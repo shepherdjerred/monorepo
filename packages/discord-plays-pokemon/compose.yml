@@ -1,0 +1,26 @@
+services:
+  discord-plays-pokemon:
+    image: ghcr.io/shepherdjerred/discord-plays-pokemon
+    shm_size: "4gb"
+    container_name: discord-plays-pokemon
+    stdin_open: true
+    tty: true
+    privileged: true
+    cap_add:
+      - SYS_ADMIN
+    volumes:
+      - ./saves:/home/ubuntu/Downloads
+      - ./config.toml:/home/ubuntu/config.toml
+      - ./logs:/home/ubuntu/logs
+    environment:
+      KASMVNC_ENABLE: true
+      SIZEW: 1920
+      SIZEH: 1080
+      REFRESH: 60
+      PASSWD: password
+      BASIC_AUTH_PASSWORD: password
+    ports:
+      - 8080:8080 # VNC
+      - 8081:8081 # UI
+volumes:
+  saves:

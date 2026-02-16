@@ -1,0 +1,362 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Ekko": {
+      "id": "Ekko",
+      "key": "245",
+      "name": "Ekko",
+      "title": "the Boy Who Shattered Time",
+      "image": {
+        "full": "Ekko.png",
+        "sprite": "champion0.png",
+        "group": "champion",
+        "x": 432,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "245000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "245001",
+          "num": 1,
+          "name": "Sandstorm Ekko",
+          "chromas": true
+        },
+        {
+          "id": "245002",
+          "num": 2,
+          "name": "Academy Ekko",
+          "chromas": false
+        },
+        {
+          "id": "245003",
+          "num": 3,
+          "name": "PROJECT: Ekko",
+          "chromas": false
+        },
+        {
+          "id": "245011",
+          "num": 11,
+          "name": "SKT T1 Ekko",
+          "chromas": false
+        },
+        {
+          "id": "245012",
+          "num": 12,
+          "name": "Trick or Treat Ekko",
+          "chromas": true
+        },
+        {
+          "id": "245019",
+          "num": 19,
+          "name": "True Damage Ekko",
+          "chromas": true
+        },
+        {
+          "id": "245028",
+          "num": 28,
+          "name": "Pulsefire Ekko",
+          "chromas": true
+        },
+        {
+          "id": "245036",
+          "num": 36,
+          "name": "Arcane Firelight Ekko",
+          "chromas": true
+        },
+        {
+          "id": "245045",
+          "num": 45,
+          "name": "Star Guardian Ekko",
+          "chromas": true
+        },
+        {
+          "id": "245046",
+          "num": 46,
+          "name": "Prestige Star Guardian Ekko",
+          "chromas": false
+        },
+        {
+          "id": "245056",
+          "num": 56,
+          "name": "Breakout True Damage Ekko",
+          "chromas": false
+        },
+        {
+          "id": "245057",
+          "num": 57,
+          "name": "Arcane Last Stand Ekko",
+          "chromas": true
+        }
+      ],
+      "lore": "A prodigy from the rough streets of Zaun, Ekko is able to manipulate time to twist any situation to his advantage. He uses his own invention, the Z-Drive, to explore the branching possibilities of reality, crafting the perfect moment to seemingly achieve the impossible the first time, every time. Though Ekko revels in this freedom, when there's a threat to those he cares about, he and the Firelights will do anything to defend them.",
+      "blurb": "A prodigy from the rough streets of Zaun, Ekko is able to manipulate time to twist any situation to his advantage. He uses his own invention, the Z-Drive, to explore the branching possibilities of reality, crafting the perfect moment to seemingly...",
+      "allytips": [
+        "Chronobreak is a potent escape tool, but it can also be quite powerful when used offensively. Don't underestimate its damage potential.",
+        "If you can proc Z-Drive Resonance on an enemy champion, it's worth taking risks to do so. The bonus Move Speed makes it easy to escape.",
+        "Phase Dive's dash is a great tool for setting up Ekko's other abilities. Use it to get double hits with Timewinder or get into position to detonate Parallel Convergence."
+      ],
+      "enemytips": [
+        "Ekko is significantly weaker when his ultimate is down. Watch for the trail he leaves behind to determine if Chronobreak is available.",
+        "Ekko's stun zone takes 3 seconds to arm. Watch for the image he creates on cast and try to guess where the zone was placed.",
+        "The second hit of Timewinder does more damage than the first; try to avoid it."
+      ],
+      "tags": ["Assassin", "Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 5,
+        "defense": 3,
+        "magic": 7,
+        "difficulty": 8
+      },
+      "stats": {
+        "hp": 655,
+        "hpperlevel": 99,
+        "mp": 280,
+        "mpperlevel": 70,
+        "movespeed": 340,
+        "armor": 32,
+        "armorperlevel": 4.2,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 9,
+        "hpregenperlevel": 0.9,
+        "mpregen": 7,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 58,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 3.3,
+        "attackspeed": 0.688
+      },
+      "spells": [
+        {
+          "id": "EkkoQ",
+          "name": "Timewinder",
+          "description": "Ekko throws a temporal grenade that expands into a time-distortion field upon hitting an enemy champion, slowing and damaging anyone caught inside. After a delay, the grenade rewinds back to Ekko, dealing damage on its return.",
+          "tooltip": "Ekko throws a device dealing <magicDamage>{{ initialdamage }} magic damage</magicDamage>. On hitting a champion or reaching the end of its range, it expands into a field that <status>Slows</status> enemies inside by {{ e2 }}%. After it expands, Ekko recalls it, dealing <magicDamage>{{ recalldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Outgoing Damage", "Slow", "Return Damage"],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ outgoingdamage }} -> {{ outgoingdamageNL }}",
+              "{{ effect2amount*-100.000000 }}% -> {{ effect2amountnl*-100.000000 }}%",
+              "{{ returndamage }} -> {{ returndamageNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [9, 8.5, 8, 7.5, 7],
+          "cooldownBurn": "9/8.5/8/7.5/7",
+          "cost": [50, 60, 70, 80, 90],
+          "costBurn": "50/60/70/80/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [70, 85, 100, 115, 130],
+            [40, 45, 50, 55, 60],
+            [40, 65, 90, 115, 140],
+            [100, 100, 100, 100, 100],
+            [0, 0, 0, 0, 0],
+            [165, 165, 165, 165, 165],
+            [1.75, 1.75, 1.75, 1.75, 1.75],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "70/85/100/115/130",
+            "40/45/50/55/60",
+            "40/65/90/115/140",
+            "100",
+            "0",
+            "165",
+            "1.75",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1075, 1075, 1075, 1075, 1075],
+          "rangeBurn": "1075",
+          "image": {
+            "full": "EkkoQ.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 192,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "EkkoW",
+          "name": "Parallel Convergence",
+          "description": "Ekko's basic attacks deal bonus magic damage to low health enemies. He can cast Parallel Convergence to split the timeline, creating an anomaly after a few seconds that slows enemies caught inside. If Ekko enters the anomaly, he gains shielding and stuns enemies by suspending them in time.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Ekko's Attacks against enemies below 30% Health deal <magicDamage>{{ missinghealthpercent }} missing Health magic damage</magicDamage>.<br /><br /><spellActive>Active:</spellActive> Ekko launches a chronosphere lasting 1.5 seconds after a delay that <status>Slows</status> enemies inside by {{ e0 }}%. If Ekko enters the sphere, he detonates it, <status>Stunning</status> for {{ e2 }} seconds and gaining <shield>{{ totalshield }} Shield</shield>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Shield Amount", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": ["{{ e4 }} -> {{ e4NL }}", "{{ cooldown }} -> {{ cooldownNL }}", "{{ cost }} -> {{ costNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [22, 20, 18, 16, 14],
+          "cooldownBurn": "22/20/18/16/14",
+          "cost": [30, 35, 40, 45, 50],
+          "costBurn": "30/35/40/45/50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [375, 375, 375, 375, 375],
+            [2.25, 2.25, 2.25, 2.25, 2.25],
+            [3, 3, 3, 3, 3],
+            [100, 120, 140, 160, 180],
+            [150, 150, 150, 150, 150],
+            [15, 15, 15, 15, 15],
+            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [3, 3, 3, 3, 3],
+            [2, 2, 2, 2, 2],
+            [40, 40, 40, 40, 40]
+          ],
+          "effectBurn": [null, "375", "2.25", "3", "100/120/140/160/180", "150", "15", "1.5", "3", "2", "40"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1600, 1600, 1600, 1600, 1600],
+          "rangeBurn": "1600",
+          "image": {
+            "full": "EkkoW.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 240,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "EkkoE",
+          "name": "Phase Dive",
+          "description": "Ekko rolls evasively while charging up his Z-Drive. His next attack deals bonus damage and warps reality, teleporting him to his target.",
+          "tooltip": "Ekko dashes and empowers his next Attack to have bonus range, teleport him to his target, and deal an additional <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}", "{{ cost }} -> {{ costNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [9, 8.5, 8, 7.5, 7],
+          "cooldownBurn": "9/8.5/8/7.5/7",
+          "cost": [40, 45, 50, 55, 60],
+          "costBurn": "40/45/50/55/60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [50, 75, 100, 125, 150],
+            [350, 350, 350, 350, 350],
+            [3, 3, 3, 3, 3],
+            [300, 300, 300, 300, 300],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "50/75/100/125/150", "350", "3", "300", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [325, 325, 325, 325, 325],
+          "rangeBurn": "325",
+          "image": {
+            "full": "EkkoE.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 288,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "EkkoR",
+          "name": "Chronobreak",
+          "description": "Ekko shatters his timeline, becoming untargetable and rewinding to a more favorable point in time. He returns to whenever he was a few seconds ago, and heals for a percentage of the damage received in that duration. Enemies near his arrival zone take massive damage.",
+          "tooltip": "Ekko turns back time, entering Stasis while teleporting to where he was 4 seconds ago and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to nearby enemies. In addition, Ekko restores <healing>{{ totalbaseheal }} Health</healing>, increased by {{ percenthealampperpercentmissinghealth }}% for each 1% Health he lost in last 4 seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Healing", "Cooldown"],
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ flatheal }} -> {{ flathealNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [110, 80, 50],
+          "cooldownBurn": "110/80/50",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [850, 850, 850],
+          "rangeBurn": "850",
+          "image": {
+            "full": "EkkoR.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 336,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Z-Drive Resonance",
+        "description": "Every third attack or damaging spell on the same target deals bonus magic damage, and grants Ekko a burst of speed if the target is a champion.<br><br>",
+        "image": {
+          "full": "Ekko_P.png",
+          "sprite": "passive0.png",
+          "group": "passive",
+          "x": 432,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

@@ -102,23 +102,23 @@ pub struct KubernetesConfig {
 impl Default for KubernetesConfig {
     fn default() -> Self {
         Self {
-            namespace: "clauderon".to_string(),
-            image: "ghcr.io/shepherdjerred/dotfiles".to_string(),
+            namespace: "clauderon".to_owned(),
+            image: "ghcr.io/shepherdjerred/dotfiles".to_owned(),
             image_pull_policy: ImagePullPolicy::default(),
-            cpu_request: "500m".to_string(),
-            cpu_limit: "2000m".to_string(),
-            memory_request: "512Mi".to_string(),
-            memory_limit: "2Gi".to_string(),
+            cpu_request: "500m".to_owned(),
+            cpu_limit: "2000m".to_owned(),
+            memory_request: "512Mi".to_owned(),
+            memory_limit: "2Gi".to_owned(),
             storage_class: None, // Use cluster default
-            cargo_cache_size: "10Gi".to_string(),
-            sccache_cache_size: "20Gi".to_string(),
-            workspace_pvc_size: "5Gi".to_string(),
+            cargo_cache_size: "10Gi".to_owned(),
+            sccache_cache_size: "20Gi".to_owned(),
+            workspace_pvc_size: "5Gi".to_owned(),
             git_remote_url: None, // Auto-detect
-            git_remote_name: "origin".to_string(),
-            service_account: "clauderon".to_string(),
+            git_remote_name: "origin".to_owned(),
+            service_account: "clauderon".to_owned(),
             proxy_mode: ProxyMode::Disabled, // Disabled by default for remote clusters
             proxy_service_port: None,
-            host_gateway_ip: Some("192.168.65.254".to_string()), // Docker Desktop default
+            host_gateway_ip: Some("192.168.65.254".to_owned()), // Docker Desktop default
             use_rwo_cache: false, // Try RWX first, fallback to RWO on error
             extra_annotations: std::collections::BTreeMap::new(),
         }

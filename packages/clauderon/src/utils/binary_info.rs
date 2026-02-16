@@ -18,7 +18,7 @@ fn daemon_info_path() -> PathBuf {
 }
 
 /// Information about the running daemon
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct DaemonInfo {
     /// PID of the daemon process
     pub pid: u32,

@@ -1,0 +1,50 @@
+# Build optimizations for faster compilation
+[build]
+# Increase parallel jobs for faster builds (adjust based on CI resources)
+jobs = 4
+# Use incremental compilation for faster rebuilds
+incremental = true
+
+# Network optimizations
+[net]
+# Use sparse protocol for faster dependency resolution (Cargo 1.68+)
+git-fetch-with-cli = false
+
+[registries.crates-io]
+# Sparse protocol significantly speeds up cargo metadata/update
+protocol = "sparse"
+
+# Profile optimizations
+[profile.dev]
+# Reduce debug info in dev builds for faster compilation
+debug = 1
+# More codegen units = faster compile, slightly slower runtime (good for dev)
+codegen-units = 256
+# Keep incremental compilation enabled for dev builds
+incremental = true
+
+[profile.dev.package."*"]
+# Optimize dependencies even in dev mode for faster runtime
+opt-level = 2
+
+# Test profile - similar to dev but can be tuned
+[profile.test]
+debug = 1
+incremental = true
+
+# Release profile optimizations
+[profile.release]
+# Balance between build speed and runtime performance
+codegen-units = 16
+# LTO takes time but produces smaller/faster binaries
+lto = "thin"
+# Strip symbols for smaller binaries
+strip = true
+# Split debuginfo for faster linking (Linux-specific but safe to set globally)
+split-debuginfo = "unpacked"
+
+# Platform-specific settings
+[target.x86_64-pc-windows-gnu]
+linker = "x86_64-w64-mingw32-gcc"
+# Windows cross-compile optimizations
+rustflags = ["-C", "target-feature=+crt-static"]

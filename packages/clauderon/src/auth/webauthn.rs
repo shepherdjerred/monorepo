@@ -2,7 +2,7 @@ use std::sync::Arc;
 use webauthn_rs::prelude::*;
 
 /// WebAuthn handler for passkey operations
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct WebAuthnHandler {
     webauthn: Arc<Webauthn>,
 }

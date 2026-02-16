@@ -1,0 +1,380 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Tristana": {
+      "id": "Tristana",
+      "key": "18",
+      "name": "Tristana",
+      "title": "the Yordle Gunner",
+      "image": {
+        "full": "Tristana.png",
+        "sprite": "champion4.png",
+        "group": "champion",
+        "x": 384,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "18000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "18001",
+          "num": 1,
+          "name": "Riot Girl Tristana",
+          "chromas": false
+        },
+        {
+          "id": "18002",
+          "num": 2,
+          "name": "Earnest Elf Tristana",
+          "chromas": false
+        },
+        {
+          "id": "18003",
+          "num": 3,
+          "name": "Firefighter Tristana",
+          "chromas": false
+        },
+        {
+          "id": "18004",
+          "num": 4,
+          "name": "Guerilla Tristana",
+          "chromas": false
+        },
+        {
+          "id": "18005",
+          "num": 5,
+          "name": "Buccaneer Tristana",
+          "chromas": false
+        },
+        {
+          "id": "18006",
+          "num": 6,
+          "name": "Rocket Girl Tristana",
+          "chromas": true
+        },
+        {
+          "id": "18010",
+          "num": 10,
+          "name": "Dragon Trainer Tristana",
+          "chromas": true
+        },
+        {
+          "id": "18011",
+          "num": 11,
+          "name": "Bewitching Tristana",
+          "chromas": false
+        },
+        {
+          "id": "18012",
+          "num": 12,
+          "name": "Omega Squad Tristana",
+          "chromas": true
+        },
+        {
+          "id": "18024",
+          "num": 24,
+          "name": "Little Demon Tristana",
+          "chromas": true
+        },
+        {
+          "id": "18033",
+          "num": 33,
+          "name": "Pengu Cosplay Tristana",
+          "chromas": true
+        },
+        {
+          "id": "18040",
+          "num": 40,
+          "name": "Hextech Tristana",
+          "chromas": false
+        },
+        {
+          "id": "18041",
+          "num": 41,
+          "name": "Firecracker Tristana",
+          "chromas": true
+        },
+        {
+          "id": "18051",
+          "num": 51,
+          "name": "Spirit Blossom Tristana",
+          "chromas": true
+        },
+        {
+          "id": "18061",
+          "num": 61,
+          "name": "Faerie Court Tristana",
+          "chromas": true
+        },
+        {
+          "id": "18070",
+          "num": 70,
+          "name": "Rain Shepherd Tristana",
+          "chromas": true
+        }
+      ],
+      "lore": "While many other yordles channel their energy into discovery, invention, or just plain mischief-making, Tristana was always inspired by the adventures of great warriors. She had heard much about Runeterra, its factions, and its wars, and believed her kind could become worthy of legend too. Setting foot in the world for the first time, she took up her trusty cannon Boomer, and now leaps into battle with steadfast courage and optimism.",
+      "blurb": "While many other yordles channel their energy into discovery, invention, or just plain mischief-making, Tristana was always inspired by the adventures of great warriors. She had heard much about Runeterra, its factions, and its wars, and believed her...",
+      "allytips": [
+        "Her massive gun allows Tristana to fire on targets at a great distance. Utilize this to prevent your enemies from ever laying a hand on you.",
+        "Use Rocket Jump after you have stacked up your Explosive Charge on an enemy to finish them off with a burst of damage.",
+        "Use Rapid Fire to help stack up your Explosive Charge on enemy champions."
+      ],
+      "enemytips": [
+        "If you see Tristana activate Rapid Fire in a fight, stun her and try to back off until the spell dissipates.",
+        "Stand away from your creeps in a lane to take less collateral damage from Explosive Charge."
+      ],
+      "tags": ["Marksman", "Assassin"],
+      "partype": "Mana",
+      "info": {
+        "attack": 9,
+        "defense": 3,
+        "magic": 5,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 640,
+        "hpperlevel": 102,
+        "mp": 300,
+        "mpperlevel": 32,
+        "movespeed": 325,
+        "armor": 30,
+        "armorperlevel": 4,
+        "spellblock": 28,
+        "spellblockperlevel": 1.3,
+        "attackrange": 550,
+        "hpregen": 4,
+        "hpregenperlevel": 0.5,
+        "mpregen": 7.2,
+        "mpregenperlevel": 0.45,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 60,
+        "attackdamageperlevel": 2.9,
+        "attackspeedperlevel": 1.5,
+        "attackspeed": 0.656
+      },
+      "spells": [
+        {
+          "id": "TristanaQ",
+          "name": "Rapid Fire",
+          "description": "Tristana fires her weapon rapidly, increasing her Attack Speed for a short time.",
+          "tooltip": "Tristana goes full-auto, gaining <attackSpeed>{{ attackspeedmod*100 }}% Attack Speed</attackSpeed> for {{ buffduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Attack Speed", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ attackspeedmod*100.000000 }}% -> {{ attackspeedmodnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [20, 19, 18, 17, 16],
+          "cooldownBurn": "20/19/18/17/16",
+          "cost": [30, 35, 40, 45, 50],
+          "costBurn": "30/35/40/45/50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [20, 20, 20, 20, 20],
+          "rangeBurn": "20",
+          "image": {
+            "full": "TristanaQ.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 0,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "TristanaW",
+          "name": "Rocket Jump",
+          "description": "Tristana fires at the ground to propel her to a distant location, dealing damage and slowing surrounding units for a brief period where she lands.",
+          "tooltip": "Tristana launches herself, dealing <magicDamage>{{ landingdamage }} magic damage</magicDamage> and <status>Slowing</status> by {{ slowmod*-100 }}% for {{ slowduration }} seconds upon landing.<br /><br />Champion takedowns and max stack <spellName>Explosive Charge</spellName> detonations on champions refresh this Ability's Cooldown.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [22, 20, 18, 16, 14],
+          "cooldownBurn": "22/20/18/16/14",
+          "cost": [30, 35, 40, 45, 50],
+          "costBurn": "30/35/40/45/50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [900, 900, 900, 900, 900],
+          "rangeBurn": "900",
+          "image": {
+            "full": "TristanaW.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 48,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "TristanaE",
+          "name": "Explosive Charge",
+          "description": "When Tristana kills a unit, her cannonballs burst into shrapnel, dealing damage to surrounding enemies. Can be activated to place a bomb on a target enemy that explodes after a short duration dealing damage to surrounding units.",
+          "tooltip": "<spellPassive>Passive: </spellPassive>Tristana's Attacks that kill enemies deal <magicDamage>{{ passivedamage }} magic damage</magicDamage> to surrounding enemies.<br /><br /><spellActive>Active:</spellActive> Tristana attaches a bomb to an enemy or turret that deals <physicalDamage>{{ activedamage }} physical damage</physicalDamage> to surrounding enemies after {{ activeduration }} seconds. The damage is increased by {{ activeperstackamp*100 }}% each time Tristana hits an Attack or Ability (max 4 stacks).<br /><br />At {{ activemaxstacks }} stacks, the bomb explodes immediately (max <physicalDamage>{{ activemaxdamage }} physical damage</physicalDamage>).{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Passive Explosion Damage", "Base Charge Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ passivebasedamage }} -> {{ passivebasedamageNL }}",
+              "{{ activebasedamage }} -> {{ activebasedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [16, 15.5, 15, 14.5, 14],
+          "cooldownBurn": "16/15.5/15/14.5/14",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [550, 550, 550, 550, 550],
+          "rangeBurn": "550",
+          "image": {
+            "full": "TristanaE.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 96,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "TristanaR",
+          "name": "Buster Shot",
+          "description": "Tristana loads a massive cannonball into her weapon and fires it at an enemy unit. This deals Magic Damage and knocks the target back. If the target is carrying the Explosive Charge bomb, the bomb detonation radius is doubled.",
+          "tooltip": "Tristana fires a massive cannonball, dealing <magicDamage>{{ damagecalc }} magic damage</magicDamage> to the target, <status>Knocking Back</status> and <status>Stunning</status> them and surrounding enemies for {{ stunduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Knockback Distance", "Stun Duration:"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ knockbackdistance }} -> {{ knockbackdistanceNL }}",
+              "{{ stunduration }} -> {{ stundurationNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [100, 100, 100],
+          "cooldownBurn": "100",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [550, 550, 550],
+          "rangeBurn": "550",
+          "image": {
+            "full": "TristanaR.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 144,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Draw a Bead",
+        "description": "Increases Tristana's Attack Range as she levels.",
+        "image": {
+          "full": "Tristana_Passive.png",
+          "sprite": "passive4.png",
+          "group": "passive",
+          "x": 384,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

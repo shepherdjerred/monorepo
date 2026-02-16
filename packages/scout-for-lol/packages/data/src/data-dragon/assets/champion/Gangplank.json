@@ -1,0 +1,361 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Gangplank": {
+      "id": "Gangplank",
+      "key": "41",
+      "name": "Gangplank",
+      "title": "the Saltwater Scourge",
+      "image": {
+        "full": "Gangplank.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 336,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "41000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "41001",
+          "num": 1,
+          "name": "Spooky Gangplank",
+          "chromas": false
+        },
+        {
+          "id": "41002",
+          "num": 2,
+          "name": "Minuteman Gangplank",
+          "chromas": false
+        },
+        {
+          "id": "41003",
+          "num": 3,
+          "name": "Sailor Gangplank",
+          "chromas": false
+        },
+        {
+          "id": "41004",
+          "num": 4,
+          "name": "Toy Soldier Gangplank",
+          "chromas": false
+        },
+        {
+          "id": "41005",
+          "num": 5,
+          "name": "Special Forces Gangplank",
+          "chromas": false
+        },
+        {
+          "id": "41006",
+          "num": 6,
+          "name": "Sultan Gangplank",
+          "chromas": false
+        },
+        {
+          "id": "41007",
+          "num": 7,
+          "name": "Captain Gangplank",
+          "chromas": false
+        },
+        {
+          "id": "41008",
+          "num": 8,
+          "name": "Dreadnova Gangplank",
+          "chromas": true
+        },
+        {
+          "id": "41014",
+          "num": 14,
+          "name": "Pool Party Gangplank",
+          "chromas": true
+        },
+        {
+          "id": "41021",
+          "num": 21,
+          "name": "FPX Gangplank",
+          "chromas": true
+        },
+        {
+          "id": "41023",
+          "num": 23,
+          "name": "Gangplank the Betrayer",
+          "chromas": true
+        },
+        {
+          "id": "41033",
+          "num": 33,
+          "name": "PROJECT: Gangplank",
+          "chromas": true
+        }
+      ],
+      "lore": "As unpredictable as he is brutal, the dethroned reaver king Gangplank is feared far and wide. Once, he ruled the port city of Bilgewater, and while his reign is over, there are those who believe this has only made him more dangerous. Gangplank would see Bilgewater bathed in blood once more before letting someone else take it—and now with pistol, cutlass, and barrels of gunpowder, he is determined to reclaim what he has lost.",
+      "blurb": "As unpredictable as he is brutal, the dethroned reaver king Gangplank is feared far and wide. Once, he ruled the port city of Bilgewater, and while his reign is over, there are those who believe this has only made him more dangerous. Gangplank would see...",
+      "allytips": [
+        "Parrrley applies On Hit effects like Frozen Mallet or Black Cleaver.",
+        "Paying attention to low-health enemies on the map can land you a surprise kill with Cannon Barrage.",
+        "Try placing Cannon Barrage on the path of escape to cut off fleeing enemies."
+      ],
+      "enemytips": [
+        "Parrrley deals a high amount of physical damage. Items that grant Armor can help if an enemy Gangplank is doing well.",
+        "Once Gangplank reaches level 6, watch out for his global-range ultimate, Cannon Barrage!"
+      ],
+      "tags": ["Fighter"],
+      "partype": "Mana",
+      "info": {
+        "attack": 7,
+        "defense": 6,
+        "magic": 4,
+        "difficulty": 9
+      },
+      "stats": {
+        "hp": 630,
+        "hpperlevel": 114,
+        "mp": 280,
+        "mpperlevel": 60,
+        "movespeed": 345,
+        "armor": 31,
+        "armorperlevel": 4.7,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 6,
+        "hpregenperlevel": 0.6,
+        "mpregen": 8,
+        "mpregenperlevel": 0.7,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 64,
+        "attackdamageperlevel": 4.2,
+        "attackspeedperlevel": 3.2,
+        "attackspeed": 0.658
+      },
+      "spells": [
+        {
+          "id": "GangplankQWrapper",
+          "name": "Parrrley",
+          "description": "Shoots target, plundering Gold for each enemy unit killed.",
+          "tooltip": "{{Spell_GangplankQWrapper_Tooltip_{{ gamemodeinteger }}}}{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Plunder Gold", "Plunder Silver Serpents", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ spelldamage }} -> {{ spelldamageNL }}",
+              "{{ e2 }} -> {{ e2NL }}",
+              "{{ e5 }} -> {{ e5NL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [4.5, 4.5, 4.5, 4.5, 4.5],
+          "cooldownBurn": "4.5",
+          "cost": [50, 45, 40, 35, 30],
+          "costBurn": "50/45/40/35/30",
+          "datavalues": {},
+          "effect": [
+            null,
+            [10, 40, 70, 100, 130],
+            [3, 4, 5, 6, 7],
+            [0, 0, 0, 0, 0],
+            [500, 500, 500, 500, 500],
+            [4, 5, 6, 7, 8],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "10/40/70/100/130", "3/4/5/6/7", "0", "500", "4/5/6/7/8", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [625, 625, 625, 625, 625],
+          "rangeBurn": "625",
+          "image": {
+            "full": "GangplankQWrapper.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 288,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "GangplankW",
+          "name": "Remove Scurvy",
+          "description": "Eats citrus to cure crowd control effects and restore Health.",
+          "tooltip": "Gangplank consumes a large amount of citrus fruit, removing all <status>Disabling</status> effects and restoring <healing>{{ basehealth }} plus {{ e2 }}% missing Health</healing>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Healing", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}", "{{ cost }} -> {{ costNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [22, 20, 18, 16, 14],
+          "cooldownBurn": "22/20/18/16/14",
+          "cost": [60, 70, 80, 90, 100],
+          "costBurn": "60/70/80/90/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [45, 70, 95, 120, 145],
+            [13, 13, 13, 13, 13],
+            [0.25, 0.25, 0.25, 0.25, 0.25],
+            [200, 200, 200, 200, 200],
+            [30, 40, 50, 60, 70],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "45/70/95/120/145", "13", "0.25", "200", "30/40/50/60/70", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [400, 400, 400, 400, 400],
+          "rangeBurn": "400",
+          "image": {
+            "full": "GangplankW.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 336,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "GangplankE",
+          "name": "Powder Keg",
+          "description": "Gangplank uncovers a powder keg at target location. If he attacks it, it explodes, spreading the attack's damage to enemies in the area, slowing them.",
+          "tooltip": "Gangplank places a powder keg that can be attacked by Gangplank and enemy champions for {{ e5 }} seconds. When an enemy destroys it, the keg is defused. When Gangplank destroys it, it explodes, <status>Slowing</status> by {{ finalslowamount }}% for {{ e2 }} seconds and dealing the <physicalDamage>Attack's damage</physicalDamage>, ignoring {{ e0 }}% Armor. Champions take an additional <physicalDamage>{{ e3 }} physical damage</physicalDamage>.<br /><br />Keg health decays every {{ barreldecaytime }} seconds. Keg explosions detonate other kegs with overlapping blast zones, but don't deal damage to the same target more than once. Keg explosions triggered by <spellName>Parrrley</spellName> will grant the bonus gold for targets killed.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Bonus Damage Against Champions", "Max Charges", "Slow", "Recharge Time"],
+            "effect": [
+              "{{ e3 }} -> {{ e3NL }}",
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ barrelslow }}% -> {{ barrelslowNL }}%",
+              "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [0, 0, 0, 0, 0],
+          "cooldownBurn": "0",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [3, 3, 4, 4, 5],
+            [2, 2, 2, 2, 2],
+            [75, 95, 115, 135, 155],
+            [40, 50, 60, 70, 80],
+            [25, 25, 25, 25, 25],
+            [2, 2, 2, 2, 2],
+            [10, 10, 10, 10, 10],
+            [100, 100, 100, 100, 100],
+            [0.5, 0.5, 0.5, 0.5, 0.5],
+            [40, 40, 40, 40, 40]
+          ],
+          "effectBurn": [
+            null,
+            "3/3/4/4/5",
+            "2",
+            "75/95/115/135/155",
+            "40/50/60/70/80",
+            "25",
+            "2",
+            "10",
+            "100",
+            "0.5",
+            "40"
+          ],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "3",
+          "range": [1000, 1000, 1000, 1000, 1000],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "GangplankE.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 384,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "GangplankR",
+          "name": "Cannon Barrage",
+          "description": "Gangplank signals his ship to bombard an area, slowing and damaging enemies.",
+          "tooltip": "Gangplank signals his ship to fire {{ totalwavestooltip }} waves of cannonballs anywhere on the map over {{ zoneduration }} seconds. Each wave <status>Slows</status> by {{ slowpercent }}% for {{ slowduration }} seconds and deals <magicDamage>{{ onewavedamage }} magic damage</magicDamage>. Maximum damage: {{ totaldamagetooltip }}<br /><br />This Ability can be upgraded in the shop via <spellName>Parrrley</spellName>.<br /><br /><spellName>Fire at Will</spellName>: Fires 6 additional waves of cannonballs.<br /><spellName>Death's Daughter</spellName>: Fires a Mega-Cannonball that deals <trueDamage>{{ deathsdaughterdamage }} true damage</trueDamage> and <status>Slows</status> by {{ deathsdaughterslow }}% for {{ deathsdaughterslowduration }} second.<br /><spellName>Raise Morale</spellName>: Allies inside Cannon Barrage gain <speed>{{ raisemoralehaste }}% Move Speed</speed> for {{ raisemoralehasteduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage Per Wave", "Cooldown"],
+            "effect": ["{{ damageperwave }} -> {{ damageperwaveNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [160, 140, 120],
+          "cooldownBurn": "160/140/120",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [1.5, 0.5, 0.5],
+            [0, 0, 0],
+            [300, 300, 300],
+            [75, 75, 75],
+            [1, 1, 1],
+            [40, 40, 40]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "1.5/0.5/0.5", "0", "300", "75", "1", "40"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [30000, 30000, 30000],
+          "rangeBurn": "30000",
+          "image": {
+            "full": "GangplankR.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 432,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Trial by Fire",
+        "description": "Every few seconds, Gangplank's melee strike will set his opponent on fire.",
+        "image": {
+          "full": "Gangplank_Passive.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 336,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

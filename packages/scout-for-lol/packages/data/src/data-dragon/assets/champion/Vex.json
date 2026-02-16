@@ -1,0 +1,295 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Vex": {
+      "id": "Vex",
+      "key": "711",
+      "name": "Vex",
+      "title": "the Gloomist",
+      "image": {
+        "full": "Vex.png",
+        "sprite": "champion4.png",
+        "group": "champion",
+        "x": 432,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "711000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "711001",
+          "num": 1,
+          "name": "Dawnbringer Vex",
+          "chromas": true
+        },
+        {
+          "id": "711010",
+          "num": 10,
+          "name": "Empyrean Vex",
+          "chromas": true
+        },
+        {
+          "id": "711020",
+          "num": 20,
+          "name": "Stargazer Vex",
+          "chromas": true
+        }
+      ],
+      "lore": "In the black heart of the Shadow Isles, a lone yordle trudges through the spectral fog, content in its murky misery. With an endless supply of teen angst and a powerful shadow in tow, Vex lives in her own self-made slice of gloom, far from the revolting cheer of the “normie” world. Though she lacks ambition, she is quick to strike down color and happiness, stopping all would-be interlopers with her magical malaise.",
+      "blurb": "In the black heart of the Shadow Isles, a lone yordle trudges through the spectral fog, content in its murky misery. With an endless supply of teen angst and a powerful shadow in tow, Vex lives in her own self-made slice of gloom, far from the revolting...",
+      "allytips": [],
+      "enemytips": [],
+      "tags": ["Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 0,
+        "defense": 0,
+        "magic": 0,
+        "difficulty": 0
+      },
+      "stats": {
+        "hp": 590,
+        "hpperlevel": 104,
+        "mp": 490,
+        "mpperlevel": 32,
+        "movespeed": 335,
+        "armor": 23,
+        "armorperlevel": 4.45,
+        "spellblock": 28,
+        "spellblockperlevel": 1.3,
+        "attackrange": 550,
+        "hpregen": 6.5,
+        "hpregenperlevel": 0.6,
+        "mpregen": 6,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 54,
+        "attackdamageperlevel": 2.75,
+        "attackspeedperlevel": 1,
+        "attackspeed": 0.669
+      },
+      "spells": [
+        {
+          "id": "VexQ",
+          "name": "Mistral Bolt",
+          "description": "Launch a damaging missile that accelerates mid-flight.",
+          "tooltip": "Vex launches a wave of mist that deals <magicDamage>{{ qdamagecalc }} magic damage</magicDamage>. After a delay, the wave becomes smaller and faster.<br /><br />Consumes <keywordMajor>Gloom</keywordMajor> on enemies hit.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["@AbilityResourceName@ Cost", "Cooldown", "Damage"],
+            "effect": [
+              "{{ cost }} -> {{ costNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [8, 7, 6, 5, 4],
+          "cooldownBurn": "8/7/6/5/4",
+          "cost": [45, 50, 55, 60, 65],
+          "costBurn": "45/50/55/60/65",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1200, 1200, 1200, 1200, 1200],
+          "rangeBurn": "1200",
+          "image": {
+            "full": "VexQ.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 192,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "VexW",
+          "name": "Personal Space",
+          "description": "Gain a shield and damage nearby enemies.",
+          "tooltip": "Vex gains <shield>{{ shieldcalc }} Shield</shield> for {{ shieldduration }} seconds and emits a shockwave that deals <magicDamage>{{ wdamagecalc }} magic damage</magicDamage>.<br /><br />Consumes <keywordMajor>Gloom</keywordMajor> on enemies hit.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Shield Amount", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ shieldamount }} -> {{ shieldamountNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [16, 15, 14, 13, 12],
+          "cooldownBurn": "16/15/14/13/12",
+          "cost": [75, 75, 75, 75, 75],
+          "costBurn": "75",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [475, 475, 475, 475, 475],
+          "rangeBurn": "475",
+          "image": {
+            "full": "VexW.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 240,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "VexE",
+          "name": "Looming Darkness",
+          "description": "Summon a damaging and slowing zone that applies Gloom to enemies.",
+          "tooltip": "Vex commands Shadow to fly to a location, increasing in size as it travels. Upon arriving, it deals <magicDamage>{{ edamagecalc }} magic damage</magicDamage> and <status>Slows</status> by {{ slowamount*100 }}% for {{ slowduration }} seconds.<br /><br />Killing an enemy with this ability reduces <keywordMajor>Doom'n Gloom's</keywordMajor> Cooldown by {{ gloomcdnonchamptooltip*100 }}%.<br /><br />Applies <keywordMajor>Gloom</keywordMajor> to enemies hit.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow", "Total AP Ratio"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowamount*100.000000 }}% -> {{ slowamountnl*100.000000 }}%",
+              "{{ apratio*100.000000 }}% -> {{ aprationl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [13, 13, 13, 13, 13],
+          "cooldownBurn": "13",
+          "cost": [70, 80, 90, 100, 110],
+          "costBurn": "70/80/90/100/110",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [800, 800, 800, 800, 800],
+          "rangeBurn": "800",
+          "image": {
+            "full": "VexE.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 288,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "VexR",
+          "name": "Shadow Surge",
+          "description": "Fire a missile that marks an enemy champion.  Recast to dash to them and deal damage.",
+          "tooltip": "Shadow excitedly surges forward, dealing <magicDamage>{{ spell.vexr:rdamagecalc }} magic damage</magicDamage> and marking the first enemy champion hit for 4 seconds.<br /><br /><recast>Recast</recast>: Dash to the marked champion, dealing <magicDamage>{{ spell.vexr:recastdamagecalc }} magic damage</magicDamage> on arrival.<br /><br />If the marked champion dies within {{ spell.vexr:takedownwindow }} seconds of taking damage from this Ability, its Cooldown is temporarily reset.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Damage", "Recast Damage", "Range"],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ recastdamage }} -> {{ recastdamageNL }}",
+              "{{ castrange }} -> {{ castrangeNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [140, 120, 100],
+          "cooldownBurn": "140/120/100",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [2000, 2500, 3000],
+          "rangeBurn": "2000/2500/3000",
+          "image": {
+            "full": "VexR.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 336,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Doom 'n Gloom",
+        "description": "Vex periodically becomes empowered, causing her next basic Ability to fear enemies and interrupt dashes. Whenever a nearby enemy dashes, Vex applies a mark that can be consumed for bonus damage that also reduces the cooldown of her empowered state.",
+        "image": {
+          "full": "Icons_Vex_Passive.png",
+          "sprite": "passive4.png",
+          "group": "passive",
+          "x": 432,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

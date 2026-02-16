@@ -1,0 +1,138 @@
+{{- $rules := include "dot_claude/hooks/safety-rules.json" | fromJson -}}
+{
+  "model": "opus",
+  "permissions": {
+    "deny": [
+{{- $denyItems := list }}
+{{- range $rules.deny }}
+{{- range .globs }}
+{{- $denyItems = append $denyItems (printf "Bash(%s)" .) }}
+{{- end }}
+{{- end }}
+{{- range $i, $item := $denyItems }}
+      "{{ $item }}"{{ if ne $i (sub (len $denyItems) 1) }},{{ end }}
+{{- end }}
+    ],
+    "ask": [
+{{- $askItems := list }}
+{{- range $rules.ask }}
+{{- range .globs }}
+{{- $askItems = append $askItems (printf "Bash(%s)" .) }}
+{{- end }}
+{{- end }}
+{{- range $i, $item := $askItems }}
+      "{{ $item }}"{{ if ne $i (sub (len $askItems) 1) }},{{ end }}
+{{- end }}
+    ],
+    "allow": [
+      "Bash(*)",
+      "Read(*)",
+      "Edit(*)",
+      "Write(*)",
+      "WebSearch",
+      "ListMcpResourcesTool",
+      "ReadMcpResourceTool",
+      "mcp__*"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/quality/session-start.sh"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/quality/prompt-submit.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Read|Edit|Write|WebFetch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/safety-hook.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/quality/pre-write.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/quality/post-write-composite.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/quality/stop-gate.sh"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "idle_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Awaiting your input\" with title \"Claude Code\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "permission_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Permission required\" with title \"Claude Code\"'"
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "feature-dev@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "pr-review-toolkit@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true,
+    "plugin-dev@claude-plugins-official": true,
+    "hookify@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true
+  },
+  "alwaysThinkingEnabled": true,
+  "terminalEditorMode": "vim"
+}

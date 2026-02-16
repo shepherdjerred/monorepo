@@ -14,6 +14,7 @@ use super::traits::{ExecutionBackend, GitOperations};
 /// Mock implementation of GitOperations for testing.
 ///
 /// Tracks worktree state in memory without executing actual git commands.
+#[derive(Debug)]
 pub struct MockGitBackend {
     /// Set of worktree paths that "exist"
     worktrees: RwLock<HashSet<PathBuf>>,
@@ -32,7 +33,7 @@ impl MockGitBackend {
         Self {
             worktrees: RwLock::new(HashSet::new()),
             should_fail: AtomicBool::new(false),
-            error_message: RwLock::new("Mock failure".to_string()),
+            error_message: RwLock::new("Mock failure".to_owned()),
         }
     }
 
@@ -125,13 +126,14 @@ impl GitOperations for MockGitBackend {
         }
 
         // Return a mock branch name
-        Ok("mock-branch".to_string())
+        Ok("mock-branch".to_owned())
     }
 }
 
 /// Mock implementation of ExecutionBackend for testing.
 ///
 /// Tracks session/container state in memory without executing actual commands.
+#[derive(Debug)]
 pub struct MockExecutionBackend {
     /// Set of session/container names that "exist"
     sessions: RwLock<HashSet<String>>,
@@ -165,7 +167,7 @@ impl MockExecutionBackend {
         Self {
             sessions: RwLock::new(HashSet::new()),
             should_fail: AtomicBool::new(false),
-            error_message: RwLock::new("Mock failure".to_string()),
+            error_message: RwLock::new("Mock failure".to_owned()),
             name_prefix: name_prefix.into(),
             exists_result: AtomicBool::new(true),
             health_state: RwLock::new(super::traits::BackendResourceHealth::Running),
@@ -290,8 +292,8 @@ impl ExecutionBackend for MockExecutionBackend {
     fn attach_command(&self, id: &str) -> Vec<String> {
         vec![
             self.name_prefix.clone(),
-            "attach".to_string(),
-            id.to_string(),
+            "attach".to_owned(),
+            id.to_owned(),
         ]
     }
 
@@ -301,7 +303,7 @@ impl ExecutionBackend for MockExecutionBackend {
             anyhow::bail!("{msg}");
         }
 
-        Ok("Mock output".to_string())
+        Ok("Mock output".to_owned())
     }
 
     fn capabilities(&self) -> super::traits::BackendCapabilities {

@@ -1,0 +1,359 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Hecarim": {
+      "id": "Hecarim",
+      "key": "120",
+      "name": "Hecarim",
+      "title": "the Shadow of War",
+      "image": {
+        "full": "Hecarim.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 144,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "120000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "120001",
+          "num": 1,
+          "name": "Blood Knight Hecarim",
+          "chromas": false
+        },
+        {
+          "id": "120002",
+          "num": 2,
+          "name": "Reaper Hecarim",
+          "chromas": false
+        },
+        {
+          "id": "120003",
+          "num": 3,
+          "name": "Headless Hecarim",
+          "chromas": false
+        },
+        {
+          "id": "120004",
+          "num": 4,
+          "name": "Arcade Hecarim",
+          "chromas": false
+        },
+        {
+          "id": "120005",
+          "num": 5,
+          "name": "Elderwood Hecarim",
+          "chromas": false
+        },
+        {
+          "id": "120006",
+          "num": 6,
+          "name": "Worldbreaker Hecarim",
+          "chromas": false
+        },
+        {
+          "id": "120007",
+          "num": 7,
+          "name": "Lancer Zero Hecarim",
+          "chromas": false
+        },
+        {
+          "id": "120008",
+          "num": 8,
+          "name": "High Noon Hecarim",
+          "chromas": true
+        },
+        {
+          "id": "120014",
+          "num": 14,
+          "name": "Cosmic Charger Hecarim",
+          "chromas": true
+        },
+        {
+          "id": "120022",
+          "num": 22,
+          "name": "Arcana Hecarim",
+          "chromas": true
+        },
+        {
+          "id": "120031",
+          "num": 31,
+          "name": "Winterblessed Hecarim",
+          "chromas": true
+        },
+        {
+          "id": "120041",
+          "num": 41,
+          "name": "Nightbringer Hecarim",
+          "chromas": true
+        }
+      ],
+      "lore": "Hecarim is a spectral fusion of man and beast, cursed to ride down the souls of the living for all eternity. When the Blessed Isles fell into shadow, this proud knight was obliterated by the destructive energies of the Ruination, along with all his cavalry and their mounts. Now, whenever the Black Mist reaches out across Runeterra, he leads their devastating charge, reveling in the slaughter and crushing the foe beneath his armored hooves.",
+      "blurb": "Hecarim is a spectral fusion of man and beast, cursed to ride down the souls of the living for all eternity. When the Blessed Isles fell into shadow, this proud knight was obliterated by the destructive energies of the Ruination, along with all his...",
+      "allytips": [
+        "Spirit of Dread restores Health when nearby enemies take damage, including damage dealt by allies. Cast this during a large fight to maximize Hecarim's survivability.",
+        "Devastating Charge deals more damage based on the distance traveled. Try using Onslaught of Shadows or Summoner Spells such as Ghost or Flash to maximize this damage."
+      ],
+      "enemytips": [
+        "Hecarim gains life from nearby enemies with Spirit of Dread but lacks durability, use burst damage.",
+        "Hecarim's ultimate causes opponents to flee in terror. Spread out to reduce his power in fights."
+      ],
+      "tags": ["Fighter", "Tank"],
+      "partype": "Mana",
+      "info": {
+        "attack": 8,
+        "defense": 6,
+        "magic": 4,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 625,
+        "hpperlevel": 106,
+        "mp": 280,
+        "mpperlevel": 40,
+        "movespeed": 345,
+        "armor": 32,
+        "armorperlevel": 5.45,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 175,
+        "hpregen": 7,
+        "hpregenperlevel": 0.75,
+        "mpregen": 7,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 66,
+        "attackdamageperlevel": 3.7,
+        "attackspeedperlevel": 2.5,
+        "attackspeed": 0.67
+      },
+      "spells": [
+        {
+          "id": "HecarimRapidSlash",
+          "name": "Rampage",
+          "description": "Hecarim cleaves nearby enemies dealing physical damage. If Hecarim damages at least one enemy, he increases the damage and lowers the cooldown of subsequent Rampages.",
+          "tooltip": "Hecarim cleaves nearby enemies for <physicalDamage>{{ damage }} physical damage</physicalDamage>. If this Ability hits, he gains a stack that decreases its Cooldown by {{ rampagecooldownreduction }} seconds and increases its damage by {{ rampagebonusdamageperc }}% for {{ e6 }} seconds. Stacks up to {{ e2 }} times.<br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Mana Cost"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cost }} -> {{ costNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [4, 4, 4, 4, 4],
+          "cooldownBurn": "4",
+          "cost": [28, 26, 24, 22, 20],
+          "costBurn": "28/26/24/22/20",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [3, 3, 3, 3, 3],
+            [1, 1, 1, 1, 1],
+            [3, 3, 3, 3, 3],
+            [60, 60, 60, 60, 60],
+            [8, 8, 8, 8, 8],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "3", "1", "3", "60", "8", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [350, 350, 350, 350, 350],
+          "rangeBurn": "350",
+          "image": {
+            "full": "HecarimRapidSlash.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 0,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "HecarimW",
+          "name": "Spirit of Dread",
+          "description": "Hecarim gains Armor and Magic Resist. Hecarim deals magic damage to nearby enemies, and gains Health equal to a percentage of any damage those enemies suffer.",
+          "tooltip": "Hecarim deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> over {{ buffduration }} seconds to nearby enemies. <br /><br />Hecarim gains <passive>{{ resistamount }}</passive> <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> and heals for <healing>{{ leechamount }}% of damage</healing> nearby enemies take from Hecarim and <healing>{{ allytooltipleachvalue }}% of damage</healing> taken from his allies.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Bonus Resistances", "Healing Cap", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ resistamount }} -> {{ resistamountNL }}",
+              "{{ minionhealcap }} -> {{ minionhealcapNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 14, 14, 14, 14],
+          "cooldownBurn": "14",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [525, 525, 525, 525, 525],
+          "rangeBurn": "525",
+          "image": {
+            "full": "HecarimW.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 48,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "HecarimRamp",
+          "name": "Devastating Charge",
+          "description": "Hecarim gains increasing Move Speed and can move through units for a short duration. His next attack knocks the target back and deals additional physical damage based on the distance he has traveled since activating the ability.",
+          "tooltip": "Hecarim becomes Ghosted and gains <speed>{{ minmovespeed*100 }}% Move Speed</speed> increasing to <speed>{{ maxmovespeed*100 }}%</speed> over {{ e5 }} seconds. His next Attack <status>Knocks Back</status> and deals between <physicalDamage>{{ mindamage }}</physicalDamage> and <physicalDamage>{{ maxdamage }} physical damage</physicalDamage>. <status>Knock Back</status> distance and damage scales with distance travelled during this Ability.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Minimum Damage", "Maximum Damage", "Cooldown"],
+            "effect": [
+              "{{ minbasedamage }} -> {{ minbasedamageNL }}",
+              "{{ maxbasedamage }} -> {{ maxbasedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [20, 19, 18, 17, 16],
+          "cooldownBurn": "20/19/18/17/16",
+          "cost": [60, 60, 60, 60, 60],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [150, 150, 150, 150, 150],
+            [350, 350, 350, 350, 350],
+            [60, 90, 120, 150, 180],
+            [30, 45, 60, 75, 90],
+            [4, 4, 4, 4, 4],
+            [0.65, 0.65, 0.65, 0.65, 0.65],
+            [1200, 1200, 1200, 1200, 1200],
+            [0.25, 0.25, 0.25, 0.25, 0.25],
+            [2.5, 2.5, 2.5, 2.5, 2.5],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "150",
+            "350",
+            "60/90/120/150/180",
+            "30/45/60/75/90",
+            "4",
+            "0.65",
+            "1200",
+            "0.25",
+            "2.5",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [300, 300, 300, 300, 300],
+          "rangeBurn": "300",
+          "image": {
+            "full": "HecarimRamp.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 96,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "HecarimUlt",
+          "name": "Onslaught of Shadows",
+          "description": "Hecarim summons spectral riders and charges forward, dealing magic damage in a line. Hecarim creates a shockwave when he finishes his charge, causing nearby enemies to flee in terror.",
+          "tooltip": "Hecarim summons spectral riders and charges forward, dealing <magicDamage>{{ damagedone }} magic damage</magicDamage>. Hecarim unleashes a shockwave at the end of the charge that <status>Fears</status> for between {{ feardurationmin }} to {{ feardurationmax }} seconds, increased by charge distance.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [140, 120, 100],
+          "cooldownBurn": "140/120/100",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [150, 250, 350],
+            [0.75, 0.75, 0.75],
+            [1.5, 1.5, 1.5],
+            [1100, 1100, 1100],
+            [1000, 1000, 1000],
+            [950, 950, 950],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "150/250/350", "0.75", "1.5", "1100", "1000", "950", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [50000, 50000, 50000],
+          "rangeBurn": "50000",
+          "image": {
+            "full": "HecarimUlt.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 144,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Warpath",
+        "description": "Hecarim gains Attack Damage equal to a percentage of his bonus Move Speed.",
+        "image": {
+          "full": "Hecarim_Passive.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 144,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

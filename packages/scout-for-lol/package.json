@@ -1,0 +1,110 @@
+{
+  "name": "scout-for-lol",
+  "private": true,
+  "workspaces": [
+    "packages/backend",
+    "packages/data",
+    "packages/report",
+    "packages/frontend",
+    "packages/desktop",
+    "packages/ui"
+  ],
+  "trustedDependencies": [
+    "husky"
+  ],
+  "scripts": {
+    "typecheck": "bun run --filter='*' typecheck",
+    "lint": "bun run --filter='*' lint",
+    "lint:ci": "bunx eslint packages/ --format json --output-file eslint-report.json || true",
+    "format": "bun run --filter='*' format",
+    "test": "bun test eslint-rules/ && bun run --filter='*' test",
+    "test:eslint-rules": "bun test eslint-rules/",
+    "clean": "rm -rf node_modules packages/*/node_modules",
+    "generate": "bun run --filter='*' generate",
+    "prepare": "husky",
+    "knip": "knip-bun",
+    "knip:ci": "knip-bun --reporter json > knip-report.json || true",
+    "duplication-check": "bun run scripts/check-duplication.ts"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.0.0",
+    "@commitlint/config-conventional": "^20.0.0",
+    "@eslint-community/eslint-plugin-eslint-comments": "^4.5.0",
+    "@eslint/js": "^9.30.1",
+    "@total-typescript/ts-reset": "^0.6.1",
+    "@types/bun": "^1.2.18",
+    "@types/eslint-plugin-jsx-a11y": "^6.10.1",
+    "@types/node": "^25.0.0",
+    "@types/react": "^19.1.13",
+    "@typescript-eslint/rule-tester": "^8.48.0",
+    "@typescript-eslint/utils": "^8.46.0",
+    "bun-types": "latest",
+    "eslint": "^9.30.1",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-import-resolver-typescript-bun": "^0.0.104",
+    "eslint-plugin-astro": "^1.5.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-regexp": "^3.0.0",
+    "eslint-plugin-unicorn": "^62.0.0",
+    "husky": "^9.1.7",
+    "jiti": "^2.6.0",
+    "jscpd": "^4.0.5",
+    "knip": "^5.70.1",
+    "lint-staged": "^16.2.3",
+    "markdownlint-cli2": "^0.20.0",
+    "prettier": "3.8.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.35.1"
+  },
+  "lint-staged": {
+    "*": "bunx prettier --ignore-unknown --write",
+    "*.md": "bunx markdownlint-cli2 --fix",
+    ".github/workflows/*.{yml,yaml}": "actionlint",
+    "packages/backend/**/*.{ts,tsx}": [
+      "bash -c 'cd packages/backend && bun run typecheck'",
+      "bash -c 'cd packages/backend && bunx eslint --cache --fix'",
+      "bun ./scripts/run-relevant-tests.ts packages/backend"
+    ],
+    "packages/data/**/*.{ts,tsx}": [
+      "bash -c 'cd packages/data && bun run typecheck'",
+      "bash -c 'cd packages/data && bunx eslint --cache --fix'",
+      "bun ./scripts/run-relevant-tests.ts packages/data"
+    ],
+    "packages/frontend/**/*.{ts,tsx,astro}": [
+      "bash -c 'cd packages/frontend && bun run typecheck'",
+      "bash -c 'cd packages/frontend && bunx eslint --cache --fix'",
+      "bun ./scripts/run-relevant-tests.ts packages/frontend"
+    ],
+    "packages/report/**/*.{ts,tsx}": [
+      "bash -c 'cd packages/report && bun run typecheck'",
+      "bash -c 'cd packages/report && bunx eslint --cache --fix'",
+      "bun ./scripts/run-relevant-tests.ts packages/report"
+    ],
+    "packages/desktop/**/*.{ts,tsx}": [
+      "bash -c 'cd packages/desktop && bun run typecheck'",
+      "bash -c 'cd packages/desktop && bunx eslint --cache --fix'",
+      "bun ./scripts/run-relevant-tests.ts packages/desktop"
+    ],
+    "packages/desktop/src-tauri/**/*.rs": [
+      "bash -c 'cd packages/desktop/src-tauri && cargo fmt'",
+      "bash -c 'cd packages/desktop/src-tauri && mkdir -p ../dist && cargo clippy -- -D warnings'"
+    ],
+    "packages/ui/**/*.{ts,tsx}": [
+      "bash -c 'cd packages/ui && bun run typecheck'",
+      "bash -c 'cd packages/ui && bunx eslint --cache --fix'"
+    ],
+    "*.{ts,tsx,js,jsx}": "bun run scripts/check-suppressions.ts"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.0",
+    "openai": "^6.9.1",
+    "react": "^19.1.1",
+    "zod": "^4.0.0"
+  },
+  "patchedDependencies": {
+    "satori@0.18.3": "patches/satori@0.18.3.patch"
+  }
+}

@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
+	<channel>
+		<title>Kalzumeus Software</title>
+		<description>Patrick McKenzie (patio11) blogs on software development, marketing, and general business topics
+</description>		
+		<link>https://www.kalzumeus.com</link>
+		<atom:link href="https://www.kalzumeus.com/feed/articles/" rel="self" type="application/rss+xml"/>
+		
+			<item>
+				<title>Tether's Troubles in November 2022</title>
+				
+				             <dc:creator>Patrick McKenzie (patio11)</dc:creator>
+				 
+
+				
+					<description>Tether's November 2022 attestation, even if believed, strongly suggests it blew up (again) during the recent crypto route.</description>
+				
+				<pubDate>Sat, 12 Nov 2022 01:25:00 +0900</pubDate>
+				<link>https://www.kalzumeus.com/2022/11/11/tether-required-recapitalization-again/</link>
+				<guid isPermaLink="true">https://www.kalzumeus.com/2022/11/11/tether-required-recapitalization-again/</guid>
+			</item>
+		
+			<item>
+				<title>Tether Required Recapitalization In May 2022</title>
+				
+				             <dc:creator>Patrick McKenzie (patio11)</dc:creator>
+				 
+
+				
+					<description>Tether's March 2022 attestation, even if believed, shows that it became insolvent during the May 2022 crypto downturn.</description>
+				
+				<pubDate>Fri, 20 May 2022 20:25:00 +0900</pubDate>
+				<link>https://www.kalzumeus.com/2022/05/20/tether-required-recapitalization/</link>
+				<guid isPermaLink="true">https://www.kalzumeus.com/2022/05/20/tether-required-recapitalization/</guid>
+			</item>
+		
+			<item>
+				<title>App Store Payments Will Have Increased Competition</title>
+				
+				             <dc:creator>Patrick McKenzie (patio11)</dc:creator>
+				 
+
+				
+					<description>Apple's App Store is reforming their guidelines about taking out-of-band payments. This will be very interesting for developers, especially in the games industry.</description>
+				
+				<pubDate>Sat, 28 Aug 2021 00:25:00 +0900</pubDate>
+				<link>https://www.kalzumeus.com/2021/08/27/app-store-payment-competition/</link>
+				<guid isPermaLink="true">https://www.kalzumeus.com/2021/08/27/app-store-payment-competition/</guid>
+			</item>
+		
+			<item>
+				<title>Solving The Vaccine Data Problem</title>
+				
+				             <dc:creator>Patrick McKenzie (patio11)</dc:creator>
+				 
+
+				
+					<description>VaccinateCA, the non-profit I have been running, expanded nationally to &lt;a href="https://www.vaccinatethestates.com"&gt;Vaccinate The States&lt;/a&gt;. Here's what we've learned in the last 100 days.</description>
+				
+				<pubDate>Sat, 24 Apr 2021 09:01:00 +0900</pubDate>
+				<link>https://www.kalzumeus.com/2021/04/23/vaccinate-the-states/</link>
+				<guid isPermaLink="true">https://www.kalzumeus.com/2021/04/23/vaccinate-the-states/</guid>
+			</item>
+		
+			<item>
+				<title>What Working At Stripe Has Been Like</title>
+				
+				             <dc:creator>Patrick McKenzie (patio11)</dc:creator>
+				 
+
+				
+					<description>I joined &lt;a href="https://stripe.com"&gt;Stripe&lt;/a&gt; to work on building financial infrastructure for the Internet. Time flies. Here is what I've learned in the first four years.</description>
+				
+				<pubDate>Fri, 09 Oct 2020 01:35:00 +0900</pubDate>
+				<link>https://www.kalzumeus.com/2020/10/09/four-years-at-stripe/</link>
+				<guid isPermaLink="true">https://www.kalzumeus.com/2020/10/09/four-years-at-stripe/</guid>
+			</item>
+		
+			<item>
+				<title>An update on a pre-registered result about the coronavirus</title>
+				
+				             <dc:creator>Patrick McKenzie (patio11)</dc:creator>
+				 
+
+				
+					<description>A history of an anomaly in the 2020 Coronavirus Pandemic, an independent research project about it, and what we need to learn about our next steps.</description>
+				
+				<pubDate>Tue, 21 Apr 2020 22:00:00 +0900</pubDate>
+				<link>https://www.kalzumeus.com/2020/04/21/japan-coronavirus/</link>
+				<guid isPermaLink="true">https://www.kalzumeus.com/2020/04/21/japan-coronavirus/</guid>
+			</item>
+		
+			<item>
+				<title>Dropping hashes: an idiom used to demonstrate provenance of documents</title>
+				
+				             <dc:creator>Patrick McKenzie (patio11)</dc:creator>
+				 
+
+				
+					<description>&lt;p&gt;There exists an idiom called “dropping a hash” which is widely understood in the security community and not widely understood elsewhere. Somewhat surprisingly, there does not appear to be a canonical explanation. I have dropped hashes before and wrote this up to explain the significance of it to non-specialists.&lt;/p&gt;
+
+</description>
+				
+				<pubDate>Tue, 21 Apr 2020 21:45:00 +0900</pubDate>
+				<link>https://www.kalzumeus.com/essays/dropping-hashes/</link>
+				<guid isPermaLink="true">https://www.kalzumeus.com/essays/dropping-hashes/</guid>
+			</item>
+		
+			<item>
+				<title>The Working Group's White paper on Japan and covid-19</title>
+				
+				             <dc:creator>Patrick McKenzie (patio11)</dc:creator>
+				 
+
+				
+					<description>&lt;p&gt;&lt;strong&gt;Author’s note:&lt;/strong&gt; This is a copy of the white paper of the Working Group, a group of four pseudonymous professionals in Tokyo. I, Patrick McKenzie, was the primary author. It was distributed quietly during the week of March 25th, 2020. I have written &lt;a href="/2020/04/21/japan-coronavirus/"&gt;an essay describing how this document came to be and demonstrating its provenance&lt;/a&gt;.&lt;/p&gt;
+
+</description>
+				
+				<pubDate>Thu, 26 Mar 2020 18:15:00 +0900</pubDate>
+				<link>https://www.kalzumeus.com/covid19-japan-white-paper/</link>
+				<guid isPermaLink="true">https://www.kalzumeus.com/covid19-japan-white-paper/</guid>
+			</item>
+		
+			<item>
+				<title>Tether: The Story So Far</title>
+				
+				             <dc:creator>Patrick McKenzie (patio11)</dc:creator>
+				 
+
+				
+					<description>Tether is the internal accounting system for the largest fraud since Madoff. That is a robust claim, I know, but the evidence for it is overwhelming.</description>
+				
+				<pubDate>Tue, 29 Oct 2019 00:27:37 +0900</pubDate>
+				<link>https://www.kalzumeus.com/2019/10/28/tether-and-bitfinex/</link>
+				<guid isPermaLink="true">https://www.kalzumeus.com/2019/10/28/tether-and-bitfinex/</guid>
+			</item>
+		
+			<item>
+				<title>How Discount Brokerages Make Money</title>
+				
+				             <dc:creator>Patrick McKenzie (patio11)</dc:creator>
+				 
+
+				
+					<description>Discount brokerages are accused of making their money via payment for order flow. This is wrong; it is actually mostly net interest revenue. That so dominates their business that selling trades for commissions is irrational; better to give away the trades to attract assets.</description>
+				
+				<pubDate>Wed, 26 Jun 2019 00:01:00 +0900</pubDate>
+				<link>https://www.kalzumeus.com/2019/6/26/how-brokerages-make-money/</link>
+				<guid isPermaLink="true">https://www.kalzumeus.com/2019/6/26/how-brokerages-make-money/</guid>
+			</item>
+		
+	</channel>
+</rss>

@@ -1,0 +1,305 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Aphelios": {
+      "id": "Aphelios",
+      "key": "523",
+      "name": "Aphelios",
+      "title": "the Weapon of the Faithful",
+      "image": {
+        "full": "Aphelios.png",
+        "sprite": "champion0.png",
+        "group": "champion",
+        "x": 432,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "523000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "523001",
+          "num": 1,
+          "name": "Nightbringer Aphelios",
+          "chromas": true
+        },
+        {
+          "id": "523009",
+          "num": 9,
+          "name": "Lunar Beast Aphelios",
+          "chromas": true
+        },
+        {
+          "id": "523018",
+          "num": 18,
+          "name": "EDG Aphelios",
+          "chromas": false
+        },
+        {
+          "id": "523020",
+          "num": 20,
+          "name": "Spirit Blossom Aphelios",
+          "chromas": false
+        },
+        {
+          "id": "523030",
+          "num": 30,
+          "name": "HEARTSTEEL Aphelios",
+          "chromas": false
+        },
+        {
+          "id": "523040",
+          "num": 40,
+          "name": "Prestige Spirit Blossom Springs Aphelios",
+          "chromas": false
+        }
+      ],
+      "lore": "Emerging from moonlight's shadow with weapons drawn, Aphelios kills the enemies of his faith in brooding silence—speaking only through the certainty of his aim, and the firing of each gun. Though fueled by a poison that renders him mute, he is guided by his sister Alune. From her distant temple sanctuary, she pushes an arsenal of moonstone weapons into his hands. For as long as the moon shines overhead, Aphelios will never be alone.",
+      "blurb": "Emerging from moonlight's shadow with weapons drawn, Aphelios kills the enemies of his faith in brooding silence—speaking only through the certainty of his aim, and the firing of each gun. Though fueled by a poison that renders him mute, he is guided by...",
+      "allytips": [
+        "Each of Aphelios' weapons have different strengths, so try to find the right situation for your current weapons. "
+      ],
+      "enemytips": [
+        "Each of Aphelios' weapons have different weaknesses, try to exploit the ones that work best for your champion. Watch out for the purple Gravity gun, it can root you."
+      ],
+      "tags": ["Marksman"],
+      "partype": "Mana",
+      "info": {
+        "attack": 6,
+        "defense": 2,
+        "magic": 1,
+        "difficulty": 10
+      },
+      "stats": {
+        "hp": 600,
+        "hpperlevel": 102,
+        "mp": 348,
+        "mpperlevel": 42,
+        "movespeed": 325,
+        "armor": 26,
+        "armorperlevel": 4.2,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 550,
+        "hpregen": 3.25,
+        "hpregenperlevel": 0.55,
+        "mpregen": 6.5,
+        "mpregenperlevel": 0.4,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 55,
+        "attackdamageperlevel": 2.3,
+        "attackspeedperlevel": 2.1,
+        "attackspeed": 0.665
+      },
+      "spells": [
+        {
+          "id": "ApheliosQ_ClientTooltipWrapper",
+          "name": "Weapon Abilites",
+          "description": "Aphelios has 5 different activated abilities, based on his main-hand weapon:<br><br>Calibrum (Rifle): Long range shot that marks its target for a long-range follow-up attack.<br>Severum (Scythe Pistol): Run fast while attacking nearby enemies with both weapons.<br>Gravitum (Cannon): Root all enemies slowed by this weapon.<br>Infernum (Flamethrower): Blast enemies in a cone and attack them with your off-hand weapon.<br>Crescendum (Chakram): Deploy a sentry that shoots your off-hand weapon.<br>",
+          "tooltip": "{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [],
+            "effect": []
+          },
+          "maxrank": 6,
+          "cooldown": [9, 9, 9, 9, 9, 9],
+          "cooldownBurn": "9",
+          "cost": [60, 60, 60, 60, 60, 60],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1450, 1450, 1450, 1450, 1450, 1450],
+          "rangeBurn": "1450",
+          "image": {
+            "full": "ApheliosQ_ClientTooltipWrapper.png",
+            "sprite": "spell1.png",
+            "group": "spell",
+            "x": 192,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "ApheliosW",
+          "name": "Phase",
+          "description": "Aphelios swaps his main-hand gun with his off-hand gun, replacing his basic attack and activated ability.",
+          "tooltip": "Swap main-hand and off-hand weapons, equipping <b><i><span class=\"colora64dff\">Gravitum</span></i></b>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [],
+            "effect": []
+          },
+          "maxrank": 6,
+          "cooldown": [0.8, 0.8, 0.8, 0.8, 0.8, 0.8],
+          "cooldownBurn": "0.8",
+          "cost": [0, 0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [250, 250, 250, 250, 250, 250],
+          "rangeBurn": "250",
+          "image": {
+            "full": "ApheliosW.png",
+            "sprite": "spell1.png",
+            "group": "spell",
+            "x": 240,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "ApheliosE_ClientTooltipWrapper",
+          "name": "Weapon Queue System",
+          "description": "Aphelios has no third ability. This slot shows the next weapon Alune will give him. Weapon order begins fixed but may change over game time -- when a weapon is out of ammo it goes to the end of the order.",
+          "tooltip": "{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [],
+            "effect": []
+          },
+          "maxrank": 6,
+          "cooldown": [0, 0, 0, 0, 0, 0],
+          "cooldownBurn": "0",
+          "cost": [0, 0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1000, 1000, 1000, 1000, 1000, 1000],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "ApheliosE_ClientTooltipWrapper.png",
+            "sprite": "spell1.png",
+            "group": "spell",
+            "x": 288,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "ApheliosR",
+          "name": "Moonlight Vigil",
+          "description": "Fire a concentrated blast of moonlight that explodes on enemy champions. Applies the unique effect of Aphelios' main-hand gun.",
+          "tooltip": "Aphelios fires a concentrated blast of moonlight that explodes when it hits a champion, dealing <physicalDamage>{{ maxdamage }} physical damage</physicalDamage> to surrounding enemies.<br /><br />Then, Aphelios attacks all champions hit with his main-hand weapon. {{ Spell_ApheliosR_WeaponMod_{{ f1 }} }}{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Calibrum Bonus: Mark Damage", "Severum Bonus: Heal", "Infernum Bonus: Damage"],
+            "effect": [
+              "{{ rbasedamage }} -> {{ rbasedamageNL }}",
+              "{{ calibrumrmarkbonusdamage }} -> {{ calibrumrmarkbonusdamageNL }}",
+              "{{ severumrhealbonus }} -> {{ severumrhealbonusNL }}",
+              "{{ infernumrbonusdamagebase }} -> {{ infernumrbonusdamagebaseNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 110, 100],
+          "cooldownBurn": "120/110/100",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1300, 1300, 1300],
+          "rangeBurn": "1300",
+          "image": {
+            "full": "ApheliosR.png",
+            "sprite": "spell1.png",
+            "group": "spell",
+            "x": 336,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "The Hitman and the Seer",
+        "description": "Aphelios wields 5 Lunari Weapons made by his sister Alune. He has access to two at a time: one main-hand and one off-hand. Each weapon has a unique Basic Attack and Ability. Attacks and abilities consume a weapon's ammo. When out of ammo, Aphelios discards the weapon and Alune summons the next of the 5. ",
+        "image": {
+          "full": "ApheliosP.png",
+          "sprite": "passive0.png",
+          "group": "passive",
+          "x": 432,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

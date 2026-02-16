@@ -20,7 +20,7 @@ const SCROLL_TO_BOTTOM: &str = "Fn+Opt+↓";
 const SCROLL_TO_BOTTOM: &str = "PgDn";
 
 /// Render the status bar
-pub fn render(frame: &mut Frame, app: &App, area: Rect) {
+pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
     let line = match app.mode {
         AppMode::Attached => render_attached_status(app),
         AppMode::CopyMode => render_copy_mode_status(app),
@@ -38,7 +38,7 @@ fn render_attached_status(app: &App) -> Line<'static> {
     let session_name = app
         .attached_session_id
         .and_then(|id| app.sessions.iter().find(|s| s.id == id))
-        .map_or_else(|| "Unknown".to_string(), |s| s.name.clone());
+        .map_or_else(|| "Unknown".to_owned(), |s| s.name.clone());
 
     // Check scroll position
     let scroll_indicator = if let Some(pty_session) = app.attached_pty_session() {
@@ -165,7 +165,7 @@ fn render_normal_status(app: &App) -> Line<'static> {
                 filter_name, filtered_count, total_count
             )
         } else {
-            "Disconnected".to_string()
+            "Disconnected".to_owned()
         }
     });
 

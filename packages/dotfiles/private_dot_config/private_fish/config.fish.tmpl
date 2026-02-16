@@ -1,0 +1,149 @@
+# Add common paths
+fish_add_path /opt/homebrew/bin
+fish_add_path /home/linuxbrew/.linuxbrew/bin
+fish_add_path ~/bin
+fish_add_path ~/.local/bin
+# for some reason, these can be missing
+fish_add_path /bin
+fish_add_path /usr/bin
+fish_add_path /usr/local/bin
+
+mise activate fish --shims | source
+
+# Use abbreviations so scripts use real commands, but your typing expands
+abbr vim lvim
+abbr ls eza
+abbr grep rg
+abbr cat bat
+abbr htop "sudo btop"
+abbr top "sudo btop"
+abbr btop "sudo btop"
+abbr less ov
+abbr ping gping
+
+# Set shell to fish (detect location)
+if test -x /opt/homebrew/bin/fish
+    set -gx SHELL /opt/homebrew/bin/fish
+else if test -x /home/linuxbrew/.linuxbrew/bin/fish
+    set -gx SHELL /home/linuxbrew/.linuxbrew/bin/fish
+else
+    set -gx SHELL (which fish)
+end
+set -gx EDITOR ~/.local/bin/lvim
+set -gx LANG en_US.UTF-8
+
+set -gx CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS "1"
+
+# CLI tool credentials (via 1Password) - only set if op CLI is available
+{{ if lookPath "op" -}}
+set -gx GITHUB_TOKEN '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/kjzy27cw4ialemerahutnxis3a/password" }}'
+set -gx GRAFANA_SERVER 'https://grafana.tailnet-1a49.ts.net/'
+set -gx GRAFANA_TOKEN '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/w5y6wldczvojkh3yxe5zadkpvi/password" }}'
+set -gx PAGERDUTY_TOKEN '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/yio3tx4wkvysvy5umdrqh7fe2e/password" }}'
+set -gx BUGSINK_URL 'https://bugsink.sjer.red'
+set -gx BUGSINK_TOKEN '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/76xqbj2znu6lkspwxhljuae554/credential" }}'
+set -gx ARGOCD_AUTH_TOKEN '{{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/nfviaka4ibphb2aodeoeow46zq/ARGOCD_TOKEN" }}'
+# sccache S3 backend (SeaweedFS) - credentials via ~/.aws/credentials
+set -gx AWS_PROFILE seaweedfs
+set -gx SCCACHE_BUCKET sccache
+set -gx SCCACHE_ENDPOINT https://seaweedfs.sjer.red
+set -gx SCCACHE_REGION us-east-1
+set -gx RUSTC_WRAPPER sccache
+{{ else -}}
+# 1Password CLI (op) not available - secrets not loaded
+# Install op and run 'chezmoi apply' to load secrets
+set -gx GRAFANA_SERVER 'https://grafana.tailnet-1a49.ts.net/'
+set -gx BUGSINK_URL 'https://bugsink.sjer.red'
+{{ end -}}
+
+# Setup Dagger engine with caching
+function _setup_dagger_engine
+    set -l cache_dir "$HOME/.cache/dagger"
+    set -l cache_file "$cache_dir/pod_name"
+    set -l cache_ttl 3600  # 1 hour in seconds
+
+    mkdir -p "$cache_dir"
+
+    # Check if cache exists and is fresh
+    if test -f "$cache_file"
+        set -l current_time (date +%s)
+        set -l cache_mtime (stat -c %Y "$cache_file" 2>/dev/null; or stat -f %m "$cache_file" 2>/dev/null)
+        set -l cache_age (math $current_time - $cache_mtime)
+
+        if test $cache_age -lt $cache_ttl
+            set -gx _EXPERIMENTAL_DAGGER_RUNNER_HOST (cat "$cache_file")
+            return
+        end
+    end
+
+    # Try to get the pod name
+    if command -v kubectl &> /dev/null
+        set -l pod_name (kubectl get pod --selector=name=dagger-dagger-helm-engine --namespace=dagger --output=jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+
+        if test -n "$pod_name"
+            set -l runner_host "kube-pod://$pod_name?namespace=dagger"
+            echo "$runner_host" > "$cache_file"
+            set -gx _EXPERIMENTAL_DAGGER_RUNNER_HOST "$runner_host"
+        end
+    end
+end
+
+_setup_dagger_engine
+
+# Setup Starship config for Coder environment
+function _setup_starship_config
+    # Check if we're in Coder
+    if test "$CODER" = "true"
+        set -l runtime_config "$HOME/.config/starship-runtime.toml"
+        set -l base_config "$HOME/.config/starship.toml"
+
+        # Create Coder-specific config by appending overrides to base config
+        if test -f "$base_config"
+            # Regenerate runtime config if it doesn't exist, is older than base, or doesn't have our marker
+            set -l needs_regen 0
+            if not test -f "$runtime_config"
+                set needs_regen 1
+            else if test "$base_config" -nt "$runtime_config"
+                set needs_regen 1
+            else if not string match -q "# Coder environment overrides" -- (cat "$runtime_config" 2>/dev/null)
+                set needs_regen 1
+            end
+
+            if test $needs_regen -eq 1
+                # Always regenerate cleanly to avoid duplicates
+                cat "$base_config" > "$runtime_config"
+                echo "" >> "$runtime_config"
+                echo "# Coder environment overrides" >> "$runtime_config"
+                echo "[hostname]" >> "$runtime_config"
+                echo "disabled = true" >> "$runtime_config"
+                echo "" >> "$runtime_config"
+                echo "[container]" >> "$runtime_config"
+                echo "disabled = true" >> "$runtime_config"
+            end
+
+            set -gx STARSHIP_CONFIG "$runtime_config"
+        end
+    end
+end
+
+_setup_starship_config
+
+if status is-interactive
+  fish_vi_key_bindings
+
+  starship init fish | source
+  atuin init fish | source
+
+  set -Ux CARAPACE_BRIDGES 'zsh,fish,bash,inshellisense' # optional
+  mkdir -p ~/.config/fish/completions
+  # Run the following block only once a day
+  if test (find ~/.config/fish/completions -name '*.fish' -mtime -1 | wc -l) -eq 0
+      echo "running carapace..."
+      carapace --list | awk '{print $1}' | xargs -I{} touch ~/.config/fish/completions/{}.fish # disable auto-loaded completions (#185)
+  end
+  # Lazy-load carapace on first tab completion
+  function _carapace_lazy --on-event fish_complete
+      functions -e _carapace_lazy  # remove this bootstrap function
+      carapace _carapace | source
+  end
+end

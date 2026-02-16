@@ -18,23 +18,40 @@ use crate::tui::attached::PtySession;
 pub enum CreateProgress {
     /// Progress step update
     Step {
+        /// Current step number (1-indexed).
         step: u32,
+        /// Total number of steps.
         total: u32,
+        /// Description of current step.
         message: String,
     },
     /// Session creation completed successfully
-    Done { session_name: String },
+    Done {
+        /// Name of the created session.
+        session_name: String,
+    },
     /// Session creation failed
-    Error { message: String },
+    Error {
+        /// Error description.
+        message: String,
+    },
 }
 
 /// Progress update from background session deletion task
 #[derive(Debug, Clone)]
 pub enum DeleteProgress {
     /// Deletion completed successfully
-    Done { session_id: String },
+    Done {
+        /// ID of the deleted session.
+        session_id: String,
+    },
     /// Deletion failed
-    Error { session_id: String, message: String },
+    Error {
+        /// ID of the session that failed to delete.
+        session_id: String,
+        /// Error description.
+        message: String,
+    },
 }
 
 /// Session filter for displaying different subsets of sessions
@@ -82,11 +99,16 @@ impl SessionFilter {
 /// The current view/mode of the application
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum AppMode {
+    /// Main session list view
     #[default]
     SessionList,
+    /// New session creation dialog
     CreateDialog,
+    /// Delete confirmation dialog
     ConfirmDelete,
+    /// PR merge confirmation dialog
     ConfirmMerge,
+    /// Help/keybindings overlay
     Help,
     /// Attached to a session via PTY
     Attached,
@@ -109,10 +131,11 @@ pub enum AppMode {
 }
 
 /// Copy mode state for text selection and navigation
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct CopyModeState {
-    /// Cursor position in terminal buffer
+    /// Cursor row in terminal buffer.
     pub cursor_row: u16,
+    /// Cursor column in terminal buffer.
     pub cursor_col: u16,
 
     /// Selection start position (when 'v' pressed)
@@ -277,26 +300,45 @@ pub enum SignalResult {
     /// Signal sent successfully
     Success(SignalType),
     /// Signal send failed
-    Error { signal: SignalType, message: String },
+    Error {
+        /// Signal that failed to send.
+        signal: SignalType,
+        /// Error description.
+        message: String,
+    },
 }
 
 /// Input focus for create dialog
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum CreateDialogFocus {
+    /// Initial prompt text area.
     #[default]
     Prompt,
+    /// Repository path input.
     RepoPath,
+    /// Base branch input.
     BaseBranch,
+    /// Backend selector.
     Backend,
+    /// Agent type selector.
     Agent,
+    /// Model selector.
     Model,
+    /// Access mode selector.
     AccessMode,
+    /// Skip safety checks toggle.
     SkipChecks,
+    /// Plan mode toggle.
     PlanMode,
+    /// Dangerous credential copy toggle.
     DangerousCopyCreds,
+    /// Custom container image input.
     ContainerImage,
+    /// Image pull policy selector.
     PullPolicy,
+    /// Kubernetes storage class input.
     StorageClass,
+    /// Create/Cancel buttons.
     Buttons,
 }
 
@@ -340,15 +382,23 @@ pub struct DirectoryPickerState {
 
 /// Create dialog state for managing session creation UI.
 #[derive(Debug, Clone)]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools, reason = "dialog has many independent boolean option fields")]
 pub struct CreateDialogState {
+    /// Initial prompt text for the session.
     pub prompt: String,
+    /// Repository path (may include subdirectory).
     pub repo_path: String,
+    /// Selected execution backend.
     pub backend: BackendType,
+    /// Selected AI agent.
     pub agent: AgentType,
+    /// Optional model override.
     pub model: Option<SessionModel>,
+    /// Whether to skip safety checks.
     pub skip_checks: bool,
+    /// Whether to start in plan mode.
     pub plan_mode: bool,
+    /// Access mode for proxy filtering.
     pub access_mode: AccessMode,
 
     /// Copy credentials directly to container (dangerous, bypasses proxy).
@@ -376,12 +426,17 @@ pub struct CreateDialogState {
     /// in a future update to allow interactive image selection.
     pub images: Vec<String>,
 
-    /// Cursor position in prompt field (line and column)
+    /// Cursor line in the prompt field.
     pub prompt_cursor_line: usize,
+    /// Cursor column in the prompt field.
     pub prompt_cursor_col: usize,
+    /// Vertical scroll offset for the prompt field.
     pub prompt_scroll_offset: usize,
+    /// Which field currently has input focus.
     pub focus: CreateDialogFocus,
-    pub button_create_focused: bool, // true = Create, false = Cancel
+    /// Whether Create button is focused (vs Cancel).
+    pub button_create_focused: bool,
+    /// Directory picker state for repo path selection.
     pub directory_picker: DirectoryPickerState,
     /// Feature flags (for conditional backend availability)
     pub feature_flags: std::sync::Arc<crate::feature_flags::FeatureFlags>,
@@ -464,7 +519,7 @@ impl DirectoryPickerState {
         // Add parent directory entry if not at root
         if let Some(parent) = self.current_dir.parent() {
             self.all_entries.push(DirEntry {
-                name: "..".to_string(),
+                name: "..".to_owned(),
                 path: parent.to_path_buf(),
                 subdirectory: PathBuf::new(),
                 is_parent: true,
@@ -608,14 +663,16 @@ impl Default for DirectoryPickerState {
 }
 
 impl CreateDialogState {
+    /// Create a new create dialog state with defaults.
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Reset dialog state to defaults while preserving feature flags.
     pub fn reset(&mut self) {
         // Preserve feature flags when resetting - they should persist across dialog opens
-        let feature_flags = self.feature_flags.clone();
+        let feature_flags = std::sync::Arc::clone(&self.feature_flags);
         *self = Self::new();
         self.feature_flags = feature_flags;
     }
@@ -959,7 +1016,7 @@ impl Default for CreateDialogState {
 }
 
 /// Main application state
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools, reason = "application state has many independent boolean flags")]
 pub struct App {
     /// Current mode/view
     pub mode: AppMode,
@@ -1057,6 +1114,15 @@ pub struct App {
 
     /// Whether the details section is expanded in recreate confirm dialog
     pub recreate_details_expanded: bool,
+}
+
+impl std::fmt::Debug for App {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("App")
+            .field("mode", &self.mode)
+            .field("sessions", &self.sessions.len())
+            .finish_non_exhaustive()
+    }
 }
 
 impl App {
@@ -1200,7 +1266,7 @@ impl App {
                 }
             } else {
                 self.status_message =
-                    Some("Health info not available - try refreshing".to_string());
+                    Some("Health info not available - try refreshing".to_owned());
             }
         }
     }
@@ -1447,13 +1513,13 @@ impl App {
                 // Execute the merge
                 client.merge_pr(&session_id, method, delete_branch).await?;
 
-                self.status_message = Some("PR merged successfully".to_string());
+                self.status_message = Some("PR merged successfully".to_owned());
                 self.mode = AppMode::SessionList;
 
                 // Refresh sessions to get updated status
                 self.refresh_sessions().await?;
             } else {
-                self.status_message = Some("Error: Not connected to daemon".to_string());
+                self.status_message = Some("Error: Not connected to daemon".to_owned());
             }
         }
         Ok(())
@@ -1487,7 +1553,7 @@ impl App {
 
             // Don't allow deletion while creation is in progress
             if self.create_task.is_some() {
-                self.status_message = Some("Cannot delete while creating a session".to_string());
+                self.status_message = Some("Cannot delete while creating a session".to_owned());
                 return;
             }
 
@@ -1587,7 +1653,7 @@ impl App {
         if let Some(session) = self.selected_session() {
             // Only allow for Docker sessions
             if session.backend != crate::core::session::BackendType::Docker {
-                self.status_message = Some("Refresh only works with Docker sessions".to_string());
+                self.status_message = Some("Refresh only works with Docker sessions".to_owned());
                 return Ok(());
             }
 
@@ -1662,7 +1728,7 @@ impl App {
             initial_prompt: self.create_dialog.prompt.clone(),
             backend: self.create_dialog.backend,
             agent: self.create_dialog.agent,
-            model: self.create_dialog.model.clone(), // Use selected model from dialog
+            model: self.create_dialog.model, // Use selected model from dialog
             dangerous_skip_checks: self.create_dialog.skip_checks,
             dangerous_copy_creds: self.create_dialog.dangerous_copy_creds,
             print_mode: false, // TUI always uses interactive mode
@@ -1736,7 +1802,7 @@ impl App {
             }
 
             let msg = if parts.is_empty() {
-                "All sessions healthy".to_string()
+                "All sessions healthy".to_owned()
             } else {
                 format!("Reconciled: {}", parts.join(", "))
             };
@@ -1916,7 +1982,7 @@ impl App {
 
             self.mode = AppMode::CopyMode;
             self.status_message = Some(
-                "Copy mode | hjkl: move | v: select | y: yank | ?: help | q: exit".to_string(),
+                "Copy mode | hjkl: move | v: select | y: yank | ?: help | q: exit".to_owned(),
             );
         }
     }
@@ -1934,7 +2000,7 @@ impl App {
     pub fn enter_locked_mode(&mut self) {
         if self.mode == AppMode::Attached {
             self.mode = AppMode::Locked;
-            self.status_message = Some("🔒 LOCKED - Ctrl+L to unlock".to_string());
+            self.status_message = Some("🔒 LOCKED - Ctrl+L to unlock".to_owned());
         }
     }
 
@@ -1960,7 +2026,7 @@ impl App {
         if self.mode == AppMode::Attached {
             self.mode = AppMode::Scroll;
             self.status_message =
-                Some("📜 SCROLL MODE - arrows/PgUp/PgDn to scroll, ESC to exit".to_string());
+                Some("📜 SCROLL MODE - arrows/PgUp/PgDn to scroll, ESC to exit".to_owned());
         }
     }
 
@@ -2098,7 +2164,9 @@ impl App {
 
         let next_session = attachable_sessions[next_idx];
         let session_id = next_session.id;
-        let container_id = next_session.backend_id.clone().unwrap();
+        let Some(container_id) = next_session.backend_id.clone() else {
+            anyhow::bail!("Session has no backend ID");
+        };
 
         // Create PTY session if needed
         if !self.pty_sessions.contains_key(&session_id) {
@@ -2153,7 +2221,9 @@ impl App {
 
         let prev_session = attachable_sessions[prev_idx];
         let session_id = prev_session.id;
-        let container_id = prev_session.backend_id.clone().unwrap();
+        let Some(container_id) = prev_session.backend_id.clone() else {
+            anyhow::bail!("Session has no backend ID");
+        };
 
         // Create PTY session if needed
         if !self.pty_sessions.contains_key(&session_id) {

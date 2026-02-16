@@ -1,0 +1,22 @@
+---
+import NavbarLayout from "@layouts/NavbarLayout.astro";
+import { BlogSchema } from "src/content/schemas";
+import BlogContent from "@components/blog/BlogContent.astro";
+import BlogWebring from "@components/blog/BlogWebring.astro";
+import Container from "@components/Container.astro";
+
+const props = BlogSchema.parse({
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  ...Astro.props.frontmatter,
+  ...Astro.props,
+});
+---
+
+<NavbarLayout title={props.title} description={props.description} openGraphType="article">
+  <Container width="normal">
+    <BlogContent {...props}>
+      <slot />
+    </BlogContent>
+  </Container>
+  <BlogWebring date={props.date} />
+</NavbarLayout>

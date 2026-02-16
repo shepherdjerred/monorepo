@@ -1,0 +1,344 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Lissandra": {
+      "id": "Lissandra",
+      "key": "127",
+      "name": "Lissandra",
+      "title": "the Ice Witch",
+      "image": {
+        "full": "Lissandra.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 144,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "127000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "127001",
+          "num": 1,
+          "name": "Bloodstone Lissandra",
+          "chromas": false
+        },
+        {
+          "id": "127002",
+          "num": 2,
+          "name": "Blade Queen Lissandra",
+          "chromas": false
+        },
+        {
+          "id": "127003",
+          "num": 3,
+          "name": "Program Lissandra",
+          "chromas": false
+        },
+        {
+          "id": "127004",
+          "num": 4,
+          "name": "Coven Lissandra",
+          "chromas": true
+        },
+        {
+          "id": "127012",
+          "num": 12,
+          "name": "Dark Cosmic Lissandra",
+          "chromas": true
+        },
+        {
+          "id": "127023",
+          "num": 23,
+          "name": "Porcelain Lissandra",
+          "chromas": true
+        },
+        {
+          "id": "127033",
+          "num": 33,
+          "name": "Prestige Porcelain Lissandra",
+          "chromas": false
+        },
+        {
+          "id": "127034",
+          "num": 34,
+          "name": "Space Groove Lissandra",
+          "chromas": true
+        },
+        {
+          "id": "127043",
+          "num": 43,
+          "name": "Flora Fatalis Lissandra",
+          "chromas": true
+        }
+      ],
+      "lore": "Lissandra's magic twists the pure power of ice into something dark and terrible. With the force of her black ice, she does more than freeze—she impales and crushes those who oppose her. To the terrified denizens of the north, she is known only as ''The Ice Witch.'' The truth is much more sinister: Lissandra is a corruptor of nature who plots to unleash an ice age on the world.",
+      "blurb": "Lissandra's magic twists the pure power of ice into something dark and terrible. With the force of her black ice, she does more than freeze—she impales and crushes those who oppose her. To the terrified denizens of the north, she is known only as ''The...",
+      "allytips": [
+        "You can instantly use your ultimate on yourself by pressing the self cast key and the ultimate key at once (alt+R by default).",
+        "Casting Glacial Path and then running in the opposite direction will leave your enemies uncertain which way you will actually go.",
+        "Lissandra's abilities are shorter range than those of many mages. As a result, buying items that offer both ability power and defense, like Zhonya's Hourglass and Banshee's Veil, can be a great choice to help her both survive and deal damage."
+      ],
+      "enemytips": [
+        "The best way to stop Lissandra from moving using her Glacial Path is to immobilize her before she reactivates it.",
+        "Lissandra's Ring of Frost has a long cooldown at early ranks; engage her while it's on cooldown.",
+        "Lissandra's Ice Shard only slows the first unit it hits. Approach Lissandra from behind your team's minions to avoid being slowed."
+      ],
+      "tags": ["Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 2,
+        "defense": 5,
+        "magic": 8,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 620,
+        "hpperlevel": 110,
+        "mp": 475,
+        "mpperlevel": 30,
+        "movespeed": 325,
+        "armor": 22,
+        "armorperlevel": 4.9,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 550,
+        "hpregen": 7,
+        "hpregenperlevel": 0.55,
+        "mpregen": 8,
+        "mpregenperlevel": 0.4,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 55,
+        "attackdamageperlevel": 2.7,
+        "attackspeedperlevel": 1.5,
+        "attackspeed": 0.656
+      },
+      "spells": [
+        {
+          "id": "LissandraQ",
+          "name": "Ice Shard",
+          "description": "Throws a spear of ice that shatters when it hits an enemy, dealing magic damage and slowing Move Speed. Shards pass through the target, dealing the same damage to other enemies hit.",
+          "tooltip": "Lissandra throws a spear of ice that shatters on the first enemy hit, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>, <status>Slowing</status> them by {{ e3 }}% for {{ e2 }} seconds, and also damaging and slowing the enemies behind them.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ effect3amount*-100.000000 }}% -> {{ effect3amountnl*-100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [8, 7, 6, 5, 4],
+          "cooldownBurn": "8/7/6/5/4",
+          "cost": [55, 60, 65, 70, 75],
+          "costBurn": "55/60/65/70/75",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [20, 24, 28, 32, 36],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "1.5", "20/24/28/32/36", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [725, 725, 725, 725, 725],
+          "rangeBurn": "725",
+          "image": {
+            "full": "LissandraQ.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 0,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "LissandraW",
+          "name": "Ring of Frost",
+          "description": "Freezes nearby enemies in ice, dealing magic damage and rooting them.",
+          "tooltip": "Lissandra creates an ice field, <status>Rooting</status> nearby enemies for {{ e2 }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Root Duration", "Cooldown"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ e2 }} -> {{ e2NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldownBurn": "10/9.5/9/8.5/8",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [70, 105, 140, 175, 210],
+            [1.25, 1.35, 1.45, 1.55, 1.65],
+            [3, 3, 3, 3, 3],
+            [8, 8, 8, 8, 8],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "70/105/140/175/210",
+            "1.25/1.35/1.45/1.55/1.65",
+            "3",
+            "8",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [450, 450, 450, 450, 450],
+          "rangeBurn": "450",
+          "image": {
+            "full": "LissandraW.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 48,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "LissandraE",
+          "name": "Glacial Path",
+          "description": "Lissandra creates an ice claw that deals magic damage. Reactivating this ability transports Lissandra to the claw's current location.",
+          "tooltip": "Lissandra casts forth an ice claw that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Lissandra can <recast>Recast</recast> while the claw travels to teleport to its location.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}", "{{ cost }} -> {{ costNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [24, 21, 18, 15, 12],
+          "cooldownBurn": "24/21/18/15/12",
+          "cost": [80, 85, 90, 95, 100],
+          "costBurn": "80/85/90/95/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [70, 105, 140, 175, 210],
+            [14, 13, 12, 11, 10],
+            [20, 20, 20, 20, 20],
+            [1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "70/105/140/175/210", "14/13/12/11/10", "20", "1", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1050, 1050, 1050, 1050, 1050],
+          "rangeBurn": "1050",
+          "image": {
+            "full": "LissandraE.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 96,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "LissandraR",
+          "name": "Frozen Tomb",
+          "description": "If cast on an enemy champion, the target is frozen solid, stunning it. If cast on Lissandra, she encases herself in dark ice, healing herself while becoming untargetable and invulnerable. Dark ice then emanates from the target dealing magic damage to enemies and slowing Move Speed.",
+          "tooltip": "Lissandra encases herself or an enemy champion in ice. Enemies are <status>Stunned</status> for {{ enemycastduration }} seconds. When self cast, Lissandra enters Stasis for {{ selfcastduration }} seconds and restores <healing>{{ healamount }} Health</healing>, increased by {{ selfcastmissinghpratio }}% for each {{ selfcastmissinghpperabove }}% missing Health.<br /><br />In either case, dark ice eminates from the target, dealing <magicDamage>{{ calculateddamage }} magic damage</magicDamage>. The ice persists for {{ slowduration }} seconds, <status>Slowing</status> enemies by {{ slowamount*-100 }}%.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow", "Healing", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowamount*-100.000000 }}% -> {{ slowamountnl*-100.000000 }}%",
+              "{{ selfcastflatheal }} -> {{ selfcastflathealNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 100, 80],
+          "cooldownBurn": "120/100/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [550, 550, 550],
+          "rangeBurn": "550",
+          "image": {
+            "full": "LissandraR.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 144,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Iceborn Subjugation",
+        "description": "When an enemy champion dies near Lissandra they become a Frozen Thrall. Frozen Thralls slow nearby enemies and then, after a delay, shatter from the intense cold, dealing magic damage to nearby targets.",
+        "image": {
+          "full": "Lissandra_Passive.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 144,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

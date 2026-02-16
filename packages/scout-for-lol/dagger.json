@@ -1,0 +1,8 @@
+{
+  "name": "scout-for-lol",
+  "engineVersion": "v0.19.8",
+  "sdk": {
+    "source": "typescript"
+  },
+  "source": ".dagger"
+}

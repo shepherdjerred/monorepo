@@ -1,0 +1,195 @@
+---
+import AppLayout from "../../layouts/app/AppLayout.astro";
+---
+
+<AppLayout title="Dashboard">
+  <div class="p-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-white">Dashboard</h1>
+      <p class="mt-2 text-slate-400">Welcome back! Here's an overview of your Scout setup.</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+        <div class="flex items-center gap-4">
+          <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-500/20">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-slate-400">Sound Packs</p>
+            <p class="text-2xl font-bold text-white" id="sound-pack-count">-</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+        <div class="flex items-center gap-4">
+          <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-500/20">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-slate-400">Desktop Clients</p>
+            <p class="text-2xl font-bold text-white" id="client-count">-</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+        <div class="flex items-center gap-4">
+          <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500/20">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-slate-400">API Tokens</p>
+            <p class="text-2xl font-bold text-white" id="token-count">-</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+        <div class="flex items-center gap-4">
+          <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500/20">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-slate-400">Events Today</p>
+            <p class="text-2xl font-bold text-white" id="events-count">-</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mb-8">
+      <h2 class="mb-4 text-lg font-semibold text-white">Quick Actions</h2>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <a
+          href="/app/sound-packs/new"
+          class="flex items-center gap-4 rounded-xl border border-slate-800 bg-slate-900/50 p-6 transition-colors hover:border-slate-700 hover:bg-slate-900"
+        >
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+          </div>
+          <div>
+            <p class="font-medium text-white">Create Sound Pack</p>
+            <p class="text-sm text-slate-400">Set up sounds for game events</p>
+          </div>
+        </a>
+
+        <a
+          href="/app/settings/tokens"
+          class="flex items-center gap-4 rounded-xl border border-slate-800 bg-slate-900/50 p-6 transition-colors hover:border-slate-700 hover:bg-slate-900"
+        >
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+          </div>
+          <div>
+            <p class="font-medium text-white">Generate API Token</p>
+            <p class="text-sm text-slate-400">Connect your desktop client</p>
+          </div>
+        </a>
+
+        <a
+          href="/getting-started"
+          class="flex items-center gap-4 rounded-xl border border-slate-800 bg-slate-900/50 p-6 transition-colors hover:border-slate-700 hover:bg-slate-900"
+        >
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+          <div>
+            <p class="font-medium text-white">Getting Started Guide</p>
+            <p class="text-sm text-slate-400">Learn how to use Scout</p>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div>
+      <h2 class="mb-4 text-lg font-semibold text-white">Recent Activity</h2>
+      <div class="rounded-xl border border-slate-800 bg-slate-900/50">
+        <div id="activity-loading" class="flex items-center justify-center p-8">
+          <svg class="h-5 w-5 animate-spin text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+        <div id="activity-empty" class="hidden p-8 text-center text-slate-400">
+          <p>No recent activity</p>
+          <p class="mt-1 text-sm">Start monitoring games to see events here</p>
+        </div>
+        <div id="activity-list" class="hidden divide-y divide-slate-800">
+          <!-- Activity items will be inserted here -->
+        </div>
+      </div>
+    </div>
+  </div>
+</AppLayout>
+
+<script>
+import { getApiClient, isAuthenticated, clearSessionToken } from "../../lib/trpc";
+
+// Check authentication
+if (!isAuthenticated()) {
+  window.location.href = "/app/login";
+}
+
+async function loadDashboard() {
+  try {
+    const client = getApiClient();
+
+    // Load user data and stats
+    const [user, soundPacks, tokens] = await Promise.all([
+      client.auth.me.query(),
+      client.soundPack.list.query(),
+      client.auth.listApiTokens.query(),
+    ]);
+
+    // Update stats
+    const soundPackCount = document.getElementById("sound-pack-count");
+    const tokenCount = document.getElementById("token-count");
+    const clientCount = document.getElementById("client-count");
+    const eventsCount = document.getElementById("events-count");
+
+    if (soundPackCount) soundPackCount.textContent = String(soundPacks.length);
+    if (tokenCount) tokenCount.textContent = String(tokens.length);
+    if (clientCount) clientCount.textContent = "0"; // TODO: Add client tracking
+    if (eventsCount) eventsCount.textContent = "0"; // TODO: Add event tracking
+
+    // Show empty activity state
+    const activityLoading = document.getElementById("activity-loading");
+    const activityEmpty = document.getElementById("activity-empty");
+
+    activityLoading?.classList.add("hidden");
+    activityEmpty?.classList.remove("hidden");
+
+    console.log("Dashboard loaded for user:", user.username);
+  } catch (error) {
+    console.error("Failed to load dashboard:", error);
+
+    // If unauthorized, redirect to login
+    if (error instanceof Error && error.message.includes("UNAUTHORIZED")) {
+      clearSessionToken();
+      window.location.href = "/app/login";
+    }
+  }
+}
+
+loadDashboard();
+</script>

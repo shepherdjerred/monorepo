@@ -1,0 +1,12 @@
+install.sh
+docker-entrypoint.sh
+Dockerfile
+
+{{- if ne .chezmoi.os "windows" }}
+AppData/
+AppData_*
+{{- end }}
+
+{{- if ne .chezmoi.os "darwin" }}
+Library/
+{{- end }}

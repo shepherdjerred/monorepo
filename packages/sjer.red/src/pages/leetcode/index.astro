@@ -1,0 +1,63 @@
+---
+import Background from "@components/Background.astro";
+import Container from "@components/Container.astro";
+import LeetCodeDay from "@components/leetcode/LeetCodeDay.astro";
+import NavbarLayout from "@layouts/NavbarLayout.astro";
+import type { JSX } from "astro/jsx-runtime";
+import { getCollection } from "astro:content";
+import * as R from "remeda";
+
+const entries = await getCollection("leetcode");
+
+const groups = R.pipe(
+  entries,
+  R.groupBy((entry) => entry.data.date.toISOString()),
+  R.entries(),
+  R.sortBy(([date]) => date),
+  R.reverse()
+);
+
+const counts = R.pipe(
+  entries,
+  R.groupBy((entry) => {
+    return entry.id.replace(/\/.*/, "");
+  }),
+  R.entries(),
+  R.map(([difficulty, entries]) => `${entries.length.toString()} ${difficulty}`),
+  R.sortBy((count) => {
+    const [_, difficulty] = count.split(" ");
+    if (difficulty === "easy") return 3;
+    if (difficulty === "medium") return 2;
+    if (difficulty === "hard") return 1;
+    return 0;
+  })
+);
+---
+
+<NavbarLayout title="LeetCode" description="My LeetCode solutions">
+  <Background extraCss="bg-black">
+    <Container width="normal">
+      <div class="text-white bg-black mt-6 p-6 rounded-md">
+        <h1 class="text-3xl text-white text-center md:text-left mb-4">LeetCode</h1>
+        <p>
+          {entries.length} questions:
+          {
+            (
+              <ul class="list-disc list-inside">
+                {R.map(counts, (count) => (
+                  <li>{count}</li>
+                ))}
+              </ul>
+            )
+          }
+        </p>
+        <p class="text mt-6 italic">
+          "So, if you're finding this question challenging, then you're doing the right thing by working on it now."
+        </p>
+      </div>
+      <div class="flex flex-col gap-12 mt-6 mb-6">
+        {R.map(groups, ([date, entries]): JSX.Element => <LeetCodeDay date={new Date(date)} entries={entries} />)}
+      </div>
+    </Container>
+  </Background>
+</NavbarLayout>

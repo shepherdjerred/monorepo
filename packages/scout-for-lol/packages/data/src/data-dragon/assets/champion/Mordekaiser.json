@@ -1,0 +1,351 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Mordekaiser": {
+      "id": "Mordekaiser",
+      "key": "82",
+      "name": "Mordekaiser",
+      "title": "the Iron Revenant",
+      "image": {
+        "full": "Mordekaiser.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 240,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "82000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "82001",
+          "num": 1,
+          "name": "Dragon Knight Mordekaiser",
+          "chromas": false
+        },
+        {
+          "id": "82002",
+          "num": 2,
+          "name": "Infernal Mordekaiser",
+          "chromas": false
+        },
+        {
+          "id": "82003",
+          "num": 3,
+          "name": "Pentakill Mordekaiser",
+          "chromas": false
+        },
+        {
+          "id": "82004",
+          "num": 4,
+          "name": "Lord Mordekaiser",
+          "chromas": false
+        },
+        {
+          "id": "82005",
+          "num": 5,
+          "name": "King of Clubs Mordekaiser",
+          "chromas": false
+        },
+        {
+          "id": "82006",
+          "num": 6,
+          "name": "Dark Star Mordekaiser",
+          "chromas": true
+        },
+        {
+          "id": "82013",
+          "num": 13,
+          "name": "PROJECT: Mordekaiser",
+          "chromas": true
+        },
+        {
+          "id": "82023",
+          "num": 23,
+          "name": "Pentakill III: Lost Chapter Mordekaiser",
+          "chromas": true
+        },
+        {
+          "id": "82032",
+          "num": 32,
+          "name": "High Noon Mordekaiser",
+          "chromas": true
+        },
+        {
+          "id": "82042",
+          "num": 42,
+          "name": "Ashen Graveknight Mordekaiser",
+          "chromas": true
+        },
+        {
+          "id": "82044",
+          "num": 44,
+          "name": "Old God Mordekaiser",
+          "chromas": true
+        },
+        {
+          "id": "82054",
+          "num": 54,
+          "name": "Sahn-Uzal Mordekaiser",
+          "chromas": false
+        }
+      ],
+      "lore": "Twice slain and thrice born, Mordekaiser is a brutal warlord from a foregone epoch who uses his necromantic sorcery to bind souls into an eternity of servitude. Few now remain who remember his earlier conquests, or know the true extent of his powers—but there are some ancient souls that do, and they fear the day when he may return to claim dominion over both the living and the dead.",
+      "blurb": "Twice slain and thrice born, Mordekaiser is a brutal warlord from a foregone epoch who uses his necromantic sorcery to bind souls into an eternity of servitude. Few now remain who remember his earlier conquests, or know the true extent of his powers—but...",
+      "allytips": [
+        "Offense is your defense. Keep fighting to build up larger Indestructible shields.",
+        "Hitting multiple champions with the same ability can help quickly activate Darkness Rise.",
+        "Use Realm of Death on a low health enemy to guarantee the kill and keep their stats for the rest of a teamfight."
+      ],
+      "enemytips": [
+        "Mordekaiser builds up a powerful damage aura when fighting champions, so keep your distance.",
+        "Damage he deals can be converted into a large shield, and consumed for health",
+        "Realm of Death will cut you off from your teammates completely. Try to save mobility spells to escape Mordekaiser once inside"
+      ],
+      "tags": ["Fighter", "Mage"],
+      "partype": "Shield",
+      "info": {
+        "attack": 4,
+        "defense": 6,
+        "magic": 7,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 645,
+        "hpperlevel": 104,
+        "mp": 100,
+        "mpperlevel": 0,
+        "movespeed": 335,
+        "armor": 37,
+        "armorperlevel": 4.2,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 175,
+        "hpregen": 5,
+        "hpregenperlevel": 0.75,
+        "mpregen": 0,
+        "mpregenperlevel": 0,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 61,
+        "attackdamageperlevel": 4,
+        "attackspeedperlevel": 1,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "MordekaiserQ",
+          "name": "Obliterate",
+          "description": "Mordekaiser smashes the ground with his mace dealing damage to each enemy struck. Damage is increased when hitting a single enemy.",
+          "tooltip": "Mordekaiser smashes the ground with Nightfall dealing <magicDamage>{{ qdamage }} magic damage</magicDamage>, increased to <magicDamage>{{ empowereddamagetooltip }}</magicDamage> if it hits only a single enemy.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Isolation Damage", "Cooldown"],
+            "effect": [
+              "{{ qbasedamage }} -> {{ qbasedamageNL }}",
+              "{{ isolationscalar*100.000000 }}% -> {{ isolationscalarnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [8, 7, 6, 5, 4],
+          "cooldownBurn": "8/7/6/5/4",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [675, 675, 675, 675, 675],
+          "rangeBurn": "675",
+          "image": {
+            "full": "MordekaiserQ.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 384,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "MordekaiserW",
+          "name": "Indestructible",
+          "description": "Mordekaiser stores damage he deals and takes to create a shield. He may consume the shield to heal.",
+          "tooltip": "<passive>Passive:</passive> Mordekaiser stores {{ damageconversion*100 }}% of the damage he deals and {{ damagetakenconversion*100 }}% of the damage he takes.<br /><br /><active>Active:</active> Mordekaiser gains the stored damage as <shield>Shield</shield>. He may <recast>Recast</recast> this Ability to restore <healing>{{ healingpercent*100 }}% of the remaining Shield as Health</healing>.<br /><br />Minimum Shield: <shield>{{ minhealthtooltip }}</shield><br />Maximum Shield: <shield>{{ maxhealthtooltip }}</shield>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Healing Percent", "Cooldown"],
+            "effect": [
+              "{{ healingpercent*100.000000 }}% -> {{ healingpercentnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 11, 10, 9, 8],
+          "cooldownBurn": "12/11/10/9/8",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [25000, 25000, 25000, 25000, 25000],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "MordekaiserW.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 432,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "MordekaiserE",
+          "name": "Death's Grasp",
+          "description": "Mordekaiser pulls all enemies in an area.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Mordekaiser gains {{ magicpen*100 }}% Magic Penetration.<br /><br /><spellActive>Active:</spellActive> Mordekaiser pulls enemies in his direction, dealing <magicDamage>{{ totaldamage }} magic damage.</magicDamage>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Percent Magic Penetration", "Damage", "Cooldown"],
+            "effect": [
+              "{{ magicpen*100.000000 }}% -> {{ magicpennl*100.000000 }}%",
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [18, 16, 14, 12, 10],
+          "cooldownBurn": "18/16/14/12/10",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [700, 700, 700, 700, 700],
+          "rangeBurn": "700",
+          "image": {
+            "full": "MordekaiserE.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 0,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "MordekaiserR",
+          "name": "Realm of Death",
+          "description": "Mordekaiser drags his victim to a different dimension with him and steals a portion of their stats. If he kills them, he keeps the stats until the victim respawns.",
+          "tooltip": "Mordekaiser banishes a champion to the Death Realm with him for {{ spiritrealmduration }}s, stealing {{ statstealpercentscalar*100 }}% of their core stats for the duration.<br /><br />If Mordekaiser kills that enemy in the Death Realm he consumes their soul, keeping the stats he stole until the target respawns.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [140, 120, 100],
+          "cooldownBurn": "140/120/100",
+          "cost": [0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [650, 650, 650],
+          "rangeBurn": "650",
+          "image": {
+            "full": "MordekaiserR.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 48,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        }
+      ],
+      "passive": {
+        "name": "Darkness Rise",
+        "description": "Mordekaiser gains a powerful damage aura and Move Speed after landing 3 attacks or spells against champions or monsters.",
+        "image": {
+          "full": "MordekaiserPassive.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 240,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

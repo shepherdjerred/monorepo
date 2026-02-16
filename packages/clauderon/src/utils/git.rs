@@ -176,8 +176,11 @@ fn parse_worktree_git_file(git_file: &Path, worktree_path: &Path) -> anyhow::Res
             )
         })?;
 
-    // Extract the path after "gitdir: "
-    let gitdir = gitdir_line.strip_prefix("gitdir: ").unwrap().trim();
+    // Extract the path after "gitdir: " (safe: we just filtered for lines starting with this prefix)
+    let gitdir = gitdir_line
+        .strip_prefix("gitdir: ")
+        .ok_or_else(|| anyhow::anyhow!("gitdir line missing expected prefix"))?
+        .trim();
 
     // Resolve the gitdir path (can be absolute or relative)
     let gitdir_path = if Path::new(gitdir).is_absolute() {
@@ -294,7 +297,7 @@ pub async fn get_github_repo(repo_path: &Path) -> anyhow::Result<String> {
         anyhow::bail!("git remote get-url origin failed: {}", stderr.trim());
     }
 
-    let url = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    let url = String::from_utf8_lossy(&output.stdout).trim().to_owned();
     parse_github_repo_from_url(&url)
 }
 
@@ -341,7 +344,7 @@ pub async fn get_remote_url(repo_path: &Path) -> anyhow::Result<String> {
         anyhow::bail!("git remote get-url origin failed: {}", stderr.trim());
     }
 
-    Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+    Ok(String::from_utf8_lossy(&output.stdout).trim().to_owned())
 }
 
 /// Parse a GitHub repository URL and extract the owner/repo
@@ -367,7 +370,7 @@ pub fn parse_github_repo_from_url(url: &str) -> anyhow::Result<String> {
     if let Some(rest) = url.strip_prefix("git@github.com:") {
         let repo = rest.trim_end_matches(".git");
         if repo.contains('/') && !repo.is_empty() {
-            return Ok(repo.to_string());
+            return Ok(repo.to_owned());
         }
         anyhow::bail!("Invalid GitHub SSH URL format: {}", url);
     }
@@ -379,7 +382,7 @@ pub fn parse_github_repo_from_url(url: &str) -> anyhow::Result<String> {
     {
         let repo = rest.trim_end_matches(".git");
         if repo.contains('/') && !repo.is_empty() {
-            return Ok(repo.to_string());
+            return Ok(repo.to_owned());
         }
         anyhow::bail!("Invalid GitHub HTTPS URL format: {}", url);
     }
@@ -543,7 +546,7 @@ mod tests {
     fn create_test_repo() -> anyhow::Result<TempDir> {
         let temp_dir = TempDir::new()?;
         let git_dir = temp_dir.path().join(".git");
-        fs::create_dir(&git_dir)?;
+        fs::create_dir_all(&git_dir)?;
         fs::write(git_dir.join("HEAD"), "ref: refs/heads/main")?;
         Ok(temp_dir)
     }
@@ -613,7 +616,7 @@ mod tests {
     fn test_validate_git_repository_success() -> anyhow::Result<()> {
         let repo = create_test_repo()?;
         let subdir = repo.path().join("src");
-        fs::create_dir(&subdir)?;
+        fs::create_dir_all(&subdir)?;
 
         assert!(validate_git_repository(&subdir).is_ok());
 

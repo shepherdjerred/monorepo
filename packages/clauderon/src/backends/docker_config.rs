@@ -175,13 +175,13 @@ mod tests {
     #[test]
     fn test_validate_rejects_dangerous_extra_flags() {
         let config = DockerConfig {
-            extra_flags: vec!["--cap-add=SYS_PTRACE; rm -rf /".to_string()],
+            extra_flags: vec!["--cap-add=SYS_PTRACE; rm -rf /".to_owned()],
             ..Default::default()
         };
         assert!(config.validate().is_err());
 
         let config = DockerConfig {
-            extra_flags: vec!["--cap-add=SYS_PTRACE && malicious".to_string()],
+            extra_flags: vec!["--cap-add=SYS_PTRACE && malicious".to_owned()],
             ..Default::default()
         };
         assert!(config.validate().is_err());
@@ -191,8 +191,8 @@ mod tests {
     fn test_validate_accepts_safe_extra_flags() {
         let config = DockerConfig {
             extra_flags: vec![
-                "--cap-add=SYS_PTRACE".to_string(),
-                "--security-opt=seccomp=unconfined".to_string(),
+                "--cap-add=SYS_PTRACE".to_owned(),
+                "--security-opt=seccomp=unconfined".to_owned(),
             ],
             ..Default::default()
         };
@@ -203,7 +203,7 @@ mod tests {
     fn test_validate_checks_image() {
         let config = DockerConfig {
             image: ImageConfig {
-                image: "bad;image".to_string(),
+                image: "bad;image".to_owned(),
                 pull_policy: ImagePullPolicy::IfNotPresent,
                 registry_auth: None,
             },
@@ -216,8 +216,8 @@ mod tests {
     fn test_validate_checks_resources() {
         let config = DockerConfig {
             resources: Some(ResourceLimits {
-                cpu: Some("invalid".to_string()),
-                memory: Some("2g".to_string()),
+                cpu: Some("invalid".to_owned()),
+                memory: Some("2g".to_owned()),
             }),
             ..Default::default()
         };
@@ -228,15 +228,15 @@ mod tests {
     fn test_toml_serialization() {
         let config = DockerConfig {
             image: ImageConfig {
-                image: "test:latest".to_string(),
+                image: "test:latest".to_owned(),
                 pull_policy: ImagePullPolicy::Always,
                 registry_auth: None,
             },
             resources: Some(ResourceLimits {
-                cpu: Some("2.0".to_string()),
-                memory: Some("2g".to_string()),
+                cpu: Some("2.0".to_owned()),
+                memory: Some("2g".to_owned()),
             }),
-            extra_flags: vec!["--cap-add=SYS_PTRACE".to_string()],
+            extra_flags: vec!["--cap-add=SYS_PTRACE".to_owned()],
             use_volume_mode: false,
         };
 

@@ -1,0 +1,328 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Cassiopeia": {
+      "id": "Cassiopeia",
+      "key": "69",
+      "name": "Cassiopeia",
+      "title": "the Serpent's Embrace",
+      "image": {
+        "full": "Cassiopeia.png",
+        "sprite": "champion0.png",
+        "group": "champion",
+        "x": 96,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "69000",
+          "num": 0,
+          "name": "default",
+          "chromas": true
+        },
+        {
+          "id": "69001",
+          "num": 1,
+          "name": "Desperada Cassiopeia",
+          "chromas": false
+        },
+        {
+          "id": "69002",
+          "num": 2,
+          "name": "Siren Cassiopeia",
+          "chromas": false
+        },
+        {
+          "id": "69003",
+          "num": 3,
+          "name": "Mythic Cassiopeia",
+          "chromas": false
+        },
+        {
+          "id": "69004",
+          "num": 4,
+          "name": "Jade Fang Cassiopeia",
+          "chromas": false
+        },
+        {
+          "id": "69008",
+          "num": 8,
+          "name": "Eternum Cassiopeia",
+          "chromas": false
+        },
+        {
+          "id": "69009",
+          "num": 9,
+          "name": "Spirit Blossom Cassiopeia",
+          "chromas": true
+        },
+        {
+          "id": "69018",
+          "num": 18,
+          "name": "Coven Cassiopeia",
+          "chromas": true
+        },
+        {
+          "id": "69028",
+          "num": 28,
+          "name": "Bewitching Cassiopeia",
+          "chromas": true
+        },
+        {
+          "id": "69038",
+          "num": 38,
+          "name": "Prestige Mythmaker Cassiopeia",
+          "chromas": false
+        }
+      ],
+      "lore": "Cassiopeia is a deadly creature bent on manipulating others to her sinister will. Youngest and most beautiful daughter of the noble Du Couteau family of Noxus, she ventured deep into the crypts beneath Shurima in search of ancient power. There, she was bitten by a gruesome tomb guardian, whose venom transformed her into a viper-like predator. Cunning and agile, Cassiopeia now slithers under the veil of night, petrifying her enemies with her baleful gaze.",
+      "blurb": "Cassiopeia is a deadly creature bent on manipulating others to her sinister will. Youngest and most beautiful daughter of the noble Du Couteau family of Noxus, she ventured deep into the crypts beneath Shurima in search of ancient power. There, she was...",
+      "allytips": [
+        "Use Twin Fang on poisoned stationary targets like monsters and units stunned by her Petrifying Gaze for maximum damage.",
+        "Lead your enemy when targeting with Noxious Blast to ensure the hit."
+      ],
+      "enemytips": [
+        "Be wary of Cassiopeia's damage potential with Twin Fang when she has you poisoned.",
+        "Turn away from Cassiopeia when she is casting Petrifying Gaze to get slowed instead of stunned."
+      ],
+      "tags": ["Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 2,
+        "defense": 3,
+        "magic": 9,
+        "difficulty": 10
+      },
+      "stats": {
+        "hp": 630,
+        "hpperlevel": 104,
+        "mp": 450,
+        "mpperlevel": 40,
+        "movespeed": 335,
+        "armor": 18,
+        "armorperlevel": 4.7,
+        "spellblock": 32,
+        "spellblockperlevel": 1.3,
+        "attackrange": 550,
+        "hpregen": 5.5,
+        "hpregenperlevel": 0.5,
+        "mpregen": 8,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 53,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 1.5,
+        "attackspeed": 0.647
+      },
+      "spells": [
+        {
+          "id": "CassiopeiaQ",
+          "name": "Noxious Blast",
+          "description": "Cassiopeia blasts an area with Poison after a brief delay, granting her increased Move Speed if she hits an enemy champion.",
+          "tooltip": "Cassiopeia blasts noxious gas, <keywordMajor>Poisoning</keywordMajor> enemies and dealing <magicDamage>{{ tooltiptotaldamage }} magic damage</magicDamage> over {{ e2 }} seconds. Hitting a champion grants Cassiopeia <speed>{{ e3 }}% Move Speed</speed> decaying over {{ e4 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Move Speed", "@AbilityResourceName@ Cost"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ e3 }}% -> {{ e3NL }}%", "{{ cost }} -> {{ costNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [3.5, 3.5, 3.5, 3.5, 3.5],
+          "cooldownBurn": "3.5",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [75, 110, 145, 180, 215],
+            [3, 3, 3, 3, 3],
+            [30, 35, 40, 45, 50],
+            [3, 3, 3, 3, 3],
+            [7, 7, 7, 7, 7],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "75/110/145/180/215", "3", "30/35/40/45/50", "3", "7", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [850, 850, 850, 850, 850],
+          "rangeBurn": "850",
+          "image": {
+            "full": "CassiopeiaQ.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 288,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "CassiopeiaW",
+          "name": "Miasma",
+          "description": "Cassiopeia releases several clouds of poison, slowing, grounding, and lightly damaging enemies that pass through them. Grounded enemies cannot use Movement abilities.",
+          "tooltip": "Cassiopeia spews venom, leaving toxic clouds for {{ e4 }} seconds. Enemies in the clouds take <magicDamage>{{ damagepersecond }} magic damage</magicDamage> per second, are <keywordMajor>Poisoned</keywordMajor>, <status>Grounded</status>, and <status>Slowed</status> by {{ e2 }}%.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ e2 }}% -> {{ e2NL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [24, 22, 20, 18, 16],
+          "cooldownBurn": "24/22/20/18/16",
+          "cost": [70, 75, 80, 85, 90],
+          "costBurn": "70/75/80/85/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [20, 25, 30, 35, 40],
+            [40, 50, 60, 70, 80],
+            [1, 1, 1, 1, 1],
+            [5, 5, 5, 5, 5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "20/25/30/35/40", "40/50/60/70/80", "1", "5", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [700, 700, 700, 700, 700],
+          "rangeBurn": "700",
+          "image": {
+            "full": "CassiopeiaW.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 336,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "CassiopeiaE",
+          "name": "Twin Fang",
+          "description": "Cassiopeia lets loose an attack that deals increased damage to Poisoned targets and heals her for a percentage of the damage dealt. If the target dies from this attack, Cassiopeia regains Mana.",
+          "tooltip": "Cassiopeia launches deadly fangs, dealing <magicDamage>{{ basicdamage }} magic damage</magicDamage>. If the enemy is <keywordMajor>Poisoned</keywordMajor>, they take an additional <magicDamage>{{ bonuspoisoneddamage }} magic damage</magicDamage> and Cassiopeia restores <healing>{{ healcalc }} Health</healing>, reduced to <healing>{{ healcalcminion }} Health</healing> against lane minions and small monsters.<br /><br />If this kills the target, Cassiopeia restores <scaleMana>{{ cost }} Mana</scaleMana>.<br /><br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Bonus Poison Damage", "Healing from Ability Power"],
+            "effect": [
+              "{{ bonusdamage }} -> {{ bonusdamageNL }}",
+              "{{ healratio*100.000000 }}% -> {{ healrationl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [0.75, 0.75, 0.75, 0.75, 0.75],
+          "cooldownBurn": "0.75",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [700, 700, 700, 700, 700],
+          "rangeBurn": "700",
+          "image": {
+            "full": "CassiopeiaE.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 384,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "CassiopeiaR",
+          "name": "Petrifying Gaze",
+          "description": "Cassiopeia releases a swirl of magical energy from her eyes, stunning any enemies in front of her that are facing her and slowing any others with their back turned.",
+          "tooltip": "Cassiopeia unleashes a petrifying gaze, dealing <magicDamage>{{ rdamage }} magic damage</magicDamage> and <status>Stunning</status> enemies facing her for {{ rccduration }} seconds. Enemies facing away are <status>Slowed</status> by {{ rslowpercent }}% decaying over the same duration instead.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ rbasedamage }} -> {{ rbasedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 100, 80],
+          "cooldownBurn": "120/100/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [825, 825, 825],
+          "rangeBurn": "825",
+          "image": {
+            "full": "CassiopeiaR.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 432,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Serpentine Grace",
+        "description": "All Move Speed bonuses are more effective on Cassiopeia.",
+        "image": {
+          "full": "Cassiopeia_Passive.png",
+          "sprite": "passive0.png",
+          "group": "passive",
+          "x": 96,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

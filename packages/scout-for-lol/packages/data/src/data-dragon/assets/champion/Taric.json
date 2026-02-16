@@ -1,0 +1,324 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Taric": {
+      "id": "Taric",
+      "key": "44",
+      "name": "Taric",
+      "title": "the Shield of Valoran",
+      "image": {
+        "full": "Taric.png",
+        "sprite": "champion4.png",
+        "group": "champion",
+        "x": 240,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "44000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "44001",
+          "num": 1,
+          "name": "Emerald Taric",
+          "chromas": false
+        },
+        {
+          "id": "44002",
+          "num": 2,
+          "name": "Armor of the Fifth Age Taric",
+          "chromas": false
+        },
+        {
+          "id": "44003",
+          "num": 3,
+          "name": "Bloodstone Taric",
+          "chromas": false
+        },
+        {
+          "id": "44004",
+          "num": 4,
+          "name": "Pool Party Taric",
+          "chromas": true
+        },
+        {
+          "id": "44009",
+          "num": 9,
+          "name": "Taric Luminshield",
+          "chromas": true
+        },
+        {
+          "id": "44018",
+          "num": 18,
+          "name": "Space Groove Taric",
+          "chromas": true
+        },
+        {
+          "id": "44027",
+          "num": 27,
+          "name": "Fatebreaker Taric",
+          "chromas": true
+        }
+      ],
+      "lore": "Taric is the Aspect of the Protector, wielding incredible power as Runeterra's guardian of life, love, and beauty. Shamed by a dereliction of duty and exiled from his homeland Demacia, Taric ascended Mount Targon to find redemption, only to discover a higher calling among the stars. Imbued with the might of ancient Targon, the Shield of Valoran now stands ever vigilant against the insidious corruption of the Void.",
+      "blurb": "Taric is the Aspect of the Protector, wielding incredible power as Runeterra's guardian of life, love, and beauty. Shamed by a dereliction of duty and exiled from his homeland Demacia, Taric ascended Mount Targon to find redemption, only to discover a...",
+      "allytips": [
+        "The cooldown reducing component of Bravado makes Cooldown Reduction items like Frozen Heart, Iceborn Gauntlet, and Spirit Visage exceptionally powerful on Taric.",
+        "Using Starlight's Touch at lower charges makes its healing less Mana efficient, but can greatly increase Taric's sustained damage via Bravado.",
+        "Rather than saving Cosmic Radiance for the last moment and risking someone dying during the delay, it can be more beneficial to cast it as soon as you know a teamfight is guaranteed to start."
+      ],
+      "enemytips": [
+        "Taric's ultimate, Cosmic Radiance, has a long delay before its effect. Try to quickly assess whether to disengage the fight or attempt to kill his allies before it goes off.",
+        "Taric reduces his spell cooldowns by basic attacking enemies with Bravado. Try to kite him in teamfights and punish him for approaching the minion wave in lane."
+      ],
+      "tags": ["Support", "Tank"],
+      "partype": "Mana",
+      "info": {
+        "attack": 4,
+        "defense": 8,
+        "magic": 5,
+        "difficulty": 3
+      },
+      "stats": {
+        "hp": 645,
+        "hpperlevel": 99,
+        "mp": 300,
+        "mpperlevel": 60,
+        "movespeed": 340,
+        "armor": 40,
+        "armorperlevel": 4.3,
+        "spellblock": 28,
+        "spellblockperlevel": 2.05,
+        "attackrange": 150,
+        "hpregen": 6,
+        "hpregenperlevel": 0.5,
+        "mpregen": 8.5,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 55,
+        "attackdamageperlevel": 3.5,
+        "attackspeedperlevel": 2,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "TaricQ",
+          "name": "Starlight's Touch",
+          "description": "Heals nearby allied champions based on charges stored. Bravado-empowered attacks grant a charge of Starlight's Touch.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Gain a stack (max {{ e6 }}) every {{ stackcooldown }} seconds and when hitting a <spellName>Bravado</spellName> Attack.<br /><br /><spellActive>Active:</spellActive> Consume all stacks to restore <healing>{{ healingperstack }} Health</healing> per stack to nearby ally champions (<healing>{{ maxstackhealing }}</healing> at {{ e6 }} stacks).{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Max Charges", "Max Healing"],
+            "effect": ["{{ e6 }} -> {{ e6NL }}", "{{ e5 }} -> {{ e5NL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [3, 3, 3, 3, 3],
+          "cooldownBurn": "3",
+          "cost": [60, 60, 60, 60, 60],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [25, 25, 25, 25, 25],
+            [1, 1, 1, 1, 1],
+            [0.15, 0.3, 0.45, 0.6, 0.75],
+            [0.75, 1.5, 2.25, 3, 3.75],
+            [25, 50, 75, 100, 125],
+            [1, 2, 3, 4, 5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "25",
+            "1",
+            "0.15/0.3/0.45/0.6/0.75",
+            "0.75/1.5/2.25/3/3.75",
+            "25/50/75/100/125",
+            "1/2/3/4/5",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " Mana, all Charges",
+          "maxammo": "-1",
+          "range": [325, 325, 325, 325, 325],
+          "rangeBurn": "325",
+          "image": {
+            "full": "TaricQ.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 384,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} Mana, all Charges"
+        },
+        {
+          "id": "TaricW",
+          "name": "Bastion",
+          "description": "Passively increase the Armor of Taric and any allied champion with Bastion.<br><br>Actively shields an ally and grants them Bastion for as long as they remain near Taric. Taric's spells also cast off the ally with Bastion.",
+          "tooltip": "<spellPassive>Passive: </spellPassive>Taric gains <scaleArmor>{{ bonusarmor }} Armor</scaleArmor> and forms a tether between him and the ally bound by this Ability. As long as they are near each other, the ally gains <scaleArmor>{{ bonusarmor }} Armor</scaleArmor> and Taric casts all his Abilities from both himself and his linked ally.<br /><br /><spellPassive>Active: </spellPassive>Taric binds to an ally champion, granting a <shield>{{ e2 }}% max Health Shield</shield> for {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Passive Armor", "Shield Ratio"],
+            "effect": [
+              "{{ armorbonuspercentage*100.000000 }}% -> {{ armorbonuspercentagenl*100.000000 }}%",
+              "{{ e2 }}% -> {{ e2NL }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [15, 15, 15, 15, 15],
+          "cooldownBurn": "15",
+          "cost": [60, 60, 60, 60, 60],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [7, 8, 9, 10, 11],
+            [2.5, 2.5, 2.5, 2.5, 2.5],
+            [1000, 1000, 1000, 1000, 1000],
+            [1300, 1300, 1300, 1300, 1300],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "7/8/9/10/11", "2.5", "1000", "1300", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [800, 800, 800, 800, 800],
+          "rangeBurn": "800",
+          "image": {
+            "full": "TaricW.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 432,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "TaricE",
+          "name": "Dazzle",
+          "description": "Taric readies a beam of starlight that, after a brief delay, deals magic damage and stuns enemies.",
+          "tooltip": "Taric projects a beam of starlight, bursting after {{ e3 }} second to deal <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Stun</status> enemies for {{ e2 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [16, 15, 14, 13, 12],
+          "cooldownBurn": "16/15/14/13/12",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [90, 130, 170, 210, 250],
+            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "90/130/170/210/250", "1.5", "1", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [610, 610, 610, 610, 610],
+          "rangeBurn": "610",
+          "image": {
+            "full": "TaricE.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 0,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "TaricR",
+          "name": "Cosmic Radiance",
+          "description": "Pulses cosmic energy onto nearby allied champions after a delay, making them invulnerable for a short duration.",
+          "tooltip": "Taric calls down protection from the heavens. After {{ initialdelay }} seconds, nearby ally champions become invulnerable for {{ invulnduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [180, 150, 120],
+          "cooldownBurn": "180/150/120",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [400, 400, 400],
+          "rangeBurn": "400",
+          "image": {
+            "full": "TaricR.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 48,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Bravado",
+        "description": "Spellcasts empower Taric's next 2 basic attacks to deal bonus magic damage, reduce his spell cooldowns, and attack in quick succession.",
+        "image": {
+          "full": "Taric_Passive.png",
+          "sprite": "passive4.png",
+          "group": "passive",
+          "x": 240,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

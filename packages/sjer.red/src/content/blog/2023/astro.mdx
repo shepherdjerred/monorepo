@@ -1,0 +1,28 @@
+---
+title: Astro
+description: Astro brings great tooling to static HTML
+date: 2023-09-10Z-0700
+hackerNews: https://news.ycombinator.com/item?id=37512903
+---
+
+It's incredibly easy to find poorly made single-page applications (SPA) today. These applications break user expectations by not acting like standard webpages. The page title doesn't update on navigation, the back/forward buttons don't work, the scroll position is not saved, and refreshing the page causes surprising behavior.
+
+A particularly bad site might be poorly optimized and take a while to load on a slow connection or perform poorly when rendered client-side.
+
+SPAs tend to be written with libraries like React and Vue. They are great for developer productivity, and I find them a joy to use. What I don't like is the amount of work that goes into making them feel like first-class citizens of the web. You have the handle the above, and so much more! What about SEO or users that disable JavaScript?
+
+Many sites do need the interactivity that these libraries provide, but there are plenty that don't. Content-heavy sites, like this one, are mostly read and have little client-side interaction that would require JavaScript. You could write the site with plain HTML/CSS, but you lose the excellent tooling that React provides. Alternatives include server-side rendering with a host like Vercel or static site generation with heavy software like Gatsby.
+
+I was determined not to compromise. I didn't want to buy into Vercel and certainly didn't want a super complicated build process with a bunch of buy-in.
+
+Enter [Astro](https://astro.build/).
+
+It's a perfect fit. By default, it outputs sites with zero JavaScript. Using familiar React-ish syntax, you can pass props or call JS at compile time in your components. You get the development speed up while also providing sites that perform great and respect your users.
+
+The feature list is jam-packed, and everything seems to work. The documentation is thorough, and it is a joy to use.
+
+I migrated this blog over to Astro in a couple of days, and I was able to add a bunch of new functionality with little effort, such as generated Open Graph images and an RSS feed that updates automatically.
+
+The site now has zero client-side JavaScript and does not need a server beyond static file hosting. The code is pretty similar to what it was before.
+
+I would highly recommend checking out [Astro](https://astro.build/). I'm only scratching the surface of what you can do with it.

@@ -2,6 +2,7 @@ use super::common::CommonAgentLogic;
 use super::traits::{Agent, AgentState};
 
 /// Claude Code agent adapter
+#[derive(Debug, Copy, Clone)]
 pub struct ClaudeCodeAgent {
     /// Common agent logic
     common_logic: CommonAgentLogic,
@@ -47,33 +48,33 @@ impl Agent for ClaudeCodeAgent {
         session_id: Option<&uuid::Uuid>,
         model: Option<&str>,
     ) -> Vec<String> {
-        let mut cmd = vec!["claude".to_string()];
+        let mut cmd = vec!["claude".to_owned()];
 
         // Add session ID first if provided
         if let Some(id) = session_id {
-            cmd.push("--session-id".to_string());
+            cmd.push("--session-id".to_owned());
             cmd.push(id.to_string());
         }
 
         // Add model flag if provided
         if let Some(model_name) = model {
-            cmd.push("--model".to_string());
-            cmd.push(model_name.to_string());
+            cmd.push("--model".to_owned());
+            cmd.push(model_name.to_owned());
         }
 
         // Only add flag if dangerous_skip_checks is enabled
         if dangerous_skip_checks {
-            cmd.push("--dangerously-skip-permissions".to_string());
+            cmd.push("--dangerously-skip-permissions".to_owned());
         }
 
         // Add image arguments
         for image in images {
-            cmd.push("--image".to_string());
+            cmd.push("--image".to_owned());
             cmd.push(image.clone());
         }
 
         // Add prompt last
-        cmd.push(prompt.to_string());
+        cmd.push(prompt.to_owned());
 
         cmd
     }
@@ -119,8 +120,8 @@ mod tests {
     fn test_start_command_with_images_and_dangerous_skip() {
         let agent = ClaudeCodeAgent::new();
         let images = vec![
-            "/path/to/image1.png".to_string(),
-            "/path/to/image2.jpg".to_string(),
+            "/path/to/image1.png".to_owned(),
+            "/path/to/image2.jpg".to_owned(),
         ];
         let cmd = agent.start_command("Analyze these images", &images, true, None, None);
         assert_eq!(cmd.len(), 7); // claude, --dangerously-skip-permissions, --image, path1, --image, path2, prompt
@@ -137,7 +138,7 @@ mod tests {
     fn test_start_command_with_all_options() {
         let agent = ClaudeCodeAgent::new();
         let session_id = uuid::Uuid::new_v4();
-        let images = vec!["/path/to/image.png".to_string()];
+        let images = vec!["/path/to/image.png".to_owned()];
         let cmd = agent.start_command(
             "Test prompt",
             &images,

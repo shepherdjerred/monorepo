@@ -1,0 +1,26 @@
+[tools]
+bun = "latest"
+
+[tasks.dev]
+description = "Set up development environment"
+run = "bun install && dagger develop"
+
+[tasks.ci]
+description = "Run CI pipeline"
+run = "dagger call ci --env=dev"
+
+[tasks.check]
+description = "Run all checks"
+run = ["bun run lint", "bun run build"]
+
+[tasks.lint]
+description = "Run linting"
+run = "bun run lint"
+
+[tasks.build]
+description = "Build the project"
+run = "bun run build"
+
+[tasks.start]
+description = "Start development server"
+run = "bun run start"

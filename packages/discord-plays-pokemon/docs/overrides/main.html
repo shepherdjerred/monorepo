@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block analytics %}
+<script defer data-domain="docs.discord-plays-pokemon.com" src="https://plausible.sjer.red/js/script.js"></script>
+{% endblock %}
+
+{% block announce %} Follow <strong>@shepherdjerred</strong> on
+<a rel="me" href="https://mastodon.social/@shepherdjerred">
+  <span class="twemoji mastodon"> {% include ".icons/fontawesome/brands/mastodon.svg" %} </span>
+  <strong>Mastodon Social</strong>
+</a>
+for updates {% endblock %}

@@ -1,0 +1,305 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Belveth": {
+      "id": "Belveth",
+      "key": "200",
+      "name": "Bel'Veth",
+      "title": "the Empress of the Void",
+      "image": {
+        "full": "Belveth.png",
+        "sprite": "champion0.png",
+        "group": "champion",
+        "x": 240,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "200000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "200001",
+          "num": 1,
+          "name": "Battle Boss Bel'Veth",
+          "chromas": true
+        },
+        {
+          "id": "200010",
+          "num": 10,
+          "name": "Cosmic Matriarch Bel'Veth",
+          "chromas": true
+        },
+        {
+          "id": "200019",
+          "num": 19,
+          "name": "Primordian Bel'Veth",
+          "chromas": true
+        }
+      ],
+      "lore": "A nightmarish empress created from the raw material of an entire devoured city, Bel'Veth is the end of Runeterra itself... and the beginning of a monstrous reality of her own design. Driven by epochs of repurposed history, knowledge, and memories from the world above, she voraciously feeds an ever-expanding need for new experiences and emotions, consuming all that crosses her path. Yet her wants could never be sated by only one world as she turns her hungry eyes toward the Void's old masters...",
+      "blurb": "A nightmarish empress created from the raw material of an entire devoured city, Bel'Veth is the end of Runeterra itself... and the beginning of a monstrous reality of her own design. Driven by epochs of repurposed history, knowledge, and memories from...",
+      "allytips": [],
+      "enemytips": [],
+      "tags": ["Fighter"],
+      "partype": "",
+      "info": {
+        "attack": 4,
+        "defense": 2,
+        "magic": 7,
+        "difficulty": 10
+      },
+      "stats": {
+        "hp": 610,
+        "hpperlevel": 105,
+        "mp": 60,
+        "mpperlevel": 0,
+        "movespeed": 340,
+        "armor": 32,
+        "armorperlevel": 4.7,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 150,
+        "hpregen": 6,
+        "hpregenperlevel": 0.6,
+        "mpregen": 0,
+        "mpregenperlevel": 0,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 60,
+        "attackdamageperlevel": 1.5,
+        "attackspeedperlevel": 0,
+        "attackspeed": 0.85
+      },
+      "spells": [
+        {
+          "id": "BelvethQ",
+          "name": "Void Surge",
+          "description": "Bel'Veth dashes in a chosen direction and damages all enemies she passes through.",
+          "tooltip": "Bel'Veth dashes, dealing <physicalDamage>{{ basedamage }} physical damage</physicalDamage> to enemies she passes through.<br /><br />Each direction has an unique Cooldown of {{ f1 }} seconds that scales down based on her <attackSpeed>Attack Speed</attackSpeed>.<br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown Per Direction", "Monster Damage", "Minion Damage"],
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ persidecooldown }} -> {{ persidecooldownNL }}",
+              "{{ monstermod }} -> {{ monstermodNL }}",
+              "{{ minonmod*100.000000 }}% -> {{ minonmodnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [1, 1, 1, 1, 1],
+          "cooldownBurn": "1",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [450, 450, 450, 450, 450],
+          "rangeBurn": "450",
+          "image": {
+            "full": "BelvethQ.png",
+            "sprite": "spell1.png",
+            "group": "spell",
+            "x": 384,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "BelvethW",
+          "name": "Above and Below",
+          "description": "Bel'Veth slams her tail to the ground, damaging, knocking up, and slowing her enemies.",
+          "tooltip": "Bel'Veth slams her tail, dealing <magicDamage>{{ damage }} magic damage</magicDamage>, <status>Knocking Up</status> foes for {{ duration }} seconds, and <status>Slowing</status> them by {{ slowpercent*100 }}% for {{ slowduration }} seconds. If a champion is hit, this refreshes the Cooldown of <spellName>Void Surge</spellName> in that direction.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow Duration", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowduration }} -> {{ slowdurationNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 11, 10, 9, 8],
+          "cooldownBurn": "12/11/10/9/8",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [715, 715, 715, 715, 715],
+          "rangeBurn": "715",
+          "image": {
+            "full": "BelvethW.png",
+            "sprite": "spell1.png",
+            "group": "spell",
+            "x": 432,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "BelvethE",
+          "name": "Royal Maelstrom",
+          "description": "Bel'Veth roots herself in place, channeling a storm of slashes around her that targets the lowest-health enemy and grants her lifesteal and damage reduction.",
+          "tooltip": "Bel'Veth channels and slashes around herself, gaining {{ drpercent*100 }}% Damage Reduction, {{ totallifesteal }} Life Steal, and Attacking {{ f2.0 }} times over {{ totalduration }} seconds with the number of Attacks increasing based on her <attackSpeed>Attack Speed</attackSpeed>. Each Attack strikes the lowest-health enemy, dealing <physicalDamage>{{ damageperstrike }}</physicalDamage> to <physicalDamage>{{ maxdamageperstriketooltip }} physical damage</physicalDamage> based on the target's missing Health.<br /><br />Using another Ability or <recast>Recasting</recast> ends this Ability early.<br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Damage Reduction", "Cooldown"],
+            "effect": [
+              "{{ damageperhit }} -> {{ damageperhitNL }}",
+              "{{ drpercent*100.000000 }}% -> {{ drpercentnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [20, 19, 18, 17, 16],
+          "cooldownBurn": "20/19/18/17/16",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [500, 500, 500, 500, 500],
+          "rangeBurn": "500",
+          "image": {
+            "full": "BelvethE.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 0,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "BelvethR",
+          "name": "Endless Banquet",
+          "description": "Bel'Veth consumes Void coral remnants, transforming into her true form and increasing her max health, attack range, attack speed, and out-of-combat move speed. Consuming the Void coral remnants of a Void epic monster will grant her a longer ultimate duration, as well as the power to summon Void remora.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Every second Attack against the same target deals an additional <trueDamage>{{ finalonhitdamage }} true damage</trueDamage>, stacking infinitely. Takedowns against champions and epic monsters leave behind a piece of Void Coral.<br /><br /><spellActive>Active:</spellActive> Consuming Void Coral grants <keywordMajor>{{ passivestacksondevour }} Lavender</keywordMajor> stack and activates Bel'Veth's true form for {{ steroidduration }} seconds. Void Coral from Void epic monsters increases the duration to {{ voidduration }} seconds and causes minions that die nearby to become Void Remora. While casting, Bel'Veth <status>Slows</status> nearby enemies before exploding, dealing <trueDamage>{{ totalexplosiondamage }} + {{ missinghealthdamage*100 }}% missing-Health true damage</trueDamage>.<br /><br />In her true form, Bel'Veth gains <healing>{{ maxhealthondevour }} max Health</healing>, <speed>{{ oocms }} Move Speed</speed> out of combat, {{ bonusaarange }} Attack range, <attackSpeed>{{ totalasmod*100 }}% Total Attack Speed</attackSpeed>, and <spellName>Void Surge</spellName> can pass through walls.<br /><br /><br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "On-Hit Damage",
+              "Explosion Damage",
+              "Bonus Health",
+              "Move Speed",
+              "Attack Speed",
+              "Void Remora Health"
+            ],
+            "effect": [
+              "{{ onhitdamage }} -> {{ onhitdamageNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ basemaxhealth }} -> {{ basemaxhealthNL }}",
+              "{{ oocms }} -> {{ oocmsNL }}",
+              "{{ totalasmod*100.000000 }}% -> {{ totalasmodnl*100.000000 }}%",
+              "{{ voidlinghpscale*100.000000 }}% -> {{ voidlinghpscalenl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [1, 1, 1],
+          "cooldownBurn": "1",
+          "cost": [0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [450, 450, 450],
+          "rangeBurn": "450",
+          "image": {
+            "full": "BelvethR.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 48,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        }
+      ],
+      "passive": {
+        "name": "Death in Lavender ",
+        "description": "Bel'Veth gains permanent attack speed stacks after taking down large minions and monsters and champions. She also gains temporary bonus attack speed after using an ability.",
+        "image": {
+          "full": "Belveth_Passive.png",
+          "sprite": "passive0.png",
+          "group": "passive",
+          "x": 240,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

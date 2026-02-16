@@ -1,0 +1,78 @@
+{
+  "name": "better-skill-capped",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "start": "vite serve --host",
+    "build": "vite build",
+    "lint+build": "bun run lint && bun run build",
+    "lint:fix+build": "bun run lint:fix && bun run build",
+    "lint": "bun run eslint && bun run prettier",
+    "lint:fix": "bun run eslint:fix && bun run prettier:fix",
+    "eslint": "eslint \"src/**/*.{js,ts,tsx}\" --color",
+    "eslint:fix": "eslint \"*/**/*.{js,ts,tsx}\" --fix --color",
+    "prettier": "prettier --check .",
+    "prettier:fix": "prettier --write ."
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.1.0",
+    "@fortawesome/fontawesome-svg-core": "^7.1.0",
+    "@fortawesome/free-solid-svg-icons": "^7.1.0",
+    "@fortawesome/react-fontawesome": "^3.1.1",
+    "@sentry/react": "^10.29.0",
+    "axios": "^1.13.2",
+    "bulma": "^1.0.4",
+    "classnames": "^2.5.1",
+    "fuse.js": "^7.1.0",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "react-highlight-words": "^0.21.0",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.10.1",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.0",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@types/react-highlight-words": "^0.20.0",
+    "@types/react-router-dom": "^5.3.3",
+    "@typescript-eslint/eslint-plugin": "^8.48.1",
+    "@typescript-eslint/parser": "^8.48.1",
+    "@vitejs/plugin-react": "^5.1.1",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-promise": "^7.2.1",
+    "eslint-plugin-react": "^7.37.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.7.4",
+    "sass": "^1.94.2",
+    "typescript-eslint": "^8.48.1",
+    "vite": "^7.2.6"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  }
+}

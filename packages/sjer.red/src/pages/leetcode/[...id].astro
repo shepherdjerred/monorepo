@@ -1,0 +1,24 @@
+---
+import BlogLayout from "@layouts/BlogLayout.astro";
+import { getCollection, render, type CollectionEntry } from "astro:content";
+
+export async function getStaticPaths() {
+  const leetcodeEntries = await getCollection("leetcode");
+  return leetcodeEntries.map((entry) => ({
+    params: { id: entry.id },
+    props: { entry },
+  }));
+}
+
+type Props = {
+  entry: CollectionEntry<"leetcode">;
+};
+
+const { entry } = Astro.props;
+
+const { Content } = await render(entry);
+---
+
+<BlogLayout title={entry.data.title} description={entry.data.description} date={entry.data.date}>
+  <Content />
+</BlogLayout>

@@ -72,7 +72,7 @@ fn acquire_spawn_lock() -> anyhow::Result<SpawnLockGuard> {
     // Try to acquire exclusive lock (non-blocking)
     // fs2 provides safe cross-platform file locking
     file.try_lock_exclusive()
-        .map_err(|_| anyhow::anyhow!("Another process is already spawning the daemon"))?;
+        .map_err(|e| anyhow::anyhow!("Another process is already spawning the daemon: {e}"))?;
 
     // Write our PID to the lock file for debugging
     let mut file = file;

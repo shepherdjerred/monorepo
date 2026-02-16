@@ -1,0 +1,329 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Velkoz": {
+      "id": "Velkoz",
+      "key": "161",
+      "name": "Vel'Koz",
+      "title": "the Eye of the Void",
+      "image": {
+        "full": "Velkoz.png",
+        "sprite": "champion4.png",
+        "group": "champion",
+        "x": 384,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "161000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "161001",
+          "num": 1,
+          "name": "Battlecast Vel'Koz",
+          "chromas": false
+        },
+        {
+          "id": "161002",
+          "num": 2,
+          "name": "Arclight Vel'Koz",
+          "chromas": false
+        },
+        {
+          "id": "161003",
+          "num": 3,
+          "name": "Definitely Not Vel'Koz",
+          "chromas": false
+        },
+        {
+          "id": "161004",
+          "num": 4,
+          "name": "Infernal Vel'Koz",
+          "chromas": true
+        },
+        {
+          "id": "161011",
+          "num": 11,
+          "name": "Blackfrost Vel'Koz",
+          "chromas": true
+        },
+        {
+          "id": "161020",
+          "num": 20,
+          "name": "Bee'Koz",
+          "chromas": true
+        }
+      ],
+      "lore": "It is unclear if Vel'Koz was the first Void-spawn to emerge on Runeterra, but there has certainly never been another to match his level of cruel, calculating sentience. While his kin devour or defile everything around them, he seeks instead to scrutinize and study the physical realm—and the strange, warlike beings that dwell there—for any weakness the Void might exploit. But Vel'Koz is far from a passive observer, striking back at threats with deadly plasma, or by disrupting the very fabric of the world itself.",
+      "blurb": "It is unclear if Vel'Koz was the first Void-spawn to emerge on Runeterra, but there has certainly never been another to match his level of cruel, calculating sentience. While his kin devour or defile everything around them, he seeks instead to...",
+      "allytips": [
+        "When laning, use Void Rift to kill minions while building stacks of Organic Deconstruction on your opponent. You can then follow up with your other abilities.",
+        "Shooting Plasma Fission diagonally and splitting at maximum range allows you to hit opponents that are out of the range of the initial missile, but is more challenging to pull off.",
+        "Be very careful about when to use Life Form Disintegration Ray. Many champions have abilities that can interrupt the spell."
+      ],
+      "enemytips": [
+        "Vel'Koz is very dangerous if left alone in a fight. Try to focus him down early.",
+        "Vel'Koz has fairly low mobility and is vulnerable to ganks.",
+        "Life Form Disintegration Ray can be interrupted by stuns, silences and knockups."
+      ],
+      "tags": ["Mage", "Support"],
+      "partype": "Mana",
+      "info": {
+        "attack": 2,
+        "defense": 2,
+        "magic": 10,
+        "difficulty": 8
+      },
+      "stats": {
+        "hp": 590,
+        "hpperlevel": 102,
+        "mp": 469,
+        "mpperlevel": 21,
+        "movespeed": 340,
+        "armor": 22,
+        "armorperlevel": 4.7,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 525,
+        "hpregen": 5.5,
+        "hpregenperlevel": 0.55,
+        "mpregen": 8,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 55,
+        "attackdamageperlevel": 3.1416,
+        "attackspeedperlevel": 1.59,
+        "attackspeed": 0.643
+      },
+      "spells": [
+        {
+          "id": "VelkozQ",
+          "name": "Plasma Fission",
+          "description": "Vel'Koz shoots a bolt of plasma that splits in two on reactivation or upon hitting an enemy. The bolt slows and damages on hit.",
+          "tooltip": "Vel'Koz shoots a plasma bolt that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slows</status> by {{ slowamount*100 }}% decaying over {{ slowduration }} second(s). At the end of its range, on hitting a target, or on <recast>Recasting</recast>, the bolt splits and fires two new bolts at a 90 degree angle.<br /><br />Killing a unit with this restores <scaleMana>{{ tooltipmanarefund }} Mana</scaleMana>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Total Damage", "Slow Duration", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowduration }} -> {{ slowdurationNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [7, 7, 7, 7, 7],
+          "cooldownBurn": "7",
+          "cost": [40, 45, 50, 55, 60],
+          "costBurn": "40/45/50/55/60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1050, 1050, 1050, 1050, 1050],
+          "rangeBurn": "1050",
+          "image": {
+            "full": "VelkozQ.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 0,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "VelkozW",
+          "name": "Void Rift",
+          "description": "Vel'Koz opens a rift to the void that deals an initial burst of damage, then explodes for a second burst of damage after a delay.",
+          "tooltip": "Vel'Koz opens a rift to the void, dealing <magicDamage>{{ initialdamage }} magic damage</magicDamage>. The rift then erupts, dealing <magicDamage>{{ secondarydamage }} magic damage</magicDamage>.<br /><br />This Ability has 2 charges ({{ ammorechargetime }} second refresh).{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Initial Damage", "Secondary Damage", "Recharge Time", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ baseinitialdamage }} -> {{ baseinitialdamageNL }}",
+              "{{ basesecondarydamage }} -> {{ basesecondarydamageNL }}",
+              "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [1.5, 1.5, 1.5, 1.5, 1.5],
+          "cooldownBurn": "1.5",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [30, 50, 70, 90, 110],
+            [45, 75, 105, 135, 165],
+            [100, 100, 100, 100, 100],
+            [0, 0, 0, 0, 0],
+            [0.25, 0.25, 0.25, 0.25, 0.25],
+            [0.5, 0.5, 0.5, 0.5, 0.5],
+            [88, 88, 88, 88, 88],
+            [500, 500, 500, 500, 500],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "30/50/70/90/110",
+            "45/75/105/135/165",
+            "100",
+            "0",
+            "0.25",
+            "0.5",
+            "88",
+            "500",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "2",
+          "range": [1050, 1050, 1050, 1050, 1050],
+          "rangeBurn": "1050",
+          "image": {
+            "full": "VelkozW.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 48,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "VelkozE",
+          "name": "Tectonic Disruption",
+          "description": "Vel'Koz causes an area to explode, knocking up enemies, and knocking close enemies slightly away.",
+          "tooltip": "Vel'Koz disrupts a nearby area, causing it to explode, <status>Knocking Up</status> for {{ stunduration }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Enemies close to Vel'Koz will be <status>Knocked Back</status> instead of <status>Knocked Up</status>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 11.5, 11, 10.5, 10],
+          "cooldownBurn": "12/11.5/11/10.5/10",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [810, 810, 810, 810, 810],
+          "rangeBurn": "810",
+          "image": {
+            "full": "VelkozE.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 96,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "VelkozR",
+          "name": "Life Form Disintegration Ray",
+          "description": "Vel'Koz unleashes a channelled beam that follows the cursor for 2.5 seconds that deals magic damage. Organic Deconstruction Researches enemy champions causing them to take true damage instead.",
+          "tooltip": "Vel'Koz channels a ray of energy that follows the cursor, dealing a total of <magicDamage>{{ totaldamage }} magic damage</magicDamage> over 2.5 seconds and <status>Slowing</status> by {{ e3 }}%. Deals <trueDamage>true damage</trueDamage> instead to enemies recently damaged by <spellName>Organic Deconstruction</spellName>.<br /><br />Enemies gain stacks of <keywordMajor>Deconstruction</keywordMajor> periodically while in the beam.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Total Damage", "Cooldown"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [100, 90, 80],
+          "cooldownBurn": "100/90/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [450, 700, 925],
+            [7, 7, 7],
+            [20, 20, 20],
+            [40, 40, 40],
+            [175, 175, 175],
+            [7, 7, 7],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "450/700/925", "7", "20", "40", "175", "7", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1575, 1575, 1575],
+          "rangeBurn": "1575",
+          "image": {
+            "full": "VelkozR.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 144,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Organic Deconstruction",
+        "description": "Vel'Koz's abilities apply <keywordName>Organic Deconstruction</keywordName> to enemies on hit. If 3 stacks are accumulated, the enemy will take a burst of true damage.",
+        "image": {
+          "full": "VelKoz_Passive.png",
+          "sprite": "passive4.png",
+          "group": "passive",
+          "x": 384,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

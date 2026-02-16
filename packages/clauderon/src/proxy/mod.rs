@@ -4,7 +4,7 @@
 //! the proxy intercepts requests and injects auth headers.
 
 // Allow missing documentation for internal proxy implementations
-#![allow(clippy::missing_errors_doc, clippy::missing_panics_doc)]
+#![allow(clippy::missing_errors_doc, clippy::missing_panics_doc, reason = "internal proxy implementations do not need public API documentation")]
 
 mod audit;
 mod ca;

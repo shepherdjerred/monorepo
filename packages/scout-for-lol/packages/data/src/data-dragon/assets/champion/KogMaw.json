@@ -1,0 +1,372 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "KogMaw": {
+      "id": "KogMaw",
+      "key": "96",
+      "name": "Kog'Maw",
+      "title": "the Mouth of the Abyss",
+      "image": {
+        "full": "KogMaw.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 336,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "96000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "96001",
+          "num": 1,
+          "name": "Caterpillar Kog'Maw",
+          "chromas": false
+        },
+        {
+          "id": "96002",
+          "num": 2,
+          "name": "Sonoran Kog'Maw",
+          "chromas": false
+        },
+        {
+          "id": "96003",
+          "num": 3,
+          "name": "Monarch Kog'Maw",
+          "chromas": false
+        },
+        {
+          "id": "96004",
+          "num": 4,
+          "name": "Reindeer Kog'Maw",
+          "chromas": false
+        },
+        {
+          "id": "96005",
+          "num": 5,
+          "name": "Lion Dance Kog'Maw",
+          "chromas": false
+        },
+        {
+          "id": "96006",
+          "num": 6,
+          "name": "Deep Sea Kog'Maw",
+          "chromas": false
+        },
+        {
+          "id": "96007",
+          "num": 7,
+          "name": "Jurassic Kog'Maw",
+          "chromas": false
+        },
+        {
+          "id": "96008",
+          "num": 8,
+          "name": "Battlecast Kog'Maw",
+          "chromas": false
+        },
+        {
+          "id": "96009",
+          "num": 9,
+          "name": "Pug'Maw",
+          "chromas": true
+        },
+        {
+          "id": "96010",
+          "num": 10,
+          "name": "Hextech Kog'Maw",
+          "chromas": false
+        },
+        {
+          "id": "96019",
+          "num": 19,
+          "name": "Arcanist Kog'Maw",
+          "chromas": true
+        },
+        {
+          "id": "96028",
+          "num": 28,
+          "name": "Bee'Maw",
+          "chromas": true
+        },
+        {
+          "id": "96037",
+          "num": 37,
+          "name": "Zap'Maw",
+          "chromas": true
+        },
+        {
+          "id": "96046",
+          "num": 46,
+          "name": "Shan Hai Scrolls Kog'Maw",
+          "chromas": true
+        },
+        {
+          "id": "96055",
+          "num": 55,
+          "name": "Victorious Kog'Maw",
+          "chromas": true
+        }
+      ],
+      "lore": "Belched forth from a rotting Void incursion deep in the wastelands of Icathia, Kog'Maw is an inquisitive yet putrid creature with a caustic, gaping mouth. This particular Void-spawn needs to gnaw and drool on anything within reach to truly understand it. Though not inherently evil, Kog'Maw's beguiling naiveté is dangerous, as it often precedes a feeding frenzy—not for sustenance, but to satisfy its unending curiosity.",
+      "blurb": "Belched forth from a rotting Void incursion deep in the wastelands of Icathia, Kog'Maw is an inquisitive yet putrid creature with a caustic, gaping mouth. This particular Void-spawn needs to gnaw and drool on anything within reach to truly understand it...",
+      "allytips": [
+        "Kog'Maw can outrange most champions with his Bio-Arcane Barrage ability.",
+        "Use Void Ooze to set up a perfect Living Artillery.",
+        "Make the most out of your Icathian Surprise."
+      ],
+      "enemytips": [
+        "Kog'Maw doesn't have a good escape ability, so he is especially prone to ganks.",
+        "Run away from Kog'Maw after he dies!!!!",
+        "The range on Living Artillery increases each rank.",
+        "Bio-Arcane Barrage allows Kog'Maw to kill Baron Nashor extremely early. It can be valuable to ward Nashor when Kog'Maw completes his Blade of the Ruined King."
+      ],
+      "tags": ["Marksman", "Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 8,
+        "defense": 2,
+        "magic": 5,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 635,
+        "hpperlevel": 99,
+        "mp": 325,
+        "mpperlevel": 40,
+        "movespeed": 330,
+        "armor": 24,
+        "armorperlevel": 4.45,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 500,
+        "hpregen": 3.75,
+        "hpregenperlevel": 0.55,
+        "mpregen": 8.75,
+        "mpregenperlevel": 0.7,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 61,
+        "attackdamageperlevel": 3.1,
+        "attackspeedperlevel": 2.65,
+        "attackspeed": 0.665
+      },
+      "spells": [
+        {
+          "id": "KogMawQ",
+          "name": "Caustic Spittle",
+          "description": "Kog'Maw launches a corrosive projectile which deals magic damage and corrodes the target's armor and magic resist for a short time. Kog'Maw also gains additional attack speed.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Kog'Maw gains <attackSpeed>{{ attackspeed*100 }}% Attack Speed</attackSpeed>.<br /><br /><spellActive>Active:</spellActive> Kog'Maw vomits a corrosive projectile that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first enemy hit and shreds <scaleArmor>{{ shredamount }}% Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for {{ shredduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Attack Speed", "Damage", "Armor and Magic Resist Shred"],
+            "effect": [
+              "{{ attackspeed*100.000000 }}% -> {{ attackspeednl*100.000000 }}%",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ shredamount }}% -> {{ shredamountNL }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [7, 7, 7, 7, 7],
+          "cooldownBurn": "7",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1],
+            [100, 100, 100, 100, 100],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "1", "1", "100", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1175, 1175, 1175, 1175, 1175],
+          "rangeBurn": "1175",
+          "image": {
+            "full": "KogMawQ.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 288,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "KogMawBioArcaneBarrage",
+          "name": "Bio-Arcane Barrage",
+          "description": "Kog'Maw's attacks gain range and deal a percent of the target's maximum health as magic damage.",
+          "tooltip": "Kog'Maw gains {{ range }} Attack Range and his Attacks deal an additional <magicDamage>{{ totalhealthdamage }} max Health magic damage</magicDamage> for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Range", "Maximum Health Damage"],
+            "effect": ["{{ range }} -> {{ rangeNL }}", "{{ maxhealthdamage }}% -> {{ maxhealthdamageNL }}%"]
+          },
+          "maxrank": 5,
+          "cooldown": [17, 17, 17, 17, 17],
+          "cooldownBurn": "17",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [530, 530, 530, 530, 530],
+          "rangeBurn": "530",
+          "image": {
+            "full": "KogMawBioArcaneBarrage.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 336,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "KogMawVoidOoze",
+          "name": "Void Ooze",
+          "description": "Kog'Maw launches a peculiar ooze which damages all enemies it passes through and leaves a trail which slows enemies who stand on it.",
+          "tooltip": "Kog'Maw spits bile, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and leaving a trail of ooze for {{ trailduration }} seconds. Enemies in the ooze are <status>Slowed</status> by {{ slowamount }}%.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowamount }}% -> {{ slowamountNL }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 12, 12, 12, 12],
+          "cooldownBurn": "12",
+          "cost": [40, 55, 70, 85, 100],
+          "costBurn": "40/55/70/85/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1200, 1200, 1200, 1200, 1200],
+          "rangeBurn": "1200",
+          "image": {
+            "full": "KogMawVoidOoze.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 384,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "KogMawLivingArtillery",
+          "name": "Living Artillery",
+          "description": "Kog'Maw fires an artillery shell at a great distance dealing magic damage (increased significantly on low health enemies) and revealing non-stealthed targets. Additionally, multiple Living Artilleries in a short period of time cause them to cost additional Mana.",
+          "tooltip": "Kog'Maw shoots acid at an area, dealing <magicDamage>{{ basedamagecalc }} plus {{ tooltipmissinghealthdamageamp }}% per 1% missing Health magic damage</magicDamage> and revealing enemies hit for 2 seconds. Enemies below <healing>40% Health</healing> instead take <magicDamage>{{ maxdamagecalc }} magic damage</magicDamage>.<br /><br />Subsequent shots within {{ manacostduration }} seconds cost an additional <scaleMana>{{ basecost }} Mana</scaleMana> (max: <scaleMana>{{ manacostcap }} Mana</scaleMana>).{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Range", "Cooldown", "Total AP Ratio"],
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ castrange }} -> {{ castrangeNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ apratio*100.000000 }}% -> {{ aprationl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [2, 1.5, 1],
+          "cooldownBurn": "2/1.5/1",
+          "cost": [40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1300, 1550, 1800],
+          "rangeBurn": "1300/1550/1800",
+          "image": {
+            "full": "KogMawLivingArtillery.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 432,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Icathian Surprise",
+        "description": "4 seconds after dying, Kogmaw explodes, dealing true damage to surrounding enemies.",
+        "image": {
+          "full": "KogMaw_IcathianSurprise.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 336,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

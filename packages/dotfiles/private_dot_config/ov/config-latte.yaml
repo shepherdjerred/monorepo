@@ -1,0 +1,66 @@
+# ov config - Catppuccin Latte theme
+General:
+  TabWidth: 8
+  Header: 0
+  AlternateRows: false
+  ColumnMode: false
+  LineNumMode: false
+  WrapMode: true
+  ColumnDelimiter: ","
+  MarkStyleWidth: 1
+  Style:
+    Alternate:
+      Background: "#ccd0da"  # surface0
+    Header:
+      Bold: true
+      Foreground: "#4c4f69"  # text
+    Body:
+      Foreground: "#4c4f69"  # text
+    LineNumber:
+      Bold: true
+      Foreground: "#9ca0b0"  # overlay0
+    SearchHighlight:
+      Background: "#df8e1d"  # yellow
+      Foreground: "#eff1f5"  # base
+    ColumnHighlight:
+      Background: "#bcc0cc"  # surface1
+    MarkLine:
+      Background: "#8839ef"  # mauve
+      Foreground: "#eff1f5"  # base
+    SectionLine:
+      Background: "#1e66f5"  # blue
+      Foreground: "#eff1f5"  # base
+    VerticalHeader:
+      Background: "#ccd0da"  # surface0
+    Ruler:
+      Background: "#ccd0da"  # surface0
+      Foreground: "#4c4f69"  # text
+      Bold: true
+    HeaderBorder:
+      Foreground: "#9ca0b0"  # overlay0
+    VerticalHeaderBorder:
+      Background: "#bcc0cc"  # surface1
+    MultiColorHighlight:
+      - Foreground: "#d20f39"  # red
+      - Foreground: "#179299"  # teal
+      - Foreground: "#df8e1d"  # yellow
+      - Foreground: "#8839ef"  # mauve
+      - Foreground: "#40a02b"  # green
+      - Foreground: "#1e66f5"  # blue
+      - Foreground: "#ea76cb"  # pink
+    ColumnRainbow:
+      - Foreground: "#4c4f69"  # text
+      - Foreground: "#d20f39"  # red
+      - Foreground: "#179299"  # teal
+      - Foreground: "#fe640b"  # peach
+      - Foreground: "#40a02b"  # green
+      - Foreground: "#1e66f5"  # blue
+      - Foreground: "#df8e1d"  # yellow
+    JumpTargetLine:
+      Underline: true
+      Foreground: "#8839ef"  # mauve
+
+StyleOverStrike:
+  Bold: true
+StyleOverLine:
+  Underline: true

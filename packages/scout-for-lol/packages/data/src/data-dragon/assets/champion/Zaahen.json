@@ -1,0 +1,281 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Zaahen": {
+      "id": "Zaahen",
+      "key": "904",
+      "name": "Zaahen",
+      "title": "The Unsundered",
+      "image": {
+        "full": "Zaahen.png",
+        "sprite": "champion5.png",
+        "group": "champion",
+        "x": 192,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "904000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "904001",
+          "num": 1,
+          "name": "Immortal Journey Zaahen",
+          "chromas": true
+        }
+      ],
+      "lore": "A fallen god wielding both divine and profane power, Zaahen hunts his fellow Darkin while defying the corruption that threatens to consume him. Once willingly sealed within his glaive to stave off madness, he now walks free, noble in heart and vicious in purpose. Zaahen fights an eternal war within—but so long as he endures, he will rise above all who seek to bring Runeterra to ruin.",
+      "blurb": "A fallen god wielding both divine and profane power, Zaahen hunts his fellow Darkin while defying the corruption that threatens to consume him. Once willingly sealed within his glaive to stave off madness, he now walks free, noble in heart and vicious...",
+      "allytips": [],
+      "enemytips": [],
+      "tags": ["Fighter", "Assassin"],
+      "partype": "Mana",
+      "info": {
+        "attack": 8,
+        "defense": 6,
+        "magic": 1,
+        "difficulty": 2
+      },
+      "stats": {
+        "hp": 640,
+        "hpperlevel": 114,
+        "mp": 350,
+        "mpperlevel": 55,
+        "movespeed": 345,
+        "armor": 36,
+        "armorperlevel": 5,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 175,
+        "hpregen": 7.5,
+        "hpregenperlevel": 0.8,
+        "mpregen": 8.15,
+        "mpregenperlevel": 0.75,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 63,
+        "attackdamageperlevel": 4,
+        "attackspeedperlevel": 2.5,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "ZaahenQ",
+          "name": "The Darkin Glaive",
+          "description": "Zaahen slashes twice on his next attack, dealing bonus damage and healing himself. Zaahen can recast this ability to have his next attack deal bonus damage and knock up his target.<br>",
+          "tooltip": "Zaahen slashes twice on his next Attack, dealing <physicalDamage>{{ initialdamage }} bonus physical damage</physicalDamage> and restoring <healing>{{ healpercent*100 }}% of his max Health</healing>.<br /><br /><recast>Recast:</recast> Zaahen's next Attack deals <physicalDamage>{{ secondhitdamage }} bonus physical damage</physicalDamage> and <status>Knocks</status> the target Up for {{ knockupduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Recast Damage", "Cooldown", "Percent Healed", "Bonus AD Ratio"],
+            "effect": [
+              "{{ q1basedamage }} -> {{ q1basedamageNL }}",
+              "{{ q2basedamage }} -> {{ q2basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ healpercent*100.000000 }}% -> {{ healpercentnl*100.000000 }}%",
+              "{{ qcoeff*100.000000 }}% -> {{ qcoeffnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [10, 9, 8, 7, 6],
+          "cooldownBurn": "10/9/8/7/6",
+          "cost": [25, 25, 25, 25, 25],
+          "costBurn": "25",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [25000, 25000, 25000, 25000, 25000],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "ZaahenQ.png",
+            "sprite": "spell16.png",
+            "group": "spell",
+            "x": 192,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "ZaahenW",
+          "name": "Dreaded Return",
+          "description": "Zaahen stabs in a direction, damaging enemies hit, then pulls them toward him.",
+          "tooltip": "Zaahen stabs in a direction, dealing <physicalDamage>{{ initialdamage }} physical damage</physicalDamage> to enemies hit, then <status>Pulls</status> them toward him, dealing <physicalDamage>{{ secondarydamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ initialbasedamage }} -> {{ initialbasedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [16, 15, 14, 13, 12],
+          "cooldownBurn": "16/15/14/13/12",
+          "cost": [50, 50, 50, 50, 50],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [850, 850, 850, 850, 850],
+          "rangeBurn": "850",
+          "image": {
+            "full": "ZaahenW.png",
+            "sprite": "spell16.png",
+            "group": "spell",
+            "x": 240,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "ZaahenE",
+          "name": "Aureate Rush",
+          "description": "Zaahen dashes to a location and slices around himself.",
+          "tooltip": "Zaahen dashes then slices around himself, dealing <physicalDamage>{{ basedamagecalc }} physical damage</physicalDamage> to nearby enemies.<br /><br />Enemies at the edge of the slice take <physicalDamage>{{ bonusdamagecalc }} physical damage</physicalDamage> <magicDamage>+{{ percenthpdamage*100 }}% of their maximum Health as magic damage</magicDamage> instead.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Base Damage", "Edge Damage", "Cooldown", "% Health damage"],
+            "effect": [
+              "{{ damage_base }} -> {{ damage_baseNL }}",
+              "{{ damagebonusbase }} -> {{ damagebonusbaseNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ percenthpdamage*100.000000 }}% -> {{ percenthpdamagenl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldownBurn": "10/9.5/9/8.5/8",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [25000, 25000, 25000, 25000, 25000],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "ZaahenE.png",
+            "sprite": "spell16.png",
+            "group": "spell",
+            "x": 288,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "ZaahenR",
+          "name": "Grim Deliverance",
+          "description": "Zaahen rises then stabs downward, damaging enemies and healing for a portion of the damage dealt.",
+          "tooltip": "<spellPassive>Passive</spellPassive>: Zaahen gains <armorPen>{{ armorpen*100 }}% %i:scaleAPen% Armor Penetration</armorPen>.<br /><br /><spellActive>Active</spellActive>: Zaahen rises, gaining {{ damagereduction*100 }}% Damage Reduction while casting.<br /><br />Zaahen then stabs downward, dealing <physicalDamage>{{ damageendcalc }} physical damage</physicalDamage> and restoring <healing>{{ healpercent*100 }}% of the damage dealt to enemy champions as Health</healing>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Damage", "Armor Penetration"],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ enddamage }} -> {{ enddamageNL }}",
+              "{{ armorpen*100.000000 }}% -> {{ armorpennl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [110, 95, 80],
+          "cooldownBurn": "110/95/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [600, 600, 600],
+          "rangeBurn": "600",
+          "image": {
+            "full": "ZaahenR.png",
+            "sprite": "spell16.png",
+            "group": "spell",
+            "x": 336,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Cultivation of War",
+        "description": "Zaahen's attacks and abilities against enemy champions  grant him stacks of Determination, gaining bonus Attack Damage per stack. When filled with Determination, Zaahen gains increased Attack Damage and can revive.",
+        "image": {
+          "full": "ZaahenP.Zaahen.png",
+          "sprite": "passive5.png",
+          "group": "passive",
+          "x": 192,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

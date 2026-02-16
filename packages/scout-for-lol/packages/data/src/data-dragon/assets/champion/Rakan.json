@@ -1,0 +1,344 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Rakan": {
+      "id": "Rakan",
+      "key": "497",
+      "name": "Rakan",
+      "title": "The Charmer",
+      "image": {
+        "full": "Rakan.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 192,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "497000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "497001",
+          "num": 1,
+          "name": "Cosmic Dawn Rakan",
+          "chromas": false
+        },
+        {
+          "id": "497002",
+          "num": 2,
+          "name": "Sweetheart Rakan",
+          "chromas": false
+        },
+        {
+          "id": "497003",
+          "num": 3,
+          "name": "SSG Rakan",
+          "chromas": true
+        },
+        {
+          "id": "497004",
+          "num": 4,
+          "name": "iG Rakan",
+          "chromas": true
+        },
+        {
+          "id": "497005",
+          "num": 5,
+          "name": "Star Guardian Rakan",
+          "chromas": true
+        },
+        {
+          "id": "497009",
+          "num": 9,
+          "name": "Elderwood Rakan",
+          "chromas": true
+        },
+        {
+          "id": "497018",
+          "num": 18,
+          "name": "Arcana Rakan",
+          "chromas": true
+        },
+        {
+          "id": "497027",
+          "num": 27,
+          "name": "Broken Covenant Rakan",
+          "chromas": true
+        },
+        {
+          "id": "497036",
+          "num": 36,
+          "name": "Redeemed Star Guardian Rakan",
+          "chromas": false
+        },
+        {
+          "id": "497037",
+          "num": 37,
+          "name": "Dragonmancer Rakan",
+          "chromas": true
+        },
+        {
+          "id": "497038",
+          "num": 38,
+          "name": "Prestige Dragonmancer Rakan",
+          "chromas": false
+        },
+        {
+          "id": "497047",
+          "num": 47,
+          "name": "Battle Academia Rakan",
+          "chromas": true
+        }
+      ],
+      "lore": "As mercurial as he is charming, Rakan is an infamous vastayan troublemaker and the greatest battle-dancer in Lhotlan tribal history. To the humans of the Ionian highlands, his name has long been synonymous with wild festivals, uncontrollable parties, and anarchic music. Few would suspect this energetic, traveling showman is also partner to the rebel Xayah, and is dedicated to her cause.",
+      "blurb": "As mercurial as he is charming, Rakan is an infamous vastayan troublemaker and the greatest battle-dancer in Lhotlan tribal history. To the humans of the Ionian highlands, his name has long been synonymous with wild festivals, uncontrollable parties...",
+      "allytips": [
+        "Rakan requires allies near him to make the most out of his tools.",
+        "Rakan's dash speeds increase with his Move Speed. Use the extra speed to surprise your enemies!",
+        "Danger is as fun as you let it be."
+      ],
+      "enemytips": [
+        "Rakan's movement abilities forecast their destination. Try to use this to your advantage.",
+        "Champions with crowd control that can be applied quickly excel against Rakan.",
+        "Catching Rakan with no allies around severely inhibits his mobility. Try to find him alone."
+      ],
+      "tags": ["Support"],
+      "partype": "Mana",
+      "info": {
+        "attack": 2,
+        "defense": 4,
+        "magic": 8,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 610,
+        "hpperlevel": 99,
+        "mp": 315,
+        "mpperlevel": 50,
+        "movespeed": 335,
+        "armor": 30,
+        "armorperlevel": 4.9,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 300,
+        "hpregen": 5,
+        "hpregenperlevel": 0.5,
+        "mpregen": 8.75,
+        "mpregenperlevel": 0.5,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 62,
+        "attackdamageperlevel": 3.5,
+        "attackspeedperlevel": 3,
+        "attackspeed": 0.635
+      },
+      "spells": [
+        {
+          "id": "RakanQ",
+          "name": "Gleaming Quill",
+          "description": "Flings a magical feather that deals magic damage. Striking a champion or epic monster enables Rakan to heal his allies.",
+          "tooltip": "Rakan flings a magical feather that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first enemy hit.<br /><br />If the feather hits a champion or epic jungle monster, Rakan restores <healing>{{ totalheal }} Health</healing> to himself and nearby allies after {{ healdelay }} seconds or when he touches an allied champion.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [11, 10, 9, 8, 7],
+          "cooldownBurn": "11/10/9/8/7",
+          "cost": [45, 45, 45, 45, 45],
+          "costBurn": "45",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [850, 850, 850, 850, 850],
+          "rangeBurn": "850",
+          "image": {
+            "full": "RakanQ.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 192,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "RakanW",
+          "name": "Grand Entrance",
+          "description": "Dashes to a location, knocking up nearby enemies on arrival.",
+          "tooltip": "Rakan dashes, then spirals into the air, <status>Knocking Up</status> for {{ knockupduration }} second and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown", "Mana Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basecost }} -> {{ basecostNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 13, 12, 11, 10],
+          "cooldownBurn": "14/13/12/11/10",
+          "cost": [50, 60, 70, 80, 90],
+          "costBurn": "50/60/70/80/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [70, 120, 170, 220, 270],
+            [0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "70/120/170/220/270", "0", "1", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [600, 600, 600, 600, 600],
+          "rangeBurn": "600",
+          "image": {
+            "full": "RakanW.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 240,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "RakanE",
+          "name": "Battle Dance",
+          "description": "Flies to an allied champion granting them a shield. Can be re-cast for free for a short duration.",
+          "tooltip": "Rakan dashes to an allied champion, granting them <shield>{{ totalshield }} Shield</shield> for {{ e3 }} seconds.<br /><br />Rakan can <recast>Recast</recast> this Ability once within {{ e2 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Shield Health", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": ["{{ baseshield }} -> {{ baseshieldNL }}", "{{ e4 }} -> {{ e4NL }}", "{{ e5 }} -> {{ e5NL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [0, 0, 0, 0, 0],
+          "cooldownBurn": "0",
+          "cost": [40, 45, 50, 55, 60],
+          "costBurn": "40/45/50/55/60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [5, 5, 5, 5, 5],
+            [3, 3, 3, 3, 3],
+            [20, 18, 16, 14, 12],
+            [40, 45, 50, 55, 60],
+            [700, 700, 700, 700, 700],
+            [1000, 1000, 1000, 1000, 1000],
+            [1150, 1150, 1150, 1150, 1150],
+            [1250, 1250, 1250, 1250, 1250],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "5", "3", "20/18/16/14/12", "40/45/50/55/60", "700", "1000", "1150", "1250", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [650, 650, 650, 650, 650],
+          "rangeBurn": "650",
+          "image": {
+            "full": "RakanE.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 288,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "RakanR",
+          "name": "The Quickness",
+          "description": "Gains Move Speed, charming and dealing magic damage to enemies touched.",
+          "tooltip": "Rakan gains <speed>{{ e5 }}% Move Speed</speed> for {{ e2 }} seconds. Rakan deals <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> and <status>Charms</status> enemies for {{ e3 }} second(s) the first time he touches them. The first champion touched grants Rakan <speed>{{ e6 }}% decaying Move Speed</speed>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Charm Duration", "Damage", "Cooldown"],
+            "effect": ["{{ e3 }} -> {{ e3NL }}", "{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [130, 110, 90],
+          "cooldownBurn": "130/110/90",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [100, 200, 300],
+            [4, 4, 4],
+            [1, 1.25, 1.5],
+            [0.25, 0.25, 0.25],
+            [75, 75, 75],
+            [150, 150, 150],
+            [150, 150, 150],
+            [130, 110, 90],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "100/200/300", "4", "1/1.25/1.5", "0.25", "75", "150", "150", "130/110/90", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [150, 150, 150],
+          "rangeBurn": "150",
+          "image": {
+            "full": "RakanR.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 336,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Fey Feathers",
+        "description": "Rakan periodically gains a shield.",
+        "image": {
+          "full": "Rakan_P.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 192,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

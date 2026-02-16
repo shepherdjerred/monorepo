@@ -1,0 +1,5 @@
+The game lasted <GAME_DURATION>. Here are the summaries from each time period:
+
+<CHUNK_SUMMARIES>
+
+Combine these into a single cohesive narrative of how the game unfolded.

@@ -1,0 +1,330 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Braum": {
+      "id": "Braum",
+      "key": "201",
+      "name": "Braum",
+      "title": "the Heart of the Freljord",
+      "image": {
+        "full": "Braum.png",
+        "sprite": "champion0.png",
+        "group": "champion",
+        "x": 384,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "201000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "201001",
+          "num": 1,
+          "name": "Dragonslayer Braum",
+          "chromas": true
+        },
+        {
+          "id": "201002",
+          "num": 2,
+          "name": "El Tigre Braum",
+          "chromas": false
+        },
+        {
+          "id": "201003",
+          "num": 3,
+          "name": "Braum Lionheart",
+          "chromas": false
+        },
+        {
+          "id": "201010",
+          "num": 10,
+          "name": "Santa Braum",
+          "chromas": false
+        },
+        {
+          "id": "201011",
+          "num": 11,
+          "name": "Crime City Braum",
+          "chromas": true
+        },
+        {
+          "id": "201024",
+          "num": 24,
+          "name": "Sugar Rush Braum",
+          "chromas": true
+        },
+        {
+          "id": "201033",
+          "num": 33,
+          "name": "Pool Party Braum",
+          "chromas": true
+        },
+        {
+          "id": "201042",
+          "num": 42,
+          "name": "Grill Master Braum",
+          "chromas": true
+        }
+      ],
+      "lore": "Blessed with massive biceps and an even bigger heart, Braum is a beloved hero of the Freljord. Every mead hall north of Frostheld toasts his legendary strength, said to have felled a forest of oaks in a single night, and punched an entire mountain into rubble. Bearing an enchanted vault door as his shield, Braum roams the frozen north sporting a mustachioed smile as big as his muscles—a true friend to all those in need.",
+      "blurb": "Blessed with massive biceps and an even bigger heart, Braum is a beloved hero of the Freljord. Every mead hall north of Frostheld toasts his legendary strength, said to have felled a forest of oaks in a single night, and punched an entire mountain into...",
+      "allytips": [
+        "Work with your allies to stack Concussive Blows, encourage them to basic attack marked targets.",
+        "Leap in front of squishy friends and shield them from projectiles with Unbreakable.",
+        "Glacial Fissure leaves a powerful slow zone, position it well to split teamfights and slow the enemy approach."
+      ],
+      "enemytips": [
+        "Braum must land Winter's Bite or a basic attack to start Concussive Blows. If you get marked, exit combat range before getting hit 3 more times to avoid the stun.",
+        "Braum's ultimate has a long cast time, use that extra time to dodge. Walking over the frozen ground left behind will slow you, position so that you don't need to cross it.",
+        "Unbreakable gives Braum extremely strong directional defense, either wait until it is down or outposition the ability."
+      ],
+      "tags": ["Tank", "Support"],
+      "partype": "Mana",
+      "info": {
+        "attack": 3,
+        "defense": 9,
+        "magic": 4,
+        "difficulty": 3
+      },
+      "stats": {
+        "hp": 610,
+        "hpperlevel": 112,
+        "mp": 311,
+        "mpperlevel": 45,
+        "movespeed": 335,
+        "armor": 35,
+        "armorperlevel": 5,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 8.5,
+        "hpregenperlevel": 1,
+        "mpregen": 7,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 55,
+        "attackdamageperlevel": 3.2,
+        "attackspeedperlevel": 3.5,
+        "attackspeed": 0.644
+      },
+      "spells": [
+        {
+          "id": "BraumQ",
+          "name": "Winter's Bite",
+          "description": "Braum propels freezing ice from his shield, slowing and dealing magic damage.<br><br>Applies a stack of <font color='#FFF673'>Concussive Blows</font>.",
+          "tooltip": "Braum propels freezing ice from his shield, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first enemy hit and <status>Slowing</status> them by {{ e2 }}% decaying over {{ e5 }} seconds.<br /><br />Applies a stack of <keywordMajor>Concussive Blows</keywordMajor>. {{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldownBurn": "8/7.5/7/6.5/6",
+          "cost": [45, 50, 55, 60, 65],
+          "costBurn": "45/50/55/60/65",
+          "datavalues": {},
+          "effect": [
+            null,
+            [75, 120, 165, 210, 255],
+            [70, 70, 70, 70, 70],
+            [30, 30, 30, 30, 30],
+            [0.02, 0.02, 0.02, 0.02, 0.02],
+            [2, 2, 2, 2, 2],
+            [1050, 1050, 1050, 1050, 1050],
+            [4, 4, 4, 4, 4],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "75/120/165/210/255", "70", "30", "0.02", "2", "1050", "4", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1000, 1000, 1000, 1000, 1000],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "BraumQ.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 0,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "BraumW",
+          "name": "Stand Behind Me",
+          "description": "Braum leaps to a target allied champion or minion. On arrival, Braum and the ally gain Armor and Magic Resist for a few seconds.",
+          "tooltip": "Braum leaps to an allied champion or minion. On arrival, Braum grants the target <scaleArmor>{{ grantedallyarmor }} Armor</scaleArmor> and <scaleMR>{{ grantedallymr }} Magic Resist</scaleMR> for {{ e1 }} seconds. Braum grants himself <scaleArmor>{{ grantedbraumarmor }} Armor</scaleArmor> and <scaleMR>{{ grantedbraummr }} Magic Resist</scaleMR> for the same duration.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Base Resists", "Cooldown"],
+            "effect": ["{{ baseresists }} -> {{ baseresistsNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 11, 10, 9, 8],
+          "cooldownBurn": "12/11/10/9/8",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [3, 3, 3, 3, 3],
+            [750, 750, 750, 750, 750],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [40, 40, 40, 40, 40],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "3", "750", "0", "0", "0", "40", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [650, 650, 650, 650, 650],
+          "rangeBurn": "650",
+          "image": {
+            "full": "BraumW.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 48,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "BraumE",
+          "name": "Unbreakable",
+          "description": "Braum raises his shield in a direction for several seconds, intercepting all projectiles causing them to hit him and be destroyed. He negates the damage of the first attack completely and reduces the damage of all subsequent attacks from this direction.",
+          "tooltip": "Braum raises his shield for {{ e2 }} seconds, intercepting enemy missiles from the chosen direction, causing them to hit Braum and then be destroyed. The first missile Braum blocks deals no damage, and subsequent projectiles deal {{ e3 }}% reduced damage.<br /><br />Braum gains <speed>{{ e4 }}% Move Speed</speed> while his shield is raised.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Duration", "Damage Reduction", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ e2 }} -> {{ e2NL }}",
+              "{{ e3 }}% -> {{ e3NL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [16, 14, 12, 10, 8],
+          "cooldownBurn": "16/14/12/10/8",
+          "cost": [30, 35, 40, 45, 50],
+          "costBurn": "30/35/40/45/50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [3, 3.25, 3.5, 3.75, 4],
+            [35, 40, 45, 50, 55],
+            [10, 10, 10, 10, 10],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "3/3.25/3.5/3.75/4", "35/40/45/50/55", "10", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [25000, 25000, 25000, 25000, 25000],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "BraumE.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 96,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "BraumRWrapper",
+          "name": "Glacial Fissure",
+          "description": "Braum slams the ground, knocking up enemies nearby and in a line in front of him. A fissure is left along the line that slows enemies.",
+          "tooltip": "Braum slams the ground sending forth a fissure that <status>Knocks Up</status> enemies in its path and nearby Braum, and deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>. The first target hit is <status>Knocked Up</status> for between {{ minknockup }} and {{ maxknockup }} seconds, increasing with distance from Braum. All others hit are <status>Knocked Up</status> for {{ minknockup }} seconds.<br /><br />The fissure also creates a zone for {{ slowzoneduration }} seconds, that <status>Slows</status> by {{ movespeedmod }}%.<br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Knockup Duration", "Slow", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ firstknockupduration }} -> {{ firstknockupdurationNL }}",
+              "{{ movespeedmod }}% -> {{ movespeedmodNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 100, 80],
+          "cooldownBurn": "120/100/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1250, 1250, 1250],
+          "rangeBurn": "1250",
+          "image": {
+            "full": "BraumRWrapper.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 144,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Concussive Blows",
+        "description": "Braum's basic attacks apply Concussive Blows. Once the first stack is applied, <font color='#FFF673'>ally</font> basic attacks also stack Concussive Blows. <br><br>Upon reaching 4 stacks, the target is stunned and takes magic damage. For the next few seconds they cannot receive new stacks, but take bonus magic damage from Braum's attacks.",
+        "image": {
+          "full": "Braum_Passive.png",
+          "sprite": "passive0.png",
+          "group": "passive",
+          "x": 384,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

@@ -1,0 +1,111 @@
+---
+title: "Determining output types from input"
+date: 2025-03-22Z-0700
+---
+
+TypeScript lacks (useful) [function overloading](https://en.wikipedia.org/wiki/Function_overloading). This makes sense -- TypeScript largely has zero runtime representation. Function overloading is generally done by having multiple functions with the same name and different type signature. For example, in Java:
+
+```java
+void doThing(int a) {
+    System.out.println("Got an int!");
+}
+
+void doThing(String b) {
+    System.out.println("Got a string!");
+}
+
+void main {
+    doThing(1); // Got an int!
+    doThing("1"); // Got a string!
+}
+```
+
+The correct function will be called depending on the type passed in.
+
+TypeScript is largely erased at runtime, so there isn't a way to determine which function implementation should be called. For example, consider this hypothetical syntax:
+
+```ts
+// @noErrors
+function doThing(a: number) {
+  console.log("Got an number!");
+}
+
+function doThing(b: string) {
+  console.log("Got a string!");
+}
+
+doThing(1);
+doThing("1");
+```
+
+At runtime, do we want to call doThing(number) or doThing(string)?
+
+JavaScript is [weakly-typed](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Data_structures#dynamic_and_weak_typing), so it can't know if you're wanting it to type coerce or not. In this example a straightforward solution would be to call the strongest match, but it becomes more complicated when you consider more complex types. For example:
+
+```ts
+// @noErrors
+type Person = {
+  name: string;
+  age: number;
+};
+
+type Dog = {
+  name: string;
+  weight: string;
+};
+
+function doThing(a: Person) {
+  console.log("Got a person!");
+}
+
+function doThing(b: Dog) {
+  console.log("Got a dog!");
+}
+
+doThing({
+  name: "John",
+  age: 21,
+  weight: 140,
+});
+```
+
+There aren't a reasonable set of rules to determine which function to call. So, what can we do instead?
+
+First, it's worth mentioning that TypeScript does _kinda_ have [function overloads](https://www.typescriptlang.org/docs/handbook/2/functions.html#function-overloads). I haven't had a good experience using them, so I never use them.
+
+Instead, I usually reach for [conditional types](https://www.typescriptlang.org/docs/handbook/2/conditional-types.html). This lets me do something that _kinda_ looks like function overloading. It allows me to write one function that handles multiple cases, and can even allow me to determine the output type based on the input.
+
+For example:
+
+```ts
+type BoardGame = {
+  name: string;
+  numberOfPieces: number;
+};
+
+type VideoGame = {
+  name: string;
+  platform: "PC" | "Console";
+};
+
+type Game = BoardGame | VideoGame;
+
+type BoardGamePieces<G extends Game> = G extends BoardGame ? number : undefined;
+
+function getNumberOfPieces<G extends Game>(game: G): BoardGamePieces<G> {
+  if ("numberOfPieces" in game) {
+    return game.numberOfPieces as BoardGamePieces<G>;
+  }
+  return undefined as BoardGamePieces<G>;
+}
+
+const result1 = getNumberOfPieces({
+  name: "Catan",
+  numberOfPieces: 100,
+});
+
+const result2 = getNumberOfPieces({
+  name: "Minecraft",
+  platform: "PC",
+});
+```

@@ -1,0 +1,51 @@
+---
+title: Debugging C in VS Code
+description: Using VS Code to debug C is pretty easy
+date: 2022-10-23Z-0700
+---
+
+Knowing how to use a debugger for the tools that you use is one of the best investments you can make.
+
+Debuggers help you explore the state of your program. They provide feedback much faster than other debugging methods, like print statements. They also allow you to see _everything_, whereas a print statement will only show what you choose to print. This can be very helpful when part of a program that you expect to be working correctly is actually misbehaving.
+
+Advanced Operating Systems, the course that I'm currently taking for my Masters are Georgia Tech, requires that you spend a fair bit of time working in C. C is a fine language, but it is very cumbersome to debug programs without a debugger. Save yourself some frustration and set your debugging environment up before you start working on your program.
+
+VS Code makes this very easy.
+
+## Setup
+
+1. Install the [C/C++ extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools)
+1. Open up the "Run and Debug" pane
+1. Click the cog icon to open up the launch.json file which contains your debugging configuration
+1. Copy this into the launch.json file:
+
+   ```json
+   {
+     "name": "debug",
+     "type": "cppdbg",
+     "request": "launch",
+     "program": "${workspaceFolder}/<path to your compiled binary>",
+     "args": ["<your program arguments>"],
+     "stopAtEntry": false,
+     "cwd": "${fileDirname}",
+     "environment": [],
+     "externalConsole": false,
+     "MIMode": "gdb",
+     "setupCommands": [
+       {
+         "description": "Enable pretty-printing for gdb",
+         "text": "-enable-pretty-printing",
+         "ignoreFailures": true
+       },
+       {
+         "description": "Set Disassembly Flavor to Intel",
+         "text": "-gdb-set disassembly-flavor intel",
+         "ignoreFailures": true
+       }
+     ]
+   }
+   ```
+
+1. Save the file and click on "Start Debugging"
+
+VS Code will launch your binary and attach a debuggger. You can do all of the usual debugger things like set breakpoints and inspect program state.

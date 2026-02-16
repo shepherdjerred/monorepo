@@ -1,0 +1,81 @@
+{
+  "name": "webring",
+  "description": "Collect the latest RSS items from your favorite feeds.",
+  "author": {
+    "name": "Jerred Shepherd",
+    "email": "npm@sjer.red",
+    "url": "https://sjer.red"
+  },
+  "homepage": "https://github.com/shepherdjerred/webring",
+  "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shepherdjerred/webring.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shepherdjerred/webring/issues"
+  },
+  "type": "module",
+  "version": "1.5.1",
+  "scripts": {
+    "prepare": "husky",
+    "lint": "eslint src --cache",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "vitest --disable-console-intercept",
+    "test:update": "vitest --disable-console-intercept --update",
+    "typedoc": "typedoc src/index.ts"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "remeda": "^2.21.2",
+    "rss-parser": "^3.13.0",
+    "sanitize-html": "^2.14.0",
+    "truncate-html": "^1.2.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.0.0",
+    "@commitlint/config-conventional": "^20.0.0",
+    "@eslint/js": "^9.22.0",
+    "@tsconfig/node24": "^24.0.0",
+    "@tsconfig/strictest": "^2.0.5",
+    "@types/express": "^5.0.0",
+    "@types/node": "^25.0.0",
+    "@types/sanitize-html": "^2.13.0",
+    "eslint": "^9.22.0",
+    "express": "^5.0.0",
+    "globals": "^17.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.0.0",
+    "prettier": "^3.5.3",
+    "typedoc": "^0.28.0",
+    "typedoc-plugin-extras": "^4.0.1",
+    "typedoc-plugin-zod": "^1.4.0",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.26.1",
+    "vitest": "^3.0.8"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": "eslint --cache --fix",
+    "*": "prettier --ignore-unknown --write"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "prettier": {
+    "printWidth": 120
+  },
+  "files": [
+    "dist",
+    "src",
+    "package.json",
+    "README.md",
+    "LICENSE",
+    "bun.lock",
+    "CHANGELOG.md"
+  ]
+}

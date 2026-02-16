@@ -1,0 +1,29 @@
+---
+import FormattedDate from "@components/FormattedDate.astro";
+import type { z } from "astro:content";
+import type { BlogSchema } from "src/content/schemas";
+
+type Props = z.infer<typeof BlogSchema>;
+
+const { title, hackerNews, date } = Astro.props;
+---
+
+<div class="flex place-content-center">
+  <article class="prose mt-10 mb-10 dark:prose-invert">
+    <hgroup>
+      <h1 class="mb-0">{title}</h1>
+      <span class="text-sm">
+        <FormattedDate date={date} />
+        {
+          hackerNews && (
+            <>
+              <span class="ml-2 mr-2">|</span>
+              <a href={hackerNews}>View comments on Hacker News</a>
+            </>
+          )
+        }
+      </span>
+    </hgroup>
+    <slot />
+  </article>
+</div>

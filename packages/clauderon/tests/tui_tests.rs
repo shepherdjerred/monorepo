@@ -1,3 +1,8 @@
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    reason = "TUI tests use expect/unwrap for simplicity"
+)]
 //! TUI tests for clauderon application.
 //!
 //! These tests cover:
@@ -112,7 +117,7 @@ fn test_open_create_dialog() {
 fn test_close_create_dialog() {
     let mut app = App::new();
     app.mode = AppMode::CreateDialog;
-    app.create_dialog.prompt = "test".to_string();
+    app.create_dialog.prompt = "test".to_owned();
 
     app.close_create_dialog();
 
@@ -141,7 +146,7 @@ async fn test_open_delete_confirm() {
 fn test_cancel_delete() {
     let mut app = App::new();
     app.mode = AppMode::ConfirmDelete;
-    app.pending_delete = Some("test-id".to_string());
+    app.pending_delete = Some("test-id".to_owned());
 
     app.cancel_delete();
 
@@ -379,7 +384,7 @@ async fn test_create_dialog_text_input() {
 async fn test_create_dialog_backspace() {
     let mut app = App::new();
     app.open_create_dialog();
-    app.create_dialog.prompt = "test".to_string();
+    app.create_dialog.prompt = "test".to_owned();
     app.create_dialog.prompt_cursor_col = 4; // Cursor at end
 
     handle_key_event(&mut app, key(KeyCode::Backspace))
@@ -564,7 +569,7 @@ async fn test_confirm_delete_n_cancels() {
 async fn test_confirm_delete_escape_cancels() {
     let mut app = App::new();
     app.mode = AppMode::ConfirmDelete;
-    app.pending_delete = Some("test-id".to_string());
+    app.pending_delete = Some("test-id".to_owned());
 
     handle_key_event(&mut app, key(KeyCode::Esc)).await.unwrap();
 
@@ -640,7 +645,7 @@ fn test_render_connection_error() {
     let mut terminal = Terminal::new(backend).unwrap();
 
     let mut app = App::new();
-    app.connection_error = Some("Connection refused".to_string());
+    app.connection_error = Some("Connection refused".to_owned());
 
     terminal.draw(|frame| ui::render(frame, &app)).unwrap();
 
@@ -677,7 +682,7 @@ fn test_render_create_dialog_with_loading() {
 
     let mut app = App::new();
     app.open_create_dialog();
-    app.loading_message = Some("Creating session (this may take up to 60s)...".to_string());
+    app.loading_message = Some("Creating session (this may take up to 60s)...".to_owned());
 
     terminal.draw(|frame| ui::render(frame, &app)).unwrap();
 
@@ -769,8 +774,8 @@ async fn test_create_session_success() {
     app.set_client(Box::new(mock));
     app.open_create_dialog();
 
-    app.create_dialog.repo_path = "/tmp/repo".to_string();
-    app.create_dialog.prompt = "Test prompt".to_string();
+    app.create_dialog.repo_path = "/tmp/repo".to_owned();
+    app.create_dialog.prompt = "Test prompt".to_owned();
 
     app.create_session_from_dialog().await.unwrap();
 
@@ -789,11 +794,11 @@ async fn test_create_session_shows_loading_indicator() {
     app.set_client(Box::new(mock));
     app.open_create_dialog();
 
-    app.create_dialog.repo_path = "/tmp/repo".to_string();
-    app.create_dialog.prompt = "Test prompt".to_string();
+    app.create_dialog.repo_path = "/tmp/repo".to_owned();
+    app.create_dialog.prompt = "Test prompt".to_owned();
 
     // Set loading message like the event handler does
-    app.loading_message = Some("Creating session (this may take up to 60s)...".to_string());
+    app.loading_message = Some("Creating session (this may take up to 60s)...".to_owned());
 
     // Verify loading message is set
     assert!(app.loading_message.is_some());
@@ -820,8 +825,8 @@ async fn test_create_session_failure() {
     app.set_client(Box::new(mock));
     app.open_create_dialog();
 
-    app.create_dialog.repo_path = "/tmp/repo".to_string();
-    app.create_dialog.prompt = "Test prompt".to_string();
+    app.create_dialog.repo_path = "/tmp/repo".to_owned();
+    app.create_dialog.prompt = "Test prompt".to_owned();
 
     let result = app.create_session_from_dialog().await;
 
@@ -932,12 +937,12 @@ async fn test_create_blocked_during_delete() {
         tokio::time::sleep(std::time::Duration::from_secs(10)).await;
         drop(tx);
     }));
-    app.deleting_session_id = Some("test-id".to_string());
+    app.deleting_session_id = Some("test-id".to_owned());
 
     // Try to create while delete is in progress
     app.mode = clauderon::tui::app::AppMode::CreateDialog;
-    app.create_dialog.repo_path = "/tmp/repo".to_string();
-    app.create_dialog.prompt = "test".to_string();
+    app.create_dialog.repo_path = "/tmp/repo".to_owned();
+    app.create_dialog.prompt = "test".to_owned();
     app.create_dialog.focus = CreateDialogFocus::Buttons;
     app.create_dialog.button_create_focused = true;
 
@@ -959,7 +964,7 @@ async fn test_delete_error_handling() {
     let mut app = App::new();
 
     // Don't set a client - this will cause connection error
-    app.pending_delete = Some("nonexistent-session".to_string());
+    app.pending_delete = Some("nonexistent-session".to_owned());
     app.confirm_delete();
 
     // Poll for deletion error
@@ -1671,11 +1676,11 @@ async fn test_k8s_session_creation_passes_options() {
         ..Default::default()
     });
     app.create_dialog.backend = BackendType::Kubernetes;
-    app.create_dialog.repo_path = "/tmp/repo".to_string();
-    app.create_dialog.prompt = "Test prompt".to_string();
-    app.create_dialog.container_image = "my-custom-image:latest".to_string();
+    app.create_dialog.repo_path = "/tmp/repo".to_owned();
+    app.create_dialog.prompt = "Test prompt".to_owned();
+    app.create_dialog.container_image = "my-custom-image:latest".to_owned();
     app.create_dialog.pull_policy = ImagePullPolicy::Always;
-    app.create_dialog.storage_class = "premium-ssd".to_string();
+    app.create_dialog.storage_class = "premium-ssd".to_owned();
     app.create_dialog.dangerous_copy_creds = true;
 
     // Create session should succeed
@@ -1729,8 +1734,8 @@ fn test_render_create_dialog_with_k8s_backend() {
         ..Default::default()
     });
     app.create_dialog.backend = BackendType::Kubernetes;
-    app.create_dialog.container_image = "test-image".to_string();
-    app.create_dialog.storage_class = "fast-ssd".to_string();
+    app.create_dialog.container_image = "test-image".to_owned();
+    app.create_dialog.storage_class = "fast-ssd".to_owned();
 
     // Should render without panicking
     terminal.draw(|frame| ui::render(frame, &app)).unwrap();

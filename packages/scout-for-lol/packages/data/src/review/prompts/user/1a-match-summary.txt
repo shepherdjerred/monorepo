@@ -1,0 +1,7 @@
+Summarize <PLAYER_NAME>'s performance playing <PLAYER_CHAMPION> in the <PLAYER_LANE> role.
+
+Match data is in the following block:
+
+---
+<MATCH_DATA>
+---

@@ -1,0 +1,11 @@
+---
+whiskers:
+  version: ^2.5.1
+  matrix:
+    - flavor
+  filename: "theme-env-{{ flavor.identifier }}.fish"
+---
+set -gx FZF_DEFAULT_OPTS "--color=bg+:{{surface0.hex}},bg:{{base.hex}},spinner:{{rosewater.hex}},hl:{{red.hex}},fg:{{text.hex}},header:{{red.hex}},info:{{mauve.hex}},pointer:{{rosewater.hex}},marker:{{lavender.hex}},fg+:{{text.hex}},prompt:{{mauve.hex}},hl+:{{red.hex}},selected-bg:{{surface1.hex}}"
+set -gx DFT_BACKGROUND {% if flavor.dark %}dark{% else %}light{% endif %}
+set -gx JQ_COLORS "{% if flavor.dark %}2;37{% else %}0;90{% endif %}:0;31:0;32:0;33:0;32:0;34:0;34:1;35"
+set -gx LS_COLORS (vivid generate catppuccin-{{ flavor.identifier }})

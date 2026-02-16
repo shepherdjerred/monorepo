@@ -1,0 +1,53 @@
+{
+  "name": "@discord-plays-pokemon/backend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "bunx tsc",
+    "watch": "bunx tsc --watch",
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "lint": "bun run lint:check",
+    "lint:fix": "bun run lint:eslint:fix",
+    "lint:check": "bun run lint:eslint:check",
+    "lint:eslint:check": "bunx eslint .",
+    "lint:eslint:fix": "bunx eslint . --fix",
+    "test": "bun test",
+    "test:watch": "bun test --watch"
+  },
+  "dependencies": {
+    "@sentry/node": "^10.0.0",
+    "@d6v/zconf": "^0.0.4",
+    "@discord-plays-pokemon/common": "1.0.0",
+    "cors": "^2.8.5",
+    "discord.js": "^14.18.0",
+    "express": "^5.0.0",
+    "lodash": "4.17.23",
+    "rxjs": "^7.8.2",
+    "selenium-webdriver": "^4.30.0",
+    "socket.io": "^4.8.1",
+    "ts-pattern": "^5.7.0",
+    "tsx": "^4.19.3",
+    "winston": "^3.17.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@tsconfig/recommended": "1.0.13",
+    "@types/bun": "^1.3.5",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/lodash": "^4.17.16",
+    "@types/node": "^25.0.0",
+    "@types/selenium-webdriver": "^4.1.28",
+    "@typescript-eslint/eslint-plugin": "^8.28.0",
+    "@typescript-eslint/parser": "^8.28.0",
+    "eslint": "^9.23.0",
+    "eslint-config-prettier": "^10.1.1",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.8.1",
+    "typescript": "5.9.3",
+    "typescript-eslint": "^8.50.0"
+  }
+}

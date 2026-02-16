@@ -1,0 +1,371 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Varus": {
+      "id": "Varus",
+      "key": "110",
+      "name": "Varus",
+      "title": "the Arrow of Retribution",
+      "image": {
+        "full": "Varus.png",
+        "sprite": "champion4.png",
+        "group": "champion",
+        "x": 240,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "110000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "110001",
+          "num": 1,
+          "name": "Blight Crystal Varus",
+          "chromas": false
+        },
+        {
+          "id": "110002",
+          "num": 2,
+          "name": "Arclight Varus",
+          "chromas": false
+        },
+        {
+          "id": "110003",
+          "num": 3,
+          "name": "Arctic Ops Varus",
+          "chromas": false
+        },
+        {
+          "id": "110004",
+          "num": 4,
+          "name": "Heartseeker Varus",
+          "chromas": false
+        },
+        {
+          "id": "110005",
+          "num": 5,
+          "name": "Varus Swiftbolt",
+          "chromas": false
+        },
+        {
+          "id": "110006",
+          "num": 6,
+          "name": "Dark Star Varus",
+          "chromas": true
+        },
+        {
+          "id": "110007",
+          "num": 7,
+          "name": "Conqueror Varus",
+          "chromas": true
+        },
+        {
+          "id": "110009",
+          "num": 9,
+          "name": "Infernal Varus",
+          "chromas": true
+        },
+        {
+          "id": "110016",
+          "num": 16,
+          "name": "PROJECT: Varus",
+          "chromas": true
+        },
+        {
+          "id": "110017",
+          "num": 17,
+          "name": "Cosmic Hunter Varus",
+          "chromas": true
+        },
+        {
+          "id": "110034",
+          "num": 34,
+          "name": "High Noon Varus",
+          "chromas": true
+        },
+        {
+          "id": "110044",
+          "num": 44,
+          "name": "Snow Moon Varus",
+          "chromas": true
+        },
+        {
+          "id": "110053",
+          "num": 53,
+          "name": "Empyrean Varus",
+          "chromas": true
+        },
+        {
+          "id": "110060",
+          "num": 60,
+          "name": "Spirit Blossom Varus",
+          "chromas": true
+        },
+        {
+          "id": "110069",
+          "num": 69,
+          "name": "T1 Varus",
+          "chromas": true
+        }
+      ],
+      "lore": "One of the ancient darkin, Varus was a deadly killer who loved to torment his foes, driving them almost to insanity before delivering the killing arrow. He was imprisoned at the end of the Great Darkin War, but escaped centuries later in the remade flesh of two Ionian hunters—they had unwittingly released him, cursed to bear the bow containing his bound essence. Varus now seeks out those who trapped him, in order to enact his brutal vengeance, but the mortal souls within still resist him every step of the way.",
+      "blurb": "One of the ancient darkin, Varus was a deadly killer who loved to torment his foes, driving them almost to insanity before delivering the killing arrow. He was imprisoned at the end of the Great Darkin War, but escaped centuries later in the remade...",
+      "allytips": [
+        "An early point in Blighted Quiver helps harass enemy champions and get killing blows on minions.",
+        "During short range fights it's sometimes best to fire Piercing Arrow quickly, rather than charging it to full power.",
+        "Try to take advantage of Piercing Arrow's very long range to snipe at enemy champions before a fight or as they're trying to flee."
+      ],
+      "enemytips": [
+        "If you are affected by Blight, Varus' abilities will deal extra damage to you.",
+        "When he gets a kill or assist, Varus temporarily gains Attack Speed and is much more dangerous.",
+        "You'll get bound in place if a tendril from Varus' ultimate, Chain of Corruption, reaches you. You can cause the tendril to die however by running far enough away from it."
+      ],
+      "tags": ["Marksman", "Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 7,
+        "defense": 3,
+        "magic": 4,
+        "difficulty": 2
+      },
+      "stats": {
+        "hp": 600,
+        "hpperlevel": 105,
+        "mp": 320,
+        "mpperlevel": 40,
+        "movespeed": 330,
+        "armor": 24,
+        "armorperlevel": 4,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 575,
+        "hpregen": 3.5,
+        "hpregenperlevel": 0.55,
+        "mpregen": 8,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 59,
+        "attackdamageperlevel": 3.4,
+        "attackspeedperlevel": 3.5,
+        "attackspeed": 0.658
+      },
+      "spells": [
+        {
+          "id": "VarusQ",
+          "name": "Piercing Arrow",
+          "description": "Varus readies and then fires a powerful shot that gains extra range and damage the longer he spends preparing to fire.",
+          "tooltip": "<attention>Begin Charging:</attention> Varus draws back his next shot, <status>Slowing</status> himself by {{ e7 }}%. After {{ e5 }} seconds, if not fired, Varus will cancel the Ability and refund {{ e4 }}% of its Mana cost.<br /><br /><attention>Release:</attention> Varus releases the arrow, dealing <physicalDamage>{{ totaldamagemintooltip }} physical damage</physicalDamage>, reduced by {{ e3 }}% per enemy hit (minimum {{ e9 }}%). Damage and <keywordMajor>Blight</keywordMajor> detonation effects are increased by up to {{ maxchargeamp*100 }}% based on charge time (maximum <physicalDamage>{{ totaldamagemax }}</physicalDamage>) .{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Maximum Damage", "Bonus AD Ratio", "Cooldown", "Mana Cost"],
+            "effect": [
+              "{{ basedamagemax }} -> {{ basedamagemaxNL }}",
+              "{{ tadratiomax }} -> {{ tadratiomaxNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basecost }} -> {{ basecostNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [16, 15, 14, 13, 12],
+          "cooldownBurn": "16/15/14/13/12",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [15, 15, 15, 15, 15],
+            [50, 50, 50, 50, 50],
+            [4, 4, 4, 4, 4],
+            [3, 3, 3, 3, 3],
+            [20, 20, 20, 20, 20],
+            [0, 0, 0, 0, 0],
+            [33, 33, 33, 33, 33],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "15", "50", "4", "3", "20", "0", "33", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [925, 925, 925, 925, 925],
+          "rangeBurn": "925",
+          "image": {
+            "full": "VarusQ.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 384,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "VarusW",
+          "name": "Blighted Quiver",
+          "description": "Passive: Varus' basic attacks deal bonus magic damage and apply Blight. Varus' other abilities detonate Blight, dealing magic damage based on the target's maximum Health. Active: Varus empowers his next Piercing Arrow.",
+          "tooltip": "<spellPassive>Passive: </spellPassive>Varus' Attacks deal an additional <magicDamage>{{ onhitdamage }} magic damage</magicDamage> and apply a <keywordMajor>Blight</keywordMajor> stack for {{ e3 }} seconds (max {{ e4 }} stacks).<br /><br />Varus' other Abilities detonate <keywordMajor>Blight</keywordMajor> stacks dealing <magicDamage>{{ percenthpperstack }} max Health magic damage</magicDamage> per stack (max <magicDamage>{{ maxpercenthpperstack }} max Health damage</magicDamage>). Detonating <keywordMajor>Blight</keywordMajor> on champions and epic monsters also reduces his basic Abilities' Cooldowns by {{ cdrperblightstack*100 }}% of their Maximum per stack.<br /><br /><spellActive>Active:</spellActive> Varus' next <spellName>Piercing Arrow</spellName> deals an additional <magicDamage>{{ qempowerpercenthp }} missing Health magic damage</magicDamage>, increased up to <magicDamage>{{ maxqempowerpercenthp }} missing Health damage</magicDamage> based on charge time.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage on Attack", "Maximum Health Damage", "Missing Health Damage"],
+            "effect": [
+              "{{ varuswonhitdamage }} -> {{ varuswonhitdamageNL }}",
+              "{{ basepercenthpperstack*100.000000 }}% -> {{ basepercenthpperstacknl*100.000000 }}%",
+              "{{ wqhealthdamage*100.000000 }}% -> {{ wqhealthdamagenl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [40, 40, 40, 40, 40],
+          "cooldownBurn": "40",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0.03, 0.035, 0.04, 0.045, 0.05],
+            [6, 6, 6, 6, 6],
+            [3, 3, 3, 3, 3],
+            [120, 120, 120, 120, 120],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0.03/0.035/0.04/0.045/0.05", "6", "3", "120", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [750, 750, 750, 750, 750],
+          "rangeBurn": "750",
+          "image": {
+            "full": "VarusW.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 432,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "VarusE",
+          "name": "Hail of Arrows",
+          "description": "Varus fires a hail of arrows that deal physical damage and desecrate the ground. Desecrated ground slows enemies' Move Speed and reduces their self healing and regeneration.",
+          "tooltip": "Varus fires a hail of arrows that deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and desecrates the ground for {{ e3 }} seconds, <status>Slowing</status> enemies by {{ slowpercent*-100 }}% and applying {{ grievousamount*100 }}% Grievous Wounds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowpercent*-100.000000 }}% -> {{ slowpercentnl*-100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [18, 16, 14, 12, 10],
+          "cooldownBurn": "18/16/14/12/10",
+          "cost": [90, 90, 90, 90, 90],
+          "costBurn": "90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [4, 4, 4, 4, 4],
+            [0, 0, 0, 0, 0],
+            [300, 300, 300, 300, 300],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "4", "0", "300", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [925, 925, 925, 925, 925],
+          "rangeBurn": "925",
+          "image": {
+            "full": "VarusE.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 0,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "VarusR",
+          "name": "Chain of Corruption",
+          "description": "Varus flings out a damaging tendril of corruption that immobilizes the first enemy champion hit and then spreads towards nearby uninfected champions, immobilizing them too on contact.",
+          "tooltip": "Varus flings out a tendril of corruption, <status>Rooting</status> the first champion hit for {{ e2 }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. <status>Rooted</status> enemies gain {{ e4 }} <keywordMajor>Blight</keywordMajor> stacks over the duration.<br /><br />The corruption spreads from its target to uninfected enemy champions. If it reaches them, they take the same damage and <status>Root</status>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [100, 80, 60],
+          "cooldownBurn": "100/80/60",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [150, 250, 350],
+            [2, 2, 2],
+            [650, 650, 650],
+            [3, 3, 3],
+            [0.5, 0.5, 0.5],
+            [600, 600, 600],
+            [1.75, 1.75, 1.75],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "150/250/350", "2", "650", "3", "0.5", "600", "1.75", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1300, 1300, 1300],
+          "rangeBurn": "1300",
+          "image": {
+            "full": "VarusR.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 48,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Living Vengeance",
+        "description": "On kill or assist, Varus temporarily gains Attack Damage and Ability Power. This bonus is larger if the enemy is a champion.",
+        "image": {
+          "full": "VarusPassive.png",
+          "sprite": "passive4.png",
+          "group": "passive",
+          "x": 240,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

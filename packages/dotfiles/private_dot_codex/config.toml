@@ -1,0 +1,11 @@
+model = "gpt-5.1-codex-max"
+model_reasoning_effort = "high"
+
+[projects."/Users/jerred/git/monorepo"]
+trust_level = "trusted"
+
+[projects."/Users/jerred/git"]
+trust_level = "trusted"
+
+[projects."/Users/jerred/git/scout-for-lol"]
+trust_level = "trusted"

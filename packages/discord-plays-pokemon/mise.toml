@@ -1,0 +1,26 @@
+[tools]
+bun = "latest"
+
+[tasks.dev]
+description = "Set up development environment"
+run = "bun install && (cd .dagger && bun install) && dagger develop"
+
+[tasks.ci]
+description = "Run CI pipeline"
+run = "dagger call ci --env=dev"
+
+[tasks.check]
+description = "Run all checks"
+run = ["bun run prettier", "bun run build", "bun run test"]
+
+[tasks.build]
+description = "Build all packages"
+run = "bun run build"
+
+[tasks.test]
+description = "Run all tests"
+run = "bun run test"
+
+[tasks.start]
+description = "Start the backend"
+run = "bun run start"

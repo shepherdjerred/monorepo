@@ -1,0 +1,338 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Volibear": {
+      "id": "Volibear",
+      "key": "106",
+      "name": "Volibear",
+      "title": "the Relentless Storm",
+      "image": {
+        "full": "Volibear.png",
+        "sprite": "champion5.png",
+        "group": "champion",
+        "x": 192,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "106000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "106001",
+          "num": 1,
+          "name": "Thunder Lord Volibear",
+          "chromas": false
+        },
+        {
+          "id": "106002",
+          "num": 2,
+          "name": "Northern Storm Volibear",
+          "chromas": false
+        },
+        {
+          "id": "106003",
+          "num": 3,
+          "name": "Runeguard Volibear",
+          "chromas": false
+        },
+        {
+          "id": "106004",
+          "num": 4,
+          "name": "Captain Volibear",
+          "chromas": false
+        },
+        {
+          "id": "106005",
+          "num": 5,
+          "name": "El Rayo Volibear",
+          "chromas": false
+        },
+        {
+          "id": "106006",
+          "num": 6,
+          "name": "The Thousand-Pierced Bear",
+          "chromas": false
+        },
+        {
+          "id": "106007",
+          "num": 7,
+          "name": "Duality Dragon Volibear",
+          "chromas": true
+        },
+        {
+          "id": "106009",
+          "num": 9,
+          "name": "Prestige Duality Dragon Volibear",
+          "chromas": false
+        },
+        {
+          "id": "106019",
+          "num": 19,
+          "name": "Inkshadow Volibear",
+          "chromas": false
+        },
+        {
+          "id": "106029",
+          "num": 29,
+          "name": "Spirit Blossom Springs Volibear",
+          "chromas": false
+        }
+      ],
+      "lore": "To those who still revere him, the Volibear is the storm made manifest. Destructive, wild, and stubbornly resolute, he existed before mortals walked the Freljord's tundra, and is fiercely protective of the lands that he and his demi-god kin created. Cultivating a deep hatred of civilization and the weakness it brought with it, he now fights to return to the old ways—when the land was untamed, and blood spilled freely—and eagerly battles all who oppose him, with tooth, claw, and thundering domination.",
+      "blurb": "To those who still revere him, the Volibear is the storm made manifest. Destructive, wild, and stubbornly resolute, he existed before mortals walked the Freljord's tundra, and is fiercely protective of the lands that he and his demi-god kin created...",
+      "allytips": [],
+      "enemytips": [],
+      "tags": ["Fighter", "Tank"],
+      "partype": "Mana",
+      "info": {
+        "attack": 7,
+        "defense": 7,
+        "magic": 4,
+        "difficulty": 3
+      },
+      "stats": {
+        "hp": 650,
+        "hpperlevel": 104,
+        "mp": 350,
+        "mpperlevel": 70,
+        "movespeed": 340,
+        "armor": 35,
+        "armorperlevel": 5.2,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 150,
+        "hpregen": 9,
+        "hpregenperlevel": 0.75,
+        "mpregen": 6.25,
+        "mpregenperlevel": 0.5,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 65,
+        "attackdamageperlevel": 3.5,
+        "attackspeedperlevel": 2,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "VolibearQ",
+          "name": "Thundering Smash",
+          "description": "Volibear gains speed towards enemies, <status>Stunning</status> and damaging the first one he Attacks.",
+          "tooltip": "Volibear gains <speed>{{ minspeedcalc }} Move Speed</speed>, doubled to <speed>{{ maxspeedcalc }}</speed> towards enemy champions for the next {{ duration }} seconds. While active, Volibear's next Attack deals <physicalDamage>{{ calculateddamage }} physical damage</physicalDamage> and <status>Stuns</status> the target for {{ stunduration }} second.<br /><br />Volibear becomes enraged if an enemy <status>Immobilizes</status> him before he <status>Stuns</status> a target, ending the Ability early but refreshing its Cooldown.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Move Speed", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ minspeed*100.000000 }}% -> {{ minspeednl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 13, 12, 11, 10],
+          "cooldownBurn": "14/13/12/11/10",
+          "cost": [50, 50, 50, 50, 50],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [300, 300, 300, 300, 300],
+          "rangeBurn": "300",
+          "image": {
+            "full": "VolibearQ.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 192,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "VolibearW",
+          "name": "Frenzied Maul",
+          "description": "Volibear damages an enemy, applying on-hit effects and marking them.  Casting this ability again on the same target deals bonus damage and Heals Volibear.",
+          "tooltip": "Volibear mauls an enemy, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and marking them for {{ markduration }} seconds.<br /><br />If this Ability is used on a marked target, its damage is increased to <physicalDamage>{{ empowereddamage }}</physicalDamage> and Volibear restores <healing>{{ baseheal }} plus {{ percentmissinghealthhealingratio }} missing Health</healing>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Base Heal", "Missing Health Percent", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ baseheal }} -> {{ basehealNL }}",
+              "{{ healpercent*100.000000 }}% -> {{ healpercentnl*100.000000 }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [5, 5, 5, 5, 5],
+          "cooldownBurn": "5",
+          "cost": [30, 35, 40, 45, 50],
+          "costBurn": "30/35/40/45/50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [325, 325, 325, 325, 325],
+          "rangeBurn": "325",
+          "image": {
+            "full": "VolibearW.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 240,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "VolibearE",
+          "name": "Sky Splitter",
+          "description": "Volibear summons a lightning bolt at a location, dealing damage and Slowing enemies while granting Volibear a Shield if he's inside the blast radius.",
+          "tooltip": "Volibear summons a thundercloud that fires a lightning bolt, dealing <magicDamage>{{ totaldamagetooltip }} plus {{ percentdamage*100 }}% max Health magic damage</magicDamage> and <status>Slowing</status> by {{ slowamount*100 }}% for {{ slowduration }} seconds.<br /><br />If Volibear is inside the blast zone, he gains a <shield>{{ shieldapratiotooltip }} plus {{ shieldamount*100 }}% max Health Shield</shield> for {{ shieldduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Percentage Damage", "Monster Damage Cap"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ percentdamage*100.000000 }}% -> {{ percentdamagenl*100.000000 }}%",
+              "{{ monsterdamagecapbase }} -> {{ monsterdamagecapbaseNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [16, 16, 16, 16, 16],
+          "cooldownBurn": "16",
+          "cost": [60, 60, 60, 60, 60],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1200, 1200, 1200, 1200, 1200],
+          "rangeBurn": "1200",
+          "image": {
+            "full": "VolibearE.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 288,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "VolibearR",
+          "name": "Stormbringer",
+          "description": "Volibear leaps to a target location, Slowing and damaging enemies beneath him while gaining bonus Health.  Enemy towers near his landing location become temporarily disabled.",
+          "tooltip": "Volibear transforms and leaps, gaining <healing>{{ healthamount }} Health</healing> and {{ bonusattackrange }} Attack Range for the next {{ transformduration }} seconds.<br /><br />Upon landing, Volibear cracks the earth, <status>Disabling</status> nearby towers for {{ towerdisableduration }} seconds and dealing <physicalDamage>{{ towerdamagetooltip }} physical damage to them</physicalDamage>. Nearby enemies are <status>Slowed</status> by {{ slowamount*100 }}%, decaying over 1 second. Enemies directly underneath Volibear suffer <physicalDamage>{{ sweetspotdamagetooltip }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Bonus Health", "Tower Disable Duration", "Cooldown"],
+            "effect": [
+              "{{ sweetspotdamage }} -> {{ sweetspotdamageNL }}",
+              "{{ healthamount }} -> {{ healthamountNL }}",
+              "{{ towerdisableduration }} -> {{ towerdisabledurationNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [160, 135, 110],
+          "cooldownBurn": "160/135/110",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [75, 115, 155],
+            [9, 9, 9],
+            [12, 12, 12],
+            [8, 8, 8],
+            [0.08, 0.08, 0.08],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "75/115/155", "9", "12", "8", "0.08", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [550, 550, 550],
+          "rangeBurn": "550",
+          "image": {
+            "full": "VolibearR.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 336,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "The Relentless Storm",
+        "description": "Volibear's Attacks and abilities grant Attack Speed, and eventually cause his Attacks to deal bonus magic damage to nearby enemies.",
+        "image": {
+          "full": "Volibear_Icon_P.png",
+          "sprite": "passive5.png",
+          "group": "passive",
+          "x": 192,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

@@ -1,0 +1,44 @@
+---
+import "../styles/global.css";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Scout for League of Legends</title>
+    <script is:inline>
+      // Initialize dark mode before page renders to prevent flash
+      if (
+        localStorage.theme === "dark" ||
+        (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    </script>
+    <script defer data-domain="scout-for-lol.com" src="https://plausible.sjer.red/js/script.js"></script>
+    <script>
+      import * as Sentry from "@sentry/browser";
+      Sentry.init({
+        dsn: "https://337945d2208840dca4a573be311a1bbb@bugsink.sjer.red/1",
+      });
+    </script>
+  </head>
+  <body class="text-slate-950 dark:text-white">
+    <slot />
+  </body>
+</html>
+
+<style>
+  html,
+  body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+  }
+</style>

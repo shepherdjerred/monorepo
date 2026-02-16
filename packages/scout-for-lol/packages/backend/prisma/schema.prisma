@@ -1,0 +1,289 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Subscription {
+  id        Int    @id @default(autoincrement())
+  playerId  Int
+  channelId String
+  player    Player @relation(fields: [playerId], references: [id])
+
+  // metadata
+  serverId         String
+  creatorDiscordId String
+  createdTime      DateTime
+  updatedTime      DateTime
+
+  @@unique([serverId, playerId, channelId])
+}
+
+model Player {
+  id                       Int                       @id @default(autoincrement())
+  alias                    String
+  discordId                String?
+  accounts                 Account[]
+  subscriptions            Subscription[]
+  competitionParticipants  CompetitionParticipant[]
+  competitionSnapshots     CompetitionSnapshot[]
+
+  // metadata
+  serverId         String
+  creatorDiscordId String
+  createdTime      DateTime
+  updatedTime      DateTime
+
+  @@unique([serverId, alias])
+}
+
+model Account {
+  id       Int    @id @default(autoincrement())
+  alias    String
+  // TODO(https://github.com/shepherdjerred/scout-for-lol/issues/186): store riot ID for the sake of easier understanding
+  puuid    String
+  region   String
+  playerId Int
+  player   Player @relation(fields: [playerId], references: [id])
+
+  // Match processing tracking
+  lastProcessedMatchId String? // Track last match we've processed to avoid duplicates
+  lastMatchTime DateTime? // Timestamp of the last match this player was in (for dynamic polling)
+  lastCheckedAt DateTime? // Timestamp of when we last checked for new matches (for polling intervals)
+
+  // metadata
+  serverId         String
+  creatorDiscordId String
+  createdTime      DateTime
+  updatedTime      DateTime
+
+  @@unique([serverId, puuid])
+}
+
+model MatchRankHistory {
+  id         Int      @id @default(autoincrement())
+  matchId    String   // Riot match ID
+  puuid      String   // Player PUUID
+  queueType  String   // "solo" or "flex"
+
+  // Rank snapshots (JSON serialized, nullable for unranked)
+  rankBefore String?  // JSON: {tier, division, lp, wins, losses}
+  rankAfter  String?  // JSON: {tier, division, lp, wins, losses}
+
+  capturedAt DateTime // When this was recorded
+
+  @@unique([matchId, puuid, queueType])
+  @@index([puuid, capturedAt])
+  @@index([matchId])
+}
+
+model Competition {
+  id               Int                       @id @default(autoincrement())
+  serverId         String
+  ownerId          String // Discord user ID
+  title            String
+  description      String
+  channelId        String
+  isCancelled      Boolean                   @default(false)
+  visibility       String // OPEN, INVITE_ONLY, SERVER_WIDE
+  criteriaType     String // Enum stored as string
+  criteriaConfig   String // JSON stored as string
+  maxParticipants  Int                       @default(50)
+
+  // Time configuration (XOR: either fixed dates OR season)
+  startDate        DateTime?
+  endDate          DateTime?
+  seasonId         String?
+
+  // Lifecycle tracking - when start/end processing was attempted
+  // These prevent re-processing even if snapshot creation fails
+  startProcessedAt DateTime?
+  endProcessedAt   DateTime?
+
+  // Relations
+  participants     CompetitionParticipant[]
+  snapshots        CompetitionSnapshot[]
+
+  // Metadata
+  creatorDiscordId String
+  createdTime      DateTime
+  updatedTime      DateTime
+
+  // Note: We do NOT have a unique constraint on [serverId, ownerId]
+  // This allows users to create multiple competitions over time
+  // The "one active competition per owner" rule is enforced in application logic
+  @@index([serverId, isCancelled])
+  @@index([serverId, ownerId, isCancelled])
+}
+
+model CompetitionParticipant {
+  id            Int         @id @default(autoincrement())
+  competitionId Int
+  playerId      Int
+  status        String // INVITED, JOINED, LEFT
+  invitedBy     String? // Discord user ID (nullable)
+  invitedAt     DateTime? // When invited (nullable - null if joined directly)
+  joinedAt      DateTime? // When joined (nullable - null if only invited)
+  leftAt        DateTime? // When left (nullable - null if still participating)
+
+  // Relations
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  player        Player      @relation(fields: [playerId], references: [id])
+
+  @@unique([competitionId, playerId])
+  @@index([competitionId, status])
+}
+
+model CompetitionSnapshot {
+  id           Int         @id @default(autoincrement())
+  competitionId Int
+  playerId     Int
+  snapshotType String // START, END
+  snapshotData String // JSON stored as string
+  snapshotTime DateTime
+
+  // Relations
+  competition  Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  player       Player      @relation(fields: [playerId], references: [id])
+
+  @@unique([competitionId, playerId, snapshotType])
+}
+
+model ServerPermission {
+  id            Int      @id @default(autoincrement())
+  serverId      String
+  discordUserId String
+  permission    String // CREATE_COMPETITION (can add more later)
+  grantedBy     String // Discord user ID
+  grantedAt     DateTime
+
+  @@unique([serverId, discordUserId, permission])
+}
+
+model GuildPermissionError {
+  id                    Int      @id @default(autoincrement())
+  serverId              String
+  channelId             String
+  errorType             String // Type of permission error
+  errorReason           String? // Detailed reason
+  firstOccurrence       DateTime // When this error first occurred
+  lastOccurrence        DateTime // Most recent occurrence
+  consecutiveErrorCount Int      @default(1) // Number of consecutive errors
+  lastSuccessfulSend    DateTime? // Last time a message was successfully sent to this server
+  ownerNotified         Boolean  @default(false) // Whether owner was notified about abandonment
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([serverId, channelId])
+  @@index([serverId, consecutiveErrorCount])
+  @@index([lastOccurrence])
+}
+
+// =============================================================================
+// Desktop Voice Notification System
+// =============================================================================
+
+model User {
+  discordId           String    @id // Discord snowflake ID
+  discordUsername     String
+  discordAvatar       String?
+  discordAccessToken  String?
+  discordRefreshToken String?
+  tokenExpiresAt      DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  apiTokens      ApiToken[]
+  soundPacks     SoundPack[]
+  desktopClients DesktopClient[]
+  storedSounds   StoredSound[]
+}
+
+model ApiToken {
+  id         Int       @id @default(autoincrement())
+  userId     String
+  user       User      @relation(fields: [userId], references: [discordId], onDelete: Cascade)
+  token      String    @unique // hashed token
+  name       String
+  scopes     String    @default("events:write")
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+  revokedAt  DateTime?
+
+  @@index([userId])
+}
+
+model DesktopClient {
+  id                Int        @id @default(autoincrement())
+  userId            String
+  user              User       @relation(fields: [userId], references: [discordId], onDelete: Cascade)
+  clientId          String     @unique // UUID generated on first connection
+  hostname          String?
+  isConnected       Boolean    @default(false)
+  lastHeartbeat     DateTime?
+  currentGameId     String? // Game ID if in active game
+  voiceChannelId    String? // Discord voice channel to join
+  guildId           String? // Discord guild ID for voice
+  activeSoundPackId Int?
+  activeSoundPack   SoundPack? @relation(fields: [activeSoundPackId], references: [id])
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  @@index([userId])
+}
+
+model SoundPack {
+  id          Int       @id @default(autoincrement())
+  userId      String
+  user        User      @relation(fields: [userId], references: [discordId], onDelete: Cascade)
+  name        String
+  version     String    @default("1.0.0")
+  description String?
+  isPublic    Boolean   @default(false) // Whether other users can use this pack
+  settings    String // JSON: { masterVolume: number, normalization: boolean }
+  defaults    String // JSON: { gameStart?: SoundPool, kill?: SoundPool, ... }
+  rules       String // JSON: SoundRule[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  desktopClients DesktopClient[]
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@index([isPublic])
+}
+
+model StoredSound {
+  id           Int      @id @default(autoincrement())
+  userId       String
+  user         User     @relation(fields: [userId], references: [discordId], onDelete: Cascade)
+  s3Key        String   @unique // S3/R2 object key
+  originalName String // Original filename
+  mimeType     String
+  sizeBytes    Int
+  durationMs   Int?
+  sourceType   String // "upload", "youtube", "url"
+  sourceUrl    String? // Original URL if from YouTube/URL
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([sourceUrl])
+}
+
+model GameEventLog {
+  id          Int      @id @default(autoincrement())
+  userId      String
+  clientId    String
+  eventType   String // "kill", "multikill", "objective", etc.
+  eventData   String // JSON of event context
+  soundPlayed String? // Sound ID that was played
+  timestamp   DateTime @default(now())
+
+  @@index([userId, timestamp])
+  @@index([clientId, timestamp])
+}

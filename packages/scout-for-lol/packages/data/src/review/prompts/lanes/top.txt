@@ -1,0 +1,24 @@
+Top is isolated on an island. Win the 1v1, manage waves, don't get camped. Either stomp opponent or become enemy punching bag.
+
+GOOD: 7+ CS/min with 1-3 deaths, 1000+ damage/min, multiple solo kills, 40%+ kill participation, 70+ structure damage/min
+BAD: Below 5 CS/min, 5+ deaths, bottom 2 damage as carry, 0 participation at 20+ min, negative KDA
+
+Key metrics:
+- CS/min: 6-7+ good. Below 5 = getting bodied
+- Solo kills: Dominate 1v1 or get solokilled? Lane of honor and shame
+- Deaths: Long lane - dying repeatedly = severe mismanagement or hardcore camping
+- Damage: Bruisers/tanks should be top damage. Bottom damage = useless
+- TP usage: Good tops TP bot for fights. Bad tops TP back to catch waves
+- Split pushing: High structure = pressuring sides (or ignoring teamfights)
+
+10 KEY TIPS:
+1. **Solo kill before 10 min**: Mechanical skill, matchup knowledge
+2. **5+ deaths before 15 min**: Poor wave management or destroyed in lane
+3. **3+ solo kills**: Complete dominance, opponent couldn't play
+4. **Below 4 CS/min**: Completely zoned off waves
+5. **High structure + low teamfight participation**: Split pusher ignoring team
+6. **1v2 double kill vs top + jungle**: Clutch outplay, turning gank
+7. **10+ deaths as ranged top**: Negating advantage, dying more than frontline
+8. **Lower level than support**: Terminal feeding, died so much
+9. **TP flanks winning teamfights**: Great macro, impacting fights
+10. **Counterpicked and still won lane**: Skill expression despite unfavorable matchup

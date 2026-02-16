@@ -1,0 +1,407 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Ashe": {
+      "id": "Ashe",
+      "key": "22",
+      "name": "Ashe",
+      "title": "the Frost Archer",
+      "image": {
+        "full": "Ashe.png",
+        "sprite": "champion0.png",
+        "group": "champion",
+        "x": 0,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "22000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "22001",
+          "num": 1,
+          "name": "Freljord Ashe",
+          "chromas": false
+        },
+        {
+          "id": "22002",
+          "num": 2,
+          "name": "Sherwood Forest Ashe",
+          "chromas": false
+        },
+        {
+          "id": "22003",
+          "num": 3,
+          "name": "Woad Ashe",
+          "chromas": false
+        },
+        {
+          "id": "22004",
+          "num": 4,
+          "name": "Queen Ashe",
+          "chromas": false
+        },
+        {
+          "id": "22005",
+          "num": 5,
+          "name": "Amethyst Ashe",
+          "chromas": false
+        },
+        {
+          "id": "22006",
+          "num": 6,
+          "name": "Heartseeker Ashe",
+          "chromas": false
+        },
+        {
+          "id": "22007",
+          "num": 7,
+          "name": "Marauder Ashe",
+          "chromas": false
+        },
+        {
+          "id": "22008",
+          "num": 8,
+          "name": "PROJECT: Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22009",
+          "num": 9,
+          "name": "Worlds 2017 Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22011",
+          "num": 11,
+          "name": "Cosmic Queen Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22017",
+          "num": 17,
+          "name": "High Noon Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22023",
+          "num": 23,
+          "name": "Fae Dragon Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22032",
+          "num": 32,
+          "name": "Coven Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22043",
+          "num": 43,
+          "name": "Ocean Song Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22052",
+          "num": 52,
+          "name": "Lunar Empress Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22063",
+          "num": 63,
+          "name": "DRX Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22065",
+          "num": 65,
+          "name": "Crystalis Motus Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22067",
+          "num": 67,
+          "name": "Infernal Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22076",
+          "num": 76,
+          "name": "Spirit Blossom Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22084",
+          "num": 84,
+          "name": "Firecracker Ashe",
+          "chromas": true
+        }
+      ],
+      "lore": "Iceborn warmother of the Avarosan tribe, Ashe commands the most populous horde in the north. Stoic, intelligent, and idealistic, yet uncomfortable with her role as leader, she taps into the ancestral magics of her lineage to wield a bow of True Ice. With her people's belief that she is the mythological hero Avarosa reincarnated, Ashe hopes to unify the Freljord once more by retaking their ancient, tribal lands.",
+      "blurb": "Iceborn warmother of the Avarosan tribe, Ashe commands the most populous horde in the north. Stoic, intelligent, and idealistic, yet uncomfortable with her role as leader, she taps into the ancestral magics of her lineage to wield a bow of True Ice...",
+      "allytips": [
+        "Try to fire Enchanted Crystal Arrow in the same direction enemies are moving, so it is more likely to hit.",
+        "Volley arrows are blocked by the first enemy they hit, so keep your distance to avoid having them all absorbed by enemy frontliners.",
+        "Hawkshot reveals units in brush. If a team fight is occuring in the jungle it can give you a significant advantage."
+      ],
+      "enemytips": [
+        "Ashe has very few defensive options, and she's a good target to gank.",
+        "Be wary of moving around the map alone if Ashe has not recently cast her Enchanted Crystal Arrow."
+      ],
+      "tags": ["Marksman", "Support"],
+      "partype": "Mana",
+      "info": {
+        "attack": 7,
+        "defense": 3,
+        "magic": 2,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 610,
+        "hpperlevel": 101,
+        "mp": 280,
+        "mpperlevel": 35,
+        "movespeed": 325,
+        "armor": 26,
+        "armorperlevel": 4.6,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 600,
+        "hpregen": 3.5,
+        "hpregenperlevel": 0.55,
+        "mpregen": 7,
+        "mpregenperlevel": 0.65,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 59,
+        "attackdamageperlevel": 3.5,
+        "attackspeedperlevel": 3,
+        "attackspeed": 0.658
+      },
+      "spells": [
+        {
+          "id": "AsheQ",
+          "name": "Ranger's Focus",
+          "description": "Ashe builds up Focus by attacking. At maximum Focus, Ashe can cast Ranger's Focus to consume all stacks of Focus, temporarily increasing her Attack Speed and transforming her basic attack into a powerful flurry attack for the duration.",
+          "tooltip": "<spellPassive>Passive: </spellPassive>Ashe's Attacks grant a stack for {{ e1 }} seconds. At {{ e2 }} stacks, she may activate this Ability.<br /><br /><spellPassive>Active:</spellPassive> Ashe gains <attackSpeed>{{ e4 }}% Attack Speed</attackSpeed> and her Attacks deal <physicalDamage>{{ empowereddamage }} damage</physicalDamage> instead for {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Attack Speed", "Flurry Attack Damage ratio"],
+            "effect": [
+              "{{ e4 }}% -> {{ e4NL }}%",
+              "{{ effect6amount*100.000000 }}% -> {{ effect6amountnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [0, 0, 0, 0, 0],
+          "cooldownBurn": "0",
+          "cost": [30, 30, 30, 30, 30],
+          "costBurn": "30",
+          "datavalues": {},
+          "effect": [
+            null,
+            [4, 4, 4, 4, 4],
+            [4, 4, 4, 4, 4],
+            [6, 6, 6, 6, 6],
+            [20, 30, 40, 50, 60],
+            [0.22, 0.235, 0.25, 0.265, 0.28],
+            [1.1, 1.175, 1.25, 1.325, 1.4],
+            [1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "4",
+            "4",
+            "6",
+            "20/30/40/50/60",
+            "0.22/0.235/0.25/0.265/0.28",
+            "1.1/1.175/1.25/1.325/1.4",
+            "1",
+            "1",
+            "1",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [400, 400, 400, 400, 400],
+          "rangeBurn": "400",
+          "image": {
+            "full": "AsheQ.png",
+            "sprite": "spell1.png",
+            "group": "spell",
+            "x": 384,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Volley",
+          "name": "Volley",
+          "description": "Ashe fires arrows in a cone for increased damage. Also applies Frost Shot.",
+          "tooltip": "Ashe fires a volley of {{ numberofarrowstooltip }} arrows, each dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. Enemies can be hit by multiple arrows, but only take damage from the first.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Arrows Fired", "Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ numberofarrowstooltip }} -> {{ numberofarrowstooltipNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [18, 14.5, 11, 7.5, 4],
+          "cooldownBurn": "18/14.5/11/7.5/4",
+          "cost": [75, 70, 65, 60, 55],
+          "costBurn": "75/70/65/60/55",
+          "datavalues": {},
+          "effect": [
+            null,
+            [5, 7, 9, 11, 13],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "5/7/9/11/13", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1200, 1200, 1200, 1200, 1200],
+          "rangeBurn": "1200",
+          "image": {
+            "full": "Volley.png",
+            "sprite": "spell1.png",
+            "group": "spell",
+            "x": 432,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "AsheSpiritOfTheHawk",
+          "name": "Hawkshot",
+          "description": "Ashe sends her Hawk Spirit on a scouting mission anywhere on the map.",
+          "tooltip": "Ashe sends forth a hawk to grant vision for 5 seconds anywhere on the map. It also reveals the area around it as it flies.<br /><br />This Ability has 2 charges ({{ chargecooldown }} second recharge).{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Recharge Time"],
+            "effect": ["{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [5, 5, 5, 5, 5],
+          "cooldownBurn": "5",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [3, 3, 3, 3, 3],
+            [50, 90, 130, 170, 210],
+            [25000, 25000, 25000, 25000, 25000],
+            [5, 5, 5, 5, 5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "3", "50/90/130/170/210", "25000", "5", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "2",
+          "range": [25000, 25000, 25000, 25000, 25000],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "AsheSpiritOfTheHawk.png",
+            "sprite": "spell1.png",
+            "group": "spell",
+            "x": 0,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "EnchantedCrystalArrow",
+          "name": "Enchanted Crystal Arrow",
+          "description": "Ashe fires a missile of ice in a straight line. If the arrow collides with an enemy Champion, it deals damage and stuns the Champion, stunning for longer the farther arrow has traveled. In addition, surrounding enemy units take damage and are slowed.",
+          "tooltip": "Ashe launches a crystal arrow of ice that <status>Stuns</status> the first champion hit and deals <magicDamage>{{ rmaindamage }} magic damage</magicDamage>. The <status>Stun</status> duration increases with distance travelled, up to {{ maxstunduration }} seconds. Surrounding enemies are <status>Slowed</status> by <spellName>Frost Shot</spellName>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ rbasedamage }} -> {{ rbasedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [100, 80, 60],
+          "cooldownBurn": "100/80/60",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [25000, 25000, 25000],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "EnchantedCrystalArrow.png",
+            "sprite": "spell1.png",
+            "group": "spell",
+            "x": 48,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Frost Shot",
+        "description": "Ashe's attacks slow their target, causing her to deal increased damage to these targets.<br><br>Ashe's critical strikes deal no bonus damage but apply an empowered slow to the target.",
+        "image": {
+          "full": "Ashe_P.png",
+          "sprite": "passive0.png",
+          "group": "passive",
+          "x": 0,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

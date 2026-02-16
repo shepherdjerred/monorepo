@@ -1,0 +1,311 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Viego": {
+      "id": "Viego",
+      "key": "234",
+      "name": "Viego",
+      "title": "The Ruined King",
+      "image": {
+        "full": "Viego.png",
+        "sprite": "champion5.png",
+        "group": "champion",
+        "x": 48,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "234000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "234001",
+          "num": 1,
+          "name": "Lunar Beast Viego",
+          "chromas": true
+        },
+        {
+          "id": "234010",
+          "num": 10,
+          "name": "Dissonance of Pentakill Viego",
+          "chromas": false
+        },
+        {
+          "id": "234019",
+          "num": 19,
+          "name": "EDG Viego",
+          "chromas": false
+        },
+        {
+          "id": "234021",
+          "num": 21,
+          "name": "King Viego",
+          "chromas": false
+        },
+        {
+          "id": "234030",
+          "num": 30,
+          "name": "Soul Fighter Viego",
+          "chromas": false
+        },
+        {
+          "id": "234037",
+          "num": 37,
+          "name": "Worlds 2024 Viego",
+          "chromas": false
+        },
+        {
+          "id": "234043",
+          "num": 43,
+          "name": "Revenant Reign Viego",
+          "chromas": false
+        }
+      ],
+      "lore": "Once ruler of a long-lost kingdom, Viego perished over a thousand years ago when his attempt to bring his wife back from the dead triggered the magical catastrophe known as the Ruination. Transformed into a powerful, unliving specter tortured by an obsessive longing for his centuries-dead queen, Viego now stands as the Ruined King, controlling the deadly Harrowings as he scours Runeterra for anything that might one day restore her, and destroying all in his path as the Black Mist pours endlessly from his cruel, broken heart.",
+      "blurb": "Once ruler of a long-lost kingdom, Viego perished over a thousand years ago when his attempt to bring his wife back from the dead triggered the magical catastrophe known as the Ruination. Transformed into a powerful, unliving specter tortured by an...",
+      "allytips": [],
+      "enemytips": [],
+      "tags": ["Fighter", "Assassin"],
+      "partype": "None",
+      "info": {
+        "attack": 6,
+        "defense": 4,
+        "magic": 2,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 630,
+        "hpperlevel": 109,
+        "mp": 10000,
+        "mpperlevel": 0,
+        "movespeed": 345,
+        "armor": 34,
+        "armorperlevel": 4.6,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 200,
+        "hpregen": 7,
+        "hpregenperlevel": 0.7,
+        "mpregen": 0,
+        "mpregenperlevel": 0,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 57,
+        "attackdamageperlevel": 3.5,
+        "attackspeedperlevel": 2.75,
+        "attackspeed": 0.658
+      },
+      "spells": [
+        {
+          "id": "ViegoQ",
+          "name": "Blade of the Ruined King",
+          "description": "Viego's spectral blade passively deals bonus percent current Health damage <OnHit>On-Hit</OnHit> and strikes twice vs. enemies he recently hit with an Ability, stealing Health.<br><br>Viego can activate this Ability to thrust his zweihander forward, impaling enemies in front of him.",
+          "tooltip": " <spellPassive>Passive:</spellPassive> Viego's Attacks deal an additional <physicalDamage>{{ totalpercenthealthonhit }} current Health physical damage</physicalDamage>. His first Attack against an enemy he has recently damaged with an Ability hits a second time, dealing <physicalDamage>{{ secondattackdamage }} physical damage</physicalDamage> and restoring <healing>{{ healmodvschamps*100 }}% of damage dealt as Health</healing>. These bonuses are kept during <keywordMajor>Possession</keywordMajor>.<br /><br /><spellActive>Active: </spellActive>Viego stabs forward, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Current Health %", "Minimum Current Health Damage", "Cooldown"],
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ percenthealthonhit }}% -> {{ percenthealthonhitNL }}%",
+              "{{ mindamageonhit }} -> {{ mindamageonhitNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [5, 4.5, 4, 3.5, 3],
+          "cooldownBurn": "5/4.5/4/3.5/3",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [600, 600, 600, 600, 600],
+          "rangeBurn": "600",
+          "image": {
+            "full": "ViegoQ.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 96,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "ViegoW",
+          "name": "Spectral Maw",
+          "description": "Viego charges up before dashing forward, releasing a ball of concentrated Black Mist that stuns the first enemy hit.",
+          "tooltip": "<charge>Begin Charging:</charge> Viego begins gathering Mist, <status>Slowing</status> himself by {{ selfslowpercent*100 }}%.<br /><br /><release>Release:</release> Viego dashes forward and hurls the gathered Mist. Deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Stuns</status> the first enemy hit for {{ stunduration }} to {{ maxstuntt }} seconds based on charge time.<br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage"],
+            "effect": ["{{ damage }} -> {{ damageNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [8, 8, 8, 8, 8],
+          "cooldownBurn": "8",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [400, 400, 400, 400, 400],
+          "rangeBurn": "400",
+          "image": {
+            "full": "ViegoW.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 144,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "ViegoE",
+          "name": "Harrowed Path",
+          "description": "Viego commands the Black Mist to haunt and surround a piece of terrain. Viego can hide in the Mist as a wraith, gaining camouflage, Move Speed, and Attack Speed.",
+          "tooltip": "Viego sends forth a spectre to haunt the first terrain hit, surrounding it with Mist for {{ mistduration }} seconds. Viego gains <keywordStealth>Camouflage</keywordStealth>, <speed>{{ totalmovespeed }} Move Speed</speed>, and <attackSpeed>{{ attackspeed*100 }}% Attack Speed</attackSpeed> while inside the Mist.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Move Speed", "Attack Speed", "Cooldown"],
+            "effect": [
+              "{{ movespeed*100.000000 }}% -> {{ movespeednl*100.000000 }}%",
+              "{{ attackspeed*100.000000 }}% -> {{ attackspeednl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 12, 10, 8, 6],
+          "cooldownBurn": "14/12/10/8/6",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [750, 750, 750, 750, 750],
+          "rangeBurn": "750",
+          "image": {
+            "full": "ViegoE.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 192,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "ViegoR",
+          "name": "Heartbreaker",
+          "description": "Viego teleports to a nearby location and executes an enemy champion on arrival, piercing their heart and causing a destructive shockwave around them that knocks away their allies.",
+          "tooltip": "Viego discards any souls he is currently <keywordMajor>Possessing</keywordMajor> and teleports. On arrival he Attacks the champion with the lowest percent Health, briefly <status>Slowing</status> them by {{ slowpercent*100 }}% and dealing <physicalDamage>{{ totaldamage }} + {{ totalpercenthealth }}% missing Health physical damage</physicalDamage>. Other nearby enemies are <status>Knocked Back</status> and take <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Missing Health Damage", "Cooldown"],
+            "effect": ["{{ maxhealthdamage }}% -> {{ maxhealthdamageNL }}%", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 100, 80],
+          "cooldownBurn": "120/100/80",
+          "cost": [0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [500, 500, 500],
+          "rangeBurn": "500",
+          "image": {
+            "full": "ViegoR.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 240,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        }
+      ],
+      "passive": {
+        "name": "Sovereign's Domination",
+        "description": "Enemies who fall before Viego become wraiths. By attacking a wraith, Viego temporarily seizes control of the dead enemy's body, healing for a percentage of his target's max health and gaining access to their basic abilities and items. He replaces their Ultimate with a free cast of his own.",
+        "image": {
+          "full": "Viego_Passive.png",
+          "sprite": "passive5.png",
+          "group": "passive",
+          "x": 48,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

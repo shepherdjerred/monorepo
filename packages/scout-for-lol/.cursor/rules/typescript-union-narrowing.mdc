@@ -1,0 +1,104 @@
+---
+description: TypeScript union type narrowing strategies
+globs: "*.ts,*.tsx"
+alwaysApply: false
+---
+
+# TypeScript Union Type Narrowing
+
+## Use Simple if/else for Complex Unions
+
+When TypeScript struggles to narrow complex union types (especially from Zod schemas), use simple `if/else` chains instead of pattern matching libraries.
+
+### ❌ AVOID (when TypeScript can't narrow)
+
+```typescript
+import { match } from "ts-pattern";
+
+const criteria = match(args.criteriaType)
+  .with("TYPE_A", () => {
+    if (!args.fieldA) throw new Error("..."); // TypeScript doesn't know fieldA exists
+    return { type: "TYPE_A", fieldA: args.fieldA };
+  })
+  .exhaustive();
+```
+
+### ✅ PREFER
+
+```typescript
+let criteria: UnionType;
+
+if (args.criteriaType === "TYPE_A") {
+  // TypeScript automatically narrows args to include fieldA
+  criteria = { type: "TYPE_A", fieldA: args.fieldA };
+} else if (args.criteriaType === "TYPE_B") {
+  criteria = { type: "TYPE_B", fieldB: args.fieldB };
+} else {
+  // Last branch - no exhaustive check needed for last case
+  criteria = { type: "TYPE_C", fieldC: args.fieldC };
+}
+```
+
+## When Union Narrowing Works Well
+
+TypeScript's natural narrowing works best with:
+
+- **Zod union schemas**: `z.union([SchemaA.and(FieldsA), SchemaB.and(FieldsB)])`
+- **Discriminated unions**: Checked with `===` equality
+- **Simple if/else chains**: TypeScript narrows automatically in each branch
+
+## When to Avoid Pattern Matching
+
+Avoid `ts-pattern` or complex matching when:
+
+1. Zod schema unions have complex intersections
+2. TypeScript shows "Property does not exist" errors despite Zod validation
+3. You need many type assertions to make it work
+
+## Type Safety Guarantee
+
+The pattern works because:
+
+1. **Zod validates at runtime**: Ensures the data structure is correct
+2. **TypeScript narrows at compile time**: Knows which fields exist in each branch
+3. **No type assertions needed**: TypeScript infers everything naturally
+
+## Exhaustive Handling
+
+**See:** `exhaustive-case-handling.mdc` for exhaustive union handling with `else if` + never check or ts-pattern.
+
+## Example: Complex Union from Zod
+
+```typescript
+// Zod schema with 12 union variants
+const Schema = z.union([
+  CommonFields.and(DateTypeA).and(CriteriaTypeA),
+  CommonFields.and(DateTypeA).and(CriteriaTypeB),
+  // ... 10 more variants
+]);
+
+const args = Schema.parse(rawInput); // Validated!
+
+// TypeScript now knows the exact shape based on discriminators
+let result: ResultType;
+
+if (args.dateType === "FIXED") {
+  // TypeScript knows: startDate and endDate exist
+  result = { dates: { start: args.startDate, end: args.endDate } };
+} else {
+  // TypeScript knows: seasonId exists
+  result = { dates: { seasonId: args.seasonId } };
+}
+
+if (args.criteriaType === "MOST_GAMES") {
+  // TypeScript knows: queue exists
+  result.criteria = { type: "MOST_GAMES", queue: args.queue };
+} else if (args.criteriaType === "WINS_CHAMPION") {
+  // TypeScript knows: championId exists
+  result.criteria = { type: "WINS_CHAMPION", championId: args.championId };
+}
+```
+
+## Key Principle
+
+**Let TypeScript's built-in narrowing do the work.** Don't fight the compiler with complex abstractions when simple code works better.

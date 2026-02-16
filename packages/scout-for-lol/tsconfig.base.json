@@ -1,0 +1,86 @@
+{
+  "compilerOptions": {
+    // Environment setup & latest features
+    "lib": [
+      "ESNext"
+    ],
+    "target": "ESNext",
+    "allowImportingTsExtensions": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "downlevelIteration": true,
+    "checkJs": false,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    // Workspace path mappings
+    "baseUrl": ".",
+    "paths": {
+      "@scout-for-lol/backend/*": [
+        "./packages/backend/src/*"
+      ],
+      "@scout-for-lol/frontend/*": [
+        "./packages/frontend/src/*"
+      ],
+      "@scout-for-lol/data/*": [
+        "./packages/data/src/*"
+      ],
+      "@scout-for-lol/data": [
+        "./packages/data/src/index.ts"
+      ],
+      "@scout-for-lol/report/*": [
+        "./packages/report/src/*"
+      ],
+      "@scout-for-lol/report": [
+        "./packages/report/src/index.ts"
+      ],
+      "@scout-for-lol/desktop/*": [
+        "./packages/desktop/src/*"
+      ],
+      "@scout-for-lol/ui/*": [
+        "./packages/ui/src/*"
+      ],
+      "@scout-for-lol/ui": [
+        "./packages/ui/src/index.ts"
+      ]
+    },
+    "types": [
+      "bun-types",
+      "node"
+    ],
+    // Best practices
+    "strict": true,
+    "skipLibCheck": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "resolveJsonModule": true,
+    "noImplicitOverride": true,
+    "strictNullChecks": true,
+    // Maximum strictness for safety
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "useUnknownInCatchVariables": true,
+    "noUncheckedSideEffectImports": true,
+    "noEmitOnError": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "isolatedDeclarations": false,
+    "strictBuiltinIteratorReturn": true,
+    "noErrorTruncation": true,
+    // Performance - enable incremental compilation
+    "incremental": true,
+    "noEmit": true
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/node_modules",
+    "**/dist"
+  ]
+}

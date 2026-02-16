@@ -1,12 +1,18 @@
 // Allow missing documentation for TUI implementation details
-#![allow(clippy::missing_errors_doc, clippy::missing_panics_doc)]
+#![allow(clippy::missing_errors_doc, clippy::missing_panics_doc, reason = "TUI implementation details do not need public API documentation")]
 
+/// Application state, modes, and dialog models.
 pub mod app;
+/// PTY session attachment and terminal rendering.
 pub mod attached;
+/// Reusable UI components (dialogs, lists, status bar).
 pub mod components;
+/// Keyboard and terminal event handling.
 pub mod events;
 mod events_copy_mode;
+/// Multi-line text input widget.
 pub mod text_input;
+/// UI rendering functions for each application mode.
 pub mod ui;
 
 pub use app::App;
@@ -140,7 +146,7 @@ async fn run_main_loop(
                             // Use PTY-based attachment for Docker
                             match app.attach_selected_session().await {
                                 Ok(()) => {
-                                    app.status_message = Some("Attached - Press Ctrl+Q to detach, Ctrl+Left/Right to switch sessions".to_string());
+                                    app.status_message = Some("Attached - Press Ctrl+Q to detach, Ctrl+Left/Right to switch sessions".to_owned());
                                 }
                                 Err(e) => {
                                     app.status_message = Some(format!("Attach failed: {e}"));
@@ -155,7 +161,7 @@ async fn run_main_loop(
                                 disable_raw_mode()?;
                                 execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
 
-                                println!("Attaching... Detach with Ctrl+O, d");
+                                tracing::info!("Attaching... Detach with Ctrl+O, d");
 
                                 // Execute attach command
                                 let status = std::process::Command::new(&command[0])
@@ -183,7 +189,7 @@ async fn run_main_loop(
                             // Use PTY-based attachment for Kubernetes
                             match app.attach_selected_session().await {
                                 Ok(()) => {
-                                    app.status_message = Some("Attached - Press Ctrl+Q to detach, Ctrl+Left/Right to switch sessions".to_string());
+                                    app.status_message = Some("Attached - Press Ctrl+Q to detach, Ctrl+Left/Right to switch sessions".to_owned());
                                 }
                                 Err(e) => {
                                     app.status_message = Some(format!("Attach failed: {e}"));
@@ -195,7 +201,7 @@ async fn run_main_loop(
                             // Use PTY-based attachment for Sprites
                             match app.attach_selected_session().await {
                                 Ok(()) => {
-                                    app.status_message = Some("Attached - Press Ctrl+Q to detach, Ctrl+Left/Right to switch sessions".to_string());
+                                    app.status_message = Some("Attached - Press Ctrl+Q to detach, Ctrl+Left/Right to switch sessions".to_owned());
                                 }
                                 Err(e) => {
                                     app.status_message = Some(format!("Attach failed: {e}"));
@@ -208,7 +214,7 @@ async fn run_main_loop(
                             // Use PTY-based attachment for Apple Container
                             match app.attach_selected_session().await {
                                 Ok(()) => {
-                                    app.status_message = Some("Attached - Press Ctrl+Q to detach, Ctrl+Left/Right to switch sessions".to_string());
+                                    app.status_message = Some("Attached - Press Ctrl+Q to detach, Ctrl+Left/Right to switch sessions".to_owned());
                                 }
                                 Err(e) => {
                                     app.status_message = Some(format!("Attach failed: {e}"));
@@ -297,7 +303,7 @@ async fn run_main_loop(
                                             app.create_dialog.prompt_cursor_col = last_line_len;
                                             app.create_dialog.ensure_cursor_visible();
 
-                                            app.status_message = Some("Prompt updated from editor".to_string());
+                                            app.status_message = Some("Prompt updated from editor".to_owned());
                                         }
                                         Err(e) => {
                                             app.status_message = Some(format!("Failed to read edited file: {e}"));
@@ -305,7 +311,7 @@ async fn run_main_loop(
                                     }
                                 }
                                 Ok(_) => {
-                                    app.status_message = Some("Editor exited without saving".to_string());
+                                    app.status_message = Some("Editor exited without saving".to_owned());
                                 }
                                 Err(e) => {
                                     app.status_message = Some(format!("Failed to launch editor: {e}"));

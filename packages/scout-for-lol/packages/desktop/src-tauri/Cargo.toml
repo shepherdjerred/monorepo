@@ -1,0 +1,61 @@
+[package]
+name = "scout-for-lol-desktop"
+version = "0.1.0"
+description = "Desktop client for Scout for League of Legends"
+authors = ["Scout for LoL Team"]
+license = "GPL-3.0-only"
+repository = "https://github.com/shepherdjerred/scout-for-lol"
+edition = "2021"
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[lints.clippy]
+# Pedantic lints
+pedantic = { level = "warn", priority = -1 }
+# Nursery lints (experimental but useful)
+nursery = { level = "warn", priority = -1 }
+# Restriction lints for extra strictness
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"
+unimplemented = "warn"
+# Complexity
+cognitive_complexity = "warn"
+# Performance
+perf = "warn"
+# Style
+style = "warn"
+
+[build-dependencies]
+tauri-build = { version = "2.1.0", features = [] }
+
+[dependencies]
+tauri = { version = "2.4.0", features = ["devtools"] }
+tauri-plugin-dialog = "2.2.0"
+tauri-plugin-fs = "2.2.0"
+tauri-plugin-log = "2.2.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+base64 = "0.22"
+sysinfo = "0.38"
+tokio-tungstenite = { version = "0.28", features = ["native-tls"] }
+native-tls = "0.2"
+futures-util = "0.3"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+log = "0.4"
+dirs = "6"
+uuid = { version = "1", features = ["v4"] }
+
+[dev-dependencies]
+mockito = "1.6"
+tokio-test = "0.4"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

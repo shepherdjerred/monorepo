@@ -25,7 +25,7 @@ pub fn get_editor() -> String {
 
     // Platform-specific fallbacks
     if cfg!(target_os = "windows") {
-        "notepad".to_string()
+        "notepad".to_owned()
     } else {
         // Try to find vim, nano, or vi
         for editor in &["vim", "nano", "vi"] {
@@ -34,7 +34,7 @@ pub fn get_editor() -> String {
             }
         }
         // Last resort fallback
-        "vi".to_string()
+        "vi".to_owned()
     }
 }
 

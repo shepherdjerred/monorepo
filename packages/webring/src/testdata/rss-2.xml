@@ -1,0 +1,2186 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Drew DeVault's blog</title>
+        <link>https://drewdevault.com</link>
+        <description>Recent content in Blogs on Drew DeVault's blog</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>en</language>
+        <lastBuildDate>Fri, 24 May 2024 00:00:00 +0000</lastBuildDate>
+
+        <atom:link href="https://drewdevault.com/blog/index.xml" rel="self"
+            type="application/rss+xml" />
+
+        <item>
+            <title>Writing a Unix clone in about a month</title>
+            <link>https://drewdevault.com/2024/05/24/2024-05-24-Bunnix.html</link>
+            <pubDate>Fri, 24 May 2024 00:00:00 +0000</pubDate>
+
+            <guid>https://drewdevault.com/2024/05/24/2024-05-24-Bunnix.html</guid>
+            <description>&lt;p&gt;I needed a bit of a break from &amp;ldquo;real work&amp;rdquo;
+                recently, so I started a new
+                programming project that was low-stakes and purely recreational. On April 21st,
+                I set out to see how much of a Unix-like operating system for x86_64 targets
+                that I could put together in about a month. The result is
+                &lt;a href="https://git.sr.ht/~sircmpwn/bunnix"&gt;Bunnix&lt;/a&gt;. Not including
+                days I didn&amp;rsquo;t work
+                on Bunnix for one reason or another, I spent 27 days on this project.&lt;/p&gt;
+                &lt;p&gt;Here&amp;rsquo;s a little demo of the results&amp;hellip;&lt;/p&gt;
+                &lt;iframe title="A short demo of the Bunnix operating system" width="720"
+                height="400"
+                src="https://spacepub.space/videos/embed/415822ac-5755-42a4-9081-b48639eed6be"
+                frameborder="0" allowfullscreen="" sandbox="allow-same-origin allow-scripts
+                allow-popups"&gt;&lt;/iframe&gt;
+                &lt;p&gt;You can try it for yourself if you like:&lt;/p&gt;
+                &lt;ul&gt;
+                &lt;li&gt;&lt;a href="https://cyanide.ayaya.dev/bunnix.iso"&gt;Bunnix 0.0.0
+                iso&lt;/a&gt;&lt;/li&gt;
+                &lt;/ul&gt;
+                &lt;p&gt;To boot this ISO with qemu:&lt;/p&gt;
+                &lt;pre tabindex="0"&gt;&lt;code&gt;qemu-system-x86_64 -cdrom bunnix.iso -display
+                sdl -serial stdio
+                &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;You can also write the iso to a USB stick and boot
+                it on real hardware. It will
+                probably work on most AMD64 machines &amp;ndash; I have tested it on a ThinkPad X220
+                and
+                a Starlabs Starbook Mk IV. Legacy boot and EFI are both supported. There are
+                some limitations to keep in mind, in particular that there is no USB support, so
+                a PS/2 keyboard (or PS/2 emulation via the BIOS) is required. Most laptops rig
+                up the keyboard via PS/2, and &lt;abbr title="your milage may
+                vary"&gt;YMMV&lt;/abbr&gt;
+                with USB keyboards via PS/2 emulation.&lt;/p&gt;
+                &lt;p&gt;&lt;em&gt;Tip: the DOOM keybindings are weird. WASD to move, right shift to
+                shoot, and
+                space to open doors. Exiting the game doesn&amp;rsquo;t work so just reboot when
+                you&amp;rsquo;re
+                done playing. I confess I didn&amp;rsquo;t spend much time on that
+                port.&lt;/em&gt;&lt;/p&gt;
+                &lt;h2 id="whats-there"&gt;What&amp;rsquo;s there?&lt;/h2&gt;
+                &lt;p&gt;The Bunnix kernel is (mostly) written in &lt;a
+                href="https://harelang.org"&gt;Hare&lt;/a&gt;, plus some
+                C components, namely lwext4 for ext4 filesystem support and libvterm for the
+                kernel video terminal.&lt;/p&gt;
+                &lt;p&gt;The kernel supports the following drivers:&lt;/p&gt;
+                &lt;ul&gt;
+                &lt;li&gt;PCI (legacy)&lt;/li&gt;
+                &lt;li&gt;AHCI block devices&lt;/li&gt;
+                &lt;li&gt;GPT and MBR partition tables&lt;/li&gt;
+                &lt;li&gt;PS/2 keyboards&lt;/li&gt;
+                &lt;li&gt;Platform serial ports&lt;/li&gt;
+                &lt;li&gt;CMOS clocks&lt;/li&gt;
+                &lt;li&gt;Framebuffers (configured by the bootloaders)&lt;/li&gt;
+                &lt;li&gt;ext4 and memfs filesystems&lt;/li&gt;
+                &lt;/ul&gt;
+                &lt;p&gt;There are numerous supported kernel features as well:&lt;/p&gt;
+                &lt;ul&gt;
+                &lt;li&gt;A virtual filesystem&lt;/li&gt;
+                &lt;li&gt;A /dev populated with block devices, null, zero, and full psuedo-devices,
+                /dev/kbd and /dev/fb0, serial and video TTYs, and the /dev/tty controlling
+                terminal.&lt;/li&gt;
+                &lt;li&gt;Reasonably complete terminal emulator and somewhat passable termios
+                support&lt;/li&gt;
+                &lt;li&gt;Some 40 syscalls, including for example clock_gettime, poll, openat et al,
+                fork, exec, pipe, dup, dup2, ioctl, etc&lt;/li&gt;
+                &lt;/ul&gt;
+                &lt;p&gt;Bunnix is a single-user system and does not currently attempt to enforce
+                Unix
+                file modes and ownership, though it could be made multi-user relatively easily
+                with a few more days of work.&lt;/p&gt;
+                &lt;p&gt;Included are two bootloaders, one for legacy boot which is
+                multiboot-compatible
+                and written in Hare, and another for EFI which is written in C. Both of them
+                load the kernel as an ELF file plus an initramfs, if required. The EFI
+                bootloader includes zlib to decompress the initramfs; multiboot-compatible
+                bootloaders handle this decompression for us.&lt;/p&gt;
+                &lt;p&gt;The userspace is largely assembled from third-party sources. The following
+                third-party software is included:&lt;/p&gt;
+                &lt;ul&gt;
+                &lt;li&gt;Colossal Cave Adventure (advent)&lt;/li&gt;
+                &lt;li&gt;dash (/bin/sh)&lt;/li&gt;
+                &lt;li&gt;Doom&lt;/li&gt;
+                &lt;li&gt;gzip&lt;/li&gt;
+                &lt;li&gt;less (pager)&lt;/li&gt;
+                &lt;li&gt;lok (/bin/awk)&lt;/li&gt;
+                &lt;li&gt;lolcat&lt;/li&gt;
+                &lt;li&gt;mandoc (man pages)&lt;/li&gt;
+                &lt;li&gt;sbase (core utils)&lt;sup id="fnref:1"&gt;&lt;a href="#fn:1"
+                class="footnote-ref" role="doc-noteref"&gt;1&lt;/a&gt;&lt;/sup&gt;&lt;/li&gt;
+                &lt;li&gt;tcc (C compiler)&lt;/li&gt;
+                &lt;li&gt;Vim 5.7&lt;/li&gt;
+                &lt;/ul&gt;
+                &lt;p&gt;The libc is derived from musl libc and contains numerous modifications to
+                suit
+                Bunnix&amp;rsquo;s needs. The curses library is based on netbsd-curses.&lt;/p&gt;
+                &lt;p&gt;The system works but it&amp;rsquo;s pretty buggy and some parts of it are
+                quite slapdash:
+                your milage will vary. Be prepared for it to crash!&lt;/p&gt;
+                &lt;h2 id="how-bunnix-came-together"&gt;How Bunnix came together&lt;/h2&gt;
+                &lt;p&gt;I started documenting the process on Mastodon on day 3 &amp;ndash; check
+                out &lt;a href="https://fosstodon.org/@drewdevault/112319697309218275"&gt;the
+                Mastodon thread&lt;/a&gt; for the
+                full story. Here&amp;rsquo;s what it looked like on day 3:&lt;/p&gt;
+                &lt;p&gt;&lt;img
+                src="https://cdn.fosstodon.org/media_attachments/files/112/319/693/110/194/041/original/2c0bd7006a74aece.png"
+                alt="Screenshot of an early Bunnix build, which boots up, sets up available memory,
+                and exercises an early in-memory filesystem"&gt;&lt;/p&gt;
+                &lt;p&gt;Here&amp;rsquo;s some thoughts after the fact.&lt;/p&gt;
+                &lt;p&gt;Some of Bunnix&amp;rsquo;s code stems from an earlier project,
+                &lt;a href="https://sr.ht/~sircmpwn/helios"&gt;Helios&lt;/a&gt;. This includes
+                portions of the kernel
+                which are responsible for some relatively generic CPU setup (GDT, IDT, etc), and
+                some drivers like AHCI were adapted for the Bunnix system. I admit that it would
+                probably not have been possible to build Bunnix so quickly without prior
+                experience through Helios.&lt;/p&gt;
+                &lt;p&gt;Two of the more challenging aspects were ext4 support and the virtual
+                terminal,
+                for which I brought in two external dependencies, lwext4 and libvterm. Both
+                proved to be challenging integrations. I had to rewrite my filesystem layer a
+                few times, and it&amp;rsquo;s still buggy today, but getting a proper Unix
+                filesystem
+                design (including openat and good handling of inodes) requires digging into
+                lwext4 internals a bit more than I&amp;rsquo;d have liked. I also learned a lot
+                about
+                mixing source languages into a Hare project, since the kernel links together
+                Hare, assembly, and C sources &amp;ndash; it works remarkably well but there are
+                some
+                pain points I noticed, particularly with respect to building the ABI integration
+                riggings. It&amp;rsquo;d be nice to automate conversion of C headers into Hare
+                forward
+                declaration modules. Some of this work already exists in hare-c, but has a ways
+                to go. If I were to start again, I would probably be more careful in my design
+                of the filesystem layer.&lt;/p&gt;
+                &lt;p&gt;Getting the terminal right was difficult as well. I wasn&amp;rsquo;t sure
+                that I was going
+                to add one at all, but I eventually decided that I wanted to port vim and that
+                was that. libvterm is a great terminal state machine library, but it&amp;rsquo;s
+                poorly
+                documented and required a lot of fine-tuning to integrate just right. I also
+                ended up spending a lot of time on performance to make sure that the terminal
+                worked smoothly.&lt;/p&gt;
+                &lt;p&gt;Another difficult part to get right was the scheduler. Helios has a simpler
+                scheduler than Bunnix, and while I initially based the Bunnix scheduler on
+                Helios I had to throw out and rewrite quite a lot of it. Both Helios and Bunnix
+                are single-CPU systems, but unlike Helios, Bunnix allows context switching
+                within the kernel &amp;ndash; in fact, even preemptive task switching enters and
+                exits
+                via the kernel. This necessitates multiple kernel stacks and a different
+                approach to task switching. However, the advantages are numerous, one of which
+                being that implementing blocking operations like disk reads and pipe(2) are much
+                simpler with wait queues. With a robust enough scheduler, the rest of the kernel
+                and its drivers come together pretty easily.&lt;/p&gt;
+                &lt;p&gt;Another source of frustration was signals, of course. Helios does not
+                attempt to
+                be a Unix and gets away without these, but to build a Unix, I needed to
+                implement signals, big messy hack though they may be. The signal implementation
+                which ended up in Bunnix is pretty bare-bones: I mostly made sure that SIGCHLD
+                worked correctly so that I could port dash.&lt;/p&gt;
+                &lt;p&gt;Porting third-party software was relatively easy thanks to basing my libc
+                on
+                musl libc. I imported large swaths of musl into my own libc and adapted it to
+                run on Bunnix, which gave me a pretty comprehensive and reliable C library
+                pretty fast. With this in place, porting third-party software was a breeze, and
+                most of the software that&amp;rsquo;s included was built with minimal
+                patching.&lt;/p&gt;
+                &lt;h2 id="what-i-learned"&gt;What I learned&lt;/h2&gt;
+                &lt;p&gt;Bunnix was an interesting project to work on. My other project, Helios, is
+                a
+                microkernel design that&amp;rsquo;s Not Unix, while Bunnix is a monolithic kernel
+                that is
+                much, much closer to Unix.&lt;/p&gt;
+                &lt;p&gt;One thing I was surprised to learn a lot about is filesystems. Helios, as a
+                microkernel, spreads the filesystem implementation across many drivers running
+                in many separate processes. This works well enough, but one thing I discovered
+                is that it&amp;rsquo;s quite important to have caching in the filesystem layer, even
+                if
+                only to track living objects. When I revisit Helios, I will have a lot of work
+                to do refactoring (or even rewriting) the filesystem code to this end.&lt;/p&gt;
+                &lt;p&gt;The approach to drivers is also, naturally, much simpler in a monolithic
+                kernel
+                design, though I&amp;rsquo;m not entirely pleased with all of the stuff I heaped
+                into ring
+                0. There might be room for an improved Helios scheduler design that incorporates
+                some of the desirable control flow elements from the monolithic design into a
+                microkernel system.&lt;/p&gt;
+                &lt;p&gt;I also finally learned how signals work from top to bottom, and boy is it
+                ugly.
+                I&amp;rsquo;ve always felt that this was one of the weakest points in the design of
+                Unix
+                and this project did nothing to disabuse me of that notion.&lt;/p&gt;
+                &lt;p&gt;I had also tried to avoid using a bitmap allocator in Helios, and generally
+                memory management in Helios is a bit fussy altogether &amp;ndash; one of the biggest
+                pain
+                points with the system right now. However, Bunnix uses a simple bitmap allocator
+                for all conventional pages on the system and I found that it works really,
+                really well and does not have nearly as much overhead as I had feared it would.
+                I will almost certainly take those lessons back to Helios.&lt;/p&gt;
+                &lt;p&gt;Finally, I&amp;rsquo;m quite sure that putting together Bunnix in just 30
+                days is a feat
+                which would not have been possible with a microkernel design. At the end of the
+                day, monolithic kernels are just much simpler to implement. The advantages of a
+                microkernel design are compelling, however &amp;ndash; perhaps a better answer lies
+                in a
+                hybrid kernel.&lt;/p&gt;
+                &lt;h2 id="whats-next"&gt;What&amp;rsquo;s next&lt;/h2&gt;
+                &lt;p&gt;Bunnix was (note the past tense) a project that I wrote for the purpose of
+                recreational programming, so it&amp;rsquo;s purpose is to be fun to work on. And
+                I&amp;rsquo;ve had
+                my fun! At this point I don&amp;rsquo;t feel the need to invest more time and energy
+                into
+                it, though it would definitely benefit from some. In the future I may spend a
+                few days on it here and there, and I would be happy to integrate improvements
+                from the community &amp;ndash; send patches to my &lt;a
+                href="https://lists.sr.ht/~sircmpwn/public-inbox"&gt;public inbox&lt;/a&gt;. But for
+                the most
+                part it is an art project which is now more-or-less complete.&lt;/p&gt;
+                &lt;p&gt;My next steps in OS development will be a return to Helios with a lot of
+                lessons
+                learned and some major redesigns in the pipeline. But I still think that Bunnix
+                is a fun and interesting OS in its own right, in no small part due to its
+                demonstration of Hare as a great language for kernel hacking. Some of the
+                priorities for improvements include:&lt;/p&gt;
+                &lt;ul&gt;
+                &lt;li&gt;A directory cache for the filesystem and better caching
+                generally&lt;/li&gt;
+                &lt;li&gt;Ironing out ext4 bugs&lt;/li&gt;
+                &lt;li&gt;procfs and top&lt;/li&gt;
+                &lt;li&gt;mmaping files&lt;/li&gt;
+                &lt;li&gt;More signals (e.g. SIGSEGV)&lt;/li&gt;
+                &lt;li&gt;Multi-user support&lt;/li&gt;
+                &lt;li&gt;NVMe block devices&lt;/li&gt;
+                &lt;li&gt;IDE block devices&lt;/li&gt;
+                &lt;li&gt;ATAPI and ISO 9660 support&lt;/li&gt;
+                &lt;li&gt;Intel HD audio support&lt;/li&gt;
+                &lt;li&gt;Network stack&lt;/li&gt;
+                &lt;li&gt;Hare toolchain in the base system&lt;/li&gt;
+                &lt;li&gt;Self hosting&lt;/li&gt;
+                &lt;/ul&gt;
+                &lt;p&gt;Whether or not it&amp;rsquo;s me or one of you readers who will work on
+                these first
+                remains to be seen.&lt;/p&gt;
+                &lt;p&gt;In any case, have fun playing with Bunnix!&lt;/p&gt;
+                &lt;div class="footnotes" role="doc-endnotes"&gt;
+                &lt;hr&gt;
+                &lt;ol&gt;
+                &lt;li id="fn:1"&gt;
+                &lt;p&gt;sbase is good software written by questionable people. I do not endorse
+                suckless.&amp;#160;&lt;a href="#fnref:1" class="footnote-backref"
+                role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+                &lt;/li&gt;
+                &lt;/ol&gt;
+                &lt;/div&gt;
+            </description>
+        </item>
+        <item>
+            <title>Copyleft licenses are not “restrictive”</title>
+            <link>https://drewdevault.com/2024/04/19/2024-04-19-Copyleft-is-not-restrictive.html</link>
+            <pubDate>Fri, 19 Apr 2024 00:00:00 +0000</pubDate>
+
+            <guid>https://drewdevault.com/2024/04/19/2024-04-19-Copyleft-is-not-restrictive.html</guid>
+            <description>&lt;p&gt;One may observe an axis, or a &amp;ldquo;spectrum&amp;rdquo;,
+                along which free and open source
+                software licenses can be organized, where one end is
+                &amp;ldquo;permissive&amp;rdquo; and the other
+                end is &amp;ldquo;copyleft&amp;rdquo;. It is important to acknowledge, however, that
+                though copyleft
+                can be found at the opposite end of an axis with respect to permissive, it is
+                not synonymous with the linguistic antonym of permissive &amp;ndash; that is,
+                copyleft
+                licenses are not &amp;ldquo;restrictive&amp;rdquo; by comparison with permissive
+                licenses.&lt;/p&gt;
+                &lt;p&gt;&lt;em&gt;Aside: Free software is not synonymous with copyleft and open
+                source is not
+                synonymous with permissive, though this is a common misconception. Permissive
+                licenses are generally free software and copyleft licenses are generally open
+                source; the distinction between permissive and copyleft is orthogonal to the
+                distinction between free software and open source.&lt;/em&gt;&lt;/p&gt;
+                &lt;p&gt;It is a common misunderstanding to construe copyleft licenses as more
+                &amp;ldquo;restrictive&amp;rdquo; or &amp;ldquo;less free&amp;rdquo; than permissive
+                licenses. This view is predicated
+                on a shallow understanding of freedom, a sort of passive freedom that presents
+                as the absence of obligations. Copyleft is predicated on a deeper understanding
+                of freedom in which freedom is a &lt;em&gt;positive guarantee of
+                rights&lt;/em&gt;.&lt;sup&gt;&lt;a
+                href="https://plato.stanford.edu/entries/liberty-positive-negative/"&gt;[source]&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+                &lt;p&gt;Let&amp;rsquo;s consider the matter of freedom, obligation, rights, and
+                restrictions in
+                depth.&lt;/p&gt;
+                &lt;p&gt;Both forms of licenses include obligations, which are not the same thing as
+                restrictions. An example of an obligation can be found in the permissive MIT
+                license:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;Permission is hereby granted […] to deal in the Software without
+                restriction
+                […] subject to the following conditions:&lt;/p&gt;
+                &lt;p&gt;The above copyright notice and this permission notice shall be included in
+                all
+                copies or substantial portions of the Software.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;This obliges the user, when distributing copies of the software, to include
+                the
+                copyright notice. However, it does not &lt;em&gt;restrict&lt;/em&gt; the use of the
+                software under
+                any conditions. An example of a restriction comes from the infamous JSON
+                license, which adds the following clause to a stock MIT license:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;The Software shall be used for Good, not Evil.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;IBM famously petitioned Douglas Crockford for, and received, a license to
+                do
+                evil with JSON.&lt;sup id="fnref:1"&gt;&lt;a href="#fn:1" class="footnote-ref"
+                role="doc-noteref"&gt;1&lt;/a&gt;&lt;/sup&gt; This kind of clause is broadly
+                referred to in the free
+                software jargon as &amp;ldquo;discrimination against field of endeavour&amp;rdquo;,
+                and such
+                restrictions contravene both the free software and open source definitions. To
+                quote the &lt;a href="https://opensource.org/osd"&gt;Open Source
+                Definition&lt;/a&gt;, clause 6:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;The license must not restrict anyone from making use of the program in a
+                specific field of endeavor. For example, it may not restrict the program from
+                being used in a business, or from being used for genetic research.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;No such restrictions are found in free or open source software licenses, be
+                they
+                permissive or copyleft &amp;ndash; all FOSS licenses permit the use of the software
+                for
+                any purpose without restriction. You can sell both permissive and copyleft
+                software, use it as part of a commercial cloud service,&lt;sup id="fnref:2"&gt;&lt;a
+                href="#fn:2" class="footnote-ref" role="doc-noteref"&gt;2&lt;/a&gt;&lt;/sup&gt; use
+                the software
+                as part of a nuclear weapons program,&lt;sup id="fnref:3"&gt;&lt;a href="#fn:3"
+                class="footnote-ref" role="doc-noteref"&gt;3&lt;/a&gt;&lt;/sup&gt; or do whatever
+                else you want with
+                it. There are no restrictions on how free software is used, regardless of if it
+                is permissive or copyleft.&lt;/p&gt;
+                &lt;p&gt;Copyleft does not impose restrictions, but it does impose obligations. The
+                obligations exist to guarantee rights to the users of the software &amp;ndash; in
+                other
+                words, to ensure freedoms. In this respect copyleft licenses are &lt;em&gt;more
+                free&lt;/em&gt;
+                than permissive licenses.&lt;/p&gt;
+                &lt;p&gt;Freedom is a political concept, and in order to understand this, we must
+                consider it in political terms, which is to say as an exercise in power
+                dynamics. Freedom without obligation is a contradiction. Freedom
+                &lt;em&gt;emerges&lt;/em&gt; from
+                obligations, specifically obligations imposed on power.&lt;/p&gt;
+                &lt;p&gt;Where does freedom come from?&lt;/p&gt;
+                &lt;p&gt;Consider the United States as an example, a society which sets forth
+                freedom as
+                a core political value.&lt;sup id="fnref:4"&gt;&lt;a href="#fn:4"
+                class="footnote-ref" role="doc-noteref"&gt;4&lt;/a&gt;&lt;/sup&gt; Freedoms in the
+                US are ultimately grounded in the US
+                constitution and its bill of rights. These tools create freedoms by guaranteeing
+                rights to US citizens through the imposition of &lt;em&gt;obligations&lt;/em&gt; on
+                the government.
+                For instance, you have a right to an attorney when accused of a crime in the
+                United States, and as such the government is &lt;em&gt;obliged&lt;/em&gt; to provide
+                you with one.
+                It is from obligations such as these that freedom emerges. Freedom of assembly,
+                another example, is guaranteed such that the police are prevented from breaking
+                up peaceful protests &amp;ndash; this freedom emerges from a
+                &lt;em&gt;constraint&lt;/em&gt; (or
+                restriction, if you must) on power (the government) as a means of guaranteeing
+                the rights and freedom of those with less power by comparison (its
+                citizens).&lt;/p&gt;
+                &lt;p&gt;Who holds the power in the context of software?&lt;/p&gt;
+                &lt;p&gt;Consider non-free software by contrast: software is written by corporations
+                and
+                sold on to users with substantial restrictions on its use. Corporations hold
+                more power than individuals: they have more resources (e.g. money), more
+                influence, and, in a sense more fundamental to the software itself, they retain
+                in private the tools to understand the software, or to modify its behavior, and
+                they dictate the conditions under which it may be used (e.g. only if your
+                license key has not expired, or only for certain purposes). This is true of
+                anyone who retains the source code in private and uses copyright law to enforce
+                their will upon the software &amp;ndash; in this way they possess, and exercise,
+                power
+                over the user.&lt;/p&gt;
+                &lt;p&gt;Permissive licenses do not provide any checks on this power; generally they
+                preserve &lt;a href="https://en.wikipedia.org/wiki/Moral_rights"&gt;moral
+                rights&lt;/a&gt; and little
+                else. Permissive licenses provide for relatively few and narrow freedoms, and
+                are not particularly &amp;ldquo;free&amp;rdquo; as such. Copyleft licenses constrain
+                these powers
+                through additional obligations, and from these obligations greater freedoms
+                emerge. Specifically, they oblige reciprocity. They are distinguished from
+                permissive licenses in this manner, but where permissive licenses
+                &lt;em&gt;permit&lt;/em&gt;,
+                copyleft does not &lt;em&gt;restrict&lt;/em&gt; per-se &amp;ndash; better terms
+                might be &amp;ldquo;reciprocal&amp;rdquo; and
+                &amp;ldquo;non-reciprocal&amp;rdquo;, but perhaps that ship has sailed.
+                &amp;ldquo;You may use this software
+                &lt;em&gt;if&lt;/em&gt; &amp;hellip;&amp;rdquo; is a statement made both by
+                permissive and copyleft licenses, with
+                different &lt;em&gt;if&lt;/em&gt;s. Neither form of license says &amp;ldquo;you
+                cannot use this software &lt;em&gt;if&lt;/em&gt;
+                &amp;hellip;&amp;rdquo;; licenses which do so are non-free.&lt;/p&gt;
+                &lt;p&gt;Permissive licenses and copyleft licenses are both free software, but only
+                the
+                latter provides a guarantee of rights, and while both might be free only the
+                latter provides &lt;em&gt;freedom&lt;/em&gt;.&lt;/p&gt;
+                &lt;div class="footnotes" role="doc-endnotes"&gt;
+                &lt;hr&gt;
+                &lt;ol&gt;
+                &lt;li id="fn:1"&gt;
+                &lt;p&gt;Strictly speaking this exception was for JSLint, not JSON. But I
+                digress.&amp;#160;&lt;a href="#fnref:1" class="footnote-backref"
+                role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+                &lt;/li&gt;
+                &lt;li id="fn:2"&gt;
+                &lt;p&gt;This is even true if the software uses the AGPL license.&amp;#160;&lt;a
+                href="#fnref:2" class="footnote-backref"
+                role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+                &lt;/li&gt;
+                &lt;li id="fn:3"&gt;
+                &lt;p&gt;Take a moment here to entertain the supposition that nuclear warheads
+                are legally obliged to include a copy of the MIT license, if they
+                incorporate MIT licensed code in their guidance systems, on board, as they
+                are &amp;ldquo;distributing&amp;rdquo; that software to the, err, recipients. As it
+                were.&amp;#160;&lt;a href="#fnref:3" class="footnote-backref"
+                role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+                &lt;/li&gt;
+                &lt;li id="fn:4"&gt;
+                &lt;p&gt;The extent to which it achieves this has, of course, been the subject of
+                intense debate for centuries.&amp;#160;&lt;a href="#fnref:4"
+                class="footnote-backref"
+                role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+                &lt;/li&gt;
+                &lt;/ol&gt;
+                &lt;/div&gt;
+            </description>
+        </item>
+        <item>
+            <title>FDO's conduct enforcement actions regarding Vaxry</title>
+            <link>https://drewdevault.com/2024/04/09/2024-04-09-FDO-conduct-enforcement.html</link>
+            <pubDate>Tue, 09 Apr 2024 00:00:00 +0000</pubDate>
+
+            <guid>https://drewdevault.com/2024/04/09/2024-04-09-FDO-conduct-enforcement.html</guid>
+            <description>&lt;p&gt;freedesktop(.org), aka FDO, recently banned Hyprland maintainer
+                Vaxry from the
+                FDO community, and in response Vaxry has taken his case to the court of public
+                opinion, publishing their email exchanges and writing about it on his
+                blog.&lt;/p&gt;
+                &lt;p&gt;It saddens me to bear witness to these events today. I wrote &lt;a
+                href="https://drewdevault.com/2023/09/17/Hyprland-toxicity.html"&gt;in September of
+                last year&lt;/a&gt; about problems with toxicity in the Hyprland community. I
+                initially reached out to Vaxry to discuss these problems in private in February
+                of last year. I failed to get through to him, leading to that blog post in
+                September. I spent some time in the following weeks talking with Vaxry on his
+                behavior and his community&amp;rsquo;s social norms, again in private, but again, I
+                was
+                unable to get through to him. Unfortunately, we find ourselves again leaving the
+                private sphere and discussing Vaxry&amp;rsquo;s behavior and the problem posed by
+                the
+                Hyprland community once again.&lt;/p&gt;
+                &lt;p&gt;The fact of the matter is that Hyprland remains a toxic community, enabled
+                and
+                encouraged by its toxic leadership, namely Vaxry. FDO&amp;rsquo;s decision to ban
+                Vaxry is
+                ultimately a consequence of Vaxry&amp;rsquo;s behavior, and because he has elected
+                to
+                appeal his case in public, I am compelled to address his behavior in public. I
+                hereby rise firmly in defense of FDO&amp;rsquo;s decision.&lt;/p&gt;
+                &lt;p&gt;I invite you to start by reading the two email threads, &lt;a
+                href="https://blog.vaxry.net/resource/articleFDO/LyudeMails.pdf"&gt;one&lt;/a&gt;,
+                and &lt;a
+                href="https://blog.vaxry.net/resource/articleFDO/lyudeReply.pdf"&gt;two&lt;/a&gt;,
+                which Vaxry has published for your consideration, as well as Vaxry&amp;rsquo;s
+                follow-ups
+                on his blog, &lt;a
+                href="https://blog.vaxry.net/articles/2024-fdo-and-redhat"&gt;one&lt;/a&gt;, and
+                &lt;a
+                href="https://blog.vaxry.net/articles/2024-fdo-and-redhat2"&gt;two&lt;/a&gt;.&lt;/p&gt;
+                &lt;p&gt;Here&amp;rsquo;s my read on the situation.&lt;/p&gt;
+                &lt;p&gt;The FDO officer that reached out to Vaxry did it after Vaxry&amp;rsquo;s
+                problematic
+                behavior was brought to her attention by members of the FDO community, and was
+                acting on her mandate within the FDO conduct enforcement board by investigating
+                complaints submitted to her by this community. It is not a stretch to suggest a
+                close relationship between these communities exists: FDO is the steward of both
+                the Wayland protocol and implementation and the wlroots library, essential
+                dependencies of Hyprland and sources for collaboration between Hyprland and FDO.
+                Vaxry and other members of the Hyprland community had already participated
+                extensively in these projects (mainly in discussions on IRC and GitLab issues)
+                at the time of the email exchange, in spaces where the code of conduct
+                applies.&lt;/p&gt;
+                &lt;p&gt;The FDO officer duly investigated the complaints she had received and
+                found, in
+                collaboration with the other members of the FDO conduct enforcement team, that
+                they were credible, and worrying. There are numerous examples of behavior from
+                Vaxry that contravenes the FDO code of conduct in several different respects,
+                and any number of them would be grounds for an immediate ban. Since these
+                behaviors are concerning, but did not take place in the FDO community, the
+                conduct board decided to issue a warning in private, stating that if this sort
+                of behavior was seen in the FDO community that it would result in enforcement
+                action from the conduct team.&lt;/p&gt;
+                &lt;p&gt;All of the actions from the FDO conduct team are reasonable and show
+                considerable restraint. Vaxry could have taken it in stride with no consequences
+                to himself. Instead, he immediately escalated the situation. He construes the
+                FDO officer&amp;rsquo;s polite and well-reasoned warning as threats and
+                intimidation. He
+                minimizes examples of his own hate speech by shrugging them off as a joke. He
+                belittles the FDO officer and builds a straw man wherein her email is an
+                official statement on behalf of RedHat, and cites a conspiracy theory about
+                &lt;abbr title="diversity, equity, and inclusion"&gt;DEI&lt;/abbr&gt; programs at
+                RedHat as
+                justification for calling the FDO officer a hypocrite. He is insulted on my
+                behalf that my name was cited in the FDO officer&amp;rsquo;s email in lowercase,
+                &amp;ldquo;drew&amp;rdquo;,
+                and feels the need to address this.&lt;/p&gt;
+                &lt;p&gt;The FDO officer responds to Vaxry&amp;rsquo;s unhinged rant with a
+                sarcastic quip
+                clarifying that it was indeed within the FDO conduct team&amp;rsquo;s remit to ban
+                Vaxry
+                from their GitLab instance &amp;ndash; I confess that in my view this was somewhat
+                unprofessional, though I can easily sympathize with the FDO officer given the
+                context. Following this, Vaxry states that Hyprland will cease all communication
+                with FDO&amp;rsquo;s conduct team and &lt;em&gt;ignore&lt;/em&gt; (emphasis his) any
+                future emails from them.
+                Finally, he threatens legal action (on what basis is unclear) and signs the
+                email.&lt;/p&gt;
+                &lt;p&gt;Regardless of how you feel about the conduct team issuing a private warning
+                to
+                Vaxry on the basis of activities outside of FDO community spaces, the email
+                thread that ensues most certainly is within the scope of the FDO code of
+                conduct, and Vaxry&amp;rsquo;s behavior therein is sufficient justification for a
+                ban from
+                the FDO community as far as I&amp;rsquo;m concerned. The conduct team cites
+                Vaxry&amp;rsquo;s stated
+                intention to ignore any future conduct interventions as the ultimate reason for
+                the ban, which I find entirely reasonable on FDO&amp;rsquo;s part. I have banned
+                people
+                for far less than this, and I stand by it.&lt;/p&gt;
+                &lt;p&gt;Vaxry&amp;rsquo;s follow-up blog posts only serve to underscore this point.
+                First of all,
+                he immediately opens with a dog-whistle calling for the reader to harass the FDO
+                officer in question: &amp;ldquo;I don&amp;rsquo;t condone harassing this person, but
+                here is their
+                full name, employer and contact details&amp;rdquo;:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;I do not condone any hateful messages sent towards any of the parties
+                mentioned.&lt;/p&gt;
+                &lt;p&gt;Recently I have received an email filled with threats to my inbox, from a
+                member of the X.org board, Freedesktop.org, and a Red Hat employee. Their name
+                is [redacted].&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;Moreover, Vaxry claims to have apologised for his past conduct, which is
+                not
+                true. In lieu of an apology, Vaxry has spent the &amp;ldquo;1.5 years&amp;rdquo;
+                since the last
+                incident posting angry rants on his blog calling out minority representation and
+                &amp;ldquo;social justice warriors&amp;rdquo; in light of his perceived persecution.
+                Meanwhile the
+                Hyprland community remains a toxic place, welcoming hate, bullying, and
+                harassment, but now prohibiting all &amp;ldquo;political&amp;rdquo; speech, which in
+                practice means
+                any discussion of LGBTQ topics, though this is largely unenforced. In the end,
+                the Hyprland community&amp;rsquo;s fundamental problem is that they&amp;rsquo;re all
+                &amp;ldquo;just having
+                fun&amp;rdquo;, and it seems that they can&amp;rsquo;t have
+                &amp;ldquo;fun&amp;rdquo; unless it&amp;rsquo;s at someone else&amp;rsquo;s
+                expense.&lt;/p&gt;
+                &lt;p&gt;The FDO team is right that Hyprland&amp;rsquo;s community reflects poorly
+                on the Linux
+                desktop community as a whole. Vaxry has created a foothold for hate,
+                transphobia, homophobia, bullying, and harassment in the Linux desktop
+                community. We are right to take action to correct this problem.&lt;/p&gt;
+                &lt;p&gt;Every option other than banning Vaxry has been exhausted over the past year
+                and
+                a half. I personally spent several weeks following my last blog post on the
+                matter discussing Vaxry&amp;rsquo;s behavior in confidence and helping him
+                understand how
+                to improve, and at my suggestion he joined a private community of positive male
+                role models to discuss these issues in a private and empathetic space. After a
+                few weeks of these private discussions, the last thing he said to me was
+                &amp;ldquo;I do
+                believe there could be arguments to sway my opinion towards
+                genocide&amp;rdquo;.&lt;sup id="fnref:1"&gt;&lt;a href="#fn:1" class="footnote-ref"
+                role="doc-noteref"&gt;1&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+                &lt;p&gt;There&amp;rsquo;s nothing left to do but to build a fence around Hyprland
+                and protect the
+                rest of the community from them. I know that there&amp;rsquo;s a lot of good people
+                who
+                use and contribute to Hyprland, and I&amp;rsquo;m sorry for those of you who are
+                affected
+                by this problem. But, in the end, actions have consequences. The rest of the
+                community has no choice but to sanction Vaxry.&lt;/p&gt;
+                &lt;p&gt;And, to Vaxry &amp;ndash; I know you&amp;rsquo;re reading this &amp;ndash;
+                there are going to continue to be
+                consequences for your actions, but it&amp;rsquo;s still not too late to change. I
+                know
+                it&amp;rsquo;s humiliating to be called out like this, and I really would rather not
+                have
+                had to do so. FDO is probably not the last time you&amp;rsquo;re going to be banned
+                if you
+                don&amp;rsquo;t change course, and it would reflect better on you if you took it on
+                the
+                chin and didn&amp;rsquo;t post inflammatory rants on your blog &amp;ndash; trust me,
+                you don&amp;rsquo;t look
+                like the good guy here. You are trapped in an echo chamber of hate, anger, and
+                bigotry. I hope that you find a way out, and that someday you can build a
+                community which is as great as your software is.&lt;/p&gt;
+                &lt;p&gt;And, to the FDO officer in question: I&amp;rsquo;m so sorry that
+                you&amp;rsquo;re at the ass end of
+                all of this hate and abuse. You don&amp;rsquo;t deserve any of it. You did a good
+                job, and
+                I&amp;rsquo;m proud of you and the rest of the FDO conduct team. If you need any
+                support,
+                someone to talk to, don&amp;rsquo;t hesitate to reach out and ask, on IRC, Matrix,
+                email,
+                whatever. Don&amp;rsquo;t read the comments.&lt;/p&gt;
+                &lt;p&gt;And on that note, I condemn in the harshest terms the response from
+                communities
+                like /r/linux on the subject. The vile harassment and hate directed at the FDO
+                officer in question is obscene and completely unjustifiable. I don&amp;rsquo;t care
+                what
+                window manager or desktop environment you use &amp;ndash; this kind of behavior is
+                completely uncalled for. I expect better.&lt;/p&gt;
+                &lt;hr&gt;
+                &lt;p&gt;&lt;em&gt;P.S. The Hyprland community has already descended on me before
+                even publishing
+                this post, after I called Vaxry out on Mastodon a few hours ago. My
+                notifications are not full of reasonable objections to my complaints, but
+                instead the response is slurs and death threats. This only serves to prove my
+                characterization of the Hyprland community as deeply toxic.&lt;/em&gt;&lt;/p&gt;
+                &lt;div class="footnotes" role="doc-endnotes"&gt;
+                &lt;hr&gt;
+                &lt;ol&gt;
+                &lt;li id="fn:1"&gt;
+                &lt;p&gt;Yes, this is taken out of context. But, if you raise this objection, I
+                struggle to imagine in what context you think this statement can be read
+                sympathetically.&amp;#160;&lt;a href="#fnref:1" class="footnote-backref"
+                role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+                &lt;/li&gt;
+                &lt;/ol&gt;
+                &lt;/div&gt;
+            </description>
+        </item>
+        <item>
+            <title>Why Prusa is floundering, and how you can avoid their fate</title>
+            <link>https://drewdevault.com/2023/12/26/2023-12-26-Prusa-is-floundering.html</link>
+            <pubDate>Tue, 26 Dec 2023 00:00:00 +0000</pubDate>
+
+            <guid>https://drewdevault.com/2023/12/26/2023-12-26-Prusa-is-floundering.html</guid>
+            <description>&lt;p&gt;Prusa is a 3D printer manufacturer which has a long history of
+                being admired by
+                the 3D printing community for high quality, open source printers. They have been
+                struggling as of late, and came under criticism for making the firmware of their
+                Mk4 printer non-free.&lt;sup id="fnref:1"&gt;&lt;a href="#fn:1" class="footnote-ref"
+                role="doc-noteref"&gt;1&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+                &lt;p&gt;&lt;a
+                href="https://lucumr.pocoo.org/2023/12/25/life-and-death-of-open-source/"&gt;Armin
+                Ronacher&lt;/a&gt; uses Prusa as a case-study in why open source companies
+                fail, and uses this example to underline his argument that open source needs to
+                adapt for commercial needs, namely by adding commercial exclusivity clauses to
+                its licenses &amp;ndash; Armin is one of the principal proponents of the non-free
+                Functional Source License. Armin cites his experience with a Chinese
+                manufactured 3D printer as evidence that intellectual property is at the heart
+                of Prusa&amp;rsquo;s decline, and goes on to discuss how this dynamic applies to his
+                own
+                work in developing a non-free license for use with Sentry. I find this work
+                pretty interesting &amp;ndash; FSL is a novel entry into the non-free license
+                compendium,
+                and it&amp;rsquo;s certainly a better way to do software than proprietary models,
+                assuming
+                that it&amp;rsquo;s not characterized as free or open source. But, allow me to use
+                the
+                same case study to draw different conclusions.&lt;/p&gt;
+                &lt;p&gt;It is clear on the face of it that Prusa&amp;rsquo;s move to a non-free
+                firmware is
+                unrelated to their struggles with the Chinese competition &amp;ndash; their firmware
+                was
+                GPL&amp;rsquo;d, and the cited competitor (Bambu) evidently respects copyleft, and
+                there&amp;rsquo;s
+                no evidence that Bambu&amp;rsquo;s printers incorporate derivatives of
+                Prusa&amp;rsquo;s firmware in
+                a manner which violates the GPL. Making the license non-free is immaterial to
+                the market dynamics between Prusa and Bambu, so the real explanation must lie
+                elsewhere.&lt;/p&gt;
+                &lt;p&gt;If you had asked me 10 years ago what I expected Prusa&amp;rsquo;s largest
+                risk would be,
+                I would have simply answered &amp;ldquo;China&amp;rdquo; and you would have probably
+                said the same.
+                The Chinese economy and industrial base can outcompete Western manufacturing in
+                almost every manufacturing market.&lt;sup id="fnref:2"&gt;&lt;a href="#fn:2"
+                class="footnote-ref" role="doc-noteref"&gt;2&lt;/a&gt;&lt;/sup&gt; This was always
+                the obvious
+                vulnerability in their business model, and they &lt;em&gt;absolutely&lt;/em&gt;
+                needed to be
+                prepared for this situation, or their death was all but certain. Prusa made one
+                of the classic errors in open source business models: they made their product,
+                made it open source, sold it, and assumed that they were done working on their
+                business model.&lt;/p&gt;
+                &lt;p&gt;It was inevitable that someday Chinese manufacturers would undercut Prusa
+                on
+                manufacturing costs. Prusa responded to this certainty by not diversifying their
+                business model whatsoever. There has only ever been one Prusa product: their
+                latest 3D printer model. The Mk4 costs $1,200. You can buy the previous
+                generation (at $1,000), or the MINI (from 2019, $500). You can open your wallet
+                and get their high-end printers, which are neat but fail to address the one
+                thing that most users at this price-point really want, which is more build
+                volume. Or, you can buy an Ender 3 off Amazon right now for $180 and
+                you&amp;rsquo;ll get
+                better than half of the value of an Mk4 at an 85% discount. You could also buy
+                Creality&amp;rsquo;s flagship model for a cool $800 and get a product which beats
+                the Mk4
+                in every respect. China has joined the market, bringing with them all of the
+                competitive advantages their industrial base can bring to bear, and
+                Prusa&amp;rsquo;s
+                naive strategy is causing their position to fall like a rock.&lt;/p&gt;
+                &lt;p&gt;Someone new to 3D printing will pick up an Ender and will probably be happy
+                with
+                it for 1-2 years. When they upgrade, will they upgrade to a Prusa or an Ender 5?
+                Three to five years a customer spends in someone else&amp;rsquo;s customer pipeline
+                is an
+                incredibly expensive opportunity cost Prusa is missing out on. This opportunity
+                cost is the kind of arithmetic that would make loss leaders like a cheap,
+                low-end, low-or-negative-margin Prusa printer make financial sense. Hell, Prusa
+                should have made a separate product line of white-labeled Chinese entry-level 3D
+                printers just to get people on the Prusa brand.&lt;/p&gt;
+                &lt;p&gt;Prusa left many stones unturned. Bambu&amp;rsquo;s cloud slicer is a
+                massive lost
+                opportunity for Prusa. On-demand cloud printing services are another lost
+                opportunity. Prusa could have built a marketplace for models &amp;amp; parts and
+                skimmed
+                a margin off of the top, but they waited until 2022 to launch Printables &amp;ndash;
+                waiting until the 11th hour when everyone was fed up with Thingiverse. Imagine a
+                Prusa where it works out of the box, you can fire up a slicer in your browser
+                which auto-connects to your printer and prints models from a Prusa-operated
+                model repository, paying $10 for a premium model, $1 off the top goes to Prusa,
+                with the same saved payment details which ensure that a fresh spool of Prusa
+                filament arrives at your front door when it auto-detects that your printer is
+                almost out. The print you want is too big for your build volume? Click here to
+                have it cloud printed &amp;ndash; do you want priority shipping for that? Your
+                hot-end is
+                reaching the end of its life &amp;ndash; as one of our valued business customers on
+                our
+                premium support contract we would be happy to send you a temporary replacement
+                printer while yours is shipped in for service.&lt;/p&gt;
+                &lt;p&gt;Prusa&amp;rsquo;s early foothold in the market was strong, and they were
+                wise to execute
+                the way they did early on. But they &lt;em&gt;absolutely&lt;/em&gt; had to diversify
+                their lines of
+                business. Prusa left gaping holes in the market and utterly failed to capitalize
+                on any of them. Prusa could have been synonymous with 3D printing if they had
+                invested in the brand (though they probably needed a better name). I should be
+                able to walk into a Best Buy and pick up an entry-level Prusa for $250-$500, or
+                into a Home Depot and pick up a workshop model for $1000-$2000. I should be able
+                to bring it home, unbox it, scan a QR code to register it with PrusaConnect, and
+                have a Benchy printing in less than 10 minutes.&lt;/p&gt;
+                &lt;p&gt;Chinese manufacturers did all of this and more, and they&amp;rsquo;re
+                winning. They aren&amp;rsquo;t
+                just cheaper &amp;ndash; they offer an outright better product. These are not cheap
+                knock-offs: if you want the best 3D printer today it&amp;rsquo;s going to be a
+                Chinese
+                one, regardless of how much you want to spend, but, as it happens, you&amp;rsquo;re
+                going
+                to spend less.&lt;/p&gt;
+                &lt;p&gt;Note that none of this is material to the license of the product, be it
+                free or
+                non-free. It&amp;rsquo;s about building a brand, developing a customer relationship,
+                and
+                identifying and exploiting market opportunities. Hackers and enthusiasts who
+                found companies like Prusa tend to imagine that the product is everything, but
+                it&amp;rsquo;s not. Maybe 10% of the work is developing the 3D printer itself
+                &amp;ndash;
+                don&amp;rsquo;t abandon the other 90% of your business. Especially when you make
+                that 10%
+                open: someone else is going to repurpose it, do the other 90%, and eat your
+                lunch. FOSS is &lt;em&gt;great&lt;/em&gt; precisely because it makes that 10% into
+                community
+                property and shares the cost of innovation, but you&amp;rsquo;d be a fool to act as
+                if
+                that was all there was to it. You need to deal with sales and marketing, chase
+                down promising leads, identify and respond to risks, look for and exploit new
+                market opportunities, and much more to be successful.&lt;/p&gt;
+                &lt;p&gt;This is a classic failure mode of open source businesses, and
+                it&amp;rsquo;s &lt;em&gt;Prusa&amp;rsquo;s
+                fault&lt;/em&gt;. They had an excellent foothold early in the market, leveraging
+                open
+                source and open hardware to great results and working hand-in-hand with
+                enthusiasts early on to develop the essential technology of 3D printing. Then,
+                they figured they were done developing their business model, and completely
+                dropped the ball as a result. Open source is not an &amp;ldquo;if you build it, the
+                money
+                will come&amp;rdquo; situation, and to think otherwise is a grave mistake.
+                Businesses need
+                to identify their risks and then mitigate them, and if they don&amp;rsquo;t do that
+                due
+                diligence, then it&amp;rsquo;s &lt;em&gt;their fault&lt;/em&gt; when it fails
+                &amp;ndash; it&amp;rsquo;s not a problem with
+                FOSS.&lt;/p&gt;
+                &lt;p&gt;Free and open source software is an incredibly powerful tool, including as
+                a
+                commercial opportunity. FOSS really has changed the world! But building a
+                business is still hard, and in addition to its fantastic advantages, the FOSS
+                model poses important and challenging constraints that you need to understand
+                and work with. You have to be creative, and you must do a risk/reward assessment
+                to understand how it applies to your business and how you can utilize it for
+                commercial success. Do the legwork and you can utilize FOSS for a competitive
+                advantage, but skip this step and you will probably fail within a decade.&lt;/p&gt;
+                &lt;div class="footnotes" role="doc-endnotes"&gt;
+                &lt;hr&gt;
+                &lt;ol&gt;
+                &lt;li id="fn:1"&gt;
+                &lt;p&gt;I sourced this information from Armin&amp;rsquo;s blog post, but it
+                didn&amp;rsquo;t
+                hold up to a later fact check: the
+                &lt;a href="https://github.com/prusa3d/Prusa-Firmware-Buddy"&gt;Mk4
+                firmware&lt;/a&gt; seems to be
+                free software. It seems the controversy here has to do with Prusa
+                developing its slicer software behind closed doors and doing occasional
+                source-code dumps, rather than managing a more traditional
+                &amp;ldquo;bazaar&amp;rdquo; style
+                project.&amp;#160;&lt;a href="#fnref:1" class="footnote-backref"
+                role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+                &lt;/li&gt;
+                &lt;li id="fn:2"&gt;
+                &lt;p&gt;That said, there are still vulnerabilities in the Chinese industrial
+                base that can be exploited by savvy Western entrepreneurs. Chinese access to
+                Western markets is constrained below a certain scale, for instance, in ways
+                that Western businesses are not.&amp;#160;&lt;a href="#fnref:2"
+                class="footnote-backref"
+                role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+                &lt;/li&gt;
+                &lt;/ol&gt;
+                &lt;/div&gt;
+            </description>
+        </item>
+        <item>
+            <title>Richard Stallman's political discourse on sex</title>
+            <link>https://drewdevault.com/2023/11/25/2023-11-26-RMS-on-sex.html</link>
+            <pubDate>Sat, 25 Nov 2023 00:00:00 +0000</pubDate>
+
+            <guid>https://drewdevault.com/2023/11/25/2023-11-26-RMS-on-sex.html</guid>
+            <description>&lt;p&gt;Richard Stallman, the founder of the Free Software Foundation, has
+                been subject
+                to numerous allegations of misconduct. He stepped down in 2019, and following
+                his re-instatement in 2021, a famous &lt;a
+                href="https://rms-open-letter.github.io/"&gt;open letter&lt;/a&gt; was published in
+                which
+                numerous organizations and individuals from throughout the Free Software
+                ecosystem called for his removal from the Free Software Foundation. The letter
+                had no effect; Stallman remains a voting member of the FSF&amp;rsquo;s &lt;a
+                href="https://www.fsf.org/about/staff-and-board"&gt;board of
+                directors&lt;/a&gt; to this day and continues to receive numerous &lt;a
+                href="https://stallman.org/talks.html"&gt;speaking
+                engagements&lt;/a&gt;.&lt;/p&gt;
+                &lt;p&gt;&lt;em&gt;Content warning: This article discusses sexual abuse, sexual
+                assault, sexual
+                harassment, and all of the above with respect to minors, as well as the systemic
+                normalization of abuse, and directly quotes statements which participate in the
+                normalization of abuse.&lt;/em&gt;&lt;/p&gt;
+                &lt;p&gt;This article presents an analysis of Stallman&amp;rsquo;s political
+                discourse on sex with
+                the aim of establishing the patterns that cause the sort of discomfort that led
+                to Stallman&amp;rsquo;s public condemnation. In particular, we will address how
+                Stallman
+                speaks about sexual assault, harassment, consent, and minors in his
+                discourse.&lt;/p&gt;
+                &lt;p&gt;I think that it is important to acknowledge this behavior not as a series
+                of
+                isolated incidents, nor a conflict with Stallman&amp;rsquo;s &amp;ldquo;&lt;a
+                href="https://www.fsf.org/news/statement-of-fsf-board-on-election-of-richard-stallman"&gt;personal
+                style&lt;/a&gt;&amp;rdquo;,
+                but a pattern of behavior from which a political narrative forms, and draws
+                attention to the fact that the meager retractions, excuses, and non-apologies
+                from both Stallman and the Free Software Foundation as a whole fail to account
+                for that pattern in a meaningful way.&lt;/p&gt;
+                &lt;p&gt;The failure of the Free Software community to account for Richard
+                Stallman&amp;rsquo;s
+                behavior has a chilling effect. The norms set by our leadership influence the
+                norms of our broader community, and many members of the Free Software community
+                look to Stallman as a ideological and political leader. The norms Stallman
+                endorses are harmful and deeply confronting and alienating to many people, in
+                particular women and children. Should these norms be adopted by our movement, we
+                risk creating a community which enables the exploitation of vulnerable
+                people.&lt;/p&gt;
+                &lt;p&gt;Let&amp;rsquo;s begin to address this by considering Stallman&amp;rsquo;s
+                retraction of his comments
+                in support of pedophilia. The following comment from Stallman in 2013 drew harsh
+                criticism:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;There is little evidence to justify the widespread assumption that willing
+                participation in pedophilia hurts children.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;&lt;small&gt;— &lt;a
+                href="https://web.archive.org/web/20210325014249/https://stallman.org/archives/2012-nov-feb.html#04_January_2013_(Pedophilia)"&gt;stallman.org,
+                04 January 2013 &amp;ldquo;Pedophilia&amp;rdquo;&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+                &lt;p&gt;Following much of the criticism directed at Stallman, he had a number of
+                &amp;ldquo;personal conversations&amp;rdquo; which reframed his views. Of the many
+                comments Stallman
+                has made which drew ire, this is one of the few for which a correction was made,
+                in September 2019:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;Many years ago I posted that I could not see anything wrong about sex
+                between
+                an adult and a child, if the child accepted it.&lt;/p&gt;
+                &lt;p&gt;Through personal conversations in recent years, I&amp;rsquo;ve learned to
+                understand how
+                sex with a child can harm per psychologically. This changed my mind about the
+                matter: I think adults should not do that. I am grateful for the conversations
+                that enabled me to understand why.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;&lt;small&gt;— &lt;a
+                href="https://web.archive.org/web/20210325015259/https://stallman.org/archives/2019-jul-oct.html#14_September_2019_(Sex_between_an_adult_and_a_child_is_wrong)"&gt;stallman.org,
+                14 September 2019 &amp;ldquo;Sex between an adult and a child is
+                wrong&amp;rdquo;&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+                &lt;p&gt;This statement from Stallman has been accepted by his defenders as evidence
+                of
+                his capitulation on pedophilia. I argue that this statement is misleading due to
+                the particular way Stallman uses the word &amp;ldquo;child&amp;rdquo;. When Stallman
+                uses this word,
+                he does so with a very specific meaning, which he explains on his website:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;Children: Humans up to age 12 or 13 are children. After that, they become
+                adolescents or teenagers. Let&amp;rsquo;s resist the practice of infantilizing
+                teenagers, by not calling them &amp;ldquo;children&amp;rdquo;.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;&lt;small&gt;— &lt;a
+                href="https://www.stallman.org/antiglossary.html"&gt;stallman.org,
+                &amp;ldquo;Anti-glossary&amp;rdquo;&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+                &lt;p&gt;It seems clear from this definition is that Stallman&amp;rsquo;s comments
+                are not a
+                capitulation at all. His 2019 retraction, when interpreted using his definition
+                of &amp;ldquo;children&amp;rdquo;, does not contradict most of Stallman&amp;rsquo;s
+                past statements regarding
+                sex and minors, including his widely criticized defenses of many people accused
+                of sexual impropriety with minors.&lt;/p&gt;
+                &lt;p&gt;Stallman&amp;rsquo;s most recent direct response to his criticism
+                underscores this:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;It was right for me to talk about the injustice to Minsky, but it was
+                tone-deaf that I didn&amp;rsquo;t acknowledge as context the injustice that Epstein
+                did
+                to women or the pain that caused.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;&lt;small&gt;— &lt;a
+                href="https://www.fsf.org/news/rms-addresses-the-free-software-community"&gt;fsf.org,
+                April 12, 2021, &amp;ldquo;RMS addresses the free software
+                community&amp;rdquo;&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+                &lt;p&gt;Stallman qualifies his apology by explicitly re-affirming his defense of
+                Marvin
+                Minsky, which is addressed in detail later in this piece. Stallman&amp;rsquo;s
+                doubling-down here is consistent with the supposition that Stallman maintains
+                the view that minors can have sexual relationships with adults of any age,
+                provided that they aren&amp;rsquo;t &amp;ldquo;children&amp;rdquo; &amp;ndash; in
+                other words, provided they&amp;rsquo;re at
+                least 13 or 14 years old.&lt;/p&gt;
+                &lt;p&gt;Stallman cares deeply about language and its usage. His strange and
+                deliberate
+                usage of the word &amp;ldquo;children&amp;rdquo; is also found many times throughout
+                his political
+                notes over the years. For example:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;It sounds horrible: &amp;ldquo;UN peacekeepers accused of child rape in
+                South Sudan.&amp;rdquo;
+                But the article makes it pretty clear that the &amp;ldquo;children&amp;rdquo;
+                involved were not
+                children. They were teenagers.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;&lt;small&gt;— &lt;a
+                href="https://web.archive.org/web/20180509120046/https://stallman.org/archives/2018-mar-jun.html#30_April_2018_(UN_peacekeepers_in_South_Sudan)"&gt;stallman.org,
+                30 April 2018 &amp;ldquo;UN peacekeepers in South
+                Sudan&amp;rdquo;&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+                &lt;p&gt;Here Stallman again explicitly distinguishes
+                &amp;ldquo;teenagers&amp;rdquo; from children, drawing
+                this distinction especially in the context of sexual relationships between
+                adults and minors. Stallman repeats this pattern many times over the years
+                &amp;ndash; we
+                see it again in Stallman&amp;rsquo;s widely criticized defense of Cody
+                Wilson:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;Cody Wilson has been charged with hiring a &amp;ldquo;child&amp;rdquo; sex
+                worker. Her age has
+                not been announced, but I think she must surely be a teenager, not a child.
+                Calling teenagers &amp;ldquo;children&amp;rdquo; in this context is a way of
+                smearing people with
+                normal sexual proclivities as &amp;ldquo;perverts&amp;rdquo;.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;&lt;small&gt;— &lt;a
+                href="https://web.archive.org/web/20180924231708/https://stallman.org/archives/2018-jul-oct.html#23_September_2018_(Cody_Wilson)"&gt;stallman.org,
+                23 September 2018 &amp;ldquo;Cody
+                Wilson&amp;rdquo;&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+                &lt;p&gt;And once more when defending Roy Moore:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;Senate candidate Roy Moore tried to start dating/sexual relationships with
+                teenagers some decades ago.&lt;/p&gt;
+                &lt;p&gt;He tried to lead Ms Corfman step by step into sex, but he always respected
+                &amp;ldquo;no&amp;rdquo; from her and his other dates. Thus, Moore does not deserve
+                the
+                exaggerated condemnation that he is receiving for this. As an example of
+                exaggeration: one mailing referred to these teenagers as
+                &amp;ldquo;children&amp;rdquo;, even the
+                one that was 18 years old. Many teenagers are minors, but none of them are
+                children.&lt;/p&gt;
+                &lt;p&gt;The condemnation is surely sparked by the political motive of wanting to
+                defeat Moore in the coming election, but it draws fuel from ageism and the
+                fashion for overprotectiveness of &amp;ldquo;children&amp;rdquo;.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;&lt;small&gt;— &lt;a
+                href="https://web.archive.org/web/20180104112431/https://www.stallman.org/archives/2017-nov-feb.html#27_November_2017_(Roy_Moore's_relationships)"&gt;stallman.org,
+                27 November 2017 &amp;ldquo;Roy Moore&amp;rsquo;s
+                relationships&amp;rdquo;&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+                &lt;p&gt;Ms. Corfman was 14 at the time Roy Moore is accused of initiating sexual
+                contact
+                with her; Moore was 32 at the time. Here we see an example of him re-iterating
+                his definition of &amp;ldquo;children&amp;rdquo;, a distinction he draws especially
+                to suggest that
+                an adult having sex with a minor is socially acceptable.&lt;/p&gt;
+                &lt;p&gt;Note that Stallman refers to Ms. Corfman as Moore&amp;rsquo;s
+                &amp;ldquo;date&amp;rdquo;. Stallman&amp;rsquo;s use of
+                this word is important: here he normalizes the possibility that a minor and an
+                adult could engage in a healthy dating relationship. In this statement, Stallman
+                cites an article which explains circumstances which do not resemble such a
+                normalized dating experience: Moore isolated Corfman from her mother, drove her
+                directly to his home, and initiated sexual contact there.&lt;/p&gt;
+                &lt;p&gt;Note also that the use of the phrase &amp;ldquo;step by step&amp;rdquo; in
+                this quotation is more
+                commonly referred to as &amp;ldquo;grooming&amp;rdquo; in the discourse on child
+                sexual
+                exploitation.&lt;/p&gt;
+                &lt;p&gt;Stallman reaches for similar reasoning in other political notes, such as
+                the
+                following:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;A British woman is on trial for going to a park and inviting teenage boys
+                to
+                have sex with her there. Her husband acted as a lookout in case someone else
+                passed by. One teenager allegedly visited her at her house repeatedly to have
+                sex with her.&lt;/p&gt;
+                &lt;p&gt;None of these acts would be wrong in any sense, provided they took
+                precautions
+                against spreading infections. The idea that adolescents (of whatever sex) need
+                to be &amp;ldquo;protected&amp;rdquo; from sexual experience they wish to have is
+                prudish
+                ignorantism, and making that experience a crime is perverse.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;&lt;small&gt;— &lt;a
+                href="https://web.archive.org/web/20170612074722/http://stallman.org/archives/2017-mar-jun.html#26_May_2017_(Prudish_ignorantism)"&gt;stallman.org,
+                26 May 2017, &amp;ldquo;Prudish
+                ignorantism&amp;rdquo;&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+                &lt;p&gt;The woman in question, aged 60, had sex with her husband, age 69, in a
+                public
+                space, and invited spectators as young as 11 to participate.&lt;/p&gt;
+                &lt;p&gt;Stallman has also sought to normalize adult attraction to minors, literally
+                describing it as &amp;ldquo;normal&amp;rdquo; in September 2018:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;Calling teenagers &amp;ldquo;children&amp;rdquo; encourages treating
+                teenagers as children, a
+                harmful practice which retards their development into capable adults.&lt;/p&gt;
+                &lt;p&gt;In this case, the effect of that mislabeling is to smear Wilson. It is
+                rare,
+                and considered perverse, for adults to be physically attracted to children.
+                However, it is normal for adults to be physically attracted to adolescents.
+                Since the claims about Wilson is the latter, it is wrong to present it as the
+                former.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;&lt;small&gt;— &lt;a
+                href="https://www.stallman.org/archives/2018-sep-dec.html#23_September_2018_(Cody_Wilson)"&gt;stallman.org,
+                23 September 2018, &amp;ldquo;Cody
+                Wilson&amp;rdquo;&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+                &lt;p&gt;One month prior, Stallman made a statement which similarly normalized adult
+                attraction to minors, and suggests that acting on this attraction should be
+                acceptable to society, likening opposition to this view to homosexual conversion
+                therapy:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;This accords with the view that Stendhal reported in France in the 1800s,
+                that a woman&amp;rsquo;s most beautiful years were from 16 to 20.&lt;/p&gt;
+                &lt;p&gt;Although this attitude on men&amp;rsquo;s part is normal, the author still
+                wants to
+                present it as wrong or perverted, and implicitly demands men somehow control
+                their attraction to direct it elsewhere. Which is as absurd, and as
+                potentially oppressive, as claiming that homosexuals should control their
+                attraction and direct it towards to the other sex. Will men be pressured to
+                undergo &amp;ldquo;age conversion therapy&amp;rdquo; intended to brainwash them to
+                feel attracted
+                mainly to women of their own age?&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;&lt;small&gt;— &lt;a
+                href="https://web.archive.org/web/20180911075211/https://www.stallman.org/archives/2018-jul-oct.html#21_August_2018_(Age_and_attraction)"&gt;stallman.org,
+                21 August 2018, &amp;ldquo;Age and
+                attraction&amp;rdquo;&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+                &lt;p&gt;A trend is thus clearly seen in Stallman&amp;rsquo;s regular political
+                notes, over several
+                years, wherein Stallman re-iterates his position that
+                &amp;ldquo;adolescents&amp;rdquo; or
+                &amp;ldquo;teenagers&amp;rdquo; are distinct from &amp;ldquo;children&amp;rdquo; for
+                the purpose of having sex with
+                adults, and normalizes and defends adult attraction to minors and adults who
+                perform sexual acts with minors. We see this distinction of the two groups,
+                children and adolescents, outlined again on his &amp;ldquo;anti-glossary&amp;rdquo;,
+                which still
+                published on his website today, albeit without the connotations of sex. His
+                regular insistence on a definition of children which excludes adolescents
+                serves such that his redaction of his controversial 2013 comment serves to
+                redact none of the other widely-condemned comments he has made since.&lt;/p&gt;
+                &lt;p&gt;Stallman has often written political notes when people accused of sexual
+                impropriety, particularly with minors, appear in the news, or appear among
+                Stallman&amp;rsquo;s social circle. Stallman&amp;rsquo;s comments generally downplay
+                the abuse and
+                manipulate language in a manner which benefits perpetrators of abuse. We see
+                this downplaying in another example from 2019:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;Should we accept stretching the terms &amp;ldquo;sexual abuse&amp;rdquo;
+                and &amp;ldquo;molestation&amp;rdquo; to
+                include looking without touching?&lt;/p&gt;
+                &lt;p&gt;I do not accept it.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;&lt;small&gt;— &lt;a
+                href="https://www.stallman.org/archives/2019-may-aug.html#11_June_2019_(Stretching_meaning_of_terms)"&gt;stallman.org,
+                11 June 2019 &amp;ldquo;Stretching meaning of
+                terms&amp;rdquo;&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+                &lt;p&gt;Stallman is writing here in response to a news article outlining
+                accusations of
+                sexual misconduct directed at Ohio State athletics doctor Richard Strauss.
+                Strauss was accused of groping at least 177 students between 1979 and 1997
+                during routine physical exams, accusations corroborated by at least 50 members
+                of the athletic department staff.&lt;/p&gt;
+                &lt;p&gt;In addition to Stallman&amp;rsquo;s regular fixation of the use of the word
+                &amp;ldquo;children&amp;rdquo;
+                with respect to sex, this political note also draws our attention to the next
+                linguistic fixation of Stallman I want to question: the use of phrases like
+                &amp;ldquo;sexual abuse&amp;rdquo; and &amp;ldquo;sexual assault&amp;rdquo;. The
+                term &amp;ldquo;sexual assault&amp;rdquo; also appears in
+                Stallman&amp;rsquo;s &amp;ldquo;Anti-glossary&amp;rdquo;:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;Sexual assault: The term is applied to a broad range of actions, from rape
+                on
+                one end, to the least physical contact on the other, as well as everything in
+                between. It acts as propaganda for treating them all the same. That would be
+                wrong.&lt;/p&gt;
+                &lt;p&gt;The term is further stretched to include sexual harassment, which does not
+                refer to a single act, but rather to a series of acts that amounts to a form
+                of gender bias. Gender bias is rightly prohibited in certain situations for
+                the sake of equal opportunity, but that is a different issue.&lt;/p&gt;
+                &lt;p&gt;I don&amp;rsquo;t think that rape should be treated the same as a momentary
+                touch.
+                People we accuse have a right to those distinctions, so I am careful not to
+                use the term &amp;ldquo;sexual assault&amp;rdquo; to categorize the actions of any
+                person on any
+                specific occasion.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;&lt;small&gt;— &lt;a
+                href="https://www.stallman.org/antiglossary.html"&gt;stallman.org,
+                &amp;ldquo;Anti-glossary&amp;rdquo;&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+                &lt;p&gt;Stallman often fixates on the term &amp;ldquo;sexual assault&amp;rdquo;
+                throughout his political
+                notes. He feels that the term fails to distinguish between
+                &amp;ldquo;grave&amp;rdquo; and &amp;ldquo;minor&amp;rdquo;
+                crimes, as he illustrated in 2021:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;&amp;ldquo;Sexual assault&amp;rdquo; is so vague that it makes no sense as
+                a charge. Because of
+                that term, we can&amp;rsquo;t whether these journalists were accused of a grave
+                crime
+                or a minor one. However, the charge of espionage shows this is political
+                persecution.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;&lt;small&gt;— &lt;a
+                href="https://stallman.org/archives/2021-jul-oct.html#21_July_2021_(Imprisonment_of_journalists)"&gt;stallman.org,
+                21 July 2021, &amp;ldquo;Imprisonment of
+                journalists&amp;rdquo;&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+                &lt;p&gt;I would like to find out what kind of crimes Stallman feels the need to
+                distinguish along this axis. His other political notes give us some hints,
+                such as this one regarding Al Franken&amp;rsquo;s sexual misconduct
+                scandal:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;If it is true that he persistently pressured her to kiss him, on stage and
+                off, if he stuck his tongue into her mouth despite her objections, that could
+                well be sexual harassment. He should have accepted no for an answer the first
+                time she said it. However, calling a kiss &amp;ldquo;sexual assault&amp;rdquo; is an
+                exaggeration,
+                an attempt to equate it to much graver acts, that are crimes.&lt;/p&gt;
+                &lt;p&gt;The term &amp;ldquo;sexual assault&amp;rdquo; encourages that injustice,
+                and I believe it has been
+                popularized specifically with that intention. That is why I reject that
+                term.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;&lt;small&gt;— &lt;a
+                href="https://web.archive.org/web/20190801201704/https://stallman.org/archives/2019-may-aug.html#30_July_2019_(Al_Franken)"&gt;stallman.org,
+                30 July 2019, &amp;ldquo;Al Franken&amp;rdquo;&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+                &lt;p&gt;Stallman also wrote in 2020 to question the use of the phrase
+                again:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;In the US, when thugs&lt;sup id="fnref:1"&gt;&lt;a href="#fn:1"
+                class="footnote-ref" role="doc-noteref"&gt;1&lt;/a&gt;&lt;/sup&gt; rape people they
+                say are suspects, it is
+                rare to bring them to justice.&lt;/p&gt;
+                &lt;p&gt;I object to describing any one crime as &amp;ldquo;sexual
+                assault&amp;rdquo; because that is vague
+                about the severity of the crime. This article often uses that term to refer to
+                many crimes that differ in severity but raise the same issue. That may be a
+                valid practice.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;&lt;small&gt;— &lt;a
+                href="https://stallman.org/notes/2020-jul-oct.html#12_August_2020_(When_thugs_rape_people_they_say_are_suspects)"&gt;stallman.org,
+                12 August 2020, &amp;ldquo;When thugs rape people they say are
+                suspects&amp;rdquo;&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+                &lt;p&gt;In the article Stallman cites in this political note, various unwelcome
+                sexual
+                acts by the police are described, the least severe of which is probably
+                molestation.&lt;/p&gt;
+                &lt;p&gt;More alarmingly, Stallman addresses his views on the term &amp;ldquo;sexual
+                assault&amp;rdquo; in
+                this 2017 note, affording for the possibility that a 35-year-old man could have
+                had consensual sex with an 11-year-old girl.&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;Jelani Maraj (who I had never heard of) could be imprisoned for a long time
+                for &amp;ldquo;sexual assault&amp;rdquo;. What does that concretely mean?&lt;/p&gt;
+                &lt;p&gt;Due to the vagueness of the term &amp;ldquo;sexual assault&amp;rdquo;
+                together with the dishonest
+                law that labels sex with adolescents as &amp;ldquo;rape&amp;rdquo; even if they are
+                willing, we
+                cannot tell from this article what sort of acts Maraj was found to have
+                committed. So we can&amp;rsquo;t begin to judge whether those acts were
+                wrong.&lt;/p&gt;
+                &lt;p&gt;I see at least three possibilities. Perhaps those acts really constituted
+                rape — it is a possibility. Or perhaps the two had sex willingly, but her
+                parents freaked out and demanded prosecution. Or, intermediate between those
+                two, perhaps he pressured her into having sex, or got her drunk.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;&lt;small&gt;— &lt;a
+                href="https://stallman.org/archives/2017-nov-feb.html#13_November_2017_(Jelani_Maraj)"&gt;stallman.org,
+                13 November 2017, &amp;ldquo;Jelani
+                Maraj&amp;rdquo;&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+                &lt;p&gt;Another article by Stallman does not explicitly refer to sexual assault,
+                but
+                does engage in a bizarre defense of a journalist who was fired for masturbating
+                during a video conference. In this article Stallman fixates on questions such as
+                whether or not the genitals being in view of the webcam was intentional or not,
+                and suggests that masturbating on a video call would be acceptable should the
+                genitals remain unseen.&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;The New Yorker&amp;rsquo;s unpublished note to staff was vague about its
+                grounds for
+                firing Toobin. Indeed, it did not even acknowledge that he had been fired.
+                This is unfair, like convicting someone on unstated charges. Something
+                didn&amp;rsquo;t
+                meet its &amp;ldquo;standards of conduct&amp;rdquo;, but it won&amp;rsquo;t tell us
+                what — we can only
+                guess. What are the possibilities? Intentionally engaging in video-call sex as
+                a side activity during a work meeting? If he had not made a mistake in keeping
+                that out of view of the coworkers, why would it make a difference what the
+                side activity was?&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;&lt;small&gt;— &lt;a
+                href="https://www.stallman.org/articles/toobin.html"&gt;stallman.org, November 2020,
+                &amp;ldquo;On the Firing of Jeffrey
+                Toobin&amp;rdquo;&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+                &lt;p&gt;Finally, Stallman elaborated on his thoughts on the term most recently in
+                October 2023. This note gives the clearest view of Stallman&amp;rsquo;s preferred
+                distinction between various sexual crimes:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;I warned that the stretchable term &amp;ldquo;sexual assault&amp;rdquo;,
+                which extends from grave
+                crimes such as rape through significant crimes such as groping and down to no
+                clear lower bound, could be stretched to criminalize minor things, perhaps
+                even stealing a kiss. Now this has happened.&lt;/p&gt;
+                &lt;p&gt;What next? Will a pat on the arm or a hug be criminalized? There is no
+                clear
+                limit to how far this can go, when a group builds up enough outrage to push
+                it.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;&lt;small&gt;— &lt;a
+                href="https://www.stallman.org/archives/2023-sep-dec.html#15_October_2023_(Sexual_assault_for_stealing_a_kiss)"&gt;stallman.org,
+                15 October 2023, &amp;ldquo;Sexual assault for stealing a
+                kiss&amp;rdquo;&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+                &lt;p&gt;From Stallman&amp;rsquo;s statements, we can refine his objection to the
+                term &amp;ldquo;sexual
+                assault&amp;rdquo;, and sexual behaviors generally, to further suggest that the
+                following
+                beliefs are held by Stallman on the subject:&lt;/p&gt;
+                &lt;ul&gt;
+                &lt;li&gt;Groping and molestation are not sexual assault, but are crimes&lt;/li&gt;
+                &lt;li&gt;Kissing someone without consent is not sexual assault, furthermore it is
+                not wrong&lt;/li&gt;
+                &lt;li&gt;Masturbating during a video conference is not wrong if you are not seen
+                doing so&lt;/li&gt;
+                &lt;li&gt;A 35-year-old man having sex with an 11-year-old girl does not constitute
+                rape, nor sexual assault, but is in fact conscionable&lt;/li&gt;
+                &lt;/ul&gt;
+                &lt;p&gt;The last of these may be covered under Stallman&amp;rsquo;s 2019
+                retraction, even
+                accounting for Stallman&amp;rsquo;s unconventional use of the word
+                &amp;ldquo;children&amp;rdquo;.&lt;/p&gt;
+                &lt;p&gt;Stallman&amp;rsquo;s fixation on the term &amp;ldquo;sexual
+                assault&amp;rdquo; can be understood in his
+                political notes as having the political aims of eroding the meaning of the
+                phrase, questioning the boundaries of consent, downplaying the importance of
+                agency in intimate interactions, appealing for the defense of people accused of
+                sexual assault, and arguing for sexual relationships between minors and adults
+                to be normalized. In one notable case, he has used this political angle to rise
+                to the defense of his friends &amp;ndash; in Stallman&amp;rsquo;s infamous email
+                regarding Marvin
+                Minsky, he writes the following:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;The injustice [done to Minsky] is in the word “assaulting”. The term
+                “sexual
+                assault” is so vague and slippery that it facilitates accusation inflation:
+                taking claims that someone did X and leading people to think of it as Y, which
+                is much worse than X.&lt;/p&gt;
+                &lt;p&gt;(&amp;hellip;)&lt;/p&gt;
+                &lt;p&gt;The word “assaulting” presumes that he applied force or violence, in some
+                unspecified way, but the article itself says no such thing. Only that they had
+                sex.&lt;/p&gt;
+                &lt;p&gt;We can imagine many scenarios, but the most plausible scenario is that she
+                presented herself to him as entirely willing. Assuming she was being coerced
+                by Epstein, he would have had every reason to tell her to conceal that from
+                most of his associates.&lt;/p&gt;
+                &lt;p&gt;I’ve concluded from various examples of accusation inflation that it is
+                absolutely wrong to use the term “sexual assault” in an accusation.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;&lt;small&gt;— Excerpt from &lt;a
+                href="https://scribe.rip/medium.com/@selamie/remove-richard-stallman-fec6ec210794"&gt;Selam
+                G&amp;rsquo;s recount of Stallman&amp;rsquo;s email&lt;/a&gt; to MIT Computer
+                Science and Artificial Intelligence Laboratory mailing list, September 2019.
+                Selam&amp;rsquo;s quotation has been corroborated by other sources.
+                Minsky is, in this context, accused of having had a sexual encounter with a
+                minor facilitated by convicted child trafficker Ghislaine Maxwell. The original
+                accusation does not state that this sexual encounter actually occurred; only
+                that the minor in question was instructed to have sex with Minsky. Minsky would
+                have been at least 75 years old at the time of the alleged incident; the minor
+                was 16.
+                &lt;/small&gt;&lt;/p&gt;
+                &lt;p&gt;There is an important, but more subtle pattern in Stallman&amp;rsquo;s
+                statements that I
+                want to draw your attention to here: Stallman appears to have little to no
+                understanding of the role of power dynamics in sexual harassment, assault, and
+                rape. Stallman appears to reject the supposition that these acts could occur
+                without an element of outwardly apparent violent coercion.&lt;/p&gt;
+                &lt;p&gt;This is most obviously evidenced by his statements regarding the sexual
+                abuse of
+                minors; most people understand that minors cannot consent to sex even if they
+                &amp;ldquo;appear willing&amp;rdquo;, in particular because an adult in this
+                situation is exploiting
+                a difference in experience and maturity to manipulate the child into sexually
+                satisfying them &amp;ndash; in other words, a power differential. Stallman seems to
+                reject this understanding of consent in his various defenses of people accused
+                of sexual impropriety with minors, and in cases where the pretense of consent
+                cannot be easily established, he offers the perpetrator the benefit of the
+                doubt.&lt;/p&gt;
+                &lt;p&gt;We can also find an example of Stallman disregarding power dynamics with
+                respect
+                to adults in the following political note from 2017:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;A famous theater director had a habit of pestering women, asking them for
+                sex.&lt;/p&gt;
+                &lt;p&gt;As far as I can tell from this article, he didn&amp;rsquo;t try to force
+                women into sex.&lt;/p&gt;
+                &lt;p&gt;When women persistently said no, he does not seem to have tried to punish
+                them.&lt;/p&gt;
+                &lt;p&gt;The most he did was ask.&lt;/p&gt;
+                &lt;p&gt;He was a pest, but nothing worse than that.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;&lt;small&gt;— &lt;a
+                href="https://web.archive.org/web/20180131020215/https://stallman.org/archives/2017-jul-oct.html#29_October_2017_(Pestering_women)"&gt;stallman.org,
+                29 October 2017, &amp;ldquo;Pestering
+                women&amp;rdquo;&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+                &lt;p&gt;In this case we have an example of &amp;ldquo;quid pro quo&amp;rdquo;, a
+                kind of sexual harassment
+                which weaponizes power dynamics for sexual gratification. This kind of sexual
+                harassment is explicitly cited as illegal by Title VII of the US Civil Rights
+                Act. A lack of competence in this respect displayed by Stallman, whose position
+                in the Free Software Foundation board of directors requires that he act in a
+                manner consistent with this law, is alarming.&lt;/p&gt;
+                &lt;p&gt;I have identified this blindness to power dynamics as a recurring theme in
+                Stallman&amp;rsquo;s comments on sexual abuse, be it with respect to sexual
+                relationships
+                between minors and adults, managers and subordinates, students and teachers, or
+                public figures and their audience. I note for the reader that Stallman has held
+                and currently holds several of these positions of power.&lt;/p&gt;
+                &lt;p&gt;In addition to his position as a voting member of the Free Software
+                Foundation&amp;rsquo;s
+                Board of Directors, Stallman is still invited to speak at events and
+                conferences. &lt;a
+                href="https://github.com/ddol/rre-rms/blob/master/fulltext/20111018.txt"&gt;Stallman&amp;rsquo;s
+                infamous rider&lt;/a&gt; prescribes a number of his
+                requirements for attending an event; most of his conditions are relatively
+                reasonable, though amusing. In this document, he states his preference for being
+                accommodated in private, on a &amp;ldquo;spare couch&amp;rdquo;, when he travels. At
+                these events,
+                in these private homes, he may be afforded many opportunities to privacy with
+                vulnerable people, including minors that, in his view, can consent to having sex
+                with adults.&lt;/p&gt;
+                &lt;p&gt;In summary, Stallman has a well-documented and oft-professed set of
+                political
+                beliefs which reject the social and legal norms regarding consent. He is not
+                simply quietly misled in these beliefs; rather he advocates for these values
+                using his political platform. He has issued no meaningful retractions of these
+                positions or apologies for harm caused, and has continued to pursue a similar
+                agenda since his return to the FSF board of directors.&lt;/p&gt;
+                &lt;p&gt;This creates a toxic environment not only in the Free Software Foundation
+                and in
+                Stallman&amp;rsquo;s direct purview, but in the broader Free Software movement. The
+                free
+                software movement is culturally poisoned by our support of Stallman as our
+                ideological leader. The open letter calling for Stallman&amp;rsquo;s removal
+                received
+                3,000 signatures; the counter-letter in support of Stallman received 6,876
+                before it stopped accepting submissions.&lt;/p&gt;
+                &lt;p&gt;Richard Stallman founded the Free Software Foundation in 1985, and has
+                performed
+                innumerable works to the benefit of our community since then. We&amp;rsquo;ve taken
+                Stallman&amp;rsquo;s views on software freedom seriously, and they&amp;rsquo;ve led
+                us to great
+                achievements. It is to Stallman&amp;rsquo;s credit that the Free Software community
+                is
+                larger than one man. However, one&amp;rsquo;s political qualifications to speak
+                about free
+                software does not make one qualified to address matters of sex; in this respect
+                Stallman&amp;rsquo;s persistence presents as dangerous incompetence.&lt;/p&gt;
+                &lt;p&gt;When we consider his speech on sex as a discourse that has been crafted and
+                rehearsed methodically over the years, he asks us to consider him seriously, and
+                so we must. When we analyze the dangerous patterns in this discourse, we have to
+                conclude that he is not fit for purpose in his leadership role, and we must
+                acknowledge the shadow that our legitimization of his discourse casts on our
+                community.&lt;/p&gt;
+                &lt;div class="footnotes" role="doc-endnotes"&gt;
+                &lt;hr&gt;
+                &lt;ol&gt;
+                &lt;li id="fn:1"&gt;
+                &lt;p&gt;Stallman consistently refers to police officers as
+                &amp;ldquo;thugs&amp;rdquo; in his
+                writing; see Stallman&amp;rsquo;s &lt;a
+                href="https://stallman.org/glossary.html"&gt;Glossary&lt;/a&gt;.&amp;#160;&lt;a
+                href="#fnref:1" class="footnote-backref"
+                role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+                &lt;/li&gt;
+                &lt;/ol&gt;
+                &lt;/div&gt;
+            </description>
+        </item>
+        <item>
+            <title>Can I be on your podcast?</title>
+            <link>https://drewdevault.com/2023/11/09/Can-I-be-on-your-podcast.html</link>
+            <pubDate>Thu, 09 Nov 2023 00:00:00 +0000</pubDate>
+
+            <guid>https://drewdevault.com/2023/11/09/Can-I-be-on-your-podcast.html</guid>
+            <description>&lt;p&gt;I am working on rousing the &lt;a
+                href="https://harelang.org"&gt;Hare&lt;/a&gt; community to get the
+                word out about our work. I have drafted the &lt;a
+                href="https://harelang.org/evangelism/"&gt;Hare evangelism&lt;/a&gt; guidelines to
+                this effect, which summarizes how we want to see our community bringing Hare to
+                more people.&lt;/p&gt;
+                &lt;p&gt;We&amp;rsquo;d like to spread the word in a way which is respectful of the
+                attention of
+                others &amp;ndash; we&amp;rsquo;re explicitly eschewing unsolicited prompts for
+                projects to
+                consider writing/rewriting in Hare, as well as any paid sponsorships or
+                advertising. Blog posts about Hare, videos, participating in (organic) online
+                discussions &amp;ndash; much better! And one idea we have is to talk about Hare on
+                podcasts which might be interested in the project.&lt;/p&gt;
+                &lt;p&gt;If that describes your podcast, here&amp;rsquo;s my bold request: can I
+                make an
+                appearance?&lt;/p&gt;
+                &lt;p&gt;Here are some mini &amp;ldquo;press kits&amp;rdquo; to give you a hook and
+                some information that
+                might be useful for preparing an interview.&lt;/p&gt;
+                &lt;h2 id="the-hare-programming-language"&gt;The Hare programming
+                language&lt;/h2&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;Hare is a systems programming language designed to be simple, stable, and
+                robust. Hare uses a static type system, manual memory management, and a
+                minimal runtime. It is well-suited to writing operating systems, system tools,
+                compilers, networking software, and other low-level, high performance
+                tasks.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;Hare has been in development since late 2019 and today has about 100
+                contributors.&lt;/p&gt;
+                &lt;ul&gt;
+                &lt;li&gt;&lt;a href="https://harelang.org/"&gt;Official
+                website&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;&lt;a href="https://sr.ht/~sircmpwn/hare/"&gt;Source code &amp;amp;
+                development resources&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;&lt;a
+                href="https://spacepub.space/w/ajS983L4cEG82jiiaTYfXv"&gt;&amp;ldquo;Introducing the
+                Hare programming language&amp;rdquo;, video, 2022&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;GPLv3, MPL 2.0, MIT&lt;/li&gt;
+                &lt;/ul&gt;
+                &lt;p&gt;&lt;img src="https://harelang.org/mascot.png" alt="A hand-drawn picture of
+                a rabbit"&gt;&lt;/p&gt;
+                &lt;p&gt;&lt;em&gt;Hare&amp;rsquo;s official mascot, Harriet. Drawn by Louis Taylor,
+                CC-0&lt;/em&gt;&lt;/p&gt;
+                &lt;h2 id="the-ares-operating-system"&gt;The Ares operating system&lt;/h2&gt;
+                &lt;p&gt;Ares is an operating system written in Hare which is under development. It
+                features a micro-kernel oriented design and runs on x86_64 and aarch64. Its
+                design is inspired by the seL4 micro-kernel and Plan 9.&lt;/p&gt;
+                &lt;ul&gt;
+                &lt;li&gt;&lt;a href="https://ares-os.org/"&gt;Official website&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;&lt;a href="https://sr.ht/~sircmpwn/helios"&gt;Source code &amp;amp;
+                development resources&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;&lt;a
+                href="https://spacepub.space/w/wpKXfhqqr7FajEAf4B2Vc2"&gt;&amp;ldquo;Introducing the
+                Helios micro-kernel&amp;rdquo;, video, FOSDEM 2023&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;GPLv3&lt;/li&gt;
+                &lt;/ul&gt;
+                &lt;p&gt;&lt;img src="https://files.catbox.moe/a4g9my.jpg" alt="A photo of a laptop
+                running the Ares operating system"&gt;&lt;/p&gt;
+                &lt;p&gt;&lt;em&gt;A picture of a ThinkPad running Ares and demonstrating some
+                features&lt;/em&gt;&lt;/p&gt;
+                &lt;h2 id="himitsu-a-secret-storage-system"&gt;Himitsu: a secret storage
+                system&lt;/h2&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;Himitsu is a secure secret storage system for Unix-like systems. It
+                provides
+                an arbitrary key/value store (where values may be secret) and a query language
+                for manipulating the key store.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;Himitsu is written in Hare.&lt;/p&gt;
+                &lt;ul&gt;
+                &lt;li&gt;&lt;a href="https://himitsustore.org/"&gt;Official
+                website&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;&lt;a href="https://sr.ht/~sircmpwn/himitsu"&gt;Source code &amp;amp;
+                development resources&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;&lt;a href="https://himitsustore.org/intro.mp4"&gt;Video
+                tour&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;GPLv3&lt;/li&gt;
+                &lt;/ul&gt;
+                &lt;h2 id="interested"&gt;Interested?&lt;/h2&gt;
+                &lt;p&gt;If any of these topics are relevant for your podcast and you&amp;rsquo;d
+                like to talk
+                about them, please reach out to me via email: &lt;a
+                href="mailto:sir@cmpwn.com"&gt;sir@cmpwn.com&lt;/a&gt;&lt;/p&gt;
+                &lt;p&gt;Thanks!&lt;/p&gt;
+            </description>
+        </item>
+        <item>
+            <title>On "real name" policies</title>
+            <link>https://drewdevault.com/2023/10/31/On-real-names.html</link>
+            <pubDate>Tue, 31 Oct 2023 00:00:00 +0000</pubDate>
+
+            <guid>https://drewdevault.com/2023/10/31/On-real-names.html</guid>
+            <description>&lt;p&gt;Some free software projects reject anonymous or pseudonymous
+                contributions,
+                requiring you to author patches using your &amp;ldquo;real name&amp;rdquo;. Such
+                projects have a
+                so-called &amp;ldquo;real name&amp;rdquo; policy; Linux is one well-known
+                example.&lt;sup id="fnref:1"&gt;&lt;a href="#fn:1" class="footnote-ref"
+                role="doc-noteref"&gt;1&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+                &lt;p&gt;The root motivations behind such policies vary, but in my experience the
+                most
+                often cited rationale is that it&amp;rsquo;s important to establish the provenance
+                of the
+                contribution for copyright reasons. In the case of Linux, contributors are asked
+                to &amp;ldquo;sign-off&amp;rdquo; their commits to indicate their agreement to the
+                terms of the
+                Developer Certificate of Origin (DCO), which includes clauses like the
+                following:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;The contribution was created in whole or in part by me and I have the right
+                to
+                submit it under the open source license indicated in the file.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;To some extent, the DCO serves as a legal assertion of copyright and an
+                agreement to license a work under given copyright terms (GPLv2 in the case of
+                Linux). This record also means that the author of the code is accountable in
+                case the copyright is challenged; in the case of an anonymous or pseudonymous
+                contributor you&amp;rsquo;re shit out of luck. At that point, liability over the
+                disagreement would likely fall into the hands of the maintainer that accepted
+                the contribution. It is reasonable for a maintainer to ask a contributor to
+                assert their copyright and accept liability over the provenance of their code in
+                a legally meaningful and accountable form.&lt;/p&gt;
+                &lt;p&gt;The possibility that someone may have something useful to offer to a free
+                software project, but is not comfortable disclosing their name for any number of
+                reasons, is a reasonable supposition. A maintainer whose &amp;ldquo;real
+                name&amp;rdquo; policy is
+                challenged on this basis would also be reasonable in saying &amp;ldquo;I feel for
+                you, but
+                I cannot agree to accept legal liability over the provenance of this code,
+                nor can I communicate that risk to end-users who acquire code under a license
+                that may or may not be valid as such&amp;rdquo;.&lt;/p&gt;
+                &lt;p&gt;&amp;ldquo;Real name&amp;rdquo; policies are controversial in the free
+                software community. I open
+                with this perspective in an attempt to cool down the room. Those who feel
+                marginalized by &amp;ldquo;real name&amp;rdquo; policies often skew young, and many
+                treat matters
+                such as copyright and licensing with disdain. Moreover, the problem tends to
+                inflame deeply hurtful sentiments and raise thorny matters of identity and
+                discrimination, and it&amp;rsquo;s easy to construe the intent of the policymakers
+                as the
+                intent to cause harm. The motivations behind these policies are
+                reasonable.&lt;/p&gt;
+                &lt;p&gt;That said, intent or otherwise, these policies can cause harm. The profile
+                of
+                the contributor who is comfortable using their &amp;ldquo;real name&amp;rdquo; is
+                likely to fall
+                more narrowly into over-represented demographics in our community; enforcing a
+                real-name policy will ostracize some people. Those with marginalized identities
+                tend to be less comfortable with disclosing their &amp;ldquo;real name&amp;rdquo;.
+                Someone who has
+                been subject to harassment may not be comfortable with this disclosure, since it
+                offers more fuel to harassers keeping tabs on their activities. The use of a
+                &amp;ldquo;real name&amp;rdquo; also confers a gender bias; avoiding a
+                &amp;ldquo;real name&amp;rdquo; policy neatly
+                eliminates discrimination on this basis. Of course, there are also many
+                &lt;a
+                href="https://www.kalzumeus.com/2010/06/17/falsehoods-programmers-believe-about-names/"&gt;falsehoods
+                programmers believe about names&lt;/a&gt; which can present in the
+                implementation of such a policy.&lt;/p&gt;
+                &lt;p&gt;There is also one particular problem which has been at the heart of
+                conflict
+                surrounding the use of &amp;ldquo;real-name&amp;rdquo; policies in free software:
+                transgender
+                identities. A transgender person is likely to change their name in the process
+                of assuming their new identity. When this happens, their real name changes.
+                However, it may or may not match their legal name &amp;ndash; some trans people opt
+                to
+                change it, others don&amp;rsquo;t; if they do it is a process that takes time.
+                Meanwhile,
+                addressing a trans person by their old name, or &amp;ldquo;deadname&amp;rdquo;, is
+                highly
+                uncomfortable. Doing so deliberately, as a matter of policy or otherwise, is a
+                form of discrimination. Many trans people experience deliberate
+                &amp;ldquo;deadnaming&amp;rdquo; as
+                a form of harassment in their daily lives, and institutionalizing this behavior
+                is cruel.&lt;/p&gt;
+                &lt;p&gt;The truth is, managing the names of participants is more challenging than
+                anyone
+                would like. On the one hand, names establish accountability and facilitate
+                collaboration, and importantly, credit the authors of a work for services
+                performed. On the other hand, names are highly personal and deeply affecting,
+                and their usage and changes over time are the subject of important consideration
+                at the discretion of their owner. A complicating factor is that handling names
+                properly introduces technical problems which must be overcome.&lt;/p&gt;
+                &lt;p&gt;To embrace the advantages of &amp;ldquo;real name&amp;rdquo; policies
+                &amp;ndash; establishing provenance,
+                encouraging accountability, fostering a social environment &amp;ndash; without
+                causing
+                harm, the approach I have settled on for my projects is to use the DCO to
+                establish provenance and encourage contributors to sign-off and participate
+                under the identity they feel most comfortable with. I encourage people to
+                utilize an identity they use beyond the project&amp;rsquo;s walls, to foster a
+                social
+                environment and a connection to the broader community, to establish
+                accountability, and to ensure that participants are reachable for further
+                discussion on their work. If a contributor&amp;rsquo;s identity changes, we make
+                every
+                effort to support this change in contemporary, future, and historical use.&lt;/p&gt;
+                &lt;div class="footnotes" role="doc-endnotes"&gt;
+                &lt;hr&gt;
+                &lt;ol&gt;
+                &lt;li id="fn:1"&gt;
+                &lt;p&gt;A &lt;a
+                href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d4563201f33a022fc0353033d9dfeb1606a88330"&gt;change
+                to Linux policy&lt;/a&gt; earlier this year refines their approach to
+                alleviate the concerns raised in this article.&amp;#160;&lt;a href="#fnref:1"
+                class="footnote-backref"
+                role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+                &lt;/li&gt;
+                &lt;/ol&gt;
+                &lt;/div&gt;
+            </description>
+        </item>
+        <item>
+            <title>Going off-script</title>
+            <link>https://drewdevault.com/2023/10/13/Going-off-script.html</link>
+            <pubDate>Fri, 13 Oct 2023 00:00:00 +0000</pubDate>
+
+            <guid>https://drewdevault.com/2023/10/13/Going-off-script.html</guid>
+            <description>&lt;p&gt;There is a phenomenon in society which I find quite bizarre. Upon
+                our entry to
+                this mortal coil, we are endowed with self-awareness, agency, and free will.
+                Each of the 8 billion members of this human race represents a unique person, a
+                unique worldview, and a unique agency. Yet, many of us have the same fundamental
+                goals and strive to live the same life.&lt;/p&gt;
+                &lt;p&gt;I think of such a life experiences as &amp;ldquo;following the
+                script&amp;rdquo;. Society lays down
+                for us a framework for living out our lives. Everyone deviates from the script
+                to some extent, but most people hit the important beats. In Western society,
+                these beats are something like, go to school, go to college, get a degree, build
+                a career, get married, have 1.5 children, retire to Florida, die.&lt;/p&gt;
+                &lt;p&gt;There are a number of reasons that someone may deviate from the script. The
+                most
+                common case is that the deviations are imposed by circumstance. A queer person
+                will face discrimination, for instance, in marriage, or in adopting and raising
+                children. Someone born into the lower class will have reduced access to higher
+                education and their opportunities for career-building are curtailed accordingly;
+                similar experiences follow for people from marginalized groups. Furthermore,
+                more and more people who might otherwise be able to follow the script are
+                finding that they can&amp;rsquo;t afford a home and don&amp;rsquo;t have the
+                resources to build a
+                family.&lt;/p&gt;
+                &lt;p&gt;There are nevertheless many people who are afforded the opportunity to
+                follow
+                the script, and when they do so, they often experience something resembling a
+                happy and fulfilling life. Generally this is not the result of a deliberate
+                choice &amp;ndash; no one was presented with the script and asked &amp;ldquo;is this
+                what you
+                want&amp;rdquo;? Each day simply follows the last and you make the choices that
+                correspond
+                with what you were told a good life looks like, and sometimes a good life
+                follows.&lt;/p&gt;
+                &lt;p&gt;Of course, it is entirely valid to want the &amp;ldquo;scripted&amp;rdquo;
+                life. But you were not
+                asked if you wanted it: it was just handed to you on a platter. The average
+                person lacks the philosophical background which underpins their worldview and
+                lifestyle, and consequently cannot explain &lt;em&gt;why&lt;/em&gt; it&amp;rsquo;s
+                &amp;ldquo;good&amp;rdquo;, for them or
+                generally. Consider your career. You were told that it was a desirable thing to
+                build for yourself, and you understand how to execute your duties as a member of
+                the working class, but can you explain why those duties are important and why
+                you should spend half of your waking life executing them? Of course, if you are
+                good at following the script, you are rewarded for doing so, generally with
+                money, but not necessarily with self-actualization.&lt;/p&gt;
+                &lt;p&gt;This state of affairs leads to some complex conflicts. This approach to
+                life
+                favors the status quo and preserves existing power structures, which explains in
+                part why it is re-enforced by education and broader social pressures. It also
+                leads to a sense of learned helplessness, a sense that this is the only way
+                things can be, which reduces the initiative to pursue social change &amp;ndash; for
+                example, by forming a union.&lt;/p&gt;
+                &lt;p&gt;It can also be uncomfortable to encounter someone who does not follow the
+                script, or even questions the script. You may be playing along, and mostly or
+                entirely exposed to people who play along. Meeting someone who doesn&amp;rsquo;t
+                &amp;ndash; they
+                skipped college, they don&amp;rsquo;t want kids, they practice polyamory, they
+                identify as
+                a gender other than what you presumed, etc &amp;ndash; this creates a moment of
+                dissonance and often resistance. This tends to re-enforce biases and can even
+                present as inadvertent micro-aggressions.&lt;/p&gt;
+                &lt;p&gt;I think it&amp;rsquo;s important to question the script, even if you decide
+                that you like
+                it. You should be able to explain &lt;em&gt;why&lt;/em&gt; you like it. This process
+                of questioning
+                is a radical act. A radical, in its non-pejorative usage, is born when someone
+                questions their life and worldview, decides that they want something else, and
+                seeks out others who came to similar conclusions. They organize, they examine
+                their discomfort and put it to words, and they share these words in the hope
+                that they can explain a similar discomfort that others might feel within
+                themselves. Radical movements, which by definition is any movement which
+                challenges the status quo, are the stories of the birth and spread of radical
+                ideas.&lt;/p&gt;
+                &lt;p&gt;Ask yourself: who are you? Did you choose to be this person? Who do you
+                want to
+                be, and how will you become that person? Should you change your major? Drop out?
+                Quit your job, start a business, found a labor union? Pick up a new hobby? Join
+                or establish a social club? An activist group? Get a less demanding job, move
+                into a smaller apartment, and spend more time writing or making art? However you
+                choose to live, choose it deliberately.&lt;/p&gt;
+                &lt;p&gt;The next step is an exercise in solidarity. How do you feel about others
+                who
+                made their own choices, choices which may be alike or different to your own?
+                Or those whose choices were constrained by their circumstances? What can you do
+                together that you couldn&amp;rsquo;t do alone?&lt;/p&gt;
+                &lt;p&gt;Who do you want to be? Do you know?&lt;/p&gt;
+            </description>
+        </item>
+        <item>
+            <title>The forbidden topics</title>
+            <link>https://drewdevault.com/2023/09/29/The-forbidden-topics.html</link>
+            <pubDate>Fri, 29 Sep 2023 00:00:00 +0000</pubDate>
+
+            <guid>https://drewdevault.com/2023/09/29/The-forbidden-topics.html</guid>
+            <description>&lt;p&gt;There are forbidden topics in the hacker community. One is sternly
+                reprimanded
+                for bringing them up, by their peers, their leaders, and the community at large.
+                In private, one can expect threats and intimidation; in public, outcry and
+                censorship. The forbidden topics are enforced by the moderators of our spaces,
+                taken off of forums, purged from chat rooms, and cleaned up from GitHub issues
+                and mailing lists; the ban-hammers fall swiftly and resolutely. My last article
+                to touch these subjects was removed from Hacker News by the moderators within 30
+                minutes and landed several death threats in my inbox. The forbidden topics, when
+                raised, are met with a resounding, aggressive dismissal and unconditional
+                condemnation.&lt;/p&gt;
+                &lt;p&gt;Some years ago, the hacker community possessed near-unanimous praise for
+                the
+                ideals of free speech; the hacker position was generally that of what we would
+                now understand as &amp;ldquo;radical&amp;rdquo; free speech, which is to say the
+                kind of &amp;ldquo;shout
+                &amp;lsquo;fire&amp;rsquo; in a crowded movie theater&amp;rdquo; radical, but more
+                specifically the kind that
+                tolerates hate speech. The popular refrain went, &amp;ldquo;I disapprove of what you
+                say,
+                but I will defend to the death your right to say it&amp;rdquo;. Many hackers hold
+                this as
+                a virtue to this day. I once held this as a virtue for myself.&lt;/p&gt;
+                &lt;p&gt;However, this was a kind of free speech which was unconsciously contingent
+                on
+                being used for speech with which the listener was comfortable. The hacker
+                community at this time was largely homogeneous, and as such most of the speech
+                we were exposed to was of the comfortable sort. As the world evolved around us,
+                and more people found their voice, this homogeneity began to break down. Critics
+                of radical free speech, victims of hate speech, and marginalized people of
+                all kinds began to appear in hacker communities. The things they had to say were
+                not comfortable.&lt;/p&gt;
+                &lt;p&gt;The free speech absolutists among the old guard, faced with this
+                discomfort,
+                developed a tendency to defend hate speech and demean speech that challenged
+                them. They were not the target of the hate, so it did not make them personally
+                uncomfortable, and defending it would maintain the pretense of defending free
+                speech, of stalwartly holding the line on a treasured part of their personal
+                hacker ethic. Speech which challenged their preconceptions and challenged their
+                power structures was not so easily acceptable. The pretense is dropped and they
+                lash out in anger, calling for the speakers to be excluded from our
+                communities.&lt;/p&gt;
+                &lt;p&gt;Some of the once-forbidden topics are becoming less so. There are carefully
+                chalked-out spaces where we can talk about them, provided they are not too
+                challenging, such as LGBTQ identities or the struggles of women in our spaces.
+                Such discussions are subject to careful management by our leaders and
+                moderators, to the extent necessary to preserve power structures. Those who
+                speak on these topics are permitted to do so relatively free of retaliation
+                provided that they speak from a perspective of humility, a voice that
+                &amp;ldquo;knows its
+                place&amp;rdquo;. Any speech which suggests that the listener may find themselves
+                subject
+                to a non-majority-conforming person in a position of power, or even that of a
+                peer, will have crossed the line; one must speak as a victim seeking the pity
+                and grace of your superiors to be permitted space to air your grievances.&lt;/p&gt;
+                &lt;p&gt;Similarly, space is made for opposition to progressive speech, again
+                moderated
+                only insofar as it is necessary to maintain power structures. Some kinds of
+                overt hate speech may rouse a response from our leaders, but those who employ a
+                more subtle approach are permitted their voice. Thus, both progressive speech
+                and hate speech are permitted within a carefully regulated framework of power
+                preservation.&lt;/p&gt;
+                &lt;p&gt;Some topics, however, remain strictly forbidden.&lt;/p&gt;
+                &lt;p&gt;Our community has persistent and pervasive problems of a particular sort
+                which
+                we are not allowed to talk about: sexual harassment and assault. Men who
+                assault, harass, and even rape women in our spaces, are protected. A culture of
+                silence is enforced, and those who call out rape, sexual assault, or harassment,
+                those who criticise they who enable and protect these behaviors, are punished,
+                swiftly and aggressively.&lt;/p&gt;
+                &lt;p&gt;Men are terrified of these kinds of allegations. It seems like a life
+                sentence:
+                social ostracization, limited work opportunities, ruined relationships. We may
+                have events in our past that weigh on our conscience; was she too drunk, did she
+                clearly consent, did she regret it in the morning? Some of us have events in our
+                past that we try not to think about, because if we think too hard, we might
+                realize that we crossed the line. This fills men with guilt and uncertainty, but
+                also fear. We know the consequences if our doubts became known.&lt;/p&gt;
+                &lt;p&gt;So we lash out in this fear. We close ranks. We demand the most stringent
+                standards of evidence to prove anything, evidence that we know is not likely to
+                be there. We refuse to believe that our friends were not the men we thought they
+                were, or to confront that we might not be ourselves. We demand due process under
+                the law, we say they should have gone to the police, that they can&amp;rsquo;t make
+                accusations of such gravity without hard proof. Think of the alleged
+                perpetrator; we can&amp;rsquo;t ruin their lives over frivolous
+                accusations.&lt;/p&gt;
+                &lt;p&gt;For victims, the only recourse permitted by society is to suffer in
+                silence.
+                Should they speak, victims are subject to similar persecutions: they are
+                ostracized, struggle to work, and lose their relationships. They have to manage
+                the consequences of a traumatic experience with support resources which are
+                absent or inadequate. Their trauma is disbelieved, their speech is punished, and
+                their assailants walk free among us as equals while they are subject to
+                retaliatory harassment or worse.&lt;/p&gt;
+                &lt;p&gt;Victims have no recourse which will satisfy men. Reporting a crime is
+                traumatic,
+                especially one of this nature. I have heard many stories of disbelief from the
+                authorities, disbelief in the face of overwhelming evidence. They were told it
+                was their fault. They were told they should have been in a different place, or
+                wearing something else, or should have simply been a different person.
+                It&amp;rsquo;s
+                their fault, not the aggressor&amp;rsquo;s. It&amp;rsquo;s about what they, the
+                victim, should
+                have done differently, never mind what the perpetrator should have done
+                differently. It&amp;rsquo;s estimated that less than 1% of rapes end with the rapist
+                in
+                jail&lt;sup id="fnref:1"&gt;&lt;a href="#fn:1" class="footnote-ref"
+                role="doc-noteref"&gt;1&lt;/a&gt;&lt;/sup&gt; &amp;ndash; the remainder go
+                unreported, unprosecuted or fail after years of
+                traumatic legal proceedings for the victims. The legal system does not provide
+                justice: it exacerbates harm. A hacker will demand this process is completed
+                before they will seek justice, or allow justice to be sought. Until then, we
+                will demand silence, and retaliate if our demands are not met.&lt;/p&gt;
+                &lt;p&gt;The strict standards of evidence required by the justice system are there
+                because of the state monopoly on violence: a guilty verdict in a crime will lead
+                to the imprisonment of the accused. We have no such recourse available in
+                private, accordingly there is no need to hold ourselves to such standards. Our
+                job is not to punish the accused, but rather to keep our communities safe. We
+                can establish the need to take action to whatever standard &lt;em&gt;we&lt;/em&gt;
+                believe is
+                sufficient, and by setting these standards as strict as the courts we will fail
+                to resolve over 99% of the situations with which we are faced &amp;ndash; a standard
+                which is clearly not sufficient to address the problem. I&amp;rsquo;m behind you if
+                you
+                want to improve the justice system in this regard, but not if you set this as a
+                blocker to seeking any justice at all. What kind of hacker puts their faith in
+                authority?&lt;/p&gt;
+                &lt;p&gt;I find the state of affairs detestable. The hypocrisy of the free speech
+                absolutist who demands censorship of challenging topics. The fact that the
+                famous hacker curiosity can suddenly dry up if satisfying it would question our
+                biases and preconceptions. The complicity of our moderators in censoring
+                progressive voices in the defense of decorum and the status quo. The duplicitous
+                characterization of &amp;ldquo;polite&amp;rdquo; hate speech as acceptable in our
+                communities. Our
+                failure to acknowledge our own shortcomings, our fear of seeing the
+                &amp;ldquo;other&amp;rdquo; in a
+                position of power, and the socially enforced ignorance of the
+                &amp;ldquo;other&amp;rdquo; that
+                naturally leads to failing to curtail discrimination and harassment in our
+                communities. The ridiculously high standard of evidence we require from victims,
+                who simply ask for our &lt;em&gt;belief&lt;/em&gt; at a minimum, before
+                we&amp;rsquo;ll consider doing
+                anything about their grievance, if we could even be convinced in the first
+                place.&lt;/p&gt;
+                &lt;p&gt;Meanwhile, the problems that these forbidden topics seek to discuss are
+                present
+                in our community. That includes the &amp;ldquo;polite&amp;rdquo; problems, such as
+                the conspicuous
+                lack of diversity in our positions of power, which may be discussed and
+                commiserated only until someone suggests doing something about it; and also the
+                impolite problems up to and including the protection of the perpetrators of
+                sexual harassment, sexual assault, and, yes, rape.&lt;/p&gt;
+                &lt;p&gt;Most hackers live under the comfortable belief that it
+                &amp;ldquo;can&amp;rsquo;t happen here&amp;rdquo;, but
+                it can and it does. I attended a hacker event this year &amp;ndash; HiP Berlin
+                &amp;ndash; where I
+                discovered that some of the organizers had cooperated to make it possible for
+                multiple known rapists to participate, working together to find a way to
+                circumvent the event&amp;rsquo;s code of conduct &amp;ndash; a document that they
+                were tasked with
+                enforcing. One of the victims was in attendance, believing the event to be safe.
+                At every hacker event I have attended in recent memory, I have personally
+                witnessed or heard stories of deeply problematic behavior and protection for its
+                perpetrators from the leadership.&lt;/p&gt;
+                &lt;p&gt;Our community has problems, important problems, that every hacker should
+                care
+                about, and we need the bravery and humility to face them, not the cowardice to
+                retaliate against those who speak up. Talk to, listen to, and believe your peers
+                and their stories. Stand up for what&amp;rsquo;s right, and speak out when you see
+                something that isn&amp;rsquo;t. Demand that your leaders and moderators do the right
+                thing. Make a platform where people can safely speak about what our community
+                needs to do right by them, and have the courage to listen to them and confront
+                yourself.&lt;/p&gt;
+                &lt;p&gt;You need to be someone who will &lt;em&gt;do something about
+                it&lt;/em&gt;.&lt;/p&gt;
+                &lt;hr&gt;
+                &lt;p&gt;&lt;strong&gt;Edit&lt;/strong&gt;: Case in point: this post was quietly
+                removed by Hacker News moderators
+                within 40 minutes of its submission.&lt;/p&gt;
+                &lt;div class="footnotes" role="doc-endnotes"&gt;
+                &lt;hr&gt;
+                &lt;ol&gt;
+                &lt;li id="fn:1"&gt;
+                &lt;p&gt;&lt;a
+                href="https://www.rainn.org/statistics/criminal-justice-system"&gt;Criminal Justice
+                System statistics, RAINN&lt;/a&gt;&amp;#160;&lt;a href="#fnref:1"
+                class="footnote-backref"
+                role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+                &lt;/li&gt;
+                &lt;/ol&gt;
+                &lt;/div&gt;
+            </description>
+        </item>
+        <item>
+            <title>Hyprland is a toxic community</title>
+            <link>https://drewdevault.com/2023/09/17/Hyprland-toxicity.html</link>
+            <pubDate>Sun, 17 Sep 2023 00:00:00 +0000</pubDate>
+
+            <guid>https://drewdevault.com/2023/09/17/Hyprland-toxicity.html</guid>
+            <description>&lt;p&gt;&lt;a href="https://hyprland.org/"&gt;Hyprland&lt;/a&gt; is an
+                open source Wayland compositor based on &lt;a
+                href="https://gitlab.freedesktop.org/wlroots/wlroots"&gt;wlroots&lt;/a&gt;, a
+                project I started back in 2017 to make it easier to build good Wayland
+                compositors. It&amp;rsquo;s a project which is loved by its users for its emphasis
+                on
+                customization and &amp;ldquo;eye candy&amp;rdquo; &amp;ndash; beautiful graphics and
+                animations, each
+                configuration tailored to the unique look and feel imagined by the user who
+                creates it. It&amp;rsquo;s a very exciting project!&lt;/p&gt;
+                &lt;p&gt;Unfortunately, the effect is spoilt by an incredibly toxic and hateful
+                community. I cannot recommend Hyprland to anyone who is not prepared to steer
+                well clear of its community spaces. Imagine a high school boys&amp;rsquo; locker
+                room come
+                to life on Discord and GitHub and you&amp;rsquo;ll get an idea of what
+                it&amp;rsquo;s like.&lt;/p&gt;
+                &lt;p&gt;I became aware of the issues with Hyprland&amp;rsquo;s community after
+                details of numerous
+                hateful incidents on their Discord came to my attention by way of the
+                grapevine. Most of them stem from the community&amp;rsquo;s tolerance of hate:
+                community
+                members are allowed to express hateful views with impunity, up to and including
+                astonishing views such as endorsements of eugenics and calls for hate-motivated
+                violence. Such comments are treated as another act in the one big inside joke
+                that is the Hyprland community &amp;ndash; the community prefers not to take itself
+                &amp;ldquo;too
+                seriously&amp;rdquo;. Hate is moderated only if it is
+                &amp;ldquo;disruptive&amp;rdquo; (e.g. presents as
+                spam), but hate presented with a veneer of decorum (or sarcasm) is tolerated,
+                and when challenged, it&amp;rsquo;s laughed off as a joke.&lt;/p&gt;
+                &lt;p&gt;In one particular incident, the moderators of the Discord server engaged in
+                a
+                harassment campaign against a transgender user, including using their moderator
+                privileges to edit the pronouns in their username from
+                &amp;ldquo;they/she&amp;rdquo; to
+                &amp;ldquo;who/cares&amp;rdquo;. These roles should be held by trusted community
+                leaders, and it&amp;rsquo;s
+                from their behavior that the community&amp;rsquo;s culture and norms stem
+                &amp;ndash; they set an
+                example for the community and define what behaviors are acceptable or expected.
+                The problem comes from the top down.&lt;/p&gt;
+                &lt;p&gt;Someone recently pitched a code of conduct &amp;ndash; something that this
+                project sorely
+                needs &amp;ndash; in a &lt;a
+                href="https://web.archive.org/web/20230917015135/https://github.com/hyprwm/Hyprland/issues/3209"&gt;GitHub
+                issue&lt;/a&gt;. This thread does not have much overt hate, but
+                it does clearly show how callous and just plain &lt;em&gt;mean&lt;/em&gt; the
+                community is,
+                including its leadership (Vaxerski is the original author of Hyprland).
+                Everything is a joke and anyone who wants to be &amp;ldquo;serious&amp;rdquo; about
+                anything is
+                mercilessly bullied and made fun of. Quoting this discussion:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;I think [a Code of Conduct] is pretty discriminatory towards people that
+                prefer a close, hostile, homogeneous, exclusive, and unhealthy community.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;First of all, why would I pledge to uphold any values? Seems like just
+                inconveniencing myself. [&amp;hellip;] If I&amp;rsquo;d want to moderate,
+                I&amp;rsquo;d spend 90% of the
+                time reading kids arguing about bullshit instead of coding.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;If you don&amp;rsquo;t know how to behave without a wall of text explaining
+                how to
+                behave online then you shouldn&amp;rsquo;t be online.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;I am not someone who believes all projects need a code of conduct,
+                &lt;em&gt;if&lt;/em&gt; there
+                exists a reasonable standard of conduct in its absence &amp;ndash; and that means
+                having
+                a community that does not bully and harass others for expressing differing
+                points of view, let alone for simply having a marginalized identity.&lt;/p&gt;
+                &lt;p&gt;I would have preferred to address these matters in private, so I reached
+                out to
+                Vaxry in February. He responded with a lack of critical awareness over how
+                toxicity presents in his community. However, following my email, he put out a
+                poll for the Discord community to see if the community members experienced
+                harassment in the community &amp;ndash; apparently 40% of respondents reported such
+                experiences. Vaxry et al implemented new moderation policies as a result. But
+                these changes did not seem to work: the problems are still present, and the
+                community is still a toxic place that facilitates bullying and hate, including
+                from the community leaders.&lt;/p&gt;
+                &lt;p&gt;Following my email conversation with Vaxry, he appeared on &lt;a
+                href="https://invidious.mnus.de/watch?v=nskemNa_Kn4"&gt;a podcast&lt;/a&gt; to
+                discuss toxicity in the Hyprland community. This quote from the interview
+                clearly illustrates the attitude of the leadership:&lt;/p&gt;
+                &lt;blockquote&gt;
+                &lt;p&gt;[A trans person] joined the Discord server and made a big deal out of their
+                pronouns [..] because they put their pronouns in their nickname and made a big
+                deal out of them because people were referring to them as &amp;ldquo;he&amp;rdquo;
+                [misgendering
+                them], which, on the Internet, let&amp;rsquo;s be real, is the default. And so, one
+                of the moderators changed the pronouns in their nickname to
+                &amp;ldquo;who/cares&amp;rdquo;. [&amp;hellip;]
+                Let&amp;rsquo;s be real, this isn&amp;rsquo;t like, calling someone the N-word or
+                something.&lt;/p&gt;
+                &lt;/blockquote&gt;
+                &lt;p&gt;Later he describes a more moderated community (the /r/unixporn discord
+                server)
+                as having an environment in which everyone is going to &amp;ldquo;lick your butthole
+                just
+                to be nice&amp;rdquo;. He compared himself to &lt;a
+                href="https://en.wikipedia.org/wiki/Terry_A._Davis"&gt;Terry Davis&lt;/a&gt;, the
+                late operating system
+                developer whose struggles with mental illness were broadcast for the world to
+                see, citing a video in which he answers a phone call and refers to the person on
+                the phone by the N-word &amp;ldquo;ten times&amp;rdquo; &amp;ndash; Vaxry compares
+                this to his approach to
+                answering &amp;ldquo;stupid questions&amp;rdquo;.&lt;/p&gt;
+                &lt;p&gt;It really disappoints me to see such an exciting project brought low by a
+                horribly mismanaged community of hate and bullying. Part of what makes open
+                source software great is that it&amp;rsquo;s great for everyone. It&amp;rsquo;s
+                unfortunate that
+                someone can discover this cool project, install it and play with it and get
+                excited about it, then join the community to find themselves at the wrong end of
+                this behavior. No one deserves that.&lt;/p&gt;
+                &lt;p&gt;I empathise with Vaxry. I remember being young, smart,
+                productive&amp;hellip; and mean. I
+                did some cool stuff, but I deeply regret the way I treated people. It
+                wasn&amp;rsquo;t
+                really my fault &amp;ndash; I was a product of my environment &amp;ndash; but it was
+                my
+                responsibility. Today, I&amp;rsquo;m proud to have built many welcoming communities,
+                where
+                people are rewarded for their involvement, rather than coming away from their
+                experience hurt. What motivates us to build and give away free software if not
+                bringing joy to ourselves and others? Can we be proud of a community which
+                brings more suffering into the world?&lt;/p&gt;
+                &lt;p&gt;&lt;strong&gt;My advice to the leadership&lt;/strong&gt; begins with taking
+                a serious look in the mirror.
+                This project needs a &amp;ldquo;come to Jesus&amp;rdquo; moment. Ask yourself what
+                kind of community
+                you can be proud of &amp;ndash; can you be proud of a community that people walk
+                away
+                from feeling dejected and hurt? Yours is not a community that brings people joy.
+                What are you going to do about it?&lt;/p&gt;
+                &lt;p&gt;A good start will be to consider the code of conduct proposal seriously,
+                but a
+                change of attitude is also required. &lt;a href="mailto:sir@cmpwn.com"&gt;My
+                inbox&lt;/a&gt; is open to any of the
+                leaders in this project (or any other project facing similar problems) if you
+                want to talk. I&amp;rsquo;m happy to chat with you in good faith and help you
+                understand
+                what&amp;rsquo;s needed and why it&amp;rsquo;s important.&lt;/p&gt;
+                &lt;p&gt;To members of the &lt;strong&gt;Hyprland community&lt;/strong&gt;, I want
+                each of you to personally step
+                up to make the community better. If you see hate and bullying, don&amp;rsquo;t stay
+                silent. This is a community which proclaims to value radical free speech: test
+                it by using your speech to argue against hate. Participate in the community as
+                you think it should be, not as it necessarily is, and change will follow. If you
+                are sensitive to hate, or a member of a marginalized group, however, I would
+                just advise steering clear of Hyprland until the community improves.&lt;/p&gt;
+                &lt;p&gt;If the leadership fails to account for these problems, it will be up to the
+                community to take their activity elsewhere. You could set up adjacent
+                communities which are less toxic, or fork the software, or simply choose to use
+                something else.&lt;/p&gt;
+                &lt;p&gt;To the &lt;strong&gt;victims of harassment&lt;/strong&gt;, I offer my
+                sincere condolences. I know how
+                hard it is to be the subject of this kind of bullying. You don&amp;rsquo;t deserve
+                to be
+                treated like this. There are many places in the free software community where
+                you are welcome and celebrated &amp;ndash; Hyprland is &lt;em&gt;not&lt;/em&gt; the
+                norm. If you need
+                support, I&amp;rsquo;m &lt;a href="mailto:sir@cmpwn.com"&gt;always
+                available&lt;/a&gt; to listen to your struggles.&lt;/p&gt;
+                &lt;p&gt;To everyone else: please share this post throughout the Hyprland community
+                and
+                adjacent communities. This is a serious problem and it&amp;rsquo;s not going to
+                change
+                unless its clearly brought to light. The Hyprland maintainers need to be made
+                aware that the broader open source community does not appreciate this kind of
+                behavior.&lt;/p&gt;
+                &lt;p&gt;I sincerely hope that this project improves its community. A serious
+                attitude
+                shift is needed from the top-down, and I hope for the sake of Vaxry, the other
+                leaders, and the community as a whole, that such change comes sooner rather than
+                later. When Vaxry is older and wiser, I want him to look back on the project and
+                community that he&amp;rsquo;s built with pride and joy, not with regret and
+                shame.&lt;/p&gt;
+                &lt;hr&gt;
+                &lt;p&gt;Vaxry has published &lt;a
+                href="https://blog.vaxry.net/articles/2023-hyprlandsCommunity"&gt;a
+                response&lt;/a&gt; to this post.&lt;/p&gt;
+                &lt;p&gt;I was also privately provided some of the enusing discussion from the
+                Hyprland
+                Discord. Consider that this lacks context and apply your grain of salt
+                accordingly.&lt;/p&gt;
+                &lt;p&gt;&lt;img src="https://l.sr.ht/1k-4.png" alt="Screenshot of a Discord channel
+                with the initial reaction to this post. A user
+                called &amp;ldquo;slave labor&amp;rdquo; responds with &amp;ldquo;no way&amp;rdquo;,
+                &amp;ldquo;the computer reddit woke up&amp;rdquo;"&gt;&lt;/p&gt;
+                &lt;p&gt;&lt;img src="https://l.sr.ht/9hS_.png" alt="Screenshot of a Discord channel
+                with Vaxry&amp;rsquo;s initial reaction to this post.
+                &amp;ldquo;Really, right as I wanted to take a day off because of health reasons I
+                have to
+                reply to this?&amp;rdquo;. Another user responds &amp;ldquo;wow this is
+                quite&amp;hellip; shallow&amp;rdquo;, &amp;ldquo;almost
+                as if it recycles very limited context to get more clicks&amp;rdquo;"&gt;&lt;/p&gt;
+                &lt;p&gt;I apologise to Vaxry for interrupting their rest, and wish them a speedy
+                recovery.&lt;/p&gt;
+                &lt;p&gt;&lt;img src="https://l.sr.ht/RwC-.png" alt="Screenshot of a Discord
+                channel. Some notable quotes include &amp;ldquo;LGBTQ is fucking
+                trash anyways&amp;rdquo; (someone else responds &amp;ldquo;fuck off&amp;rdquo; to
+                this) and &amp;ldquo;for reclaiming
+                polymc from the leftoids&amp;rdquo;. The discussion as a whole lacks any sembelance
+                of
+                professionalism."&gt;&lt;/p&gt;
+                &lt;p&gt;&lt;a
+                href="https://paste.sr.ht/~sircmpwn/093af570609ec87e987af6cc69c59e9624c2b280"&gt;Here&lt;/a&gt;
+                is a plain text log which includes some additional discussion.&lt;/p&gt;
+            </description>
+        </item>
+    </channel>
+</rss>

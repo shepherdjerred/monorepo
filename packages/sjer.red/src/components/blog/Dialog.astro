@@ -1,0 +1,20 @@
+<div class="rounded-xl border-2 dark:border-white p-4 md:ml-8 mr-8 flex flex-col items-center">
+  <div class="flex flex-col gap-4">
+    <slot />
+  </div>
+  <span class="text-xs">
+    Inspired by <a href="https://xeiaso.net/blog/">Xe's blog</a>
+  </span>
+</div>
+
+<style>
+  .force-normal {
+    color: rgb(55, 65, 81);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .force-normal {
+      color: rgb(255, 255, 255);
+    }
+  }
+</style>

@@ -1,0 +1,264 @@
+---
+description: Pre-commit workflow checklist and quick error reference
+globs: "*.ts,*.tsx"
+alwaysApply: false
+---
+
+# Code Quality Checklist
+
+Quick reference for pre-commit verification and error fixing.
+
+## Pre-Commit Workflow
+
+```bash
+mise check  # Runs 6 checks in parallel (~60-90s)
+```
+
+**mise check includes:**
+
+- TypeScript compilation
+- ESLint (with 12 custom rules)
+- Prettier formatting
+- Bun tests
+- Knip (unused code detection)
+- JSCPD (duplicate code detection)
+
+**When mise passes but CI fails:** `dagger call check`
+
+**See:** `mise-and-dagger-usage.mdc` for details.
+
+## Complete Pre-Commit Checklist
+
+```bash
+# 1. Format code
+bun run format:write
+
+# 2. Run all checks
+mise check
+
+# 3. Commit (triggers lint-staged hooks automatically)
+git add .
+git commit -m "message"
+```
+
+### Lint-Staged (Pre-Commit Hooks)
+
+Husky + lint-staged automatically run on `git commit`:
+
+**Per-file checks:**
+
+- Prettier auto-format
+- Markdown linting
+- Per-package typecheck + lint for changed files
+- Run relevant tests for changed files
+- Check for eslint-disable suppressions
+
+**Example:** Edit `packages/backend/src/user.ts` → commit triggers:
+
+```bash
+cd packages/backend && bun run typecheck
+cd packages/backend && bunx eslint --cache --fix
+bun ./scripts/run-relevant-tests.ts packages/backend
+```
+
+**See:** `package.json` lint-staged configuration for full details.
+
+## Quick Error Fixing Guide
+
+### TypeScript Errors
+
+```
+error TS2322: Type 'string' is not assignable to type 'number'
+```
+
+**Fix:** Update type or validate with Zod.
+
+```typescript
+// ❌ const x: number = "5";
+// ✅ const x = NumberSchema.parse(input);
+```
+
+**See:** `typescript-standards.mdc`
+
+### ESLint Errors
+
+| Error | Fix |
+|-------|-----|
+| `no-type-assertions` | Use Zod validation or `as unknown` |
+| `prefer-zod-validation` | Replace `typeof`/`instanceof` with Zod |
+| `zod-schema-naming` | Rename to PascalCase ending with `Schema` |
+| `no-function-overloads` | Use conditional types or unions |
+| `max-lines-per-function` | Split into smaller functions |
+| `complexity` | Reduce branches or extract logic |
+
+**Example:**
+
+```typescript
+// ❌ const user = data as User;
+// ✅ const user = UserSchema.parse(data);
+```
+
+**See:** `eslint-custom-rules.mdc` for all 12 rules.
+
+### Prettier Errors
+
+```
+error: Line too long (127 characters)
+```
+
+**Fix:** Auto-fix with `bun run format:write`
+
+### Test Failures
+
+```
+✗ should fetch data successfully
+  error: Expected 200 but got 404
+```
+
+**Fix:** Debug test or update test data.
+
+**See:** `testing-patterns.mdc`
+
+### Unused Code (Knip)
+
+```
+Unused export: oldFunction in src/utils.ts
+```
+
+**Fix:** Delete unused code or ensure it's imported.
+
+**Config:** `knip.json` (threshold: warn, ignores test files)
+
+### Duplicate Code (JSCPD)
+
+```
+Found 2 clones (15% duplication)
+src/utils.ts [10:25]
+src/helpers.ts [45:60]
+```
+
+**Fix:** Extract common code into shared utility.
+
+**Config:** `.jscpd.json` (threshold: 12%, minLines: 9, minTokens: 30)
+
+## Order to Fix Issues
+
+Fix in this order (TypeScript blocks ESLint):
+
+1. **TypeScript errors** → Fix type mismatches
+2. **ESLint errors** → Fix code issues
+3. **Prettier errors** → Run `bun run format:write`
+4. **Test failures** → Debug and fix
+5. **Knip/JSCPD** → Clean up
+
+## Complexity Limits
+
+| Limit | Value | Fix Strategy |
+|-------|-------|--------------|
+| `max-lines` | 500 (files), 400 (functions) | Split into smaller pieces |
+| `complexity` | 20 | Reduce branches with early returns |
+| `max-depth` | 4 | Flatten nested conditions |
+| `max-params` | 4 | Use object parameter |
+
+**Example:**
+
+```typescript
+// ❌ Too many params
+function create(name, email, role, dept, start, end) { }
+
+// ✅ Object parameter
+function create(params: { name: string; email: string; ... }) { }
+```
+
+## Naming Conventions
+
+| Type | Format | Example |
+|------|--------|---------|
+| Zod Schemas | PascalCase + `Schema` | `UserSchema` |
+| Functions | camelCase or PascalCase | `getUser`, `Component` |
+| Variables | camelCase | `userName` |
+| Constants | UPPER_CASE or camelCase | `MAX_ITEMS` |
+| Types | PascalCase | `User` |
+
+## Import Restrictions
+
+**Use Bun APIs, not Node.js:**
+
+```typescript
+// ❌ import fs from "fs";
+// ✅ const file = await Bun.file(path).text();
+```
+
+**No re-exports:**
+
+```typescript
+// ❌ export * from "./utils";
+// ✅ import { helper } from "./utils"; export { helper };
+```
+
+**Use workspace packages:**
+
+```typescript
+// ❌ import { User } from "../../../data/types";
+// ✅ import { User } from "@scout-for-lol/data";
+```
+
+## Common Violation Patterns
+
+### Pattern 1: Type Assertion Without Validation
+
+```typescript
+// ❌ const user = userData as User;
+// ✅ const user = UserSchema.parse(userData);
+```
+
+### Pattern 2: Using typeof Instead of Zod
+
+```typescript
+// ❌ if (typeof value === "string") { }
+// ✅ const result = z.string().safeParse(value); if (result.success) { }
+```
+
+### Pattern 3: Missing Null Check
+
+```typescript
+// ❌ const date = competition.startDate; const isPast = now > date;
+// ✅ const isPast = competition.startDate && now > competition.startDate;
+```
+
+### Pattern 4: Non-null Assertion
+
+```typescript
+// ❌ const name = user!.profile!.name;
+// ✅ const name = user?.profile?.name ?? "Unknown";
+```
+
+### Pattern 5: Missing Return Type
+
+```typescript
+// ❌ export function getUser(id: string) { }
+// ✅ export function getUser(id: string): Promise<User> { }
+```
+
+## Commands Quick Reference
+
+| Command | Duration | Purpose |
+|---------|----------|---------|
+| `mise check` | 60-90s | All 6 checks (local) |
+| `dagger call check` | 2-5m | All checks (CI-like) |
+| `bun run format:write` | 5-10s | Auto-fix formatting |
+| `bun run typecheck` | 10-20s | TypeScript only |
+| `bun run lint` | 10-20s | ESLint only |
+| `bun test` | 20-60s | Tests only |
+| `bun run knip` | 10-20s | Unused code detection |
+| `bun run duplication-check` | 5-10s | Duplicate code detection |
+
+## Related Documentation
+
+- **ESLint Rules:** `eslint-custom-rules.mdc` - All 12 custom rules
+- **TypeScript:** `typescript-standards.mdc` - Type safety rules
+- **Zod Validation:** `zod-validation-patterns.mdc` - Schema patterns
+- **Testing:** `testing-patterns.mdc` - Test best practices
+- **Mise/Dagger:** `mise-and-dagger-usage.mdc` - Tool comparison
+- **Type Assertions:** `type-assertions-policy.mdc` - When to use `as`
+- **Exhaustive Cases:** `exhaustive-case-handling.mdc` - Union handling

@@ -1,0 +1,21 @@
+---
+import type { ResultEntry } from "webring/dist/types.ts";
+import FormattedDate from "@components/FormattedDate.astro";
+
+type Props = {
+  entry: ResultEntry;
+};
+
+const { title, url, preview, source, date } = Astro.props.entry;
+---
+
+<div class="article prose dark:prose-invert mt-14 grow-0 basis-full">
+  <h4 class="title" dir="auto">
+    <a href={url} target="_blank" rel="noopener">{title}</a>
+  </h4>
+  <p class="summary" dir="auto" set:html={preview} />
+  <small class="source"> via <a href={source.url}>{source.title}</a></small>
+  <span class="text-sm">
+    <FormattedDate date={date} />
+  </span>
+</div>

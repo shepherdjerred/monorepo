@@ -1,0 +1,358 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Vi": {
+      "id": "Vi",
+      "key": "254",
+      "name": "Vi",
+      "title": "the Piltover Enforcer",
+      "image": {
+        "full": "Vi.png",
+        "sprite": "champion5.png",
+        "group": "champion",
+        "x": 0,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "254000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "254001",
+          "num": 1,
+          "name": "Neon Strike Vi",
+          "chromas": false
+        },
+        {
+          "id": "254002",
+          "num": 2,
+          "name": "Officer Vi",
+          "chromas": true
+        },
+        {
+          "id": "254003",
+          "num": 3,
+          "name": "Debonair Vi",
+          "chromas": false
+        },
+        {
+          "id": "254004",
+          "num": 4,
+          "name": "Demon Vi",
+          "chromas": false
+        },
+        {
+          "id": "254005",
+          "num": 5,
+          "name": "Warring Kingdoms Vi",
+          "chromas": false
+        },
+        {
+          "id": "254011",
+          "num": 11,
+          "name": "PROJECT: Vi",
+          "chromas": false
+        },
+        {
+          "id": "254012",
+          "num": 12,
+          "name": "Heartbreaker Vi",
+          "chromas": true
+        },
+        {
+          "id": "254020",
+          "num": 20,
+          "name": "PsyOps Vi",
+          "chromas": true
+        },
+        {
+          "id": "254029",
+          "num": 29,
+          "name": "Arcane Undercity Vi",
+          "chromas": false
+        },
+        {
+          "id": "254030",
+          "num": 30,
+          "name": "Heartache Vi",
+          "chromas": true
+        },
+        {
+          "id": "254039",
+          "num": 39,
+          "name": "Primal Ambush Vi",
+          "chromas": true
+        },
+        {
+          "id": "254048",
+          "num": 48,
+          "name": "Arcane Brawler Vi",
+          "chromas": false
+        },
+        {
+          "id": "254049",
+          "num": 49,
+          "name": "T1 Vi",
+          "chromas": true
+        }
+      ],
+      "lore": "Raised on the mean streets of Zaun, Vi is a hotheaded, impulsive, and fearsome woman with very little respect for authority. She has always been a shrewd survivor, both from her youthful troublemaking topside and an unfairly long stint in Stillwater Hold. Now working with the Piltover Enforcers to keep the peace instead of breaking it, she wields mighty hextech gauntlets that can punch through walls—and criminals—with equal ease.",
+      "blurb": "Raised on the mean streets of Zaun, Vi is a hotheaded, impulsive, and fearsome woman with very little respect for authority. She has always been a shrewd survivor, both from her youthful troublemaking topside and an unfairly long stint in Stillwater...",
+      "allytips": [
+        "A fully charged Vault Breaker will deal double damage. It's great for catching and finishing off fleeing enemies.",
+        "Relentless Force does full damage to anyone caught in the shockwave. Use it on minions in lane to hit enemies hiding behind them.",
+        "Cease and Desist is a powerful initiation tool, just remember not to get too far ahead of the rest of your team."
+      ],
+      "enemytips": [
+        "A fully charged Vault breaker deals double damage. If you see Vi start to charge you should back off or try to dodge it.",
+        "Vi will shred your Armor and gain Attack Speed if she manages to hit you three times in a row. Try not to engage in extended brawls with her.",
+        "Vi cannot be stopped while using her ult. Remember to save your displacement effects until after she's done charging."
+      ],
+      "tags": ["Fighter", "Assassin"],
+      "partype": "Mana",
+      "info": {
+        "attack": 8,
+        "defense": 5,
+        "magic": 3,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 655,
+        "hpperlevel": 105,
+        "mp": 295,
+        "mpperlevel": 65,
+        "movespeed": 340,
+        "armor": 30,
+        "armorperlevel": 4.7,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 10,
+        "hpregenperlevel": 1,
+        "mpregen": 8,
+        "mpregenperlevel": 0.65,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 63,
+        "attackdamageperlevel": 3.5,
+        "attackspeedperlevel": 2,
+        "attackspeed": 0.644
+      },
+      "spells": [
+        {
+          "id": "ViQ",
+          "name": "Vault Breaker",
+          "description": "Vi charges her gauntlets and unleashes a vault shattering punch, carrying her forward. Enemies she hits are knocked back and receive a stack of Denting Blows.",
+          "tooltip": "<charge>Begin Charging:</charge> Vi begins charging a powerful punch, <status>Slowing</status> herself by {{ e4 }}%.<br /><br /><release>Release:</release> Vi dashes forward dealing between <physicalDamage>{{ totaldamage }} and {{ maxdamagetooltip }} physical damage</physicalDamage> based on charge time and applying <spellName>Denting Blows</spellName> to all enemies hit. Vi stops upon colliding with an enemy champion, and <status>Knocks</status> them <status>Back</status>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Minimum Damage", "Maximum Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ mindamage }} -> {{ mindamageNL }}",
+              "{{ mindamage*2.500000 }} -> {{ mindamagenl*2.500000 }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 10.5, 9, 7.5, 6],
+          "cooldownBurn": "12/10.5/9/7.5/6",
+          "cost": [50, 60, 70, 80, 90],
+          "costBurn": "50/60/70/80/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [15, 15, 15, 15, 15],
+            [6, 6, 6, 6, 6],
+            [5, 5, 5, 5, 5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "15", "6", "5", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [250, 250, 250, 250, 250],
+          "rangeBurn": "250",
+          "image": {
+            "full": "ViQ.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 384,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "ViW",
+          "name": "Denting Blows",
+          "description": "Vi's punches break her opponent's Armor, dealing bonus damage and granting her Attack Speed.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Every 3rd Attack on the same target deals an additional <physicalDamage>{{ totaldamagetooltip }} max Health physical damage</physicalDamage>, removes <scaleArmor>{{ shredamount }}% Armor</scaleArmor> and grants Vi <attackSpeed>{{ attackspeed }}% Attack Speed</attackSpeed> for {{ sharedbuffsduration }} seconds. It also reduces the remaining Cooldown of <spellName>Blast Shield</spellName> by {{ spell.vipassive:cdreductionon3hit }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Maximum Health Damage", "Attack Speed"],
+            "effect": [
+              "{{ maxhealthdamage }}% -> {{ maxhealthdamageNL }}%",
+              "{{ attackspeed }}% -> {{ attackspeedNL }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [0, 0, 0, 0, 0],
+          "cooldownBurn": "0",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "Passive",
+          "maxammo": "-1",
+          "range": [750, 750, 750, 750, 750],
+          "rangeBurn": "750",
+          "image": {
+            "full": "ViW.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 432,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "Passive"
+        },
+        {
+          "id": "ViE",
+          "name": "Relentless Force",
+          "description": "Vi's next attack blasts through her target, dealing damage to enemies behind it.",
+          "tooltip": "Vi's next Attack deals <physicalDamage>{{ totaldamagetooltip }} physical damage</physicalDamage> to the target and enemies behind them.<br /><br />This Ability has 2 charges ({{ ammorechargetime }} second refresh).{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Base Damage", "Charge Time", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [1, 1, 1, 1, 1],
+          "cooldownBurn": "1",
+          "cost": [26, 32, 38, 44, 50],
+          "costBurn": "26/32/38/44/50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [50, 50, 50, 50, 50],
+            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [6, 6, 6, 6, 6],
+            [1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "50", "1.5", "6", "1", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "2",
+          "range": [400, 400, 400, 400, 400],
+          "rangeBurn": "400",
+          "image": {
+            "full": "ViE.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 0,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "ViR",
+          "name": "Cease and Desist",
+          "description": "Vi runs down an enemy, knocking aside anyone in the way. When she reaches her target she knocks it into the air, jumps after it, and slams it back into the ground.",
+          "tooltip": "Vi singles out an enemy champion, revealing them and dashing unstoppably towards them. Upon reaching them, Vi <status>Knocks</status> them <status>Up</status> for {{ rstunduration }} seconds and deals <physicalDamage>{{ damage }} physical damage</physicalDamage>.<br /><br />Any other enemies Vi collides with are dealt damage, knocked aside, and <status>Stunned</status> for {{ secondarytargetstunduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Base Damage", "Cooldown"],
+            "effect": ["{{ rbasedamage }} -> {{ rbasedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [140, 115, 90],
+          "cooldownBurn": "140/115/90",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [800, 800, 800],
+          "rangeBurn": "800",
+          "image": {
+            "full": "ViR.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 48,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Blast Shield",
+        "description": "Vi charges a shield over time. The shield can be activated by hitting an enemy with an ability.",
+        "image": {
+          "full": "ViPassive.png",
+          "sprite": "passive5.png",
+          "group": "passive",
+          "x": 0,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

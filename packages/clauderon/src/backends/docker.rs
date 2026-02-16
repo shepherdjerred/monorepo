@@ -99,6 +99,7 @@ impl DockerProxyConfig {
 }
 
 /// Docker container backend
+#[derive(Debug)]
 pub struct DockerBackend {
     /// Path to clauderon directory for proxy CA and configs.
     clauderon_dir: PathBuf,
@@ -366,7 +367,7 @@ impl DockerBackend {
     ) -> anyhow::Result<()> {
         // Build the clone script
         let base_branch_clone = base_branch.map_or_else(
-            || "git clone ${GIT_REMOTE_URL} .".to_string(),
+            || "git clone ${GIT_REMOTE_URL} .".to_owned(),
             |b| format!("git clone --branch {b} --single-branch ${{GIT_REMOTE_URL}} ."),
         );
 
@@ -414,28 +415,28 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
         );
 
         let mut args = vec![
-            "run".to_string(),
-            "--rm".to_string(),
-            "-v".to_string(),
+            "run".to_owned(),
+            "--rm".to_owned(),
+            "-v".to_owned(),
             format!("{volume_name}:/workspace"),
-            "-e".to_string(),
+            "-e".to_owned(),
             format!("GIT_REMOTE_URL={git_remote_url}"),
-            "-e".to_string(),
+            "-e".to_owned(),
             format!("BRANCH_NAME={branch_name}"),
         ];
 
         if let Some(name) = git_user_name {
-            args.extend(["-e".to_string(), format!("GIT_AUTHOR_NAME={name}")]);
+            args.extend(["-e".to_owned(), format!("GIT_AUTHOR_NAME={name}")]);
         }
 
         if let Some(email) = git_user_email {
-            args.extend(["-e".to_string(), format!("GIT_AUTHOR_EMAIL={email}")]);
+            args.extend(["-e".to_owned(), format!("GIT_AUTHOR_EMAIL={email}")]);
         }
 
         args.extend([
-            "alpine/git:latest".to_string(),
-            "/bin/sh".to_string(),
-            "-c".to_string(),
+            "alpine/git:latest".to_owned(),
+            "/bin/sh".to_owned(),
+            "-c".to_owned(),
             script,
         ]);
 
@@ -546,7 +547,7 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
     /// # Errors
     ///
     /// Returns an error if the proxy CA certificate is required but missing.
-    #[allow(clippy::too_many_arguments)]
+    #[expect(clippy::too_many_arguments, reason = "container creation requires many configuration parameters")]
     pub fn build_create_args(
         name: &str,
         workdir: &Path,
@@ -579,18 +580,18 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
         // Validate the effective image
         image_config.validate()?;
 
-        let mut args = vec!["run".to_string(), "-dit".to_string()];
+        let mut args = vec!["run".to_owned(), "-dit".to_owned()];
 
         // Add pull policy flag if not default (IfNotPresent is Docker's default)
         if let Some(pull_flag) = image_config.pull_policy.to_docker_flag() {
-            args.push("--pull".to_string());
-            args.push(pull_flag.to_string());
+            args.push("--pull".to_owned());
+            args.push(pull_flag.to_owned());
         }
 
         args.extend([
-            "--name".to_string(),
+            "--name".to_owned(),
             container_name,
-            "--user".to_string(),
+            "--user".to_owned(),
             uid.to_string(),
         ]);
 
@@ -609,24 +610,24 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
                 anyhow::anyhow!("volume_mode is true but workspace_volume is not provided")
             })?;
 
-            args.extend(["-v".to_string(), format!("{vol_name}:/workspace")]);
+            args.extend(["-v".to_owned(), format!("{vol_name}:/workspace")]);
 
             // Set working directory based on initial_workdir
             if initial_workdir.as_os_str().is_empty() {
-                "/workspace".to_string()
+                "/workspace".to_owned()
             } else {
                 format!("/workspace/{}", initial_workdir.display())
             }
         } else if repositories.is_empty() {
             // LEGACY MODE: Single repository using workdir parameter (bind mount)
             args.extend([
-                "-v".to_string(),
+                "-v".to_owned(),
                 format!("{display}:/workspace", display = workdir.display()),
             ]);
 
             // Set working directory based on initial_workdir
             if initial_workdir.as_os_str().is_empty() {
-                "/workspace".to_string()
+                "/workspace".to_owned()
             } else {
                 format!("/workspace/{}", initial_workdir.display())
             }
@@ -639,7 +640,7 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
 
             // Mount primary repository to /workspace
             args.extend([
-                "-v".to_string(),
+                "-v".to_owned(),
                 format!(
                     "{display}:/workspace",
                     display = primary_repo.worktree_path.display()
@@ -652,7 +653,7 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
                 Self::validate_mount_name(&repo.mount_name)?;
 
                 args.extend([
-                    "-v".to_string(),
+                    "-v".to_owned(),
                     format!(
                         "{src}:/repos/{mount}",
                         src = repo.worktree_path.display(),
@@ -670,21 +671,21 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
 
             // Set working directory based on primary repo's subdirectory
             if primary_repo.subdirectory.as_os_str().is_empty() {
-                "/workspace".to_string()
+                "/workspace".to_owned()
             } else {
                 format!("/workspace/{}", primary_repo.subdirectory.display())
             }
         };
 
         args.extend([
-            "-w".to_string(),
+            "-w".to_owned(),
             working_dir,
-            "-e".to_string(),
-            "TERM=xterm-256color".to_string(),
-            "-e".to_string(),
-            "COLORTERM=truecolor".to_string(),
-            "-e".to_string(),
-            "HOME=/workspace".to_string(),
+            "-e".to_owned(),
+            "TERM=xterm-256color".to_owned(),
+            "-e".to_owned(),
+            "COLORTERM=truecolor".to_owned(),
+            "-e".to_owned(),
+            "HOME=/workspace".to_owned(),
         ]);
 
         // Add extra flags from config (advanced users only)
@@ -693,7 +694,7 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
         }
 
         if agent == AgentType::Codex {
-            args.extend(["-e".to_string(), "CODEX_HOME=/workspace/.codex".to_string()]);
+            args.extend(["-e".to_owned(), "CODEX_HOME=/workspace/.codex".to_owned()]);
         }
 
         // Mount shared Rust cargo and sccache cache volumes for faster builds
@@ -702,24 +703,24 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
         // cargo caches provide dependency download caching
         // Note: Mounted under /workspace (HOME) since containers run as non-root user
         args.extend([
-            "-v".to_string(),
-            "clauderon-cargo-registry:/workspace/.cargo/registry".to_string(),
-            "-v".to_string(),
-            "clauderon-cargo-git:/workspace/.cargo/git".to_string(),
-            "-v".to_string(),
-            "clauderon-sccache:/workspace/.cache/sccache".to_string(),
+            "-v".to_owned(),
+            "clauderon-cargo-registry:/workspace/.cargo/registry".to_owned(),
+            "-v".to_owned(),
+            "clauderon-cargo-git:/workspace/.cargo/git".to_owned(),
+            "-v".to_owned(),
+            "clauderon-sccache:/workspace/.cache/sccache".to_owned(),
         ]);
 
         // Configure sccache as Rust compiler wrapper (if installed in dotfiles image)
         // If sccache is not installed, cargo will show a clear warning but continue to work
         // This is a progressive enhancement - works without sccache, better with it
         args.extend([
-            "-e".to_string(),
-            "CARGO_HOME=/workspace/.cargo".to_string(),
-            "-e".to_string(),
-            "RUSTC_WRAPPER=sccache".to_string(),
-            "-e".to_string(),
-            "SCCACHE_DIR=/workspace/.cache/sccache".to_string(),
+            "-e".to_owned(),
+            "CARGO_HOME=/workspace/.cargo".to_owned(),
+            "-e".to_owned(),
+            "RUSTC_WRAPPER=sccache".to_owned(),
+            "-e".to_owned(),
+            "SCCACHE_DIR=/workspace/.cache/sccache".to_owned(),
         ]);
 
         // Add hook communication environment variables
@@ -727,9 +728,9 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
         // (Unix sockets don't work across the macOS VM boundary in Docker/OrbStack)
         if let (Some(sid), Some(port)) = (session_id, http_port) {
             args.extend([
-                "-e".to_string(),
+                "-e".to_owned(),
                 format!("CLAUDERON_SESSION_ID={sid}"),
-                "-e".to_string(),
+                "-e".to_owned(),
                 format!("CLAUDERON_HTTP_PORT={port}"),
             ]);
         }
@@ -742,10 +743,10 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
         // - Note: The base .clauderon directory is NOT mounted for security reasons.
         //   Only specific subdirectories like uploads/ are mounted. Hooks are created
         //   inside the container via docker exec (see hooks/installer.rs).
-        let home_dir = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+        let home_dir = std::env::var("HOME").unwrap_or_else(|_| "/root".to_owned());
         let uploads_dir = format!("{home_dir}/.clauderon/uploads");
         args.extend([
-            "-v".to_string(),
+            "-v".to_owned(),
             format!("{uploads_dir}:/workspace/.clauderon/uploads"),
         ]);
 
@@ -786,7 +787,7 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
                             // - There are path conflicts in the container
                             // - The worktree and parent repo are in very different directory structures
                             args.extend([
-                                "-v".to_string(),
+                                "-v".to_owned(),
                                 format!(
                                     "{display1}:{display2}",
                                     display1 = parent_git_dir.display(),
@@ -885,26 +886,26 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
             // Required for Linux and macOS with OrbStack
             // Harmless on Docker Desktop (flag is ignored if host already exists)
             args.extend([
-                "--add-host".to_string(),
-                "host.docker.internal:host-gateway".to_string(),
+                "--add-host".to_owned(),
+                "host.docker.internal:host-gateway".to_owned(),
             ]);
 
             // Proxy environment variables
             args.extend([
-                "-e".to_string(),
+                "-e".to_owned(),
                 format!("HTTP_PROXY=http://host.docker.internal:{port}"),
-                "-e".to_string(),
+                "-e".to_owned(),
                 format!("HTTPS_PROXY=http://host.docker.internal:{port}"),
-                "-e".to_string(),
-                "NO_PROXY=localhost,127.0.0.1,host.docker.internal".to_string(),
+                "-e".to_owned(),
+                "NO_PROXY=localhost,127.0.0.1,host.docker.internal".to_owned(),
             ]);
 
             // Set dummy tokens so CLI tools will make requests (proxy replaces with real tokens)
             args.extend([
-                "-e".to_string(),
-                "GH_TOKEN=clauderon-proxy".to_string(),
-                "-e".to_string(),
-                "GITHUB_TOKEN=clauderon-proxy".to_string(),
+                "-e".to_owned(),
+                "GH_TOKEN=clauderon-proxy".to_owned(),
+                "-e".to_owned(),
+                "GITHUB_TOKEN=clauderon-proxy".to_owned(),
             ]);
 
             match agent {
@@ -912,43 +913,42 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
                     // Set placeholder OAuth token - Claude Code uses this for auth
                     // The proxy will intercept API requests and inject the real OAuth token
                     args.extend([
-                        "-e".to_string(),
-                        "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-clauderon-proxy-placeholder"
-                            .to_string(),
+                        "-e".to_owned(),
+                        "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-clauderon-proxy-placeholder".to_owned(),
                     ]);
                 }
                 AgentType::Codex => {
                     // Codex uses OpenAI API keys (exec supports CODEX_API_KEY, CLI generally uses OPENAI_API_KEY)
                     args.extend([
-                        "-e".to_string(),
-                        "OPENAI_API_KEY=sk-openai-clauderon-proxy-placeholder".to_string(),
-                        "-e".to_string(),
-                        "CODEX_API_KEY=sk-openai-clauderon-proxy-placeholder".to_string(),
+                        "-e".to_owned(),
+                        "OPENAI_API_KEY=sk-openai-clauderon-proxy-placeholder".to_owned(),
+                        "-e".to_owned(),
+                        "CODEX_API_KEY=sk-openai-clauderon-proxy-placeholder".to_owned(),
                     ]);
                 }
                 AgentType::Gemini => {
                     // Gemini uses Gemini API key
                     args.extend([
-                        "-e".to_string(),
-                        "GEMINI_API_KEY=sk-gemini-clauderon-proxy-placeholder".to_string(),
+                        "-e".to_owned(),
+                        "GEMINI_API_KEY=sk-gemini-clauderon-proxy-placeholder".to_owned(),
                     ]);
                 }
             }
 
             // SSL/TLS environment variables for CA trust
             args.extend([
-                "-e".to_string(),
-                "NODE_EXTRA_CA_CERTS=/etc/clauderon/proxy-ca.pem".to_string(),
-                "-e".to_string(),
-                "SSL_CERT_FILE=/etc/clauderon/proxy-ca.pem".to_string(),
-                "-e".to_string(),
-                "REQUESTS_CA_BUNDLE=/etc/clauderon/proxy-ca.pem".to_string(),
+                "-e".to_owned(),
+                "NODE_EXTRA_CA_CERTS=/etc/clauderon/proxy-ca.pem".to_owned(),
+                "-e".to_owned(),
+                "SSL_CERT_FILE=/etc/clauderon/proxy-ca.pem".to_owned(),
+                "-e".to_owned(),
+                "REQUESTS_CA_BUNDLE=/etc/clauderon/proxy-ca.pem".to_owned(),
             ]);
 
             // Volume mounts for proxy configs (read-only)
             // CA certificate is always mounted (required)
             args.extend([
-                "-v".to_string(),
+                "-v".to_owned(),
                 format!(
                     "{display}:/etc/clauderon/proxy-ca.pem:ro",
                     display = ca_cert_path.display()
@@ -956,7 +956,7 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
             ]);
             if codex_dir.exists() {
                 args.extend([
-                    "-v".to_string(),
+                    "-v".to_owned(),
                     format!(
                         "{display}:/etc/clauderon/codex:ro",
                         display = codex_dir.display()
@@ -967,13 +967,13 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
             // Mount and configure Talos if available
             if has_talos_config {
                 args.extend([
-                    "-v".to_string(),
+                    "-v".to_owned(),
                     format!(
                         "{display}:/etc/clauderon/talos:ro",
                         display = talos_config_dir.display()
                     ),
-                    "-e".to_string(),
-                    "TALOSCONFIG=/etc/clauderon/talos/config".to_string(),
+                    "-e".to_owned(),
+                    "TALOSCONFIG=/etc/clauderon/talos/config".to_owned(),
                 ]);
             }
         }
@@ -982,17 +982,17 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
         // Set both AUTHOR and COMMITTER variables so git commits have proper attribution
         if let Some(name) = git_user_name {
             args.extend([
-                "-e".to_string(),
+                "-e".to_owned(),
                 format!("GIT_AUTHOR_NAME={name}"),
-                "-e".to_string(),
+                "-e".to_owned(),
                 format!("GIT_COMMITTER_NAME={name}"),
             ]);
         }
         if let Some(email) = git_user_email {
             args.extend([
-                "-e".to_string(),
+                "-e".to_owned(),
                 format!("GIT_AUTHOR_EMAIL={email}"),
-                "-e".to_string(),
+                "-e".to_owned(),
                 format!("GIT_COMMITTER_EMAIL={email}"),
             ]);
         }
@@ -1054,7 +1054,7 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
                     // Mount to /workspace/.claude.json since HOME=/workspace in container
                     // Note: NOT read-only because Claude Code writes to it
                     args.extend([
-                        "-v".to_string(),
+                        "-v".to_owned(),
                         format!(
                             "{display}:/workspace/.claude.json",
                             display = claude_json_path.display()
@@ -1071,7 +1071,7 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
                         let plugin_config_path = config_dir.join("plugins/known_marketplaces.json");
                         if plugin_config_path.exists() {
                             args.extend([
-                                "-v".to_string(),
+                                "-v".to_owned(),
                                 format!(
                                     "{}:/workspace/.claude/plugins/known_marketplaces.json:ro",
                                     plugin_config_path.display()
@@ -1086,7 +1086,7 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
 
                         if host_plugins_dir.exists() {
                             args.extend([
-                                "-v".to_string(),
+                                "-v".to_owned(),
                                 format!(
                                     "{}:/workspace/.claude/plugins/marketplaces:ro",
                                     host_plugins_dir.display()
@@ -1121,7 +1121,7 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
                         );
                     } else {
                         args.extend([
-                            "-v".to_string(),
+                            "-v".to_owned(),
                             format!(
                                 "{}:/etc/claude-code/managed-settings.json:ro",
                                 managed_settings_path.display()
@@ -1151,7 +1151,7 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
                     let escaped = arg.replace('\'', "'\\''");
                     format!("'{escaped}'")
                 } else {
-                    arg.to_string()
+                    arg.to_owned()
                 }
             };
 
@@ -1177,8 +1177,8 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
                     // Add print mode flags if enabled
                     if print_mode {
                         // Insert after "claude" but before other args
-                        cmd_vec.insert(1, "--print".to_string());
-                        cmd_vec.insert(2, "--verbose".to_string());
+                        cmd_vec.insert(1, "--print".to_owned());
+                        cmd_vec.insert(2, "--verbose".to_owned());
                     }
 
                     // If we have a session ID, generate a wrapper script that handles restart
@@ -1186,8 +1186,8 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
                         let session_id_str = sid.to_string();
 
                         // Build the create command (for first run)
-                        let mut create_cmd = vec!["claude".to_string()];
-                        create_cmd.push("--session-id".to_string());
+                        let mut create_cmd = vec!["claude".to_owned()];
+                        create_cmd.push("--session-id".to_owned());
                         create_cmd.push(session_id_str.clone());
                         // Add remaining args (skip "claude" at index 0)
                         create_cmd.extend(cmd_vec.iter().skip(1).cloned());
@@ -1217,7 +1217,7 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
                         // Claude Code stores session history at: .claude/projects/<project-path>/<session-id>.jsonl
                         // where project-path is the working directory with / replaced by -
                         let project_path = if initial_workdir.as_os_str().is_empty() {
-                            "-workspace".to_string()
+                            "-workspace".to_owned()
                         } else {
                             format!(
                                 "-workspace-{}",
@@ -1260,13 +1260,13 @@ if [ -f /etc/clauderon/codex/config.toml ]; then
     cp /etc/clauderon/codex/config.toml "$CODEX_HOME/config.toml"
 fi"#;
                     if print_mode {
-                        let mut cmd_vec = vec!["codex".to_string()];
+                        let mut cmd_vec = vec!["codex".to_owned()];
                         if dangerous_skip_checks {
-                            cmd_vec.push("--full-auto".to_string());
+                            cmd_vec.push("--full-auto".to_owned());
                         }
-                        cmd_vec.push("exec".to_string());
+                        cmd_vec.push("exec".to_owned());
                         for image in &translated_images {
-                            cmd_vec.push("--image".to_string());
+                            cmd_vec.push("--image".to_owned());
                             cmd_vec.push(image.clone());
                         }
                         if !escaped_prompt.is_empty() {
@@ -1292,12 +1292,12 @@ fi"#;
                             .collect::<Vec<_>>()
                             .join(" ");
 
-                        let mut resume_cmd_vec = vec!["codex".to_string()];
+                        let mut resume_cmd_vec = vec!["codex".to_owned()];
                         if dangerous_skip_checks {
-                            resume_cmd_vec.push("--full-auto".to_string());
+                            resume_cmd_vec.push("--full-auto".to_owned());
                         }
-                        resume_cmd_vec.push("resume".to_string());
-                        resume_cmd_vec.push("--last".to_string());
+                        resume_cmd_vec.push("resume".to_owned());
+                        resume_cmd_vec.push("--last".to_owned());
                         let resume_cmd_str = resume_cmd_vec
                             .iter()
                             .map(|a| quote_arg(a))
@@ -1330,7 +1330,7 @@ fi"#,
 
                     // Add print mode flags if enabled
                     if print_mode {
-                        cmd_vec.insert(1, "--print".to_string());
+                        cmd_vec.insert(1, "--print".to_owned());
                     }
 
                     // If we have a session ID, generate a wrapper script that handles restart
@@ -1338,8 +1338,8 @@ fi"#,
                         let session_id_str = sid.to_string();
 
                         // Build the create command (for first run)
-                        let mut create_cmd = vec!["gemini".to_string()];
-                        create_cmd.push("--session-id".to_string());
+                        let mut create_cmd = vec!["gemini".to_owned()];
+                        create_cmd.push("--session-id".to_owned());
                         create_cmd.push(session_id_str.clone());
                         // Add remaining args (skip "gemini" at index 0)
                         create_cmd.extend(cmd_vec.iter().skip(1).cloned());
@@ -1364,7 +1364,7 @@ fi"#,
 
                         // Generate wrapper script that detects restart via session history file
                         let project_path = if initial_workdir.as_os_str().is_empty() {
-                            "-workspace".to_string()
+                            "-workspace".to_owned()
                         } else {
                             format!(
                                 "-workspace-{}",
@@ -1401,8 +1401,8 @@ fi"#,
 
         args.extend([
             image_config.image.clone(),
-            "bash".to_string(),
-            "-c".to_string(),
+            "bash".to_owned(),
+            "-c".to_owned(),
             agent_cmd,
         ]);
 
@@ -1420,10 +1420,70 @@ fi"#,
     #[must_use]
     pub fn build_attach_args(name: &str) -> Vec<String> {
         vec![
-            "bash".to_string(),
-            "-c".to_string(),
+            "bash".to_owned(),
+            "-c".to_owned(),
             format!("docker start {name} 2>/dev/null; docker attach {name}"),
         ]
+    }
+
+    // Legacy method names for backward compatibility during migration
+
+    /// Create a new Docker container (legacy name)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the container creation fails.
+    #[deprecated(note = "Use ExecutionBackend::create instead")]
+    pub async fn create_container(
+        &self,
+        name: &str,
+        workdir: &Path,
+        initial_prompt: &str,
+    ) -> anyhow::Result<String> {
+        self.create(
+            name,
+            workdir,
+            initial_prompt,
+            super::traits::CreateOptions {
+                agent: AgentType::ClaudeCode,
+                model: None, // Use default model
+                print_mode: false,
+                plan_mode: true, // Default to plan mode
+                session_proxy_port: None,
+                images: vec![],
+                dangerous_skip_checks: false,
+                dangerous_copy_creds: false, // Docker is local, no copy-creds needed
+                session_id: None,
+                initial_workdir: std::path::PathBuf::new(),
+                http_port: None,
+                container_image: None,
+                container_resources: None,
+                repositories: vec![], // Legacy single-repo mode
+                storage_class_override: None,
+                volume_mode: false,
+            },
+        )
+        .await
+    }
+
+    /// Check if a Docker container exists (legacy name)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the Docker command fails.
+    #[deprecated(note = "Use ExecutionBackend::exists instead")]
+    pub async fn container_exists(&self, name: &str) -> anyhow::Result<bool> {
+        self.exists(name).await
+    }
+
+    /// Delete a Docker container (legacy name)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the Docker command fails.
+    #[deprecated(note = "Use ExecutionBackend::delete instead")]
+    pub async fn delete_container(&self, name: &str) -> anyhow::Result<()> {
+        self.delete(name).await
     }
 }
 
@@ -1546,7 +1606,7 @@ impl ExecutionBackend for DockerBackend {
             anyhow::bail!("Failed to create Docker container: {stderr}");
         }
 
-        let container_id = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let container_id = String::from_utf8_lossy(&output.stdout).trim().to_owned();
 
         tracing::info!(
             container_id = %container_id,
@@ -1695,7 +1755,7 @@ impl ExecutionBackend for DockerBackend {
                 Ok(super::traits::BackendResourceHealth::Stopped)
             }
             "dead" => Ok(super::traits::BackendResourceHealth::Error {
-                message: "Container is in dead state".to_string(),
+                message: "Container is in dead state".to_owned(),
             }),
             "restarting" => Ok(super::traits::BackendResourceHealth::Pending),
             other => Ok(super::traits::BackendResourceHealth::Error {
@@ -1725,67 +1785,6 @@ impl ExecutionBackend for DockerBackend {
 
         tracing::info!(container = %name, "Successfully started Docker container");
         Ok(())
-    }
-}
-
-// Legacy method names for backward compatibility during migration
-impl DockerBackend {
-    /// Create a new Docker container (legacy name)
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the container creation fails.
-    #[deprecated(note = "Use ExecutionBackend::create instead")]
-    pub async fn create_container(
-        &self,
-        name: &str,
-        workdir: &Path,
-        initial_prompt: &str,
-    ) -> anyhow::Result<String> {
-        self.create(
-            name,
-            workdir,
-            initial_prompt,
-            super::traits::CreateOptions {
-                agent: AgentType::ClaudeCode,
-                model: None, // Use default model
-                print_mode: false,
-                plan_mode: true, // Default to plan mode
-                session_proxy_port: None,
-                images: vec![],
-                dangerous_skip_checks: false,
-                dangerous_copy_creds: false, // Docker is local, no copy-creds needed
-                session_id: None,
-                initial_workdir: std::path::PathBuf::new(),
-                http_port: None,
-                container_image: None,
-                container_resources: None,
-                repositories: vec![], // Legacy single-repo mode
-                storage_class_override: None,
-                volume_mode: false,
-            },
-        )
-        .await
-    }
-
-    /// Check if a Docker container exists (legacy name)
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the Docker command fails.
-    #[deprecated(note = "Use ExecutionBackend::exists instead")]
-    pub async fn container_exists(&self, name: &str) -> anyhow::Result<bool> {
-        self.exists(name).await
-    }
-
-    /// Delete a Docker container (legacy name)
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the Docker command fails.
-    #[deprecated(note = "Use ExecutionBackend::delete instead")]
-    pub async fn delete_container(&self, name: &str) -> anyhow::Result<()> {
-        self.delete(name).await
     }
 }
 
@@ -1824,12 +1823,12 @@ mod tests {
 
         // Must have -dit for interactive TTY sessions
         assert!(
-            args.contains(&"-dit".to_string()),
+            args.contains(&"-dit".to_owned()),
             "Expected -dit flag for TTY allocation, got: {args:?}"
         );
         // Should NOT have plain -d
         assert!(
-            !args.contains(&"-d".to_string()),
+            !args.contains(&"-d".to_owned()),
             "Should not use -d alone, need -dit for interactive sessions"
         );
     }
@@ -2186,7 +2185,7 @@ mod tests {
 
         // Create talos directory so it gets mounted
         let talos_dir = clauderon_dir.path().join("talos");
-        std::fs::create_dir(&talos_dir).expect("Failed to create talos dir");
+        std::fs::create_dir_all(&talos_dir).expect("Failed to create talos dir");
         std::fs::write(talos_dir.join("config"), "dummy").expect("Failed to write talos config");
 
         let proxy_config = DockerProxyConfig::new(18100, clauderon_dir.path().to_path_buf());
@@ -2601,7 +2600,7 @@ mod tests {
         use tempfile::tempdir;
 
         let temp_dir = tempdir().expect("Failed to create temp dir");
-        let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
+        let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_owned());
         let session_id = uuid::Uuid::new_v4();
         let host_path = format!("{home}/.clauderon/uploads/{session_id}/test-image.png");
 

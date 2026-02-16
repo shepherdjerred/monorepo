@@ -6,6 +6,7 @@ use tracing::instrument;
 use super::traits::GitOperations;
 
 /// Git worktree backend
+#[derive(Debug, Copy, Clone)]
 pub struct GitBackend;
 
 impl GitBackend {
@@ -73,7 +74,7 @@ impl GitOperations for GitBackend {
 
                 // Build warning message, handling empty stderr
                 let warning_msg = if stderr.trim().is_empty() {
-                    "Post-checkout hook failed (no error output)".to_string()
+                    "Post-checkout hook failed (no error output)".to_owned()
                 } else {
                     format!("Post-checkout hook failed: {stderr}")
                 };
@@ -156,7 +157,7 @@ impl GitOperations for GitBackend {
             anyhow::bail!("Failed to get branch: {stderr}");
         }
 
-        let branch = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let branch = String::from_utf8_lossy(&output.stdout).trim().to_owned();
         Ok(branch)
     }
 }

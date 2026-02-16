@@ -1,0 +1,21 @@
+# ~/.bash_env - Sourced by all bash shells via BASH_ENV and shell configs
+# This ensures mise and brew are available in scripts and non-interactive shells
+
+# Add Linuxbrew to PATH if not already present
+if [[ ":$PATH:" != *":/home/linuxbrew/.linuxbrew/bin:"* ]]; then
+    export PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH"
+fi
+
+# Add user local bin
+if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+
+# Activate mise shims if mise is available
+if command -v mise &>/dev/null; then
+    eval "$(mise activate bash --shims)"
+fi
+
+# Fix gRPC DNS resolution for Tailscale split DNS on macOS
+# Required for tools like talosctl to resolve Tailscale hostnames
+export GRPC_DNS_RESOLVER=native

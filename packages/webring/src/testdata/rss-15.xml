@@ -1,0 +1,731 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><generator uri="https://jekyllrb.com/" version="3.9.3">Jekyll</generator><link href="https://awesomekling.github.io/feed.xml" rel="self" type="application/atom+xml"/><link href="https://awesomekling.github.io/" rel="alternate" type="text/html"/><updated>2023-04-07T06:15:44+00:00</updated><id>https://awesomekling.github.io/feed.xml</id><title type="html">Andreas Kling</title><subtitle>I like computers!</subtitle><entry><title type="html">Making myself uncomfortable again</title><link href="https://awesomekling.github.io/Making-myself-uncomfortable-again/" rel="alternate" type="text/html" title="Making myself uncomfortable again"/><published>2023-04-07T00:00:00+00:00</published><updated>2023-04-07T00:00:00+00:00</updated><id>https://awesomekling.github.io/Making-myself-uncomfortable-again</id><content type="html" xml:base="https://awesomekling.github.io/Making-myself-uncomfortable-again/">&lt;p&gt;In early 2019, some months after completing a rehab program for drug addiction, I was in a very open-minded headspace where I wanted to challenge myself and find ways to improve as a person.&lt;/p&gt;
+
+&lt;p&gt;Drugs had filled my life with secrecy and lies, but that life was over. Although I was unsure of my next steps, I was so tired of the secrecy that I couldn’t think of anything I’d rather change about myself.&lt;/p&gt;
+
+&lt;p&gt;So, roughly 6 months into the SerenityOS project, I started making YouTube videos to document my progress. At the time, I was still working on the project alone, and I thought video could be an engaging format.&lt;/p&gt;
+
+&lt;p&gt;The first videos were simple programming sessions, filled with clumsiness and mumbling. I made lots of mistakes and mumbled even more while fixing them. Over time, I improved, and also starting making monthly SerenityOS update videos – a tradition which is still going today.&lt;/p&gt;
+
+&lt;p&gt;Eventually, I began recording myself driving to work, and that’s when I truly opened up. In these car videos, I discussed programming, job experiences, motivation, operating systems, and many other topics. As I grew more comfortable, I eventually shared my history with drug addiction and how it inspired the name “SerenityOS” as well. People were incredibly supportive, and for the first time since childhood I felt accepted for who I really was.&lt;/p&gt;
+
+&lt;h2 id="where-i-am-today"&gt;Where I am today&lt;/h2&gt;
+
+&lt;p&gt;Just two weeks ago, I posted my 1000th video to YouTube. That’s a &lt;em&gt;lot&lt;/em&gt; of videos. With more than 39,600 subscribers, I’ve been able to share my work, thoughts and knowledge with more people than I ever imagined.&lt;/p&gt;
+
+&lt;p&gt;Moreover, I’ve attracted hundreds of people to collaborate on SerenityOS with me, many of whom are still active contributors today. This experience has brought me immense joy.&lt;/p&gt;
+
+&lt;p&gt;At this point, I feel like I’ve accomplished my goal of becoming comfortable on camera and learned to embrace authenticity, leaving the secrecy and lies behind.&lt;/p&gt;
+
+&lt;p&gt;Now, I’m ready to face a new challenge and feel uncomfortable once again!&lt;/p&gt;
+
+&lt;h2 id="writing-a-new-frontier"&gt;Writing: a new frontier&lt;/h2&gt;
+
+&lt;p&gt;Writing has always intimidated me. While I can manage short bursts (like Tweets), I’ve rarely practiced writing anything more substantial. This is something I’m &lt;em&gt;incredibly&lt;/em&gt; uncomfortable with, and I feel like it’s time to confront it.&lt;/p&gt;
+
+&lt;p&gt;So, here’s what I’m going to do: I’ll be taking a break from making my usual “unprepared” videos (i.e everything other than SerenityOS update videos), and focus instead on writing. I will write posts like this one, but also technical posts, book reviews, etc.&lt;/p&gt;
+
+&lt;p&gt;As I write this, a mix of fear and excitement fills my heart. I feel intimidated and out of my element, and this tells me I’m on the right track.&lt;/p&gt;
+
+&lt;p&gt;With this, I aim to become significantly better at writing. I also hope to become better at thinking. I tend to think in English, so it seems logical that improving my command of English will improve my ability to think as well.&lt;/p&gt;
+
+&lt;p&gt;To follow along on my new journey, stay tuned for regular blog updates and post announcements on my &lt;a href="https://twitter.com/awesomekling"&gt;Twitter&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;It’s going to be bumpy at first, but I’ll do my best to improve quickly.&lt;/p&gt;
+
+&lt;p&gt;Thank you for reading! I hope to see you here again.&lt;/p&gt;</content><author><name/></author><category term="personal"/><category term="writing"/><category term="self-improvement"/><summary type="html">In early 2019, some months after completing a rehab program for drug addiction, I was in a very open-minded headspace where I wanted to challenge myself and find ways to improve as a person.</summary></entry><entry><title type="html">MutexProtected: A C++ Pattern for Easier Concurrency</title><link href="https://awesomekling.github.io/MutexProtected-A-C++-Pattern-for-Easier-Concurrency/" rel="alternate" type="text/html" title="MutexProtected: A C++ Pattern for Easier Concurrency"/><published>2023-04-06T00:00:00+00:00</published><updated>2023-04-06T00:00:00+00:00</updated><id>https://awesomekling.github.io/MutexProtected-A-C++-Pattern-for-Easier-Concurrency</id><content type="html" xml:base="https://awesomekling.github.io/MutexProtected-A-C++-Pattern-for-Easier-Concurrency/">&lt;p&gt;In this post, we will discuss the challenges of programming with locks and how the C++ language offers some useful tools to make it easier. We will start with an example in C and then use C++ to improve upon it in steps. The example APIs are based on real-life APIs from the &lt;a href="https://github.com/SerenityOS/serenity"&gt;SerenityOS&lt;/a&gt; kernel.&lt;/p&gt;
+
+&lt;h3 id="barebones-example-in-c"&gt;Barebones example in C&lt;/h3&gt;
+
+&lt;p&gt;Let’s imagine a struct &lt;code class="language-plaintext highlighter-rouge"&gt;Thing&lt;/code&gt; with a field &lt;code class="language-plaintext highlighter-rouge"&gt;field&lt;/code&gt; that will be accessed by multiple threads. We’ll use a mutex &lt;code class="language-plaintext highlighter-rouge"&gt;mutex&lt;/code&gt; to ensure that only one thread can access it at a time.&lt;/p&gt;
+
+&lt;div class="language-c highlighter-rouge"&gt;&lt;div class="highlight"&gt;&lt;pre class="highlight"&gt;&lt;code&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="n"&gt;Thing&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;Mutex&lt;/span&gt; &lt;span class="n"&gt;mutex&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="n"&gt;Field&lt;/span&gt; &lt;span class="n"&gt;field&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;};&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In C, accessing &lt;code class="language-plaintext highlighter-rouge"&gt;Thing&lt;/code&gt; would typically look something like this:&lt;/p&gt;
+
+&lt;div class="language-c highlighter-rouge"&gt;&lt;div class="highlight"&gt;&lt;pre class="highlight"&gt;&lt;code&gt;&lt;span class="n"&gt;mutex_lock&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;thing&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;mutex&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="n"&gt;use&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;thing&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;field&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="n"&gt;mutex_unlock&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;thing&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;mutex&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;An obvious problem in the C version is that the mutex must be manually unlocked. Forgetting to unlock a mutex tends to have unpleasant consequences.&lt;/p&gt;
+
+&lt;h3 id="improving-it-with-a-c-raii-class"&gt;Improving it with a C++ RAII class&lt;/h3&gt;
+
+&lt;p&gt;The “forgot to unlock” problem is easily solved in C++ with a RAII class for automatic locking &amp;amp; unlocking:&lt;/p&gt;
+
+&lt;div class="language-cpp highlighter-rouge"&gt;&lt;div class="highlight"&gt;&lt;pre class="highlight"&gt;&lt;code&gt;&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;MutexLocker&lt;/span&gt; &lt;span class="n"&gt;locker&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;thing&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;mutex&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;use&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;thing&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;field&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The &lt;code class="language-plaintext highlighter-rouge"&gt;MutexLocker&lt;/code&gt; locks the mutex when constructed and unlocks it when destroyed. No need for a manual call to &lt;code class="language-plaintext highlighter-rouge"&gt;mutex_unlock()&lt;/code&gt; anymore.&lt;/p&gt;
+
+&lt;p&gt;That’s already pretty good! However, the &lt;code class="language-plaintext highlighter-rouge"&gt;MutexLocker&lt;/code&gt; approach still has some major shortcomings:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;You can still forget to &lt;em&gt;lock&lt;/em&gt; the mutex and access &lt;code class="language-plaintext highlighter-rouge"&gt;field&lt;/code&gt; anyway.&lt;/li&gt;
+  &lt;li&gt;Developers who are unfamiliar with this code may not realize that &lt;code class="language-plaintext highlighter-rouge"&gt;mutex&lt;/code&gt; and &lt;code class="language-plaintext highlighter-rouge"&gt;field&lt;/code&gt; have this important relationship.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Even so, the &lt;code class="language-plaintext highlighter-rouge"&gt;MutexLocker&lt;/code&gt; was our favored pattern in SerenityOS up until 2021, when we introduced a new pattern to the codebase.&lt;/p&gt;
+
+&lt;h3 id="adding-lambdas-to-the-mix-introducing-mutexprotected"&gt;Adding lambdas to the mix: introducing &lt;code class="language-plaintext highlighter-rouge"&gt;MutexProtected&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;code class="language-plaintext highlighter-rouge"&gt;MutexProtected&lt;/code&gt; is a powerful C++ construct that addresses the main issues with &lt;code class="language-plaintext highlighter-rouge"&gt;MutexLocker&lt;/code&gt; and makes it significantly easier to use mutexes correctly:&lt;/p&gt;
+
+&lt;div class="language-cpp highlighter-rouge"&gt;&lt;div class="highlight"&gt;&lt;pre class="highlight"&gt;&lt;code&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;Thing&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;MutexProtected&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Field&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;field&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;};&lt;/span&gt;
+
+&lt;span class="n"&gt;thing&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;field&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;with&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="p"&gt;](&lt;/span&gt;&lt;span class="n"&gt;Field&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt; &lt;span class="n"&gt;field&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;use&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;field&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="p"&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Essentially, &lt;code class="language-plaintext highlighter-rouge"&gt;MutexProtected&amp;lt;T&amp;gt;&lt;/code&gt; is a bundled mutex and &lt;code class="language-plaintext highlighter-rouge"&gt;T&lt;/code&gt;. However, you can’t access the &lt;code class="language-plaintext highlighter-rouge"&gt;T&lt;/code&gt; directly! The only way we’ll let you access the &lt;code class="language-plaintext highlighter-rouge"&gt;T&lt;/code&gt; is by calling &lt;code class="language-plaintext highlighter-rouge"&gt;with()&lt;/code&gt; and passing it a callback that takes a &lt;code class="language-plaintext highlighter-rouge"&gt;T&amp;amp;&lt;/code&gt; parameter.&lt;/p&gt;
+
+&lt;p&gt;When called, &lt;code class="language-plaintext highlighter-rouge"&gt;with()&lt;/code&gt; locks the mutex, then invokes the callback, and finally unlocks the mutex again before returning.&lt;/p&gt;
+
+&lt;p&gt;As you can see, we’ve now also solved the issue of someone forgetting to &lt;em&gt;lock&lt;/em&gt; the mutex before accessing the field. And not only that, but since the mutex and field have been combined into a single variable, you no longer have to be aware of the relationship between the two. It’s been encoded into the type system!&lt;/p&gt;
+
+&lt;p&gt;When multiple fields are protected by a single mutex, we can simply combine them into a struct:&lt;/p&gt;
+
+&lt;div class="language-cpp highlighter-rouge"&gt;&lt;div class="highlight"&gt;&lt;pre class="highlight"&gt;&lt;code&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;ManyFields&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;Field1&lt;/span&gt; &lt;span class="n"&gt;field1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="n"&gt;Field2&lt;/span&gt; &lt;span class="n"&gt;field2&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="n"&gt;Field3&lt;/span&gt; &lt;span class="n"&gt;field3&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;};&lt;/span&gt;
+
+&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;Thing&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;MutexProtected&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;ManyFields&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;fields&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;};&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Note that it’s still possible to make mistakes with &lt;code class="language-plaintext highlighter-rouge"&gt;MutexProtected&lt;/code&gt;, such as deadlocking the program by using multiple &lt;code class="language-plaintext highlighter-rouge"&gt;MutexProtected&lt;/code&gt; simultaneously in inconsistent order. Thankfully such bugs are generally trivial to diagnose compared to data races.&lt;/p&gt;
+
+&lt;p&gt;That concludes our look at &lt;code class="language-plaintext highlighter-rouge"&gt;MutexProtected&lt;/code&gt;. If you’re currently working on a C++ project using mainly the &lt;code class="language-plaintext highlighter-rouge"&gt;MutexLocker&lt;/code&gt; approach, consider adding something like our &lt;code class="language-plaintext highlighter-rouge"&gt;MutexProtected&lt;/code&gt; to further reduce the chances of using locks incorrectly.&lt;/p&gt;
+
+&lt;p&gt;You can find the SerenityOS implementation &lt;a href="https://github.com/SerenityOS/serenity/blob/master/Kernel/Locking/MutexProtected.h"&gt;on GitHub&lt;/a&gt;. (Note that it’s a little more sophisticated than the imaginary &lt;code class="language-plaintext highlighter-rouge"&gt;MutexProtected&lt;/code&gt; I’ve used for examples above.)&lt;/p&gt;
+
+&lt;h3 id="final-notes"&gt;Final notes&lt;/h3&gt;
+
+&lt;p&gt;Although &lt;code class="language-plaintext highlighter-rouge"&gt;MutexProtected&lt;/code&gt; was introduced to SerenityOS in 2021, we do still have a lot of code using the old &lt;code class="language-plaintext highlighter-rouge"&gt;MutexLocker&lt;/code&gt; pattern. There are still cases where &lt;code class="language-plaintext highlighter-rouge"&gt;MutexLocker&lt;/code&gt; works better, for example when a mutex is used to synchronize something other than data.&lt;/p&gt;
+
+&lt;p&gt;And yes, it &lt;em&gt;is&lt;/em&gt; possible to make life difficult by persisting the &lt;code class="language-plaintext highlighter-rouge"&gt;T&amp;amp;&lt;/code&gt; to an outside location while inside the callback. This is C++ after all, so the programmer does have great freedom. However, doing so is definitely not recommended, and we have yet to encounter anyone trying to do this in our codebase.&lt;/p&gt;</content><author><name/></author><category term="technical"/><category term="cpp"/><category term="serenityos"/><summary type="html">In this post, we will discuss the challenges of programming with locks and how the C++ language offers some useful tools to make it easier. We will start with an example in C and then use C++ to improve upon it in steps. The example APIs are based on real-life APIs from the SerenityOS kernel.</summary></entry><entry><title type="html">Excellence is a habit, but so is failure</title><link href="https://awesomekling.github.io/Excellence-is-a-habit-but-so-is-failure/" rel="alternate" type="text/html" title="Excellence is a habit, but so is failure"/><published>2023-04-05T00:00:00+00:00</published><updated>2023-04-05T00:00:00+00:00</updated><id>https://awesomekling.github.io/Excellence-is-a-habit-but-so-is-failure</id><content type="html" xml:base="https://awesomekling.github.io/Excellence-is-a-habit-but-so-is-failure/">&lt;p&gt;We often hear that making small incremental improvements every day can lead to great things. This popular piece of advice rings true, and it’s a powerful reminder to keep pushing ourselves forward.&lt;/p&gt;
+
+&lt;p&gt;But there’s another side to this story that we don’t discuss as often: how incremental neglect and small missteps can accumulate and lead to negative outcomes. Recognizing and addressing these patterns of neglect early can make a significant difference in preventing larger problems down the road.&lt;/p&gt;
+
+&lt;p&gt;Reflecting on my own life, I’ve noticed that most of the things that really went off-track were indeed consequences of incremental neglect and numerous small yet poor choices:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;I didn’t become addicted to drugs overnight. It happened over hundreds of moments where I prioritized momentary pleasure over health and safety.&lt;/li&gt;
+  &lt;li&gt;I didn’t become overweight overnight. It happened over hundreds of moments where I opted for immediate gratification over long-term health.&lt;/li&gt;
+  &lt;li&gt;I didn’t ruin relationships overnight. It happened over hundreds of moments where I chose comfort over confronting difficult conversations, admitting my mistakes, or even just acknowledging that someone was better than me at something.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;From these experiences, I’ve realized that avoiding bad habits is just as important as cultivating good habits.&lt;/p&gt;
+
+&lt;p&gt;To address these kinds of issues, we must become aware of our patterns of incremental neglect and then take deliberate steps to counteract them and foster healthier habits.&lt;/p&gt;</content><author><name/></author><category term="personal"/><category term="non-technical"/><category term="self-improvement"/><summary type="html">We often hear that making small incremental improvements every day can lead to great things. This popular piece of advice rings true, and it’s a powerful reminder to keep pushing ourselves forward.</summary></entry><entry><title type="html">How SerenityOS declares ssize_t</title><link href="https://awesomekling.github.io/How-SerenityOS-declares-ssize_t/" rel="alternate" type="text/html" title="How SerenityOS declares ssize_t"/><published>2023-04-04T00:00:00+00:00</published><updated>2023-04-04T00:00:00+00:00</updated><id>https://awesomekling.github.io/How-SerenityOS-declares-ssize_t</id><content type="html" xml:base="https://awesomekling.github.io/How-SerenityOS-declares-ssize_t/">&lt;p&gt;This post explores one of my favorite hacks in &lt;a href="https://github.com/SerenityOS/serenity"&gt;SerenityOS&lt;/a&gt;. I don’t recommend doing this in your codebase, but it has worked for us so far. :^)&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id="background"&gt;Background&lt;/h2&gt;
+
+&lt;p&gt;&lt;code class="language-plaintext highlighter-rouge"&gt;size_t&lt;/code&gt; and &lt;code class="language-plaintext highlighter-rouge"&gt;ssize_t&lt;/code&gt; are common types used in many POSIX APIs.
+&lt;a href="https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/sys_types.h.html"&gt;According to POSIX&lt;/a&gt;,
+they are used as follows:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class="language-plaintext highlighter-rouge"&gt;size_t&lt;/code&gt;: Used for sizes of objects.&lt;/li&gt;
+  &lt;li&gt;&lt;code class="language-plaintext highlighter-rouge"&gt;ssize_t&lt;/code&gt;: Used for a count of bytes or an error indication.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In practice, &lt;code class="language-plaintext highlighter-rouge"&gt;ssize_t&lt;/code&gt; is essentially a “signed &lt;code class="language-plaintext highlighter-rouge"&gt;size_t&lt;/code&gt;”.&lt;/p&gt;
+
+&lt;p&gt;Since we’re building the whole operating system, including the standard C library ourselves,
+we’re also responsible for declaring all the common system types, including &lt;code class="language-plaintext highlighter-rouge"&gt;size_t&lt;/code&gt; and &lt;code class="language-plaintext highlighter-rouge"&gt;ssize_t&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id="how-we-declare-them"&gt;How we declare them&lt;/h2&gt;
+
+&lt;p&gt;To &lt;a href="https://github.com/SerenityOS/serenity/blob/master/Userland/Libraries/LibC/stddef.h#L20"&gt;declare&lt;/a&gt; &lt;code class="language-plaintext highlighter-rouge"&gt;size_t&lt;/code&gt;, we leverage the C preprocessor’s predefined &lt;code class="language-plaintext highlighter-rouge"&gt;__SIZE_TYPE__&lt;/code&gt; macro:&lt;/p&gt;
+
+&lt;div class="language-c highlighter-rouge"&gt;&lt;div class="highlight"&gt;&lt;pre class="highlight"&gt;&lt;code&gt;&lt;span class="k"&gt;typedef&lt;/span&gt; &lt;span class="n"&gt;__SIZE_TYPE__&lt;/span&gt; &lt;span class="kt"&gt;size_t&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;However, there is no &lt;code class="language-plaintext highlighter-rouge"&gt;__SSIZE_TYPE__&lt;/code&gt; macro for &lt;code class="language-plaintext highlighter-rouge"&gt;ssize_t&lt;/code&gt;, so I decided to get a little &lt;a href="https://github.com/SerenityOS/serenity/blob/master/Kernel/API/POSIX/sys/types.h#L18"&gt;creative&lt;/a&gt;:&lt;/p&gt;
+
+&lt;div class="language-c highlighter-rouge"&gt;&lt;div class="highlight"&gt;&lt;pre class="highlight"&gt;&lt;code&gt;&lt;span class="cp"&gt;#define unsigned signed
+&lt;/span&gt;&lt;span class="k"&gt;typedef&lt;/span&gt; &lt;span class="n"&gt;__SIZE_TYPE__&lt;/span&gt; &lt;span class="kt"&gt;ssize_t&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="cp"&gt;#undef unsigned
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Here’s what’s happening: The C preprocessor expands “&lt;code class="language-plaintext highlighter-rouge"&gt;__SIZE_TYPE__&lt;/code&gt;” to “&lt;code class="language-plaintext highlighter-rouge"&gt;unsigned long&lt;/code&gt;” or something similar.
+We trick it by temporarily defining a macro that replaces “&lt;code class="language-plaintext highlighter-rouge"&gt;unsigned&lt;/code&gt;” with “&lt;code class="language-plaintext highlighter-rouge"&gt;signed&lt;/code&gt;”, and so &lt;code class="language-plaintext highlighter-rouge"&gt;ssize_t&lt;/code&gt; is declared as a signed version of whatever the &lt;code class="language-plaintext highlighter-rouge"&gt;size_t&lt;/code&gt; type is!&lt;/p&gt;
+
+&lt;h2 id="how-others-declare-them"&gt;How others declare them&lt;/h2&gt;
+
+&lt;p&gt;Other C libraries typically use more careful techniques, such as wrapping the declarations in architecture-specific &lt;code class="language-plaintext highlighter-rouge"&gt;#ifdef&lt;/code&gt;s:&lt;/p&gt;
+
+&lt;div class="language-c highlighter-rouge"&gt;&lt;div class="highlight"&gt;&lt;pre class="highlight"&gt;&lt;code&gt;&lt;span class="cp"&gt;#ifdef __i386__
+&lt;/span&gt;&lt;span class="k"&gt;typedef&lt;/span&gt; &lt;span class="kt"&gt;uint32_t&lt;/span&gt; &lt;span class="kt"&gt;size_t&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;typedef&lt;/span&gt; &lt;span class="kt"&gt;int32_t&lt;/span&gt; &lt;span class="kt"&gt;ssize_t&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="cp"&gt;#endif
+&lt;/span&gt;
+&lt;span class="cp"&gt;#ifdef __x86_64__
+&lt;/span&gt;&lt;span class="k"&gt;typedef&lt;/span&gt; &lt;span class="kt"&gt;uint64_t&lt;/span&gt; &lt;span class="kt"&gt;size_t&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;typedef&lt;/span&gt; &lt;span class="kt"&gt;int64_t&lt;/span&gt; &lt;span class="kt"&gt;ssize_t&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="cp"&gt;#endif
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;That’s obviously a better approach if you’re building with compilers that don’t predefine &lt;code class="language-plaintext highlighter-rouge"&gt;__SIZE_TYPE__&lt;/code&gt;, or in an environment where &lt;code class="language-plaintext highlighter-rouge"&gt;unsigned&lt;/code&gt; has already been redefined.&lt;/p&gt;
+
+&lt;p&gt;In our case, we haven’t had any issues with our approach yet, so I’m inclined to hold on to the hack as it’s just so cute. :^)&lt;/p&gt;</content><author><name/></author><category term="serenityos"/><category term="technical"/><category term="unix"/><category term="cpp"/><summary type="html">This post explores one of my favorite hacks in SerenityOS. I don’t recommend doing this in your codebase, but it has worked for us so far. :^)</summary></entry><entry><title type="html">15 Minutes Every Day</title><link href="https://awesomekling.github.io/15-minutes-every-day/" rel="alternate" type="text/html" title="15 Minutes Every Day"/><published>2023-04-03T00:00:00+00:00</published><updated>2023-04-03T00:00:00+00:00</updated><id>https://awesomekling.github.io/15-minutes-every-day</id><content type="html" xml:base="https://awesomekling.github.io/15-minutes-every-day/">&lt;p&gt;Someone once suggested that I set aside a small portion of my income every month. I’ve been doing this for years with an automatic bank transfer so I can’t mess it up.&lt;/p&gt;
+
+&lt;p&gt;I was reflecting on this habit recently, and had a thought: what if I treated cleaning the same way?&lt;/p&gt;
+
+&lt;p&gt;I’ve never been good at cleaning. Every place I ever lived was a bit messy, except when expecting a visitor.&lt;/p&gt;
+
+&lt;p&gt;The idea became: every day I’d “invest” 15 minutes into our home by picking a small cleaning task and doing it immediately after breakfast. I shared the idea with my wife, and we agreed to test it out together.&lt;/p&gt;
+
+&lt;p&gt;For the first few days, we found things to do easily, such as organizing cables, tools, pantry items and clothes. Then, we moved on to cleaning tasks, like scrubbing cabinets, washing floors, and cleaning the sofa.&lt;/p&gt;
+
+&lt;p&gt;These kind of things used to be so hard for me to get done, but now I’m doing them every day, and it’s even fun doing them together with my wife. We also do a little “demo” when we’re finished, to show each other what we accomplished.&lt;/p&gt;
+
+&lt;p&gt;We’re only 2 weeks into this, and our home looks noticeably nicer. I also find it easier to keep it nice, since any small mess now stands out way more than it did before.&lt;/p&gt;
+
+&lt;p&gt;I’m sure there’s a novelty aspect to why I’m enjoying this, but even so, it really does feel like a sustainable habit, especially since it’s only 15 minutes every day.&lt;/p&gt;</content><author><name/></author><category term="personal"/><category term="non-technical"/><summary type="html">Someone once suggested that I set aside a small portion of my income every month. I’ve been doing this for years with an automatic bank transfer so I can’t mess it up.</summary></entry><entry><title type="html">How I make a living working on SerenityOS</title><link href="https://awesomekling.github.io/How-I-make-a-living-working-on-SerenityOS/" rel="alternate" type="text/html" title="How I make a living working on SerenityOS"/><published>2022-10-29T00:00:00+00:00</published><updated>2022-10-29T00:00:00+00:00</updated><id>https://awesomekling.github.io/How-I-make-a-living-working-on-SerenityOS</id><content type="html" xml:base="https://awesomekling.github.io/How-I-make-a-living-working-on-SerenityOS/">&lt;p&gt;This post describes in detail how I support myself while working on the SerenityOS project.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id="introduction"&gt;Introduction&lt;/h3&gt;
+
+&lt;p&gt;Hello! My name is Andreas Kling and I’m the founder of the &lt;a href="https://github.com/SerenityOS/serenity"&gt;SerenityOS&lt;/a&gt; project. If you’re not familiar, SerenityOS is a from-scratch operating system that I started building in 2018. It combines a Unix-like core with the look &amp;amp; feel of the late 1990s. Although it began as a one-man project, it has since blossomed into a lively open source community with &lt;a href="https://github.com/SerenityOS/serenity/graphs/contributors"&gt;hundreds of amazing developers&lt;/a&gt; working on it.&lt;/p&gt;
+
+&lt;p&gt;Since May of 2021, &lt;a href="https://awesomekling.github.io/I-quit-my-job-to-focus-on-SerenityOS-full-time/"&gt;SerenityOS has been my full-time job&lt;/a&gt;. This terrifying but exciting leap was made possible by recurring donations from generous people who like what I do and want to see it continue.&lt;/p&gt;
+
+&lt;p&gt;With so many people having my back, I’ve grown a bit more courageous with taking on large projects, which has led to SerenityOS expanding into both a &lt;a href="https://awesomekling.github.io/Memory-safety-for-SerenityOS/"&gt;new memory-safe systems language (Jakt)&lt;/a&gt; and a &lt;a href="https://awesomekling.github.io/Ladybird-a-new-cross-platform-browser-project/"&gt;new cross-platform browser (Ladybird)&lt;/a&gt; in the last year.&lt;/p&gt;
+
+&lt;h3 id="okay-but-how-do-you-actually-make-a-living"&gt;“Okay, but how do you &lt;em&gt;actually&lt;/em&gt; make a living?”&lt;/h3&gt;
+
+&lt;p&gt;I get this question regularly, so I’m going to do my best to answer it. Please understand that I’m publishing this for transparency, not to brag about making so much or complain about not making enough.&lt;/p&gt;
+
+&lt;p&gt;All currency amounts below are in USD.&lt;/p&gt;
+
+&lt;h3 id="main-source-of-income-individual-sponsorshipsdonations"&gt;Main source of income: Individual sponsorships/donations&lt;/h3&gt;
+
+&lt;p&gt;I created a &lt;a href="https://www.patreon.com/awesomekling"&gt;Patreon&lt;/a&gt; back in April of 2019. I felt a bit silly at the time, with thoughts like &lt;em&gt;“who do I think I am”&lt;/em&gt; and &lt;em&gt;“what am I even doing”&lt;/em&gt; echoing in my head. I still did it though. I was too curious to see what would happen, even though I expected nothing. Amazingly, a couple of people actually signed up!&lt;/p&gt;
+
+&lt;p&gt;Later on, when &lt;a href="https://github.com/sponsors/awesomekling"&gt;GitHub Sponsors&lt;/a&gt; opened up, I got in as early as I could. Not only did they have zero fees, but they also offered to match the first $5,000 in donations. And once again, some people actually signed up!&lt;/p&gt;
+
+&lt;p&gt;On both platforms, people are invited to donate to me personally so that I can spend time working on SerenityOS. No goods/services are offered in return.&lt;/p&gt;
+
+&lt;p&gt;Here are the current numbers as of 2022-10-29. They tend to fluctuate as people join and leave as supporters.&lt;/p&gt;
+
+&lt;style&gt;
+th, td {
+    padding-right: 1em;
+}
+&lt;/style&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style="text-align: left"&gt;&lt;strong&gt;Platform&lt;/strong&gt;&lt;/th&gt;
+      &lt;th style="text-align: right"&gt;&lt;strong&gt;Supporters&lt;/strong&gt;&lt;/th&gt;
+      &lt;th style="text-align: right"&gt;&lt;strong&gt;$/month&lt;/strong&gt;&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style="text-align: left"&gt;GitHub Sponsors&lt;/td&gt;
+      &lt;td style="text-align: right"&gt;263&lt;/td&gt;
+      &lt;td style="text-align: right"&gt;2,136&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style="text-align: left"&gt;Patreon&lt;/td&gt;
+      &lt;td style="text-align: right"&gt;268&lt;/td&gt;
+      &lt;td style="text-align: right"&gt;1,411&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style="text-align: left"&gt;PayPal&lt;/td&gt;
+      &lt;td style="text-align: right"&gt;&amp;lt;5&lt;/td&gt;
+      &lt;td style="text-align: right"&gt;&amp;lt;200&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style="text-align: left"&gt;Cryptocurrency&lt;/td&gt;
+      &lt;td style="text-align: right"&gt;&amp;lt;5&lt;/td&gt;
+      &lt;td style="text-align: right"&gt;&amp;lt;50&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Early on I would monitor these numbers closely, as I found it fascinating. Eventually it became a source of stress, so now I only check on them once a month when I do my accounting.&lt;/p&gt;
+
+&lt;h3 id="secondary-source-of-income-youtube"&gt;Secondary source of income: YouTube&lt;/h3&gt;
+
+&lt;p&gt;I’ve been fairly active on &lt;a href="https://youtube.com/andreaskling"&gt;YouTube&lt;/a&gt; since early on in the SerenityOS project. I started uploading development videos about ~6 months into the project. They were awkward and clumsy, but people seemed to enjoy watching someone incrementally building a new operating system from scratch.&lt;/p&gt;
+
+&lt;p&gt;Once the channel grew large enough, I was able to enable monetization in the form of ads. I felt a bit weird about this, since I use an ad blocker myself, but I figured that the kind of person who watches my content is perfectly aware of ad blockers and can make their own decisions about them.&lt;/p&gt;
+
+&lt;p&gt;Income from ads varies wildly depending on how often I upload new videos, and how many views they get. YouTube’s terms &amp;amp; conditions don’t allow me to disclose analytics in detail, but my estimated revenue this month is &lt;strong&gt;$315&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Outside of ads, I also have 58 people enrolled as “channel members”, which nets &lt;strong&gt;$65/month&lt;/strong&gt; (part of the $315). YouTube allows you to create separate content for channel members, but I don’t make use of this feature as I prefer that everyone has access to everything I make. The one thing that channel members &lt;em&gt;do&lt;/em&gt; get is the ability to use our fancy SerenityOS and yak-shaving-themed emotes when commenting/chatting the channel.&lt;/p&gt;
+
+&lt;p&gt;Finally, YouTube also allows people to send “super chats” during live streams. These are irregular, but this month I have received &lt;strong&gt;$50&lt;/strong&gt; across 8 super chats (also part of the $315).&lt;/p&gt;
+
+&lt;h3 id="tertiary-source-of-income-merch"&gt;Tertiary source of income: Merch&lt;/h3&gt;
+
+&lt;p&gt;People kept asking me for SerenityOS related merch like t-shirts and tea cups, so I ended up making a &lt;a href="https://store.serenityos.org/"&gt;print-on-demand store&lt;/a&gt; using Teespring. Afterwards, people have told me that they felt much more comfortable supporting the project if they got &lt;em&gt;something&lt;/em&gt; in return, “like a laptop sticker or something”. This makes perfect sense, but had not occurred to me before.&lt;/p&gt;
+
+&lt;p&gt;Monthly income from merch varies greatly. Last month it was &lt;strong&gt;$0&lt;/strong&gt; and so far this month it’s at &lt;strong&gt;$101&lt;/strong&gt;. People are not going to buy the same t-shirt over and over again, so you have to put in some effort into making new designs/products available.&lt;/p&gt;
+
+&lt;h3 id="non-income-sponsorednative-advertising"&gt;Non-income: Sponsored/native advertising&lt;/h3&gt;
+
+&lt;p&gt;I’ve been approached to advertise a number of products, including (but not limited to) mobile games, VPN services, programming courses, zero-day exploit brokers, cloud platforms, etc.&lt;/p&gt;
+
+&lt;p&gt;So far I haven’t accepted any of these offers, as I made a rule for myself that I wouldn’t advertise something I’m not personally using.&lt;/p&gt;
+
+&lt;p&gt;The only thing that came somewhat close was when I started using the CLion IDE, the folks at JetBrains gave me three 1-year license codes to raffle out to my YouTube audience. Since I use CLion daily, both on and off YouTube, I would be happy to partner with them, but so far we’re just friends. :^)&lt;/p&gt;
+
+&lt;h3 id="non-income-venture-capital"&gt;Non-income: Venture capital&lt;/h3&gt;
+
+&lt;p&gt;I’ve also been approached by a handful of folks from VC firms and while I have nothing against them, I’m not taking any meetings. I’m not interested in selling influence over the things I work on, and I’d much rather have many small donors who believe in me than one huge investor telling me what to do.&lt;/p&gt;
+
+&lt;h3 id="accounting-and-taxes"&gt;Accounting and taxes&lt;/h3&gt;
+
+&lt;p&gt;All of the above is a fairly unusual way of making a living, so there isn’t a lot of guidance from Swedish tax authorities on how to report things, etc. I wanted to make sure that everything is done correctly, and that I pay all the taxes I’m supposed to, so I ended up hiring an accounting consultant.&lt;/p&gt;
+
+&lt;p&gt;They advised me to start a business, since it would make accounting much more straightforward, so in 2021 I formed &lt;strong&gt;Cerphus Software AB&lt;/strong&gt;. The name comes from the imaginary software company I had as a child. :^)&lt;/p&gt;
+
+&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="en" dir="ltr"&gt;I was trying to come up with a nice name for my business, and while there were many good options, I decided to fulfill a childhood dream and turn my then-imaginary &amp;quot;software company&amp;quot; into a real one.&lt;br /&gt;&lt;br /&gt;I&amp;#39;ve just signed the documents forming Cerphus Software AB 👦💻🦌 &lt;a href="https://t.co/LK2lPfSw7Z"&gt;https://t.co/LK2lPfSw7Z&lt;/a&gt;&lt;/p&gt;&amp;mdash; Andreas Kling (@awesomekling) &lt;a href="https://twitter.com/awesomekling/status/1409466985608585221?ref_src=twsrc%5Etfw"&gt;June 28, 2021&lt;/a&gt;&lt;/blockquote&gt;
+&lt;script async="" src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;
+
+&lt;p&gt;I’m extremely glad that I hired an accountant. It cost a bit of money to get everything up and running, but we’ve settled into a comfortable routine, and they only need to spend a little bit of time per month on filing everything for me.&lt;/p&gt;
+
+&lt;p&gt;In fact, other than the occasional computer part, accounting services is the only real expense I have.&lt;/p&gt;
+
+&lt;h3 id="summary--closing-thoughts"&gt;Summary &amp;amp; closing thoughts&lt;/h3&gt;
+
+&lt;p&gt;As you can see, the numbers above put me at roughly &lt;strong&gt;$4200&lt;/strong&gt; this month. My wife and I live a modest life, and while taxes in Sweden are high, this is enough to break even where we are right now.&lt;/p&gt;
+
+&lt;p&gt;I know I could make a lot more money doing something else, but having the freedom to work on SerenityOS (and Jakt and Ladybird) in peace is worth infinitely more.&lt;/p&gt;
+
+&lt;p&gt;It’s incredibly humbling to have so many people support me financially so that I can continue my work. My massive heartfelt thanks to everyone who has supported me in the past and present! ❤️&lt;/p&gt;
+
+&lt;p&gt;In the future, I would love to be able to pay more people to work on the project. Especially now that we’re making a truly independent open source cross-platform web browser, I think there’s a lot of room to grow. I don’t know exactly how to do this yet, but when/if there’s enough support, I will find a way to restructure so I can hire people.&lt;/p&gt;
+
+&lt;h3 id="my-links"&gt;My Links&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href="https://youtube.com/andreaskling"&gt;YouTube&lt;/a&gt; |
+&lt;a href="https://patreon.com/awesomekling"&gt;Patreon&lt;/a&gt; |
+&lt;a href="https://github.com/sponsors/awesomekling"&gt;GitHub Sponsors&lt;/a&gt; |
+&lt;a href="https://paypal.me/awesomekling"&gt;PayPal&lt;/a&gt; |
+&lt;a href="https://store.serenityos.org/"&gt;Teespring&lt;/a&gt; |
+&lt;a href="https://etherscan.io/address/0xae3C5A0b9AD28F8C7B0d0c56C1109411dE4EC029"&gt;Ethereum&lt;/a&gt;&lt;/p&gt;</content><author><name/></author><category term="serenityos"/><category term="non-technical"/><category term="personal"/><summary type="html">This post describes in detail how I support myself while working on the SerenityOS project.</summary></entry><entry><title type="html">Ladybird: A new cross-platform browser project</title><link href="https://awesomekling.github.io/Ladybird-a-new-cross-platform-browser-project/" rel="alternate" type="text/html" title="Ladybird: A new cross-platform browser project"/><published>2022-09-12T00:00:00+00:00</published><updated>2022-09-12T00:00:00+00:00</updated><id>https://awesomekling.github.io/Ladybird-a-new-cross-platform-browser-project</id><content type="html" xml:base="https://awesomekling.github.io/Ladybird-a-new-cross-platform-browser-project/">&lt;p&gt;This post describes the Ladybird browser, based on the LibWeb and LibJS engines from SerenityOS.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Since starting the &lt;a href="https://serenityos.org"&gt;SerenityOS&lt;/a&gt; project in 2018, my goal has been “to build a complete desktop operating system to eventually use as my daily driver”.&lt;/p&gt;
+
+&lt;p&gt;What started as 
+&lt;a href="https://awesomekling.github.io/I-quit-my-job-to-focus-on-SerenityOS-full-time/"&gt;a little therapy project&lt;/a&gt; for myself has blossomed into a huge OSS community with hundreds of people working on it all over the world. We’ve gone from &lt;em&gt;nothing&lt;/em&gt; to a capable system with its own browser stack in the last 4 years.&lt;/p&gt;
+
+&lt;p&gt;Throughout this incredible expansion, my own goals have remained the same. Today I’m updating them a little bit: &lt;em&gt;in addition to building a new OS for myself, I’m also going to build a cross-platform web browser.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id="a-browser-is-born"&gt;A browser is born&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src="https://awesomekling.github.io/assets/ladybird-thispost.png" alt="This post in Ladybird" /&gt;&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href="https://github.com/SerenityOS/ladybird"&gt;Ladybird&lt;/a&gt; browser came to life on July 4th, when I recorded &lt;a href="https://www.youtube.com/watch?v=X38MTKHt3_I"&gt;a video of myself making a simple Qt GUI for the LibWeb browser engine&lt;/a&gt;. Thanks to some recent work by &lt;a href="https://github.com/dexesttp"&gt;Dex&lt;/a&gt; and others, we had LibWeb building on Linux in headless mode, so I decided to push ahead and build a simple GUI around it.&lt;/p&gt;
+
+&lt;p&gt;I originally imagined Ladybird as a debugging tool that made it easier for people to remain in Linux while working on LibWeb if they wanted to. It’s now two months later, and I find myself using Ladybird for most of my own browser development work.&lt;/p&gt;
+
+&lt;p&gt;At this point, we might as well tweak the scope from “browser engine for SerenityOS” to “cross-platform browser engine” and build something that many more people could potentially have use for some day. :^)&lt;/p&gt;
+
+&lt;p&gt;Note that &lt;a href="https://github.com/SerenityOS/serenity/commit/a67e823838943b31fb7cea68bd592093e197cf16"&gt;LibWeb started back in 2019, then called LibHTML&lt;/a&gt;:&lt;/p&gt;
+
+&lt;div class="language-plaintext highlighter-rouge"&gt;&lt;div class="highlight"&gt;&lt;pre class="highlight"&gt;&lt;code&gt;commit a67e823838943b31fb7cea68bd592093e197cf16
+Author: Andreas Kling
+Date:   Sat Jun 15 18:55:47 2019 +0200
+
+    LibHTML: Start working on a simple HTML library.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/SerenityOS/serenity/commit/f5476be702009968468731df5e23cdeb68fdb6e0"&gt;LibJS began almost 9 months later, in 2020&lt;/a&gt;:&lt;/p&gt;
+
+&lt;div class="language-plaintext highlighter-rouge"&gt;&lt;div class="highlight"&gt;&lt;pre class="highlight"&gt;&lt;code&gt;commit f5476be702009968468731df5e23cdeb68fdb6e0
+Author: Andreas Kling
+Date:   Sat Mar 7 19:42:11 2020 +0100
+
+    LibJS: Start building a JavaScript engine for SerenityOS :^)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;If you’re interested, you can see exactly how I started the LibJS engine,
+as the whole process was &lt;a href="https://www.youtube.com/watch?v=byNwCHc_IIM"&gt;recorded for YouTube&lt;/a&gt; :^)&lt;/p&gt;
+
+&lt;h2 id="basic-architecture"&gt;Basic architecture&lt;/h2&gt;
+
+&lt;p&gt;Both LibWeb and LibJS are novel engines. I have a personal history with the Qt and WebKit projects, so there’s some inspiration from them throughout, but all the code is new. Not to mention, hundreds of people have worked on the codebase since I started it, all adding their own personal influences, so it’s definitely its own thing.&lt;/p&gt;
+
+&lt;p&gt;The browser and libraries are all written in C++. (While our own memory-safe &lt;a href="https://awesomekling.github.io/Memory-safety-for-SerenityOS/"&gt;Jakt&lt;/a&gt; language is in heavy development, it’s not yet ready for use in Ladybird.)&lt;/p&gt;
+
+&lt;p&gt;Here’s a rough breakdown of the current stack:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;&lt;a href="https://github.com/SerenityOS/ladybird"&gt;Ladybird&lt;/a&gt;&lt;/strong&gt;: Tabbed browser GUI application&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;&lt;a href="https://github.com/SerenityOS/serenity/tree/master/Userland/Libraries/LibWeb"&gt;LibWeb&lt;/a&gt;&lt;/strong&gt;: Web engine, multiple standards: HTML, DOM, CSS, SVG, …&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;&lt;a href="https://github.com/SerenityOS/serenity/tree/master/Userland/Libraries/LibJS"&gt;LibJS&lt;/a&gt;&lt;/strong&gt;: The ECMAScript language, runtime library, garbage collector&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;&lt;a href="https://github.com/SerenityOS/serenity/tree/master/Userland/Libraries/LibGfx"&gt;LibGfx&lt;/a&gt;&lt;/strong&gt;: 2D graphics, text rendering, image formats (PNG, JPG, GIF, …)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;&lt;a href="https://github.com/SerenityOS/serenity/tree/master/Userland/Libraries/LibRegex"&gt;LibRegex&lt;/a&gt;&lt;/strong&gt;: Regular expression engine&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;&lt;a href="https://github.com/SerenityOS/serenity/tree/master/Userland/Libraries/LibXML"&gt;LibXML&lt;/a&gt;&lt;/strong&gt;: XML parser&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;&lt;a href="https://github.com/SerenityOS/serenity/tree/master/Userland/Libraries/LibWasm"&gt;LibWasm&lt;/a&gt;&lt;/strong&gt;: WebAssembly parser and interpreter&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;&lt;a href="https://github.com/SerenityOS/serenity/tree/master/Userland/Libraries/LibUnicode"&gt;LibUnicode&lt;/a&gt;&lt;/strong&gt;: Unicode support library&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;&lt;a href="https://github.com/SerenityOS/serenity/tree/master/Userland/Libraries/LibTextCodec"&gt;LibTextCodec&lt;/a&gt;&lt;/strong&gt;: Text encoding conversion library&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;&lt;a href="https://github.com/SerenityOS/serenity/tree/master/Userland/Libraries/LibMarkdown"&gt;LibMarkdown&lt;/a&gt;&lt;/strong&gt;: Markdown parser&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;&lt;a href="https://github.com/SerenityOS/serenity/tree/master/Userland/Libraries/LibCore"&gt;LibCore&lt;/a&gt;&lt;/strong&gt;: Miscellaneous support functions (I/O, datetime, MIME data, …)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;&lt;a href="https://www.qt.io"&gt;Qt&lt;/a&gt;&lt;/strong&gt;: Cross-platform GUI and networking&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;LibWeb has a &lt;code class="language-plaintext highlighter-rouge"&gt;Platform&lt;/code&gt; layer where Ladybird injects Qt support code for event loops, timers, system font settings, etc. We currently use Qt for networking in Ladybird, as the multi-process RequestServer system is not available outside of SerenityOS yet. Likewise, Ladybird is currently single-process, while the SerenityOS browser is process-per-tab. All of this is temporary and will change over time.&lt;/p&gt;
+
+&lt;h2 id="license--business-model"&gt;License &amp;amp; “business model”&lt;/h2&gt;
+
+&lt;p&gt;Ladybird and its engine are freely available under the &lt;a href="https://opensource.org/licenses/BSD-2-Clause"&gt;2-clause BSD license&lt;/a&gt;. You cannot buy influence over the project, but you can improve the browser by participating in development!&lt;/p&gt;
+
+&lt;p&gt;I’m personally working on these projects &lt;a href="https://awesomekling.github.io/I-quit-my-job-to-focus-on-SerenityOS-full-time/"&gt;full time since 2021&lt;/a&gt; thanks to my generous supporters. If you like what I’m doing, you can help me do more of it by supporting me on &lt;a href="https://github.com/sponsors/awesomekling"&gt;GitHub Sponsors&lt;/a&gt;, &lt;a href="https://patreon.com/awesomekling"&gt;Patreon&lt;/a&gt; or &lt;a href="https://paypal.me/awesomekling"&gt;PayPal&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;I would &lt;em&gt;love&lt;/em&gt; to have enough money to pay others to work on Ladybird some day. At the moment, I make just enough to support my own family, but if things should grow past the point where I’m comfortable, I will look into restructuring so I can hire more help.&lt;/p&gt;
+
+&lt;p&gt;In addition to myself, you can already directly sponsor &lt;a href="https://github.com/sponsors/linusg"&gt;Linus Groh&lt;/a&gt; and &lt;a href="https://github.com/sponsors/AtkinsSJ"&gt;Sam Atkins&lt;/a&gt; who both do a lot of excellent browser work.&lt;/p&gt;
+
+&lt;h2 id="a-note-on-maturity"&gt;A note on maturity&lt;/h2&gt;
+
+&lt;p&gt;Please note that we’re still early in development, and many web platform features are missing or broken. It’s going to take a long time before Ladybird is ready for day-to-day browsing.&lt;/p&gt;
+
+&lt;p&gt;We’re very much in the “make it work” part of the “make it work, make it good, make it faster” cycle. As such, we tend to focus a lot more on correctness and feature support rather than optimization. Performance work happens mostly at the architectural level, although targeted optimizations that relieve particular pain points do also happen.&lt;/p&gt;
+
+&lt;p&gt;Please note that this is &lt;em&gt;not&lt;/em&gt; a product announcement or release, but more of a personal announcement that I’m adding &lt;em&gt;“a truly independent cross-platform browser”&lt;/em&gt; to my list of personal goals. It’s also an invitation to anyone who might be interested in working on a completely new browser. :^)&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="https://awesomekling.github.io/assets/ladybird-acid3.png" alt="Acid3 passes in Ladybird" /&gt;&lt;/p&gt;
+
+&lt;p&gt;As you can see above, we do pass the classic &lt;a href="https://en.wikipedia.org/wiki/Acid3"&gt;Acid3 standards test&lt;/a&gt;, which covers a bunch of basic CSS layout features, and various DOM/HTML APIs. However, the test does not cover many of the features used on the web today (like CSS flexbox, CSS grid, etc.)&lt;/p&gt;
+
+&lt;p&gt;Fidelity of modern websites in Ladybird is steadily improving, but you’ll often see lots of layout and compatibility issues. For example, here’s Reddit right now:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="https://awesomekling.github.io/assets/ladybird-proggit.png" alt="/r/programming in Ladybird" /&gt;&lt;/p&gt;
+
+&lt;h2 id="community-acknowledgment"&gt;Community acknowledgment&lt;/h2&gt;
+
+&lt;p&gt;Sometimes people write articles saying I’m “single-handedly” doing this or that. I’m not! Both Ladybird and SerenityOS are community efforts that hundreds of awesome people are pouring their heart and soul into. I write a lot of code, and I do my best to cheerlead for the community, but I absolutely wouldn’t be here without them!&lt;/p&gt;
+
+&lt;h2 id="faq"&gt;FAQ&lt;/h2&gt;
+
+&lt;h4 id="q-which-platforms-will-ladybird-support"&gt;&lt;strong&gt;Q: Which platforms will Ladybird support?&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;So far, we’ve seen it running on Linux, macOS, Windows (WSL) and Android. The Linux version is definitely the most tested.&lt;/p&gt;
+
+&lt;p&gt;Since the libraries come from SerenityOS, they’re already self-contained, and we only need Qt to help us with GUI and networking. This makes the browser quite portable, and in &lt;em&gt;theory&lt;/em&gt; we could run wherever Qt runs. In practice, we’ll see what happens.&lt;/p&gt;
+
+&lt;h4 id="q-when-will-ladybird-be-ready-for-use"&gt;&lt;strong&gt;Q: When will Ladybird be ready for use?&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;I don’t know. It depends on what you consider “ready”, but I’d expect a few more years of development before we have something solid. You can accelerate this process by participating in development and/or supporting our developers financially.&lt;/p&gt;
+
+&lt;h4 id="q-how-can-i-participate-in-development"&gt;&lt;strong&gt;Q: How can I participate in development?&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;The most important work ahead of us is fixing bugs and adding missing features to LibWeb and LibJS. If you try opening your favorite website in Ladybird, you will find bugs! To participate in development, figure out the bug and fix it. Development discussion primarily happens in the &lt;code class="language-plaintext highlighter-rouge"&gt;#browser&lt;/code&gt; and &lt;code class="language-plaintext highlighter-rouge"&gt;#js&lt;/code&gt; channels on &lt;a href="https://discord.gg/serenityos"&gt;our Discord server&lt;/a&gt;, so come join us there.&lt;/p&gt;
+
+&lt;h4 id="q-i-found-a-website-that-does-not-work-where-do-i-report-this"&gt;&lt;strong&gt;Q: I found a website that does not work! Where do I report this?&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;At this point, there are &lt;em&gt;way&lt;/em&gt; more websites that don’t work than websites that do. We’re not yet at the point where reporting individual site issues makes sense.&lt;/p&gt;
+
+&lt;p&gt;That said, if you’re going to actually work on fixing the problems, feel free to track them using GitHub issues if that helps you.&lt;/p&gt;
+
+&lt;h4 id="q-do-you-have-a-javascript-jit-compiler"&gt;&lt;strong&gt;Q: Do you have a JavaScript JIT compiler?&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;No, we have a traditional AST interpreter that is being replaced by a bytecode VM. You can track the &lt;a href="https://libjs.dev/test262/"&gt;LibJS test262 score for both backends here&lt;/a&gt;. I’m not convinced that the complexity and security burdens of a JavaScript JIT are reasonable, and given recent developments like Microsoft Edge’s &lt;a href="https://microsoftedge.github.io/edgevr/posts/Super-Duper-Secure-Mode/"&gt;Super Duper Secure Mode&lt;/a&gt;, I’m interested in pushing for best-effort JIT-less performance while keeping the codebase simple.&lt;/p&gt;
+
+&lt;h4 id="q-i-opened-acid3-in-my-browser-and-i-only-got-97100-whats-wrong"&gt;&lt;strong&gt;Q: I opened Acid3 in my browser and I only got 97/100. What’s wrong?&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;You’re using an older version of the test that does not reflect settled web standards. The up-to-date version is here: &lt;a href="http://wpt.live/acid/acid3/test.html"&gt;http://wpt.live/acid/acid3/test.html&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h4 id="q-why-bother-you-cant-make-a-new-browser-engine-without-billions-of-dollars-and-hundreds-of-staff"&gt;&lt;strong&gt;Q: Why bother? You can’t make a new browser engine without billions of dollars and hundreds of staff.&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Sure you can. Don’t listen to armchair defeatists who never worked on a browser.&lt;/p&gt;
+
+&lt;h2 id="contact"&gt;Contact&lt;/h2&gt;
+
+&lt;p&gt;If you’re interested in working on Ladybird, LibWeb, LibJS, or any part of the supporting stack, you can find us on the &lt;a href="https://discord.gg/serenityos"&gt;SerenityOS Discord&lt;/a&gt;. :^)&lt;/p&gt;</content><author><name/></author><category term="serenityos"/><category term="ladybird"/><category term="technical"/><summary type="html">This post describes the Ladybird browser, based on the LibWeb and LibJS engines from SerenityOS.</summary></entry><entry><title type="html">Memory safety for SerenityOS</title><link href="https://awesomekling.github.io/Memory-safety-for-SerenityOS/" rel="alternate" type="text/html" title="Memory safety for SerenityOS"/><published>2022-05-19T00:00:00+00:00</published><updated>2022-05-19T00:00:00+00:00</updated><id>https://awesomekling.github.io/Memory-safety-for-SerenityOS</id><content type="html" xml:base="https://awesomekling.github.io/Memory-safety-for-SerenityOS/">&lt;p&gt;This post describes how we’re going to achieve memory safety in SerenityOS.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;After visiting my nephews for easter, I spent the drive back home thinking about the future they will grow up in. What will their computers look like? What kind of software will they use? Will any of my code still be running?&lt;/p&gt;
+
+&lt;p&gt;When I started the &lt;a href="https://github.com/SerenityOS/serenity"&gt;SerenityOS&lt;/a&gt; project in 2018, I used C++ for everything, simply because it was the language I was most comfortable with. It was the right choice at the time, as it allowed me to bootstrap the project (and a community) very quickly and efficiently.&lt;/p&gt;
+
+&lt;p&gt;In the time since then, SerenityOS has grown larger and more complex, and we recently passed 700 individual contributors! It’s &lt;em&gt;far&lt;/em&gt; from a one-man hobby project at this point.&lt;/p&gt;
+
+&lt;p&gt;When thinking about the future, I would love for SerenityOS to be around in 30 years, when my nephews are my age (and I’m an old greybeard!)&lt;/p&gt;
+
+&lt;p&gt;While I believe our community and system architectures are strong enough to sustain development for years to come, I no longer believe that C++ is the right language for us.&lt;/p&gt;
+
+&lt;p&gt;As much as I enjoy using it, the lack of memory safety in C++ means that we’ll always have bugs that could have been avoided. I’m tired of this, and I don’t want to spend the next decades of my life debugging more avoidable bugs.&lt;/p&gt;
+
+&lt;p&gt;To improve the longevity of SerenityOS, we need to make the system memory-safe.&lt;/p&gt;
+
+&lt;h2 id="so-how-do-we-achieve-memory-safety"&gt;So how do we achieve memory safety?&lt;/h2&gt;
+
+&lt;p&gt;I spent a few weeks exploring the current landscape of memory-safe systems languages. I learned a handful of new ones so I could see how they work, and understand what they do to achieve safety.&lt;/p&gt;
+
+&lt;p&gt;I tried rewriting parts of SerenityOS in different languages, and while there were some interesting options, they all came with idiosyncratic limitations and dependencies that made them unsuitable for adoption.&lt;/p&gt;
+
+&lt;p&gt;Since the beginning, SerenityOS has been about making everything ourselves, for fun, for love of programming, for control, for performance, for vertical integration, etc.&lt;/p&gt;
+
+&lt;p&gt;In fact, the main thing we haven’t made ourselves is a programming language.&lt;/p&gt;
+
+&lt;h2 id="yak-baiting-a-friend"&gt;Yak-baiting a friend&lt;/h2&gt;
+
+&lt;p&gt;Throughout this process, I’d been talking to &lt;a href="https://twitter.com/jntrnr"&gt;my friend JT&lt;/a&gt; and sharing the struggle I had with the various languages. After talking their ear off about why some language wasn’t a good fit, I got this intriguing message:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="https://awesomekling.github.io/assets/jt_yakbait.png" alt="JT saying &amp;quot;So... I'm totally yak baited at this point&amp;quot;" /&gt;&lt;/p&gt;
+
+&lt;font size="2"&gt;&lt;b&gt;NOTE: "yakbait" is &lt;a href="https://github.com/SerenityOS/yaksplained#yakbait-nerd-snipe"&gt;SerenityOS slang&lt;/a&gt; for baiting someone into shaving your yak&lt;/b&gt;&lt;/font&gt;
+
+&lt;p&gt;JT went on to suggest that instead of settling for an existing language, we could design a new language by simply stealing the stuff we liked from other languages, and skipping the stuff we didn’t like or need.&lt;/p&gt;
+
+&lt;p&gt;To simplify incremental adoption, the new language would transpile to C++, which could then easily interact with our existing code.&lt;/p&gt;
+
+&lt;p&gt;I was hooked. &lt;em&gt;Transpiling to C++!?&lt;/em&gt; I didn’t even realize that was an option!&lt;/p&gt;
+
+&lt;p&gt;We decided to name it &lt;strong&gt;Jakt&lt;/strong&gt; (&lt;a href="https://en.wiktionary.org/wiki/jakt#Swedish"&gt;Swedish for “hunt”&lt;/a&gt;). What followed was 2 weeks of intense compiler bootstrapping with JT.&lt;/p&gt;
+
+&lt;p&gt;The language is now at a point where I feel comfortable telling you that we’re working on it, but it’s still a &lt;strong&gt;&lt;em&gt;long&lt;/em&gt;&lt;/strong&gt; way from “ready”.&lt;/p&gt;
+
+&lt;h2 id="jakt"&gt;Jakt&lt;/h2&gt;
+
+&lt;p&gt;So, let’s take a look at &lt;strong&gt;Jakt&lt;/strong&gt;! It’s…&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Object-oriented&lt;/li&gt;
+  &lt;li&gt;Safe by default&lt;/li&gt;
+  &lt;li&gt;Paranoid about integer overflow &amp;amp; truncation&lt;/li&gt;
+  &lt;li&gt;Immutable by default&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;Young and immature, not ready for anything serious&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The current Jakt compiler is written in Rust and spits out C++. Development happens in the &lt;a href="https://github.com/SerenityOS/jakt"&gt;jakt&lt;/a&gt; repository on GitHub.&lt;/p&gt;
+
+&lt;h3 id="a-little-jakt-program"&gt;A little Jakt program&lt;/h3&gt;
+
+&lt;div class="language-plaintext highlighter-rouge"&gt;&lt;div class="highlight"&gt;&lt;pre class="highlight"&gt;&lt;code&gt;class Language {
+    name: String
+    age_in_days: i64
+    
+    function greet(this) {
+        println("Hello from {}!", this.name)
+        println("I am this many days old:")
+        for i in 0..this.age_in_days {
+            println(":^)")
+        }
+    }
+}
+
+function main() {
+    let jakt = Language(name: "Jakt", age_in_days: 14)
+    jakt.greet()
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id="memory-safety"&gt;Memory safety&lt;/h3&gt;
+
+&lt;p&gt;So how does Jakt achieve memory safety? Through a combination of these techniques:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Automatic reference counting of all &lt;code class="language-plaintext highlighter-rouge"&gt;class&lt;/code&gt; instances.&lt;/li&gt;
+  &lt;li&gt;Runtime bounds checking of arrays and slices.&lt;/li&gt;
+  &lt;li&gt;No dereferencing raw pointers in safe (default) code. &lt;code class="language-plaintext highlighter-rouge"&gt;unsafe&lt;/code&gt; keyword for situations where it’s necessary.&lt;/li&gt;
+  &lt;li&gt;&lt;code class="language-plaintext highlighter-rouge"&gt;weak&lt;/code&gt; references that get emptied on pointee destruction.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id="roadmap"&gt;Roadmap&lt;/h2&gt;
+
+&lt;p&gt;Here’s a &lt;em&gt;very&lt;/em&gt; fluffy 10 year roadmap for this project:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Bring up basic language features.&lt;/li&gt;
+  &lt;li&gt;Improve static analysis in the compiler.&lt;/li&gt;
+  &lt;li&gt;Write an auto-formatter for Jakt.&lt;/li&gt;
+  &lt;li&gt;Rewrite the Jakt compiler in Jakt.&lt;/li&gt;
+  &lt;li&gt;Integrate Jakt with the SerenityOS build system.&lt;/li&gt;
+  &lt;li&gt;Incrementally rewrite SerenityOS in Jakt.&lt;/li&gt;
+  &lt;li&gt;Stop transpiling to C++ and generate native code directly.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id="faq"&gt;FAQ&lt;/h2&gt;
+
+&lt;h4 id="q-why-not-just-use-an-existing-language"&gt;&lt;strong&gt;Q: Why not just use an existing language?&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;I have nothing bad to say about other languages. This is simply the option that makes the most sense for SerenityOS, which is fundamentally about having fun and implementing everything ourselves.&lt;/p&gt;
+
+&lt;h4 id="q-why-does-jakt-have-flaws"&gt;&lt;strong&gt;Q: Why does Jakt have flaws?&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;It’s two weeks old.&lt;/p&gt;
+
+&lt;h4 id="q-when-will-jakt-be-done-will-it-hit-10"&gt;&lt;strong&gt;Q: When will Jakt be done? Will it hit 1.0?&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;It will evolve with SerenityOS, so as SerenityOS matures no doubt Jakt will as well.&lt;/p&gt;
+
+&lt;h4 id="q-why-arc-automatic-reference-counting-instead-of-a-borrow-checker"&gt;&lt;strong&gt;Q: Why ARC (automatic reference counting) instead of a borrow checker?&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;ARC allows the language to feel lightweight without constantly asking the user to make decisions about memory management.&lt;/p&gt;
+
+&lt;p&gt;There’s a little bit of overhead from maintaining reference counts, but we’re betting that the comfort gained will outweigh the cost.&lt;/p&gt;
+
+&lt;h4 id="q-what-about-iterator-invalidation"&gt;&lt;strong&gt;Q: What about iterator invalidation?&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;We’re discussing a number of approaches, but have not settled on one yet.&lt;/p&gt;
+
+&lt;h4 id="q-what-about-thread-safety"&gt;&lt;strong&gt;Q: What about thread safety?&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Jakt currently does nothing to enforce thread safety. We have not started looking at this area yet.&lt;/p&gt;
+
+&lt;h2 id="contact"&gt;Contact&lt;/h2&gt;
+
+&lt;p&gt;If you’re interested in working on Jakt, you can find us on the &lt;a href="https://discord.gg/serenityos"&gt;SerenityOS Discord&lt;/a&gt;. :^)&lt;/p&gt;</content><author><name/></author><category term="serenityos"/><category term="technical"/><category term="cpp"/><category term="jakt"/><summary type="html">This post describes how we’re going to achieve memory safety in SerenityOS.</summary></entry><entry><title type="html">I quit my job to focus on SerenityOS full time</title><link href="https://awesomekling.github.io/I-quit-my-job-to-focus-on-SerenityOS-full-time/" rel="alternate" type="text/html" title="I quit my job to focus on SerenityOS full time"/><published>2021-05-28T00:00:00+00:00</published><updated>2021-05-28T00:00:00+00:00</updated><id>https://awesomekling.github.io/I-quit-my-job-to-focus-on-SerenityOS-full-time</id><content type="html" xml:base="https://awesomekling.github.io/I-quit-my-job-to-focus-on-SerenityOS-full-time/">&lt;p&gt;Hello friends! :^) Let me tell you a story…&lt;/p&gt;
+
+&lt;p&gt;It was October 2018 and I had just completed a 3-month rehab program at a state addiction clinic in Sweden. I was unemployed, staying with family, and had basically nothing going on.&lt;/p&gt;
+
+&lt;p&gt;With no drugs or other vices to pass the time, the days seemed impossibly long. I struggled to find activities to fill them. I enrolled in school for a while, but it wasn’t for me this time either. Eventually I turned to programming, since it’s always been my big interest in life.&lt;/p&gt;
+
+&lt;p&gt;Until that point, my career had been focused on web browsers (WebKit at Apple &amp;amp; Nokia). However, I had always been interested in low-level things so I began &lt;a href="http://www.serenityos.org/happy/1st/"&gt;tinkering&lt;/a&gt; with some of that. I wrote a little ELF executable parser.. And an Ext2 filesystem browser.. And a little GUI framework with an event loop..&lt;/p&gt;
+
+&lt;p&gt;Out of this tinkering, an operating system began to take shape. I chose the name &lt;a href="https://www.serenityos.org/"&gt;&lt;strong&gt;SerenityOS&lt;/strong&gt;&lt;/a&gt; because I wanted to always remember the &lt;a href="https://en.wikipedia.org/wiki/Serenity_Prayer"&gt;Serenity Prayer&lt;/a&gt;. I was quite worried about my future at the time, and I figured that this name would help me stay on the good path.&lt;/p&gt;
+
+&lt;p&gt;My general idea was to build my own dream system for daily use. It would be a combination of my two favorite computing paradigms: the 1990s GUI and the no-nonsense command-line of late-2000s Unix.&lt;/p&gt;
+
+&lt;p&gt;While at Apple, I really enjoyed how most of the software was made under one roof. Not only did this enable super tight integrations, but it made the system extremely hackable for its developers, and you could always find &lt;em&gt;the&lt;/em&gt; experts somewhere nearby. I thought I could try bringing that same feeling to the open source world, so I decided that SerenityOS wasn’t going to be a patchwork of packages – no, we’re building everything ourselves! From kernel to web browser, and everything in between.&lt;/p&gt;
+
+&lt;p&gt;So I started hacking, day after day. Week after week. Month after month. The project became my rock as I slowly learned to navigate life again.&lt;/p&gt;
+
+&lt;p&gt;I decided to record some of my programming sessions and posted them to &lt;a href="https://www.youtube.com/andreaskling"&gt;my YouTube channel&lt;/a&gt;. I was &lt;em&gt;very&lt;/em&gt; uncomfortable with this at first, but I kept at it since I liked the feeling of just being myself and letting people see me, instead of putting on a mask and pretending everything was fine.&lt;/p&gt;
+
+&lt;p&gt;Over time, more people discovered my little project (and my little channel), and many found something that really resonated with them. Since those humble beginnings, it has grown into a vibrant open source community with hundreds of &lt;a href="https://github.com/SerenityOS/serenity/graphs/contributors"&gt;contributors&lt;/a&gt; from all over the world. To say that this has been an amazing journey would be an understatement, yet in many ways we are still only getting started.&lt;/p&gt;
+
+&lt;p&gt;Until now, I’ve been juggling SerenityOS as a side project while also having a full time programming job.&lt;/p&gt;
+
+&lt;p&gt;That all changes today! I just wrapped up my last day at work, and I’m no longer employed. Instead, I will be focusing on SerenityOS full time starting &lt;em&gt;right now&lt;/em&gt;! :^)&lt;/p&gt;
+
+&lt;p&gt;This is all made possible by the extremely generous support I’m receiving from folks via &lt;a href="https://patreon.com/awesomekling"&gt;Patreon&lt;/a&gt;, &lt;a href="https://github.com/sponsors/awesomekling"&gt;GitHub Sponsors&lt;/a&gt; and &lt;a href="https://paypal.me/awesomekling"&gt;PayPal&lt;/a&gt;! I feel super fortunate to have the trust &amp;amp; support of so many people. Thank you all so much!!&lt;/p&gt;
+
+&lt;p&gt;At the time of writing, I’m receiving a bit over $2000 in donations per month. There’s also a modest amount from &lt;a href="https://youtube.com/c/andreaskling"&gt;YouTube&lt;/a&gt; (say $150/month), as well as sales of &lt;a href="https://serenityos.creator-spring.com/"&gt;SerenityOS merchandise&lt;/a&gt; (another $100).&lt;/p&gt;
+
+&lt;p&gt;This isn’t yet enough to fully sustain me and my family, but it’s close enough that I decided it’s time to take a chance and see what happens!&lt;/p&gt;
+
+&lt;p&gt;As you probably understand, I’m not trying to get rich by doing this. I’m just a human being trying to stay sane and healthy, and it just so happens that my therapy/self-care project resonates with thousands of people, many of whom want to support it and see where it goes.&lt;/p&gt;
+
+&lt;p&gt;It’s truly an honor to find myself in this position, and I promise that I will continue doing my best. Thank you so much for reading this post. I’m gonna have a nap and then we’ll start fresh in the morning! :^)&lt;/p&gt;
+
+&lt;p&gt;Andreas Kling&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="https://awesomekling.github.io/assets/writing-this-post.png" alt="Screenshot of editing this post in today's build of SerenityOS" /&gt;&lt;/p&gt;</content><author><name/></author><category term="serenityos"/><category term="technical"/><category term="non-technical"/><category term="personal"/><summary type="html">Hello friends! :^) Let me tell you a story…</summary></entry><entry><title type="html">Smarter C/C++ inlining with __attribute__((flatten))</title><link href="https://awesomekling.github.io/Smarter-C++-inlining-with-attribute-flatten/" rel="alternate" type="text/html" title="Smarter C/C++ inlining with __attribute__((flatten))"/><published>2020-04-27T00:00:00+00:00</published><updated>2020-04-27T00:00:00+00:00</updated><id>https://awesomekling.github.io/Smarter-C++-inlining-with-attribute-flatten</id><content type="html" xml:base="https://awesomekling.github.io/Smarter-C++-inlining-with-attribute-flatten/">&lt;p&gt;This post describes a compile-time technique for getting the benefits of aggressive inlining in hot code while protecting cool code from its downsides.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Hello friends!&lt;/p&gt;
+
+&lt;p&gt;A common technique for improving performance of hot code in C/C++ is to inline the hottest functions called. While it often helps make things faster, there are some downsides to inlining. Let’s quickly review the pros &amp;amp; cons:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Pros of inlining:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Removes function call overhead (yay!)&lt;/li&gt;
+  &lt;li&gt;May reveal additional optimization opportunities (sometimes yay!)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Cons of inlining:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Increases program size (boo!)&lt;/li&gt;
+  &lt;li&gt;May reduce cache locality (sometimes boo!)&lt;/li&gt;
+  &lt;li&gt;May increase build times (boo!)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;When compiling with optimizations, the compiler usually makes pretty reasonable choices about which functions to inline. It uses a combination of heuristics, with function size being the most important one AFAIK.&lt;/p&gt;
+
+&lt;h2 id="manual-inlining-with-__attribute__always_inline"&gt;Manual inlining with &lt;code class="language-plaintext highlighter-rouge"&gt;__attribute__((always_inline))&lt;/code&gt;&lt;/h2&gt;
+
+&lt;p&gt;However, sometimes &lt;em&gt;you&lt;/em&gt; know some code is &lt;strong&gt;hot&lt;/strong&gt; and the compiler has no idea. This is usually when &lt;code class="language-plaintext highlighter-rouge"&gt;__attribute__((always_inline))&lt;/code&gt; comes in. If you add this attribute to a function, that function will now be inlined wherever it is called, even when the compiler would normally have dismissed it as too large. &lt;em&gt;(Note that there are exceptions to this, and some functions cannot be inlined.)&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Here’s a contrived example of a very common scenario in larger codebases:&lt;/p&gt;
+
+&lt;div class="language-cpp highlighter-rouge"&gt;&lt;div class="highlight"&gt;&lt;pre class="highlight"&gt;&lt;code&gt;&lt;span class="n"&gt;__attribute__&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;always_inline&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="kr"&gt;inline&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;do_thing&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;// this code is always inlined at the call site&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;hot_code&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;// the program spends &amp;gt;80% of its runtime in this function&lt;/span&gt;
+    &lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;condition&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="p"&gt;...&lt;/span&gt;
+        &lt;span class="n"&gt;do_thing&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+        &lt;span class="p"&gt;...&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The above is all well and good, but what happens when &lt;code class="language-plaintext highlighter-rouge"&gt;do_thing()&lt;/code&gt; is a popular function that gets called a lot?&lt;/p&gt;
+
+&lt;div class="language-cpp highlighter-rouge"&gt;&lt;div class="highlight"&gt;&lt;pre class="highlight"&gt;&lt;code&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;cool_code&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;// the program spends &amp;lt;5% of its runtime in this function&lt;/span&gt;
+    &lt;span class="p"&gt;...&lt;/span&gt;
+    &lt;span class="n"&gt;do_thing&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;do_thing&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;do_thing&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now the &lt;code class="language-plaintext highlighter-rouge"&gt;cool_code()&lt;/code&gt; function gets three copies of &lt;code class="language-plaintext highlighter-rouge"&gt;do_thing()&lt;/code&gt; inlined into it, invoking all of the cons from the list we made above (larger program size, worse cache locality, longer build time.)&lt;/p&gt;
+
+&lt;h2 id="targeted-flattening-instead-of-global-inlining"&gt;Targeted flattening instead of global inlining&lt;/h2&gt;
+
+&lt;p&gt;Now for the trick! Both GCC and Clang support &lt;code class="language-plaintext highlighter-rouge"&gt;__attribute__((flatten))&lt;/code&gt;. Putting it on a function causes all of its callees to be inlined into it. It’s dead simple.&lt;/p&gt;
+
+&lt;div class="language-cpp highlighter-rouge"&gt;&lt;div class="highlight"&gt;&lt;pre class="highlight"&gt;&lt;code&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;do_thing&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;// this code is not always inlined at the call site&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="n"&gt;__attribute__&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;flatten&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;hot_code&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;// the program spends &amp;gt;80% of its runtime in this function&lt;/span&gt;
+    &lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;condition&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;call_something&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;   &lt;span class="c1"&gt;// inlined!&lt;/span&gt;
+        &lt;span class="n"&gt;do_thing&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;        &lt;span class="c1"&gt;// inlined!&lt;/span&gt;
+        &lt;span class="n"&gt;other_thing&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;      &lt;span class="c1"&gt;// also inlined!&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;cool_code&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;// the program spends &amp;lt;5% of its runtime in this function&lt;/span&gt;
+    &lt;span class="p"&gt;...&lt;/span&gt;
+    &lt;span class="n"&gt;do_thing&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;            &lt;span class="c1"&gt;// not inlined!&lt;/span&gt;
+    &lt;span class="n"&gt;do_thing&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;            &lt;span class="c1"&gt;// not inlined!&lt;/span&gt;
+    &lt;span class="n"&gt;do_thing&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;            &lt;span class="c1"&gt;// guess!&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;em&gt;Note: Functions with &lt;code class="language-plaintext highlighter-rouge"&gt;__attribute__((noinline))&lt;/code&gt; will not be inlined. The same goes for functions where the compiler can’t see the body.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id="in-conclusion"&gt;In conclusion&lt;/h2&gt;
+
+&lt;p&gt;&lt;code class="language-plaintext highlighter-rouge"&gt;__attribute__((flatten))&lt;/code&gt; lets you opt in to the pros of aggressive inlining on a per-function basis, while protecting the rest of your program from the cons!&lt;/p&gt;
+
+&lt;p&gt;Until next time! :^)&lt;/p&gt;</content><author><name/></author><category term="technical"/><category term="cpp"/><summary type="html">This post describes a compile-time technique for getting the benefits of aggressive inlining in hot code while protecting cool code from its downsides.</summary></entry></feed>

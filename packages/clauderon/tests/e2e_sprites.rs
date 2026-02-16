@@ -1,3 +1,9 @@
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::clone_on_ref_ptr,
+    reason = "E2E tests use expect/unwrap/clone for simplicity"
+)]
 //! End-to-end tests for Sprites backend
 //!
 //! These tests require SPRITES_TOKEN environment variable to be set.
@@ -383,8 +389,8 @@ async fn test_sprites_multi_repo_session() {
             repo_path: primary_dir.path().to_path_buf(),
             subdirectory: std::path::PathBuf::new(),
             worktree_path: primary_dir.path().to_path_buf(),
-            branch_name: "master".to_string(),
-            mount_name: "primary".to_string(),
+            branch_name: "master".to_owned(),
+            mount_name: "primary".to_owned(),
             is_primary: true,
             base_branch: None,
         },
@@ -392,8 +398,8 @@ async fn test_sprites_multi_repo_session() {
             repo_path: secondary_dir.path().to_path_buf(),
             subdirectory: std::path::PathBuf::new(),
             worktree_path: secondary_dir.path().to_path_buf(),
-            branch_name: "main".to_string(),
-            mount_name: "secondary-lib".to_string(),
+            branch_name: "main".to_owned(),
+            mount_name: "secondary-lib".to_owned(),
             is_primary: false,
             base_branch: None,
         },
@@ -499,7 +505,7 @@ async fn test_sprites_new_branch_creation() {
         subdirectory: std::path::PathBuf::new(),
         worktree_path: temp_dir.path().to_path_buf(),
         branch_name: unique_branch.clone(),
-        mount_name: "primary".to_string(),
+        mount_name: "primary".to_owned(),
         is_primary: true,
         base_branch: None,
     }];
@@ -537,7 +543,7 @@ async fn test_sprites_new_branch_creation() {
         .output();
 
     if let Ok(output) = branch_check {
-        let current_branch = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let current_branch = String::from_utf8_lossy(&output.stdout).trim().to_owned();
         assert_eq!(
             current_branch, unique_branch,
             "Should be on the newly created branch"
@@ -584,8 +590,8 @@ async fn test_sprites_existing_remote_branch_tracking() {
         repo_path: temp_dir.path().to_path_buf(),
         subdirectory: std::path::PathBuf::new(),
         worktree_path: temp_dir.path().to_path_buf(),
-        branch_name: "test".to_string(),
-        mount_name: "primary".to_string(),
+        branch_name: "test".to_owned(),
+        mount_name: "primary".to_owned(),
         is_primary: true,
         base_branch: None,
     }];
@@ -623,7 +629,7 @@ async fn test_sprites_existing_remote_branch_tracking() {
         .output();
 
     if let Ok(output) = branch_check {
-        let current_branch = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let current_branch = String::from_utf8_lossy(&output.stdout).trim().to_owned();
         assert_eq!(
             current_branch, "test",
             "Should be on the 'test' tracking branch"
@@ -664,9 +670,9 @@ async fn test_sprites_base_branch_workflow() {
         subdirectory: std::path::PathBuf::new(),
         worktree_path: temp_dir.path().to_path_buf(),
         branch_name: feature_branch.clone(),
-        mount_name: "primary".to_string(),
+        mount_name: "primary".to_owned(),
         is_primary: true,
-        base_branch: Some("master".to_string()), // Clone from master, create feature branch
+        base_branch: Some("master".to_owned()), // Clone from master, create feature branch
     }];
 
     let options = CreateOptions {
@@ -702,7 +708,7 @@ async fn test_sprites_base_branch_workflow() {
         .output();
 
     if let Ok(output) = branch_check {
-        let current_branch = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let current_branch = String::from_utf8_lossy(&output.stdout).trim().to_owned();
         assert_eq!(
             current_branch, feature_branch,
             "Should be on the feature branch"
@@ -905,7 +911,7 @@ async fn test_sprites_claude_installation_verified() {
             output.status.success(),
             "Claude should be installed and in PATH"
         );
-        let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let path = String::from_utf8_lossy(&output.stdout).trim().to_owned();
         assert!(!path.is_empty(), "Claude path should not be empty");
         println!("Claude installed at: {path}");
     }
@@ -957,7 +963,7 @@ async fn test_sprites_abduco_installation_verified() {
             output.status.success(),
             "Abduco should be installed and in PATH"
         );
-        let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let path = String::from_utf8_lossy(&output.stdout).trim().to_owned();
         assert!(!path.is_empty(), "Abduco path should not be empty");
         println!("Abduco installed at: {path}");
     }

@@ -1,0 +1,4 @@
+<REVIEW_TEXT>
+
+The style of art should be <ART_STYLE>
+<IMAGE_INSPIRATIONS>

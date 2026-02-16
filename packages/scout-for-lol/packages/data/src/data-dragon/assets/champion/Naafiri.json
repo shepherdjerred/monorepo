@@ -1,0 +1,305 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Naafiri": {
+      "id": "Naafiri",
+      "key": "950",
+      "name": "Naafiri",
+      "title": "the Hound of a Hundred Bites",
+      "image": {
+        "full": "Naafiri.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 336,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "950000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "950001",
+          "num": 1,
+          "name": "Soul Fighter Naafiri",
+          "chromas": true
+        },
+        {
+          "id": "950011",
+          "num": 11,
+          "name": "PROJECT: Naafiri",
+          "chromas": true
+        },
+        {
+          "id": "950020",
+          "num": 20,
+          "name": "Glizzy Naafiri",
+          "chromas": true
+        }
+      ],
+      "lore": "Across the sands of Shurima, a chorus of howls rings out. It is the call of the dune hounds, voracious predators who form packs and compete for the right to hunt in these barren lands. Among them, one pack stands above all, for they are driven not only by canine instincts, but by the ancient power of the Darkin.",
+      "blurb": "Across the sands of Shurima, a chorus of howls rings out. It is the call of the dune hounds, voracious predators who form packs and compete for the right to hunt in these barren lands. Among them, one pack stands above all, for they are driven not only...",
+      "allytips": [
+        "Across the sands of Shurima, a chorus of howls rings out. It is the call of the dune hounds, voracious predators who form packs and compete for the right to hunt in these barren lands. Among them, one pack stands above all, for they are driven not only by canine instincts, but by the ancient power of the Darkin."
+      ],
+      "enemytips": [],
+      "tags": ["Assassin", "Fighter"],
+      "partype": "Mana",
+      "info": {
+        "attack": 9,
+        "defense": 5,
+        "magic": 0,
+        "difficulty": 2
+      },
+      "stats": {
+        "hp": 610,
+        "hpperlevel": 105,
+        "mp": 400,
+        "mpperlevel": 55,
+        "movespeed": 340,
+        "armor": 28,
+        "armorperlevel": 4.2,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 7.5,
+        "hpregenperlevel": 0.7,
+        "mpregen": 7.5,
+        "mpregenperlevel": 1,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 55,
+        "attackdamageperlevel": 2,
+        "attackspeedperlevel": 2.1,
+        "attackspeed": 0.663
+      },
+      "spells": [
+        {
+          "id": "NaafiriQ",
+          "name": "Darkin Daggers",
+          "description": "Naafiri hurls up to two daggers, each inflicting bleed, or each inflicting bonus damage if the target is already bleeding.<br><br>Packmates leap to attack the first champion or monster hit by this skill.<br>",
+          "tooltip": "Naafiri hurls Darkin-tainted blades, dealing <physicalDamage>{{ spell.naafiriq:totaldamagefirstcast }} physical damage</physicalDamage> and inflicting a bleed, dealing <physicalDamage>{{ spell.naafiriq:totalbleeddamage }} physical damage</physicalDamage> over {{ spell.naafiriq:bleedduration }} seconds.<br /><br />Naafiri can <recast>Recast</recast> this Ability. If enemies hit are already bleeding from this Ability, it instead deals the remaining bleed damage plus between <physicalDamage>{{ spell.naafiriq:totalmindamagesecondcast }}</physicalDamage> and <physicalDamage>{{ spell.naafiriq:totalmaxdamagesecondcast }} physical damage</physicalDamage>, based on their missing Health. If that target was a champion or large monster, Naafiri restores <healing>{{ spell.naafiriq:totalhealsecondcast }} Health</healing>.<br /><br /><keywordMajor>Packmates</keywordMajor> will leap at the first champion or monster hit and attack them for {{ spell.naafirip:packmatetauntduration }} seconds. <br /><br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Initial Damage",
+              "Second Cast Damage",
+              "Bleed Damage",
+              "Healing",
+              "@AbilityResourceName@ Cost",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamagefirstcast }} -> {{ basedamagefirstcastNL }}",
+              "{{ basedamagesecondcast }} -> {{ basedamagesecondcastNL }}",
+              "{{ bleedbasedamage }} -> {{ bleedbasedamageNL }}",
+              "{{ basehealsecondcast }} -> {{ basehealsecondcastNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [9, 8.5, 8, 7.5, 7],
+          "cooldownBurn": "9/8.5/8/7.5/7",
+          "cost": [55, 60, 65, 70, 75],
+          "costBurn": "55/60/65/70/75",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [900, 900, 900, 900, 900],
+          "rangeBurn": "900",
+          "image": {
+            "full": "NaafiriQ.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 288,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "NaafiriR",
+          "name": "The Call of the Pack",
+          "description": "Naafiri becomes Untargetable and empowers her pack, spawning additional packmates and gaining increased Move Speed and Attack Damage.<br>",
+          "tooltip": "Naafiri becomes Untargetable for {{ untargetableduration }} second and prepares to hunt, spawning <keywordMajor>{{ packmatestoadd }} additional Packmates</keywordMajor> and gaining <physicalDamage>{{ bonusad }} Attack Damage</physicalDamage> and <speed>{{ movespeedamount*100 }}% Move Speed</speed> for {{ duration }} seconds.<br /><br /><keywordMajor>Packmates</keywordMajor> become Untargetable and are recalled to Naafiri.<br /><br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Move Speed", "Cooldown"],
+            "effect": [
+              "{{ movespeedamount*100.000000 }}% -> {{ movespeedamountnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [26, 24, 22, 20, 18],
+          "cooldownBurn": "26/24/22/20/18",
+          "cost": [60, 60, 60, 60, 60],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [400, 400, 400, 400, 400],
+          "rangeBurn": "400",
+          "image": {
+            "full": "NaafiriR.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 336,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "NaafiriE",
+          "name": "Eviscerate",
+          "description": "Naafiri dashes and damages enemies in an area around her, recalling her packmates and fully healing them.",
+          "tooltip": "Naafiri surges forward, dealing <physicalDamage>{{ totaldamagefirstslash }} physical damage</physicalDamage>, then explodes in a flurry of blades, dealing <physicalDamage>{{ totaldamagesecondslash }} physical damage.</physicalDamage><br /><br /><keywordMajor>Packmates</keywordMajor> become Untargetable and are recalled to Naafiri <healing>restoring 100% Health</healing>. <br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage (First Slash)", "Damage (Second Slash)", "Cooldown"],
+            "effect": [
+              "{{ basedamagefirstslash }} -> {{ basedamagefirstslashNL }}",
+              "{{ basedamagesecondhit }} -> {{ basedamagesecondhitNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [11, 10, 9, 8, 7],
+          "cooldownBurn": "11/10/9/8/7",
+          "cost": [35, 35, 35, 35, 35],
+          "costBurn": "35",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [450, 450, 450, 450, 450],
+          "rangeBurn": "450",
+          "image": {
+            "full": "NaafiriE.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 384,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "NaafiriW",
+          "name": "Hounds' Pursuit",
+          "description": "Naafiri and her packmates dash at a champion, dealing damage. Naafiri reveals nearby enemies if she scores a takedown and can recast this Ability once. The second cast grants a shield.",
+          "tooltip": "Naafiri dashes at an enemy champion, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and briefly <status>Slowing</status> them. <keywordMajor>Packmates</keywordMajor> become Untargetable and dash alongside Naafiri, dealing <physicalDamage>{{ packmatedamage }} physical damage</physicalDamage> per <keywordMajor>Packmate</keywordMajor>.<br /><br />If Naafiri scores a Takedown within {{ takedownwindow }} seconds she reveals nearby enemies and can recast this Ability once. The second cast grants <shield>{{ shieldtotal }} Shield</shield> for {{ shieldduration }} seconds.<br /><br /><br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Shield Amount", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ shieldsize }} -> {{ shieldsizeNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [110, 95, 80],
+          "cooldownBurn": "110/95/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [900, 900, 900],
+          "rangeBurn": "900",
+          "image": {
+            "full": "NaafiriW.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 432,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "We Are More",
+        "description": "Naafiri spawns packmates that attack the targets of her attacks and abilities.",
+        "image": {
+          "full": "Icons_Naafiri_P.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 336,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

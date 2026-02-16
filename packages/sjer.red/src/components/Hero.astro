@@ -1,0 +1,14 @@
+---
+import Background from "./Background.astro";
+import Container from "./Container.astro";
+---
+
+<Background extraCss={`bg-black min-h-[0vh] md:min-h-[5vh]`}>
+  <Container width={"normal"}>
+    <div class:list={[`grid grid-cols-1 md:grid-flow-row`]}>
+      <div class:list={[`md:place-self-center m-5 md:m-0 md:pt-10 md:pb-10 text-center`]}>
+        <h1 class:list={[`text-black bg-white p-2 font-bold text-4xl inline-block mb-2 md:mb-0`]}>Hi, I'm Jerred 😄</h1>
+      </div>
+    </div>
+  </Container>
+</Background>

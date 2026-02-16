@@ -1,3 +1,8 @@
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    reason = "integration tests use expect/unwrap for simplicity"
+)]
 //! Integration tests for SessionManager with mock backends.
 //!
 //! These tests verify SessionManager behavior using mock implementations
@@ -117,7 +122,7 @@ async fn test_create_session_zellij_success() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "Test prompt".to_string(),
+            "Test prompt".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None, // model
@@ -168,7 +173,7 @@ async fn test_create_session_docker_success() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "Zellij prompt".to_string(),
+            "Zellij prompt".to_owned(),
             BackendType::Zellij, // Changed from Docker to avoid proxy requirement
             AgentType::ClaudeCode,
             None, // model
@@ -212,7 +217,7 @@ async fn test_create_session_git_fails() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "Test prompt".to_string(),
+            "Test prompt".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None, // model
@@ -254,7 +259,7 @@ async fn test_create_session_backend_fails() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "Test prompt".to_string(),
+            "Test prompt".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None, // model
@@ -296,7 +301,7 @@ async fn test_get_session_by_name() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "prompt".to_string(),
+            "prompt".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None, // model
@@ -330,7 +335,7 @@ async fn test_get_session_by_uuid() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "prompt".to_string(),
+            "prompt".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None, // model
@@ -374,7 +379,7 @@ async fn test_delete_session_success() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "prompt".to_string(),
+            "prompt".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None, // model
@@ -431,7 +436,7 @@ async fn test_archive_session_success() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "prompt".to_string(),
+            "prompt".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None, // model
@@ -480,7 +485,7 @@ async fn test_unarchive_session_success() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "prompt".to_string(),
+            "prompt".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None, // model
@@ -521,7 +526,7 @@ async fn test_unarchive_session_not_archived() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "prompt".to_string(),
+            "prompt".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None, // model
@@ -566,7 +571,7 @@ async fn test_get_attach_command_zellij() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "prompt".to_string(),
+            "prompt".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None, // model
@@ -601,7 +606,7 @@ async fn test_get_attach_command_docker() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "prompt".to_string(),
+            "prompt".to_owned(),
             BackendType::Zellij, // Changed from Docker to avoid proxy requirement
             AgentType::ClaudeCode,
             None, // model
@@ -646,7 +651,7 @@ async fn test_reconcile_healthy_session() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "prompt".to_string(),
+            "prompt".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None, // model
@@ -683,7 +688,7 @@ async fn test_reconcile_missing_backend() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "prompt".to_string(),
+            "prompt".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None, // model
@@ -732,7 +737,7 @@ async fn test_list_sessions_multiple() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "prompt 1".to_string(),
+            "prompt 1".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None, // model
@@ -755,7 +760,7 @@ async fn test_list_sessions_multiple() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "prompt 2".to_string(),
+            "prompt 2".to_owned(),
             BackendType::Zellij, // Changed from Docker to avoid proxy requirement
             AgentType::ClaudeCode,
             None, // model
@@ -778,7 +783,7 @@ async fn test_list_sessions_multiple() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "prompt 3".to_string(),
+            "prompt 3".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None, // model
@@ -812,7 +817,7 @@ async fn test_update_metadata_success() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "prompt".to_string(),
+            "prompt".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None, // model
@@ -838,16 +843,16 @@ async fn test_update_metadata_success() {
     manager
         .update_metadata(
             &session.name,
-            Some("Test Title".to_string()),
-            Some("Test Description".to_string()),
+            Some("Test Title".to_owned()),
+            Some("Test Description".to_owned()),
         )
         .await
         .unwrap();
 
     // Verify metadata was updated
     let updated = manager.get_session(&session.name).await.unwrap();
-    assert_eq!(updated.title, Some("Test Title".to_string()));
-    assert_eq!(updated.description, Some("Test Description".to_string()));
+    assert_eq!(updated.title, Some("Test Title".to_owned()));
+    assert_eq!(updated.description, Some("Test Description".to_owned()));
 }
 
 #[tokio::test]
@@ -859,7 +864,7 @@ async fn test_update_metadata_by_uuid() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "prompt".to_string(),
+            "prompt".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None, // model
@@ -882,14 +887,14 @@ async fn test_update_metadata_by_uuid() {
     manager
         .update_metadata(
             &session.id.to_string(),
-            Some("UUID Title".to_string()),
+            Some("UUID Title".to_owned()),
             None,
         )
         .await
         .unwrap();
 
     let updated = manager.get_session(&session.id.to_string()).await.unwrap();
-    assert_eq!(updated.title, Some("UUID Title".to_string()));
+    assert_eq!(updated.title, Some("UUID Title".to_owned()));
     assert!(updated.description.is_none());
 }
 
@@ -902,7 +907,7 @@ async fn test_update_metadata_partial() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "prompt".to_string(),
+            "prompt".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None, // model
@@ -923,23 +928,23 @@ async fn test_update_metadata_partial() {
 
     // Update only title
     manager
-        .update_metadata(&session.name, Some("Just Title".to_string()), None)
+        .update_metadata(&session.name, Some("Just Title".to_owned()), None)
         .await
         .unwrap();
 
     let updated = manager.get_session(&session.name).await.unwrap();
-    assert_eq!(updated.title, Some("Just Title".to_string()));
+    assert_eq!(updated.title, Some("Just Title".to_owned()));
     assert!(updated.description.is_none());
 
     // Update only description
     manager
-        .update_metadata(&session.name, None, Some("Just Description".to_string()))
+        .update_metadata(&session.name, None, Some("Just Description".to_owned()))
         .await
         .unwrap();
 
     let updated = manager.get_session(&session.name).await.unwrap();
     assert!(updated.title.is_none()); // Was set to None
-    assert_eq!(updated.description, Some("Just Description".to_string()));
+    assert_eq!(updated.description, Some("Just Description".to_owned()));
 }
 
 #[tokio::test]
@@ -949,8 +954,8 @@ async fn test_update_metadata_session_not_found() {
     let result = manager
         .update_metadata(
             "nonexistent",
-            Some("Title".to_string()),
-            Some("Description".to_string()),
+            Some("Title".to_owned()),
+            Some("Description".to_owned()),
         )
         .await;
 
@@ -970,7 +975,7 @@ async fn test_session_lifecycle() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "prompt".to_string(),
+            "prompt".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None, // model

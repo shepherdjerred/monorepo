@@ -1,0 +1,323 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Qiyana": {
+      "id": "Qiyana",
+      "key": "246",
+      "name": "Qiyana",
+      "title": "Empress of the Elements",
+      "image": {
+        "full": "Qiyana.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 96,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "246000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "246001",
+          "num": 1,
+          "name": "Battle Boss Qiyana",
+          "chromas": true
+        },
+        {
+          "id": "246002",
+          "num": 2,
+          "name": "True Damage Qiyana",
+          "chromas": false
+        },
+        {
+          "id": "246010",
+          "num": 10,
+          "name": "Prestige True Damage Qiyana",
+          "chromas": false
+        },
+        {
+          "id": "246011",
+          "num": 11,
+          "name": "Battle Queen Qiyana",
+          "chromas": true
+        },
+        {
+          "id": "246020",
+          "num": 20,
+          "name": "Shockblade Qiyana",
+          "chromas": true
+        },
+        {
+          "id": "246021",
+          "num": 21,
+          "name": "Prestige True Damage Qiyana (2022)",
+          "chromas": false
+        },
+        {
+          "id": "246030",
+          "num": 30,
+          "name": "Lunar Empress Qiyana",
+          "chromas": true
+        },
+        {
+          "id": "246040",
+          "num": 40,
+          "name": "La Ilusión Qiyana",
+          "chromas": true
+        },
+        {
+          "id": "246050",
+          "num": 50,
+          "name": "Prestige Battle Academia Qiyana",
+          "chromas": false
+        }
+      ],
+      "lore": "In the jungle city of Ixaocan, Qiyana plots her own ruthless path to the high seat of the Yun Tal. Last in line to succeed her parents, she faces those who stand in her way with brash confidence and unprecedented mastery over elemental magic. With the land itself obeying her every command, Qiyana sees herself as the greatest elementalist in the history of Ixaocan—and by that right, deserving of not only a city, but an empire.",
+      "blurb": "In the jungle city of Ixaocan, Qiyana plots her own ruthless path to the high seat of the Yun Tal. Last in line to succeed her parents, she faces those who stand in her way with brash confidence and unprecedented mastery over elemental magic. With the...",
+      "allytips": [],
+      "enemytips": [],
+      "tags": ["Assassin"],
+      "partype": "Mana",
+      "info": {
+        "attack": 0,
+        "defense": 2,
+        "magic": 4,
+        "difficulty": 8
+      },
+      "stats": {
+        "hp": 590,
+        "hpperlevel": 121,
+        "mp": 375,
+        "mpperlevel": 60,
+        "movespeed": 335,
+        "armor": 31,
+        "armorperlevel": 4.5,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 150,
+        "hpregen": 8,
+        "hpregenperlevel": 0.9,
+        "mpregen": 8,
+        "mpregenperlevel": 0.7,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 64,
+        "attackdamageperlevel": 3.1,
+        "attackspeedperlevel": 2.1,
+        "attackspeed": 0.688
+      },
+      "spells": [
+        {
+          "id": "QiyanaQ",
+          "name": "Elemental Wrath / Edge of Ixtal",
+          "description": "Qiyana swings her weapon, dealing damage with a bonus effect based on her element.",
+          "tooltip": "If Qiyana does not have an <keywordMajor>Enchantment</keywordMajor>, she slashes, dealing <physicalDamage>{{ vanilladamage }} physical damage</physicalDamage> to enemies in a small area. If she does, this Ability gains extra range and an additional effect based on the type of <keywordMajor>Enchantment</keywordMajor>:<li><keywordMajor>Ice Enchantment</keywordMajor>: Briefly <status>Roots</status>, then <status>Slows</status> by {{ slowpotency*-100 }}% for {{ slowduration }} second.<li><keywordMajor>Rock Enchantment</keywordMajor>: Deals an additional <physicalDamage>{{ tremordamage }} physical damage</physicalDamage> to units below {{ critthreshold*100 }}% Health.<li><keywordMajor>Wild Enchantment</keywordMajor>: Leaves a trail that turns Qiyana <keywordStealth>Invisible</keywordStealth> and grants <speed>{{ haste*100 }}% Move Speed</speed>.<br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage"],
+            "effect": ["{{ vanillabase }} -> {{ vanillabaseNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [7, 7, 7, 7, 7],
+          "cooldownBurn": "7",
+          "cost": [35, 35, 35, 35, 35],
+          "costBurn": "35",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "0",
+          "range": [525, 525, 525, 525, 525],
+          "rangeBurn": "525",
+          "image": {
+            "full": "QiyanaQ.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 288,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "QiyanaW",
+          "name": "Terrashape",
+          "description": "Qiyana dashes to a location and enchants her weapon with an element. Her attacks and abilities deal bonus damage while her weapon is enchanted. ",
+          "tooltip": "<spellPassive>Passive:</spellPassive> While Qiyana's weapon is <keywordMajor>Enchanted</keywordMajor>, she gains <attackSpeed>{{ attackspeed*100 }}% Attack Speed</attackSpeed> and her Attacks deal an additional <magicDamage>{{ onhitdamage }} magic damage</magicDamage>. She also gains <speed>{{ passivems*100 }}% Move Speed</speed> while out of combat near the corresponding terrain type.<br /><br /><spellActive>Active:</spellActive> Qiyana dashes towards a nearby brush, terrain, or river and <keywordMajor>Enchants</keywordMajor> her weapon with that particular terrain type. This refreshes <spellName>Elemental Wrath / Edge of Ixtal</spellName>'s Cooldown.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["On-Hit Damage", "Move Speed", "Bonus Attack Speed", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ passivems*100.000000 }}% -> {{ passivemsnl*100.000000 }}%",
+              "{{ attackspeed*100.000000 }}% -> {{ attackspeednl*100.000000 }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [7, 7, 7, 7, 7],
+          "cooldownBurn": "7",
+          "cost": [25, 30, 35, 40, 45],
+          "costBurn": "25/30/35/40/45",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "0",
+          "range": [1100, 1100, 1100, 1100, 1100],
+          "rangeBurn": "1100",
+          "image": {
+            "full": "QiyanaW.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 336,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "QiyanaE",
+          "name": "Audacity",
+          "description": "Qiyana dashes to an enemy, damaging them.",
+          "tooltip": "Qiyana dashes through an enemy and deals <physicalDamage>{{ damage }} physical damage</physicalDamage> to them.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Base Damage", "Cooldown", "Mana Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basecost }} -> {{ basecostNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [11, 10, 9, 8, 7],
+          "cooldownBurn": "11/10/9/8/7",
+          "cost": [40, 45, 50, 55, 60],
+          "costBurn": "40/45/50/55/60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "0",
+          "range": [650, 650, 650, 650, 650],
+          "rangeBurn": "650",
+          "image": {
+            "full": "QiyanaE.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 384,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "QiyanaR",
+          "name": "Supreme Display of Talent",
+          "description": "Qiyana sends out a shockwave that detonates whatever elements she hits with it, stunning and damaging nearby enemies.",
+          "tooltip": "Qiyana launches a shockwave that <status>Knocks Back</status> enemies and detonates when it hits terrain. The explosion follows the entire edge of the terrain, <status>Stunning</status> for between 0.5 and {{ stunduration }} seconds and dealing <physicalDamage>{{ damage }}</physicalDamage> plus <physicalDamage>{{ missinghealthdamagerock }} max Health physical damage</physicalDamage>. <status>Stun</status> duration scales down with distance the shockwave has travelled.<br /><br />Any river or brush the shockwave passes through also explode after a delay for the same damage and <status>Stun</status>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Initial Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 120, 120],
+          "cooldownBurn": "120",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "0",
+          "range": [950, 950, 950],
+          "rangeBurn": "950",
+          "image": {
+            "full": "QiyanaR.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 432,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Royal Privilege",
+        "description": "Qiyana's first basic attack or ability against each enemy deals bonus damage.",
+        "image": {
+          "full": "Qiyana_Passive.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 96,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

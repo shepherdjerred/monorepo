@@ -1,0 +1,258 @@
+palette = "catppuccin_latte"
+
+[directory]
+style = "bold lavender"
+
+[git_branch]
+style = "bold mauve"
+
+[git_status]
+style = "bold maroon"
+
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+
+[bun]
+format = "via [$symbol]($style)"
+style = "peach"
+
+[buf]
+format = "via [$symbol]($style)"
+style = "blue"
+
+[cmake]
+format = "via [$symbol]($style)"
+style = "blue"
+
+[cobol]
+format = "via [$symbol]($style)"
+style = "blue"
+
+[crystal]
+format = "via [$symbol]($style)"
+style = "mauve"
+
+[daml]
+format = "via [$symbol]($style)"
+style = "teal"
+
+[dart]
+format = "via [$symbol]($style)"
+style = "sky"
+
+[deno]
+format = "via [$symbol]($style)"
+style = "green"
+
+[dotnet]
+format = "[$symbol(🎯 $tfm )]($style)"
+style = "mauve"
+
+[elixir]
+format = "via [$symbol]($style)"
+style = "mauve"
+
+[elm]
+format = "via [$symbol]($style)"
+style = "sky"
+
+[erlang]
+format = "via [$symbol]($style)"
+style = "red"
+
+[fennel]
+format = "via [$symbol]($style)"
+style = "yellow"
+
+[gleam]
+format = "via [$symbol]($style)"
+style = "pink"
+
+[golang]
+format = "via [$symbol]($style)"
+style = "sapphire"
+
+[gradle]
+format = "via [$symbol]($style)"
+style = "teal"
+
+[haxe]
+format = "via [$symbol]($style)"
+style = "peach"
+
+[helm]
+format = "via [$symbol]($style)"
+style = "sapphire"
+
+[java]
+format = "via [$symbol]($style)"
+style = "red"
+
+[julia]
+format = "via [$symbol]($style)"
+style = "mauve"
+
+[kotlin]
+format = "via [$symbol]($style)"
+style = "mauve"
+
+[lua]
+format = "via [$symbol]($style)"
+style = "blue"
+disabled = true
+
+[meson]
+format = "via [$symbol]($style)"
+style = "sapphire"
+
+[nim]
+format = "via [$symbol]($style)"
+style = "yellow"
+
+[nodejs]
+format = "via [$symbol]($style)"
+style = "green"
+
+[ocaml]
+format = 'via [$symbol($switch_indicator$switch_name )]($style)'
+style = "peach"
+
+[opa]
+format = "via [$symbol]($style)"
+style = "blue"
+
+[perl]
+format = "via [$symbol]($style)"
+style = "sky"
+
+[php]
+format = "via [$symbol]($style)"
+style = "mauve"
+
+[pulumi]
+format = "via [$symbol$stack]($style)"
+style = "mauve"
+
+[purescript]
+format = "via [$symbol]($style)"
+style = "mauve"
+
+[python]
+format = "via [$symbol]($style)"
+style = "yellow"
+
+[quarto]
+format = "via [$symbol]($style)"
+style = "blue"
+
+[raku]
+format = "via [$symbol]($style)"
+style = "mauve"
+
+[red]
+format = "via [$symbol]($style)"
+style = "red"
+
+[rlang]
+format = "via [$symbol]($style)"
+style = "blue"
+
+[ruby]
+format = "via [$symbol]($style)"
+style = "red"
+
+[rust]
+format = "via [$symbol]($style)"
+style = "peach"
+
+[solidity]
+format = "via [$symbol]($style)"
+style = "blue"
+
+[typst]
+format = "via [$symbol]($style)"
+style = "teal"
+
+[swift]
+format = "via [$symbol]($style)"
+style = "peach"
+
+[vagrant]
+format = "via [$symbol]($style)"
+style = "sapphire"
+
+[vlang]
+format = "via [$symbol]($style)"
+style = "blue"
+
+[zig]
+format = "via [$symbol]($style)"
+style = "peach"
+
+[aws]
+style = "yellow"
+
+[docker_context]
+style = "blue"
+
+[kubernetes]
+style = "sapphire"
+
+# Catppuccin Latte palette
+[palettes.catppuccin_latte]
+rosewater = "#dc8a78"
+flamingo = "#dd7878"
+pink = "#ea76cb"
+mauve = "#8839ef"
+red = "#d20f39"
+maroon = "#e64553"
+peach = "#fe640b"
+yellow = "#df8e1d"
+green = "#40a02b"
+teal = "#179299"
+sky = "#04a5e5"
+sapphire = "#209fb5"
+blue = "#1e66f5"
+lavender = "#7287fd"
+text = "#4c4f69"
+subtext1 = "#5c5f77"
+subtext0 = "#6c6f85"
+overlay2 = "#7c7f93"
+overlay1 = "#8c8fa1"
+overlay0 = "#9ca0b0"
+surface2 = "#acb0be"
+surface1 = "#bcc0cc"
+surface0 = "#ccd0da"
+base = "#eff1f5"
+mantle = "#e6e9ef"
+crust = "#dce0e8"
+
+# Catppuccin Mocha palette
+[palettes.catppuccin_mocha]
+rosewater = "#f5e0dc"
+flamingo = "#f2cdcd"
+pink = "#f5c2e7"
+mauve = "#cba6f7"
+red = "#f38ba8"
+maroon = "#eba0ac"
+peach = "#fab387"
+yellow = "#f9e2af"
+green = "#a6e3a1"
+teal = "#94e2d5"
+sky = "#89dceb"
+sapphire = "#74c7ec"
+blue = "#89b4fa"
+lavender = "#b4befe"
+text = "#cdd6f4"
+subtext1 = "#bac2de"
+subtext0 = "#a6adc8"
+overlay2 = "#9399b2"
+overlay1 = "#7f849c"
+overlay0 = "#6c7086"
+surface2 = "#585b70"
+surface1 = "#45475a"
+surface0 = "#313244"
+base = "#1e1e2e"
+mantle = "#181825"
+crust = "#11111b"

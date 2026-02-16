@@ -44,6 +44,7 @@ fn default_limit() -> f64 {
 }
 
 /// Client for Claude.ai API operations
+#[derive(Debug)]
 pub struct ClaudeApiClient {
     http_client: Client,
     base_url: String,
@@ -56,6 +57,7 @@ impl ClaudeApiClient {
     ///
     /// Panics if the HTTP client cannot be built with the default configuration.
     #[must_use]
+    #[expect(clippy::expect_used, reason = "default reqwest Client::builder configuration is infallible")]
     pub fn new() -> Self {
         let http_client = Client::builder()
             .timeout(Duration::from_secs(10))
@@ -64,7 +66,7 @@ impl ClaudeApiClient {
 
         Self {
             http_client,
-            base_url: "https://claude.ai".to_string(),
+            base_url: "https://claude.ai".to_owned(),
         }
     }
 
@@ -241,7 +243,7 @@ impl ClaudeApiClient {
             .ok_or_else(|| anyhow::anyhow!("Missing seven_day usage data in API response"))?;
 
         Ok(crate::api::protocol::ClaudeUsage {
-            organization_id: org_id.to_string(),
+            organization_id: org_id.to_owned(),
             organization_name: None, // Will be filled by caller if available
             five_hour: crate::api::protocol::UsageWindow {
                 current: five_hour.current,

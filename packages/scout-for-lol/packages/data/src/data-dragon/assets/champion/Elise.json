@@ -1,0 +1,368 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Elise": {
+      "id": "Elise",
+      "key": "60",
+      "name": "Elise",
+      "title": "the Spider Queen",
+      "image": {
+        "full": "Elise.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 0,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60001",
+          "num": 1,
+          "name": "Death Blossom Elise",
+          "chromas": false
+        },
+        {
+          "id": "60002",
+          "num": 2,
+          "name": "Victorious Elise",
+          "chromas": false
+        },
+        {
+          "id": "60003",
+          "num": 3,
+          "name": "Blood Moon Elise",
+          "chromas": false
+        },
+        {
+          "id": "60004",
+          "num": 4,
+          "name": "SKT T1 Elise",
+          "chromas": false
+        },
+        {
+          "id": "60005",
+          "num": 5,
+          "name": "Super Galaxy Elise",
+          "chromas": false
+        },
+        {
+          "id": "60006",
+          "num": 6,
+          "name": "Bewitching Elise",
+          "chromas": true
+        },
+        {
+          "id": "60015",
+          "num": 15,
+          "name": "Withered Rose Elise",
+          "chromas": true
+        },
+        {
+          "id": "60024",
+          "num": 24,
+          "name": "Coven Elise",
+          "chromas": true
+        },
+        {
+          "id": "60034",
+          "num": 34,
+          "name": "Masque of the Black Rose Elise",
+          "chromas": false
+        }
+      ],
+      "lore": "Elise is a deadly predator who dwells in a shuttered, lightless palace, deep within the oldest city of Noxus. Once mortal, she was the mistress of a powerful house, but the bite of a vile demigod transformed her into something beautiful, yet utterly inhuman—a spider-like creature, drawing unsuspecting prey into her web. To maintain her eternal youth, Elise now prefers to feed upon the naive and the faithless, and there are few who can resist her seductions.",
+      "blurb": "Elise is a deadly predator who dwells in a shuttered, lightless palace, deep within the oldest city of Noxus. Once mortal, she was the mistress of a powerful house, but the bite of a vile demigod transformed her into something beautiful, yet utterly...",
+      "allytips": [
+        "Spider Form is most effective at finishing off enemies with low health; Human Form's Neurotoxin does more damage to healthy foes. ",
+        "When in Spider Form, Spiderlings will attack the target that Elise uses Venomous Bite on. ",
+        "Elise's Spider Form and Spider Form abilities do not cost mana and can be prioritized when you are trying to conserve mana."
+      ],
+      "enemytips": [
+        "Elise's Spider Form is more dangerous when you are at low health, and her Human Form more potent when you are at high health.",
+        "Rappel will only move Elise straight up and down unless she can descend upon an enemy unit.",
+        "Rappel has a long cooldown. Elise is vulnerable after she has used it."
+      ],
+      "tags": ["Assassin", "Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 6,
+        "defense": 5,
+        "magic": 7,
+        "difficulty": 9
+      },
+      "stats": {
+        "hp": 620,
+        "hpperlevel": 109,
+        "mp": 324,
+        "mpperlevel": 50,
+        "movespeed": 330,
+        "armor": 30,
+        "armorperlevel": 4.5,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 550,
+        "hpregen": 5.5,
+        "hpregenperlevel": 0.6,
+        "mpregen": 6,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 55,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 1.75,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "EliseHumanQ",
+          "name": "Neurotoxin / Venomous Bite",
+          "description": "Human Form: Deals damage based upon how high the target's Health is.<br><br>Spider Form: Lunges at an enemy and deals damage based upon how low their Health is.",
+          "tooltip": "<keywordMajor>Human Form</keywordMajor>: Elise injects neurotoxin, dealing <magicDamage>{{ basedamage }} plus {{ humanpercenthealth }} current Health magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Neurotoxin Damage", "Venomous Bite Damage", "Monster Damage Cap", "Mana Cost (Neurotoxin)"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ spiderbasedamage }} -> {{ spiderbasedamageNL }}",
+              "{{ monstercapdamage }} -> {{ monstercapdamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [6, 6, 6, 6, 6],
+          "cooldownBurn": "6",
+          "cost": [80, 85, 90, 95, 100],
+          "costBurn": "80/85/90/95/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [615, 615, 615, 615, 615],
+          "rangeBurn": "615",
+          "image": {
+            "full": "EliseHumanQ.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 384,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "EliseHumanW",
+          "name": "Volatile Spiderling / Skittering Frenzy",
+          "description": "Human Form: Releases a venom-gorged Spiderling that explodes when it nears a target.<br><br>Spider Form: Elise and her Spiderlings gain Attack Speed.",
+          "tooltip": "<keywordMajor>Human Form</keywordMajor>: Elise summons an explosive spider that moves to a location and explodes when it nears an enemy or after 3 seconds. The spider deals <magicDamage>{{ spell.elisehumanw:totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "@AbilityResourceName@ Cost"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cost }} -> {{ costNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 12, 12, 12, 12],
+          "cooldownBurn": "12",
+          "cost": [60, 70, 80, 90, 100],
+          "costBurn": "60/70/80/90/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [4, 4, 4, 4, 4],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [3, 3, 3, 3, 3],
+            [65, 75, 85, 95, 105],
+            [275, 275, 275, 275, 275],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "4", "0", "0", "3", "65/75/85/95/105", "275", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [950, 950, 950, 950, 950],
+          "rangeBurn": "950",
+          "image": {
+            "full": "EliseHumanW.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 432,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "EliseHumanE",
+          "name": "Cocoon / Rappel",
+          "description": "Human Form: Stuns the first enemy unit hit and reveals them if they are not stealthed.<br><br>Spider Form: Elise and her Spiderlings ascend into the air and then descend upon target enemy. After descending on an enemy target, Elise's bonus damage and healing from Spider Queen is increased.",
+          "tooltip": "<keywordMajor>Human Form</keywordMajor>: Elise fires a cocoon, <status>Stunning</status> and revealing the first enemy hit for {{ stunduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Stun Duration:", "Cooldown (Cocoon)", "Cooldown (Rappel)", "Damage and Healing Increase"],
+            "effect": [
+              "{{ e5 }} -> {{ e5NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ e3 }} -> {{ e3NL }}",
+              "{{ e6 }}% -> {{ e6NL }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 11.5, 11, 10.5, 10],
+          "cooldownBurn": "12/11.5/11/10.5/10",
+          "cost": [50, 50, 50, 50, 50],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [12, 11.5, 11, 10.5, 10],
+            [15, 20, 25, 30, 35],
+            [22, 21, 20, 19, 18],
+            [2, 2, 2, 2, 2],
+            [1.6, 1.8, 2, 2.2, 2.4],
+            [40, 55, 70, 85, 100],
+            [250, 250, 250, 250, 250],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "12/11.5/11/10.5/10",
+            "15/20/25/30/35",
+            "22/21/20/19/18",
+            "2",
+            "1.6/1.8/2/2.2/2.4",
+            "40/55/70/85/100",
+            "250",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1075, 1075, 1075, 1075, 1075],
+          "rangeBurn": "1075",
+          "image": {
+            "full": "EliseHumanE.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 0,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "EliseR",
+          "name": "Spider Form",
+          "description": "Transforms into a menacing spider, reducing her attack range in exchange for Move Speed, new abilities, and a Spiderling swarm that will attack her foes.",
+          "tooltip": "<keywordMajor>Human Form</keywordMajor>: Elise transforms into a menacing spider, becoming melee, gaining access to <keywordMajor>Spider Form</keywordMajor> Abilities and summons all dormant <keywordMajor>Spiderlings</keywordMajor>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Spider Form Bite Damage",
+              "Spiderling Bonus Damage",
+              "Maximum Number of Spiderlings",
+              "Spiderling Armor",
+              "Spiderling Magic Resist"
+            ],
+            "effect": [
+              "{{ passivebonusdamage }} -> {{ passivebonusdamageNL }}",
+              "{{ spiderlingbasedamage }} -> {{ spiderlingbasedamageNL }}",
+              "{{ spiderlingsstored }} -> {{ spiderlingsstoredNL }}",
+              "{{ e6 }} -> {{ e6NL }}",
+              "{{ e7 }} -> {{ e7NL }}"
+            ]
+          },
+          "maxrank": 4,
+          "cooldown": [3, 3, 3, 3],
+          "cooldownBurn": "3",
+          "cost": [0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0],
+            [12, 22, 32, 42],
+            [25, 25, 25, 25],
+            [25, 25, 25, 25],
+            [2, 3, 4, 5],
+            [30, 50, 70, 90],
+            [50, 70, 90, 110],
+            [6, 8, 10, 12],
+            [0.08, 0.08, 0.08, 0.08],
+            [0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "12/22/32/42",
+            "25",
+            "25",
+            "2/3/4/5",
+            "30/50/70/90",
+            "50/70/90/110",
+            "6/8/10/12",
+            "0.08",
+            "0"
+          ],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [20, 20, 20, 20],
+          "rangeBurn": "20",
+          "image": {
+            "full": "EliseR.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 48,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        }
+      ],
+      "passive": {
+        "name": "Spider Queen",
+        "description": "Human Form: When Elise's abilities hit an enemy, she gains a dormant Spiderling.<br><br>Spider Form: Basic attacks deal bonus magic damage and restore health to Elise.",
+        "image": {
+          "full": "ElisePassive.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 0,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

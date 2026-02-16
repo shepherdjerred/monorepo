@@ -1,0 +1,311 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Ornn": {
+      "id": "Ornn",
+      "key": "516",
+      "name": "Ornn",
+      "title": "The Fire below the Mountain",
+      "image": {
+        "full": "Ornn.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 384,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "516000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "516001",
+          "num": 1,
+          "name": "Thunder Lord Ornn",
+          "chromas": false
+        },
+        {
+          "id": "516002",
+          "num": 2,
+          "name": "Elderwood Ornn",
+          "chromas": true
+        },
+        {
+          "id": "516011",
+          "num": 11,
+          "name": "Space Groove Ornn",
+          "chromas": true
+        },
+        {
+          "id": "516020",
+          "num": 20,
+          "name": "Choo-Choo Ornn",
+          "chromas": true
+        },
+        {
+          "id": "516029",
+          "num": 29,
+          "name": "Aegis Frame Ornn",
+          "chromas": true
+        }
+      ],
+      "lore": "Ornn is the Freljordian spirit of forging and craftsmanship. He works in the solitude of a massive smithy, hammered out from the lava caverns beneath the volcano Hearth-Home. There he stokes bubbling cauldrons of molten rock to purify ores and fashion items of unsurpassed quality. When other deities—especially Volibear—walk the earth and meddle in mortal affairs, Ornn arises to put these impetuous beings back in their place, either with his trusty hammer or the fiery power of the mountains themselves.",
+      "blurb": "Ornn is the Freljordian spirit of forging and craftsmanship. He works in the solitude of a massive smithy, hammered out from the lava caverns beneath the volcano Hearth-Home. There he stokes bubbling cauldrons of molten rock to purify ores and fashion...",
+      "allytips": [
+        "Learning build paths of items can help quickly select upgrades in lane.",
+        "Volcanic Rupture can be used to set up zoning areas to threaten enemies.",
+        "The order of your abilties matters! Try to optimize Brittle usage."
+      ],
+      "enemytips": [
+        "Try to stay away from walls. Ornn is much less strong if he cannot stun you.",
+        "Attack Ornn to keep him from creating items in lane."
+      ],
+      "tags": ["Tank"],
+      "partype": "Mana",
+      "info": {
+        "attack": 5,
+        "defense": 9,
+        "magic": 3,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 660,
+        "hpperlevel": 109,
+        "mp": 341,
+        "mpperlevel": 65,
+        "movespeed": 335,
+        "armor": 33,
+        "armorperlevel": 5.2,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 175,
+        "hpregen": 9,
+        "hpregenperlevel": 0.9,
+        "mpregen": 8,
+        "mpregenperlevel": 0.6,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 69,
+        "attackdamageperlevel": 3.5,
+        "attackspeedperlevel": 2,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "OrnnQ",
+          "name": "Volcanic Rupture",
+          "description": "Ornn slams the ground, sending out a fissure dealing damage and slowing enemies hit. After a small delay, a magma pillar forms at the end location.",
+          "tooltip": "Ornn slams the ground, creating a fissure dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Slowing</status> by {{ e5 }}% for {{ e6 }} seconds. A pillar of rock forms at the fissure's end for {{ e3 }} seconds. {{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [9, 8.5, 8, 7.5, 7],
+          "cooldownBurn": "9/8.5/8/7.5/7",
+          "cost": [45, 45, 45, 45, 45],
+          "costBurn": "45",
+          "datavalues": {},
+          "effect": [
+            null,
+            [20, 45, 70, 95, 120],
+            [1, 1, 1, 1, 1],
+            [4, 4, 4, 4, 4],
+            [0, 0, 0, 0, 0],
+            [40, 40, 40, 40, 40],
+            [2, 2, 2, 2, 2],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "20/45/70/95/120", "1", "4", "0", "40", "2", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [800, 800, 800, 800, 800],
+          "rangeBurn": "800",
+          "image": {
+            "full": "OrnnQ.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 0,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "OrnnW",
+          "name": "Bellows Breath",
+          "description": "Ornn advances, breathing fire. Enemies hit by the final gout of flame become Brittle.",
+          "tooltip": "Ornn stomps forward Unstoppably while breathing fire, dealing <magicDamage>{{ maxpercenthpperticktooltip }}% max Health magic damage</magicDamage> over {{ breathduration }} seconds. Enemies hit by the final bout of flame become <keywordMajor>Brittle</keywordMajor> for {{ brittleduration }} seconds.<br /><br /><status>Immobilizing</status> effects on <keywordMajor>Brittle</keywordMajor> targets have their duration increased by 30% and deal an additional <magicDamage>{{ brittlepercentmaxhpcalc }} max Health magic damage</magicDamage>. Ornn's Attacks against <keywordMajor>Brittle</keywordMajor> targets <status>Knock</status> them <status>Back</status>, dealing the additional damage.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["% Health damage", "Minimum Damage", "Maximum Damage", "@AbilityResourceName@ Cost", "Cooldown"],
+            "effect": [
+              "{{ maxpercenthpperticktooltip }}% -> {{ maxpercenthpperticktooltipNL }}%",
+              "{{ minimumdamagepertick*5.000000 }} -> {{ minimumdamageperticknl*5.000000 }}",
+              "{{ monsterdamagepertickcap*5.000000 }} -> {{ monsterdamagepertickcapnl*5.000000 }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 11.5, 11, 10.5, 10],
+          "cooldownBurn": "12/11.5/11/10.5/10",
+          "cost": [45, 50, 55, 60, 65],
+          "costBurn": "45/50/55/60/65",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [25000, 25000, 25000, 25000, 25000],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "OrnnW.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 48,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "OrnnE",
+          "name": "Searing Charge",
+          "description": "Ornn charges, dealing damage to enemies he passes through. If Ornn collides with terrain while charging, the impact creates a shockwave around him which deals damage and knocks up enemies.",
+          "tooltip": "Ornn charges, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. If Ornn rams into terrain, he creates a shockwave that <status>Knocks Up</status> enemies for {{ knockupduration }} seconds and applies the same damage to those not hit by the charge.<br /><br />Ornn's charge destroys magma pillars and terrain created by enemies.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Dash Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 13.5, 13, 12.5, 12],
+          "cooldownBurn": "14/13.5/13/12.5/12",
+          "cost": [35, 40, 45, 50, 55],
+          "costBurn": "35/40/45/50/55",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [450, 450, 450, 450, 450],
+          "rangeBurn": "450",
+          "image": {
+            "full": "OrnnE.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 96,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "OrnnR",
+          "name": "Call of the Forge God",
+          "description": "Ornn summons a massive elemental at a location which travels toward him with increasing speed. Enemies run over by the elemental take damage, are slowed and are made Brittle. Ornn can recast the ability to charge into the elemental, redirecting it in the direction he hits it, causing the elemental to affect any enemies it runs over to be knocked up, dealing the same damage and re-applying Brittle.",
+          "tooltip": "Ornn summons a massive lava elemental, which stampedes towards him, dealing <magicDamage>{{ rdamagecalc }} magic damage</magicDamage>, applying <keywordMajor>Brittle</keywordMajor> to, and <status>Slowing</status> enemies hit by {{ rslowpercentbasepremath }}% for {{ brittledurationtooltiponly }} seconds.<br /><br />Ornn can <recast>Recast</recast> to dash with a headbutt. If he dashes into the elemental, he redirects and empowers it, causing it to <status>Knock Up</status> the first champion for {{ rstunduration }} second and subsequent champions for {{ minstun }} seconds. The elemental also deals <magicDamage>{{ rdamagecalc }} magic damage</magicDamage> and reapplies <keywordMajor>Brittle</keywordMajor>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow", "Cooldown"],
+            "effect": [
+              "{{ rbasedamage }} -> {{ rbasedamageNL }}",
+              "{{ rslowpercentbasepremath }} -> {{ rslowpercentbasepremathNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [140, 120, 100],
+          "cooldownBurn": "140/120/100",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [2500, 2500, 2500],
+          "rangeBurn": "2500",
+          "image": {
+            "full": "OrnnR.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 144,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Living Forge",
+        "description": "Ornn gains an additional bonus Armor and Magic Resist from all sources.<br><br>Ornn can spend gold to forge non-consumable items anywhere.<br><br>Additionally, he can create masterwork items for himself and for his allies.",
+        "image": {
+          "full": "OrnnP.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 384,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

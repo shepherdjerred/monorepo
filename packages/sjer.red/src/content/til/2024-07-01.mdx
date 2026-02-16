@@ -1,0 +1,102 @@
+---
+title: Using Twoslash with Shiki and Astro
+date: 2024-07-01Z-0700
+hackerNews: https://news.ycombinator.com/item?id=40848479
+---
+
+Do you want code snippets like below on your Astro site?
+
+Note: you can hover over types to see their definitions.
+
+```typescript
+interface IdLabel {
+  id: number /* some fields */;
+}
+interface NameLabel {
+  name: string /* other fields */;
+}
+type NameOrId<T extends number | string> = T extends number ? IdLabel : NameLabel;
+// This comment should not be included
+
+// ---cut---
+function createLabel<T extends number | string>(idOrName: T): NameOrId<T> {
+  throw "unimplemented";
+}
+
+let a = createLabel("typescript");
+```
+
+It's super easy. In your `astro.config.ts` file, add the following:
+
+```typescript
+// @errors: 2307
+import { defineConfig } from "astro/config";
+// ---cut---
+import { rendererRich, transformerTwoslash } from "@shikijs/twoslash";
+
+export default defineConfig({
+  markdown: {
+    shikiConfig: {
+      transformers: [
+        transformerTwoslash({
+          renderer: rendererRich(),
+        }),
+      ],
+    },
+  },
+});
+```
+
+Import this CSS in your layout:
+
+```typescript
+import "@shikijs/twoslash/style-rich.css";
+```
+
+Add the following CSS and import it in your layout:
+
+```scss
+// fixes an issue where type popups are cut off
+.astro-code {
+  overflow: visible !important;
+}
+```
+
+Bonus: enable an automatic light & dark mode. Add the following CSS from [Shiki's documentation](https://shiki.style/guide/dual-themes#query-based-dark-mode):
+
+```scss
+@media (prefers-color-scheme: dark) {
+  .shiki,
+  .shiki span {
+    color: var(--shiki-dark) !important;
+    background-color: var(--shiki-dark-bg) !important;
+    /* Optional, if you also want font styles */
+    font-style: var(--shiki-dark-font-style) !important;
+    font-weight: var(--shiki-dark-font-weight) !important;
+    text-decoration: var(--shiki-dark-text-decoration) !important;
+  }
+}
+```
+
+Add the following to your `astro.config.ts`:
+
+```typescript
+// @errors: 2307
+import { defineConfig } from "astro/config";
+// ---cut---
+export default defineConfig({
+  markdown: {
+    shikiConfig: {
+      theme: "github-dark",
+      themes: {
+        light: "github-light",
+        dark: "github-dark",
+      },
+    },
+  },
+});
+```
+
+You can try it on this site by toggling your browser's or operating system's dark mode.
+
+Check out [Shiki's Twoslash documentation](https://shikijs.github.io/twoslash/) for details.

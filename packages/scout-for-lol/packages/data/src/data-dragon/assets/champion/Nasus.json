@@ -1,0 +1,368 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Nasus": {
+      "id": "Nasus",
+      "key": "75",
+      "name": "Nasus",
+      "title": "the Curator of the Sands",
+      "image": {
+        "full": "Nasus.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 432,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "75000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "75001",
+          "num": 1,
+          "name": "Galactic Nasus",
+          "chromas": false
+        },
+        {
+          "id": "75002",
+          "num": 2,
+          "name": "Pharaoh Nasus",
+          "chromas": false
+        },
+        {
+          "id": "75003",
+          "num": 3,
+          "name": "Dreadknight Nasus",
+          "chromas": true
+        },
+        {
+          "id": "75004",
+          "num": 4,
+          "name": "Riot K-9 Nasus",
+          "chromas": false
+        },
+        {
+          "id": "75005",
+          "num": 5,
+          "name": "Infernal Nasus",
+          "chromas": false
+        },
+        {
+          "id": "75006",
+          "num": 6,
+          "name": "Archduke Nasus",
+          "chromas": false
+        },
+        {
+          "id": "75010",
+          "num": 10,
+          "name": "Worldbreaker Nasus",
+          "chromas": false
+        },
+        {
+          "id": "75011",
+          "num": 11,
+          "name": "Lunar Guardian Nasus",
+          "chromas": true
+        },
+        {
+          "id": "75016",
+          "num": 16,
+          "name": "Battlecast Nasus",
+          "chromas": true
+        },
+        {
+          "id": "75025",
+          "num": 25,
+          "name": "Space Groove Nasus",
+          "chromas": true
+        },
+        {
+          "id": "75035",
+          "num": 35,
+          "name": "Armored Titan Nasus",
+          "chromas": true
+        },
+        {
+          "id": "75045",
+          "num": 45,
+          "name": "Nightbringer Nasus",
+          "chromas": true
+        },
+        {
+          "id": "75054",
+          "num": 54,
+          "name": "Fatemaker Nasus",
+          "chromas": true
+        }
+      ],
+      "lore": "Nasus is an imposing, jackal-headed Ascended being from ancient Shurima, a heroic figure regarded as a demigod by the people of the desert. Fiercely intelligent, he was a guardian of knowledge and peerless strategist whose wisdom guided the ancient empire of Shurima to greatness for many centuries. After the fall of the empire, he went into self-imposed exile, becoming little more than a legend. Now that the ancient city of Shurima has risen once more, he has returned, determined to ensure it never falls again.",
+      "blurb": "Nasus is an imposing, jackal-headed Ascended being from ancient Shurima, a heroic figure regarded as a demigod by the people of the desert. Fiercely intelligent, he was a guardian of knowledge and peerless strategist whose wisdom guided the ancient...",
+      "allytips": [
+        "Paying attention to last hitting with Siphoning Strike will have a large impact at the end of a game.",
+        "If you're solo, Spirit Fire is a great way to farm a lane. It can be bad if you're in a lane with 2 and you push too far. Find the right balance between Siphoning Strike last hits and AoE farming.",
+        "If you have low defenses, people will focus you down even during your ultimate. Try buying some survivability items even in your DPS builds."
+      ],
+      "enemytips": [
+        "While transformed by his ultimate, Nasus is stronger than most champions in the League. Engage him only if you have a clear advantage.",
+        "Max rank Wither is a very effective counter to Attack Damage characters, so try to avoid getting caught alone by it.",
+        "Nasus is prone to being kited. Try not to engage him at full Health."
+      ],
+      "tags": ["Fighter", "Tank"],
+      "partype": "Mana",
+      "info": {
+        "attack": 7,
+        "defense": 5,
+        "magic": 6,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 650,
+        "hpperlevel": 104,
+        "mp": 326,
+        "mpperlevel": 62,
+        "movespeed": 350,
+        "armor": 34,
+        "armorperlevel": 4.7,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 9,
+        "hpregenperlevel": 0.9,
+        "mpregen": 7.45,
+        "mpregenperlevel": 0.5,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 67,
+        "attackdamageperlevel": 4,
+        "attackspeedperlevel": 3.48,
+        "attackspeed": 0.638
+      },
+      "spells": [
+        {
+          "id": "NasusQ",
+          "name": "Siphoning Strike",
+          "description": "Nasus strikes his foe, dealing damage and increasing the power of his future Siphoning Strikes if he slays his target.",
+          "tooltip": "Nasus' next Attack deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. Killing an enemy with this Attack permanently increases its damage by {{ basicstacks }}, increased to {{ bigstacks }} against champions, large minions and large jungle monsters.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Base Damage", "Cooldown"],
+            "effect": ["{{ bonusdamage }} -> {{ bonusdamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [7.5, 6.5, 5.5, 4.5, 3.5],
+          "cooldownBurn": "7.5/6.5/5.5/4.5/3.5",
+          "cost": [20, 20, 20, 20, 20],
+          "costBurn": "20",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [255, 255, 255, 255, 255],
+          "rangeBurn": "255",
+          "image": {
+            "full": "NasusQ.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 192,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "NasusW",
+          "name": "Wither",
+          "description": "Nasus ages an enemy champion, decelerating their Move Speed and Attack Speed over time.",
+          "tooltip": "Nasus ages a champion, <status>Slowing</status> them by {{ slowbase }}%, increasing to {{ maxslowtooltiponly }}% over {{ duration }} seconds. Their <attackSpeed>Attack Speed</attackSpeed> is also reduced by {{ attackspeedslowmult*100 }}% of the <status>Slow</status>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Max Slow", "Cooldown"],
+            "effect": ["{{ maxslowtooltiponly }}% -> {{ maxslowtooltiponlyNL }}%", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [15, 14, 13, 12, 11],
+          "cooldownBurn": "15/14/13/12/11",
+          "cost": [80, 80, 80, 80, 80],
+          "costBurn": "80",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [700, 700, 700, 700, 700],
+          "rangeBurn": "700",
+          "image": {
+            "full": "NasusW.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 240,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "NasusE",
+          "name": "Spirit Fire",
+          "description": "Nasus unleashes a spirit flame at a location, dealing damage and reducing the Armor of enemies who stand on it.",
+          "tooltip": "Nasus ignites a spirit flame, dealing <magicDamage>{{ initialdamage }} magic damage</magicDamage>. Enemies in the area lose <scaleArmor>{{ e2 }}% Armor</scaleArmor> and take <magicDamage>{{ totaldotdamage }} magic damage</magicDamage> over {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Initial Damage", "Damage Per Second", "Armor Reduction %", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ e4 }} -> {{ e4NL }}",
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ effect2amount*-100.000000 }}% -> {{ effect2amountnl*-100.000000 }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 12, 12, 12, 12],
+          "cooldownBurn": "12",
+          "cost": [60, 70, 80, 90, 100],
+          "costBurn": "60/70/80/90/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [10, 16, 22, 28, 34],
+            [30, 35, 40, 45, 50],
+            [5, 5, 5, 5, 5],
+            [50, 80, 110, 140, 170],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "10/16/22/28/34",
+            "30/35/40/45/50",
+            "5",
+            "50/80/110/140/170",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [650, 650, 650, 650, 650],
+          "rangeBurn": "650",
+          "image": {
+            "full": "NasusE.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 288,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "NasusR",
+          "name": "Fury of the Sands",
+          "description": "Nasus unleashes a mighty sandstorm that batters nearby enemies. While the storm rages, he gains increased Health, Attack Range, damages nearby enemies, has a reduced cooldown on Siphoning Strike, and gains bonus Armor and Magic Resistance.",
+          "tooltip": "Nasus becomes empowered in the sandstorm for 15 seconds, increasing his <healing>maximum Health by {{ bonushealth }}</healing> and <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resistance</scaleMR> by {{ initialresistgain }}.<br /><br />While the storm rages, nearby enemies take <magicDamage>{{ damagecalc }} of their maximum Health as magic damage</magicDamage> each second and <spellName>Siphoning Strike</spellName> has a {{ qcdr*100 }}% reduced Cooldown.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Bonus Health", "Max Health %", "Bonus Armor and Magic Resistance", "Cooldown"],
+            "effect": [
+              "{{ bonushealth }} -> {{ bonushealthNL }}",
+              "{{ aoedamagepercent*100.000000 }}% -> {{ aoedamagepercentnl*100.000000 }}%",
+              "{{ initialresistgain }} -> {{ initialresistgainNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 100, 80],
+          "cooldownBurn": "120/100/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [400, 400, 400],
+          "rangeBurn": "400",
+          "image": {
+            "full": "NasusR.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 336,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Soul Eater",
+        "description": "Nasus drains his foe's spiritual energy, giving him bonus Life Steal.",
+        "image": {
+          "full": "Nasus_Passive.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 432,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

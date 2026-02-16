@@ -1,0 +1,208 @@
+---
+title: Compilers Project Setup
+description: My 8803 Compilers Project Setup
+date: 2024-01-23Z-0700
+---
+
+This semester I'm taking [CS 8803 Compilers at Georgia Tech](https://omscs.gatech.edu/cs-8803-o08-compilers-theory-and-practice). I've heard this class is quite challenging, but so far I've had a blast and cannot wait to learn more.
+
+The class has you build a compiler across several phases. It's unique in that it sets _very_ few constraints for your implementation. The only real technical requirement is that you use C++ and Java, and [ANTLR](https://www.antlr.org) for the front-end.
+
+All of this freedom leaves a lot of questions for students, especially if they're not used to writing large applications by themselves.
+
+I'm sharing some of the decisions I've made for my project. Almost all of this is specific to Java, so if you're using C++, you will find little to help you.
+
+Let's get to it! If you have any questions, I'd be happy to answer them. Shoot me an email: [compilers@sjer.red](mailto:compilers@sjer.red).
+
+## Maven
+
+You should absolutely be using Maven, especially considering class explicitly supports it. Maven makes your life _much_ easier. It handles all of your dependencies and the lifecycle of building and tests your project.
+
+Maven is still a fairly relevant technology in the Java world today. It surpassed [Ant](https://ant.apache.org), and it still a very popular choice for projects today. The more modern alternative is [Gradle](https://gradle.org). You might be able to use Gradle, but you'd have to ask the course staff.
+
+Here's my full [`pom.xml`](https://gist.github.com/shepherdjerred/d36b1815f50be9fc2b03f686989987e5) so that you can see how I've set all of this up.
+
+## Earthly
+
+[Earthly](https://earthly.dev) is one of my favorite tools. It's essentially a combination of Docker and Make. You define a set of targets. Each instruction is run in a containerized environment. This gives you the simplicity and ergonomics of Make, with all the isolation benefits of Docker.
+
+I use Earthly to build the `.zip` that I submit, and to ensure that the `.zip` is buildable in the Docker environment that Gradescope uses.
+
+Here's what my Earthfile looks like:
+
+```dockerfile
+# This declares the version of Earthly to use
+VERSION 0.7
+
+# This builds the Dockerfile that the course staff provides
+image:
+    FROM DOCKERFILE resources/docker/
+    WORKDIR /workspace/
+
+# Download Maven dependencies
+deps:
+    FROM +image
+    COPY pom.xml .
+    CACHE /root/.m2/repository/
+    RUN mvn dependency:resolve
+    RUN rm pom.xml
+
+# Zip up my submission. Save the .zip file as a local artifact.
+zip:
+    FROM ubuntu:jammy
+    WORKDIR /workspace/
+
+    RUN apt update
+    RUN apt install -y zip
+
+    COPY src/main/ src/main/
+    COPY pom.xml lombok.config Makefile .
+    COPY +tiger/Tiger.g4 .
+    RUN zip -r submission.zip .
+
+    SAVE ARTIFACT submission.zip AS LOCAL submission.zip
+
+# Unzip my submission an attempt to build it.
+build:
+    FROM +deps
+    COPY +zip/submission.zip .
+    RUN unzip submission.zip
+    RUN make all
+	SAVE ARTIFACT cs8803_bin/tigerc.jar AS LOCAL cs8803_bin/tigerc.jar
+
+# I specify my Tiger Lexer and Parser in separate files, within a directory that is idomatic for ANTLR
+# The project PDF says that a single Tiger.g4 file must exist at the root of the project, which is what this target creates.
+tiger:
+    FROM ubuntu:jammy
+    COPY src/main/antlr4/com/shepherdjerred/compiler/TigerLexer.g4 .
+    COPY src/main/antlr4/com/shepherdjerred/compiler/TigerParser.g4 .
+    # discard the first 5 lines of TigerParser
+    RUN tail -n +6 TigerParser.g4 > TigerParser.g4
+    # combine the two files into one
+    RUN cat TigerLexer.g4 TigerParser.g4 > Tiger.g4
+    # replace lexer grammar TigerLexer; with grammer Tiger;
+    RUN sed -i 's/lexer grammar TigerLexer;/grammar Tiger;/g' Tiger.g4
+    SAVE ARTIFACT Tiger.g4
+
+# Runs my tests
+test:
+    FROM +deps
+    COPY src/ src/
+    COPY lombok.config pom.xml .
+    RUN mvn test
+```
+
+To execute an Earthfile, all you need is the [Earthly CLI](https://earthly.dev/get-earthly) and Docker. Everything else is containerized! For example, I wouldn't need Java, Maven, or Make to build this project. If I wanted to set up CI with GitHub Actions, all I would need to do is use the [Earthly Setup Action](https://github.com/earthly/actions-setup) and then run my target, e.g. `earthly +test`.
+
+## IDE
+
+[IntelliJ IDEA](https://www.jetbrains.com/idea/) is objectively the best Java IDE. If you're comfortable with VS Code and you don't plan to write Java in the future, then sticking with VS Code is okay. If you plan to do more work in Java, then I would _highly_ suggest IntelliJ.
+
+Java has a reputation as a mediocre language. That may be true, but where it shines is in the ecosystem. IntelliJ is a perfect example of this. It has incredibly powerful analysis and refactoring capabilities, and very tightly integrates with Java tools like Maven.
+
+As an example, I was able to develop my ANTLR grammar using a [plugin](https://plugins.jetbrains.com/plugin/7358-antlr-v4) which allowed easy testing.
+
+As a student, you can get a copy of IntelliJ for free with [JetBrain's education program](https://www.jetbrains.com/community/education/#students).
+
+## Libraries
+
+I use a ton of libraries because Java has _so_ many great libraries. Here's what I'm currently using in my project. Some of them _might_ be overkill, e.g. Log4J2.
+
+- [JUnit 5](https://junit.org/junit5/)
+  - So much better than the default JUnit 4. I'll show why in the testing section.
+- [Lombok](https://projectlombok.org)
+  - Generate Java code at compile time. Java is a verbose language — Lombok makes it better.
+- [Guava](https://github.com/google/guava)
+  - I haven't used this yet, but I often reach for some of its utilities.
+- [Log4J2](https://logging.apache.org/log4j/2.x/)
+  - As mentioned above, I use this for logging.
+- [Immutables](http://immutables.github.io)
+  - Generates immutable objects. I prefer a more functional style of programming that avoids mutation. I suspect this will come in handy in later phases of the project. I've used this both at AWS and in the Distributed Systems course — in both cases, it was quite helpful.
+- [picocli](https://picocli.info)
+  - For my commands. Super easy to use, although you could probably get away with the native Java libraries.
+
+## Testing
+
+Testing the most important aspect of software development. Do yourself a favor and come up with an effective strategy to test your work now. Having a solid testing methodology will allow you to quickly verify your work, and will give you confidence that your code works if you ever go back and refactor.
+
+This might sound like a lot of work for a school project, but I think this investment is worth it considering we're building a compiler for the semester.
+
+JUnit is the de facto standard for testing Java. JUnit 4 is the most common version today, but JUnit 5 has some brilliant features.
+
+One example is parameterized testing. For example, I have tests that check all the sample files given to us by the course staff. I use a parameterized test to run the same test on each file. This is much better than having a separate test for each file, and easily allows you to add test cases.
+
+Here's what a test looks like:
+
+```java
+public static Stream<String> TestBadLexer() {
+  var files = Paths.get("src/test/resources/official/bad/lexer").toFile().listFiles();
+  assert files != null;
+  return Arrays.stream(files).map(File::getAbsolutePath);
+}
+
+@ParameterizedTest
+@MethodSource()
+public void TestBadLexer(String file) {
+  var compiler = new TigerCompiler();
+  assertThrows(LexerException.class, () -> compiler.compile(file, false));
+}
+```
+
+JUnit will use the static method named `TestBadLexer` that supplies a list of filenames to the `TestBadLexer` as the first argument. My test then checks that the appropriate error is thrown.
+
+Another great strategy is [snapshot testing](https://kentcdodds.com/blog/effective-snapshot-testing). This allows you to save some test output to a file. On subsequent runs, the test output is compared with the saved output. If the output is different, the test fails.
+
+If the test fails, you can visually inspect the different. If the change is expected, you can update the snapshot. If the change is unexpected, you can investigate further.
+
+I use this for investigating the `.tokens` file I produce. I chose to use the [java-snapshot-testing library](https://github.com/origin-energy/java-snapshot-testing). It's not as ergonomic as what I've experienced in other languages like TypeScript and Go, but it does seem to work well.
+
+Here's an example test:
+
+```java
+@Test
+@SneakyThrows
+public void TestHelloWorldTokens() {
+  Path tokensFile = Paths.get("src/test/resources/hello.tokens");
+  Files.deleteIfExists(tokensFile);
+
+  var compiler = new TigerCompiler();
+  var file = "src/test/resources/hello.tiger";
+  // the `true` argument tells the compiler to write the tokens to a file
+  compiler.compile(file, true);
+
+  assert Files.exists(tokensFile);
+
+  expect.toMatchSnapshot(Files.readString(tokensFile));
+
+  Files.delete(tokensFile);
+}
+```
+
+It saves a file named `__snapshots__/MainTest.snap`. The file looks like this:
+
+```
+com.shepherdjerred.compiler.MainTest.TestHelloWorldTokens=[
+<PROGRAM, "program">
+<ID, "demo_print">
+<LET, "let">
+[the rest of the file goes on]
+```
+
+Let's say that I introduce a bug and a token is missing. This is an example of the error I would see:
+
+```
+au.com.origin.snapshots.exceptions.SnapshotMatchException: Error(s) matching snapshot(s) (1 failure)
+
+Missing content at line 18:
+  ["<INT, "int">",
+   "<COMMA, ",">",
+   "<ID, "z">"]
+```
+
+I can then investigate why the snapshot no longer matches, and update it if the changes look correct.
+
+Here's my full [`MainTest.java`](https://gist.github.com/shepherdjerred/4b13eed30431a91d5ad887932ba923c9) file so that you can see how I've set all of this up.
+
+## Conclusion
+
+I hope this was some use to you, and that you're as excited as I am for this semester. If you need any advice about project setup or have some suggestions, feel free to reach out!

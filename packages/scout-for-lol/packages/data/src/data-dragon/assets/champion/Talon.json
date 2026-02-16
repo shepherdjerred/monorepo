@@ -1,0 +1,350 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Talon": {
+      "id": "Talon",
+      "key": "91",
+      "name": "Talon",
+      "title": "the Blade's Shadow",
+      "image": {
+        "full": "Talon.png",
+        "sprite": "champion4.png",
+        "group": "champion",
+        "x": 192,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "91000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "91001",
+          "num": 1,
+          "name": "Renegade Talon",
+          "chromas": false
+        },
+        {
+          "id": "91002",
+          "num": 2,
+          "name": "Crimson Elite Talon",
+          "chromas": false
+        },
+        {
+          "id": "91003",
+          "num": 3,
+          "name": "Dragonblade Talon",
+          "chromas": true
+        },
+        {
+          "id": "91004",
+          "num": 4,
+          "name": "SSW Talon",
+          "chromas": false
+        },
+        {
+          "id": "91005",
+          "num": 5,
+          "name": "Blood Moon Talon",
+          "chromas": false
+        },
+        {
+          "id": "91012",
+          "num": 12,
+          "name": "Enduring Sword Talon",
+          "chromas": true
+        },
+        {
+          "id": "91020",
+          "num": 20,
+          "name": "Talon Blackwood",
+          "chromas": true
+        },
+        {
+          "id": "91029",
+          "num": 29,
+          "name": "Withered Rose Talon",
+          "chromas": true
+        },
+        {
+          "id": "91038",
+          "num": 38,
+          "name": "High Noon Talon",
+          "chromas": true
+        },
+        {
+          "id": "91039",
+          "num": 39,
+          "name": "Prestige High Noon Talon",
+          "chromas": false
+        },
+        {
+          "id": "91049",
+          "num": 49,
+          "name": "Primal Ambush Talon",
+          "chromas": true
+        },
+        {
+          "id": "91059",
+          "num": 59,
+          "name": "Grand Reckoning Talon",
+          "chromas": false
+        }
+      ],
+      "lore": "Talon is the knife in the darkness, a merciless killer able to strike without warning and escape before any alarm is raised. He carved out a dangerous reputation on the brutal streets of Noxus, where he was forced to fight, kill, and steal to survive. Adopted by the notorious Du Couteau family, he now plies his deadly trade at the empire's command, assassinating enemy leaders, captains, and heroes… as well as any Noxian foolish enough to earn the scorn of their masters.",
+      "blurb": "Talon is the knife in the darkness, a merciless killer able to strike without warning and escape before any alarm is raised. He carved out a dangerous reputation on the brutal streets of Noxus, where he was forced to fight, kill, and steal to survive...",
+      "allytips": [
+        "You can use Assassin's Path to get behind the enemy and set up for Noxian Diplomacy's melee attack.",
+        "Shadow Assault is a powerful escape tool, but can also be offensively used to assault a group.",
+        "Remember to pick your target before the fight. Focusing all of Talon's abilities on one target can be very rewarding, but splitting them up between many may leave you helpless."
+      ],
+      "enemytips": [
+        "Talon's attacks are all physical damage. Build armor early to counter his burst damage.",
+        "Talon is heavily reliant on Shadow Assault to escape a fight. When it is down he's significantly more vulnerable.",
+        "Talon has unrivaled roaming ability. Make sure to keep track of his position or force him to stay in lane by pushing aggressively."
+      ],
+      "tags": ["Assassin"],
+      "partype": "Mana",
+      "info": {
+        "attack": 9,
+        "defense": 3,
+        "magic": 1,
+        "difficulty": 7
+      },
+      "stats": {
+        "hp": 658,
+        "hpperlevel": 109,
+        "mp": 400,
+        "mpperlevel": 37,
+        "movespeed": 335,
+        "armor": 30,
+        "armorperlevel": 4.7,
+        "spellblock": 36,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 8.5,
+        "hpregenperlevel": 0.75,
+        "mpregen": 7.6,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 68,
+        "attackdamageperlevel": 3.1,
+        "attackspeedperlevel": 2.9,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "TalonQ",
+          "name": "Noxian Diplomacy",
+          "description": "Talon stabs the target unit. If they are within melee range, this attack deals critical damage. If they are outside melee range, Talon will leap at his target before stabbing them. Talon refunds some health and cooldown if this ability kills the target.",
+          "tooltip": "Talon leaps to a target and deals <physicalDamage>{{ leapdamage }} physical damage</physicalDamage>. If used in melee range, this Ability instead critically strikes for <physicalDamage>{{ criticaldamage }} physical damage</physicalDamage>.<br /><br />If this Ability kills the target, Talon restores <healing>{{ totalhealing }} Health</healing> and refunds {{ cooldownrefund*100 }}% of its Cooldown.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldownBurn": "8/7.5/7/6.5/6",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [575, 575, 575, 575, 575],
+          "rangeBurn": "575",
+          "image": {
+            "full": "TalonQ.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 192,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "TalonW",
+          "name": "Rake",
+          "description": "Talon sends out a volley of daggers that then return back to him, dealing physical damage every time it passes through an enemy. The returning blades deal bonus damage and slow units hit.",
+          "tooltip": "Talon tosses a volley of blades, dealing <physicalDamage>{{ totalinitialdamage }} physical damage</physicalDamage>. The blades then return to him, dealing <physicalDamage>{{ totalreturndamage }} physical damage</physicalDamage> and <status>Slowing</status> by {{ movespeedslow*100 }}% for {{ slowduration }} second.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["@AbilityResourceName@ Cost", "Initial Damage", "Return Damage", "Slow", "Cooldown"],
+            "effect": [
+              "{{ cost }} -> {{ costNL }}",
+              "{{ initialbasedamage }} -> {{ initialbasedamageNL }}",
+              "{{ returnbasedamage }} -> {{ returnbasedamageNL }}",
+              "{{ movespeedslow*100.000000 }}% -> {{ movespeedslownl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [9, 8.5, 8, 7.5, 7],
+          "cooldownBurn": "9/8.5/8/7.5/7",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [650, 650, 650, 650, 650],
+          "rangeBurn": "650",
+          "image": {
+            "full": "TalonW.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 240,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "TalonE",
+          "name": "Assassin's Path",
+          "description": "Talon vaults over any terrain or structure, up to a max distance. This ability has a low cooldown, but puts the used terrain on a long cooldown.",
+          "tooltip": "Talon vaults over the nearest terrain or structure. Talon cannot dash over the same terrain more than once every {{ wallcd }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Terrain Cooldown"],
+            "effect": ["{{ wallcd }} -> {{ wallcdNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [0, 0, 0, 0, 0],
+          "cooldownBurn": "0",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [625, 625, 625, 625, 625],
+            [1250, 1250, 1250, 1250, 1250],
+            [2, 2, 2, 2, 2],
+            [160, 135, 110, 85, 60],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "625", "1250", "2", "160/135/110/85/60", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [725, 725, 725, 725, 725],
+          "rangeBurn": "725",
+          "image": {
+            "full": "TalonE.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 288,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "TalonR",
+          "name": "Shadow Assault",
+          "description": "Talon disperses a ring of blades and becomes Invisible while gaining additional Move Speed. When Talon emerges from Invisibility, the blades converge on his location. Each time the blades move, Shadow Assault deals physical damage to enemies hit by at least one blade.",
+          "tooltip": "Talon disperses a ring of blades that deal <physicalDamage>{{ damage }} physical damage</physicalDamage>, gains <speed>{{ movespeed*100 }}% Move Speed</speed>, and becomes <keywordStealth>Invisible</keywordStealth> for {{ duration }} seconds. When the <keywordStealth>Invisibility</keywordStealth> ends, the blades return to Talon, dealing <physicalDamage>{{ damage }} physical damage</physicalDamage> again.<br /><br />If Talon cancels the <keywordStealth>Invisibility</keywordStealth> with an Attack or with <spellName>Noxian Diplomacy</spellName>, the blades return to the target instead.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Move Speed", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ movespeed*100.000000 }}% -> {{ movespeednl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [100, 80, 60],
+          "cooldownBurn": "100/80/60",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [550, 550, 550],
+          "rangeBurn": "550",
+          "image": {
+            "full": "TalonR.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 336,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Blade's End",
+        "description": "Talon's spells Wound champions and large monsters, stacking up to 3 times. When Talon attacks a champion with 3 stacks of Wound, they bleed for heavy damage over time.",
+        "image": {
+          "full": "TalonP.png",
+          "sprite": "passive4.png",
+          "group": "passive",
+          "x": 192,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

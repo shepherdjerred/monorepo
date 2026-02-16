@@ -120,12 +120,12 @@ impl ResourceLimits {
         let mut args = Vec::new();
 
         if let Some(cpu) = &self.cpu {
-            args.push("--cpus".to_string());
+            args.push("--cpus".to_owned());
             args.push(cpu.clone());
         }
 
         if let Some(memory) = &self.memory {
-            args.push("--memory".to_string());
+            args.push("--memory".to_owned());
             args.push(memory.clone());
         }
 
@@ -141,10 +141,9 @@ impl ResourceLimits {
 fn validate_cpu_limit(cpu: &str) -> anyhow::Result<()> {
     // Check for millicores format (e.g., "2000m")
     if let Some(stripped) = cpu.strip_suffix('m') {
-        stripped.parse::<u64>().map_err(|_| {
+        stripped.parse::<u64>().map_err(|e| {
             anyhow::anyhow!(
-                "Invalid CPU limit: '{}'. Millicores must be a positive integer (e.g., '2000m')",
-                cpu
+                "Invalid CPU limit: '{cpu}'. Millicores must be a positive integer (e.g., '2000m'): {e}"
             )
         })?;
         return Ok(());
@@ -152,10 +151,9 @@ fn validate_cpu_limit(cpu: &str) -> anyhow::Result<()> {
 
     // Check for decimal format (e.g., "2.0")
     cpu.parse::<f64>()
-        .map_err(|_| {
+        .map_err(|e| {
             anyhow::anyhow!(
-                "Invalid CPU limit: '{}'. Expected decimal (e.g., '2.0') or millicores (e.g., '2000m')",
-                cpu
+                "Invalid CPU limit: '{cpu}'. Expected decimal (e.g., '2.0') or millicores (e.g., '2000m'): {e}"
             )
         })
         .and_then(|val| {
@@ -192,10 +190,9 @@ fn validate_memory_limit(memory: &str) -> anyhow::Result<()> {
     // Validate numeric part
     numeric_part
         .parse::<f64>()
-        .map_err(|_| {
+        .map_err(|e| {
             anyhow::anyhow!(
-                "Invalid memory limit: '{}'. Numeric part must be a positive number",
-                memory
+                "Invalid memory limit: '{memory}'. Numeric part must be a positive number: {e}"
             )
         })
         .and_then(|val| {
@@ -349,7 +346,7 @@ impl Default for DockerConfig {
     fn default() -> Self {
         Self {
             image: ImageConfig {
-                image: "ghcr.io/shepherdjerred/dotfiles:latest".to_string(),
+                image: "ghcr.io/shepherdjerred/dotfiles:latest".to_owned(),
                 pull_policy: ImagePullPolicy::IfNotPresent,
                 registry_auth: None,
             },
@@ -437,14 +434,14 @@ mod tests {
     #[test]
     fn test_resource_limits_to_docker_args() {
         let limits = ResourceLimits {
-            cpu: Some("2.0".to_string()),
-            memory: Some("2g".to_string()),
+            cpu: Some("2.0".to_owned()),
+            memory: Some("2g".to_owned()),
         };
         let args = limits.to_docker_args();
         assert_eq!(args, vec!["--cpus", "2.0", "--memory", "2g"]);
 
         let limits_cpu_only = ResourceLimits {
-            cpu: Some("1.5".to_string()),
+            cpu: Some("1.5".to_owned()),
             memory: None,
         };
         let args = limits_cpu_only.to_docker_args();
@@ -480,14 +477,14 @@ mod tests {
     #[test]
     fn test_image_config_validate() {
         let valid_config = ImageConfig {
-            image: "ghcr.io/user/repo:tag".to_string(),
+            image: "ghcr.io/user/repo:tag".to_owned(),
             pull_policy: ImagePullPolicy::IfNotPresent,
             registry_auth: None,
         };
         assert!(valid_config.validate().is_ok());
 
         let invalid_config = ImageConfig {
-            image: "bad;image".to_string(),
+            image: "bad;image".to_owned(),
             pull_policy: ImagePullPolicy::Always,
             registry_auth: None,
         };

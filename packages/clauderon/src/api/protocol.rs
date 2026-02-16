@@ -17,25 +17,45 @@ pub enum Request {
     ListSessions,
 
     /// Get a specific session by ID or name
-    GetSession { id: String },
+    GetSession {
+        /// Session ID or name.
+        id: String,
+    },
 
     /// Create a new session
     CreateSession(CreateSessionRequest),
 
     /// Delete a session
-    DeleteSession { id: String },
+    DeleteSession {
+        /// Session ID to delete.
+        id: String,
+    },
 
     /// Archive a session
-    ArchiveSession { id: String },
+    ArchiveSession {
+        /// Session ID to archive.
+        id: String,
+    },
 
     /// Unarchive a session
-    UnarchiveSession { id: String },
+    UnarchiveSession {
+        /// Session ID to unarchive.
+        id: String,
+    },
 
     /// Get the attach command for a session
-    AttachSession { id: String },
+    AttachSession {
+        /// Session ID to attach to.
+        id: String,
+    },
 
     /// Update session access mode
-    UpdateAccessMode { id: String, access_mode: AccessMode },
+    UpdateAccessMode {
+        /// Session ID to update.
+        id: String,
+        /// New access mode for proxy filtering.
+        access_mode: AccessMode,
+    },
 
     /// Reconcile state with reality
     Reconcile,
@@ -47,13 +67,24 @@ pub enum Request {
     GetRecentRepos,
 
     /// Send a prompt to a session (for hotkey triggers)
-    SendPrompt { session: String, prompt: String },
+    SendPrompt {
+        /// Session ID or name.
+        session: String,
+        /// Prompt text to send.
+        prompt: String,
+    },
 
     /// Get session ID by name (for hook scripts)
-    GetSessionIdByName { name: String },
+    GetSessionIdByName {
+        /// Session name to look up.
+        name: String,
+    },
 
     /// Refresh a session (pull latest image and recreate container)
-    RefreshSession { id: String },
+    RefreshSession {
+        /// Session ID to refresh.
+        id: String,
+    },
 
     /// Get current feature flags
     GetFeatureFlags,
@@ -62,27 +93,48 @@ pub enum Request {
     GetHealth,
 
     /// Get health status of a single session
-    GetSessionHealth { id: String },
+    GetSessionHealth {
+        /// Session ID to check.
+        id: String,
+    },
 
     /// Start a stopped session (container/pod)
-    StartSession { id: String },
+    StartSession {
+        /// Session ID to start.
+        id: String,
+    },
 
     /// Wake a hibernated session (sprites)
-    WakeSession { id: String },
+    WakeSession {
+        /// Session ID to wake.
+        id: String,
+    },
 
     /// Recreate a session (delete and recreate backend)
-    RecreateSession { id: String },
+    RecreateSession {
+        /// Session ID to recreate.
+        id: String,
+    },
 
     /// Cleanup a session (remove from database, worktree already missing)
-    CleanupSession { id: String },
+    CleanupSession {
+        /// Session ID to clean up.
+        id: String,
+    },
 
     /// Recreate a session fresh (delete worktree and re-clone, data lost)
-    RecreateSessionFresh { id: String },
+    RecreateSessionFresh {
+        /// Session ID to recreate fresh.
+        id: String,
+    },
 
     /// Merge a pull request for a session
     MergePr {
+        /// Session ID whose PR to merge.
         id: String,
+        /// Merge strategy to use.
         method: crate::core::MergeMethod,
+        /// Whether to delete the branch after merging.
         delete_branch: bool,
     },
 }
@@ -167,7 +219,7 @@ pub struct CreateRepositoryInput {
 /// Request to create a new session
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[allow(clippy::struct_excessive_bools)] // Independent configuration flags
+#[expect(clippy::struct_excessive_bools, reason = "independent configuration flags")]
 pub struct CreateSessionRequest {
     /// Path to the repository (LEGACY: used when repositories is None)
     pub repo_path: String,
@@ -333,7 +385,7 @@ pub struct UploadResponse {
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", content = "payload")]
-#[allow(clippy::large_enum_variant)]
+#[expect(clippy::large_enum_variant, reason = "Response variants are not boxed for simplicity since they are not stored in collections")]
 pub enum Response {
     /// List of sessions
     Sessions(Vec<Session>),
@@ -346,7 +398,9 @@ pub enum Response {
 
     /// Session created successfully
     Created {
+        /// ID of the newly created session.
         id: String,
+        /// Optional warnings from session creation.
         warnings: Option<Vec<String>>,
     },
 
@@ -363,7 +417,10 @@ pub enum Response {
     Refreshed,
 
     /// Command to attach to a session
-    AttachReady { command: Vec<String> },
+    AttachReady {
+        /// Shell command arguments to execute for attachment.
+        command: Vec<String>,
+    },
 
     /// Reconciliation report
     ReconcileReport(ReconcileReportDto),
@@ -378,10 +435,14 @@ pub enum Response {
     AccessModeUpdated,
 
     /// Session ID returned
-    SessionId { session_id: String },
+    SessionId {
+        /// The resolved session ID.
+        session_id: String,
+    },
 
     /// Current feature flags
     FeatureFlags {
+        /// Current feature flag values.
         flags: crate::feature_flags::FeatureFlags,
     },
 
@@ -401,16 +462,27 @@ pub enum Response {
     Woken,
 
     /// Session recreated successfully
-    Recreated { new_backend_id: Option<String> },
+    Recreated {
+        /// New backend resource ID (if changed).
+        new_backend_id: Option<String>,
+    },
 
     /// Session cleaned up successfully
     CleanedUp,
 
     /// Action blocked error (e.g., recreate blocked for sprites with auto_destroy)
-    ActionBlocked { reason: String },
+    ActionBlocked {
+        /// Explanation of why the action was blocked.
+        reason: String,
+    },
 
     /// Error response
-    Error { code: String, message: String },
+    Error {
+        /// Machine-readable error code.
+        code: String,
+        /// Human-readable error description.
+        message: String,
+    },
 }
 
 /// Real-time events from the server
@@ -425,20 +497,36 @@ pub enum Event {
     SessionUpdated(Session),
 
     /// A session was deleted
-    SessionDeleted { id: String },
+    SessionDeleted {
+        /// ID of the deleted session.
+        id: String,
+    },
 
     /// Session status changed
     StatusChanged {
+        /// Session ID.
         id: String,
+        /// Previous status.
         old: SessionStatus,
+        /// New status.
         new: SessionStatus,
     },
 
     /// Progress update during async operation
-    SessionProgress { id: String, progress: ProgressStep },
+    SessionProgress {
+        /// Session ID.
+        id: String,
+        /// Progress step details.
+        progress: ProgressStep,
+    },
 
     /// Session operation failed
-    SessionFailed { id: String, error: String },
+    SessionFailed {
+        /// Session ID.
+        id: String,
+        /// Error description.
+        error: String,
+    },
 }
 
 /// Credential availability status
@@ -512,7 +600,7 @@ pub struct UpdateCredentialRequest {
 
 /// Request to merge a pull request
 #[typeshare]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct MergePrRequest {
     /// Merge method to use
     pub method: crate::core::MergeMethod,
@@ -586,7 +674,7 @@ pub struct ClaudeUsage {
 
 /// Feature flags response for the frontend
 #[typeshare]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct FeatureFlagsResponse {
     /// Current feature flag values
     pub flags: crate::feature_flags::FeatureFlags,

@@ -1,0 +1,385 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Shaco": {
+      "id": "Shaco",
+      "key": "35",
+      "name": "Shaco",
+      "title": "the Demon Jester",
+      "image": {
+        "full": "Shaco.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 432,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "35000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "35001",
+          "num": 1,
+          "name": "Mad Hatter Shaco",
+          "chromas": false
+        },
+        {
+          "id": "35002",
+          "num": 2,
+          "name": "Royal Shaco",
+          "chromas": false
+        },
+        {
+          "id": "35003",
+          "num": 3,
+          "name": "Nutcracko",
+          "chromas": false
+        },
+        {
+          "id": "35004",
+          "num": 4,
+          "name": "Workshop Shaco",
+          "chromas": false
+        },
+        {
+          "id": "35005",
+          "num": 5,
+          "name": "Asylum Shaco",
+          "chromas": false
+        },
+        {
+          "id": "35006",
+          "num": 6,
+          "name": "Masked Shaco",
+          "chromas": false
+        },
+        {
+          "id": "35007",
+          "num": 7,
+          "name": "Wild Card Shaco",
+          "chromas": false
+        },
+        {
+          "id": "35008",
+          "num": 8,
+          "name": "Dark Star Shaco",
+          "chromas": true
+        },
+        {
+          "id": "35015",
+          "num": 15,
+          "name": "Arcanist Shaco",
+          "chromas": true
+        },
+        {
+          "id": "35023",
+          "num": 23,
+          "name": "Crime City Nightmare Shaco",
+          "chromas": true
+        },
+        {
+          "id": "35033",
+          "num": 33,
+          "name": "Winterblessed Shaco",
+          "chromas": true
+        },
+        {
+          "id": "35043",
+          "num": 43,
+          "name": "Soul Fighter Shaco",
+          "chromas": true
+        },
+        {
+          "id": "35044",
+          "num": 44,
+          "name": "Prestige Soul Fighter Shaco",
+          "chromas": false
+        },
+        {
+          "id": "35054",
+          "num": 54,
+          "name": "Fright Night Shaco",
+          "chromas": true
+        },
+        {
+          "id": "35064",
+          "num": 64,
+          "name": "Cat-in-the-Box Shaco",
+          "chromas": true
+        }
+      ],
+      "lore": "Crafted long ago as a plaything for a lonely prince, the enchanted marionette Shaco now delights in murder and mayhem. Corrupted by dark magic and the loss of his beloved charge, the once-kind puppet finds pleasure only in the misery of the poor souls he torments. He uses toys and simple tricks to deadly effect, finding the results of his bloody “games” hilarious—and for those who hear a dark chuckle in the dead of night, the Demon Jester may have marked them as his next plaything.",
+      "blurb": "Crafted long ago as a plaything for a lonely prince, the enchanted marionette Shaco now delights in murder and mayhem. Corrupted by dark magic and the loss of his beloved charge, the once-kind puppet finds pleasure only in the misery of the poor souls...",
+      "allytips": [
+        "Using Deceive over terrain can help you make a clean escape.",
+        "Try getting items with on-hit effects. These will also benefit your Hallucination clone.",
+        "Backstab's damage can be increased with increased Critical Damage effects like Infinity Edge."
+      ],
+      "enemytips": [
+        "If Shaco is doing well early-game, it is worth the investment to place Stealth Wards near his Jungle camps.",
+        "If Shaco uses Deceive to enter a fight he won't be able to quickly use it again to get away. Work with your team to quickly focus him down."
+      ],
+      "tags": ["Assassin"],
+      "partype": "Mana",
+      "info": {
+        "attack": 8,
+        "defense": 4,
+        "magic": 6,
+        "difficulty": 9
+      },
+      "stats": {
+        "hp": 630,
+        "hpperlevel": 99,
+        "mp": 297,
+        "mpperlevel": 40,
+        "movespeed": 345,
+        "armor": 30,
+        "armorperlevel": 4,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 8.5,
+        "hpregenperlevel": 0.55,
+        "mpregen": 6,
+        "mpregenperlevel": 0.35,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 63,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 3,
+        "attackspeed": 0.694
+      },
+      "spells": [
+        {
+          "id": "Deceive",
+          "name": "Deceive",
+          "description": "Shaco becomes Invisible and teleports to target location.<br><br>His first attack while Invisible is empowered, dealing bonus damage and critically striking if he attacks from behind.",
+          "tooltip": "Shaco teleports and becomes <keywordStealth>Invisible</keywordStealth> for {{ stealthduration }} seconds. Using <spellName>Jack In The Box</spellName> or <spellName>Hallucinate</spellName> does not break <keywordStealth>Invisibility</keywordStealth>.<br /><br />Shaco's next Attack while <keywordStealth>Invisible</keywordStealth> deals an additional <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. If striking from behind, this Attack critically strikes for {{ qcritdamagemod }} damage.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Stealth Duration", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ stealthduration }} -> {{ stealthdurationNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [13, 12.5, 12, 11.5, 11],
+          "cooldownBurn": "13/12.5/12/11.5/11",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [400, 400, 400, 400, 400],
+          "rangeBurn": "400",
+          "image": {
+            "full": "Deceive.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 192,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "JackInTheBox",
+          "name": "Jack In The Box",
+          "description": "Shaco creates a hidden animated Jack-in-the-Box. When triggered, it will fear and attack nearby enemies.",
+          "tooltip": "Shaco creates a trap that stealths itself after {{ e5 }} seconds and lasts for {{ trapduration }} seconds. It activates when an enemy comes near or when revealed, <status>Fearing</status> nearby enemy Champions for {{ fearduration }} seconds, or {{ minionfearduration }} seconds for minions and jungle monsters.<br /><br />Once activated, the trap fires at all nearby enemies for 5 seconds, dealing <magicDamage>{{ aoedamage }} magic damage</magicDamage>, or <magicDamage>{{ stdamage }} damage</magicDamage> if focused on a single target.<br /><br />Jack in the Box's attacks deal an additional <magicDamage>{{ monsterbonusdamage }}</magicDamage> damage to monsters.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Fear Duration", "Bonus Monster Damage", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ stbasedamage }} -> {{ stbasedamageNL }}",
+              "{{ fearduration }} -> {{ feardurationNL }}",
+              "{{ monsterbonusdamage }} -> {{ monsterbonusdamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [15, 15, 15, 15, 15],
+          "cooldownBurn": "15",
+          "cost": [70, 65, 60, 55, 50],
+          "costBurn": "70/65/60/55/50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [35, 50, 65, 80, 95],
+            [200, 300, 400, 500, 600],
+            [0.5, 0.75, 1, 1.25, 1.5],
+            [40, 40, 40, 40, 40],
+            [2, 2, 2, 2, 2],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "35/50/65/80/95",
+            "200/300/400/500/600",
+            "0.5/0.75/1/1.25/1.5",
+            "40",
+            "2",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [500, 500, 500, 500, 500],
+          "rangeBurn": "500",
+          "image": {
+            "full": "JackInTheBox.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 240,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "TwoShivPoison",
+          "name": "Two-Shiv Poison",
+          "description": "Shaco's Shivs passively poison targets on hit, slowing their Move Speed. He can throw his Shivs to deal damage and poison the target. The thrown Shiv deals bonus damage if the target is below 30% health.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> While this Ability is off Cooldown, Shaco's Attacks <status>Slow</status> the target by {{ slowamount*-100 }}% for {{ slowdurationpassive }} seconds.<br /><br /><spellActive>Active:</spellActive> Shaco throws a shiv, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slowing</status> by {{ slowamount*-100 }}% for {{ slowdurationactive }} seconds. If the target has less than {{ executehealththreshold*100 }}% Health, the shiv deals <magicDamage>{{ totalexecutedamage }} damage</magicDamage> instead.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowamount*-100.000000 }}% -> {{ slowamountnl*-100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [8, 8, 8, 8, 8],
+          "cooldownBurn": "8",
+          "cost": [75, 75, 75, 75, 75],
+          "costBurn": "75",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [625, 625, 625, 625, 625],
+          "rangeBurn": "625",
+          "image": {
+            "full": "TwoShivPoison.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 288,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "HallucinateFull",
+          "name": "Hallucinate",
+          "description": "Shaco creates an illusion of himself near him, which can attack nearby enemies (Deals reduced damage to turrets).  Upon death, it explodes, spawning three mini Jack in the Boxes and dealing damage to nearby enemies.",
+          "tooltip": "Shaco briefly disappears, then reappears with a clone that lasts {{ clonelifetime }} seconds and detonates when it dies, dealing <magicDamage>{{ explosiontotaldamage }} magic damage</magicDamage> and spawning three mini <spellName>Jack in the Boxes</spellName> that trigger immediately. The clone deals {{ cloneaadamagepercent*100 }}% of Shaco's damage and receives {{ cloneincomingdamagepercent*100 }}% increased damage.<br /><br />Mini <spellName>Jack in the Boxes</spellName> deal <magicDamage>{{ aoedamage }} magic damage</magicDamage>, or <magicDamage>{{ stdamage }} magic damage</magicDamage> if firing at only one enemy, and <status>Fear</status> for {{ boxfearduration }} second.<br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["On Death Damage", "Mini Box Damage", "Cooldown"],
+            "effect": [
+              "{{ explosionbasedamage }} -> {{ explosionbasedamageNL }}",
+              "{{ stbasedamage }} -> {{ stbasedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [100, 90, 80],
+          "cooldownBurn": "100/90/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [6, 6, 6],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "6", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [200, 200, 200],
+          "rangeBurn": "200",
+          "image": {
+            "full": "HallucinateFull.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 336,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Backstab",
+        "description": "Shaco's basic attacks and Two-Shiv Poison deal additional damage when striking from behind.",
+        "image": {
+          "full": "Jester_CarefulStrikes.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 432,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

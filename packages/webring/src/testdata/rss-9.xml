@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:wfw="http://wellformedweb.org/CommentAPI/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:sy="http://purl.org/rss/1.0/modules/syndication/" xmlns:slash="http://purl.org/rss/1.0/modules/slash/" version="2.0">
+  <channel>
+    <title>Xe Iaso's blog</title>
+    <link>https://xeiaso.net/</link>
+    <atom:link href="https://xeiaso.net/blog.rss" rel="self" type="application/rss+xml"/>
+    <description>Thoughts and musings from Xe Iaso</description>
+    <lastBuildDate>Fri, 12 Jul 2024 16:06:52 GMT</lastBuildDate>
+    <language>en</language>
+    <generator>Lume v2.2.0</generator>
+    <item>
+      <title>My fears about AI are not what you think</title>
+      <link>https://xeiaso.net/videos/2024/ai-fears/</link>
+      <guid isPermaLink="false">https://xeiaso.net/videos/2024/ai-fears/</guid>
+      <description>A clip from a longer stream VOD where I run through my fears with the AI industry</description>
+      <content:encoded>
+        <![CDATA[<div class="my-4"><video id="95ef49d1a89d833531b8fd6d41c56c0ece228fd41707b354949dd894b0438556" class="not-prose sm:max-h-[50vh] mx-auto" controls><source src="https://cdn.xeiaso.net/file/christine-static/video/2024/0707-totk/ai-fears/index.m3u8" type="application/vnd.apple.mpegurl"/><source src="https://cdn.xeiaso.net/file/christine-static/blog/HLSBROKE.mp4" type="video/mp4"/></video><script type="module">import execFor from '/js/hls.js';
+        
+        execFor('95ef49d1a89d833531b8fd6d41c56c0ece228fd41707b354949dd894b0438556', 'https://cdn.xeiaso.net/file/christine-static/video/2024/0707-totk/ai-fears/index.m3u8');</script><div class="text-center">Want to watch this in your video player of choice? Take this:<br/><a href="https://cdn.xeiaso.net/file/christine-static/video/2024/0707-totk/ai-fears/index.m3u8" rel="noreferrer">https://cdn.xeiaso.net/file/christine-static/video/2024/0707-totk/ai-fears/index.m3u8</a></div></div>
+        <p>I have been having some difficulty with motivation for creating things lately, and not because of writer's block or anything like that. I've actually been having difficulty with motivation because of the fact that whatever I make, it will just be the input to a system that will replace me. Or at least the input to a system that will be able to 80/20 the things that I do. And I don't know how to feel about this.</p>
+        <p>Per hour, I cost a fair bit of money, and I need to sleep at night. I need to take vacations. I can burn out. I can get sick. I have medical leave.</p>
+        <p>A large language model doesn't need to do any of that. AI tools don't have those problems. They
+        go 24/7. They never have to sleep. They don't get RSI. They don't burn out. They don't take vacations. They just continue doing the thing that they're set up to do until the computer shuts off.</p>
+        <p>I don't know how to feel about it.</p>
+        <blockquote>
+        <p>The worst thing LLM's have destroyed isn't really jobs, but hope in people.</p>
+        </blockquote>]]>
+      </content:encoded>
+      <pubDate>Mon, 08 Jul 2024 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>"No way to prevent this" say users of only language where this regularly happens</title>
+      <link>https://xeiaso.net/shitposts/no-way-to-prevent-this/CVE-2024-6387/</link>
+      <guid isPermaLink="false">https://xeiaso.net/shitposts/no-way-to-prevent-this/CVE-2024-6387/</guid>
+      <content:encoded>
+        <![CDATA[<p>In the hours following the release of <a href="https://www.qualys.com/2024/07/01/cve-2024-6387/regresshion.txt">CVE-2024-6387</a> for the project <a href="https://www.openssh.com/">OpenSSH</a>, site reliability workers
+        and systems administrators scrambled to desperately rebuild and patch all their systems to fix a combination of memory unsafety and glibc's creative decisions in signal handler implementation logic allowing remote unprivileged users can gain arbitrary code execution after predicting SSH memory addresses in a forged public key while a SIGALRM handler is being executed. This is due to the affected components being
+        written in C, the only programming language where these vulnerabilities regularly happen. &quot;This was a terrible tragedy, but sometimes
+        these things just happen and there's nothing anyone can do to stop them,&quot; said programmer Dr. Maurine Wilderman, echoing statements
+        expressed by hundreds of thousands of programmers who use the only language where 90% of the world's memory safety vulnerabilities have
+        occurred in the last 50 years, and whose projects are 20 times more likely to have security vulnerabilities. &quot;It's a shame, but what can
+        we do? There really isn't anything we can do to prevent memory safety vulnerabilities from happening if the programmer doesn't want to
+        write their code in a robust manner.&quot; At press time, users of the only programming language in the world where these vulnerabilities
+        regularly happen once or twice per quarter for the last eight years were referring to themselves and their situation as &quot;helpless.&quot;</p>
+        ]]>
+      </content:encoded>
+      <pubDate>Mon, 01 Jul 2024 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Setting up Gitea on Kubernetes from scratch</title>
+      <link>https://xeiaso.net/vods/2024/gitea-k8s/</link>
+      <guid isPermaLink="false">https://xeiaso.net/vods/2024/gitea-k8s/</guid>
+      <content:encoded>
+        <![CDATA[<p>I set up Gitea on Kubernetes with only the documentation, a dream, and existential suffering.</p>
+        <h2>High Level Topics Covered</h2>
+        <ul>
+        <li>Setting up Gitea, a self-hosted Git service, on a Kubernetes cluster</li>
+        <li>Using Helm, a package manager for Kubernetes, to simplify the deployment process</li>
+        <li>Troubleshooting common issues that arise during the setup process</li>
+        <li>Configuring and managing persistent storage for Gitea</li>
+        <li>Integrating Gitea with other services, such as Tigris and S3</li>
+        </ul>
+        <h2>Interesting Lessons Learned</h2>
+        <ul>
+        <li>Helm can be a useful tool for simplifying Kubernetes deployments, but it can also introduce complexity and potential security risks.</li>
+        <li>Persistent storage is essential for ensuring that data is preserved across pod restarts.</li>
+        <li>Careful configuration of Gitea's storage settings is important to avoid potential errors and data loss.</li>
+        <li>Integrating Gitea with other services can enhance its functionality and make it a more powerful tool for managing Git repositories.</li>
+        <li>It is important to thoroughly test and troubleshoot any changes made to a Kubernetes deployment to ensure that it is functioning properly.</li>
+        </ul>
+        ]]>
+      </content:encoded>
+      <pubDate>Sun, 30 Jun 2024 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>The Steam Deck ships with WireGuard</title>
+      <link>https://xeiaso.net/notes/2024/steam-deck-wireguard/</link>
+      <guid isPermaLink="false">https://xeiaso.net/notes/2024/steam-deck-wireguard/</guid>
+      <description>One less install required!</description>
+      <content:encoded>
+        <![CDATA[<p>While I was poking around SteamOS, I tried to run wg-quick and was surprised to see it was preinstalled. I've been wanting to get into my Deck from my MacBook over a stable IP for a fair bit, and this means I can just add it to my private <a href="https://fly.io/">fly.io</a> network.</p>
+        <p>So I did that:</p>
+        <pre><code class="code-highlight"><span class="code-line">$ fly wg create personal yul mipha mipha.conf
+        </span></code></pre>
+        <p>And then I imported the config to my deck over normal SSH and activated it:</p>
+        <pre><code class="code-highlight"><span class="code-line">$ sudo cp mipha.conf /etc/wg-quick/fly0.conf
+        </span><span class="code-line">
+        </span><span class="code-line">$ sudo systemctl enable --now wg-quick@fly0.service
+        </span></code></pre>
+        <p>And then I can ping it as normal:</p>
+        <pre><code class="code-highlight"><span class="code-line">$ ping6 fdaa:0:641b:a7b:9285:0:a:2502 -c4
+        </span><span class="code-line">PING6(56=40+8+8 bytes) [scrubbed] --> fdaa:0:641b:a7b:9285:0:a:2502
+        </span><span class="code-line">16 bytes from fdaa:0:641b:a7b:9285:0:a:2502, icmp_seq=0 hlim=62 time=35.587 ms
+        </span><span class="code-line">16 bytes from fdaa:0:641b:a7b:9285:0:a:2502, icmp_seq=1 hlim=62 time=22.683 ms
+        </span><span class="code-line">16 bytes from fdaa:0:641b:a7b:9285:0:a:2502, icmp_seq=2 hlim=62 time=29.850 ms
+        </span><span class="code-line">16 bytes from fdaa:0:641b:a7b:9285:0:a:2502, icmp_seq=3 hlim=62 time=95.205 ms
+        </span><span class="code-line">
+        </span><span class="code-line">--- fdaa:0:641b:a7b:9285:0:a:2502 ping6 statistics ---
+        </span><span class="code-line">4 packets transmitted, 4 packets received, 0.0% packet loss
+        </span><span class="code-line">round-trip min/avg/max/std-dev = 22.683/45.831/95.205/28.870 ms
+        </span></code></pre>
+        <p>Et voila! I'm in. Now it's easy to copy off the videos I got with Decky Recorder. Here's a few screenshots I've copied over:</p>
+        <figure class="max-w-3xl mx-auto undefined"><a href="https://cdn.xeiaso.net/file/christine-static/blog/2024/steam-deck-wireguard/20231212171009_1.jpg"><picture><source type="image/avif" srcset="https://cdn.xeiaso.net/file/christine-static/blog/2024/steam-deck-wireguard/20231212171009_1.avif"/><source type="image/webp" srcset="https://cdn.xeiaso.net/file/christine-static/blog/2024/steam-deck-wireguard/20231212171009_1.webp"/><img loading="lazy" src="https://cdn.xeiaso.net/file/christine-static/blog/2024/steam-deck-wireguard/20231212171009_1.jpg"/></picture></a></figure>
+        <figure class="max-w-3xl mx-auto undefined"><a href="https://cdn.xeiaso.net/file/christine-static/blog/2024/steam-deck-wireguard/20231212171009_1.jpg"><picture><source type="image/avif" srcset="https://cdn.xeiaso.net/file/christine-static/blog/2024/steam-deck-wireguard/20231212171009_1.avif"/><source type="image/webp" srcset="https://cdn.xeiaso.net/file/christine-static/blog/2024/steam-deck-wireguard/20231212171009_1.webp"/><img loading="lazy" src="https://cdn.xeiaso.net/file/christine-static/blog/2024/steam-deck-wireguard/20231212171009_1.jpg"/></picture></a></figure>
+        <figure class="max-w-3xl mx-auto undefined"><a href="https://cdn.xeiaso.net/file/christine-static/blog/2024/steam-deck-wireguard/20231212171107_1.jpg"><picture><source type="image/avif" srcset="https://cdn.xeiaso.net/file/christine-static/blog/2024/steam-deck-wireguard/20231212171107_1.avif"/><source type="image/webp" srcset="https://cdn.xeiaso.net/file/christine-static/blog/2024/steam-deck-wireguard/20231212171107_1.webp"/><img loading="lazy" src="https://cdn.xeiaso.net/file/christine-static/blog/2024/steam-deck-wireguard/20231212171107_1.jpg"/></picture></a></figure>
+        <p>Hope this gives you ideas!</p>
+        <hr/>
+        <p>This was originally a post on <a href="https://x.com/theprincessxena/status/1806786540137275709">X's article feature</a>, but it has been copied here in case the original is deleted, that product is cancelled, or some other bad thing happens.</p>]]>
+      </content:encoded>
+      <pubDate>Fri, 28 Jun 2024 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>"No way to prevent this" say users of only language where this regularly happens</title>
+      <link>https://xeiaso.net/shitposts/no-way-to-prevent-this/CVE-2024-5535/</link>
+      <guid isPermaLink="false">https://xeiaso.net/shitposts/no-way-to-prevent-this/CVE-2024-5535/</guid>
+      <content:encoded>
+        <![CDATA[<p>In the hours following the release of <a href="https://jbp.io/2024/06/27/cve-2024-5535-openssl-memory-safety.html">CVE-2024-5535</a> for the project <a href="https://openssl.org/">OpenSSL</a>, site reliability workers
+        and systems administrators scrambled to desperately rebuild and patch all their systems to fix NPN (the precursor to ALPN) in OpenSSL 1.0.x, 1.1.x, and 3.x leaking 255 bytes of client heap to the server with every write. This is due to the affected components being
+        written in C, the only programming language where these vulnerabilities regularly happen. &quot;This was a terrible tragedy, but sometimes
+        these things just happen and there's nothing anyone can do to stop them,&quot; said programmer Ms. Carrie Kuhn, echoing statements
+        expressed by hundreds of thousands of programmers who use the only language where 90% of the world's memory safety vulnerabilities have
+        occurred in the last 50 years, and whose projects are 20 times more likely to have security vulnerabilities. &quot;It's a shame, but what can
+        we do? There really isn't anything we can do to prevent memory safety vulnerabilities from happening if the programmer doesn't want to
+        write their code in a robust manner.&quot; At press time, users of the only programming language in the world where these vulnerabilities
+        regularly happen once or twice per quarter for the last eight years were referring to themselves and their situation as &quot;helpless.&quot;</p>
+        ]]>
+      </content:encoded>
+      <pubDate>Thu, 27 Jun 2024 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>"No way to prevent this" say users of only language where this regularly happens</title>
+      <link>https://xeiaso.net/shitposts/no-way-to-prevent-this/CVE-2024-28820/</link>
+      <guid isPermaLink="false">https://xeiaso.net/shitposts/no-way-to-prevent-this/CVE-2024-28820/</guid>
+      <content:encoded>
+        <![CDATA[<p>In the hours following the release of <a href="https://www.tenable.com/cve/CVE-2024-28820">CVE-2024-28820</a> for the project <a href="https://github.com/threerings/openvpn-auth-ldap">OpenVPN Auth-LDAP</a>, site reliability workers
+        and systems administrators scrambled to desperately rebuild and patch all their systems to fix a vulnerability where passing fourteen colons into the password field when the attacker knows a valid username, causing a buffer overflow. This is due to the affected components being
+        written in C, the only programming language where these vulnerabilities regularly happen. &quot;This was a terrible tragedy, but sometimes
+        these things just happen and there's nothing anyone can do to stop them,&quot; said programmer King Edmond Wiegand, echoing statements
+        expressed by hundreds of thousands of programmers who use the only language where 90% of the world's memory safety vulnerabilities have
+        occurred in the last 50 years, and whose projects are 20 times more likely to have security vulnerabilities. &quot;It's a shame, but what can
+        we do? There really isn't anything we can do to prevent memory safety vulnerabilities from happening if the programmer doesn't want to
+        write their code in a robust manner.&quot; At press time, users of the only programming language in the world where these vulnerabilities
+        regularly happen once or twice per quarter for the last eight years were referring to themselves and their situation as &quot;helpless.&quot;</p>
+        ]]>
+      </content:encoded>
+      <pubDate>Thu, 27 Jun 2024 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>The key bit of the code that was biting me in net/http</title>
+      <link>https://xeiaso.net/videos/2024/how-mime-parsing-works/</link>
+      <guid isPermaLink="false">https://xeiaso.net/videos/2024/how-mime-parsing-works/</guid>
+      <description>A clip from a longer stream VOD where I explain how MIME parsing works in Go's net/http package</description>
+      <content:encoded>
+        <![CDATA[<div class="my-4 flex space-x-4 rounded-md border border-solid border-fg-4 bg-bg-2 p-3 dark:border-fgDark-4 dark:bg-bgDark-2 max-w-full min-h-fit"><div class="flex max-h-16 shrink-0 items-center justify-center self-center"><img style="max-height:4rem" alt="Cadey is enby" loading="lazy" src="https://cdn.xeiaso.net/sticker/cadey/enby/128"/></div><div class="convsnippet min-w-0 self-center">&lt;<a href="https://xeiaso.net/characters#cadey"><b>Cadey</b></a>> <p>This is a clip from a longer stream VOD. This has been mildly edited for
+        clarity and brevity. The full stream VOD is available <a href="https://xeiaso.net/vods/2024/mime-rss/">on my
+        website</a>. I have included a transcript of the clip below
+        the video. Enjoy!</p></div></div>
+        <div class="my-4"><video id="aec2c4c739cc4c4c1482bba37bbcd9e32931c555cf9115ef12d45507d5acb5d6" class="not-prose sm:max-h-[50vh] mx-auto" controls><source src="https://cdn.xeiaso.net/file/christine-static/video/2024/how-mime-parsing-works/index.m3u8" type="application/vnd.apple.mpegurl"/><source src="https://cdn.xeiaso.net/file/christine-static/blog/HLSBROKE.mp4" type="video/mp4"/></video><script type="module">import execFor from '/js/hls.js';
+        
+        execFor('aec2c4c739cc4c4c1482bba37bbcd9e32931c555cf9115ef12d45507d5acb5d6', 'https://cdn.xeiaso.net/file/christine-static/video/2024/how-mime-parsing-works/index.m3u8');</script><div class="text-center">Want to watch this in your video player of choice? Take this:<br/><a href="https://cdn.xeiaso.net/file/christine-static/video/2024/how-mime-parsing-works/index.m3u8" rel="noreferrer">https://cdn.xeiaso.net/file/christine-static/video/2024/how-mime-parsing-works/index.m3u8</a></div></div>
+        <p>So what's happening here is we are hitting this line of code.</p>
+        <p>And for those of you that can't read it, because you're watching this on a mobile phone screen. So this. This function is deep in the net HTTP file server code and go the net HTTP file server is a thing that basically converts files onto a file system from HTTP requests and HTTP responses using those files. So in this case, we're determining what content type to attach the response.</p>
+        <p>So what this will do is it will check to see if it can figure out what the MIME type of a file is by its extension. Normally, this isn't the best idea. However, realistically, it works well enough that you can just rely on it. Because like.</p>
+        <p>Windows requires you to have file extensions asterisk and people just have file extensions so that things work fine on Windows. So if you can detect what the MIME type is by the file extension, then you know you save a lot of the other effort. Otherwise, it'll attempt to read the first 512 bytes of the file and run the detect content type algorithm, which is a standard algorithm to detect content types. I don't think I need to cover it here, but if you want to just look into it on Google, it's basically just tries to read the first 512 bytes of a file for magic numbers and then we'll just already copy it. We'll just copy out the what it thinks is a good guess and go with that. So the important part here is that when it does it, it reads 512 bytes to that to that temporary buffer, detects the content type, and then it rewinds the file so that the rest of the file serving stack can just work. That makes sense. That's normal enough. But why does that work?</p>
+        <p>So when you have an HTTP dot file system, you basically have something that opens HTTP dot files.</p>
+        <p>So to go down here and let's go over and see what a file what a file system is. An HTTP dot file system is an interface with a single method. You give it a name and it returns a file or it blows up and dies.</p>
+        <p>So and then a file is a combination of like five methods. A file can be closed, which means you don't want to read from it anymore. A file can be read from, which means you can get data out of it. A file can be seeked through or have the position moved around like fast forwarding or rewinding a VHS tape.</p>
+        <p>We can read a directory from, we can attempt to use a file as a directory because technically files and directories are the same thing. It's complicated. Don't learn how file system works. You'll be ruined for life. And we can also get metadata about a file in the form of file info. But if you notice here, we have a net HTTP dot file and then it gets an IO slash FS dot file.</p>
+        <p>What is an io/fs.File?</p>
+        <p>So let's go to io/fs and we look at an io/fs.File.</p>
+        <p>And oh, look, an io/fs.File is only three methods. You can get file metadata info, you can read from a file, or you can close it. This is a subset of the http.File interface. It only has io.Closer, io.Reader, and Stat.</p>
+        <p>The http File interface is more specific than the io/fs interface. So things that match one interface don't always match the other interface. And if we look around here, I'm pretty sure we'll see where it converts a io/fs.FileSystem to an HTTP file system. And I'm pretty sure I'm going to see an error that...</p>
+        <p>Oh, here we go. Yep, here's where it converts from an io/fs.FileSystem to an HTTP file system.</p>
+        <p>It sees if the underlying file has a seek method, and if not, it can't do anything.</p>]]>
+      </content:encoded>
+      <pubDate>Tue, 25 Jun 2024 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Writing MIME, RSS, and existential suffering</title>
+      <link>https://xeiaso.net/vods/2024/mime-rss/</link>
+      <guid isPermaLink="false">https://xeiaso.net/vods/2024/mime-rss/</guid>
+      <content:encoded>
+        <![CDATA[<p>I'm trying to get back into streaming regularly, and I decided to
+        break the anti-streak by doing a good old fashioned blogpost writing
+        stream. I broke down the problem, wrote out all the prose, and then
+        published it.</p>
+        <p>After remembering that you actually have to push commits for them to
+        be live.</p>
+        ]]>
+      </content:encoded>
+      <pubDate>Tue, 25 Jun 2024 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>MIME, RSS, and existential torment</title>
+      <link>https://xeiaso.net/blog/2024/fixing-rss-mailcap/</link>
+      <guid isPermaLink="false">https://xeiaso.net/blog/2024/fixing-rss-mailcap/</guid>
+      <description>TL;DR: how I fixed my RSS feed by installing mailcap so I don't get tormented by mimes</description>
+      <content:encoded>
+        <![CDATA[<p>This morning, I woke up with a flurry of emails in my inbox. When people tried to read my blog's RSS feed, they got an error like this:</p>
+        <pre><code class="code-highlight"><span class="code-line">$ curl https://xeiaso.net/blog.rss
+        </span><span class="code-line">seeker can't seek
+        </span></code></pre>
+        <p>This should not happen. When I first encountered this, I had to do a double-take. When I remade my website for <a href="https://xeiaso.net/blog/xesite-v4/">version 4</a> I did make some weird technical decisions and I figured one of those was coming back to bite me. One of the weirdest things my website does is that it serves everything from a .zip file. As far as I understand my blog, here's what I expect to happen when somebody requests a file:</p>
+        <p><img src="https://xeiaso.net/static/blog/fixing-rss-mailcap/how-it-should-work.excalidraw.svg" alt/></p>
+        <p>When someone fetches a file I expect it to interact with the lume FileSystem component, pass it to the zip file, get a file back, and then serve it back to the user with happy puppies and HTTP 200 responses. This was not happening, and the error that I got was initially very confusing.</p>
+        <p>The actual reason why this was happening trolled me so hard that I felt the need to write about it so that y'all are able to understand all of the moving parts and why it failed in this way in particular.</p>
+        <h2>Go interfaces</h2>
+        <p>In Go, interfaces are used to describe abstract behaviors that apply between types. As an absurd example, let's imagine something that has the behavior of quacking. In Go you'd probably write an interface like this to represent this behavior:</p>
+        <pre class="language-go"><code class="language-go code-highlight"><span class="code-line"><span class="token keyword">type</span> Quacker <span class="token keyword">interface</span> <span class="token punctuation">{</span>
+        </span><span class="code-line">    <span class="token function">Quack</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+        </span><span class="code-line"><span class="token punctuation">}</span>
+        </span></code></pre>
+        <p>So, for some type <code>Duck</code>, you could make it quack like this:</p>
+        <pre class="language-go"><code class="language-go code-highlight"><span class="code-line"><span class="token keyword">type</span> Duck <span class="token keyword">struct</span><span class="token punctuation">{</span><span class="token punctuation">}</span>
+        </span><span class="code-line">
+        </span><span class="code-line"><span class="token keyword">func</span> <span class="token punctuation">(</span>Duck<span class="token punctuation">)</span> <span class="token function">Quack</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">&quot;Quack!&quot;</span><span class="token punctuation">)</span> <span class="token punctuation">}</span>
+        </span></code></pre>
+        <p>And then you can pass a <code>Duck</code> value anywhere that takes a <code>Quacker</code>, even if the underlying implementation is something absurd:</p>
+        <pre class="language-go"><code class="language-go code-highlight"><span class="code-line"><span class="token keyword">type</span> Sheep <span class="token keyword">struct</span><span class="token punctuation">{</span><span class="token punctuation">}</span>
+        </span><span class="code-line">
+        </span><span class="code-line"><span class="token keyword">func</span> <span class="token punctuation">(</span>Sheep<span class="token punctuation">)</span> <span class="token function">Quack</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">&quot;Baaaaa&quot;</span><span class="token punctuation">)</span> <span class="token punctuation">}</span>
+        </span></code></pre>
+        <p>Interfaces are used all over the standard library and they make a lot of things really damn convenient in practice. Want to override how a HTTP request works? Define your own <a href="https://pkg.go.dev/net/http#RoundTripper"><code>net/http#RoundTripper</code></a>. When you define HTTP handlers, you're dealing with the <a href="https://pkg.go.dev/net/http#Handler"><code>net/http#Handler</code></a> interface. Interfaces are everywhere and they are lovely.</p>
+        <p>One of the more recent and exciting interfaces is <a href="https://pkg.go.dev/io/fs#FS"><code>io/fs.FS</code></a>, which represents an abstract &quot;filesystem&quot;. This allows you to make filesystem logic pluggable so that you can <a href="https://pkg.go.dev/embed#hdr-File_Systems">embed filesystems into your code</a>, or read stuff out of anything that implements the <code>io/fs#FS</code> interface. One of these things is a .zip file reader, AKA <a href="https://pkg.go.dev/archive/zip#Reader"><code>archive/zip#Reader</code></a>.</p>
+        <p>This is the core of how my website works. Every time you read anything from my site, you're actually looking at the contents of a zipfile full of gzip streams.</p>
+        <p>So anyways, you go to the RSS feed and then you get a HTTP 500 back. The flow looks like this:</p>
+        <p><img src="https://xeiaso.net/static/blog/fixing-rss-mailcap/how-it-broke.excalidraw.svg" alt/></p>
+        <p>The Go HTTP package <a href="https://pkg.go.dev/net/http#FileSystem">has had its own filesystem logic</a> for a while, since Go 1.0. Here's its view of what a <code>File</code> should be:</p>
+        <pre class="language-go"><code class="language-go code-highlight"><span class="code-line"><span class="token comment">// imagine this is in net/http</span>
+        </span><span class="code-line"><span class="token keyword">package</span> http
+        </span><span class="code-line">
+        </span><span class="code-line"><span class="token keyword">import</span> <span class="token string">&quot;io/fs&quot;</span>
+        </span><span class="code-line">
+        </span><span class="code-line"><span class="token keyword">type</span> File <span class="token keyword">interface</span> <span class="token punctuation">{</span>
+        </span><span class="code-line">	io<span class="token punctuation">.</span>Closer
+        </span><span class="code-line">	io<span class="token punctuation">.</span>Reader
+        </span><span class="code-line">	io<span class="token punctuation">.</span>Seeker
+        </span><span class="code-line">	<span class="token function">Readdir</span><span class="token punctuation">(</span>count <span class="token builtin">int</span><span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">]</span>fs<span class="token punctuation">.</span>FileInfo<span class="token punctuation">,</span> <span class="token builtin">error</span><span class="token punctuation">)</span>
+        </span><span class="code-line">	<span class="token function">Stat</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>fs<span class="token punctuation">.</span>FileInfo<span class="token punctuation">,</span> <span class="token builtin">error</span><span class="token punctuation">)</span>
+        </span><span class="code-line"><span class="token punctuation">}</span>
+        </span></code></pre>
+        <p>Here's what <code>io/fs</code> thinks a file should be:</p>
+        <pre class="language-go"><code class="language-go code-highlight"><span class="code-line"><span class="token keyword">package</span> fs
+        </span><span class="code-line">
+        </span><span class="code-line"><span class="token keyword">type</span> File <span class="token keyword">interface</span> <span class="token punctuation">{</span>
+        </span><span class="code-line">	<span class="token function">Stat</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>FileInfo<span class="token punctuation">,</span> <span class="token builtin">error</span><span class="token punctuation">)</span>
+        </span><span class="code-line">	<span class="token function">Read</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token builtin">int</span><span class="token punctuation">,</span> <span class="token builtin">error</span><span class="token punctuation">)</span>
+        </span><span class="code-line">	<span class="token function">Close</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token builtin">error</span>
+        </span><span class="code-line"><span class="token punctuation">}</span>
+        </span></code></pre>
+        <p>A <code>net/http#File</code> is a <em>more specific</em> interface than a <code>io/fs#File</code>, which means that not all things that can be represented as an <code>io/fs#File</code> can work as a <code>net/http#File</code>.</p>
+        <div class="my-4 flex space-x-4 rounded-md border border-solid border-fg-4 bg-bg-2 p-3 dark:border-fgDark-4 dark:bg-bgDark-2 max-w-full min-h-fit"><div class="flex max-h-16 shrink-0 items-center justify-center self-center"><img style="max-height:4rem" alt="Mara is hacker" loading="lazy" src="https://cdn.xeiaso.net/sticker/mara/hacker/128"/></div><div class="convsnippet min-w-0 self-center">&lt;<a href="https://xeiaso.net/characters#mara"><b>Mara</b></a>> <p>In Go, you generally call interfaces with more methods &quot;more specific&quot; than ones that have less methods. When you are making interfaces in Go, it's generally seen that a smaller interface is better than a bigger one because those are more easy to compose. A file can be read from, but so can a network socket or a HTTP response body. If you make your interfaces vague, then they can apply many other places.</p><p>Consider this <a href="https://go-proverbs.github.io/">Go proverb</a>:</p><div class="mx-auto mt-4 mb-2 rounded-lg bg-bg-2 p-4 dark:bg-bgDark-2 md:max-w-lg xe-dont-newline">> <p>The bigger the interface, the weaker the abstraction.</p></div></div></div>
+        <p>This all matters because when the standard library HTTP fileserver tries to serve a file, it has to figure out the <code>Content-Type</code> of that file. The code is <a href="https://github.com/golang/go/blob/2073b35e07ce9cea47ee1fbe763b304d2371954f/src/net/http/fs.go#L242-L254">in a function imaginatively named <code>serveContent</code></a>, but the overall flow looks kinda like this:</p>
+        <p><img src="https://xeiaso.net/static/blog/fixing-rss-mailcap/serveContent-flow.excalidraw.svg" alt/></p>
+        <p>Whenever you try to serve a file that doesn't already have a <code>Content-Type</code> header defined, it tries to detect it from the extension. If it can't, it'll try to read the first 512 bytes of the file to detect what kind of file it is, and then rewind the file back so that it can be served to the user.</p>
+        <p>Unless that file doesn't have a working <code>.Seek</code> method.</p>
+        <p>As it turns out, when you read <code>io/fs#File</code>s from a zipfile, they don't have a <code>.Seek</code> method defined. This makes sense because any file in a zipfile exists in a superposition of both being compressed and not being compressed that only gets resolved when the file is read from. It doesn't make sense to be able to rewind a compressed stream and then get back data from earlier in it. You'd have to put everything in memory and then you could run out of memory and crash.</p>
+        <p>The reason we got this <code>seeker can't seek</code> error is because they added a &quot;type shim&quot; to allow an <code>io/fs#File</code> to act as a <code>net/http#File</code>. Here's the codepath I hit:</p>
+        <pre class="language-go"><code class="language-go code-highlight"><span class="code-line"><span class="token keyword">var</span> errMissingSeek <span class="token operator">=</span> errors<span class="token punctuation">.</span><span class="token function">New</span><span class="token punctuation">(</span><span class="token string">&quot;seeker can't seek&quot;</span><span class="token punctuation">)</span>
+        </span><span class="code-line">
+        </span><span class="code-line"><span class="token keyword">func</span> <span class="token punctuation">(</span>f ioFile<span class="token punctuation">)</span> <span class="token function">Seek</span><span class="token punctuation">(</span>offset <span class="token builtin">int64</span><span class="token punctuation">,</span> whence <span class="token builtin">int</span><span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token builtin">int64</span><span class="token punctuation">,</span> <span class="token builtin">error</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        </span><span class="code-line">	s<span class="token punctuation">,</span> ok <span class="token operator">:=</span> f<span class="token punctuation">.</span>file<span class="token punctuation">.</span><span class="token punctuation">(</span>io<span class="token punctuation">.</span>Seeker<span class="token punctuation">)</span>
+        </span><span class="code-line">	<span class="token keyword">if</span> <span class="token operator">!</span>ok <span class="token punctuation">{</span>
+        </span><span class="code-line">		<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">,</span> errMissingSeek
+        </span><span class="code-line">	<span class="token punctuation">}</span>
+        </span><span class="code-line">	<span class="token keyword">return</span> s<span class="token punctuation">.</span><span class="token function">Seek</span><span class="token punctuation">(</span>offset<span class="token punctuation">,</span> whence<span class="token punctuation">)</span>
+        </span><span class="code-line"><span class="token punctuation">}</span>
+        </span></code></pre>
+        <p>A zipfile's <code>io/fs#File</code> isn't an <a href="https://pkg.go.dev/io#Seeker"><code>io.Seeker</code></a>. This means that any time the <code>net/http#FileSystem</code> logic tried to seek, it instantly got that <code>seeker can't seek</code> error and blew up.</p>
+        <h2>Getting trolled by MIMEs</h2>
+        <p>However, we don't have to fix this problem today. We can work around it with the power of the MIME registry.</p>
+        <div class="my-4 flex space-x-4 rounded-md border border-solid border-fg-4 bg-bg-2 p-3 dark:border-fgDark-4 dark:bg-bgDark-2 max-w-full min-h-fit"><div class="flex max-h-16 shrink-0 items-center justify-center self-center"><img style="max-height:4rem" alt="Aoi is wut" loading="lazy" src="https://cdn.xeiaso.net/sticker/aoi/wut/128"/></div><div class="convsnippet min-w-0 self-center">&lt;<a href="https://xeiaso.net/characters#aoi"><b>Aoi</b></a>> <p>I don't get it, if this is broken now, then how did it ever work in the first
+        place?</p></div></div>
+        <p>That first step of the diagram is the relevant bit. If the file extension is in the MIME registry, then it'll be returned to the user:</p>
+        <p><img src="https://xeiaso.net/static/blog/fixing-rss-mailcap/mime-registry.excalidraw.svg" alt/></p>
+        <p>Go has a <a href="https://github.com/golang/go/blob/2073b35e07ce9cea47ee1fbe763b304d2371954f/src/mime/type.go#L60-L77">minimal subset</a> of very very commonly used MIME types so that things will Just Work™️, but when the program starts, it tries to read all of the other common MIME-extension pairs out of <code>/etc/mime.types</code> (and a few other places).</p>
+        <p>Guess what file wasn't present in the Docker image I made with Earthly?</p>
+        <p>In Alpine Linux, this file is <a href="https://pkgs.alpinelinux.org/contents?file=mime.types&amp;path=&amp;name=&amp;branch=edge&amp;repo=main&amp;arch=ppc64le">in the <code>mailcap</code> package</a>. Fixing this was as easy as changing a single line in my Earthly configuration:</p>
+        <pre class="language-diff"><code class="language-diff code-highlight"><span class="code-line deleted"><span class="token deleted-sign deleted"><span class="token prefix deleted">-</span><span class="token line">    RUN apk add -U ca-certificates deno typst
+        </span></span></span><span class="code-line inserted"><span class="token deleted-sign deleted"><span class="token line"></span></span><span class="token inserted-sign inserted"><span class="token prefix inserted">+</span><span class="token line">    RUN apk add -U ca-certificates deno typst mailcap
+        </span></span></span></code></pre>
+        <div class="my-4 flex space-x-4 rounded-md border border-solid border-fg-4 bg-bg-2 p-3 dark:border-fgDark-4 dark:bg-bgDark-2 max-w-full min-h-fit"><div class="flex max-h-16 shrink-0 items-center justify-center self-center"><img style="max-height:4rem" alt="Cadey is coffee" loading="lazy" src="https://cdn.xeiaso.net/sticker/cadey/coffee/128"/></div><div class="convsnippet min-w-0 self-center">&lt;<a href="https://xeiaso.net/characters#cadey"><b>Cadey</b></a>> <p>God, I feel like a buffoon. How the hell am I employable???</p></div></div>
+        <div class="my-4 flex space-x-4 rounded-md border border-solid border-fg-4 bg-bg-2 p-3 dark:border-fgDark-4 dark:bg-bgDark-2 max-w-full min-h-fit"><div class="flex max-h-16 shrink-0 items-center justify-center self-center"><img style="max-height:4rem" alt="Numa is happy" loading="lazy" src="https://cdn.xeiaso.net/sticker/numa/happy/128"/></div><div class="convsnippet min-w-0 self-center">&lt;<a href="https://xeiaso.net/characters#numa"><b>Numa</b></a>> <p>Don't worry, this is why we get paid the big bucks. The more you fuck around
+        like this, the weirder it is when you find out why.</p></div></div>
+        <h2>Conclusion</h2>
+        <p>This is why the RSS feed was broken. It was broken because I got trolled by a bunch of MIMEs. No (mail)cap, fr fr.</p>
+        <div class="my-4 flex space-x-4 rounded-md border border-solid border-fg-4 bg-bg-2 p-3 dark:border-fgDark-4 dark:bg-bgDark-2 max-w-full min-h-fit"><div class="flex max-h-16 shrink-0 items-center justify-center self-center"><img style="max-height:4rem" alt="Aoi is coffee" loading="lazy" src="https://cdn.xeiaso.net/sticker/aoi/coffee/128"/></div><div class="convsnippet min-w-0 self-center">&lt;<a href="https://xeiaso.net/characters#aoi"><b>Aoi</b></a>> <p>Please don't.</p></div></div>
+        <p>If you want to watch me suffer through explaining things like this, <a href="https://twitch.tv/princessxen">follow me on Twitch</a>. We'll all learn together.</p>]]>
+      </content:encoded>
+      <pubDate>Sun, 23 Jun 2024 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Building a constellation of images with Earthly</title>
+      <link>https://xeiaso.net/blog/2024/earthly-docker/</link>
+      <guid isPermaLink="false">https://xeiaso.net/blog/2024/earthly-docker/</guid>
+      <description>What if building container images was actually a graph?</description>
+      <content:encoded>
+        <![CDATA[<p>Docker is the universal package format of the Internet. It allows you to ship an application and all of its dependencies in one unit so that you can run it without worrying about dependencies on the host machine breaking your app. It's quickly become the gold standard for how to package and deploy applications, and it's not hard to see why.</p>
+        <p>However, the main way you build a Docker image is with the <code>docker build</code> command, which takes a <code>Dockerfile</code> in the directory you specify on the command line and then builds an image from that. This works great for single-component applications, or even facets of a larger monorepo, but it falls short when you have something like a monorepo written in Go that has multiple components that need to be built and then packaged into separate images.</p>
+        <p>I have two big &quot;monorepos&quot; of side projects and the like that I want to deploy as Docker images. One is <a href="https://github.com/Xe/site">my blog</a>, and the other is my <a href="https://github.com/Xe/x">/x/ experimental monorepo</a>. Both of these projects have multiple components that need to be built and packaged into separate Docker images, and I've been struggling to find a way to do this <a href="https://xeiaso.net/talks/2024/nix-docker-build/">that was as good as the previous setup</a>.</p>
+        <p>When I was working with a coworker on something recently, I was pointed to <a href="https://docs.earthly.dev/">Earthly</a>. Earthly is a unique form of violence, it's effectively a bastard child of Make and Docker that was raised by a team of people who really care about developer ergonomics. The best way to think about Earthly is that it's a build system that just happens to execute every step in a container and you can fossilize artifacts or images out of the build process.</p>
+        <p>Under the hood, Docker has started to use <a href="https://docs.docker.com/build/buildkit/">BuildKit</a> to make images. This effectively transforms a Dockerfile into a graph of steps that can be executed in parallel. Consider this Dockerfile:</p>
+        <pre class="language-dockerfile"><code class="language-Dockerfile code-highlight"><span class="code-line"><span class="token instruction"><span class="token keyword">FROM</span> golang:1.22 <span class="token keyword">AS</span> builder</span>
+        </span><span class="code-line"><span class="token instruction"><span class="token keyword">WORKDIR</span> /src</span>
+        </span><span class="code-line"><span class="token instruction"><span class="token keyword">COPY</span> . .</span>
+        </span><span class="code-line"><span class="token instruction"><span class="token keyword">RUN</span> mkdir -p /app/bin &amp;&amp; go build -o /app/bin/myapp ./cmd/myapp</span>
+        </span><span class="code-line">
+        </span><span class="code-line"><span class="token instruction"><span class="token keyword">FROM</span> nodejs <span class="token keyword">AS</span> frontend</span>
+        </span><span class="code-line"><span class="token instruction"><span class="token keyword">WORKDIR</span> /src</span>
+        </span><span class="code-line"><span class="token instruction"><span class="token keyword">COPY</span> . .</span>
+        </span><span class="code-line"><span class="token instruction"><span class="token keyword">RUN</span> npm install &amp;&amp; npm run build</span>
+        </span><span class="code-line">
+        </span><span class="code-line"><span class="token instruction"><span class="token keyword">FROM</span> ubuntu:24.04 <span class="token keyword">AS</span> runner</span>
+        </span><span class="code-line"><span class="token instruction"><span class="token keyword">WORKDIR</span> /app</span>
+        </span><span class="code-line"><span class="token instruction"><span class="token keyword">COPY</span> <span class="token options"><span class="token property">--from</span><span class="token punctuation">=</span><span class="token string">builder</span></span> /app/bin/myapp /app/bin/myapp</span>
+        </span><span class="code-line"><span class="token instruction"><span class="token keyword">COPY</span> <span class="token options"><span class="token property">--from</span><span class="token punctuation">=</span><span class="token string">frontend</span></span> /src/build /app/static</span>
+        </span><span class="code-line"><span class="token instruction"><span class="token keyword">CMD</span> [<span class="token string">&quot;/app/bin/myapp&quot;</span>]</span>
+        </span></code></pre>
+        <p>This effectively turns a build into a graph like this:</p>
+        <p><img src="https://xeiaso.net/static/img/docker-graph.svg" alt="Dockerfile graph"/></p>
+        <p>The <code>builder</code> and <code>frontend</code> stages can be built in parallel, but the <code>runner</code> stage needs to wait until both of them are done before it can be built. This is a simple example, but it shows how you can have multiple components that need to be built and then packaged into a single image.</p>
+        <p>What if you have multiple images though? That's where Earthly comes in. Earthly builds on top of BuildKit to allow you to define a series of targets that can be built in parallel, and then it builds them in the most efficient way possible. It's like Make, but for Docker images.</p>
+        <h2>My blog's backend</h2>
+        <p>My blog is an unfortunately complicated project, it wasn't intended to be that way, it sorta organically grew this way after a decade or so. It's a Go project that requires on a few components:</p>
+        <ul>
+        <li>The blog backend itself (really just something that sits there and serves the blog, occasionally rebuilding it when I push a new post)</li>
+        <li>The Patreon token escrow service (a service that sits in front of the Patreon API and allows me to have a token that can be used to access the API without having to worry about it being revoked)</li>
+        <li>A <a href="https://xeiaso.net/blog/2024/overengineering-preview-site/">few other components</a> in <code>/x/</code> that I'm not going to talk about here</li>
+        </ul>
+        <p>After breaking everything down into the components and inputs, I came up with the following flow:</p>
+        <p><img src="https://xeiaso.net/static/img/xesite-graph.svg" alt="Xesite build graph"/></p>
+        <p>Going from left to right, the inputs are:</p>
+        <ul>
+        <li>The source code tree (a checkout of the blog's repository)</li>
+        <li>The <a href="https://hub.docker.com/_/golang">go:1.22-alpine</a> image</li>
+        <li>The <a href="https://hub.docker.com/_/alpine">alpine:edge</a> image</li>
+        </ul>
+        <p>These are then passed through to pull and build the components and their dependencies. The <code>+patreon</code> and <code>+xesite</code> targets are the final images that are built from the components. The <code>+xesite</code> target is a bit weird in that we need to copy the <a href="https://cdn.xeiaso.net/static/pkg/iosevka/specimen.html">Iosevka Iaso</a> font files and the <a href="https://dhall-lang.org/">Dhall</a> binary into the image so that the blog can use them (it will panic at runtime if it can't find them).</p>
+        <p>These two targets are then pushed to the <a href="https://ghcr.io/">GitHub Container Registry</a> so that they can be pulled down and run on <a href="https://fly.io/">Fly.io</a>.</p>
+        <div class="my-4 flex space-x-4 rounded-md border border-solid border-fg-4 bg-bg-2 p-3 dark:border-fgDark-4 dark:bg-bgDark-2 max-w-full min-h-fit"><div class="flex max-h-16 shrink-0 items-center justify-center self-center"><img style="max-height:4rem" alt="Cadey is coffee" loading="lazy" src="https://cdn.xeiaso.net/sticker/cadey/coffee/128"/></div><div class="convsnippet min-w-0 self-center">&lt;<a href="https://xeiaso.net/characters#cadey"><b>Cadey</b></a>> <p>At the time of writing, Fly.io is my employer. I'm using Fly.io to run my
+        blog. I'm not just shilling it for the sake of shilling it. I was a user
+        before I was an employee, and I'm still a user now that I'm an employee. It's
+        a great platform and I love it. If the platform wasn't great, I wouldn't be
+        using it.</p></div></div>
+        <p>Oh, as a side note, when you're trying to build multiple images at once from CI, you need to make an <code>all</code> target or similar that depends on all of the images you want to build. This is because Earthly can only build one target at a time.</p>
+        <pre class="language-dockerfile"><code class="language-Dockerfile code-highlight"><span class="code-line">all:
+        </span><span class="code-line">    BUILD --platform=linux/amd64 +xesite
+        </span><span class="code-line">    BUILD --platform=linux/amd64 +patreon-saasproxy
+        </span></code></pre>
+        <p>You can then chuck this into GitHub Actions:</p>
+        <pre class="language-yaml"><code class="language-yaml code-highlight"><span class="code-line"><span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Build and push Docker image
+        </span><span class="code-line">  <span class="token key atrule">id</span><span class="token punctuation">:</span> build<span class="token punctuation">-</span>and<span class="token punctuation">-</span>push
+        </span><span class="code-line">  <span class="token key atrule">run</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
+        </span></span><span class="code-line"><span class="token scalar string">    earthly --ci --push +all</span>
+        </span></code></pre>
+        <p>The <a href="https://docs.earthly.dev/ci-integration/overview#earthly"><code>--ci</code> flag</a> sets some options that help Earthly work better in a CI environment. It's not strictly necessary, but it's probably a good idea to use it.</p>
+        <h2>The impact</h2>
+        <p>The difference between these two flows is subtle but staggering. Building my blog's backend with the old flow could take up to 10 minutes. Building my blog's backend with Earthly takes tens of seconds. The old flow produced a 734 MB image with a bunch of extraneous dependencies (even though that should be mathematically impossible). The new flow shits out a 262 MB image that has only what is required to run the blog.</p>
+        <p>Not to mention the developer ergonomics of using Earthly. With Earthly I can build <strong>and push</strong> my images in one Go. I don't even run into the Dockerfile landmine of forgetting to run <code>docker build -t</code> before running <code>docker push</code>. I can't tell you how many times I've done that and had to dig up the image reference from <code>docker images</code> to manually tag and push it.</p>
+        <p>Earthly is exactly what I needed. I'm going to adopt it as my Docker image build system of choice.</p>
+        <p>The only downside is them adding advertisements for their SaaS product in all of my build outputs:</p>
+        <pre><code class="code-highlight"><span class="code-line">🛰️ Reuse cache between CI runs with Earthly Satellites! 2-20X faster than without cache. Generous free tier https://cloud.earthly.dev
+        </span></code></pre>
+        <p>I get why they're doing this, it's really hard to make money off of developer tooling like this. Developers are both extremely well paid and notoriously cheap. I'm not going to fault them for trying to make money off of their product. I just wish I could turn it off.</p>]]>
+      </content:encoded>
+      <pubDate>Sat, 22 Jun 2024 00:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>

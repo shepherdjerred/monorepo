@@ -1,0 +1,378 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "MasterYi": {
+      "id": "MasterYi",
+      "key": "11",
+      "name": "Master Yi",
+      "title": "the Wuju Bladesman",
+      "image": {
+        "full": "MasterYi.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 0,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "11000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "11001",
+          "num": 1,
+          "name": "Assassin Master Yi",
+          "chromas": false
+        },
+        {
+          "id": "11002",
+          "num": 2,
+          "name": "Chosen Master Yi",
+          "chromas": false
+        },
+        {
+          "id": "11003",
+          "num": 3,
+          "name": "Ionia Master Yi",
+          "chromas": false
+        },
+        {
+          "id": "11004",
+          "num": 4,
+          "name": "Samurai Yi",
+          "chromas": false
+        },
+        {
+          "id": "11005",
+          "num": 5,
+          "name": "Headhunter Master Yi",
+          "chromas": true
+        },
+        {
+          "id": "11009",
+          "num": 9,
+          "name": "PROJECT: Yi",
+          "chromas": false
+        },
+        {
+          "id": "11010",
+          "num": 10,
+          "name": "Cosmic Blade Master Yi",
+          "chromas": false
+        },
+        {
+          "id": "11011",
+          "num": 11,
+          "name": "Eternal Sword Yi",
+          "chromas": true
+        },
+        {
+          "id": "11017",
+          "num": 17,
+          "name": "Snow Man Yi",
+          "chromas": true
+        },
+        {
+          "id": "11024",
+          "num": 24,
+          "name": "Blood Moon Master Yi",
+          "chromas": false
+        },
+        {
+          "id": "11033",
+          "num": 33,
+          "name": "PsyOps Master Yi",
+          "chromas": false
+        },
+        {
+          "id": "11042",
+          "num": 42,
+          "name": "Debonair Master Yi",
+          "chromas": false
+        },
+        {
+          "id": "11052",
+          "num": 52,
+          "name": "Spirit Blossom Master Yi",
+          "chromas": false
+        },
+        {
+          "id": "11053",
+          "num": 53,
+          "name": "Prestige Spirit Blossom Master Yi",
+          "chromas": true
+        },
+        {
+          "id": "11089",
+          "num": 89,
+          "name": "Inkshadow Master Yi",
+          "chromas": false
+        },
+        {
+          "id": "11096",
+          "num": 96,
+          "name": "Heavenscale Master Yi",
+          "chromas": false
+        },
+        {
+          "id": "11106",
+          "num": 106,
+          "name": "Victorious Master Yi",
+          "chromas": false
+        }
+      ],
+      "lore": "Master Yi has tempered his body and sharpened his mind, so that thought and action have become almost as one. Though he chooses to enter into violence only as a last resort, the grace and speed of his blade ensures resolution is always swift. As one of the last living practitioners of the Ionian art of Wuju, Yi has devoted his life to continuing the legacy of his people—scrutinizing potential new disciples with the Seven Lenses of Insight to identify the most worthy among them.",
+      "blurb": "Master Yi has tempered his body and sharpened his mind, so that thought and action have become almost as one. Though he chooses to enter into violence only as a last resort, the grace and speed of his blade ensures resolution is always swift. As one of...",
+      "allytips": [
+        "If you're in a lane against ranged players, leveling up Meditate can allow you to stay in the lane longer and gain levels faster than they will.",
+        "Wuju Style is very strong early for last hitting minions.",
+        "Try using Alpha Strike on a minion in front of an enemy champion so you are placed at a safe distance at the end of the spell."
+      ],
+      "enemytips": [
+        "Meditate is an effective method of healing damage over time, but Master Yi is susceptible to coordinated team ganks early in the game.",
+        "If Master Yi tries to farm with Alpha Strike, hit him a few times so he has to use mana with Meditate to heal.",
+        "Although Master Yi cannot be slowed while using Highlander, other disables can stop him in his tracks."
+      ],
+      "tags": ["Fighter", "Assassin"],
+      "partype": "Mana",
+      "info": {
+        "attack": 10,
+        "defense": 4,
+        "magic": 2,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 640,
+        "hpperlevel": 105,
+        "mp": 251,
+        "mpperlevel": 42,
+        "movespeed": 355,
+        "armor": 33,
+        "armorperlevel": 4.5,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 175,
+        "hpregen": 7.5,
+        "hpregenperlevel": 0.65,
+        "mpregen": 7.25,
+        "mpregenperlevel": 0.45,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 65,
+        "attackdamageperlevel": 2.5,
+        "attackspeedperlevel": 2.5,
+        "attackspeed": 0.679
+      },
+      "spells": [
+        {
+          "id": "AlphaStrike",
+          "name": "Alpha Strike",
+          "description": "Master Yi teleports across the battlefield with blinding speed, dealing physical damage to multiple units in his path, while simultaneously becoming untargetable. Alpha Strike can critically strike and deals bonus physical damage to monsters. Basic attacks reduce Alpha Strike's cooldown.",
+          "tooltip": "Master Yi becomes Untargetable and teleports to rapidly strike enemies near his target, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to all enemies hit after {{ alphastrikebounces }} hits. <br /><br />This Ability can strike the same enemy repeatedly if there are no other targets, dealing {{ subsequenthitmultiplier*100 }}% damage for subsequent hits (<physicalDamage>{{ subesquentdamage }}</physicalDamage>), for a maximum single target total of <physicalDamage>{{ singletotaldamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Bonus Monster Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ bonusmonsterdamage }} -> {{ bonusmonsterdamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [20, 19.5, 19, 18.5, 18],
+          "cooldownBurn": "20/19.5/19/18.5/18",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [600, 600, 600, 600, 600],
+          "rangeBurn": "600",
+          "image": {
+            "full": "AlphaStrike.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 384,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Meditate",
+          "name": "Meditate",
+          "description": "Master Yi rejuvenates his body by focus of mind, restoring Health and taking reduced damage for a short time. In addition, Master Yi will gain stacks of Double Strike and pause the remaining duration on Wuju Style and Highlander for each second he channels.",
+          "tooltip": "Master Yi channels, restoring <healing>{{ totalheal }} Health</healing> over {{ healduration }} seconds. This healing is increased by up to {{ maxmissinghealthpercent*100 }}% based on Master Yi's missing Health.<br /><br />While channeling and for {{ drlinger }} seconds afterwards, he takes {{ initialdr }} reduced damage, decreased to {{ damagereduction*100 }}% after the first {{ initialextradrduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Health Restored", "Damage Reduction"],
+            "effect": [
+              "{{ baseheal }} -> {{ basehealNL }}",
+              "{{ damagereduction*100.000000 }}% -> {{ damagereductionnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [10, 10, 10, 10, 10],
+          "cooldownBurn": "10",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " Mana (+{{ percentmanacostpersecond*100 }}% Max Mana per second)",
+          "maxammo": "-1",
+          "range": [20, 20, 20, 20, 20],
+          "rangeBurn": "20",
+          "image": {
+            "full": "Meditate.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 432,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ basemanacost }} Mana (+{{ percentmanacostpersecond*100 }}% Max Mana per second)"
+        },
+        {
+          "id": "WujuStyle",
+          "name": "Wuju Style",
+          "description": "Grants bonus true damage on basic attacks.",
+          "tooltip": "Master Yi's Attacks deal an additional <trueDamage>{{ totaldamage }} true damage</trueDamage> for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 14, 14, 14, 14],
+          "cooldownBurn": "14",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [20, 20, 20, 20, 20],
+          "rangeBurn": "20",
+          "image": {
+            "full": "WujuStyle.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 0,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "Highlander",
+          "name": "Highlander",
+          "description": "Master Yi moves with unparalleled agility, temporarily increasing his Move Speed and Attack Speed as well as making him immune to all slowing effects. While active, Champion kills or assists extend Highlander's duration. Passively reduces cooldown for his other abilities on a kill or assist.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Champion takedowns reduce the remaining Cooldown of Master Yi's basic Abilities by {{ rcooldownrefund*100 }}%.<br /><br /><spellActive>Active:</spellActive> Master Yi enters a trance, gaining <speed>{{ rmsbonus }}% Move Speed</speed>, <attackSpeed>{{ rasbonus }}% Attack Speed</attackSpeed>, and immunity to <status>Slows</status> for {{ rduration }} seconds. Champion takedowns extend the duration of this Ability by {{ rkillassistextension }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Attack Speed", "Move Speed"],
+            "effect": ["{{ rasbonus }}% -> {{ rasbonusNL }}%", "{{ rmsbonus }}% -> {{ rmsbonusNL }}%"]
+          },
+          "maxrank": 3,
+          "cooldown": [85, 85, 85],
+          "cooldownBurn": "85",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1, 1, 1],
+          "rangeBurn": "1",
+          "image": {
+            "full": "Highlander.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 48,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Double Strike",
+        "description": "Every few consecutive basic attack, Master Yi strikes twice.",
+        "image": {
+          "full": "MasterYi_Passive1.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 0,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

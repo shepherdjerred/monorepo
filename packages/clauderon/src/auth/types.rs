@@ -7,9 +7,13 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[typeshare]
 pub struct AuthUser {
+    /// Unique user identifier.
     pub id: String,
+    /// Login username.
     pub username: String,
+    /// Optional display name.
     pub display_name: Option<String>,
+    /// Account creation timestamp (ISO 8601).
     pub created_at: String,
 }
 
@@ -17,9 +21,13 @@ pub struct AuthUser {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[typeshare]
 pub struct UserPasskey {
+    /// Unique passkey identifier.
     pub id: String,
+    /// Owner user ID.
     pub user_id: String,
+    /// Optional device name for the passkey.
     pub device_name: Option<String>,
+    /// Passkey registration timestamp (ISO 8601).
     pub created_at: String,
 }
 
@@ -39,7 +47,9 @@ pub struct AuthStatus {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[typeshare]
 pub struct RegistrationStartRequest {
+    /// Desired username.
     pub username: String,
+    /// Optional display name.
     pub display_name: Option<String>,
 }
 
@@ -47,7 +57,9 @@ pub struct RegistrationStartRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[typeshare]
 pub struct RegistrationStartResponse {
+    /// Server-generated challenge identifier.
     pub challenge_id: String,
+    /// WebAuthn credential creation options.
     #[typeshare(typescript(type = "any"))]
     pub options: serde_json::Value, // PublicKeyCredentialCreationOptions
 }
@@ -56,10 +68,14 @@ pub struct RegistrationStartResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[typeshare]
 pub struct RegistrationFinishRequest {
+    /// Username being registered.
     pub username: String,
+    /// Challenge ID from the start response.
     pub challenge_id: String,
+    /// WebAuthn credential from the browser.
     #[typeshare(typescript(type = "any"))]
     pub credential: serde_json::Value, // PublicKeyCredential
+    /// Optional name for the authenticator device.
     pub device_name: Option<String>,
 }
 
@@ -67,6 +83,7 @@ pub struct RegistrationFinishRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[typeshare]
 pub struct RegistrationFinishResponse {
+    /// The newly created user.
     pub user: AuthUser,
 }
 
@@ -74,6 +91,7 @@ pub struct RegistrationFinishResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[typeshare]
 pub struct LoginStartRequest {
+    /// Username to authenticate.
     pub username: String,
 }
 
@@ -81,7 +99,9 @@ pub struct LoginStartRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[typeshare]
 pub struct LoginStartResponse {
+    /// Server-generated challenge identifier.
     pub challenge_id: String,
+    /// WebAuthn credential request options.
     #[typeshare(typescript(type = "any"))]
     pub options: serde_json::Value, // PublicKeyCredentialRequestOptions
 }
@@ -90,8 +110,11 @@ pub struct LoginStartResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[typeshare]
 pub struct LoginFinishRequest {
+    /// Username being authenticated.
     pub username: String,
+    /// Challenge ID from the start response.
     pub challenge_id: String,
+    /// WebAuthn credential from the browser.
     #[typeshare(typescript(type = "any"))]
     pub credential: serde_json::Value, // PublicKeyCredential
 }
@@ -100,6 +123,7 @@ pub struct LoginFinishRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[typeshare]
 pub struct LoginFinishResponse {
+    /// The authenticated user.
     pub user: AuthUser,
 }
 
@@ -157,11 +181,15 @@ pub(super) struct WebAuthnChallengeRow {
 }
 
 /// Internal auth session (parsed from database)
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct AuthSession {
+    /// Session ID.
     pub id: Uuid,
+    /// Owner user ID.
     pub user_id: Uuid,
+    /// When this session expires.
     pub expires_at: DateTime<Utc>,
+    /// When this session was created.
     pub created_at: DateTime<Utc>,
 }
 

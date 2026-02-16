@@ -1,0 +1,365 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Diana": {
+      "id": "Diana",
+      "key": "131",
+      "name": "Diana",
+      "title": "Scorn of the Moon",
+      "image": {
+        "full": "Diana.png",
+        "sprite": "champion0.png",
+        "group": "champion",
+        "x": 288,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "131000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "131001",
+          "num": 1,
+          "name": "Dark Valkyrie Diana",
+          "chromas": false
+        },
+        {
+          "id": "131002",
+          "num": 2,
+          "name": "Lunar Goddess Diana",
+          "chromas": true
+        },
+        {
+          "id": "131003",
+          "num": 3,
+          "name": "Infernal Diana",
+          "chromas": false
+        },
+        {
+          "id": "131011",
+          "num": 11,
+          "name": "Blood Moon Diana",
+          "chromas": false
+        },
+        {
+          "id": "131012",
+          "num": 12,
+          "name": "Dark Waters Diana",
+          "chromas": true
+        },
+        {
+          "id": "131018",
+          "num": 18,
+          "name": "Dragonslayer Diana",
+          "chromas": true
+        },
+        {
+          "id": "131025",
+          "num": 25,
+          "name": "Battle Queen Diana",
+          "chromas": false
+        },
+        {
+          "id": "131026",
+          "num": 26,
+          "name": "Prestige Battle Queen Diana",
+          "chromas": false
+        },
+        {
+          "id": "131027",
+          "num": 27,
+          "name": "Sentinel Diana",
+          "chromas": true
+        },
+        {
+          "id": "131037",
+          "num": 37,
+          "name": "Firecracker Diana",
+          "chromas": true
+        },
+        {
+          "id": "131047",
+          "num": 47,
+          "name": "Winterblessed Diana",
+          "chromas": true
+        },
+        {
+          "id": "131054",
+          "num": 54,
+          "name": "Heavenscale Diana",
+          "chromas": true
+        },
+        {
+          "id": "131064",
+          "num": 64,
+          "name": "Dark Cosmic Diana",
+          "chromas": true
+        },
+        {
+          "id": "131065",
+          "num": 65,
+          "name": "Prestige Dark Cosmic Diana",
+          "chromas": false
+        }
+      ],
+      "lore": "Bearing her crescent moonblade, Diana fights as a warrior of the Lunari—a faith all but quashed in the lands around Mount Targon. Clad in shimmering armor the color of winter snow at night, she is a living embodiment of the silver moon's power. Imbued with the essence of an Aspect from beyond Targon's towering summit, Diana is no longer wholly human, and struggles to understand her power and purpose in this world.",
+      "blurb": "Bearing her crescent moonblade, Diana fights as a warrior of the Lunari—a faith all but quashed in the lands around Mount Targon. Clad in shimmering armor the color of winter snow at night, she is a living embodiment of the silver moon's power. Imbued...",
+      "allytips": [
+        "Landing Crescent Strike is critically important, but don't be afraid to miss. The cooldown is short and the mana cost is low.",
+        "Consider when to cast Lunar Rush without Moonlight and when to wait for another Crescent Strike.",
+        "Use Moonfall and Lunar Rush to stay on targets and activate Moonsilver Blade for extra damage."
+      ],
+      "enemytips": [
+        "Dodge Crescent Strike, or move to safety if you are affected by Moonlight.",
+        "Pale Cascade orbs only last a few seconds. Avoid Diana and engage her after the shield dissipates.",
+        "Diana can play very aggressively if she uses Lunar Rush without Moonlight, but you can punish her by slowing or stunning her when she has no way to get back into position."
+      ],
+      "tags": ["Fighter", "Assassin"],
+      "partype": "Mana",
+      "info": {
+        "attack": 7,
+        "defense": 6,
+        "magic": 8,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 640,
+        "hpperlevel": 109,
+        "mp": 375,
+        "mpperlevel": 25,
+        "movespeed": 345,
+        "armor": 31,
+        "armorperlevel": 4.3,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 150,
+        "hpregen": 6.5,
+        "hpregenperlevel": 0.85,
+        "mpregen": 8,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 57,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 2,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "DianaQ",
+          "name": "Crescent Strike",
+          "description": "Unleashes a bolt of lunar energy in an arc dealing magic damage.<br><br>Afflicts enemies struck with Moonlight, revealing them if they are not stealthed for 3 seconds.",
+          "tooltip": "Diana unleashes an arc of lunar energy, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and marking with <keywordMajor>Moonlight</keywordMajor> for {{ moonlightduration }} seconds. <br /><br /><keywordMajor>Moonlight</keywordMajor> reveals enemies that are not <keywordStealth>stealthed</keywordStealth>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Damage"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ basedamage }} -> {{ basedamageNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldownBurn": "8/7.5/7/6.5/6",
+          "cost": [50, 50, 50, 50, 50],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1],
+            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [3, 3, 3, 3, 3],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "1", "1.5", "3", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [900, 900, 900, 900, 900],
+          "rangeBurn": "900",
+          "image": {
+            "full": "DianaQ.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 96,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "DianaOrbs",
+          "name": "Pale Cascade",
+          "description": "Diana creates three orbiting spheres that detonate on contact with enemies to deal damage in an area. She also gains a temporary shield that absorbs damage. If her third sphere detonates, the shield gains additional strength.",
+          "tooltip": "Diana creates three orbiting spheres for {{ shieldduration }} seconds that explode on contact, each dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>, up to a max of <magicDamage>{{ totalmaxdamage }} damage</magicDamage>.<br /><br />Diana also gains <shield>{{ shieldvalue }} Shield</shield> for the same duration. When the last sphere detonates, she gains an additional <shield>{{ shieldvalue }} Shield</shield> and refreshes the duration.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Shield Amount", "@AbilityResourceName@ Cost", "Cooldown"],
+            "effect": [
+              "{{ orbdamage }} -> {{ orbdamageNL }}",
+              "{{ shieldbase }} -> {{ shieldbaseNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [15, 13.5, 12, 10.5, 9],
+          "cooldownBurn": "15/13.5/12/10.5/9",
+          "cost": [40, 45, 50, 55, 60],
+          "costBurn": "40/45/50/55/60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [5, 5, 5, 5, 5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1],
+            [4, 4, 4, 4, 4],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "5", "0", "0", "1", "4", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [800, 800, 800, 800, 800],
+          "rangeBurn": "800",
+          "image": {
+            "full": "DianaOrbs.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 144,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "DianaTeleport",
+          "name": "Lunar Rush",
+          "description": "Becomes the living embodiment of the vengeful moon, dashing to an enemy and dealing magic damage.<br><br>Lunar Rush has no cooldown when used to dash to an enemy afflicted with Moonlight. All other enemies will have the Moonlight debuff removed regardless of whether they were the target of Lunar Rush.",
+          "tooltip": "Diana becomes as the vengeful moon, dashing to an enemy and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. If the target is afflicted with <keywordMajor>Moonlight</keywordMajor>, this Ability's Cooldown is refreshed.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage"],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [22, 20, 18, 16, 14],
+          "cooldownBurn": "22/20/18/16/14",
+          "cost": [40, 45, 50, 55, 60],
+          "costBurn": "40/45/50/55/60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [4, 4, 4, 0, 0],
+            [40, 60, 80, 100, 120],
+            [50, 75, 100, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "4/4/4/0/0", "40/60/80/100/120", "50/75/100/0/0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [825, 825, 825, 825, 825],
+          "rangeBurn": "825",
+          "image": {
+            "full": "DianaTeleport.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 192,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "DianaR",
+          "name": "Moonfall",
+          "description": "Diana reveals and draws in all nearby enemies and slows them.<br><br>If Diana pulls in one or more enemy champions, the moonlight crashes down onto her after a short delay, dealing magic damage in an area around her, increased for each target beyond the first pulled.",
+          "tooltip": "Diana <status>Pulls In</status>, <status>Slows</status> by {{ slowtooltip }}%, and reveals nearby enemies for {{ slowduration }} seconds.<br /><br />If Diana hits at least one enemy champion, she calls to the moon, dealing <magicDamage>{{ rexplosiondamage }} magic damage</magicDamage> plus <magicDamage>{{ rmultihitamplification }}</magicDamage> for each champion pulled beyond the first, up to a max of an additional <magicDamage>{{ maxdamage }} damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Damage", "Slow"],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ slowtooltip }}% -> {{ slowtooltipNL }}%"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [100, 90, 80],
+          "cooldownBurn": "100/90/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [-0.35, -0.4, -0.45],
+            [2, 2, 2],
+            [0.5, 0.5, 0.5],
+            [3, 3, 3],
+            [4, 4, 4],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "-0.35/-0.4/-0.45", "2", "0.5", "3", "4", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [475, 475, 475],
+          "rangeBurn": "475",
+          "image": {
+            "full": "DianaR.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 240,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Moonsilver Blade",
+        "description": "Every third strike cleaves nearby enemies for an additional magic damage. After casting a spell, Diana gains Attack Speed for 5 seconds.",
+        "image": {
+          "full": "Diana_Passive_LunarBlade.png",
+          "sprite": "passive0.png",
+          "group": "passive",
+          "x": 288,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

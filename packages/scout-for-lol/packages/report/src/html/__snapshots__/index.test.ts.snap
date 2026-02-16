@@ -1,0 +1,25 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`sanity check 1`] = `"cb785fa87c0bdf26f660be4d926078f008af619109445f62013e34a671999cb0"`;
+
+exports[`no items test 1`] = `"e66829ccb6a733b1d6da2acd6857d569ac145e0fb6cf80c1350682a84c7e23c1"`;
+
+exports[`all fields zeroed out test 1`] = `"dfa2966f789abab8d6e65097ec375646e4cfe925addb3c85614d427fa58a8b0e"`;
+
+exports[`no rank test 1`] = `"0ccd5a81a3eac454a747f682c4c58fba7c56f4166bbfb5f091fafcb110c000a5"`;
+
+exports[`large values test 1`] = `"842e22ef17e1259db9595d4e0d6e3d2730007f47c5bc0cc3ad8d2dca66bded7d"`;
+
+exports[`victory test 1`] = `"3dca6f29ee011f3bb8031ed6de2256acd49a78fc6338aa7accf81e9ccd839585"`;
+
+exports[`surrender test 1`] = `"fb3cd647d6c11136ef39cd80e9d3dcd8d061898a052b225597e4c7f5d152688c"`;
+
+exports[`no rank before match test 1`] = `"0ab03b504e8e4807ac80ce44736e63121f0d4c41040b84fdba94b39d3a0395c5"`;
+
+exports[`multiple highlighted players test 1`] = `"0974bf0caf1d2a2e68bed58c4156f74da959232fe7958b225285d4776364346a"`;
+
+exports[`clash game test 1`] = `"757b532e99adfed92bba00567233019a8b16e29cd382e7525083a3bd96eacc18"`;
+
+exports[`aram clash game test 1`] = `"cae4961528a8d20b63a855bd381e964a9631cdb1e22cd636628f58aee6760ec5"`;
+
+exports[`multiple players with promotion and demotion test 1`] = `"babe7d0a38022ed14e7fc827496e6596fcd19e5711cce1a2d8d7655e27ceff46"`;

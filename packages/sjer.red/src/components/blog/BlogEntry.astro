@@ -1,0 +1,29 @@
+---
+import FormattedDate from "@components/FormattedDate.astro";
+import type { CollectionEntry } from "astro:content";
+
+type Props = {
+  entry: CollectionEntry<"blog" | "til">;
+};
+
+const { id } = Astro.props.entry;
+const { title, starred, isDraft, date } = Astro.props.entry.data;
+---
+
+<div class="bg-white dark:bg-black dark:text-white text-black rounded-md flex overflow-clip">
+  {starred ? <div class="bg-purple-600 w-2" /> : <div class="bg-white dark:bg-black w-2" />}
+  <div class="pl-3 pt-4 pb-4 text-xl flex flex-col">
+    <div>
+      <a
+        href={`/blog/${id}`}
+        class={`underline font-semibold dark:hover:bg-white dark:hover:text-black hover:bg-black hover:text-white p-1 inline`}
+      >
+        {title}
+      </a>
+      {isDraft ? "(Draft)" : ""}
+    </div>
+    <span class="ml-1 text-sm">
+      <FormattedDate date={date} />
+    </span>
+  </div>
+</div>

@@ -1,0 +1,6 @@
+[tools]
+# No runtime tools needed - this is a collection of Anki flashcard files
+
+[tasks.dev]
+description = "Generate Anki decks from markdown"
+run = "./generate.sh"

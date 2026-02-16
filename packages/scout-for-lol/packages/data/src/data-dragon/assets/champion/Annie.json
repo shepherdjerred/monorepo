@@ -1,0 +1,389 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Annie": {
+      "id": "Annie",
+      "key": "1",
+      "name": "Annie",
+      "title": "the Dark Child",
+      "image": {
+        "full": "Annie.png",
+        "sprite": "champion0.png",
+        "group": "champion",
+        "x": 384,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "1000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "1001",
+          "num": 1,
+          "name": "Goth Annie",
+          "chromas": false
+        },
+        {
+          "id": "1002",
+          "num": 2,
+          "name": "Red Riding Annie",
+          "chromas": false
+        },
+        {
+          "id": "1003",
+          "num": 3,
+          "name": "Annie in Wonderland",
+          "chromas": false
+        },
+        {
+          "id": "1004",
+          "num": 4,
+          "name": "Prom Queen Annie",
+          "chromas": false
+        },
+        {
+          "id": "1005",
+          "num": 5,
+          "name": "Frostfire Annie",
+          "chromas": false
+        },
+        {
+          "id": "1006",
+          "num": 6,
+          "name": "Reverse Annie",
+          "chromas": false
+        },
+        {
+          "id": "1007",
+          "num": 7,
+          "name": "FrankenTibbers Annie",
+          "chromas": false
+        },
+        {
+          "id": "1008",
+          "num": 8,
+          "name": "Panda Annie",
+          "chromas": false
+        },
+        {
+          "id": "1009",
+          "num": 9,
+          "name": "Sweetheart Annie",
+          "chromas": false
+        },
+        {
+          "id": "1010",
+          "num": 10,
+          "name": "Hextech Annie",
+          "chromas": false
+        },
+        {
+          "id": "1011",
+          "num": 11,
+          "name": "Super Galaxy Annie",
+          "chromas": false
+        },
+        {
+          "id": "1012",
+          "num": 12,
+          "name": "Annie-Versary",
+          "chromas": false
+        },
+        {
+          "id": "1013",
+          "num": 13,
+          "name": "Lunar Beast Annie",
+          "chromas": true
+        },
+        {
+          "id": "1022",
+          "num": 22,
+          "name": "Cafe Cuties Annie",
+          "chromas": false
+        },
+        {
+          "id": "1031",
+          "num": 31,
+          "name": "Fright Night Annie",
+          "chromas": false
+        },
+        {
+          "id": "1040",
+          "num": 40,
+          "name": "Winterblessed Annie",
+          "chromas": false
+        },
+        {
+          "id": "1050",
+          "num": 50,
+          "name": "Battle Princess Annie",
+          "chromas": false
+        }
+      ],
+      "lore": "Dangerous, yet disarmingly precocious, Annie is a child mage with immense pyromantic power. Even in the shadows of the mountains north of Noxus, she is a magical outlier. Her natural affinity for fire manifested early in life through unpredictable, emotional outbursts, though she eventually learned to control these “playful tricks.” Her favorite includes the summoning of her beloved teddy bear, Tibbers, as a fiery protector. Lost in the perpetual innocence of childhood, Annie wanders the dark forests, always looking for someone to play with.",
+      "blurb": "Dangerous, yet disarmingly precocious, Annie is a child mage with immense pyromantic power. Even in the shadows of the mountains north of Noxus, she is a magical outlier. Her natural affinity for fire manifested early in life through unpredictable...",
+      "allytips": [
+        "Storing a stun for use with her ultimate can turn the tide of a team fight.",
+        "Striking killing blows on minions with Disintegrate enables Annie to farm extremely well early in the game.",
+        "Molten Shield is a good spell to cast to work up to Annie's stun, so sometimes it's beneficial to grab at least 1 rank in it early."
+      ],
+      "enemytips": [
+        "Annie's summoned bear, Tibbers, burns opposing units around himself. Try to keep your distance from him after he's been summoned.",
+        "Summoner Smite can be used to help take down Tibbers.",
+        "Keep an eye out for a white, swirling power around Annie. It means she's ready to unleash her stun."
+      ],
+      "tags": ["Mage", "Support"],
+      "partype": "Mana",
+      "info": {
+        "attack": 2,
+        "defense": 3,
+        "magic": 10,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 560,
+        "hpperlevel": 96,
+        "mp": 418,
+        "mpperlevel": 25,
+        "movespeed": 335,
+        "armor": 23,
+        "armorperlevel": 4,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 625,
+        "hpregen": 5.5,
+        "hpregenperlevel": 0.55,
+        "mpregen": 8,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 50,
+        "attackdamageperlevel": 2.65,
+        "attackspeedperlevel": 1.36,
+        "attackspeed": 0.61
+      },
+      "spells": [
+        {
+          "id": "AnnieQ",
+          "name": "Disintegrate",
+          "description": "Annie hurls a Mana infused fireball, dealing damage and refunding the Mana cost if it destroys the target.",
+          "tooltip": "Annie hurls a fireball, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. If the target dies, Annie refunds the Mana cost and reduces the Cooldown by 50%.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "@AbilityResourceName@ Cost"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cost }} -> {{ costNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [4, 4, 4, 4, 4],
+          "cooldownBurn": "4",
+          "cost": [60, 65, 70, 75, 80],
+          "costBurn": "60/65/70/75/80",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [625, 625, 625, 625, 625],
+          "rangeBurn": "625",
+          "image": {
+            "full": "AnnieQ.png",
+            "sprite": "spell1.png",
+            "group": "spell",
+            "x": 0,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "AnnieW",
+          "name": "Incinerate",
+          "description": "Annie casts a blazing cone of fire, dealing damage to all enemies in the area.",
+          "tooltip": "Annie projects a wave of fire, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "@AbilityResourceName@ Cost"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cost }} -> {{ costNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [7, 7, 7, 7, 7],
+          "cooldownBurn": "7",
+          "cost": [70, 75, 80, 85, 90],
+          "costBurn": "70/75/80/85/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [600, 600, 600, 600, 600],
+          "rangeBurn": "600",
+          "image": {
+            "full": "AnnieW.png",
+            "sprite": "spell1.png",
+            "group": "spell",
+            "x": 48,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "AnnieE",
+          "name": "Molten Shield",
+          "description": "Grants Annie or an ally a shield, a burst of Move Speed, and damages enemies who strike her with attacks or spells.",
+          "tooltip": "Annie grants an ally champion <shield>{{ shieldblocktotal }} Shield</shield> for {{ shieldduration }} seconds and <speed>{{ movespeedcalc }} Decaying Move Speed</speed> for {{ movementspeedduration }} seconds. While the shield holds, enemies who hit the shielded ally with an Attack or Ability receive <magicDamage>{{ damagereturn }} magic damage</magicDamage> once per shield.<br /><br />Tibbers always gains the effects of <spellName>Molten Shield</spellName> when summoned.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Shield Health", "Damage Reflection", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ shieldamount }} -> {{ shieldamountNL }}",
+              "{{ damagereflection }} -> {{ damagereflectionNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 11.5, 11, 10.5, 10],
+          "cooldownBurn": "12/11.5/11/10.5/10",
+          "cost": [60, 65, 70, 75, 80],
+          "costBurn": "60/65/70/75/80",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [800, 800, 800, 800, 800],
+          "rangeBurn": "800",
+          "image": {
+            "full": "AnnieE.png",
+            "sprite": "spell1.png",
+            "group": "spell",
+            "x": 96,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "AnnieR",
+          "name": "Summon: Tibbers",
+          "description": "Annie wills her bear Tibbers to life, dealing damage to units in the area. Tibbers can attack and also burns enemies that stand near him.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Annie gains {{ rpercentpenbuff*100 }}% Magic Penetration.<br /><br />Annie summons her bear Tibbers, dealing <magicDamage>{{ initialburstdamage }} magic damage</magicDamage>. For the next {{ tibberslifetime }} seconds, Tibbers burns nearby enemies for <magicDamage>{{ tibbersauradamage }} magic damage per second</magicDamage>.<br /><br />Tibbers becomes enraged when summoned, if Annie stuns an enemy champion, and if Annie dies. When enraged, Tibbers gains <attackSpeed>275% Attack Speed</attackSpeed> and <speed>100% Move Speed</speed> decaying over 3 seconds.<br /><br /><recast>Recast:</recast> Manually issue orders to Tibbers.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Initial Damage",
+              "Aura Damage",
+              "Attack Damage",
+              "Bonus Move Speed",
+              "Cooldown",
+              "Magic Penetration"
+            ],
+            "effect": [
+              "{{ initialdamage }} -> {{ initialdamageNL }}",
+              "{{ auradamage }} -> {{ auradamageNL }}",
+              "{{ tibbersattackdamage }} -> {{ tibbersattackdamageNL }}",
+              "{{ tibbersbonusms }} -> {{ tibbersbonusmsNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ rpercentpenbuff*100.000000 }}% -> {{ rpercentpenbuffnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [130, 115, 100],
+          "cooldownBurn": "130/115/100",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [600, 600, 600],
+          "rangeBurn": "600",
+          "image": {
+            "full": "AnnieR.png",
+            "sprite": "spell1.png",
+            "group": "spell",
+            "x": 144,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Pyromania",
+        "description": "After casting 4 spells, Annie's next offensive spell will stun the target.<br><br>Annie begins the game and respawns with Pyromania available.",
+        "image": {
+          "full": "Annie_Passive.png",
+          "sprite": "passive0.png",
+          "group": "passive",
+          "x": 384,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

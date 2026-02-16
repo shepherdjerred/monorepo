@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 use tracing::{debug, info, instrument, warn};
 
 /// Plugin discovery handler for reading host plugin configuration.
+#[derive(Debug)]
 pub struct PluginDiscovery {
     host_claude_dir: PathBuf,
 }
@@ -16,15 +17,20 @@ pub struct PluginDiscovery {
 /// Discovered plugin information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiscoveredPlugin {
+    /// Plugin name (directory name).
     pub name: String,
+    /// Marketplace the plugin belongs to.
     pub marketplace: String,
+    /// Absolute path to the plugin directory.
     pub path: PathBuf,
 }
 
 /// Complete plugin manifest including marketplace configuration.
 #[derive(Debug, Clone)]
 pub struct PluginManifest {
+    /// Raw marketplace configuration JSON.
     pub marketplace_configs: serde_json::Value,
+    /// All discovered plugins from host system.
     pub installed_plugins: Vec<DiscoveredPlugin>,
 }
 
@@ -150,8 +156,7 @@ impl PluginDiscovery {
             let marketplace_name = marketplace_dir
                 .file_name()
                 .and_then(|n| n.to_str())
-                .unwrap_or("unknown")
-                .to_string();
+                .unwrap_or("unknown").to_owned();
 
             debug!(
                 "Scanning marketplace: {} at {}",
@@ -198,8 +203,7 @@ impl PluginDiscovery {
                 let plugin_name = plugin_path
                     .file_name()
                     .and_then(|n| n.to_str())
-                    .unwrap_or("unknown")
-                    .to_string();
+                    .unwrap_or("unknown").to_owned();
 
                 // Verify this is a valid plugin by checking for manifest
                 let manifest_path = plugin_path.join(".claude-plugin/plugin.json");

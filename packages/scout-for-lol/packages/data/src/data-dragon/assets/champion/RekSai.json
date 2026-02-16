@@ -1,0 +1,315 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "RekSai": {
+      "id": "RekSai",
+      "key": "421",
+      "name": "Rek'Sai",
+      "title": "the Void Burrower",
+      "image": {
+        "full": "RekSai.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 288,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "421000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "421001",
+          "num": 1,
+          "name": "Eternum Rek'Sai",
+          "chromas": false
+        },
+        {
+          "id": "421002",
+          "num": 2,
+          "name": "Pool Party Rek'Sai",
+          "chromas": true
+        },
+        {
+          "id": "421009",
+          "num": 9,
+          "name": "Blackfrost Rek'Sai",
+          "chromas": true
+        },
+        {
+          "id": "421017",
+          "num": 17,
+          "name": "Elderwood Rek'Sai",
+          "chromas": true
+        },
+        {
+          "id": "421026",
+          "num": 26,
+          "name": "Primordian Rek'Sai",
+          "chromas": true
+        }
+      ],
+      "lore": "An apex predator, Rek'Sai is a merciless Void-spawn that tunnels beneath the ground to ambush and devour unsuspecting prey. Her insatiable hunger has laid waste to entire regions of the once-great empire of Shurima—merchants, traders, even armed caravans, will go hundreds of miles out of their way to avoid her and her offspring's hunting grounds. All know that once Rek'Sai is seen on the horizon, death from below is all but guaranteed.",
+      "blurb": "An apex predator, Rek'Sai is a merciless Void-spawn that tunnels beneath the ground to ambush and devour unsuspecting prey. Her insatiable hunger has laid waste to entire regions of the once-great empire of Shurima—merchants, traders, even armed...",
+      "allytips": [
+        "Keeping tunnels spread out across the map will ensure you have choices when you want to cast Void Rush.",
+        "Cast Burrow before travelling around the map to take advantage of the increased Move Speed and the safety provided by Tremor Sense.",
+        "Tremor Sense can warn you of enemies closing in, and is particularly useful when entering enemy territory."
+      ],
+      "enemytips": [
+        "If you see one of Rek'Sai's tunnels, briefly stand on one of the entrances to destroy it.",
+        "Rek'Sai's Furious Bite gains damage as she builds Fury. Be very careful around her when her Fury is full.",
+        "When Rek'Sai is near, she can see the position of you and your allies, but only if you're moving."
+      ],
+      "tags": ["Fighter", "Tank"],
+      "partype": "Rage",
+      "info": {
+        "attack": 8,
+        "defense": 5,
+        "magic": 2,
+        "difficulty": 3
+      },
+      "stats": {
+        "hp": 600,
+        "hpperlevel": 99,
+        "mp": 100,
+        "mpperlevel": 0,
+        "movespeed": 340,
+        "armor": 35,
+        "armorperlevel": 4.5,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 175,
+        "hpregen": 2.5,
+        "hpregenperlevel": 0.5,
+        "mpregen": 0,
+        "mpregenperlevel": 0,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 62,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 2,
+        "attackspeed": 0.667
+      },
+      "spells": [
+        {
+          "id": "RekSaiQ",
+          "name": "Queen's Wrath / Prey Seeker",
+          "description": "Rek'Sai's next 3 basic attacks deal bonus Physical Damage to nearby enemies.<br><br>While Burrowed, Rek'Sai launches a burst of void-charged earth that damages and reveals enemies hit.",
+          "tooltip": "<keywordMajor>Unburrowed:</keywordMajor> Rek'Sai's next 3 Attacks within {{ buffduration }} seconds gain <attackSpeed>{{ attackspeed*100 }}% Attack Speed</attackSpeed> and deal an additional <physicalDamage>{{ totaldamagetooltip }} physical damage</physicalDamage> to nearby enemies. Attacks refresh the duration of this Ability.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Queen's Wrath AD Ratio", "Queen's Wrath Cooldown", "Prey Seeker Damage"],
+            "effect": [
+              "{{ unburrowedadratio*100.000000 }}% -> {{ unburrowedadrationl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ burrowedbasedamage }} -> {{ burrowedbasedamageNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [4, 3.5, 3, 2.5, 2],
+          "cooldownBurn": "4/3.5/3/2.5/2",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [12, 11, 10, 9, 8],
+            [5, 5, 5, 5, 5],
+            [3, 3, 3, 3, 3],
+            [300, 300, 300, 300, 300],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "12/11/10/9/8", "5", "3", "300", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [325, 325, 325, 325, 325],
+          "rangeBurn": "325",
+          "image": {
+            "full": "RekSaiQ.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 96,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "RekSaiW",
+          "name": "Burrow / Un-burrow",
+          "description": "Rek'Sai burrows into the ground, gaining new abilities and increased Move Speed. Her vision range is reduced and she cannot use basic attacks.<br><br>While Burrowed, Rek'Sai may cast Unburrow to knock up and damage nearby enemies.",
+          "tooltip": "<keywordMajor>Unburrowed:</keywordMajor> Rek'Sai burrows into the ground, gaining access to new Abilities but cannot Attack. She gains <speed>{{ burrowedmovespeed }} Move Speed</speed>, {{ visionradiusmod*-100 }}% reduced vision range, and nearby enemies that move and are otherwise unseen will have their positions revealed to Rek'sai and her allies.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Unburrow Damage", "Knock Up Immunity", "Burrowed Move Speed"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ knockupimmunity }} -> {{ knockupimmunityNL }}",
+              "{{ burrowedmovespeed }} -> {{ burrowedmovespeedNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [4, 4, 4, 4, 4],
+          "cooldownBurn": "4",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [1500, 1500, 1500, 1500, 1500],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1],
+            [10, 10, 10, 10, 10],
+            [250, 250, 250, 250, 250],
+            [175, 175, 175, 175, 175],
+            [3, 3, 3, 3, 3],
+            [0.3, 0.3, 0.3, 0.3, 0.3]
+          ],
+          "effectBurn": [null, "1500", "0", "0", "0", "1", "10", "250", "175", "3", "0.3"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [1650, 1650, 1650, 1650, 1650],
+          "rangeBurn": "1650",
+          "image": {
+            "full": "RekSaiW.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 144,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "RekSaiE",
+          "name": "Furious Bite / Tunnel",
+          "description": "Rek'Sai bites her target, dealing physical damage, or bonus true damage if she has max Fury.<br><br>While Burrowed, Rek'Sai creates a re-usable, long lasting tunnel. Enemies can destroy it by standing on top of either entrance.",
+          "tooltip": "<keywordMajor>Unburrowed:</keywordMajor> Rek'Sai bites a target, dealing <physicalDamage>{{ spell.reksaie:basedamage }} physical damage</physicalDamage>. At max <keywordMajor>Fury</keywordMajor>, the bite deals <trueDamage>{{ spell.reksaie:empowereddamage }} true damage</trueDamage> instead.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Base Damage", "Empowered Damage", "Tunnel Cast Cooldown", "Tunnel Use Cooldown"],
+            "effect": [
+              "{{ empoweredbasedamage*0.800000 }} -> {{ empoweredbasedamagenl*0.800000 }}",
+              "{{ empoweredbasedamage }} -> {{ empoweredbasedamageNL }}",
+              "{{ dashcooldown }} -> {{ dashcooldownNL }}",
+              "{{ tunnelreusecooldown }} -> {{ tunnelreusecooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [6, 6, 6, 6, 6],
+          "cooldownBurn": "6",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [250, 250, 250, 250, 250],
+          "rangeBurn": "250",
+          "image": {
+            "full": "RekSaiE.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 192,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "RekSaiR",
+          "name": "Void Rush",
+          "description": "Rek'Sai passively marks targets by damaging them. She can activate this ability to become briefly untargetable and lunge at a marked target for heavy damage based on their maximum health.",
+          "tooltip": "Rek'Sai targets an enemy damaged by her in the last {{ preymarkduration }} seconds and then dives underground, becoming Untargetable. Moments later, she leaps unstoppably at her target, dealing <physicalDamage>{{ rbasedamagecalc }} plus {{ percenthealthdamage }}% max Health physical damage</physicalDamage> and resets the cooldown of <keywordMajor>Burrow / Un-burrow</keywordMajor>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "% Health damage", "Cooldown"],
+            "effect": [
+              "{{ rbasedamage }} -> {{ rbasedamageNL }}",
+              "{{ percenthealthdamage }}% -> {{ percenthealthdamageNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 100, 80],
+          "cooldownBurn": "120/100/80",
+          "cost": [0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [1500, 1500, 1500],
+          "rangeBurn": "1500",
+          "image": {
+            "full": "RekSaiR.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 240,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        }
+      ],
+      "passive": {
+        "name": "Fury of the Xer'Sai",
+        "description": "Rek'Sai generates Fury by Attacking and hitting with basic Abilities. She consumes this Fury while Burrowed to restore health.",
+        "image": {
+          "full": "RekSai_Passive.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 288,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

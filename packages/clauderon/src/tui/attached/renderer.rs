@@ -134,6 +134,7 @@ fn convert_indexed_color(idx: u8) -> Color {
 }
 
 /// Widget wrapper for rendering a terminal buffer.
+#[derive(Debug)]
 pub struct TerminalWidget<'a> {
     buffer: &'a TerminalBuffer,
 }

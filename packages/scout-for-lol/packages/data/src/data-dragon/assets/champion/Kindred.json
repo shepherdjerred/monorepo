@@ -1,0 +1,316 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Kindred": {
+      "id": "Kindred",
+      "key": "203",
+      "name": "Kindred",
+      "title": "The Eternal Hunters",
+      "image": {
+        "full": "Kindred.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 240,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "203000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "203001",
+          "num": 1,
+          "name": "Shadowfire Kindred",
+          "chromas": false
+        },
+        {
+          "id": "203002",
+          "num": 2,
+          "name": "Super Galaxy Kindred",
+          "chromas": false
+        },
+        {
+          "id": "203003",
+          "num": 3,
+          "name": "Spirit Blossom Kindred",
+          "chromas": true
+        },
+        {
+          "id": "203012",
+          "num": 12,
+          "name": "Porcelain Kindred",
+          "chromas": true
+        },
+        {
+          "id": "203022",
+          "num": 22,
+          "name": "Woof and Lamb Kindred",
+          "chromas": true
+        },
+        {
+          "id": "203023",
+          "num": 23,
+          "name": "DRX Kindred",
+          "chromas": true
+        },
+        {
+          "id": "203033",
+          "num": 33,
+          "name": "Prestige Porcelain Kindred",
+          "chromas": false
+        },
+        {
+          "id": "203034",
+          "num": 34,
+          "name": "Chosen of the Wolf Kindred",
+          "chromas": true
+        }
+      ],
+      "lore": "Separate, but never parted, Kindred represents the twin essences of death. Lamb's bow offers a swift release from the mortal realm for those who accept their fate. Wolf hunts down those who run from their end, delivering violent finality within his crushing jaws. Though interpretations of Kindred's nature vary across Runeterra, every mortal must choose the true face of their death.",
+      "blurb": "Separate, but never parted, Kindred represents the twin essences of death. Lamb's bow offers a swift release from the mortal realm for those who accept their fate. Wolf hunts down those who run from their end, delivering violent finality within his...",
+      "allytips": [
+        "Moving around between attacks while jungling will help you avoid damage and also generate more heals from Wolf's Frenzy.",
+        "Pick which Hunts you want to pursue carefully; getting many of them is the key to success as the game goes on.",
+        "Don't go in first to a large team fight. Wait for your teammates to initiate."
+      ],
+      "enemytips": [
+        "Kindred is fragile - turn the pressure up on her, and she will be forced to play cautiously.",
+        "Clear the Hunts Wolf activates on jungle camps to slow down Kindred's damage output.",
+        "When Kindred uses Lamb's Respite get inside, it stops all champions from dying."
+      ],
+      "tags": ["Marksman"],
+      "partype": "Mana",
+      "info": {
+        "attack": 8,
+        "defense": 2,
+        "magic": 2,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 595,
+        "hpperlevel": 104,
+        "mp": 300,
+        "mpperlevel": 35,
+        "movespeed": 325,
+        "armor": 29,
+        "armorperlevel": 4.7,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 500,
+        "hpregen": 7,
+        "hpregenperlevel": 0.55,
+        "mpregen": 7,
+        "mpregenperlevel": 0.4,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 65,
+        "attackdamageperlevel": 3.25,
+        "attackspeedperlevel": 3.5,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "KindredQ",
+          "name": "Dance of Arrows",
+          "description": "Kindred tumbles and shoots up to three arrows at nearby targets.",
+          "tooltip": "Kindred vaults, firing an arrow at up to 3 enemies, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and gaining <attackSpeed>{{ totalqattackspeed }} Attack Speed</attackSpeed> for {{ e8 }} seconds.<br /><br />While inside of <spellName>Wolf's Frenzy</spellName>, this Ability's Cooldown is reduced to {{ e4 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown in Wolf's Frenzy"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ e4 }} -> {{ e4NL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [9, 9, 9, 9, 9],
+          "cooldownBurn": "9",
+          "cost": [35, 35, 35, 35, 35],
+          "costBurn": "35",
+          "datavalues": {},
+          "effect": [
+            null,
+            [40, 65, 90, 115, 140],
+            [0, 0, 0, 0, 0],
+            [500, 500, 500, 500, 500],
+            [4, 3.5, 3, 2.5, 2],
+            [100, 100, 100, 100, 100],
+            [12, 12, 12, 12, 12],
+            [0.35, 0.35, 0.35, 0.35, 0.35],
+            [4, 4, 4, 4, 4],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "40/65/90/115/140", "0", "500", "4/3.5/3/2.5/2", "100", "12", "0.35", "4", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [340, 340, 340, 340, 340],
+          "rangeBurn": "340",
+          "image": {
+            "full": "KindredQ.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 384,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "KindredW",
+          "name": "Wolf's Frenzy",
+          "description": "Wolf enrages and attacks enemies around him.  Lamb passively gains stacks by moving and attacking. When fully charged, Lamb's next attack restores health.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Kindred gains stacks as they move and attack. At 100 stacks, Kindred's next Attack restores up to <healing>{{ attackheal }} Health</healing> based on their missing Health.<br /><br /><spellActive>Active:</spellActive> Kindred claims a territory, ordering Wolf to bite at the last enemy Lamb Attacked. Wolf's bites deal <magicDamage>{{ basewolfdamage }}</magicDamage> plus <magicDamage>{{ percentwolfdamage }} current Health magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ e5 }} -> {{ e5NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [18, 17, 16, 15, 14],
+          "cooldownBurn": "18/17/16/15/14",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [40, 45, 50, 55, 60],
+            [1, 1, 1, 1, 1],
+            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [8.5, 8.5, 8.5, 8.5, 8.5],
+            [25, 30, 35, 40, 45],
+            [800, 800, 800, 800, 800],
+            [0.5, 0.5, 0.5, 0.5, 0.5],
+            [0.5, 0.5, 0.5, 0.5, 0.5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "40/45/50/55/60", "1", "1.5", "8.5", "25/30/35/40/45", "800", "0.5", "0.5", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [560, 560, 560, 560, 560],
+          "rangeBurn": "560",
+          "image": {
+            "full": "KindredW.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 432,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "KindredEWrapper",
+          "name": "Mounting Dread",
+          "description": "Lamb fires a carefully placed shot, slowing the target. If Lamb attacks the target two more times, her third attack instead directs Wolf to pounce on the enemy, savaging them for massive damage.",
+          "tooltip": "Kindred weakens an enemy, <status>Slowing</status> them by {{ totalslow }}% for {{ slowduration }} second.<br /><br />Kindred's third Attack against the target within {{ totalduration }} seconds of each other directs Wolf to pounce on the enemy, dealing an additional <physicalDamage>{{ basebitedamage }}</physicalDamage> plus <physicalDamage>{{ percentbitedamage }} missing Health physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 12.5, 11, 9.5, 8],
+          "cooldownBurn": "14/12.5/11/9.5/8",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [500, 500, 500, 500, 500],
+          "rangeBurn": "500",
+          "image": {
+            "full": "KindredEWrapper.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 0,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "KindredR",
+          "name": "Lamb's Respite",
+          "description": "Lamb grants all living things inside a zone a respite from death. Until the effect ends, nothing can die. At the end, units are healed.",
+          "tooltip": "Kindred blesses the ground for {{ e2 }} seconds, allowing no unit, ally, enemy, or neutral to die while inside. Upon reaching 10% Health, units can't be damaged or healed while still inside the zone.<br /><br />When the blessing ends, all units inside heal for <healing>{{ e1 }} Health</healing>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Healing", "Cooldown"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [160, 140, 120],
+          "cooldownBurn": "160/140/120",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [225, 300, 375],
+            [4, 4, 4],
+            [530, 530, 530],
+            [400, 400, 400],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "225/300/375", "4", "530", "400", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [500, 500, 500],
+          "rangeBurn": "500",
+          "image": {
+            "full": "KindredR.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 48,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Mark of the Kindred",
+        "description": "Kindred can mark targets to Hunt. Successfully completing a Hunt permanently empowers Kindred's basic abilities. Every 4 hunts completed also increases Kindred's basic attack range.",
+        "image": {
+          "full": "Kindred_Passive.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 240,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

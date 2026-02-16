@@ -10,6 +10,12 @@ pub struct PortAllocator {
     state: RwLock<AllocatorState>,
 }
 
+impl std::fmt::Debug for PortAllocator {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PortAllocator").finish_non_exhaustive()
+    }
+}
+
 struct AllocatorState {
     base_port: u16,
     next_port: u16,

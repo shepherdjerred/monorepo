@@ -23,14 +23,14 @@ fn create_test_session(
     worktree_path: &std::path::Path,
 ) -> Session {
     let mut session = Session::new(SessionConfig {
-        name: name.to_string(),
+        name: name.to_owned(),
         title: None,
         description: None,
         repo_path: "/tmp/test-repo".into(),
         worktree_path: worktree_path.to_path_buf(),
         subdirectory: std::path::PathBuf::new(),
-        branch_name: name.to_string(),
-        initial_prompt: "Test prompt".to_string(),
+        branch_name: name.to_owned(),
+        initial_prompt: "Test prompt".to_owned(),
         backend,
         agent: AgentType::ClaudeCode,
         dangerous_skip_checks: true,
@@ -58,8 +58,8 @@ fn create_mock_health_report(
         state,
         available_actions: actions,
         recommended_action: None,
-        description: "Test description".to_string(),
-        details: "Test details".to_string(),
+        description: "Test description".to_owned(),
+        details: "Test details".to_owned(),
         data_safe,
     }
 }
@@ -363,7 +363,7 @@ fn test_kubernetes_pvc_deleted_data_lost() {
     let report = create_mock_health_report(
         &session,
         ResourceState::DataLost {
-            reason: "PVC was deleted".to_string(),
+            reason: "PVC was deleted".to_owned(),
         },
         vec![AvailableAction::Cleanup, AvailableAction::RecreateFresh],
         false,

@@ -1,0 +1,55 @@
+---
+import { ClientNavigation } from "@scout-for-lol/frontend/components/client-navigation";
+import { ClientMobileNav } from "@scout-for-lol/frontend/components/client-mobile-nav";
+
+interface Props {
+  activePage?: "home" | "getting-started" | "docs" | "support" | "whatsnew";
+}
+
+const { activePage } = Astro.props;
+
+const navItems = [
+  { href: "/", label: "Home" },
+  { href: "/getting-started", label: "Getting Started" },
+  { href: "/docs", label: "Documentation" },
+  { href: "/whatsnew", label: "What's New" },
+  { href: "/support", label: "Support" },
+  { href: "https://github.com/shepherdjerred/scout-for-lol", label: "GitHub", external: true },
+];
+
+const mobileNavItems = [
+  { href: "/", label: "Home", currentPage: "home" },
+  { href: "/getting-started", label: "Getting Started", currentPage: "getting-started" },
+  { href: "/docs", label: "Documentation", currentPage: "docs" },
+  { href: "/whatsnew", label: "What's New", currentPage: "whatsnew" },
+  { href: "/support", label: "Support", currentPage: "support" },
+  { href: "https://github.com/shepherdjerred/scout-for-lol", label: "GitHub", external: true },
+];
+
+const discordLink = "https://discord.com/oauth2/authorize?client_id=1182800769188110366";
+---
+
+<header class="absolute inset-x-0 top-0 z-50 bg-white dark:bg-gray-900">
+  <nav class="flex items-center justify-between p-4 lg:p-6 lg:px-8" aria-label="Global">
+    <div class="flex lg:flex-1">
+      <a href="/" class="-m-1.5 p-1.5">
+        <span class="sr-only">Scout for League of Legends</span>
+        <div class="h-8 w-8 bg-linear-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+          <span class="text-white font-bold text-sm">S</span>
+        </div>
+      </a>
+    </div>
+    <div class="flex lg:hidden">
+      <ClientMobileNav items={mobileNavItems} activePage={activePage} discordLink={discordLink} client:load />
+    </div>
+    <ClientNavigation items={navItems} client:load />
+    <div class="hidden lg:flex lg:flex-1 lg:justify-end">
+      <a
+        href={discordLink}
+        class="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+      >
+        Add to Discord
+      </a>
+    </div>
+  </nav>
+</header>

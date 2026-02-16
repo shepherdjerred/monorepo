@@ -1,0 +1,354 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Gragas": {
+      "id": "Gragas",
+      "key": "79",
+      "name": "Gragas",
+      "title": "the Rabble Rouser",
+      "image": {
+        "full": "Gragas.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 0,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "79000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "79001",
+          "num": 1,
+          "name": "Scuba Gragas",
+          "chromas": false
+        },
+        {
+          "id": "79002",
+          "num": 2,
+          "name": "Hillbilly Gragas",
+          "chromas": false
+        },
+        {
+          "id": "79003",
+          "num": 3,
+          "name": "Santa Gragas",
+          "chromas": false
+        },
+        {
+          "id": "79004",
+          "num": 4,
+          "name": "Gragas, Esq.",
+          "chromas": false
+        },
+        {
+          "id": "79005",
+          "num": 5,
+          "name": "Vandal Gragas",
+          "chromas": false
+        },
+        {
+          "id": "79006",
+          "num": 6,
+          "name": "Oktoberfest Gragas",
+          "chromas": false
+        },
+        {
+          "id": "79007",
+          "num": 7,
+          "name": "Superfan Gragas",
+          "chromas": false
+        },
+        {
+          "id": "79008",
+          "num": 8,
+          "name": "Fnatic Gragas",
+          "chromas": false
+        },
+        {
+          "id": "79009",
+          "num": 9,
+          "name": "Gragas Caskbreaker",
+          "chromas": false
+        },
+        {
+          "id": "79010",
+          "num": 10,
+          "name": "Arctic Ops Gragas",
+          "chromas": false
+        },
+        {
+          "id": "79011",
+          "num": 11,
+          "name": "Warden Gragas",
+          "chromas": true
+        },
+        {
+          "id": "79020",
+          "num": 20,
+          "name": "Space Groove Gragas",
+          "chromas": true
+        },
+        {
+          "id": "79029",
+          "num": 29,
+          "name": "High Noon Gragas",
+          "chromas": true
+        },
+        {
+          "id": "79039",
+          "num": 39,
+          "name": "Music Fan Gragas",
+          "chromas": true
+        }
+      ],
+      "lore": "Equal parts jolly and imposing, Gragas is a massive, rowdy brewmaster who's always on the lookout for new ways to raise everyone's spirits. Hailing from parts unknown, he searches for ingredients among the unblemished wastes of the Freljord to help him perfect his latest concoction. He is impulsive, headstrong, and renowned for the brawls he starts, which often end in all-night parties and widespread property damage. Any appearance from Gragas must surely foreshadow merriment and destruction—in that order.",
+      "blurb": "Equal parts jolly and imposing, Gragas is a massive, rowdy brewmaster who's always on the lookout for new ways to raise everyone's spirits. Hailing from parts unknown, he searches for ingredients among the unblemished wastes of the Freljord to help him...",
+      "allytips": [
+        "The damage reduction from Drunken Rage is applied when you start drinking, try to use it when you see damage coming your way.",
+        "Try to knock enemies back into your towers with Explosive Cask.",
+        "Try to combo Body Slam with Explosive Cask to set up kills for your team."
+      ],
+      "enemytips": [
+        "Gragas can knock everybody away with his ultimate. Be careful that you don't get knocked into him or, worse, an enemy tower.",
+        "Body Slam is on a very low cooldown, making it difficult to pursue Gragas. Don't overextend yourself chasing him."
+      ],
+      "tags": ["Fighter", "Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 4,
+        "defense": 7,
+        "magic": 6,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 640,
+        "hpperlevel": 115,
+        "mp": 400,
+        "mpperlevel": 47,
+        "movespeed": 330,
+        "armor": 38,
+        "armorperlevel": 5,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 5.5,
+        "hpregenperlevel": 0.5,
+        "mpregen": 6,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 64,
+        "attackdamageperlevel": 3.5,
+        "attackspeedperlevel": 2.05,
+        "attackspeed": 0.675
+      },
+      "spells": [
+        {
+          "id": "GragasQ",
+          "name": "Barrel Roll",
+          "description": "Gragas rolls his cask to a location, which can be activated to explode or will explode on its own after 4 seconds. The potency of the explosion increases over time. Enemies struck by the blast have their Move Speed slowed.",
+          "tooltip": "Gragas rolls a cask that explodes after {{ e4 }} seconds, dealing between <magicDamage>{{ mindamage }} magic damage</magicDamage> and <magicDamage>{{ maxdamage }} magic damage</magicDamage> and <status>Slowing</status> for between {{ e2 }} and {{ effect2amount*1.5 }}% for {{ e3 }} seconds. The damage and <status>Slow</status> increase with time the cask spent before exploding. <br /><br />Gragas can <recast>Recast</recast> to detonate the cask early.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow", "Cooldown"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ e2 }} -> {{ e2NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [10, 9, 8, 7, 6],
+          "cooldownBurn": "10/9/8/7/6",
+          "cost": [80, 80, 80, 80, 80],
+          "costBurn": "80",
+          "datavalues": {},
+          "effect": [
+            null,
+            [80, 120, 160, 200, 240],
+            [40, 45, 50, 55, 60],
+            [2, 2, 2, 2, 2],
+            [4, 4, 4, 4, 4],
+            [2, 2, 2, 2, 2],
+            [150, 150, 150, 150, 150],
+            [70, 70, 70, 70, 70],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "80/120/160/200/240", "40/45/50/55/60", "2", "4", "2", "150", "70", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [850, 850, 850, 850, 850],
+          "rangeBurn": "850",
+          "image": {
+            "full": "GragasQ.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 384,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "GragasW",
+          "name": "Drunken Rage",
+          "description": "Gragas samples his latest brew for 1 second. After finishing, he becomes boisterous and belligerent, dealing magic damage to all nearby enemies on his next basic attack and reducing damage received.",
+          "tooltip": "Gragas samples his brew, reducing incoming damage by {{ damagereduction }} for {{ defenseduration }} seconds and empowering his next Attack to deal an additional <magicDamage>{{ totaldamage }}</magicDamage> plus <magicDamage>{{ maxhppercentdamage }}% max Health magic damage</magicDamage> to the target and surrounding enemies.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage Reduction", "Damage"],
+            "effect": [
+              "{{ basedamagereduction }}% -> {{ basedamagereductionNL }}%",
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [5, 5, 5, 5, 5],
+          "cooldownBurn": "5",
+          "cost": [30, 30, 30, 30, 30],
+          "costBurn": "30",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [20, 20, 20, 20, 20],
+          "rangeBurn": "20",
+          "image": {
+            "full": "GragasW.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 432,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "GragasE",
+          "name": "Body Slam",
+          "description": "Gragas charges to a location and collides with the first enemy unit he comes across, dealing damage to all nearby enemy units and stunning them.",
+          "tooltip": "Gragas charges forward, colliding with the first enemy, <status>Knocking Up</status> nearby enemies for {{ stunduration }} second and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to them.<br /><br />This Ability's Cooldown is reduced by {{ cooldownrefund*100 }}% if Gragas collides with an enemy.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 13.5, 13, 12.5, 12],
+          "cooldownBurn": "14/13.5/13/12.5/12",
+          "cost": [50, 50, 50, 50, 50],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "1", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [600, 600, 600, 600, 600],
+          "rangeBurn": "600",
+          "image": {
+            "full": "GragasE.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 0,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "GragasR",
+          "name": "Explosive Cask",
+          "description": "Gragas hurls his cask to a location, dealing damage and knocking back enemies caught in the blast radius.",
+          "tooltip": "Gragas hurls his cask, dealing <magicDamage>{{ damagedone }} magic damage</magicDamage> and <status>Knocking Away</status> enemies from the impact zone.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [100, 85, 70],
+          "cooldownBurn": "100/85/70",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1000, 1000, 1000],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "GragasR.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 48,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Happy Hour",
+        "description": "Gragas periodically heals upon using a skill.",
+        "image": {
+          "full": "GragasPassiveHeal.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 0,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

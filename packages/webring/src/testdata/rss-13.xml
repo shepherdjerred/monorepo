@@ -1,0 +1,518 @@
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:sy="http://purl.org/rss/1.0/modules/syndication/" xmlns:admin="http://webns.net/mvcb/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel> 
+    <title>Peter Norvig</title>
+    <link>http://www.norvig.com</link>
+    <description>Articles by Peter Norvig</description>
+    <language>en-us</language>
+
+    <item><title>xkcd 1970: Name Dominoes</title>
+        <description>Lay out dominoes legally; the dominoes have people names, not numbers.</description>
+        <guid>https://github.com/norvig/pytudes/blob/master/ipynb/xkcd-Name-Dominoes.ipynb</guid>
+        <link>https://github.com/norvig/pytudes/blob/master/ipynb/xkcd-Name-Dominoes.ipynb</link>
+        <dc:date>2018-3-21</dc:date></item>
+
+    <item><title>Functional Lifestyles Training</title>
+        <description>Some heavy lambda lifting could get you in better functional shape.</description>
+        <guid>https://medium.com/@peternorvig/functional-lifestyles-training-47984a3cd2ba</guid>
+        <link>https://medium.com/@peternorvig/functional-lifestyles-training-47984a3cd2ba</link>
+        <dc:date>2018-4-1</dc:date></item>
+
+    <item><title>Advent of Code 2017</title>
+        <description>Solutions to the puzzle site.</description>
+        <guid>https://github.com/norvig/pytudes/blob/master/ipynb/Advent%202017.ipynb</guid>
+        <link>https://github.com/norvig/pytudes/blob/master/ipynb/Advent%202017.ipynb</link>
+        <dc:date>2016-12-24</dc:date></item>
+
+    <item><title>Advent of Code 2016</title>
+        <description>Solutions to the puzzle site.</description>
+        <guid>http://nbviewer.ipython.org/url/norvig.com/ipython/Advent%20of%20Code.ipynb</guid>
+        <link>http://nbviewer.ipython.org/url/norvig.com/ipython/Advent%20of%20Code.ipynb</link>
+        <dc:date>2016-12-24</dc:date></item>
+
+    <item><title>Translating English Sentences into Propositional Logic Statements</title>
+        <description>Automatically converting informal English sentences into formal Propositional Logic.</description>
+        <guid>http://nbviewer.ipython.org/url/norvig.com/ipython/PropositionalLogic.ipynb</guid>
+        <link>http://nbviewer.ipython.org/url/norvig.com/ipython/PropositionalLogic.ipynb</link>
+        <dc:date>2016-10-01</dc:date></item>
+
+    <item><title>Even Longer Longest Palindrome</title>
+        <description>Updating the palindrome program to search letter-by-letter; thus finding a longer palindrome.</description>
+        <guid>http://norvig.com/palindrome.html</guid>
+        <link>http://norvig.com/palindrome.html</link>
+        <dc:date>2016-10-06</dc:date></item>
+
+    <item><title>On the (Small) Number of Atoms in the Universe</title>
+        <description>On the difference between counting things and counting combinations of things.</description>
+        <guid>http://norvig.com/atoms.html</guid>
+        <link>http://norvig.com/atoms.html</link>
+        <dc:date>2016-04-27</dc:date></item>
+
+    <item><title>The Strength in Numbers Theorem</title>
+        <description>Update to my probability notebook, adding the Central Limit Theorem, also known as the Strength in Numbers Theorem.</description>
+        <guid>http://nbviewer.ipython.org/url/norvig.com/ipython/Probability.ipynb#The-Central-Limit-Theorem-/-Strength-in-Numbers-Theorem</guid>
+        <link>http://nbviewer.ipython.org/url/norvig.com/ipython/Probability.ipynb#The-Central-Limit-Theorem-/-Strength-in-Numbers-Theorem</link>
+        <dc:date>2016-04-27</dc:date></item>
+
+    <item><title>WWW: Will Warriors Win?</title>
+        <description>Will the Warriors win the NBA title?</description>
+        <guid>http://nbviewer.ipython.org/url/norvig.com/ipython/WWW.ipynb</guid>
+        <link>http://nbviewer.ipython.org/url/norvig.com/ipython/WWW.ipynb</link>
+        <dc:date>2016-04-27</dc:date></item>
+
+    <item><title>Go, Dog. Gauguin! The P. D. Eastman Story</title>
+        <description>The untold story of the children's book author/illustrator.</description>
+        <guid>https://medium.com/@peternorvig/go-dog-gauguin-the-p-d-eastman-story-a81dd9704cb4</guid>
+        <link>https://medium.com/@peternorvig/go-dog-gauguin-the-p-d-eastman-story-a81dd9704cb4</link>
+        <dc:date>2016-04-01</dc:date></item>
+
+    <item><title>Countdown to 2016</title>
+        <description>Solving the equation 10 _ 9 _ 8 _ 7 _ 6 _ 5 _ 4 _ 3 _ 2 _ 1 = 2016. From an Alex Bellos puzzle.</description>
+        <guid>http://nbviewer.ipython.org/url/norvig.com/ipython/Countdown.ipynb</guid>
+        <link>http://nbviewer.ipython.org/url/norvig.com/ipython/Countdown.ipynb</link>
+        <dc:date>2016-01-06</dc:date></item>
+
+    <item><title>Refactoring a Crossword Game Program</title>
+        <description>Refactoring the Scrabble / Wrds with Friends game from Udacity CS 212.</description>
+        <guid>http://nbviewer.ipython.org/url/norvig.com/ipython/Scrabble.ipynb</guid>
+        <link>http://nbviewer.ipython.org/url/norvig.com/ipython/Scrabble.ipynb</link>
+        <dc:date>2015-12-29</dc:date></item>
+
+    <item><title>Beal's Conjecture Revisited</title>
+        <description>Updating the work I did in 2000 to search for counterexamples to Beal's Conjecture.
+Lists some of the things that people do wrong in trying to settle the conjecture.</description>
+        <guid>http://norvig.com/beal.html</guid>
+        <link>http://norvig.com/beal.html</link>
+        <dc:date>2015-10-20</dc:date></item>
+
+    <item><title>Probability, Paradox, and the Reasonable Person Principle</title>
+        <description>An IPython notebook tutorial on Probability Paradoxes</description>
+        <guid>http://nbviewer.ipython.org/url/norvig.com/ipython/Probability.ipynb</guid>
+        <link>http://nbviewer.ipython.org/url/norvig.com/ipython/Probability.ipynb</link>
+        <dc:date>2015-10-03</dc:date></item>
+
+    <item><title>Let's Code About Bike Locks</title>
+        <description>How many words can be made from a letter-based combination lock?</description>
+        <guid>http://nbviewer.ipython.org/url/norvig.com/ipython/Fred%20Buns.ipynb</guid>
+        <link>http://nbviewer.ipython.org/url/norvig.com/ipython/Fred%20Buns.ipynb</link>
+        <dc:date>2015-06-15</dc:date></item>
+
+    <item><title>When Cheryl Met Eve: A Birthday Story</title>
+        <description>An extended exploration beyond the popular "Cheryl's Birthday" logic puzzle.</description>
+        <guid>http://nbviewer.ipython.org/url/norvig.com/ipython/Cheryl-and-Eve.ipynb</guid>
+        <link>http://nbviewer.ipython.org/url/norvig.com/ipython/Cheryl-and-Eve.ipynb</link>
+        <dc:date>2015-05-13</dc:date></item>
+
+    <item><title>Cheryl's Birthday (How to Solve It with Code)</title>
+        <description>A solution to the popular "Cheryl's Birthday" logic puzzle.</description>
+        <guid>http://nbviewer.ipython.org/url/norvig.com/ipython/Cheryl.ipynb</guid>
+        <link>http://nbviewer.ipython.org/url/norvig.com/ipython/Cheryl.ipynb</link>
+        <dc:date>2015-04-24</dc:date></item>
+
+    <item><title>LI2: Lego Institute for Lego Investigation</title>
+        <description>Web site for a new research institute.</description>
+        <guid>http://norvig.com/LI2</guid>
+        <link>http://norvig.com/LI2</link>
+        <dc:date>2014-09-10</dc:date></item>
+
+    <item><title>Sol Golomb's Rectangle Puzzle</title>
+        <description>How many ways can you pack rectangles into a square? And other combinatorial problems ...</description>
+        <guid>http://nbviewer.ipython.org/url/norvig.com/ipython/Golomb-Puzzle.ipynb?create=1</guid>
+        <link>http://nbviewer.ipython.org/url/norvig.com/ipython/Golomb-Puzzle.ipynb?create=1</link>
+        <dc:date>2014-05-07</dc:date></item>
+
+    <item><title>xkcd 1313: Regex Golf (Part 2: Infinite Problems)</title>
+        <description>Newly updated and improved version of my code to implement
+a meta-regex-golf program based on xkcd comic #1313.
+The code is "a program that plays regex golf with arbitrary lists..."</description>
+        <guid>http://nbviewer.ipython.org/url/norvig.com/ipython/xkcd1313-part2.ipynb?create=1</guid>
+        <link>http://nbviewer.ipython.org/url/norvig.com/ipython/xkcd1313-part2.ipynb?create=1</link>
+        <dc:date>2014-02-20</dc:date></item>
+
+    <item><title>xkcd 1313: Regex Golf</title>
+        <description>Code to implement a meta-regex-golf program based on xkcd comic #1313.
+The code is "a program that plays regex golf with arbitrary lists..."</description>
+        <guid>http://nbviewer.ipython.org/url/norvig.com/ipython/xkcd1313.ipynb?create=1</guid>
+        <link>http://nbviewer.ipython.org/url/norvig.com/ipython/xkcd1313.ipynb?create=1</link>
+        <dc:date>2014-02-20</dc:date></item>
+
+    <item><title>Letter Frequencies for Scrabble</title>
+        <description>An analysis of frequency counts for letters in English, with applications 
+to the game of Scrabble.  Also presents a distillation of the Google Books Ngram data,
+broken out by time periods.</description>
+        <guid>http://norvig.com/scrabble-letter-scores.html</guid>
+        <link>http://norvig.com/scrabble-letter-scores.html</link>
+        <dc:date>2013-01-27</dc:date></item>
+
+    <item><title>Photos of Costa Rica Wildlife</title>
+        <description>Photos from a trip to Costa Rica with wildlife photographer Suzi Eszterhas.</description>
+        <guid>http://pn.smugmug.com/Nature/Costa-Rica-2013</guid>
+        <link>http://pn.smugmug.com/Nature/Costa-Rica-2013</link>
+        <dc:date>2013-01-27</dc:date></item>
+
+    <item><title>English Letter Frequency Counts: Mayzner Revisited or ETAOIN SRHLDCU</title>
+        <description>An analysis of frequency counts for letters and letter sequences (n-grams),
+with counts broken out by length of word and poition in word, as well as
+by length of ngram.  A re-implementation of the work done by Mark Mayzner
+in the 1960s -- but this time with 30 million times more data.</description>
+        <guid>http://norvig.com/mayzner.html</guid>
+        <link>http://norvig.com/mayzner.html</link>
+        <dc:date>2013-01-04</dc:date></item>
+
+    <item><title>FAQ for the 2012 US Presidential Election (#FF00FF)</title>
+        <description>Added questions about early voting and state/federal
+to my frequently-asked-question list for the 2012 United States Presidential
+Election; all questions are answered with facts that are as objective
+as I can make them, except for the last question, in which I endorse 
+President Obama.</description>
+        <guid>http://norvig.com/election-faq-2012.html</guid>
+        <link>http://norvig.com/election-faq-2012.html</link>
+        <dc:date>2012-11-02</dc:date></item>
+
+    <item><title>FAQ for the 2012 US Presidential Election (#FF00FF)</title>
+        <description>A frequently-asked-question list for the 2012 United States Presidential
+Election; all questions are answered with facts that are as objective
+as I can make them, except for the last question, in which I endorse 
+President Obama.</description>
+        <guid>http://norvig.com/election-faq-2012.html</guid>
+        <link>http://norvig.com/election-faq-2012.html</link>
+        <dc:date>2012-10-27</dc:date></item>
+
+    <item><title>Intro to Statistics</title>
+        <description>This is not actually mine; it is a class by my co-teacher, Sebastian Thrun, on Intro to Statistics.
+I mention it because I think statistics is one of the most under-appreciated topics; everyone should learn statistics!</description>
+        <guid>http://www.udacity.com/overview/Course/st101/CourseRev/1</guid>
+        <link>http://www.udacity.com/overview/Course/st101/CourseRev/1</link>
+        <dc:date>2012-06-24</dc:date></item>
+
+    <item><title>Peter Norvig: The 100,000-student classroom</title>
+        <description>My talk at the TED conference. Six minute video.</description>
+        <guid>http://www.ted.com/talks/peter_norvig_the_100_000_student_classroom.html</guid>
+        <link>http://www.ted.com/talks/peter_norvig_the_100_000_student_classroom.html</link>
+        <dc:date>2012-06-24</dc:date></item>
+
+    <item><title>Google's Hybrid Approach to Research</title>
+        <description>An article printed in the Communications of the ACM describing Google's research, both within Google Research and within Engineering as a whole.
+Alfred Spector, Peter Norvig and Slav Petrov.</description>
+        <guid>http://norvig.com/hybrid-research.pdf</guid>
+        <link>http://norvig.com/hybrid-research.pdf</link>
+        <dc:date>2012-06-24</dc:date></item>
+
+    <item><title>Prescient but Not Perfect: A Look Back at a 1966 Scientific American Article on Systems Analysis</title>
+        <description>My thoughts on a 1966 Scientific American article that was my introduction to programming.  And if you ever need a CPL compiler, this is a good place to start.</description>
+        <guid>http://blogs.scientificamerican.com/at-scientific-american/2011/08/23/systems-analysis-look-back-1966-scientific-american-article/</guid>
+        <link>http://blogs.scientificamerican.com/at-scientific-american/2011/08/23/systems-analysis-look-back-1966-scientific-american-article/</link>
+        <dc:date>2011-08-24</dc:date></item>
+
+    <item><title>Strachey's Checkers program from 1966</title>
+        <description>The source code to accompany my essay on Strachey's Scientific American article.</description>
+        <guid>http://norvig.com/sciam/checkers.py</guid>
+        <link>http://norvig.com/sciam/checkers.py</link>
+        <dc:date>2011-08-24</dc:date></item>
+
+    <item><title>Introduction to Artificial Intelligence</title>
+        <description>Sebastian Thrun and I are teaching an AI class online; 126,000 people have signed up so far.</description>
+        <guid>http://www.ai-class.org</guid>
+        <link>http://www.ai-class.org</link>
+        <dc:date>2011-08-24</dc:date></item>
+
+    <item><title>On Chomsky and the Two Cultures of Statistical Learning</title>
+        <description>At the MIT 150 symposium, Chomsky said that the notion of success used
+by statistical language models (namely, that they successfully predict
+the world and allow programs to accomplish tasks) was "very novel
+... I don't know of anything like it in the history of science." This
+essay argues that it is not novel at all, but perfectly commonplace.</description>
+        <guid>http://norvig.com/chomsky.html</guid>
+        <link>http://norvig.com/chomsky.html</link>
+        <dc:date>2011-05-27</dc:date></item>
+
+    <item><title>Dance Photography</title>
+        <description>An overview of photographic techniques for taking pictures of indoor dance performances. (Also useful for any indoor action photography.)</description>
+        <guid>http://norvig.com/dance-photography.html</guid>
+        <link>http://norvig.com/dance-photography.html</link>
+        <dc:date>2011-05-16</dc:date></item>
+
+    <item><title>(An ((Even Better) Lisp) Interpreter (in Python))</title>
+        <description>A new version of Lispy (Lisp interpreter in Python).
+I released an earlier version on Sept. 30th, but this version is improved.</description>
+        <guid>http://norvig.com/lispy2.html</guid>
+        <link>http://norvig.com/lispy2.html</link>
+        <dc:date>2010-10-05</dc:date></item>
+
+    <item><title>(How to Write a (Lisp) Interpreter (in Python))</title>
+        <description>A Lisp interpreter in 90 lines of Python</description>
+        <guid>http://norvig.com/lispy.html</guid>
+        <link>http://norvig.com/lispy.html</link>
+        <dc:date>2010-09-30</dc:date></item>
+
+    <item><title>The Odds of Finding a Set in The Card Game SET</title>
+        <description>Correcting an error in the instruction booklet for the card game SET</description>
+        <guid>http://norvig.com/SET.html</guid>
+        <link>http://norvig.com/SET.html</link>
+        <dc:date>2010-04-28</dc:date></item>
+
+    <item><title>All we want are the facts, ma'am</title>
+        <description>On the lost art of fact-checking, and Chris Anderson's Wired Magazine article on The End of Theory</description>
+        <guid>http://norvig.com/fact-check.html</guid>
+        <link>http://norvig.com/fact-check.html</link>
+        <dc:date>2009-02-22</dc:date></item>
+
+    <item><title>Lieberman, Egg, Sausage and Lieberman</title>
+        <description>A reply to Nate Silver's jungle primary post</description>
+        <guid>http://norvig.com/chart538.html</guid>
+        <link>http://norvig.com/chart538.html</link>
+        <dc:date>2009-02-22</dc:date></item>
+
+    <item><title>An Exercise in Species Barcoding</title>
+        <description>Just in time for Darwin's birthday: an exercise in analyzing the differences in genomes to detect the boundaries between species</description>
+        <guid>http://norvig.com/ibol.html</guid>
+        <link>http://norvig.com/ibol.html</link>
+        <dc:date>2009-02-11</dc:date></item>
+
+    <item><title>Election final predictions -- Part of my FAQ for the 2008 Election</title>
+        <description>Final prediction for electoral and popular votes: 353-185; 54-45%</description>
+        <guid>http://norvig.com/election-faq.html#final</guid>
+        <link>http://norvig.com/election-faq.html#final</link>
+        <dc:date>2008-11-04</dc:date></item>
+
+    <item><title>What does McCain have to do to win? FAQ for the 2008 Election</title>
+        <description>Does McCain have a path to win?  A state-by-state analysis.</description>
+        <guid>http://norvig.com/election-faq.html#change</guid>
+        <link>http://norvig.com/election-faq.html#change</link>
+        <dc:date>2008-10-30</dc:date></item>
+
+    <item><title>What are imaginary reasons McCain might win? FAQ for the 2008 Election</title>
+        <description>Here are some reasons based onhope, not reason.</description>
+        <guid>http://norvig.com/election-faq.html#jpod</guid>
+        <link>http://norvig.com/election-faq.html#jpod</link>
+        <dc:date>2008-10-30</dc:date></item>
+
+    <item><title>Election 2008 Dashboard</title>
+        <description>A collection of charts, poll results, and links, for the obsessive election junkie.</description>
+        <guid>http://norvig.com/election-dashboard.html</guid>
+        <link>http://norvig.com/election-dashboard.html</link>
+        <dc:date>2008-10-15</dc:date></item>
+
+    <item><title>How accurate are polls? FAQ for the 2008 Presidential Election</title>
+        <description>New question for my FAQ answers "How accurate are polls?"</description>
+        <guid>http://norvig.com/election-faq.html#polls</guid>
+        <link>http://norvig.com/election-faq.html#polls</link>
+        <dc:date>2008-10-21</dc:date></item>
+
+    <item><title>What about the economy? FAQ for the 2008 US Presidential Election</title>
+        <description>New question: "What about the economy" for FF00FF, my
+FAQ for the 2008 US Presidential Election.</description>
+        <guid>http://norvig.com/election-faq.html#economy</guid>
+        <link>http://norvig.com/election-faq.html#economy</link>
+        <dc:date>2008-10-12</dc:date></item>
+
+    <item><title>Why are there so many negative attacks on both sides? FAQ for the 2008 US Presidential Election</title>
+        <description>New question: "Why are there so many negative attacks on both sides?" for FF00FF, my
+FAQ for the 2008 US Presidential Election.</description>
+        <guid>http://norvig.com/election-faq.html#attacks</guid>
+        <link>http://norvig.com/election-faq.html#attacks</link>
+        <dc:date>2008-10-20</dc:date></item>
+
+    <item><title>Does race matter? FAQ for the 2008 US Presidential Election</title>
+        <description>New question: "Does race matter?" for FF00FF, my
+FAQ for the 2008 US Presidential Election.</description>
+        <guid>http://norvig.com/election-faq.html#race</guid>
+        <link>http://norvig.com/election-faq.html#race</link>
+        <dc:date>2008-10-09</dc:date></item>
+
+    <item><title>Is the media biased? FAQ for the 2008 US Presidential Election</title>
+        <description>New question: "Is the media biased?" for my
+FAQ for the 2008 US Presidential Election. Tells you where to get
+information and compares the candidates.</description>
+        <guid>http://norvig.com/election-faq.html#media</guid>
+        <link>http://norvig.com/election-faq.html#media</link>
+        <dc:date>2008-10-7</dc:date></item>
+
+    <item><title>Is it rational to vote? FAQ for the 2008 US Presidential Election</title>
+        <description>New question: "Is it rational to vote?" for my
+FAQ for the 2008 US Presidential Election. Tells you where to get
+information and compares the candidates.</description>
+        <guid>http://norvig.com/election-faq.html#rational</guid>
+        <link>http://norvig.com/election-faq.html#rational</link>
+        <dc:date>2008-10-03</dc:date></item>
+
+    <item><title>FAQ for the 2008 US Presidential Election</title>
+        <description>An FAQ for the 2008 US Presidential Election. Tells you where to get
+information and compares the candidates.</description>
+        <guid>http://norvig.com/election-faq.html</guid>
+        <link>http://norvig.com/election-faq.html</link>
+        <dc:date>2008-09-30</dc:date></item>
+
+    <item><title>Beauty and the Geek Game Theory: Answering the Freakonomics Challenge</title>
+        <description>Answering Alon Nir's Freakonomics Challenge: What strategy to use on the TV show Beauty and the Geek</description>
+        <guid>http://norvig.com/geek.html</guid>
+        <link>http://norvig.com/geek.html</link>
+        <dc:date>2008-08-16</dc:date></item>
+
+    <item><title>Galapagos Photography</title>
+        <description>Notes on what camera equipment to take to Galapagos, and links to my galleries.</description>
+        <guid>http://norvig.com/galapagos-photography.html</guid>
+        <link>http://norvig.com/galapagos-photography.html</link>
+        <dc:date>2008-08-02</dc:date></item>
+
+    <item><title>Hiring a President II: Why I Endorse Obama</title>
+        <description>How to hire a president as if we were interviewing for CEO of a company: the 2008 edition.</description>
+        <guid>http://norvig.com/hiring-president2.html</guid>
+        <link>http://norvig.com/hiring-president2.html</link>
+        <dc:date>2008-02-04</dc:date></item>
+
+    <item><title>Update to world's longest palindrome sentence</title>
+        <description>I update my palindrome page, and list a slightly longer one.</description>
+        <guid>http://norvig.com/palindrome.html</guid>
+        <link>http://norvig.com/palindrome.html</link>
+        <dc:date>2007-11-11</dc:date></item>
+
+    <item><title>Evaluating Extraordinary Claims: Mind Over Matter? Or Mind Over Mind?</title>
+        <description>A companion to my essay on experiment design, this essay uses as an
+example the literature on the efficacy of intercessory prayer on
+medical conditions.</description>
+        <guid>http://norvig.com/prayer.html</guid>
+        <link>http://norvig.com/prayer.html</link>
+        <dc:date>2007-07-09</dc:date></item>
+
+    <item><title>Warning Signs in Experimental Design and Interpretation</title>
+        <description>An update to my essay on experiment design; it now stresses warning signs
+rather than clear-cut mistakes and urges the reader to consider the
+factors that dilute the credibility of an experiment.</description>
+        <guid>http://norvig.com/experiment-design.html</guid>
+        <link>http://norvig.com/experiment-design.html</link>
+        <dc:date>2007-07-09</dc:date></item>
+
+    <item><title>How to Write a Spelling Corrector (in Python)</title>
+        <description>Theory and practice of spelling correction algorithms</description>
+        <guid>http://norvig.com/spell-correct.html</guid>
+        <link>http://norvig.com/spell-correct.html</link>
+        <dc:date>2007-04-10</dc:date></item>
+
+    <item><title>Alexa Toolbar and the Problem of Experiment Design</title>
+        <description>Can you trust statistics about internet usage?</description>
+        <guid>http://norvig.com/logs-alexa.html</guid>
+        <link>http://norvig.com/logs-alexa.html</link>
+        <dc:date>2007-01-08</dc:date></item>
+
+    <item><title>Norvig.com 2006 logs</title>
+        <description>Web logs for my site for the year</description>
+        <guid>http://norvig.com/logs/logs06.html</guid>
+        <link>http://norvig.com/logs/logs06.html</link>
+        <dc:date>2007-01-08</dc:date></item>
+
+    <item><title>The Game of Carcassonne and the Parity Problem</title>
+        <description>Making a pretty map using the Carcassonne tiles; and figure out when you can't.</description>
+        <guid>http://norvig.com/carcassonne.html</guid>
+        <link>http://norvig.com/carcassonne.html</link>
+        <dc:date>2007-01-08</dc:date></item>
+
+    <item><title>My Speech to the Graduates</title>
+        <description>Commencement address for U.C. Berkeley Computer Science, May 2006</description>
+        <guid>http://www.norvig.com/speech.html</guid>
+        <link>http://www.norvig.com/speech.html</link>
+        <dc:date>2006-08-27</dc:date></item>
+
+    <item><title>Norwegian translation of Teach Yourself Programming</title>
+        <description>Norwegian translation of my <i>Teach Yourself Programming in Ten Years</i> essay</description>
+        <guid>http://www.space-cadet.org/articles/norvig-norw.shtml</guid>
+        <link>http://www.space-cadet.org/articles/norvig-norw.shtml</link>
+        <dc:date>2006-07-23</dc:date></item>
+
+    <item><title>Gilligan's Island Revisited</title>
+        <description>Plot synopses for episodes of a Gilligan's Island remake starring members of the Bush Administration.</description>
+        <guid>http://www.mcsweeneys.net/links/lists/15PeterNorvig.html</guid>
+        <link>http://www.mcsweeneys.net/links/lists/15PeterNorvig.html</link>
+        <dc:date>2006-06-16</dc:date></item>
+
+    <item><title>Solving Every Sudoku Puzzle</title>
+        <description>Python code and an explanation of how to solve any Sudoku puzzle.</description>
+        <guid>http://norvig.com/sudoku.html</guid>
+        <link>http://norvig.com/sudoku.html</link>
+        <dc:date>2006-05-25</dc:date></item>
+
+    <item><title>Reporters and parrots</title>
+        <description>Essay on reporting, innumeracy, and equal time.</description>
+        <guid>http://norvig.com/reporters-and-parrots.html</guid>
+        <link>http://norvig.com/reporters-and-parrots.html</link>
+        <dc:date>2006-05-25</dc:date></item>
+
+    <item><title>Romanian Translation of "Teach Yourself Programming in Ten Years"</title>
+        <description>Romanian translation of this essay done by Ştefan Lazăr</description>
+        <guid>http://norvig.com/romanian21-days.html</guid>
+        <link>http://norvig.com/romanian21-days.html</link>
+        <dc:date>2006-05-11</dc:date></item>
+
+    <item><title>The Global Climate Change Consensus: My Experiment</title>
+        <description>Do your own research! Confirm or deny the global climate change consensus!  Here's how I did it.</description>
+        <guid>http://norvig.com/oreskes.html</guid>
+        <link>http://norvig.com/oreskes.html</link>
+        <dc:date>2006-02-05</dc:date></item>
+
+    <item><title>2005 Performance Review for Albert Einstein</title>
+        <description>The annual performance review for the guy who had a REALLY big year in '05.</description>
+        <guid>http://norvig.com/performance-review.html</guid>
+        <link>http://norvig.com/performance-review.html</link>
+        <dc:date>2005-08-08</dc:date></item>
+
+    <item><title>Doing the Martin Shuffle (with your iPod)</title>
+        <description>Describes the most efficient way to navigate on an iPod Shuffle to the song you want.</description>
+        <guid>http://norvig.com/ipod.html</guid>
+        <link>http://norvig.com/ipod.html</link>
+        <dc:date>2005-08-08</dc:date></item>
+
+    <item><title>The Gettysburg Powerpoint Presentation</title>
+        <description>Satire describing what Lincoln might have done with Powerpoint)</description>
+        <guid>http://norvig.com/Gettysburg/index.htm</guid>
+        <link>http://norvig.com/Gettysburg/index.htm</link>
+        <dc:date>2005-08-08</dc:date></item>
+
+    <item><title>The Making of the Gettysburg Powerpoint Presentation</title>
+        <description>The story behind (and reaction to) my Gettysburg Powerpoint Presentation.)</description>
+        <guid>http://norvig.com/Gettysburg/making.htm</guid>
+        <link>http://norvig.com/Gettysburg/making.htm</link>
+        <dc:date>2005-08-08</dc:date></item>
+
+    <item><title>Artificial Intelligence: A Modern Approach</title>
+        <description>Home page for the leading textbook on Artificial Intelligence.</description>
+        <guid>http://aima.cs.berkeley.edu/</guid>
+        <link>http://aima.cs.berkeley.edu/</link>
+        <dc:date>2005-08-08</dc:date></item>
+
+    <item><title>Teach Yourself Programming in 10 Years</title>
+        <description>Essay describing why you really can't learn to program in 21 days.</description>
+        <guid>http://norvig.com/21-days.html</guid>
+        <link>http://norvig.com/21-days.html</link>
+        <dc:date>2005-08-08</dc:date></item>
+
+    <item><title>Design Patterns in Dynamic Languages</title>
+        <description>How design patterns are implemented in dynamic languages such as Lisp, Dylan, or Python.  Recently mentioned on Slashdot.</description>
+        <guid>http://norvig.com/design-patterns</guid>
+        <link>http://norvig.com/design-patterns</link>
+        <dc:date>2005-08-08</dc:date></item>
+
+    <item><title>The Java IAQ</title>
+        <description>Infrequently Answered Questions for Java</description>
+        <guid>http://norvig.com/java-iaq.html</guid>
+        <link>http://norvig.com/java-iaq.html</link>
+        <dc:date>2005-08-08</dc:date></item>
+
+    <item><title>The Python IAQ</title>
+        <description>Infrequently Answered Questions for Python</description>
+        <guid>http://norvig.com/python-iaq.html</guid>
+        <link>http://norvig.com/python-iaq.html</link>
+        <dc:date>2005-08-08</dc:date></item>
+
+    <item><title>Paradigms of AI Programming</title>
+        <description>Home page for a book on Lisp and AI programming.</description>
+        <guid>http://norvig.com/paip/README.html</guid>
+        <link>http://norvig.com/paip/README.html</link>
+        <dc:date>2005-08-08</dc:date></item>
+
+    <item><title>JScheme</title>
+        <description>An implementation of the Scheme programming language in Java.</description>
+        <guid>http://norvig.com/jscheme.html</guid>
+        <link>http://norvig.com/jscheme.html</link>
+        <dc:date>2005-08-08</dc:date></item>
+
+  </channel>
+</rss>

@@ -5,7 +5,7 @@ use uuid::Uuid;
 use super::types::{AuthSession, AuthSessionRow};
 
 /// Session store for managing authentication sessions
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SessionStore {
     pool: SqlitePool,
 }
@@ -105,7 +105,7 @@ impl SessionStore {
             .execute(&self.pool)
             .await?;
 
-        #[allow(clippy::cast_possible_truncation)]
+        #[expect(clippy::cast_possible_truncation, reason = "rows affected count is bounded by session count")]
         Ok(result.rows_affected() as usize)
     }
 }

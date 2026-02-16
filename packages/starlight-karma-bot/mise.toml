@@ -1,0 +1,35 @@
+[tools]
+bun = "latest"
+node = "lts"
+
+[tasks.check]
+description = "Run all checks (typecheck, lint, format, test)"
+run = [
+    "bun run typecheck",
+    "bun run lint",
+    "bun run format",
+]
+
+[tasks.build]
+description = "Build the project"
+run = "bun run typecheck"
+
+[tasks.lint]
+description = "Run ESLint"
+run = "bunx eslint --cache ."
+
+[tasks.typecheck]
+description = "Run TypeScript type checking"
+run = "bunx tsc --noEmit"
+
+[tasks.format]
+description = "Check formatting with Prettier"
+run = "bunx prettier --check ."
+
+[tasks.ci]
+description = "Run CI checks locally"
+run = [
+    "bun run typecheck",
+    "bun run lint",
+    "bun run format",
+]

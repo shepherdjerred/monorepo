@@ -1,0 +1,350 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Chogath": {
+      "id": "Chogath",
+      "key": "31",
+      "name": "Cho'Gath",
+      "title": "the Terror of the Void",
+      "image": {
+        "full": "Chogath.png",
+        "sprite": "champion0.png",
+        "group": "champion",
+        "x": 144,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "31000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "31001",
+          "num": 1,
+          "name": "Nightmare Cho'Gath",
+          "chromas": false
+        },
+        {
+          "id": "31002",
+          "num": 2,
+          "name": "Gentleman Cho'Gath",
+          "chromas": false
+        },
+        {
+          "id": "31003",
+          "num": 3,
+          "name": "Loch Ness Cho'Gath",
+          "chromas": false
+        },
+        {
+          "id": "31004",
+          "num": 4,
+          "name": "Jurassic Cho'Gath",
+          "chromas": false
+        },
+        {
+          "id": "31005",
+          "num": 5,
+          "name": "Battlecast Prime Cho'Gath",
+          "chromas": true
+        },
+        {
+          "id": "31006",
+          "num": 6,
+          "name": "Prehistoric Cho'Gath",
+          "chromas": false
+        },
+        {
+          "id": "31007",
+          "num": 7,
+          "name": "Dark Star Cho'Gath",
+          "chromas": false
+        },
+        {
+          "id": "31014",
+          "num": 14,
+          "name": "Shan Hai Scrolls Cho'Gath",
+          "chromas": true
+        },
+        {
+          "id": "31023",
+          "num": 23,
+          "name": "Broken Covenant Cho'Gath",
+          "chromas": true
+        },
+        {
+          "id": "31032",
+          "num": 32,
+          "name": "Toy Terror Cho'Gath",
+          "chromas": true
+        },
+        {
+          "id": "31041",
+          "num": 41,
+          "name": "Petricite Cho'Gath",
+          "chromas": false
+        }
+      ],
+      "lore": "From the moment Cho'Gath first emerged into the harsh light of Runeterra's sun, the beast was driven by the most pure and insatiable hunger. A perfect expression of the Void's desire to consume all life, Cho'Gath's complex biology quickly converts matter into new bodily growth—increasing its muscle mass and density, or hardening its outer carapace like organic diamond. When growing larger does not suit the Void-spawn's needs, it vomits out the excess material as razor-sharp spines, leaving prey skewered and ready to feast upon later.",
+      "blurb": "From the moment Cho'Gath first emerged into the harsh light of Runeterra's sun, the beast was driven by the most pure and insatiable hunger. A perfect expression of the Void's desire to consume all life, Cho'Gath's complex biology quickly converts...",
+      "allytips": [
+        "Try to line up your attacks with Vorpal Spikes so that they kill minions and harass enemy champions at the same time.",
+        "If you're having difficulty feasting upon champions, try eating minions until you're larger.",
+        "Using Rupture on creeps in combination with Carnivore is a good way to gain Health and Mana."
+      ],
+      "enemytips": [
+        "Purchasing a few HP items decreases the chances of Cho'Gath killing you quickly.",
+        "Focus on preventing Cho'Gath from reaching his max size.",
+        "Rupture has a smoke cloud indicating the area it will strike. Try to watch out for it to prevent Cho'Gath from being able to combo his abilities."
+      ],
+      "tags": ["Tank", "Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 3,
+        "defense": 7,
+        "magic": 7,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 644,
+        "hpperlevel": 94,
+        "mp": 270,
+        "mpperlevel": 60,
+        "movespeed": 345,
+        "armor": 38,
+        "armorperlevel": 4.5,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 9,
+        "hpregenperlevel": 0.85,
+        "mpregen": 7.2,
+        "mpregenperlevel": 0.45,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 69,
+        "attackdamageperlevel": 4.2,
+        "attackspeedperlevel": 1.44,
+        "attackspeed": 0.658
+      },
+      "spells": [
+        {
+          "id": "Rupture",
+          "name": "Rupture",
+          "description": "Ruptures the ground at target location, popping enemy units into the air, dealing damage and slowing them.",
+          "tooltip": "Cho'Gath ruptures the ground, <status>Knocking Up</status> enemies for {{ e5 }} second, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>, and <status>Slowing</status> them by {{ e2 }}% for {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [6, 6, 6, 6, 6],
+          "cooldownBurn": "6",
+          "cost": [50, 50, 50, 50, 50],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [60, 60, 60, 60, 60],
+            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [0.625, 0.625, 0.625, 0.625, 0.625],
+            [1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "60", "1.5", "0.63", "1", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [950, 950, 950, 950, 950],
+          "rangeBurn": "950",
+          "image": {
+            "full": "Rupture.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 0,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "FeralScream",
+          "name": "Feral Scream",
+          "description": "Cho'Gath unleashes a terrible scream at enemies in a cone, dealing magic damage and Silencing enemies for a few seconds.",
+          "tooltip": "Cho'Gath roars, <status>Silencing</status> enemies for {{ e2 }} seconds and dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown", "Silence Duration", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ e2 }} -> {{ e2NL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [11, 10.5, 10, 9.5, 9],
+          "cooldownBurn": "11/10.5/10/9.5/9",
+          "cost": [70, 75, 80, 85, 90],
+          "costBurn": "70/75/80/85/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [80, 130, 180, 230, 280],
+            [1.6, 1.7, 1.8, 1.9, 2],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "80/130/180/230/280", "1.6/1.7/1.8/1.9/2", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [300, 300, 300, 300, 300],
+          "rangeBurn": "300",
+          "image": {
+            "full": "FeralScream.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 48,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "VorpalSpikes",
+          "name": "Vorpal Spikes",
+          "description": "Cho'Gath's attacks release deadly spikes, dealing damage and slowing all enemy units in front of him.",
+          "tooltip": "Cho'Gath's next 3 Attacks launch spikes that deal <magicDamage>{{ flatdamagecalc }} plus {{ maxhealthpercentcalc }} of the target's max Health magic damage</magicDamage> and <status>Slow</status> by {{ slowamountpercentage }}%, decaying over {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Maximum Health Damage", "Monster Damage", "Slow", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ percenthealthdamage }}% -> {{ percenthealthdamageNL }}%",
+              "{{ modifiedmonstercap }} -> {{ modifiedmonstercapNL }}",
+              "{{ slowamountpercentage }}% -> {{ slowamountpercentageNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [8, 7, 6, 5, 4],
+          "cooldownBurn": "8/7/6/5/4",
+          "cost": [30, 30, 30, 30, 30],
+          "costBurn": "30",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [40, 40, 40, 40, 40],
+          "rangeBurn": "40",
+          "image": {
+            "full": "VorpalSpikes.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 96,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Feast",
+          "name": "Feast",
+          "description": "Devours an enemy unit, dealing a high amount of true damage. If the target is killed, Cho'Gath grows, gaining maximum Health.",
+          "tooltip": "Cho'Gath ravenously feeds on an enemy, dealing <trueDamage>{{ rdamage }} true damage</trueDamage> to champions or <trueDamage>{{ rmonsterdamage }}</trueDamage> to minions or jungle monsters. If this kills the target, Cho'Gath gains a stack, which causes him to grow in size and gain <healing>{{ rhealthperstack }} max Health</healing>. Only {{ rminionmaxstacks }} stacks can be gained from minions and non-epic jungle monsters. {{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Champion Damage", "Health per Stack", "Attack Range per Stack", "Cooldown"],
+            "effect": [
+              "{{ rbasedamage }} -> {{ rbasedamageNL }}",
+              "{{ rhealthperstack }} -> {{ rhealthperstackNL }}",
+              "{{ attackrangeperstack }} -> {{ attackrangeperstackNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [80, 70, 60],
+          "cooldownBurn": "80/70/60",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [175, 175, 175],
+          "rangeBurn": "175",
+          "image": {
+            "full": "Feast.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 144,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Carnivore",
+        "description": "Whenever Cho'Gath kills a unit, he recovers Health and Mana. The values restored increase with Cho'Gath's level.",
+        "image": {
+          "full": "GreenTerror_TailSpike.png",
+          "sprite": "passive0.png",
+          "group": "passive",
+          "x": 144,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

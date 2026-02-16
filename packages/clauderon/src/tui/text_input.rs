@@ -566,7 +566,7 @@ mod tests {
     fn test_multibyte_chars() {
         // Test various UTF-8 characters
         let text = "héllo";
-        let mut text_mut = text.to_string();
+        let mut text_mut = text.to_owned();
 
         // Insert at position after 'h' (1 byte)
         let cursor = insert_char_at_cursor(&mut text_mut, 1, 'i');

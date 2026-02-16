@@ -9,7 +9,7 @@ use ratatui::{
 use crate::tui::app::DirectoryPickerState;
 
 /// Render the directory picker modal
-pub fn render(frame: &mut Frame, state: &DirectoryPickerState, area: Rect) {
+pub fn render(frame: &mut Frame<'_>, state: &DirectoryPickerState, area: Rect) {
     if !state.is_active {
         return;
     }
@@ -46,7 +46,7 @@ pub fn render(frame: &mut Frame, state: &DirectoryPickerState, area: Rect) {
     render_help(frame, inner[3]);
 }
 
-fn render_current_path(frame: &mut Frame, state: &DirectoryPickerState, area: Rect) {
+fn render_current_path(frame: &mut Frame<'_>, state: &DirectoryPickerState, area: Rect) {
     let path_str = state.current_dir.to_string_lossy();
     let text = Line::from(vec![
         Span::styled("Path: ", Style::default().add_modifier(Modifier::BOLD)),
@@ -57,7 +57,7 @@ fn render_current_path(frame: &mut Frame, state: &DirectoryPickerState, area: Re
     frame.render_widget(paragraph, area);
 }
 
-fn render_search_query(frame: &mut Frame, state: &DirectoryPickerState, area: Rect) {
+fn render_search_query(frame: &mut Frame<'_>, state: &DirectoryPickerState, area: Rect) {
     let text = if state.search_query.is_empty() {
         Line::from(vec![
             Span::styled("Search: ", Style::default().add_modifier(Modifier::BOLD)),
@@ -75,7 +75,7 @@ fn render_search_query(frame: &mut Frame, state: &DirectoryPickerState, area: Re
     frame.render_widget(paragraph, area);
 }
 
-fn render_directory_list(frame: &mut Frame, state: &DirectoryPickerState, area: Rect) {
+fn render_directory_list(frame: &mut Frame<'_>, state: &DirectoryPickerState, area: Rect) {
     // Show error if present
     if let Some(error) = &state.error {
         let error_text = Line::from(Span::styled(error, Style::default().fg(Color::Red)));
@@ -116,7 +116,7 @@ fn render_directory_list(frame: &mut Frame, state: &DirectoryPickerState, area: 
         None
     };
 
-    let items: Vec<ListItem> = state
+    let items: Vec<ListItem<'_>> = state
         .filtered_entries
         .iter()
         .enumerate()
@@ -174,7 +174,7 @@ fn render_directory_list(frame: &mut Frame, state: &DirectoryPickerState, area: 
     frame.render_stateful_widget(list, area, &mut list_state);
 }
 
-fn render_help(frame: &mut Frame, area: Rect) {
+fn render_help(frame: &mut Frame<'_>, area: Rect) {
     let help_text = Line::from(vec![
         Span::styled("↑↓", Style::default().fg(Color::Cyan)),
         Span::raw(": navigate  "),

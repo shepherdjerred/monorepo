@@ -1,0 +1,347 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Olaf": {
+      "id": "Olaf",
+      "key": "2",
+      "name": "Olaf",
+      "title": "the Berserker",
+      "image": {
+        "full": "Olaf.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 288,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "2000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "2001",
+          "num": 1,
+          "name": "Forsaken Olaf",
+          "chromas": false
+        },
+        {
+          "id": "2002",
+          "num": 2,
+          "name": "Glacial Olaf",
+          "chromas": false
+        },
+        {
+          "id": "2003",
+          "num": 3,
+          "name": "Brolaf",
+          "chromas": true
+        },
+        {
+          "id": "2004",
+          "num": 4,
+          "name": "Pentakill Olaf",
+          "chromas": false
+        },
+        {
+          "id": "2005",
+          "num": 5,
+          "name": "Marauder Olaf",
+          "chromas": false
+        },
+        {
+          "id": "2006",
+          "num": 6,
+          "name": "Butcher Olaf",
+          "chromas": false
+        },
+        {
+          "id": "2015",
+          "num": 15,
+          "name": "SKT T1 Olaf",
+          "chromas": false
+        },
+        {
+          "id": "2016",
+          "num": 16,
+          "name": "Dragonslayer Olaf",
+          "chromas": true
+        },
+        {
+          "id": "2025",
+          "num": 25,
+          "name": "Sentinel Olaf",
+          "chromas": true
+        },
+        {
+          "id": "2035",
+          "num": 35,
+          "name": "Pentakill III: Lost Chapter Olaf",
+          "chromas": true
+        },
+        {
+          "id": "2044",
+          "num": 44,
+          "name": "Infernal Olaf",
+          "chromas": true
+        }
+      ],
+      "lore": "An unstoppable force of destruction, the axe-wielding Olaf wants nothing but to die in glorious combat. Hailing from the brutal Freljordian peninsula of Lokfar, he once received a prophecy foretelling his peaceful passing—a coward's fate, and a great insult among his people. Seeking death, and fueled by rage, he rampaged across the land, slaughtering scores of great warriors and legendary beasts in search of any opponent who could stop him. Now a brutal enforcer for the Winter's Claw, he seeks his end in the great wars to come.",
+      "blurb": "An unstoppable force of destruction, the axe-wielding Olaf wants nothing but to die in glorious combat. Hailing from the brutal Freljordian peninsula of Lokfar, he once received a prophecy foretelling his peaceful passing—a coward's fate, and a great...",
+      "allytips": [
+        "Olaf can combine Berserker Rage, Vicious Strikes, and Ragnarok at low life to become deceptively strong.",
+        "The bonus healing granted by Vicious Strikes amplifies your Life Steal from all sources as well as heals from allies."
+      ],
+      "enemytips": [
+        "Olaf becomes more dangerous the lower life he is. Save your disables to finish him off.",
+        "Preventing Olaf from reaching his axe will minimize the amount of harassment he can cause in the laning phase.",
+        "Olaf has reduced defenses from damage during Ragnarok, despite being immune to disables. If you can't escape from Olaf during Ragnarok, try focusing your damage on him with your teammates."
+      ],
+      "tags": ["Fighter", "Tank"],
+      "partype": "Mana",
+      "info": {
+        "attack": 9,
+        "defense": 5,
+        "magic": 3,
+        "difficulty": 3
+      },
+      "stats": {
+        "hp": 645,
+        "hpperlevel": 119,
+        "mp": 316,
+        "mpperlevel": 50,
+        "movespeed": 350,
+        "armor": 35,
+        "armorperlevel": 4.2,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 6.5,
+        "hpregenperlevel": 0.6,
+        "mpregen": 7.5,
+        "mpregenperlevel": 0.6,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 68,
+        "attackdamageperlevel": 4.7,
+        "attackspeedperlevel": 2.7,
+        "attackspeed": 0.694
+      },
+      "spells": [
+        {
+          "id": "OlafAxeThrowCast",
+          "name": "Undertow",
+          "description": "Olaf throws an axe into the ground at a target location, dealing damage to enemies it passes through and reducing their Armor and Move Speed. If Olaf picks up the axe, the ability's cooldown is reset.",
+          "tooltip": "Olaf throws an axe, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Slowing</status> by {{ slowamount*100 }}% for up to {{ e3 }} seconds (based on distance travelled). Champions hit lose <scaleArmor>{{ shredamount*100 }}% Armor</scaleArmor> for {{ debuffduration }} seconds.<br /><br />If Olaf picks up the axe, this Ability's Cooldown is reduced to {{ tooltipcdrefund }} seconds, or fully refunded if {{ tooltipcdrefund }} seconds has elapsed.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow", "Monster Damage", "Mana Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowamount*100.000000 }}% -> {{ slowamountnl*100.000000 }}%",
+              "{{ monsterdamage }} -> {{ monsterdamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [9, 9, 9, 9, 9],
+          "cooldownBurn": "9",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [80, 125, 170, 215, 260],
+            [30, 30, 30, 30, 30],
+            [2.5, 2.5, 2.5, 2.5, 2.5],
+            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [800, 800, 800, 800, 800],
+            [400, 400, 400, 400, 400],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "80/125/170/215/260", "30", "2.5", "1.5", "800", "400", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1000, 1000, 1000, 1000, 1000],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "OlafAxeThrowCast.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 96,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "OlafFrenziedStrikes",
+          "name": "Tough It Out",
+          "description": "Olaf's Attack Speed is increased and he gains a Shield.",
+          "tooltip": "Olaf gains <attackSpeed>{{ attackspeed*100 }}% Attack Speed</attackSpeed> for {{ duration }} seconds, and <shield>{{ baseshield }} plus {{ shieldpercmissinghp*100 }}% missing Health Shield (up to a maximum of {{ maxshieldcalc }} Shield below {{ thresholdformax*100 }}% Health)</shield> for {{ shieldduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Attack Speed", "Base Shield", "Cooldown"],
+            "effect": [
+              "{{ attackspeed*100.000000 }}% -> {{ attackspeednl*100.000000 }}%",
+              "{{ baseshield }} -> {{ baseshieldNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [16, 15, 14, 13, 12],
+          "cooldownBurn": "16/15/14/13/12",
+          "cost": [50, 50, 50, 50, 50],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [700, 700, 700, 700, 700],
+          "rangeBurn": "700",
+          "image": {
+            "full": "OlafFrenziedStrikes.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 144,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "OlafRecklessStrike",
+          "name": "Reckless Swing",
+          "description": "Olaf attacks with such force that it deals true damage to his target and himself, refunding the Health cost if he destroys the target.",
+          "tooltip": "Olaf ferociously swings his axes, dealing <trueDamage>{{ totaldamage }} true damage</trueDamage>. If the enemy dies, the cost is refunded.<br /><br />Attacks lower the Cooldown of this Ability by 1 second, increased to 2 seconds when attacking monsters.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [11, 10, 9, 8, 7],
+          "cooldownBurn": "11/10/9/8/7",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [70, 115, 160, 205, 250],
+            [30, 30, 30, 30, 30],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "70/115/160/205/250", "30", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "Health",
+          "maxammo": "-1",
+          "range": [325, 325, 325, 325, 325],
+          "rangeBurn": "325",
+          "image": {
+            "full": "OlafRecklessStrike.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 192,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "Health"
+        },
+        {
+          "id": "OlafRagnarok",
+          "name": "Ragnarok",
+          "description": "Olaf passively gains increased armor and magic resist. He can activate this ability to become immune to disables for as long as he keeps attacking.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Olaf gains <scaleArmor>{{ resists }} Armor</scaleArmor> and <scaleMR>{{ resists }} Magic Resist</scaleMR>.<br /><br /><spellActive>Active: </spellActive>Olaf cleanses all <status>Immobilizing</status> and <status>Disabling</status> effects on himself and becomes immune to them for {{ duration }} seconds. While active, Olaf gains <scaleAD>{{ ad }} Attack Damage</scaleAD>. Hitting a champion with an Attack or <spellName>Reckless Swing</spellName> extends the duration by {{ durationextension }} seconds.<br /><br />Additionally, Olaf gains <speed>{{ haste*100 }}% Move Speed</speed> towards enemy champions for {{ hasteduration }} second.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Armor and Magic Resist", "Attack Damage", "Move Speed", "Cooldown"],
+            "effect": [
+              "{{ resists }} -> {{ resistsNL }}",
+              "{{ flatad }} -> {{ flatadNL }}",
+              "{{ haste*100.000000 }} -> {{ hastenl*100.000000 }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [100, 90, 80],
+          "cooldownBurn": "100/90/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [400, 400, 400],
+          "rangeBurn": "400",
+          "image": {
+            "full": "OlafRagnarok.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 240,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Berserker Rage",
+        "description": "Olaf gains Attack Speed and Life Steal based on his missing Health.",
+        "image": {
+          "full": "Olaf_Passive.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 288,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

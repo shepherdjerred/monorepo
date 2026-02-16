@@ -4,10 +4,14 @@ use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD as BASE64_URL
 use chrono::Utc;
 use serde_json::json;
 
+/// Placeholder access token used by the Codex proxy.
 pub const DUMMY_ACCESS_TOKEN: &str = "clauderon-codex-proxy-access-token";
+/// Placeholder refresh token used by the Codex proxy.
 pub const DUMMY_REFRESH_TOKEN: &str = "clauderon-codex-proxy-refresh-token";
+/// Placeholder account ID used by the Codex proxy.
 pub const DUMMY_ACCOUNT_ID: &str = "clauderon-codex-proxy-account";
 
+/// Generate a dummy JWT ID token for Codex proxy authentication.
 #[must_use]
 pub fn dummy_id_token(account_id: Option<&str>) -> String {
     let header = json!({ "alg": "none", "typ": "JWT" });
@@ -26,6 +30,11 @@ pub fn dummy_id_token(account_id: Option<&str>) -> String {
     format!("{header_b64}.{payload_b64}.{signature_b64}")
 }
 
+/// Generate a dummy `auth.json` string for Codex containers.
+///
+/// # Errors
+///
+/// Returns an error if JSON serialization fails.
 pub fn dummy_auth_json_string(account_id: Option<&str>) -> anyhow::Result<String> {
     let auth_json = json!({
         "OPENAI_API_KEY": null,
@@ -41,6 +50,7 @@ pub fn dummy_auth_json_string(account_id: Option<&str>) -> anyhow::Result<String
     Ok(serde_json::to_string_pretty(&auth_json)?)
 }
 
+/// Generate a dummy Codex `config.toml` that uses file-based credentials.
 #[must_use]
 pub fn dummy_config_toml() -> &'static str {
     "cli_auth_credentials_store = \"file\"\n"

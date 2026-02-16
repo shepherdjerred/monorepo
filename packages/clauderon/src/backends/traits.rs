@@ -13,8 +13,8 @@ use super::container_config::{ImageConfig, ResourceLimits};
 /// This struct describes what operations a backend supports and whether
 /// data is preserved during recreation. This helps the UI determine what
 /// actions to offer and what warnings to show.
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[allow(clippy::struct_excessive_bools)] // Independent capability flags
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[expect(clippy::struct_excessive_bools, reason = "independent capability flags")]
 pub struct BackendCapabilities {
     /// Whether this backend supports proactive recreation when healthy
     pub can_recreate: bool,
@@ -73,7 +73,10 @@ pub enum BackendResourceHealth {
     Pending,
 
     /// Resource is in an error state
-    Error { message: String },
+    Error {
+        /// Error description.
+        message: String,
+    },
 
     /// Resource is crash-looping (Kubernetes only)
     CrashLoop,
@@ -139,7 +142,7 @@ pub trait GitOperations: Send + Sync {
 
 /// Options for creating an execution backend session.
 #[derive(Debug, Clone, Default)]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools, reason = "independent configuration flags for session creation")]
 pub struct CreateOptions {
     /// Agent to run (Claude Code, Codex, or Gemini).
     pub agent: AgentType,
@@ -317,6 +320,6 @@ pub trait ExecutionBackend: Send + Sync {
     }
 }
 
-// Keep the old name as an alias for backward compatibility during refactoring
+/// Deprecated alias for [`ExecutionBackend`].
 #[deprecated(note = "Use ExecutionBackend instead")]
 pub type Backend = dyn ExecutionBackend;

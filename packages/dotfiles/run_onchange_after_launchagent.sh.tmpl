@@ -1,0 +1,9 @@
+#!/bin/bash
+{{ if eq .chezmoi.os "darwin" -}}
+# {{ include "Library/LaunchAgents/com.jerred.dark-notify.plist" | sha256sum }}
+PLIST="$HOME/Library/LaunchAgents/com.jerred.dark-notify.plist"
+if [ -f "$PLIST" ] && command -v dark-notify &>/dev/null; then
+    launchctl bootout gui/$(id -u) "$PLIST" 2>/dev/null || true
+    launchctl bootstrap gui/$(id -u) "$PLIST"
+fi
+{{ end -}}

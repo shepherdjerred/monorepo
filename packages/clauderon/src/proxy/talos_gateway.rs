@@ -18,7 +18,7 @@ use super::ca::ProxyCa;
 /// 3. Gateway establishes new mTLS connection to real Talos with host's cert (O=os:admin)
 /// 4. Talos validates cert, extracts Organization field, grants access
 /// 5. Container never needs Talos private key (zero-credential access)
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TalosGateway {
     /// Listen address.
     addr: SocketAddr,
@@ -30,7 +30,7 @@ pub struct TalosGateway {
 
 /// Parsed Talos configuration.
 #[derive(Debug, Clone, Deserialize)]
-pub struct TalosConfig {
+pub(super) struct TalosConfig {
     /// Current context name.
     pub context: String,
     /// Available contexts.
@@ -290,7 +290,7 @@ fn parse_ed25519_key(pem_bytes: &[u8]) -> anyhow::Result<PrivateKeyDer<'static>>
 
 /// Simple base64 decoder (without PEM detection).
 fn decode_base64_raw(s: &str) -> anyhow::Result<Vec<u8>> {
-    #[allow(clippy::cast_possible_truncation)]
+    #[expect(clippy::cast_possible_truncation, reason = "index i is always < 64, safe to cast to i8")]
     const DECODE_TABLE: [i8; 256] = {
         let mut table = [-1i8; 256];
         let alphabet = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -386,7 +386,7 @@ async fn handle_talos_connection(
         let port: u16 = endpoint[colon_idx + 1..]
             .parse()
             .map_err(|e| anyhow::anyhow!("invalid port in endpoint '{}': {}", endpoint, e))?;
-        (host.to_string(), port)
+        (host.to_owned(), port)
     } else {
         (endpoint.clone(), 50000)
     };

@@ -1,0 +1,358 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Zyra": {
+      "id": "Zyra",
+      "key": "143",
+      "name": "Zyra",
+      "title": "Rise of the Thorns",
+      "image": {
+        "full": "Zyra.png",
+        "sprite": "champion5.png",
+        "group": "champion",
+        "x": 48,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "143000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "143001",
+          "num": 1,
+          "name": "Wildfire Zyra",
+          "chromas": false
+        },
+        {
+          "id": "143002",
+          "num": 2,
+          "name": "Haunted Zyra",
+          "chromas": false
+        },
+        {
+          "id": "143003",
+          "num": 3,
+          "name": "SKT T1 Zyra",
+          "chromas": false
+        },
+        {
+          "id": "143004",
+          "num": 4,
+          "name": "Dragon Sorceress Zyra",
+          "chromas": false
+        },
+        {
+          "id": "143005",
+          "num": 5,
+          "name": "Coven Zyra",
+          "chromas": true
+        },
+        {
+          "id": "143006",
+          "num": 6,
+          "name": "Prestige Coven Zyra",
+          "chromas": false
+        },
+        {
+          "id": "143007",
+          "num": 7,
+          "name": "Crystal Rose Zyra",
+          "chromas": true
+        },
+        {
+          "id": "143016",
+          "num": 16,
+          "name": "Crime City Nightmare Zyra",
+          "chromas": true
+        },
+        {
+          "id": "143036",
+          "num": 36,
+          "name": "Mythmaker Zyra",
+          "chromas": true
+        },
+        {
+          "id": "143046",
+          "num": 46,
+          "name": "Street Demons Zyra",
+          "chromas": true
+        },
+        {
+          "id": "143055",
+          "num": 55,
+          "name": "Blood Moon Zyra",
+          "chromas": true
+        },
+        {
+          "id": "143064",
+          "num": 64,
+          "name": "Spirit Blossom Zyra",
+          "chromas": true
+        }
+      ],
+      "lore": "Born in an ancient, sorcerous catastrophe, Zyra is the wrath of nature given form—an alluring hybrid of plant and human, kindling new life with every step. She views the many mortals of Valoran as little more than prey for her seeded progeny, and thinks nothing of slaying them with flurries of deadly spines. Though her true purpose has not been revealed, Zyra wanders the world, indulging her most primal urges to colonize, and strangle all other life from it.",
+      "blurb": "Born in an ancient, sorcerous catastrophe, Zyra is the wrath of nature given form—an alluring hybrid of plant and human, kindling new life with every step. She views the many mortals of Valoran as little more than prey for her seeded progeny, and thinks...",
+      "allytips": [
+        "Placing a seed in your spell's path after you have cast it gives you the best chance of having a seed in the proper spot.",
+        "Seeds grant vision to your team.",
+        "Zyra is a great ambusher - look for opportunities to set a trap of seeds in brush, then lure enemies in."
+      ],
+      "enemytips": [
+        "Zyra's seeds can be destroyed by stepping on them. If she tries to grow them as you do, dodge back at the last moment. ",
+        "Moving closer to Zyra can be a smart move if she places plants too far away from herself.",
+        "Plants take fixed damage from attacks and effects, similar to wards. They also expire quickly on their own.",
+        "Moving the fight to a different area will deprive Zyra of accumulated seeds.",
+        "Seeds placed by Zyra's W are larger, a different color, and grant a small amount of vision to her team."
+      ],
+      "tags": ["Mage", "Support"],
+      "partype": "Mana",
+      "info": {
+        "attack": 4,
+        "defense": 3,
+        "magic": 8,
+        "difficulty": 7
+      },
+      "stats": {
+        "hp": 574,
+        "hpperlevel": 93,
+        "mp": 418,
+        "mpperlevel": 25,
+        "movespeed": 340,
+        "armor": 29,
+        "armorperlevel": 4.2,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 575,
+        "hpregen": 5.5,
+        "hpregenperlevel": 0.5,
+        "mpregen": 7,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 53,
+        "attackdamageperlevel": 3.2,
+        "attackspeedperlevel": 2.11,
+        "attackspeed": 0.681
+      },
+      "spells": [
+        {
+          "id": "ZyraQ",
+          "name": "Deadly Spines",
+          "description": "Thick vines spread through the ground and explode into spines, dealing magic damage to enemies within the area. If cast near a seed, Deadly Spines grows a Thorn Spitter plant, which fires at enemies from afar.",
+          "tooltip": "Zyra causes thick vines to spread and explode into spines, dealing <magicDamage>{{ initialdamage }} magic damage</magicDamage>.<br /><br />If this Ability is cast near a <keywordMajor>Seed</keywordMajor>, the <keywordMajor>Seed</keywordMajor> grows into a Thorn Spitter that deals <magicDamage>{{ spell.zyrap:plantdamage }} magic damage</magicDamage> and lasts {{ spell.zyrap:plantduration }} seconds. Thorn Spitters have 575 range.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Damage"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ e1 }} -> {{ e1NL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [7, 6.5, 6, 5.5, 5],
+          "cooldownBurn": "7/6.5/6/5.5/5",
+          "cost": [55, 55, 55, 55, 55],
+          "costBurn": "55",
+          "datavalues": {},
+          "effect": [
+            null,
+            [60, 100, 140, 180, 220],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "60/100/140/180/220", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [800, 800, 800, 800, 800],
+          "rangeBurn": "800",
+          "image": {
+            "full": "ZyraQ.png",
+            "sprite": "spell17.png",
+            "group": "spell",
+            "x": 96,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "ZyraW",
+          "name": "Rampant Growth",
+          "description": "Zyra plants a seed, lasting up to 60 seconds. Deadly Spines and Grasping Roots cast near seeds will turn them into plants who fight for Zyra. Zyra can store multiple seeds at once, and killing enemies reduces Rampant Growth's recharge time.",
+          "tooltip": "Zyra plants a <keywordMajor>Seed</keywordMajor> that lasts {{ e6 }} seconds. These <keywordMajor>Seeds</keywordMajor> grant <keywordStealth>True Sight</keywordStealth> of enemy champions that step on them for {{ e3 }} seconds, but are still destroyed.<br /><br />This Ability has 2 charges with a {{ ammorechargetime }} second recharge time. Killing an enemy minion or monster reduces the recharge time by {{ e1 }}%. Champion takedowns reduce the recharge time by {{ e2 }}% instead.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Seed Recharge Rate"],
+            "effect": ["{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [0, 0, 0, 0, 0],
+          "cooldownBurn": "0",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [35, 35, 35, 35, 35],
+            [100, 100, 100, 100, 100],
+            [2, 2, 2, 2, 2],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [60, 60, 60, 60, 60],
+            [0, 0, 0, 0, 0],
+            [10, 20, 30, 40, 50],
+            [0.4, 0.8, 1.2, 1.6, 2],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "35", "100", "2", "0", "0", "60", "0", "10/20/30/40/50", "0.4/0.8/1.2/1.6/2", "0"],
+          "vars": [],
+          "costType": "1 Seed",
+          "maxammo": "2",
+          "range": [850, 850, 850, 850, 850],
+          "rangeBurn": "850",
+          "image": {
+            "full": "ZyraW.png",
+            "sprite": "spell17.png",
+            "group": "spell",
+            "x": 144,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "1 Seed"
+        },
+        {
+          "id": "ZyraE",
+          "name": "Grasping Roots",
+          "description": "Zyra sends forth vines through the ground to ensnare her target, dealing damage and rooting enemies they come across. If cast near a seed, Grasping Roots grows a Vine Lasher, whose short range attacks reduce enemy Move Speed.",
+          "tooltip": "Zyra sends vines forward, <status>Rooting</status> for {{ e5 }} second(s) and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. <br /><br />If this Ability passes near a <keywordMajor>Seed</keywordMajor>, the <keywordMajor>Seed</keywordMajor> grows into a Vine Lasher that deals <magicDamage>{{ spell.zyrap:plantdamage }} magic damage</magicDamage> and lasts {{ spell.zyrap:plantduration }} seconds. Vine Lashers have 400 range, and their Attacks <status>Slow</status> by {{ e2 }}% for {{ e3 }} seconds. The <status>Slow</status> from multiple Vine Lashers stacks up to {{ maxslowstacks }} times.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["@AbilityResourceName@ Cost", "Damage", "Root Duration"],
+            "effect": [
+              "{{ cost }} -> {{ costNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ rootduration }} -> {{ rootdurationNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [11, 11, 11, 11, 11],
+          "cooldownBurn": "11",
+          "cost": [70, 75, 80, 85, 90],
+          "costBurn": "70/75/80/85/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [60, 95, 130, 165, 200],
+            [30, 30, 30, 30, 30],
+            [2, 2, 2, 2, 2],
+            [4, 4, 4, 0, 0],
+            [1, 1.25, 1.5, 1.75, 2],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "60/95/130/165/200",
+            "30",
+            "2",
+            "4/4/4/0/0",
+            "1/1.25/1.5/1.75/2",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1100, 1100, 1100, 1100, 1100],
+          "rangeBurn": "1100",
+          "image": {
+            "full": "ZyraE.png",
+            "sprite": "spell17.png",
+            "group": "spell",
+            "x": 192,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "ZyraR",
+          "name": "Stranglethorns",
+          "description": "Zyra summons a twisted thicket at her target location, dealing damage to enemies as it expands and knocking them airborne as it contracts. Plants within the thicket are enraged.",
+          "tooltip": "Zyra summons the fury of nature, growing a twisted thicket that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>. After 2 seconds, the vines snap upwards, <status>Knocking Up</status> for {{ e1 }} second.<br /><br />Zyra's plants within the thicket become enraged, resetting their duration, gaining <healing>{{ e2 }}% Health</healing> and Attacking for {{ plantdamagebonus }}% bonus damage.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Damage"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ e3 }} -> {{ e3NL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [110, 100, 90],
+          "cooldownBurn": "110/100/90",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [1, 1, 1],
+            [50, 50, 50],
+            [200, 300, 400],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [150, 150, 150],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "1", "50", "200/300/400", "0", "0", "0", "150", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [700, 700, 700],
+          "rangeBurn": "700",
+          "image": {
+            "full": "ZyraR.png",
+            "sprite": "spell17.png",
+            "group": "spell",
+            "x": 240,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Garden of Thorns",
+        "description": "Seeds spawn around Zyra periodically, becoming faster with level. Zyra can cast Deadly Spines or Grasping Roots near seeds to grow plants, who fight for Zyra.",
+        "image": {
+          "full": "ZyraP.png",
+          "sprite": "passive5.png",
+          "group": "passive",
+          "x": 48,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

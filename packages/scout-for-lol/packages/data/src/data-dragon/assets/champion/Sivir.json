@@ -1,0 +1,390 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Sivir": {
+      "id": "Sivir",
+      "key": "15",
+      "name": "Sivir",
+      "title": "the Battle Mistress",
+      "image": {
+        "full": "Sivir.png",
+        "sprite": "champion4.png",
+        "group": "champion",
+        "x": 192,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "15000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "15001",
+          "num": 1,
+          "name": "Warrior Princess Sivir",
+          "chromas": false
+        },
+        {
+          "id": "15002",
+          "num": 2,
+          "name": "Spectacular Sivir",
+          "chromas": false
+        },
+        {
+          "id": "15003",
+          "num": 3,
+          "name": "Huntress Sivir",
+          "chromas": false
+        },
+        {
+          "id": "15004",
+          "num": 4,
+          "name": "Bandit Sivir",
+          "chromas": false
+        },
+        {
+          "id": "15005",
+          "num": 5,
+          "name": "PAX Sivir",
+          "chromas": false
+        },
+        {
+          "id": "15006",
+          "num": 6,
+          "name": "Snowstorm Sivir",
+          "chromas": true
+        },
+        {
+          "id": "15007",
+          "num": 7,
+          "name": "Warden Sivir",
+          "chromas": false
+        },
+        {
+          "id": "15008",
+          "num": 8,
+          "name": "Victorious Sivir",
+          "chromas": false
+        },
+        {
+          "id": "15009",
+          "num": 9,
+          "name": "Neo PAX Sivir",
+          "chromas": false
+        },
+        {
+          "id": "15010",
+          "num": 10,
+          "name": "Pizza Delivery Sivir",
+          "chromas": true
+        },
+        {
+          "id": "15016",
+          "num": 16,
+          "name": "Blood Moon Sivir",
+          "chromas": true
+        },
+        {
+          "id": "15025",
+          "num": 25,
+          "name": "Odyssey Sivir",
+          "chromas": true
+        },
+        {
+          "id": "15034",
+          "num": 34,
+          "name": "Cafe Cuties Sivir",
+          "chromas": true
+        },
+        {
+          "id": "15043",
+          "num": 43,
+          "name": "Solar Eclipse Sivir",
+          "chromas": true
+        },
+        {
+          "id": "15050",
+          "num": 50,
+          "name": "Mythmaker Sivir",
+          "chromas": true
+        },
+        {
+          "id": "15051",
+          "num": 51,
+          "name": "Prestige Mythmaker Sivir",
+          "chromas": false
+        },
+        {
+          "id": "15061",
+          "num": 61,
+          "name": "Primal Ambush Sivir",
+          "chromas": true
+        },
+        {
+          "id": "15070",
+          "num": 70,
+          "name": "Ann-Sivir-sary",
+          "chromas": false
+        }
+      ],
+      "lore": "Sivir is a renowned fortune hunter and mercenary captain who plies her trade in the deserts of Shurima. Armed with her legendary jeweled crossblade, she has fought and won countless battles for those who can afford her exorbitant price. Known for her fearless resolve and endless ambition, she prides herself on recovering buried treasures from the perilous tombs of Shurima—for a generous bounty. With ancient forces stirring the very bones of Shurima, Sivir finds herself torn between conflicting destinies.",
+      "blurb": "Sivir is a renowned fortune hunter and mercenary captain who plies her trade in the deserts of Shurima. Armed with her legendary jeweled crossblade, she has fought and won countless battles for those who can afford her exorbitant price. Known for her...",
+      "allytips": [
+        "Sivir's Boomerang Blade returns to her after reaching the max range, so you can shift position to hit enemies who would otherwise have evaded it.",
+        "Ricochet resets Sivir's basic attack timer on activation, so activating this immediately after landing a normal basic attack will maximize damage output.",
+        "Try saving Spell Shield for enemy abilities that can disable you such as stuns and roots."
+      ],
+      "enemytips": [
+        "Boomerang Blade costs a lot of mana to cast, so dodging it sets Sivir back. If it hits you on the way out, avoid its path on the way back.",
+        "Sivir is a powerful pushing champion, so leaving her unattended in a lane for too long will often result in your turrets being destroyed.",
+        "When laning against Sivir, it is possible to throw off the timing of her Spell Shield by faking an advance, then backing off."
+      ],
+      "tags": ["Marksman"],
+      "partype": "Mana",
+      "info": {
+        "attack": 9,
+        "defense": 3,
+        "magic": 1,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 600,
+        "hpperlevel": 104,
+        "mp": 340,
+        "mpperlevel": 45,
+        "movespeed": 335,
+        "armor": 30,
+        "armorperlevel": 4,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 500,
+        "hpregen": 3.25,
+        "hpregenperlevel": 0.55,
+        "mpregen": 6,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 60,
+        "attackdamageperlevel": 2.5,
+        "attackspeedperlevel": 1.6,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "SivirQ",
+          "name": "Boomerang Blade",
+          "description": "Sivir hurls her crossblade like a boomerang, dealing damage each way.",
+          "tooltip": "Sivir hurls her crossblade like a boomerang, dealing <physicalDamage>{{ totaldamage }}</physicalDamage> to all enemies it cuts through. Hitting non-champions reduces the damage to subsequent targets, down to a minimum of {{ falloffminimum*100 }}%.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown", "Mana Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldownBurn": "10/9.5/9/8.5/8",
+          "cost": [55, 60, 65, 70, 75],
+          "costBurn": "55/60/65/70/75",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1200, 1200, 1200, 1200, 1200],
+          "rangeBurn": "1200",
+          "image": {
+            "full": "SivirQ.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 192,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SivirW",
+          "name": "Ricochet",
+          "description": "Sivir's next few basic attacks gain additional attack speed and bounce to nearby targets, dealing reduced damage while bouncing.",
+          "tooltip": "For the next {{ buffduration }} seconds, Sivir gains <attackSpeed>{{ ricochetattackspeed*100 }}% Attack Speed</attackSpeed> and her auto attacks are empowered to bounce to additional surrounding enemies dealing <physicalDamage>{{ bouncedamage }} physical damage</physicalDamage> each bounce for up to {{ maxbounces }} bounces.<br /><br />These bounces critically strike if the attack generating them does.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Attack Speed", "Total AD Ratio"],
+            "effect": [
+              "{{ ricochetattackspeed*100.000000 }}% -> {{ ricochetattackspeednl*100.000000 }}%",
+              "{{ bounceadratio*100.000000 }}% -> {{ bounceadrationl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 12, 12, 12, 12],
+          "cooldownBurn": "12",
+          "cost": [60, 60, 60, 60, 60],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [20, 20, 20, 20, 20],
+          "rangeBurn": "20",
+          "image": {
+            "full": "SivirW.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 240,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SivirE",
+          "name": "Spell Shield",
+          "description": "Creates a magical barrier that blocks a single enemy ability cast on Sivir. She receives health and a burst of movement speed if a spell is blocked.",
+          "tooltip": "Sivir creates a magical barrier for {{ e1 }} seconds that blocks the next incoming enemy Ability. If an ability is blocked, Sivir restores <healing>{{ totalheal }} health</healing> and triggers Fleet of Foot.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Total AD Ratio", "Cooldown"],
+            "effect": [
+              "{{ healratio*100.000000 }}% -> {{ healrationl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [24, 22.5, 21, 19.5, 18],
+          "cooldownBurn": "24/22.5/21/19.5/18",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [55, 55, 55, 55, 55],
+            [60, 60, 60, 60, 60],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "1.5", "55", "60", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [20, 20, 20, 20, 20],
+          "rangeBurn": "20",
+          "image": {
+            "full": "SivirE.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 288,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SivirR",
+          "name": "On The Hunt",
+          "description": "Sivir leads her allies in battle, granting them a surge of Move Speed for a period of time. In addition, Sivir's attacks reduce her spell cooldowns.",
+          "tooltip": "Sivir rallies her nearby allies, granting them <speed>{{ maxms*100 }}% Move Speed</speed> for {{ ultduration }} seconds.<br /><br />Sivir's attacks against champions while On The Hunt reduce the cooldown of her basic abilities by 0.5 seconds.<br /><br />Takedowns on recently damaged enemies refreshes the duration of the hunt.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Max Move Speed", "Duration"],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ maxms*100.000000 }}% -> {{ maxmsnl*100.000000 }}%",
+              "{{ ultduration }} -> {{ ultdurationNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 100, 80],
+          "cooldownBurn": "120/100/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1000, 1000, 1000],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "SivirR.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 336,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Fleet of Foot",
+        "description": "Sivir gains a short burst of Move Speed when she attacks an enemy champion.",
+        "image": {
+          "full": "Sivir_Passive.png",
+          "sprite": "passive4.png",
+          "group": "passive",
+          "x": 192,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

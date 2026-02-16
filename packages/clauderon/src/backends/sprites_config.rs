@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use tracing::{debug, info, warn};
 
 /// Lifecycle configuration for sprites
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct SpritesLifecycle {
     /// Automatically destroy sprite on session deletion
     /// If false, sprite persists for reuse (incurs storage costs)
@@ -17,7 +17,7 @@ pub struct SpritesLifecycle {
 }
 
 /// Git repository configuration for sprites
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub struct SpritesGit {
     /// Use shallow clone (--depth 1) for faster cloning
     /// Shallow clones are faster but may break git describe, rebasing, etc.
@@ -43,7 +43,7 @@ impl Default for SpritesGit {
 /// SPRITES_TOKEN environment variable. Resource allocation (CPU, memory)
 /// and image selection are not configurable - sprites use a fixed environment
 /// of Ubuntu 24.04 with 8 vCPUs, 8GB RAM, and 100GB storage.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct SpritesConfig {
     /// Lifecycle management
     #[serde(default)]

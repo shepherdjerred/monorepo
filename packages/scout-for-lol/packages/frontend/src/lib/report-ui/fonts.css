@@ -1,0 +1,31 @@
+/* League of Legends Fonts */
+
+/* Beaufort For LoL */
+@font-face {
+  font-family: "Beaufort For LoL";
+  src: url("/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Regular.ttf") format("truetype");
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: "Beaufort For LoL";
+  src: url("/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Bold.ttf") format("truetype");
+  font-weight: bold;
+}
+
+/* Spiegel */
+@font-face {
+  font-family: "Spiegel";
+  src: url("/fonts/Spiegel-TTF/Spiegel_TT_Regular.ttf") format("truetype");
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: "Spiegel";
+  src: url("/fonts/Spiegel-TTF/Spiegel_TT_Bold.ttf") format("truetype");
+  font-weight: bold;
+}
+
+* {
+  font-family: "Beaufort For LoL", sans-serif;
+}

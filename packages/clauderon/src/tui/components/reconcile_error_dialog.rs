@@ -11,7 +11,7 @@ use crate::core::manager::MAX_RECONCILE_ATTEMPTS;
 use crate::tui::app::App;
 
 /// Render the reconcile error dialog
-pub fn render(frame: &mut Frame, app: &App, area: Rect) {
+pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
     let Some(session) = app.reconcile_error_session() else {
         return;
     };
@@ -59,7 +59,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
 
     // Attempts info with time since last attempt
     let time_ago = session.last_reconcile_at.map_or_else(
-        || "unknown".to_string(),
+        || "unknown".to_owned(),
         |t| {
             let duration = Utc::now().signed_duration_since(t);
             if duration.num_minutes() < 1 {

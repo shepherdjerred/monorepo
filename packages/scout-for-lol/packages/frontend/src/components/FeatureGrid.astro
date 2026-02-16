@@ -1,0 +1,14 @@
+---
+interface Props {
+  columns?: 2 | 3;
+}
+
+const { columns = 2 } = Astro.props;
+const gridCols = columns === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-2';
+---
+
+<div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-4xl">
+  <dl class={`grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none ${gridCols} lg:gap-y-16`}>
+    <slot />
+  </dl>
+</div>

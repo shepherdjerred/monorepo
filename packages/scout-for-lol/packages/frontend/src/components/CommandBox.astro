@@ -1,0 +1,20 @@
+---
+interface Props {
+  command: string;
+  description?: string;
+  variant?: 'light' | 'dark';
+}
+
+const { command, description, variant = 'light' } = Astro.props;
+const bgClass = variant === 'dark' ? 'bg-white dark:bg-gray-800' : 'bg-gray-100 dark:bg-gray-800';
+const textClass = variant === 'dark' ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300';
+---
+
+<div class={`rounded-md p-4 ${bgClass} ${description ? 'mb-4' : ''}`}>
+  <code class={`text-sm ${textClass}`}>
+    {command}
+  </code>
+</div>
+{description && (
+  <p class="text-xs text-gray-600 dark:text-gray-300 mt-2">{description}</p>
+)}

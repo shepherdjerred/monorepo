@@ -1,0 +1,112 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 4 * * *" # Daily at 4 AM UTC
+
+jobs:
+  dagger-ci:
+    runs-on: [sjer.red-runner-set]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: 1password/load-secrets-action/configure@v3
+        with:
+          connect-host: http://onepassword-connect.1password.svc.cluster.local:8080
+          connect-token: ${{ secrets.OP_CONNECT_TOKEN }}
+
+      - uses: 1password/load-secrets-action@v3
+        with:
+          export-env: true
+        env:
+          DAGGER_CLOUD_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/DAGGER_CLOUD_TOKEN
+          S3_ACCESS_KEY_ID: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/S3_ACCESS_KEY_ID
+          S3_SECRET_ACCESS_KEY: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/S3_SECRET_ACCESS_KEY
+
+      - name: Extract kubectl version
+        id: kubectl-version
+        run: |
+          KUBECTL_VERSION=v1.34.1
+          echo "version=$KUBECTL_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Cache kubectl
+        uses: actions/cache@v5
+        id: kubectl-cache
+        with:
+          path: ~/.local/bin/kubectl
+          key: kubectl-${{ steps.kubectl-version.outputs.version }}-linux-amd64
+
+      - name: Install kubectl
+        if: steps.kubectl-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/.local/bin
+          curl -LO "https://dl.k8s.io/release/${{ steps.kubectl-version.outputs.version }}/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          mv kubectl ~/.local/bin/
+
+      - name: Add kubectl to PATH
+        run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Extract Dagger version
+        id: dagger-version
+        run: |
+          DAGGER_IMAGE=$(kubectl get pod --selector=name=dagger-dagger-helm-engine --namespace=dagger -o jsonpath='{.items[0].spec.containers[0].image}')
+          DAGGER_VERSION="${DAGGER_IMAGE##*:v}"
+          echo "version=$DAGGER_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Install Dagger CLI
+        run: |
+          curl -fsSL https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=${{ steps.dagger-version.outputs.version }} BIN_DIR=$HOME/.local/bin sh
+
+      - name: Get Dagger Engine Pod Name
+        run: |
+          DAGGER_ENGINE_POD_NAME="$(kubectl get pod --selector=name=dagger-dagger-helm-engine --namespace=dagger --output=jsonpath='{.items[0].metadata.name}')"
+          echo "_EXPERIMENTAL_DAGGER_RUNNER_HOST=kube-pod://$DAGGER_ENGINE_POD_NAME?namespace=dagger" >> "$GITHUB_ENV"
+
+      - name: Determine branch and PR info
+        id: context
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_REF: ${{ github.head_ref }}
+          REF_NAME: ${{ github.ref_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            echo "branch=$HEAD_REF" >> "$GITHUB_OUTPUT"
+            echo "is_pr=true" >> "$GITHUB_OUTPUT"
+            echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          else
+            # For push and schedule events, use ref_name (defaults to main for schedule)
+            echo "branch=$REF_NAME" >> "$GITHUB_OUTPUT"
+            echo "is_pr=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Dagger CI
+        run: |
+          ARGS=(
+            --source=.
+            --branch="${{ steps.context.outputs.branch }}"
+            --version="1.0.${{ github.run_number }}"
+            --date="$(date -u +%Y-%m-%d)"
+          )
+
+          if [[ "${{ steps.context.outputs.is_pr }}" != "true" ]]; then
+            ARGS+=(
+              --s3-access-key-id=env:S3_ACCESS_KEY_ID
+              --s3-secret-access-key=env:S3_SECRET_ACCESS_KEY
+            )
+          fi
+
+          dagger call ci "${ARGS[@]}"
+
+permissions:
+  contents: read

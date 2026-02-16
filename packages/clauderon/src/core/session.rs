@@ -40,7 +40,7 @@ pub struct SessionRepository {
 /// Represents a single AI coding session
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools, reason = "session has many independent boolean state fields")]
 pub struct Session {
     /// Unique identifier
     #[typeshare(serialized_as = "String")]
@@ -179,6 +179,7 @@ pub struct Session {
 }
 
 /// Configuration for creating a new session
+#[derive(Debug)]
 pub struct SessionConfig {
     /// Human-friendly name
     pub name: String,
@@ -476,7 +477,6 @@ impl Session {
     #[must_use]
     pub fn effective_model(&self) -> SessionModel {
         self.model
-            .clone()
             .unwrap_or_else(|| SessionModel::default_for_agent(self.agent))
     }
 
@@ -622,7 +622,7 @@ impl ClaudeModel {
     }
 }
 
-#[allow(clippy::derivable_impls)]
+#[expect(clippy::derivable_impls, reason = "explicit default makes the chosen default variant clear")]
 impl Default for ClaudeModel {
     fn default() -> Self {
         Self::Sonnet4_5
@@ -705,7 +705,7 @@ impl GeminiModel {
 
 /// Model configuration for a session
 #[typeshare]
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", content = "content")]
 pub enum SessionModel {
     /// Claude Code model
@@ -895,7 +895,7 @@ pub enum WorkflowStage {
 
 /// Blocker details for a session
 #[typeshare]
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct BlockerDetails {
     /// Whether CI checks are failing
     pub ci_failing: bool,
@@ -1002,7 +1002,10 @@ pub enum ResourceState {
     Missing,
 
     /// Backend is in an error state
-    Error { message: String },
+    Error {
+        /// Error description.
+        message: String,
+    },
 
     /// Kubernetes: pod is in CrashLoopBackOff
     CrashLoop,
@@ -1012,7 +1015,10 @@ pub enum ResourceState {
 
     /// Data has been lost and cannot be recovered
     /// (e.g., PVC deleted, sprite with auto_destroy deleted)
-    DataLost { reason: String },
+    DataLost {
+        /// Why data was lost.
+        reason: String,
+    },
 
     /// Git worktree was deleted
     WorktreeMissing,
@@ -1173,8 +1179,8 @@ impl SessionHealthReport {
             state: ResourceState::Healthy,
             available_actions: vec![AvailableAction::Recreate],
             recommended_action: None,
-            description: "Session is running normally.".to_string(),
-            details: "The backend resource is running and the worktree exists.".to_string(),
+            description: "Session is running normally.".to_owned(),
+            details: "The backend resource is running and the worktree exists.".to_owned(),
             data_safe: true,
         }
     }
@@ -1212,7 +1218,7 @@ pub struct HealthCheckResult {
 impl HealthCheckResult {
     /// Create a new health check result from a list of reports
     #[must_use]
-    #[expect(clippy::cast_possible_truncation)]
+    #[expect(clippy::cast_possible_truncation, reason = "session counts are bounded by application logic")]
     pub fn new(sessions: Vec<SessionHealthReport>) -> Self {
         let healthy_count = sessions.iter().filter(|r| r.state.is_healthy()).count() as u32;
         let needs_attention_count = sessions.iter().filter(|r| r.needs_attention()).count() as u32;
@@ -1302,7 +1308,7 @@ pub fn get_history_file_path(
     subdirectory: &Path,
 ) -> PathBuf {
     let project_path = if subdirectory.as_os_str().is_empty() {
-        "-workspace".to_string()
+        "-workspace".to_owned()
     } else {
         format!(
             "-workspace-{}",
@@ -1503,7 +1509,7 @@ mod tests {
     fn test_session_effective_model_with_explicit_model() {
         let session = Session {
             id: Uuid::new_v4(),
-            name: "test".to_string(),
+            name: "test".to_owned(),
             title: None,
             description: None,
             status: SessionStatus::Running,
@@ -1513,10 +1519,10 @@ mod tests {
             repo_path: PathBuf::from("/test"),
             worktree_path: PathBuf::from("/test/worktree"),
             subdirectory: PathBuf::new(),
-            branch_name: "test".to_string(),
+            branch_name: "test".to_owned(),
             repositories: None,
             backend_id: None,
-            initial_prompt: "test".to_string(),
+            initial_prompt: "test".to_owned(),
             dangerous_skip_checks: false,
             dangerous_copy_creds: false,
             pr_url: None,
@@ -1554,7 +1560,7 @@ mod tests {
     fn test_session_effective_model_with_none_falls_back_to_default() {
         let session = Session {
             id: Uuid::new_v4(),
-            name: "test".to_string(),
+            name: "test".to_owned(),
             title: None,
             description: None,
             status: SessionStatus::Running,
@@ -1564,10 +1570,10 @@ mod tests {
             repo_path: PathBuf::from("/test"),
             worktree_path: PathBuf::from("/test/worktree"),
             subdirectory: PathBuf::new(),
-            branch_name: "test".to_string(),
+            branch_name: "test".to_owned(),
             repositories: None,
             backend_id: None,
-            initial_prompt: "test".to_string(),
+            initial_prompt: "test".to_owned(),
             dangerous_skip_checks: false,
             dangerous_copy_creds: false,
             pr_url: None,
@@ -1606,7 +1612,7 @@ mod tests {
     fn test_session_model_cli_flag_with_explicit_model() {
         let session = Session {
             id: Uuid::new_v4(),
-            name: "test".to_string(),
+            name: "test".to_owned(),
             title: None,
             description: None,
             status: SessionStatus::Running,
@@ -1616,10 +1622,10 @@ mod tests {
             repo_path: PathBuf::from("/test"),
             worktree_path: PathBuf::from("/test/worktree"),
             subdirectory: PathBuf::new(),
-            branch_name: "test".to_string(),
+            branch_name: "test".to_owned(),
             repositories: None,
             backend_id: None,
-            initial_prompt: "test".to_string(),
+            initial_prompt: "test".to_owned(),
             dangerous_skip_checks: false,
             dangerous_copy_creds: false,
             pr_url: None,
@@ -1654,7 +1660,7 @@ mod tests {
     fn test_session_model_cli_flag_with_none_returns_none() {
         let session = Session {
             id: Uuid::new_v4(),
-            name: "test".to_string(),
+            name: "test".to_owned(),
             title: None,
             description: None,
             status: SessionStatus::Running,
@@ -1664,10 +1670,10 @@ mod tests {
             repo_path: PathBuf::from("/test"),
             worktree_path: PathBuf::from("/test/worktree"),
             subdirectory: PathBuf::new(),
-            branch_name: "test".to_string(),
+            branch_name: "test".to_owned(),
             repositories: None,
             backend_id: None,
-            initial_prompt: "test".to_string(),
+            initial_prompt: "test".to_owned(),
             dangerous_skip_checks: false,
             dangerous_copy_creds: false,
             pr_url: None,
@@ -1715,7 +1721,7 @@ mod tests {
     #[test]
     fn test_workflow_stage_merged() {
         let session = Session {
-            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_url: Some("https://github.com/test/test/pull/1".to_owned()),
             pr_check_status: Some(CheckStatus::Merged),
             pr_review_decision: None,
             ..create_test_session()
@@ -1727,7 +1733,7 @@ mod tests {
     #[test]
     fn test_workflow_stage_blocked_by_ci_failure() {
         let session = Session {
-            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_url: Some("https://github.com/test/test/pull/1".to_owned()),
             pr_check_status: Some(CheckStatus::Failing),
             pr_review_decision: Some(ReviewDecision::ReviewRequired),
             merge_conflict: false,
@@ -1741,7 +1747,7 @@ mod tests {
     #[test]
     fn test_workflow_stage_blocked_by_merge_conflict() {
         let session = Session {
-            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_url: Some("https://github.com/test/test/pull/1".to_owned()),
             pr_check_status: Some(CheckStatus::Passing),
             pr_review_decision: Some(ReviewDecision::Approved),
             merge_conflict: true,
@@ -1754,7 +1760,7 @@ mod tests {
     #[test]
     fn test_workflow_stage_blocked_by_changes_requested() {
         let session = Session {
-            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_url: Some("https://github.com/test/test/pull/1".to_owned()),
             pr_check_status: Some(CheckStatus::Passing),
             pr_review_decision: Some(ReviewDecision::ChangesRequested),
             merge_conflict: false,
@@ -1768,7 +1774,7 @@ mod tests {
     #[test]
     fn test_workflow_stage_ready_to_merge() {
         let session = Session {
-            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_url: Some("https://github.com/test/test/pull/1".to_owned()),
             pr_check_status: Some(CheckStatus::Passing),
             pr_review_decision: Some(ReviewDecision::Approved),
             merge_conflict: false,
@@ -1782,7 +1788,7 @@ mod tests {
     #[test]
     fn test_workflow_stage_ready_to_merge_with_mergeable() {
         let session = Session {
-            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_url: Some("https://github.com/test/test/pull/1".to_owned()),
             pr_check_status: Some(CheckStatus::Mergeable),
             pr_review_decision: Some(ReviewDecision::Approved),
             merge_conflict: false,
@@ -1796,7 +1802,7 @@ mod tests {
     #[test]
     fn test_workflow_stage_review_awaiting() {
         let session = Session {
-            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_url: Some("https://github.com/test/test/pull/1".to_owned()),
             pr_check_status: Some(CheckStatus::Passing),
             pr_review_decision: Some(ReviewDecision::ReviewRequired),
             merge_conflict: false,
@@ -1809,7 +1815,7 @@ mod tests {
     #[test]
     fn test_workflow_stage_review_no_decision() {
         let session = Session {
-            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_url: Some("https://github.com/test/test/pull/1".to_owned()),
             pr_check_status: Some(CheckStatus::Passing),
             pr_review_decision: None,
             merge_conflict: false,
@@ -1822,7 +1828,7 @@ mod tests {
     #[test]
     fn test_workflow_stage_implementation_pending_ci() {
         let session = Session {
-            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_url: Some("https://github.com/test/test/pull/1".to_owned()),
             pr_check_status: Some(CheckStatus::Pending),
             pr_review_decision: Some(ReviewDecision::Approved),
             merge_conflict: false,
@@ -1915,7 +1921,7 @@ mod tests {
     fn create_test_session() -> Session {
         Session {
             id: Uuid::new_v4(),
-            name: "test".to_string(),
+            name: "test".to_owned(),
             title: None,
             description: None,
             status: SessionStatus::Running,
@@ -1925,10 +1931,10 @@ mod tests {
             repo_path: PathBuf::from("/test"),
             worktree_path: PathBuf::from("/test/worktree"),
             subdirectory: PathBuf::new(),
-            branch_name: "test".to_string(),
+            branch_name: "test".to_owned(),
             repositories: None,
             backend_id: None,
-            initial_prompt: "test".to_string(),
+            initial_prompt: "test".to_owned(),
             dangerous_skip_checks: false,
             dangerous_copy_creds: false,
             pr_url: None,

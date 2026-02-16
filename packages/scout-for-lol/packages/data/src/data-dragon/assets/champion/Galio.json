@@ -1,0 +1,348 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Galio": {
+      "id": "Galio",
+      "key": "3",
+      "name": "Galio",
+      "title": "the Colossus",
+      "image": {
+        "full": "Galio.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 288,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "3000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "3001",
+          "num": 1,
+          "name": "Enchanted Galio",
+          "chromas": false
+        },
+        {
+          "id": "3002",
+          "num": 2,
+          "name": "Hextech Galio",
+          "chromas": false
+        },
+        {
+          "id": "3003",
+          "num": 3,
+          "name": "Commando Galio",
+          "chromas": false
+        },
+        {
+          "id": "3004",
+          "num": 4,
+          "name": "Gatekeeper Galio",
+          "chromas": false
+        },
+        {
+          "id": "3005",
+          "num": 5,
+          "name": "Debonair Galio",
+          "chromas": false
+        },
+        {
+          "id": "3006",
+          "num": 6,
+          "name": "Birdio",
+          "chromas": true
+        },
+        {
+          "id": "3013",
+          "num": 13,
+          "name": "Infernal Galio",
+          "chromas": true
+        },
+        {
+          "id": "3019",
+          "num": 19,
+          "name": "Dragon Guardian Galio",
+          "chromas": true
+        },
+        {
+          "id": "3028",
+          "num": 28,
+          "name": "Mythmaker Galio",
+          "chromas": true
+        },
+        {
+          "id": "3040",
+          "num": 40,
+          "name": "Aegis Frame Galio",
+          "chromas": true
+        }
+      ],
+      "lore": "Outside the gleaming city of Demacia, the stone colossus Galio keeps vigilant watch. Built as a bulwark against enemy mages, he often stands motionless for decades until the presence of powerful magic stirs him to life. Once activated, Galio makes the most of his time, savoring the thrill of a fight and the rare honor of defending his countrymen. But his triumphs are always bittersweet, for the magic he destroys is also his source of reanimation, and each victory leaves him dormant once again.",
+      "blurb": "Outside the gleaming city of Demacia, the stone colossus Galio keeps vigilant watch. Built as a bulwark against enemy mages, he often stands motionless for decades until the presence of powerful magic stirs him to life. Once activated, Galio makes the...",
+      "allytips": [
+        "You can release Shield of Durand even while crowd controlled.",
+        "You can use the minimap ally icons to cast Hero's Entrance.",
+        "You can use the step back from Justice Punch to dodge enemy spells."
+      ],
+      "enemytips": [
+        "Galio moves slower when he is charging Shield of Durand.",
+        "Hero's Entrance can be interrupted before Galio jumps into the air.",
+        "Galio cannot traverse walls with Justice Punch."
+      ],
+      "tags": ["Tank", "Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 1,
+        "defense": 10,
+        "magic": 6,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 600,
+        "hpperlevel": 126,
+        "mp": 410,
+        "mpperlevel": 40,
+        "movespeed": 340,
+        "armor": 24,
+        "armorperlevel": 4.7,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 150,
+        "hpregen": 8,
+        "hpregenperlevel": 0.8,
+        "mpregen": 9.5,
+        "mpregenperlevel": 0.7,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 59,
+        "attackdamageperlevel": 3.5,
+        "attackspeedperlevel": 1.5,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "GalioQ",
+          "name": "Winds of War",
+          "description": "Galio fires two windblasts that converge into a large tornado that deals damage over time.",
+          "tooltip": "Galio fires two windblasts that deal <magicDamage>{{ qmissiledamage }} magic damage</magicDamage> each. When the windblasts meet, they combine into a tornado that deals <magicDamage>{{ percentsuperqdamagett }}% max Health magic damage</magicDamage> over {{ superqduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Windblast Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [11, 10, 9, 8, 7],
+          "cooldownBurn": "11/10/9/8/7",
+          "cost": [70, 75, 80, 85, 90],
+          "costBurn": "70/75/80/85/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [825, 825, 825, 825, 825],
+          "rangeBurn": "825",
+          "image": {
+            "full": "GalioQ.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 96,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "GalioW",
+          "name": "Shield of Durand",
+          "description": "Galio charges a defensive stance, moving slowly. Upon releasing the charge, Galio will taunt and damage nearby enemies.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Galio gains a <shield>{{ totalpassiveshield }} Magic Shield</shield> after not taking damage for {{ passiveshieldooctimer }} seconds.<br /><br /><charge>Begin Charging:</charge> Galio reduces incoming magic damage by {{ magicdamagereduction }} and incoming physical damage by {{ physicaldamagereduction }} and <status>Slows</status> himself by {{ e3 }}%.<br /><br /><release>Release:</release> Galio <status>Taunts</status> enemy champions for between {{ e4 }} to {{ e7 }} seconds, deals between <magicDamage>{{ mintotaldamage }}</magicDamage> and <magicDamage>{{ maxtotaldamage }} magic damage</magicDamage>, and refreshes the damage reduction for {{ e8 }} seconds. Taunt duration, damage, and range increase with charge time.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Shield Health Ratio",
+              "Magic Damage Reduction",
+              "Physical Damage Reduction",
+              "Maximum Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ passiveshieldhealthratio*100.000000 }}% -> {{ passiveshieldhealthrationl*100.000000 }}%",
+              "{{ e1 }}% -> {{ e1NL }}%",
+              "{{ effect1amount*0.500000 }}% -> {{ effect1amountnl*0.500000 }}%",
+              "{{ maximumwbasedamage }} -> {{ maximumwbasedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [18, 17, 16, 15, 14],
+          "cooldownBurn": "18/17/16/15/14",
+          "cost": [50, 50, 50, 50, 50],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [25, 30, 35, 40, 45],
+            [2, 2, 2, 2, 2],
+            [15, 15, 15, 15, 15],
+            [0.5, 0.5, 0.5, 0.5, 0.5],
+            [0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1],
+            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [2, 2, 2, 2, 2],
+            [1.25, 1.25, 1.25, 1.25, 1.25],
+            [4, 4, 4, 4, 4]
+          ],
+          "effectBurn": [null, "25/30/35/40/45", "2", "15", "0.5", "0", "1", "1.5", "2", "1.25", "4"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [275, 275, 275, 275, 275],
+          "rangeBurn": "275",
+          "image": {
+            "full": "GalioW.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 144,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "GalioE",
+          "name": "Justice Punch",
+          "description": "Galio will briefly step back and charge, knocking up the first enemy champion he encounters.",
+          "tooltip": "Galio lunges forward with a mighty blow, <status>Knocking Up</status> for {{ knockupduration }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first champion hit. Other enemies in the way take <magicDamage>{{ pvedamage }} magic damage</magicDamage>.<br /><br />Galio's dash stops on hitting terrain.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [11, 10, 9, 8, 7],
+          "cooldownBurn": "11/10/9/8/7",
+          "cost": [50, 50, 50, 50, 50],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [650, 650, 650, 650, 650],
+          "rangeBurn": "650",
+          "image": {
+            "full": "GalioE.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 192,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "GalioR",
+          "name": "Hero's Entrance",
+          "description": "Galio designates an ally's position as his landing spot, granting all allies in the area a magic shield. After a delay Galio smashes down location, knocking up nearby enemies.",
+          "tooltip": "Galio designates an allied champion's position as his landing spot, granting all allied champions in the area <spellName>Shield of Durand's</spellName> passive <shield>Shield</shield> for {{ temporarywshieldduration }} seconds. Galio then flies to his landing zone.<br /><br />When Galio lands, he <status>Knocks Up</status> for {{ stundurationouter }} seconds and deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Range", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ castrange }} -> {{ castrangeNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [180, 160, 140],
+          "cooldownBurn": "180/160/140",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [4000, 4750, 5500],
+          "rangeBurn": "4000/4750/5500",
+          "image": {
+            "full": "GalioR.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 240,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Colossal Smash",
+        "description": "Every few seconds, Galio's next basic attack deals bonus magic damage in an area.",
+        "image": {
+          "full": "Galio_Passive.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 288,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

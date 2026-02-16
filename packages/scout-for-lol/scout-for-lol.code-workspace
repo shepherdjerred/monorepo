@@ -1,0 +1,76 @@
+{
+  "folders": [
+    {
+      "name": "dagger",
+      "path": ".dagger",
+    },
+    {
+      "name": "backend",
+      "path": "packages/backend",
+    },
+    {
+      "name": "report",
+      "path": "packages/report",
+    },
+    {
+      "name": "data",
+      "path": "packages/data",
+    },
+    {
+      "name": "frontend",
+      "path": "packages/frontend",
+    },
+    {
+      "name": "desktop",
+      "path": "packages/desktop",
+    },
+    {
+      "name": "root",
+      "path": ".",
+    },
+  ],
+  "extensions": {
+    "unwantedRecommendations": [],
+    "recommendations": [
+      "astro-build.astro-vscode",
+      "tamasfe.even-better-toml",
+      "github.vscode-github-actions",
+      "esbenp.prettier-vscode",
+      "DavidAnson.vscode-markdownlint",
+      "ms-azuretools.vscode-docker",
+      "timonwong.shellcheck",
+      "mkhl.shfmt",
+      "redhat.vscode-yaml",
+      "arahata.linter-actionlint",
+      "bradlc.vscode-tailwindcss",
+      "lightyen.tailwindcss-intellisense-twin",
+      "prisma.prisma",
+      "orta.vscode-jest",
+      "dbaeumer.vscode-eslint",
+      "oven.bun-vscode",
+      "unifiedjs.vscode-mdx",
+      "rust-lang.rust-analyzer",
+    ],
+  },
+  "settings": {
+    "testing.automaticallyOpenPeekView": "never",
+    "typescript.tsserver.experimental.enableProjectDiagnostics": true,
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/bower_components": true,
+      "**/*.code-search": true,
+      "**/dist": true,
+      "**/generated": true,
+    },
+  },
+  "launch": {
+    "configurations": [
+      {
+        "type": "chrome",
+        "name": "https://localhost:4321",
+        "request": "launch",
+        "url": "https://localhost:4321",
+      },
+    ],
+  },
+}

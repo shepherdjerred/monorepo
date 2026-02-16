@@ -1,0 +1,67 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import Hero from "../components/Hero.astro";
+import CTA from "../components/CTA.astro";
+import { changelog, formatChangelogDate, renderChangelogToHtml } from "../data/changelog";
+---
+
+<Layout>
+  <div class="bg-white dark:bg-gray-900">
+    <Navbar activePage="whatsnew" />
+
+    <Hero
+      title="What's New"
+      subtitle="Check out the latest updates and improvements to Scout for League of Legends."
+      showGradient={true}
+    />
+
+    <!-- Changelog Section -->
+    <div class="py-24 sm:py-32">
+      <div class="mx-auto max-w-3xl px-6 lg:px-8">
+        <div class="space-y-12">
+          {changelog.map((entry, index) => (
+            <div
+              class={`pb-12 ${index !== changelog.length - 1 ? "border-b border-gray-200 dark:border-gray-700" : ""}`}
+            >
+              <!-- Date Header -->
+              <div class="mb-6">
+                <div class="flex items-center gap-x-3">
+                  <div class="h-3 w-3 rounded-full bg-indigo-600 dark:bg-indigo-500"></div>
+                  <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">
+                    {formatChangelogDate(entry)}
+                  </h2>
+                </div>
+              </div>
+
+              <!-- Changes List -->
+              <div class="text-gray-600 dark:text-gray-300 prose pl-6 space-y-6" set:html={renderChangelogToHtml(entry.text)} />
+            </div>
+          ))}
+        </div>
+
+        {changelog.length === 0 && (
+          <div class="text-center py-12">
+            <p class="text-gray-600 dark:text-gray-300">
+              No changelog entries found. Check back soon!
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+
+    <!-- CTA Section -->
+    <CTA
+      variant="indigo"
+      title="Ready to get Scout?"
+      description="Add Scout to your Discord server and start tracking your friends' League matches today."
+      buttons={[
+        { text: 'Add to Discord', href: 'https://discord.com/oauth2/authorize?client_id=1182800769188110366', variant: 'primary' },
+        { text: 'Read the docs', href: '/docs', variant: 'secondary' }
+      ]}
+    />
+
+    <Footer variant="homepage" />
+  </div>
+</Layout>

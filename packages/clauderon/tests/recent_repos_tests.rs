@@ -1,3 +1,8 @@
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    reason = "integration tests use expect/unwrap for simplicity"
+)]
 //! Integration tests for recent repositories tracking.
 //!
 //! These tests verify that:
@@ -114,7 +119,7 @@ async fn test_recent_repo_tracked_on_session_create() {
         .create_session(
             repo_path.to_string_lossy().to_string(),
             None,
-            "Test prompt".to_string(),
+            "Test prompt".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None,                  // model
@@ -331,9 +336,9 @@ async fn test_nonexistent_repo_handles_gracefully() {
     // The manager should fail since the path doesn't exist
     let result = manager
         .create_session(
-            "/nonexistent/repo/path".to_string(),
+            "/nonexistent/repo/path".to_owned(),
             None,
-            "Prompt".to_string(),
+            "Prompt".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None,
@@ -425,11 +430,11 @@ async fn test_subdirectories_tracked_separately() {
         .map(|r| r.subdirectory.to_string_lossy().to_string())
         .collect();
     assert!(
-        subdirs.contains(&"packages/bar".to_string()),
+        subdirs.contains(&"packages/bar".to_owned()),
         "Should have packages/bar subdirectory"
     );
     assert!(
-        subdirs.contains(&"packages/foo".to_string()),
+        subdirs.contains(&"packages/foo".to_owned()),
         "Should have packages/foo subdirectory"
     );
 }
@@ -531,17 +536,17 @@ async fn test_subdirectories_respect_limit() {
         .collect();
 
     assert!(
-        !subdirs.contains(&"package-0".to_string()),
+        !subdirs.contains(&"package-0".to_owned()),
         "Oldest subdirectory should have been removed"
     );
 
     // The newest subdirectories should be in the list
     assert!(
-        subdirs.contains(&"package-5".to_string()),
+        subdirs.contains(&"package-5".to_owned()),
         "Newest subdirectory should be in the list"
     );
     assert!(
-        subdirs.contains(&"package-4".to_string()),
+        subdirs.contains(&"package-4".to_owned()),
         "Second newest subdirectory should be in the list"
     );
 }

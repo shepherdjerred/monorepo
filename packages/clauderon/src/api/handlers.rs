@@ -8,7 +8,7 @@ use super::protocol::{CreateSessionRequest, ProgressStep, Request, Response};
 use super::types::ReconcileReportDto;
 
 /// Handle an API request
-#[allow(
+#[expect(
     clippy::too_many_lines,
     reason = "Protocol handler with many request types - splitting would reduce clarity"
 )]
@@ -27,7 +27,7 @@ pub async fn handle_request(
             || {
                 tracing::warn!(id = %id, "Session not found");
                 Response::Error {
-                    code: "NOT_FOUND".to_string(),
+                    code: "NOT_FOUND".to_owned(),
                     message: format!("Session not found: {id}"),
                 }
             },
@@ -38,7 +38,7 @@ pub async fn handle_request(
             // Validate request including experimental models check
             if let Err(e) = req.validate(&manager.feature_flags()) {
                 return Response::Error {
-                    code: "INVALID_REQUEST".to_string(),
+                    code: "INVALID_REQUEST".to_owned(),
                     message: e.to_string(),
                 };
             }
@@ -55,7 +55,7 @@ pub async fn handle_request(
                         req.initial_prompt,
                         req.backend,
                         req.agent,
-                        req.model.clone(),
+                        req.model,
                         req.dangerous_skip_checks,
                         req.dangerous_copy_creds,
                         req.print_mode,
@@ -87,7 +87,7 @@ pub async fn handle_request(
                             "Failed to start session creation"
                         );
                         Response::Error {
-                            code: "CREATE_ERROR".to_string(),
+                            code: "CREATE_ERROR".to_owned(),
                             message: e.to_string(),
                         }
                     }
@@ -101,7 +101,7 @@ pub async fn handle_request(
                         req.initial_prompt,
                         req.backend,
                         req.agent,
-                        req.model.clone(),
+                        req.model,
                         req.dangerous_skip_checks,
                         req.dangerous_copy_creds,
                         req.print_mode,
@@ -136,7 +136,7 @@ pub async fn handle_request(
                             "Failed to create session"
                         );
                         Response::Error {
-                            code: "CREATE_ERROR".to_string(),
+                            code: "CREATE_ERROR".to_owned(),
                             message: e.to_string(),
                         }
                     }
@@ -152,7 +152,7 @@ pub async fn handle_request(
             Err(e) => {
                 tracing::error!(id = %id, error = %e, "Failed to delete session");
                 Response::Error {
-                    code: "DELETE_ERROR".to_string(),
+                    code: "DELETE_ERROR".to_owned(),
                     message: e.to_string(),
                 }
             }
@@ -166,7 +166,7 @@ pub async fn handle_request(
             Err(e) => {
                 tracing::error!(id = %id, error = %e, "Failed to archive session");
                 Response::Error {
-                    code: "ARCHIVE_ERROR".to_string(),
+                    code: "ARCHIVE_ERROR".to_owned(),
                     message: e.to_string(),
                 }
             }
@@ -180,7 +180,7 @@ pub async fn handle_request(
             Err(e) => {
                 tracing::error!(id = %id, error = %e, "Failed to unarchive session");
                 Response::Error {
-                    code: "UNARCHIVE_ERROR".to_string(),
+                    code: "UNARCHIVE_ERROR".to_owned(),
                     message: e.to_string(),
                 }
             }
@@ -194,7 +194,7 @@ pub async fn handle_request(
             Err(e) => {
                 tracing::error!(id = %id, error = %e, "Failed to refresh session");
                 Response::Error {
-                    code: "REFRESH_ERROR".to_string(),
+                    code: "REFRESH_ERROR".to_owned(),
                     message: e.to_string(),
                 }
             }
@@ -208,7 +208,7 @@ pub async fn handle_request(
             Err(e) => {
                 tracing::error!(id = %id, error = %e, "Failed to get attach command");
                 Response::Error {
-                    code: "ATTACH_ERROR".to_string(),
+                    code: "ATTACH_ERROR".to_owned(),
                     message: e.to_string(),
                 }
             }
@@ -227,7 +227,7 @@ pub async fn handle_request(
             Err(e) => {
                 tracing::error!(error = %e, "Failed to reconcile");
                 Response::Error {
-                    code: "RECONCILE_ERROR".to_string(),
+                    code: "RECONCILE_ERROR".to_owned(),
                     message: e.to_string(),
                 }
             }
@@ -242,7 +242,7 @@ pub async fn handle_request(
                 Err(e) => {
                     tracing::error!(session = %id, error = %e, "Failed to update access mode");
                     Response::Error {
-                        code: "UPDATE_ERROR".to_string(),
+                        code: "UPDATE_ERROR".to_owned(),
                         message: e.to_string(),
                     }
                 }
@@ -269,7 +269,7 @@ pub async fn handle_request(
             Err(e) => {
                 tracing::error!(error = %e, "Failed to get recent repos");
                 Response::Error {
-                    code: "RECENT_REPOS_ERROR".to_string(),
+                    code: "RECENT_REPOS_ERROR".to_owned(),
                     message: e.to_string(),
                 }
             }
@@ -284,7 +284,7 @@ pub async fn handle_request(
                 Err(e) => {
                     tracing::error!(session = %session, error = %e, "Failed to send prompt");
                     Response::Error {
-                        code: "SEND_PROMPT_ERROR".to_string(),
+                        code: "SEND_PROMPT_ERROR".to_owned(),
                         message: e.to_string(),
                     }
                 }
@@ -304,13 +304,13 @@ pub async fn handle_request(
                 Err(e) => {
                     tracing::error!(session_id = %id, error = %e, "Failed to merge PR");
                     Response::Error {
-                        code: "MERGE_PR_ERROR".to_string(),
+                        code: "MERGE_PR_ERROR".to_owned(),
                         message: e.to_string(),
                     }
                 }
             },
             Err(e) => Response::Error {
-                code: "INVALID_ID".to_string(),
+                code: "INVALID_ID".to_owned(),
                 message: format!("Invalid session ID: {e}"),
             },
         },
@@ -320,13 +320,13 @@ pub async fn handle_request(
                 session_id: session.id.to_string(),
             },
             None => Response::Error {
-                code: "NOT_FOUND".to_string(),
+                code: "NOT_FOUND".to_owned(),
                 message: format!("Session not found: {name}"),
             },
         },
 
         Request::GetFeatureFlags => Response::FeatureFlags {
-            flags: (*manager.feature_flags()).clone(),
+            flags: *manager.feature_flags(),
         },
 
         Request::GetHealth => {
@@ -339,7 +339,7 @@ pub async fn handle_request(
                 Ok(id) => id,
                 Err(e) => {
                     return Response::Error {
-                        code: "INVALID_ID".to_string(),
+                        code: "INVALID_ID".to_owned(),
                         message: format!("Invalid session ID: {e}"),
                     };
                 }
@@ -349,7 +349,7 @@ pub async fn handle_request(
                 Err(e) => {
                     tracing::error!(id = %id, error = %e, "Failed to check session health");
                     Response::Error {
-                        code: "HEALTH_ERROR".to_string(),
+                        code: "HEALTH_ERROR".to_owned(),
                         message: e.to_string(),
                     }
                 }
@@ -361,7 +361,7 @@ pub async fn handle_request(
                 Ok(id) => id,
                 Err(e) => {
                     return Response::Error {
-                        code: "INVALID_ID".to_string(),
+                        code: "INVALID_ID".to_owned(),
                         message: format!("Invalid session ID: {e}"),
                     };
                 }
@@ -374,7 +374,7 @@ pub async fn handle_request(
                 Err(e) => {
                     tracing::error!(id = %id, error = %e, "Failed to start session");
                     Response::Error {
-                        code: "START_ERROR".to_string(),
+                        code: "START_ERROR".to_owned(),
                         message: e.to_string(),
                     }
                 }
@@ -386,7 +386,7 @@ pub async fn handle_request(
                 Ok(id) => id,
                 Err(e) => {
                     return Response::Error {
-                        code: "INVALID_ID".to_string(),
+                        code: "INVALID_ID".to_owned(),
                         message: format!("Invalid session ID: {e}"),
                     };
                 }
@@ -399,7 +399,7 @@ pub async fn handle_request(
                 Err(e) => {
                     tracing::error!(id = %id, error = %e, "Failed to wake session");
                     Response::Error {
-                        code: "WAKE_ERROR".to_string(),
+                        code: "WAKE_ERROR".to_owned(),
                         message: e.to_string(),
                     }
                 }
@@ -411,7 +411,7 @@ pub async fn handle_request(
                 Ok(id) => id,
                 Err(e) => {
                     return Response::Error {
-                        code: "INVALID_ID".to_string(),
+                        code: "INVALID_ID".to_owned(),
                         message: format!("Invalid session ID: {e}"),
                     };
                 }
@@ -432,7 +432,7 @@ pub async fn handle_request(
                 Err(crate::core::manager::RecreateError::Other(e)) => {
                     tracing::error!(id = %id, error = %e, "Failed to recreate session");
                     Response::Error {
-                        code: "RECREATE_ERROR".to_string(),
+                        code: "RECREATE_ERROR".to_owned(),
                         message: e.to_string(),
                     }
                 }
@@ -444,7 +444,7 @@ pub async fn handle_request(
                 Ok(id) => id,
                 Err(e) => {
                     return Response::Error {
-                        code: "INVALID_ID".to_string(),
+                        code: "INVALID_ID".to_owned(),
                         message: format!("Invalid session ID: {e}"),
                     };
                 }
@@ -457,7 +457,7 @@ pub async fn handle_request(
                 Err(e) => {
                     tracing::error!(id = %id, error = %e, "Failed to cleanup session");
                     Response::Error {
-                        code: "CLEANUP_ERROR".to_string(),
+                        code: "CLEANUP_ERROR".to_owned(),
                         message: e.to_string(),
                     }
                 }
@@ -469,7 +469,7 @@ pub async fn handle_request(
                 Ok(id) => id,
                 Err(e) => {
                     return Response::Error {
-                        code: "INVALID_ID".to_string(),
+                        code: "INVALID_ID".to_owned(),
                         message: format!("Invalid session ID: {e}"),
                     };
                 }
@@ -484,7 +484,7 @@ pub async fn handle_request(
                 Err(e) => {
                     tracing::error!(id = %id, error = %e, "Failed to recreate session fresh");
                     Response::Error {
-                        code: "RECREATE_FRESH_ERROR".to_string(),
+                        code: "RECREATE_FRESH_ERROR".to_owned(),
                         message: e.to_string(),
                     }
                 }
@@ -527,7 +527,7 @@ pub async fn handle_create_session_with_progress(
         &Response::Progress(ProgressStep {
             step: 1,
             total: 2,
-            message: "Creating git worktree...".to_string(),
+            message: "Creating git worktree...".to_owned(),
         }),
     )
     .await?;
@@ -540,7 +540,7 @@ pub async fn handle_create_session_with_progress(
             req.initial_prompt,
             req.backend,
             req.agent,
-            req.model.clone(),
+            req.model,
             req.dangerous_skip_checks,
             req.dangerous_copy_creds,
             req.print_mode,
@@ -591,7 +591,7 @@ pub async fn handle_create_session_with_progress(
             send_response(
                 writer,
                 &Response::Error {
-                    code: "CREATE_ERROR".to_string(),
+                    code: "CREATE_ERROR".to_owned(),
                     message: e.to_string(),
                 },
             )

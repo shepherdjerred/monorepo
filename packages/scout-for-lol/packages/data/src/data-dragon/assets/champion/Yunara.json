@@ -1,0 +1,277 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Yunara": {
+      "id": "Yunara",
+      "key": "804",
+      "name": "Yunara",
+      "title": "the Unbroken Faith",
+      "image": {
+        "full": "Yunara.png",
+        "sprite": "champion5.png",
+        "group": "champion",
+        "x": 96,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "804000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "804001",
+          "num": 1,
+          "name": "Spirit Blossom Springs Yunara",
+          "chromas": true
+        }
+      ],
+      "lore": "Unwavering in her devotion to Ionia, Yunara has spent centuries cloistered away in the spirit realm honing her skills with the Aion Er'na, a legendary Kinkou relic. Despite all she has sacrificed, Yunara's vow to rid the land of disharmony and strife remains unbroken, as does her faith. But the world that now awaits her—and the shadow of an ancient threat risen once more—will test every ounce of her resolve.",
+      "blurb": "Unwavering in her devotion to Ionia, Yunara has spent centuries cloistered away in the spirit realm honing her skills with the Aion Er'na, a legendary Kinkou relic. Despite all she has sacrificed, Yunara's vow to rid the land of disharmony and strife...",
+      "allytips": [],
+      "enemytips": [],
+      "tags": ["Marksman"],
+      "partype": "Mana",
+      "info": {
+        "attack": 9,
+        "defense": 2,
+        "magic": 0,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 590,
+        "hpperlevel": 110,
+        "mp": 275,
+        "mpperlevel": 45,
+        "movespeed": 325,
+        "armor": 25,
+        "armorperlevel": 4.4,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 575,
+        "hpregen": 4,
+        "hpregenperlevel": 0.55,
+        "mpregen": 7.5,
+        "mpregenperlevel": 0.75,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 55,
+        "attackdamageperlevel": 2.5,
+        "attackspeedperlevel": 2,
+        "attackspeed": 0.65
+      },
+      "spells": [
+        {
+          "id": "YunaraQ",
+          "name": "Cultivation of Spirit",
+          "description": "Yunara gains Attack Speed, bonus damage On-Hit, and her Attacks spread to nearby enemies.",
+          "tooltip": "<spellPassive>Passive</spellPassive>: Yunara deal <magicDamage>{{ calc_passive_damage }} magic damage</magicDamage> <OnHit>%i:OnHit% On-Hit</OnHit> and attacking grants <evolve>{{ resource_nonchampion }} Unleash</evolve> (<evolve>{{ resource_champion }} Unleash</evolve> for champions).<br /><br /><spellPassive>Active</spellPassive>: Yunara consumes <evolve>{{ resource_max }} Unleash</evolve> and for {{ buff_duration }} seconds gains <attackSpeed>{{ calc_attack_speed }} Attack Speed</attackSpeed> and deals an additional <magicDamage>{{ calc_damage }} magic damage</magicDamage> <OnHit>%i:OnHit% On-Hit</OnHit>. During this time, her Attacks spread to nearby enemies dealing them <physicalDamage>{{ calc_damage_spread }} physical damage</physicalDamage>.<br /><br /><keywordMajor>Transcendent State</keywordMajor>: This Ability is instantly activated for {{ spell.yunarar:buff_duration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Passive On-Hit Damage", "Attack Speed", "Active On-Hit Damage"],
+            "effect": [
+              "{{ damage_passive }} -> {{ damage_passiveNL }}",
+              "{{ attack_speed*100.000000 }}% -> {{ attack_speednl*100.000000 }}%",
+              "{{ damage }} -> {{ damageNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [0, 0, 0, 0, 0],
+          "cooldownBurn": "0",
+          "cost": [30, 30, 30, 30, 30],
+          "costBurn": "30",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " Mana",
+          "maxammo": "-1",
+          "range": [0, 0, 0, 0, 0],
+          "rangeBurn": "0",
+          "image": {
+            "full": "YunaraQ.png",
+            "sprite": "spell16.png",
+            "group": "spell",
+            "x": 288,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ basecost }} Mana"
+        },
+        {
+          "id": "YunaraW",
+          "name": "Arc of Judgment | Arc of Ruin",
+          "description": "Yunara fires a spinning prayer bead that deals damage and slows enemies. While in her Transcendent State she instead fires off a laser that deals damage and slows enemies.",
+          "tooltip": "Yunara lets rip a prayer bead that deals <magicDamage>{{ calc_damage_initial }} magic damage</magicDamage> and <status>Slows by {{ calc_slow }} decaying over {{ slow_duration }} seconds</status>. It deals an additional <magicDamage>{{ calc_damage_per_second }} magic damage</magicDamage> per second.<br /><br /><keywordMajor>Transcendent State - Arc of Ruin</keywordMajor>: Yunara fires a laser that deals <magicDamage>{{ spell.yunarar:calc_rw_damage }} magic damage</magicDamage> and <status>Slows by {{ spell.yunarar:calc_rw_slow_amount }} decaying over {{ spell.yunarar:rw_slow_duration }} second</status>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Damage Per Second"],
+            "effect": ["{{ damage }} -> {{ damageNL }}", "{{ damage*0.600000 }} -> {{ damagenl*0.600000 }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [10, 10, 10, 10, 10],
+          "cooldownBurn": "10",
+          "cost": [60, 60, 60, 60, 60],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " Mana",
+          "maxammo": "-1",
+          "range": [1150, 1150, 1150, 1150, 1150],
+          "rangeBurn": "1150",
+          "image": {
+            "full": "YunaraW.png",
+            "sprite": "spell16.png",
+            "group": "spell",
+            "x": 336,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ f2.0 }} Mana"
+        },
+        {
+          "id": "YunaraE",
+          "name": "Kanmei's Steps | Untouchable Shadow",
+          "description": "Yunara gains Move Speed and becomes Ghosted. While in her Transcendent State she instead dashes in a direction.",
+          "tooltip": "Yunara gains <speed>{{ calc_move_speed }} Move Speed</speed>, increased to <speed>{{ calc_move_speed_enhanced }} Move Speed</speed> when moving toward an enemy champion, for {{ buff_duration }} seconds.<br /><br /><keywordMajor>Transcendent State - Untouchable Shadow</keywordMajor>: Yunara dashes in a direction.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Move Speed", "Max Move Speed"],
+            "effect": [
+              "{{ move_speed*100.000000 }}% -> {{ move_speednl*100.000000 }}%",
+              "{{ move_speed*150.000000 }}% -> {{ move_speednl*150.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [9, 9, 9, 9, 9],
+          "cooldownBurn": "9",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " Mana",
+          "maxammo": "-1",
+          "range": [0, 0, 0, 0, 0],
+          "rangeBurn": "0",
+          "image": {
+            "full": "YunaraE.png",
+            "sprite": "spell16.png",
+            "group": "spell",
+            "x": 384,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ f2.0 }} Mana"
+        },
+        {
+          "id": "YunaraR",
+          "name": "Transcend One's Self",
+          "description": "Yunara enters a Transcendent State that upgrades her basic Abilities.",
+          "tooltip": "Yunara enters a <keywordMajor>Transcendent State</keywordMajor> for {{ buff_duration }} seconds upgrading her basic Abilities for the duration.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Arc of Ruin | Damage", "Untouchable Shadow | Dash Speed"],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ rw_damage_base }} -> {{ rw_damage_baseNL }}",
+              "{{ re_dash_speed }} -> {{ re_dash_speedNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [100, 90, 80],
+          "cooldownBurn": "100/90/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [0, 0, 0],
+          "rangeBurn": "0",
+          "image": {
+            "full": "YunaraR.png",
+            "sprite": "spell16.png",
+            "group": "spell",
+            "x": 432,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Vow of the First Lands",
+        "description": "Yunara's Critical Strikes deal bonus magic damage.",
+        "image": {
+          "full": "Yunara_Passive.Yunara.png",
+          "sprite": "passive5.png",
+          "group": "passive",
+          "x": 96,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

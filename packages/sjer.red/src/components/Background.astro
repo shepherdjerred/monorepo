@@ -1,0 +1,11 @@
+---
+type Props = {
+  extraCss?: string | undefined;
+};
+
+const { extraCss } = Astro.props;
+---
+
+<div class:list={[extraCss]}>
+  <slot />
+</div>

@@ -361,6 +361,7 @@ fn generate_sprites_settings_json() -> &'static str {
 }
 
 /// Hook installation result for sprites
+#[derive(Debug)]
 pub struct SpritesHookInstallResult {
     /// Commands to execute in the sprite to install hooks
     pub commands: Vec<Vec<String>>,
@@ -385,14 +386,14 @@ pub fn generate_sprites_hook_commands(
     let commands = vec![
         // Create hooks directory
         vec![
-            "mkdir".to_string(),
-            "-p".to_string(),
-            "/home/sprite/workspace/.clauderon/hooks".to_string(),
+            "mkdir".to_owned(),
+            "-p".to_owned(),
+            "/home/sprite/workspace/.clauderon/hooks".to_owned(),
         ],
         // Write send_status.sh
         vec![
-            "sh".to_string(),
-            "-c".to_string(),
+            "sh".to_owned(),
+            "-c".to_owned(),
             format!(
                 "cat > /home/sprite/workspace/.clauderon/hooks/send_status.sh << 'OUTER_EOF'\n{}\nOUTER_EOF",
                 send_status_script
@@ -400,20 +401,20 @@ pub fn generate_sprites_hook_commands(
         ],
         // Make executable
         vec![
-            "chmod".to_string(),
-            "+x".to_string(),
-            "/home/sprite/workspace/.clauderon/hooks/send_status.sh".to_string(),
+            "chmod".to_owned(),
+            "+x".to_owned(),
+            "/home/sprite/workspace/.clauderon/hooks/send_status.sh".to_owned(),
         ],
         // Create .claude directory
         vec![
-            "mkdir".to_string(),
-            "-p".to_string(),
-            "/home/sprite/workspace/.claude".to_string(),
+            "mkdir".to_owned(),
+            "-p".to_owned(),
+            "/home/sprite/workspace/.claude".to_owned(),
         ],
         // Write settings.json
         vec![
-            "sh".to_string(),
-            "-c".to_string(),
+            "sh".to_owned(),
+            "-c".to_owned(),
             format!(
                 "cat > /home/sprite/workspace/.claude/settings.json << 'EOF'\n{}\nEOF",
                 settings_json
@@ -421,8 +422,8 @@ pub fn generate_sprites_hook_commands(
         ],
         // Set session ID environment variable in bashrc
         vec![
-            "sh".to_string(),
-            "-c".to_string(),
+            "sh".to_owned(),
+            "-c".to_owned(),
             format!(
                 "echo 'export CLAUDERON_SESSION_ID=\"{}\"' >> ~/.bashrc",
                 session_id

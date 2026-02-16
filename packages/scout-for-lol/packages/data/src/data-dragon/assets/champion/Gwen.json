@@ -1,0 +1,306 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Gwen": {
+      "id": "Gwen",
+      "key": "887",
+      "name": "Gwen",
+      "title": "The Hallowed Seamstress",
+      "image": {
+        "full": "Gwen.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 96,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "887000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "887001",
+          "num": 1,
+          "name": "Space Groove Gwen",
+          "chromas": true
+        },
+        {
+          "id": "887011",
+          "num": 11,
+          "name": "Cafe Cuties Gwen",
+          "chromas": true
+        },
+        {
+          "id": "887020",
+          "num": 20,
+          "name": "Soul Fighter Gwen",
+          "chromas": true
+        },
+        {
+          "id": "887030",
+          "num": 30,
+          "name": "Battle Queen Gwen",
+          "chromas": true
+        },
+        {
+          "id": "887039",
+          "num": 39,
+          "name": "Rain Shepherd Gwen",
+          "chromas": true
+        }
+      ],
+      "lore": "A former doll transformed and brought to life by magic, Gwen wields the very tools that once created her. She carries the weight of her maker's love with every step, taking nothing for granted. At her command is the Hallowed Mist, an ancient and protective magic that has blessed Gwen's scissors, needles, and sewing thread. So much is new to her, but Gwen remains joyfully determined to fight for the good that survives in a broken world.",
+      "blurb": "A former doll transformed and brought to life by magic, Gwen wields the very tools that once created her. She carries the weight of her maker's love with every step, taking nothing for granted. At her command is the Hallowed Mist, an ancient and...",
+      "allytips": [
+        "Always be Attacking - In addition to dealing bonus damage, Gwen's Attacks empower or reset many of her Abilities.",
+        "Gwen can still damage enemies outside her Hallowed Mists, especially with her Ultimate's range.",
+        "Some of Gwen's Abilities can apply her passive to multiple enemies, so aim them at groups to get maximum damage and healing."
+      ],
+      "enemytips": [
+        "Gwen's Hallowed Mist shroud will only follow her once, after that it will dissipate when she leaves.",
+        "Gwen must hit something to recast her Ultimate, try to evade her between casts.",
+        "Gwen needs to attack a few times to set up her damage, so try to get the jump on her."
+      ],
+      "tags": ["Fighter"],
+      "partype": "Mana",
+      "info": {
+        "attack": 7,
+        "defense": 4,
+        "magic": 5,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 620,
+        "hpperlevel": 115,
+        "mp": 330,
+        "mpperlevel": 40,
+        "movespeed": 340,
+        "armor": 39,
+        "armorperlevel": 4.9,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 150,
+        "hpregen": 9,
+        "hpregenperlevel": 0.9,
+        "mpregen": 7.5,
+        "mpregenperlevel": 0.7,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 63,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 2.25,
+        "attackspeed": 0.69
+      },
+      "spells": [
+        {
+          "id": "GwenQ",
+          "name": "Snip Snip!",
+          "description": "Gwen snips her scissors in a cone up to 6 times dealing magic damage. Gwen deals true damage to units in the center and applies her passive to them on each snip.",
+          "tooltip": "<spellPassive>Passive</spellPassive>: Gwen gains 1 stack when she hits an enemy with an attack (max 4, lasts {{ buffduration }} seconds).<br /><br /><spellActive>Active</spellActive>: Consumes stacks. Gwen snips once for <magicDamage>{{ miniswipedamage }} magic damage</magicDamage>, snips again for each ammo consumed, and then snips a final time for <magicDamage>{{ finalswipedamage }} magic damage</magicDamage>. <br /><br />The center of each strikes converts {{ truedamageconversion*100 }}% of the damage into <trueDamage>true damage</trueDamage> instead and applies <spellName>A Thousand Cuts</spellName> to enemies hit.<br /><rules><br />Deals {{ minionmod*100 }}% damage to minions.<br />Minions below {{ executethreshold*100 }}% health take {{ executebonus }}% bonus damage instead of reduced damage.</rules>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Final Strike Damage"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ swipedamagebase }} -> {{ swipedamagebaseNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [6.5, 5.75, 5, 4.25, 3.5],
+          "cooldownBurn": "6.5/5.75/5/4.25/3.5",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [450, 450, 450, 450, 450],
+          "rangeBurn": "450",
+          "image": {
+            "full": "GwenQ.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 288,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "GwenW",
+          "name": "Hallowed Mist",
+          "description": "Gwen summons mist that protects her from enemies outside of it. She can only be targeted by enemies who enter the mist.",
+          "tooltip": "Gwen summons the Hallowed Mist, making her Untargetable to all enemies (except towers) outside the zone for {{ zoneduration }} seconds or until she leaves it. While in the Mist, Gwen gains {{ totalresists }} <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR>.<br /><br />Gwen can <recast>Recast</recast> this Ability once to call the Mist to her. This will automatically <recast>Recast</recast> the first time Gwen attempts to leave the zone.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Bonus Resistances", "Cooldown"],
+            "effect": ["{{ baseresists }} -> {{ baseresistsNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [22, 21, 20, 19, 18],
+          "cooldownBurn": "22/21/20/19/18",
+          "cost": [60, 60, 60, 60, 60],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [0, 0, 0, 0, 0],
+          "rangeBurn": "0",
+          "image": {
+            "full": "GwenW.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 336,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "GwenE",
+          "name": "Skip 'n Slash",
+          "description": "Gwen dashes a short distance then gains Attack Speed, attack range, and magic damage <OnHit>On-Hit</OnHit> for a few seconds. If she hits an enemy during that time, this Ability's cooldown is partially refunded. ",
+          "tooltip": "Gwen dashes and empowers her Attacks for {{ buffduration }} seconds.<br /><br />Empowered Attacks gain <attackSpeed>{{ bonusattackspeed }} Attack Speed</attackSpeed>, <magicDamage>{{ onhitdamage }} magic damage</magicDamage> %i:OnHit% <OnHit>On-Hit</OnHit>, {{ bonusattackrange }} range, and the first one to hit an enemy refunds {{ cdrefund*100 }}% of this Ability's Cooldown.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Attack Speed", "Cooldown Refund"],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ baseattackspeed }}% -> {{ baseattackspeedNL }}%",
+              "{{ cdrefund }} -> {{ cdrefundNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [13, 12.5, 12, 11.5, 11],
+          "cooldownBurn": "13/12.5/12/11.5/11",
+          "cost": [35, 35, 35, 35, 35],
+          "costBurn": "35",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [400, 400, 400, 400, 400],
+          "rangeBurn": "400",
+          "image": {
+            "full": "GwenE.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 384,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "GwenR",
+          "name": "Needlework",
+          "description": "Gwen hurls a needle that slows enemies hit, deals magic damage, and applies A Thousand Cuts to champions hit. <br><br>This ability can be cast up to two more times, with each cast throwing additional needles and dealing more damage. ",
+          "tooltip": "<spellActive>First Cast:</spellActive> Hurl a needle that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>, <status>Slows</status> by {{ initialslow*-100 }}% for {{ debuffduration }} seconds, and applies <spellName>A Thousand Cuts</spellName> to all enemies hit. Gwen can <recast>Recast</recast> this ability up to 2 additional times within 6 seconds ({{ lockouttime }}s cooldown between casts).<br /><br /><recast>Second Cast:</recast> Fire three needles to deal <magicDamage>{{ totaldamage3 }} magic damage</magicDamage><br /><recast>Third Cast:</recast> Fire five needles to deal <magicDamage>{{ totaldamage5 }} magic damage</magicDamage>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Base Damage", "Slow"],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ initialslow*-100.000000 }}% -> {{ initialslownl*-100.000000 }}%"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 100, 80],
+          "cooldownBurn": "120/100/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1200, 1200, 1200],
+          "rangeBurn": "1200",
+          "image": {
+            "full": "GwenR.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 432,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "A Thousand Cuts",
+        "description": "Gwen's attacks deal bonus magic damage based on the targets health. She heals for a portion of the damage dealt to champions by this effect. ",
+        "image": {
+          "full": "Gwen_Passive.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 96,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

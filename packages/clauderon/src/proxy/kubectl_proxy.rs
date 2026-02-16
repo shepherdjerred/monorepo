@@ -12,6 +12,7 @@ use std::process::{Child, Command, Stdio};
 /// Kubernetes API. Containers can access the K8s API via this proxy using
 /// `http://host-gateway:{port}`, and the proxy handles all authentication
 /// using the host's kubeconfig.
+#[derive(Debug)]
 pub struct KubectlProxy {
     port: u16,
     process: Option<Child>,

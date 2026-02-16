@@ -1,0 +1,30 @@
+node_modules
+.jj
+*.tar.gz
+*.db
+.eslintcache
+*.sqlite
+*.node
+*.wasm
+*.tsbuildinfo
+
+# Logs
+logs/
+
+# Test coverage and reports
+coverage/
+*.lcov
+junit.xml
+
+# Test cache (e.g., fetch mocking)
+.test-cache/
+
+jscpd-report/
+
+**/generated/
+
+settings.local.json
+
+# ESLint tool cache files (regenerate with scripts/update-lint-cache.sh)
+.knip-cache.json
+.jscpd-cache.json

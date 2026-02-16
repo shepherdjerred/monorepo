@@ -1,0 +1,33 @@
+---
+import Badge from "./Badge.astro";
+
+interface Props {
+  title: string;
+  subtitle?: string;
+  badge?: string;
+  centered?: boolean;
+  variant?: "section" | "page";
+}
+
+const { title, subtitle, badge, centered = true, variant = "section" } = Astro.props;
+
+const isPage = variant === "page";
+const titleClass = isPage
+  ? "text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white lg:text-5xl"
+  : `text-pretty text-4xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-5xl ${centered ? "lg:text-balance" : ""}`;
+
+const subtitleClass = isPage
+  ? "mt-6 text-lg text-gray-600 dark:text-gray-300"
+  : "mt-6 text-lg/8 text-gray-600 dark:text-gray-300";
+
+const containerClass = isPage
+  ? `${centered ? "text-center" : ""} mb-16`
+  : `mx-auto max-w-2xl ${centered ? "lg:text-center" : ""}`;
+---
+
+<div class={containerClass}>
+  {badge && <Badge text={badge} color="indigo" size="md" />}
+  {isPage ? <h1 class={titleClass}>{title}</h1> : <p class={`mt-2 ${titleClass}`}>{title}</p>}
+  {subtitle && <p class={subtitleClass}>{subtitle}</p>}
+  <slot />
+</div>

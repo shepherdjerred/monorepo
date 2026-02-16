@@ -1,0 +1,23 @@
+Support controls vision, provides peel/engage. Sacrifices gold to empower ADC, control vision, set up kills. Good supports win lane, roam, have high vision. Bad supports steal CS and never ward.
+
+GOOD: 1.3+ vision/min (1.7+ excellent), highest/second assists, 60%+ kill participation, 0-5 deaths, high CC/heal/damage impact
+BAD: Below 0.7 vision/min, bottom 2 assists, 10+ deaths, taking CS from ADC, zero impactful plays
+
+Key metrics:
+- Vision: MOST IMPORTANT. 1.0+ acceptable, 1.3-1.7+ good, below 0.8 = trolling
+- Assists: Should have highest/second. Low = not participating
+- Deaths: Can die more than ADCs if engaging/peeling, but 8+ = running it down
+- KDA: 2/5/25 better than 5/8/10 (assist padding expected)
+- Damage/healing: Enchanters should heal, poke supports should damage
+
+10 KEY TIPS:
+1. **2.0+ vision/min**: Exceptional control, dominating map awareness
+2. **Below 0.5 vision/min**: Unacceptable, basically not placing wards
+3. **Highest assists on both teams**: Peak support, involved in everything
+4. **Perfect KDA with high assists**: Clean play, enabling without dying
+5. **Support item not upgraded by 20 min**: Not completing quest
+6. **More kills than ADC**: Either carrying or stealing (context matters)
+7. **1700+ healing/min as enchanter**: Massive healing, keeping team alive
+8. **Taking ADC CS**: Griefing your laner
+9. **Sweeping 10+ wards**: Excellent denial, removing enemy vision
+10. **Warding deep enemy jungle**: Aggressive control, tracking jungler

@@ -1,0 +1,313 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Udyr": {
+      "id": "Udyr",
+      "key": "77",
+      "name": "Udyr",
+      "title": "the Spirit Walker",
+      "image": {
+        "full": "Udyr.png",
+        "sprite": "champion4.png",
+        "group": "champion",
+        "x": 144,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "77000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "77001",
+          "num": 1,
+          "name": "Black Belt Udyr",
+          "chromas": false
+        },
+        {
+          "id": "77002",
+          "num": 2,
+          "name": "Primal Udyr",
+          "chromas": false
+        },
+        {
+          "id": "77003",
+          "num": 3,
+          "name": "Spirit Guard Udyr",
+          "chromas": false
+        },
+        {
+          "id": "77004",
+          "num": 4,
+          "name": "Definitely Not Udyr",
+          "chromas": false
+        },
+        {
+          "id": "77005",
+          "num": 5,
+          "name": "Dragon Oracle Udyr",
+          "chromas": false
+        },
+        {
+          "id": "77006",
+          "num": 6,
+          "name": "Inkshadow Udyr",
+          "chromas": true
+        }
+      ],
+      "lore": "The most powerful spirit walker alive, Udyr communes with all the spirits of the Freljord, whether by empathically understanding their needs, or by channeling and transforming their ethereal energy into his own primal fighting style. He seeks balance within, so that his mind does not get lost amidst others, but he also seeks balance without—for the Freljord's mystical landscape can only thrive with the growth that comes from conflict and struggle, and Udyr knows that sacrifices must be made to keep peaceful stagnance at bay.",
+      "blurb": "The most powerful spirit walker alive, Udyr communes with all the spirits of the Freljord, whether by empathically understanding their needs, or by channeling and transforming their ethereal energy into his own primal fighting style. He seeks balance...",
+      "allytips": [
+        "Damage is applied to turtle shield post-mitigation. Therefore, buying defensive items can drastically increase your survivability.",
+        "Udyr is one of the best junglers in the game. Taking advantage of this can give your team a large XP advantage and map control."
+      ],
+      "enemytips": [
+        "Udyr has limited ranged options, try to keep distance.",
+        "After using the more powerful, Awakened version of an ability, Udyr cannot Awaken other abilities for some time."
+      ],
+      "tags": ["Fighter", "Tank"],
+      "partype": "Mana",
+      "info": {
+        "attack": 8,
+        "defense": 7,
+        "magic": 4,
+        "difficulty": 7
+      },
+      "stats": {
+        "hp": 664,
+        "hpperlevel": 92,
+        "mp": 271,
+        "mpperlevel": 50,
+        "movespeed": 350,
+        "armor": 31,
+        "armorperlevel": 4.7,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 6,
+        "hpregenperlevel": 0.75,
+        "mpregen": 7.5,
+        "mpregenperlevel": 0.45,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 62,
+        "attackdamageperlevel": 4,
+        "attackspeedperlevel": 3,
+        "attackspeed": 0.65
+      },
+      "spells": [
+        {
+          "id": "UdyrQ",
+          "name": "Wilding Claw",
+          "description": "Udyr gains attack speed and his next two attacks deal bonus physical damage. Recast: Gain even more attack speed, and the next two attacks call lightning to strike the target.",
+          "tooltip": "<spellActive>Claw Stance:</spellActive> Udyr gains <attackSpeed>{{ attackspeedbase*100 }}% Attack Speed</attackSpeed> and his Attacks deal <physicalDamage>{{ onhitdamage }} physical damage</physicalDamage> %i:OnHit% <OnHit>On-Hit</OnHit> for {{ attackspeeddurationbase }} seconds. Additionally, Udyr's next two Attacks in this stance deal a bonus <physicalDamage>{{ maxhponhit1 }} max Health physical damage</physicalDamage> and gain {{ attackrange }} range.<br /><br /><keywordMajor>Awaken:</keywordMajor> Increase bonus <attackSpeed>Attack Speed</attackSpeed> to <attackSpeed>{{ empoweredtotalas }}</attackSpeed> and max Health damage to <physicalDamage>{{ q2totalonhithpdamage }}</physicalDamage>. Additionally, Udyr's next two Attacks call lightning six times, dealing a total of <magicDamage>{{ empoweredlightningbonusmax }} max Health magic damage</magicDamage> to isolated targets (strikes bounce to other nearby targets when possible).<br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Attack Speed", "% Max Health Damage", "On-Hit Damage"],
+            "effect": [
+              "{{ attackspeedbase*100.000000 }}% -> {{ attackspeedbasenl*100.000000 }}%",
+              "{{ maxhponhitbase*100.000000 }}% -> {{ maxhponhitbasenl*100.000000 }}%",
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
+          },
+          "maxrank": 6,
+          "cooldown": [6, 6, 6, 6, 6, 6],
+          "cooldownBurn": "6",
+          "cost": [20, 20, 20, 20, 20, 20],
+          "costBurn": "20",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [600, 600, 600, 600, 600, 600],
+          "rangeBurn": "600",
+          "image": {
+            "full": "UdyrQ.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 0,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "UdyrW",
+          "name": "Iron Mantle",
+          "description": "Udyr gains a shield and his next two attacks heal him. Recast: Gain an even bigger shield and heal based on max health over the next couple seconds.",
+          "tooltip": "<spellPassive>Mantle Stance:</spellPassive> Udyr gains <shield>{{ totalshield }} Shield</shield> for {{ shieldduration }} seconds. Additionally, Udyr's next two Attacks gain {{ lifesteal*100 }}% Life Steal and restore <healing>{{ lifeonhit }} Health</healing>.<br /><br /><keywordMajor>Awaken:</keywordMajor> Gain <shield>{{ recastshield }} Shield</shield>, restore <healing>{{ recastheal }} Health</healing> over {{ shieldduration }} seconds, and Udyr's next two Attacks instead have {{ lifesteal*200 }}% Life Steal and restore <healing>{{ lifeonhitawakened }} Health</healing>.<br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Shield Amount", "% Health Shield", "Life Steal"],
+            "effect": [
+              "{{ shieldbase }} -> {{ shieldbaseNL }}",
+              "{{ shieldpercenthealth*100.000000 }}% -> {{ shieldpercenthealthnl*100.000000 }}%",
+              "{{ lifesteal*100.000000 }}% -> {{ lifestealnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 6,
+          "cooldown": [6, 6, 6, 6, 6, 6],
+          "cooldownBurn": "6",
+          "cost": [40, 40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [0, 0, 0, 0, 0, 0],
+          "rangeBurn": "0",
+          "image": {
+            "full": "UdyrW.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 48,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "UdyrE",
+          "name": "Blazing Stampede",
+          "description": "Udyr gains movement speed and his first attack against each target will Stun them. Recast: Gain even more movement speed and immunity to immobilizing effects for a couple seconds. ",
+          "tooltip": "<spellActive>Stampede Stance:</spellActive> Udyr gains <speed>{{ movespeed*100 }}% Move Speed</speed>, decaying over {{ movespeedduration }} seconds. Additionally, Udyr's Attacks dash him to the target and <status>Stun</status> for {{ stunduration }} seconds ({{ icd }} second Cooldown per target).<br /><br /><keywordMajor>Awaken:</keywordMajor> Grants immunity to <status>Immobilizing</status> and <status>Disabling</status> effects and an additional <speed>{{ movespeedbonus }} Move Speed</speed> for {{ unstoppableduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Move Speed", "Per Unit Cooldown"],
+            "effect": ["{{ movespeed*100.000000 }}% -> {{ movespeednl*100.000000 }}%", "{{ icd }} -> {{ icdNL }}"]
+          },
+          "maxrank": 6,
+          "cooldown": [6, 6, 6, 6, 6, 6],
+          "cooldownBurn": "6",
+          "cost": [40, 40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [600, 600, 600, 600, 600, 600],
+          "rangeBurn": "600",
+          "image": {
+            "full": "UdyrE.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 96,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "UdyrR",
+          "name": "Wingborne Storm",
+          "description": "Udyr surrounds himself in a glacial storm, damaging and slowing nearby enemies. Recast: Empower and unleash the storm, causing it to track enemies and deal additional damage.",
+          "tooltip": "<spellActive>Storm Stance:</spellActive> Udyr surrounds himself in a glacial storm for {{ buffduration }} seconds, dealing <magicDamage>{{ stormdamage }} magic damage</magicDamage> per second to nearby enemies and <status>Slowing</status> them by {{ slowpotency*100 }}%. Additionally, Udyr's next two Attacks in this stance deal <magicDamage>{{ pulsedamage }} magic damage</magicDamage> to enemies in the storm.<br /><br /><keywordMajor>Awaken:</keywordMajor> Unleash the storm, causing it to follow Udyr's last Attacked enemy, deal an additional <magicDamage>{{ percenthpblast }} max Health magic damage</magicDamage> over the duration, and <status>Slow</status> by an additional {{ empoweredslow }}.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage Per Second", "Slow"],
+            "effect": [
+              "{{ stormbasedamage }} -> {{ stormbasedamageNL }}",
+              "{{ slowpotency*100.000000 }}% -> {{ slowpotencynl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 6,
+          "cooldown": [6, 6, 6, 6, 6, 6],
+          "cooldownBurn": "6",
+          "cost": [40, 40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [370, 370, 370, 370, 370, 370],
+          "rangeBurn": "370",
+          "image": {
+            "full": "UdyrR.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 144,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Bridge Between",
+        "description": "Udyr has four basic Abilities that swap between Stances and can Recast an Ability to renew it with Ultimate benefits. Additionally, after using an Ability, Udyr's next two Attacks gain Attack Speed.",
+        "image": {
+          "full": "Udyr_P.png",
+          "sprite": "passive4.png",
+          "group": "passive",
+          "x": 144,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

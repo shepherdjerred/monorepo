@@ -1,0 +1,14 @@
+dist
+node_modules
+coverage
+.cache
+config*.toml
+!config.example.toml
+!config.dev.toml
+error.png
+.tmp-earthly-out
+*.gba
+logs
+saves
+.DS_Store
+.claude/settings.local.json

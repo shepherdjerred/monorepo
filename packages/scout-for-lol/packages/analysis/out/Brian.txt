@@ -1,0 +1,60 @@
+author: Brian (208425244128444418)
+messages: 7192
+volume: avg_words 6.58, median_words 4.0, p90_words 13.0, avg_chars 42.5, p90_chars 80.0
+lexical: ttr 0.128, hapax 0.067, caps/msg 0.0
+sentences: avg_words 5.897
+words: avg_len 4.45, variety 6078, typos/msg 3.089
+tokens: the (1.0), to (0.6942598187311179), in (0.38368580060422963), that (0.38308157099697887), we (0.3619335347432024), it (0.34622356495468276), for (0.34259818731117825), is (0.3419939577039275)
+char_trigrams:  th (3845), the (2438), ing (1877), he  (1739),  to (1578), ng  (1473)
+style_markers: maybe (110), yall (45), really (38), probably (38), bro (32), yo (30)
+laughter: \bl+o+l+\b (68), \blmao\b (21), \bha+ha+\b (15), \b(rofl|lmfao)\b (3)
+emoji: 😄 (29), 😛 (11), 🤔 (7), 😎 (6), 😢 (5), 🙂 (4)
+openers: what (147), we (146), think (141), yeah (130), you (124) | what the (32), what's the (31), im down (31), not sure (30), we can (25)
+closers: today (104), man (99), it (84), now (78), rn (53) | right now (23), the server (19), move today (17), be fun (13), im down (12)
+cadence: . (3105), : (1489), ' (1461), ? (1281), , (1254), ! (907) | repeats !! (31), ?! (19), !!! (9), ?? (7) | ?/msg 0.178 !/msg 0.126 .../msg 0.046
+formatting: links/msg 0.022 mentions/msg 0.096 quotes/msg 0.004 code/msg 0.006 multiline/msg 0.039 stretch/msg 0.079 shout/msg 0.036
+hours: 20, 22, 18
+mentions: 202595851678384137 (209), 160509172704739328 (87), 208404668026454016 (50), 263577791105073152 (35), 175488352949108736 (33)
+representative: what the
+interesting:
+ 1. (0.532) this is the
+ 2. (0.464) that’s the squad
+ 3. (0.462) in the yard
+ 4. (0.457) one of the 🐱s
+ 5. (0.437) and the collegiums
+ 6. (0.429) in the back with the gas
+ 7. (0.426) welcome to the Dawgs <@456226577798135808>
+ 8. (0.425) congrats to the Vietnamese
+ 9. (0.416) on the way
+10. (0.413) _p the less i know the better
+11. (0.411) what the bros up to
+12. (0.41) nvm it’s to the aiport
+13. (0.407) on the road
+14. (0.403) what the fuck?
+15. (0.403) ... what the fuck ........................................ !
+16. (0.403) what the fuck
+17. (0.403) # ^ what the fuck
+18. (0.401) study the craft, the *dynasty*
+19. (0.399) what the heck !~
+20. (0.399) what the heck
+quotes:
+- "what's the move today" (15)
+- "what the heck" (10)
+- "cheep chicken monday today" (4)
+- "1122 23rd ave seattle wa" (4)
+- "who pissed him off" (4)
+- "what the fuck" (4)
+- "stream that shit" (4)
+- "frank ocean cayendo" (4)
+- "money in the grave" (4)
+- "rock roll mcdonalds" (3)
+- "love ya man" (3)
+- "you hate to see it" (3)
+- "that's pretty good" (3)
+- "settings maxqueuelength 10" (3)
+- "suga honey iced tea kelis" (3)
+- "who wants to play flex later" (3)
+- "y'all miss jerred" (3)
+- "thank man thank" (3)
+- "can play later" (3)
+- "midtown square apartments" (2)

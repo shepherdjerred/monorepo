@@ -11,13 +11,19 @@ use super::session::BackendType;
 pub enum SessionError {
     /// Session not found.
     #[error("Session {session_id} not found")]
-    NotFound { session_id: Uuid },
+    NotFound {
+        /// ID of the session that was not found.
+        session_id: Uuid,
+    },
 
     /// Backend failed to start a session.
     #[error("Backend {backend:?} failed to start session {session_id}: {source}")]
     BackendStartFailed {
+        /// Session that failed to start.
         session_id: Uuid,
+        /// Backend type that failed.
         backend: BackendType,
+        /// Underlying error.
         #[source]
         source: anyhow::Error,
     },
@@ -25,8 +31,11 @@ pub enum SessionError {
     /// Backend failed to stop a session.
     #[error("Backend {backend:?} failed to stop session {session_id}: {source}")]
     BackendStopFailed {
+        /// Session that failed to stop.
         session_id: Uuid,
+        /// Backend type that failed.
         backend: BackendType,
+        /// Underlying error.
         #[source]
         source: anyhow::Error,
     },
@@ -34,8 +43,11 @@ pub enum SessionError {
     /// Git worktree creation failed.
     #[error("Git worktree creation failed for session {session_id} at {path}: {source}")]
     WorktreeCreationFailed {
+        /// Session the worktree was for.
         session_id: Uuid,
+        /// Target worktree path.
         path: PathBuf,
+        /// Underlying error.
         #[source]
         source: anyhow::Error,
     },
@@ -43,39 +55,59 @@ pub enum SessionError {
     /// Git worktree removal failed.
     #[error("Git worktree removal failed for session {session_id} at {path}: {source}")]
     WorktreeRemovalFailed {
+        /// Session the worktree belonged to.
         session_id: Uuid,
+        /// Worktree path that could not be removed.
         path: PathBuf,
+        /// Underlying error.
         #[source]
         source: anyhow::Error,
     },
 
     /// Session name conflict.
     #[error("Session name '{name}' already exists")]
-    NameConflict { name: String },
+    NameConflict {
+        /// Conflicting session name.
+        name: String,
+    },
 
     /// Failed to generate unique session name.
     #[error("Failed to generate unique session name after {attempts} attempts")]
-    NameGenerationFailed { attempts: usize },
+    NameGenerationFailed {
+        /// Number of attempts made.
+        attempts: usize,
+    },
 
     /// Invalid repository path.
     #[error("Invalid repository path '{path}': {reason}")]
-    InvalidRepoPath { path: String, reason: String },
+    InvalidRepoPath {
+        /// The invalid path.
+        path: String,
+        /// Why the path is invalid.
+        reason: String,
+    },
 
     /// Session is in invalid state for operation.
     #[error(
         "Session {session_id} is in invalid state for operation '{operation}': current state is {current_state:?}"
     )]
     InvalidState {
+        /// Session in invalid state.
         session_id: Uuid,
+        /// Operation that was attempted.
         operation: String,
+        /// Current state description.
         current_state: String,
     },
 
     /// History directory creation failed.
     #[error("Failed to create history directory for session {session_id} at {path}: {source}")]
     HistoryDirectoryCreationFailed {
+        /// Session the history directory was for.
         session_id: Uuid,
+        /// Target directory path.
         path: PathBuf,
+        /// Underlying I/O error.
         #[source]
         source: std::io::Error,
     },
@@ -83,7 +115,9 @@ pub enum SessionError {
     /// Store operation failed.
     #[error("Store operation failed for session {session_id}: {source}")]
     StoreFailed {
+        /// Session the store operation was for.
         session_id: Uuid,
+        /// Underlying error.
         #[source]
         source: anyhow::Error,
     },
@@ -95,15 +129,20 @@ pub enum BackendError {
     /// Backend is not available.
     #[error("Backend {backend:?} is not available: {reason}")]
     Unavailable {
+        /// Backend type that is unavailable.
         backend: BackendType,
+        /// Why the backend is unavailable.
         reason: String,
     },
 
     /// Command execution failed.
     #[error("Command '{command}' failed for backend {backend:?}: {source}")]
     CommandFailed {
+        /// Backend type the command was for.
         backend: BackendType,
+        /// Command that failed.
         command: String,
+        /// Underlying I/O error.
         #[source]
         source: std::io::Error,
     },
@@ -111,29 +150,38 @@ pub enum BackendError {
     /// Resource not found.
     #[error("Resource '{resource}' not found for backend {backend:?}")]
     ResourceNotFound {
+        /// Backend type.
         backend: BackendType,
+        /// Resource identifier.
         resource: String,
     },
 
     /// Resource already exists.
     #[error("Resource '{resource}' already exists for backend {backend:?}")]
     ResourceExists {
+        /// Backend type.
         backend: BackendType,
+        /// Resource identifier.
         resource: String,
     },
 
     /// Configuration error.
     #[error("Backend {backend:?} configuration error: {message}")]
     ConfigurationError {
+        /// Backend type with bad configuration.
         backend: BackendType,
+        /// Error description.
         message: String,
     },
 
     /// Timeout waiting for operation.
     #[error("Timeout waiting for {operation} on backend {backend:?} after {timeout_ms}ms")]
     Timeout {
+        /// Backend type that timed out.
         backend: BackendType,
+        /// Operation that timed out.
         operation: String,
+        /// Timeout duration in milliseconds.
         timeout_ms: u64,
     },
 }
@@ -168,7 +216,7 @@ mod tests {
     fn test_backend_error_unavailable() {
         let err = BackendError::Unavailable {
             backend: BackendType::Kubernetes,
-            reason: "not installed".to_string(),
+            reason: "not installed".to_owned(),
         };
         let msg = err.to_string();
         assert!(msg.contains("Kubernetes"));

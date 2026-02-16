@@ -1,0 +1,33 @@
+---
+import { Icon } from "astro-icon/components";
+import { changelog, formatChangelogDate, renderChangelogToHtml } from "../data/changelog";
+
+const latestEntry = changelog[0];
+---
+
+{
+  latestEntry && (
+    <div class="bg-indigo-600 dark:bg-indigo-700 text-white pt-16 lg:pt-21.5 relative z-40 pointer-events-auto">
+      <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-x-6 select-text">
+          <div class="flex items-start gap-x-3 min-w-0 flex-1">
+            <Icon name="heroicons:megaphone" class="h-6 w-6 shrink-0 mt-0.5 text-white" />
+            <div class="min-w-0">
+              <p class="text-sm font-semibold leading-tight text-white">What's New - {formatChangelogDate(latestEntry)}</p>
+              <p
+                class="text-sm text-white/80 leading-snug mt-0.5"
+                set:html={renderChangelogToHtml(latestEntry.banner)}
+              />
+            </div>
+          </div>
+          <a
+            href="/whatsnew"
+            class="shrink-0 text-sm font-semibold text-white hover:text-white/80 transition-colors whitespace-nowrap ml-9 md:ml-0"
+          >
+            View all <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  )
+}

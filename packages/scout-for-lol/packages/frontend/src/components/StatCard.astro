@@ -1,0 +1,25 @@
+---
+import Card from "./Card.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  icon?: string | undefined;
+  gradient?: string | undefined;
+}
+
+const { title, description, icon, gradient = "yellow" } = Astro.props;
+
+// Determine if icon is an astro-icon name or HTML
+const isIconName = icon && !icon.includes("<");
+---
+
+<Card
+  title={title}
+  description={description}
+  icon={isIconName ? icon : undefined}
+  iconHtml={!isIconName ? icon : undefined}
+  gradient={gradient}
+  withCard={true}
+  layout="centered"
+/>

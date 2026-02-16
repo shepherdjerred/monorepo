@@ -1,0 +1,337 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "MonkeyKing": {
+      "id": "MonkeyKing",
+      "key": "62",
+      "name": "Wukong",
+      "title": "the Monkey King",
+      "image": {
+        "full": "MonkeyKing.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 192,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "62000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "62001",
+          "num": 1,
+          "name": "Volcanic Wukong",
+          "chromas": false
+        },
+        {
+          "id": "62002",
+          "num": 2,
+          "name": "General Wukong",
+          "chromas": false
+        },
+        {
+          "id": "62003",
+          "num": 3,
+          "name": "Jade Dragon Wukong",
+          "chromas": true
+        },
+        {
+          "id": "62004",
+          "num": 4,
+          "name": "Underworld Wukong",
+          "chromas": true
+        },
+        {
+          "id": "62005",
+          "num": 5,
+          "name": "Radiant Wukong",
+          "chromas": false
+        },
+        {
+          "id": "62006",
+          "num": 6,
+          "name": "Lancer Stratus Wukong",
+          "chromas": false
+        },
+        {
+          "id": "62007",
+          "num": 7,
+          "name": "Battle Academia Wukong",
+          "chromas": true
+        },
+        {
+          "id": "62016",
+          "num": 16,
+          "name": "Elderwood Wukong",
+          "chromas": true
+        },
+        {
+          "id": "62026",
+          "num": 26,
+          "name": "Mecha Kingdoms Wukong",
+          "chromas": true
+        }
+      ],
+      "lore": "Wukong is a vastayan trickster who uses his strength, agility, and intelligence to confuse his opponents and gain the upper hand. After finding a lifelong friend in the warrior known as Master Yi, Wukong became the last student of the ancient martial art known as Wuju. Armed with an enchanted staff, Wukong seeks to prevent Ionia from falling to ruin.",
+      "blurb": "Wukong is a vastayan trickster who uses his strength, agility, and intelligence to confuse his opponents and gain the upper hand. After finding a lifelong friend in the warrior known as Master Yi, Wukong became the last student of the ancient martial...",
+      "allytips": [
+        "Decoy and Nimbus Strike work well together to quickly strike your enemy and get out before they can retaliate.",
+        "Try using Decoy near brush to make an enemy overreact to your movement."
+      ],
+      "enemytips": [
+        "Wukong will often use Decoy after Nimbus Strike. Try delaying your abilities by a short amount of time to ensure that you're hitting the real Wukong.",
+        "Wukong becomes tougher to kill when surrounded by his enemies. Try to isolate him to gain an advantage."
+      ],
+      "tags": ["Fighter", "Tank"],
+      "partype": "Mana",
+      "info": {
+        "attack": 8,
+        "defense": 5,
+        "magic": 2,
+        "difficulty": 3
+      },
+      "stats": {
+        "hp": 610,
+        "hpperlevel": 99,
+        "mp": 330,
+        "mpperlevel": 65,
+        "movespeed": 340,
+        "armor": 31,
+        "armorperlevel": 4.7,
+        "spellblock": 28,
+        "spellblockperlevel": 2.05,
+        "attackrange": 175,
+        "hpregen": 3.5,
+        "hpregenperlevel": 0.65,
+        "mpregen": 8,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 66,
+        "attackdamageperlevel": 3.5,
+        "attackspeedperlevel": 3,
+        "attackspeed": 0.69
+      },
+      "spells": [
+        {
+          "id": "MonkeyKingDoubleAttack",
+          "name": "Crushing Blow",
+          "description": "Wukong's next attack gains attack range, deals bonus damage, and reduces the target's armor for a few seconds.",
+          "tooltip": "Wukong and his <keywordMajor>Clone's</keywordMajor> next Attack gains {{ attackrangebonus }} range, deals an additional <physicalDamage>{{ bonusdamagett }} physical damage</physicalDamage>, and removes <scaleArmor>{{ armorshredpercent*100 }}% Armor</scaleArmor> for {{ shredduration }} seconds.<br /><br />This Ability's cooldown is reduced by {{ cooldowndecrease }} seconds every time Wukong or his <keywordMajor>Clone</keywordMajor> hit an enemy with an Attack or Ability.<br /><br /><rules>This Ability triggers spell effects upon dealing damage.</rules>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Armor Reduction %", "Range", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ armorshredpercent*100.000000 }}% -> {{ armorshredpercentnl*100.000000 }}%",
+              "{{ attackrangebonus }} -> {{ attackrangebonusNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldownBurn": "8/7.5/7/6.5/6",
+          "cost": [20, 20, 20, 20, 20],
+          "costBurn": "20",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [250, 275, 300, 325, 350],
+          "rangeBurn": "250/275/300/325/350",
+          "image": {
+            "full": "MonkeyKingDoubleAttack.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 192,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "MonkeyKingDecoy",
+          "name": "Warrior Trickster",
+          "description": "Wukong becomes <font color='#91d7ee'>Invisible</font> and dashes in a direction, leaving behind a clone that will attack nearby enemies.",
+          "tooltip": "Wukong dashes and becomes <keywordStealth>Invisible</keywordStealth> for {{ stealthduration }} second, leaving behind a stationary <keywordMajor>Clone</keywordMajor> for {{ cloneduration }} seconds.<br /><br />The <keywordMajor>Clone</keywordMajor> Attacks nearby enemies Wukong has recently damaged and will mimic his ultimate, each dealing {{ clonedamagemod*100 }}% of normal damage.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage Percent", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ clonedamagemod*100.000000 }}% -> {{ clonedamagemodnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [22, 21, 20, 19, 18],
+          "cooldownBurn": "22/21/20/19/18",
+          "cost": [60, 55, 50, 45, 40],
+          "costBurn": "60/55/50/45/40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [275, 275, 275, 275, 275],
+          "rangeBurn": "275",
+          "image": {
+            "full": "MonkeyKingDecoy.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 240,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "MonkeyKingNimbus",
+          "name": "Nimbus Strike",
+          "description": "Wukong dashes to a targeted enemy and sends out images to attack enemies near his target, dealing damage to each enemy struck.",
+          "tooltip": "Wukong dashes to an enemy, sending out <keywordMajor>Clones</keywordMajor> that mimic the dash to up to {{ extratargets }} additional enemies nearby. Each enemy struck takes <magicDamage>{{ totaldamage }} magic damage</magicDamage>. He and his <keywordMajor>Clone</keywordMajor> gain <attackSpeed>{{ attackspeed*100 }}% Attack Speed</attackSpeed> for {{ attackspeedduration }} seconds.<br /><br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Attack Speed", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ attackspeed*100.000000 }}% -> {{ attackspeednl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [10, 9.25, 8.5, 7.75, 7],
+          "cooldownBurn": "10/9.25/8.5/7.75/7",
+          "cost": [30, 35, 40, 45, 50],
+          "costBurn": "30/35/40/45/50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [650, 650, 650, 650, 650],
+          "rangeBurn": "650",
+          "image": {
+            "full": "MonkeyKingNimbus.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 288,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "MonkeyKingSpinToWin",
+          "name": "Cyclone",
+          "description": "Wukong's extends his staff and spins it around repeatedly, gaining Move Speed.<br><br>Enemies struck take damage and are knocked up.",
+          "tooltip": "Wukong gains <speed>{{ movespeed*100 }}% Move Speed</speed> and spins his staff, <status>Knocking Up</status> nearby enemies for {{ knockupduration }} seconds and take <physicalDamage>{{ totaldamagett }} plus {{ percenthpdamagett }} max Health physical damage</physicalDamage> over {{ spinduration }} seconds.<br /><br />This Ability can be cast a second time within {{ recastwindow }} seconds before going on cooldown.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Maximum Health Damage", "Cooldown"],
+            "effect": [
+              "{{ basepercentmaxhpdmgpersec*200.000000 }}% -> {{ basepercentmaxhpdmgpersecnl*200.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [130, 110, 90],
+          "cooldownBurn": "130/110/90",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [315, 315, 315],
+          "rangeBurn": "315",
+          "image": {
+            "full": "MonkeyKingSpinToWin.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 336,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Stone Skin",
+        "description": "Wukong gains stacking armor and max health regeneration while fighting champions and monsters.",
+        "image": {
+          "full": "MonkeyKingStoneSkin.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 192,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

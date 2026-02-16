@@ -1,0 +1,354 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Syndra": {
+      "id": "Syndra",
+      "key": "134",
+      "name": "Syndra",
+      "title": "the Dark Sovereign",
+      "image": {
+        "full": "Syndra.png",
+        "sprite": "champion4.png",
+        "group": "champion",
+        "x": 48,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "134000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "134001",
+          "num": 1,
+          "name": "Justicar Syndra",
+          "chromas": false
+        },
+        {
+          "id": "134002",
+          "num": 2,
+          "name": "Atlantean Syndra",
+          "chromas": false
+        },
+        {
+          "id": "134003",
+          "num": 3,
+          "name": "Queen of Diamonds Syndra",
+          "chromas": false
+        },
+        {
+          "id": "134004",
+          "num": 4,
+          "name": "Snow Day Syndra",
+          "chromas": false
+        },
+        {
+          "id": "134005",
+          "num": 5,
+          "name": "SKT T1 Syndra",
+          "chromas": true
+        },
+        {
+          "id": "134006",
+          "num": 6,
+          "name": "Star Guardian Syndra",
+          "chromas": true
+        },
+        {
+          "id": "134007",
+          "num": 7,
+          "name": "Pool Party Syndra",
+          "chromas": true
+        },
+        {
+          "id": "134016",
+          "num": 16,
+          "name": "Withered Rose Syndra",
+          "chromas": true
+        },
+        {
+          "id": "134025",
+          "num": 25,
+          "name": "Bewitching Syndra",
+          "chromas": true
+        },
+        {
+          "id": "134034",
+          "num": 34,
+          "name": "Prestige Star Guardian Syndra",
+          "chromas": false
+        },
+        {
+          "id": "134044",
+          "num": 44,
+          "name": "Spirit Blossom Syndra",
+          "chromas": true
+        },
+        {
+          "id": "134054",
+          "num": 54,
+          "name": "Coven Syndra",
+          "chromas": true
+        },
+        {
+          "id": "134065",
+          "num": 65,
+          "name": "Dumpling Darlings Syndra",
+          "chromas": true
+        }
+      ],
+      "lore": "Syndra is a fearsome Ionian mage with incredible power at her command. As a child, she disturbed the village elders with her reckless and wild magic. She was sent away to be taught greater control, but eventually discovered her supposed mentor was restraining her abilities. Forming her feelings of betrayal and hurt into dark spheres of energy, Syndra has sworn to destroy all who would try to control her.",
+      "blurb": "Syndra is a fearsome Ionian mage with incredible power at her command. As a child, she disturbed the village elders with her reckless and wild magic. She was sent away to be taught greater control, but eventually discovered her supposed mentor was...",
+      "allytips": [
+        "To maximize your ultimate's damage use it when there are many spheres on the battlefield.",
+        "After you hit an enemy champion with Force of Will follow up with Dark Sphere, they'll be slowed and have a hard time avoiding it.",
+        "Get one of your spells to rank 5 as quickly as possible, they gain powerful bonus effects at max rank."
+      ],
+      "enemytips": [
+        "Get boots early when playing against Syndra, they'll help you avoid many of her spells.",
+        "Attack Syndra after she's used Scatter the Weak, it has a long cooldown so she'll be vulnerable.",
+        "At max rank Syndra's spells gain bonus effects and change in appearance."
+      ],
+      "tags": ["Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 2,
+        "defense": 3,
+        "magic": 9,
+        "difficulty": 8
+      },
+      "stats": {
+        "hp": 563,
+        "hpperlevel": 100,
+        "mp": 480,
+        "mpperlevel": 40,
+        "movespeed": 330,
+        "armor": 25,
+        "armorperlevel": 4,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 550,
+        "hpregen": 6.5,
+        "hpregenperlevel": 0.6,
+        "mpregen": 8,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 54,
+        "attackdamageperlevel": 2.9,
+        "attackspeedperlevel": 2,
+        "attackspeed": 0.658
+      },
+      "spells": [
+        {
+          "id": "SyndraQ",
+          "name": "Dark Sphere",
+          "description": "Syndra conjures a Dark Sphere dealing magic damage. The sphere remains and can be manipulated by her other powers.",
+          "tooltip": "Syndra conjures a <keywordMajor>Dark Sphere</keywordMajor>, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. The <keywordMajor>Dark Sphere</keywordMajor> remains for {{ sphereduration }} seconds and can be manipulated by Syndra's other Abilities.<br /><br /><evolve>{{ spell.syndrapassive:q1upgradethreshold }} Splinters of Wrath</evolve>: Syndra can store {{ upgrade1maxammo }} charges of <keywordMajor>Dark Sphere</keywordMajor>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["@AbilityResourceName@ Cost", "Damage"],
+            "effect": ["{{ cost }} -> {{ costNL }}", "{{ basedamage }} -> {{ basedamageNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [7, 7, 7, 7, 7],
+          "cooldownBurn": "7",
+          "cost": [40, 45, 50, 55, 60],
+          "costBurn": "40/45/50/55/60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [800, 800, 800, 800, 800],
+          "rangeBurn": "800",
+          "image": {
+            "full": "SyndraQ.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 96,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SyndraW",
+          "name": "Force of Will",
+          "description": "Syndra picks up and throws a Dark Sphere or enemy minion dealing magic damage and slowing the Move Speed of enemies.",
+          "tooltip": "Syndra grabs a <keywordMajor>Dark Sphere</keywordMajor>, enemy minion, or non-epic monster. She drags it with her and can <recast>Recast</recast> for up to 5 seconds.<br /><br /><recast>Recast</recast>: Syndra hurls the object, dealing <magicDamage>{{ throwdamage }} magic damage</magicDamage> and <status>Slowing</status> by {{ totalslowamount }}% for {{ f2 }} seconds.<br /><br /><evolve>{{ spell.syndrapassive:wupgradethreshold }} Splinters of Wrath</evolve>: This Ability deals an additional <trueDamage>{{ tooltiponlypassivebonuspercent }} true damage</trueDamage>.<br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage"],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 11, 10, 9, 8],
+          "cooldownBurn": "12/11/10/9/8",
+          "cost": [60, 70, 80, 90, 100],
+          "costBurn": "60/70/80/90/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [925, 925, 925, 925, 925],
+          "rangeBurn": "925",
+          "image": {
+            "full": "SyndraW.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 144,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SyndraE",
+          "name": "Scatter the Weak",
+          "description": "Syndra knocks enemies and Dark Spheres back dealing magic damage. Enemies hit by Dark Spheres become stunned.",
+          "tooltip": "Syndra projects a wave of force, <status>Knocking Back</status> enemies and <keywordMajor>Dark Spheres</keywordMajor> and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br /><keywordMajor>Dark Spheres</keywordMajor> that are pushed <status>Stun</status> enemies for {{ stunduration }} seconds and deal <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br /><evolve>{{ spell.syndrapassive:eupgradethreshold }} Splinters of Wrath</evolve>: This Ability's width is increased and <status>Slows</status> enemies by <status>{{ upgradedslowamount*100 }}%</status> for {{ upgradedslowduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [15, 15, 15, 15, 15],
+          "cooldownBurn": "15",
+          "cost": [50, 50, 50, 50, 50],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [650, 650, 650, 650, 650],
+          "rangeBurn": "650",
+          "image": {
+            "full": "SyndraE.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 192,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SyndraR",
+          "name": "Unleashed Power",
+          "description": "Syndra bombards an enemy Champion with all of her Dark Spheres.",
+          "tooltip": "<spellPassive>Passive</spellPassive>: <spellName>Dark Sphere</spellName> gains an additional {{ qhasteperrank }} Ability Haste for each rank of <spellName>Unleashed Power</spellName>.<br /><br />Syndra draws on her full cataclysmic power, launching the 3 <keywordMajor>Dark Spheres</keywordMajor> orbiting her plus up to 4 more nearby at an enemy champion. Each <keywordMajor>Dark Sphere</keywordMajor> deals <magicDamage>{{ damagecalc }} magic damage</magicDamage> (max <magicDamage>{{ maxdamagecalc }} magic damage</magicDamage>).<br /><br /><evolve>{{ spell.syndrapassive:rupgradethreshold }} Splinters of Wrath</evolve>: This Ability <danger>executes</danger> enemies below {{ upgradeexecutethreshold*100 }}% Health.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown", "Dark Sphere Ability Haste"],
+            "effect": [
+              "{{ damagepersphere }} -> {{ damagepersphereNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ tooltiponlytotalqhaste }} -> {{ tooltipoNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 100, 80],
+          "cooldownBurn": "120/100/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [675, 675, 675],
+          "rangeBurn": "675",
+          "image": {
+            "full": "SyndraR.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 240,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Transcendent",
+        "description": "Syndra collects Splinters of Wrath from gaining levels and damaging enemies which upgrade her abilities.<br><br><font color='#FF9900'>Dark Sphere</font>: Syndra can hold an additional charge<br><font color='#FF9900'>Force of Will</font>: Bonus true damage.<br><font color='#FF9900'>Scatter the Weak</font>: Increased width and slows all targets<br><font color='#FF9900'>Unleashed Power</font>: Executes low health targets",
+        "image": {
+          "full": "SyndraPassive.png",
+          "sprite": "passive4.png",
+          "group": "passive",
+          "x": 48,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

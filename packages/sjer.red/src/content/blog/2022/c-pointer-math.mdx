@@ -1,0 +1,65 @@
+---
+title: Pointer Math in C
+description: 2D arrays in C can be tricky
+date: 2022-10-15Z-0700
+---
+
+C is a very confusing language.
+
+The world is built on C, and some people are able to get _very_ good at it, but I am not one of those people.
+
+I pick it up for class, learn it, use it, appreciate it, and then forget it. Why would I want to write an application in C? I'm not a systems programmer, so I don't touch it.
+
+One side effect of this usage pattern is that I quickly forget how pointers and manual memory management work.
+
+Pointers are the semantics of `calloc` and `free` are easy enough to refresh on. It takes me a little while to remember if I need to use `*`, `&`, `->`, or `.` when working with pointers. That's not a big deal though -- again, I can refresh myself on the syntax rather easily.
+
+One thing that does trip me up (and led to a very annoying bug in a barrier algorithm) is 2D arrays, or rather representing a 2D array as a pointer.
+
+Here's what I did.
+
+```c
+int x;
+int y;
+int *array;
+
+array = calloc(x * y, sizeof(int))
+
+for (int i = 0; i < x; i++) {
+    for (int j = 0; j < y; j++>) {
+        item = array[i + j];
+    }
+}
+```
+
+Now, this seems somewhat reasonable at first. The problem is that there is going to be a collision. `x = 0, y = 1` and `x = 1, y = 0` will refer to the same slots in the array, which shouldn't happen!
+
+My next attempted was to change the array access to `array[i * j]`. This also doesn't work. Consider when `i = 0` or `j = 0`. Any multiplication by zero is zero, so these will all refer to the same slot.
+
+The correct solution is rather simple. The access should be `array[(i * y) + j]`. Let's prove this with an example.
+
+With `x = 2` and `y = 3`. These are the possible values of `i` and `j`:
+
+```
+i = 0, j = 0
+i = 0, j = 1
+i = 0, j = 2
+i = 1, j = 0
+i = 1, j = 1
+i = 1, j = 2
+```
+
+Now, lets see which slot in the array each pair will fit into.
+
+```
+i = 0, j = 0; (0 * 3) + 0 = 0
+i = 0, j = 1; (0 * 3) + 1 = 1
+i = 0, j = 2; (0 * 3) + 2 = 2
+i = 1, j = 0; (1 * 3) + 0 = 3
+i = 1, j = 1; (1 * 3) + 1 = 4
+i = 1, j = 2; (1 * 3) + 2 = 5
+```
+
+A unique index for each item! This is exactly what we wanted.
+
+You should perform these accesses based on the usage patterns of your data. The example above uses the x value as the column and the y value as the row. Accesses to sequential x values will be faster than accesses to sequential y values because of locality.

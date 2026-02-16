@@ -1,0 +1,158 @@
+---
+title: "`satisfies` is my favorite TypeScript keyword"
+date: 2024-12-21Z-0700
+---
+
+I've been doing a lot of work in TypeScript lately, and with that I've spent quite a bit of time learning more about its type system. TypeScript is a wonderfully advanced language though it has an unfortunately steep learning curve; in many ways it's the complete opposite of Go.
+
+One confusing thing about TypeScript is that it doesn't always infer the most precise type possible. As an example:
+
+```ts
+// name is of type "Jerred"
+const name = "Jerred";
+
+// person1 is of type { name: string }
+const person1 = {
+  name: "Jerred",
+};
+
+// person2 is of type { readonly name: "Jerred" }
+const person2 = {
+  name: "Jerred",
+} as const;
+```
+
+Why is the name of `person1` of type `string` and not the literal `"Jerred"`? Because the object _could_ be mutated to contain any other string.
+
+What happens when I want to pass those objects to a function that requires `name` to be `"Jerred"`?
+
+```ts
+// name is of type "Jerred"
+const name = "Jerred";
+
+// person1 is of type { name: string }
+const person1 = {
+  name: "Jerred",
+};
+
+// person2 is of type { readonly name: "Jerred" }
+const person2 = {
+  name: "Jerred",
+} as const;
+
+// ---cut---
+function handleJerred(name: "Jerred") {
+  // do something
+}
+
+// these are okay
+handleJerred(name);
+handleJerred(person2.name);
+
+// @errors: 2345
+handleJerred(person1.name);
+```
+
+As we'd expect, the types don't match up. The most obvious way is to annotate the variable declaration with the expected type:
+
+```ts
+function handleJerred(name: "Jerred") {
+  // do something
+}
+// ---cut---
+const person1: { name: "Jerred" } = {
+  name: "Jerred",
+};
+
+// okay
+handleJerred(person1.name);
+```
+
+We could also use the `satisfies` keyword. This keyword is a bit esoteric and not very common, but it comes in handy in some scenarios where you'd otherwise pull your hair out.
+
+Here's a quick example just to show the syntax:
+
+```ts
+function handleJerred(name: "Jerred") {
+  // do something
+}
+// ---cut---
+const person1 = {
+  name: "Jerred",
+} satisfies { name: "Jerred" };
+
+// okay
+handleJerred(person1.name);
+```
+
+`satisfies` is an alternative to an explicit variable type annotation. It tells TypeScript that your assignment should be _at least_ assignable to the provided type. It's kind of like a type-safe way to cast values.
+
+The benefit of `satifies` over an variable type annotation is that it lets TypeScript infer a more specific type based on the value provided. Consider this scenario:
+
+```ts
+function handleJerred(name: "Jerred") {
+  // do something
+}
+// ---cut---
+// @errors: 2353 2345
+type Person = {
+  name: string;
+  isCool: boolean;
+};
+
+function coolPeopleOnly(person: Person & { isCool: true }) {
+  // only cool people can enter here
+}
+
+const person1: Person = {
+  name: "Jerred",
+  isCool: true,
+};
+
+// okay, so we need to say that `isCool` is true
+coolPeopleOnly(person1);
+
+// and we also need to include the name field...
+const person2: { isCool: true } = {
+  name: "Jerred",
+  isCool: true,
+};
+
+const person3: { name: string; isCool: true } = {
+  name: "Jerred",
+  isCool: true,
+};
+
+coolPeopleOnly(person3);
+```
+
+A simpler solution is to use `satifies`:
+
+```ts
+type Person = {
+  name: string;
+  isCool: boolean;
+};
+
+function coolPeopleOnly(person: Person & { isCool: true }) {
+  // only cool people can enter here
+}
+// ---cut---
+// @errors: 2353 2345
+const person = {
+  name: "Jerred",
+  isCool: true,
+} satisfies Person;
+
+coolPeopleOnly(person);
+```
+
+TypeScript will ensure that your value is assignable to your type. The type of the assigned variable will be made based on the type of the value instead of the type provided to `satisfies`.
+
+This really comes in handy when you want to ensure that TypeScript is being as specific as possible.
+
+Read more:
+
+- [TypeScript documentation](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html)
+- [Learning TypeScript](https://www.learningtypescript.com/articles/the-satisfies-operator)
+- [Total TypeScript](https://www.totaltypescript.com/clarifying-the-satisfies-operator)

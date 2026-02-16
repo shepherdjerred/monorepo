@@ -1,0 +1,300 @@
+---
+description: TypeScript code standards and strict type safety rules
+globs: "*.ts,*.tsx"
+---
+
+# TypeScript Code Standards
+
+## Strict Type Safety Rules
+
+- **NEVER use `any`** - Always define proper types
+- **Avoid type assertions** - Use Zod validation instead
+- **Use unknown for uncertain types** - Validate with Zod before processing
+- **Prefer `undefined` over `null`** - Use `undefined` for optional/missing; `null` only for external APIs
+- **Prefer advanced types** - Mapped types, conditional types, template literals
+- **Exhaustive matching** - Handle all union cases explicitly
+
+**See:** `type-assertions-policy.mdc`, `zod-validation-patterns.mdc`, `exhaustive-case-handling.mdc`
+
+## Error Handling
+
+- Use `zod-validation-error` for user-friendly error messages
+- Handle errors at appropriate levels
+- Use Result patterns where appropriate
+- Proper async/await error handling
+
+## Performance & Memory
+
+- Lazy load heavy dependencies
+- Clean up resources and connections
+- Use proper caching strategies
+- Consider memory implications of data structures
+
+## Function Parameter Design
+
+**Avoid optional parameters with defaults when they affect behavior.**
+
+**Why:** Defaults mask intent and hide bugs. Make behavior-affecting parameters required.
+
+```typescript
+// ❌ BAD - Default hides decision
+function fetchData(id: string, purpose: "read" | "write" = "read") { }
+fetchData(id);  // Reading or writing?
+
+// ✅ GOOD - Explicit
+function fetchData(id: string, purpose: "read" | "write") { }
+fetchData(id, "read");  // Clear intent
+```
+
+**Defaults acceptable for:** UI options, pagination limits, feature flags defaulting to "off"
+
+**Defaults forbidden for:** Core behavior, data integrity, security/permissions
+
+## Naming Conventions (ESLint Enforced)
+
+ESLint enforces TypeScript naming standards via `@typescript-eslint/naming-convention`:
+
+| Type | Format | Examples |
+|------|--------|----------|
+| Functions | camelCase or PascalCase | `getUser`, `UserComponent` |
+| Variables | camelCase | `userName`, `itemCount` |
+| Constants | UPPER_CASE or camelCase | `MAX_ITEMS`, `defaultTimeout` |
+| Zod Schemas | PascalCase + `Schema` | `UserSchema` (custom rule) |
+| Types | PascalCase | `User`, `CompetitionStatus` |
+| Interfaces | PascalCase | `UserInterface` (prefer `type`) |
+| Enum members | PascalCase or UPPER_CASE | `Active`, `MAX_SIZE` |
+| Parameters | camelCase | `userId`, `options` |
+
+**Note:** `_` prefix allowed for unused variables (e.g., `_error`)
+
+## Dependencies
+
+- Use `remeda` for functional data transformations
+- Use `ts-pattern` for complex control flow
+- Use `env-var` for type-safe environment configuration
+- Use `date-fns` for date operations
+
+## How TypeScript Checking Works in This Project
+
+### Running Type Checks
+
+```bash
+# Run TypeScript compiler
+bun run typecheck
+mise run typecheck
+
+# Type-aware ESLint (runs with TypeScript)
+bun run lint
+mise run lint
+```
+
+**What gets checked:**
+
+- Type annotations on all variables and parameters
+- Null/undefined safety (`strictNullChecks`)
+- No implicit `any` types (`noImplicitAny`)
+- All code paths return values (`noImplicitReturns`)
+- Unused variables and parameters are flagged
+- Imports/exports match across packages
+
+### TypeScript Configuration
+
+The project uses strict TypeScript settings configured in `tsconfig.base.json`:
+
+| Option | Value | What It Enforces |
+|--------|-------|------------------|
+| `strict` | `true` | All strict checks enabled |
+| `strictNullChecks` | `true` | Handle null/undefined explicitly |
+| `noImplicitAny` | `true` | All types must be explicit |
+| `noImplicitThis` | `true` | `this` must be typed |
+| `noUnusedLocals` | `true` | No unused variables |
+| `noUnusedParameters` | `true` | No unused parameters |
+| `noImplicitReturns` | `true` | All code paths must return |
+| `exactOptionalPropertyTypes` | `true` | Optional properties can't be `undefined` |
+
+### Project References
+
+The monorepo uses TypeScript project references for proper type checking across packages:
+
+```
+tsconfig.json (root)
+├── packages/backend/tsconfig.json
+├── packages/data/tsconfig.json
+├── packages/report/tsconfig.json
+├── packages/frontend/tsconfig.json
+├── packages/report-ui/tsconfig.json
+└── packages/review-dev-tool/tsconfig.json
+```
+
+**Impact:**
+
+- Each package has its own type checking context
+- Can't import from packages not in workspace
+- Circular dependencies are caught immediately
+- Incremental builds are faster
+
+**Building:** When editing `tsconfig.json`, run:
+
+```bash
+bun run generate  # Regenerate TypeScript references
+```
+
+## Common TypeScript Errors and Fixes
+
+### Error: "Type 'X' is not assignable to type 'Y'"
+
+**Cause:** Type mismatch between variable and usage
+
+```typescript
+// ❌ WRONG
+const count: number = "5";  // string assigned to number
+
+// ✅ CORRECT
+const count: number = 5;
+// OR
+const countStr = "5";
+const count = Number(countStr);
+```
+
+### Error: "Object is possibly 'null' or 'undefined'"
+
+**Cause:** Using value without null check
+
+```typescript
+// ❌ WRONG
+const date = competition.startDate;
+const isPast = date > now;  // date might be null!
+
+// ✅ CORRECT
+const date = competition.startDate;
+if (date !== null) {
+  const isPast = date > now;
+}
+// OR
+const isPast = date && date > now;
+```
+
+### Error: "Property 'X' does not exist on type 'Y'"
+
+**Cause:** Wrong field name or missing type
+
+```typescript
+// ❌ WRONG
+const user = userData;
+console.log(user.fullName);  // Property doesn't exist
+
+// ✅ CORRECT - Define proper type
+const UserSchema = z.object({ name: z.string() });
+const user = UserSchema.parse(userData);
+console.log(user.name);
+```
+
+### Error: "Variable has type 'any'"
+
+**Cause:** Missing type annotation
+
+```typescript
+// ❌ WRONG
+function process(data) {  // 'data' is implicitly any
+  return data.field;
+}
+
+// ✅ CORRECT
+function process(data: unknown): string {
+  const schema = z.object({ field: z.string() });
+  return schema.parse(data).field;
+}
+```
+
+### Error: "'X' is declared but never used"
+
+**Cause:** Unused variable or import
+
+```typescript
+// ❌ WRONG
+import { User } from "./types";  // Imported but not used
+import { userId } from "./config";  // Parameter not used
+
+// ✅ CORRECT
+import type { User } from "./types";  // Only used in types
+// OR remove entirely if not needed
+```
+
+**For intentionally unused variables:**
+
+```typescript
+function handleError(_error: unknown) {  // Prefix with _ to ignore
+  logToSentry(); // Just log, don't use error
+}
+```
+
+## Type-Aware Linting
+
+TypeScript ESLint rules require type information. They're slower but catch more bugs:
+
+```bash
+# These use type-aware linting
+bun run lint
+
+# Individual packages
+cd packages/backend && bun run lint
+```
+
+**Type-aware rules enforce:**
+
+- Unsafe operations on complex types
+- Improper async/await usage
+- Null-unsafe operations
+- Redundant type checks
+
+**If linting is slow:**
+
+- Check your IDE's TypeScript version matches CLI
+- Try: `rm -rf node_modules/.cache && bun install`
+- See: `mise-and-dagger-usage.mdc` for performance tips
+
+## Fixing TypeScript Before ESLint
+
+**Important:** Fix TypeScript errors first, then ESLint errors
+
+```bash
+# ❌ WRONG (ESLint can't check uncompilable code)
+mise check  # TypeScript fails, ESLint skipped
+
+# ✅ CORRECT (Fix errors in order)
+bun run typecheck          # Fix type errors first
+bun run lint               # Then fix linting errors
+bun run format:write       # Then format
+```
+
+The order matters because:
+
+1. TypeScript errors prevent type-aware linting
+2. ESLint can't analyze broken type context
+3. Prettier formatting works on any valid code
+
+## Satisfying TypeScript with Zod
+
+Always use Zod to validate before using data:
+
+```typescript
+// ❌ WRONG - Trust the type, hope it's correct
+const user: User = JSON.parse(response);
+console.log(user.name);  // Could crash at runtime
+
+// ✅ CORRECT - Validate and TypeScript infers type
+const UserSchema = z.object({ name: z.string() });
+const user = UserSchema.parse(JSON.parse(response));
+console.log(user.name);  // Guaranteed to exist
+```
+
+## Related Documentation
+
+- **Type Assertions:** `type-assertions-policy.mdc` - When to use `as`
+- **Type Safety:** `type-safety-strategy.mdc` - Overall strategy
+- **Zod Validation:** `zod-validation-patterns.mdc` - Schema patterns
+- **Exhaustive Cases:** `exhaustive-case-handling.mdc` - Union handling
+- **Union Narrowing:** `typescript-union-narrowing.mdc` - Narrowing strategies
+- **Common Pitfalls:** `typescript-common-pitfalls.mdc` - Avoid mistakes
+- **ESLint Rules:** `eslint-custom-rules.mdc` - Custom rules
+- **Code Quality:** `code-quality-checklist.mdc` - Verification guide

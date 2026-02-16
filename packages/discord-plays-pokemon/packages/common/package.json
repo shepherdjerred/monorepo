@@ -1,0 +1,44 @@
+{
+  "name": "@discord-plays-pokemon/common",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "bunx tsc",
+    "watch": "bunx tsc --watch",
+    "lint": "bun run lint:check",
+    "lint:fix": "bun run lint:eslint:fix",
+    "lint:check": "bun run lint:eslint:check",
+    "lint:eslint:check": "bunx eslint .",
+    "lint:eslint:fix": "bunx eslint . --fix",
+    "test": "true"
+  },
+  "dependencies": {
+    "lodash": "4.17.23",
+    "ts-pattern": "^5.7.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@tsconfig/recommended": "1.0.13",
+    "@types/lodash": "^4.17.16",
+    "@types/node": "^25.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.28.0",
+    "@typescript-eslint/parser": "^8.28.0",
+    "eslint": "^9.23.0",
+    "eslint-config-prettier": "^10.1.1",
+    "typescript": "5.9.3",
+    "typescript-eslint": "^8.50.0"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./*": "./dist/*"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/*"
+      ]
+    }
+  }
+}

@@ -56,6 +56,7 @@ pub enum SessionStatus {
 }
 
 /// A console session with background reader.
+#[derive(Debug)]
 pub struct PtySession {
     /// Session identifier (matches clauderon session ID).
     session_id: uuid::Uuid,
@@ -173,7 +174,7 @@ impl PtySession {
                 result = reader.read_line(&mut line) => {
                     match result {
                         Ok(0) => {
-                            let _ = event_tx.send(PtyEvent::Error("Console connection closed".to_string())).await;
+                            let _ = event_tx.send(PtyEvent::Error("Console connection closed".to_owned())).await;
                             break;
                         }
                         Ok(_) => {
@@ -283,7 +284,7 @@ impl PtySession {
         self.write_tx
             .send(WriteRequest::Bytes(data))
             .await
-            .map_err(|_| anyhow::anyhow!("Console write channel closed"))
+            .map_err(|e| anyhow::anyhow!("Console write channel closed: {e}"))
     }
 
     /// Try to receive the next console event (non-blocking).
@@ -354,7 +355,7 @@ impl PtySession {
         self.write_tx
             .send(WriteRequest::Signal { signal })
             .await
-            .map_err(|_| anyhow::anyhow!("Console write channel closed"))?;
+            .map_err(|e| anyhow::anyhow!("Console write channel closed: {e}"))?;
 
         tracing::info!(
             session_id = %self.session_id,

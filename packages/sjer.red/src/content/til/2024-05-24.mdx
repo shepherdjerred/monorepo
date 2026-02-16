@@ -1,0 +1,100 @@
+---
+title: "Closures in Groovy"
+date: 2024-05-24Z-0700
+---
+
+import Socratic from "@components/blog/Socratic.astro";
+import Dialog from "@components/blog/Dialog.astro";
+import Divider from "@components/Divider.astro";
+
+I interact with [Groovy](https://groovy-lang.org/) solely because [Jenkins](https://www.jenkins.io/) uses it to define pipelines.
+
+Pros:
+
+- It's in the Java ecosystem
+- It's a "real" language (turing complete unlike YAML)
+- It's not YAML
+
+Cons:
+
+- No static typing
+- Linters/formatters aren't great
+- Jenkins is quite hard to work with and has surprisingly poor tooling
+
+While updating some Groovy scripts, I wanted to update a utiltiy method to take a closure in a nicer way. The method looked like this:
+
+```groovy
+def hello(clo, first = "John", last = "Doe") {
+    println "Hello, $first $last"
+    clo()
+}
+
+// usage
+foo(clo: { println "I didn't see you there!" }, first: "Jerred", last: "Shepherd")
+```
+
+I've seen methods that look a bit prettier when called, like this:
+
+```groovy
+def bar(someArg, Closure clo) {
+    clo()
+}
+
+bar(someArg) {
+    println 'hello'
+}
+```
+
+Note that the closure is passed as the last argument. This allows the closure to be passed in braces after the method call. This looks quite a bit nicer!
+
+<Dialog>
+  <Socratic perspective="student">
+    It looks like Groovy has some nice syntatic sugar: named and default parameters are both pretty nice to have.
+  </Socratic>
+  <Divider />
+  <Socratic perspective="teacher">
+    Groovy does have some nice features, but{" "}
+    <a href="https://groovy-lang.org/objectorientation.html#_named_parameters">named parameters</a> have some rough
+    edges. The documentation doesn't clearly cover how to use named parameters with default parameters or closures.
+  </Socratic>
+</Dialog>
+
+Originally, I wanted to combine named parameters, default parameters, and a closure as the last argument. Unfortunately, this doesn't seem possible. Here's what I came up with:
+
+```groovy
+def baz(first = "John", last = "Doe", Closure clo) {
+    println "Hello, $first $last"
+    clo()
+}
+```
+
+The result of running this:
+
+```groovy
+baz(first: "Jerred", last: "Shepherd") {
+  println "I didn't see you there!"
+}
+Hello, [first:Jerred, last:Shepherd] Doe
+I didn't see you there!
+```
+
+Groovy implements named parameters as a map. Unfortunately, it seems that Groovy is using the both the `first` and `last` parameters as a map value and passing that to the `first` argument.
+
+```groovy
+// Groovy takes this:
+baz(first: "Jerred", last: "Shepherd")
+
+// and implicitly converts it to this:
+baz([first: "Jerred", last: "Shepherd"], null)
+
+// so, when calling baz, we're passing the map as the first argument and null as the second argument
+// this leads to Groovy using the map as the first argument, and the default value of "Doe" as the second argument
+Hello, [first:Jerred, last:Shepherd] Doe
+I didn't see you there!
+
+// instead, we want Groovy to print:
+Hello, Jerred Shepherd
+I didn't see you there!
+```
+
+Closures are still pretty cool, but it's frustrating to figure out the syntax for how some of these features interact. Additionally, the feedback loop for Groovy with Jenkins is long, so if you don't know the language, it's hard to make progress.

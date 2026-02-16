@@ -1,0 +1,283 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Ambessa": {
+      "id": "Ambessa",
+      "key": "799",
+      "name": "Ambessa",
+      "title": "Matriarch of War",
+      "image": {
+        "full": "Ambessa.png",
+        "sprite": "champion0.png",
+        "group": "champion",
+        "x": 240,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "799000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "799001",
+          "num": 1,
+          "name": "Chosen of the Wolf Ambessa",
+          "chromas": true
+        }
+      ],
+      "lore": "All who know the name Medarda respect and fear the family's leader, Ambessa. As a Noxian general, she embodies a deadly combination of ruthless strength and fearless resolve in battle. Her role as matriarch is no different, requiring great cunning to empower the Medardas while leaving no room for failure or compassion. Embracing the merciless ways of the Wolf, Ambessa will do whatever it takes to protect her family's legacy, even at the cost of her own children's love.",
+      "blurb": "All who know the name Medarda respect and fear the family's leader, Ambessa. As a Noxian general, she embodies a deadly combination of ruthless strength and fearless resolve in battle. Her role as matriarch is no different, requiring great cunning to...",
+      "allytips": [],
+      "enemytips": [],
+      "tags": ["Fighter", "Assassin"],
+      "partype": "Energy",
+      "info": {
+        "attack": 9,
+        "defense": 2,
+        "magic": 0,
+        "difficulty": 10
+      },
+      "stats": {
+        "hp": 630,
+        "hpperlevel": 110,
+        "mp": 200,
+        "mpperlevel": 0,
+        "movespeed": 335,
+        "armor": 35,
+        "armorperlevel": 4.9,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 8.5,
+        "hpregenperlevel": 0.75,
+        "mpregen": 50,
+        "mpregenperlevel": 0,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 63,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 2.5,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "AmbessaQ",
+          "name": "Cunning Sweep / Sundering Slam",
+          "description": "Ambessa sweeps her twin drakehounds in a semicircle in front of her, dealing bonus damage to enemies hit by the blades. Striking an enemy will transform the next cast of this ability for a short period of time, causing her to slam her twin drakehounds down in a line in front of her, dealing bonus damage to the first enemy hit.",
+          "tooltip": "<spellActive>Cunning Sweep</spellActive>: Ambessa sweeps her blades forward, dealing <physicalDamage>{{ calc_damage_1_max }} + {{ calc_damage_1_percent_max }} max Health physical damage</physicalDamage> to enemies at the edge of the strike. All other enemies take {{ calc_damage_1_min_ratio }} damage. Striking an enemy readies a <spellActive>Sundering Slam</spellActive>.<br /><br /><spellActive>Sundering Slam</spellActive>: Ambessa slams her blades down, dealing <physicalDamage>{{ calc_damage_2_max }} + {{ calc_damage_2_percent_max }} max Health physical damage</physicalDamage> against the first enemy hit. All other enemies take {{ calc_damage_2_min_ratio }} damage.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Cunning Sweep | Damage",
+              "Cunning Sweep | Max Health Damage",
+              "Cooldown",
+              "Sundering Slam | Damage",
+              "Sundering Slam | Max Health Damage"
+            ],
+            "effect": [
+              "{{ damage_1_base }} -> {{ damage_1_baseNL }}",
+              "{{ damage_1_percent*100.000000 }}% -> {{ damage_1_percentnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ damage_2_base }} -> {{ damage_2_baseNL }}",
+              "{{ damage_1_percent*100.000000 }}% -> {{ damage_1_percentnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 13, 12, 11, 10],
+          "cooldownBurn": "14/13/12/11/10",
+          "cost": [70, 70, 70, 70, 70],
+          "costBurn": "70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [650, 650, 650, 650, 650],
+          "rangeBurn": "650",
+          "image": {
+            "full": "AmbessaQ.png",
+            "sprite": "spell0.png",
+            "group": "spell",
+            "x": 384,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "AmbessaW",
+          "name": "Repudiation",
+          "description": "Ambessa gains a shield, briefly braces herself, and then slams the ground to damage nearby enemies. If she blocked any non-minion damage while bracing herself, this ability will deal increased damage.",
+          "tooltip": "Ambessa gains <shield>{{ calc_shield }} Shield</shield> for {{ shield_duration }} seconds and braces herself for {{ buff_duration }} seconds. She then slams the ground, dealing <physicalDamage>{{ calc_damage_low }} physical damage</physicalDamage> to nearby enemies, which increases to <physicalDamage>{{ calc_damage_high }} physical damage</physicalDamage> if she braced herself from damage from an enemy champion, large monster, or structure.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Damage"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ basedamage }} -> {{ basedamageNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [18, 17, 16, 15, 14],
+          "cooldownBurn": "18/17/16/15/14",
+          "cost": [70, 70, 70, 70, 70],
+          "costBurn": "70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [325, 325, 325, 325, 325],
+          "rangeBurn": "325",
+          "image": {
+            "full": "AmbessaW.png",
+            "sprite": "spell0.png",
+            "group": "spell",
+            "x": 432,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "AmbessaE",
+          "name": "Lacerate",
+          "description": "Ambessa whips her twin drakehounds around herself, damaging and slowing nearby enemies. Initiating Drakehound's Step from this ability causes her to strike a second time at the end of its dash.",
+          "tooltip": "Ambessa whips her chains around, dealing <physicalDamage>{{ calc_damage_flat }} physical damage</physicalDamage> and <status>Slowing</status> enemies by <status>{{ slow_amount*100 }}%</status>, which decays over {{ slow_duration }} second. Initiating <spellName>Drakehound's Step</spellName> from this Ability will trigger an additional strike.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Damage"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ damage_flat_base }} -> {{ damage_flat_baseNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [13, 12, 11, 10, 9],
+          "cooldownBurn": "13/12/11/10/9",
+          "cost": [70, 70, 70, 70, 70],
+          "costBurn": "70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [325, 325, 325, 325, 325],
+          "rangeBurn": "325",
+          "image": {
+            "full": "AmbessaE.png",
+            "sprite": "spell1.png",
+            "group": "spell",
+            "x": 0,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "AmbessaR",
+          "name": "Public Execution",
+          "description": "Ambessa blinks to the farthest enemy champion in a line of her choosing and suppresses them upon her arrival. She then slams the enemy into the ground where they take damage and are stunned.",
+          "tooltip": "<spellPassive>Passive</spellPassive>: Ambessa gains <armorPen>{{ armor_penetration*100 }}% %i:scaleAPen% Armor Penetration</armorPen> and her Abilities <healing>heal her for {{ calc_omnivamp }} of the damage she dealt</healing>.<br /><br /><spellActive>Active</spellActive>: Ambessa becomes <attention>Unstoppable</attention> and blinks to the farthest enemy champion in a line, <status>Suppressing</status> the target for {{ suppress_duration }} seconds and then slamming them into the ground, dealing <physicalDamage>{{ calc_damage }} physical damage</physicalDamage> and <status>Stunning</status> them for {{ stun_duration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Armor Penetration", "Healing", "Damage"],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ armor_penetration*100.000000 }}% -> {{ armor_penetrationnl*100.000000 }}%",
+              "{{ omnivamp*100.000000 }}% -> {{ omnivampnl*100.000000 }}%",
+              "{{ damage }} -> {{ damageNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [130, 115, 100],
+          "cooldownBurn": "130/115/100",
+          "cost": [0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No cost",
+          "maxammo": "-1",
+          "range": [1250, 1250, 1250],
+          "rangeBurn": "1250",
+          "image": {
+            "full": "AmbessaR.png",
+            "sprite": "spell1.png",
+            "group": "spell",
+            "x": 48,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No cost"
+        }
+      ],
+      "passive": {
+        "name": "Drakehound's Step",
+        "description": "Entering an attack or movement command while casting an ability will cause Ambessa to dash a short distance once the ability is cast, granting her next attack bonus range, damage, and attack speed, and refunding energy.",
+        "image": {
+          "full": "Icon_Ambessa_Passive.Domina.png",
+          "sprite": "passive0.png",
+          "group": "passive",
+          "x": 240,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

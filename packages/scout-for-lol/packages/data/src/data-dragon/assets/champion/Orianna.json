@@ -1,0 +1,361 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Orianna": {
+      "id": "Orianna",
+      "key": "61",
+      "name": "Orianna",
+      "title": "the Lady of Clockwork",
+      "image": {
+        "full": "Orianna.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 336,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "61000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "61001",
+          "num": 1,
+          "name": "Gothic Orianna",
+          "chromas": false
+        },
+        {
+          "id": "61002",
+          "num": 2,
+          "name": "Sewn Chaos Orianna",
+          "chromas": false
+        },
+        {
+          "id": "61003",
+          "num": 3,
+          "name": "Bladecraft Orianna",
+          "chromas": false
+        },
+        {
+          "id": "61004",
+          "num": 4,
+          "name": "TPA Orianna",
+          "chromas": false
+        },
+        {
+          "id": "61005",
+          "num": 5,
+          "name": "Winter Wonder Orianna",
+          "chromas": false
+        },
+        {
+          "id": "61006",
+          "num": 6,
+          "name": "Heartseeker Orianna",
+          "chromas": false
+        },
+        {
+          "id": "61007",
+          "num": 7,
+          "name": "Dark Star Orianna",
+          "chromas": true
+        },
+        {
+          "id": "61008",
+          "num": 8,
+          "name": "Victorious Orianna",
+          "chromas": true
+        },
+        {
+          "id": "61011",
+          "num": 11,
+          "name": "Pool Party Orianna",
+          "chromas": true
+        },
+        {
+          "id": "61020",
+          "num": 20,
+          "name": "Orbeeanna",
+          "chromas": true
+        },
+        {
+          "id": "61029",
+          "num": 29,
+          "name": "Star Guardian Orianna",
+          "chromas": true
+        },
+        {
+          "id": "61038",
+          "num": 38,
+          "name": "T1 Orianna",
+          "chromas": true
+        }
+      ],
+      "lore": "Once a curious girl of flesh and blood, Orianna is now a technological marvel comprised entirely of clockwork. She became gravely ill after an accident in the lower districts of Zaun, and her failing body had to be replaced with exquisite artifice, piece by piece. Accompanied by an extraordinary brass sphere she built for companionship and protection, Orianna is now free to explore the wonders of Piltover, and beyond.",
+      "blurb": "Once a curious girl of flesh and blood, Orianna is now a technological marvel comprised entirely of clockwork. She became gravely ill after an accident in the lower districts of Zaun, and her failing body had to be replaced with exquisite artifice...",
+      "allytips": [
+        "Command: Protect can be used on yourself to return the Ball back to you quickly. Combine this with Command: Attack for a quick harassment.",
+        "Command: Dissonance is a very powerful escape tool if Orianna has the Ball. The combination of speed and leaving a slowing obstacle can be quite powerful.",
+        "Command: Shockwave can be used to drag enemies towards you or away from you if you position the Ball properly."
+      ],
+      "enemytips": [
+        "Orianna can only affect the area the Ball is around. Use this to your advantage.",
+        "Watch out for Orianna's Ball returning to her due to leashing. This may cause some unexpected situations."
+      ],
+      "tags": ["Mage", "Support"],
+      "partype": "Mana",
+      "info": {
+        "attack": 4,
+        "defense": 3,
+        "magic": 9,
+        "difficulty": 7
+      },
+      "stats": {
+        "hp": 585,
+        "hpperlevel": 110,
+        "mp": 418,
+        "mpperlevel": 25,
+        "movespeed": 325,
+        "armor": 20,
+        "armorperlevel": 4.2,
+        "spellblock": 26,
+        "spellblockperlevel": 1.3,
+        "attackrange": 525,
+        "hpregen": 7,
+        "hpregenperlevel": 0.55,
+        "mpregen": 8,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 44,
+        "attackdamageperlevel": 2.6,
+        "attackspeedperlevel": 3.5,
+        "attackspeed": 0.658
+      },
+      "spells": [
+        {
+          "id": "OrianaIzunaCommand",
+          "name": "Command: Attack",
+          "description": "Orianna commands her Ball to fire toward a target location, dealing magic damage to targets along the way (deals less damage to subsequent targets). Her Ball remains at the target location after.",
+          "tooltip": "Orianna commands her <keywordMajor>Ball</keywordMajor> to move to an area, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> to surrounding enemies and to enemies it passes through. Deals {{ e2 }}% less damage to all enemies after the first.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [6, 5.25, 4.5, 3.75, 3],
+          "cooldownBurn": "6/5.25/4.5/3.75/3",
+          "cost": [35, 35, 35, 35, 35],
+          "costBurn": "35",
+          "datavalues": {},
+          "effect": [
+            null,
+            [60, 90, 120, 150, 180],
+            [30, 30, 30, 30, 30],
+            [70, 70, 70, 70, 70],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "60/90/120/150/180", "30", "70", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [815, 815, 815, 815, 815],
+          "rangeBurn": "815",
+          "image": {
+            "full": "OrianaIzunaCommand.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 288,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "OrianaDissonanceCommand",
+          "name": "Command: Dissonance",
+          "description": "Orianna commands her Ball to release a pulse of energy, dealing magic damage around it. This leaves a field behind that speeds up allies and slows enemies.",
+          "tooltip": "Orianna commands her <keywordMajor>Ball</keywordMajor> to release an electric pulse, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to surrounding enemies.<br /><br />The pulse leaves behind an energy field for {{ fieldduration }} seconds, <status>Slowing</status> enemies by {{ slowamount*100 }}% and granting allies <speed>{{ hasteamount*100 }}% Move Speed</speed>, decaying over {{ slowandhasteduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow", "Move Speed", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowamount*100.000000 }}% -> {{ slowamountnl*100.000000 }}%",
+              "{{ hasteamount*100.000000 }}% -> {{ hasteamountnl*100.000000 }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [7, 7, 7, 7, 7],
+          "cooldownBurn": "7",
+          "cost": [60, 65, 70, 75, 80],
+          "costBurn": "60/65/70/75/80",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [225, 225, 225, 225, 225],
+          "rangeBurn": "225",
+          "image": {
+            "full": "OrianaDissonanceCommand.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 336,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "OrianaRedactCommand",
+          "name": "Command: Protect",
+          "description": "Orianna commands her Ball to attach to an allied champion, Shielding them and dealing magic damage to any enemies it passes through on the way. Additionally, the Ball grants additional Armor and Magic Resist to the champion it is attached to.",
+          "tooltip": "<spellPassive>Passive: </spellPassive>The <keywordMajor>Ball</keywordMajor> adds <scaleArmor>{{ e2 }} Armor</scaleArmor> and <scaleMR>{{ e2 }} Magic Resist</scaleMR> to the allied champion it is attached to.<br /><br /><spellActive>Active: </spellActive>Orianna commands her <keywordMajor>Ball</keywordMajor> to attach to an allied champion, granting them <shield>{{ totalshieldtooltip }} Shield</shield> for {{ e5 }} seconds. Enemies the <keywordMajor>Ball</keywordMajor> passes through take <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Armor Bonus", "Magic Resist Bonus", "Shield Amount"],
+            "effect": [
+              "{{ e3 }} -> {{ e3NL }}",
+              "{{ e2 }} -> {{ e2NL }}",
+              "{{ e2 }} -> {{ e2NL }}",
+              "{{ e1 }} -> {{ e1NL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [9, 9, 9, 9, 9],
+          "cooldownBurn": "9",
+          "cost": [60, 60, 60, 60, 60],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [55, 90, 125, 160, 195],
+            [6, 12, 18, 24, 30],
+            [60, 90, 120, 150, 180],
+            [75, 75, 75, 75, 75],
+            [2.5, 2.5, 2.5, 2.5, 2.5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "55/90/125/160/195",
+            "6/12/18/24/30",
+            "60/90/120/150/180",
+            "75",
+            "2.5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1095, 1095, 1095, 1095, 1095],
+          "rangeBurn": "1095",
+          "image": {
+            "full": "OrianaRedactCommand.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 384,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "OrianaDetonateCommand",
+          "name": "Command: Shockwave",
+          "description": "Orianna commands her Ball to unleash a shockwave, dealing magic damage and launching nearby enemies towards the Ball after a short delay.",
+          "tooltip": "Orianna commands her <keywordMajor>Ball</keywordMajor> to unleash a shockwave, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to nearby enemies and <status>Knocking</status> them in the direction of the <keywordMajor>Ball</keywordMajor>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ damage }} -> {{ damageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [110, 95, 80],
+          "cooldownBurn": "110/95/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [410, 410, 410],
+          "rangeBurn": "410",
+          "image": {
+            "full": "OrianaDetonateCommand.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 432,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Clockwork Windup",
+        "description": "Orianna's Attacks deal additional magic damage. This damage increases the more Orianna Attacks the same target.",
+        "image": {
+          "full": "OriannaPassive.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 336,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

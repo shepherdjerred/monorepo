@@ -1,0 +1,87 @@
+---
+import { ClientRouter } from "astro:transitions";
+import { SEO } from "astro-seo";
+import { getImagePath } from "astro-opengraph-images";
+import "@styles/global.css";
+
+export type Props = {
+  title?: string;
+  description?: string;
+  openGraphType?: string;
+};
+
+const url = Astro.url;
+const site = Astro.site;
+
+const openGraphType = Astro.props.openGraphType ?? "website";
+const title = Astro.props.title ?? "Jerred Shepherd";
+const description = Astro.props.description;
+
+const openGraphImageUrl = getImagePath({ url, site });
+
+import "@styles/background.scss";
+import "@styles/commit-mono.scss";
+import "@styles/prose.scss";
+import "@styles/code.scss";
+import "@styles/font-size.scss";
+import "@styles/header.scss";
+import "@shikijs/twoslash/style-rich.css";
+import "@fontsource/nunito";
+import "@fontsource-variable/lora";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width" />
+
+    <meta name="generator" content={Astro.generator} />
+    <meta name="theme-color" content="#000000" />
+
+    <!-- https://realfavicongenerator.net/ -->
+    <link rel="icon" type="image/png" href="/favicon-48x48.png" sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="sjer.red" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#000000" />
+
+    <SEO
+      openGraph={{
+        basic: {
+          title: title,
+          type: openGraphType,
+          image: openGraphImageUrl,
+          url: url,
+        },
+        optional: {
+          siteName: "Jerred Shepherd",
+          description: description ?? "",
+        },
+      }}
+    />
+
+    <!-- https://indielogin.com/ -->
+    <link href="https://github.com/shepherdjerred" rel="me" />
+    <link href="mailto:auth@sjer.red" rel="me" />
+
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <title>{title}</title>
+    <ClientRouter />
+
+    <script defer data-domain="sjer.red" src="https://plausible.sjer.red/js/script.js"></script>
+    <script>
+      import * as Sentry from "@sentry/browser";
+      Sentry.init({
+        dsn: "https://41fb03e17fb24ceb98a910ad7dea3572@bugsink.sjer.red/2",
+      });
+    </script>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

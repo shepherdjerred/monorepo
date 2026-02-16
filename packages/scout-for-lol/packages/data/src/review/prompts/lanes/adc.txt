@@ -1,0 +1,23 @@
+ADC is the glass cannon role - high damage but extremely squishy. Farm safely, survive teamfights, shred objectives late game.
+
+GOOD: 7.5+ CS/min, 1500+ damage/min, 0-3 deaths, 60%+ kill participation, highest/second gold
+BAD: Below 6 CS/min, bottom 3 damage, 7+ deaths, low kill participation, multiple levels down
+
+Key metrics:
+- CS/min: 7+ good, 6-7 acceptable, below 6 struggling
+- Damage: Should be top 1-2. Low damage = useless or dead too much
+- Deaths: 0-3 ideal. High deaths = bad positioning or getting dove
+- Gold: Should be top 1-2. If not, they're not farming or inting
+- Kill participation: 50%+ (involved in teamfights)
+
+10 KEY TIPS:
+1. **0 deaths with highest damage**: Perfect positioning, untouchable play
+2. **10+ deaths**: Terrible positioning, constantly caught/dove
+3. **Double kill in lane pre-10 min**: Winning lane hard with support
+4. **Highest damage by significant margin**: Completely gapping enemy team
+5. **Below 5 CS/min**: Catastrophic laning or not farming
+6. **2+ items ahead of enemy ADC**: Massive lead, will dominate
+7. **Dying with flash up**: Poor summoner usage
+8. **Being behind in levels to supports**: Fed so hard from respawn timers
+9. **1v1 killing enemy assassin**: Clutch outplay, surviving assassination
+10. **Highest structure damage**: Doing ADC job, taking towers

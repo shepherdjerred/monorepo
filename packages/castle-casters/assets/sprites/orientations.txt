@@ -1,0 +1,19 @@
+Lone H (Horizontal)
+Lone V (Vertical)
+Lone C (Center)
+H connected L (Left)
+H connected R (Right) (flipped L)
+H connected LR
+V connected U (Up)
+V connected D (Down) (flipped R)
+V connected UD
+C connected U
+C connected D
+C connected L
+C connected R
+C connected UD
+C connected LR
+C connected UL
+C connected UR (flipped UL)
+C connected DL
+C connected DR (flipped DR)

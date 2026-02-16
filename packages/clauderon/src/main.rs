@@ -1,3 +1,9 @@
+#![allow(
+    clippy::print_stdout,
+    clippy::print_stderr,
+    reason = "CLI binary uses stdout/stderr for user-facing output"
+)]
+
 use clap::{Parser, Subcommand};
 use tracing_subscriber::{Layer, layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -536,6 +542,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Install the ring crypto provider for rustls before any TLS operations
     // This is required because multiple dependencies enable conflicting crypto providers
+    #[expect(clippy::expect_used, reason = "crypto provider must be installed before any TLS operations")]
     rustls::crypto::ring::default_provider()
         .install_default()
         .expect("Failed to install rustls crypto provider");
@@ -1213,12 +1220,12 @@ fn print_env(name: &str, default: Option<&str>) {
 
 fn print_env_detailed(name: &str, description: &str, default: Option<&str>) {
     let status = match std::env::var(name) {
-        Ok(_) => "SET".to_string(),
+        Ok(_) => "SET".to_owned(),
         Err(_) => {
             if let Some(def) = default {
                 format!("default: {def}")
             } else {
-                "not set".to_string()
+                "not set".to_owned()
             }
         }
     };
@@ -1262,7 +1269,7 @@ fn print_credential_row(
     } else if from_file {
         ("loaded", format!("file:{}", file_path.display()))
     } else {
-        ("missing", "-".to_string())
+        ("missing", "-".to_owned())
     };
 
     println!("{:<20} {:<12} {:<30}", service, status, source);
@@ -1311,11 +1318,11 @@ fn print_codex_credential_row(auth_path: &std::path::Path) {
     let from_file = auth_path.exists();
 
     let (status, source) = if from_env {
-        ("loaded", "env:CODEX_*".to_string())
+        ("loaded", "env:CODEX_*".to_owned())
     } else if from_file {
         ("loaded", format!("auth.json:{}", auth_path.display()))
     } else {
-        ("missing", "-".to_string())
+        ("missing", "-".to_owned())
     };
 
     println!("{:<20} {:<12} {:<30}", "ChatGPT", status, source);

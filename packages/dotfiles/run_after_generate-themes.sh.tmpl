@@ -1,0 +1,15 @@
+#!/bin/bash
+{{ if eq .chezmoi.os "darwin" -}}
+if ! command -v whiskers &>/dev/null; then
+    echo "whiskers not installed, skipping theme generation" >&2
+    exit 0
+fi
+
+TERA_FILE="$HOME/.local/share/chezmoi/private_dot_config/private_fish/conf.d/theme-env.fish.tera"
+OUT_DIR="$HOME/.config/fish/conf.d"
+
+if [[ -f "$TERA_FILE" ]]; then
+  mkdir -p "$OUT_DIR"
+  cd "$OUT_DIR" && whiskers "$TERA_FILE"
+fi
+{{ end -}}
