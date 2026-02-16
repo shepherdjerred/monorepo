@@ -2,28 +2,9 @@
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 import * as eslint from "@eslint/js";
+import { customRulesPlugin } from "../eslint-config/local.ts";
 import * as tseslint from "typescript-eslint";
 import unicorn from "eslint-plugin-unicorn";
-import { zodSchemaNaming } from "./eslint-rules/zod-schema-naming";
-import { noRedundantZodParse } from "./eslint-rules/no-redundant-zod-parse";
-import { satoriBestPractices } from "./eslint-rules/satori-best-practices";
-import { prismaClientDisconnect } from "./eslint-rules/prisma-client-disconnect";
-import { noTypeAssertions } from "./eslint-rules/no-type-assertions";
-import { preferZodValidation } from "./eslint-rules/prefer-zod-validation";
-import { preferBunApis } from "./eslint-rules/prefer-bun-apis";
-import { noReExports } from "./eslint-rules/no-re-exports";
-import { noUseEffect } from "./eslint-rules/no-use-effect";
-import { preferDateFns } from "./eslint-rules/prefer-date-fns";
-import { noFunctionOverloads } from "./eslint-rules/no-function-overloads";
-import { noParentImports } from "./eslint-rules/no-parent-imports";
-import { noTypeGuards } from "./eslint-rules/no-type-guards";
-import { preferAsyncAwait } from "./eslint-rules/prefer-async-await";
-import { noDtoNaming } from "./eslint-rules/no-dto-naming";
-import { preferStructuredLogging } from "./eslint-rules/prefer-structured-logging";
-import { requireTsExtensions } from "./eslint-rules/require-ts-extensions";
-import { knipUnused } from "./eslint-rules/knip-unused";
-import { noCodeDuplication } from "./eslint-rules/jscpd-duplication";
-import { noShadcnThemeTokens } from "./eslint-rules/no-shadcn-theme-tokens";
 import * as importPlugin from "eslint-plugin-import";
 import * as regexpPlugin from "eslint-plugin-regexp";
 import * as eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
@@ -35,39 +16,6 @@ import * as astroPlugin from "eslint-plugin-astro";
 // import mdx from "eslint-plugin-mdx";
 // Tailwind linting disabled - plugin incompatible with Tailwind CSS v4
 // import tailwindcss from "eslint-plugin-tailwindcss";
-
-/**
- * Bridge typescript-eslint rule to ESLint plugin system
- *
- * Type assertion required: @typescript-eslint/utils RuleContext includes extra methods
- * (getAncestors, getDeclaredVariables, getScope, markVariableAsUsed) that base ESLint
- * RuleContext doesn't have. At runtime, typescript-eslint provides a compatible context,
- * but TypeScript sees the types as incompatible. The rule works correctly at runtime.
- */
-const customRulesPlugin = {
-  rules: {
-    "zod-schema-naming": zodSchemaNaming,
-    "no-redundant-zod-parse": noRedundantZodParse,
-    "satori-best-practices": satoriBestPractices,
-    "prisma-client-disconnect": prismaClientDisconnect,
-    "no-type-assertions": noTypeAssertions,
-    "prefer-zod-validation": preferZodValidation,
-    "prefer-bun-apis": preferBunApis,
-    "no-re-exports": noReExports,
-    "no-use-effect": noUseEffect,
-    "prefer-date-fns": preferDateFns,
-    "no-function-overloads": noFunctionOverloads,
-    "no-parent-imports": noParentImports,
-    "no-type-guards": noTypeGuards,
-    "prefer-async-await": preferAsyncAwait,
-    "no-dto-naming": noDtoNaming,
-    "prefer-structured-logging": preferStructuredLogging,
-    "require-ts-extensions": requireTsExtensions,
-    "knip-unused": knipUnused,
-    "no-code-duplication": noCodeDuplication,
-    "no-shadcn-theme-tokens": noShadcnThemeTokens,
-  },
-};
 
 // eslint-disable-next-line @typescript-eslint/no-deprecated -- we will fix this later
 export default tseslint.config(
@@ -99,8 +47,6 @@ export default tseslint.config(
         projectService: {
           allowDefaultProject: [
             "eslint.config.ts",
-            "eslint-rules/*.ts",
-            "eslint-rules/shared/*.ts",
             "packages/*/tailwind.config.ts",
           ],
         },
@@ -581,12 +527,14 @@ export default tseslint.config(
       ],
     },
   },
-  // Config file itself can use relative imports for local eslint rules
+  // Config file can use tooling-specific imports
   {
-    files: ["eslint.config.ts", "eslint-rules/**/*.ts"],
+    files: ["eslint.config.ts"],
     rules: {
       "no-relative-import-paths/no-relative-import-paths": "off",
       "custom-rules/require-ts-extensions": "off",
+      "custom-rules/no-parent-imports": "off",
+      "import/no-relative-packages": "off",
       // Allow Node.js APIs in eslint-rules (these run in Node.js, not Bun)
       "no-restricted-imports": "off",
       "custom-rules/prefer-bun-apis": "off",

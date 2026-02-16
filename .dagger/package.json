@@ -6,7 +6,8 @@
     "lint": "bunx eslint src"
   },
   "dependencies": {
-    "typescript": "^5.8.0"
+    "typescript": "^5.8.0",
+    "zod": "^4.1.11"
   },
   "dagger": {
     "runtime": "bun"

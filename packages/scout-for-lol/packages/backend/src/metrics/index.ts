@@ -330,6 +330,64 @@ export const avgAccountsPerPlayer = new Gauge({
 });
 
 // =======================
+// Riot API Metrics
+// =======================
+
+/**
+ * Total number of Riot API requests
+ */
+export const riotApiRequestsTotal = new Counter({
+  name: "riot_api_requests_total",
+  help: "Total Riot API requests",
+  labelNames: ["source", "status"] as const,
+  registers: [registry],
+});
+
+/**
+ * Total number of match reports generated
+ */
+export const reportsGeneratedTotal = new Counter({
+  name: "reports_generated_total",
+  help: "Total match reports generated",
+  labelNames: ["queue_type"] as const,
+  registers: [registry],
+});
+
+/**
+ * Total number of database queries
+ */
+export const databaseQueriesTotal = new Counter({
+  name: "database_queries_total",
+  help: "Total database queries",
+  labelNames: ["operation"] as const,
+  registers: [registry],
+});
+
+// =======================
+// Riot API Health State
+// =======================
+
+let lastSuccessfulRiotApiCall: number | undefined;
+let lastRiotApiAttempt: number | undefined;
+
+export function updateRiotApiHealth(success: boolean): void {
+  lastRiotApiAttempt = Date.now();
+  if (success) {
+    lastSuccessfulRiotApiCall = Date.now();
+  }
+}
+
+export function getRiotApiHealth(): {
+  lastSuccessTimestamp: number | undefined;
+  lastAttemptTimestamp: number | undefined;
+} {
+  return {
+    lastSuccessTimestamp: lastSuccessfulRiotApiCall,
+    lastAttemptTimestamp: lastRiotApiAttempt,
+  };
+}
+
+// =======================
 // Application Metrics
 // =======================
 

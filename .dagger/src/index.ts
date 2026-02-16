@@ -8,6 +8,7 @@ import {
   publishBirmelImageWithContainer,
 } from "./birmel.js";
 import { reviewPr, handleInteractive } from "./code-review.js";
+import { updateReadmes as updateReadmesFn } from "./update-readme.js";
 import { checkAstroOpengraphImages } from "./astro-opengraph-images.js";
 import { checkWebring, deployWebringDocs } from "./webring.js";
 import { checkStarlightKarmaBot, deployStarlightKarmaBot } from "./starlight-karma-bot.js";
@@ -17,6 +18,15 @@ import { checkCastleCasters } from "./castle-casters.js";
 import { checkMacosCrossCompiler, deployMacosCrossCompiler } from "./macos-cross-compiler.js";
 import { checkDiscordPlaysPokemon, deployDiscordPlaysPokemon } from "./discord-plays-pokemon.js";
 import { checkScoutForLol, deployScoutForLol } from "./scout-for-lol.js";
+import {
+  checkHomelab,
+  ciHomelab,
+  homelabHelmBuild as homelabHelmBuildFn,
+  homelabTestHelm as homelabTestHelmFn,
+  homelabTestRenovateRegex as homelabTestRenovateRegexFn,
+  homelabSync as homelabSyncFn,
+  Stage as HomelabStage,
+} from "./homelab/index.js";
 
 const PACKAGES = ["eslint-config", "bun-decompile", "astro-opengraph-images", "webring"] as const;
 const REPO_URL = "shepherdjerred/monorepo";
@@ -104,7 +114,19 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/packages/better-skill-capped/package.json", source.file("packages/better-skill-capped/package.json"))
     .withMountedFile("/workspace/packages/sjer.red/package.json", source.file("packages/sjer.red/package.json"))
     .withMountedFile("/workspace/packages/webring/package.json", source.file("packages/webring/package.json"))
-    .withMountedFile("/workspace/packages/starlight-karma-bot/package.json", source.file("packages/starlight-karma-bot/package.json"));
+    .withMountedFile("/workspace/packages/starlight-karma-bot/package.json", source.file("packages/starlight-karma-bot/package.json"))
+    .withMountedFile("/workspace/packages/homelab/package.json", source.file("packages/homelab/package.json"))
+    .withMountedFile("/workspace/packages/discord-plays-pokemon/package.json", source.file("packages/discord-plays-pokemon/package.json"))
+    .withMountedFile("/workspace/packages/scout-for-lol/package.json", source.file("packages/scout-for-lol/package.json"))
+    .withMountedFile("/workspace/packages/discord-plays-pokemon/packages/backend/package.json", source.file("packages/discord-plays-pokemon/packages/backend/package.json"))
+    .withMountedFile("/workspace/packages/discord-plays-pokemon/packages/common/package.json", source.file("packages/discord-plays-pokemon/packages/common/package.json"))
+    .withMountedFile("/workspace/packages/discord-plays-pokemon/packages/frontend/package.json", source.file("packages/discord-plays-pokemon/packages/frontend/package.json"))
+    .withMountedFile("/workspace/packages/scout-for-lol/packages/backend/package.json", source.file("packages/scout-for-lol/packages/backend/package.json"))
+    .withMountedFile("/workspace/packages/scout-for-lol/packages/data/package.json", source.file("packages/scout-for-lol/packages/data/package.json"))
+    .withMountedFile("/workspace/packages/scout-for-lol/packages/desktop/package.json", source.file("packages/scout-for-lol/packages/desktop/package.json"))
+    .withMountedFile("/workspace/packages/scout-for-lol/packages/frontend/package.json", source.file("packages/scout-for-lol/packages/frontend/package.json"))
+    .withMountedFile("/workspace/packages/scout-for-lol/packages/report/package.json", source.file("packages/scout-for-lol/packages/report/package.json"))
+    .withMountedFile("/workspace/packages/scout-for-lol/packages/ui/package.json", source.file("packages/scout-for-lol/packages/ui/package.json"));
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
   container = container.withExec(["bun", "install", "--frozen-lockfile"]);
@@ -127,7 +149,10 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedDirectory("/workspace/packages/better-skill-capped", source.directory("packages/better-skill-capped"))
     .withMountedDirectory("/workspace/packages/sjer.red", source.directory("packages/sjer.red"))
     .withMountedDirectory("/workspace/packages/webring", source.directory("packages/webring"))
-    .withMountedDirectory("/workspace/packages/starlight-karma-bot", source.directory("packages/starlight-karma-bot"));
+    .withMountedDirectory("/workspace/packages/starlight-karma-bot", source.directory("packages/starlight-karma-bot"))
+    .withMountedDirectory("/workspace/packages/homelab", source.directory("packages/homelab"))
+    .withMountedDirectory("/workspace/packages/discord-plays-pokemon", source.directory("packages/discord-plays-pokemon"))
+    .withMountedDirectory("/workspace/packages/scout-for-lol", source.directory("packages/scout-for-lol"));
 
   // PHASE 4: Re-run bun install to recreate workspace node_modules symlinks
   // (Source mounts in Phase 3 replace the symlinks that Phase 2 created)
@@ -401,36 +426,43 @@ function complianceCheck(source: Directory): Container {
   const script = `#!/bin/sh
 set -e
 ERRORS=0
+
+# Guardrail: all packages in monorepo must remain integrated.
+if grep -q '"!packages/' /workspace/package.json; then
+  echo 'FAIL: package.json contains excluded workspaces (!packages/...)'
+  ERRORS=$((ERRORS+1))
+fi
+
 for dir in /workspace/packages/*/; do
   PKG=$(basename "$dir")
-  # Skip exempt packages
-  case "$PKG" in
-    resume|eslint-config|clauderon|claude-plugin|a2ui-poc|discord-claude|fonts|anki|castle-casters|dotfiles|macos-cross-compiler|discord-plays-pokemon|scout-for-lol|homelab|dpp) continue ;;
-  esac
 
   echo "Checking $PKG..."
 
-  # Check for eslint config
-  if ! ls "$dir"eslint.config.* >/dev/null 2>&1; then
-    echo "  FAIL: $PKG missing eslint.config.*"
+  # Non-Bun packages are still part of the monorepo; they simply do not
+  # participate in this package.json contract check.
+  if [ ! -f "$dir/package.json" ]; then
+    echo "  INFO: $PKG has no package.json (non-Bun package)"
+    continue
+  fi
+
+  # Check for script contract expected by root automation.
+  if ! grep -q '"build"' "$dir/package.json" 2>/dev/null; then
+    echo "  FAIL: $PKG missing build script"
     ERRORS=$((ERRORS+1))
   fi
 
-  # Check for lint script in package.json
+  if ! grep -q '"test"' "$dir/package.json" 2>/dev/null; then
+    echo "  FAIL: $PKG missing test script"
+    ERRORS=$((ERRORS+1))
+  fi
+
   if ! grep -q '"lint"' "$dir/package.json" 2>/dev/null; then
     echo "  FAIL: $PKG missing lint script"
     ERRORS=$((ERRORS+1))
   fi
 
-  # Check for typecheck script in package.json
   if ! grep -q '"typecheck"' "$dir/package.json" 2>/dev/null; then
     echo "  FAIL: $PKG missing typecheck script"
-    ERRORS=$((ERRORS+1))
-  fi
-
-  # Check for tsconfig.json
-  if [ ! -f "$dir/tsconfig.json" ]; then
-    echo "  FAIL: $PKG missing tsconfig.json"
     ERRORS=$((ERRORS+1))
   fi
 done
@@ -478,12 +510,11 @@ BASELINE_TS=$(grep -o '"ts-suppressions": [0-9]*' /workspace/.quality-baseline.j
 BASELINE_RUST=$(grep -o '"rust-allow": [0-9]*' /workspace/.quality-baseline.json | grep -o '[0-9]*')
 BASELINE_PRETTIER=$(grep -o "\\"\$PRETTIER_PAT\\": [0-9]*" /workspace/.quality-baseline.json | grep -o '[0-9]*')
 
-# Count current suppressions (excluding node_modules, dist, archive, non-workspace packages)
-EXCLUDED="homelab|anki|castle-casters|dotfiles|macos-cross-compiler|discord-plays-pokemon|scout-for-lol"
-CURRENT_ESLINT=$(grep -r "$ESLINT_PAT" /workspace/packages/ /workspace/.dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | grep -vE "packages/($EXCLUDED)/" | wc -l | tr -d ' ')
-CURRENT_TS=$(grep -r "$TS_PAT" /workspace/packages/ /workspace/.dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | grep -vE "packages/($EXCLUDED)/" | wc -l | tr -d ' ')
+# Count current suppressions across full monorepo package tree.
+CURRENT_ESLINT=$(grep -r "$ESLINT_PAT" /workspace/packages/ /workspace/.dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | wc -l | tr -d ' ')
+CURRENT_TS=$(grep -r "$TS_PAT" /workspace/packages/ /workspace/.dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | wc -l | tr -d ' ')
 CURRENT_RUST=$(grep -r "$RUST_PAT" /workspace/packages/clauderon/src/ --include="*.rs" 2>/dev/null | wc -l | tr -d ' ')
-CURRENT_PRETTIER=$(grep -r "$PRETTIER_PAT" /workspace/packages/ /workspace/.dagger/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.css" --include="*.json" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | grep -vE "packages/($EXCLUDED)/" | wc -l | tr -d ' ')
+CURRENT_PRETTIER=$(grep -r "$PRETTIER_PAT" /workspace/packages/ /workspace/.dagger/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.css" --include="*.json" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | wc -l | tr -d ' ')
 
 echo "Suppression counts (current / baseline):"
 echo "  $ESLINT_PAT: $CURRENT_ESLINT / $BASELINE_ESLINT"
@@ -607,7 +638,15 @@ export class Monorepo {
     registryUsername?: string,
     registryPassword?: Secret,
     s3AccessKeyId?: Secret,
-    s3SecretAccessKey?: Secret
+    s3SecretAccessKey?: Secret,
+    argocdToken?: Secret,
+    chartMuseumUsername?: string,
+    chartMuseumPassword?: Secret,
+    cloudflareApiToken?: Secret,
+    cloudflareAccountId?: Secret,
+    hassBaseUrl?: Secret,
+    hassToken?: Secret,
+    tofuGithubToken?: Secret,
   ): Promise<string> {
     const outputs: string[] = [];
     const isRelease = branch === "main";
@@ -716,6 +755,7 @@ export class Monorepo {
       checkDiscordPlaysPokemon(source),
       checkScoutForLol(source),
       checkCastleCasters(source),
+      checkHomelab(source, hassBaseUrl, hassToken),
     ]);
 
     const packageErrors: string[] = [];
@@ -976,6 +1016,35 @@ export class Monorepo {
             outputs.push(`✗ scout-for-lol deploy: ${msg}`);
             releaseErrors.push(`scout-for-lol deploy: ${msg}`);
           }
+        }
+      }
+
+      // Homelab full CI/deploy
+      if (argocdToken && chartMuseumUsername && chartMuseumPassword && cloudflareApiToken && cloudflareAccountId) {
+        outputs.push("\n--- Homelab Release ---");
+        try {
+          const homelabSecrets = {
+            argocdToken,
+            ghcrUsername: registryUsername ?? "",
+            ghcrPassword: registryPassword!,
+            chartVersion: version ?? "dev",
+            chartMuseumUsername,
+            chartMuseumPassword,
+            cloudflareApiToken,
+            cloudflareAccountId,
+            awsAccessKeyId: s3AccessKeyId!,
+            awsSecretAccessKey: s3SecretAccessKey!,
+            ...(hassBaseUrl ? { hassBaseUrl } : {}),
+            ...(hassToken ? { hassToken } : {}),
+            ...(githubToken ? { githubToken } : {}),
+            ...(npmToken ? { npmToken } : {}),
+            ...(tofuGithubToken ? { tofuGithubToken } : {}),
+          };
+          outputs.push(await ciHomelab(source, HomelabStage.Prod, homelabSecrets));
+        } catch (error) {
+          const msg = error instanceof Error ? error.message : String(error);
+          outputs.push(`✗ homelab release: ${msg}`);
+          releaseErrors.push(`homelab release: ${msg}`);
         }
       }
 
@@ -1544,6 +1613,106 @@ retry = 3
             diffHunk: commentDiffHunk,
           }
         : undefined,
+    });
+  }
+
+  /**
+   * Run homelab full CI pipeline.
+   */
+  @func()
+  async homelabCi(
+    source: Directory,
+    argocdToken: Secret,
+    ghcrUsername: string,
+    ghcrPassword: Secret,
+    chartVersion: string,
+    chartMuseumUsername: string,
+    chartMuseumPassword: Secret,
+    cloudflareApiToken: Secret,
+    cloudflareAccountId: Secret,
+    awsAccessKeyId: Secret,
+    awsSecretAccessKey: Secret,
+    hassBaseUrl?: Secret,
+    hassToken?: Secret,
+    githubToken?: Secret,
+    npmToken?: Secret,
+    tofuGithubToken?: Secret,
+  ): Promise<string> {
+    return ciHomelab(source, HomelabStage.Prod, {
+      argocdToken,
+      ghcrUsername,
+      ghcrPassword,
+      chartVersion,
+      chartMuseumUsername,
+      chartMuseumPassword,
+      cloudflareApiToken,
+      cloudflareAccountId,
+      awsAccessKeyId,
+      awsSecretAccessKey,
+      ...(hassBaseUrl ? { hassBaseUrl } : {}),
+      ...(hassToken ? { hassToken } : {}),
+      ...(githubToken ? { githubToken } : {}),
+      ...(npmToken ? { npmToken } : {}),
+      ...(tofuGithubToken ? { tofuGithubToken } : {}),
+    });
+  }
+
+  /**
+   * Run homelab validation checks (lint + typecheck for HA and CDK8s).
+   */
+  @func()
+  async homelabCheckAll(source: Directory, hassBaseUrl?: Secret, hassToken?: Secret): Promise<string> {
+    return checkHomelab(source, hassBaseUrl, hassToken);
+  }
+
+  /**
+   * Build all homelab Helm charts.
+   */
+  @func()
+  homelabHelmBuild(source: Directory, version: string): Directory {
+    return homelabHelmBuildFn(source, version);
+  }
+
+  /**
+   * Trigger an ArgoCD sync for homelab.
+   */
+  @func()
+  async homelabSync(argocdToken: Secret): Promise<string> {
+    return homelabSyncFn(argocdToken);
+  }
+
+  /**
+   * Test homelab Helm charts.
+   */
+  @func()
+  async homelabTestHelm(source: Directory): Promise<string> {
+    return homelabTestHelmFn(source);
+  }
+
+  /**
+   * Test homelab Renovate regex patterns.
+   */
+  @func()
+  async homelabTestRenovateRegex(source: Directory): Promise<string> {
+    return homelabTestRenovateRegexFn(source);
+  }
+
+  /**
+   * Regenerate monorepo README files and open/update a PR.
+   * Designed for CI usage on main branch pushes.
+   */
+  @func()
+  async updateReadmes(
+    source: Directory,
+    githubToken: Secret,
+    openaiApiKey: Secret,
+    baseBranch = "main",
+  ): Promise<string> {
+    return await updateReadmesFn({
+      source,
+      githubToken,
+      openaiApiKey,
+      baseBranch,
     });
   }
 }

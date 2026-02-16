@@ -44,7 +44,6 @@
     "tw-to-css": "^0.0.12"
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "workspace:*",
     "@eslint/js": "^9.22.0",
     "@fontsource/roboto": "^5.2.5",
     "@tsconfig/node24": "^24.0.0",

@@ -20,7 +20,7 @@ if [ ! -f "$CHART_YAML" ]; then
 fi
 
 # Update Chart.yaml version and appVersion
-# This matches the logic used in .dagger/src/helm.ts
+# This matches the logic used in ../../.dagger/src/homelab/helm.ts
 sed -i.bak "s/^version:.*$/version: ${VERSION}/" "$CHART_YAML"
 sed -i.bak "s/^appVersion:.*$/appVersion: ${VERSION}/" "$CHART_YAML"
 rm -f "${CHART_YAML}.bak"

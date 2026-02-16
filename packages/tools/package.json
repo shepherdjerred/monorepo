@@ -13,7 +13,6 @@
     "lint": "eslint ."
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "workspace:*",
     "@types/bun": "latest",
     "eslint": "^9.39.2",
     "typescript": "latest"

@@ -25,7 +25,7 @@ The project uses a workspace-based architecture:
 - [src/cdk8s/](mdc:src/cdk8s) - Kubernetes infrastructure definitions
 - [src/ha/](mdc:src/ha) - Home Assistant application code
 - [package.json](mdc:package.json) - Root workspace configuration
-- [dagger.json](mdc:dagger.json) - Dagger CI/CD configuration
+- [../../dagger.json](mdc:../../dagger.json) - Dagger CI/CD configuration
 
 ## Key Principles
 - **Infrastructure as Code**: All Kubernetes resources defined in TypeScript
@@ -37,7 +37,7 @@ The project uses a workspace-based architecture:
 ## Development Environment
 - Use [mise.toml](mdc:mise.toml) for tool version management
 - Use [renovate.json](mdc:renovate.json) for automated dependency updates
-- Reference [.commitlintrc.json](mdc:.commitlintrc.json) for commit message format
+- Reference [../../lefthook.yml](mdc:../../lefthook.yml) for commit and pre-commit policy
 
 ## Quality Assurance
 - Kubernetes manifest linting with [.kube-linter.yaml](mdc:.kube-linter.yaml)

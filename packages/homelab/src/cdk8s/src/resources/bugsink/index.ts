@@ -265,6 +265,7 @@ echo "Database URL built successfully"
           key: "secret-key",
         }),
         DEBUG: EnvValue.fromValue("False"),
+        BASE_URL: EnvValue.fromValue("https://bugsink.sjer.red"),
 
         // Email configuration for background email tasks
         EMAIL_HOST: EnvValue.fromValue("postal-postal-smtp-service.postal"),

@@ -25,7 +25,6 @@ cat > "$PACKAGE_DIR/package.json" << EOF
     "lint": "bunx eslint ."
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "workspace:*",
     "typescript": "^5.9.3"
   }
 }
@@ -33,7 +32,7 @@ EOF
 
 # eslint.config.ts
 cat > "$PACKAGE_DIR/eslint.config.ts" << EOF
-import { recommended } from "@shepherdjerred/eslint-config";
+import { recommended } from "../eslint-config/local.ts";
 export default recommended({ tsconfigRootDir: import.meta.dirname });
 EOF
 

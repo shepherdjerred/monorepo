@@ -4,8 +4,8 @@ description: CI/CD pipeline automation using Dagger, including build targets, qu
 # CI/CD & Automation with Dagger
 
 ## Dagger Configuration
-- Use Dagger for all CI/CD pipelines as configured in [dagger.json](mdc:dagger.json)
-- Access Dagger functions via `.dagger/` directory
+- Use Dagger for all CI/CD pipelines as configured in [../../dagger.json](mdc:../../dagger.json)
+- Access Dagger functions via `../../.dagger/src/homelab/`
 - List available targets with `dagger functions`
 - Execute targets with `dagger call <target>`
 
@@ -85,11 +85,11 @@ dagger call <function-name> <args> export --path=<local-directory>
 ### Dagger Function Patterns
 - **Extract common container setup** into helper functions to reduce duplication
 - **Use shared caching strategies** across related functions
-- **Follow layered container architecture** as defined in [.dagger/src/base.ts](mdc:.dagger/src/base.ts)
+- **Follow layered container architecture** as defined in [../../.dagger/src/homelab/base.ts](mdc:../../.dagger/src/homelab/base.ts)
 - **Optimize for Docker layer caching** to improve build performance
 
 ### Helm Pipeline Optimization
-- **Shared `getHelmContainer()` helper** - Common setup for all helm functions in [.dagger/src/helm.ts](mdc:.dagger/src/helm.ts)
+- **Shared `getHelmContainer()` helper** - Common setup for all helm functions in [../../.dagger/src/homelab/helm.ts](mdc:../../.dagger/src/homelab/helm.ts)
 - **Version management** - Automatic updating of Chart.yaml version and appVersion fields
 - **Artifact packaging** - Consistent chart packaging and export strategies
 - **Cache efficiency** - Proper use of cache volumes for helm registry data

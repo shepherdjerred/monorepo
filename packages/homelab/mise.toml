@@ -5,13 +5,13 @@ python = "latest"
 
 [tasks.check]
 description = "Check"
-run = "dagger call check-all --source=."
+run = "dagger call homelab-check-all --source=."
 
 [tasks.ci]
 run = 'dagger call ci --argocd-token=env:DUMMY_ARGOCD_TOKEN --chart-museum-password=env:DUMMY_CHART_MUSEUM_PASSWORD --chart-museum-username=dummy-user --chart-version=0.1.0-dev --ghcr-password=env:DUMMY_GHCR_PASSWORD --ghcr-username=dummy-user --env=dev --hass-base-url=env:HASS_BASE_URL --hass-token=env:HASS_TOKEN'
 
 [tasks.dev]
-run = 'bun install && dagger develop && (cd .dagger/ && bun install && bun run scripts/fix-sdk.ts) && (cd src/ha/ && ./generate-types.ts)'
+run = 'bun install && (cd ../../ && dagger develop) && (cd ../../.dagger/ && bun install && bun run scripts/fix-sdk.ts) && (cd src/ha/ && ./generate-types.ts)'
 
 [tasks.build-cdk8s]
 dir = 'src/cdk8s/'
@@ -26,7 +26,7 @@ dir = 'src/helm-types/'
 run = ['bun run typecheck', 'bun run lint']
 
 [tasks.build-dagger]
-dir = '.dagger/'
+dir = '../../.dagger/'
 run = ['bun run typecheck', 'bun run lint']
 
 [tasks.build]

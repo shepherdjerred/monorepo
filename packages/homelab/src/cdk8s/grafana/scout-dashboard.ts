@@ -331,7 +331,7 @@ export function createScoutDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`sum by (environment) (rate(riot_api_rate_limit_errors_total{${buildFilter()}}[5m]))`)
+          .expr(`sum by (environment) (rate(riot_api_errors_total{${buildFilter()}, http_status="429"}[5m]))`)
           .legendFormat("{{environment}}"),
       )
       .unit("reqps")

@@ -1,4 +1,4 @@
-import { recommended, accessibilityConfig } from "@shepherdjerred/eslint-config";
+import { recommended, accessibilityConfig } from "../../../eslint-config/local.ts";
 import react from "eslint-plugin-react";
 
 export default [

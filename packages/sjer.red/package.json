@@ -55,7 +55,6 @@
     "url": "https://github.com/shepherdjerred/monorepo/issues"
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "workspace:*",
     "@eslint/eslintrc": "^3.3.0",
     "@eslint/js": "^9.22.0",
     "@playwright/test": "^1.51.0",
@@ -69,5 +68,5 @@
     "markdownlint-cli2": "^0.20.0",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.26.1"
-  },
+  }
 }

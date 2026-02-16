@@ -13,7 +13,6 @@
     "**/.astro/**",
     "**/*-stub.ts",
     "**/postcss.config.js",
-    "eslint-rules/eslint-plugin-eslint-comments.d.ts",
     "packages/backend/src/database/migrate.ts",
     "packages/backend/src/health.ts"
   ],
@@ -34,8 +33,8 @@
   },
   "workspaces": {
     ".": {
-      "entry": ["scripts/*.ts", ".husky/commit-msg", ".husky/pre-commit", "eslint-rules/**/*.test.ts"],
-      "project": ["scripts/**/*.ts", "eslint-rules/**/*.ts"]
+      "entry": ["scripts/*.ts", ".husky/commit-msg", ".husky/pre-commit"],
+      "project": ["scripts/**/*.ts"]
     },
     ".dagger": {
       "entry": ["src/index.ts"],

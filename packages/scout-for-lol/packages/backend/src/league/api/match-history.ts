@@ -4,9 +4,10 @@ import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
 import type { PlayerConfigEntry, MatchId } from "@scout-for-lol/data/index";
 import { MatchIdSchema } from "@scout-for-lol/data/index";
 import { z } from "zod";
-import { riotApiErrorsTotal } from "@scout-for-lol/backend/metrics/index.ts";
+import { riotApiErrorsTotal, riotApiRequestsTotal, updateRiotApiHealth } from "@scout-for-lol/backend/metrics/index.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import { withTimeout } from "@scout-for-lol/backend/utils/timeout.ts";
+import * as Sentry from "@sentry/bun";
 
 const logger = createLogger("api-match-history");
 
@@ -26,9 +27,18 @@ export async function getRecentMatchIds(player: PlayerConfigEntry, count = 5): P
     const region = mapRegionToEnum(playerRegion);
     const regionGroup = regionToRegionGroup(region);
 
+    Sentry.addBreadcrumb({
+      category: "riot-api",
+      message: `Fetching match history for ${playerAlias}`,
+      data: { playerAlias, region: playerRegion, endpoint: "MatchV5.list" },
+      level: "info",
+    });
+
     const response = await withTimeout(api.MatchV5.list(playerPuuid, regionGroup, { count }));
 
     const apiTime = Date.now() - startTime;
+    riotApiRequestsTotal.inc({ source: "match-history", status: "success" });
+    updateRiotApiHealth(true);
 
     // The response should be an ApiResponseDTO with a response property containing an array of match IDs
     const matchIdsResult = z.array(MatchIdSchema).safeParse(response.response);
@@ -46,6 +56,9 @@ export async function getRecentMatchIds(player: PlayerConfigEntry, count = 5): P
 
     return matchIds;
   } catch (e) {
+    riotApiRequestsTotal.inc({ source: "match-history", status: e instanceof Error && e.message.includes("timed out") ? "timeout" : "error" });
+    updateRiotApiHealth(false);
+
     const result = z.object({ status: z.number() }).safeParse(e);
     if (result.success) {
       const status = result.data.status;
@@ -55,6 +68,9 @@ export async function getRecentMatchIds(player: PlayerConfigEntry, count = 5): P
       }
       logger.error(`❌ HTTP Error ${status.toString()} for ${playerAlias}`);
       riotApiErrorsTotal.inc({ source: "match-history-api", http_status: status.toString() });
+      Sentry.captureException(e, {
+        tags: { source: "match-history-api", playerAlias, region: playerRegion, httpStatus: status.toString() },
+      });
     } else {
       logger.error(`❌ Error fetching match history for ${playerAlias}:`, e);
       riotApiErrorsTotal.inc({ source: "match-history-api", http_status: "unknown" });

@@ -31,6 +31,7 @@ import { fetchMatchTimeline } from "./match-data-fetcher.ts";
 import { isExceptionalGame } from "./exceptional-game.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import { saveMatchRankHistory, getLatestRankBefore } from "@scout-for-lol/backend/league/model/rank-history.ts";
+import { reportsGeneratedTotal } from "@scout-for-lol/backend/metrics/index.ts";
 
 const logger = createLogger("postmatch-match-report-generator");
 
@@ -412,7 +413,7 @@ export async function generateMatchReport(
     const timelineData = await fetchTimelineIfStandardMatch(matchData, matchId, playersInMatch);
 
     // Process match based on queue type
-    return await match<number, Promise<MessageCreateOptions>>(matchData.info.queueId)
+    const result = await match<number, Promise<MessageCreateOptions>>(matchData.info.queueId)
       .with(1700, () => processArenaMatch(players, matchData, matchId, playersInMatch))
       .otherwise(() =>
         processStandardMatch({
@@ -424,6 +425,11 @@ export async function generateMatchReport(
           targetGuildIds: options.targetGuildIds,
         }),
       );
+
+    const queueType = parseQueueType(matchData.info.queueId) ?? "unknown";
+    reportsGeneratedTotal.inc({ queue_type: queueType });
+
+    return result;
   } catch (error) {
     logErrorDetails(error, matchId, matchData, trackedPlayers);
     throw error;

@@ -9,7 +9,7 @@ The Dagger pipeline in [.dagger/](mdc:.dagger) has been optimized for maximum ca
 
 ## 🏗️ Layered Container Architecture
 
-The pipeline follows a strict layered caching approach defined in [.dagger/src/base.ts](mdc:.dagger/src/base.ts):
+The pipeline follows a strict layered caching approach defined in [../../.dagger/src/homelab/base.ts](mdc:../../.dagger/src/homelab/base.ts):
 
 1. **System Layer** (`getSystemContainer()`) - Ubuntu + OS packages
 2. **Runtime Layer** (`getMiseRuntimeContainer()`) - Mise tools (bun, node, python)
@@ -38,12 +38,12 @@ The pipeline follows a strict layered caching approach defined in [.dagger/src/b
 
 ## 🔧 Workspace-Specific Handling
 
-### HA Workspace ([.dagger/src/ha.ts](mdc:.dagger/src/ha.ts))
+### HA Workspace ([../../.dagger/src/homelab/ha.ts](mdc:../../.dagger/src/homelab/ha.ts))
 - Has `bun.lock` file - copy before dependency installation
 - Uses `bun` commands directly (mise tools are pre-installed)
 - Cache key: `bun-cache-{platform}`
 
-### CDK8s Workspace ([.dagger/src/cdk8s.ts](mdc:.dagger/src/cdk8s.ts))
+### CDK8s Workspace ([../../.dagger/src/homelab/cdk8s.ts](mdc:../../.dagger/src/homelab/cdk8s.ts))
 - No `bun.lock` file - only copy `package.json`
 - Uses `bun` commands directly (mise tools are pre-installed)
 - Additional TypeScript compilation cache
@@ -78,7 +78,7 @@ The pipeline follows a strict layered caching approach defined in [.dagger/src/b
 
 ### When Updating Versions
 
-- Update [.dagger/src/versions.ts](mdc:.dagger/src/versions.ts)
+- Update [../../.dagger/src/homelab/versions.ts](mdc:../../.dagger/src/homelab/versions.ts)
 - Docker will automatically invalidate relevant layers
 - No need to change cache volume names
 
@@ -148,10 +148,10 @@ dagger call build-ha | grep CACHED
 
 ## 📚 Related Files
 
-- [.dagger/src/base.ts](mdc:.dagger/src/base.ts) - Core container functions
-- [.dagger/src/ha.ts](mdc:.dagger/src/ha.ts) - Home Assistant pipeline
-- [.dagger/src/cdk8s.ts](mdc:.dagger/src/cdk8s.ts) - CDK8s pipeline
-- [.dagger/src/versions.ts](mdc:.dagger/src/versions.ts) - Version management
-- [.dagger/OPTIMIZATION_GUIDE.md](mdc:.dagger/OPTIMIZATION_GUIDE.md) - Detailed optimization guide
+- [../../.dagger/src/homelab/base.ts](mdc:../../.dagger/src/homelab/base.ts) - Core container functions
+- [../../.dagger/src/homelab/ha.ts](mdc:../../.dagger/src/homelab/ha.ts) - Home Assistant pipeline
+- [../../.dagger/src/homelab/cdk8s.ts](mdc:../../.dagger/src/homelab/cdk8s.ts) - CDK8s pipeline
+- [../../.dagger/src/homelab/versions.ts](mdc:../../.dagger/src/homelab/versions.ts) - Version management
+- [../../.dagger/OPTIMIZATION_GUIDE.md](mdc:../../.dagger/OPTIMIZATION_GUIDE.md) - Detailed optimization guide
 
 **Remember**: The goal is 90% faster builds for source-only changes by leveraging Docker's proven layer caching mechanisms.
