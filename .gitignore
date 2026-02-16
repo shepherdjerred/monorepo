@@ -31,3 +31,6 @@ test-results/
 /.npm/
 /.rustup/
 .config/
+
+# Lefthook local overrides
+lefthook-local.yml

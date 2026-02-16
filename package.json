@@ -11,13 +11,12 @@
     "docs:dev": "bun run --filter='./packages/clauderon/docs' dev",
     "docs:build": "bun run --filter='./packages/clauderon/docs' build",
     "docs:preview": "bun run --filter='./packages/clauderon/docs' preview",
-    "prepare": "husky"
+    "prepare": "lefthook install"
   },
   "devDependencies": {
     "@dagger.io/dagger": "^0.19.0",
     "@prisma/client": "^6.0.0",
-    "husky": "^9.1.7",
-    "lint-staged": "^16.2.7",
+    "lefthook": "^2.1.1",
     "prisma": "^6.0.0",
     "typescript": "^5.9.3"
   }
