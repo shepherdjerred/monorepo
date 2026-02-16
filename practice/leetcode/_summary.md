@@ -1,1 +1,0 @@
-This project is a Java-based application managed with Maven, as indicated by the presence of the `pom.xml` file. The source code resides in the `src` directory, suggesting standard Java project structure. The `pom.xml` manages project dependencies, build configuration, and potentially enables integration with frameworks or libraries commonly used in the Java ecosystem.

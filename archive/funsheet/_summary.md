@@ -1,1 +1,0 @@
-This project is a Java-based web application built using the Spring Boot framework, as specified in the `pom.xml`, with dependencies managed via Maven. It includes a `Procfile` for deployment on Heroku, indicating it is intended for cloud deployment. The codebase, located in the `src` directory, adheres to the Apache License 2.0 as described in the LICENSE file.
