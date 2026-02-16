@@ -1,4 +1,8 @@
-import { type ArenaChampion, type Augment, type RawParticipant } from "@scout-for-lol/data";
+import {
+  type ArenaChampion,
+  type Augment,
+  type RawParticipant,
+} from "@scout-for-lol/data";
 import { participantToChampion } from "@scout-for-lol/data/model/match-helpers";
 import { mapAugmentIdsToUnion } from "@scout-for-lol/backend/league/arena/augment";
 

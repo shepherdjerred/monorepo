@@ -43,7 +43,7 @@ ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_
       stdout: "pipe",
       stdin: "pipe",
     });
-    proc.stdin.write(nvmeOutput);
+    await proc.stdin.write(nvmeOutput);
     await proc.stdin.end();
     const result = await new Response(proc.stdout).text();
 
@@ -61,7 +61,7 @@ ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_
       stdout: "pipe",
       stdin: "pipe",
     });
-    proc.stdin.write(satOutput);
+    await proc.stdin.write(satOutput);
     await proc.stdin.end();
     const result = await new Response(proc.stdout).text();
 

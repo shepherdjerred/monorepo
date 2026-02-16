@@ -109,7 +109,13 @@
           "description": "Taliyah throws a volley of rocks in a target direction, moving freely as she casts. This creates Worked Ground below her. If Taliyah casts Threaded Volley on Worked Ground, she consumes the ground to throw a stronger boulder that slows enemies.",
           "tooltip": "Taliyah hurls 5 rocks, each dealing <magicDamage>{{ rockdamage }} magic damage</magicDamage> in an area around the first enemy hit while creating Worked Ground at that area. Subsequent hits against the same enemy deal {{ extramissilereduceddamagepercent }}% less damage.<br /><br />Casts on worked ground cost {{ e7 }} Mana and have {{ workedgroundcdr*100 }}% less Cooldown, consume the Worked Ground, and hurl a boulder that <status>Slows</status> enemies it hits by {{ slowpercent*100 }}% for {{ slowduration }} seconds, dealing <magicDamage>{{ bigrockdamage }} magic damage</magicDamage> to the primary target. Monsters hit by the boulder are <status>Stunned</status> for {{ monsterstunduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow", "Monster Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Slow",
+              "Monster Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowpercent*100.000000 }}% -> {{ slowpercentnl*100.000000 }}%",
@@ -137,7 +143,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "30", "10", "400", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "30",
+            "10",
+            "400",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -161,7 +179,10 @@
           "tooltip": "Taliyah quakes the earth, <status>Knocking</status> enemies in an area in the chosen direction.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "@AbilityResourceName@ Cost"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ cost }} -> {{ costNL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [14, 12.5, 11, 9.5, 8],
@@ -182,7 +203,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0.5", "400", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0.5",
+            "400",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -230,7 +263,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "4", "85", "0", "4", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "4",
+            "85",
+            "0",
+            "4",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -254,7 +299,10 @@
           "tooltip": "Taliyah creates a massive earthen wall for {{ e1 }} seconds. If she immediately <recast>Recasts</recast>, she will ride along the wall as it unravels. Moving or being immobilized will end the ride.<br /><br />This ability cannot be cast if Taliyah has taken damage from Champions or structures within the last {{ damagelockouttime }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Wall length", "Cooldown"],
-            "effect": ["{{ walllength }} -> {{ walllengthNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ walllength }} -> {{ walllengthNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [180, 150, 120],
@@ -275,7 +323,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "4", "2500/4500/6500", "0.1", "2500", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "4",
+            "2500/4500/6500",
+            "0.1",
+            "2500",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

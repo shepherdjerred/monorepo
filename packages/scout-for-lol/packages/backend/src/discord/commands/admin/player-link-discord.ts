@@ -1,6 +1,9 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index";
+import {
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data/index";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { executeCommand } from "@scout-for-lol/backend/discord/commands/utils/command-wrapper.ts";
 import { findPlayerByAliasWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.ts";
@@ -20,7 +23,9 @@ const ArgsSchema = z.object({
   guildId: DiscordGuildIdSchema,
 });
 
-export async function executePlayerLinkDiscord(interaction: ChatInputCommandInteraction) {
+export async function executePlayerLinkDiscord(
+  interaction: ChatInputCommandInteraction,
+) {
   return executeCommand({
     interaction,
     schema: ArgsSchema,
@@ -34,7 +39,12 @@ export async function executePlayerLinkDiscord(interaction: ChatInputCommandInte
       const { playerAlias, discordUserId, guildId } = args;
 
       // Find the player
-      const player = await findPlayerByAliasWithSubscriptions(prisma, guildId, playerAlias, interaction);
+      const player = await findPlayerByAliasWithSubscriptions(
+        prisma,
+        guildId,
+        playerAlias,
+        interaction,
+      );
       if (!player) {
         return;
       }
@@ -55,12 +65,18 @@ export async function executePlayerLinkDiscord(interaction: ChatInputCommandInte
         return;
       }
 
-      logger.info(`💾 Linking Discord ID ${discordUserId} to player "${playerAlias}"`);
+      logger.info(
+        `💾 Linking Discord ID ${discordUserId} to player "${playerAlias}"`,
+      );
 
       await executeDiscordLinkOperation(
         interaction,
         async () => {
-          const updatedPlayer = await updatePlayerDiscordId(prisma, playerNonNull.id, discordUserId);
+          const updatedPlayer = await updatePlayerDiscordId(
+            prisma,
+            playerNonNull.id,
+            discordUserId,
+          );
           // updatePlayerDiscordId always returns a player (update operation never returns null)
           // Check that result is not null
           if (!updatedPlayer) {

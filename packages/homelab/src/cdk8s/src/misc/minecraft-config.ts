@@ -12,7 +12,7 @@
  */
 
 import { Glob } from "bun";
-import path from "path";
+import path from "node:path";
 import { type Construct } from "constructs";
 import { KubeConfigMap } from "../../generated/imports/k8s.ts";
 import versions from "../versions.ts";

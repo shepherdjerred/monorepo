@@ -1,4 +1,5 @@
-import { App, Chart } from "cdk8s";
+import type { App} from "cdk8s";
+import { Chart } from "cdk8s";
 import { KubeNetworkPolicy, IntOrString } from "../../generated/imports/k8s.ts";
 import { createSyncthingDeployment } from "../resources/syncthing.ts";
 
@@ -39,9 +40,9 @@ export function createSyncthingChart(app: App) {
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
           ports: [
-            { port: IntOrString.fromNumber(22000), protocol: "TCP" }, // BEP sync
-            { port: IntOrString.fromNumber(22000), protocol: "UDP" }, // QUIC sync
-            { port: IntOrString.fromNumber(21027), protocol: "UDP" }, // Local discovery
+            { port: IntOrString.fromNumber(22_000), protocol: "TCP" }, // BEP sync
+            { port: IntOrString.fromNumber(22_000), protocol: "UDP" }, // QUIC sync
+            { port: IntOrString.fromNumber(21_027), protocol: "UDP" }, // Local discovery
             { port: IntOrString.fromNumber(443), protocol: "TCP" }, // Global discovery + relays
           ],
         },

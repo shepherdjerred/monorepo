@@ -133,7 +133,13 @@
           "description": "Sion charges a powerful swing in an area in front of himself that will deal damage to enemies when released. If he charges for enough time, enemies hit by the swing will also be knocked up and stunned.",
           "tooltip": "<charge>Begin Charging</charge>: Sion charges a heavy blow for up to 2 seconds.<br /><br /><release>Release</release>: Sion slams his axe down, briefly <status>Slowing</status> and dealing between <physicalDamage>{{ mindamagetotal }} and {{ maxdamagetotal }} physical damage</physicalDamage> based on charge time. If Sion charged for at least 1 second, enemies are <status>Knocked Up</status> and <status>Stunned</status> for between {{ basestuntime }} and 2.25 seconds based on charge time.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Minimum Damage", "Maximum Damage", "Attack Damage Ratio", "Attack Damage Ratio", "Cooldown"],
+            "label": [
+              "Minimum Damage",
+              "Maximum Damage",
+              "Attack Damage Ratio",
+              "Attack Damage Ratio",
+              "Cooldown"
+            ],
             "effect": [
               "{{ lowdamage }} -> {{ lowdamageNL }}",
               "{{ highdamage }} -> {{ highdamageNL }}",
@@ -161,7 +167,19 @@
             [150, 150, 150, 150, 150],
             [-0.8, -0.8, -0.8, -0.8, -0.8]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "2.5", "0", "7.5", "60", "150", "-0.8"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "2.5",
+            "0",
+            "7.5",
+            "60",
+            "150",
+            "-0.8"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -184,7 +202,13 @@
           "description": "Sion shields himself and can reactivate after 3 seconds to deal Magic Damage to enemies nearby. When Sion kills enemies, he passively gains maximum Health.",
           "tooltip": "<spellPassive>Passive</spellPassive>: Sion gains <scaleHealth>{{ hpperkill }} max Health</scaleHealth> when he kills a unit, or {{ hpperchampkill }} for champion takedowns, large minions and large monsters.<br /><br /><spellActive>Active</spellActive>: Sion gains <shield>{{ totalshield }} Shield</shield> for 6 seconds. After {{ e7 }} seconds if the shield still holds, Sion can <recast>Recast</recast> to detonate the shield to deal <magicDamage>{{ totaldamage }} plus {{ e4 }}% max Health magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Shield Amount", "Damage", "Max Health Shield Ratio", "Mana Cost", "Cooldown"],
+            "label": [
+              "Shield Amount",
+              "Damage",
+              "Max Health Shield Ratio",
+              "Mana Cost",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ e2 }} -> {{ e2NL }}",
@@ -247,7 +271,12 @@
           "description": "Sion fires a short range shockwave that damages and slows and reduces the Armor of the first enemy hit. If the shockwave hits a minion or monster, it will be knocked back, damaging, slowing, and reducing the Armor of all enemies that it passes through.",
           "tooltip": "Sion fires a shockwave, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>, <status>Slowing</status> them by {{ slowamount }}% for {{ slowduration }} seconds and removing <scaleArmor>{{ armorshred }}% Armor</scaleArmor> for {{ armorshredduration }} seconds. Non-champions hit are <status>Knocked Back</status>. Enemies hit by a <status>Knocked Back</status> unit take the same damage and effects.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Slow",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ slowamount }}% -> {{ slowamountNL }}%",
@@ -336,7 +365,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

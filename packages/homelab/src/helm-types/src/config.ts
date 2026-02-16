@@ -129,8 +129,8 @@ export function shouldAllowArbitraryProps(
   if (yamlComment) {
     const commentLower = yamlComment.toLowerCase();
     if (
-      /\b(arbitrary|custom|additional|extra|any)\s+(keys?|properties?|fields?|values?)\b/i.exec(commentLower) ||
-      /\bkey[\s-]?value\s+pairs?\b/i.exec(commentLower)
+      /\b(arbitrary|custom|additional|extra|any)\s+(keys?|properties?|fields?|values?)\b/i.test(commentLower) ||
+      /\bkey[\s-]?value\s+pairs?\b/i.test(commentLower)
     ) {
       return true;
     }

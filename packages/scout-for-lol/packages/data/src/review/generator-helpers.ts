@@ -1,8 +1,22 @@
 import { match as matchPattern } from "ts-pattern";
-import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.ts";
-import { selectRandomBehaviors, type Personality } from "@scout-for-lol/data/review/prompts.ts";
-import { wasPromoted, wasDemoted, rankToSimpleString, tierToPercentileString } from "@scout-for-lol/data/model/rank.ts";
-import { lpDiffToString, rankToLeaguePoints } from "@scout-for-lol/data/model/league-points.ts";
+import type {
+  ArenaMatch,
+  CompletedMatch,
+} from "@scout-for-lol/data/model/index.ts";
+import {
+  selectRandomBehaviors,
+  type Personality,
+} from "@scout-for-lol/data/review/prompts.ts";
+import {
+  wasPromoted,
+  wasDemoted,
+  rankToSimpleString,
+  tierToPercentileString,
+} from "@scout-for-lol/data/model/rank.ts";
+import {
+  lpDiffToString,
+  rankToLeaguePoints,
+} from "@scout-for-lol/data/model/league-points.ts";
 
 /**
  * Extract match data from a match object
@@ -43,7 +57,8 @@ export function extractMatchData(
       };
     })
     .otherwise((regularMatch: CompletedMatch) => {
-      const player = regularMatch.players[playerIndex] ?? regularMatch.players[0];
+      const player =
+        regularMatch.players[playerIndex] ?? regularMatch.players[0];
       if (!player) {
         throw new Error("No player data found");
       }
@@ -102,7 +117,10 @@ export function getOrdinalSuffix(num: number): string {
  * @param playerIndex - Index of the player being reviewed (to exclude from friends list)
  * @returns A formatted string describing friends in the match, or empty string if none
  */
-function buildFriendsContext(match: CompletedMatch | ArenaMatch, playerIndex: number): string {
+function buildFriendsContext(
+  match: CompletedMatch | ArenaMatch,
+  playerIndex: number,
+): string {
   const allPlayers = match.players;
   const totalTrackedPlayers = allPlayers.length;
   const friends = allPlayers.filter((_, index) => index !== playerIndex);
@@ -114,12 +132,17 @@ function buildFriendsContext(match: CompletedMatch | ArenaMatch, playerIndex: nu
   }
 
   // Handle solo/duo queue case
-  if (queueType === "solo" && totalTrackedPlayers === 2 && friends.length === 1) {
+  if (
+    queueType === "solo" &&
+    totalTrackedPlayers === 2 &&
+    friends.length === 1
+  ) {
     const duoPartner = friends[0];
     if (duoPartner) {
       const alias = duoPartner.playerConfig.alias;
       const champion = duoPartner.champion.championName;
-      const lane = "lane" in duoPartner && duoPartner.lane ? ` in ${duoPartner.lane}` : "";
+      const lane =
+        "lane" in duoPartner && duoPartner.lane ? ` in ${duoPartner.lane}` : "";
       return `This is a duo queue game. Their duo partner is ${alias} (playing ${champion}${lane}).`;
     }
   }
@@ -156,7 +179,11 @@ function buildFriendsContext(match: CompletedMatch | ArenaMatch, playerIndex: nu
  * Build context for flex queue matches with special messaging based on party size
  */
 function buildFlexQueueContext(
-  friends: { playerConfig: { alias: string }; champion: { championName: string }; lane?: string | undefined }[],
+  friends: {
+    playerConfig: { alias: string };
+    champion: { championName: string };
+    lane?: string | undefined;
+  }[],
   totalTrackedPlayers: number,
 ): string {
   const friendDescriptions = friends.map((friend) => {
@@ -270,10 +297,14 @@ function buildRankContext(match: CompletedMatch | ArenaMatch): string {
       rankInfo.push(`${rankLine} They were DEMOTED after this game.`);
     } else if (rankBefore) {
       // Show LP change for non-promotion/demotion games
-      const lpDelta = rankToLeaguePoints(rankAfter) - rankToLeaguePoints(rankBefore);
+      const lpDelta =
+        rankToLeaguePoints(rankAfter) - rankToLeaguePoints(rankBefore);
       if (lpDelta !== 0) {
         const lpStr = lpDiffToString(lpDelta);
-        const changeStr = lpDelta > 0 ? `gained ${lpStr.replace(/[+-]/, "")}` : `lost ${lpStr.replace(/[+-]/, "")}`;
+        const changeStr =
+          lpDelta > 0
+            ? `gained ${lpStr.replace(/[+-]/, "")}`
+            : `lost ${lpStr.replace(/[+-]/, "")}`;
         rankInfo.push(`${rankLine} They ${changeStr}.`);
       } else {
         rankInfo.push(rankLine);
@@ -313,7 +344,15 @@ export function buildPromptVariables(params: {
   queueContext: string;
   rankContext: string;
 } {
-  const { matchData, personality, laneContext, match, playerIndex = 0, matchAnalysis, timelineSummary } = params;
+  const {
+    matchData,
+    personality,
+    laneContext,
+    match,
+    playerIndex = 0,
+    matchAnalysis,
+    timelineSummary,
+  } = params;
   const playerName = matchData["playerName"];
   if (!playerName) {
     throw new Error("No player name found");
@@ -332,7 +371,9 @@ export function buildPromptVariables(params: {
   const friendsContext = buildFriendsContext(match, playerIndex);
 
   // Select 3-6 random behaviors based on personality weights
-  const randomBehavior = selectRandomBehaviors(personality.metadata.randomBehaviors);
+  const randomBehavior = selectRandomBehaviors(
+    personality.metadata.randomBehaviors,
+  );
   const matchAnalysisText =
     matchAnalysis && matchAnalysis.trim().length > 0
       ? matchAnalysis.trim()

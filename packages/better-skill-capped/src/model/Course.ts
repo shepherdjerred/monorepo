@@ -1,7 +1,7 @@
-import { Role } from "./Role";
-import { CourseVideo } from "./CourseVideo";
+import type { Role } from "./Role";
+import type { CourseVideo } from "./CourseVideo";
 
-export interface Course {
+export type Course = {
   title: string;
   uuid: string;
   description?: string;

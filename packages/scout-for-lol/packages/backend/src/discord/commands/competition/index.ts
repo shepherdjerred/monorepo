@@ -13,7 +13,11 @@ export const competitionCommand = new SlashCommandBuilder()
       .setDescription("Create a new competition")
       // Required fields
       .addStringOption((option) =>
-        option.setName("title").setDescription("Competition title (max 100 chars)").setRequired(true).setMaxLength(100),
+        option
+          .setName("title")
+          .setDescription("Competition title (max 100 chars)")
+          .setRequired(true)
+          .setMaxLength(100),
       )
       .addStringOption((option) =>
         option
@@ -37,19 +41,26 @@ export const competitionCommand = new SlashCommandBuilder()
           ),
       )
       .addChannelOption((option) =>
-        option.setName("channel").setDescription("Channel for daily leaderboard updates").setRequired(true),
+        option
+          .setName("channel")
+          .setDescription("Channel for daily leaderboard updates")
+          .setRequired(true),
       )
       // Date options (mutually exclusive with season)
       .addStringOption((option) =>
         option
           .setName("start-date")
-          .setDescription("Start date+time (ISO: YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss, or with timezone Z/+HH:mm)")
+          .setDescription(
+            "Start date+time (ISO: YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss, or with timezone Z/+HH:mm)",
+          )
           .setRequired(false),
       )
       .addStringOption((option) =>
         option
           .setName("end-date")
-          .setDescription("End date+time (ISO: YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss, or with timezone Z/+HH:mm)")
+          .setDescription(
+            "End date+time (ISO: YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss, or with timezone Z/+HH:mm)",
+          )
           .setRequired(false),
       )
       .addStringOption((option) =>
@@ -115,7 +126,9 @@ export const competitionCommand = new SlashCommandBuilder()
       .addBooleanOption((option) =>
         option
           .setName("add-all-members")
-          .setDescription("Add all server members with linked accounts (admin only)")
+          .setDescription(
+            "Add all server members with linked accounts (admin only)",
+          )
           .setRequired(false),
       ),
   )
@@ -132,7 +145,11 @@ export const competitionCommand = new SlashCommandBuilder()
       )
       // Editable always fields
       .addStringOption((option) =>
-        option.setName("title").setDescription("New title (max 100 chars)").setRequired(false).setMaxLength(100),
+        option
+          .setName("title")
+          .setDescription("New title (max 100 chars)")
+          .setRequired(false)
+          .setMaxLength(100),
       )
       .addStringOption((option) =>
         option
@@ -142,7 +159,10 @@ export const competitionCommand = new SlashCommandBuilder()
           .setMaxLength(500),
       )
       .addChannelOption((option) =>
-        option.setName("channel").setDescription("New channel for updates").setRequired(false),
+        option
+          .setName("channel")
+          .setDescription("New channel for updates")
+          .setRequired(false),
       )
       // DRAFT-only fields
       .addStringOption((option) =>
@@ -166,10 +186,16 @@ export const competitionCommand = new SlashCommandBuilder()
       )
       // Date options (DRAFT only)
       .addStringOption((option) =>
-        option.setName("start-date").setDescription("New start date (DRAFT only, ISO format)").setRequired(false),
+        option
+          .setName("start-date")
+          .setDescription("New start date (DRAFT only, ISO format)")
+          .setRequired(false),
       )
       .addStringOption((option) =>
-        option.setName("end-date").setDescription("New end date (DRAFT only, ISO format)").setRequired(false),
+        option
+          .setName("end-date")
+          .setDescription("New end date (DRAFT only, ISO format)")
+          .setRequired(false),
       )
       .addStringOption((option) =>
         option
@@ -196,7 +222,9 @@ export const competitionCommand = new SlashCommandBuilder()
       .addStringOption((option) =>
         option
           .setName("queue")
-          .setDescription("New queue type (DRAFT only, required for most criteria)")
+          .setDescription(
+            "New queue type (DRAFT only, required for most criteria)",
+          )
           .setRequired(false)
           .addChoices(
             { name: "Solo Queue", value: "SOLO" },
@@ -213,7 +241,9 @@ export const competitionCommand = new SlashCommandBuilder()
       .addStringOption((option) =>
         option
           .setName("champion")
-          .setDescription("New champion name (DRAFT only, for Most Wins Champion)")
+          .setDescription(
+            "New champion name (DRAFT only, for Most Wins Champion)",
+          )
           .setRequired(false)
           .setAutocomplete(true),
       )
@@ -243,7 +273,10 @@ export const competitionCommand = new SlashCommandBuilder()
       .setName("grant-permission")
       .setDescription("Grant competition creation permission to a user")
       .addUserOption((option) =>
-        option.setName("user").setDescription("User to grant permission to").setRequired(true),
+        option
+          .setName("user")
+          .setDescription("User to grant permission to")
+          .setRequired(true),
       ),
   )
   .addSubcommand((subcommand) =>
@@ -263,9 +296,18 @@ export const competitionCommand = new SlashCommandBuilder()
       .setName("invite")
       .setDescription("Invite a user to your competition")
       .addIntegerOption((option) =>
-        option.setName("competition-id").setDescription("ID of your competition").setRequired(true).setMinValue(1),
+        option
+          .setName("competition-id")
+          .setDescription("ID of your competition")
+          .setRequired(true)
+          .setMinValue(1),
       )
-      .addUserOption((option) => option.setName("user").setDescription("User to invite").setRequired(true)),
+      .addUserOption((option) =>
+        option
+          .setName("user")
+          .setDescription("User to invite")
+          .setRequired(true),
+      ),
   )
   .addSubcommand((subcommand) =>
     subcommand
@@ -296,10 +338,16 @@ export const competitionCommand = new SlashCommandBuilder()
       .setName("list")
       .setDescription("List all competitions in the server")
       .addBooleanOption((option) =>
-        option.setName("active-only").setDescription("Show only active competitions").setRequired(false),
+        option
+          .setName("active-only")
+          .setDescription("Show only active competitions")
+          .setRequired(false),
       )
       .addBooleanOption((option) =>
-        option.setName("my-competitions").setDescription("Show only your competitions").setRequired(false),
+        option
+          .setName("my-competitions")
+          .setDescription("Show only your competitions")
+          .setRequired(false),
       ),
   )
   .setContexts(InteractionContextType.Guild);

@@ -164,7 +164,12 @@
           "description": "Varus readies and then fires a powerful shot that gains extra range and damage the longer he spends preparing to fire.",
           "tooltip": "<attention>Begin Charging:</attention> Varus draws back his next shot, <status>Slowing</status> himself by {{ e7 }}%. After {{ e5 }} seconds, if not fired, Varus will cancel the Ability and refund {{ e4 }}% of its Mana cost.<br /><br /><attention>Release:</attention> Varus releases the arrow, dealing <physicalDamage>{{ totaldamagemintooltip }} physical damage</physicalDamage>, reduced by {{ e3 }}% per enemy hit (minimum {{ e9 }}%). Damage and <keywordMajor>Blight</keywordMajor> detonation effects are increased by up to {{ maxchargeamp*100 }}% based on charge time (maximum <physicalDamage>{{ totaldamagemax }}</physicalDamage>) .{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Maximum Damage", "Bonus AD Ratio", "Cooldown", "Mana Cost"],
+            "label": [
+              "Maximum Damage",
+              "Bonus AD Ratio",
+              "Cooldown",
+              "Mana Cost"
+            ],
             "effect": [
               "{{ basedamagemax }} -> {{ basedamagemaxNL }}",
               "{{ tadratiomax }} -> {{ tadratiomaxNL }}",
@@ -191,7 +196,19 @@
             [33, 33, 33, 33, 33],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "15", "50", "4", "3", "20", "0", "33", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "15",
+            "50",
+            "4",
+            "3",
+            "20",
+            "0",
+            "33",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -214,7 +231,11 @@
           "description": "Passive: Varus' basic attacks deal bonus magic damage and apply Blight. Varus' other abilities detonate Blight, dealing magic damage based on the target's maximum Health. Active: Varus empowers his next Piercing Arrow.",
           "tooltip": "<spellPassive>Passive: </spellPassive>Varus' Attacks deal an additional <magicDamage>{{ onhitdamage }} magic damage</magicDamage> and apply a <keywordMajor>Blight</keywordMajor> stack for {{ e3 }} seconds (max {{ e4 }} stacks).<br /><br />Varus' other Abilities detonate <keywordMajor>Blight</keywordMajor> stacks dealing <magicDamage>{{ percenthpperstack }} max Health magic damage</magicDamage> per stack (max <magicDamage>{{ maxpercenthpperstack }} max Health damage</magicDamage>). Detonating <keywordMajor>Blight</keywordMajor> on champions and epic monsters also reduces his basic Abilities' Cooldowns by {{ cdrperblightstack*100 }}% of their Maximum per stack.<br /><br /><spellActive>Active:</spellActive> Varus' next <spellName>Piercing Arrow</spellName> deals an additional <magicDamage>{{ qempowerpercenthp }} missing Health magic damage</magicDamage>, increased up to <magicDamage>{{ maxqempowerpercenthp }} missing Health damage</magicDamage> based on charge time.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage on Attack", "Maximum Health Damage", "Missing Health Damage"],
+            "label": [
+              "Damage on Attack",
+              "Maximum Health Damage",
+              "Missing Health Damage"
+            ],
             "effect": [
               "{{ varuswonhitdamage }} -> {{ varuswonhitdamageNL }}",
               "{{ basepercenthpperstack*100.000000 }}% -> {{ basepercenthpperstacknl*100.000000 }}%",
@@ -240,7 +261,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0.03/0.035/0.04/0.045/0.05", "6", "3", "120", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0.03/0.035/0.04/0.045/0.05",
+            "6",
+            "3",
+            "120",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -289,7 +322,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "4", "0", "300", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "4",
+            "0",
+            "300",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -313,7 +358,10 @@
           "tooltip": "Varus flings out a tendril of corruption, <status>Rooting</status> the first champion hit for {{ e2 }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. <status>Rooted</status> enemies gain {{ e4 }} <keywordMajor>Blight</keywordMajor> stacks over the duration.<br /><br />The corruption spreads from its target to uninfected enemy champions. If it reaches them, they take the same damage and <status>Root</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [100, 80, 60],
@@ -334,7 +382,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "150/250/350", "2", "650", "3", "0.5", "600", "1.75", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "150/250/350",
+            "2",
+            "650",
+            "3",
+            "0.5",
+            "600",
+            "1.75",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

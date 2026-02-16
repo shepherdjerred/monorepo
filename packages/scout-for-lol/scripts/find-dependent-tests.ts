@@ -9,7 +9,9 @@ import { join, resolve } from "path";
 
 const args = Bun.argv.slice(2);
 if (args.length < 2) {
-  console.error("Usage: find-dependent-tests.ts <package-dir> <changed-files...>");
+  console.error(
+    "Usage: find-dependent-tests.ts <package-dir> <changed-files...>",
+  );
   throw new Error("Missing required arguments");
 }
 
@@ -36,12 +38,17 @@ if (configFile.error) {
   // TypeScript's DiagnosticMessageChain is a special type that can be a string or an object
   const messageText = configFile.error.messageText;
 
-  const errorMessage = typeof messageText === "string" ? messageText : messageText.messageText;
+  const errorMessage =
+    typeof messageText === "string" ? messageText : messageText.messageText;
   console.error(`Error reading tsconfig.json: ${errorMessage}`);
   process.exit(1);
 }
 
-const parsedConfig = ts.parseJsonConfigFileContent(configFile.config, ts.sys, absolutePackageDir);
+const parsedConfig = ts.parseJsonConfigFileContent(
+  configFile.config,
+  ts.sys,
+  absolutePackageDir,
+);
 
 // Create TypeScript program
 console.error("Loading TypeScript program...");
@@ -60,7 +67,9 @@ if (absoluteChangedFiles.length === 0) {
   process.exit(0);
 }
 
-console.error(`Analyzing ${String(absoluteChangedFiles.length)} changed file(s)...`);
+console.error(
+  `Analyzing ${String(absoluteChangedFiles.length)} changed file(s)...`,
+);
 
 // Build reverse dependency map: file -> files that depend on it
 const reverseDeps = new Map<string, Set<string>>();
@@ -78,7 +87,9 @@ const sourceFiles = program.getSourceFiles().filter((sf) => {
   );
 });
 
-console.error(`Building dependency graph for ${String(sourceFiles.length)} files...`);
+console.error(
+  `Building dependency graph for ${String(sourceFiles.length)} files...`,
+);
 
 // Build dependency graph using TypeScript's module resolution
 for (const sourceFile of sourceFiles) {
@@ -145,7 +156,12 @@ for (const sourceFile of sourceFiles) {
 
 // Helper to resolve imports using TypeScript's module resolution
 function resolveImport(fromFile: string, moduleName: string): string | null {
-  const resolved = ts.resolveModuleName(moduleName, fromFile, parsedConfig.options, ts.sys);
+  const resolved = ts.resolveModuleName(
+    moduleName,
+    fromFile,
+    parsedConfig.options,
+    ts.sys,
+  );
 
   if (resolved.resolvedModule) {
     const resolvedPath = resolved.resolvedModule.resolvedFileName;
@@ -181,7 +197,9 @@ for (const file of absoluteChangedFiles) {
   findDependents(file);
 }
 
-console.error(`Total affected files (including transitive deps): ${String(affectedFiles.size)}`);
+console.error(
+  `Total affected files (including transitive deps): ${String(affectedFiles.size)}`,
+);
 
 // Find test files for affected files
 const testFiles = new Set<string>();

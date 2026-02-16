@@ -7,7 +7,11 @@
 
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { backfillLastMatchTime } from "@scout-for-lol/backend/league/api/backfill-match-history.ts";
-import { LeagueAccountSchema, LeaguePuuidSchema, type PlayerConfigEntry } from "@scout-for-lol/data/index.ts";
+import {
+  LeagueAccountSchema,
+  LeaguePuuidSchema,
+  type PlayerConfigEntry,
+} from "@scout-for-lol/data/index.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("refresh-match-times");
@@ -36,7 +40,9 @@ const STALE_THRESHOLD_HOURS = 6;
 export async function refreshMatchTimes(): Promise<void> {
   logger.info("🔄 Starting match time refresh task");
 
-  const staleThreshold = new Date(Date.now() - STALE_THRESHOLD_HOURS * 60 * 60 * 1000);
+  const staleThreshold = new Date(
+    Date.now() - STALE_THRESHOLD_HOURS * 60 * 60 * 1000,
+  );
 
   // Find accounts that need refreshing
   const accountsToRefresh = await prisma.account.findMany({
@@ -72,7 +78,9 @@ export async function refreshMatchTimes(): Promise<void> {
     const batchNum = Math.floor(i / BATCH_SIZE) + 1;
     const totalBatches = Math.ceil(accountsToRefresh.length / BATCH_SIZE);
 
-    logger.info(`📦 Processing batch ${batchNum.toString()}/${totalBatches.toString()}`);
+    logger.info(
+      `📦 Processing batch ${batchNum.toString()}/${totalBatches.toString()}`,
+    );
 
     for (const account of batch) {
       try {

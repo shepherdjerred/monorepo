@@ -34,7 +34,7 @@ export function isYAMLKey(line: string): boolean {
 export function isSimpleYAMLValue(line: string): boolean {
   const hasURL = line.includes("http://") || line.includes("https://");
   const isRef = /^ref:/i.test(line);
-  return /^[\w.-]+:\s+[^:]+$/.test(line) && !hasURL && !isRef;
+  return /^[\w.-]+:\s[^:]+$/.test(line) && !hasURL && !isRef;
 }
 
 /**
@@ -42,12 +42,12 @@ export function isSimpleYAMLValue(line: string): boolean {
  * Exported for testing purposes
  */
 export function isSectionHeader(line: string, nextLine: string | undefined): boolean {
-  if (!nextLine) return false;
+  if (!nextLine) {return false;}
 
   const isFollowedByYAMLKey =
     /^[\w.-]+:\s*\|/.test(nextLine) || /^[\w.-]+:\s*$/.test(nextLine) || /^[\w.-]+:\s+/.test(nextLine);
 
-  if (!isFollowedByYAMLKey) return false;
+  if (!isFollowedByYAMLKey) {return false;}
 
   const wordCount = line.split(/\s+/).length;
   const hasConfigKeywords = /\b(configuration|config|example|setup|settings?|options?|alternative)\b/i.test(line);
@@ -133,7 +133,7 @@ export function normalizeCommentLine(line: string): string {
  * Removes Helm-specific markers and filters out code examples and section headers
  */
 export function cleanYAMLComment(comment: string): string {
-  if (!comment) return "";
+  if (!comment) {return "";}
 
   // Normalize all lines
   const lines = comment.split("\n").map(normalizeCommentLine);
@@ -148,12 +148,12 @@ export function cleanYAMLComment(comment: string): string {
 
     // Empty lines end code blocks (but not examples)
     if (!line) {
-      if (inCodeBlock && !inExample) inCodeBlock = false;
+      if (inCodeBlock && !inExample) {inCodeBlock = false;}
       continue;
     }
 
     // Skip @default lines (we'll generate our own)
-    if (line.startsWith("@default")) continue;
+    if (line.startsWith("@default")) {continue;}
 
     // Check if this line starts an Example section (preserve these!)
     if (/^Example:?$/i.test(line.trim())) {
@@ -214,7 +214,7 @@ function isPartOfYAMLBlock(line: string, trimmed: string): boolean {
  * Helper: Check if this is a section header followed by a YAML key
  */
 function isSectionHeaderForCommentedBlock(nextLine: string | undefined): boolean {
-  if (!nextLine) return false;
+  if (!nextLine) {return false;}
   const nextTrimmed = nextLine.trim();
   return /^[\w.-]+:\s*(\||$)/.test(nextTrimmed);
 }
@@ -368,7 +368,7 @@ export function preprocessYAMLComments(yamlContent: string): string {
 
     // Check if this is a commented-out YAML key
     // Pattern: one or more # followed by optional whitespace, then key: value
-    const commentedKeyMatch = /^([ \t]*)(#+)\s*([\w.-]+:\s*.*)$/.exec(line);
+    const commentedKeyMatch = /^([ \t]*)(#+)\s*([\w.-]+:\s*(?:\S.*)?)$/.exec(line);
 
     if (commentedKeyMatch) {
       const [, indent, , keyValue] = commentedKeyMatch;
@@ -397,7 +397,7 @@ export function preprocessYAMLComments(yamlContent: string): string {
         const prevTrimmed = prevLine?.trim() ?? "";
         const prevIsCommentedKey = /^#+\s*[\w.-]+:\s/.test(prevTrimmed);
         const prevIsBlank = !prevTrimmed;
-        const prevIsListItem = prevTrimmed.startsWith("#") && prevTrimmed.substring(1).trim().startsWith("-");
+        const prevIsListItem = prevTrimmed.startsWith("#") && prevTrimmed.slice(1).trim().startsWith("-");
 
         // If previous line is prose or a list item, this is likely a YAML example
         const likelyExample = (!prevIsBlank && !prevIsCommentedKey && prevTrimmed.startsWith("#")) || prevIsListItem;
@@ -503,16 +503,26 @@ function parseCommentsWithRegex(yamlContent: string): Map<string, CommentWithMet
       // Extract comment text (handle multiple # characters)
       let commentText = trimmed;
       while (commentText.startsWith("#")) {
-        commentText = commentText.substring(1);
+        commentText = commentText.slice(1);
       }
       commentText = commentText.trim();
 
       // Skip commented-out YAML keys (these are not documentation)
       // Match patterns like "key: value" or "key:" but NOT prose-like text
       // This includes quoted values like: key: "value"
-      const looksLikeYAMLKey = /^[\w.-]+:\s*(\||$|[\w.-]+$|"[^"]*"$|'[^']*'$|\[|\{)/.test(commentText);
+      const looksLikeYAMLKey = /^[\w.-]+:\s*(\||$|[\w.-]+$|"[^"]*"$|'[^']*'$|[[{])/.test(commentText);
 
-      if (!looksLikeYAMLKey) {
+      if (looksLikeYAMLKey) {
+        // This is a commented-out YAML key, which means the pending comments
+        // were describing this commented-out section, not a future real key
+        // So we should discard them
+        pendingDebugInfo.push(
+          `Line ${String(lineNum)}: Commented-out YAML key detected: "${commentText}", discarding pending`,
+        );
+        pendingComment = [];
+        pendingCommentIndent = -1;
+        pendingDebugInfo = [];
+      } else {
         const commentIndent = line.search(/\S/);
 
         // If we just discarded comments (indent === -1), this is a fresh start
@@ -537,16 +547,6 @@ function parseCommentsWithRegex(yamlContent: string): Map<string, CommentWithMet
           pendingCommentIndent = commentIndent;
           pendingDebugInfo.push(`Line ${String(lineNum)}: New start: "${commentText}"`);
         }
-      } else {
-        // This is a commented-out YAML key, which means the pending comments
-        // were describing this commented-out section, not a future real key
-        // So we should discard them
-        pendingDebugInfo.push(
-          `Line ${String(lineNum)}: Commented-out YAML key detected: "${commentText}", discarding pending`,
-        );
-        pendingComment = [];
-        pendingCommentIndent = -1;
-        pendingDebugInfo = [];
       }
       return;
     }
@@ -619,7 +619,7 @@ export function parseYAMLCommentsWithMetadata(yamlContent: string): Map<string, 
 
     // Recursively walk the YAML AST and extract comments
     function visitNode(node: unknown, keyPath: string[] = [], inheritedComment = ""): void {
-      if (!node) return;
+      if (!node) {return;}
 
       // Handle map/object nodes - check if node has items array
       const mapNodeCheck = z
@@ -636,11 +636,11 @@ export function parseYAMLCommentsWithMetadata(yamlContent: string): Map<string, 
         for (let i = 0; i < mapNodeCheck.data.items.length; i++) {
           const item = mapNodeCheck.data.items[i];
           const itemCheck = z.object({ key: z.unknown(), value: z.unknown() }).safeParse(item);
-          if (!itemCheck.success) continue;
+          if (!itemCheck.success) {continue;}
 
           // Get the key - validate it has a value property that's a string
           const keyNodeCheck = z.object({ value: z.string() }).safeParse(itemCheck.data.key);
-          if (!keyNodeCheck.success) continue;
+          if (!keyNodeCheck.success) {continue;}
 
           const key = keyNodeCheck.data.value;
           const newPath = [...keyPath, key];

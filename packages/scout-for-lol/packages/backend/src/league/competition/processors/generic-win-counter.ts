@@ -1,4 +1,8 @@
-import type { RawMatch, CompetitionQueueType, RawParticipant } from "@scout-for-lol/data";
+import type {
+  RawMatch,
+  CompetitionQueueType,
+  RawParticipant,
+} from "@scout-for-lol/data";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
@@ -80,7 +84,8 @@ export function buildWinBasedLeaderboard(params: {
   metadataFn: (wins: number, games: number) => Record<string, unknown>;
   minGames?: number;
 }): LeaderboardEntry[] {
-  const { winCounts, totalGames, participants, scoreFn, metadataFn, minGames } = params;
+  const { winCounts, totalGames, participants, scoreFn, metadataFn, minGames } =
+    params;
   const entries: LeaderboardEntry[] = [];
 
   for (const participant of participants) {

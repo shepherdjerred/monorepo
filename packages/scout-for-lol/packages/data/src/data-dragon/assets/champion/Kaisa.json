@@ -165,7 +165,10 @@
           "tooltip": "Kai'Sa launches {{ e2 }} missiles that split among nearby enemies, each dealing <physicalDamage>{{ totalindividualmissiledamage }} physical damage</physicalDamage>, up to a maximum of {{ maxdamagedisplay }}. Additional missile hits on champions or monsters deal {{ extrahitreduction*100 }}% damage.<br /><br /><keywordMajor>Evolved</keywordMajor>: Kai'Sa instead fires {{ e7 }} missiles.<br />Current: <physicalDamage>{{ f11.1 }}/{{ e6 }} Bonus Attack Damage</physicalDamage>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Damage Per Missile"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ basedamage }} -> {{ basedamageNL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [10, 9, 8, 7, 6],
@@ -186,7 +189,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "40/55/70/85/100", "6", "0.25", "2", "0.35", "100", "12", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "40/55/70/85/100",
+            "6",
+            "0.25",
+            "2",
+            "0.35",
+            "100",
+            "12",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -210,7 +225,11 @@
           "tooltip": "Kai'Sa fires a void blast that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>, applies {{ e4 }} stacks of <keywordMajor>Plasma</keywordMajor>, and grants <keywordStealth>True Sight</keywordStealth> of the first enemy hit for {{ spell.kaisapassive:pduration }} seconds.<br /><br /><keywordMajor>Evolved</keywordMajor>: Kai'Sa instead applies {{ e5 }} stacks of <keywordMajor>Plasma</keywordMajor> and hitting a champion reduces the Cooldown by {{ e3 }}%.<br />Current: <scaleAP>{{ f2.1 }}/{{ e2 }} Ability Power</scaleAP>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Damage", "Mana Cost"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ e1 }} -> {{ e1NL }}", "{{ cost }} -> {{ costNL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [22, 20, 18, 16, 14],
@@ -231,7 +250,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "30/55/80/105/130", "100", "75", "2", "3", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "30/55/80/105/130",
+            "100",
+            "75",
+            "2",
+            "3",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -315,7 +346,12 @@
           "description": "Kai'Sa dashes near an enemy champion.",
           "tooltip": "Kai'Sa warps near an enemy champion affected by <keywordMajor>Plasma</keywordMajor> and gains <shield>{{ rcalculatedshieldvalue }} Shield</shield> for {{ rshieldduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Range", "Cooldown", "Shield Amount", "Attack Damage Ratio"],
+            "label": [
+              "Range",
+              "Cooldown",
+              "Shield Amount",
+              "Attack Damage Ratio"
+            ],
             "effect": [
               "{{ rrange }} -> {{ rrangeNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -342,7 +378,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

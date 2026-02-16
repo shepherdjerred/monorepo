@@ -43,7 +43,9 @@ const PACKAGES_DIR = "packages";
 // Patterns to search for
 // Note: Patterns are constructed via RegExp to avoid triggering check-suppressions.ts
 const PATTERNS = {
-  tsIgnores: new RegExp("@ts-" + "ignore|@ts-" + "expect-error|@ts-" + "nocheck"),
+  tsIgnores: new RegExp(
+    "@ts-" + "ignore|@ts-" + "expect-error|@ts-" + "nocheck",
+  ),
   eslintDisables: new RegExp("eslint-" + "disable"),
   typeAssertions: /as unknown as \w+|as any\b/,
   nonNullAssertions: /\w+\[\d+\]!\.|\w+!\.(?!==)/,
@@ -66,9 +68,14 @@ const EXCLUDES = [
 // Files to exclude only for certain patterns (tests are ok for some patterns)
 const TEST_PATTERNS = ["**/*.test.ts", "**/*.integration.test.ts"];
 
-async function searchPattern(pattern: RegExp, includeTests: boolean = false): Promise<CategoryResult> {
+async function searchPattern(
+  pattern: RegExp,
+  includeTests: boolean = false,
+): Promise<CategoryResult> {
   const excludePatterns = includeTests
-    ? EXCLUDES.filter((e) => !TEST_PATTERNS.some((t) => e.includes(t.replace("**/*", ""))))
+    ? EXCLUDES.filter(
+        (e) => !TEST_PATTERNS.some((t) => e.includes(t.replace("**/*", ""))),
+      )
     : EXCLUDES;
 
   const files = await glob(`${PACKAGES_DIR}/**/*.ts`, {
@@ -102,16 +109,23 @@ async function searchPattern(pattern: RegExp, includeTests: boolean = false): Pr
 async function runAudit(): Promise<AuditResults> {
   console.log("🔍 Scanning codebase for unsafe patterns...\n");
 
-  const [tsIgnores, eslintDisables, typeAssertions, nonNullAssertions, zodParse, zodSafeParse, jsonParse] =
-    await Promise.all([
-      searchPattern(PATTERNS.tsIgnores, true),
-      searchPattern(PATTERNS.eslintDisables, true),
-      searchPattern(PATTERNS.typeAssertions, true),
-      searchPattern(PATTERNS.nonNullAssertions, true),
-      searchPattern(PATTERNS.zodParse, false),
-      searchPattern(PATTERNS.zodSafeParse, false),
-      searchPattern(PATTERNS.jsonParse, false),
-    ]);
+  const [
+    tsIgnores,
+    eslintDisables,
+    typeAssertions,
+    nonNullAssertions,
+    zodParse,
+    zodSafeParse,
+    jsonParse,
+  ] = await Promise.all([
+    searchPattern(PATTERNS.tsIgnores, true),
+    searchPattern(PATTERNS.eslintDisables, true),
+    searchPattern(PATTERNS.typeAssertions, true),
+    searchPattern(PATTERNS.nonNullAssertions, true),
+    searchPattern(PATTERNS.zodParse, false),
+    searchPattern(PATTERNS.zodSafeParse, false),
+    searchPattern(PATTERNS.jsonParse, false),
+  ]);
 
   return {
     tsIgnores,
@@ -145,12 +159,22 @@ function getRiskLevel(category: string, count: number): string {
 function printResults(results: AuditResults, verbose: boolean): void {
   const zodParseRatio =
     results.zodParse.count + results.zodSafeParse.count > 0
-      ? Math.round((results.zodSafeParse.count / (results.zodParse.count + results.zodSafeParse.count)) * 100)
+      ? Math.round(
+          (results.zodSafeParse.count /
+            (results.zodParse.count + results.zodSafeParse.count)) *
+            100,
+        )
       : 0;
 
-  console.log("═══════════════════════════════════════════════════════════════");
-  console.log("                    UNSAFE CODE AUDIT REPORT                    ");
-  console.log("═══════════════════════════════════════════════════════════════\n");
+  console.log(
+    "═══════════════════════════════════════════════════════════════",
+  );
+  console.log(
+    "                    UNSAFE CODE AUDIT REPORT                    ",
+  );
+  console.log(
+    "═══════════════════════════════════════════════════════════════\n",
+  );
 
   console.log("📊 Summary (excluding tests and generated code)\n");
 
@@ -206,15 +230,23 @@ function printResults(results: AuditResults, verbose: boolean): void {
   if (zodParseRatio >= 60) {
     console.log("   ✅ Good: Majority of parsing uses safeParse\n");
   } else if (zodParseRatio >= 40) {
-    console.log("   ⚠️  Warning: Consider using more safeParse for external data\n");
+    console.log(
+      "   ⚠️  Warning: Consider using more safeParse for external data\n",
+    );
   } else {
     console.log("   ❌ Poor: Most parsing uses throwing .parse()\n");
   }
 
   if (verbose) {
-    console.log("\n═══════════════════════════════════════════════════════════════");
-    console.log("                        DETAILED FINDINGS                        ");
-    console.log("═══════════════════════════════════════════════════════════════\n");
+    console.log(
+      "\n═══════════════════════════════════════════════════════════════",
+    );
+    console.log(
+      "                        DETAILED FINDINGS                        ",
+    );
+    console.log(
+      "═══════════════════════════════════════════════════════════════\n",
+    );
 
     const categories: [string, CategoryResult][] = [
       ["TypeScript Ignores", results.tsIgnores],
@@ -230,7 +262,9 @@ function printResults(results: AuditResults, verbose: boolean): void {
         console.log("─".repeat(60));
         for (const finding of result.findings.slice(0, 20)) {
           console.log(`  ${finding.file}:${finding.line}`);
-          console.log(`    ${finding.content.slice(0, 80)}${finding.content.length > 80 ? "..." : ""}`);
+          console.log(
+            `    ${finding.content.slice(0, 80)}${finding.content.length > 80 ? "..." : ""}`,
+          );
         }
         if (result.findings.length > 20) {
           console.log(`  ... and ${result.findings.length - 20} more`);
@@ -240,9 +274,15 @@ function printResults(results: AuditResults, verbose: boolean): void {
   }
 
   // Output JSON for CI/tracking
-  console.log("\n═══════════════════════════════════════════════════════════════");
-  console.log("                         JSON OUTPUT                            ");
-  console.log("═══════════════════════════════════════════════════════════════\n");
+  console.log(
+    "\n═══════════════════════════════════════════════════════════════",
+  );
+  console.log(
+    "                         JSON OUTPUT                            ",
+  );
+  console.log(
+    "═══════════════════════════════════════════════════════════════\n",
+  );
 
   const jsonOutput = {
     timestamp: new Date().toISOString(),
@@ -262,13 +302,16 @@ function printResults(results: AuditResults, verbose: boolean): void {
 }
 
 // Main execution
-const verbose = process.argv.includes("--verbose") || process.argv.includes("-v");
+const verbose =
+  process.argv.includes("--verbose") || process.argv.includes("-v");
 const results = await runAudit();
 printResults(results, verbose);
 
 // Exit with error if critical thresholds exceeded
 const criticalIssues =
-  results.tsIgnores.count > 10 || results.typeAssertions.count > 50 || results.jsonParse.count > 50;
+  results.tsIgnores.count > 10 ||
+  results.typeAssertions.count > 50 ||
+  results.jsonParse.count > 50;
 
 if (criticalIssues) {
   console.log("\n⚠️  Warning: Some metrics exceed recommended thresholds");

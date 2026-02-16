@@ -6,9 +6,15 @@ import {
   hasPermission,
   revokePermission,
 } from "@scout-for-lol/backend/database/competition/permissions.ts";
-import { clearAllRateLimits, recordCreation } from "@scout-for-lol/backend/database/competition/rate-limit.ts";
+import {
+  clearAllRateLimits,
+  recordCreation,
+} from "@scout-for-lol/backend/database/competition/rate-limit.ts";
 
-import { testGuildId, testAccountId } from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  testGuildId,
+  testAccountId,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
 import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a test database
@@ -39,7 +45,12 @@ describe("hasPermission", () => {
       grantedBy: testAccountId("12300000000"),
     });
 
-    const result = await hasPermission(prisma, serverId, userId, "CREATE_COMPETITION");
+    const result = await hasPermission(
+      prisma,
+      serverId,
+      userId,
+      "CREATE_COMPETITION",
+    );
     expect(result).toBe(true);
   });
 
@@ -65,10 +76,24 @@ describe("hasPermission", () => {
     });
 
     // Has permission on server1
-    expect(await hasPermission(prisma, testGuildId("111111111111111111"), userId, "CREATE_COMPETITION")).toBe(true);
+    expect(
+      await hasPermission(
+        prisma,
+        testGuildId("111111111111111111"),
+        userId,
+        "CREATE_COMPETITION",
+      ),
+    ).toBe(true);
 
     // Does NOT have permission on server2
-    expect(await hasPermission(prisma, testGuildId("222222222222222222"), userId, "CREATE_COMPETITION")).toBe(false);
+    expect(
+      await hasPermission(
+        prisma,
+        testGuildId("222222222222222222"),
+        userId,
+        "CREATE_COMPETITION",
+      ),
+    ).toBe(false);
   });
 });
 
@@ -187,12 +212,16 @@ describe("revokePermission", () => {
       grantedBy: testAccountId("12300000000"),
     });
 
-    expect(await hasPermission(prisma, serverId, userId, "CREATE_COMPETITION")).toBe(true);
+    expect(
+      await hasPermission(prisma, serverId, userId, "CREATE_COMPETITION"),
+    ).toBe(true);
 
     // Revoke permission
     await revokePermission(prisma, serverId, userId, "CREATE_COMPETITION");
 
-    expect(await hasPermission(prisma, serverId, userId, "CREATE_COMPETITION")).toBe(false);
+    expect(
+      await hasPermission(prisma, serverId, userId, "CREATE_COMPETITION"),
+    ).toBe(false);
   });
 
   test("is idempotent - revoking twice does not error", async () => {
@@ -213,7 +242,9 @@ describe("revokePermission", () => {
 
 describe("canCreateCompetition - admin bypass", () => {
   test("admin with Administrator permission always allowed", async () => {
-    const permissions = new PermissionsBitField(PermissionFlagsBits.Administrator);
+    const permissions = new PermissionsBitField(
+      PermissionFlagsBits.Administrator,
+    );
 
     const result = await canCreateCompetition(
       prisma,
@@ -231,12 +262,21 @@ describe("canCreateCompetition - admin bypass", () => {
     const userId = testAccountId("987654321098765432");
 
     // Verify no permission grant
-    expect(await hasPermission(prisma, serverId, userId, "CREATE_COMPETITION")).toBe(false);
+    expect(
+      await hasPermission(prisma, serverId, userId, "CREATE_COMPETITION"),
+    ).toBe(false);
 
     // Admin should still be allowed
-    const permissions = new PermissionsBitField(PermissionFlagsBits.Administrator);
+    const permissions = new PermissionsBitField(
+      PermissionFlagsBits.Administrator,
+    );
 
-    const result = await canCreateCompetition(prisma, serverId, userId, permissions);
+    const result = await canCreateCompetition(
+      prisma,
+      serverId,
+      userId,
+      permissions,
+    );
 
     expect(result.allowed).toBe(true);
   });
@@ -249,9 +289,16 @@ describe("canCreateCompetition - admin bypass", () => {
     recordCreation(serverId, userId);
 
     // Admin should still be allowed
-    const permissions = new PermissionsBitField(PermissionFlagsBits.Administrator);
+    const permissions = new PermissionsBitField(
+      PermissionFlagsBits.Administrator,
+    );
 
-    const result = await canCreateCompetition(prisma, serverId, userId, permissions);
+    const result = await canCreateCompetition(
+      prisma,
+      serverId,
+      userId,
+      permissions,
+    );
 
     expect(result.allowed).toBe(true);
   });
@@ -275,9 +322,16 @@ describe("canCreateCompetition - granted permission", () => {
     });
 
     // Non-admin permissions
-    const permissions = new PermissionsBitField(PermissionFlagsBits.SendMessages);
+    const permissions = new PermissionsBitField(
+      PermissionFlagsBits.SendMessages,
+    );
 
-    const result = await canCreateCompetition(prisma, serverId, userId, permissions);
+    const result = await canCreateCompetition(
+      prisma,
+      serverId,
+      userId,
+      permissions,
+    );
 
     expect(result.allowed).toBe(true);
   });
@@ -287,9 +341,16 @@ describe("canCreateCompetition - granted permission", () => {
     const userId = testAccountId("987654321098765432");
 
     // Non-admin permissions, no grant
-    const permissions = new PermissionsBitField(PermissionFlagsBits.SendMessages);
+    const permissions = new PermissionsBitField(
+      PermissionFlagsBits.SendMessages,
+    );
 
-    const result = await canCreateCompetition(prisma, serverId, userId, permissions);
+    const result = await canCreateCompetition(
+      prisma,
+      serverId,
+      userId,
+      permissions,
+    );
 
     expect(result.allowed).toBe(false);
     expect(result.reason).toContain("Missing CREATE_COMPETITION permission");
@@ -317,9 +378,16 @@ describe("canCreateCompetition - rate limit", () => {
     recordCreation(serverId, userId);
 
     // Non-admin permissions
-    const permissions = new PermissionsBitField(PermissionFlagsBits.SendMessages);
+    const permissions = new PermissionsBitField(
+      PermissionFlagsBits.SendMessages,
+    );
 
-    const result = await canCreateCompetition(prisma, serverId, userId, permissions);
+    const result = await canCreateCompetition(
+      prisma,
+      serverId,
+      userId,
+      permissions,
+    );
 
     expect(result.allowed).toBe(false);
     expect(result.reason).toContain("Rate limited");
@@ -339,9 +407,16 @@ describe("canCreateCompetition - rate limit", () => {
 
     recordCreation(serverId, userId);
 
-    const permissions = new PermissionsBitField(PermissionFlagsBits.SendMessages);
+    const permissions = new PermissionsBitField(
+      PermissionFlagsBits.SendMessages,
+    );
 
-    const result = await canCreateCompetition(prisma, serverId, userId, permissions);
+    const result = await canCreateCompetition(
+      prisma,
+      serverId,
+      userId,
+      permissions,
+    );
 
     expect(result.reason).toMatch(/Try again in \d+ minute/);
   });

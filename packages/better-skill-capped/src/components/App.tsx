@@ -1,18 +1,18 @@
 import React from "react";
-import { Content } from "../model/Content";
+import type { Content } from "@shepherdjerred/better-skill-capped/model/Content";
 import { Router } from "./Router";
-import { Bookmark, Bookmarkable } from "../model/Bookmark";
-import { LocalStorageBookmarkDatastore } from "../datastore/LocalStorageBookmarkDatastore";
-import { BookmarkDatastore } from "../datastore/BookmarkDatastore";
-import { WatchStatusDatastore } from "../datastore/WatchStatusDatastore";
-import { Watchable, WatchStatus } from "../model/WatchStatus";
-import { LocalStorageWatchStatusDatastore } from "../datastore/LocalStorageWatchStatusDatastore";
+import type { Bookmark, Bookmarkable } from "@shepherdjerred/better-skill-capped/model/Bookmark";
+import { LocalStorageBookmarkDatastore } from "@shepherdjerred/better-skill-capped/datastore/LocalStorageBookmarkDatastore";
+import type { BookmarkDatastore } from "@shepherdjerred/better-skill-capped/datastore/BookmarkDatastore";
+import type { WatchStatusDatastore } from "@shepherdjerred/better-skill-capped/datastore/WatchStatusDatastore";
+import type { Watchable, WatchStatus } from "@shepherdjerred/better-skill-capped/model/WatchStatus";
+import { LocalStorageWatchStatusDatastore } from "@shepherdjerred/better-skill-capped/datastore/LocalStorageWatchStatusDatastore";
 import * as Sentry from "@sentry/react";
 import { Color, Hero, Size } from "./Hero";
-import { ManifestLoader } from "../ManifestLoader";
-import { Parser } from "../parser/Parser";
+import { ManifestLoader } from "@shepherdjerred/better-skill-capped/ManifestLoader";
+import { Parser } from "@shepherdjerred/better-skill-capped/parser/Parser";
 
-export interface AppState {
+export type AppState = {
   content?: Content;
   bookmarkDatastore?: BookmarkDatastore;
   bookmarks: Bookmark[];
@@ -30,7 +30,7 @@ export default class App extends React.Component<unknown, AppState> {
       content: undefined,
       bookmarks: [],
       watchStatuses: [],
-      isDownloadEnabled: window.localStorage.getItem("download") === "true" || false,
+      isDownloadEnabled: globalThis.localStorage.getItem("download") === "true" || false,
       isTipsModalVisible: false,
     };
   }
@@ -73,7 +73,7 @@ export default class App extends React.Component<unknown, AppState> {
       watchStatusesDatastore?.remove(currentWatchStatus);
     }
 
-    const newStatus = currentWatchStatus !== undefined ? !currentWatchStatus.isWatched : true;
+    const newStatus = currentWatchStatus === undefined ? true : !currentWatchStatus.isWatched;
 
     watchStatusesDatastore?.add({
       item,
@@ -108,13 +108,13 @@ export default class App extends React.Component<unknown, AppState> {
       console.error("Bookmark datastore not ready yet");
     }
 
-    if (currentBookmark !== undefined) {
-      bookmarkDatastore?.remove(currentBookmark);
-    } else {
+    if (currentBookmark === undefined) {
       bookmarkDatastore?.add({
         item,
         date: new Date(),
       });
+    } else {
+      bookmarkDatastore?.remove(currentBookmark);
     }
     this.setState({
       bookmarks: bookmarkDatastore?.get() ?? [],

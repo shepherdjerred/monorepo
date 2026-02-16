@@ -1,4 +1,8 @@
-import type { MatchId, RawMatch, RawTimeline } from "@scout-for-lol/data/index.ts";
+import type {
+  MatchId,
+  RawMatch,
+  RawTimeline,
+} from "@scout-for-lol/data/index.ts";
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { saveToS3 } from "@scout-for-lol/backend/storage/s3-helpers.ts";
 
@@ -8,7 +12,10 @@ import { saveToS3 } from "@scout-for-lol/backend/storage/s3-helpers.ts";
  * @param trackedPlayerAliases Array of tracked player aliases in this match (empty array if none)
  * @returns Promise that resolves when the match is saved
  */
-export async function saveMatchToS3(match: RawMatch, trackedPlayerAliases: string[]): Promise<void> {
+export async function saveMatchToS3(
+  match: RawMatch,
+  trackedPlayerAliases: string[],
+): Promise<void> {
   const matchId = MatchIdSchema.parse(match.metadata.matchId);
   const body = JSON.stringify(match, null, 2);
 
@@ -121,7 +128,10 @@ export async function saveSvgToS3(
  * @param trackedPlayerAliases Array of tracked player aliases in this match (empty array if none)
  * @returns Promise that resolves when the timeline is saved
  */
-export async function saveTimelineToS3(timeline: RawTimeline, trackedPlayerAliases: string[]): Promise<void> {
+export async function saveTimelineToS3(
+  timeline: RawTimeline,
+  trackedPlayerAliases: string[],
+): Promise<void> {
   const matchId = MatchIdSchema.parse(timeline.metadata.matchId);
   const body = JSON.stringify(timeline, null, 2);
 

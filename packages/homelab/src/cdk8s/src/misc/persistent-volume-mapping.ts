@@ -1,5 +1,5 @@
 import { PersistentVolume, type IPersistentVolume } from "cdk8s-plus-31";
-import { Construct } from "constructs";
+import type { Construct } from "constructs";
 
 /**
  * Central mapping of logical PV names to actual PV UUIDs

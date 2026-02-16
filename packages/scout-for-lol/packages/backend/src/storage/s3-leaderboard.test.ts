@@ -251,7 +251,9 @@ describe("S3 Key Generation Logic", () => {
     const day = String(date.getUTCDate()).padStart(2, "0");
     const expectedKey = `leaderboards/competition-${competitionId.toString()}/snapshots/${year.toString()}-${month}-${day}.json`;
 
-    expect(expectedKey).toBe("leaderboards/competition-456/snapshots/2025-10-15.json");
+    expect(expectedKey).toBe(
+      "leaderboards/competition-456/snapshots/2025-10-15.json",
+    );
   });
 
   test("snapshot key pads single digit months and days", () => {

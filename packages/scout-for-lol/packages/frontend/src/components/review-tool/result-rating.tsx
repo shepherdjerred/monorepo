@@ -10,10 +10,17 @@ type ResultRatingProps = {
   onNotesChange: (notes: string) => Promise<void>;
 };
 
-export function ResultRating({ rating, notes, onRatingChange, onNotesChange }: ResultRatingProps) {
+export function ResultRating({
+  rating,
+  notes,
+  onRatingChange,
+  onNotesChange,
+}: ResultRatingProps) {
   return (
     <div className="p-4 bg-surface-50 rounded border border-surface-200">
-      <h3 className="text-sm font-semibold text-surface-700 mb-3">Rate this generation</h3>
+      <h3 className="text-sm font-semibold text-surface-700 mb-3">
+        Rate this generation
+      </h3>
       <div className="mb-3">
         <StarRating
           rating={rating}
@@ -30,7 +37,10 @@ export function ResultRating({ rating, notes, onRatingChange, onNotesChange }: R
         />
       </div>
       <div>
-        <label htmlFor="rating-notes" className="block text-xs font-medium text-surface-600 mb-1">
+        <label
+          htmlFor="rating-notes"
+          className="block text-xs font-medium text-surface-600 mb-1"
+        >
           Notes (optional)
         </label>
         <textarea

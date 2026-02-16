@@ -1,7 +1,10 @@
 import type { ButtonHTMLAttributes, DetailedHTMLProps, ReactNode } from "react";
 import { cn } from "./cn.ts";
 
-type ButtonProps = DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement> & {
+type ButtonProps = DetailedHTMLProps<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  HTMLButtonElement
+> & {
   variant?: "default" | "outline" | "ghost" | "primary" | "secondary";
   size?: "sm" | "md";
   icon?: ReactNode;
@@ -23,8 +26,10 @@ export function Button({
   const variants: Record<NonNullable<ButtonProps["variant"]>, string> = {
     default: "bg-black text-white hover:bg-brand-700 focus:ring-brand-500",
     primary: "bg-black text-white hover:bg-brand-700 focus:ring-brand-500",
-    secondary: "bg-surface-100 text-surface-900 hover:bg-surface-200 focus:ring-brand-500",
-    outline: "border border-surface-300 text-surface-900 hover:bg-surface-50 focus:ring-brand-500",
+    secondary:
+      "bg-surface-100 text-surface-900 hover:bg-surface-200 focus:ring-brand-500",
+    outline:
+      "border border-surface-300 text-surface-900 hover:bg-surface-50 focus:ring-brand-500",
     ghost: "text-surface-700 hover:bg-surface-100 focus:ring-brand-500",
   };
   const sizes: Record<NonNullable<ButtonProps["size"]>, string> = {
@@ -35,7 +40,11 @@ export function Button({
   const isDisabled = isLoading || Boolean(disabled);
 
   return (
-    <button className={cn(base, variants[variant], sizes[size], className)} disabled={isDisabled} {...props}>
+    <button
+      className={cn(base, variants[variant], sizes[size], className)}
+      disabled={isDisabled}
+      {...props}
+    >
       {icon && <span className="mr-2 flex items-center">{icon}</span>}
       {children}
     </button>

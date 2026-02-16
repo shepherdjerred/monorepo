@@ -1,4 +1,8 @@
-import { type CompletedMatch, DiscordAccountIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
+import {
+  type CompletedMatch,
+  DiscordAccountIdSchema,
+  LeaguePuuidSchema,
+} from "@scout-for-lol/data";
 import { matchToSvg, svgToPng } from "@scout-for-lol/report/html/index.tsx";
 import { test, expect } from "bun:test";
 
@@ -33,13 +37,39 @@ function createChampion(params: {
     spells: params.spells,
     runes: [
       // Keystone + 3 primary runes (Dark Harvest + domination tree)
-      { id: 8128, name: "Dark Harvest", description: "Damaging a champion below 50% health deals adaptive damage" },
-      { id: 8126, name: "Cheap Shot", description: "Deal bonus true damage to champions with impaired movement" },
-      { id: 8138, name: "Eyeball Collection", description: "Collect eyeballs for champion takedowns" },
-      { id: 8135, name: "Treasure Hunter", description: "Gain gold for unique champion takedowns" },
+      {
+        id: 8128,
+        name: "Dark Harvest",
+        description:
+          "Damaging a champion below 50% health deals adaptive damage",
+      },
+      {
+        id: 8126,
+        name: "Cheap Shot",
+        description:
+          "Deal bonus true damage to champions with impaired movement",
+      },
+      {
+        id: 8138,
+        name: "Eyeball Collection",
+        description: "Collect eyeballs for champion takedowns",
+      },
+      {
+        id: 8135,
+        name: "Treasure Hunter",
+        description: "Gain gold for unique champion takedowns",
+      },
       // 2 secondary runes (from another tree)
-      { id: 8345, name: "Biscuit Delivery", description: "Gain a biscuit every 2 min" },
-      { id: 8347, name: "Cosmic Insight", description: "Gain CDR for summoner spells and items" },
+      {
+        id: 8345,
+        name: "Biscuit Delivery",
+        description: "Gain a biscuit every 2 min",
+      },
+      {
+        id: 8347,
+        name: "Cosmic Insight",
+        description: "Gain CDR for summoner spells and items",
+      },
     ],
     lane: params.lane,
     creepScore: params.creepScore,
@@ -284,13 +314,23 @@ test("no items test", async () => {
   if (matchNoItems.players[0]?.champion) {
     matchNoItems.players[0].champion.items = [0, 0, 0, 0, 0, 0, 0];
   }
-  matchNoItems.teams.blue.forEach((player) => (player.items = [0, 0, 0, 0, 0, 0, 0]));
-  matchNoItems.teams.red.forEach((player) => (player.items = [0, 0, 0, 0, 0, 0, 0]));
+  matchNoItems.teams.blue.forEach(
+    (player) => (player.items = [0, 0, 0, 0, 0, 0, 0]),
+  );
+  matchNoItems.teams.red.forEach(
+    (player) => (player.items = [0, 0, 0, 0, 0, 0, 0]),
+  );
 
   const svg = await matchToSvg(matchNoItems);
   const png = await svgToPng(svg);
-  await Bun.write(new URL("__snapshots__/match_no_items.png", import.meta.url), png);
-  await Bun.write(new URL("__snapshots__/match_no_items.svg", import.meta.url), svg);
+  await Bun.write(
+    new URL("__snapshots__/match_no_items.png", import.meta.url),
+    png,
+  );
+  await Bun.write(
+    new URL("__snapshots__/match_no_items.svg", import.meta.url),
+    svg,
+  );
 
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
@@ -352,8 +392,14 @@ test("all fields zeroed out test", async () => {
 
   const svg = await matchToSvg(matchZeroedOut);
   const png = await svgToPng(svg);
-  await Bun.write(new URL("__snapshots__/match_zeroed_out.png", import.meta.url), png);
-  await Bun.write(new URL("__snapshots__/match_zeroed_out.svg", import.meta.url), svg);
+  await Bun.write(
+    new URL("__snapshots__/match_zeroed_out.png", import.meta.url),
+    png,
+  );
+  await Bun.write(
+    new URL("__snapshots__/match_zeroed_out.svg", import.meta.url),
+    svg,
+  );
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
 });
@@ -367,9 +413,15 @@ test("no rank test", async () => {
 
   const svg = await matchToSvg(matchNoRank);
   const png = await svgToPng(svg);
-  await Bun.write(new URL("__snapshots__/match_no_rank.png", import.meta.url), png);
+  await Bun.write(
+    new URL("__snapshots__/match_no_rank.png", import.meta.url),
+    png,
+  );
 
-  await Bun.write(new URL("__snapshots__/match_no_rank.svg", import.meta.url), svg);
+  await Bun.write(
+    new URL("__snapshots__/match_no_rank.svg", import.meta.url),
+    svg,
+  );
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
 });
@@ -413,9 +465,15 @@ test("large values test", async () => {
 
   const svg = await matchToSvg(matchLargeValues);
   const png = await svgToPng(svg);
-  await Bun.write(new URL("__snapshots__/match_large_values.png", import.meta.url), png);
+  await Bun.write(
+    new URL("__snapshots__/match_large_values.png", import.meta.url),
+    png,
+  );
 
-  await Bun.write(new URL("__snapshots__/match_large_values.svg", import.meta.url), svg);
+  await Bun.write(
+    new URL("__snapshots__/match_large_values.svg", import.meta.url),
+    svg,
+  );
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
 });
@@ -428,9 +486,15 @@ test("victory test", async () => {
 
   const svg = await matchToSvg(matchVictory);
   const png = await svgToPng(svg);
-  await Bun.write(new URL("__snapshots__/match_victory.png", import.meta.url), png);
+  await Bun.write(
+    new URL("__snapshots__/match_victory.png", import.meta.url),
+    png,
+  );
 
-  await Bun.write(new URL("__snapshots__/match_victory.svg", import.meta.url), svg);
+  await Bun.write(
+    new URL("__snapshots__/match_victory.svg", import.meta.url),
+    svg,
+  );
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
 });
@@ -443,9 +507,15 @@ test("surrender test", async () => {
 
   const svg = await matchToSvg(matchSurrender);
   const png = await svgToPng(svg);
-  await Bun.write(new URL("__snapshots__/match_surrender.png", import.meta.url), png);
+  await Bun.write(
+    new URL("__snapshots__/match_surrender.png", import.meta.url),
+    png,
+  );
 
-  await Bun.write(new URL("__snapshots__/match_surrender.svg", import.meta.url), svg);
+  await Bun.write(
+    new URL("__snapshots__/match_surrender.svg", import.meta.url),
+    svg,
+  );
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
 });
@@ -465,9 +535,15 @@ test("no rank before match test", async () => {
 
   const svg = await matchToSvg(matchNoRankBefore);
   const png = await svgToPng(svg);
-  await Bun.write(new URL("__snapshots__/match_no_rank_before.png", import.meta.url), png);
+  await Bun.write(
+    new URL("__snapshots__/match_no_rank_before.png", import.meta.url),
+    png,
+  );
 
-  await Bun.write(new URL("__snapshots__/match_no_rank_before.svg", import.meta.url), svg);
+  await Bun.write(
+    new URL("__snapshots__/match_no_rank_before.svg", import.meta.url),
+    svg,
+  );
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
 });
@@ -545,9 +621,21 @@ test("multiple highlighted players test", async () => {
 
   const svg = await matchToSvg(match);
   const png = await svgToPng(svg);
-  await Bun.write(new URL("__snapshots__/match_multiple_highlighted_players.png", import.meta.url), png);
+  await Bun.write(
+    new URL(
+      "__snapshots__/match_multiple_highlighted_players.png",
+      import.meta.url,
+    ),
+    png,
+  );
 
-  await Bun.write(new URL("__snapshots__/match_multiple_highlighted_players.svg", import.meta.url), svg);
+  await Bun.write(
+    new URL(
+      "__snapshots__/match_multiple_highlighted_players.svg",
+      import.meta.url,
+    ),
+    svg,
+  );
   // Hash the SVG for snapshot comparison instead of storing the full content
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
@@ -559,8 +647,14 @@ test("clash game test", async () => {
 
   const svg = await matchToSvg(matchClash);
   const png = await svgToPng(svg);
-  await Bun.write(new URL("__snapshots__/match_clash.png", import.meta.url), png);
-  await Bun.write(new URL("__snapshots__/match_clash.svg", import.meta.url), svg);
+  await Bun.write(
+    new URL("__snapshots__/match_clash.png", import.meta.url),
+    png,
+  );
+  await Bun.write(
+    new URL("__snapshots__/match_clash.svg", import.meta.url),
+    svg,
+  );
 
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
@@ -572,8 +666,14 @@ test("aram clash game test", async () => {
 
   const svg = await matchToSvg(matchAramClash);
   const png = await svgToPng(svg);
-  await Bun.write(new URL("__snapshots__/match_aram_clash.png", import.meta.url), png);
-  await Bun.write(new URL("__snapshots__/match_aram_clash.svg", import.meta.url), svg);
+  await Bun.write(
+    new URL("__snapshots__/match_aram_clash.png", import.meta.url),
+    png,
+  );
+  await Bun.write(
+    new URL("__snapshots__/match_aram_clash.svg", import.meta.url),
+    svg,
+  );
 
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
@@ -733,8 +833,20 @@ test("multiple players with promotion and demotion test", async () => {
 
   const svg = await matchToSvg(match);
   const png = await svgToPng(svg);
-  await Bun.write(new URL("__snapshots__/match_promotion_demotion_mixed.png", import.meta.url), png);
-  await Bun.write(new URL("__snapshots__/match_promotion_demotion_mixed.svg", import.meta.url), svg);
+  await Bun.write(
+    new URL(
+      "__snapshots__/match_promotion_demotion_mixed.png",
+      import.meta.url,
+    ),
+    png,
+  );
+  await Bun.write(
+    new URL(
+      "__snapshots__/match_promotion_demotion_mixed.svg",
+      import.meta.url,
+    ),
+    svg,
+  );
 
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();

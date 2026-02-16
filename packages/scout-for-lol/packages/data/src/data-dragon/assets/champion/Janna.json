@@ -170,7 +170,11 @@
           "description": "By creating a localized change in pressure and temperature, Janna is able to create a small storm that grows in size with time. She can activate the spell again to release the storm. On release this storm will fly towards the direction it was cast in, dealing damage and knocking away any enemies in its path.",
           "tooltip": "Janna summons a tornado that grows stronger over {{ maxduration }} seconds then blows along its path. It deals <magicDamage>{{ minimumdamage }} - {{ maxdamage }} magic damage</magicDamage> and <status>Knocks Up</status> for {{ baseknockup }} - {{ maxknockup }} seconds. The distance, damage, and <status>Knock Up</status> duration increase based on how much the tornado grew. Janna can <recast>Recast</recast> to send the tornado early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Damage Per Second Charged", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Damage Per Second Charged",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ mindamage }} -> {{ mindamageNL }}",
               "{{ bonusdamage }} -> {{ bonusdamageNL }}",
@@ -196,7 +200,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -219,7 +235,13 @@
           "description": "Janna summons an air elemental that passively increases her Move Speed and enables her to pass through units. She may also activate this ability to deal damage and slow an enemy's Move Speed.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Janna gains <speed>{{ totalms }} Move Speed</speed> and is Ghosted.<br /><br /><spellActive>Active:</spellActive> Janna's elemental strikes an enemy, <status>Slowing</status> them by {{ totalslow }} for {{ slowduration }} seconds, and dealing <magicDamage>{{ totaldamage }} + {{ spell.tailwindself:bonusdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow", "Passive Move Speed", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Slow",
+              "Passive Move Speed",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowpercent }}% -> {{ slowpercentNL }}%",
@@ -247,7 +269,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -270,7 +304,12 @@
           "description": "Janna conjures a defensive gale that shields an ally champion or turret from incoming damage and increases their Attack Damage.",
           "tooltip": "Janna grants an ally champion or turret <shield>{{ totalshield }} Shield</shield> for {{ shieldduration }} seconds. While shielded, they gain <scaleAD>{{ totalad }} Attack Damage</scaleAD>.<br /><br />Janna refunds {{ ecdrefundforcc*100 }}% of the cooldown whenever she impairs an enemy champion's movement with an Ability.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Shield Health", "Attack Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Shield Health",
+              "Attack Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ baseshield }} -> {{ baseshieldNL }}",
               "{{ bonusad }} -> {{ bonusadNL }}",
@@ -297,7 +336,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -321,7 +372,10 @@
           "tooltip": "Janna summons a magical monsoon, <status>Knocking Back</status> nearby enemies then healing nearby allies for <healing>{{ totalheal }} Health</healing> over {{ e3 }} seconds. Moving or using an Ability ends the monsoon early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Heal Per Second", "Cooldown"],
-            "effect": ["{{ healbasepersecond }} -> {{ healbasepersecondNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ healbasepersecond }} -> {{ healbasepersecondNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [130, 115, 100],
@@ -342,7 +396,19 @@
             [0.5, 0.5, 0.5],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "300/450/600", "3", "700", "875", "875", "1200", "10", "0.5", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "300/450/600",
+            "3",
+            "700",
+            "875",
+            "875",
+            "1200",
+            "10",
+            "0.5",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

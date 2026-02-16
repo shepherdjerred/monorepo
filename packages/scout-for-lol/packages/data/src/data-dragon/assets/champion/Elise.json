@@ -128,7 +128,12 @@
           "description": "Human Form: Deals damage based upon how high the target's Health is.<br><br>Spider Form: Lunges at an enemy and deals damage based upon how low their Health is.",
           "tooltip": "<keywordMajor>Human Form</keywordMajor>: Elise injects neurotoxin, dealing <magicDamage>{{ basedamage }} plus {{ humanpercenthealth }} current Health magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Neurotoxin Damage", "Venomous Bite Damage", "Monster Damage Cap", "Mana Cost (Neurotoxin)"],
+            "label": [
+              "Neurotoxin Damage",
+              "Venomous Bite Damage",
+              "Monster Damage Cap",
+              "Mana Cost (Neurotoxin)"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ spiderbasedamage }} -> {{ spiderbasedamageNL }}",
@@ -155,7 +160,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -179,7 +196,10 @@
           "tooltip": "<keywordMajor>Human Form</keywordMajor>: Elise summons an explosive spider that moves to a location and explodes when it nears an enemy or after 3 seconds. The spider deals <magicDamage>{{ spell.elisehumanw:totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "@AbilityResourceName@ Cost"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cost }} -> {{ costNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [12, 12, 12, 12, 12],
@@ -200,7 +220,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "4", "0", "0", "3", "65/75/85/95/105", "275", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "4",
+            "0",
+            "0",
+            "3",
+            "65/75/85/95/105",
+            "275",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -223,7 +255,12 @@
           "description": "Human Form: Stuns the first enemy unit hit and reveals them if they are not stealthed.<br><br>Spider Form: Elise and her Spiderlings ascend into the air and then descend upon target enemy. After descending on an enemy target, Elise's bonus damage and healing from Spider Queen is increased.",
           "tooltip": "<keywordMajor>Human Form</keywordMajor>: Elise fires a cocoon, <status>Stunning</status> and revealing the first enemy hit for {{ stunduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Stun Duration:", "Cooldown (Cocoon)", "Cooldown (Rappel)", "Damage and Healing Increase"],
+            "label": [
+              "Stun Duration:",
+              "Cooldown (Cocoon)",
+              "Cooldown (Rappel)",
+              "Damage and Healing Increase"
+            ],
             "effect": [
               "{{ e5 }} -> {{ e5NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",

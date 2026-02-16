@@ -6,7 +6,10 @@ import {
   formatPermissionErrorForLog,
 } from "@scout-for-lol/backend/discord/utils/permissions";
 import { PermissionFlagsBits } from "discord.js";
-import { mockUser, mockTextChannel } from "@scout-for-lol/backend/testing/discord-mocks";
+import {
+  mockUser,
+  mockTextChannel,
+} from "@scout-for-lol/backend/testing/discord-mocks";
 import { testAccountId } from "@scout-for-lol/backend/testing/test-ids";
 
 // Mock bot user for tests
@@ -66,7 +69,10 @@ describe("checkSendMessagePermission", () => {
       isDMBased: () => false,
       permissionsFor: undefined,
     });
-    const result = await checkSendMessagePermission(invalidChannel, mockBotUser);
+    const result = await checkSendMessagePermission(
+      invalidChannel,
+      mockBotUser,
+    );
     expect(result.hasPermission).toBe(false);
     expect(result.reason).toContain("Cannot check permissions");
   });
@@ -120,7 +126,10 @@ describe("checkSendMessagePermission", () => {
       permissionsFor: () => ({
         has: (permission: bigint) => {
           // Has both ViewChannel and SendMessages
-          return permission === PermissionFlagsBits.ViewChannel || permission === PermissionFlagsBits.SendMessages;
+          return (
+            permission === PermissionFlagsBits.ViewChannel ||
+            permission === PermissionFlagsBits.SendMessages
+          );
         },
       }),
       guild: null,
@@ -224,7 +233,10 @@ describe("getPermissionErrorMessage", () => {
   });
 
   test("includes reason when provided", () => {
-    const message = getPermissionErrorMessage("123456789", "Missing Send Messages permission");
+    const message = getPermissionErrorMessage(
+      "123456789",
+      "Missing Send Messages permission",
+    );
     expect(message).toContain("Missing Send Messages permission");
   });
 
@@ -238,7 +250,11 @@ describe("getPermissionErrorMessage", () => {
 describe("formatPermissionErrorForLog", () => {
   test("formats permission error correctly", () => {
     const error = { code: 50013, message: "Missing Permissions" };
-    const message = formatPermissionErrorForLog("123456789", error, "Missing Send Messages");
+    const message = formatPermissionErrorForLog(
+      "123456789",
+      error,
+      "Missing Send Messages",
+    );
     expect(message).toContain("123456789");
     expect(message).toContain("Missing Send Messages");
     expect(message).toContain("Discord Permission Error");
@@ -254,7 +270,11 @@ describe("formatPermissionErrorForLog", () => {
 
   test("includes reason when provided", () => {
     const error = { code: 50013, message: "Missing Permissions" };
-    const message = formatPermissionErrorForLog("123456789", error, "Custom reason");
+    const message = formatPermissionErrorForLog(
+      "123456789",
+      error,
+      "Custom reason",
+    );
     expect(message).toContain("Custom reason");
   });
 });

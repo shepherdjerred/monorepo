@@ -3,11 +3,25 @@ import { z } from "zod";
 import { calculateLeaderboard } from "@scout-for-lol/backend/league/competition/leaderboard.ts";
 import { createCompetition } from "@scout-for-lol/backend/database/competition/queries.ts";
 import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.ts";
-import { PlayerIdSchema, parseCompetition, type Rank, type DiscordGuildId } from "@scout-for-lol/data";
-import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
+import {
+  PlayerIdSchema,
+  parseCompetition,
+  type Rank,
+  type DiscordGuildId,
+} from "@scout-for-lol/data";
+import {
+  S3Client,
+  ListObjectsV2Command,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  testGuildId,
+  testAccountId,
+  testChannelId,
+  testPuuid,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
 import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.ts";
 
 // ============================================================================
@@ -49,7 +63,12 @@ function getActiveCompetitionDates(): { startDate: Date; endDate: Date } {
 }
 
 // Helper to create a test player with account
-async function createTestPlayer(discordId: string, alias: string, serverId: DiscordGuildId, puuid: string) {
+async function createTestPlayer(
+  discordId: string,
+  alias: string,
+  serverId: DiscordGuildId,
+  puuid: string,
+) {
   return prisma.player.create({
     data: {
       discordId: testAccountId(discordId),
@@ -127,7 +146,9 @@ describe("calculateLeaderboard integration tests", () => {
     };
 
     // Should throw error for DRAFT competition
-    expect(calculateLeaderboard(prisma, competition)).rejects.toThrow("Cannot calculate leaderboard for DRAFT");
+    expect(calculateLeaderboard(prisma, competition)).rejects.toThrow(
+      "Cannot calculate leaderboard for DRAFT",
+    );
   });
 
   test("should return empty leaderboard for competition with no participants", async () => {
@@ -237,8 +258,18 @@ describe("calculateLeaderboard integration tests - Scoring", () => {
     });
 
     // Add participants
-    await addParticipant({ prisma, competitionId: competition.id, playerId: player1.id, status: "JOINED" });
-    await addParticipant({ prisma, competitionId: competition.id, playerId: player2.id, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competition.id,
+      playerId: player1.id,
+      status: "JOINED",
+    });
+    await addParticipant({
+      prisma,
+      competitionId: competition.id,
+      playerId: player2.id,
+      status: "JOINED",
+    });
 
     // Note: No matches in S3, so scores will be 0
 
@@ -252,7 +283,9 @@ describe("calculateLeaderboard integration tests - Scoring", () => {
     expect(leaderboard[1]?.score).toBe(0);
     expect(leaderboard[1]?.rank).toBe(1);
   });
+});
 
+describe("calculateLeaderboard integration tests - Rank Scoring", () => {
   test.skip("should handle HIGHEST_RANK criteria with START snapshots (active competition)", async () => {
     // NOTE: This test is skipped because ACTIVE competitions now fetch current rank from Riot API
     // in real-time, not from stored snapshots. This test would require mocking the Riot API.
@@ -326,8 +359,18 @@ describe("calculateLeaderboard integration tests - Scoring", () => {
     });
 
     // Add participants
-    await addParticipant({ prisma, competitionId: competition.id, playerId: player1.id, status: "JOINED" });
-    await addParticipant({ prisma, competitionId: competition.id, playerId: player2.id, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competition.id,
+      playerId: player1.id,
+      status: "JOINED",
+    });
+    await addParticipant({
+      prisma,
+      competitionId: competition.id,
+      playerId: player2.id,
+      status: "JOINED",
+    });
 
     // Create START snapshots with rank data (realistic for active competition)
     const goldRank: Rank = {
@@ -387,8 +430,18 @@ describe("calculateLeaderboard integration tests - Scoring", () => {
 describe("calculateLeaderboard - HIGHEST_RANK Criteria", () => {
   test("should handle HIGHEST_RANK criteria with END snapshots (ended competition)", async () => {
     // Create players using helper
-    const player1 = await createTestPlayer("300000000", "Player3", testGuildId("000000"), "3");
-    const player2 = await createTestPlayer("400000000", "Player4", testGuildId("000000"), "4");
+    const player1 = await createTestPlayer(
+      "300000000",
+      "Player3",
+      testGuildId("000000"),
+      "3",
+    );
+    const player2 = await createTestPlayer(
+      "400000000",
+      "Player4",
+      testGuildId("000000"),
+      "4",
+    );
 
     const activeEndDate = new Date();
     activeEndDate.setDate(activeEndDate.getDate() + 1);
@@ -407,8 +460,18 @@ describe("calculateLeaderboard - HIGHEST_RANK Criteria", () => {
       criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
     });
 
-    await addParticipant({ prisma, competitionId: competition.id, playerId: player1.id, status: "JOINED" });
-    await addParticipant({ prisma, competitionId: competition.id, playerId: player2.id, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competition.id,
+      playerId: player1.id,
+      status: "JOINED",
+    });
+    await addParticipant({
+      prisma,
+      competitionId: competition.id,
+      playerId: player2.id,
+      status: "JOINED",
+    });
 
     const endedDate = new Date();
     endedDate.setDate(endedDate.getDate() - 1);
@@ -417,8 +480,20 @@ describe("calculateLeaderboard - HIGHEST_RANK Criteria", () => {
       data: { endDate: endedDate },
     });
 
-    const goldRank: Rank = { tier: "gold", division: 2, lp: 50, wins: 100, losses: 80 };
-    const silverRank: Rank = { tier: "silver", division: 1, lp: 75, wins: 80, losses: 70 };
+    const goldRank: Rank = {
+      tier: "gold",
+      division: 2,
+      lp: 50,
+      wins: 100,
+      losses: 80,
+    };
+    const silverRank: Rank = {
+      tier: "silver",
+      division: 1,
+      lp: 75,
+      wins: 80,
+      losses: 70,
+    };
 
     await prisma.competitionSnapshot.create({
       data: {
@@ -439,12 +514,17 @@ describe("calculateLeaderboard - HIGHEST_RANK Criteria", () => {
       },
     });
 
-    const updatedCompetition = await prisma.competition.findUnique({ where: { id: competition.id } });
+    const updatedCompetition = await prisma.competition.findUnique({
+      where: { id: competition.id },
+    });
     if (!updatedCompetition) {
       throw new Error("Competition not found");
     }
 
-    const leaderboard = await calculateLeaderboard(prisma, parseCompetition(updatedCompetition));
+    const leaderboard = await calculateLeaderboard(
+      prisma,
+      parseCompetition(updatedCompetition),
+    );
 
     expect(leaderboard).toHaveLength(2);
     expect(leaderboard[0]?.playerId).toBe(PlayerIdSchema.parse(player1.id));
@@ -454,7 +534,9 @@ describe("calculateLeaderboard - HIGHEST_RANK Criteria", () => {
     expect(leaderboard[1]?.rank).toBe(2);
     expect(leaderboard[1]?.score).toMatchObject(silverRank);
   });
+});
 
+describe("calculateLeaderboard - MOST_RANK_CLIMB Criteria", () => {
   test.skip("should handle MOST_RANK_CLIMB criteria with START and END snapshots", async () => {
     // NOTE: This test is skipped because it's for an ACTIVE competition,
     // which now fetches current rank from Riot API instead of using stored END snapshots.
@@ -530,8 +612,18 @@ describe("calculateLeaderboard - HIGHEST_RANK Criteria", () => {
     });
 
     // Add participants
-    await addParticipant({ prisma, competitionId: competition.id, playerId: player1.id, status: "JOINED" });
-    await addParticipant({ prisma, competitionId: competition.id, playerId: player2.id, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competition.id,
+      playerId: player1.id,
+      status: "JOINED",
+    });
+    await addParticipant({
+      prisma,
+      competitionId: competition.id,
+      playerId: player2.id,
+      status: "JOINED",
+    });
 
     // Player 1: Silver 1 50LP → Gold 2 50LP (climbed ~2 divisions = 400 LP)
     await prisma.competitionSnapshot.create({
@@ -702,9 +794,24 @@ describe("calculateLeaderboard integration tests - Filters", () => {
     });
 
     // Add participants with different statuses
-    await addParticipant({ prisma, competitionId: competition.id, playerId: player1.id, status: "JOINED" });
-    await addParticipant({ prisma, competitionId: competition.id, playerId: player2.id, status: "INVITED" }); // Should not appear
-    await addParticipant({ prisma, competitionId: competition.id, playerId: player3.id, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competition.id,
+      playerId: player1.id,
+      status: "JOINED",
+    });
+    await addParticipant({
+      prisma,
+      competitionId: competition.id,
+      playerId: player2.id,
+      status: "INVITED",
+    }); // Should not appear
+    await addParticipant({
+      prisma,
+      competitionId: competition.id,
+      playerId: player3.id,
+      status: "JOINED",
+    });
 
     // Set player3 to LEFT status
     await prisma.competitionParticipant.update({

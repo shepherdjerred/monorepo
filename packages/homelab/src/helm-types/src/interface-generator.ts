@@ -26,7 +26,7 @@ export function generateTypeScriptCode(mainInterface: TypeScriptInterface, chart
     code = `// Generated TypeScript types for ${chartName} Helm chart
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-${code.substring(code.indexOf("\n\n") + 2)}`;
+${code.slice(Math.max(0, code.indexOf("\n\n") + 2))}`;
   }
 
   return code;
@@ -75,7 +75,7 @@ function generateInterfaceCode(iface: TypeScriptInterface): string {
       if (prop.description) {
         // Format multi-line descriptions properly with " * " prefix
         // Escape */ sequences to prevent premature comment closure
-        const escapedDescription = prop.description.replace(/\*\//g, "*\\/");
+        const escapedDescription = prop.description.replaceAll('*/', String.raw`*\/`);
         const descLines = escapedDescription.split("\n");
         for (const line of descLines) {
           code += `   * ${line}\n`;
@@ -85,7 +85,7 @@ function generateInterfaceCode(iface: TypeScriptInterface): string {
       if (prop.default !== undefined) {
         const defaultStr = formatDefaultValue(prop.default);
         if (defaultStr) {
-          if (prop.description) code += `   *\n`;
+          if (prop.description) {code += `   *\n`;}
           code += `   * @default ${defaultStr}\n`;
         }
       }
@@ -104,13 +104,13 @@ function generateInterfaceCode(iface: TypeScriptInterface): string {
  * Format a default value for display in JSDoc
  */
 function formatDefaultValue(value: unknown): string | null {
-  if (value === null) return "null";
-  if (value === undefined) return null;
+  if (value === null) {return "null";}
+  if (value === undefined) {return null;}
 
   // Handle arrays
   const arrayCheck = ArraySchema.safeParse(value);
   if (arrayCheck.success) {
-    if (arrayCheck.data.length === 0) return "[]";
+    if (arrayCheck.data.length === 0) {return "[]";}
     if (arrayCheck.data.length <= 3) {
       try {
         return JSON.stringify(arrayCheck.data);
@@ -125,7 +125,7 @@ function formatDefaultValue(value: unknown): string | null {
   const recordCheck = RecordSchema.safeParse(value);
   if (recordCheck.success) {
     const keys = Object.keys(recordCheck.data);
-    if (keys.length === 0) return "{}";
+    if (keys.length === 0) {return "{}";}
     if (keys.length <= 3) {
       try {
         return JSON.stringify(recordCheck.data);
@@ -141,7 +141,7 @@ function formatDefaultValue(value: unknown): string | null {
   if (stringCheck.success) {
     // Truncate long strings
     if (stringCheck.data.length > 50) {
-      return `"${stringCheck.data.substring(0, 47)}..."`;
+      return `"${stringCheck.data.slice(0, 47)}..."`;
     }
     return `"${stringCheck.data}"`;
   }
@@ -168,7 +168,7 @@ function formatDefaultValue(value: unknown): string | null {
 function generateParameterType(iface: TypeScriptInterface, chartName: string): string {
   const parameterKeys = flattenInterfaceKeys(iface);
 
-  const normalizedChartName = capitalizeFirst(chartName).replace(/-/g, "");
+  const normalizedChartName = capitalizeFirst(chartName).replaceAll('-', "");
   let code = `export type ${normalizedChartName}HelmParameters = {\n`;
 
   for (const key of parameterKeys) {
@@ -185,7 +185,7 @@ function flattenInterfaceKeys(iface: TypeScriptInterface, prefix = ""): string[]
 
   for (const [key, prop] of Object.entries(iface.properties)) {
     // Remove quotes from key for parameter names
-    const cleanKey = key.replace(/"/g, "");
+    const cleanKey = key.replaceAll('"', "");
     const fullKey = prefix ? `${prefix}.${cleanKey}` : cleanKey;
 
     if (prop.nested) {

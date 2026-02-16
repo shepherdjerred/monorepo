@@ -6,11 +6,18 @@
  */
 
 import { type Client } from "discord.js";
-import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index";
+import {
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data/index";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { getCompetitionsByChannelId } from "@scout-for-lol/backend/database/competition/queries.ts";
 import { sendDM } from "@scout-for-lol/backend/discord/utils/dm.ts";
-import { discordSubscriptionsCleanedTotal, guildDataCleanupTotal } from "@scout-for-lol/backend/metrics/index.ts";
+import {
+  discordSubscriptionsCleanedTotal,
+  guildDataCleanupTotal,
+} from "@scout-for-lol/backend/metrics/index.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
@@ -38,9 +45,14 @@ export async function runDataValidation(client: Client): Promise<void> {
     await validateChannels(client);
 
     const duration = Date.now() - startTime;
-    logger.info(`[DataValidation] ✅ Validation complete in ${duration.toString()}ms`);
+    logger.info(
+      `[DataValidation] ✅ Validation complete in ${duration.toString()}ms`,
+    );
   } catch (error) {
-    logger.error("[DataValidation] Error during validation:", getErrorMessage(error));
+    logger.error(
+      "[DataValidation] Error during validation:",
+      getErrorMessage(error),
+    );
     Sentry.captureException(error, { tags: { source: "data-validation" } });
     throw error;
   }
@@ -60,34 +72,50 @@ async function validateGuilds(client: Client): Promise<void> {
     });
 
     const storedGuildIds = storedGuilds.map((s) => s.serverId);
-    logger.info(`[DataValidation] Found ${storedGuildIds.length.toString()} unique guilds in database`);
+    logger.info(
+      `[DataValidation] Found ${storedGuildIds.length.toString()} unique guilds in database`,
+    );
 
     // Get guilds bot is currently in
     const activeGuildIds = new Set(client.guilds.cache.keys());
-    logger.info(`[DataValidation] Bot is currently in ${activeGuildIds.size.toString()} guilds`);
+    logger.info(
+      `[DataValidation] Bot is currently in ${activeGuildIds.size.toString()} guilds`,
+    );
 
     // Find guilds bot is no longer in
-    const orphanedGuildIds = storedGuildIds.filter((id) => !activeGuildIds.has(id));
+    const orphanedGuildIds = storedGuildIds.filter(
+      (id) => !activeGuildIds.has(id),
+    );
 
     if (orphanedGuildIds.length === 0) {
       logger.info("[DataValidation] ✅ All stored guilds are valid");
       return;
     }
 
-    logger.info(`[DataValidation] ⚠️  Found ${orphanedGuildIds.length.toString()} orphaned guild(s)`);
+    logger.info(
+      `[DataValidation] ⚠️  Found ${orphanedGuildIds.length.toString()} orphaned guild(s)`,
+    );
 
     // Clean up each orphaned guild
     for (const guildId of orphanedGuildIds) {
       try {
         await cleanupOrphanedGuild(guildId);
       } catch (error) {
-        logger.error(`[DataValidation] Error cleaning up guild ${guildId}:`, getErrorMessage(error));
-        Sentry.captureException(error, { tags: { source: "guild-cleanup", guildId } });
+        logger.error(
+          `[DataValidation] Error cleaning up guild ${guildId}:`,
+          getErrorMessage(error),
+        );
+        Sentry.captureException(error, {
+          tags: { source: "guild-cleanup", guildId },
+        });
         // Continue with other guilds
       }
     }
   } catch (error) {
-    logger.error("[DataValidation] Error validating guilds:", getErrorMessage(error));
+    logger.error(
+      "[DataValidation] Error validating guilds:",
+      getErrorMessage(error),
+    );
     Sentry.captureException(error, { tags: { source: "validate-guilds" } });
     throw error;
   }
@@ -108,9 +136,17 @@ async function cleanupOrphanedGuild(serverId: string): Promise<void> {
     });
 
     if (deletedSubs.count > 0) {
-      logger.info(`[DataValidation]   Deleted ${deletedSubs.count.toString()} subscription(s)`);
-      discordSubscriptionsCleanedTotal.inc({ reason: "periodic_validation_guild" }, deletedSubs.count);
-      guildDataCleanupTotal.inc({ data_type: "subscriptions", status: "success" });
+      logger.info(
+        `[DataValidation]   Deleted ${deletedSubs.count.toString()} subscription(s)`,
+      );
+      discordSubscriptionsCleanedTotal.inc(
+        { reason: "periodic_validation_guild" },
+        deletedSubs.count,
+      );
+      guildDataCleanupTotal.inc({
+        data_type: "subscriptions",
+        status: "success",
+      });
     }
 
     // Delete server permissions
@@ -119,8 +155,13 @@ async function cleanupOrphanedGuild(serverId: string): Promise<void> {
     });
 
     if (deletedPerms.count > 0) {
-      logger.info(`[DataValidation]   Deleted ${deletedPerms.count.toString()} permission(s)`);
-      guildDataCleanupTotal.inc({ data_type: "permissions", status: "success" });
+      logger.info(
+        `[DataValidation]   Deleted ${deletedPerms.count.toString()} permission(s)`,
+      );
+      guildDataCleanupTotal.inc({
+        data_type: "permissions",
+        status: "success",
+      });
     }
 
     // Delete permission error records
@@ -129,13 +170,20 @@ async function cleanupOrphanedGuild(serverId: string): Promise<void> {
     });
 
     if (deletedErrors.count > 0) {
-      logger.info(`[DataValidation]   Deleted ${deletedErrors.count.toString()} error record(s)`);
+      logger.info(
+        `[DataValidation]   Deleted ${deletedErrors.count.toString()} error record(s)`,
+      );
     }
 
     logger.info(`[DataValidation] ✅ Cleaned up guild ${serverId}`);
   } catch (error) {
-    logger.error(`[DataValidation] Error cleaning up guild ${serverId}:`, getErrorMessage(error));
-    Sentry.captureException(error, { tags: { source: "cleanup-orphaned-guild", serverId } });
+    logger.error(
+      `[DataValidation] Error cleaning up guild ${serverId}:`,
+      getErrorMessage(error),
+    );
+    Sentry.captureException(error, {
+      tags: { source: "cleanup-orphaned-guild", serverId },
+    });
     guildDataCleanupTotal.inc({ data_type: "all", status: "failed" });
   }
 }
@@ -153,7 +201,9 @@ async function validateChannels(client: Client): Promise<void> {
       distinct: ["channelId"],
     });
 
-    logger.info(`[DataValidation] Found ${storedChannels.length.toString()} unique channels in database`);
+    logger.info(
+      `[DataValidation] Found ${storedChannels.length.toString()} unique channels in database`,
+    );
 
     // Collect orphaned channels
     const orphanedChannels: string[] = [];
@@ -161,16 +211,22 @@ async function validateChannels(client: Client): Promise<void> {
     for (const { channelId } of storedChannels) {
       try {
         // Try to fetch the channel
-        const channel = await client.channels.fetch(channelId).catch(() => null);
+        const channel = await client.channels
+          .fetch(channelId)
+          .catch(() => null);
 
         if (!channel) {
           // Channel doesn't exist
-          logger.info(`[DataValidation] ⚠️  Channel ${channelId} no longer exists`);
+          logger.info(
+            `[DataValidation] ⚠️  Channel ${channelId} no longer exists`,
+          );
           orphanedChannels.push(channelId);
         }
       } catch (error) {
         // Error fetching channel - likely doesn't exist
-        logger.info(`[DataValidation] ⚠️  Channel ${channelId} could not be fetched: ${getErrorMessage(error)}`);
+        logger.info(
+          `[DataValidation] ⚠️  Channel ${channelId} could not be fetched: ${getErrorMessage(error)}`,
+        );
         orphanedChannels.push(channelId);
       }
     }
@@ -180,14 +236,21 @@ async function validateChannels(client: Client): Promise<void> {
       return;
     }
 
-    logger.info(`[DataValidation] Found ${orphanedChannels.length.toString()} orphaned channel(s)`);
+    logger.info(
+      `[DataValidation] Found ${orphanedChannels.length.toString()} orphaned channel(s)`,
+    );
 
     // Clean up orphaned channels and notify owners (grouped by owner)
     await cleanupOrphanedChannels(client, orphanedChannels);
 
-    logger.info(`[DataValidation] ✅ Cleaned up ${orphanedChannels.length.toString()} orphaned channel(s)`);
+    logger.info(
+      `[DataValidation] ✅ Cleaned up ${orphanedChannels.length.toString()} orphaned channel(s)`,
+    );
   } catch (error) {
-    logger.error("[DataValidation] Error validating channels:", getErrorMessage(error));
+    logger.error(
+      "[DataValidation] Error validating channels:",
+      getErrorMessage(error),
+    );
     Sentry.captureException(error, { tags: { source: "validate-channels" } });
     throw error;
   }
@@ -197,10 +260,16 @@ async function validateChannels(client: Client): Promise<void> {
  * Clean up data for channels that no longer exist and notify owners
  * Groups notifications by owner to prevent spam
  */
-async function cleanupOrphanedChannels(client: Client, channelIds: string[]): Promise<void> {
+async function cleanupOrphanedChannels(
+  client: Client,
+  channelIds: string[],
+): Promise<void> {
   try {
     // Collect all competitions affected by deleted channels, grouped by owner
-    const competitionsByOwner = new Map<string, { id: number; title: string }[]>();
+    const competitionsByOwner = new Map<
+      string,
+      { id: number; title: string }[]
+    >();
 
     for (const channelId of channelIds) {
       const parsedChannelId = DiscordChannelIdSchema.parse(channelId);
@@ -214,11 +283,17 @@ async function cleanupOrphanedChannels(client: Client, channelIds: string[]): Pr
         logger.info(
           `[DataValidation]   Deleted ${deletedSubs.count.toString()} subscription(s) for channel ${channelId}`,
         );
-        discordSubscriptionsCleanedTotal.inc({ reason: "periodic_validation_channel" }, deletedSubs.count);
+        discordSubscriptionsCleanedTotal.inc(
+          { reason: "periodic_validation_channel" },
+          deletedSubs.count,
+        );
       }
 
       // Get competitions using this channel
-      const competitions = await getCompetitionsByChannelId(prisma, parsedChannelId);
+      const competitions = await getCompetitionsByChannelId(
+        prisma,
+        parsedChannelId,
+      );
 
       // Group competitions by owner
       for (const competition of competitions) {
@@ -265,12 +340,22 @@ If you have any questions, feel free to reach out for support.`;
           );
         }
       } catch (error) {
-        logger.error(`[DataValidation]   Failed to notify owner ${ownerId}:`, getErrorMessage(error));
-        Sentry.captureException(error, { tags: { source: "notify-owner-channel-cleanup", ownerId } });
+        logger.error(
+          `[DataValidation]   Failed to notify owner ${ownerId}:`,
+          getErrorMessage(error),
+        );
+        Sentry.captureException(error, {
+          tags: { source: "notify-owner-channel-cleanup", ownerId },
+        });
       }
     }
   } catch (error) {
-    logger.error(`[DataValidation] Error cleaning up orphaned channels:`, getErrorMessage(error));
-    Sentry.captureException(error, { tags: { source: "cleanup-orphaned-channels" } });
+    logger.error(
+      `[DataValidation] Error cleaning up orphaned channels:`,
+      getErrorMessage(error),
+    );
+    Sentry.captureException(error, {
+      tags: { source: "cleanup-orphaned-channels" },
+    });
   }
 }

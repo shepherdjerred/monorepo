@@ -145,7 +145,10 @@
           "tooltip": "Hecarim cleaves nearby enemies for <physicalDamage>{{ damage }} physical damage</physicalDamage>. If this Ability hits, he gains a stack that decreases its Cooldown by {{ rampagecooldownreduction }} seconds and increases its damage by {{ rampagebonusdamageperc }}% for {{ e6 }} seconds. Stacks up to {{ e2 }} times.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Mana Cost"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cost }} -> {{ costNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [4, 4, 4, 4, 4],
@@ -166,7 +169,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "3", "1", "3", "60", "8", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "3",
+            "1",
+            "3",
+            "60",
+            "8",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -189,7 +204,12 @@
           "description": "Hecarim gains Armor and Magic Resist. Hecarim deals magic damage to nearby enemies, and gains Health equal to a percentage of any damage those enemies suffer.",
           "tooltip": "Hecarim deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> over {{ buffduration }} seconds to nearby enemies. <br /><br />Hecarim gains <passive>{{ resistamount }}</passive> <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> and heals for <healing>{{ leechamount }}% of damage</healing> nearby enemies take from Hecarim and <healing>{{ allytooltipleachvalue }}% of damage</healing> taken from his allies.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Bonus Resistances", "Healing Cap", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Bonus Resistances",
+              "Healing Cap",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ resistamount }} -> {{ resistamountNL }}",
@@ -216,7 +236,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -301,7 +333,10 @@
           "tooltip": "Hecarim summons spectral riders and charges forward, dealing <magicDamage>{{ damagedone }} magic damage</magicDamage>. Hecarim unleashes a shockwave at the end of the charge that <status>Fears</status> for between {{ feardurationmin }} to {{ feardurationmax }} seconds, increased by charge distance.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [140, 120, 100],
@@ -322,7 +357,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "150/250/350", "0.75", "1.5", "1100", "1000", "950", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "150/250/350",
+            "0.75",
+            "1.5",
+            "1100",
+            "1000",
+            "950",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

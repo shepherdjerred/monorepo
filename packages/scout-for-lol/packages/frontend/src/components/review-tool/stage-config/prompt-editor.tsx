@@ -2,7 +2,10 @@ import { Button } from "@scout-for-lol/frontend/components/review-tool/ui/button
 import { Dialog } from "@scout-for-lol/frontend/components/review-tool/ui/dialog";
 import { Textarea } from "@scout-for-lol/frontend/components/review-tool/ui/textarea";
 import { useState } from "react";
-import { PromptVariablesInfo, type PromptStageName } from "./prompt-variables-info.tsx";
+import {
+  PromptVariablesInfo,
+  type PromptStageName,
+} from "./prompt-variables-info.tsx";
 
 type PromptEditorProps = {
   label: string;
@@ -13,7 +16,14 @@ type PromptEditorProps = {
   promptType?: "system" | "user";
 };
 
-export function PromptEditor({ label, prompt, defaultPrompt, onSave, stage, promptType }: PromptEditorProps) {
+export function PromptEditor({
+  label,
+  prompt,
+  defaultPrompt,
+  onSave,
+  stage,
+  promptType,
+}: PromptEditorProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(prompt ?? defaultPrompt ?? "");
 
@@ -47,13 +57,22 @@ export function PromptEditor({ label, prompt, defaultPrompt, onSave, stage, prom
         className="max-h-[90vh] max-w-4xl overflow-hidden"
       >
         <div className="space-y-4">
-          {stage && promptType && <PromptVariablesInfo stage={stage} type={promptType} />}
+          {stage && promptType && (
+            <PromptVariablesInfo stage={stage} type={promptType} />
+          )}
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-surface-700">Prompt template</span>
+              <span className="text-xs font-medium text-surface-700">
+                Prompt template
+              </span>
               {defaultPrompt && (
-                <Button variant="ghost" size="sm" type="button" onClick={handleReset}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  type="button"
+                  onClick={handleReset}
+                >
                   Reset to default
                 </Button>
               )}

@@ -3,7 +3,12 @@ import { z } from "zod";
 
 export const numberOfDivisions = 4;
 export type Division = z.infer<typeof DivisionSchema>;
-export const DivisionSchema = z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]);
+export const DivisionSchema = z.union([
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+]);
 
 export function parseDivision(input: string): Division | undefined {
   return match(input.toUpperCase())

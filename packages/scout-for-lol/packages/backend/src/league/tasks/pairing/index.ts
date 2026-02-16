@@ -10,7 +10,10 @@ import {
  * Posts pairing winrates and surrender stats to Discord
  * Returns { success: boolean, message: string } indicating whether the task ran
  */
-export async function runWeeklyPairingUpdate(): Promise<{ success: boolean; message: string }> {
+export async function runWeeklyPairingUpdate(): Promise<{
+  success: boolean;
+  message: string;
+}> {
   return runWeeklyPairingUpdateInternal();
 }
 
@@ -31,6 +34,9 @@ export function cancelPairingUpdate(): void {
 /**
  * Get info about the current pairing update task
  */
-export function getPairingUpdateInfo(): { running: boolean; startedAt: Date | null } {
+export function getPairingUpdateInfo(): {
+  running: boolean;
+  startedAt: Date | null;
+} {
   return getTaskInfoInternal();
 }

@@ -1,5 +1,5 @@
 import { Events } from "discord.js";
-import { handleKarma } from "../karma/commands.ts";
+import { handleKarma } from "#src/karma/commands.ts";
 import "./rest.ts";
 import client from "./client.ts";
 
@@ -9,7 +9,7 @@ client.on(Events.InteractionCreate, (interaction) => {
       if (!interaction.isChatInputCommand()) {
         return;
       }
-      console.log(
+      console.warn(
         `[Command] User ${interaction.user.tag} (${interaction.user.id}) executed command: /${interaction.commandName}`,
       );
       switch (interaction.commandName) {
@@ -17,8 +17,8 @@ client.on(Events.InteractionCreate, (interaction) => {
           await handleKarma(interaction);
           break;
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
     }
   })();
 });

@@ -6,13 +6,17 @@ import { createLogger } from "@scout-for-lol/backend/logger.ts";
 const logger = createLogger("health");
 
 logger.info("🏥 Starting health check");
-logger.info(`🔍 Health check URL: http://127.0.0.1:${configuration.port.toString()}/healthz`);
+logger.info(
+  `🔍 Health check URL: http://127.0.0.1:${configuration.port.toString()}/healthz`,
+);
 
 // health check used by Docker
 try {
   const startTime = Date.now();
 
-  const response = await fetch(`http://127.0.0.1:${configuration.port.toString()}/healthz`);
+  const response = await fetch(
+    `http://127.0.0.1:${configuration.port.toString()}/healthz`,
+  );
 
   const responseTime = Date.now() - startTime;
   logger.info(`📊 Health check response time: ${responseTime.toString()}ms`);

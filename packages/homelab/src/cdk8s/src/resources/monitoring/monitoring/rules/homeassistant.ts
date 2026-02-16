@@ -1,5 +1,6 @@
+import type {
+  PrometheusRuleSpecGroups} from "../../../../../generated/imports/monitoring.coreos.com";
 import {
-  PrometheusRuleSpecGroups,
   PrometheusRuleSpecGroupsRulesExpr,
 } from "../../../../../generated/imports/monitoring.coreos.com";
 import { createSensorAlert, createBinarySensorAlert } from "./shared";

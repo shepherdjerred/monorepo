@@ -7,7 +7,10 @@ import {
   CardDescription,
   CardContent,
 } from "@scout-for-lol/desktop/components/ui/card.tsx";
-import { StatusIndicator, Badge } from "@scout-for-lol/desktop/components/ui/badge.tsx";
+import {
+  StatusIndicator,
+  Badge,
+} from "@scout-for-lol/desktop/components/ui/badge.tsx";
 
 type MonitorSectionProps = {
   isMonitoring: boolean;
@@ -22,7 +25,11 @@ type MonitorSectionProps = {
 
 type MonitoringState = "starting" | "active" | "ready" | "setup-required";
 
-function getMonitoringState(isStarting: boolean, isMonitoring: boolean, canMonitor: boolean): MonitoringState {
+function getMonitoringState(
+  isStarting: boolean,
+  isMonitoring: boolean,
+  canMonitor: boolean,
+): MonitoringState {
   if (isStarting) {
     return "starting";
   }
@@ -51,7 +58,14 @@ function getStatusIndicatorProps(state: MonitoringState): {
   }
 }
 
-const TRACKED_EVENTS = ["Kills", "Multi-kills", "First Blood", "Objectives", "Aces", "Game End"];
+const TRACKED_EVENTS = [
+  "Kills",
+  "Multi-kills",
+  "First Blood",
+  "Objectives",
+  "Aces",
+  "Game End",
+];
 
 export function MonitorSection({
   isMonitoring,
@@ -68,7 +82,11 @@ export function MonitorSection({
   const isTesting = loading?.includes("Testing") ?? loading?.includes("event");
   const canMonitor = lcuConnected && backendConnected;
 
-  const monitoringState = getMonitoringState(isStarting, isMonitoring, canMonitor);
+  const monitoringState = getMonitoringState(
+    isStarting,
+    isMonitoring,
+    canMonitor,
+  );
   const statusProps = getStatusIndicatorProps(monitoringState);
 
   return (
@@ -76,24 +94,38 @@ export function MonitorSection({
       {/* Header */}
       <div className="space-y-2">
         <h2 className="text-2xl font-bold text-gray-100">Game Monitoring</h2>
-        <p className="text-gray-400">Track in-game events and send real-time updates to Discord</p>
+        <p className="text-gray-400">
+          Track in-game events and send real-time updates to Discord
+        </p>
       </div>
 
       {/* Prerequisites Check */}
       {!canMonitor && (
-        <Card variant="bordered" className="border-discord-yellow/30 bg-discord-yellow/5">
+        <Card
+          variant="bordered"
+          className="border-discord-yellow/30 bg-discord-yellow/5"
+        >
           <CardContent className="flex items-start gap-5">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-discord-yellow/20">
               <AlertTriangle className="h-5 w-5 text-discord-yellow" />
             </div>
             <div>
-              <h3 className="font-medium text-discord-yellow">Complete Setup Required</h3>
+              <h3 className="font-medium text-discord-yellow">
+                Complete Setup Required
+              </h3>
               <p className="mt-2 text-sm text-gray-400">
-                Connect to both League Client and Discord before starting monitoring.
+                Connect to both League Client and Discord before starting
+                monitoring.
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
-                <PrerequisiteBadge label="League Client" fulfilled={lcuConnected} />
-                <PrerequisiteBadge label="Backend" fulfilled={backendConnected} />
+                <PrerequisiteBadge
+                  label="League Client"
+                  fulfilled={lcuConnected}
+                />
+                <PrerequisiteBadge
+                  label="Backend"
+                  fulfilled={backendConnected}
+                />
               </div>
             </div>
           </CardContent>
@@ -106,7 +138,10 @@ export function MonitorSection({
           <CardTitle>Monitoring Status</CardTitle>
           <CardDescription>
             <div className="mt-2">
-              <StatusIndicator status={statusProps.status} label={statusProps.label} />
+              <StatusIndicator
+                status={statusProps.status}
+                label={statusProps.label}
+              />
             </div>
           </CardDescription>
         </CardHeader>
@@ -117,7 +152,9 @@ export function MonitorSection({
             <div className="flex items-center gap-4 rounded-lg bg-gray-900/50 p-5">
               <div className="flex-1">
                 <p className="text-sm text-gray-400">Game Status</p>
-                <p className="text-lg font-semibold text-gray-100">{inGame ? "In Game" : "Not in Game"}</p>
+                <p className="text-lg font-semibold text-gray-100">
+                  {inGame ? "In Game" : "Not in Game"}
+                </p>
               </div>
               {inGame && (
                 <Badge variant="success" dot pulse>
@@ -130,7 +167,9 @@ export function MonitorSection({
           {/* What Gets Tracked */}
           {isMonitoring && (
             <div className="rounded-lg border border-gray-700/50 bg-gray-900/30 p-5">
-              <h4 className="mb-4 text-sm font-medium text-gray-200">Events Being Tracked</h4>
+              <h4 className="mb-4 text-sm font-medium text-gray-200">
+                Events Being Tracked
+              </h4>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {TRACKED_EVENTS.map((event) => (
                   <div
@@ -172,7 +211,12 @@ export function MonitorSection({
                   Stop Monitoring
                 </Button>
                 {onTest && (
-                  <Button variant="outline" size="lg" onClick={onTest} loading={isTesting}>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={onTest}
+                    loading={isTesting}
+                  >
                     Test Events
                   </Button>
                 )}
@@ -185,11 +229,19 @@ export function MonitorSection({
   );
 }
 
-function PrerequisiteBadge({ label, fulfilled }: { label: string; fulfilled: boolean }) {
+function PrerequisiteBadge({
+  label,
+  fulfilled,
+}: {
+  label: string;
+  fulfilled: boolean;
+}) {
   return (
     <div
       className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium ${
-        fulfilled ? "bg-discord-green/20 text-discord-green" : "bg-gray-700/50 text-gray-400"
+        fulfilled
+          ? "bg-discord-green/20 text-discord-green"
+          : "bg-gray-700/50 text-gray-400"
       }`}
     >
       {fulfilled ? (

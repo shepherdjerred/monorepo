@@ -5,11 +5,21 @@ import {
   type CreateCompetitionInput,
 } from "@scout-for-lol/backend/database/competition/queries.ts";
 import { clearAllRateLimits } from "@scout-for-lol/backend/database/competition/rate-limit.ts";
-import { validateOwnerLimit, validateServerLimit } from "@scout-for-lol/backend/database/competition/validation.ts";
+import {
+  validateOwnerLimit,
+  validateServerLimit,
+} from "@scout-for-lol/backend/database/competition/validation.ts";
 import { ErrorSchema } from "@scout-for-lol/backend/utils/errors.ts";
-import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  testGuildId,
+  testAccountId,
+  testChannelId,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
 import { ChampionIdSchema, DiscordAccountIdSchema } from "@scout-for-lol/data";
-import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.ts";
+import {
+  createTestDatabase,
+  deleteIfExists,
+} from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a test database
 const { prisma } = createTestDatabase("create-command-test");
@@ -291,7 +301,11 @@ describe("Permission and limit integration", () => {
 
     let error: unknown = null;
     try {
-      await validateOwnerLimit(prisma, testGuildId("123456789012345678"), ownerId);
+      await validateOwnerLimit(
+        prisma,
+        testGuildId("123456789012345678"),
+        ownerId,
+      );
     } catch (e) {
       error = e;
     }
@@ -312,7 +326,9 @@ describe("Permission and limit integration", () => {
     for (let i = 0; i < 2; i++) {
       await createCompetition(prisma, {
         serverId,
-        ownerId: DiscordAccountIdSchema.parse((100000000000000000 + i).toString()),
+        ownerId: DiscordAccountIdSchema.parse(
+          (100000000000000000 + i).toString(),
+        ),
         channelId: testChannelId("111222333444555666"),
         title: `Competition ${i.toString()}`,
         description: "Test",
@@ -529,8 +545,12 @@ describe("Metadata tracking", () => {
 
     const afterCreate = new Date();
 
-    expect(competition.createdTime.getTime()).toBeGreaterThanOrEqual(beforeCreate.getTime());
-    expect(competition.createdTime.getTime()).toBeLessThanOrEqual(afterCreate.getTime());
+    expect(competition.createdTime.getTime()).toBeGreaterThanOrEqual(
+      beforeCreate.getTime(),
+    );
+    expect(competition.createdTime.getTime()).toBeLessThanOrEqual(
+      afterCreate.getTime(),
+    );
     expect(competition.updatedTime).toEqual(competition.createdTime);
   });
 });

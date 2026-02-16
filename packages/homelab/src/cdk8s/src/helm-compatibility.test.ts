@@ -198,9 +198,8 @@ describe("Helm Compatibility Tests", () => {
       const lines = yamlContent.split("\n");
       const fileName = "manifests.k8s.yaml";
 
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        if (!line) continue;
+      for (const [i, line] of lines.entries()) {
+        if (!line) {continue;}
 
         // Skip comments
         if (line.trim().startsWith("#")) {
@@ -216,8 +215,7 @@ describe("Helm Compatibility Tests", () => {
         const hasTemplateStart = line.includes("{{");
         const hasTemplateEnd = line.includes("}}");
 
-        if (hasTemplateStart && hasTemplateEnd) {
-          // If we have {{ }} but it's not the escaped form, it's a violation
+        if (hasTemplateStart && hasTemplateEnd && // If we have {{ }} but it's not the escaped form, it's a violation
           // We need to check for unescaped patterns like:
           // - {{ .Values.something }}
           // - {{ template "name" }}
@@ -227,10 +225,10 @@ describe("Helm Compatibility Tests", () => {
 
           // Simple heuristic: if line contains {{ but NOT {{ " then it might be unescaped
           // This catches {{ .Values and {{ template but allows {{ "{{" }}
-          if (
+          (
             /\{\{(?!\s*"[{"}]")/.test(line) || // Matches {{ not followed by "{{" or "}}"
             /[^"]\}\}/.test(line.replaceAll('}}" }}', "")) // Matches }} not part of }}" }}
-          ) {
+          )) {
             // Additional check: the escaped pattern should have the quotes
             // If we see {{ something }} where something is not a string literal with {{ or }}
             // then it's likely unescaped
@@ -256,7 +254,6 @@ describe("Helm Compatibility Tests", () => {
               }
             }
           }
-        }
       }
 
       expect(violations).toEqual([]);

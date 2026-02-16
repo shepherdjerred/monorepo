@@ -10,11 +10,11 @@ import { Karma } from "./db/karma.ts";
  *   GUILD_ID=your_server_id bun run src/migrate-legacy-karma.ts
  */
 
-const GUILD_ID = process.env["GUILD_ID"];
+const GUILD_ID = Bun.env["GUILD_ID"];
 
 async function migrateLegacyKarma() {
-  if (!GUILD_ID) {
-    console.error("❌ Error: GUILD_ID environment variable is required");
+  if (GUILD_ID === undefined || GUILD_ID === "") {
+    console.error("Error: GUILD_ID environment variable is required");
     console.error("Usage: GUILD_ID=your_server_id bun run src/migrate-legacy-karma.ts");
     console.error("\nTo find your server ID:");
     console.error("1. Enable Developer Mode in Discord (User Settings > Advanced > Developer Mode)");
@@ -22,7 +22,7 @@ async function migrateLegacyKarma() {
     process.exit(1);
   }
 
-  console.log(`🔍 Checking for legacy karma records (where guildId is NULL)...`);
+  console.warn(`Checking for legacy karma records (where guildId is NULL)...`);
 
   // Count records that need migration
   const countResult = await dataSource
@@ -32,16 +32,16 @@ async function migrateLegacyKarma() {
     .getCount();
 
   if (countResult === 0) {
-    console.log("✅ No legacy karma records found. Migration not needed.");
+    console.warn("No legacy karma records found. Migration not needed.");
     process.exit(0);
   }
 
-  console.log(`📊 Found ${countResult.toString()} legacy karma record(s) to migrate`);
-  console.log(`🎯 Will assign them to guild: ${GUILD_ID}`);
-  console.log("");
+  console.warn(`Found ${countResult.toString()} legacy karma record(s) to migrate`);
+  console.warn(`Will assign them to guild: ${GUILD_ID}`);
+  console.warn("");
 
   // Prompt for confirmation
-  const readline = await import("readline");
+  const readline = await import("node:readline");
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -53,12 +53,12 @@ async function migrateLegacyKarma() {
   rl.close();
 
   if (answer.toLowerCase() !== "yes" && answer.toLowerCase() !== "y") {
-    console.log("❌ Migration cancelled");
+    console.warn("Migration cancelled");
     process.exit(0);
   }
 
   // Perform the migration
-  console.log("🚀 Starting migration...");
+  console.warn("Starting migration...");
 
   const result = await dataSource
     .getRepository(Karma)
@@ -68,14 +68,15 @@ async function migrateLegacyKarma() {
     .where("guildId IS NULL")
     .execute();
 
-  console.log(`✅ Migration complete! Updated ${String(result.affected)} record(s)`);
-  console.log("🎉 All legacy karma has been assigned to the specified server");
+  console.warn(`Migration complete! Updated ${String(result.affected)} record(s)`);
+  console.warn("All legacy karma has been assigned to the specified server");
 
   process.exit(0);
 }
 
-// Run the migration
-migrateLegacyKarma().catch((error: unknown) => {
-  console.error("❌ Migration failed:", error);
+try {
+  await migrateLegacyKarma();
+} catch (error: unknown) {
+  console.error("Migration failed:", error);
   process.exit(1);
-});
+}

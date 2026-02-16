@@ -54,7 +54,9 @@ const ChampionListSchema = z.object({
  * Used for autocomplete and validation
  * @returns Array of champions with id and name
  */
-export async function getChampionList(): Promise<{ id: string; name: string }[]> {
+export async function getChampionList(): Promise<
+  { id: string; name: string }[]
+> {
   // Return cached list if available
   if (championListCache !== null) {
     return championListCache;

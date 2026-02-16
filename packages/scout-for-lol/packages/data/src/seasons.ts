@@ -75,7 +75,9 @@ export function getSeasonById(seasonId: string): SeasonData | undefined {
  * @returns Array of all season data
  */
 export function getAllSeasons(): SeasonData[] {
-  return Object.values(SEASONS).sort((a, b) => b.startDate.getTime() - a.startDate.getTime());
+  return Object.values(SEASONS).sort(
+    (a, b) => b.startDate.getTime() - a.startDate.getTime(),
+  );
 }
 
 /**
@@ -84,7 +86,9 @@ export function getAllSeasons(): SeasonData[] {
  */
 export function getCurrentSeason(): SeasonData | undefined {
   const now = new Date();
-  return getAllSeasons().find((season) => isWithinInterval(now, { start: season.startDate, end: season.endDate }));
+  return getAllSeasons().find((season) =>
+    isWithinInterval(now, { start: season.startDate, end: season.endDate }),
+  );
 }
 
 /**
@@ -107,7 +111,9 @@ export function getSeasonChoices(): { name: string; value: SeasonId }[] {
  * @param seasonId The season ID
  * @returns Object with startDate and endDate or undefined if not found
  */
-export function getSeasonDates(seasonId: string): { startDate: Date; endDate: Date } | undefined {
+export function getSeasonDates(
+  seasonId: string,
+): { startDate: Date; endDate: Date } | undefined {
   const season = getSeasonById(seasonId);
   if (!season) {
     return undefined;
@@ -124,7 +130,10 @@ export function getSeasonDates(seasonId: string): { startDate: Date; endDate: Da
  * @param now Optional date to check against (defaults to current date)
  * @returns true if season has ended, false if not, undefined if season not found
  */
-export function hasSeasonEnded(seasonId: string, now: Date = new Date()): boolean | undefined {
+export function hasSeasonEnded(
+  seasonId: string,
+  now: Date = new Date(),
+): boolean | undefined {
   const season = getSeasonById(seasonId);
   if (!season) {
     return undefined;

@@ -87,7 +87,7 @@ describe("Integration Tests - Full Workflow", () => {
       },
       "test",
     );
-    expect(testCodeWithStarSlash).toContain("*\\/");
+    expect(testCodeWithStarSlash).toContain(String.raw`*\/`);
 
     // Verify the generated code is valid TypeScript by checking structure
     expect(code).toContain("scopes?: string;");

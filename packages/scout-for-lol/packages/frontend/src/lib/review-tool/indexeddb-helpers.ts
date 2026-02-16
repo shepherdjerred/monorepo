@@ -5,7 +5,11 @@ type UpgradeHandler = (db: IDBDatabase) => void;
 /**
  * Open an IndexedDB database with optional upgrade handler
  */
-export function openIndexedDB(dbName: string, version: number, upgradeHandler?: UpgradeHandler): Promise<IDBDatabase> {
+export function openIndexedDB(
+  dbName: string,
+  version: number,
+  upgradeHandler?: UpgradeHandler,
+): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(dbName, version);
 
@@ -35,7 +39,9 @@ export function openIndexedDB(dbName: string, version: number, upgradeHandler?: 
  * Execute an IndexedDB request and return the result
  * Resolves with the result or undefined if no result is available
  */
-export function executeRequest<T = IDBValidKey>(request: IDBRequest<T>): Promise<T | undefined> {
+export function executeRequest<T = IDBValidKey>(
+  request: IDBRequest<T>,
+): Promise<T | undefined> {
   return new Promise((resolve, reject) => {
     request.onerror = () => {
       const error = request.error;
@@ -51,6 +57,9 @@ export function executeRequest<T = IDBValidKey>(request: IDBRequest<T>): Promise
 /**
  * Get an object store from a transaction
  */
-export function getStore(transaction: IDBTransaction, storeName: string): IDBObjectStore {
+export function getStore(
+  transaction: IDBTransaction,
+  storeName: string,
+): IDBObjectStore {
   return transaction.objectStore(storeName);
 }

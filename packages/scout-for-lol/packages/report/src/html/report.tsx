@@ -60,7 +60,9 @@ export function Report({ match }: { match: CompletedMatch }) {
               alignSelf: "flex-start",
             }}
           >
-            <span style={{ color: palette.gold[4] }}>{mainPlayer?.outcome}</span>
+            <span style={{ color: palette.gold[4] }}>
+              {mainPlayer?.outcome}
+            </span>
             <div
               style={{
                 fontSize: "6rem",
@@ -83,7 +85,12 @@ export function Report({ match }: { match: CompletedMatch }) {
                 {/* Check both before and after a match; this handles placements */}
                 {mainPlayer?.rankBeforeMatch &&
                   mainPlayer.rankAfterMatch &&
-                  lpDiffToString(leaguePointsDelta(mainPlayer.rankBeforeMatch, mainPlayer.rankAfterMatch))}
+                  lpDiffToString(
+                    leaguePointsDelta(
+                      mainPlayer.rankBeforeMatch,
+                      mainPlayer.rankAfterMatch,
+                    ),
+                  )}
               </span>
               {wins !== undefined && losses !== undefined && (
                 <div
@@ -117,7 +124,10 @@ export function Report({ match }: { match: CompletedMatch }) {
               {match.queueType === "clash" ? "CLASH" : "ARAM CLASH"}
             </div>
           ) : hasSingleTrackedPlayer && mainPlayer?.rankAfterMatch ? (
-            <RankedBadge oldRank={mainPlayer.rankBeforeMatch} newRank={mainPlayer.rankAfterMatch} />
+            <RankedBadge
+              oldRank={mainPlayer.rankBeforeMatch}
+              newRank={mainPlayer.rankAfterMatch}
+            />
           ) : (
             // Multiple tracked players - show all badges with scaled style
             match.players.some((p) => p.rankAfterMatch) && (
@@ -152,7 +162,11 @@ export function Report({ match }: { match: CompletedMatch }) {
                         {player.champion.riotIdGameName}
                       </span>
                       {player.rankAfterMatch && (
-                        <RankedBadge oldRank={player.rankBeforeMatch} newRank={player.rankAfterMatch} scale={0.78} />
+                        <RankedBadge
+                          oldRank={player.rankBeforeMatch}
+                          newRank={player.rankAfterMatch}
+                          scale={0.78}
+                        />
                       )}
                     </div>
                   ))}
@@ -168,8 +182,18 @@ export function Report({ match }: { match: CompletedMatch }) {
             flexDirection: "column",
           }}
         >
-          {renderTeam(match.teams.blue, "blue", highlightNames, match.durationInSeconds / 60)}
-          {renderTeam(match.teams.red, "red", highlightNames, match.durationInSeconds / 60)}
+          {renderTeam(
+            match.teams.blue,
+            "blue",
+            highlightNames,
+            match.durationInSeconds / 60,
+          )}
+          {renderTeam(
+            match.teams.red,
+            "red",
+            highlightNames,
+            match.durationInSeconds / 60,
+          )}
         </div>
       </div>
     </div>

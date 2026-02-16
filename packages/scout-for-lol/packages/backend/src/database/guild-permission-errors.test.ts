@@ -6,8 +6,14 @@ import {
   markGuildAsNotified,
   cleanupOldErrorRecords,
 } from "@scout-for-lol/backend/database/guild-permission-errors.ts";
-import { DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { testGuildId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
+import {
+  testGuildId,
+  testChannelId,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
 import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a test database
@@ -109,7 +115,11 @@ describe("recordSuccessfulSend", () => {
     });
 
     // Record successful send
-    await recordSuccessfulSend(prisma, testGuildId("12300000000"), testChannelId("456000000"));
+    await recordSuccessfulSend(
+      prisma,
+      testGuildId("12300000000"),
+      testChannelId("456000000"),
+    );
 
     const record = await prisma.guildPermissionError.findUnique({
       where: {
@@ -125,7 +135,11 @@ describe("recordSuccessfulSend", () => {
   });
 
   test("creates record with successful send if none exists", async () => {
-    await recordSuccessfulSend(prisma, testGuildId("12300000000"), testChannelId("456000000"));
+    await recordSuccessfulSend(
+      prisma,
+      testGuildId("12300000000"),
+      testChannelId("456000000"),
+    );
 
     const record = await prisma.guildPermissionError.findUnique({
       where: {
@@ -510,7 +524,11 @@ describe("Permission Error Workflow", () => {
     expect(record?.consecutiveErrorCount).toBe(3);
 
     // 3. Successful send resets count
-    await recordSuccessfulSend(prisma, DiscordGuildIdSchema.parse(serverId), DiscordChannelIdSchema.parse(channelId));
+    await recordSuccessfulSend(
+      prisma,
+      DiscordGuildIdSchema.parse(serverId),
+      DiscordChannelIdSchema.parse(channelId),
+    );
     record = await prisma.guildPermissionError.findUnique({
       where: { serverId_channelId: { serverId, channelId } },
     });

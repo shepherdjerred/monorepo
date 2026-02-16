@@ -145,7 +145,12 @@
           "description": "Shoots target, plundering Gold for each enemy unit killed.",
           "tooltip": "{{Spell_GangplankQWrapper_Tooltip_{{ gamemodeinteger }}}}{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Plunder Gold", "Plunder Silver Serpents", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Plunder Gold",
+              "Plunder Silver Serpents",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ spelldamage }} -> {{ spelldamageNL }}",
               "{{ e2 }} -> {{ e2NL }}",
@@ -172,7 +177,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "10/40/70/100/130", "3/4/5/6/7", "0", "500", "4/5/6/7/8", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "10/40/70/100/130",
+            "3/4/5/6/7",
+            "0",
+            "500",
+            "4/5/6/7/8",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -196,7 +213,11 @@
           "tooltip": "Gangplank consumes a large amount of citrus fruit, removing all <status>Disabling</status> effects and restoring <healing>{{ basehealth }} plus {{ e2 }}% missing Health</healing>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Healing", "Cooldown", "@AbilityResourceName@ Cost"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}", "{{ cost }} -> {{ costNL }}"]
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [22, 20, 18, 16, 14],
@@ -217,7 +238,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "45/70/95/120/145", "13", "0.25", "200", "30/40/50/60/70", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "45/70/95/120/145",
+            "13",
+            "0.25",
+            "200",
+            "30/40/50/60/70",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -240,7 +273,12 @@
           "description": "Gangplank uncovers a powder keg at target location. If he attacks it, it explodes, spreading the attack's damage to enemies in the area, slowing them.",
           "tooltip": "Gangplank places a powder keg that can be attacked by Gangplank and enemy champions for {{ e5 }} seconds. When an enemy destroys it, the keg is defused. When Gangplank destroys it, it explodes, <status>Slowing</status> by {{ finalslowamount }}% for {{ e2 }} seconds and dealing the <physicalDamage>Attack's damage</physicalDamage>, ignoring {{ e0 }}% Armor. Champions take an additional <physicalDamage>{{ e3 }} physical damage</physicalDamage>.<br /><br />Keg health decays every {{ barreldecaytime }} seconds. Keg explosions detonate other kegs with overlapping blast zones, but don't deal damage to the same target more than once. Keg explosions triggered by <spellName>Parrrley</spellName> will grant the bonus gold for targets killed.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Bonus Damage Against Champions", "Max Charges", "Slow", "Recharge Time"],
+            "label": [
+              "Bonus Damage Against Champions",
+              "Max Charges",
+              "Slow",
+              "Recharge Time"
+            ],
             "effect": [
               "{{ e3 }} -> {{ e3NL }}",
               "{{ e1 }} -> {{ e1NL }}",
@@ -303,7 +341,10 @@
           "tooltip": "Gangplank signals his ship to fire {{ totalwavestooltip }} waves of cannonballs anywhere on the map over {{ zoneduration }} seconds. Each wave <status>Slows</status> by {{ slowpercent }}% for {{ slowduration }} seconds and deals <magicDamage>{{ onewavedamage }} magic damage</magicDamage>. Maximum damage: {{ totaldamagetooltip }}<br /><br />This Ability can be upgraded in the shop via <spellName>Parrrley</spellName>.<br /><br /><spellName>Fire at Will</spellName>: Fires 6 additional waves of cannonballs.<br /><spellName>Death's Daughter</spellName>: Fires a Mega-Cannonball that deals <trueDamage>{{ deathsdaughterdamage }} true damage</trueDamage> and <status>Slows</status> by {{ deathsdaughterslow }}% for {{ deathsdaughterslowduration }} second.<br /><spellName>Raise Morale</spellName>: Allies inside Cannon Barrage gain <speed>{{ raisemoralehaste }}% Move Speed</speed> for {{ raisemoralehasteduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage Per Wave", "Cooldown"],
-            "effect": ["{{ damageperwave }} -> {{ damageperwaveNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ damageperwave }} -> {{ damageperwaveNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [160, 140, 120],
@@ -324,7 +365,19 @@
             [1, 1, 1],
             [40, 40, 40]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "1.5/0.5/0.5", "0", "300", "75", "1", "40"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "1.5/0.5/0.5",
+            "0",
+            "300",
+            "75",
+            "1",
+            "40"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

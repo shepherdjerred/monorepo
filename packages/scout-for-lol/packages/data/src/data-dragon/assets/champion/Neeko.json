@@ -160,7 +160,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -183,7 +195,12 @@
           "description": "Neeko passively deals bonus magic damage every third attack, briefly increasing her move speed. Neeko can activate to send a clone in a direction and recast to change the direction of the clone.",
           "tooltip": "<passive>Passive:</passive> Every 3rd Attack deals an additional <magicDamage>{{ passivebonusdamagecalc }} bonus magic damage</magicDamage> and increases Neeko's <speed>Move Speed by {{ passivehaste }}%</speed> for {{ passivehasteduration }} second.<br /><br /><active>Active:</active> Neeko becomes <keywordStealth>invisible</keywordStealth> for {{ stealthduration }} seconds and projects a clone that lasts {{ cloneduration }} seconds. Neeko and the clone gain <speed>{{ haste }}% Move Speed</speed> for {{ hasteduration }} seconds. <br /><br /><rules>The clone can be controlled using the Move Pet Click hotkey or by <recast>Recasting</recast> this Ability.<br />The clone mirrors her spellcasts, emotes, and recall.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Passive Damage", "Active Move Speed", "Passive Move Speed", "Cooldown"],
+            "label": [
+              "Passive Damage",
+              "Active Move Speed",
+              "Passive Move Speed",
+              "Cooldown"
+            ],
             "effect": [
               "{{ passivedamage }} -> {{ passivedamageNL }}",
               "{{ haste }}% -> {{ hasteNL }}%",
@@ -210,7 +227,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -267,7 +296,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -291,7 +332,10 @@
           "tooltip": "After a delay Neeko leaps into the air, <status>Knocking Up</status> all nearby enemies for {{ delayuntilexplosion }} seconds. She then crashes down, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to all nearby enemies and <status>Stunning</status> them for {{ stunduration }} seconds.<br /><br /><rules>This Ability can be prepared in secret if Neeko is disguised. {{ delaybeforepassiveremoval }} seconds after casting this ability Neeko breaks her disguise.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ damage }} -> {{ damageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [120, 105, 90],
@@ -312,7 +356,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

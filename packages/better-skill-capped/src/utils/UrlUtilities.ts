@@ -1,6 +1,6 @@
-import { Course } from "../model/Course";
-import { Video } from "../model/Video";
-import { Commentary } from "../model/Commentary";
+import type { Course } from "@shepherdjerred/better-skill-capped/model/Course";
+import type { Video } from "@shepherdjerred/better-skill-capped/model/Video";
+import type { Commentary } from "@shepherdjerred/better-skill-capped/model/Commentary";
 
 const BASE_URL = "https://www.skill-capped.com/lol/";
 const BROWSE_URL = BASE_URL + "browse";
@@ -8,9 +8,9 @@ const BROWSE_URL = BASE_URL + "browse";
 export function rawTitleToUrlTitle(rawTitle: string): string {
   return rawTitle
     .toLowerCase()
-    .replace(/ /g, "-")
-    .replace(/\$/g, "")
-    .replace(/[!:.'%,[\]]/g, "");
+    .replaceAll(' ', "-")
+    .replaceAll('$', "")
+    .replaceAll(/[!:.'%,[\]]/g, "");
 }
 
 export function getVideoUrl(video: Video): string {

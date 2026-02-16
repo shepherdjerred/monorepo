@@ -6,7 +6,11 @@
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { router, publicProcedure, protectedProcedure } from "@scout-for-lol/backend/trpc/trpc.ts";
+import {
+  router,
+  publicProcedure,
+  protectedProcedure,
+} from "@scout-for-lol/backend/trpc/trpc.ts";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { generateApiToken } from "@scout-for-lol/backend/trpc/context.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
@@ -110,7 +114,9 @@ export const authRouter = router({
       const tokensJson: unknown = await tokenResponse.json();
       const tokensResult = DiscordTokenResponseSchema.safeParse(tokensJson);
       if (!tokensResult.success) {
-        logger.error("Invalid Discord token response", { error: tokensResult.error });
+        logger.error("Invalid Discord token response", {
+          error: tokensResult.error,
+        });
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Invalid token response from Discord",
@@ -136,7 +142,9 @@ export const authRouter = router({
       const userJson: unknown = await userResponse.json();
       const userResult = DiscordUserSchema.safeParse(userJson);
       if (!userResult.success) {
-        logger.error("Invalid Discord user response", { error: userResult.error });
+        logger.error("Invalid Discord user response", {
+          error: userResult.error,
+        });
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Invalid user response from Discord",
@@ -166,7 +174,9 @@ export const authRouter = router({
         },
       });
 
-      logger.info(`User logged in: ${user.discordUsername} (${user.discordId})`);
+      logger.info(
+        `User logged in: ${user.discordUsername} (${user.discordId})`,
+      );
 
       // Generate a session token for the user
       const { token, hash } = generateApiToken();
@@ -203,7 +213,9 @@ export const authRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { token, hash } = generateApiToken();
 
-      const expiresAt = input.expiresInDays ? new Date(Date.now() + input.expiresInDays * 24 * 60 * 60 * 1000) : null;
+      const expiresAt = input.expiresInDays
+        ? new Date(Date.now() + input.expiresInDays * 24 * 60 * 60 * 1000)
+        : null;
 
       const apiToken = await prisma.apiToken.create({
         data: {
@@ -215,7 +227,9 @@ export const authRouter = router({
         },
       });
 
-      logger.info(`API token created for user ${ctx.user.discordUsername}: ${input.name}`);
+      logger.info(
+        `API token created for user ${ctx.user.discordUsername}: ${input.name}`,
+      );
 
       // Return the unhashed token - this is the only time it will be shown!
       return {
@@ -255,32 +269,36 @@ export const authRouter = router({
   /**
    * Revoke an API token
    */
-  revokeApiToken: protectedProcedure.input(z.object({ tokenId: z.number() })).mutation(async ({ input, ctx }) => {
-    // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after Zod validation
-    const tokenId = input.tokenId as ApiTokenId;
-    const token = await prisma.apiToken.findFirst({
-      where: {
-        id: tokenId,
-        userId: ctx.user.discordId,
-      },
-    });
-
-    if (!token) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Token not found",
+  revokeApiToken: protectedProcedure
+    .input(z.object({ tokenId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after Zod validation
+      const tokenId = input.tokenId as ApiTokenId;
+      const token = await prisma.apiToken.findFirst({
+        where: {
+          id: tokenId,
+          userId: ctx.user.discordId,
+        },
       });
-    }
 
-    await prisma.apiToken.update({
-      where: { id: tokenId },
-      data: { revokedAt: new Date() },
-    });
+      if (!token) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Token not found",
+        });
+      }
 
-    logger.info(`API token revoked: ${token.name} for user ${ctx.user.discordUsername}`);
+      await prisma.apiToken.update({
+        where: { id: tokenId },
+        data: { revokedAt: new Date() },
+      });
 
-    return { success: true };
-  }),
+      logger.info(
+        `API token revoked: ${token.name} for user ${ctx.user.discordUsername}`,
+      );
+
+      return { success: true };
+    }),
 
   /**
    * Get current user info

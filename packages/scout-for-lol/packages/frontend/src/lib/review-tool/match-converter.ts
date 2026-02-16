@@ -44,7 +44,10 @@ export function convertRawMatchToInternalFormat(
   let reorderedParticipants = [...rawMatch.info.participants];
   if (selectedPlayerName) {
     const selectedIndex = reorderedParticipants.findIndex((p) => {
-      const riotId = p.riotIdGameName && p.riotIdTagline ? `${p.riotIdGameName}#${p.riotIdTagline}` : "Unknown";
+      const riotId =
+        p.riotIdGameName && p.riotIdTagline
+          ? `${p.riotIdGameName}#${p.riotIdTagline}`
+          : "Unknown";
       return riotId === selectedPlayerName;
     });
 
@@ -52,15 +55,22 @@ export function convertRawMatchToInternalFormat(
       // Move selected player to first position
       const selectedPlayer = reorderedParticipants[selectedIndex];
       if (selectedPlayer) {
-        reorderedParticipants = [selectedPlayer, ...reorderedParticipants.filter((_, i) => i !== selectedIndex)];
+        reorderedParticipants = [
+          selectedPlayer,
+          ...reorderedParticipants.filter((_, i) => i !== selectedIndex),
+        ];
       }
     }
   }
 
   // Build team rosters first (needed for lane opponent calculation)
   const teams = {
-    blue: rawMatch.info.participants.filter((p) => p.teamId === 100).map(participantToChampion),
-    red: rawMatch.info.participants.filter((p) => p.teamId === 200).map(participantToChampion),
+    blue: rawMatch.info.participants
+      .filter((p) => p.teamId === 100)
+      .map(participantToChampion),
+    red: rawMatch.info.participants
+      .filter((p) => p.teamId === 200)
+      .map(participantToChampion),
   };
 
   // Update players with real data from the match - split by queue type for proper typing
@@ -116,7 +126,9 @@ export function convertRawMatchToInternalFormat(
       const team = parseTeam(participant.teamId);
       // Team should always be defined for valid matches (teamId is 100 or 200)
       if (!team) {
-        console.warn(`Invalid teamId ${participant.teamId.toString()} for participant`);
+        console.warn(
+          `Invalid teamId ${participant.teamId.toString()} for participant`,
+        );
         return player; // Keep original player if team is invalid
       }
       const enemyTeam = invertTeam(team);
@@ -166,7 +178,10 @@ export type MatchMetadata = {
 /**
  * Extract metadata for all participants from a raw Riot API match
  */
-export function extractMatchMetadataFromRawMatch(rawMatch: RawMatch, key: string): MatchMetadata[] {
+export function extractMatchMetadataFromRawMatch(
+  rawMatch: RawMatch,
+  key: string,
+): MatchMetadata[] {
   const queueType = parseQueueType(rawMatch.info.queueId);
   const timestamp = new Date(rawMatch.info.gameEndTimestamp);
 

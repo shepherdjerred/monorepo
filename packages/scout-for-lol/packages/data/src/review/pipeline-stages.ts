@@ -5,15 +5,30 @@
  * All JSON data is minified before being sent to reduce token usage.
  */
 
-import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index";
+import type {
+  ArenaMatch,
+  CompletedMatch,
+} from "@scout-for-lol/data/model/index";
 import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema";
-import type { OpenAIClient, ModelConfig, StageTrace, ImageGenerationTrace } from "./pipeline-types.ts";
+import type {
+  OpenAIClient,
+  ModelConfig,
+  StageTrace,
+  ImageGenerationTrace,
+} from "./pipeline-types.ts";
 import type { Personality } from "./prompts.ts";
-import { replaceTemplateVariables, selectRandomImagePrompts } from "./prompts.ts";
+import {
+  replaceTemplateVariables,
+  selectRandomImagePrompts,
+} from "./prompts.ts";
 import { buildPromptVariables, extractMatchData } from "./generator-helpers.ts";
 import type { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
-import { minifyJson, replacePromptVariables, callOpenAI } from "./pipeline-utils.ts";
+import {
+  minifyJson,
+  replacePromptVariables,
+  callOpenAI,
+} from "./pipeline-utils.ts";
 
 // ============================================================================
 // Stage 1a: Timeline Summary
@@ -41,7 +56,15 @@ export async function generateMatchSummary(params: {
   systemPrompt: string;
   userPrompt: string;
 }): Promise<{ text: string; trace: StageTrace }> {
-  const { match, rawMatch, playerIndex, client, model, systemPrompt, userPrompt: userPromptTemplate } = params;
+  const {
+    match,
+    rawMatch,
+    playerIndex,
+    client,
+    model,
+    systemPrompt,
+    userPrompt: userPromptTemplate,
+  } = params;
 
   const player = match.players[playerIndex] ?? match.players[0];
   if (!player) {
@@ -111,7 +134,12 @@ export async function generateReviewTextStage(params: {
   model: ModelConfig;
   systemPrompt: string;
   userPrompt: string;
-}): Promise<{ text: string; reviewerName: string; playerName: string; trace: StageTrace }> {
+}): Promise<{
+  text: string;
+  reviewerName: string;
+  playerName: string;
+  trace: StageTrace;
+}> {
   const {
     match,
     personality,
@@ -138,7 +166,10 @@ export async function generateReviewTextStage(params: {
     ...(timelineSummary !== undefined && { timelineSummary }),
   });
 
-  const userPrompt = replaceTemplateVariables(userPromptTemplate, promptVariables);
+  const userPrompt = replaceTemplateVariables(
+    userPromptTemplate,
+    promptVariables,
+  );
   const systemPrompt = replacePromptVariables(systemPromptTemplate, {
     PERSONALITY_INSTRUCTIONS: personality.instructions,
     STYLE_CARD: minifyJsonString(personality.styleCard),
@@ -194,8 +225,20 @@ export async function generateImageDescription(params: {
   systemPrompt: string;
   userPrompt: string;
   imagePrompts?: string[] | undefined;
-}): Promise<{ text: string; trace: StageTrace; selectedImagePrompts: string[] }> {
-  const { reviewText, artStyle, client, model, systemPrompt, userPrompt: userPromptTemplate, imagePrompts } = params;
+}): Promise<{
+  text: string;
+  trace: StageTrace;
+  selectedImagePrompts: string[];
+}> {
+  const {
+    reviewText,
+    artStyle,
+    client,
+    model,
+    systemPrompt,
+    userPrompt: userPromptTemplate,
+    imagePrompts,
+  } = params;
 
   // Select 2-3 random image prompts from personality
   const selectedImagePrompts = selectRandomImagePrompts(imagePrompts);
@@ -255,7 +298,13 @@ export async function generateImage(params: {
   timeoutMs: number;
   userPrompt: string;
 }): Promise<{ imageBase64: string; trace: ImageGenerationTrace }> {
-  const { imageDescription, geminiClient, model, timeoutMs, userPrompt: userPromptTemplate } = params;
+  const {
+    imageDescription,
+    geminiClient,
+    model,
+    timeoutMs,
+    userPrompt: userPromptTemplate,
+  } = params;
 
   const geminiModel = geminiClient.getGenerativeModel({ model });
   // Replace variables in prompt template
@@ -269,11 +318,16 @@ export async function generateImage(params: {
   // Add timeout protection
   const timeoutPromise = new Promise<never>((_, reject) => {
     setTimeout(() => {
-      reject(new Error(`Gemini API call timed out after ${timeoutMs.toString()}ms`));
+      reject(
+        new Error(`Gemini API call timed out after ${timeoutMs.toString()}ms`),
+      );
     }, timeoutMs);
   });
 
-  const resultRaw = await Promise.race([geminiModel.generateContent(prompt), timeoutPromise]);
+  const resultRaw = await Promise.race([
+    geminiModel.generateContent(prompt),
+    timeoutPromise,
+  ]);
   const durationMs = Date.now() - startTime;
 
   const result = GeminiResponseSchema.parse(resultRaw);

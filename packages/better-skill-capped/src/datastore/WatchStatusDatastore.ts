@@ -1,7 +1,7 @@
-import { WatchStatus } from "../model/WatchStatus";
+import type { WatchStatus } from "@shepherdjerred/better-skill-capped/model/WatchStatus";
 
-export interface WatchStatusDatastore {
-  add(watchStatus: WatchStatus): void;
-  get(): WatchStatus[];
-  remove(watchStatus: WatchStatus): void;
+export type WatchStatusDatastore = {
+  add: (watchStatus: WatchStatus) => void;
+  get: () => WatchStatus[];
+  remove: (watchStatus: WatchStatus) => void;
 }

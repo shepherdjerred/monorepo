@@ -19,7 +19,11 @@ type ConfigImportModalProps = {
   onImportSuccess: (tabConfig?: TabConfig) => void;
 };
 
-export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigImportModalProps) {
+export function ConfigImportModal({
+  isOpen,
+  onClose,
+  onImportSuccess,
+}: ConfigImportModalProps) {
   const [jsonInput, setJsonInput] = useState("");
   const [parsedBundle, setParsedBundle] = useState<ConfigBundle | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
@@ -39,7 +43,9 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
       setParseError(null);
     } catch (error) {
       const errorResult = ErrorSchema.safeParse(error);
-      setParseError(errorResult.success ? errorResult.data.message : String(error));
+      setParseError(
+        errorResult.success ? errorResult.data.message : String(error),
+      );
       setParsedBundle(null);
     }
   };
@@ -63,7 +69,9 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
         handleClose();
       } catch (error) {
         const errorResult = ErrorSchema.safeParse(error);
-        alert(`Failed to import config: ${errorResult.success ? errorResult.data.message : String(error)}`);
+        alert(
+          `Failed to import config: ${errorResult.success ? errorResult.data.message : String(error)}`,
+        );
       }
     })();
   };
@@ -90,7 +98,9 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
         setParseError(null);
       } catch (error) {
         const errorResult = ErrorSchema.safeParse(error);
-        setParseError(errorResult.success ? errorResult.data.message : String(error));
+        setParseError(
+          errorResult.success ? errorResult.data.message : String(error),
+        );
         setParsedBundle(null);
       }
     };
@@ -136,16 +146,30 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
           {/* Header */}
           <div className="sticky top-0 bg-white border-b border-surface-200 px-6 py-4 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-surface-900">Import Configuration</h2>
-              <p className="text-sm text-surface-500 mt-1">Import shared config from JSON</p>
+              <h2 className="text-xl font-bold text-surface-900">
+                Import Configuration
+              </h2>
+              <p className="text-sm text-surface-500 mt-1">
+                Import shared config from JSON
+              </p>
             </div>
             <button
               onClick={handleClose}
               className="text-surface-400 hover:text-surface-600 transition-colors"
               title="Close"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -154,7 +178,10 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
           <div className="p-6 space-y-4">
             {/* File Upload */}
             <div>
-              <label htmlFor="upload-config-file" className="block text-sm font-medium text-surface-700 mb-2">
+              <label
+                htmlFor="upload-config-file"
+                className="block text-sm font-medium text-surface-700 mb-2"
+              >
                 Upload Config File
               </label>
               <input
@@ -174,7 +201,10 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
 
             {/* Or Paste JSON */}
             <div>
-              <label htmlFor="or-paste-json" className="block text-sm font-medium text-surface-700 mb-2">
+              <label
+                htmlFor="or-paste-json"
+                className="block text-sm font-medium text-surface-700 mb-2"
+              >
                 Or Paste JSON
               </label>
               <textarea
@@ -198,18 +228,29 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
             {/* Parse Error */}
             {parseError && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-sm text-red-800 font-medium">Failed to parse JSON:</p>
-                <p className="text-sm text-red-700 mt-1 font-mono">{parseError}</p>
+                <p className="text-sm text-red-800 font-medium">
+                  Failed to parse JSON:
+                </p>
+                <p className="text-sm text-red-700 mt-1 font-mono">
+                  {parseError}
+                </p>
               </div>
             )}
 
             {/* Summary */}
             {summary && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm font-semibold text-blue-900 mb-2">Config Bundle Summary:</p>
+                <p className="text-sm font-semibold text-blue-900 mb-2">
+                  Config Bundle Summary:
+                </p>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• Exported: {new Date(summary.exportedAt).toLocaleString()}</li>
-                  <li>• Settings: {summary.hasTabConfig ? "✓ Included" : "✗ Not included"}</li>
+                  <li>
+                    • Exported: {new Date(summary.exportedAt).toLocaleString()}
+                  </li>
+                  <li>
+                    • Settings:{" "}
+                    {summary.hasTabConfig ? "✓ Included" : "✗ Not included"}
+                  </li>
                   <li>• Custom Personalities: {summary.personalitiesCount}</li>
                   <li>• Custom Art Styles: {summary.artStylesCount}</li>
                 </ul>
@@ -219,7 +260,9 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
             {/* Import Options */}
             {parsedBundle && (
               <div className="space-y-3">
-                <p className="text-sm font-medium text-surface-700">Import Options:</p>
+                <p className="text-sm font-medium text-surface-700">
+                  Import Options:
+                </p>
 
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -230,7 +273,9 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
                     }}
                     className="w-4 h-4 text-brand-600 rounded focus:ring-2 focus:ring-brand-500"
                   />
-                  <span className="text-sm text-surface-700">Import Settings (text/image generation, prompts)</span>
+                  <span className="text-sm text-surface-700">
+                    Import Settings (text/image generation, prompts)
+                  </span>
                 </label>
 
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -243,7 +288,8 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
                     className="w-4 h-4 text-brand-600 rounded focus:ring-2 focus:ring-brand-500"
                   />
                   <span className="text-sm text-surface-700">
-                    Import Custom Personalities ({summary?.personalitiesCount ?? 0})
+                    Import Custom Personalities (
+                    {summary?.personalitiesCount ?? 0})
                   </span>
                 </label>
 
@@ -298,7 +344,12 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
               className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               disabled={!parsedBundle}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"

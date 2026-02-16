@@ -1,4 +1,4 @@
-import { Chart } from "cdk8s";
+import type { Chart } from "cdk8s";
 import {
   KubeClusterRole,
   KubeClusterRoleBinding,
@@ -128,8 +128,8 @@ receivers:
               securityContext: {
                 runAsNonRoot: true,
                 readOnlyRootFilesystem: true,
-                runAsUser: 65534,
-                runAsGroup: 65534,
+                runAsUser: 65_534,
+                runAsGroup: 65_534,
               },
             },
           ],

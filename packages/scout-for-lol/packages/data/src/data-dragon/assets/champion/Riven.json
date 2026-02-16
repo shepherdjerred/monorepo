@@ -236,7 +236,10 @@
           "tooltip": "Riven's sword emits a burst of runic energy, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Stunning</status> for {{ e5 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [11, 10, 9, 8, 7],
@@ -257,7 +260,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "65/95/125/155/185", "40/70/100/130/160", "3", "0.75", "0.75", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "65/95/125/155/185",
+            "40/70/100/130/160",
+            "3",
+            "0.75",
+            "0.75",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -281,7 +296,10 @@
           "tooltip": "Riven quickly dashes and gains <shield>{{ totalshield }} Shield</shield> for 1.5 seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Shield Amount", "Cooldown"],
-            "effect": ["{{ e2 }} -> {{ e2NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ e2 }} -> {{ e2NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [10, 9, 8, 7, 6],
@@ -302,7 +320,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "70/95/120/145/170", "70/95/120/145/170", "4", "800", "1.5", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "70/95/120/145/170",
+            "70/95/120/145/170",
+            "4",
+            "800",
+            "1.5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -325,7 +355,11 @@
           "description": "Riven empowers her keepsake weapon with energy, and gains Attack Damage and Range. During this time, she also gains the ability to use Wind Slash, a powerful ranged attack, once.",
           "tooltip": "Riven's weapon surges with spiritual energy, granting her <physicalDamage>{{ bonusad }} Attack Damage</physicalDamage> and increased range on damaging Abilities and Attacks for {{ duration }} seconds. While active, she can <recast>Recast.</recast><br /><br /><recast>Recast:</recast> Riven fires a wind slash that deals between <physicalDamage>{{ mindamage }}</physicalDamage> and <physicalDamage>{{ maxdamage }} physical damage</physicalDamage>, based on their missing Health.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Minimum Shockwave Damage", "Maximum Shockwave Damage", "Cooldown"],
+            "label": [
+              "Minimum Shockwave Damage",
+              "Maximum Shockwave Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ minbase }} -> {{ minbaseNL }}",
               "{{ maxbase }} -> {{ maxbaseNL }}",
@@ -351,7 +385,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "100/150/200", "300/450/600", "20", "15", "25", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "100/150/200",
+            "300/450/600",
+            "20",
+            "15",
+            "25",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",

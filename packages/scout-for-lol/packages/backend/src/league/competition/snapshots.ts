@@ -10,7 +10,7 @@ import {
 } from "@scout-for-lol/data/index";
 import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.ts";
 import { fetchSnapshotData } from "@scout-for-lol/backend/league/competition/leaderboard.ts";
-import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import type { ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("competition-snapshots");
@@ -33,7 +33,7 @@ const logger = createLogger("competition-snapshots");
  * parameters will update the existing snapshot instead of creating duplicates
  */
 export async function createSnapshot(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   params: {
     competitionId: CompetitionId;
     playerId: PlayerId;
@@ -75,7 +75,9 @@ export async function createSnapshot(
   // Check if snapshots are needed for this criteria type
   // Some criteria (MOST_GAMES_PLAYED, MOST_WINS_*, etc.) don't use snapshots
   if (snapshotDataContainer === null) {
-    logger.info(`[Snapshots] No snapshot needed for ${criteria.type} criteria - skipping`);
+    logger.info(
+      `[Snapshots] No snapshot needed for ${criteria.type} criteria - skipping`,
+    );
     return;
   }
 
@@ -89,7 +91,8 @@ export async function createSnapshot(
   // We'll create their START snapshot later when they first become ranked.
   if (criteria.type === "MOST_RANK_CLIMB" && snapshotType === "START") {
     const queue = criteria.queue;
-    const hasRank = rankData && (queue === "SOLO" ? rankData.solo : rankData.flex);
+    const hasRank =
+      rankData && (queue === "SOLO" ? rankData.solo : rankData.flex);
 
     if (!hasRank) {
       logger.info(
@@ -103,7 +106,10 @@ export async function createSnapshot(
   // If no rank data was fetched, use empty object (player is unranked)
   const snapshotToStore = rankData ?? {};
 
-  logger.info(`[Snapshots] Extracted rank data for player ${playerId.toString()}:`, JSON.stringify(snapshotToStore));
+  logger.info(
+    `[Snapshots] Extracted rank data for player ${playerId.toString()}:`,
+    JSON.stringify(snapshotToStore),
+  );
 
   // Get the appropriate schema for validation
   const schema = getSnapshotSchemaForCriteria(criteria);
@@ -133,7 +139,9 @@ export async function createSnapshot(
     },
   });
 
-  logger.info(`[Snapshots] ✅ Created ${snapshotType} snapshot for player ${playerId.toString()}`);
+  logger.info(
+    `[Snapshots] ✅ Created ${snapshotType} snapshot for player ${playerId.toString()}`,
+  );
 }
 
 // ============================================================================
@@ -151,14 +159,16 @@ export async function createSnapshot(
  * @returns Parsed snapshot data, or null if snapshot doesn't exist
  */
 export async function getSnapshot(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   params: {
     competitionId: CompetitionId;
     playerId: PlayerId;
     snapshotType: SnapshotType;
     criteria: CompetitionCriteria;
   },
-): Promise<RankSnapshotData | GamesPlayedSnapshotData | WinsSnapshotData | null> {
+): Promise<
+  RankSnapshotData | GamesPlayedSnapshotData | WinsSnapshotData | null
+> {
   const { competitionId, playerId, snapshotType, criteria } = params;
   const snapshot = await prisma.competitionSnapshot.findUnique({
     where: {
@@ -200,17 +210,26 @@ export async function getSnapshot(
  * Individual failures are logged but don't stop the entire process.
  */
 export async function createSnapshotsForAllParticipants(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   competitionId: CompetitionId,
   snapshotType: SnapshotType,
   criteria: CompetitionCriteria,
 ): Promise<void> {
-  logger.info(`[Snapshots] Creating ${snapshotType} snapshots for competition ${competitionId.toString()}`);
+  logger.info(
+    `[Snapshots] Creating ${snapshotType} snapshots for competition ${competitionId.toString()}`,
+  );
 
   // Get all JOINED participants
-  const participants = await getParticipants(prisma, competitionId, "JOINED", true);
+  const participants = await getParticipants(
+    prisma,
+    competitionId,
+    "JOINED",
+    true,
+  );
 
-  logger.info(`[Snapshots] Found ${participants.length.toString()} participants`);
+  logger.info(
+    `[Snapshots] Found ${participants.length.toString()} participants`,
+  );
 
   // Create snapshots in parallel
   const results = await Promise.allSettled(
@@ -230,7 +249,9 @@ export async function createSnapshotsForAllParticipants(
 
   logger.info(`[Snapshots] ✅ Created ${successful.toString()} snapshots`);
   if (failed > 0) {
-    logger.warn(`[Snapshots] ⚠️  Failed to create ${failed.toString()} snapshots`);
+    logger.warn(
+      `[Snapshots] ⚠️  Failed to create ${failed.toString()} snapshots`,
+    );
 
     // Log individual failures
     results.forEach((result, index) => {

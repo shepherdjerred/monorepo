@@ -8,7 +8,9 @@ import { getRuneInfo, parseLane } from "@scout-for-lol/data";
  * Get match outcome from participant data
  * Mirrors backend implementation from packages/backend/src/league/model/match.ts
  */
-export function getOutcome(participant: RawParticipant): "Victory" | "Defeat" | "Surrender" {
+export function getOutcome(
+  participant: RawParticipant,
+): "Victory" | "Defeat" | "Surrender" {
   if (participant.win) {
     return "Victory";
   }
@@ -57,7 +59,8 @@ function extractRunes(p: RawParticipant): Rune[] {
  * Convert raw participant to champion (like backend does)
  */
 export function participantToChampion(p: RawParticipant): Champion {
-  const riotIdGameName = p.riotIdGameName && p.riotIdTagline ? p.riotIdGameName : "Unknown";
+  const riotIdGameName =
+    p.riotIdGameName && p.riotIdTagline ? p.riotIdGameName : "Unknown";
 
   return {
     riotIdGameName,
@@ -81,7 +84,8 @@ export function participantToChampion(p: RawParticipant): Champion {
  * Valid match key pattern: games/YYYY/MM/DD/{MATCH_ID}/match.json
  * Match ID examples: NA1_1234567890, EUW1_9876543210_TEST, etc.
  */
-const VALID_MATCH_KEY_REGEX = /^games\/\d{4}\/\d{2}\/\d{2}\/[^/]+\/match\.json$/;
+const VALID_MATCH_KEY_REGEX =
+  /^games\/\d{4}\/\d{2}\/\d{2}\/[^/]+\/match\.json$/;
 
 /**
  * Check if an S3 key represents a valid match file

@@ -1,5 +1,8 @@
 import configuration from "@scout-for-lol/backend/configuration.ts";
-import { getMetrics, getRiotApiHealth } from "@scout-for-lol/backend/metrics/index.ts";
+import {
+  getMetrics,
+  getRiotApiHealth,
+} from "@scout-for-lol/backend/metrics/index.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
@@ -56,9 +59,12 @@ const server = Bun.serve({
       // Unhealthy if: API attempts exist in last 10 minutes AND last success was >5 minutes ago
       const tenMinutesMs = 10 * 60 * 1000;
       const fiveMinutesMs = 5 * 60 * 1000;
-      const hasRecentAttempts = lastAttemptTimestamp !== undefined && now - lastAttemptTimestamp < tenMinutesMs;
+      const hasRecentAttempts =
+        lastAttemptTimestamp !== undefined &&
+        now - lastAttemptTimestamp < tenMinutesMs;
       const lastSuccessStale =
-        lastSuccessTimestamp === undefined || now - lastSuccessTimestamp > fiveMinutesMs;
+        lastSuccessTimestamp === undefined ||
+        now - lastSuccessTimestamp > fiveMinutesMs;
       const healthy = !(hasRecentAttempts && lastSuccessStale);
 
       return new Response(
@@ -90,7 +96,9 @@ const server = Bun.serve({
         });
       } catch (error) {
         logger.error("❌ Error generating metrics:", error);
-        Sentry.captureException(error, { tags: { source: "http-server-metrics" } });
+        Sentry.captureException(error, {
+          tags: { source: "http-server-metrics" },
+        });
         return new Response("Internal Server Error", {
           status: 500,
           headers: {
@@ -131,7 +139,9 @@ const server = Bun.serve({
         });
       } catch (error) {
         logger.error("❌ tRPC request error:", error);
-        Sentry.captureException(error, { tags: { source: "http-server-trpc" } });
+        Sentry.captureException(error, {
+          tags: { source: "http-server-trpc" },
+        });
         return new Response("Internal Server Error", {
           status: 500,
           headers: {

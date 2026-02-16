@@ -51,7 +51,9 @@ export function Damage({
         alignItems: "center",
         gap: containerGap,
         ...(containerWidth ? { width: containerWidth } : {}),
-        ...(containerMinWidth !== undefined ? { minWidth: containerMinWidth } : {}),
+        ...(containerMinWidth !== undefined
+          ? { minWidth: containerMinWidth }
+          : {}),
       }}
     >
       {textLayout === "simple" ? (
@@ -84,7 +86,9 @@ export function Damage({
           width: barWidth,
           height: barHeight,
           backgroundColor: barBackgroundColor,
-          ...(barBorderRadius !== undefined ? { borderRadius: barBorderRadius } : {}),
+          ...(barBorderRadius !== undefined
+            ? { borderRadius: barBorderRadius }
+            : {}),
           ...(barOverflow ? { overflow: barOverflow } : {}),
         }}
       >
@@ -94,7 +98,9 @@ export function Damage({
             width: `${percent.toString()}%`,
             height: "100%",
             backgroundColor: fillColor,
-            ...(fillBorderRadius !== undefined ? { borderRadius: fillBorderRadius } : {}),
+            ...(fillBorderRadius !== undefined
+              ? { borderRadius: fillBorderRadius }
+              : {}),
           }}
         />
       </span>

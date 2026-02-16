@@ -152,8 +152,16 @@
           "description": "Malzahar opens up two portals to the Void. After a short delay, they fire projectiles that deal Magic Damage and silence enemy champions.",
           "tooltip": "Malzahar opens two portals to the Void that fire projectiles inward, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> and <status>Silencing</status> for {{ e2 }} second(s).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Silence Duration", "@AbilityResourceName@ Cost"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ e2 }} -> {{ e2NL }}", "{{ cost }} -> {{ costNL }}"]
+            "label": [
+              "Damage",
+              "Silence Duration",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ e2 }} -> {{ e2NL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [6, 6, 6, 6, 6],
@@ -174,7 +182,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "70/105/140/175/210", "1/1.25/1.5/1.75/2", "0.4", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "70/105/140/175/210",
+            "1/1.25/1.5/1.75/2",
+            "0.4",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -197,7 +217,11 @@
           "description": "Malzahar summons Voidlings to attack nearby enemies.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Malzahar's other Abilities give him a stack when cast (max {{ stackcap }}).<br /><br /><spellActive>Active:</spellActive> Malzahar summons a Voidling plus an additional Voidling per stack. Voidlings last {{ voidlingduration }} seconds and deal <magicDamage>{{ voidlingbonusdamagetooltip }} magic damage</magicDamage> each hit.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Voidling Damage", "Voidling Duration", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Voidling Damage",
+              "Voidling Duration",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ voidlingbasedamage }} -> {{ voidlingbasedamageNL }}",
               "{{ voidlingduration }} -> {{ voidlingdurationNL }}",
@@ -223,7 +247,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "25000", "2", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "25000",
+            "2",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
@@ -272,7 +308,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "8", "2", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "8",
+            "2",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -295,7 +343,11 @@
           "description": "Malzahar channels the essence of the Void to suppress an enemy champion over a zone of damaging negative energy.",
           "tooltip": "Malzahar <status>Suppresses</status> an enemy champion and deals <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> over {{ e4 }} seconds. A zone of negative energy is created around his target dealing <magicDamage>{{ zonedamagetooltip }} max Health magic damage</magicDamage> over {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Nether Grasp Damage", "Null Zone Damage Per Second", "Cooldown"],
+            "label": [
+              "Nether Grasp Damage",
+              "Null Zone Damage Per Second",
+              "Cooldown"
+            ],
             "effect": [
               "{{ beamdamage }} -> {{ beamdamageNL }}",
               "{{ maxhealthdamage }}% -> {{ maxhealthdamageNL }}%",
@@ -321,7 +373,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "5", "2.5", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "5",
+            "2.5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

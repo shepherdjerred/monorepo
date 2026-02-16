@@ -195,7 +195,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -292,7 +304,10 @@
           "tooltip": "<spellPassive>Passive:</spellPassive> Twisted Fate gains <attackSpeed>{{ attackspeedbonus }}% Attack Speed</attackSpeed> and every 4th Attack deals an additional <magicDamage>{{ bonusdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Bonus Damage:", "Attack Speed"],
-            "effect": ["{{ damage }} -> {{ damageNL }}", "{{ attackspeedbonus }}% -> {{ attackspeedbonusNL }}%"]
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ attackspeedbonus }}% -> {{ attackspeedbonusNL }}%"
+            ]
           },
           "maxrank": 5,
           "cooldown": [0, 0, 0, 0, 0],
@@ -313,7 +328,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "4", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "4",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "Passive",
           "maxammo": "-1",
@@ -337,7 +364,10 @@
           "tooltip": "Twisted Fate focuses on his cards, granting <keywordStealth>True Sight</keywordStealth> of all enemy champions on the map for {{ e1 }} seconds and allowing him to <recast>Recast</recast>.<br /><br /><recast>Recast</recast>: Twisted Fate teleports up to {{ e4 }} units away.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Duration", "Cooldown"],
-            "effect": ["{{ recastduration }} -> {{ recastdurationNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ recastduration }} -> {{ recastdurationNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [170, 140, 110],
@@ -358,7 +388,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "6/8/10", "0", "0", "5500", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "6/8/10",
+            "0",
+            "0",
+            "5500",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

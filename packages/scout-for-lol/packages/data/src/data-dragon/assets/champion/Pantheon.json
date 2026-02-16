@@ -178,7 +178,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -226,7 +238,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -250,7 +274,10 @@
           "tooltip": "Pantheon braces his shield and engages enemies in a chosen direction for {{ shieldduration }} seconds, becoming immune to non-tower damage from that direction and dealing <physicalDamage>{{ damagecalc }} physical damage</physicalDamage> over the duration. After channeling Pantheon slams with his shield, dealing <physicalDamage>{{ shielddamagecalc }} physical damage</physicalDamage>.<br /><br /><span class=\"colorEDDA74\">Mortal Will Bonus:</span> When Pantheon slams his shield he gains <scaleArmor>{{ resistscalc }} Armor</scaleArmor> and <scaleMR>{{ resistscalc }} Magic Resist</scaleMR> for {{ resistsduration }} seconds, and <speed>{{ speedamount*100 }}% Move Speed</speed> for {{ speedduration }} seconds. <br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Shield Slam Damage"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ shieldbasedamage }} -> {{ shieldbasedamageNL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ shieldbasedamage }} -> {{ shieldbasedamageNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [22, 21, 20, 19, 18],
@@ -271,7 +298,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -320,7 +359,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

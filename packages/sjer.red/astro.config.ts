@@ -6,10 +6,11 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import { rehypeHeadingIds } from "@astrojs/markdown-remark";
 import icon from "astro-icon";
 import astroOpenGraphImages, { presets } from "astro-opengraph-images";
-import * as fs from "fs";
 import { rendererRich, transformerTwoslash } from "@shikijs/twoslash";
 import rehypeMermaid from "rehype-mermaid";
 import tailwindcss from "@tailwindcss/vite";
+
+const fontData = await Bun.file(new URL("public/fonts/CommitMono/CommitMono-700-Regular.otf", import.meta.url)).arrayBuffer();
 
 // https://astro.build/config
 export default defineConfig({
@@ -60,7 +61,7 @@ export default defineConfig({
       options: {
         fonts: [
           {
-            data: fs.readFileSync(new URL("./public/fonts/CommitMono/CommitMono-700-Regular.otf", import.meta.url)),
+            data: fontData,
             name: "Commit Mono",
             weight: 400,
             style: "normal",
@@ -78,6 +79,7 @@ export default defineConfig({
   prefetch: true,
 
   vite: {
+    // @ts-expect-error tailwindcss uses vite 7.x types but Astro uses vite 6.x
     plugins: [tailwindcss()],
   },
 });

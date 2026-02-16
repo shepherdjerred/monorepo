@@ -146,7 +146,12 @@
           "description": "Ziggs throws a bouncing bomb that deals magic damage.",
           "tooltip": "Ziggs throws a bouncing bomb that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Total AP Ratio", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Total AP Ratio",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ apratio*100.000000 }}% -> {{ aprationl*100.000000 }}%",
@@ -173,7 +178,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "850", "325", "225", "180", "240", "70", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "850",
+            "325",
+            "225",
+            "180",
+            "240",
+            "70",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -222,7 +239,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "70/105/140/175/210", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "70/105/140/175/210",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -245,7 +274,12 @@
           "description": "Ziggs scatters proximity mines that detonate on enemy contact, dealing magic damage and slowing. Successive mine detonations on the same target deal reduced damage.",
           "tooltip": "Ziggs scatters proximity mines that detonate on enemy contact, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slows</status> by {{ slow*-100 }}% for {{ e4 }} seconds. Mines last {{ mineduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Mine Damage", "Total AP Ratio", "Slow", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Mine Damage",
+              "Total AP Ratio",
+              "Slow",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ damagepermine }} -> {{ damagepermineNL }}",
               "{{ apratiopermine*100.000000 }}% -> {{ apratioperminenl*100.000000 }}%",
@@ -272,7 +306,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "10", "1.5", "0.4", "0", "135", "150", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "10",
+            "1.5",
+            "0.4",
+            "0",
+            "135",
+            "150",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -321,7 +367,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

@@ -1,5 +1,6 @@
+import type {
+  PrometheusRuleSpecGroups} from "../../../../../generated/imports/monitoring.coreos.com";
 import {
-  PrometheusRuleSpecGroups,
   PrometheusRuleSpecGroupsRulesExpr,
 } from "../../../../../generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "./shared";
@@ -51,6 +52,20 @@ export function getHaWorkflowRuleGroups(): PrometheusRuleSpecGroups[] {
             'sum without(pod, instance, container, endpoint) (increase(ha_workflow_errors_total{error_type="TimeoutError"}[15m])) > 0',
           ),
           for: "5m",
+          labels: { severity: "warning" },
+        },
+        {
+          alert: "HaRoombaVerificationFailed",
+          annotations: {
+            description: escapePrometheusTemplate(
+              "Roomba failed to start cleaning after being commanded. The vacuum state did not transition to 'cleaning' within the verification window.",
+            ),
+            summary: "Roomba failed to start cleaning",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'sum without(pod, instance, container, endpoint) (increase(ha_workflow_executions_total{workflow="roomba_verification", status="failure"}[15m])) > 0',
+          ),
+          for: "0m",
           labels: { severity: "warning" },
         },
         {

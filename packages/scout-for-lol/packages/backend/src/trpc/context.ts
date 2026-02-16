@@ -6,7 +6,10 @@
 
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import type { ApiToken, User } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import type {
+  ApiToken,
+  User,
+} from "@scout-for-lol/backend/generated/prisma/client/index.js";
 
 const logger = createLogger("trpc-context");
 
@@ -70,7 +73,10 @@ export async function createContext(request: Request): Promise<Context> {
           data: { lastUsedAt: new Date() },
         });
 
-        logger.debug(`API token auth successful for user ${user.discordUsername}`, { requestId });
+        logger.debug(
+          `API token auth successful for user ${user.discordUsername}`,
+          { requestId },
+        );
       } else {
         logger.debug("API token expired", { requestId });
       }

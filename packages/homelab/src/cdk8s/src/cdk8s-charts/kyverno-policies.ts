@@ -1,4 +1,5 @@
-import { App, Chart } from "cdk8s";
+import type { App} from "cdk8s";
+import { Chart } from "cdk8s";
 import { createVeleroBackupLabelPolicy } from "../resources/kyverno-policies.ts";
 
 export function createKyvernoPoliciesChart(app: App) {

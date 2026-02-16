@@ -118,7 +118,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -168,7 +180,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -191,7 +215,12 @@
           "description": "Milio tosses a shield to an ally, temporarily increasing their movement speed. This ability has 2 charges.",
           "tooltip": "Milio wraps an ally champion in protective flames, granting <shield>{{ shieldcalc }} Shield</shield> and <speed>{{ movespeedamount*100 }}% Move Speed</speed> for {{ movespeedduration }} seconds.<br /><br />This ability has 2 charges and the effects stack on repeat targets.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Shield Amount", "Move Speed", "Mana Cost", "Recharge Time"],
+            "label": [
+              "Shield Amount",
+              "Move Speed",
+              "Mana Cost",
+              "Recharge Time"
+            ],
             "effect": [
               "{{ shieldbase }} -> {{ shieldbaseNL }}",
               "{{ movespeedamount*100.000000 }}% -> {{ movespeedamountnl*100.000000 }}%",
@@ -218,7 +247,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "2",
@@ -242,7 +283,10 @@
           "tooltip": "Milio unleashes a wave of soothing flames on nearby ally champions, cleansing <status>Disabling</status> and <status>Immobilizing</status> effects, restoring <healing>{{ healcalc }} Health</healing>, and granting {{ tenacityamount*100 }}% Tenacity for {{ tenacityduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Healing", "Cooldown"],
-            "effect": ["{{ healbase }} -> {{ healbaseNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ healbase }} -> {{ healbaseNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [160, 145, 130],
@@ -263,7 +307,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

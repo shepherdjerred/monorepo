@@ -1,10 +1,9 @@
-import type { RenderFunctionInput } from "../types.js";
+import type { RenderFunctionInput } from "#src/types.js";
 const { twj } = await import("tw-to-css");
 
 // from https://fullstackheroes.com/resources/vercel-og-templates/wave/
-export async function waveSvg({ title }: RenderFunctionInput): Promise<React.ReactNode> {
-  return Promise.resolve(
-    <div style={twj("h-full w-full flex items-start justify-start bg-yellow-50 relative")}>
+export function waveSvg({ title }: RenderFunctionInput): React.ReactNode {
+  return <div style={twj("h-full w-full flex items-start justify-start bg-yellow-50 relative")}>
       <h1 style={twj("text-7xl p-20 font-bold text-left text-gray-900")}>{title}</h1>
 
       <svg
@@ -21,6 +20,5 @@ export async function waveSvg({ title }: RenderFunctionInput): Promise<React.Rea
           strokeLinejoin="miter"
         ></path>
       </svg>
-    </div>,
-  );
+    </div>;
 }

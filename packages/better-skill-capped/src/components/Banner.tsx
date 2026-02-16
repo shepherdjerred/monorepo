@@ -1,6 +1,6 @@
 import React from "react";
 
-export interface BannerProps {
+export type BannerProps = {
   children: React.ReactNode;
   type: BannerType;
 }

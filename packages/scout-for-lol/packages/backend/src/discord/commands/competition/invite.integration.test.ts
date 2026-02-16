@@ -1,8 +1,18 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { createCompetition, getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.ts";
+import {
+  createCompetition,
+  getCompetitionById,
+} from "@scout-for-lol/backend/database/competition/queries.ts";
 import type { CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.ts";
-import { addParticipant, getParticipantStatus } from "@scout-for-lol/backend/database/competition/participants.ts";
-import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  addParticipant,
+  getParticipantStatus,
+} from "@scout-for-lol/backend/database/competition/participants.ts";
+import {
+  testGuildId,
+  testAccountId,
+  testChannelId,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
 import {
   type CompetitionId,
   type DiscordAccountId,
@@ -10,7 +20,10 @@ import {
   type DiscordGuildId,
   type PlayerId,
 } from "@scout-for-lol/data";
-import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.ts";
+import {
+  createTestDatabase,
+  deleteIfExists,
+} from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a test database for integration tests
 const { prisma } = createTestDatabase("competition-invite-test");
@@ -114,8 +127,14 @@ describe("Owner invites user", () => {
     const ownerId = testAccountId("111111111111111111");
     const targetUserId = testAccountId("222222222222222222");
 
-    const { playerId } = await createTestPlayer(serverId, targetUserId, "TargetUser");
-    const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
+    const { playerId } = await createTestPlayer(
+      serverId,
+      targetUserId,
+      "TargetUser",
+    );
+    const { competitionId } = await createTestCompetition(serverId, ownerId, {
+      visibility: "INVITE_ONLY",
+    });
 
     // Owner invites target user
     await addParticipant({
@@ -157,7 +176,9 @@ describe("Non-owner tries to invite", () => {
     const targetUserId = testAccountId("222222222222222222");
 
     await createTestPlayer(serverId, targetUserId, "TargetUser");
-    const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
+    const { competitionId } = await createTestCompetition(serverId, ownerId, {
+      visibility: "INVITE_ONLY",
+    });
 
     // Get competition to verify ownership
     const competition = await getCompetitionById(prisma, competitionId);
@@ -182,8 +203,14 @@ describe("Invite to OPEN competition", () => {
     const ownerId = testAccountId("111111111111111111");
     const targetUserId = testAccountId("222222222222222222");
 
-    const { playerId } = await createTestPlayer(serverId, targetUserId, "TargetUser");
-    const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "OPEN" });
+    const { playerId } = await createTestPlayer(
+      serverId,
+      targetUserId,
+      "TargetUser",
+    );
+    const { competitionId } = await createTestCompetition(serverId, ownerId, {
+      visibility: "OPEN",
+    });
 
     // Owner invites target user (works for any visibility type)
     await addParticipant({
@@ -214,11 +241,22 @@ describe("Invite already joined user", () => {
     const ownerId = testAccountId("111111111111111111");
     const targetUserId = testAccountId("222222222222222222");
 
-    const { playerId } = await createTestPlayer(serverId, targetUserId, "TargetUser");
-    const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "OPEN" });
+    const { playerId } = await createTestPlayer(
+      serverId,
+      targetUserId,
+      "TargetUser",
+    );
+    const { competitionId } = await createTestCompetition(serverId, ownerId, {
+      visibility: "OPEN",
+    });
 
     // User joins first
-    await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: playerId,
+      status: "JOINED",
+    });
 
     // Check status
     const status = await getParticipantStatus(prisma, competitionId, playerId);
@@ -240,8 +278,14 @@ describe("Invite already invited user", () => {
     const ownerId = testAccountId("111111111111111111");
     const targetUserId = testAccountId("222222222222222222");
 
-    const { playerId } = await createTestPlayer(serverId, targetUserId, "TargetUser");
-    const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
+    const { playerId } = await createTestPlayer(
+      serverId,
+      targetUserId,
+      "TargetUser",
+    );
+    const { competitionId } = await createTestCompetition(serverId, ownerId, {
+      visibility: "INVITE_ONLY",
+    });
 
     // Owner invites target user
     await addParticipant({
@@ -282,7 +326,9 @@ describe("Invite user without Player account", () => {
     const ownerId = testAccountId("111111111111111111");
     const targetUserId = testAccountId("222222222222222222");
 
-    const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
+    const { competitionId } = await createTestCompetition(serverId, ownerId, {
+      visibility: "INVITE_ONLY",
+    });
 
     // Try to find player - should not exist
     const player = await prisma.player.findFirst({
@@ -311,15 +357,39 @@ describe("Invite when at limit", () => {
     const serverId = testGuildId("123456789012345678");
     const ownerId = testAccountId("111111111111111111");
 
-    const { competitionId } = await createTestCompetition(serverId, ownerId, { maxParticipants: 2 });
+    const { competitionId } = await createTestCompetition(serverId, ownerId, {
+      maxParticipants: 2,
+    });
 
     // Create 2 players and have them join
-    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("1000000000000"), "Player1");
-    const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("2000000000000"), "Player2");
-    const { playerId: player3Id } = await createTestPlayer(serverId, testAccountId("3000000000000"), "Player3");
+    const { playerId: player1Id } = await createTestPlayer(
+      serverId,
+      testAccountId("1000000000000"),
+      "Player1",
+    );
+    const { playerId: player2Id } = await createTestPlayer(
+      serverId,
+      testAccountId("2000000000000"),
+      "Player2",
+    );
+    const { playerId: player3Id } = await createTestPlayer(
+      serverId,
+      testAccountId("3000000000000"),
+      "Player3",
+    );
 
-    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "JOINED" });
-    await addParticipant({ prisma, competitionId: competitionId, playerId: player2Id, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: player1Id,
+      status: "JOINED",
+    });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: player2Id,
+      status: "JOINED",
+    });
 
     // Verify 2 participants
     const count = await prisma.competitionParticipant.count({
@@ -353,11 +423,22 @@ describe("Invite user who left", () => {
     const ownerId = testAccountId("111111111111111111");
     const targetUserId = testAccountId("222222222222222222");
 
-    const { playerId } = await createTestPlayer(serverId, targetUserId, "TargetUser");
-    const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "OPEN" });
+    const { playerId } = await createTestPlayer(
+      serverId,
+      targetUserId,
+      "TargetUser",
+    );
+    const { competitionId } = await createTestCompetition(serverId, ownerId, {
+      visibility: "OPEN",
+    });
 
     // User joins then leaves
-    await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: playerId,
+      status: "JOINED",
+    });
     await prisma.competitionParticipant.update({
       where: {
         competitionId_playerId: {
@@ -390,7 +471,11 @@ describe("Invite to cancelled competition", () => {
     const ownerId = testAccountId("111111111111111111");
     const targetUserId = testAccountId("222222222222222222");
 
-    const { playerId } = await createTestPlayer(serverId, targetUserId, "TargetUser");
+    const { playerId } = await createTestPlayer(
+      serverId,
+      targetUserId,
+      "TargetUser",
+    );
     const { competitionId } = await createTestCompetition(serverId, ownerId, {
       visibility: "INVITE_ONLY",
       isCancelled: true,
@@ -429,7 +514,11 @@ describe("Invite to ended competition", () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
-    const { playerId } = await createTestPlayer(serverId, targetUserId, "TargetUser");
+    const { playerId } = await createTestPlayer(
+      serverId,
+      targetUserId,
+      "TargetUser",
+    );
     const { competitionId } = await createTestCompetition(serverId, ownerId, {
       visibility: "INVITE_ONLY",
       startDate: lastWeek,
@@ -466,12 +555,26 @@ describe("Multiple invitations", () => {
     const serverId = testGuildId("123456789012345678");
     const ownerId = testAccountId("111111111111111111");
 
-    const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
+    const { competitionId } = await createTestCompetition(serverId, ownerId, {
+      visibility: "INVITE_ONLY",
+    });
 
     // Create 3 players
-    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("1000000000000"), "Player1");
-    const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("2000000000000"), "Player2");
-    const { playerId: player3Id } = await createTestPlayer(serverId, testAccountId("3000000000000"), "Player3");
+    const { playerId: player1Id } = await createTestPlayer(
+      serverId,
+      testAccountId("1000000000000"),
+      "Player1",
+    );
+    const { playerId: player2Id } = await createTestPlayer(
+      serverId,
+      testAccountId("2000000000000"),
+      "Player2",
+    );
+    const { playerId: player3Id } = await createTestPlayer(
+      serverId,
+      testAccountId("3000000000000"),
+      "Player3",
+    );
 
     // Owner invites all 3
     await addParticipant({
@@ -497,9 +600,21 @@ describe("Multiple invitations", () => {
     });
 
     // Verify all 3 have INVITED status
-    const status1 = await getParticipantStatus(prisma, competitionId, player1Id);
-    const status2 = await getParticipantStatus(prisma, competitionId, player2Id);
-    const status3 = await getParticipantStatus(prisma, competitionId, player3Id);
+    const status1 = await getParticipantStatus(
+      prisma,
+      competitionId,
+      player1Id,
+    );
+    const status2 = await getParticipantStatus(
+      prisma,
+      competitionId,
+      player2Id,
+    );
+    const status3 = await getParticipantStatus(
+      prisma,
+      competitionId,
+      player3Id,
+    );
 
     expect(status1).toBe("INVITED");
     expect(status2).toBe("INVITED");

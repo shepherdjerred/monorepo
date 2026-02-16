@@ -4482,7 +4482,9 @@
           "landSkillShotsEarlyGame": 2,
           "laneMinionsFirst10Minutes": 0,
           "legendaryCount": 0,
-          "legendaryItemUsed": [223031, 223031, 223031, 223033, 223031, 223033, 223153],
+          "legendaryItemUsed": [
+            223031, 223031, 223031, 223033, 223031, 223033, 223153
+          ],
           "lostAnInhibitor": 0,
           "maxKillDeficit": 0,
           "mejaisFullStackInTime": 0,

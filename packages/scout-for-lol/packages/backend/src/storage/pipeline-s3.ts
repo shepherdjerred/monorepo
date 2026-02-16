@@ -42,7 +42,14 @@ async function saveStageTrace(params: {
   stageNumber: string;
   trace: StageTrace;
 }): Promise<void> {
-  const { matchId, queueType, trackedPlayerAliases, stageName, stageNumber, trace } = params;
+  const {
+    matchId,
+    queueType,
+    trackedPlayerAliases,
+    stageName,
+    stageNumber,
+    trace,
+  } = params;
 
   const body = JSON.stringify(
     {
@@ -139,7 +146,8 @@ async function saveFinalReview(params: {
   reviewText: string;
   context: PipelineContext;
 }): Promise<void> {
-  const { matchId, queueType, trackedPlayerAliases, reviewText, context } = params;
+  const { matchId, queueType, trackedPlayerAliases, reviewText, context } =
+    params;
 
   await saveToS3({
     matchId,
@@ -215,7 +223,10 @@ async function saveFinalImage(params: {
 /**
  * Wrapper to safely run a save operation and log errors
  */
-async function safeSave(operation: () => Promise<unknown>, errorMessage: string): Promise<void> {
+async function safeSave(
+  operation: () => Promise<unknown>,
+  errorMessage: string,
+): Promise<void> {
   try {
     await operation();
   } catch (err) {
@@ -231,7 +242,9 @@ async function safeSave(operation: () => Promise<unknown>, errorMessage: string)
  * - Final review text as TXT
  * - Final image (if generated) as PNG
  */
-export async function savePipelineTracesToS3(params: SavePipelineTracesParams): Promise<void> {
+export async function savePipelineTracesToS3(
+  params: SavePipelineTracesParams,
+): Promise<void> {
   const { matchId, queueType, trackedPlayerAliases, output } = params;
   const { traces, review, context } = output;
 
@@ -418,8 +431,10 @@ export async function savePipelineDebugToS3(params: {
         ? {
             model: output.traces.imageGeneration.model,
             durationMs: output.traces.imageGeneration.durationMs,
-            imageGenerated: output.traces.imageGeneration.response.imageGenerated,
-            imageSizeBytes: output.traces.imageGeneration.response.imageSizeBytes,
+            imageGenerated:
+              output.traces.imageGeneration.response.imageGenerated,
+            imageSizeBytes:
+              output.traces.imageGeneration.response.imageSizeBytes,
           }
         : null,
     },

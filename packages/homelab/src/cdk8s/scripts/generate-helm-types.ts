@@ -80,10 +80,10 @@ async function generateHelmTypes() {
       });
 
       const prettierExitCode = await prettierProc.exited;
-      if (prettierExitCode !== 0) {
-        console.warn(`Prettier failed with code ${prettierExitCode.toString()}, continuing...`);
-      } else {
+      if (prettierExitCode === 0) {
         console.log("✅ Prettier formatting completed");
+      } else {
+        console.warn(`Prettier failed with code ${prettierExitCode.toString()}, continuing...`);
       }
     } catch (error) {
       console.warn(`Failed to run prettier: ${String(error)}, continuing...`);
@@ -142,9 +142,9 @@ async function generateChartTypes(chart: ChartInfo) {
     // Generate minimal type for charts with no values
     const code = `// Generated TypeScript types for ${chart.name} Helm chart
 
-export type ${capitalizeFirst(chart.name).replace(/-/g, "")}HelmValues = object;
+export type ${capitalizeFirst(chart.name).replaceAll('-', "")}HelmValues = object;
 
-export type ${capitalizeFirst(chart.name).replace(/-/g, "")}HelmParameters = {
+export type ${capitalizeFirst(chart.name).replaceAll('-', "")}HelmParameters = {
   [key: string]: string;
 };
 `;
@@ -155,7 +155,7 @@ export type ${capitalizeFirst(chart.name).replace(/-/g, "")}HelmParameters = {
   }
 
   console.log(`  🏗️  Converting to TypeScript interfaces...`);
-  const interfaceName = `${capitalizeFirst(chart.name).replace(/-/g, "")}HelmValues`;
+  const interfaceName = `${capitalizeFirst(chart.name).replaceAll('-', "")}HelmValues`;
   const tsInterface: TypeScriptInterface = convertToTypeScriptInterface(
     helmValues,
     interfaceName,

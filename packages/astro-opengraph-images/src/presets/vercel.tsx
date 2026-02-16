@@ -1,8 +1,7 @@
-import type { RenderFunctionInput } from "../types.js";
+import type { RenderFunctionInput } from "#src/types.js";
 
-export async function vercel({ title }: RenderFunctionInput): Promise<React.ReactNode> {
-  return Promise.resolve(
-    <div
+export function vercel({ title }: RenderFunctionInput): React.ReactNode {
+  return <div
       style={{
         height: "100%",
         width: "100%",
@@ -42,6 +41,5 @@ export async function vercel({ title }: RenderFunctionInput): Promise<React.Reac
       >
         <b>{title}</b>
       </div>
-    </div>,
-  );
+    </div>;
 }

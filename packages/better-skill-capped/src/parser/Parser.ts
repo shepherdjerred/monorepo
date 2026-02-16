@@ -1,12 +1,12 @@
-import { Content } from "../model/Content";
-import { ManifestCommentary, ManifestCourse, ManifestCourseChapters, Manifest, ManifestVideo } from "./Manifest";
-import { Video } from "../model/Video";
-import { Course } from "../model/Course";
-import { Commentary } from "../model/Commentary";
-import { roleFromString } from "../model/Role";
-import { rawTitleToDisplayTitle } from "../utils/TitleUtilities";
-import { getCommentaryUrl, getVideoUrl } from "../utils/UrlUtilities";
-import { CourseVideo } from "../model/CourseVideo";
+import type { Content } from "@shepherdjerred/better-skill-capped/model/Content";
+import type { ManifestCommentary, ManifestCourse, ManifestCourseChapters, Manifest, ManifestVideo } from "./Manifest";
+import type { Video } from "@shepherdjerred/better-skill-capped/model/Video";
+import type { Course } from "@shepherdjerred/better-skill-capped/model/Course";
+import type { Commentary } from "@shepherdjerred/better-skill-capped/model/Commentary";
+import { roleFromString } from "@shepherdjerred/better-skill-capped/model/Role";
+import { rawTitleToDisplayTitle } from "@shepherdjerred/better-skill-capped/utils/TitleUtilities";
+import { getCommentaryUrl, getVideoUrl } from "@shepherdjerred/better-skill-capped/utils/UrlUtilities";
+import type { CourseVideo } from "@shepherdjerred/better-skill-capped/model/CourseVideo";
 
 export class Parser {
   parse(manifest: Manifest): Content {
@@ -28,13 +28,9 @@ export class Parser {
     return input.flatMap((video) => {
       const match = this.matchVideoToCourse(video, courses, chapters);
 
-      if (match !== undefined) {
-        return [];
-      } else {
-        return {
+      return match === undefined ? {
           ...video,
-        } as unknown as Video;
-      }
+        } as unknown as Video : [];
     });
   }
 
@@ -110,14 +106,10 @@ export class Parser {
   }
 
   getImageUrl(input: ManifestVideo | ManifestCommentary): string {
-    if (input.tSS !== "") {
-      return input.tSS.replace(
+    return input.tSS === "" ? `https://ik.imagekit.io/skillcapped/thumbnails/${input.uuid}/thumbnails/thumbnail_${String(input.tId)}.jpg` : input.tSS.replace(
         "https://d20k8dfo6rtj2t.cloudfront.net/jpg-images/",
         "https://ik.imagekit.io/skillcapped/customss/jpg-images/",
       );
-    } else {
-      return `https://ik.imagekit.io/skillcapped/thumbnails/${input.uuid}/thumbnails/thumbnail_${String(input.tId)}.jpg`;
-    }
   }
 
   parseCourses(
@@ -140,7 +132,7 @@ export class Parser {
         }
         const courseVideos: CourseVideo[] = courseChapters.chapters[0].vids.map((video) => {
           const videoInfo = videos.find((candidate) => candidate.uuid === video.uuid);
-          const altTitle = video.altTitle !== undefined ? rawTitleToDisplayTitle(video.altTitle) : undefined;
+          const altTitle = video.altTitle === undefined ? undefined : rawTitleToDisplayTitle(video.altTitle);
 
           if (videoInfo === undefined) {
             throw new Error(`Couldn't find video ${JSON.stringify(video)}`);

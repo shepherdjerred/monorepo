@@ -53,7 +53,7 @@ async function testGpuResources() {
             throw new Error(`No match found for ${match.toString()}`);
           }
           const value = match[1].trim();
-          const lineNumber = content.substring(0, match.index).split("\n").length;
+          const lineNumber = content.slice(0, Math.max(0, match.index)).split("\n").length;
 
           if (value === EXPECTED_VALUE.toString()) {
             console.log(`✅ Line ${lineNumber.toString()}: gpu.intel.com/i915: ${value} (correct)`);
@@ -68,7 +68,7 @@ async function testGpuResources() {
       }
 
       // Check for service-specific GPU resource
-      const servicePattern = new RegExp(`name: ${service}[\\s\\S]*?gpu\\.intel\\.com\\/i915:\\s*(.+?)`, "g");
+      const servicePattern = new RegExp(String.raw`name: ${service}[\s\S]*?gpu\.intel\.com\/i915:\s*(.+?)`, "g");
       const serviceMatch = servicePattern.exec(content);
 
       if (serviceMatch?.[1]) {

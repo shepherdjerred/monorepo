@@ -21,7 +21,15 @@ if (await templateFile.exists()) {
 logger.info("Generating test template database...");
 
 const result = Bun.spawnSync(
-  ["bunx", "prisma", "db", "push", `--schema=${schemaPath}`, "--skip-generate", "--accept-data-loss"],
+  [
+    "bunx",
+    "prisma",
+    "db",
+    "push",
+    `--schema=${schemaPath}`,
+    "--skip-generate",
+    "--accept-data-loss",
+  ],
   {
     cwd: `${import.meta.dirname}/..`,
     env: {

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Modal } from "./Modal";
 
-export interface TipsModalProps {
+export type TipsModalProps = {
   onClose: () => void;
   isVisible: boolean;
 }

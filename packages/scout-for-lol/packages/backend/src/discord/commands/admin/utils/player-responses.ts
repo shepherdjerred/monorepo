@@ -4,15 +4,21 @@ import type { PlayerWithSubscriptions } from "@scout-for-lol/backend/discord/com
 /**
  * Format a list of player accounts for display
  */
-export function formatPlayerAccountsList(player: NonNullable<PlayerWithSubscriptions>): string {
-  return player.accounts.map((acc) => `• ${acc.alias} (${acc.region})`).join("\n");
+export function formatPlayerAccountsList(
+  player: NonNullable<PlayerWithSubscriptions>,
+): string {
+  return player.accounts
+    .map((acc) => `• ${acc.alias} (${acc.region})`)
+    .join("\n");
 }
 
 /**
  * Format a list of player subscriptions for display
  * Returns formatted list or "No active subscriptions." if empty
  */
-export function formatPlayerSubscriptionsList(player: NonNullable<PlayerWithSubscriptions>): string {
+export function formatPlayerSubscriptionsList(
+  player: NonNullable<PlayerWithSubscriptions>,
+): string {
   if (player.subscriptions.length === 0) {
     return "No active subscriptions.";
   }

@@ -1,8 +1,15 @@
-import { type DiscordAccountId, type DiscordGuildId, type PermissionType } from "@scout-for-lol/data";
+import {
+  type DiscordAccountId,
+  type DiscordGuildId,
+  type PermissionType,
+} from "@scout-for-lol/data";
 import type { PermissionsBitField } from "discord.js";
 import { PermissionFlagsBits } from "discord.js";
-import { type PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
-import { checkRateLimit, getTimeRemaining } from "@scout-for-lol/backend/database/competition/rate-limit.ts";
+import { type ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
+import {
+  checkRateLimit,
+  getTimeRemaining,
+} from "@scout-for-lol/backend/database/competition/rate-limit.ts";
 
 // ============================================================================
 // Permission Check Result
@@ -27,7 +34,7 @@ export type PermissionCheckResult = {
  * @returns true if user has the permission
  */
 export async function hasPermission(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   serverId: DiscordGuildId,
   userId: DiscordAccountId,
   permission: PermissionType,
@@ -49,7 +56,7 @@ export async function hasPermission(
  * Grant permission to a user
  */
 export async function grantPermission(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   params: {
     serverId: DiscordGuildId;
     userId: DiscordAccountId;
@@ -91,7 +98,7 @@ export async function grantPermission(
  * @param permission - Permission type to revoke
  */
 export async function revokePermission(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   serverId: DiscordGuildId,
   userId: DiscordAccountId,
   permission: PermissionType,
@@ -125,7 +132,7 @@ export async function revokePermission(
  * @returns Result with allowed flag and optional reason
  */
 export async function canCreateCompetition(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   serverId: DiscordGuildId,
   userId: DiscordAccountId,
   memberPermissions: Readonly<PermissionsBitField>,
@@ -136,12 +143,18 @@ export async function canCreateCompetition(
   }
 
   // 2. Check ServerPermission grant
-  const hasGrant = await hasPermission(prisma, serverId, userId, "CREATE_COMPETITION");
+  const hasGrant = await hasPermission(
+    prisma,
+    serverId,
+    userId,
+    "CREATE_COMPETITION",
+  );
 
   if (!hasGrant) {
     return {
       allowed: false,
-      reason: "Missing CREATE_COMPETITION permission. Ask a server admin to grant you permission.",
+      reason:
+        "Missing CREATE_COMPETITION permission. Ask a server admin to grant you permission.",
     };
   }
 

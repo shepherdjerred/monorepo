@@ -1,10 +1,10 @@
 import React from "react";
 import { ToggleButton } from "./ToggleButton";
-import { Watchable } from "../model/WatchStatus";
+import type { Watchable } from "@shepherdjerred/better-skill-capped/model/WatchStatus";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
-export interface ToggleWatchStatusButtonProps {
+export type ToggleWatchStatusButtonProps = {
   item: Watchable;
   isWatched: boolean;
   onToggleWatchStatus: (item: Watchable) => void;

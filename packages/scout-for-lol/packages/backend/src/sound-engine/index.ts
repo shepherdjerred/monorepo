@@ -75,7 +75,10 @@ export type SoundSelection = {
  * @param context - The event context
  * @returns The selected sound and volume, or null if no sound matches
  */
-export function selectSoundForEvent(pack: SoundPack, context: EventContext): SoundSelection | null {
+export function selectSoundForEvent(
+  pack: SoundPack,
+  context: EventContext,
+): SoundSelection | null {
   // Get enabled rules sorted by priority (highest first)
   const sortedRules = pipe(
     pack.rules,
@@ -89,7 +92,9 @@ export function selectSoundForEvent(pack: SoundPack, context: EventContext): Sou
       const sound = selectFromPool(rule.sounds);
       if (sound) {
         const volume = sound.volume * pack.settings.masterVolume;
-        logger.debug(`Rule '${rule.name}' matched, selected sound '${sound.id}' with volume ${String(volume)}`);
+        logger.debug(
+          `Rule '${rule.name}' matched, selected sound '${sound.id}' with volume ${String(volume)}`,
+        );
         return {
           sound,
           volume,
@@ -105,7 +110,9 @@ export function selectSoundForEvent(pack: SoundPack, context: EventContext): Sou
     const sound = selectFromPool(defaultPool);
     if (sound) {
       const volume = sound.volume * pack.settings.masterVolume;
-      logger.debug(`Using default sound '${sound.id}' for ${context.eventType} with volume ${String(volume)}`);
+      logger.debug(
+        `Using default sound '${sound.id}' for ${context.eventType} with volume ${String(volume)}`,
+      );
       return {
         sound,
         volume,
@@ -124,7 +131,9 @@ function ruleMatches(rule: SoundRule, context: EventContext): boolean {
     return false;
   }
 
-  const conditionResults = rule.conditions.map((c) => conditionMatches(c, context));
+  const conditionResults = rule.conditions.map((c) =>
+    conditionMatches(c, context),
+  );
 
   return match(rule.conditionLogic)
     .with("all", () => conditionResults.every(Boolean))
@@ -135,11 +144,16 @@ function ruleMatches(rule: SoundRule, context: EventContext): boolean {
 /**
  * Check if a single condition matches the context
  */
-function conditionMatches(condition: RuleCondition, context: EventContext): boolean {
+function conditionMatches(
+  condition: RuleCondition,
+  context: EventContext,
+): boolean {
   return match(condition)
     .with({ type: "player" }, (c) => {
-      const targetName = c.field === "killer" ? context.killerName : context.victimName;
-      const isLocal = c.field === "killer" ? context.killerIsLocal : context.victimIsLocal;
+      const targetName =
+        c.field === "killer" ? context.killerName : context.victimName;
+      const isLocal =
+        c.field === "killer" ? context.killerIsLocal : context.victimIsLocal;
 
       // Check if local player matches
       if (c.includeLocalPlayer && isLocal) {
@@ -150,14 +164,21 @@ function conditionMatches(condition: RuleCondition, context: EventContext): bool
       if (!targetName) {
         return false;
       }
-      return c.players.some((p) => p.toLowerCase() === targetName.toLowerCase());
+      return c.players.some(
+        (p) => p.toLowerCase() === targetName.toLowerCase(),
+      );
     })
     .with({ type: "champion" }, (c) => {
-      const targetChampion = c.field === "killerChampion" ? context.killerChampion : context.victimChampion;
+      const targetChampion =
+        c.field === "killerChampion"
+          ? context.killerChampion
+          : context.victimChampion;
       if (!targetChampion) {
         return false;
       }
-      return c.champions.some((ch) => ch.toLowerCase() === targetChampion.toLowerCase());
+      return c.champions.some(
+        (ch) => ch.toLowerCase() === targetChampion.toLowerCase(),
+      );
     })
     .with({ type: "multikill" }, (c) => {
       if (!context.multikillType) {
@@ -210,7 +231,10 @@ function selectFromPool(pool: SoundPool): SoundEntry | null {
       return enabledSounds[0] ?? null;
     })
     .with("weighted", () => {
-      const totalWeight = enabledSounds.reduce((sum, s) => sum + (s.weight ?? 1), 0);
+      const totalWeight = enabledSounds.reduce(
+        (sum, s) => sum + (s.weight ?? 1),
+        0,
+      );
       if (totalWeight <= 0) {
         return enabledSounds[0] ?? null;
       }

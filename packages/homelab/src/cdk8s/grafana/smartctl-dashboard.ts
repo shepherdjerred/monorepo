@@ -474,7 +474,7 @@ export function createSmartctlDashboard() {
       .thresholds(
         new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
           { value: 0, color: "green" },
-          { value: 10000, color: "yellow" },
+          { value: 10_000, color: "yellow" },
         ]),
       )
       .gridPos({ x: 12, y: 29, w: 12, h: 8 }),

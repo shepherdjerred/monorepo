@@ -107,22 +107,20 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
               () =>
                 runSequential([
                   // Debug: Log the full state before doing anything
-                  () =>
-                    (async () => {
-                      logger.info(`Before any changes - Full state: ${JSON.stringify(bedroomMediaPlayer.attributes)}`);
-                      logger.info(`Before any changes - Entity state: ${bedroomMediaPlayer.state}`);
-                      return Promise.resolve();
-                    })(),
+                  () => {
+                    logger.info(`Before any changes - Full state: ${JSON.stringify(bedroomMediaPlayer.attributes)}`);
+                    logger.info(`Before any changes - Entity state: ${bedroomMediaPlayer.state}`);
+                    return Promise.resolve();
+                  },
                   () => hass.call.media_player.unjoin({ entity_id: bedroomMediaPlayer.entity_id }),
                   // Wait longer for unjoin to complete fully
                   () => wait({ amount: 5, unit: "s" }),
                   // Debug: Log state after unjoin
-                  () =>
-                    (async () => {
-                      logger.info(`After unjoin - Full state: ${JSON.stringify(bedroomMediaPlayer.attributes)}`);
-                      logger.info(`After unjoin - Entity state: ${bedroomMediaPlayer.state}`);
-                      return Promise.resolve();
-                    })(),
+                  () => {
+                    logger.info(`After unjoin - Full state: ${JSON.stringify(bedroomMediaPlayer.attributes)}`);
+                    logger.info(`After unjoin - Entity state: ${bedroomMediaPlayer.state}`);
+                    return Promise.resolve();
+                  },
                   // Try volume_set with explicit value
                   () =>
                     (async () => {
@@ -132,16 +130,15 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                         volume_level: 0,
                       });
                       logger.info("volume_set call completed");
-                      return Promise.resolve();
+                      return;
                     })(),
                   // Wait and check if it took effect
                   () => wait({ amount: 2, unit: "s" }),
                   // Debug: Log state after volume_set
-                  () =>
-                    (async () => {
-                      logger.info(`After volume_set - Full state: ${JSON.stringify(bedroomMediaPlayer.attributes)}`);
-                      return Promise.resolve();
-                    })(),
+                  () => {
+                    logger.info(`After volume_set - Full state: ${JSON.stringify(bedroomMediaPlayer.attributes)}`);
+                    return Promise.resolve();
+                  },
                   // Play media with error handling and retry
                   () =>
                     (async () => {
@@ -155,12 +152,12 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                           }),
                         });
                         logger.info("Successfully started media playback");
-                      } catch (error) {
+                      } catch (playError) {
                         const errorMsg = z
                           .instanceof(Error)
                           .transform((error) => error.message)
-                          .catch((ctx) => String(ctx.value))
-                          .parse(error);
+                          .catch((error) => String(error.value))
+                          .parse(playError);
                         logger.error(`First play_media attempt failed: ${errorMsg}`);
                         logger.info("Waiting additional time and retrying...");
                         await wait({ amount: 3, unit: "s" });
@@ -177,7 +174,7 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                           const retryErrorMsg = z
                             .instanceof(Error)
                             .transform((error) => error.message)
-                            .catch((ctx) => String(ctx.value))
+                            .catch((error) => String(error.value))
                             .parse(retryError);
                           logger.error(`Retry also failed: ${retryErrorMsg}`);
                           // Continue with the rest of the routine even if media fails

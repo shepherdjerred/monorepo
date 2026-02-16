@@ -11,10 +11,15 @@ export async function checkPostMatch() {
     await checkMatchHistory();
 
     const executionTime = Date.now() - startTime;
-    logger.info(`✅ Post-match check completed successfully in ${executionTime.toString()}ms`);
+    logger.info(
+      `✅ Post-match check completed successfully in ${executionTime.toString()}ms`,
+    );
   } catch (error) {
     const executionTime = Date.now() - startTime;
-    logger.error(`❌ Post-match check failed after ${executionTime.toString()}ms:`, error);
+    logger.error(
+      `❌ Post-match check failed after ${executionTime.toString()}ms:`,
+      error,
+    );
     throw error;
   }
 }

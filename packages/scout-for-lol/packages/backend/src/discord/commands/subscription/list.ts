@@ -3,10 +3,14 @@ import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.ts";
 
-export async function executeSubscriptionList(interaction: ChatInputCommandInteraction) {
+export async function executeSubscriptionList(
+  interaction: ChatInputCommandInteraction,
+) {
   if (!interaction.guildId) {
     await interaction.reply({
-      content: truncateDiscordMessage("This command can only be used in a server"),
+      content: truncateDiscordMessage(
+        "This command can only be used in a server",
+      ),
       ephemeral: true,
     });
     return;
@@ -30,20 +34,21 @@ export async function executeSubscriptionList(interaction: ChatInputCommandInter
 
   if (subscriptions.length === 0) {
     await interaction.editReply({
-      content: truncateDiscordMessage("📭 No subscriptions found for this server."),
+      content: truncateDiscordMessage(
+        "📭 No subscriptions found for this server.",
+      ),
     });
     return;
   }
 
   // Group subscriptions by channel
-  const subscriptionsByChannel: Record<string, typeof subscriptions> = subscriptions.reduce<
-    Record<string, typeof subscriptions>
-  >((acc, sub) => {
-    const channelId = sub.channelId;
-    acc[channelId] ??= [];
-    acc[channelId].push(sub);
-    return acc;
-  }, {});
+  const subscriptionsByChannel: Record<string, typeof subscriptions> =
+    subscriptions.reduce<Record<string, typeof subscriptions>>((acc, sub) => {
+      const channelId = sub.channelId;
+      acc[channelId] ??= [];
+      acc[channelId].push(sub);
+      return acc;
+    }, {});
 
   const embed = new EmbedBuilder()
     .setTitle("🔔 Server Subscriptions")
@@ -53,7 +58,9 @@ export async function executeSubscriptionList(interaction: ChatInputCommandInter
     );
 
   // Add fields for each channel
-  for (const [channelId, channelSubs] of Object.entries(subscriptionsByChannel)) {
+  for (const [channelId, channelSubs] of Object.entries(
+    subscriptionsByChannel,
+  )) {
     const playerList = channelSubs
       .map((sub) => {
         const player = sub.player;

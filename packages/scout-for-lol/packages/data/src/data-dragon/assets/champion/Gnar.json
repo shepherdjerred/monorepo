@@ -134,7 +134,13 @@
           "description": "Gnar throws a boomerang that damages and slows enemies it hits before returning to him. If he catches the boomerang its cooldown is reduced.<br><br>Mega Gnar instead throws a boulder that stops on the first unit hit, damaging and slowing everything nearby. It can then be picked up to reduce the cooldown.",
           "tooltip": "<keywordMajor>Mini Gnar:</keywordMajor> Gnar throws a boomerang that deals <physicalDamage>{{ spell.gnarq:minitotaldamage }} physical damage</physicalDamage> and <status>Slows</status> by {{ spell.gnarq:slowamount*100 }}% for {{ spell.gnarq:slowduration }} seconds. The boomerang returns after hitting an enemy, dealing reduced damage to subsequent targets. Each enemy can only be hit once. Catching the boomerang reduces its Cooldown by {{ spell.gnarq:minicdrefund*100 }}%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Boomerang Damage", "Boulder Damage", "Slow", "Boulder Slow Amount", "Cooldown"],
+            "label": [
+              "Boomerang Damage",
+              "Boulder Damage",
+              "Slow",
+              "Boulder Slow Amount",
+              "Cooldown"
+            ],
             "effect": [
               "{{ minibasedamage }} -> {{ minibasedamageNL }}",
               "{{ megabasedamage }} -> {{ megabasedamageNL }}",
@@ -162,7 +168,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -211,7 +229,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -234,7 +264,12 @@
           "description": "Gnar leaps to a location and bounces off the head of any unit he lands on, traveling further.<br><br>Mega Gnar is too large to bounce and instead lands with earth-shattering force, dealing damage in an area around him.",
           "tooltip": "<keywordMajor>Mini Gnar:</keywordMajor> Gnar leaps, gaining <attackSpeed>{{ spell.gnare:minibas*100 }}% Attack Speed</attackSpeed> for {{ spell.gnare:miniasduration }} seconds. If Gnar lands on a unit he will bounce off it, traveling further. Bouncing off an enemy deals <physicalDamage>{{ spell.gnare:minitotaldamage }} physical damage</physicalDamage> and briefly <status>Slows</status> by {{ spell.gnare:movespeedmod*-100 }}%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Hop Damage", "Crunch Damage", "Bonus Attack Speed", "Cooldown"],
+            "label": [
+              "Hop Damage",
+              "Crunch Damage",
+              "Bonus Attack Speed",
+              "Cooldown"
+            ],
             "effect": [
               "{{ minidamage }} -> {{ minidamageNL }}",
               "{{ megadamage }} -> {{ megadamageNL }}",
@@ -261,7 +296,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -284,7 +331,12 @@
           "description": "Mega Gnar throws everything around him in a chosen direction, dealing damage and slowing them.  Any enemy that hits a wall is stunned and takes bonus damage.",
           "tooltip": "<keywordMajor>Mini Gnar Passive:</keywordMajor> Increase <spellName>Hyper's</spellName> <speed>Move Speed</speed>.<br /><br /><keywordMajor>Mega Gnar:</keywordMajor> Gnar tosses nearby enemies, dealing <physicalDamage>{{ damage }} physical damage</physicalDamage>, <status>Knocking Back</status>, and <status>Slowing</status> them by {{ rslowpercent }}% for {{ rccduration }} seconds. Enemies that hit a wall instead take <physicalDamage>{{ walldamage }} physical damage</physicalDamage> and are <status>Stunned</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow/Stun Duration", "Hyper Move Speed", "Cooldown"],
+            "label": [
+              "Damage",
+              "Slow/Stun Duration",
+              "Hyper Move Speed",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ rccduration }} -> {{ rccdurationNL }}",
@@ -311,7 +363,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",

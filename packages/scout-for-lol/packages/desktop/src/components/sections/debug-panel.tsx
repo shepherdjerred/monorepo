@@ -1,4 +1,12 @@
-import { Bug, Trash2, FileText, AlertCircle, Info, AlertTriangle, X } from "lucide-react";
+import {
+  Bug,
+  Trash2,
+  FileText,
+  AlertCircle,
+  Info,
+  AlertTriangle,
+  X,
+} from "lucide-react";
 import { Button } from "@scout-for-lol/desktop/components/ui/button.tsx";
 import { cn } from "@scout-for-lol/desktop/lib/utils";
 
@@ -83,12 +91,30 @@ export function DebugPanel({
 
       {/* Status Grid */}
       <div className="border-b border-gray-800 p-5">
-        <h4 className="mb-5 text-xs font-medium uppercase tracking-wider text-gray-500">Connection Status</h4>
+        <h4 className="mb-5 text-xs font-medium uppercase tracking-wider text-gray-500">
+          Connection Status
+        </h4>
         <div className="grid grid-cols-2 gap-3">
-          <StatusItem label="LCU" value={lcuStatus.connected ? "Yes" : "No"} active={lcuStatus.connected} />
-          <StatusItem label="Backend" value={backendStatus.connected ? "Yes" : "No"} active={backendStatus.connected} />
-          <StatusItem label="In Game" value={lcuStatus.inGame ? "Yes" : "No"} active={lcuStatus.inGame} />
-          <StatusItem label="Monitoring" value={isMonitoring ? "Yes" : "No"} active={isMonitoring} />
+          <StatusItem
+            label="LCU"
+            value={lcuStatus.connected ? "Yes" : "No"}
+            active={lcuStatus.connected}
+          />
+          <StatusItem
+            label="Backend"
+            value={backendStatus.connected ? "Yes" : "No"}
+            active={backendStatus.connected}
+          />
+          <StatusItem
+            label="In Game"
+            value={lcuStatus.inGame ? "Yes" : "No"}
+            active={lcuStatus.inGame}
+          />
+          <StatusItem
+            label="Monitoring"
+            value={isMonitoring ? "Yes" : "No"}
+            active={isMonitoring}
+          />
         </div>
       </div>
 
@@ -107,7 +133,8 @@ export function DebugPanel({
               <span className="text-gray-400">Debug:</span> {logPaths.debug_log}
             </p>
             <p className="break-all text-[11px] text-gray-500">
-              <span className="text-gray-400">Startup:</span> {logPaths.startup_log}
+              <span className="text-gray-400">Startup:</span>{" "}
+              {logPaths.startup_log}
             </p>
           </div>
         </div>
@@ -116,8 +143,15 @@ export function DebugPanel({
       {/* Logs */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <div className="flex items-center justify-between border-b border-gray-800 px-5 py-4">
-          <h4 className="text-xs font-medium uppercase tracking-wider text-gray-500">Live Logs ({logs.length})</h4>
-          <Button variant="ghost" size="sm" onClick={onClearLogs} icon={<Trash2 className="h-3 w-3" />}>
+          <h4 className="text-xs font-medium uppercase tracking-wider text-gray-500">
+            Live Logs ({logs.length})
+          </h4>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClearLogs}
+            icon={<Trash2 className="h-3 w-3" />}
+          >
             Clear
           </Button>
         </div>
@@ -141,7 +175,9 @@ export function DebugPanel({
                     getLogColorClass(log.level),
                   )}
                 >
-                  <span className="mt-0.5 shrink-0">{getLogIcon(log.level)}</span>
+                  <span className="mt-0.5 shrink-0">
+                    {getLogIcon(log.level)}
+                  </span>
                   <div className="min-w-0 flex-1">
                     <span className="text-gray-600">[{log.timestamp}]</span>{" "}
                     <span className="break-words">{log.message}</span>
@@ -156,11 +192,26 @@ export function DebugPanel({
   );
 }
 
-function StatusItem({ label, value, active }: { label: string; value: string; active: boolean }) {
+function StatusItem({
+  label,
+  value,
+  active,
+}: {
+  label: string;
+  value: string;
+  active: boolean;
+}) {
   return (
     <div className="flex items-center justify-between rounded-lg bg-gray-800/50 px-4 py-3">
       <span className="text-xs text-gray-500">{label}</span>
-      <span className={cn("text-xs font-medium", active ? "text-discord-green" : "text-gray-400")}>{value}</span>
+      <span
+        className={cn(
+          "text-xs font-medium",
+          active ? "text-discord-green" : "text-gray-400",
+        )}
+      >
+        {value}
+      </span>
     </div>
   );
 }

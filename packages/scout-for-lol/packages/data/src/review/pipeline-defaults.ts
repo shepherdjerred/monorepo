@@ -40,7 +40,8 @@ import IMAGE_GENERATION_USER_PROMPT_RAW from "./prompts/user/4-image-generation.
  * Summarizes curated timeline data (kills, objectives, towers, gold snapshots)
  * into a concise narrative of how the game unfolded.
  */
-export const TIMELINE_SUMMARY_SYSTEM_PROMPT = TIMELINE_SUMMARY_SYSTEM_PROMPT_RAW.trim();
+export const TIMELINE_SUMMARY_SYSTEM_PROMPT =
+  TIMELINE_SUMMARY_SYSTEM_PROMPT_RAW.trim();
 
 /**
  * System prompt for Stage 1a (Chunked): Timeline Chunk Summary
@@ -48,7 +49,8 @@ export const TIMELINE_SUMMARY_SYSTEM_PROMPT = TIMELINE_SUMMARY_SYSTEM_PROMPT_RAW
  * Summarizes a single chunk of timeline data (typically 10 minutes).
  * Each chunk is processed independently, then aggregated.
  */
-export const TIMELINE_CHUNK_SYSTEM_PROMPT = TIMELINE_CHUNK_SYSTEM_PROMPT_RAW.trim();
+export const TIMELINE_CHUNK_SYSTEM_PROMPT =
+  TIMELINE_CHUNK_SYSTEM_PROMPT_RAW.trim();
 
 /**
  * System prompt for Stage 1a (Aggregation): Timeline Aggregate
@@ -56,7 +58,8 @@ export const TIMELINE_CHUNK_SYSTEM_PROMPT = TIMELINE_CHUNK_SYSTEM_PROMPT_RAW.tri
  * Combines multiple chunk summaries into a cohesive narrative.
  * Identifies cross-chunk patterns and game flow.
  */
-export const TIMELINE_AGGREGATE_SYSTEM_PROMPT = TIMELINE_AGGREGATE_SYSTEM_PROMPT_RAW.trim();
+export const TIMELINE_AGGREGATE_SYSTEM_PROMPT =
+  TIMELINE_AGGREGATE_SYSTEM_PROMPT_RAW.trim();
 
 /**
  * System prompt for Stage 1b: Match Summary
@@ -65,7 +68,8 @@ export const TIMELINE_AGGREGATE_SYSTEM_PROMPT = TIMELINE_AGGREGATE_SYSTEM_PROMPT
  * Output is factual and will be used by the personality reviewer.
  */
 // TODO: include the lane context in the system prompt
-export const MATCH_SUMMARY_SYSTEM_PROMPT = MATCH_SUMMARY_SYSTEM_PROMPT_RAW.trim();
+export const MATCH_SUMMARY_SYSTEM_PROMPT =
+  MATCH_SUMMARY_SYSTEM_PROMPT_RAW.trim();
 
 /**
  * System prompt for Stage 2: Review Text
@@ -80,20 +84,25 @@ export const REVIEW_TEXT_SYSTEM_PROMPT = REVIEW_TEXT_SYSTEM_PROMPT_RAW.trim();
  *
  * Turns a review into a vivid image concept for Gemini to generate.
  */
-export const IMAGE_DESCRIPTION_SYSTEM_PROMPT = IMAGE_DESCRIPTION_SYSTEM_PROMPT_RAW.trim();
+export const IMAGE_DESCRIPTION_SYSTEM_PROMPT =
+  IMAGE_DESCRIPTION_SYSTEM_PROMPT_RAW.trim();
 
 // ============================================================================
 // User Prompts (Templates with variables)
 // See prompt-variables.ts for variable documentation
 // ============================================================================
 
-export const TIMELINE_SUMMARY_USER_PROMPT = TIMELINE_SUMMARY_USER_PROMPT_RAW.trim();
+export const TIMELINE_SUMMARY_USER_PROMPT =
+  TIMELINE_SUMMARY_USER_PROMPT_RAW.trim();
 export const TIMELINE_CHUNK_USER_PROMPT = TIMELINE_CHUNK_USER_PROMPT_RAW.trim();
-export const TIMELINE_AGGREGATE_USER_PROMPT = TIMELINE_AGGREGATE_USER_PROMPT_RAW.trim();
+export const TIMELINE_AGGREGATE_USER_PROMPT =
+  TIMELINE_AGGREGATE_USER_PROMPT_RAW.trim();
 export const MATCH_SUMMARY_USER_PROMPT = MATCH_SUMMARY_USER_PROMPT_RAW.trim();
 export const REVIEW_TEXT_USER_PROMPT = REVIEW_TEXT_USER_PROMPT_RAW.trim();
-export const IMAGE_DESCRIPTION_USER_PROMPT = IMAGE_DESCRIPTION_USER_PROMPT_RAW.trim();
-export const IMAGE_GENERATION_USER_PROMPT = IMAGE_GENERATION_USER_PROMPT_RAW.trim();
+export const IMAGE_DESCRIPTION_USER_PROMPT =
+  IMAGE_DESCRIPTION_USER_PROMPT_RAW.trim();
+export const IMAGE_GENERATION_USER_PROMPT =
+  IMAGE_GENERATION_USER_PROMPT_RAW.trim();
 
 // ============================================================================
 // Default Model Configurations
@@ -261,7 +270,9 @@ export function getDefaultStageConfigs(): PipelineStagesConfig {
  * Merges custom overrides with defaults, allowing partial overrides.
  * Selects a fresh random art style if not provided in overrides.
  */
-export function createStageConfigs(overrides?: Partial<PipelineStagesConfig>): PipelineStagesConfig {
+export function createStageConfigs(
+  overrides?: Partial<PipelineStagesConfig>,
+): PipelineStagesConfig {
   const defaultImageGeneration = createDefaultImageGenerationStage();
 
   if (!overrides) {

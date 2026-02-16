@@ -34,7 +34,9 @@ test("throws error when rune image doesn't exist", async () => {
 });
 
 test("throws error when augment image doesn't exist", async () => {
-  await expect(validateAugmentIcon("assets/ux/cherry/augments/icons/nonexistent.png")).rejects.toThrow(
+  await expect(
+    validateAugmentIcon("assets/ux/cherry/augments/icons/nonexistent.png"),
+  ).rejects.toThrow(
     /Augment image nonexistent.png not found.*Run 'bun run update-data-dragon'/,
   );
 });

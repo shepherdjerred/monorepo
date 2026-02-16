@@ -1,4 +1,4 @@
-export interface Manifest {
+export type Manifest = {
   timestamp: number;
   patch: ManifestPatch;
   videos: ManifestVideo[];
@@ -9,13 +9,13 @@ export interface Manifest {
   videosToCourses: ManifestCourseChapters;
 }
 
-export interface ManifestPatch {
+export type ManifestPatch = {
   patchVal: string;
   releaseDate: number;
   patchUrl: string;
 }
 
-export interface ManifestVideo {
+export type ManifestVideo = {
   role: string;
   title: string;
   desc: string;
@@ -27,7 +27,7 @@ export interface ManifestVideo {
   cSS: string;
 }
 
-export interface ManifestCommentary {
+export type ManifestCommentary = {
   role: string;
   title?: string;
   desc: string;
@@ -48,14 +48,14 @@ export interface ManifestCommentary {
   type: string;
 }
 
-export interface ManifestStaff {
+export type ManifestStaff = {
   name: string;
   summonerName: string;
   profileImage: string;
   profileImageWithRank: string;
 }
 
-export interface ManifestCourse {
+export type ManifestCourse = {
   title: string;
   uuid: string;
   desc: string;
@@ -65,7 +65,7 @@ export interface ManifestCourse {
   courseImage2: string;
 }
 
-export interface ManifestThisWeekData {
+export type ManifestThisWeekData = {
   year: number;
   weekNum: number;
   release: number;

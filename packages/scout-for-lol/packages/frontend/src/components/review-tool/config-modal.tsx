@@ -17,7 +17,12 @@ type ConfigModalProps = {
   onGlobalChange: (config: GlobalConfig) => void;
 };
 
-export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: ConfigModalProps) {
+export function ConfigModal({
+  isOpen,
+  onClose,
+  globalConfig,
+  onGlobalChange,
+}: ConfigModalProps) {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [preview] = useState<Awaited<ReturnType<typeof getResetPreview>>>({
     configs: 0,
@@ -43,7 +48,9 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
       );
     } catch (error) {
       const errorResult = ErrorSchema.safeParse(error);
-      alert(`Failed to reset settings: ${errorResult.success ? errorResult.data.message : String(error)}`);
+      alert(
+        `Failed to reset settings: ${errorResult.success ? errorResult.data.message : String(error)}`,
+      );
     }
   };
 
@@ -79,16 +86,30 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
           {/* Header */}
           <div className="sticky top-0 bg-white border-b border-surface-200 px-6 py-4 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-surface-900">API Configuration</h2>
-              <p className="text-sm text-surface-500 mt-1">API keys and external service configuration</p>
+              <h2 className="text-xl font-bold text-surface-900">
+                API Configuration
+              </h2>
+              <p className="text-sm text-surface-500 mt-1">
+                API keys and external service configuration
+              </p>
             </div>
             <button
               onClick={onClose}
               className="text-surface-400 hover:text-surface-600 transition-colors"
               title="Close"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -105,7 +126,12 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
               className="px-4 py-2 bg-defeat-600 text-white rounded-lg hover:bg-defeat-700 transition-colors flex items-center gap-2"
               title="Reset all settings except API keys, cache, and cost data"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -141,11 +167,20 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
             }}
           />
           <div className="flex min-h-full items-center justify-center p-4">
-            <div role="dialog" aria-modal="true" className="relative bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div
+              role="dialog"
+              aria-modal="true"
+              className="relative bg-white rounded-lg shadow-xl max-w-md w-full"
+            >
               <div className="p-6">
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0">
-                    <svg className="w-10 h-10 text-defeat-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="w-10 h-10 text-defeat-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -155,17 +190,23 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-surface-900 mb-2">Reset to Defaults?</h3>
-                    <p className="text-sm text-surface-600 mb-3">This will clear the following data:</p>
+                    <h3 className="text-lg font-semibold text-surface-900 mb-2">
+                      Reset to Defaults?
+                    </h3>
+                    <p className="text-sm text-surface-600 mb-3">
+                      This will clear the following data:
+                    </p>
                     <ul className="text-sm text-surface-600 space-y-1 mb-3 list-disc list-inside">
                       {preview.configs > 0 && (
                         <li>
-                          {preview.configs} saved configuration{preview.configs !== 1 ? "s" : ""}
+                          {preview.configs} saved configuration
+                          {preview.configs !== 1 ? "s" : ""}
                         </li>
                       )}
                       {preview.historyEntries > 0 && (
                         <li>
-                          {preview.historyEntries} history entr{preview.historyEntries !== 1 ? "ies" : "y"}
+                          {preview.historyEntries} history entr
+                          {preview.historyEntries !== 1 ? "ies" : "y"}
                         </li>
                       )}
                       {preview.customPersonalities > 0 && (
@@ -176,16 +217,23 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
                       )}
                       {preview.customArtStyles > 0 && (
                         <li>
-                          {preview.customArtStyles} custom art style{preview.customArtStyles !== 1 ? "s" : ""}
+                          {preview.customArtStyles} custom art style
+                          {preview.customArtStyles !== 1 ? "s" : ""}
                         </li>
                       )}
 
-                      {!hasDataToReset && <li className="text-surface-400 italic">No custom data found</li>}
+                      {!hasDataToReset && (
+                        <li className="text-surface-400 italic">
+                          No custom data found
+                        </li>
+                      )}
                     </ul>
                     <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded p-2 mb-3">
                       ✓ API keys, cache, and cost data will be preserved
                     </p>
-                    <p className="text-sm text-surface-600 font-medium">This cannot be undone. Continue?</p>
+                    <p className="text-sm text-surface-600 font-medium">
+                      This cannot be undone. Continue?
+                    </p>
                   </div>
                 </div>
               </div>

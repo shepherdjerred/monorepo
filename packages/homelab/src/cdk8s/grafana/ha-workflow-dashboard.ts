@@ -179,8 +179,8 @@ export function createHaWorkflowDashboard() {
     ).thresholds(
       new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
         { value: 0, color: "green" },
-        { value: 86400, color: "yellow" }, // 24 hours
-        { value: 172800, color: "red" }, // 48 hours
+        { value: 86_400, color: "yellow" }, // 24 hours
+        { value: 172_800, color: "red" }, // 48 hours
       ]),
     ),
   );

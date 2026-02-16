@@ -4,7 +4,7 @@ import { PrometheusRuleSpecGroupsRulesExpr } from "../../../../../generated/impo
 // Converts "{{ anything }}" to "{{ "{{" }} anything {{ "}}" }}"
 export function escapeGoTemplate(template: string): string {
   // Use a more specific replacement to avoid double-escaping
-  return template.replace(/\{\{([^}]*)\}\}/g, '{{ "{{" }}$1{{ "}}" }}');
+  return template.replaceAll(/\{\{([^}]*)\}\}/g, '{{ "{{" }}$1{{ "}}" }}');
 }
 
 // Helper to create readable Prometheus template strings with Helm escaping

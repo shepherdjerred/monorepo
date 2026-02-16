@@ -158,7 +158,11 @@ describe("Competition Lifecycle - Query Logic", () => {
       );
 
       const competitionsToEnd = competitions.filter(
-        (c) => c.endDate <= now && c.hasStartSnapshots && !c.hasEndSnapshots && !c.isCancelled,
+        (c) =>
+          c.endDate <= now &&
+          c.hasStartSnapshots &&
+          !c.hasEndSnapshots &&
+          !c.isCancelled,
       );
 
       // Competition 1: should start (start date passed, no START snapshots)

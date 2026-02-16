@@ -154,7 +154,10 @@
           "tooltip": "LeBlanc projects a sigil to an enemy, dealing <magicDamage>{{ damage }} magic damage</magicDamage> and marking them for {{ markduration }} seconds.<br /><br />Damaging the marked enemy with an Ability detonates the sigil, dealing <magicDamage>{{ markdamage }} magic damage</magicDamage>.<br /><br />If either part kills the target, Leblanc refunds {{ manarefund*100 }}% of the Mana cost and {{ cooldownrefund*100 }}% of this spell's remaining Cooldown.<br /><br /><rules>The initial sigil deals an additional {{ bonusminiondamage }} damage to minions. </rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Sigil Damage", "Detonation Damage"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ basemarkdamage }} -> {{ basemarkdamageNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ basemarkdamage }} -> {{ basemarkdamageNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [6, 6, 6, 6, 6],
@@ -175,7 +178,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -224,7 +239,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "2", "4", "600", "0.2", "0.2", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "2",
+            "4",
+            "600",
+            "0.2",
+            "0.2",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -273,7 +300,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "1.5", "1.5", "865", "14/13.25/12.5/11.75/11", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "1.5",
+            "1.5",
+            "865",
+            "14/13.25/12.5/11.75/11",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -328,7 +367,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "2",

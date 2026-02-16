@@ -1,4 +1,4 @@
-import { App } from "cdk8s";
+import type { App } from "cdk8s";
 import { createAppsChart } from "./cdk8s-charts/apps.ts";
 import { createScoutChart } from "./cdk8s-charts/scout.ts";
 import { createStarlightKarmaBotChart } from "./cdk8s-charts/starlight-karma-bot.ts";

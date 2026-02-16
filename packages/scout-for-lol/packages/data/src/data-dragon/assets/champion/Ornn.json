@@ -104,7 +104,10 @@
           "tooltip": "Ornn slams the ground, creating a fissure dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Slowing</status> by {{ e5 }}% for {{ e6 }} seconds. A pillar of rock forms at the fissure's end for {{ e3 }} seconds. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [9, 8.5, 8, 7.5, 7],
@@ -125,7 +128,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "20/45/70/95/120", "1", "4", "0", "40", "2", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "20/45/70/95/120",
+            "1",
+            "4",
+            "0",
+            "40",
+            "2",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -148,7 +163,13 @@
           "description": "Ornn advances, breathing fire. Enemies hit by the final gout of flame become Brittle.",
           "tooltip": "Ornn stomps forward Unstoppably while breathing fire, dealing <magicDamage>{{ maxpercenthpperticktooltip }}% max Health magic damage</magicDamage> over {{ breathduration }} seconds. Enemies hit by the final bout of flame become <keywordMajor>Brittle</keywordMajor> for {{ brittleduration }} seconds.<br /><br /><status>Immobilizing</status> effects on <keywordMajor>Brittle</keywordMajor> targets have their duration increased by 30% and deal an additional <magicDamage>{{ brittlepercentmaxhpcalc }} max Health magic damage</magicDamage>. Ornn's Attacks against <keywordMajor>Brittle</keywordMajor> targets <status>Knock</status> them <status>Back</status>, dealing the additional damage.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["% Health damage", "Minimum Damage", "Maximum Damage", "@AbilityResourceName@ Cost", "Cooldown"],
+            "label": [
+              "% Health damage",
+              "Minimum Damage",
+              "Maximum Damage",
+              "@AbilityResourceName@ Cost",
+              "Cooldown"
+            ],
             "effect": [
               "{{ maxpercenthpperticktooltip }}% -> {{ maxpercenthpperticktooltipNL }}%",
               "{{ minimumdamagepertick*5.000000 }} -> {{ minimumdamageperticknl*5.000000 }}",
@@ -176,7 +197,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -225,7 +258,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -274,7 +319,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

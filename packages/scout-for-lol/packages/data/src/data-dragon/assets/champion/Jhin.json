@@ -146,7 +146,12 @@
           "description": "Jhin launches a magical cartridge at an enemy. It can hit up to four targets and gains damage each time it kills.",
           "tooltip": "Jhin launches a cartridge that deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> before bouncing to a nearby enemy that has not been hit yet.<br /><br />The cartridge can hit a maximum of {{ tooltipmaxtargetshit }} times. Enemies that die shortly after being hit increase the damage of subsequent hits by {{ percentamponkill*100 }}%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Total AD Ratio", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Total AD Ratio",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ adratio*100.000000 }}% -> {{ adrationl*100.000000 }}%",
@@ -173,7 +178,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -222,7 +239,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -246,7 +275,10 @@
           "tooltip": "<passive>Passive:</passive> Champions Jhin kills will create and detonate a Lotus Trap at their location.<br /><br /><active>Active:</active> Jhin places an invisible Lotus Trap for {{ trapduration }} minutes that creates a zone that <status>Slows</status> by {{ trapslowamount*100 }}% when stepped on by an enemy. After {{ trapdetonationtime }} seconds, the trap detonates, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br />This ability has 2 charges ({{ ammorechargeratetooltip }} second refresh).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Recharge Time"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [2, 2, 2, 2, 2],
@@ -267,7 +299,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "2",
@@ -291,7 +335,10 @@
           "tooltip": "Jhin sets up and channels, enabling him to fire 4 super shots, each dealing between <physicalDamage>{{ damagecalc }}</physicalDamage> and <physicalDamage>{{ maxincreasecalc }} physical damage</physicalDamage> to the first champion hit based on their percentage missing health and <status>Slowing</status> them by {{ slowpercent*100 }}% for {{ slowduration }} seconds. The fourth shot critically strikes for {{ fourthshotmultiplier*100 }}% damage.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ damage }} -> {{ damageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [120, 105, 90],
@@ -312,7 +359,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import type { ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
 import type { DiscordAccountId } from "@scout-for-lol/data";
 import type { PlayerWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.ts";
 
@@ -7,7 +7,7 @@ import type { PlayerWithSubscriptions } from "@scout-for-lol/backend/discord/com
  * Returns the updated player with accounts and subscriptions included
  */
 export async function updatePlayerDiscordId(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   playerId: number,
   discordId: DiscordAccountId | null,
 ): Promise<PlayerWithSubscriptions> {

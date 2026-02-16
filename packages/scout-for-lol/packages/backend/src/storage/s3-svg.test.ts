@@ -57,7 +57,8 @@ afterEach(() => {
 describe("saveSvgToS3 - Success Cases", () => {
   test("uploads SVG with correct parameters", async () => {
     const matchId = MatchIdSchema.parse("NA1_1234567890");
-    const svgContent = '<svg xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100"/></svg>';
+    const svgContent =
+      '<svg xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100"/></svg>';
     const queueType = "solo";
 
     // Mock successful S3 upload
@@ -76,7 +77,9 @@ describe("saveSvgToS3 - Success Cases", () => {
     expect(command.input.ContentType).toBe("image/svg+xml");
 
     // Verify return value format
-    expect(result).toMatch(/^s3:\/\/test-bucket\/games\/\d{4}\/\d{2}\/\d{2}\/NA1_1234567890\/report\.svg$/);
+    expect(result).toMatch(
+      /^s3:\/\/test-bucket\/games\/\d{4}\/\d{2}\/\d{2}\/NA1_1234567890\/report\.svg$/,
+    );
   });
 
   test("handles arena queue type", async () => {
@@ -115,7 +118,9 @@ describe("saveSvgToS3 - Success Cases", () => {
     const command = getValidatedCommand(0);
     // Body should be Uint8Array or string
     expect(command.input.Body).toBeDefined();
-    const isValidBody = command.input.Body instanceof Uint8Array || typeof command.input.Body === "string";
+    const isValidBody =
+      command.input.Body instanceof Uint8Array ||
+      typeof command.input.Body === "string";
     expect(isValidBody).toBe(true);
 
     expect(result).toBeDefined();
@@ -123,7 +128,8 @@ describe("saveSvgToS3 - Success Cases", () => {
 
   test("handles SVG with special XML characters", async () => {
     const matchId = MatchIdSchema.parse("NA1_SPECIAL_CHARS");
-    const svgContent = '<svg xmlns="http://www.w3.org/2000/svg"><text>&lt;&gt;&amp;&quot;&#x27;</text></svg>';
+    const svgContent =
+      '<svg xmlns="http://www.w3.org/2000/svg"><text>&lt;&gt;&amp;&quot;&#x27;</text></svg>';
     const queueType = "solo";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -166,7 +172,9 @@ describe("saveSvgToS3 - Error Handling", () => {
     // Mock S3 error
     s3Mock.on(PutObjectCommand).rejects(new Error("S3 upload failed"));
 
-    await expect(saveSvgToS3(matchId, svgContent, queueType, [])).rejects.toThrow("Failed to save SVG NA1_ERROR to S3");
+    await expect(
+      saveSvgToS3(matchId, svgContent, queueType, []),
+    ).rejects.toThrow("Failed to save SVG NA1_ERROR to S3");
 
     expect(s3Mock.calls().length).toBe(1);
   });
@@ -178,9 +186,9 @@ describe("saveSvgToS3 - Error Handling", () => {
 
     s3Mock.on(PutObjectCommand).rejects(new Error("Network timeout"));
 
-    await expect(saveSvgToS3(matchId, svgContent, queueType, [])).rejects.toThrow(
-      "Failed to save SVG EUW1_NETWORK_ERROR to S3",
-    );
+    await expect(
+      saveSvgToS3(matchId, svgContent, queueType, []),
+    ).rejects.toThrow("Failed to save SVG EUW1_NETWORK_ERROR to S3");
   });
 });
 
@@ -204,7 +212,9 @@ describe("saveSvgToS3 - S3 Key Format", () => {
 
     // Verify key structure
     const key = command.input.Key;
-    expect(key).toMatch(/^games\/\d{4}\/\d{2}\/\d{2}\/NA1_DATE_TEST\/report\.svg$/);
+    expect(key).toMatch(
+      /^games\/\d{4}\/\d{2}\/\d{2}\/NA1_DATE_TEST\/report\.svg$/,
+    );
 
     // Verify it uses today's date
     const now = new Date();
@@ -300,7 +310,10 @@ describe("saveSvgToS3 - Content Type and Metadata", () => {
     const command = getValidatedCommand(0);
     expect(command.input.Body).toBeDefined();
     // Body should be a Uint8Array (UTF-8 encoded)
-    expect(command.input.Body instanceof Uint8Array || typeof command.input.Body === "string").toBe(true);
+    expect(
+      command.input.Body instanceof Uint8Array ||
+        typeof command.input.Body === "string",
+    ).toBe(true);
   });
 });
 
@@ -315,9 +328,24 @@ describe("saveSvgToS3 - Concurrent Operations", () => {
     });
 
     const uploads = [
-      saveSvgToS3(MatchIdSchema.parse("NA1_CONCURRENT_1"), "<svg>1</svg>", "solo", []),
-      saveSvgToS3(MatchIdSchema.parse("NA1_CONCURRENT_2"), "<svg>2</svg>", "flex", []),
-      saveSvgToS3(MatchIdSchema.parse("NA1_CONCURRENT_3"), "<svg>3</svg>", "arena", []),
+      saveSvgToS3(
+        MatchIdSchema.parse("NA1_CONCURRENT_1"),
+        "<svg>1</svg>",
+        "solo",
+        [],
+      ),
+      saveSvgToS3(
+        MatchIdSchema.parse("NA1_CONCURRENT_2"),
+        "<svg>2</svg>",
+        "flex",
+        [],
+      ),
+      saveSvgToS3(
+        MatchIdSchema.parse("NA1_CONCURRENT_3"),
+        "<svg>3</svg>",
+        "arena",
+        [],
+      ),
     ];
 
     const results = await Promise.all(uploads);

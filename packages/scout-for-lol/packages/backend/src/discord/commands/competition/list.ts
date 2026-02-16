@@ -28,14 +28,18 @@ const ITEMS_PER_PAGE = 5;
  * Execute /competition list command
  * Shows all competitions in the server with pagination
  */
-export async function executeCompetitionList(interaction: ChatInputCommandInteraction): Promise<void> {
+export async function executeCompetitionList(
+  interaction: ChatInputCommandInteraction,
+): Promise<void> {
   // ============================================================================
   // Step 1: Validate server context
   // ============================================================================
 
   if (!interaction.guildId) {
     await interaction.reply({
-      content: truncateDiscordMessage("❌ This command can only be used in a server."),
+      content: truncateDiscordMessage(
+        "❌ This command can only be used in a server.",
+      ),
       ephemeral: true,
     });
     return;
@@ -48,7 +52,8 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
   // ============================================================================
 
   const showActiveOnly = interaction.options.getBoolean("active-only") ?? false;
-  const showOwnOnly = interaction.options.getBoolean("my-competitions") ?? false;
+  const showOwnOnly =
+    interaction.options.getBoolean("my-competitions") ?? false;
 
   // ============================================================================
   // Step 3: Fetch competitions
@@ -66,7 +71,9 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
   } catch (error) {
     logger.error("[Competition List] Error fetching competitions:", error);
     await interaction.reply({
-      content: truncateDiscordMessage(`Error fetching competitions: ${getErrorMessage(error)}`),
+      content: truncateDiscordMessage(
+        `Error fetching competitions: ${getErrorMessage(error)}`,
+      ),
       ephemeral: true,
     });
     return;
@@ -97,8 +104,15 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
   const totalPages = Math.ceil(competitions.length / ITEMS_PER_PAGE);
   const currentPage = 0;
 
-  const embed = buildListEmbed({ competitions, currentPage, totalPages, showActiveOnly, showOwnOnly });
-  const components = totalPages > 1 ? [buildPaginationButtons(currentPage, totalPages)] : [];
+  const embed = buildListEmbed({
+    competitions,
+    currentPage,
+    totalPages,
+    showActiveOnly,
+    showOwnOnly,
+  });
+  const components =
+    totalPages > 1 ? [buildPaginationButtons(currentPage, totalPages)] : [];
 
   await interaction.reply({
     embeds: [embed],
@@ -145,7 +159,13 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
         }
 
         // Update the message
-        const newEmbed = buildListEmbed({ competitions, currentPage: page, totalPages, showActiveOnly, showOwnOnly });
+        const newEmbed = buildListEmbed({
+          competitions,
+          currentPage: page,
+          totalPages,
+          showActiveOnly,
+          showOwnOnly,
+        });
         const newComponents = [buildPaginationButtons(page, totalPages)];
 
         await buttonInteraction.update({
@@ -174,7 +194,8 @@ function buildListEmbed(params: {
   showActiveOnly: boolean;
   showOwnOnly: boolean;
 }): EmbedBuilder {
-  const { competitions, currentPage, totalPages, showActiveOnly, showOwnOnly } = params;
+  const { competitions, currentPage, totalPages, showActiveOnly, showOwnOnly } =
+    params;
   const embed = new EmbedBuilder().setColor(0x5865f2); // Blue
 
   // Build title
@@ -226,7 +247,9 @@ function buildListEmbed(params: {
     }
 
     // Add criteria description
-    lines.push(`**Criteria:** ${getCriteriaShortDescription(competition.criteria)}`);
+    lines.push(
+      `**Criteria:** ${getCriteriaShortDescription(competition.criteria)}`,
+    );
 
     embed.addFields({
       name: competition.title,
@@ -237,7 +260,9 @@ function buildListEmbed(params: {
 
   // Add footer
   if (totalPages > 1) {
-    embed.setFooter({ text: `Page ${(currentPage + 1).toString()} of ${totalPages.toString()}` });
+    embed.setFooter({
+      text: `Page ${(currentPage + 1).toString()} of ${totalPages.toString()}`,
+    });
   }
   embed.setTimestamp(new Date());
 
@@ -295,7 +320,9 @@ function buildPaginationButtons(
 /**
  * Get emoji for competition status
  */
-function getStatusEmoji(status: ReturnType<typeof getCompetitionStatus>): string {
+function getStatusEmoji(
+  status: ReturnType<typeof getCompetitionStatus>,
+): string {
   return match(status)
     .with("DRAFT", () => "🔵")
     .with("ACTIVE", () => "🟢")
@@ -319,14 +346,19 @@ function getVisibilityText(visibility: string): string {
  * Get short criteria description
  */
 function getCriteriaShortDescription(
-  criteria: Awaited<ReturnType<typeof getCompetitionsByServer>>[number]["criteria"],
+  criteria: Awaited<
+    ReturnType<typeof getCompetitionsByServer>
+  >[number]["criteria"],
 ): string {
   return match(criteria)
     .with({ type: "MOST_GAMES_PLAYED" }, () => "Most Games Played")
     .with({ type: "HIGHEST_RANK" }, () => "Highest Rank")
     .with({ type: "MOST_RANK_CLIMB" }, () => "Most Rank Climb")
     .with({ type: "MOST_WINS_PLAYER" }, () => "Most Wins")
-    .with({ type: "MOST_WINS_CHAMPION" }, (c) => `Most Wins (Champion ${c.championId.toString()})`)
+    .with(
+      { type: "MOST_WINS_CHAMPION" },
+      (c) => `Most Wins (Champion ${c.championId.toString()})`,
+    )
     .with({ type: "HIGHEST_WIN_RATE" }, () => "Highest Win Rate")
     .exhaustive();
 }

@@ -12,7 +12,7 @@ const ErrorSchema = z.object({
   message: z.string(),
 });
 
-const HELP_TEXT = `
+const HELP_TEXT = String.raw`
 helm-types - Generate TypeScript types from Helm charts
 
 USAGE:
@@ -29,25 +29,25 @@ OPTIONS:
 
 EXAMPLES:
   # Generate types for ArgoCD and print to stdout
-  bunx @homelab/helm-types \\
-    --name argo-cd \\
-    --repo https://argoproj.github.io/argo-helm \\
+  bunx @homelab/helm-types \
+    --name argo-cd \
+    --repo https://argoproj.github.io/argo-helm \
     --version 8.3.1
 
   # Generate types with custom output file
-  bunx @homelab/helm-types \\
-    --name argo-cd \\
-    --repo https://argoproj.github.io/argo-helm \\
-    --version 8.3.1 \\
+  bunx @homelab/helm-types \
+    --name argo-cd \
+    --repo https://argoproj.github.io/argo-helm \
+    --version 8.3.1 \
     --output argo-cd.types.ts
 
   # Generate types with custom chart name and interface name
-  bunx @homelab/helm-types \\
-    --name argocd \\
-    --chart argo-cd \\
-    --repo https://argoproj.github.io/argo-helm \\
-    --version 8.3.1 \\
-    --interface ArgocdHelmValues \\
+  bunx @homelab/helm-types \
+    --name argocd \
+    --chart argo-cd \
+    --repo https://argoproj.github.io/argo-helm \
+    --version 8.3.1 \
+    --interface ArgocdHelmValues \
     --output argocd.types.ts
 `;
 
@@ -69,48 +69,78 @@ function parseCliArgs(args: string[]): CliArgs {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (!arg) continue;
+    if (!arg) {continue;}
 
-    if (arg === "--help" || arg === "-h") {
+    switch (arg) {
+    case "--help": 
+    case "-h": {
       result.help = true;
-    } else if (arg === "--name" || arg === "-n") {
+    
+    break;
+    }
+    case "--name": 
+    case "-n": {
       const value = args[i + 1];
       if (value) {
         result.name = value;
         i += 1;
       }
-    } else if (arg === "--chart" || arg === "-c") {
+    
+    break;
+    }
+    case "--chart": 
+    case "-c": {
       const value = args[i + 1];
       if (value) {
         result.chart = value;
         i += 1;
       }
-    } else if (arg === "--repo" || arg === "-r") {
+    
+    break;
+    }
+    case "--repo": 
+    case "-r": {
       const value = args[i + 1];
       if (value) {
         result.repo = value;
         i += 1;
       }
-    } else if (arg === "--version" || arg === "-v") {
+    
+    break;
+    }
+    case "--version": 
+    case "-v": {
       const value = args[i + 1];
       if (value) {
         result.version = value;
         i += 1;
       }
-    } else if (arg === "--output" || arg === "-o") {
+    
+    break;
+    }
+    case "--output": 
+    case "-o": {
       const value = args[i + 1];
       if (value) {
         result.output = value;
         i += 1;
       }
-    } else if (arg === "--interface" || arg === "-i") {
+    
+    break;
+    }
+    case "--interface": 
+    case "-i": {
       const value = args[i + 1];
       if (value) {
         result.interface = value;
         i += 1;
       }
-    } else if (arg.startsWith("-")) {
+    
+    break;
+    }
+    default: if (arg.startsWith("-")) {
       throw new Error(`Unknown argument: ${arg}`);
+    }
     }
   }
 

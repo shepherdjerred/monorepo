@@ -21,7 +21,10 @@ function getRequiredEnvVar(name: string): string {
   }
 }
 
-function getOptionalEnvVar(name: string, defaultValue?: string): string | undefined {
+function getOptionalEnvVar(
+  name: string,
+  defaultValue?: string,
+): string | undefined {
   const value = env.get(name).asString();
   if (value) {
     logger.info(`✅ ${name}: configured`);
@@ -39,7 +42,10 @@ export default {
   version: getRequiredEnvVar("VERSION"),
   gitSha: getRequiredEnvVar("GIT_SHA"),
   sentryDsn: getOptionalEnvVar("SENTRY_DSN"),
-  environment: env.get("ENVIRONMENT").default("dev").asEnum(["dev", "beta", "prod"]),
+  environment: env
+    .get("ENVIRONMENT")
+    .default("dev")
+    .asEnum(["dev", "beta", "prod"]),
   discordToken: getRequiredEnvVar("DISCORD_TOKEN"),
   applicationId: getRequiredEnvVar("APPLICATION_ID"),
   discordClientSecret: getOptionalEnvVar("DISCORD_CLIENT_SECRET"),

@@ -123,7 +123,9 @@ describe("Criteria type requirements", () => {
     const queue = "SOLO";
 
     expect(queue).toBeDefined();
-    expect(["SOLO", "FLEX", "RANKED_ANY", "ARENA", "ARAM", "ALL"]).toContain(queue);
+    expect(["SOLO", "FLEX", "RANKED_ANY", "ARENA", "ARAM", "ALL"]).toContain(
+      queue,
+    );
   });
 
   test("HIGHEST_RANK requires queue to be SOLO or FLEX", () => {

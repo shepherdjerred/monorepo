@@ -1,6 +1,6 @@
-import { Video } from "./Video";
+import type { Video } from "./Video";
 
-export interface Commentary extends Video {
+export type Commentary = {
   staff: string;
   matchLink: string;
   champion: string;
@@ -11,7 +11,7 @@ export interface Commentary extends Video {
   gameLengthInMinutes: number;
   carry: string;
   type: string;
-}
+} & Video
 
 export function isCommentary(item: unknown): item is Commentary {
   const possibleCommentary = item as Commentary;

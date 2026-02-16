@@ -25,10 +25,19 @@ import { SettingsPanel } from "./settings-panel.tsx";
 import { ResultsPanel } from "./results-panel.tsx";
 import { MatchBrowser } from "./match-browser.tsx";
 import { MatchDetailsPanel } from "./match-details-panel.tsx";
-import { RankConfigPanel, createDefaultRankConfig, type RankConfig } from "./rank-config-panel.tsx";
+import {
+  RankConfigPanel,
+  createDefaultRankConfig,
+  type RankConfig,
+} from "./rank-config-panel.tsx";
 import { RatingsAnalytics } from "./ratings-analytics.tsx";
 import { Spinner } from "./ui/spinner.tsx";
-import type { CompletedMatch, ArenaMatch, RawMatch, RawTimeline } from "@scout-for-lol/data";
+import type {
+  CompletedMatch,
+  ArenaMatch,
+  RawMatch,
+  RawTimeline,
+} from "@scout-for-lol/data";
 
 // Store for app initialization state
 type AppInitState = {
@@ -124,7 +133,11 @@ void initializeAppData();
 
 export default function App() {
   // Subscribe to app initialization state
-  const initState = useSyncExternalStore(subscribeToAppInit, getAppInitSnapshot, getAppInitSnapshot);
+  const initState = useSyncExternalStore(
+    subscribeToAppInit,
+    getAppInitSnapshot,
+    getAppInitSnapshot,
+  );
   const { globalConfig, config, isInitialized } = initState;
 
   const [matchState, setMatchState] = useState<MatchState>({
@@ -140,7 +153,9 @@ export default function App() {
       <div className="min-h-screen bg-surface-50 flex items-center justify-center">
         <div className="card p-8 flex flex-col items-center gap-4 animate-fade-in">
           <Spinner size="lg" className="text-brand-500" />
-          <p className="text-surface-600 font-medium">Loading configuration...</p>
+          <p className="text-surface-600 font-medium">
+            Loading configuration...
+          </p>
         </div>
       </div>
     );
@@ -170,7 +185,11 @@ export default function App() {
     setMatchState((prev) => ({ ...prev, result }));
   };
 
-  const updateMatch = (match: CompletedMatch | ArenaMatch, rawMatch: RawMatch, rawTimeline: RawTimeline | null) => {
+  const updateMatch = (
+    match: CompletedMatch | ArenaMatch,
+    rawMatch: RawMatch,
+    rawTimeline: RawTimeline | null,
+  ) => {
     setMatchState((prev) => {
       const newState: MatchState = {
         match,
@@ -189,7 +208,10 @@ export default function App() {
   };
 
   // Apply rank overrides to match if enabled
-  const getMatchWithRankOverrides = (): CompletedMatch | ArenaMatch | undefined => {
+  const getMatchWithRankOverrides = ():
+    | CompletedMatch
+    | ArenaMatch
+    | undefined => {
     if (!matchState.match) {
       return undefined;
     }
@@ -244,8 +266,12 @@ export default function App() {
               {/* Match Browser */}
               <section className="card p-0 overflow-hidden">
                 <div className="px-6 py-4 border-b border-surface-200/50">
-                  <h2 className="text-lg font-semibold text-surface-900">Browse Matches</h2>
-                  <p className="text-sm text-surface-500 mt-0.5">Select a match to generate a review</p>
+                  <h2 className="text-lg font-semibold text-surface-900">
+                    Browse Matches
+                  </h2>
+                  <p className="text-sm text-surface-500 mt-0.5">
+                    Select a match to generate a review
+                  </p>
                 </div>
                 <MatchBrowser
                   onMatchSelected={(match, rawMatch, rawTimeline) => {
@@ -258,14 +284,20 @@ export default function App() {
               {/* Selected Match Details */}
               {matchState.match && (
                 <section className="animate-slide-up">
-                  <MatchDetailsPanel match={matchState.match} hasTimeline={matchState.rawTimeline !== undefined} />
+                  <MatchDetailsPanel
+                    match={matchState.match}
+                    hasTimeline={matchState.rawTimeline !== undefined}
+                  />
                 </section>
               )}
 
               {/* Rank Context Override */}
               {matchState.match && matchState.match.queueType !== "arena" && (
                 <section className="animate-slide-up">
-                  <RankConfigPanel config={matchState.rankConfig} onChange={updateRankConfig} />
+                  <RankConfigPanel
+                    config={matchState.rankConfig}
+                    onChange={updateRankConfig}
+                  />
                 </section>
               )}
 

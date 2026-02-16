@@ -3,7 +3,10 @@ import type {
   LeaderboardEntry,
   PlayerWithAccounts,
 } from "@scout-for-lol/backend/league/competition/processors/types.ts";
-import { isPlayerInMatch, matchesQueue } from "@scout-for-lol/backend/league/competition/processors/helpers.ts";
+import {
+  isPlayerInMatch,
+  matchesQueue,
+} from "@scout-for-lol/backend/league/competition/processors/helpers.ts";
 
 /**
  * Process "Most Games Played" criteria

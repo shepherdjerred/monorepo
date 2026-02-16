@@ -13,7 +13,6 @@
 import simpleGit from "simple-git";
 import OpenAI from "openai";
 import { z } from "zod";
-import { createPostalClientFromEnv } from "./postal-client.js";
 import {
   getFullDependencyChanges,
   fetchReleaseNotesBetween,
@@ -21,6 +20,7 @@ import {
   type FullDependencyDiff,
 } from "./index.js";
 import { HELM_CHART_GITHUB_REPOS, HELM_CHART_APP_REPOS, DOCKER_IMAGE_GITHUB_REPOS } from "./repo-mappings.js";
+import { formatEmailHtml, sendEmail } from "./email-formatter.js";
 
 // Schema for parsed dependency info from renovate comments
 const DependencyInfoSchema = z.object({
@@ -82,7 +82,7 @@ const REPO_URL = "https://github.com/shepherdjerred/homelab.git";
 const args = Bun.argv.slice(2);
 const dryRun = args.includes("--dry-run");
 const daysArg = args.find((a) => !a.startsWith("--"));
-const DAYS_TO_LOOK_BACK = daysArg ? parseInt(daysArg, 10) : 7;
+const DAYS_TO_LOOK_BACK = daysArg ? Number.parseInt(daysArg, 10) : 7;
 
 async function main() {
   console.log(`Starting dependency summary generation (looking back ${String(DAYS_TO_LOOK_BACK)} days)...`);
@@ -113,7 +113,7 @@ async function generateAndSendSummary() {
     const changes = await getVersionChanges(tempDir);
     if (changes.length === 0) {
       console.log("No dependency changes in the last week");
-      await sendEmail("No Dependency Updates This Week", "<p>No dependencies were updated in the last week.</p>");
+      await sendEmail("No Dependency Updates This Week", "<p>No dependencies were updated in the last week.</p>", dryRun);
       return;
     }
 
@@ -126,8 +126,8 @@ async function generateAndSendSummary() {
     const summary = await summarizeWithLLM(changes, releaseNotes);
 
     // Step 4: Format and send email
-    const htmlContent = formatEmailHtml(changes, summary, failedFetches);
-    await sendEmail("Weekly Dependency Update Summary", htmlContent);
+    const htmlContent = formatEmailHtml(changes, summary, failedFetches, transitiveDepsDiffs);
+    await sendEmail("Weekly Dependency Update Summary", htmlContent, dryRun);
   } finally {
     // Cleanup temp directory
     await Bun.$`rm -rf ${tempDir}`;
@@ -181,18 +181,45 @@ async function getVersionChanges(repoPath: string): Promise<DependencyInfo[]> {
   const uniqueChanges = new Map<string, DependencyInfo>();
   for (const change of changes) {
     const existing = uniqueChanges.get(change.name);
-    if (!existing) {
-      uniqueChanges.set(change.name, change);
-    } else {
+    if (existing) {
       // Keep the oldest "old" version and newest "new" version
       uniqueChanges.set(change.name, {
         ...change,
         oldVersion: existing.oldVersion,
       });
+    } else {
+      uniqueChanges.set(change.name, change);
     }
   }
 
-  return Array.from(uniqueChanges.values());
+  return [...uniqueChanges.values()];
+}
+
+function findMatchingAddedLine(
+  lines: string[],
+  startIndex: number,
+  versionRegex: RegExp,
+  name: string,
+  renovateComment: string | null,
+  oldVersion: string,
+): DependencyInfo | null {
+  for (let j = startIndex; j < lines.length; j++) {
+    const nextLine = lines[j];
+    if (!nextLine) {continue;}
+    if (!nextLine.startsWith("+") || nextLine.startsWith("+++")) {continue;}
+
+    const newVersionMatch = versionRegex.exec(nextLine);
+    if (!newVersionMatch) {continue;}
+
+    const newName = newVersionMatch[1] ?? newVersionMatch[2];
+    if (newName !== name) {continue;}
+
+    const newVersion = newVersionMatch[3];
+    if (!newVersion) {continue;}
+
+    return parseRenovateComment(renovateComment, name, oldVersion, newVersion);
+  }
+  return null;
 }
 
 function parseDiff(diff: string): DependencyInfo[] {
@@ -200,11 +227,11 @@ function parseDiff(diff: string): DependencyInfo[] {
   const lines = diff.split("\n");
 
   // Match both quoted keys ("name": "value") and unquoted keys (name: "value")
-  const versionRegex = /(?:"([^"]+)"|([a-zA-Z0-9_-]+)):\s*"([^"]+)"/;
+  const versionRegex = /(?:"([^"]+)"|([\w-]+)):\s*"([^"]+)"/;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (!line) continue;
+    if (!line) {continue;}
 
     // Look for removed lines (old version)
     if (line.startsWith("-") && !line.startsWith("---")) {
@@ -213,7 +240,7 @@ function parseDiff(diff: string): DependencyInfo[] {
         // Name is either group 1 (quoted) or group 2 (unquoted)
         const name = versionMatch[1] ?? versionMatch[2];
         const oldVersion = versionMatch[3];
-        if (!name || !oldVersion) continue;
+        if (!name || !oldVersion) {continue;}
 
         // Look backwards for the renovate comment (should be directly above)
         // The comment must be on the immediately preceding line (in context)
@@ -224,24 +251,9 @@ function parseDiff(diff: string): DependencyInfo[] {
         }
 
         // Look for the corresponding added line
-        for (let j = i + 1; j < lines.length; j++) {
-          const nextLine = lines[j];
-          if (!nextLine) continue;
-          if (nextLine.startsWith("+") && !nextLine.startsWith("+++")) {
-            const newVersionMatch = versionRegex.exec(nextLine);
-            if (newVersionMatch) {
-              const newName = newVersionMatch[1] ?? newVersionMatch[2];
-              if (newName === name) {
-                const newVersion = newVersionMatch[3];
-                if (!newVersion) continue;
-                const info = parseRenovateComment(renovateComment, name, oldVersion, newVersion);
-                if (info) {
-                  changes.push(info);
-                }
-                break;
-              }
-            }
-          }
+        const matchedInfo = findMatchingAddedLine(lines, i + 1, versionRegex, name, renovateComment, oldVersion);
+        if (matchedInfo) {
+          changes.push(matchedInfo);
         }
       }
     }
@@ -260,8 +272,8 @@ function parseRenovateComment(
     return null;
   }
 
-  const datasourceRegex = /datasource=([^\s]+)/;
-  const registryUrlRegex = /registryUrl=([^\s]+)/;
+  const datasourceRegex = /datasource=(\S+)/;
+  const registryUrlRegex = /registryUrl=(\S+)/;
 
   const datasourceMatch = datasourceRegex.exec(comment);
   const registryUrlMatch = registryUrlRegex.exec(comment);
@@ -304,7 +316,7 @@ async function fetchAllReleaseNotes(
       const releaseNotesList = await fetchReleaseNotes(change);
       if (releaseNotesList.length > 0) {
         for (const note of releaseNotesList) {
-          const preview = note.notes.slice(0, 100).replace(/\n/g, " ");
+          const preview = note.notes.slice(0, 100).replaceAll('\n', " ");
           console.log(`  ✓ [${note.source}] Got ${String(note.notes.length)} chars: "${preview}..."`);
           notes.push(note);
         }
@@ -327,12 +339,12 @@ async function fetchReleaseNotes(dep: DependencyInfo): Promise<ReleaseNotes[]> {
   switch (dep.datasource) {
     case "github-releases": {
       const note = await fetchGitHubReleaseNotes(dep);
-      if (note) results.push(note);
+      if (note) {results.push(note);}
       break;
     }
     case "docker": {
       const note = await fetchDockerReleaseNotes(dep);
-      if (note) results.push(note);
+      if (note) {results.push(note);}
       break;
     }
     case "helm": {
@@ -341,6 +353,9 @@ async function fetchReleaseNotes(dep: DependencyInfo): Promise<ReleaseNotes[]> {
       results.push(...helmNotes);
       break;
     }
+    case "custom.papermc":
+      // Custom datasource - no release notes fetching implemented
+      break;
   }
 
   return results;
@@ -364,6 +379,46 @@ async function fetchGitHubReleaseNotes(dep: DependencyInfo): Promise<ReleaseNote
     };
   }
   return null;
+}
+
+async function tryArtifactHubFallback(depName: string, newVersion: string): Promise<ReleaseNotes | null> {
+  try {
+    const searchUrl = `https://artifacthub.io/api/v1/packages/helm/${depName}`;
+    const response = await fetch(searchUrl, {
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "homelab-dependency-summary",
+      },
+    });
+
+    if (!response.ok) {return null;}
+
+    const rawData: unknown = await response.json();
+    const parsed = ArtifactHubSchema.safeParse(rawData);
+    if (!parsed.success) {return null;}
+
+    const repoUrl = parsed.data.repository?.url;
+    if (!repoUrl) {return null;}
+
+    const repoMatch = /github\.com\/([^/]+\/[^/]+)/i.exec(repoUrl);
+    if (!repoMatch?.[1]) {return null;}
+
+    const [owner, repo] = repoMatch[1].split("/");
+    if (!owner || !repo) {return null;}
+
+    const releases = await fetchGitHubReleases(owner, repo, newVersion);
+    if (!releases) {return null;}
+
+    return {
+      dependency: depName,
+      version: newVersion,
+      notes: releases.body,
+      url: releases.url,
+      source: "helm-chart",
+    };
+  } catch {
+    return null;
+  }
 }
 
 async function fetchDockerReleaseNotes(dep: DependencyInfo): Promise<ReleaseNotes | null> {
@@ -454,40 +509,9 @@ async function fetchHelmReleaseNotes(dep: DependencyInfo): Promise<ReleaseNotes[
 
   // 3. If still nothing, try ArtifactHub API as fallback
   if (results.length === 0) {
-    try {
-      const searchUrl = `https://artifacthub.io/api/v1/packages/helm/${dep.name}`;
-      const response = await fetch(searchUrl, {
-        headers: {
-          Accept: "application/json",
-          "User-Agent": "homelab-dependency-summary",
-        },
-      });
-
-      if (response.ok) {
-        const rawData: unknown = await response.json();
-        const parsed = ArtifactHubSchema.safeParse(rawData);
-
-        if (parsed.success && parsed.data.repository?.url) {
-          const repoMatch = /github\.com\/([^/]+\/[^/]+)/i.exec(parsed.data.repository.url);
-          if (repoMatch?.[1]) {
-            const [owner, repo] = repoMatch[1].split("/");
-            if (owner && repo) {
-              const releases = await fetchGitHubReleases(owner, repo, dep.newVersion);
-              if (releases) {
-                results.push({
-                  dependency: dep.name,
-                  version: dep.newVersion,
-                  notes: releases.body,
-                  url: releases.url,
-                  source: "helm-chart",
-                });
-              }
-            }
-          }
-        }
-      }
-    } catch {
-      // Continue
+    const artifactHubResult = await tryArtifactHubFallback(dep.name, dep.newVersion);
+    if (artifactHubResult) {
+      results.push(artifactHubResult);
     }
   }
 
@@ -696,285 +720,7 @@ Format the response in HTML for email.`;
   }
 }
 
-function formatEmailHtml(changes: DependencyInfo[], llmSummary: string, failedFetches: FailedFetch[]): string {
-  const changesHtml = changes
-    .map(
-      (c) => `
-        <tr>
-          <td style="padding: 8px; border: 1px solid #ddd;">${c.name}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">${c.oldVersion}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">${c.newVersion}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">${c.datasource}</td>
-        </tr>`,
-    )
-    .join("");
 
-  const failedHtml =
-    failedFetches.length > 0
-      ? `
-  <h2>⚠️ Failed to Fetch Release Notes (${String(failedFetches.length)})</h2>
-  <p style="color: #b45309; background-color: #fef3c7; padding: 10px; border-radius: 4px;">
-    The following dependencies could not have their release notes fetched.
-    The AI summary for these may be less accurate.
-  </p>
-  <ul>
-    ${failedFetches.map((f) => `<li><strong>${f.dependency}</strong>: ${f.reason}</li>`).join("\n    ")}
-  </ul>
-  `
-      : "";
-
-  // Format transitive dependencies section
-  const transitiveDepsHtml = formatTransitiveDepsHtml();
-
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
-    h1 { color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 10px; }
-    h2 { color: #1e40af; margin-top: 30px; }
-    h3 { color: #3b82f6; margin-top: 20px; }
-    table { border-collapse: collapse; width: 100%; margin: 20px 0; }
-    th { background-color: #2563eb; color: white; padding: 12px 8px; text-align: left; }
-    td { padding: 8px; border: 1px solid #ddd; }
-    tr:nth-child(even) { background-color: #f8fafc; }
-    .summary { background-color: #f0f9ff; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0; }
-    .transitive { background-color: #f0fdf4; border-left: 4px solid #22c55e; padding: 15px; margin: 20px 0; }
-    .transitive-section { margin-left: 20px; }
-    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 0.9em; }
-    .dep-chain { color: #6b7280; font-size: 0.9em; }
-  </style>
-</head>
-<body>
-  <h1>Weekly Dependency Update Summary</h1>
-  <p>Generated on ${new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
-
-  <h2>Direct Dependency Updates (${String(changes.length)})</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Dependency</th>
-        <th>Old Version</th>
-        <th>New Version</th>
-        <th>Source</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${changesHtml}
-    </tbody>
-  </table>
-
-  ${transitiveDepsHtml}
-
-  ${failedHtml}
-
-  <h2>AI Summary</h2>
-  <div class="summary">
-    ${llmSummary}
-  </div>
-
-  <div class="footer">
-    <p>This summary was automatically generated by your homelab dependency monitoring system.</p>
-    <p>Repository: <a href="https://github.com/shepherdjerred/homelab">shepherdjerred/homelab</a></p>
-  </div>
-</body>
-</html>`;
-}
-
-function formatTransitiveDepsHtml(): string {
-  if (transitiveDepsDiffs.size === 0) {
-    return "";
-  }
-
-  const sections: string[] = [];
-
-  for (const [chartName, diff] of transitiveDepsDiffs) {
-    const hasChanges =
-      diff.images.updated.length > 0 || diff.charts.updated.length > 0 || diff.appVersions.updated.length > 0;
-
-    if (!hasChanges) continue;
-
-    let sectionHtml = `<h3>${chartName} - Transitive Updates</h3><div class="transitive-section">`;
-
-    // Sub-chart updates
-    if (diff.charts.updated.length > 0) {
-      sectionHtml += `
-      <h4>Sub-chart Updates</h4>
-      <table>
-        <thead>
-          <tr>
-            <th>Chart</th>
-            <th>Old Version</th>
-            <th>New Version</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${diff.charts.updated
-            .map(
-              (c) => `
-            <tr>
-              <td style="padding: 8px; border: 1px solid #ddd;">${c.name}</td>
-              <td style="padding: 8px; border: 1px solid #ddd;">${c.oldVersion}</td>
-              <td style="padding: 8px; border: 1px solid #ddd;">${c.newVersion}</td>
-            </tr>
-          `,
-            )
-            .join("")}
-        </tbody>
-      </table>`;
-    }
-
-    // Image updates
-    if (diff.images.updated.length > 0) {
-      sectionHtml += `
-      <h4>Container Image Updates</h4>
-      <table>
-        <thead>
-          <tr>
-            <th>Image</th>
-            <th>Old Tag</th>
-            <th>New Tag</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${diff.images.updated
-            .map((img) => {
-              const registry = img.registry ? `${img.registry}/` : "";
-              return `
-            <tr>
-              <td style="padding: 8px; border: 1px solid #ddd;">${registry}${img.repository}</td>
-              <td style="padding: 8px; border: 1px solid #ddd;">${img.oldTag}</td>
-              <td style="padding: 8px; border: 1px solid #ddd;">${img.newTag}</td>
-            </tr>
-          `;
-            })
-            .join("")}
-        </tbody>
-      </table>`;
-    }
-
-    // AppVersion updates
-    if (diff.appVersions.updated.length > 0) {
-      sectionHtml += `
-      <h4>AppVersion Updates</h4>
-      <ul>
-        ${diff.appVersions.updated
-          .map((a) => `<li><strong>${a.chartName}</strong>: ${a.oldAppVersion} → ${a.newAppVersion}</li>`)
-          .join("\n")}
-      </ul>`;
-    }
-
-    sectionHtml += "</div>";
-    sections.push(sectionHtml);
-  }
-
-  if (sections.length === 0) {
-    return "";
-  }
-
-  return `
-  <h2>Transitive Dependency Updates</h2>
-  <div class="transitive">
-    <p>The following indirect dependencies were also updated as part of the direct dependency changes above.</p>
-  </div>
-  ${sections.join("\n")}
-  `;
-}
-
-async function sendEmail(subject: string, htmlContent: string): Promise<void> {
-  // In dry-run mode, output to markdown file
-  if (dryRun) {
-    // Convert HTML to markdown
-    const markdown = htmlContent
-      // Remove style blocks
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-      // Convert headers
-      .replace(/<h1[^>]*>(.*?)<\/h1>/gi, "\n# $1\n")
-      .replace(/<h2[^>]*>(.*?)<\/h2>/gi, "\n## $1\n")
-      .replace(/<h3[^>]*>(.*?)<\/h3>/gi, "\n### $1\n")
-      // Convert strong/bold
-      .replace(/<strong>(.*?)<\/strong>/gi, "**$1**")
-      .replace(/<b>(.*?)<\/b>/gi, "**$1**")
-      // Convert em/italic
-      .replace(/<em>(.*?)<\/em>/gi, "*$1*")
-      .replace(/<i>(.*?)<\/i>/gi, "*$1*")
-      // Convert links
-      .replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, "[$2]($1)")
-      // Convert table - build proper markdown table
-      .replace(/<table[^>]*>([\s\S]*?)<\/table>/gi, (_match, tableContent: string) => {
-        const rows: string[] = [];
-        const rowMatches = tableContent.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi) ?? [];
-        rowMatches.forEach((row, index) => {
-          const cells: string[] = [];
-          const cellMatches = row.match(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/gi) ?? [];
-          cellMatches.forEach((cell) => {
-            const content = cell
-              .replace(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/i, "$1")
-              .replace(/<[^>]+>/g, "")
-              .trim();
-            cells.push(content);
-          });
-          rows.push("| " + cells.join(" | ") + " |");
-          // Add separator after header row
-          if (index === 0) {
-            rows.push("|" + cells.map(() => "---").join("|") + "|");
-          }
-        });
-        return "\n" + rows.join("\n") + "\n";
-      })
-      // Convert list items
-      .replace(/<li[^>]*>/gi, "\n- ")
-      .replace(/<\/li>/gi, "")
-      // Convert paragraphs and divs to newlines
-      .replace(/<\/p>/gi, "\n\n")
-      .replace(/<p[^>]*>/gi, "")
-      .replace(/<\/div>/gi, "\n")
-      .replace(/<div[^>]*>/gi, "")
-      .replace(/<br\s*\/?>/gi, "\n")
-      // Remove remaining tags
-      .replace(/<[^>]+>/g, "")
-      // Decode HTML entities
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&nbsp;/g, " ")
-      // Clean up whitespace
-      .replace(/\n\s*\n\s*\n/g, "\n\n")
-      .trim();
-
-    const outputPath = "dependency-summary.md";
-    await Bun.write(outputPath, markdown);
-    console.log(`\nDRY RUN - Markdown summary written to: ${outputPath}`);
-    return;
-  }
-
-  const recipientEmail = Bun.env["RECIPIENT_EMAIL"];
-  const senderEmail = Bun.env["SENDER_EMAIL"] ?? "updates@homelab.local";
-
-  if (!recipientEmail) {
-    console.error("RECIPIENT_EMAIL not set, cannot send email");
-    throw new Error("RECIPIENT_EMAIL not set");
-  }
-
-  try {
-    const postal = createPostalClientFromEnv();
-    await postal.sendEmail({
-      to: recipientEmail,
-      from: senderEmail,
-      subject,
-      htmlBody: htmlContent,
-      tag: "dependency-summary",
-    });
-
-    console.log("Email sent successfully via Postal");
-  } catch (error) {
-    console.error(`Failed to send email: ${String(error)}`);
-    throw error;
-  }
-}
 
 // Run the script
 await main();

@@ -1,21 +1,21 @@
 import React from "react";
 import { Searchbar } from "./Searchbar";
 import PaginatedFuseSearch from "./PaginatedFuseSearch";
-import { IFuseOptions } from "fuse.js";
-import { FuseSearchResult } from "./FuseSearch";
-import { Container } from "../../Container";
-import FilterSelector from "../filter/FilterSelector";
-import { Filters } from "../filter/Filters";
-import { isCommentary } from "../../../model/Commentary";
-import { isCourse } from "../../../model/Course";
-import { isVideo } from "../../../model/Video";
-import { Watchable } from "../../../model/WatchStatus";
-import { Bookmarkable } from "../../../model/Bookmark";
-import Banner, { BannerType } from "../../Banner";
-import Type, { getType } from "../../../model/Type";
-import { Role } from "../../../model/Role";
+import type { IFuseOptions } from "fuse.js";
+import type { FuseSearchResult } from "./FuseSearch";
+import { Container } from "@shepherdjerred/better-skill-capped/components/Container";
+import FilterSelector from "@shepherdjerred/better-skill-capped/components/omnisearch/filter/FilterSelector";
+import type { Filters } from "@shepherdjerred/better-skill-capped/components/omnisearch/filter/Filters";
+import { isCommentary } from "@shepherdjerred/better-skill-capped/model/Commentary";
+import { isCourse } from "@shepherdjerred/better-skill-capped/model/Course";
+import { isVideo } from "@shepherdjerred/better-skill-capped/model/Video";
+import type { Watchable } from "@shepherdjerred/better-skill-capped/model/WatchStatus";
+import type { Bookmarkable } from "@shepherdjerred/better-skill-capped/model/Bookmark";
+import Banner, { BannerType } from "@shepherdjerred/better-skill-capped/components/Banner";
+import Type, { getType } from "@shepherdjerred/better-skill-capped/model/Type";
+import { Role } from "@shepherdjerred/better-skill-capped/model/Role";
 
-export interface SearchProps<T> {
+export type SearchProps<T> = {
   items: T[];
   fuseOptions: IFuseOptions<T>;
   render: (items: FuseSearchResult<T>) => React.ReactNode;
@@ -25,7 +25,7 @@ export interface SearchProps<T> {
   isBookmarked: (item: Bookmarkable) => boolean;
 }
 
-interface SearchState {
+type SearchState = {
   query: string;
   filters: Filters;
 }
@@ -74,52 +74,32 @@ export default class Search<T> extends React.PureComponent<SearchProps<T>, Searc
     // TODO this is very hacky. fix it.
     const filteredItems = items
       .filter((item) => {
-        if (isVideo(item) || isCourse(item) || isCommentary(item)) {
-          return filters.roles.find((role) => role === item.role) !== undefined;
-        } else {
-          return false;
-        }
+        return isVideo(item) || isCourse(item) || isCommentary(item) ? filters.roles.find((role) => role === item.role) !== undefined : false;
       })
       .filter((item) => {
         if (filters.onlyBookmarked) {
-          if (isVideo(item) || isCourse(item) || isCommentary(item)) {
-            return isBookmarked(item);
-          } else {
-            return false;
-          }
+          return isVideo(item) || isCourse(item) || isCommentary(item) ? isBookmarked(item) : false;
         } else {
           return true;
         }
       })
       .filter((item) => {
         if (filters.onlyUnbookmarked) {
-          if (isVideo(item) || isCourse(item) || isCommentary(item)) {
-            return !isBookmarked(item);
-          } else {
-            return false;
-          }
+          return isVideo(item) || isCourse(item) || isCommentary(item) ? !isBookmarked(item) : false;
         } else {
           return true;
         }
       })
       .filter((item) => {
         if (filters.onlyUnwatched) {
-          if (isVideo(item) || isCourse(item) || isCommentary(item)) {
-            return !isWatched(item);
-          } else {
-            return false;
-          }
+          return isVideo(item) || isCourse(item) || isCommentary(item) ? !isWatched(item) : false;
         } else {
           return true;
         }
       })
       .filter((item) => {
         if (filters.onlyWatched) {
-          if (isVideo(item) || isCourse(item) || isCommentary(item)) {
-            return isWatched(item);
-          } else {
-            return false;
-          }
+          return isVideo(item) || isCourse(item) || isCommentary(item) ? isWatched(item) : false;
         } else {
           return true;
         }

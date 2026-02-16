@@ -30,7 +30,10 @@ const logger = createLogger("model-match");
 export function toMatch(
   players: Player[],
   rawMatch: RawMatch,
-  playerRanks: Map<string, { before: Rank | undefined; after: Rank | undefined }>,
+  playerRanks: Map<
+    string,
+    { before: Rank | undefined; after: Rank | undefined }
+  >,
 ): CompletedMatch {
   const teams = getTeams(rawMatch.info.participants, participantToChampion);
   const queueType = parseQueueType(rawMatch.info.queueId);
@@ -45,12 +48,17 @@ export function toMatch(
     // This ensures no participant data leaks into player config
     const configValidation = PlayerConfigEntrySchema.safeParse(player.config);
     if (!configValidation.success) {
-      throw new Error(`Invalid player config for ${player.config.alias}: config has unexpected fields`);
+      throw new Error(
+        `Invalid player config for ${player.config.alias}: config has unexpected fields`,
+      );
     }
     // Use validated config to ensure no extra fields
     const validatedConfig = configValidation.data;
 
-    const participantRaw = findParticipant(player.config.league.leagueAccount.puuid, rawMatch.info.participants);
+    const participantRaw = findParticipant(
+      player.config.league.leagueAccount.puuid,
+      rawMatch.info.participants,
+    );
     if (participantRaw === undefined) {
       const searchingFor = player.config.league.leagueAccount.puuid;
       const metadataPuuids = rawMatch.metadata.participants;
@@ -71,7 +79,9 @@ export function toMatch(
         emptyPuuidsInInfo: infoPuuids.filter((p) => p === "").length,
       });
 
-      throw new Error(`participant not found for player ${player.config.alias}`);
+      throw new Error(
+        `participant not found for player ${player.config.alias}`,
+      );
     }
 
     // TypeScript needs explicit narrowing after throw
@@ -86,14 +96,23 @@ export function toMatch(
 
     // Get per-player rank data from the map
     const puuid = player.config.league.leagueAccount.puuid;
-    const ranks = playerRanks.get(puuid) ?? { before: undefined, after: undefined };
+    const ranks = playerRanks.get(puuid) ?? {
+      before: undefined,
+      after: undefined,
+    };
 
     const playerObject = {
       playerConfig: validatedConfig,
       rankBeforeMatch: ranks.before,
       rankAfterMatch: ranks.after,
-      wins: queueType === "solo" || queueType === "flex" ? (player.ranks[queueType]?.wins ?? undefined) : undefined,
-      losses: queueType === "solo" || queueType === "flex" ? (player.ranks[queueType]?.losses ?? undefined) : undefined,
+      wins:
+        queueType === "solo" || queueType === "flex"
+          ? (player.ranks[queueType]?.wins ?? undefined)
+          : undefined,
+      losses:
+        queueType === "solo" || queueType === "flex"
+          ? (player.ranks[queueType]?.losses ?? undefined)
+          : undefined,
       champion,
       outcome: getOutcome(participant),
       team: team,
@@ -128,7 +147,9 @@ const ArenaSubteamIdSchema = z.union([
   z.literal(8),
 ]);
 
-function validateArenaSubteamId(participant: RawParticipant): 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 {
+function validateArenaSubteamId(
+  participant: RawParticipant,
+): 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 {
   return ArenaSubteamIdSchema.parse(participant.playerSubteamId);
 }
 
@@ -153,7 +174,9 @@ export function groupArenaTeams(participants: RawParticipant[]) {
     sortBy(([subteamId]) => subteamId),
     map(([subteamId, players]) => {
       if (players.length !== 2) {
-        throw new Error(`subteam ${subteamId.toString()} must have exactly 2 players`);
+        throw new Error(
+          `subteam ${subteamId.toString()} must have exactly 2 players`,
+        );
       }
       return { subteamId, players };
     }),
@@ -164,7 +187,10 @@ export function groupArenaTeams(participants: RawParticipant[]) {
   return groups;
 }
 
-export function getArenaTeammate(participant: RawParticipant, participants: RawParticipant[]) {
+export function getArenaTeammate(
+  participant: RawParticipant,
+  participants: RawParticipant[],
+) {
   const sub = validateArenaSubteamId(participant);
   for (const p of participants) {
     if (p === participant) {
@@ -203,7 +229,10 @@ export function getArenaPlacement(participant: RawParticipant) {
   return ArenaParticipantFieldsSchema.parse(participant).placement;
 }
 
-export function toArenaMatch(players: Player[], rawMatch: RawMatch): ArenaMatch {
+export function toArenaMatch(
+  players: Player[],
+  rawMatch: RawMatch,
+): ArenaMatch {
   const subteams = toArenaSubteams(rawMatch.info.participants);
 
   // Build ArenaMatch.players for all tracked players
@@ -212,12 +241,17 @@ export function toArenaMatch(players: Player[], rawMatch: RawMatch): ArenaMatch 
     // This ensures no participant data leaks into player config
     const configValidation = PlayerConfigEntrySchema.safeParse(player.config);
     if (!configValidation.success) {
-      throw new Error(`Invalid player config for ${player.config.alias}: config has unexpected fields`);
+      throw new Error(
+        `Invalid player config for ${player.config.alias}: config has unexpected fields`,
+      );
     }
     // Use validated config to ensure no extra fields
     const validatedConfig = configValidation.data;
 
-    const participant = findParticipant(validatedConfig.league.leagueAccount.puuid, rawMatch.info.participants);
+    const participant = findParticipant(
+      validatedConfig.league.leagueAccount.puuid,
+      rawMatch.info.participants,
+    );
     if (participant === undefined) {
       const searchingFor = validatedConfig.league.leagueAccount.puuid;
       const metadataPuuids = rawMatch.metadata.participants;
@@ -238,14 +272,21 @@ export function toArenaMatch(players: Player[], rawMatch: RawMatch): ArenaMatch 
         emptyPuuidsInInfo: infoPuuids.filter((p) => p === "").length,
       });
 
-      throw new Error(`participant not found for player ${validatedConfig.alias}`);
+      throw new Error(
+        `participant not found for player ${validatedConfig.alias}`,
+      );
     }
     const subteamId = validateArenaSubteamId(participant);
     const placement = getArenaPlacement(participant);
     const champion = participantToArenaChampion(participant);
-    const teammateRaw = getArenaTeammate(participant, rawMatch.info.participants);
+    const teammateRaw = getArenaTeammate(
+      participant,
+      rawMatch.info.participants,
+    );
     if (!teammateRaw) {
-      throw new Error(`arena teammate not found for player ${validatedConfig.alias}`);
+      throw new Error(
+        `arena teammate not found for player ${validatedConfig.alias}`,
+      );
     }
     const arenaTeammate = participantToArenaChampion(teammateRaw);
 

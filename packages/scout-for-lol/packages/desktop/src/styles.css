@@ -13,7 +13,9 @@
 
   body {
     @apply bg-gray-900 text-gray-100 antialiased;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+      Arial, sans-serif;
   }
 
   /* Custom scrollbar for dark theme */

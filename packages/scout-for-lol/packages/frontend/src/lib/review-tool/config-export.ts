@@ -4,8 +4,15 @@
 import { z } from "zod";
 import { TabConfigSchema, PersonalitySchema } from "./config/schema.ts";
 import type { TabConfig } from "./config/schema.ts";
-import { CustomArtStyleSchema, loadCustomArtStyles, saveCustomArtStyles } from "./art-style-storage.ts";
-import { loadCustomPersonalities, saveCustomPersonalities } from "./personality-storage.ts";
+import {
+  CustomArtStyleSchema,
+  loadCustomArtStyles,
+  saveCustomArtStyles,
+} from "./art-style-storage.ts";
+import {
+  loadCustomPersonalities,
+  saveCustomPersonalities,
+} from "./personality-storage.ts";
 import { getPersonalityById } from "./prompts.ts";
 
 /**
@@ -31,8 +38,13 @@ async function exportAllConfig(tabConfig: TabConfig): Promise<ConfigBundle> {
 
   // If personalityId is set to a specific built-in personality (not "random"),
   // resolve it and include the full personality data in customPersonality
-  if (exportedTabConfig.prompts.personalityId !== "random" && !exportedTabConfig.prompts.customPersonality) {
-    const personality = getPersonalityById(exportedTabConfig.prompts.personalityId);
+  if (
+    exportedTabConfig.prompts.personalityId !== "random" &&
+    !exportedTabConfig.prompts.customPersonality
+  ) {
+    const personality = getPersonalityById(
+      exportedTabConfig.prompts.personalityId,
+    );
     if (personality) {
       exportedTabConfig.prompts.customPersonality = personality;
     }
@@ -57,7 +69,9 @@ async function exportAllConfigAsJSON(tabConfig: TabConfig): Promise<string> {
 /**
  * Download config bundle as a JSON file
  */
-export async function downloadConfigBundle(tabConfig: TabConfig): Promise<void> {
+export async function downloadConfigBundle(
+  tabConfig: TabConfig,
+): Promise<void> {
   const json = await exportAllConfigAsJSON(tabConfig);
   const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -103,7 +117,9 @@ export async function applyConfigBundle(
     if (options.mergeWithExisting) {
       const existing = await loadCustomPersonalities();
       const existingIds = new Set(existing.map((p) => p.id));
-      const newPersonalities = bundle.customPersonalities.filter((p) => !existingIds.has(p.id));
+      const newPersonalities = bundle.customPersonalities.filter(
+        (p) => !existingIds.has(p.id),
+      );
       await saveCustomPersonalities([...existing, ...newPersonalities]);
     } else {
       await saveCustomPersonalities(bundle.customPersonalities);
@@ -114,7 +130,9 @@ export async function applyConfigBundle(
     if (options.mergeWithExisting) {
       const existing = await loadCustomArtStyles();
       const existingIds = new Set(existing.map((s) => s.id));
-      const newStyles = bundle.customArtStyles.filter((s) => !existingIds.has(s.id));
+      const newStyles = bundle.customArtStyles.filter(
+        (s) => !existingIds.has(s.id),
+      );
       await saveCustomArtStyles([...existing, ...newStyles]);
     } else {
       await saveCustomArtStyles(bundle.customArtStyles);

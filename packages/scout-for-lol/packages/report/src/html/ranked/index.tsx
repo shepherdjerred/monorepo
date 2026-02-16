@@ -1,4 +1,9 @@
-import { divisionToString, TierSchema, wasDemoted, wasPromoted } from "@scout-for-lol/data";
+import {
+  divisionToString,
+  TierSchema,
+  wasDemoted,
+  wasPromoted,
+} from "@scout-for-lol/data";
 import type { Rank, Tier } from "@scout-for-lol/data";
 import { palette } from "@scout-for-lol/report/assets/colors.ts";
 import { z } from "zod";
@@ -13,7 +18,10 @@ if (typeof Bun !== "undefined") {
       await Promise.all(
         TierSchema.options.map(async (tier): Promise<[Tier, string]> => {
           const image = await Bun.file(
-            new URL(`./assets/Rank=${tier.charAt(0).toUpperCase() + tier.slice(1)}.png`, import.meta.url),
+            new URL(
+              `./assets/Rank=${tier.charAt(0).toUpperCase() + tier.slice(1)}.png`,
+              import.meta.url,
+            ),
           ).arrayBuffer();
           const bytes = new Uint8Array(image);
           // Use Buffer to avoid stack overflow with large arrays
@@ -104,8 +112,18 @@ export function RankedBadge({
               alignItems: "flex-end",
             }}
           >
-            <div style={{ width: `${iconSize.toString()}rem`, height: `${iconSize.toString()}rem`, display: "flex" }}>
-              <img src={badge} alt="" style={{ width: "100%", height: "100%", display: "block" }} />
+            <div
+              style={{
+                width: `${iconSize.toString()}rem`,
+                height: `${iconSize.toString()}rem`,
+                display: "flex",
+              }}
+            >
+              <img
+                src={badge}
+                alt=""
+                style={{ width: "100%", height: "100%", display: "block" }}
+              />
             </div>
             <span
               style={{
@@ -117,7 +135,12 @@ export function RankedBadge({
               {divisionToString(newRank.division)}
             </span>
           </span>
-          <span style={{ position: "absolute", top: `${promotedTextTop.toString()}rem` }}>
+          <span
+            style={{
+              position: "absolute",
+              top: `${promotedTextTop.toString()}rem`,
+            }}
+          >
             {showPromoted && `Promoted`}
             {showDemoted && `Demoted`}
           </span>

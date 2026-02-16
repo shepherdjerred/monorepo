@@ -1,7 +1,7 @@
 import classNames from "classnames";
 import React from "react";
 
-export interface ContainerProps {
+export type ContainerProps = {
   sidebar?: React.ReactNode;
   children: React.ReactNode;
 }

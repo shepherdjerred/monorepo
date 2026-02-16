@@ -154,7 +154,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -178,7 +190,10 @@
           "tooltip": "Yorick summons a wall of spirits blocking enemies' path, but not allies'. The wall has <healing>{{ wallhealthtooltip }} Health</healing> and disappears after {{ circleduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Health"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ wallhealthtooltip }} -> {{ wallhealthtooltipNL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ wallhealthtooltip }} -> {{ wallhealthtooltipNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [20, 18, 16, 14, 12],
@@ -199,7 +214,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -256,7 +283,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -279,7 +318,12 @@
           "description": "Yorick summons the Maiden of the Mist that causes Yorick's attacks against the Maiden's target to deal bonus damage. The Maiden will also automatically raise Walkers from dead enemies.",
           "tooltip": "Yorick summons the <keywordMajor>Maiden of the Mist</keywordMajor> with <healing>{{ yorickbigghoulhealth }} Health</healing> and <magicDamage>{{ yorickbigghouldamage }} Magic Attack Damage</magicDamage> plus {{ rghoulnumbers }} <keywordMajor>Mist Walkers</keywordMajor>. The <keywordMajor>Maiden</keywordMajor> automatically raises <keywordMajor>Mist Walkers</keywordMajor> from nearby enemy deaths and marks enemy Champions with her attacks. When Yorick damages the <keywordMajor>Maiden's</keywordMajor> target, he deals <magicDamage>{{ rmarkdamagepercent }}% max Health magic damage</magicDamage>.<br /><br />After 10 seconds, Yorick can <recast>Recast</recast> this Ability to free the <keywordMajor>Maiden</keywordMajor>, sending her down the nearest lane.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Attack Damage", "Mark Damage", "Mist Walkers", "Cooldown"],
+            "label": [
+              "Attack Damage",
+              "Mark Damage",
+              "Mist Walkers",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rbigghoulbonusad }} -> {{ rbigghoulbonusadNL }}",
               "{{ rmarkdamagepercent }}% -> {{ rmarkdamagepercentNL }}%",
@@ -306,7 +350,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

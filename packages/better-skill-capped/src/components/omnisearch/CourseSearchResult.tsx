@@ -1,16 +1,16 @@
-import { Course } from "../../model/Course";
+import type { Course } from "@shepherdjerred/better-skill-capped/model/Course";
 import React from "react";
 import Highlighter from "react-highlight-words";
 import "./CourseSearchResult.css";
-import { Watchable } from "../../model/WatchStatus";
-import { FuseSearchResult } from "./search/FuseSearch";
+import type { Watchable } from "@shepherdjerred/better-skill-capped/model/WatchStatus";
+import type { FuseSearchResult } from "./search/FuseSearch";
 import { CourseSearchResultVideo } from "./CourseSearchResultVideo";
-import { roleToString } from "../../model/Role";
-import { ToggleBookmarkButton } from "../BookmarkToggleButton";
-import { ToggleWatchStatusButton } from "../ToggleWatchStatusButton";
-import { Bookmarkable } from "../../model/Bookmark";
+import { roleToString } from "@shepherdjerred/better-skill-capped/model/Role";
+import { ToggleBookmarkButton } from "@shepherdjerred/better-skill-capped/components/BookmarkToggleButton";
+import { ToggleWatchStatusButton } from "@shepherdjerred/better-skill-capped/components/ToggleWatchStatusButton";
+import type { Bookmarkable } from "@shepherdjerred/better-skill-capped/model/Bookmark";
 
-export interface CourseSearchResultProps {
+export type CourseSearchResultProps = {
   result: FuseSearchResult<Course>;
   onToggleBookmark: (item: Bookmarkable) => void;
   isBookmarked: (item: Bookmarkable) => boolean;

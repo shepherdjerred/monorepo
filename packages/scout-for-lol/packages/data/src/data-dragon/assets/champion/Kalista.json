@@ -111,7 +111,10 @@
           "tooltip": "Kalista hurls a spear, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to the first target hit. If this kills the target, the spear continues onward, carrying any <spellName>Rend</spellName> stacks to the next target hit.<br /><br />Kalista can dash after using this Ability using <spellName>Martial Poise</spellName>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["@AbilityResourceName@ Cost", "Damage"],
-            "effect": ["{{ cost }} -> {{ costNL }}", "{{ basedamage }} -> {{ basedamageNL }}"]
+            "effect": [
+              "{{ cost }} -> {{ costNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [9, 9, 9, 9, 9],
@@ -132,7 +135,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -155,7 +170,11 @@
           "description": "Gain bonus damage when Kalista and her Oathsworn strike the same target. <br><br>Activate to send a soul to scout out the path, revealing the area in front of it.",
           "tooltip": "<spellPassive>Passive:</spellPassive> When Kalista and her <keywordMajor>Oathsworn</keywordMajor> both Attack the same target, she deals <magicDamage>{{ maxhealthdamage*100 }}% max Health magic damage</magicDamage>. This effect has a {{ pertargetcooldown }} second Cooldown per target and a cap of {{ maximummonsterdamage }} to non-champions.<br /><br /><spellPassive>Active: </spellPassive>Kalista sends a ghost to patrol an area for three laps. Champions spotted are revealed for 4 seconds. This ability has 2 charges ({{ ammorechargetooltip }} second refresh).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Maximum Health Damage", "Ammo Recharge", "Monster Damage Cap"],
+            "label": [
+              "Maximum Health Damage",
+              "Ammo Recharge",
+              "Monster Damage Cap"
+            ],
             "effect": [
               "{{ maxhealthdamage*100.000000 }}% -> {{ maxhealthdamagenl*100.000000 }}%",
               "{{ ammorechargetooltip }} -> {{ ammorechargetooltipNL }}",
@@ -216,7 +235,14 @@
           "description": "Attacks impale their targets with spears. Activate to rip the spears out, slowing and dealing escalating damage.",
           "tooltip": "<spellPassive>Passive: </spellPassive>Kalista's spears linger in their target for 4 seconds, stacking any number of times.<br /><br /><spellActive>Active:</spellActive> Kalista rips the spears from nearby enemies, dealing <physicalDamage>{{ normaldamage }}</physicalDamage> plus <physicalDamage>{{ additionaldamage }} physical damage</physicalDamage> per spear beyond the first. <status>Slows</status> enemies hit by <attention>{{ totalslowamount }}</attention> for {{ slowduration }} seconds.<br /><br />If this Ability kills at least one target, its Cooldown is refreshed and it refunds <scaleMana>{{ manarefund }} Mana</scaleMana>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Damage per Stack", "AD Ratio per Stack", "Move Speed Slow", "Mana Refund", "Cooldown"],
+            "label": [
+              "Damage",
+              "Damage per Stack",
+              "AD Ratio per Stack",
+              "Move Speed Slow",
+              "Mana Refund",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ additionalbasedamage }} -> {{ additionalbasedamageNL }}",
@@ -245,7 +271,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "2", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "2",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -269,7 +307,10 @@
           "tooltip": "Kalista puts her <keywordMajor>Oathsworn</keywordMajor> into Stasis and draws them to herself for up to 4 seconds. The <keywordMajor>Oathsworn</keywordMajor> can click to launch themselves, stopping at the first champion hit and <status>Knocking Back</status> all nearby enemies. If the <keywordMajor>Oathsworn</keywordMajor> hits a champion, they are placed at their maximum attack range from it.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Knockup Duration"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ e2 }} -> {{ e2NL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ e2 }} -> {{ e2NL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [160, 140, 120],
@@ -290,7 +331,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "1/1.5/2", "40/60/80", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "1/1.5/2",
+            "40/60/80",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

@@ -29,7 +29,9 @@ const ArgsSchema = z.object({
   guildId: DiscordGuildIdSchema,
 });
 
-export async function executeAccountAdd(interaction: ChatInputCommandInteraction) {
+export async function executeAccountAdd(
+  interaction: ChatInputCommandInteraction,
+) {
   return executeCommand({
     interaction,
     schema: ArgsSchema,
@@ -43,7 +45,12 @@ export async function executeAccountAdd(interaction: ChatInputCommandInteraction
     handler: async ({ data: args, userId }) => {
       const { riotId, region, playerAlias, guildId } = args;
       // Find the player
-      const player = await findPlayerByAliasWithAccounts(prisma, guildId, playerAlias, interaction);
+      const player = await findPlayerByAliasWithAccounts(
+        prisma,
+        guildId,
+        playerAlias,
+        interaction,
+      );
       if (!player) {
         return;
       }
@@ -51,7 +58,12 @@ export async function executeAccountAdd(interaction: ChatInputCommandInteraction
       // Resolve Riot ID to PUUID
       const puuidResult = await resolvePuuidFromRiotId(riotId, region);
       if (!puuidResult.success) {
-        await interaction.reply(buildRiotApiError(`${riotId.game_name}#${riotId.tag_line}`, puuidResult.error));
+        await interaction.reply(
+          buildRiotApiError(
+            `${riotId.game_name}#${riotId.tag_line}`,
+            puuidResult.error,
+          ),
+        );
         return;
       }
 
@@ -71,14 +83,22 @@ export async function executeAccountAdd(interaction: ChatInputCommandInteraction
       });
 
       if (existingAccount) {
-        logger.info(`❌ Account already exists for player "${existingAccount.player.alias}"`);
+        logger.info(
+          `❌ Account already exists for player "${existingAccount.player.alias}"`,
+        );
         await interaction.reply(
-          buildAccountExistsError(`${riotId.game_name}#${riotId.tag_line}`, existingAccount.player.alias, playerAlias),
+          buildAccountExistsError(
+            `${riotId.game_name}#${riotId.tag_line}`,
+            existingAccount.player.alias,
+            playerAlias,
+          ),
         );
         return;
       }
 
-      logger.info(`💾 Adding account ${riotId.game_name}#${riotId.tag_line} to player "${playerAlias}"`);
+      logger.info(
+        `💾 Adding account ${riotId.game_name}#${riotId.tag_line} to player "${playerAlias}"`,
+      );
 
       try {
         const now = new Date();
@@ -107,10 +127,17 @@ export async function executeAccountAdd(interaction: ChatInputCommandInteraction
               region: region,
             },
           },
-          ...(player.discordId && { discordAccount: { id: DiscordAccountIdSchema.parse(player.discordId) } }),
+          ...(player.discordId && {
+            discordAccount: {
+              id: DiscordAccountIdSchema.parse(player.discordId),
+            },
+          }),
         };
 
-        await backfillLastMatchTime(playerConfigEntry, LeaguePuuidSchema.parse(puuid));
+        await backfillLastMatchTime(
+          playerConfigEntry,
+          LeaguePuuidSchema.parse(puuid),
+        );
 
         // Get updated player with all accounts
         const updatedPlayer = await prisma.player.findUnique({
@@ -124,10 +151,14 @@ export async function executeAccountAdd(interaction: ChatInputCommandInteraction
         });
 
         const accountsList =
-          updatedPlayer?.accounts.map((acc) => `• ${acc.alias} (${acc.region})`).join("\n") ?? "No accounts";
+          updatedPlayer?.accounts
+            .map((acc) => `• ${acc.alias} (${acc.region})`)
+            .join("\n") ?? "No accounts";
         const subscriptionsList =
           updatedPlayer && updatedPlayer.subscriptions.length > 0
-            ? updatedPlayer.subscriptions.map((sub) => `<#${sub.channelId}>`).join(", ")
+            ? updatedPlayer.subscriptions
+                .map((sub) => `<#${sub.channelId}>`)
+                .join(", ")
             : "No active subscriptions.";
 
         await interaction.reply(

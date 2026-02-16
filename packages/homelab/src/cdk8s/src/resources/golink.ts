@@ -1,13 +1,14 @@
 import { Deployment, DeploymentStrategy, EnvValue, Secret, Volume } from "cdk8s-plus-31";
-import { Chart, Size } from "cdk8s";
+import type { Chart} from "cdk8s";
+import { Size } from "cdk8s";
 import { withCommonProps } from "../misc/common.ts";
 import { ZfsNvmeVolume } from "../misc/zfs-nvme-volume.ts";
 import { OnePasswordItem } from "../../generated/imports/onepassword.com.ts";
 import versions from "../versions.ts";
 
 export function createGolinkDeployment(chart: Chart) {
-  const UID = 65532;
-  const GID = 65532;
+  const UID = 65_532;
+  const GID = 65_532;
 
   const deployment = new Deployment(chart, "golink", {
     replicas: 1,

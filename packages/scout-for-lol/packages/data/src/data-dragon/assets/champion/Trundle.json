@@ -121,7 +121,12 @@
           "description": "Trundle bites his opponent, dealing damage, briefly slowing and sapping some of their Attack Damage.",
           "tooltip": "Trundle's next Attack deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and briefly <status>Slows</status> by {{ slowamount*100 }}%, then Trundle gains <physicalDamage>{{ bonusad }} Attack Damage</physicalDamage> for {{ sapdebuffduration }} seconds and the enemy loses <physicalDamage>{{ sappedad*-1 }} Attack Damage</physicalDamage> for the same duration.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Attack Damage Ratio", "Attack Damage", "Attack Damage Removed"],
+            "label": [
+              "Damage",
+              "Attack Damage Ratio",
+              "Attack Damage",
+              "Attack Damage Removed"
+            ],
             "effect": [
               "{{ bonusdamage }} -> {{ bonusdamageNL }}",
               "{{ adscaling*100.000000 }}% -> {{ adscalingnl*100.000000 }}%",
@@ -148,7 +153,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -197,7 +214,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "20/28/36/44/52", "30/45/60/75/90", "25", "8", "775", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "20/28/36/44/52",
+            "30/45/60/75/90",
+            "25",
+            "8",
+            "775",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -221,7 +250,10 @@
           "tooltip": "Trundle creates an icy pillar for {{ e1 }} seconds, briefly <status>Knocking Back</status> enemies directly over it and <status>Slowing</status> nearby enemies by {{ e2 }}%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Slow"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ e2 }}% -> {{ e2NL }}%"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ e2 }}% -> {{ e2NL }}%"
+            ]
           },
           "maxrank": 5,
           "cooldown": [21, 19.5, 18, 16.5, 15],
@@ -242,7 +274,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "6", "34/38/42/46/50", "360", "225", "150", "225", "400", "60", "0", "0"],
+          "effectBurn": [
+            null,
+            "6",
+            "34/38/42/46/50",
+            "360",
+            "225",
+            "150",
+            "225",
+            "400",
+            "60",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -290,7 +334,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

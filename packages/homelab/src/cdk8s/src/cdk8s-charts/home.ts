@@ -1,4 +1,5 @@
-import { App, Chart } from "cdk8s";
+import type { App} from "cdk8s";
+import { Chart } from "cdk8s";
 import { createHomeAssistantDeployment } from "../resources/home/homeassistant.ts";
 import { createHaDeployment } from "../resources/home/ha.ts";
 import { KubeNetworkPolicy, IntOrString } from "../../generated/imports/k8s.ts";
@@ -42,8 +43,8 @@ export async function createHomeChart(app: App) {
           from: [{ ipBlock: { cidr: "192.168.1.0/24" } }],
           ports: [
             { port: IntOrString.fromNumber(5353), protocol: "UDP" },
-            { port: IntOrString.fromNumber(21063), protocol: "TCP" },
-            { port: IntOrString.fromNumber(21064), protocol: "TCP" },
+            { port: IntOrString.fromNumber(21_063), protocol: "TCP" },
+            { port: IntOrString.fromNumber(21_064), protocol: "TCP" },
           ],
         },
       ],

@@ -1,4 +1,5 @@
-import { Chart, Size } from "cdk8s";
+import type { Chart} from "cdk8s";
+import { Size } from "cdk8s";
 import { Deployment, DeploymentStrategy, Service, Volume, EnvValue } from "cdk8s-plus-31";
 import { withCommonProps } from "../misc/common.ts";
 import { ZfsNvmeVolume } from "../misc/zfs-nvme-volume.ts";

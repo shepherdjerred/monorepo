@@ -1,5 +1,8 @@
 import { afterAll, beforeEach, describe, expect, test, mock } from "bun:test";
-import { createCompetition, type CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.ts";
+import {
+  createCompetition,
+  type CreateCompetitionInput,
+} from "@scout-for-lol/backend/database/competition/queries.ts";
 import type {
   CompetitionCriteria,
   CompetitionId,
@@ -11,7 +14,12 @@ import type {
 } from "@scout-for-lol/data";
 import { z } from "zod";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  testGuildId,
+  testAccountId,
+  testChannelId,
+  testPuuid,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
 import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.ts";
 // Schema for Discord message content validation
 const MessageContentSchema = z.object({
@@ -20,7 +28,10 @@ const MessageContentSchema = z.object({
 });
 
 // Mock the Discord send function BEFORE importing daily-update
-let sentMessages: { channelId: string; content: string | Record<string, unknown> }[] = [];
+let sentMessages: {
+  channelId: string;
+  content: string | Record<string, unknown>;
+}[] = [];
 
 // Custom error class for channel send failures (for type checking)
 class ChannelSendError extends Error {
@@ -103,7 +114,11 @@ async function createTestCompetition(
   return { competitionId: competition.id, channelId };
 }
 
-async function createTestPlayer(alias: string, puuid: LeaguePuuid, region: Region): Promise<{ playerId: PlayerId }> {
+async function createTestPlayer(
+  alias: string,
+  puuid: LeaguePuuid,
+  region: Region,
+): Promise<{ playerId: PlayerId }> {
   const now = new Date();
   const player = await testPrisma.player.create({
     data: {
@@ -131,7 +146,10 @@ async function createTestPlayer(alias: string, puuid: LeaguePuuid, region: Regio
   return { playerId: player.id };
 }
 
-async function addTestParticipant(competitionId: CompetitionId, playerId: PlayerId): Promise<void> {
+async function addTestParticipant(
+  competitionId: CompetitionId,
+  playerId: PlayerId,
+): Promise<void> {
   const now = new Date();
   await testPrisma.competitionParticipant.create({
     data: {
@@ -143,7 +161,11 @@ async function addTestParticipant(competitionId: CompetitionId, playerId: Player
   });
 }
 
-async function createStartSnapshot(competitionId: CompetitionId, playerId: PlayerId, startDate: Date): Promise<void> {
+async function createStartSnapshot(
+  competitionId: CompetitionId,
+  playerId: PlayerId,
+  startDate: Date,
+): Promise<void> {
   await testPrisma.competitionSnapshot.create({
     data: {
       competitionId,
@@ -186,10 +208,18 @@ describe("Daily Leaderboard Update", () => {
     const startDate = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000); // 3 days ago
     const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
 
-    const { competitionId, channelId } = await createTestCompetition(criteria, startDate, endDate);
+    const { competitionId, channelId } = await createTestCompetition(
+      criteria,
+      startDate,
+      endDate,
+    );
 
     // Create START snapshot to make it ACTIVE
-    const { playerId } = await createTestPlayer("Player1", testPuuid("player1"), "AMERICA_NORTH");
+    const { playerId } = await createTestPlayer(
+      "Player1",
+      testPuuid("player1"),
+      "AMERICA_NORTH",
+    );
     await addTestParticipant(competitionId, playerId);
     await createStartSnapshot(competitionId, playerId, startDate);
 
@@ -226,11 +256,16 @@ describe("Daily Leaderboard Update", () => {
     // Create 3 active competitions on different servers
     const comps = [];
     for (let i = 0; i < 3; i++) {
-      const { competitionId, channelId } = await createTestCompetition(criteria, startDate, endDate, {
-        serverId: testGuildId((100 + i).toString()),
-        channelId: testChannelId(i.toString()),
-        title: `Competition ${i.toString()}`,
-      });
+      const { competitionId, channelId } = await createTestCompetition(
+        criteria,
+        startDate,
+        endDate,
+        {
+          serverId: testGuildId((100 + i).toString()),
+          channelId: testChannelId(i.toString()),
+          title: `Competition ${i.toString()}`,
+        },
+      );
 
       // Make them ACTIVE by adding START snapshots
       const { playerId } = await createTestPlayer(
@@ -253,13 +288,17 @@ describe("Daily Leaderboard Update", () => {
     // Verify each competition got an update
     for (let i = 0; i < 3; i++) {
       const expectedChannelId = comps[i]?.channelId;
-      const messageForComp = sentMessages.find((m) => m.channelId === expectedChannelId);
+      const messageForComp = sentMessages.find(
+        (m) => m.channelId === expectedChannelId,
+      );
       expect(messageForComp).toBeDefined();
 
       const parsed = MessageContentSchema.safeParse(messageForComp?.content);
       expect(parsed.success).toBe(true);
       if (parsed.success) {
-        expect(parsed.data.content).toContain("📊 **Daily Leaderboard Update**");
+        expect(parsed.data.content).toContain(
+          "📊 **Daily Leaderboard Update**",
+        );
         expect(parsed.data.content).toContain(`Competition ${i.toString()}`);
       }
     }
@@ -286,7 +325,11 @@ describe("Daily Leaderboard Update", () => {
       "AMERICA_NORTH",
     );
     await addTestParticipant(endedId, endedPlayerId);
-    await createStartSnapshot(endedId, endedPlayerId, new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000));
+    await createStartSnapshot(
+      endedId,
+      endedPlayerId,
+      new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000),
+    );
 
     // Create CANCELLED competition - won't be returned by getActiveCompetitions
     const { competitionId: cancelledId } = await createTestCompetition(
@@ -332,7 +375,9 @@ describe("Daily Leaderboard Update", () => {
     const parsed = MessageContentSchema.safeParse(message);
     expect(parsed.success).toBe(true);
   });
+});
 
+describe("Daily Leaderboard Update - Error Handling & Edge Cases", () => {
   test("continues processing after error in one competition", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_GAMES_PLAYED",
@@ -344,25 +389,34 @@ describe("Daily Leaderboard Update", () => {
     const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     // Create first competition with invalid channel (will fail to send)
-    const { competitionId: comp1Id } = await createTestCompetition(criteria, startDate, endDate, {
-      channelId: testChannelId("999"),
-      title: "Competition 1",
-    });
-    const { playerId: player1Id } = await createTestPlayer("Player1", testPuuid("error-player1"), "AMERICA_NORTH");
-    await addTestParticipant(comp1Id, player1Id);
-    await createStartSnapshot(comp1Id, player1Id, startDate);
-
-    // Create second competition (should succeed)
-    const { competitionId: comp2Id, channelId: channel2Id } = await createTestCompetition(
+    const { competitionId: comp1Id } = await createTestCompetition(
       criteria,
       startDate,
       endDate,
       {
-        channelId: testChannelId("0"),
-        title: "Competition 2",
+        channelId: testChannelId("999"),
+        title: "Competition 1",
       },
     );
-    const { playerId: player2Id } = await createTestPlayer("Player2", testPuuid("error-player2"), "AMERICA_NORTH");
+    const { playerId: player1Id } = await createTestPlayer(
+      "Player1",
+      testPuuid("error-player1"),
+      "AMERICA_NORTH",
+    );
+    await addTestParticipant(comp1Id, player1Id);
+    await createStartSnapshot(comp1Id, player1Id, startDate);
+
+    // Create second competition (should succeed)
+    const { competitionId: comp2Id, channelId: channel2Id } =
+      await createTestCompetition(criteria, startDate, endDate, {
+        channelId: testChannelId("0"),
+        title: "Competition 2",
+      });
+    const { playerId: player2Id } = await createTestPlayer(
+      "Player2",
+      testPuuid("error-player2"),
+      "AMERICA_NORTH",
+    );
     await addTestParticipant(comp2Id, player2Id);
     await createStartSnapshot(comp2Id, player2Id, startDate);
 
@@ -395,10 +449,18 @@ describe("Daily Leaderboard Update", () => {
     const startDate = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
     const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    const { competitionId } = await createTestCompetition(criteria, startDate, endDate);
+    const { competitionId } = await createTestCompetition(
+      criteria,
+      startDate,
+      endDate,
+    );
 
     // Make it ACTIVE
-    const { playerId } = await createTestPlayer("Player1", testPuuid("day-count-player"), "AMERICA_NORTH");
+    const { playerId } = await createTestPlayer(
+      "Player1",
+      testPuuid("day-count-player"),
+      "AMERICA_NORTH",
+    );
     await addTestParticipant(competitionId, playerId);
     await createStartSnapshot(competitionId, playerId, startDate);
 
@@ -435,10 +497,15 @@ describe("Daily Leaderboard Update", () => {
 
     // Create 3 active competitions
     for (let i = 0; i < 3; i++) {
-      const { competitionId } = await createTestCompetition(criteria, startDate, endDate, {
-        channelId: testChannelId(i.toString()),
-        title: `Competition ${i.toString()}`,
-      });
+      const { competitionId } = await createTestCompetition(
+        criteria,
+        startDate,
+        endDate,
+        {
+          channelId: testChannelId(i.toString()),
+          title: `Competition ${i.toString()}`,
+        },
+      );
 
       const { playerId } = await createTestPlayer(
         `Player${i.toString()}`,

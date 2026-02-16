@@ -5,7 +5,11 @@ import {
   isCompetitionActive,
 } from "@scout-for-lol/backend/database/competition/validation.ts";
 
-import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  testGuildId,
+  testAccountId,
+  testChannelId,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
 // ============================================================================
 // isCompetitionActive
 // ============================================================================
@@ -169,7 +173,9 @@ describe("CompetitionDatesSchema - date order", () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0]?.message).toContain("startDate must be before endDate");
+      expect(result.error.issues[0]?.message).toContain(
+        "startDate must be before endDate",
+      );
     }
   });
 
@@ -183,7 +189,9 @@ describe("CompetitionDatesSchema - date order", () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0]?.message).toContain("startDate must be before endDate");
+      expect(result.error.issues[0]?.message).toContain(
+        "startDate must be before endDate",
+      );
     }
   });
 });
@@ -236,7 +244,9 @@ describe("CompetitionDatesSchema - duration limit", () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0]?.message).toContain("Competition duration cannot exceed 90 days");
+      expect(result.error.issues[0]?.message).toContain(
+        "Competition duration cannot exceed 90 days",
+      );
     }
   });
 
@@ -250,7 +260,9 @@ describe("CompetitionDatesSchema - duration limit", () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0]?.message).toContain("Competition duration cannot exceed 90 days");
+      expect(result.error.issues[0]?.message).toContain(
+        "Competition duration cannot exceed 90 days",
+      );
     }
   });
 
@@ -603,7 +615,9 @@ describe("CompetitionCreationSchema - criteria validation", () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0]?.message).toContain("criteriaConfig must be valid JSON");
+      expect(result.error.issues[0]?.message).toContain(
+        "criteriaConfig must be valid JSON",
+      );
     }
   });
 

@@ -3,7 +3,11 @@
  * Replaces localStorage with a more robust and capable storage solution
  */
 import { z } from "zod";
-import { openIndexedDB, executeRequest, getStore } from "./indexeddb-helpers.ts";
+import {
+  openIndexedDB,
+  executeRequest,
+  getStore,
+} from "./indexeddb-helpers.ts";
 
 const DB_NAME = "scout-review-storage";
 const DB_VERSION = 1;
@@ -66,7 +70,10 @@ function getDB(): Promise<IDBDatabase> {
  * Returns `unknown` to enforce runtime validation by callers.
  * All callers should validate the result with Zod before using it.
  */
-export async function getItem(storeName: string, key: string): Promise<unknown> {
+export async function getItem(
+  storeName: string,
+  key: string,
+): Promise<unknown> {
   try {
     const db = await getDB();
     const transaction = db.transaction([storeName], "readonly");
@@ -86,7 +93,11 @@ export async function getItem(storeName: string, key: string): Promise<unknown> 
 /**
  * Set a single value in a store
  */
-export async function setItem(storeName: string, key: string, value: unknown): Promise<boolean> {
+export async function setItem(
+  storeName: string,
+  key: string,
+  value: unknown,
+): Promise<boolean> {
   try {
     const db = await getDB();
     const transaction = db.transaction([storeName], "readwrite");
@@ -126,7 +137,10 @@ export async function getAllItems(storeName: string): Promise<unknown[]> {
 /**
  * Add or update an item in a store with keyPath
  */
-export async function putItem(storeName: string, value: unknown): Promise<boolean> {
+export async function putItem(
+  storeName: string,
+  value: unknown,
+): Promise<boolean> {
   try {
     const db = await getDB();
     const transaction = db.transaction([storeName], "readwrite");
@@ -143,7 +157,10 @@ export async function putItem(storeName: string, value: unknown): Promise<boolea
 /**
  * Delete an item from a store with keyPath
  */
-export async function deleteItem(storeName: string, key: string): Promise<boolean> {
+export async function deleteItem(
+  storeName: string,
+  key: string,
+): Promise<boolean> {
   try {
     const db = await getDB();
     const transaction = db.transaction([storeName], "readwrite");
@@ -254,7 +271,12 @@ export async function migrateFromLocalStorage(): Promise<void> {
 
   for (const migration of migrations) {
     try {
-      await migrateSingleItem(migration.localStorageKey, migration.store, migration.isArray, migration.key);
+      await migrateSingleItem(
+        migration.localStorageKey,
+        migration.store,
+        migration.isArray,
+        migration.key,
+      );
     } catch (error) {
       console.error(`Failed to migrate ${migration.localStorageKey}:`, error);
     }

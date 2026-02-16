@@ -1,8 +1,7 @@
-import type { RenderFunctionInput } from "../types.js";
+import type { RenderFunctionInput } from "#src/types.js";
 
-export async function rauchg({ title }: RenderFunctionInput): Promise<React.ReactNode> {
-  return Promise.resolve(
-    <div
+export function rauchg({ title }: RenderFunctionInput): React.ReactNode {
+  return <div
       style={{
         display: "flex",
         height: "100%",
@@ -57,6 +56,5 @@ export async function rauchg({ title }: RenderFunctionInput): Promise<React.Reac
       >
         {title}
       </div>
-    </div>,
-  );
+    </div>;
 }

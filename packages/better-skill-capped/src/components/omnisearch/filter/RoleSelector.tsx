@@ -1,7 +1,7 @@
 import React from "react";
-import { Role } from "../../../model/Role";
+import { Role } from "@shepherdjerred/better-skill-capped/model/Role";
 
-export interface RoleSelectorProps {
+export type RoleSelectorProps = {
   selectedRoles: Role[];
   onRolesUpdate: (newRoles: Role[]) => void;
 }
@@ -16,7 +16,7 @@ export default function RoleSelector({ selectedRoles, onRolesUpdate }: RoleSelec
   };
 
   const getNewRoles = (role: Role) => {
-    let newRoles = selectedRoles.slice();
+    let newRoles = [...selectedRoles];
     if (isChecked(role)) {
       newRoles = newRoles.filter((candidate) => {
         return candidate !== role;

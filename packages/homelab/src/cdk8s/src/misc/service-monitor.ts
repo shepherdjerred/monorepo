@@ -1,4 +1,4 @@
-import { Chart } from "cdk8s";
+import type { Chart } from "cdk8s";
 import { ServiceMonitor } from "../../generated/imports/monitoring.coreos.com.ts";
 
 export type CreateServiceMonitorOptions = {

@@ -150,7 +150,12 @@
           "description": "Graves fires an explosive shell that detonates after 1 second, or after colliding with terrain.",
           "tooltip": "Graves fires a powder round dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. After 1 second or after colliding with terrain, it detonates, dealing <physicalDamage>{{ totaldetonationdamage }} physical damage</physicalDamage> along the travel path again and to enemies near the blast.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Detonation Damage", "Detonation AD Ratio", "Cooldown"],
+            "label": [
+              "Damage",
+              "Detonation Damage",
+              "Detonation AD Ratio",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ basedetonationdamage }} -> {{ basedetonationdamageNL }}",
@@ -177,7 +182,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -201,7 +218,11 @@
           "tooltip": "Graves creates a cloud of black smoke for 4 seconds, <status>Slowing</status> enemies inside by {{ e2 }}% and blocking their vision outside the area. The initial impact deals <magicDamage>{{ impactdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "@AbilityResourceName@ Cost", "Cooldown"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cost }} -> {{ costNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [26, 24, 22, 20, 18],
@@ -222,7 +243,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "60/110/160/210/260", "50", "200", "4", "0.5", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "60/110/160/210/260",
+            "50",
+            "200",
+            "4",
+            "0.5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -271,7 +304,19 @@
             [60, 60, 60, 60, 60],
             [8, 8, 8, 8, 8]
           ],
-          "effectBurn": [null, "30/40/50/60/70", "4", "20/25/30/35/40", "0.5", "0", "750", "375", "275", "60", "8"],
+          "effectBurn": [
+            null,
+            "30/40/50/60/70",
+            "4",
+            "20/25/30/35/40",
+            "0.5",
+            "0",
+            "750",
+            "375",
+            "275",
+            "60",
+            "8"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -320,7 +365,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

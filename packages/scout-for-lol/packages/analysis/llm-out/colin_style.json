@@ -89,7 +89,13 @@
     "roles": "none",
     "team_moods": "often critical of teammates' performance."
   },
-  "other_games": ["Valheim", "Elden Ring", "CS:GO", "Monster Hunter World", "RuneScape"],
+  "other_games": [
+    "Valheim",
+    "Elden Ring",
+    "CS:GO",
+    "Monster Hunter World",
+    "RuneScape"
+  ],
   "how_to_mimic": [
     "Use casual language with frequent slang.",
     "Incorporate humor and sarcasm into messages.",

@@ -1,4 +1,4 @@
-import { App } from "cdk8s";
+import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { createProject } from "../resources/argo-applications/project.ts";
 

@@ -1,8 +1,7 @@
-import type { RenderFunctionInput } from "../types.js";
+import type { RenderFunctionInput } from "#src/types.js";
 
-export async function blackAndWhite({ title, description }: RenderFunctionInput): Promise<React.ReactNode> {
-  return Promise.resolve(
-    <div
+export function blackAndWhite({ title, description }: RenderFunctionInput): React.ReactNode {
+  return <div
       style={{
         height: "100%",
         width: "100%",
@@ -29,6 +28,5 @@ export async function blackAndWhite({ title, description }: RenderFunctionInput)
       >
         {description ?? ""}
       </div>
-    </div>,
-  );
+    </div>;
 }

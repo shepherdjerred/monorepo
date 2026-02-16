@@ -3,7 +3,11 @@ import { z } from "zod";
 import { CompetitionIdSchema, getCompetitionStatus } from "@scout-for-lol/data";
 import type { Competition } from "@scout-for-lol/backend/generated/prisma/client";
 
-import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  testGuildId,
+  testAccountId,
+  testChannelId,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
 /**
  * These tests verify the validation logic patterns used in edit.ts
  * They test the same patterns without needing Discord.js mocks
@@ -388,7 +392,8 @@ describe("Error handling for restricted edits", () => {
     const fieldsEditableAlways = ["title", "description", "channelId"];
 
     // Title is always editable, so no error
-    const shouldError = !isDraft && titleProvided && !fieldsEditableAlways.includes("title");
+    const shouldError =
+      !isDraft && titleProvided && !fieldsEditableAlways.includes("title");
 
     expect(shouldError).toBe(false);
   });
@@ -399,7 +404,9 @@ describe("Criteria validation patterns", () => {
     const queue = "SOLO";
 
     expect(queue).toBeDefined();
-    expect(["SOLO", "FLEX", "RANKED_ANY", "ARENA", "ARAM", "ALL"]).toContain(queue);
+    expect(["SOLO", "FLEX", "RANKED_ANY", "ARENA", "ARAM", "ALL"]).toContain(
+      queue,
+    );
   });
 
   test("HIGHEST_RANK requires queue to be SOLO or FLEX", () => {

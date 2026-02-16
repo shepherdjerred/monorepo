@@ -1,16 +1,16 @@
-import { roleToString } from "../../model/Role";
+import { roleToString } from "@shepherdjerred/better-skill-capped/model/Role";
 import React from "react";
-import { Video } from "../../model/Video";
-import { ToggleWatchStatusButton } from "../ToggleWatchStatusButton";
-import { ToggleBookmarkButton } from "../BookmarkToggleButton";
-import { Bookmarkable } from "../../model/Bookmark";
-import { Watchable } from "../../model/WatchStatus";
-import { getStreamUrl } from "../../utils/UrlUtilities";
+import type { Video } from "@shepherdjerred/better-skill-capped/model/Video";
+import { ToggleWatchStatusButton } from "@shepherdjerred/better-skill-capped/components/ToggleWatchStatusButton";
+import { ToggleBookmarkButton } from "@shepherdjerred/better-skill-capped/components/BookmarkToggleButton";
+import type { Bookmarkable } from "@shepherdjerred/better-skill-capped/model/Bookmark";
+import type { Watchable } from "@shepherdjerred/better-skill-capped/model/WatchStatus";
+import { getStreamUrl } from "@shepherdjerred/better-skill-capped/utils/UrlUtilities";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCloudDownloadAlt } from "@fortawesome/free-solid-svg-icons";
 import Highlighter from "react-highlight-words";
 
-export interface VideoSearchResultProps {
+export type VideoSearchResultProps = {
   video: Video;
   isBookmarked: boolean;
   isWatched: boolean;

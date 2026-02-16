@@ -10,7 +10,12 @@ import type { ReviewConfig } from "@scout-for-lol/frontend/lib/review-tool/confi
 function getMatchDisplayInfo(match: CompletedMatch | ArenaMatch) {
   const player = match.players[0];
   if (!player) {
-    return { alias: "Unknown", champion: "???", outcomeText: "", outcomeClass: "text-surface-500" };
+    return {
+      alias: "Unknown",
+      champion: "???",
+      outcomeText: "",
+      outcomeClass: "text-surface-500",
+    };
   }
 
   const alias = player.playerConfig.alias;
@@ -22,17 +27,30 @@ function getMatchDisplayInfo(match: CompletedMatch | ArenaMatch) {
       const placement = arenaPlayer.placement;
       const outcomeText = `#${String(placement)}`;
       const outcomeClass =
-        placement === 1 ? "text-victory-600" : placement === 8 ? "text-defeat-600" : "text-surface-500";
+        placement === 1
+          ? "text-victory-600"
+          : placement === 8
+            ? "text-defeat-600"
+            : "text-surface-500";
       return { alias, champion, outcomeText, outcomeClass };
     }
-    return { alias, champion, outcomeText: "", outcomeClass: "text-surface-500" };
+    return {
+      alias,
+      champion,
+      outcomeText: "",
+      outcomeClass: "text-surface-500",
+    };
   }
 
   // Regular match
   if ("outcome" in player) {
     const outcome = player.outcome;
     const outcomeClass =
-      outcome === "Victory" ? "text-victory-600" : outcome === "Defeat" ? "text-defeat-600" : "text-surface-500";
+      outcome === "Victory"
+        ? "text-victory-600"
+        : outcome === "Defeat"
+          ? "text-defeat-600"
+          : "text-surface-500";
     return { alias, champion, outcomeText: outcome, outcomeClass };
   }
 
@@ -52,7 +70,9 @@ function SelectedMatchDisplay(props: { match: CompletedMatch | ArenaMatch }) {
         {info.champion.slice(0, 2).toUpperCase()}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="font-semibold text-surface-900 truncate">{info.alias}</div>
+        <div className="font-semibold text-surface-900 truncate">
+          {info.alias}
+        </div>
         <div className="text-xs text-surface-600 flex items-center gap-1.5">
           <span>{info.champion}</span>
           <span className="text-surface-300">•</span>
@@ -60,7 +80,9 @@ function SelectedMatchDisplay(props: { match: CompletedMatch | ArenaMatch }) {
           {match.queueType && (
             <>
               <span className="text-surface-300">•</span>
-              <span className="capitalize">{match.queueType.replace(/_/g, " ")}</span>
+              <span className="capitalize">
+                {match.queueType.replace(/_/g, " ")}
+              </span>
             </>
           )}
         </div>
@@ -84,29 +106,40 @@ export function MatchAndReviewerInfo(props: MatchAndReviewerInfoProps) {
     <div className="mb-4 grid grid-cols-2 gap-4">
       {/* Selected Match */}
       <div className="p-3 rounded-lg bg-surface-50 border border-surface-200">
-        <div className="text-xs font-medium text-surface-500 uppercase tracking-wide mb-2">Selected Match</div>
+        <div className="text-xs font-medium text-surface-500 uppercase tracking-wide mb-2">
+          Selected Match
+        </div>
         {match ? (
           <SelectedMatchDisplay match={match} />
         ) : (
-          <div className="text-sm text-surface-400 italic">No match selected</div>
+          <div className="text-sm text-surface-400 italic">
+            No match selected
+          </div>
         )}
       </div>
 
       {/* Reviewer */}
       <div className="p-3 rounded-lg bg-surface-50 border border-surface-200">
-        <div className="text-xs font-medium text-surface-500 uppercase tracking-wide mb-2">Reviewer</div>
+        <div className="text-xs font-medium text-surface-500 uppercase tracking-wide mb-2">
+          Reviewer
+        </div>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-black font-bold text-lg">
-            {config.prompts.personalityId === "random" ? "?" : config.prompts.personalityId.charAt(0).toUpperCase()}
+            {config.prompts.personalityId === "random"
+              ? "?"
+              : config.prompts.personalityId.charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-semibold text-surface-900 truncate">
-              {config.prompts.personalityId === "random" ? "Random Personality" : config.prompts.personalityId}
+              {config.prompts.personalityId === "random"
+                ? "Random Personality"
+                : config.prompts.personalityId}
             </div>
             <div className="text-xs text-surface-600">
               {config.prompts.personalityId === "random"
                 ? "Will pick a random reviewer"
-                : (config.prompts.customPersonality?.metadata.name ?? "Custom personality")}
+                : (config.prompts.customPersonality?.metadata.name ??
+                  "Custom personality")}
             </div>
           </div>
         </div>

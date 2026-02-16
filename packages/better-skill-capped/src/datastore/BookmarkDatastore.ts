@@ -1,7 +1,7 @@
-import { Bookmark } from "../model/Bookmark";
+import type { Bookmark } from "@shepherdjerred/better-skill-capped/model/Bookmark";
 
-export interface BookmarkDatastore {
-  add(bookmark: Bookmark): void;
-  get(): Bookmark[];
-  remove(bookmark: Bookmark): void;
+export type BookmarkDatastore = {
+  add: (bookmark: Bookmark) => void;
+  get: () => Bookmark[];
+  remove: (bookmark: Bookmark) => void;
 }

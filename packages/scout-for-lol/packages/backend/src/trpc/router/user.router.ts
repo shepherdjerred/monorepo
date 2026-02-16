@@ -6,7 +6,10 @@
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { router, protectedProcedure } from "@scout-for-lol/backend/trpc/trpc.ts";
+import {
+  router,
+  protectedProcedure,
+} from "@scout-for-lol/backend/trpc/trpc.ts";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
@@ -82,29 +85,33 @@ export const userRouter = router({
   /**
    * Disconnect/remove a desktop client
    */
-  disconnectClient: protectedProcedure.input(z.object({ clientId: z.string() })).mutation(async ({ input, ctx }) => {
-    const client = await prisma.desktopClient.findFirst({
-      where: {
-        clientId: input.clientId,
-        userId: ctx.user.discordId,
-      },
-    });
-
-    if (!client) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Desktop client not found",
+  disconnectClient: protectedProcedure
+    .input(z.object({ clientId: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const client = await prisma.desktopClient.findFirst({
+        where: {
+          clientId: input.clientId,
+          userId: ctx.user.discordId,
+        },
       });
-    }
 
-    await prisma.desktopClient.delete({
-      where: { id: client.id },
-    });
+      if (!client) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Desktop client not found",
+        });
+      }
 
-    logger.info(`Desktop client disconnected: ${input.clientId} for user ${ctx.user.discordUsername}`);
+      await prisma.desktopClient.delete({
+        where: { id: client.id },
+      });
 
-    return { success: true };
-  }),
+      logger.info(
+        `Desktop client disconnected: ${input.clientId} for user ${ctx.user.discordUsername}`,
+      );
+
+      return { success: true };
+    }),
 
   /**
    * Get event history for a client
@@ -140,14 +147,16 @@ export const userRouter = router({
    * Get available Discord voice channels for configuration
    * This requires the bot to be in the guild
    */
-  getVoiceChannels: protectedProcedure.input(z.object({ guildId: z.string() })).query(({ input }) => {
-    // This would query Discord API for voice channels
-    // For now, return empty - will be implemented with Discord client
-    // The desktop app will need to provide guild ID from Discord OAuth
-    const channels: { id: string; name: string }[] = [];
-    return {
-      guildId: input.guildId,
-      channels,
-    };
-  }),
+  getVoiceChannels: protectedProcedure
+    .input(z.object({ guildId: z.string() }))
+    .query(({ input }) => {
+      // This would query Discord API for voice channels
+      // For now, return empty - will be implemented with Discord client
+      // The desktop app will need to provide guild ID from Discord OAuth
+      const channels: { id: string; name: string }[] = [];
+      return {
+        guildId: input.guildId,
+        channels,
+      };
+    }),
 });

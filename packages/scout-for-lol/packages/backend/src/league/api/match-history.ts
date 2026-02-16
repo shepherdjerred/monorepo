@@ -4,7 +4,11 @@ import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
 import type { PlayerConfigEntry, MatchId } from "@scout-for-lol/data/index";
 import { MatchIdSchema } from "@scout-for-lol/data/index";
 import { z } from "zod";
-import { riotApiErrorsTotal, riotApiRequestsTotal, updateRiotApiHealth } from "@scout-for-lol/backend/metrics/index.ts";
+import {
+  riotApiErrorsTotal,
+  riotApiRequestsTotal,
+  updateRiotApiHealth,
+} from "@scout-for-lol/backend/metrics/index.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import { withTimeout } from "@scout-for-lol/backend/utils/timeout.ts";
 import * as Sentry from "@sentry/bun";
@@ -15,12 +19,17 @@ const logger = createLogger("api-match-history");
  * Fetch recent match IDs for a player
  * Returns up to `count` most recent match IDs
  */
-export async function getRecentMatchIds(player: PlayerConfigEntry, count = 5): Promise<MatchId[] | undefined> {
+export async function getRecentMatchIds(
+  player: PlayerConfigEntry,
+  count = 5,
+): Promise<MatchId[] | undefined> {
   const playerAlias = player.alias;
   const playerPuuid = player.league.leagueAccount.puuid;
   const playerRegion = player.league.leagueAccount.region;
 
-  logger.info(`📜 Fetching recent match IDs for player: ${playerAlias} (${playerPuuid}) in region ${playerRegion}`);
+  logger.info(
+    `📜 Fetching recent match IDs for player: ${playerAlias} (${playerPuuid}) in region ${playerRegion}`,
+  );
 
   try {
     const startTime = Date.now();
@@ -34,7 +43,9 @@ export async function getRecentMatchIds(player: PlayerConfigEntry, count = 5): P
       level: "info",
     });
 
-    const response = await withTimeout(api.MatchV5.list(playerPuuid, regionGroup, { count }));
+    const response = await withTimeout(
+      api.MatchV5.list(playerPuuid, regionGroup, { count }),
+    );
 
     const apiTime = Date.now() - startTime;
     riotApiRequestsTotal.inc({ source: "match-history", status: "success" });
@@ -44,8 +55,14 @@ export async function getRecentMatchIds(player: PlayerConfigEntry, count = 5): P
     const matchIdsResult = z.array(MatchIdSchema).safeParse(response.response);
 
     if (!matchIdsResult.success) {
-      logger.error(`❌ Failed to parse match IDs for ${playerAlias}:`, matchIdsResult.error);
-      riotApiErrorsTotal.inc({ source: "match-id-parsing", http_status: "validation" });
+      logger.error(
+        `❌ Failed to parse match IDs for ${playerAlias}:`,
+        matchIdsResult.error,
+      );
+      riotApiErrorsTotal.inc({
+        source: "match-id-parsing",
+        http_status: "validation",
+      });
       return undefined;
     }
 
@@ -56,7 +73,13 @@ export async function getRecentMatchIds(player: PlayerConfigEntry, count = 5): P
 
     return matchIds;
   } catch (e) {
-    riotApiRequestsTotal.inc({ source: "match-history", status: e instanceof Error && e.message.includes("timed out") ? "timeout" : "error" });
+    riotApiRequestsTotal.inc({
+      source: "match-history",
+      status:
+        e instanceof Error && e.message.includes("timed out")
+          ? "timeout"
+          : "error",
+    });
     updateRiotApiHealth(false);
 
     const result = z.object({ status: z.number() }).safeParse(e);
@@ -67,13 +90,24 @@ export async function getRecentMatchIds(player: PlayerConfigEntry, count = 5): P
         return undefined;
       }
       logger.error(`❌ HTTP Error ${status.toString()} for ${playerAlias}`);
-      riotApiErrorsTotal.inc({ source: "match-history-api", http_status: status.toString() });
+      riotApiErrorsTotal.inc({
+        source: "match-history-api",
+        http_status: status.toString(),
+      });
       Sentry.captureException(e, {
-        tags: { source: "match-history-api", playerAlias, region: playerRegion, httpStatus: status.toString() },
+        tags: {
+          source: "match-history-api",
+          playerAlias,
+          region: playerRegion,
+          httpStatus: status.toString(),
+        },
       });
     } else {
       logger.error(`❌ Error fetching match history for ${playerAlias}:`, e);
-      riotApiErrorsTotal.inc({ source: "match-history-api", http_status: "unknown" });
+      riotApiErrorsTotal.inc({
+        source: "match-history-api",
+        http_status: "unknown",
+      });
     }
     return undefined;
   }
@@ -83,7 +117,10 @@ export async function getRecentMatchIds(player: PlayerConfigEntry, count = 5): P
  * Filter out match IDs that have already been processed
  * Returns only new matches that come after the lastProcessedMatchId
  */
-export function filterNewMatches(matchIds: MatchId[], lastProcessedMatchId: MatchId | undefined | null): MatchId[] {
+export function filterNewMatches(
+  matchIds: MatchId[],
+  lastProcessedMatchId: MatchId | undefined | null,
+): MatchId[] {
   if (!lastProcessedMatchId) {
     // If no last processed match, return the most recent match only to avoid spam
     return matchIds.slice(0, 1);

@@ -1,4 +1,5 @@
-import { Chart, ApiObject } from "cdk8s";
+import type { Chart} from "cdk8s";
+import { ApiObject } from "cdk8s";
 
 /**
  * Creates Kyverno ClusterPolicy to automatically add velero backup labels

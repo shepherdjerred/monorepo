@@ -48,13 +48,16 @@ export class VoiceManager {
   /**
    * Ensure connected to a voice channel
    */
-  async ensureConnected(guildId: string, channelId: string): Promise<VoiceConnection> {
+  async ensureConnected(
+    guildId: string,
+    channelId: string,
+  ): Promise<VoiceConnection> {
     if (!this.client) {
       throw new Error("Discord client not initialized");
     }
 
     const existingConnection = this.connections.get(guildId);
-    if (existingConnection && existingConnection.state.status === VoiceConnectionStatus.Ready) {
+    if (existingConnection?.state.status === VoiceConnectionStatus.Ready) {
       return existingConnection;
     }
 
@@ -64,7 +67,10 @@ export class VoiceManager {
   /**
    * Join a voice channel
    */
-  async joinChannel(guildId: string, channelId: string): Promise<VoiceConnection> {
+  async joinChannel(
+    guildId: string,
+    channelId: string,
+  ): Promise<VoiceConnection> {
     if (!this.client) {
       throw new Error("Discord client not initialized");
     }
@@ -103,7 +109,9 @@ export class VoiceManager {
     }
 
     this.connections.set(guildId, connection);
-    logger.info(`Joined voice channel ${voiceChannel.name} in guild ${guildId}`);
+    logger.info(
+      `Joined voice channel ${voiceChannel.name} in guild ${guildId}`,
+    );
 
     // Handle disconnections
     connection.on(VoiceConnectionStatus.Disconnected, () => {
@@ -130,7 +138,11 @@ export class VoiceManager {
   /**
    * Play a sound in a guild's voice channel
    */
-  async playSound(guildId: string, source: SoundSource, volume = 1.0): Promise<void> {
+  async playSound(
+    guildId: string,
+    source: SoundSource,
+    volume = 1.0,
+  ): Promise<void> {
     const connection = this.connections.get(guildId);
     if (!connection) {
       throw new Error(`No voice connection for guild ${guildId}`);

@@ -1,5 +1,5 @@
-import { WatchStatusDatastore } from "./WatchStatusDatastore";
-import { WatchStatus } from "../model/WatchStatus";
+import type { WatchStatusDatastore } from "./WatchStatusDatastore";
+import type { WatchStatus } from "@shepherdjerred/better-skill-capped/model/WatchStatus";
 
 const IDENTIFIER = "watchStatus";
 
@@ -11,7 +11,7 @@ export class LocalStorageWatchStatusDatastore implements WatchStatusDatastore {
   }
 
   get(): WatchStatus[] {
-    return JSON.parse(window.localStorage.getItem(IDENTIFIER) ?? "[]") as WatchStatus[];
+    return JSON.parse(globalThis.localStorage.getItem(IDENTIFIER) ?? "[]") as WatchStatus[];
   }
 
   remove(watchStatus: WatchStatus): void {
@@ -22,6 +22,6 @@ export class LocalStorageWatchStatusDatastore implements WatchStatusDatastore {
   }
 
   private set(watchStatuses: WatchStatus[]) {
-    window.localStorage.setItem(IDENTIFIER, JSON.stringify(watchStatuses));
+    globalThis.localStorage.setItem(IDENTIFIER, JSON.stringify(watchStatuses));
   }
 }

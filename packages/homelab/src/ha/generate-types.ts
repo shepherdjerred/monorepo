@@ -22,7 +22,7 @@ function parseEnvValue(envContent: string, key: string): string | undefined {
     }
 
     const normalized = line.startsWith("export ") ? line.slice("export ".length).trim() : line;
-    const match = /^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/.exec(normalized);
+    const match = /^([A-Z_]\w*)\s*=\s*(.*)$/i.exec(normalized);
     if (!match) {
       continue;
     }
@@ -104,14 +104,16 @@ async function addTsDisableComments() {
       let content = await Bun.file(filePath).text();
 
       // Check if TypeScript disable comments are already present
-      if (!content.includes("@ts-nocheck")) {
+      if (content.includes("@ts-nocheck")) {
+        console.log(`✅ TypeScript disable comments already present in ${filePath}`);
+      } else {
         // Add TypeScript disable comments at the top after the existing header
         const lines = content.split("\n");
         let insertIndex = 0;
 
         // Find where to insert (after existing header comments)
-        for (let i = 0; i < lines.length; i++) {
-          if (lines[i]?.startsWith("//") || lines[i]?.trim() === "") {
+        for (const [i, line] of lines.entries()) {
+          if (line.startsWith("//") || line.trim() === "") {
             insertIndex = i + 1;
           } else {
             break;
@@ -126,8 +128,6 @@ async function addTsDisableComments() {
 
         await Bun.write(filePath, content);
         console.log(`✅ Added TypeScript disable comments to ${filePath}`);
-      } else {
-        console.log(`✅ TypeScript disable comments already present in ${filePath}`);
       }
     } catch (error) {
       console.error(`❌ Failed to process ${filePath}:`, error);
@@ -151,7 +151,7 @@ async function postProcessRegistry() {
       const unionType = states.map((state) => `"${state}"`).join(" | ");
 
       // Create a regex to match the entity definition and replace state: string
-      const entityPattern = new RegExp(`("${entityId.replace(/\./g, "\\.")}":\\s*{[^}]*?)state:\\s*string;`, "s");
+      const entityPattern = new RegExp(String.raw`("${entityId.replaceAll('.', String.raw`\.`)}":\s*{[^}]*?)state:\s*string;`, "s");
 
       const replacement = `$1state: ${unionType};`;
 
@@ -188,7 +188,7 @@ async function validateProcessing() {
     for (const [entityId, states] of Object.entries(ENTITY_STATE_MAPPINGS)) {
       const unionType = states.map((state) => `"${state}"`).join(" | ");
       const expectedPattern = new RegExp(
-        `"${entityId.replace(/\./g, "\\.")}":\\s*{[^}]*?state:\\s*${unionType.replace(/[|()]/g, "\\$&")};`,
+        String.raw`"${entityId.replaceAll('.', String.raw`\.`)}":\s*{[^}]*?state:\s*${unionType.replaceAll(/[|()]/g, String.raw`\$&`)};`,
         "s",
       );
 

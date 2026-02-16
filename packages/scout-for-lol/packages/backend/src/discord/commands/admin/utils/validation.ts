@@ -62,11 +62,16 @@ export async function executeWithTiming<T>(
   try {
     const result = await operation();
     const executionTime = Date.now() - startTime;
-    logger.info(`✅ ${commandName} completed successfully for ${username} in ${executionTime.toString()}ms`);
+    logger.info(
+      `✅ ${commandName} completed successfully for ${username} in ${executionTime.toString()}ms`,
+    );
     return result;
   } catch (error) {
     const executionTime = Date.now() - startTime;
-    logger.error(`❌ ${commandName} failed for ${username} after ${executionTime.toString()}ms:`, error);
+    logger.error(
+      `❌ ${commandName} failed for ${username} after ${executionTime.toString()}ms:`,
+      error,
+    );
     throw error;
   }
 }

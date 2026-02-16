@@ -66,7 +66,10 @@ const ACTIVITY_THRESHOLDS = {
  * @param currentTime - Current time (for testing purposes)
  * @returns Polling interval in minutes
  */
-export function calculatePollingInterval(lastMatchTime: Date | undefined, currentTime: Date = new Date()): number {
+export function calculatePollingInterval(
+  lastMatchTime: Date | undefined,
+  currentTime: Date = new Date(),
+): number {
   // If we've never seen them in a match, use max interval to avoid excessive polling
   // They'll be checked when first added, and if no matches are found, we'll check infrequently
   if (lastMatchTime === undefined) {

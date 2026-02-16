@@ -6,7 +6,9 @@ const augmentIconSize = "2rem";
 export function renderAugment(augment: Augment) {
   if (augment.type === "full") {
     // Use iconLarge from augment data (iconSmall exists but we use iconLarge for better quality)
-    const iconUrl = augment.iconLarge ? getAugmentIcon(augment.iconLarge) : null;
+    const iconUrl = augment.iconLarge
+      ? getAugmentIcon(augment.iconLarge)
+      : null;
 
     if (iconUrl) {
       return (
@@ -37,5 +39,9 @@ export function renderAugment(augment: Augment) {
     return <div style={{ display: "contents" }}>{augment.name}</div>;
   }
   // For minimal augments (type === "id"), return text as JSX
-  return <div style={{ display: "contents" }}>{`Augment ${augment.id.toString()}`}</div>;
+  return (
+    <div
+      style={{ display: "contents" }}
+    >{`Augment ${augment.id.toString()}`}</div>
+  );
 }

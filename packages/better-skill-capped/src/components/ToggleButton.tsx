@@ -1,6 +1,6 @@
 import React from "react";
 
-export interface ToggleButtonProps {
+export type ToggleButtonProps = {
   status: boolean;
   onToggle: () => void;
   buttonText: (status: boolean) => React.ReactNode;

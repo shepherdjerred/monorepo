@@ -120,7 +120,12 @@
           "description": "Viktor blasts an enemy unit with magic damage, which grants him a shield and empowers his next basic attack.<br><br>Augment: Siphon Power's shield is increased by 60% and Viktor gains bonus move speed after casting the Ability.<br>",
           "tooltip": "Viktor blasts an enemy, dealing <magicDamage>{{ totalmissiledamage }} magic damage</magicDamage> and granting Viktor <shield>{{ shieldlevelscaling }} Shield</shield> for {{ buffduration }} seconds.<br /><br />Viktor's next Attack within 4 seconds deals <magicDamage>{{ attacktotaldmg }} magic damage</magicDamage>.<br /><br /><keywordMajor>Upgraded:</keywordMajor> Grants <shield>{{ totalaugmentedshieldvalue }} Shield</shield> and Viktor additionally gains <speed>{{ augmentmovespeedbonus }}% Move Speed</speed> for {{ buffduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage (Missile)", "Damage (Attack)"],
+            "label": [
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Damage (Missile)",
+              "Damage (Attack)"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
@@ -147,7 +152,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "2.5", "30", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "2.5",
+            "30",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -195,7 +212,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -218,7 +247,12 @@
           "description": "Viktor uses his biomechanical arm to fire a Hextech Ray that cuts across the field in a line, dealing damage to all enemies in its path.<br><br>Augment: An explosion follows in the Hextech Ray's wake, dealing magic damage.<br>",
           "tooltip": "Viktor fires a hextech ray in a chosen direction, dealing <magicDamage>{{ laserdamage }} magic damage</magicDamage> to any enemies it hits.<br /><br /><keywordMajor>Upgraded:</keywordMajor> An aftershock follows Hextech Ray, dealing <magicDamage>{{ aftershockdamage }} magic damage</magicDamage>.<br /><br /><br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage (Hextech Ray)", "Damage (Aftershock)", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage (Hextech Ray)",
+              "Damage (Aftershock)",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamagelaser }} -> {{ basedamagelaserNL }}",
               "{{ basedamageaftershock }} -> {{ basedamageaftershockNL }}",
@@ -245,7 +279,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "70/110/150/190/230", "20/60/100/140/180", "1", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "70/110/150/190/230",
+            "20/60/100/140/180",
+            "1",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -268,7 +314,11 @@
           "description": "Viktor conjures an Arcane Storm on the field, dealing magic damage and interrupting enemy channels. The storm periodically does magic damage to all nearby enemies and can be redirected by Viktor.<br><br>Augment: The Arcane Storm moves 25% faster, and whenever champions die after taking damage from it, the storm grows and increases in its duration.<br><br>",
           "tooltip": "Viktor conjures an Arcane Storm in an area for {{ stormduration }} seconds, which instantly deals <magicDamage>{{ initialburstdamage }} magic damage</magicDamage> followed by <magicDamage>{{ subsequentburstdamage }} magic damage</magicDamage> per second to surrounding enemies. The storm automatically follows champions it has recently damaged.<br /><br /><recast>Recast:</recast> Viktor can manually move the storm.<br /><br /><keywordMajor>Upgraded:</keywordMajor> The storm moves {{ augmentboost*100 }}% faster. If a champion that the storm has damaged dies, the storm increases its size and its duration by {{ tooltip_durationextension }} seconds (up to {{ maxgrowths }} times).<br /><br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage (Initial Burst)", "Damage (Periodic Ticks)"],
+            "label": [
+              "Cooldown",
+              "Damage (Initial Burst)",
+              "Damage (Periodic Ticks)"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ initialburstbasedamage }} -> {{ initialburstbasedamageNL }}",
@@ -294,7 +344,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

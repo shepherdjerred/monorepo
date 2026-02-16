@@ -18,6 +18,9 @@
   },
   "type": "module",
   "version": "1.14.3",
+  "imports": {
+    "#src/*": "./src/*"
+  },
   "scripts": {
     "lint": "eslint src --cache",
     "build": "tsc",
@@ -27,6 +30,24 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./types.js": {
+      "types": "./dist/types.d.ts",
+      "default": "./dist/types.js"
+    },
+    "./util.js": {
+      "types": "./dist/util.d.ts",
+      "default": "./dist/util.js"
+    },
+    "./extract.js": {
+      "types": "./dist/extract.d.ts",
+      "default": "./dist/extract.js"
+    }
+  },
   "keywords": [
     "astro-integration",
     "withastro",
@@ -48,6 +69,7 @@
     "@fontsource/roboto": "^5.2.5",
     "@tsconfig/node24": "^24.0.0",
     "@tsconfig/strictest": "^2.0.5",
+    "@types/bun": "^1.3.9",
     "@types/jsdom": "^27.0.0",
     "@types/node": "^25.0.0",
     "@types/react": "^19.0.10",

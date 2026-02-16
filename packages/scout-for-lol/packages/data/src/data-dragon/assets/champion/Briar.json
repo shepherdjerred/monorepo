@@ -110,7 +110,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "% of current Health",
           "maxammo": "-1",
@@ -133,7 +145,14 @@
           "description": "Briar leaps forward and shatters her pillory, entering a Blood Frenzy that causes her to relentlessly pursue the nearest enemy (prioritizing champions). While frenzied, she gains increased Attack Speed and Move Speed, and her attacks deal damage in an area around her target.<br><br>Briar can reactivate this ability while frenzied to take a CHOMP out of her target on her next attack, dealing additional damage based on their missing Health, and healing Briar based on the damage she deals.",
           "tooltip": "Briar leaps and enters a <keywordMajor>Blood Frenzy</keywordMajor>, self-taunting to the nearest enemy for {{ berserkduration }} seconds, prioritizing Champions. While in <keywordMajor>Blood Frenzy</keywordMajor> she gains <attackSpeed>{{ berserkas*100 }}% Attack Speed</attackSpeed> and <speed>{{ berserkms*100 }}% Move Speed</speed>, and her Attacks deal <physicalDamage>{{ totalaoedamage }} physical damage</physicalDamage> to enemies surrounding her target.<br /><br />Briar can <recast>Recast</recast> this Ability to empower her next Attack. It deals <physicalDamage>{{ totalattackbonusdamage }} + {{ totalattackpercentmissinghealth }}% missing Health physical damage</physicalDamage> and <healing>heals Briar for {{ attackmaxhpheal }} + {{ attackhealpercent*100 }}% of the damage dealt</healing>.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Attack Speed", "Move Speed", "Area Damage AD Ratio", "Damage", "Healing", "Cooldown"],
+            "label": [
+              "Attack Speed",
+              "Move Speed",
+              "Area Damage AD Ratio",
+              "Damage",
+              "Healing",
+              "Cooldown"
+            ],
             "effect": [
               "{{ berserkas*100.000000 }}% -> {{ berserkasnl*100.000000 }}%",
               "{{ berserkms*100.000000 }}% -> {{ berserkmsnl*100.000000 }}%",
@@ -162,7 +181,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "% of current Health",
           "maxammo": "-1",
@@ -211,7 +242,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "% of current Health",
           "maxammo": "-1",
@@ -261,7 +304,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "% of current Health",
           "maxammo": "-1",

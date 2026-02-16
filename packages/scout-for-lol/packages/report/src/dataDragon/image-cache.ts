@@ -90,11 +90,15 @@ export function getAugmentIcon(augmentIconPath: string): string {
   if (cached) {
     return cached;
   }
-  throw new Error(`Augment icon ${augmentIconPath} not found in cache. Call preloadAugmentIcons() before rendering.`);
+  throw new Error(
+    `Augment icon ${augmentIconPath} not found in cache. Call preloadAugmentIcons() before rendering.`,
+  );
 }
 
 // Pre-load champion images for a list of champion names
-export async function preloadChampionImages(championNames: string[]): Promise<void> {
+export async function preloadChampionImages(
+  championNames: string[],
+): Promise<void> {
   const uniqueNames = [...new Set(championNames)];
   await Promise.all(
     uniqueNames.map(async (championName) => {

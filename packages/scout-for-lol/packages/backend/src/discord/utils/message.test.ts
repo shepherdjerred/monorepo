@@ -177,7 +177,9 @@ Content for second section`;
     expect(chunks[0]).toContain("## First Section");
     expect(chunks[0]).toContain("Content for first");
     // Second section should also be present
-    const hasSecondSection = chunks.some((c) => c.includes("## Second Section"));
+    const hasSecondSection = chunks.some((c) =>
+      c.includes("## Second Section"),
+    );
     expect(hasSecondSection).toBe(true);
   });
 

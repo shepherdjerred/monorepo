@@ -27,7 +27,10 @@ export function formatCriteriaType(type: string): string {
 /**
  * Get status emoji for competition based on dates
  */
-export function getStatusEmoji(startDate: Date | null, endDate: Date | null): string {
+export function getStatusEmoji(
+  startDate: Date | null,
+  endDate: Date | null,
+): string {
   if (startDate && endDate) {
     const now = new Date();
     return now < startDate ? "🔵" : "🟢"; // Draft vs Active
@@ -38,7 +41,11 @@ export function getStatusEmoji(startDate: Date | null, endDate: Date | null): st
 /**
  * Format date information for competition
  */
-export function formatDateInfo(startDate: Date | null, endDate: Date | null, seasonId: string | null): string {
+export function formatDateInfo(
+  startDate: Date | null,
+  endDate: Date | null,
+  seasonId: string | null,
+): string {
   if (startDate && endDate) {
     const startTimestamp = String(Math.floor(startDate.getTime() / 1000));
     const endTimestamp = String(Math.floor(endDate.getTime() / 1000));

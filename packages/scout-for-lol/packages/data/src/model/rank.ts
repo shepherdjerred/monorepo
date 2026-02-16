@@ -1,7 +1,13 @@
 import { z } from "zod";
-import { DivisionSchema, divisionToString } from "@scout-for-lol/data/model/division.ts";
+import {
+  DivisionSchema,
+  divisionToString,
+} from "@scout-for-lol/data/model/division.ts";
 import { TierSchema, type Tier } from "@scout-for-lol/data/model/tier.ts";
-import { rankToLeaguePoints, tierToOrdinal } from "@scout-for-lol/data/model/league-points.ts";
+import {
+  rankToLeaguePoints,
+  tierToOrdinal,
+} from "@scout-for-lol/data/model/league-points.ts";
 import { startCase } from "@scout-for-lol/data/util.ts";
 
 export type Rank = z.infer<typeof RankSchema>;
@@ -48,7 +54,10 @@ export function wasDemoted(previous: Rank | undefined, current: Rank): boolean {
   return false;
 }
 
-export function wasPromoted(previous: Rank | undefined, current: Rank): boolean {
+export function wasPromoted(
+  previous: Rank | undefined,
+  current: Rank,
+): boolean {
   if (previous === undefined) {
     return false;
   }

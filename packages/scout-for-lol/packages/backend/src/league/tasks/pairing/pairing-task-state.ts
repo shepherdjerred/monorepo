@@ -34,15 +34,21 @@ export function getTaskInfo(): { running: boolean; startedAt: Date | null } {
  */
 export function startTask(): AbortSignal {
   if (inProgress) {
-    const runningFor = startedAt ? Math.round((Date.now() - startedAt.getTime()) / 1000) : 0;
-    throw new Error(`Pairing update is already running (started ${runningFor.toString()}s ago)`);
+    const runningFor = startedAt
+      ? Math.round((Date.now() - startedAt.getTime()) / 1000)
+      : 0;
+    throw new Error(
+      `Pairing update is already running (started ${runningFor.toString()}s ago)`,
+    );
   }
 
   inProgress = true;
   abortController = new AbortController();
   startedAt = new Date();
 
-  logger.info(`[TaskState] 🚀 Pairing update task started at ${startedAt.toISOString()}`);
+  logger.info(
+    `[TaskState] 🚀 Pairing update task started at ${startedAt.toISOString()}`,
+  );
 
   return abortController.signal;
 }
@@ -71,8 +77,12 @@ export function finishTask(): void {
     return;
   }
 
-  const elapsed = startedAt ? Math.round((Date.now() - startedAt.getTime()) / 1000) : 0;
-  logger.info(`[TaskState] ✅ Pairing update task finished after ${elapsed.toString()}s`);
+  const elapsed = startedAt
+    ? Math.round((Date.now() - startedAt.getTime()) / 1000)
+    : 0;
+  logger.info(
+    `[TaskState] ✅ Pairing update task finished after ${elapsed.toString()}s`,
+  );
 
   inProgress = false;
   abortController = null;

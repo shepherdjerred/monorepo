@@ -3,21 +3,24 @@
 /* Beaufort for LoL - Headings/Titles */
 @font-face {
   font-family: "Beaufort for LoL";
-  src: url("/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Regular.ttf") format("truetype");
+  src: url("/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Regular.ttf")
+    format("truetype");
   font-weight: 400;
   font-style: normal;
 }
 
 @font-face {
   font-family: "Beaufort for LoL";
-  src: url("/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Bold.ttf") format("truetype");
+  src: url("/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Bold.ttf")
+    format("truetype");
   font-weight: 700;
   font-style: normal;
 }
 
 @font-face {
   font-family: "Beaufort for LoL";
-  src: url("/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Heavy.ttf") format("truetype");
+  src: url("/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Heavy.ttf")
+    format("truetype");
   font-weight: 900;
   font-style: normal;
 }

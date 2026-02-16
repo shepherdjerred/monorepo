@@ -44,7 +44,11 @@ type Not<T extends false> = true;
  * Branded types are intersection types like: number & { __brand: "PlayerId" }
  * We check if they're mutually assignable, wrapped in tuples to prevent union distribution
  */
-type TypesMatch<T, U> = [T] extends [U] ? ([U] extends [T] ? true : false) : false;
+type TypesMatch<T, U> = [T] extends [U]
+  ? [U] extends [T]
+    ? true
+    : false
+  : false;
 
 // ============================================================================
 // Tests: Player Model Returns Branded Types
@@ -64,66 +68,96 @@ type PlayerIdNotPlainNumber = Expect<Not<TypesMatch<Player["id"], number>>>;
 type AccountIdIsBranded = Expect<TypesMatch<Account["id"], AccountId>>;
 
 // Account.playerId should be PlayerId
-type AccountPlayerIdIsBranded = Expect<TypesMatch<Account["playerId"], PlayerId>>;
+type AccountPlayerIdIsBranded = Expect<
+  TypesMatch<Account["playerId"], PlayerId>
+>;
 
 // Account should not have plain numbers
 type AccountIdNotPlainNumber = Expect<Not<TypesMatch<Account["id"], number>>>;
-type AccountPlayerIdNotPlainNumber = Expect<Not<TypesMatch<Account["playerId"], number>>>;
+type AccountPlayerIdNotPlainNumber = Expect<
+  Not<TypesMatch<Account["playerId"], number>>
+>;
 
 // ============================================================================
 // Tests: Competition Model Returns Branded Types
 // ============================================================================
 
 // Competition.id should be CompetitionId
-type CompetitionIdIsBranded = Expect<TypesMatch<Competition["id"], CompetitionId>>;
+type CompetitionIdIsBranded = Expect<
+  TypesMatch<Competition["id"], CompetitionId>
+>;
 
 // Competition should not have plain number id
-type CompetitionIdNotPlainNumber = Expect<Not<TypesMatch<Competition["id"], number>>>;
+type CompetitionIdNotPlainNumber = Expect<
+  Not<TypesMatch<Competition["id"], number>>
+>;
 
 // ============================================================================
 // Tests: CompetitionParticipant Has Multiple Branded IDs
 // ============================================================================
 
 // CompetitionParticipant.id should be ParticipantId
-type ParticipantIdIsBranded = Expect<TypesMatch<CompetitionParticipant["id"], ParticipantId>>;
+type ParticipantIdIsBranded = Expect<
+  TypesMatch<CompetitionParticipant["id"], ParticipantId>
+>;
 
 // CompetitionParticipant.playerId should be PlayerId
-type ParticipantPlayerIdIsBranded = Expect<TypesMatch<CompetitionParticipant["playerId"], PlayerId>>;
+type ParticipantPlayerIdIsBranded = Expect<
+  TypesMatch<CompetitionParticipant["playerId"], PlayerId>
+>;
 
 // CompetitionParticipant.competitionId should be CompetitionId
-type ParticipantCompetitionIdIsBranded = Expect<TypesMatch<CompetitionParticipant["competitionId"], CompetitionId>>;
+type ParticipantCompetitionIdIsBranded = Expect<
+  TypesMatch<CompetitionParticipant["competitionId"], CompetitionId>
+>;
 
 // ============================================================================
 // Tests: Type Safety - Can't Mix Different ID Types
 // ============================================================================
 
 // PlayerId and CompetitionId should be different types
-type PlayerIdAndCompetitionIdDifferent = Expect<Not<TypesMatch<PlayerId, CompetitionId>>>;
+type PlayerIdAndCompetitionIdDifferent = Expect<
+  Not<TypesMatch<PlayerId, CompetitionId>>
+>;
 
 // PlayerId and AccountId should be different types
-type PlayerIdAndAccountIdDifferent = Expect<Not<TypesMatch<PlayerId, AccountId>>>;
+type PlayerIdAndAccountIdDifferent = Expect<
+  Not<TypesMatch<PlayerId, AccountId>>
+>;
 
 // CompetitionId and AccountId should be different types
-type CompetitionIdAndAccountIdDifferent = Expect<Not<TypesMatch<CompetitionId, AccountId>>>;
+type CompetitionIdAndAccountIdDifferent = Expect<
+  Not<TypesMatch<CompetitionId, AccountId>>
+>;
 
 // ============================================================================
 // Tests: Discord ID Branded Types
 // ============================================================================
 
 // Competition.serverId should be DiscordGuildId
-type CompetitionServerIdIsBranded = Expect<TypesMatch<Competition["serverId"], DiscordGuildId>>;
+type CompetitionServerIdIsBranded = Expect<
+  TypesMatch<Competition["serverId"], DiscordGuildId>
+>;
 
 // Competition.channelId should be DiscordChannelId
-type CompetitionChannelIdIsBranded = Expect<TypesMatch<Competition["channelId"], DiscordChannelId>>;
+type CompetitionChannelIdIsBranded = Expect<
+  TypesMatch<Competition["channelId"], DiscordChannelId>
+>;
 
 // Competition.ownerId should be DiscordAccountId
-type CompetitionOwnerIdIsBranded = Expect<TypesMatch<Competition["ownerId"], DiscordAccountId>>;
+type CompetitionOwnerIdIsBranded = Expect<
+  TypesMatch<Competition["ownerId"], DiscordAccountId>
+>;
 
 // Player.serverId should be DiscordGuildId
-type PlayerServerIdIsBranded = Expect<TypesMatch<Player["serverId"], DiscordGuildId>>;
+type PlayerServerIdIsBranded = Expect<
+  TypesMatch<Player["serverId"], DiscordGuildId>
+>;
 
 // Player.discordId should be DiscordAccountId | null
-type PlayerDiscordIdIsBranded = Expect<TypesMatch<Player["discordId"], DiscordAccountId | null>>;
+type PlayerDiscordIdIsBranded = Expect<
+  TypesMatch<Player["discordId"], DiscordAccountId | null>
+>;
 
 // ============================================================================
 // Tests: Branded Types Are Still Numbers at Runtime
@@ -153,12 +187,16 @@ type ProcessPlayerFn = (id: PlayerId) => void;
 /**
  * Check that the function won't accept CompetitionId
  */
-type ProcessPlayerDoesNotAcceptCompetitionId = Expect<Not<TypesMatch<Parameters<ProcessPlayerFn>, [CompetitionId]>>>;
+type ProcessPlayerDoesNotAcceptCompetitionId = Expect<
+  Not<TypesMatch<Parameters<ProcessPlayerFn>, [CompetitionId]>>
+>;
 
 /**
  * Check that the function accepts PlayerId
  */
-type ProcessPlayerAcceptsPlayerId = Expect<TypesMatch<Parameters<ProcessPlayerFn>, [PlayerId]>>;
+type ProcessPlayerAcceptsPlayerId = Expect<
+  TypesMatch<Parameters<ProcessPlayerFn>, [PlayerId]>
+>;
 
 // ============================================================================
 // Summary: All Tests Collected Here

@@ -38,7 +38,8 @@ export function SoundPackEditor() {
     const addUrl = (entry: SoundEntry) => {
       if (
         entry.source.type === "url" &&
-        (entry.source.url.includes("youtube.com") || entry.source.url.includes("youtu.be")) &&
+        (entry.source.url.includes("youtube.com") ||
+          entry.source.url.includes("youtu.be")) &&
         !seen.has(entry.source.url)
       ) {
         seen.add(entry.source.url);
@@ -73,20 +74,31 @@ export function SoundPackEditor() {
       return;
     }
 
-    setCacheAllState({ isRunning: true, total: urls.length, completed: 0, failed: 0 });
+    setCacheAllState({
+      isRunning: true,
+      total: urls.length,
+      completed: 0,
+      failed: 0,
+    });
 
     for (const url of urls) {
       try {
         // Check if already cached
         const status = await editor.adapter.getCacheStatus(url);
         if (status === "cached") {
-          setCacheAllState((prev) => ({ ...prev, completed: prev.completed + 1 }));
+          setCacheAllState((prev) => ({
+            ...prev,
+            completed: prev.completed + 1,
+          }));
           continue;
         }
 
         // Cache the URL
         await editor.adapter.cacheYouTubeAudio(url);
-        setCacheAllState((prev) => ({ ...prev, completed: prev.completed + 1 }));
+        setCacheAllState((prev) => ({
+          ...prev,
+          completed: prev.completed + 1,
+        }));
       } catch (error) {
         console.error("Failed to cache:", url, error);
         setCacheAllState((prev) => ({ ...prev, failed: prev.failed + 1 }));
@@ -105,7 +117,9 @@ export function SoundPackEditor() {
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold">Sound Pack Editor</h2>
           {editor.isDirty && (
-            <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Unsaved changes</span>
+            <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded">
+              Unsaved changes
+            </span>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -142,7 +156,8 @@ export function SoundPackEditor() {
               {cacheAllState.isRunning ? (
                 <>
                   <span className="animate-pulse">⏳</span>
-                  {cacheAllState.completed + cacheAllState.failed}/{cacheAllState.total}
+                  {cacheAllState.completed + cacheAllState.failed}/
+                  {cacheAllState.total}
                 </>
               ) : (
                 <>📥 Cache All ({youtubeUrlCount})</>
@@ -166,7 +181,11 @@ export function SoundPackEditor() {
       {editor.error && (
         <div className="px-4 py-2 bg-red-50 border-b border-red-200 text-red-700 text-sm flex items-center justify-between">
           <span>{editor.error}</span>
-          <button type="button" onClick={editor.clearError} className="text-red-500 hover:text-red-700">
+          <button
+            type="button"
+            onClick={editor.clearError}
+            className="text-red-500 hover:text-red-700"
+          >
             ×
           </button>
         </div>
@@ -174,7 +193,10 @@ export function SoundPackEditor() {
 
       {/* Pack name */}
       <div className="px-4 py-3 bg-white border-b">
-        <label htmlFor="pack-name" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="pack-name"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Pack Name
         </label>
         <input
@@ -205,7 +227,8 @@ export function SoundPackEditor() {
             }`}
           >
             {tab === "defaults" && "Default Sounds"}
-            {tab === "rules" && `Rules (${String(editor.soundPack.rules.length)})`}
+            {tab === "rules" &&
+              `Rules (${String(editor.soundPack.rules.length)})`}
             {tab === "settings" && "Settings"}
           </button>
         ))}

@@ -1,9 +1,10 @@
 import React from "react";
 import PaginationControls from "./PaginationControls";
-import { FuseSearch, FuseSearchResult } from "./FuseSearch";
-import { IFuseOptions } from "fuse.js";
+import type { FuseSearchResult } from "./FuseSearch";
+import { FuseSearch } from "./FuseSearch";
+import type { IFuseOptions } from "fuse.js";
 
-export interface PaginatedFuseSearchProps<T> {
+export type PaginatedFuseSearchProps<T> = {
   query: string;
   items: T[];
   fuseOptions: IFuseOptions<T>;
@@ -11,7 +12,7 @@ export interface PaginatedFuseSearchProps<T> {
   itemsPerPage: number;
 }
 
-interface PaginatedFuseSearchState<T> {
+type PaginatedFuseSearchState<T> = {
   matches: T[];
   currentPage: number;
 }

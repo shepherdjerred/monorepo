@@ -1,7 +1,8 @@
-import { Chart, Duration } from "cdk8s";
+import type { Chart} from "cdk8s";
+import { Duration } from "cdk8s";
 import { ConfigMap, DaemonSet, Volume, ServiceAccount, Probe } from "cdk8s-plus-31";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import versions from "../../versions.ts";
 
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);

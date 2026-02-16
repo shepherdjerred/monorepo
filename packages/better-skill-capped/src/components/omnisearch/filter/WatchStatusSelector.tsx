@@ -1,6 +1,6 @@
 import React from "react";
 
-export interface WatchStatusSelectorProps {
+export type WatchStatusSelectorProps = {
   onlyShowUnwatched: boolean;
   onlyShowWatched: boolean;
   onSelectionChange: (onlyShowUnwatched: boolean, onlyShowWatched: boolean) => void;

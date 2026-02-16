@@ -206,7 +206,10 @@
           "tooltip": "Miss Fortune fires a bouncing shot, dealing <physicalDamage>{{ totaldamagetooltip }} physical damage</physicalDamage> to an enemy and to another one behind them. <br /><br />The second shot can critically strike for <physicalDamage>{{ totaldamagecrit }} physical damage</physicalDamage>. It always critically strikes if the first shot kills its target.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Damage"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ basedamage }} -> {{ basedamageNL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [7, 6, 5, 4, 3],
@@ -227,7 +230,19 @@
             [160, 160, 160, 160, 160],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "20/45/70/95/120", "0", "0", "40", "20", "40", "110", "160", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "20/45/70/95/120",
+            "0",
+            "0",
+            "40",
+            "20",
+            "40",
+            "110",
+            "160",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -276,7 +291,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -300,7 +327,10 @@
           "tooltip": "Miss Fortune rains bullets, revealing an area, <status>Slowing</status> by {{ totalslowamount }} and dealing <magicDamage>{{ totaldamagepersecond }} magic damage</magicDamage> per second for {{ baseduration }} seconds (total <magicDamage>{{ totaldamage }} magic damage</magicDamage>).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage Per Second", "Cooldown"],
-            "effect": ["{{ basedamagepersecond }} -> {{ basedamagepersecondNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamagepersecond }} -> {{ basedamagepersecondNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [18, 17, 16, 15, 14],
@@ -321,7 +351,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -345,7 +387,10 @@
           "tooltip": "Miss Fortune channels a barrage of bullets, firing {{ basewaves }} waves over {{ basechannelduration }} seconds, dealing <physicalDamage>{{ physicaldamageperwave }} physical damage</physicalDamage> per wave (total <physicalDamage>{{ totalphysicaldamage }} physical damage</physicalDamage>).<br /><br />Each wave can critically strike for %i:scaleCrit% <physicalDamage>{{ critdamageperwave }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Bullet Barrages", "Cooldown"],
-            "effect": ["{{ basewaves }} -> {{ basewavesNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basewaves }} -> {{ basewavesNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [120, 110, 100],
@@ -366,7 +411,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

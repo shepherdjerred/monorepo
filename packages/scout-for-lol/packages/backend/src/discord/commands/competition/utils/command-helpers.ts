@@ -21,19 +21,30 @@ import {
 /**
  * Extract competition ID from interaction
  */
-export function extractCompetitionId(interaction: ChatInputCommandInteraction): CompetitionId {
-  return CompetitionIdSchema.parse(interaction.options.getInteger("competition-id", true));
+export function extractCompetitionId(
+  interaction: ChatInputCommandInteraction,
+): CompetitionId {
+  return CompetitionIdSchema.parse(
+    interaction.options.getInteger("competition-id", true),
+  );
 }
 
 /**
  * Validate server context and return server ID
  * Returns null if validation fails (and sends error reply)
  */
-export async function validateServerContext(interaction: ChatInputCommandInteraction): Promise<DiscordGuildId | null> {
-  const serverId = interaction.guildId ? DiscordGuildIdSchema.parse(interaction.guildId) : null;
+export async function validateServerContext(
+  interaction: ChatInputCommandInteraction,
+): Promise<DiscordGuildId | null> {
+  const serverId = interaction.guildId
+    ? DiscordGuildIdSchema.parse(interaction.guildId)
+    : null;
 
   if (!serverId) {
-    await replyWithError(interaction, "This command can only be used in a server");
+    await replyWithError(
+      interaction,
+      "This command can only be used in a server",
+    );
     return null;
   }
 
@@ -50,7 +61,8 @@ export async function fetchLinkedPlayerForUser(
   userId: string | DiscordAccountId,
   logContext: string,
 ): Promise<Awaited<ReturnType<typeof prisma.player.findFirst>> | null> {
-  const parsedUserId = typeof userId === "string" ? DiscordAccountIdSchema.parse(userId) : userId;
+  const parsedUserId =
+    typeof userId === "string" ? DiscordAccountIdSchema.parse(userId) : userId;
 
   let player;
   try {
@@ -61,8 +73,15 @@ export async function fetchLinkedPlayerForUser(
       },
     });
   } catch (error) {
-    logger.error(`[${logContext}] Error fetching player for user ${parsedUserId}:`, error);
-    await replyWithErrorFromException(interaction, error, "fetching player data");
+    logger.error(
+      `[${logContext}] Error fetching player for user ${parsedUserId}:`,
+      error,
+    );
+    await replyWithErrorFromException(
+      interaction,
+      error,
+      "fetching player data",
+    );
     return null;
   }
 
@@ -87,13 +106,23 @@ export async function fetchCompetitionWithErrorHandling(
   try {
     competition = await getCompetitionById(prisma, competitionId);
   } catch (error) {
-    logger.error(`[${commandName}] Error fetching competition ${competitionId.toString()}:`, error);
-    await replyWithErrorFromException(interaction, error, "fetching competition");
+    logger.error(
+      `[${commandName}] Error fetching competition ${competitionId.toString()}:`,
+      error,
+    );
+    await replyWithErrorFromException(
+      interaction,
+      error,
+      "fetching competition",
+    );
     return null;
   }
 
   if (!competition) {
-    await replyWithError(interaction, `Competition with ID ${competitionId.toString()} not found`);
+    await replyWithError(
+      interaction,
+      `Competition with ID ${competitionId.toString()} not found`,
+    );
     return null;
   }
 
@@ -162,7 +191,13 @@ export async function checkParticipantLimit(options: {
   logContext: string;
   fullMessage: string;
 }): Promise<number | null> {
-  const { interaction, competitionId, maxParticipants, logContext, fullMessage } = options;
+  const {
+    interaction,
+    competitionId,
+    maxParticipants,
+    logContext,
+    fullMessage,
+  } = options;
   let activeParticipantCount;
   try {
     activeParticipantCount = await prisma.competitionParticipant.count({
@@ -173,7 +208,11 @@ export async function checkParticipantLimit(options: {
     });
   } catch (error) {
     logger.error(`[${logContext}] Error counting participants:`, error);
-    await replyWithErrorFromException(interaction, error, "checking participant limit");
+    await replyWithErrorFromException(
+      interaction,
+      error,
+      "checking participant limit",
+    );
     return null;
   }
 

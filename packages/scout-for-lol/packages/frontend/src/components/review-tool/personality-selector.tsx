@@ -50,8 +50,13 @@ export function PersonalitySelector({
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <label className="block text-sm font-medium text-surface-700">Personalities ({personalities.length})</label>
-        <button onClick={onCreateNew} className="text-xs text-brand-600 hover:text-brand-700 font-medium">
+        <label className="block text-sm font-medium text-surface-700">
+          Personalities ({personalities.length})
+        </label>
+        <button
+          onClick={onCreateNew}
+          className="text-xs text-brand-600 hover:text-brand-700 font-medium"
+        >
           + Create New
         </button>
       </div>
@@ -67,11 +72,17 @@ export function PersonalitySelector({
           <div className="flex items-center justify-between">
             <div>
               <h4 className="text-sm font-medium text-surface-900">Random</h4>
-              <p className="text-xs text-surface-600">Pick a random personality for each review</p>
+              <p className="text-xs text-surface-600">
+                Pick a random personality for each review
+              </p>
             </div>
             {selectedPersonalityId === "random" && (
               <span className="text-brand-600 text-xs flex items-center gap-1">
-                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path
                     fillRule="evenodd"
                     d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -85,7 +96,9 @@ export function PersonalitySelector({
         </button>
 
         {personalities.map((personality) => {
-          const isCustom = customPersonalities.some((p) => p.id === personality.id);
+          const isCustom = customPersonalities.some(
+            (p) => p.id === personality.id,
+          );
           const isSelected = selectedPersonalityId === personality.id;
           return (
             <div
@@ -109,13 +122,21 @@ export function PersonalitySelector({
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h4 className="text-sm font-medium text-surface-900">{personality.metadata.name}</h4>
+                    <h4 className="text-sm font-medium text-surface-900">
+                      {personality.metadata.name}
+                    </h4>
                     {isCustom && (
-                      <span className="px-1.5 py-0.5 bg-brand-100 text-brand-700 text-xs rounded">Custom</span>
+                      <span className="px-1.5 py-0.5 bg-brand-100 text-brand-700 text-xs rounded">
+                        Custom
+                      </span>
                     )}
                     {isSelected && (
                       <span className="text-brand-600 flex items-center">
-                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <svg
+                          className="w-3.5 h-3.5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
                           <path
                             fillRule="evenodd"
                             d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"

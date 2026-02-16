@@ -8,7 +8,10 @@ import { parseLane } from "@scout-for-lol/data/model/lane";
 /**
  * Finds a participant in a match by their PUUID
  */
-export function findParticipant(puuid: string, participants: RawParticipant[]): RawParticipant | undefined {
+export function findParticipant(
+  puuid: string,
+  participants: RawParticipant[],
+): RawParticipant | undefined {
   return pipe(
     participants,
     filter((participant) => participant.puuid === puuid),
@@ -19,7 +22,9 @@ export function findParticipant(puuid: string, participants: RawParticipant[]): 
 /**
  * Determines the outcome of a match for a participant
  */
-export function getOutcome(participant: RawParticipant): "Victory" | "Surrender" | "Defeat" {
+export function getOutcome(
+  participant: RawParticipant,
+): "Victory" | "Surrender" | "Defeat" {
   return match(participant)
     .returnType<"Victory" | "Surrender" | "Defeat">()
     .with({ win: true }, () => "Victory")
@@ -31,7 +36,9 @@ export function getOutcome(participant: RawParticipant): "Victory" | "Surrender"
 /**
  * Helper to extract runes from a single rune style
  */
-function extractRunesFromStyle(style: RawParticipant["perks"]["styles"][number] | undefined): Rune[] {
+function extractRunesFromStyle(
+  style: RawParticipant["perks"]["styles"][number] | undefined,
+): Rune[] {
   const runes: Rune[] = [];
   if (!style) {
     return runes;
@@ -72,7 +79,9 @@ export function extractRunes(participant: RawParticipant): Rune[] {
 export function participantToChampion(participant: RawParticipant): Champion {
   return {
     riotIdGameName:
-      participant.riotIdGameName && participant.riotIdGameName.length > 0 ? participant.riotIdGameName : "Unknown",
+      participant.riotIdGameName && participant.riotIdGameName.length > 0
+        ? participant.riotIdGameName
+        : "Unknown",
     championName: participant.championName,
     kills: participant.kills,
     deaths: participant.deaths,
@@ -90,7 +99,8 @@ export function participantToChampion(participant: RawParticipant): Champion {
     spells: [participant.summoner1Id, participant.summoner2Id],
     gold: participant.goldEarned,
     runes: extractRunes(participant),
-    creepScore: participant.totalMinionsKilled + participant.neutralMinionsKilled,
+    creepScore:
+      participant.totalMinionsKilled + participant.neutralMinionsKilled,
     visionScore: participant.visionScore,
     damage: participant.totalDamageDealtToChampions,
     lane: parseLane(participant.teamPosition),
@@ -100,7 +110,10 @@ export function participantToChampion(participant: RawParticipant): Champion {
 /**
  * Splits participants into blue and red teams
  */
-export function getTeams(participants: RawParticipant[], championConverter: (p: RawParticipant) => Champion) {
+export function getTeams(
+  participants: RawParticipant[],
+  championConverter: (p: RawParticipant) => Champion,
+) {
   return {
     blue: pipe(participants.slice(0, 5), map(championConverter)),
     red: pipe(participants.slice(5, 10), map(championConverter)),

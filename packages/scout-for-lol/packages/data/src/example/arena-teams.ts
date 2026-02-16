@@ -1,5 +1,8 @@
 import { type ArenaTeam } from "@scout-for-lol/data";
-import { createMasterOfDualityAugment, createCourageAugment } from "./arena-augments.ts";
+import {
+  createMasterOfDualityAugment,
+  createCourageAugment,
+} from "./arena-augments.ts";
 import { getTeam1 } from "./arena-teams-1.ts";
 import { getTeam2 } from "./arena-teams-2.ts";
 import { getTeam3 } from "./arena-teams-3.ts";

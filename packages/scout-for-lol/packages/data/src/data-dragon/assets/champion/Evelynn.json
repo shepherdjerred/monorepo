@@ -170,7 +170,11 @@
           "description": "Evelynn strikes out with her Lasher, dealing damage to the first unit hit. Then, Evelynn can shoot a line of spikes at nearby foes a few times.",
           "tooltip": "Evelynn strikes with her Lasher, dealing <magicDamage>{{ missiledamage }} magic damage</magicDamage> to the first enemy hit and causing Evelynn's next 3 Attacks or Abilities on that unit to deal an additional <magicDamage>{{ totalbonusdamage }} magic damage</magicDamage>. Evelynn can <recast>Recast</recast> this Ability up to {{ qstackcount }} times.<br /><br /><recast>Recast:</recast> Evelynn fires spikes through the nearest enemy, dealing <magicDamage>{{ missiledamage }} magic damage</magicDamage> to all enemies hit.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Lasher and Spike Damage", "Bonus Damage:", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Lasher and Spike Damage",
+              "Bonus Damage:",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ hatespikebasedamage }} -> {{ hatespikebasedamageNL }}",
               "{{ bonusdamagebase }} -> {{ bonusdamagebaseNL }}",
@@ -196,7 +200,19 @@
             [4, 4, 4, 4, 4],
             [-0.25, -0.25, -0.25, -0.25, -0.25]
           ],
-          "effectBurn": [null, "0", "30", "60", "15/25/35/45/55", "25/30/35/40/45", "6", "30", "50", "4", "-0.25"],
+          "effectBurn": [
+            null,
+            "0",
+            "30",
+            "60",
+            "15/25/35/45/55",
+            "25/30/35/40/45",
+            "6",
+            "30",
+            "50",
+            "4",
+            "-0.25"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -290,7 +306,12 @@
           "description": "Evelynn whips her target with her Lasher, dealing damage. She then gains Move Speed for a short duration.",
           "tooltip": "Evelynn whips an enemy, dealing <magicDamage>{{ basedamage }} plus {{ percenthealthbasetooltip }} max Health magic damage</magicDamage>. Evelynn gains <speed>{{ speedamount*100 }}% Move Speed</speed> for {{ speedduration }} seconds.<br /><br />Entering <keywordMajor>Demon Shade</keywordMajor> refreshes this Ability's cooldown and empowers it. When this Ability is empowered, Evelynn dashes to the target and deals <magicDamage>{{ empowereddamage }} plus {{ percenthealthempoweredtooltip }} max Health magic damage</magicDamage> to her target and everyone she passes through instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Empowered Damage", "Move Speed", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Empowered Damage",
+              "Move Speed",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ empowereddamage }} -> {{ empowereddamageNL }}",
@@ -378,7 +399,19 @@
             [30, 45, 60],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "125/250/375", "1.4", "2.5", "150/225/300", "3", "5/4/3", "0.3", "700", "30/45/60", "0"],
+          "effectBurn": [
+            null,
+            "125/250/375",
+            "1.4",
+            "2.5",
+            "150/225/300",
+            "3",
+            "5/4/3",
+            "0.3",
+            "700",
+            "30/45/60",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

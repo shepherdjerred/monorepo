@@ -7,7 +7,10 @@ import {
   type RawTimeline,
 } from "@scout-for-lol/data";
 
-import { testAccountId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  testAccountId,
+  testPuuid,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
 
 // Test match ID for all tests
 const TEST_MATCH_ID = MatchIdSchema.parse("NA1_1234567890");
@@ -96,8 +99,20 @@ describe("generateMatchReview", () => {
                 },
               },
             },
-            rankBeforeMatch: { tier: "gold", division: 2, lp: 50, wins: 25, losses: 23 },
-            rankAfterMatch: { tier: "gold", division: 2, lp: 65, wins: 26, losses: 23 },
+            rankBeforeMatch: {
+              tier: "gold",
+              division: 2,
+              lp: 50,
+              wins: 25,
+              losses: 23,
+            },
+            rankAfterMatch: {
+              tier: "gold",
+              division: 2,
+              lp: 65,
+              wins: 26,
+              losses: 23,
+            },
             wins: 50,
             losses: 48,
             champion: {
@@ -143,7 +158,12 @@ describe("generateMatchReview", () => {
         },
       } satisfies CompletedMatch;
 
-      const review = await generateMatchReview(match, TEST_MATCH_ID, MINIMAL_RAW_MATCH, MINIMAL_RAW_TIMELINE);
+      const review = await generateMatchReview(
+        match,
+        TEST_MATCH_ID,
+        MINIMAL_RAW_MATCH,
+        MINIMAL_RAW_TIMELINE,
+      );
 
       expect(review).toBeUndefined();
     });
@@ -233,7 +253,12 @@ describe("generateMatchReview", () => {
         teams: [],
       } satisfies ArenaMatch;
 
-      const review = await generateMatchReview(match, TEST_MATCH_ID, MINIMAL_RAW_MATCH, MINIMAL_RAW_TIMELINE);
+      const review = await generateMatchReview(
+        match,
+        TEST_MATCH_ID,
+        MINIMAL_RAW_MATCH,
+        MINIMAL_RAW_TIMELINE,
+      );
 
       expect(review).toBeUndefined();
     });

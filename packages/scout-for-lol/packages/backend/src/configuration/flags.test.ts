@@ -1,5 +1,8 @@
 import { describe, test, expect, beforeEach } from "bun:test";
-import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index";
+import {
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data/index";
 
 import {
   getLimit,
@@ -28,7 +31,9 @@ describe("Feature Flags System", () => {
 
     test("returns override for specific server", () => {
       const serverId = DiscordGuildIdSchema.parse("1337623164146155593");
-      expect(getLimit("player_subscriptions", { server: serverId })).toBe("unlimited");
+      expect(getLimit("player_subscriptions", { server: serverId })).toBe(
+        "unlimited",
+      );
       expect(getLimit("accounts", { server: serverId })).toBe("unlimited");
     });
 
@@ -38,11 +43,16 @@ describe("Feature Flags System", () => {
 
       // Add overrides with different specificity
       addLimitOverride("competitions_per_owner", 20, { server: serverId });
-      addLimitOverride("competitions_per_owner", 50, { server: serverId, user: userId });
+      addLimitOverride("competitions_per_owner", 50, {
+        server: serverId,
+        user: userId,
+      });
 
       // More specific override should win
       expect(getLimit("competitions_per_owner", { server: serverId })).toBe(20);
-      expect(getLimit("competitions_per_owner", { server: serverId, user: userId })).toBe(50);
+      expect(
+        getLimit("competitions_per_owner", { server: serverId, user: userId }),
+      ).toBe(50);
 
       // Clean up
       clearLimitOverrides("competitions_per_owner");
@@ -53,13 +63,23 @@ describe("Feature Flags System", () => {
       const otherServerId = DiscordGuildIdSchema.parse("98765432109876543");
       const userId = DiscordAccountIdSchema.parse("11111111111111111");
 
-      addLimitOverride("competitions_per_server", 100, { server: serverId, user: userId });
+      addLimitOverride("competitions_per_server", 100, {
+        server: serverId,
+        user: userId,
+      });
 
       // Should match
-      expect(getLimit("competitions_per_server", { server: serverId, user: userId })).toBe(100);
+      expect(
+        getLimit("competitions_per_server", { server: serverId, user: userId }),
+      ).toBe(100);
 
       // Should not match (wrong server)
-      expect(getLimit("competitions_per_server", { server: otherServerId, user: userId })).toBe(2);
+      expect(
+        getLimit("competitions_per_server", {
+          server: otherServerId,
+          user: userId,
+        }),
+      ).toBe(2);
 
       // Should not match (missing user)
       expect(getLimit("competitions_per_server", { server: serverId })).toBe(2);
@@ -104,11 +124,16 @@ describe("Feature Flags System", () => {
 
       // Add overrides with different specificity
       addFlagOverride("ai_reviews_enabled", true, { server: serverId });
-      addFlagOverride("ai_reviews_enabled", false, { server: serverId, user: userId });
+      addFlagOverride("ai_reviews_enabled", false, {
+        server: serverId,
+        user: userId,
+      });
 
       // More specific override should win
       expect(getFlag("ai_reviews_enabled", { server: serverId })).toBe(true);
-      expect(getFlag("ai_reviews_enabled", { server: serverId, user: userId })).toBe(false);
+      expect(
+        getFlag("ai_reviews_enabled", { server: serverId, user: userId }),
+      ).toBe(false);
 
       clearFlagOverrides("ai_reviews_enabled");
     });
@@ -118,13 +143,20 @@ describe("Feature Flags System", () => {
       const otherServerId = DiscordGuildIdSchema.parse("98765432109876543");
       const userId = DiscordAccountIdSchema.parse("11111111111111111");
 
-      addFlagOverride("ai_reviews_enabled", true, { server: serverId, user: userId });
+      addFlagOverride("ai_reviews_enabled", true, {
+        server: serverId,
+        user: userId,
+      });
 
       // Should match
-      expect(getFlag("ai_reviews_enabled", { server: serverId, user: userId })).toBe(true);
+      expect(
+        getFlag("ai_reviews_enabled", { server: serverId, user: userId }),
+      ).toBe(true);
 
       // Should not match (wrong server)
-      expect(getFlag("ai_reviews_enabled", { server: otherServerId, user: userId })).toBe(false);
+      expect(
+        getFlag("ai_reviews_enabled", { server: otherServerId, user: userId }),
+      ).toBe(false);
 
       // Should not match (missing user)
       expect(getFlag("ai_reviews_enabled", { server: serverId })).toBe(false);
@@ -132,7 +164,9 @@ describe("Feature Flags System", () => {
       clearFlagOverrides("ai_reviews_enabled");
     });
   });
+});
 
+describe("Feature Flags - Specificity & Overrides", () => {
   describe("Specificity matching", () => {
     beforeEach(() => {
       clearLimitOverrides("player_subscriptions");
@@ -143,9 +177,14 @@ describe("Feature Flags System", () => {
       const userId = DiscordAccountIdSchema.parse("98765432109876543");
 
       addLimitOverride("player_subscriptions", 20, { server: serverId });
-      addLimitOverride("player_subscriptions", 100, { server: serverId, user: userId });
+      addLimitOverride("player_subscriptions", 100, {
+        server: serverId,
+        user: userId,
+      });
 
-      expect(getLimit("player_subscriptions", { server: serverId, user: userId })).toBe(100);
+      expect(
+        getLimit("player_subscriptions", { server: serverId, user: userId }),
+      ).toBe(100);
 
       clearLimitOverrides("player_subscriptions");
     });
@@ -156,10 +195,23 @@ describe("Feature Flags System", () => {
       const playerId = 42;
 
       addLimitOverride("player_subscriptions", 20, { server: serverId });
-      addLimitOverride("player_subscriptions", 50, { server: serverId, user: userId });
-      addLimitOverride("player_subscriptions", 200, { server: serverId, user: userId, player: playerId });
+      addLimitOverride("player_subscriptions", 50, {
+        server: serverId,
+        user: userId,
+      });
+      addLimitOverride("player_subscriptions", 200, {
+        server: serverId,
+        user: userId,
+        player: playerId,
+      });
 
-      expect(getLimit("player_subscriptions", { server: serverId, user: userId, player: playerId })).toBe(200);
+      expect(
+        getLimit("player_subscriptions", {
+          server: serverId,
+          user: userId,
+          player: playerId,
+        }),
+      ).toBe(200);
 
       clearLimitOverrides("player_subscriptions");
     });
@@ -171,7 +223,9 @@ describe("Feature Flags System", () => {
       addLimitOverride("player_subscriptions", 50, { server: serverId });
 
       // Override should still match (override attributes are subset of query)
-      expect(getLimit("player_subscriptions", { server: serverId, user: userId })).toBe(50);
+      expect(
+        getLimit("player_subscriptions", { server: serverId, user: userId }),
+      ).toBe(50);
 
       clearLimitOverrides("player_subscriptions");
     });

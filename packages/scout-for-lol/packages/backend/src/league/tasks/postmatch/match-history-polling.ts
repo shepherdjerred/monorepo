@@ -1,5 +1,14 @@
-import type { RawMatch, PlayerConfigEntry, LeaguePuuid, MatchId, DiscordGuildId } from "@scout-for-lol/data/index.ts";
-import { getRecentMatchIds, filterNewMatches } from "@scout-for-lol/backend/league/api/match-history.ts";
+import type {
+  RawMatch,
+  PlayerConfigEntry,
+  LeaguePuuid,
+  MatchId,
+  DiscordGuildId,
+} from "@scout-for-lol/data/index.ts";
+import {
+  getRecentMatchIds,
+  filterNewMatches,
+} from "@scout-for-lol/backend/league/api/match-history.ts";
 import {
   getAccountsWithState,
   updateLastProcessedMatch,
@@ -8,15 +17,24 @@ import {
   updateLastMatchTime,
   updateLastCheckedAt,
 } from "@scout-for-lol/backend/database/index.ts";
-import { MatchIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
-import { send, ChannelSendError } from "@scout-for-lol/backend/league/discord/channel.ts";
+import {
+  MatchIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data/index.ts";
+import {
+  send,
+  ChannelSendError,
+} from "@scout-for-lol/backend/league/discord/channel.ts";
 import {
   shouldCheckPlayer,
   calculatePollingInterval,
   MAX_PLAYERS_PER_RUN,
 } from "@scout-for-lol/backend/utils/polling-intervals.ts";
 import { generateMatchReport } from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.ts";
-import { fetchMatchData } from "@scout-for-lol/backend/league/tasks/postmatch/match-data-fetcher.ts";
+import {
+  processMatchForPlayer,
+  type PlayerWithMatchIds,
+} from "@scout-for-lol/backend/league/tasks/postmatch/match-processing.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import { uniqueBy } from "remeda";
@@ -84,70 +102,34 @@ function shouldSkipPollingRun(): boolean {
   return true;
 }
 
-type PlayerWithMatchIds = {
-  player: PlayerConfigEntry;
-  matchIds: MatchId[];
-};
-
-/**
- * Process a single match for a player
- * Extracted to reduce nesting depth
- */
-async function processMatchForPlayer(
-  player: PlayerConfigEntry,
-  matchId: MatchId,
-  allPlayerConfigs: PlayerConfigEntry[],
-  processedMatchIds: Set<MatchId>,
-): Promise<void> {
-  try {
-    // Skip if we've already processed this match in this run
-    if (processedMatchIds.has(matchId)) {
-      logger.info(`[${player.alias}] ⏭️  Match ${matchId} already processed in this run`);
-      return;
-    }
-
-    // Fetch match data
-    const matchData = await fetchMatchData(matchId, player.league.leagueAccount.region);
-
-    if (!matchData) {
-      logger.info(`[${player.alias}] ⚠️  Could not fetch match data for ${matchId}, skipping`);
-      return;
-    }
-
-    // Process the match with all tracked players
-    await processMatchAndUpdatePlayers(matchData, allPlayerConfigs, processedMatchIds, matchId);
-  } catch (error) {
-    logger.error(`[${player.alias}] ❌ Error processing match ${matchId}:`, error);
-    Sentry.captureException(error, {
-      tags: {
-        source: "match-processing",
-        matchId,
-        playerAlias: player.alias,
-      },
-    });
-    // Continue with next match even if this one fails
-  }
-}
-
 /**
  * Process a completed match and send Discord notifications
  */
-async function processMatch(matchData: RawMatch, trackedPlayers: PlayerConfigEntry[]): Promise<void> {
+async function processMatch(
+  matchData: RawMatch,
+  trackedPlayers: PlayerConfigEntry[],
+): Promise<void> {
   const matchId = MatchIdSchema.parse(matchData.metadata.matchId);
   logger.info(`[processMatch] 🎮 Processing match ${matchId}`);
 
   try {
     // Determine which tracked players are in this match
     const playersInMatch = trackedPlayers.filter((player) =>
-      matchData.metadata.participants.includes(player.league.leagueAccount.puuid),
+      matchData.metadata.participants.includes(
+        player.league.leagueAccount.puuid,
+      ),
     );
 
     // Get channels to notify FIRST - we need guild IDs for feature flag checks
-    const puuids: LeaguePuuid[] = playersInMatch.map((p) => p.league.leagueAccount.puuid);
+    const puuids: LeaguePuuid[] = playersInMatch.map(
+      (p) => p.league.leagueAccount.puuid,
+    );
     const channels = await getChannelsSubscribedToPlayers(puuids);
 
     if (channels.length === 0) {
-      logger.info(`[processMatch] ⚠️  No channels subscribed to players in match ${matchId}`);
+      logger.info(
+        `[processMatch] ⚠️  No channels subscribed to players in match ${matchId}`,
+      );
       return;
     }
 
@@ -157,30 +139,45 @@ async function processMatch(matchData: RawMatch, trackedPlayers: PlayerConfigEnt
       (id) => id,
     );
 
-    logger.info(`[processMatch] 🎯 Target guilds: ${targetGuildIds.join(", ")}`);
+    logger.info(
+      `[processMatch] 🎯 Target guilds: ${targetGuildIds.join(", ")}`,
+    );
 
     // Generate the match report message with guild context for feature flags
-    const message = await generateMatchReport(matchData, trackedPlayers, { targetGuildIds });
+    const message = await generateMatchReport(matchData, trackedPlayers, {
+      targetGuildIds,
+    });
 
     if (!message) {
-      logger.info(`[processMatch] ⚠️  No message generated for match ${matchId}`);
+      logger.info(
+        `[processMatch] ⚠️  No message generated for match ${matchId}`,
+      );
       return;
     }
 
-    logger.info(`[processMatch] 📢 Sending notifications to ${channels.length.toString()} channel(s)`);
+    logger.info(
+      `[processMatch] 📢 Sending notifications to ${channels.length.toString()} channel(s)`,
+    );
 
     // Send to all subscribed channels
     for (const { channel } of channels) {
       try {
         await send(message, channel);
-        logger.info(`[processMatch] ✅ Sent notification to channel ${channel}`);
+        logger.info(
+          `[processMatch] ✅ Sent notification to channel ${channel}`,
+        );
       } catch (error) {
         if (error instanceof ChannelSendError && error.isPermissionError) {
-          logger.warn(`[processMatch] ⚠️  Permission error sending to channel ${channel}: ${error.message}`);
+          logger.warn(
+            `[processMatch] ⚠️  Permission error sending to channel ${channel}: ${error.message}`,
+          );
           continue;
         }
 
-        logger.error(`[processMatch] ❌ Failed to send notification to channel ${channel}:`, error);
+        logger.error(
+          `[processMatch] ❌ Failed to send notification to channel ${channel}:`,
+          error,
+        );
         Sentry.captureException(error, {
           tags: {
             source: "discord-notification",
@@ -225,7 +222,9 @@ async function processMatchAndUpdatePlayers(
       `found ${allTrackedPlayers.length.toString()} tracked players in match`,
   );
   if (allTrackedPlayers.length > 0) {
-    logger.info(`[processMatch] 👥 Tracked players in match: ${allTrackedPlayers.map((p) => p.alias).join(", ")}`);
+    logger.info(
+      `[processMatch] 👥 Tracked players in match: ${allTrackedPlayers.map((p) => p.alias).join(", ")}`,
+    );
   }
 
   // Process the match
@@ -246,7 +245,9 @@ async function processMatchAndUpdatePlayers(
     const brandedMatchId = MatchIdSchema.parse(matchId);
     await updateLastProcessedMatch(playerPuuid, brandedMatchId);
     await updateLastMatchTime(playerPuuid, matchCreationTime);
-    logger.info(`[processMatch] ✅ Updated ${trackedPlayer.alias} lastMatchTime`);
+    logger.info(
+      `[processMatch] ✅ Updated ${trackedPlayer.alias} lastMatchTime`,
+    );
   }
 }
 
@@ -268,7 +269,9 @@ export async function checkMatchHistory(): Promise<void> {
   try {
     // Get all tracked player accounts with their polling state
     const accountsWithState = await getAccountsWithState();
-    logger.info(`📊 Found ${accountsWithState.length.toString()} total player account(s)`);
+    logger.info(
+      `📊 Found ${accountsWithState.length.toString()} total player account(s)`,
+    );
 
     if (accountsWithState.length === 0) {
       logger.info("⏸️  No players to check");
@@ -281,17 +284,23 @@ export async function checkMatchHistory(): Promise<void> {
     const intervalDistribution = new Map<number, number>();
     for (const { lastMatchTime } of accountsWithState) {
       const interval = calculatePollingInterval(lastMatchTime, currentTime);
-      intervalDistribution.set(interval, (intervalDistribution.get(interval) ?? 0) + 1);
+      intervalDistribution.set(
+        interval,
+        (intervalDistribution.get(interval) ?? 0) + 1,
+      );
     }
 
     // Log interval distribution
     for (const [interval, count] of intervalDistribution.entries()) {
-      logger.info(`📊 Polling interval ${interval.toString()}min: ${count.toString()} account(s)`);
+      logger.info(
+        `📊 Polling interval ${interval.toString()}min: ${count.toString()} account(s)`,
+      );
     }
 
     // Filter to only players that should be checked this cycle
-    const eligiblePlayers = accountsWithState.filter(({ lastMatchTime, lastCheckedAt }) =>
-      shouldCheckPlayer(lastMatchTime, lastCheckedAt, currentTime),
+    const eligiblePlayers = accountsWithState.filter(
+      ({ lastMatchTime, lastCheckedAt }) =>
+        shouldCheckPlayer(lastMatchTime, lastCheckedAt, currentTime),
     );
 
     logger.info(
@@ -322,17 +331,25 @@ export async function checkMatchHistory(): Promise<void> {
       );
     }
 
-    logger.info(`📊 Checking ${playersToCheck.length.toString()} account(s) this run`);
+    logger.info(
+      `📊 Checking ${playersToCheck.length.toString()} account(s) this run`,
+    );
 
     if (playersToCheck.length === 0) {
-      logger.info("⏸️  No players to check this cycle (based on polling intervals)");
+      logger.info(
+        "⏸️  No players to check this cycle (based on polling intervals)",
+      );
       return;
     }
 
     // Fetch recent match IDs for each player
     const playersWithMatches: PlayerWithMatchIds[] = [];
 
-    for (const { config: player, lastMatchTime, lastCheckedAt } of playersToCheck) {
+    for (const {
+      config: player,
+      lastMatchTime,
+      lastCheckedAt,
+    } of playersToCheck) {
       const puuid = player.league.leagueAccount.puuid;
       const interval = calculatePollingInterval(lastMatchTime, currentTime);
 
@@ -355,7 +372,10 @@ export async function checkMatchHistory(): Promise<void> {
         }
 
         // Filter to only new matches
-        const newMatchIds = filterNewMatches(recentMatchIds, lastProcessedMatchId);
+        const newMatchIds = filterNewMatches(
+          recentMatchIds,
+          lastProcessedMatchId,
+        );
 
         if (newMatchIds.length === 0) {
           logger.info(`[${player.alias}] ✅ No new matches to process`);
@@ -367,7 +387,10 @@ export async function checkMatchHistory(): Promise<void> {
         );
         playersWithMatches.push({ player, matchIds: newMatchIds });
       } catch (error) {
-        logger.error(`[${player.alias}] ❌ Error checking match history:`, error);
+        logger.error(
+          `[${player.alias}] ❌ Error checking match history:`,
+          error,
+        );
         Sentry.captureException(error, {
           tags: {
             source: "match-history-check",
@@ -382,7 +405,9 @@ export async function checkMatchHistory(): Promise<void> {
     if (playersWithMatches.length === 0) {
       logger.info("✅ No new matches found for any players");
       const totalTime = Date.now() - startTime;
-      logger.info(`⏱️  Match history check completed in ${totalTime.toString()}ms`);
+      logger.info(
+        `⏱️  Match history check completed in ${totalTime.toString()}ms`,
+      );
       return;
     }
 
@@ -399,13 +424,23 @@ export async function checkMatchHistory(): Promise<void> {
 
     for (const { player, matchIds } of playersWithMatches) {
       for (const matchId of matchIds) {
-        await processMatchForPlayer(player, matchId, allPlayerConfigs, processedMatchIds);
+        await processMatchForPlayer({
+          player,
+          matchId,
+          allPlayerConfigs,
+          processedMatchIds,
+          processMatchAndUpdatePlayers,
+        });
       }
     }
 
     const totalTime = Date.now() - startTime;
-    logger.info(`✅ Match history check completed in ${totalTime.toString()}ms`);
-    logger.info(`📊 Processed ${processedMatchIds.size.toString()} unique match(es)`);
+    logger.info(
+      `✅ Match history check completed in ${totalTime.toString()}ms`,
+    );
+    logger.info(
+      `📊 Processed ${processedMatchIds.size.toString()} unique match(es)`,
+    );
   } catch (error) {
     logger.error("❌ Error in match history check:", error);
     throw error;

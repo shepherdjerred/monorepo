@@ -8,7 +8,8 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
-import { Chart, Size } from "cdk8s";
+import type { Chart} from "cdk8s";
+import { Size } from "cdk8s";
 import { withCommonLinuxServerProps } from "../../misc/linux-server.ts";
 import { withCommonProps } from "../../misc/common.ts";
 import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
@@ -117,12 +118,12 @@ export function createQBitTorrentDeployment(
     withCommonProps({
       name: "qbittorrent-exporter",
       image: `ghcr.io/esanchezm/prometheus-qbittorrent-exporter:${versions["esanchezm/prometheus-qbittorrent-exporter"]}`,
-      ports: [{ number: 17871, name: "metrics" }],
+      ports: [{ number: 17_871, name: "metrics" }],
       securityContext: {
         ensureNonRoot: true,
         readOnlyRootFilesystem: true,
-        user: 65534, // nobody user
-        group: 65534,
+        user: 65_534, // nobody user
+        group: 65_534,
       },
       envVariables: {
         QBITTORRENT_HOST: EnvValue.fromValue("localhost"),
@@ -159,7 +160,7 @@ export function createQBitTorrentDeployment(
         app: "qbittorrent",
       },
     },
-    ports: [{ port: 17871, name: "metrics" }],
+    ports: [{ port: 17_871, name: "metrics" }],
   });
 
   new TailscaleIngress(chart, "qbittorrent-tailscale-ingress", {

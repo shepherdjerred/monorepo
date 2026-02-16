@@ -161,7 +161,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -210,7 +222,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "60/85/110/135/160", "1/1.1/1.2/1.3/1.4", "0", "0", "1300", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "60/85/110/135/160",
+            "1/1.1/1.2/1.3/1.4",
+            "0",
+            "0",
+            "1300",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -233,7 +257,12 @@
           "description": "Maokai flings a sapling to the target area to stand guard. More effective in brush.",
           "tooltip": "Maokai flings a sapling, which stands watch for {{ saplingduration }} seconds. Saplings chase nearby enemies, detonating on arrival to deal <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slow</status> surrounding enemies by {{ slowamount*100 }}% for {{ slowduration }} seconds. <keywordMajor>Sap Magic's</keywordMajor> Cooldown is reduced by an additional 4 seconds if the sapling hits an enemy champion or epic monster.<br /><br />If placed in brush, Saplings instead last for {{ empoweredsaplingduration }} seconds and cause a larger explosion, dealing <magicDamage>{{ totalempowereddamage }} magic damage</magicDamage> over {{ empowereddotduration }} seconds and <status>Slowing</status> enemies by {{ empoweredslowamount }}.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Empowered Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Empowered Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ empoweredbasedamage }} -> {{ empoweredbasedamageNL }}",
@@ -260,7 +289,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -309,7 +350,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0.6", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0.6",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

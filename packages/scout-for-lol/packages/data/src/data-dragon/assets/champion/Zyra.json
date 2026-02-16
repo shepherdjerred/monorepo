@@ -149,7 +149,10 @@
           "tooltip": "Zyra causes thick vines to spread and explode into spines, dealing <magicDamage>{{ initialdamage }} magic damage</magicDamage>.<br /><br />If this Ability is cast near a <keywordMajor>Seed</keywordMajor>, the <keywordMajor>Seed</keywordMajor> grows into a Thorn Spitter that deals <magicDamage>{{ spell.zyrap:plantdamage }} magic damage</magicDamage> and lasts {{ spell.zyrap:plantduration }} seconds. Thorn Spitters have 575 range.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Damage"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ e1 }} -> {{ e1NL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ e1 }} -> {{ e1NL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [7, 6.5, 6, 5.5, 5],
@@ -170,7 +173,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "60/100/140/180/220", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "60/100/140/180/220",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -215,7 +230,19 @@
             [0.4, 0.8, 1.2, 1.6, 2],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "35", "100", "2", "0", "0", "60", "0", "10/20/30/40/50", "0.4/0.8/1.2/1.6/2", "0"],
+          "effectBurn": [
+            null,
+            "35",
+            "100",
+            "2",
+            "0",
+            "0",
+            "60",
+            "0",
+            "10/20/30/40/50",
+            "0.4/0.8/1.2/1.6/2",
+            "0"
+          ],
           "vars": [],
           "costType": "1 Seed",
           "maxammo": "2",
@@ -300,7 +327,10 @@
           "tooltip": "Zyra summons the fury of nature, growing a twisted thicket that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>. After 2 seconds, the vines snap upwards, <status>Knocking Up</status> for {{ e1 }} second.<br /><br />Zyra's plants within the thicket become enraged, resetting their duration, gaining <healing>{{ e2 }}% Health</healing> and Attacking for {{ plantdamagebonus }}% bonus damage.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Damage"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ e3 }} -> {{ e3NL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ e3 }} -> {{ e3NL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [110, 100, 90],
@@ -321,7 +351,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "1", "50", "200/300/400", "0", "0", "0", "150", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "1",
+            "50",
+            "200/300/400",
+            "0",
+            "0",
+            "0",
+            "150",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

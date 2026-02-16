@@ -66,7 +66,9 @@ export const EXCLUDED_PERSONALITY_FILES = new Set(["generic.json"]);
  * @param behaviors - Array of behaviors with prompts and weights
  * @returns The selected behaviors' prompts joined by newlines, or empty string if none available
  */
-export function selectRandomBehaviors(behaviors: RandomBehavior[] | undefined): string {
+export function selectRandomBehaviors(
+  behaviors: RandomBehavior[] | undefined,
+): string {
   if (!behaviors || behaviors.length === 0) {
     return "";
   }
@@ -74,7 +76,8 @@ export function selectRandomBehaviors(behaviors: RandomBehavior[] | undefined): 
   // Determine how many behaviors to select (3-6, capped by available)
   const minCount = 3;
   const maxCount = 12;
-  const targetCount = minCount + Math.floor(Math.random() * (maxCount - minCount + 1));
+  const targetCount =
+    minCount + Math.floor(Math.random() * (maxCount - minCount + 1));
   const count = Math.min(behaviors.length, targetCount);
 
   // Create a mutable copy for weighted sampling without replacement
@@ -124,7 +127,9 @@ export function selectRandomBehaviors(behaviors: RandomBehavior[] | undefined): 
  * @param imagePrompts - Array of image prompt strings from personality metadata
  * @returns Array of 2-3 randomly selected prompts, or empty array if no prompts available
  */
-export function selectRandomImagePrompts(imagePrompts: string[] | undefined): string[] {
+export function selectRandomImagePrompts(
+  imagePrompts: string[] | undefined,
+): string[] {
   if (!imagePrompts || imagePrompts.length === 0) {
     return [];
   }

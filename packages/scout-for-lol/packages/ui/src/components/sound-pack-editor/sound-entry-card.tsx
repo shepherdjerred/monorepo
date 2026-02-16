@@ -30,7 +30,10 @@ type SoundEntryCardProps = {
 // Helper functions to reduce component complexity
 // =============================================================================
 
-function getSourceIcon(sourceType: "file" | "url", isYouTube: boolean): { emoji: string; colorClass: string } {
+function getSourceIcon(
+  sourceType: "file" | "url",
+  isYouTube: boolean,
+): { emoji: string; colorClass: string } {
   if (sourceType === "file") {
     return { emoji: "🎵", colorClass: "text-gray-500" };
   }
@@ -40,23 +43,38 @@ function getSourceIcon(sourceType: "file" | "url", isYouTube: boolean): { emoji:
   return { emoji: "🔗", colorClass: "text-blue-500" };
 }
 
-function getSourceTypeLabel(sourceType: "file" | "url", isYouTube: boolean): string {
+function getSourceTypeLabel(
+  sourceType: "file" | "url",
+  isYouTube: boolean,
+): string {
   if (sourceType === "file") {
     return "File";
   }
   return isYouTube ? "YouTube" : "URL";
 }
 
-function getCacheButtonStyles(status: CacheStatus): { colorClass: string; title: string; emoji: string } {
+function getCacheButtonStyles(status: CacheStatus): {
+  colorClass: string;
+  title: string;
+  emoji: string;
+} {
   switch (status) {
     case "cached": {
       return { colorClass: "text-green-600", title: "Cached", emoji: "✓📥" };
     }
     case "caching": {
-      return { colorClass: "text-yellow-600 animate-pulse", title: "Caching...", emoji: "⏳" };
+      return {
+        colorClass: "text-yellow-600 animate-pulse",
+        title: "Caching...",
+        emoji: "⏳",
+      };
     }
     case "error": {
-      return { colorClass: "text-red-500", title: "Cache failed - click to retry", emoji: "📥" };
+      return {
+        colorClass: "text-red-500",
+        title: "Cache failed - click to retry",
+        emoji: "📥",
+      };
     }
     case "not-cached": {
       return { colorClass: "text-gray-500", title: "Cache audio", emoji: "📥" };
@@ -108,7 +126,9 @@ export function SoundEntryCard({
   const [isCaching, setIsCaching] = useState(false);
 
   const isYouTube =
-    entry.source.type === "url" && (entry.source.url.includes("youtube.com") || entry.source.url.includes("youtu.be"));
+    entry.source.type === "url" &&
+    (entry.source.url.includes("youtube.com") ||
+      entry.source.url.includes("youtu.be"));
 
   // Check cache status on mount and when URL changes
   // eslint-disable-next-line custom-rules/no-use-effect -- Need to check cache status on mount
@@ -155,7 +175,9 @@ export function SoundEntryCard({
   };
 
   const sourceDisplay =
-    entry.source.type === "file" ? (entry.source.path.split("/").pop() ?? entry.source.path) : entry.source.url;
+    entry.source.type === "file"
+      ? (entry.source.path.split("/").pop() ?? entry.source.path)
+      : entry.source.url;
 
   const icon = getSourceIcon(entry.source.type, isYouTube);
   const typeLabel = getSourceTypeLabel(entry.source.type, isYouTube);
@@ -171,7 +193,10 @@ export function SoundEntryCard({
         {/* Content */}
         <div className="flex-1 min-w-0">
           {/* Source path/URL */}
-          <div className="text-sm font-medium text-gray-900 truncate" title={sourceDisplay}>
+          <div
+            className="text-sm font-medium text-gray-900 truncate"
+            title={sourceDisplay}
+          >
             {sourceDisplay}
           </div>
 
@@ -200,7 +225,10 @@ export function SoundEntryCard({
 
           {/* Weight input (for weighted selection) */}
           <div className="mt-2 flex items-center gap-2">
-            <label htmlFor={`weight-${entry.id}`} className="text-xs text-gray-500">
+            <label
+              htmlFor={`weight-${entry.id}`}
+              className="text-xs text-gray-500"
+            >
               Weight:
             </label>
             <input

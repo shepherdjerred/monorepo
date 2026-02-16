@@ -88,7 +88,9 @@ const ImageGenerationStageConfigSchema = z.object({
   userPrompt: z.string().optional(),
 });
 
-export type ImageGenerationStageConfig = z.infer<typeof ImageGenerationStageConfigSchema>;
+export type ImageGenerationStageConfig = z.infer<
+  typeof ImageGenerationStageConfigSchema
+>;
 
 /**
  * All pipeline stages configuration
@@ -118,7 +120,9 @@ export const TextGenerationSettingsSchema = z.object({
   topP: z.number().min(0).max(1).default(1.0),
 });
 
-export type TextGenerationSettings = z.infer<typeof TextGenerationSettingsSchema>;
+export type TextGenerationSettings = z.infer<
+  typeof TextGenerationSettingsSchema
+>;
 
 /**
  * Image generation settings schema (legacy - for art style UI)
@@ -126,7 +130,12 @@ export type TextGenerationSettings = z.infer<typeof TextGenerationSettingsSchema
 export const ImageGenerationSettingsSchema = z.object({
   enabled: z.boolean().default(true),
   model: z.string().default(DEFAULT_IMAGE_GENERATION_MODEL),
-  timeoutMs: z.number().int().min(10000).max(300000).default(DEFAULT_IMAGE_GENERATION_TIMEOUT_MS),
+  timeoutMs: z
+    .number()
+    .int()
+    .min(10000)
+    .max(300000)
+    .default(DEFAULT_IMAGE_GENERATION_TIMEOUT_MS),
   artStyle: z
     .union([
       z.literal("random"),
@@ -138,7 +147,9 @@ export const ImageGenerationSettingsSchema = z.object({
   mashupMode: z.boolean().default(false),
 });
 
-export type ImageGenerationSettings = z.infer<typeof ImageGenerationSettingsSchema>;
+export type ImageGenerationSettings = z.infer<
+  typeof ImageGenerationSettingsSchema
+>;
 
 /**
  * Random behavior schema - weighted random prompts
@@ -300,7 +311,9 @@ const PipelineIntermediateResultsSchema = z.object({
   selectedArtStyle: z.string().optional(),
 });
 
-export type PipelineIntermediateResults = z.infer<typeof PipelineIntermediateResultsSchema>;
+export type PipelineIntermediateResults = z.infer<
+  typeof PipelineIntermediateResultsSchema
+>;
 
 /**
  * Pipeline context schema
@@ -444,7 +457,10 @@ export function createDefaultTabConfig(): TabConfig {
 /**
  * Merge global and tab configs into a complete ReviewConfig
  */
-export function mergeConfigs(global: GlobalConfig, tab: TabConfig): ReviewConfig {
+export function mergeConfigs(
+  global: GlobalConfig,
+  tab: TabConfig,
+): ReviewConfig {
   const result: ReviewConfig = {
     api: global.api,
     textGeneration: tab.textGeneration,
@@ -460,7 +476,10 @@ export function mergeConfigs(global: GlobalConfig, tab: TabConfig): ReviewConfig
 /**
  * Split a ReviewConfig into global and tab configs
  */
-export function splitConfig(config: ReviewConfig): { global: GlobalConfig; tab: TabConfig } {
+export function splitConfig(config: ReviewConfig): {
+  global: GlobalConfig;
+  tab: TabConfig;
+} {
   const tab: TabConfig = {
     textGeneration: config.textGeneration,
     imageGeneration: config.imageGeneration,

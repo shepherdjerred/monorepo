@@ -193,7 +193,12 @@
           "description": "Caitlyn revs up her rifle for 1 second to unleash a penetrating shot that deals physical damage (deals less damage to subsequent targets).",
           "tooltip": "Caitlyn revs her rifle to fire a piercing shot dealing <physicalDamage>{{ initialdamage }} physical damage</physicalDamage>. After the bolt strikes the first target, it opens into a wider shot that deals <physicalDamage>{{ secondarydamage }} physical damage</physicalDamage>.<br /><br />Enemies revealed by <spellName>Yordle Snap Trap</spellName> always take full damage.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Total AD Ratio", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Total AD Ratio",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ tadratio*100.000000 }}% -> {{ tadrationl*100.000000 }}%",
@@ -220,7 +225,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "50", "1", "1.3/1.45/1.6/1.75/1.9", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "50",
+            "1",
+            "1.3/1.45/1.6/1.75/1.9",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -243,7 +260,12 @@
           "description": "Caitlyn sets a trap that, when sprung, reveals and immobilizes the enemy champion for 1.5 seconds, granting Caitlyn an empowered Headshot.",
           "tooltip": "Caitlyn sets a trap that <status>Roots</status> the first champion that steps on it for {{ rootduration }} seconds and granting <keywordStealth>True Sight</keywordStealth> of them for 3 seconds. Traps last for {{ trapduration }} seconds, and {{ maximumtraps }} traps may be active at once. This Ability has {{ maximumcharges }} charges ({{ ammorechargetime }} second refresh).<br /><br />Targets rooted by this Ability take an additional <physicalDamage>{{ headshotbonusdamage }} physical damage</physicalDamage> from <keywordMajor>Headshot</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Bonus Headshot Damage on Trapped Targets", "Recharge Time", "Maximum Traps", "Trap Duration"],
+            "label": [
+              "Bonus Headshot Damage on Trapped Targets",
+              "Recharge Time",
+              "Maximum Traps",
+              "Trap Duration"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}",
@@ -270,7 +292,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "2", "0", "0", "0", "0", "0", "30", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "2",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "30",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "2",
@@ -294,7 +328,10 @@
           "tooltip": "Caitlyn fires a net, pushing her backwards. The net <status>Slows</status> the first target hit by {{ e3 }}% for {{ e2 }} second and deals <magicDamage>{{ netdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [16, 14, 12, 10, 8],
@@ -315,7 +352,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "80/130/180/230/280", "1", "50", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "80/130/180/230/280",
+            "1",
+            "50",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -360,7 +409,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

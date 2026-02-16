@@ -75,7 +75,10 @@ function getDB(): Promise<IDBDatabase> {
 /**
  * Write to IndexedDB
  */
-async function setInIndexedDB(key: string, entry: CacheEntry): Promise<boolean> {
+async function setInIndexedDB(
+  key: string,
+  entry: CacheEntry,
+): Promise<boolean> {
   try {
     const db = await getDB();
     return await new Promise((resolve, reject) => {
@@ -101,7 +104,10 @@ async function setInIndexedDB(key: string, entry: CacheEntry): Promise<boolean> 
 /**
  * Generate a cache key from request parameters
  */
-function generateCacheKey(endpoint: string, params: Record<string, unknown>): string {
+function generateCacheKey(
+  endpoint: string,
+  params: Record<string, unknown>,
+): string {
   const sortedParams = Object.keys(params)
     .sort()
     .reduce<Record<string, unknown>>((acc, key) => {
@@ -128,7 +134,10 @@ function isCacheValid(entry: CacheEntry): boolean {
  * Get cached data if available and valid (async - checks memory and IndexedDB)
  * Returns unknown data that must be validated by the caller
  */
-export async function getCachedDataAsync(endpoint: string, params: Record<string, unknown>): Promise<unknown> {
+export async function getCachedDataAsync(
+  endpoint: string,
+  params: Record<string, unknown>,
+): Promise<unknown> {
   const cacheKey = generateCacheKey(endpoint, params);
 
   // Check in-memory cache first (fastest)
@@ -194,10 +203,17 @@ export async function getCachedDataAsync(endpoint: string, params: Record<string
  * Evict old cache entries from IndexedDB to free up space
  * Removes expired entries first, then oldest non-expired entries
  */
-async function evictOldCacheEntries(targetBytesToFree: number): Promise<number> {
+async function evictOldCacheEntries(
+  targetBytesToFree: number,
+): Promise<number> {
   try {
     const db = await getDB();
-    const entries: { key: string; timestamp: number; size: number; expired: boolean }[] = [];
+    const entries: {
+      key: string;
+      timestamp: number;
+      size: number;
+      expired: boolean;
+    }[] = [];
 
     // Collect all cache entries with metadata
     await new Promise<void>((resolve, reject) => {
@@ -206,7 +222,9 @@ async function evictOldCacheEntries(targetBytesToFree: number): Promise<number> 
       const request = store.openCursor();
 
       request.onsuccess = (event) => {
-        const targetResult = IDBRequestEventTargetSchema.safeParse(event.target);
+        const targetResult = IDBRequestEventTargetSchema.safeParse(
+          event.target,
+        );
         if (!targetResult.success) {
           resolve();
           return;
@@ -305,7 +323,9 @@ export async function setCachedData(
     await setInIndexedDB(cacheKey, entry);
   } catch (error) {
     // If quota exceeded, try to free up space and retry
-    const QuotaErrorSchema = z.object({ name: z.literal("QuotaExceededError") });
+    const QuotaErrorSchema = z.object({
+      name: z.literal("QuotaExceededError"),
+    });
     const errorResult = QuotaErrorSchema.safeParse(error);
     if (errorResult.success) {
       console.warn("IndexedDB quota exceeded, attempting cache eviction...");
@@ -315,7 +335,9 @@ export async function setCachedData(
       const freedBytes = await evictOldCacheEntries(estimatedSize * 2); // Free 2x the needed space
 
       if (freedBytes > 0) {
-        console.log(`Freed ${(freedBytes / 1024).toFixed(2)} KB from IndexedDB cache`);
+        console.log(
+          `Freed ${(freedBytes / 1024).toFixed(2)} KB from IndexedDB cache`,
+        );
         try {
           await setInIndexedDB(cacheKey, entry);
           return;

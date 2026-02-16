@@ -170,7 +170,11 @@
           "description": "In human form, Nidalee throws a spiked javelin at her target that gains damage as it flies.  As a cougar, her next attack will attempt to fatally wound her target, dealing more damage the less life they have.",
           "tooltip": "<keywordMajor>Human Form:</keywordMajor> Nidalee throws her javelin, dealing <magicDamage>{{ humanminimumdamage }} magic damage</magicDamage>, increased up to <magicDamage>{{ humanmaximumdamage }} magic damage</magicDamage> based on distance flown.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Javelin Minimum Damage", "Javelin Maximum Damage", "Javelin Mana Cost"],
+            "label": [
+              "Javelin Minimum Damage",
+              "Javelin Maximum Damage",
+              "Javelin Mana Cost"
+            ],
             "effect": [
               "{{ spearminimumdamage }} -> {{ spearminimumdamageNL }}",
               "{{ spearmaximumdamage }} -> {{ spearmaximumdamageNL }}",
@@ -232,7 +236,11 @@
           "tooltip": "<keywordMajor>Human Form:</keywordMajor> Nidalee places an invisible trap for 2 minutes. When an enemy walks over it, they are dealt <magicDamage>{{ damagepersecond }} magic damage</magicDamage> per second for {{ e3 }} seconds.<br /><br />{{ maxtraps }} traps may be active at once.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Trap Damage", "Trap Cooldown", "Trap Mana Cost"],
-            "effect": ["{{ e7 }} -> {{ e7NL }}", "{{ cooldown }} -> {{ cooldownNL }}", "{{ cost }} -> {{ costNL }}"]
+            "effect": [
+              "{{ e7 }} -> {{ e7NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [13, 12, 11, 10, 9],
@@ -288,7 +296,11 @@
           "description": "In human form, Nidalee channels the spirit of the cougar to heal her allies and imbue them with Attack Speed for a short duration. As a cougar, she claws in a direction, dealing damage to enemies in front of her.",
           "tooltip": "<keywordMajor>Human Form:</keywordMajor> Nidalee restores <healing>{{ totalhealing }} Health</healing> increased up to <healing>{{ maxhealing }}</healing> based on missing Health and grants them <attackSpeed>{{ bonusas*100 }}% Attack Speed</attackSpeed> for {{ asduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Primal Surge Heal", "Primal Surge Attack Speed", "Primal Surge Mana Cost"],
+            "label": [
+              "Primal Surge Heal",
+              "Primal Surge Attack Speed",
+              "Primal Surge Mana Cost"
+            ],
             "effect": [
               "{{ baseheal }} -> {{ basehealNL }}",
               "{{ bonusas*100.000000 }}% -> {{ bonusasnl*100.000000 }}%",
@@ -314,7 +326,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -371,7 +395,19 @@
             [0, 0, 0, 0],
             [0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "6", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "6",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",

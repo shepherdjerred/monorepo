@@ -90,7 +90,9 @@ export function logNotification(
     ? ` [Competition ${entry.competitionId.toString()}: ${entry.competitionTitle ?? "Unknown"}]`
     : "";
 
-  logger.info(`${emoji} [NotificationLog] ${type}${competitionInfo} | Trigger: ${trigger} | Instance: ${INSTANCE_ID}`);
+  logger.info(
+    `${emoji} [NotificationLog] ${type}${competitionInfo} | Trigger: ${trigger} | Instance: ${INSTANCE_ID}`,
+  );
 
   // File log (non-blocking)
   void (async () => {
@@ -108,7 +110,13 @@ export function logNotification(
  * Log when a cron job fires
  */
 export function logCronTrigger(jobName: string, details?: string): void {
-  logNotification("CRON_TRIGGER", `cron:${jobName}`, details ? { message: details } : {});
+  logNotification(
+    "CRON_TRIGGER",
+    `cron:${jobName}`,
+    details ? { message: details } : {},
+  );
 }
 
-logger.info(`📝 Notification logger initialized | Instance ID: ${INSTANCE_ID} | Log file: ${LOG_FILE}`);
+logger.info(
+  `📝 Notification logger initialized | Instance ID: ${INSTANCE_ID} | Log file: ${LOG_FILE}`,
+);

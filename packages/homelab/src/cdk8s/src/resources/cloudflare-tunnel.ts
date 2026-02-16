@@ -1,4 +1,4 @@
-import { Chart } from "cdk8s";
+import type { Chart } from "cdk8s";
 import { ClusterTunnel } from "../../generated/imports/networking.cfargotunnel.com.ts";
 import { CLOUDFLARE_TUNNEL_SECRET_NAME } from "../misc/cloudflare-tunnel.ts";
 

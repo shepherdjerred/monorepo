@@ -1,5 +1,5 @@
 import { PrometheusRule } from "../../../../generated/imports/monitoring.coreos.com";
-import { Chart } from "cdk8s";
+import type { Chart } from "cdk8s";
 import { getHomeAssistantRuleGroups } from "./rules/homeassistant";
 import { getVeleroRuleGroups } from "./rules/velero";
 import { getArgoCDRuleGroups } from "./rules/argocd";

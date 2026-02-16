@@ -1,9 +1,16 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { match } from "ts-pattern";
-import { createCompetition, getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.ts";
+import {
+  createCompetition,
+  getCompetitionById,
+} from "@scout-for-lol/backend/database/competition/queries.ts";
 import type { CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.ts";
 import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.ts";
-import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  testGuildId,
+  testAccountId,
+  testChannelId,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
 import {
   ChampionIdSchema,
   getCompetitionStatus,
@@ -14,7 +21,10 @@ import {
   type DiscordGuildId,
   type PlayerId,
 } from "@scout-for-lol/data/index";
-import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.ts";
+import {
+  createTestDatabase,
+  deleteIfExists,
+} from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a test database for integration tests
 const { prisma } = createTestDatabase("competition-view-test");
@@ -79,7 +89,10 @@ async function createTestCompetition(
 
   const criteria: CreateCompetitionInput["criteria"] = options?.criteriaType
     ? match(options.criteriaType)
-        .with("HIGHEST_RANK", () => ({ type: "HIGHEST_RANK" as const, queue: "SOLO" as const }))
+        .with("HIGHEST_RANK", () => ({
+          type: "HIGHEST_RANK" as const,
+          queue: "SOLO" as const,
+        }))
         .with("MOST_WINS_CHAMPION", () => {
           if (!options.championId) {
             throw new Error("championId required for MOST_WINS_CHAMPION");
@@ -90,7 +103,10 @@ async function createTestCompetition(
             queue: "SOLO" as const,
           };
         })
-        .with("MOST_GAMES_PLAYED", () => ({ type: "MOST_GAMES_PLAYED" as const, queue: "SOLO" as const }))
+        .with("MOST_GAMES_PLAYED", () => ({
+          type: "MOST_GAMES_PLAYED" as const,
+          queue: "SOLO" as const,
+        }))
         .exhaustive()
     : { type: "MOST_GAMES_PLAYED" as const, queue: "SOLO" as const };
 
@@ -155,13 +171,40 @@ describe("Competition View - DRAFT Status", () => {
     const ownerId = testAccountId("10000000100");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId);
-    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
-    const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("200000000020"), "Player2");
-    const { playerId: player3Id } = await createTestPlayer(serverId, testAccountId("300000000030"), "Player3");
+    const { playerId: player1Id } = await createTestPlayer(
+      serverId,
+      testAccountId("100000000010"),
+      "Player1",
+    );
+    const { playerId: player2Id } = await createTestPlayer(
+      serverId,
+      testAccountId("200000000020"),
+      "Player2",
+    );
+    const { playerId: player3Id } = await createTestPlayer(
+      serverId,
+      testAccountId("300000000030"),
+      "Player3",
+    );
 
-    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "JOINED" });
-    await addParticipant({ prisma, competitionId: competitionId, playerId: player2Id, status: "JOINED" });
-    await addParticipant({ prisma, competitionId: competitionId, playerId: player3Id, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: player1Id,
+      status: "JOINED",
+    });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: player2Id,
+      status: "JOINED",
+    });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: player3Id,
+      status: "JOINED",
+    });
 
     const competition = await getCompetitionById(prisma, competitionId);
     expect(competition).not.toBeNull();
@@ -248,10 +291,28 @@ describe("Competition View - ACTIVE Status", () => {
     });
 
     // Add participants
-    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
-    const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("200000000020"), "Player2");
-    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "JOINED" });
-    await addParticipant({ prisma, competitionId: competitionId, playerId: player2Id, status: "JOINED" });
+    const { playerId: player1Id } = await createTestPlayer(
+      serverId,
+      testAccountId("100000000010"),
+      "Player1",
+    );
+    const { playerId: player2Id } = await createTestPlayer(
+      serverId,
+      testAccountId("200000000020"),
+      "Player2",
+    );
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: player1Id,
+      status: "JOINED",
+    });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: player2Id,
+      status: "JOINED",
+    });
 
     const competition = await getCompetitionById(prisma, competitionId);
     expect(competition).not.toBeNull();
@@ -263,7 +324,8 @@ describe("Competition View - ACTIVE Status", () => {
     const status = getCompetitionStatus(competition);
     expect(status).toBe("ACTIVE");
 
-    const { calculateLeaderboard } = await import("@scout-for-lol/backend/league/competition/leaderboard.js");
+    const { calculateLeaderboard } =
+      await import("@scout-for-lol/backend/league/competition/leaderboard.js");
     const leaderboard = await calculateLeaderboard(prisma, competition);
 
     // Should have entries for both participants
@@ -333,10 +395,28 @@ describe("Competition View - ENDED Status", () => {
     });
 
     // Add participants while competition is active
-    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
-    const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("200000000020"), "Player2");
-    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "JOINED" });
-    await addParticipant({ prisma, competitionId: competitionId, playerId: player2Id, status: "JOINED" });
+    const { playerId: player1Id } = await createTestPlayer(
+      serverId,
+      testAccountId("100000000010"),
+      "Player1",
+    );
+    const { playerId: player2Id } = await createTestPlayer(
+      serverId,
+      testAccountId("200000000020"),
+      "Player2",
+    );
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: player1Id,
+      status: "JOINED",
+    });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: player2Id,
+      status: "JOINED",
+    });
 
     // Now update the competition to have ended
     const yesterday = new Date(now);
@@ -363,7 +443,8 @@ describe("Competition View - ENDED Status", () => {
     expect(participants).toHaveLength(2);
 
     // Test final leaderboard for ended competition
-    const { calculateLeaderboard } = await import("@scout-for-lol/backend/league/competition/leaderboard.js");
+    const { calculateLeaderboard } =
+      await import("@scout-for-lol/backend/league/competition/leaderboard.js");
     const leaderboard = await calculateLeaderboard(prisma, competition);
 
     // Should have entries for both participants
@@ -484,7 +565,9 @@ describe("Competition View - Different Criteria Types", () => {
 
     expect(competition.criteria.type).toBe("MOST_WINS_CHAMPION");
     if (competition.criteria.type === "MOST_WINS_CHAMPION") {
-      expect(competition.criteria.championId).toBe(ChampionIdSchema.parse(championId));
+      expect(competition.criteria.championId).toBe(
+        ChampionIdSchema.parse(championId),
+      );
     }
   });
 });

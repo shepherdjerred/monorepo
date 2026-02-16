@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { CompetitionIdSchema, PlayerIdSchema, type CachedLeaderboard } from "@scout-for-lol/data";
+import {
+  CompetitionIdSchema,
+  PlayerIdSchema,
+  type CachedLeaderboard,
+} from "@scout-for-lol/data";
 import { EmbedBuilder } from "discord.js";
 
 /**
@@ -382,7 +386,11 @@ describe("Discord Embed Integration", () => {
     const embed = new EmbedBuilder();
     const title = "📊 Current Standings";
 
-    embed.addFields({ name: title, value: "━━━━━━━━━━━━━━━━━━━━━", inline: false });
+    embed.addFields({
+      name: title,
+      value: "━━━━━━━━━━━━━━━━━━━━━",
+      inline: false,
+    });
 
     const fields = embed.toJSON().fields;
     expect(fields).toBeDefined();
@@ -456,8 +464,12 @@ describe("Edge Cases", () => {
   });
 
   test("should handle cache from different competition IDs", () => {
-    const cached1 = createCachedLeaderboard({ competitionId: CompetitionIdSchema.parse(123) });
-    const cached2 = createCachedLeaderboard({ competitionId: CompetitionIdSchema.parse(456) });
+    const cached1 = createCachedLeaderboard({
+      competitionId: CompetitionIdSchema.parse(123),
+    });
+    const cached2 = createCachedLeaderboard({
+      competitionId: CompetitionIdSchema.parse(456),
+    });
 
     expect(cached1.competitionId).not.toBe(cached2.competitionId);
   });
@@ -548,7 +560,8 @@ describe("Edge Cases", () => {
 describe("Competition Status Handling", () => {
   test("should use correct title for ACTIVE competition", () => {
     const status = "ACTIVE";
-    const title = status === "ACTIVE" ? "📊 Current Standings" : "📊 Leaderboard";
+    const title =
+      status === "ACTIVE" ? "📊 Current Standings" : "📊 Leaderboard";
 
     expect(title).toBe("📊 Current Standings");
   });
@@ -562,7 +575,10 @@ describe("Competition Status Handling", () => {
 
   test("should use correct title for CANCELLED competition", () => {
     const status = "CANCELLED";
-    const title = status === "CANCELLED" ? "📊 Standings (at cancellation)" : "📊 Leaderboard";
+    const title =
+      status === "CANCELLED"
+        ? "📊 Standings (at cancellation)"
+        : "📊 Leaderboard";
 
     expect(title).toBe("📊 Standings (at cancellation)");
   });

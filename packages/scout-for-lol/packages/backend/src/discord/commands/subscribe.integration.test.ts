@@ -1,5 +1,10 @@
 import { afterAll, describe, test, expect, beforeEach } from "bun:test";
-import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  testGuildId,
+  testAccountId,
+  testChannelId,
+  testPuuid,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
 import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create test database
@@ -163,7 +168,10 @@ describe("Subscribe Command - Account Creation", () => {
     });
 
     expect(playerWithAccounts?.accounts).toHaveLength(2);
-    expect(playerWithAccounts?.accounts.map((a) => a.puuid).sort()).toEqual([testPuuid("euw"), testPuuid("na1")]);
+    expect(playerWithAccounts?.accounts.map((a) => a.puuid).sort()).toEqual([
+      testPuuid("euw"),
+      testPuuid("na1"),
+    ]);
   });
 
   test("prevents duplicate accounts with same PUUID in same server", async () => {

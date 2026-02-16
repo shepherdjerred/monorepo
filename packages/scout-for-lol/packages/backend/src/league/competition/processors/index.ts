@@ -37,7 +37,9 @@ export function processCriteria(
   snapshotData?: SnapshotData,
 ): LeaderboardEntry[] {
   return match(criteria)
-    .with({ type: "MOST_GAMES_PLAYED" }, (c) => processMostGamesPlayed(matches, participants, c))
+    .with({ type: "MOST_GAMES_PLAYED" }, (c) =>
+      processMostGamesPlayed(matches, participants, c),
+    )
     .with({ type: "HIGHEST_RANK" }, (c) => {
       if (!snapshotData) {
         throw new Error("Snapshot data required for HIGHEST_RANK criteria");
@@ -48,10 +50,21 @@ export function processCriteria(
       if (!snapshotData) {
         throw new Error("Snapshot data required for MOST_RANK_CLIMB criteria");
       }
-      return processMostRankClimb(participants, c, snapshotData.startSnapshots, snapshotData.endSnapshots);
+      return processMostRankClimb(
+        participants,
+        c,
+        snapshotData.startSnapshots,
+        snapshotData.endSnapshots,
+      );
     })
-    .with({ type: "MOST_WINS_PLAYER" }, (c) => processMostWinsPlayer(matches, participants, c))
-    .with({ type: "MOST_WINS_CHAMPION" }, (c) => processMostWinsChampion(matches, participants, c))
-    .with({ type: "HIGHEST_WIN_RATE" }, (c) => processHighestWinRate(matches, participants, c))
+    .with({ type: "MOST_WINS_PLAYER" }, (c) =>
+      processMostWinsPlayer(matches, participants, c),
+    )
+    .with({ type: "MOST_WINS_CHAMPION" }, (c) =>
+      processMostWinsChampion(matches, participants, c),
+    )
+    .with({ type: "HIGHEST_WIN_RATE" }, (c) =>
+      processHighestWinRate(matches, participants, c),
+    )
     .exhaustive();
 }

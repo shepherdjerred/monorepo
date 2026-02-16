@@ -127,7 +127,7 @@ describe("Code Generation", () => {
 
     const code = generateTypeScriptCode(iface, "test-chart");
 
-    expect(code).toContain("*\\/");
+    expect(code).toContain(String.raw`*\/`);
     expect(code).not.toContain("This is a comment with */");
   });
 

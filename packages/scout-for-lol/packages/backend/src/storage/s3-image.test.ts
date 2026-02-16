@@ -76,7 +76,9 @@ describe("saveImageToS3 - Success Cases", () => {
     expect(command.input.Bucket).toBe("test-bucket");
 
     // Verify return value format
-    expect(result).toMatch(/^s3:\/\/test-bucket\/games\/\d{4}\/\d{2}\/\d{2}\/NA1_1234567890\/report\.png$/);
+    expect(result).toMatch(
+      /^s3:\/\/test-bucket\/games\/\d{4}\/\d{2}\/\d{2}\/NA1_1234567890\/report\.png$/,
+    );
     expect(result).toContain(matchId);
   });
 
@@ -218,9 +220,9 @@ describe("saveImageToS3 - Error Handling", () => {
     // Mock S3 error
     s3Mock.on(PutObjectCommand).rejects(new Error("S3 upload failed"));
 
-    await expect(saveImageToS3(matchId, imageBuffer, queueType, [])).rejects.toThrow(
-      "Failed to save PNG NA1_ERROR_CASE to S3",
-    );
+    await expect(
+      saveImageToS3(matchId, imageBuffer, queueType, []),
+    ).rejects.toThrow("Failed to save PNG NA1_ERROR_CASE to S3");
 
     expect(s3Mock.calls().length).toBe(1);
   });
@@ -232,9 +234,9 @@ describe("saveImageToS3 - Error Handling", () => {
 
     s3Mock.on(PutObjectCommand).rejects(new Error("Network timeout"));
 
-    await expect(saveImageToS3(matchId, imageBuffer, queueType, [])).rejects.toThrow(
-      "Failed to save PNG EUW1_SPECIFIC_ERROR to S3",
-    );
+    await expect(
+      saveImageToS3(matchId, imageBuffer, queueType, []),
+    ).rejects.toThrow("Failed to save PNG EUW1_SPECIFIC_ERROR to S3");
   });
 
   test("throws error when S3 returns non-200 status", async () => {
@@ -297,7 +299,9 @@ describe("saveImageToS3 - S3 Key Format", () => {
 
     // Verify key structure
     const key = command.input.Key;
-    expect(key).toMatch(/^games\/\d{4}\/\d{2}\/\d{2}\/NA1_DATE_TEST\/report\.png$/);
+    expect(key).toMatch(
+      /^games\/\d{4}\/\d{2}\/\d{2}\/NA1_DATE_TEST\/report\.png$/,
+    );
 
     // Verify it uses today's date
     const now = new Date();
@@ -382,7 +386,9 @@ describe("saveImageToS3 - Metadata", () => {
 
     if (uploadedAtStr) {
       const uploadedAt = new Date(uploadedAtStr);
-      expect(uploadedAt.getTime()).toBeGreaterThanOrEqual(beforeUpload.getTime());
+      expect(uploadedAt.getTime()).toBeGreaterThanOrEqual(
+        beforeUpload.getTime(),
+      );
       expect(uploadedAt.getTime()).toBeLessThanOrEqual(afterUpload.getTime());
     }
   });

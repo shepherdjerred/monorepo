@@ -1,21 +1,22 @@
 import { Resvg } from "@resvg/resvg-js";
 import satori, { type SatoriOptions } from "satori";
 import { presets } from "./index.js";
-import * as fs from "fs/promises";
-import type { RenderFunctionInput } from "../types.js";
-import { getFilePath } from "../util.js";
+import * as fs from "node:fs/promises";
+import type { RenderFunctionInput } from "#src/types.js";
+import { getFilePath } from "#src/util.js";
 import * as jsdom from "jsdom";
-import { sanitizeHtml } from "../extract.js";
-import { fileURLToPath } from "url";
+import { sanitizeHtml } from "#src/extract.js";
+import { fileURLToPath } from "node:url";
 
 // Updates the examples for the README
-// Run with `npx tsx src/presets/renderExamples.ts`
+// Run with `npx tsx src/presets/render-examples.ts`
 async function renderExamples() {
   const pathname = "dist/index/";
   const dir = new URL("../../examples/preset", import.meta.url);
 
-  const htmlFile = getFilePath({ dir: fileURLToPath(dir), page: pathname });
-  const html = (await fs.readFile(htmlFile)).toString();
+  const htmlFile = await getFilePath({ dir: fileURLToPath(dir), page: pathname });
+  const htmlBuffer = await fs.readFile(htmlFile);
+  const html = htmlBuffer.toString();
   const document = new jsdom.JSDOM(sanitizeHtml(html)).window.document;
 
   const page: RenderFunctionInput = {
@@ -48,7 +49,7 @@ async function renderExamples() {
     const resvg = new Resvg(svg, { font: { loadSystemFonts: false }, fitTo: { mode: "width", value: options.width } });
     const target = `assets/presets/${name}.png`;
     await fs.writeFile(target, resvg.render().asPng());
-    console.log(`Wrote ${target}`);
+    console.warn(`Wrote ${target}`);
   });
 
   await Promise.all(promises);

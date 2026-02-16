@@ -79,12 +79,10 @@ export function welcomeHome({ hass, logger }: TServiceParams) {
       newState: ENTITY_STATE<"person.jerred"> | undefined,
       oldState: ENTITY_STATE<"person.jerred"> | undefined,
     ) => {
-      if (oldState && newState && newState.state === "home" && oldState.state === "not_home") {
-        // Only trigger if Shuxin is not home (this is the first arrival)
-        if (personShuxin.state === "not_home") {
+      if (oldState && newState && newState.state === "home" && oldState.state === "not_home" && // Only trigger if Shuxin is not home (this is the first arrival)
+        personShuxin.state === "not_home") {
           await runWelcomeHome();
         }
-      }
     },
   );
 
@@ -93,12 +91,10 @@ export function welcomeHome({ hass, logger }: TServiceParams) {
       newState: ENTITY_STATE<"person.shuxin"> | undefined,
       oldState: ENTITY_STATE<"person.shuxin"> | undefined,
     ) => {
-      if (oldState && newState && newState.state === "home" && oldState.state === "not_home") {
-        // Only trigger if Jerred is not home (this is the first arrival)
-        if (personJerred.state === "not_home") {
+      if (oldState && newState && newState.state === "home" && oldState.state === "not_home" && // Only trigger if Jerred is not home (this is the first arrival)
+        personJerred.state === "not_home") {
           await runWelcomeHome();
         }
-      }
     },
   );
 }

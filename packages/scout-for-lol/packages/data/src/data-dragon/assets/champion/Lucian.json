@@ -185,7 +185,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0.41", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0.41",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -234,7 +246,19 @@
             [1, 1, 1, 1, 1],
             [700, 700, 700, 700, 700]
           ],
-          "effectBurn": [null, "75/110/145/180/215", "60/65/70/75/80", "900", "0", "1", "200", "1", "6", "1", "700"],
+          "effectBurn": [
+            null,
+            "75/110/145/180/215",
+            "60/65/70/75/80",
+            "900",
+            "0",
+            "1",
+            "200",
+            "1",
+            "6",
+            "1",
+            "700"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -258,7 +282,10 @@
           "tooltip": "Lucian dashes.<br /><br />Cooldown is reduced by {{ e1 }} second whenever Lucian hits an enemy with <spellName>Lightslinger</spellName> ({{ e2 }} seconds for champions). {{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "@AbilityResourceName@ Cost"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ cost }} -> {{ costNL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [18, 17, 16, 15, 14],
@@ -279,7 +306,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "1", "2", "425", "200", "1350", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "1",
+            "2",
+            "425",
+            "200",
+            "1350",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -303,7 +342,10 @@
           "tooltip": "Lucian rapidly fires <keywordMajor>{{ totalnumshots }}</keywordMajor> shots in a direction for {{ duration }} seconds or until he <recast>Recasts</recast>. Each shot deals <physicalDamage>{{ damageperbullet }} physical damage</physicalDamage> to the first enemy hit.<br /><br />While firing, Lucian may use <spellName>Relentless Pursuit</spellName>.<br /><br />Total Damage: <physicalDamage>{{ totaldamage }} physical damage</physicalDamage><br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [110, 100, 90],
@@ -324,7 +366,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

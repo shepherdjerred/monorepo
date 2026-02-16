@@ -1,6 +1,10 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { DiscordGuildIdSchema, RegionSchema, RiotIdSchema } from "@scout-for-lol/data";
+import {
+  DiscordGuildIdSchema,
+  RegionSchema,
+  RiotIdSchema,
+} from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { executeCommand } from "@scout-for-lol/backend/discord/commands/utils/command-wrapper.ts";
 import { findPlayerByAliasWithAccounts } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.ts";
@@ -22,7 +26,9 @@ const ArgsSchema = z.object({
   guildId: DiscordGuildIdSchema,
 });
 
-export async function executeAccountTransfer(interaction: ChatInputCommandInteraction) {
+export async function executeAccountTransfer(
+  interaction: ChatInputCommandInteraction,
+) {
   return executeCommand({
     interaction,
     schema: ArgsSchema,
@@ -38,7 +44,12 @@ export async function executeAccountTransfer(interaction: ChatInputCommandIntera
       // Resolve Riot ID to PUUID
       const puuidResult = await resolvePuuidFromRiotId(riotId, region);
       if (!puuidResult.success) {
-        await interaction.reply(buildRiotApiError(`${riotId.game_name}#${riotId.tag_line}`, puuidResult.error));
+        await interaction.reply(
+          buildRiotApiError(
+            `${riotId.game_name}#${riotId.tag_line}`,
+            puuidResult.error,
+          ),
+        );
         return;
       }
 
@@ -62,7 +73,9 @@ export async function executeAccountTransfer(interaction: ChatInputCommandIntera
       });
 
       if (!account) {
-        logger.info(`❌ Account not found: ${riotId.game_name}#${riotId.tag_line}`);
+        logger.info(
+          `❌ Account not found: ${riotId.game_name}#${riotId.tag_line}`,
+        );
         await interaction.reply({
           content: `❌ **Account not found**\n\nNo account with Riot ID ${riotId.game_name}#${riotId.tag_line} exists in this server.`,
           ephemeral: true,
@@ -71,7 +84,11 @@ export async function executeAccountTransfer(interaction: ChatInputCommandIntera
       }
 
       // Find the target player
-      const targetPlayer = await findPlayerByAliasWithAccounts(prisma, guildId, toPlayerAlias);
+      const targetPlayer = await findPlayerByAliasWithAccounts(
+        prisma,
+        guildId,
+        toPlayerAlias,
+      );
       if (!targetPlayer) {
         logger.info(`❌ Target player not found: "${toPlayerAlias}"`);
         await interaction.reply(buildPlayerNotFoundError(toPlayerAlias));
@@ -120,7 +137,9 @@ export async function executeAccountTransfer(interaction: ChatInputCommandIntera
           },
         });
 
-        const sourceRemainingAccounts = sourcePlayer.accounts.filter((acc) => acc.id !== account.id);
+        const sourceRemainingAccounts = sourcePlayer.accounts.filter(
+          (acc) => acc.id !== account.id,
+        );
         const targetNewAccounts = [...targetPlayer.accounts, account];
 
         await interaction.reply(

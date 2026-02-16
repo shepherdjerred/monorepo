@@ -4,7 +4,9 @@ import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 /**
  * Build a player not found error response
  */
-export function buildPlayerNotFoundError(alias: string): InteractionReplyOptions {
+export function buildPlayerNotFoundError(
+  alias: string,
+): InteractionReplyOptions {
   return {
     content: `❌ **Player not found**\n\nNo player with alias "${alias}" exists in this server.`,
     ephemeral: true,
@@ -14,7 +16,10 @@ export function buildPlayerNotFoundError(alias: string): InteractionReplyOptions
 /**
  * Build a database error response
  */
-export function buildDatabaseError(operation: string, error: unknown): InteractionReplyOptions {
+export function buildDatabaseError(
+  operation: string,
+  error: unknown,
+): InteractionReplyOptions {
   const errorMessage = getErrorMessage(error);
   return {
     content: `❌ **Database Error**\n\nFailed to ${operation}: ${errorMessage}`,
@@ -25,7 +30,10 @@ export function buildDatabaseError(operation: string, error: unknown): Interacti
 /**
  * Build a Riot API error response
  */
-export function buildRiotApiError(_riotId: string, error: string): InteractionReplyOptions {
+export function buildRiotApiError(
+  _riotId: string,
+  error: string,
+): InteractionReplyOptions {
   return {
     content: `❌ **Error looking up Riot ID**\n\n${error}`,
     ephemeral: true,
@@ -35,7 +43,10 @@ export function buildRiotApiError(_riotId: string, error: string): InteractionRe
 /**
  * Build a success response with optional details
  */
-export function buildSuccessResponse(message: string, details?: string): InteractionReplyOptions {
+export function buildSuccessResponse(
+  message: string,
+  details?: string,
+): InteractionReplyOptions {
   const content = details ? `${message}\n\n${details}` : message;
   return {
     content,
@@ -78,7 +89,10 @@ export function buildDiscordAlreadyLinkedError(
 /**
  * Build a Discord ID already in use error
  */
-export function buildDiscordIdInUseError(discordId: string, existingPlayerAlias: string): InteractionReplyOptions {
+export function buildDiscordIdInUseError(
+  discordId: string,
+  existingPlayerAlias: string,
+): InteractionReplyOptions {
   return {
     content: `❌ **Discord ID already in use**\n\n<@${discordId}> is already linked to player "${existingPlayerAlias}".\n\nUse \`/admin player-unlink-discord\` on "${existingPlayerAlias}" first if you want to link this Discord account to a different player.`,
     ephemeral: true,
@@ -88,7 +102,9 @@ export function buildDiscordIdInUseError(discordId: string, existingPlayerAlias:
 /**
  * Build a player not linked to Discord error
  */
-export function buildPlayerNotLinkedError(alias: string): InteractionReplyOptions {
+export function buildPlayerNotLinkedError(
+  alias: string,
+): InteractionReplyOptions {
   return {
     content: `❌ **No Discord link**\n\nPlayer "${alias}" does not have a Discord account linked.`,
     ephemeral: true,

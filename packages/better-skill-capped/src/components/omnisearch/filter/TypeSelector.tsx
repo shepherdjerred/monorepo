@@ -1,7 +1,7 @@
 import React from "react";
-import Type from "../../../model/Type";
+import Type from "@shepherdjerred/better-skill-capped/model/Type";
 
-export interface TypeSelectorProps {
+export type TypeSelectorProps = {
   selectedTypes: Type[];
   onTypesUpdate: (newTypes: Type[]) => void;
 }
@@ -16,7 +16,7 @@ export default function TypeSelector({ selectedTypes, onTypesUpdate }: TypeSelec
   };
 
   const getNewTypes = (type: Type) => {
-    let newTypes = selectedTypes.slice();
+    let newTypes = [...selectedTypes];
     if (isChecked(type)) {
       newTypes = newTypes.filter((candidate) => {
         return candidate !== type;

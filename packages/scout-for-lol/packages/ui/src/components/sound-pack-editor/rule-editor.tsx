@@ -85,7 +85,9 @@ export function RuleEditor({
             onUpdate({ enabled: !rule.enabled });
           }}
           className={`w-5 h-5 rounded border flex items-center justify-center ${
-            rule.enabled ? "bg-green-500 border-green-500 text-white" : "bg-white border-gray-300"
+            rule.enabled
+              ? "bg-green-500 border-green-500 text-white"
+              : "bg-white border-gray-300"
           }`}
           title={rule.enabled ? "Disable rule" : "Enable rule"}
         >
@@ -114,7 +116,10 @@ export function RuleEditor({
             e.stopPropagation();
           }}
         >
-          <label htmlFor={`priority-${rule.id}`} className="text-xs text-gray-500">
+          <label
+            htmlFor={`priority-${rule.id}`}
+            className="text-xs text-gray-500"
+          >
             Priority:
           </label>
           <input
@@ -167,7 +172,9 @@ export function RuleEditor({
 
           {/* Conditions */}
           <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Conditions</h4>
+            <h4 className="text-sm font-medium text-gray-700 mb-2">
+              Conditions
+            </h4>
             <ConditionBuilder
               conditions={rule.conditions}
               onChange={(conditions) => {

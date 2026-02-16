@@ -89,13 +89,23 @@ export type CalculatePairingStatsOptions = {
 /**
  * Calculate pairing stats from matches
  */
-export async function calculatePairingStats(options: CalculatePairingStatsOptions): Promise<ServerPairingStats> {
-  const { players, startDate, endDate, serverId, gameMode = "ranked" } = options;
+export async function calculatePairingStats(
+  options: CalculatePairingStatsOptions,
+): Promise<ServerPairingStats> {
+  const {
+    players,
+    startDate,
+    endDate,
+    serverId,
+    gameMode = "ranked",
+  } = options;
   const allowedQueueTypes = getQueueTypesForCategory(gameMode);
   logger.info(
     `[CalculatePairings] Starting calculation for ${players.length.toString()} players (${gameMode}: ${allowedQueueTypes.join(", ")})`,
   );
-  logger.info(`[CalculatePairings] Date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
+  logger.info(
+    `[CalculatePairings] Date range: ${startDate.toISOString()} to ${endDate.toISOString()}`,
+  );
 
   // Create PUUID to alias map
   const puuidToAlias = createPuuidToAliasMap(players);
@@ -107,9 +117,13 @@ export async function calculatePairingStats(options: CalculatePairingStatsOption
   }
 
   // Query matches from S3
-  logger.info(`[CalculatePairings] Querying matches for ${allPuuids.length.toString()} PUUIDs`);
+  logger.info(
+    `[CalculatePairings] Querying matches for ${allPuuids.length.toString()} PUUIDs`,
+  );
   const matches = await queryMatchesByDateRange(startDate, endDate, allPuuids);
-  logger.info(`[CalculatePairings] Found ${matches.length.toString()} matches total`);
+  logger.info(
+    `[CalculatePairings] Found ${matches.length.toString()} matches total`,
+  );
 
   // Filter and process matches
   const pairingAccumulators = new Map<string, PairingAccumulator>();
@@ -117,10 +131,17 @@ export async function calculatePairingStats(options: CalculatePairingStatsOption
   let totalMatchesAnalyzed = 0;
 
   for (const match of matches) {
-    const result = processMatch(match, puuidToAlias, pairingAccumulators, allowedQueueTypes);
+    const result = processMatch(
+      match,
+      puuidToAlias,
+      pairingAccumulators,
+      allowedQueueTypes,
+    );
     if (result.filtered) {
       totalMatchesFiltered++;
-      logger.debug(`[CalculatePairings] Filtered match ${match.metadata.matchId}: ${result.reason ?? "unknown"}`);
+      logger.debug(
+        `[CalculatePairings] Filtered match ${match.metadata.matchId}: ${result.reason ?? "unknown"}`,
+      );
     } else {
       totalMatchesAnalyzed++;
     }
@@ -179,7 +200,9 @@ export async function calculatePairingStats(options: CalculatePairingStatsOption
   }
 
   // Log individual surrender stats
-  const sortedBySurrenders = [...individualStats].sort((a, b) => b.surrenders - a.surrenders);
+  const sortedBySurrenders = [...individualStats].sort(
+    (a, b) => b.surrenders - a.surrenders,
+  );
   const topSurrenderer = sortedBySurrenders[0];
   if (topSurrenderer !== undefined && topSurrenderer.surrenders > 0) {
     logger.info(
@@ -220,11 +243,18 @@ function processMatch(
   // Check queue type against allowed types
   const queueType = parseQueueType(match.info.queueId);
   if (!queueType || !allowedQueueTypes.includes(queueType)) {
-    return { filtered: true, reason: `queue type ${queueType ?? "unknown"} not in ${allowedQueueTypes.join("/")}` };
+    return {
+      filtered: true,
+      reason: `queue type ${queueType ?? "unknown"} not in ${allowedQueueTypes.join("/")}`,
+    };
   }
 
   // Find tracked players in this match
-  const trackedPlayersInMatch: { alias: string; won: boolean; surrendered: boolean }[] = [];
+  const trackedPlayersInMatch: {
+    alias: string;
+    won: boolean;
+    surrendered: boolean;
+  }[] = [];
 
   for (const puuid of match.metadata.participants) {
     const alias = puuidToAlias.get(puuid);
@@ -251,17 +281,26 @@ function processMatch(
   // Determine match outcome for tracked players
   // All tracked players should have the same outcome if they're on the same team
   // If they're on different teams, we need to track each combination separately
-  const aliasToOutcome = new Map<string, { won: boolean; surrendered: boolean }>();
+  const aliasToOutcome = new Map<
+    string,
+    { won: boolean; surrendered: boolean }
+  >();
   for (const player of trackedPlayersInMatch) {
     const existing = aliasToOutcome.get(player.alias);
     if (existing) {
       // Validate that all accounts for the same player have the same outcome
       if (existing.won !== player.won) {
         // Player has multiple accounts with conflicting outcomes (likely custom game)
-        return { filtered: true, reason: `player ${player.alias} has conflicting outcomes` };
+        return {
+          filtered: true,
+          reason: `player ${player.alias} has conflicting outcomes`,
+        };
       }
     } else {
-      aliasToOutcome.set(player.alias, { won: player.won, surrendered: player.surrendered });
+      aliasToOutcome.set(player.alias, {
+        won: player.won,
+        surrendered: player.surrendered,
+      });
     }
   }
 
@@ -278,7 +317,7 @@ function processMatch(
     if (firstOutcome === undefined) {
       continue;
     }
-    const allSameOutcome = outcomes.every((o) => o !== undefined && o.won === firstOutcome.won);
+    const allSameOutcome = outcomes.every((o) => o?.won === firstOutcome.won);
 
     if (!allSameOutcome) {
       // Players on different teams - skip this match for this combination
@@ -314,7 +353,11 @@ function processMatch(
 /**
  * Create empty stats structure
  */
-function createEmptyStats(serverId: string, startDate: Date, endDate: Date): ServerPairingStats {
+function createEmptyStats(
+  serverId: string,
+  startDate: Date,
+  endDate: Date,
+): ServerPairingStats {
   return {
     version: "v1",
     serverId,

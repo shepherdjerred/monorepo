@@ -9,16 +9,29 @@ type DialogProps = {
   className?: string;
 };
 
-export function Dialog({ open, onClose, title, children, className }: DialogProps) {
+export function Dialog({
+  open,
+  onClose,
+  title,
+  children,
+  className,
+}: DialogProps) {
   if (!open) {
     return null;
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className={cn("w-full max-w-2xl rounded-lg bg-white shadow-xl", className)}>
+      <div
+        className={cn(
+          "w-full max-w-2xl rounded-lg bg-white shadow-xl",
+          className,
+        )}
+      >
         <div className="flex items-center justify-between border-b border-surface-200 px-4 py-3">
-          {title && <h3 className="text-sm font-semibold text-surface-900">{title}</h3>}
+          {title && (
+            <h3 className="text-sm font-semibold text-surface-900">{title}</h3>
+          )}
           <button
             type="button"
             onClick={onClose}

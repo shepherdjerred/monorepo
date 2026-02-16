@@ -1,7 +1,10 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { removeParticipant, getParticipantStatus } from "@scout-for-lol/backend/database/competition/participants.ts";
+import {
+  removeParticipant,
+  getParticipantStatus,
+} from "@scout-for-lol/backend/database/competition/participants.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("competition-leave");
@@ -21,7 +24,9 @@ import {
  * Execute /competition leave command
  * Allows users to opt out of competitions (soft delete - sets status to LEFT)
  */
-export async function executeCompetitionLeave(interaction: ChatInputCommandInteraction): Promise<void> {
+export async function executeCompetitionLeave(
+  interaction: ChatInputCommandInteraction,
+): Promise<void> {
   // ============================================================================
   // Step 1: Extract and validate input
   // ============================================================================
@@ -37,7 +42,12 @@ export async function executeCompetitionLeave(interaction: ChatInputCommandInter
   // Step 2: Get user's linked Player account
   // ============================================================================
 
-  const player = await fetchLinkedPlayerForUser(interaction, serverId, userId, "Competition Leave");
+  const player = await fetchLinkedPlayerForUser(
+    interaction,
+    serverId,
+    userId,
+    "Competition Leave",
+  );
   if (!player) {
     return;
   }
@@ -46,7 +56,11 @@ export async function executeCompetitionLeave(interaction: ChatInputCommandInter
   // Step 3: Check if competition exists
   // ============================================================================
 
-  const competition = await fetchCompetitionWithErrorHandling(interaction, competitionId, "Competition Leave");
+  const competition = await fetchCompetitionWithErrorHandling(
+    interaction,
+    competitionId,
+    "Competition Leave",
+  );
   if (!competition) {
     return;
   }
@@ -57,10 +71,21 @@ export async function executeCompetitionLeave(interaction: ChatInputCommandInter
 
   let participantStatus;
   try {
-    participantStatus = await getParticipantStatus(prisma, competitionId, player.id);
+    participantStatus = await getParticipantStatus(
+      prisma,
+      competitionId,
+      player.id,
+    );
   } catch (error) {
-    logger.error(`[Competition Leave] Error checking participant status:`, error);
-    await replyWithErrorFromException(interaction, error, "checking participation status");
+    logger.error(
+      `[Competition Leave] Error checking participant status:`,
+      error,
+    );
+    await replyWithErrorFromException(
+      interaction,
+      error,
+      "checking participation status",
+    );
     return;
   }
 
@@ -86,7 +111,11 @@ You're not in this competition. Use \`/competition list\` to see competitions yo
     );
   } catch (error) {
     logger.error(`[Competition Leave] Error removing participant:`, error);
-    await replyWithErrorFromException(interaction, error, "leaving competition");
+    await replyWithErrorFromException(
+      interaction,
+      error,
+      "leaving competition",
+    );
     return;
   }
 

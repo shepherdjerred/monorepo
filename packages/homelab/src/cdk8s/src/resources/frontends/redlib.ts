@@ -1,5 +1,5 @@
 import { Deployment, DeploymentStrategy, EnvValue, Service } from "cdk8s-plus-31";
-import { Chart } from "cdk8s";
+import type { Chart } from "cdk8s";
 import { withCommonProps } from "../../misc/common.ts";
 import { TailscaleIngress } from "../../misc/tailscale.ts";
 import versions from "../../versions.ts";

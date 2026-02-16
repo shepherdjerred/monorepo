@@ -171,7 +171,10 @@
           "tooltip": "Thresh throws out his scythe, <status>Stunning</status> the first unit hit and <status>Pulling</status> them towards Thresh for {{ tauntlength }} seconds. The scythe does <magicDamage>{{ totaldamage }} magic damage</magicDamage> and also grants <keywordStealth>True Sight</keywordStealth> for the duration.<br /><br />Thresh can <recast>Recast</recast> this Ability to pull himself to the enemy.<br /><br />If this Ability hits, its Cooldown is reduced by {{ hitbonuscooldown }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [19, 16.5, 14, 11.5, 9],
@@ -192,7 +195,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "100", "1.5", "75", "12", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "100",
+            "1.5",
+            "75",
+            "12",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -215,7 +230,11 @@
           "description": "Thresh throws out a lantern that shields nearby allied Champions from damage. Allies can click the lantern to dash to Thresh.",
           "tooltip": "Thresh throws his lantern, allowing an ally to click on it to dash to Thresh.<br /><br />The lantern also grants <shield>{{ totalshield }} Shield</shield> for {{ shieldduration }} seconds to Thresh and the first ally champion to come in contact with it.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Shield Amount", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Shield Amount",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ baseshieldvalue }} -> {{ baseshieldvalueNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -241,7 +260,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "1", "2", "0", "6", "4", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "1",
+            "2",
+            "0",
+            "6",
+            "4",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -264,7 +295,13 @@
           "description": "Thresh's attacks wind up, dealing more damage the longer he waits between attacks. When activated, Thresh sweeps his chain, knocking all enemies hit in the direction of the blow.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Thresh's Attacks deal additional damage based on how long since he last Attacked. They deal between <magicDamage>{{ pattackdamagemin }}</magicDamage> and <magicDamage>{{ pattackdamagemax }} magic damage</magicDamage>.<br /><br /><spellActive>Active:</spellActive> Thresh whips his chains, <status>Pulling</status> or <status>Pushing</status> enemies in the direction of the swing. Enemies hit are also <status>Slowed</status> by {{ e2 }}% for {{ e4 }} second and take <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Passive Damage", "Active Damage", "Slow", "@AbilityResourceName@ Cost", "Cooldown"],
+            "label": [
+              "Passive Damage",
+              "Active Damage",
+              "Slow",
+              "@AbilityResourceName@ Cost",
+              "Cooldown"
+            ],
             "effect": [
               "{{ passiveadratio }}% -> {{ passiveadratioNL }}%",
               "{{ e1 }} -> {{ e1NL }}",
@@ -328,7 +365,10 @@
           "tooltip": "Thresh creates a prison of spectral walls, <status>Slowing</status> champions by {{ e3 }}% for {{ e2 }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Walls break after one collision, and after one is broken, the rest deal no damage and <status>Slow</status> for half duration.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [120, 100, 80],
@@ -349,7 +389,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "250/400/550", "2", "99", "4", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "250/400/550",
+            "2",
+            "99",
+            "4",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

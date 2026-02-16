@@ -1,4 +1,8 @@
-import { GetObjectCommand, ListObjectsV2Command, type S3Client } from "@aws-sdk/client-s3";
+import {
+  GetObjectCommand,
+  ListObjectsV2Command,
+  type S3Client,
+} from "@aws-sdk/client-s3";
 import { createS3Client } from "@scout-for-lol/backend/storage/s3-client.ts";
 import configuration from "@scout-for-lol/backend/configuration.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
@@ -35,7 +39,10 @@ async function readBodyWithTimeout(
 
   try {
     logger.debug(`[S3Query] 📖 Reading body stream for ${key}`);
-    const result = await Promise.race([body.transformToString(), timeoutPromise]);
+    const result = await Promise.race([
+      body.transformToString(),
+      timeoutPromise,
+    ]);
     logger.debug(`[S3Query] ✅ Body stream read complete for ${key}`);
     return result;
   } finally {
@@ -119,7 +126,11 @@ function isRetryableError(error: unknown): boolean {
 /**
  * Fetch and parse a match from S3 with timeout and retry logic
  */
-async function getMatchFromS3(client: S3Client, bucket: string, key: string): Promise<RawMatch | null> {
+async function getMatchFromS3(
+  client: S3Client,
+  bucket: string,
+  key: string,
+): Promise<RawMatch | null> {
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     const abortController = new AbortController();
     const timeoutId = setTimeout(() => {
@@ -156,11 +167,17 @@ async function getMatchFromS3(client: S3Client, bucket: string, key: string): Pr
       }
 
       // Use body stream timeout to prevent hanging on stream read
-      const bodyString = await readBodyWithTimeout(response.Body, BODY_STREAM_TIMEOUT_MS, key);
+      const bodyString = await readBodyWithTimeout(
+        response.Body,
+        BODY_STREAM_TIMEOUT_MS,
+        key,
+      );
       clearTimeout(timeoutId);
 
       const elapsed = Date.now() - startTime;
-      logger.debug(`[S3Query] ✅ Downloaded match ${key} in ${elapsed.toString()}ms`);
+      logger.debug(
+        `[S3Query] ✅ Downloaded match ${key} in ${elapsed.toString()}ms`,
+      );
 
       // Parse and validate the match data with Zod schema for runtime type safety
       const matchData = JSON.parse(bodyString);
@@ -173,7 +190,9 @@ async function getMatchFromS3(client: S3Client, bucket: string, key: string): Pr
       const errorMessage = getErrorMessage(error);
 
       if (abortController.signal.aborted) {
-        logger.warn(`[S3Query] ⏱️ Request timeout after ${S3_REQUEST_TIMEOUT_MS.toString()}ms for key: ${key}`);
+        logger.warn(
+          `[S3Query] ⏱️ Request timeout after ${S3_REQUEST_TIMEOUT_MS.toString()}ms for key: ${key}`,
+        );
         // Timeout is retryable
         if (attempt < MAX_RETRIES) {
           continue;
@@ -189,7 +208,9 @@ async function getMatchFromS3(client: S3Client, bucket: string, key: string): Pr
       }
 
       // Non-retryable error (parse error, validation error, etc.) - don't retry
-      logger.warn(`[S3Query] ❌ Failed to fetch or parse match ${key}: ${errorMessage}`);
+      logger.warn(
+        `[S3Query] ❌ Failed to fetch or parse match ${key}: ${errorMessage}`,
+      );
       return null;
     }
   }
@@ -206,11 +227,17 @@ async function getMatchFromS3(client: S3Client, bucket: string, key: string): Pr
  * @param puuids Array of participant PUUIDs to filter by
  * @returns Array of matches that occurred in the date range and include any of the specified participants
  */
-export async function queryMatchesByDateRange(startDate: Date, endDate: Date, puuids: string[]): Promise<RawMatch[]> {
+export async function queryMatchesByDateRange(
+  startDate: Date,
+  endDate: Date,
+  puuids: string[],
+): Promise<RawMatch[]> {
   const bucket = configuration.s3BucketName;
 
   if (!bucket) {
-    logger.warn("[S3Query] S3_BUCKET_NAME not configured, returning empty results");
+    logger.warn(
+      "[S3Query] S3_BUCKET_NAME not configured, returning empty results",
+    );
     return [];
   }
 
@@ -219,8 +246,12 @@ export async function queryMatchesByDateRange(startDate: Date, endDate: Date, pu
     return [];
   }
 
-  logger.info(`[S3Query] 🔍 Querying matches from ${startDate.toISOString()} to ${endDate.toISOString()}`);
-  logger.info(`[S3Query] 👥 Filtering for ${puuids.length.toString()} participants`);
+  logger.info(
+    `[S3Query] 🔍 Querying matches from ${startDate.toISOString()} to ${endDate.toISOString()}`,
+  );
+  logger.info(
+    `[S3Query] 👥 Filtering for ${puuids.length.toString()} participants`,
+  );
 
   const client = createS3Client();
   const dayPrefixes = generateDatePrefixes(startDate, endDate);
@@ -256,14 +287,18 @@ export async function queryMatchesByDateRange(startDate: Date, endDate: Date, pu
           continue;
         }
 
-        logger.info(`[S3Query] Found ${response.Contents.length.toString()} object(s) in ${prefix}`);
+        logger.info(
+          `[S3Query] Found ${response.Contents.length.toString()} object(s) in ${prefix}`,
+        );
 
         // Filter for only match.json files (games/{date}/{matchId}/match.json)
         const matchJsonKeys = response.Contents.flatMap((obj) =>
           obj.Key?.endsWith("/match.json") ? [obj.Key] : [],
         ).slice(0, 1000); // Limit to prevent memory issues
 
-        logger.info(`[S3Query] Found ${matchJsonKeys.length.toString()} match.json file(s) in ${prefix}`);
+        logger.info(
+          `[S3Query] Found ${matchJsonKeys.length.toString()} match.json file(s) in ${prefix}`,
+        );
         totalObjects += matchJsonKeys.length;
 
         // Get all keys for this day
@@ -283,7 +318,9 @@ export async function queryMatchesByDateRange(startDate: Date, endDate: Date, pu
               const match = await getMatchFromS3(client, bucket, key);
               return { key, match };
             } catch (error) {
-              logger.warn(`[S3Query] Failed to fetch match ${key}: ${getErrorMessage(error)}`);
+              logger.warn(
+                `[S3Query] Failed to fetch match ${key}: ${getErrorMessage(error)}`,
+              );
               return { key, match: null };
             }
           });
@@ -294,12 +331,16 @@ export async function queryMatchesByDateRange(startDate: Date, endDate: Date, pu
           matchedObjects += batchMatches.length;
         }
       } catch (error) {
-        logger.error(`[S3Query] Error processing prefix ${prefix}: ${getErrorMessage(error)}`);
+        logger.error(
+          `[S3Query] Error processing prefix ${prefix}: ${getErrorMessage(error)}`,
+        );
         consecutiveErrors++;
 
         // Circuit breaker: if we get too many consecutive errors, stop processing
         if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
-          logger.error(`[S3Query] ❌ Too many consecutive errors (${consecutiveErrors.toString()}), stopping query`);
+          logger.error(
+            `[S3Query] ❌ Too many consecutive errors (${consecutiveErrors.toString()}), stopping query`,
+          );
           throw new Error(
             `S3 query failed after ${consecutiveErrors.toString()} consecutive errors. Last error: ${getErrorMessage(error)}`,
           );

@@ -25,7 +25,6 @@ ruleTester.run("prefer-zod-validation", preferZodValidation, {
     { code: `const result = schema.safeParse(data);` },
     { code: `const user = schema.parse(data); console.log(user.name.first);` },
     { code: `if (obj && typeof obj.field === "string") { }` },
-    { code: `if (obj && typeof obj.field === "string") { }` },
     { code: `if (typeof obj === "object") { }` },
     { code: `if ("field" in obj) { }` },
     { code: `if (typeof obj === "object" && "field" in other) { }` },

@@ -63,7 +63,10 @@ const STAGE_MESSAGES: Record<PipelineStageName, string> = {
 };
 
 /** Count enabled stages for progress tracking */
-function countEnabledStages(stages: PipelineStagesConfig, hasGemini: boolean): number {
+function countEnabledStages(
+  stages: PipelineStagesConfig,
+  hasGemini: boolean,
+): number {
   let count = 1; // reviewText is always enabled
   if (stages.timelineSummary.enabled) {
     count++;
@@ -123,7 +126,10 @@ type Stage1Context = {
   traces: Partial<PipelineTraces>;
   rawMatch: RawMatch;
   rawTimeline: RawTimeline;
-  reportProgress: (stage: PipelineStageName, options?: ProgressReportOptions) => void;
+  reportProgress: (
+    stage: PipelineStageName,
+    options?: ProgressReportOptions,
+  ) => void;
 };
 
 type Stage3And4Context = {
@@ -145,7 +151,9 @@ type Stage3And4Result = {
 // Stage 1 Helpers
 // ============================================================================
 
-async function runTimelineSummary(ctx: Stage1Context): Promise<TimelineSummaryResult | undefined> {
+async function runTimelineSummary(
+  ctx: Stage1Context,
+): Promise<TimelineSummaryResult | undefined> {
   const { input, reportProgress, rawTimeline, rawMatch } = ctx;
   const { clients, stages } = input;
 
@@ -165,7 +173,9 @@ async function runTimelineSummary(ctx: Stage1Context): Promise<TimelineSummaryRe
   });
 }
 
-async function runMatchSummary(ctx: Stage1Context): Promise<{ text: string; trace: StageTrace } | undefined> {
+async function runMatchSummary(
+  ctx: Stage1Context,
+): Promise<{ text: string; trace: StageTrace } | undefined> {
   const { input } = ctx;
   const { match, player, clients, stages } = input;
 
@@ -185,7 +195,10 @@ async function runMatchSummary(ctx: Stage1Context): Promise<{ text: string; trac
 }
 
 async function runStage1Parallel(ctx: Stage1Context): Promise<Stage1Result> {
-  const [timelineResult, matchResult] = await Promise.all([runTimelineSummary(ctx), runMatchSummary(ctx)]);
+  const [timelineResult, matchResult] = await Promise.all([
+    runTimelineSummary(ctx),
+    runMatchSummary(ctx),
+  ]);
 
   const result: Stage1Result = {};
 
@@ -220,8 +233,11 @@ async function runStage1Parallel(ctx: Stage1Context): Promise<Stage1Result> {
 // Stage 3 & 4 Helpers
 // ============================================================================
 
-async function runStage3ImageDescription(ctx: Stage3And4Context): Promise<string | undefined> {
-  const { reviewText, stages, clients, traces, intermediate, imagePrompts } = ctx;
+async function runStage3ImageDescription(
+  ctx: Stage3And4Context,
+): Promise<string | undefined> {
+  const { reviewText, stages, clients, traces, intermediate, imagePrompts } =
+    ctx;
 
   if (!stages.imageDescription.enabled) {
     return undefined;
@@ -278,7 +294,9 @@ async function runStage4ImageGeneration(
   }
 }
 
-async function runStage3And4(ctx: Stage3And4Context): Promise<Stage3And4Result> {
+async function runStage3And4(
+  ctx: Stage3And4Context,
+): Promise<Stage3And4Result> {
   const { stages, clients, reportProgress } = ctx;
   const result: Stage3And4Result = {};
 
@@ -294,7 +312,10 @@ async function runStage3And4(ctx: Stage3And4Context): Promise<Stage3And4Result> 
       reportProgress("image-generation");
     }
 
-    const imageBase64 = await runStage4ImageGeneration(ctx, imageDescriptionText);
+    const imageBase64 = await runStage4ImageGeneration(
+      ctx,
+      imageDescriptionText,
+    );
     if (imageBase64 !== undefined) {
       result.imageBase64 = imageBase64;
     }
@@ -317,7 +338,9 @@ async function runStage3And4(ctx: Stage3And4Context): Promise<Stage3And4Result> 
  * @param input - Complete pipeline input with match data, player info, prompts, clients, and stage configs
  * @returns Complete pipeline output with review, traces, intermediate results, and context
  */
-export async function generateFullMatchReview(input: ReviewPipelineInput): Promise<ReviewPipelineOutput> {
+export async function generateFullMatchReview(
+  input: ReviewPipelineInput,
+): Promise<ReviewPipelineOutput> {
   const { match, player, prompts, clients, stages, onProgress } = input;
 
   // Initialize output structures
@@ -351,7 +374,8 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
   reportProgress("review-text");
 
   // matchSummaryText is only undefined if the stage was explicitly disabled
-  const effectiveMatchSummary = stage1Result.matchSummaryText ?? "Match summary stage is disabled.";
+  const effectiveMatchSummary =
+    stage1Result.matchSummaryText ?? "Match summary stage is disabled.";
 
   const reviewTextParams: Parameters<typeof generateReviewTextStage>[0] = {
     match: match.processed,
@@ -395,7 +419,9 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
   const imageResult = await runStage3And4(stage3And4Ctx);
 
   // Build Final Output
-  const reviewOutput: ReviewPipelineOutput["review"] = { text: reviewResult.text };
+  const reviewOutput: ReviewPipelineOutput["review"] = {
+    text: reviewResult.text,
+  };
   if (imageResult.imageBase64 !== undefined) {
     reviewOutput.imageBase64 = imageResult.imageBase64;
   }

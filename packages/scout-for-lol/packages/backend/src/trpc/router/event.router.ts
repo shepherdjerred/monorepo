@@ -6,12 +6,24 @@
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { router, desktopClientProcedure } from "@scout-for-lol/backend/trpc/trpc.ts";
+import {
+  router,
+  desktopClientProcedure,
+} from "@scout-for-lol/backend/trpc/trpc.ts";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import { selectSoundForEvent, type EventContext } from "@scout-for-lol/backend/sound-engine/index.ts";
+import {
+  selectSoundForEvent,
+  type EventContext,
+} from "@scout-for-lol/backend/sound-engine/index.ts";
 import { voiceManager } from "@scout-for-lol/backend/voice/index.ts";
-import type { SoundPack, SoundPackSettings, DefaultSounds, SoundRule, SoundPackId } from "@scout-for-lol/data";
+import type {
+  SoundPack,
+  SoundPackSettings,
+  DefaultSounds,
+  SoundRule,
+  SoundPackId,
+} from "@scout-for-lol/data";
 
 const logger = createLogger("event-router");
 
@@ -62,7 +74,17 @@ const GameEventSchema = z.discriminatedUnion("eventType", [
     eventType: z.literal("objective"),
     objectiveType: z.enum(["dragon", "baron", "herald", "tower", "inhibitor"]),
     killerName: z.string().optional(),
-    dragonType: z.enum(["infernal", "mountain", "ocean", "cloud", "hextech", "chemtech", "elder"]).optional(),
+    dragonType: z
+      .enum([
+        "infernal",
+        "mountain",
+        "ocean",
+        "cloud",
+        "hextech",
+        "chemtech",
+        "elder",
+      ])
+      .optional(),
     isStolen: z.boolean().optional(),
     team: z.enum(["ally", "enemy"]),
     localPlayerName: z.string(),
@@ -214,82 +236,100 @@ export const eventRouter = router({
    * Submit a game event from desktop client
    * This triggers sound playback in Discord voice channel
    */
-  submit: desktopClientProcedure.input(GameEventSchema).mutation(async ({ input, ctx }) => {
-    logger.debug(`Event received: ${input.eventType}`, { userId: ctx.user.discordId });
-
-    // Get the desktop client's configuration
-    const client = await prisma.desktopClient.findFirst({
-      where: { userId: ctx.user.discordId },
-      include: { activeSoundPack: true },
-    });
-
-    if (!client) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Desktop client not configured. Please configure voice channel and sound pack first.",
-      });
-    }
-
-    if (!client.voiceChannelId || !client.guildId) {
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message: "Voice channel not configured for desktop client",
-      });
-    }
-
-    if (!client.activeSoundPack) {
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message: "Sound pack not configured for desktop client",
-      });
-    }
-
-    // Convert event to context
-    const context = gameEventToContext(input);
-
-    // Parse sound pack and evaluate rules
-    const soundPack = parseSoundPack(client.activeSoundPack);
-    const selection = selectSoundForEvent(soundPack, context);
-
-    if (!selection) {
-      logger.debug(`No sound matched for event ${input.eventType}`);
-      return { soundPlayed: null };
-    }
-
-    // Play the sound in Discord voice channel
-    try {
-      await voiceManager.ensureConnected(client.guildId, client.voiceChannelId);
-      await voiceManager.playSound(client.guildId, selection.sound.source, selection.volume);
-
-      logger.info(`Played sound '${selection.sound.id}' for event ${input.eventType}`, {
+  submit: desktopClientProcedure
+    .input(GameEventSchema)
+    .mutation(async ({ input, ctx }) => {
+      logger.debug(`Event received: ${input.eventType}`, {
         userId: ctx.user.discordId,
-        ruleName: selection.ruleName,
       });
 
-      // Log the event
-      await prisma.gameEventLog.create({
-        data: {
-          userId: ctx.user.discordId,
-          clientId: client.clientId,
-          eventType: input.eventType,
-          eventData: JSON.stringify(input),
+      // Get the desktop client's configuration
+      const client = await prisma.desktopClient.findFirst({
+        where: { userId: ctx.user.discordId },
+        include: { activeSoundPack: true },
+      });
+
+      if (!client) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message:
+            "Desktop client not configured. Please configure voice channel and sound pack first.",
+        });
+      }
+
+      if (!client.voiceChannelId || !client.guildId) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Voice channel not configured for desktop client",
+        });
+      }
+
+      if (!client.activeSoundPack) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Sound pack not configured for desktop client",
+        });
+      }
+
+      // Convert event to context
+      const context = gameEventToContext(input);
+
+      // Parse sound pack and evaluate rules
+      const soundPack = parseSoundPack(client.activeSoundPack);
+      const selection = selectSoundForEvent(soundPack, context);
+
+      if (!selection) {
+        logger.debug(`No sound matched for event ${input.eventType}`);
+        return { soundPlayed: null };
+      }
+
+      // Play the sound in Discord voice channel
+      try {
+        await voiceManager.ensureConnected(
+          client.guildId,
+          client.voiceChannelId,
+        );
+        await voiceManager.playSound(
+          client.guildId,
+          selection.sound.source,
+          selection.volume,
+        );
+
+        logger.info(
+          `Played sound '${selection.sound.id}' for event ${input.eventType}`,
+          {
+            userId: ctx.user.discordId,
+            ruleName: selection.ruleName,
+          },
+        );
+
+        // Log the event
+        await prisma.gameEventLog.create({
+          data: {
+            userId: ctx.user.discordId,
+            clientId: client.clientId,
+            eventType: input.eventType,
+            eventData: JSON.stringify(input),
+            soundPlayed: selection.sound.id,
+          },
+        });
+
+        return {
           soundPlayed: selection.sound.id,
-        },
-      });
-
-      return {
-        soundPlayed: selection.sound.id,
-        ruleName: selection.ruleName,
-        volume: selection.volume,
-      };
-    } catch (error) {
-      logger.error("Failed to play sound", { error, userId: ctx.user.discordId });
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to play sound in voice channel",
-      });
-    }
-  }),
+          ruleName: selection.ruleName,
+          volume: selection.volume,
+        };
+      } catch (error) {
+        logger.error("Failed to play sound", {
+          error,
+          userId: ctx.user.discordId,
+        });
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to play sound in voice channel",
+        });
+      }
+    }),
 
   /**
    * Heartbeat from desktop client to update connection status
@@ -357,23 +397,34 @@ export const eventRouter = router({
       const client = await prisma.desktopClient.upsert({
         where: { clientId: input.clientId },
         update: {
-          ...(input.voiceChannelId !== undefined && { voiceChannelId: input.voiceChannelId }),
+          ...(input.voiceChannelId !== undefined && {
+            voiceChannelId: input.voiceChannelId,
+          }),
           ...(input.guildId !== undefined && { guildId: input.guildId }),
-          ...(input.soundPackId !== undefined && { activeSoundPackId: input.soundPackId }),
+          ...(input.soundPackId !== undefined && {
+            activeSoundPackId: input.soundPackId,
+          }),
         },
         create: {
           userId: ctx.user.discordId,
           clientId: input.clientId,
-          ...(input.voiceChannelId !== undefined && { voiceChannelId: input.voiceChannelId }),
+          ...(input.voiceChannelId !== undefined && {
+            voiceChannelId: input.voiceChannelId,
+          }),
           ...(input.guildId !== undefined && { guildId: input.guildId }),
-          ...(input.soundPackId !== undefined && { activeSoundPackId: input.soundPackId }),
+          ...(input.soundPackId !== undefined && {
+            activeSoundPackId: input.soundPackId,
+          }),
         },
       });
 
-      logger.info(`Desktop client configured for user ${ctx.user.discordUsername}`, {
-        voiceChannelId: client.voiceChannelId,
-        soundPackId: client.activeSoundPackId,
-      });
+      logger.info(
+        `Desktop client configured for user ${ctx.user.discordUsername}`,
+        {
+          voiceChannelId: client.voiceChannelId,
+          soundPackId: client.activeSoundPackId,
+        },
+      );
 
       return {
         clientId: client.clientId,
@@ -386,27 +437,29 @@ export const eventRouter = router({
   /**
    * Get desktop client configuration
    */
-  getConfig: desktopClientProcedure.input(z.object({ clientId: z.uuid() })).query(async ({ input, ctx }) => {
-    const client = await prisma.desktopClient.findFirst({
-      where: {
-        clientId: input.clientId,
-        userId: ctx.user.discordId,
-      },
-      include: { activeSoundPack: true },
-    });
+  getConfig: desktopClientProcedure
+    .input(z.object({ clientId: z.uuid() }))
+    .query(async ({ input, ctx }) => {
+      const client = await prisma.desktopClient.findFirst({
+        where: {
+          clientId: input.clientId,
+          userId: ctx.user.discordId,
+        },
+        include: { activeSoundPack: true },
+      });
 
-    if (!client) {
-      return null;
-    }
+      if (!client) {
+        return null;
+      }
 
-    return {
-      clientId: client.clientId,
-      voiceChannelId: client.voiceChannelId,
-      guildId: client.guildId,
-      soundPackId: client.activeSoundPackId,
-      soundPackName: client.activeSoundPack?.name,
-      isConnected: client.isConnected,
-      lastHeartbeat: client.lastHeartbeat,
-    };
-  }),
+      return {
+        clientId: client.clientId,
+        voiceChannelId: client.voiceChannelId,
+        guildId: client.guildId,
+        soundPackId: client.activeSoundPackId,
+        soundPackName: client.activeSoundPack?.name,
+        isConnected: client.isConnected,
+        lastHeartbeat: client.lastHeartbeat,
+      };
+    }),
 });

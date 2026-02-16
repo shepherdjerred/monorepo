@@ -26,17 +26,26 @@ describe("participantToArenaChampion with real arena JSON", () => {
       for (const dto of participants) {
         const champ = await participantToArenaChampion(dto);
         // all augments non-zero (for id-only fallback and full augment objects)
-        expect(champ.augments.every((a) => (z.object({ id: z.number() }).safeParse(a).success ? a.id : 0) !== 0)).toBe(
-          true,
-        );
+        expect(
+          champ.augments.every(
+            (a) =>
+              (z.object({ id: z.number() }).safeParse(a).success ? a.id : 0) !==
+              0,
+          ),
+        ).toBe(true);
         // at most 6
         expect(champ.augments.length).toBeLessThanOrEqual(6);
         // base fields present
         expect(z.string().safeParse(champ.championName).success).toBe(true);
         expect(z.number().safeParse(champ.level).success).toBe(true);
         // metrics present as numbers or undefined
-        expect(z.number().safeParse(champ.teamSupport.damageShieldedOnTeammate).success).toBe(true);
-        expect(z.number().safeParse(champ.teamSupport.healsOnTeammate).success).toBe(true);
+        expect(
+          z.number().safeParse(champ.teamSupport.damageShieldedOnTeammate)
+            .success,
+        ).toBe(true);
+        expect(
+          z.number().safeParse(champ.teamSupport.healsOnTeammate).success,
+        ).toBe(true);
       }
     }
   });

@@ -105,7 +105,12 @@ export type ChampionCondition = z.infer<typeof ChampionConditionSchema>;
 /**
  * Multi-kill types
  */
-export const MultikillTypeSchema = z.enum(["double", "triple", "quadra", "penta"]);
+export const MultikillTypeSchema = z.enum([
+  "double",
+  "triple",
+  "quadra",
+  "penta",
+]);
 
 export type MultikillType = z.infer<typeof MultikillTypeSchema>;
 
@@ -123,7 +128,13 @@ export type MultikillCondition = z.infer<typeof MultikillConditionSchema>;
 /**
  * Objective types in the game
  */
-export const ObjectiveTypeSchema = z.enum(["tower", "inhibitor", "dragon", "baron", "herald"]);
+export const ObjectiveTypeSchema = z.enum([
+  "tower",
+  "inhibitor",
+  "dragon",
+  "baron",
+  "herald",
+]);
 
 export type ObjectiveType = z.infer<typeof ObjectiveTypeSchema>;
 
@@ -141,7 +152,15 @@ export type ObjectiveCondition = z.infer<typeof ObjectiveConditionSchema>;
 /**
  * Dragon types in the game
  */
-export const DragonTypeSchema = z.enum(["infernal", "mountain", "ocean", "cloud", "hextech", "chemtech", "elder"]);
+export const DragonTypeSchema = z.enum([
+  "infernal",
+  "mountain",
+  "ocean",
+  "cloud",
+  "hextech",
+  "chemtech",
+  "elder",
+]);
 
 export type DragonType = z.infer<typeof DragonTypeSchema>;
 
@@ -238,24 +257,46 @@ export type SoundRule = z.infer<typeof SoundRuleSchema>;
 /**
  * Event types that can trigger sounds
  */
-export const EventTypeSchema = z.enum(["gameStart", "gameEnd", "firstBlood", "kill", "multiKill", "objective", "ace"]);
+export const EventTypeSchema = z.enum([
+  "gameStart",
+  "gameEnd",
+  "firstBlood",
+  "kill",
+  "multiKill",
+  "objective",
+  "ace",
+]);
 
 export type EventType = z.infer<typeof EventTypeSchema>;
 
 /**
  * All event types as a constant array
  */
-export const EVENT_TYPES: EventType[] = ["gameStart", "gameEnd", "firstBlood", "kill", "multiKill", "objective", "ace"];
+export const EVENT_TYPES: EventType[] = [
+  "gameStart",
+  "gameEnd",
+  "firstBlood",
+  "kill",
+  "multiKill",
+  "objective",
+  "ace",
+];
 
 /**
  * Human-readable labels for event types
  */
-export const EVENT_TYPE_LABELS: Record<EventType, { label: string; description: string }> = {
+export const EVENT_TYPE_LABELS: Record<
+  EventType,
+  { label: string; description: string }
+> = {
   gameStart: { label: "Game Start", description: "When the game begins" },
   gameEnd: { label: "Game End", description: "Victory or defeat" },
   firstBlood: { label: "First Blood", description: "First kill of the game" },
   kill: { label: "Kill", description: "When a champion is killed" },
-  multiKill: { label: "Multi-kill", description: "Double, triple, quadra, penta" },
+  multiKill: {
+    label: "Multi-kill",
+    description: "Double, triple, quadra, penta",
+  },
   objective: { label: "Objective", description: "Dragon, Baron, towers, etc." },
   ace: { label: "Ace", description: "Team wipe" },
 };
@@ -311,7 +352,10 @@ export const SoundPackSchema = z.object({
   description: z.string().nullish(), // nullish accepts null, undefined, or string
 
   /** Global settings */
-  settings: SoundPackSettingsSchema.default({ masterVolume: 1, normalization: true }),
+  settings: SoundPackSettingsSchema.default({
+    masterVolume: 1,
+    normalization: true,
+  }),
 
   /** Default sounds for each event type (fallback when no rules match) */
   defaults: DefaultSoundsSchema.default({}),

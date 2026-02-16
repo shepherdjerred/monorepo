@@ -17,7 +17,9 @@ export type ServerPlayer = {
 /**
  * Get all tracked players for a specific server with their PUUIDs
  */
-export async function getServerPlayers(serverId: DiscordGuildId): Promise<ServerPlayer[]> {
+export async function getServerPlayers(
+  serverId: DiscordGuildId,
+): Promise<ServerPlayer[]> {
   logger.info(`[GetServerPlayers] Fetching players for server: ${serverId}`);
 
   const players = await prisma.player.findMany({
@@ -46,7 +48,9 @@ export async function getServerPlayers(serverId: DiscordGuildId): Promise<Server
 /**
  * Create a map from PUUID to player alias for quick lookup
  */
-export function createPuuidToAliasMap(players: ServerPlayer[]): Map<string, string> {
+export function createPuuidToAliasMap(
+  players: ServerPlayer[],
+): Map<string, string> {
   const map = new Map<string, string>();
   for (const player of players) {
     for (const puuid of player.puuids) {
@@ -59,7 +63,9 @@ export function createPuuidToAliasMap(players: ServerPlayer[]): Map<string, stri
 /**
  * Create a map from alias to Discord ID for mentions
  */
-export function createAliasToDiscordIdMap(players: ServerPlayer[]): Map<string, string> {
+export function createAliasToDiscordIdMap(
+  players: ServerPlayer[],
+): Map<string, string> {
   const map = new Map<string, string>();
   for (const player of players) {
     if (player.discordId) {

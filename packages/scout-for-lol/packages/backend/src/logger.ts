@@ -142,7 +142,8 @@ const baseSettings: ISettingsParam<ILogObj> = {
   // Use "pretty" in TTY for colored output, "pretty" without styling in non-TTY
   type: "pretty",
   minLevel: getLogLevelNumber(LOG_LEVEL_STDOUT),
-  prettyLogTemplate: "{{dateIsoStr}} {{logLevelName}} [{{name}}] {{filePathWithLine}}\t",
+  prettyLogTemplate:
+    "{{dateIsoStr}} {{logLevelName}} [{{name}}] {{filePathWithLine}}\t",
   prettyLogTimeZone: "UTC",
   // Only enable styling in TTY environments to avoid ANSI color code errors in CI
   stylePrettyLogs: IS_TTY,

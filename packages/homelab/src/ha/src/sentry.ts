@@ -27,4 +27,6 @@ if (enabled && dsn) {
   console.log("Sentry disabled or DSN not configured");
 }
 
-export { Sentry };
+
+
+export * as Sentry from "@sentry/bun";

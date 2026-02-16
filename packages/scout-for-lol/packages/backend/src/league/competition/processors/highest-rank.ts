@@ -21,7 +21,8 @@ export function processHighestRank(
 
   for (const participant of participants) {
     const playerRanks = ranks[participant.id];
-    const rank = criteria.queue === "SOLO" ? playerRanks?.solo : playerRanks?.flex;
+    const rank =
+      criteria.queue === "SOLO" ? playerRanks?.solo : playerRanks?.flex;
 
     if (rank) {
       entries.push({

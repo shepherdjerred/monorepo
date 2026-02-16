@@ -24,7 +24,9 @@ console.log(`  ✓ .knip-cache.json updated (${Date.now() - knipStart}ms)\n`);
 console.log("Running jscpd (this may take a while)...");
 const jscpdStart = Date.now();
 await $`bunx jscpd --reporters json --output /tmp/jscpd-lint-cache .`.quiet();
-const jscpdReport = await Bun.file("/tmp/jscpd-lint-cache/jscpd-report.json").text();
+const jscpdReport = await Bun.file(
+  "/tmp/jscpd-lint-cache/jscpd-report.json",
+).text();
 await Bun.write(".jscpd-cache.json", jscpdReport);
 console.log(`  ✓ .jscpd-cache.json updated (${Date.now() - jscpdStart}ms)\n`);
 

@@ -5,7 +5,11 @@
  * Extracted to avoid code duplication.
  */
 
-import type { OpenAIClient, ModelConfig, StageTrace } from "./pipeline-types.ts";
+import type {
+  OpenAIClient,
+  ModelConfig,
+  StageTrace,
+} from "./pipeline-types.ts";
 import { modelSupportsParameter } from "./models.ts";
 
 /**
@@ -40,7 +44,10 @@ export function extractTemplateVariables(template: string): Set<string> {
  *
  * @throws Error if variables are missing or unused
  */
-export function replacePromptVariables(template: string, variables: Record<string, string>): string {
+export function replacePromptVariables(
+  template: string,
+  variables: Record<string, string>,
+): string {
   const templateVars = extractTemplateVariables(template);
   const providedVars = new Set(Object.keys(variables));
 
@@ -74,7 +81,8 @@ export async function callOpenAI(params: {
 }): Promise<{ text: string; trace: StageTrace }> {
   const { client, model, systemPrompt, userPrompt } = params;
 
-  const messages: { role: "system" | "user" | "assistant"; content: string }[] = [];
+  const messages: { role: "system" | "user" | "assistant"; content: string }[] =
+    [];
 
   if (systemPrompt) {
     messages.push({ role: "system", content: systemPrompt });
@@ -85,14 +93,18 @@ export async function callOpenAI(params: {
 
   // Only include temperature and topP if the model supports them
   // Some models (like GPT-5 series and O-series) don't support these parameters
-  const supportsTemperature = modelSupportsParameter(model.model, "temperature");
+  const supportsTemperature = modelSupportsParameter(
+    model.model,
+    "temperature",
+  );
   const supportsTopP = modelSupportsParameter(model.model, "topP");
 
   const response = await client.chat.completions.create({
     model: model.model,
     messages,
     max_completion_tokens: model.maxTokens,
-    ...(supportsTemperature && model.temperature !== undefined && { temperature: model.temperature }),
+    ...(supportsTemperature &&
+      model.temperature !== undefined && { temperature: model.temperature }),
     ...(supportsTopP && model.topP !== undefined && { top_p: model.topP }),
   });
 

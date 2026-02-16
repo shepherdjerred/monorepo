@@ -1,6 +1,10 @@
-import { type ChatInputCommandInteraction, type InteractionReplyOptions, MessageFlags } from "discord.js";
+import {
+  type ChatInputCommandInteraction,
+  type InteractionReplyOptions,
+  MessageFlags,
+} from "discord.js";
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
-import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import type { ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
 import type { PlayerWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
@@ -21,7 +25,9 @@ type DiscordLinkValidationResult =
 /**
  * Build a validation error response for player not found
  */
-function buildPlayerNotFoundError(playerAlias: string): DiscordLinkValidationResult {
+function buildPlayerNotFoundError(
+  playerAlias: string,
+): DiscordLinkValidationResult {
   return {
     success: false,
     errorResponse: {
@@ -34,7 +40,9 @@ function buildPlayerNotFoundError(playerAlias: string): DiscordLinkValidationRes
 /**
  * Build a validation error response from an error response builder function
  */
-function buildValidationErrorResponse(errorResponse: InteractionReplyOptions): DiscordLinkValidationResult {
+function buildValidationErrorResponse(
+  errorResponse: InteractionReplyOptions,
+): DiscordLinkValidationResult {
   return {
     success: false,
     errorResponse: {
@@ -51,7 +59,7 @@ function buildValidationErrorResponse(errorResponse: InteractionReplyOptions): D
  * 2. Player doesn't already have a Discord ID
  */
 export async function validateDiscordLink(options: {
-  prisma: PrismaClient;
+  prisma: ExtendedPrismaClient;
   guildId: DiscordGuildId;
   player: PlayerWithSubscriptions;
   discordUserId: DiscordAccountId;
@@ -74,14 +82,20 @@ export async function validateDiscordLink(options: {
   });
 
   if (existingPlayer) {
-    logger.info(`❌ Discord ID already linked to player "${existingPlayer.alias}"`);
-    return buildValidationErrorResponse(buildDiscordIdInUseError(discordUserId, existingPlayer.alias));
+    logger.info(
+      `❌ Discord ID already linked to player "${existingPlayer.alias}"`,
+    );
+    return buildValidationErrorResponse(
+      buildDiscordIdInUseError(discordUserId, existingPlayer.alias),
+    );
   }
 
   // Check if player already has a Discord ID
   if (player.discordId) {
     logger.info(`⚠️  Player already has Discord ID: ${player.discordId}`);
-    return buildValidationErrorResponse(buildDiscordAlreadyLinkedError(playerAlias, player.discordId));
+    return buildValidationErrorResponse(
+      buildDiscordAlreadyLinkedError(playerAlias, player.discordId),
+    );
   }
 
   return { success: true };
@@ -120,7 +134,10 @@ export async function executeDiscordLinkOperation(
     await operation();
   } catch (error) {
     logger.error(`❌ Database error during Discord ${operationName}:`, error);
-    const { buildDatabaseError } = await import("@scout-for-lol/backend/discord/commands/admin/utils/responses.js");
-    await interaction.reply(buildDatabaseError(`${operationName} Discord ID`, error));
+    const { buildDatabaseError } =
+      await import("@scout-for-lol/backend/discord/commands/admin/utils/responses.js");
+    await interaction.reply(
+      buildDatabaseError(`${operationName} Discord ID`, error),
+    );
   }
 }

@@ -1,0 +1,3 @@
+packages/desktop/dist/
+packages/desktop/src-tauri/target/
+packages/frontend/.astro/

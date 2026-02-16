@@ -113,7 +113,7 @@ describe("Code Generation", () => {
     const code = generateTypeScriptCode(tsInterface, "test");
 
     // Should escape */ to *\/ to prevent premature comment closure
-    expect(code).toContain("*\\/");
+    expect(code).toContain(String.raw`*\/`);
     // Should still be valid TypeScript (not prematurely closing the comment)
     expect(code).toContain("policy?: string;");
     // Should not have unescaped */
@@ -157,7 +157,7 @@ describe("Code Generation", () => {
     const code = generateTypeScriptCode(tsInterface, "test");
 
     // Should escape all */ sequences
-    expect(code).toContain("*\\/");
+    expect(code).toContain(String.raw`*\/`);
     // Should maintain line structure
     expect(code).toContain("Line 1");
     expect(code).toContain("Line 2");

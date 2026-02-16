@@ -84,7 +84,13 @@
           "description": "Mel fires a barrage of projectiles that explode around a target location, dealing damage repeatedly to enemies within the area.",
           "tooltip": "Mel unleashes a barrage of {{ explosioncount }} projectiles that explode in the area around a target location.<br /><br />The first explosion hit deals <magicDamage>{{ initialexplosiondamage }} magic damage</magicDamage> and each subsequent explosion deals <magicDamage>{{ totalexplosiondamage }} magic damage</magicDamage>, adding up to <magicDamage>{{ alldamagehit }} magic damage</magicDamage> total.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Initial Damage", "Explosion Damage", "Explosion Count", "Cooldown", "Mana Cost"],
+            "label": [
+              "Initial Damage",
+              "Explosion Damage",
+              "Explosion Count",
+              "Cooldown",
+              "Mana Cost"
+            ],
             "effect": [
               "{{ initialdamage }} -> {{ initialdamageNL }}",
               "{{ explosiondamage }} -> {{ explosiondamageNL }}",
@@ -112,7 +118,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -135,7 +153,12 @@
           "description": "Mel forms a barrier around herself that reflects enemy projectiles back at the attacker, prevents her from taking damage, and grants her movement speed.",
           "tooltip": "Mel forms a barrier around herself that reflects projectiles from enemy champions, gaining <shield>{{ shieldamount }} Shields</shield> for {{ duration }} seconds and <speed>{{ movespeed*100 }}% decaying Move Speed</speed> for {{ movespeedduration }} seconds.<br /><br />Reflected projectiles deal <magicDamage>{{ damagepercent }} original damage as magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Reflected Damage", "Shield Amount", "Cooldown", "Mana Cost"],
+            "label": [
+              "Reflected Damage",
+              "Shield Amount",
+              "Cooldown",
+              "Mana Cost"
+            ],
             "effect": [
               "{{ basedamagepercent*100.000000 }}% -> {{ basedamagepercentnl*100.000000 }}%",
               "{{ baseshieldamount }} -> {{ baseshieldamountNL }}",
@@ -162,7 +185,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -212,7 +247,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -269,7 +316,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

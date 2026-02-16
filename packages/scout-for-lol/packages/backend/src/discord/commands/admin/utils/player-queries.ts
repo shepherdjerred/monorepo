@@ -1,25 +1,32 @@
-import type { PrismaClient, Prisma } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import type { Prisma } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import type { ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
 import { type ChatInputCommandInteraction } from "discord.js";
 import { type DiscordGuildId } from "@scout-for-lol/data";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("utils-player-queries");
 
-export type PlayerWithAccounts = Awaited<ReturnType<typeof findPlayerByAliasWithAccounts>>;
-export type PlayerWithSubscriptions = Awaited<ReturnType<typeof findPlayerByAliasWithSubscriptions>>;
-export type PlayerWithCompetitions = Awaited<ReturnType<typeof findPlayerByAliasWithCompetitions>>;
+export type PlayerWithAccounts = Awaited<
+  ReturnType<typeof findPlayerByAliasWithAccounts>
+>;
+export type PlayerWithSubscriptions = Awaited<
+  ReturnType<typeof findPlayerByAliasWithSubscriptions>
+>;
+export type PlayerWithCompetitions = Awaited<
+  ReturnType<typeof findPlayerByAliasWithCompetitions>
+>;
 
 /**
  * Build options object, conditionally including interaction if defined
  */
 function buildFindPlayerOptions<T extends Prisma.PlayerInclude>(options: {
-  prisma: PrismaClient;
+  prisma: ExtendedPrismaClient;
   serverId: DiscordGuildId;
   alias: string;
   include: T;
   interaction?: ChatInputCommandInteraction;
 }): {
-  prisma: PrismaClient;
+  prisma: ExtendedPrismaClient;
   serverId: DiscordGuildId;
   alias: string;
   include: T;
@@ -35,13 +42,15 @@ function buildFindPlayerOptions<T extends Prisma.PlayerInclude>(options: {
 /**
  * Generic helper to find a player by alias with configurable includes
  */
-async function findPlayerByAliasGeneric<T extends Prisma.PlayerInclude>(options: {
-  prisma: PrismaClient;
+async function findPlayerByAliasGeneric<
+  T extends Prisma.PlayerInclude,
+>(options: {
+  prisma: ExtendedPrismaClient;
   serverId: DiscordGuildId;
   alias: string;
   include: T;
   interaction?: ChatInputCommandInteraction;
-}): Promise<Prisma.PlayerGetPayload<{ include: T }> | null> {
+}) {
   const { prisma, serverId, alias, include, interaction } = options;
   const player = await prisma.player.findUnique({
     where: {
@@ -68,7 +77,7 @@ async function findPlayerByAliasGeneric<T extends Prisma.PlayerInclude>(options:
  * Find a player by alias with accounts included
  */
 export async function findPlayerByAliasWithAccounts(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   serverId: DiscordGuildId,
   alias: string,
   interaction?: ChatInputCommandInteraction,
@@ -88,7 +97,7 @@ export async function findPlayerByAliasWithAccounts(
  * Find a player by alias with subscriptions included
  */
 export async function findPlayerByAliasWithSubscriptions(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   serverId: DiscordGuildId,
   alias: string,
   interaction?: ChatInputCommandInteraction,
@@ -108,7 +117,7 @@ export async function findPlayerByAliasWithSubscriptions(
  * Find a player by alias with competition participants included
  */
 export async function findPlayerByAliasWithCompetitions(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   serverId: DiscordGuildId,
   alias: string,
   interaction?: ChatInputCommandInteraction,

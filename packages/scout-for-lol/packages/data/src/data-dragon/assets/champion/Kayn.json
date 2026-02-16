@@ -116,7 +116,10 @@
           "tooltip": "Kayn dashes then spins his scythe, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to enemies he passes through, then deals the damage again to nearby enemies.<br /><br /><keywordMajor>Darkin Slayer:</keywordMajor> Instead deal <physicalDamage>{{ darkinflatdamage }} plus {{ darkinpercentdamage }} max Health physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Base Damage"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ e1 }} -> {{ e1NL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ e1 }} -> {{ e1NL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [7, 6.5, 6, 5.5, 5],
@@ -173,7 +176,11 @@
           "tooltip": "Kayn swipes his scythe upward, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Slowing</status> enemies hit by {{ e3 }}%, decaying over {{ e5 }} seconds.<br /><br /><keywordMajor>Shadow Assassin:</keywordMajor> Kayn can move while using this Ability and increases its range.<br /><br /><keywordMajor>Darkin Slayer:</keywordMajor> Additionally <status>Knocks Up</status> enemies hit for {{ e2 }} second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}", "{{ cost }} -> {{ costNL }}"]
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [13, 12, 11, 10, 9],
@@ -194,7 +201,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "85/130/175/220/265", "1", "90", "160", "1.5", "900", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "85/130/175/220/265",
+            "1",
+            "90",
+            "160",
+            "1.5",
+            "900",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -218,7 +237,11 @@
           "tooltip": "Kayn gains <speed>{{ e1 }}% Move Speed</speed>, becomes Ghosted, and can move through Terrain for {{ e2 }} seconds. When he first enters terrain, he restores <healing>{{ totalhealing }} Health</healing>.<br /><br />Being <status>Immobilized</status> and spending more than {{ e3 }} consecutive seconds outside of Terrain ends this Ability early.<br /><br /><keywordMajor>Shadow Assassin:</keywordMajor> Gain <speed>{{ e5 }}% Move Speed</speed>, <status>Slow</status> immunity, and reduce the Cooldown to {{ assassincdreduction }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Duration", "Healing"],
-            "effect": ["{{ f15 }} -> {{ f16 }}", "{{ e2 }} -> {{ e2NL }}", "{{ e7 }} -> {{ e7NL }}"]
+            "effect": [
+              "{{ f15 }} -> {{ f16 }}",
+              "{{ e2 }} -> {{ e2NL }}",
+              "{{ e7 }} -> {{ e7NL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [21, 19, 17, 15, 13],
@@ -300,7 +323,19 @@
             [750, 750, 750],
             [550, 550, 550]
           ],
-          "effectBurn": [null, "0", "0.5", "0", "2.5", "300", "0", "0", "0", "750", "550"],
+          "effectBurn": [
+            null,
+            "0",
+            "0.5",
+            "0",
+            "2.5",
+            "300",
+            "0",
+            "0",
+            "0",
+            "750",
+            "550"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

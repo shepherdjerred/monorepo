@@ -182,7 +182,10 @@ try {
 } catch (error) {
   console.error("Discord API error:", error);
   if (interaction.replied || interaction.deferred) {
-    await interaction.followUp({ content: "An error occurred", ephemeral: true });
+    await interaction.followUp({
+      content: "An error occurred",
+      ephemeral: true,
+    });
   } else {
     await interaction.reply({ content: "An error occurred", ephemeral: true });
   }

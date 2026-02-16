@@ -57,13 +57,15 @@ export const STAGE_PROMPT_VARIABLES = {
     system: [
       {
         name: "LANE_CONTEXT",
-        description: "Lane-specific context (e.g., top lane plays, jungle pathing)",
+        description:
+          "Lane-specific context (e.g., top lane plays, jungle pathing)",
       },
     ],
     user: [
       {
         name: "TIMELINE_DATA",
-        description: "Minified JSON of enriched timeline with participant lookups",
+        description:
+          "Minified JSON of enriched timeline with participant lookups",
       },
     ],
   },
@@ -76,7 +78,8 @@ export const STAGE_PROMPT_VARIABLES = {
       { name: "PLAYER_LANE", description: "Lane (or 'arena' for arena queue)" },
       {
         name: "MATCH_DATA",
-        description: "Minified JSON containing both processedMatch and rawMatch",
+        description:
+          "Minified JSON containing both processedMatch and rawMatch",
       },
     ],
   },
@@ -93,7 +96,10 @@ export const STAGE_PROMPT_VARIABLES = {
       },
     ],
     user: [
-      { name: "REVIEWER NAME", description: "Personality name (e.g., 'Aaron')" },
+      {
+        name: "REVIEWER NAME",
+        description: "Personality name (e.g., 'Aaron')",
+      },
       { name: "PLAYER NAME", description: "Player being reviewed" },
       { name: "PLAYER CHAMPION", description: "Their champion" },
       { name: "PLAYER LANE", description: "Their lane" },
@@ -104,7 +110,8 @@ export const STAGE_PROMPT_VARIABLES = {
       },
       {
         name: "RANDOM BEHAVIOR",
-        description: "Random personality-specific behavior (from randomBehaviors)",
+        description:
+          "Random personality-specific behavior (from randomBehaviors)",
       },
       {
         name: "MATCH ANALYSIS",
@@ -114,7 +121,10 @@ export const STAGE_PROMPT_VARIABLES = {
         name: "QUEUE CONTEXT",
         description: "Queue type and context (solo, flex, clash, etc.)",
       },
-      { name: "RANK CONTEXT", description: "Rank changes (promos, demotions, LP gains)" },
+      {
+        name: "RANK CONTEXT",
+        description: "Rank changes (promos, demotions, LP gains)",
+      },
     ],
   },
 
@@ -151,6 +161,8 @@ export type StagePromptVariablesMap = typeof STAGE_PROMPT_VARIABLES;
  *
  * This is type-safe and will error if an invalid stage name is used.
  */
-export function getStageVariables(stage: PromptStageName): StagePromptVariables {
+export function getStageVariables(
+  stage: PromptStageName,
+): StagePromptVariables {
   return STAGE_PROMPT_VARIABLES[stage];
 }

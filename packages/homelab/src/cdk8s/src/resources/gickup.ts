@@ -1,19 +1,20 @@
-import { Chart, Size } from "cdk8s";
+import type { Chart} from "cdk8s";
+import { Size } from "cdk8s";
 import { ConfigMap, Deployment, DeploymentStrategy, Secret, Service, Volume } from "cdk8s-plus-31";
 import { withCommonProps } from "../misc/common.ts";
 import { ZfsSataVolume } from "../misc/zfs-sata-volume.ts";
 import { createServiceMonitor } from "../misc/service-monitor.ts";
 import { OnePasswordItem } from "../../generated/imports/onepassword.com.ts";
 import versions from "../versions.ts";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);
 const CURRENT_DIRNAME = dirname(CURRENT_FILENAME);
 
 export async function createGickupDeployment(chart: Chart) {
-  const UID = 65532;
-  const GID = 65532;
+  const UID = 65_532;
+  const GID = 65_532;
 
   // Load the gickup configuration from file
   const configPath = join(CURRENT_DIRNAME, "configs", "gickup.yml");

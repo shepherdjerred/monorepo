@@ -1,4 +1,4 @@
-import { type PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import { type ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
 import {
   CompetitionCriteriaSchema,
   CompetitionVisibilitySchema,
@@ -28,7 +28,11 @@ const MAX_COMPETITION_DURATION_DAYS = 90;
  * Check if a competition is considered "active"
  * Active means: not cancelled AND (not ended OR not started yet)
  */
-export function isCompetitionActive(isCancelled: boolean, endDate: Date | null, now: Date = new Date()): boolean {
+export function isCompetitionActive(
+  isCancelled: boolean,
+  endDate: Date | null,
+  now: Date = new Date(),
+): boolean {
   if (isCancelled) {
     return false;
   }
@@ -104,7 +108,11 @@ export const CompetitionCreationSchema = z
     channelId: DiscordChannelIdSchema,
 
     // Content fields
-    title: z.string().min(1, "Title cannot be empty").max(100, "Title cannot exceed 100 characters").trim(),
+    title: z
+      .string()
+      .min(1, "Title cannot be empty")
+      .max(100, "Title cannot exceed 100 characters")
+      .trim(),
     description: z
       .string()
       .min(1, "Description cannot be empty")
@@ -132,7 +140,9 @@ export const CompetitionCreationSchema = z
       // Validate criteriaConfig is valid JSON and matches criteriaType schema
       try {
         const config: unknown = JSON.parse(data.criteriaConfig);
-        const objectResult = z.record(z.string(), z.unknown()).safeParse(config);
+        const objectResult = z
+          .record(z.string(), z.unknown())
+          .safeParse(config);
         if (!objectResult.success) {
           return false;
         }
@@ -143,12 +153,15 @@ export const CompetitionCreationSchema = z
       }
     },
     {
-      message: "criteriaConfig must be valid JSON matching the criteriaType schema",
+      message:
+        "criteriaConfig must be valid JSON matching the criteriaType schema",
       path: ["criteriaConfig"],
     },
   );
 
-export type CompetitionCreationInput = z.infer<typeof CompetitionCreationSchema>;
+export type CompetitionCreationInput = z.infer<
+  typeof CompetitionCreationSchema
+>;
 
 // ============================================================================
 // Database Validation Functions
@@ -159,12 +172,15 @@ export type CompetitionCreationInput = z.infer<typeof CompetitionCreationSchema>
  * This is async so it can't be part of Zod schema refinement easily
  */
 export async function validateOwnerLimit(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   serverId: DiscordGuildId,
   ownerId: DiscordAccountId,
 ): Promise<void> {
   // Get the limit for this owner/server combination
-  const limit = getLimit("competitions_per_owner", { server: serverId, user: ownerId });
+  const limit = getLimit("competitions_per_owner", {
+    server: serverId,
+    user: ownerId,
+  });
 
   const now = new Date();
 
@@ -196,12 +212,14 @@ export async function validateOwnerLimit(
  * Validate server doesn't have too many active competitions
  */
 export async function validateServerLimit(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   serverId: DiscordGuildId,
   requesterId?: DiscordAccountId,
 ): Promise<void> {
   // Get the limit for this server and requester
-  const attributes = requesterId ? { server: serverId, user: requesterId } : { server: serverId };
+  const attributes = requesterId
+    ? { server: serverId, user: requesterId }
+    : { server: serverId };
   const limit = getLimit("competitions_per_server", attributes);
 
   const now = new Date();

@@ -1,23 +1,23 @@
 import { expect, test } from "vitest";
 import type { Configuration } from "./types.js";
 import { run } from "./index.js";
-import { tmpdir } from "os";
-import { mkdtemp } from "fs/promises";
-import { join } from "path";
+import { tmpdir } from "node:os";
+import { mkdtemp } from "node:fs/promises";
+import path from "node:path";
 import express from "express";
 
 const app = express();
 app.use(express.static("src/testdata"));
 
-const port = Math.floor(Math.random() * 10000) + 3000;
+const port = Math.floor(Math.random() * 10_000) + 3000;
 app.listen(port, () => {
-  console.log(`Test server listening at http://localhost:${port.toString()}`);
+  console.warn(`Test server listening at http://localhost:${port.toString()}`);
 });
 
 await new Promise((resolve) => setTimeout(resolve, 500));
 
-function createUrl(path: string): string {
-  return `http://localhost:${port.toString()}/${path}`;
+function createUrl(urlPath: string): string {
+  return `http://localhost:${port.toString()}/${urlPath}`;
 }
 
 function createSources(count: number): Configuration["sources"] {
@@ -27,7 +27,7 @@ function createSources(count: number): Configuration["sources"] {
   }));
 }
 
-test("it should fetch an RSS feed without caching", { timeout: 30000 }, async () => {
+test("it should fetch an RSS feed without caching", { timeout: 30_000 }, async () => {
   const config: Configuration = {
     sources: createSources(19),
     number: 1,
@@ -41,7 +41,7 @@ test("it should fetch an RSS feed without caching", { timeout: 30000 }, async ()
   expect(string).toMatchSnapshot();
 });
 
-test("it should fetch several RSS feeds", { timeout: 30000 }, async () => {
+test("it should fetch several RSS feeds", { timeout: 30_000 }, async () => {
   const config: Configuration = {
     sources: createSources(19),
     number: 3,
@@ -55,7 +55,7 @@ test("it should fetch several RSS feeds", { timeout: 30000 }, async () => {
   expect(string).toMatchSnapshot();
 });
 
-test("it should fetch an RSS feed with caching", { timeout: 30000 }, async () => {
+test("it should fetch an RSS feed with caching", { timeout: 30_000 }, async () => {
   const config: Configuration = {
     sources: createSources(19),
     number: 1,
@@ -76,6 +76,6 @@ test("it should fetch an RSS feed with caching", { timeout: 30000 }, async () =>
 // https://sdorra.dev/posts/2024-02-12-vitest-tmpdir
 async function createTempDir() {
   const ostmpdir = tmpdir();
-  const dir = join(ostmpdir, "unit-test-");
+  const dir = path.join(ostmpdir, "unit-test-");
   return await mkdtemp(dir);
 }

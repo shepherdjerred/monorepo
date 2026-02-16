@@ -7,7 +7,11 @@ type MatchLoadingStateProps = {
   onCancel: () => void;
 };
 
-export function MatchLoadingState({ loading, loadingProgress, onCancel }: MatchLoadingStateProps) {
+export function MatchLoadingState({
+  loading,
+  loadingProgress,
+  onCancel,
+}: MatchLoadingStateProps) {
   if (!loading) {
     return null;
   }
@@ -22,10 +26,15 @@ export function MatchLoadingState({ loading, loadingProgress, onCancel }: MatchL
           <div className="w-full bg-surface-200 rounded-full h-2">
             <div
               className="bg-brand-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${((loadingProgress.current / loadingProgress.total) * 100).toString()}%` }}
+              style={{
+                width: `${((loadingProgress.current / loadingProgress.total) * 100).toString()}%`,
+              }}
             />
           </div>
-          <button onClick={onCancel} className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700">
+          <button
+            onClick={onCancel}
+            className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
+          >
             Cancel
           </button>
         </div>

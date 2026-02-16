@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
     // Environment setup & latest features
-    "lib": [
-      "ESNext"
-    ],
+    "lib": ["ESNext"],
     "target": "ESNext",
     "allowImportingTsExtensions": true,
     "esModuleInterop": true,
@@ -16,38 +14,18 @@
     // Workspace path mappings
     "baseUrl": ".",
     "paths": {
-      "@scout-for-lol/backend/*": [
-        "./packages/backend/src/*"
-      ],
-      "@scout-for-lol/frontend/*": [
-        "./packages/frontend/src/*"
-      ],
-      "@scout-for-lol/data/*": [
-        "./packages/data/src/*"
-      ],
-      "@scout-for-lol/data": [
-        "./packages/data/src/index.ts"
-      ],
-      "@scout-for-lol/report/*": [
-        "./packages/report/src/*"
-      ],
-      "@scout-for-lol/report": [
-        "./packages/report/src/index.ts"
-      ],
-      "@scout-for-lol/desktop/*": [
-        "./packages/desktop/src/*"
-      ],
-      "@scout-for-lol/ui/*": [
-        "./packages/ui/src/*"
-      ],
-      "@scout-for-lol/ui": [
-        "./packages/ui/src/index.ts"
-      ]
+      "@scout-for-lol/backend/generated/*": ["./packages/backend/generated/*"],
+      "@scout-for-lol/backend/*": ["./packages/backend/src/*"],
+      "@scout-for-lol/frontend/*": ["./packages/frontend/src/*"],
+      "@scout-for-lol/data/*": ["./packages/data/src/*"],
+      "@scout-for-lol/data": ["./packages/data/src/index.ts"],
+      "@scout-for-lol/report/*": ["./packages/report/src/*"],
+      "@scout-for-lol/report": ["./packages/report/src/index.ts"],
+      "@scout-for-lol/desktop/*": ["./packages/desktop/src/*"],
+      "@scout-for-lol/ui/*": ["./packages/ui/src/*"],
+      "@scout-for-lol/ui": ["./packages/ui/src/index.ts"]
     },
-    "types": [
-      "bun-types",
-      "node"
-    ],
+    "types": ["bun-types", "node"],
     // Best practices
     "strict": true,
     "skipLibCheck": true,
@@ -77,10 +55,5 @@
     "incremental": true,
     "noEmit": true
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/node_modules",
-    "**/dist"
-  ]
+  "exclude": ["node_modules", "dist", "**/node_modules", "**/dist"]
 }

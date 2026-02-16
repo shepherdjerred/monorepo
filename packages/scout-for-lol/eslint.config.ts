@@ -74,7 +74,10 @@ export default tseslint.config(
   },
   {
     files: ["**/*.{ts,tsx}"],
-    extends: [importPlugin.flatConfigs.recommended, importPlugin.flatConfigs.typescript],
+    extends: [
+      importPlugin.flatConfigs.recommended,
+      importPlugin.flatConfigs.typescript,
+    ],
     settings: {
       "import/resolver": {
         // Use the Bun-specific TypeScript resolver which properly handles Bun built-in modules
@@ -103,8 +106,14 @@ export default tseslint.config(
   {
     rules: {
       // Code quality and complexity limits
-      "max-lines": ["error", { max: 500, skipBlankLines: false, skipComments: false }],
-      "max-lines-per-function": ["error", { max: 400, skipBlankLines: true, skipComments: true }],
+      "max-lines": [
+        "error",
+        { max: 500, skipBlankLines: false, skipComments: false },
+      ],
+      "max-lines-per-function": [
+        "error",
+        { max: 400, skipBlankLines: true, skipComments: true },
+      ],
       complexity: ["error", { max: 20 }],
       "max-depth": ["error", { max: 4 }],
       "max-params": ["error", { max: 4 }],
@@ -204,7 +213,8 @@ export default tseslint.config(
           patterns: [
             {
               group: ["node:*"],
-              message: "Avoid node: imports. Bun provides faster, more modern alternatives. See https://bun.sh/docs",
+              message:
+                "Avoid node: imports. Bun provides faster, more modern alternatives. See https://bun.sh/docs",
             },
             {
               group: ["twisted/dist/models-dto*"],
@@ -256,8 +266,14 @@ export default tseslint.config(
       "custom-rules": customRulesPlugin,
     },
     rules: {
-      "max-lines": ["error", { max: 1500, skipBlankLines: false, skipComments: false }],
-      "max-lines-per-function": ["error", { max: 200, skipBlankLines: true, skipComments: true }],
+      "max-lines": [
+        "error",
+        { max: 1500, skipBlankLines: false, skipComments: false },
+      ],
+      "max-lines-per-function": [
+        "error",
+        { max: 200, skipBlankLines: true, skipComments: true },
+      ],
       // Allow test mocks and doubles to use any and type assertions
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",
@@ -286,7 +302,11 @@ export default tseslint.config(
   },
   // Allow instanceof for Discord.js error handling and channel type checking
   {
-    files: ["**/discord/**/*.ts", "**/league/discord/**/*.ts", "**/league/tasks/competition/**/*.ts"],
+    files: [
+      "**/discord/**/*.ts",
+      "**/league/discord/**/*.ts",
+      "**/league/tasks/competition/**/*.ts",
+    ],
     ignores: ["**/*.test.ts", "**/*.test.tsx", "**/*.integration.test.ts"],
     plugins: {
       "custom-rules": customRulesPlugin,

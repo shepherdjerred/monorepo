@@ -35,7 +35,9 @@ function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
  * Check if a match includes any of the specified participant PUUIDs
  */
 function matchIncludesParticipant(match: RawMatch, puuids: string[]): boolean {
-  return match.metadata.participants.some((puuid: string) => puuids.includes(puuid));
+  return match.metadata.participants.some((puuid: string) =>
+    puuids.includes(puuid),
+  );
 }
 
 // ============================================================================
@@ -58,7 +60,11 @@ describe("generateDatePrefixes", () => {
 
     const prefixes = generateDatePrefixes(startDate, endDate);
 
-    expect(prefixes).toEqual(["matches/2025/01/15/", "matches/2025/01/16/", "matches/2025/01/17/"]);
+    expect(prefixes).toEqual([
+      "matches/2025/01/15/",
+      "matches/2025/01/16/",
+      "matches/2025/01/17/",
+    ]);
   });
 
   test("handles month boundary crossing", () => {
@@ -67,7 +73,11 @@ describe("generateDatePrefixes", () => {
 
     const prefixes = generateDatePrefixes(startDate, endDate);
 
-    expect(prefixes).toEqual(["matches/2025/01/31/", "matches/2025/02/01/", "matches/2025/02/02/"]);
+    expect(prefixes).toEqual([
+      "matches/2025/01/31/",
+      "matches/2025/02/01/",
+      "matches/2025/02/02/",
+    ]);
   });
 
   test("handles year boundary crossing", () => {
@@ -90,7 +100,11 @@ describe("generateDatePrefixes", () => {
 
     const prefixes = generateDatePrefixes(startDate, endDate);
 
-    expect(prefixes).toEqual(["matches/2025/01/05/", "matches/2025/01/06/", "matches/2025/01/07/"]);
+    expect(prefixes).toEqual([
+      "matches/2025/01/05/",
+      "matches/2025/01/06/",
+      "matches/2025/01/07/",
+    ]);
   });
 
   test("handles dates with different times on same day", () => {
@@ -108,7 +122,11 @@ describe("generateDatePrefixes", () => {
 
     const prefixes = generateDatePrefixes(startDate, endDate);
 
-    expect(prefixes).toEqual(["matches/2024/02/28/", "matches/2024/02/29/", "matches/2024/03/01/"]);
+    expect(prefixes).toEqual([
+      "matches/2024/02/28/",
+      "matches/2024/02/29/",
+      "matches/2024/03/01/",
+    ]);
   });
 
   test("handles non-leap year February", () => {
@@ -198,14 +216,22 @@ describe("matchIncludesParticipant", () => {
   });
 
   test("includes match with only first participant matching", () => {
-    const match = createMockMatch(["PUUID-MATCH", "PUUID-NO-MATCH-1", "PUUID-NO-MATCH-2"]);
+    const match = createMockMatch([
+      "PUUID-MATCH",
+      "PUUID-NO-MATCH-1",
+      "PUUID-NO-MATCH-2",
+    ]);
     const puuids = ["PUUID-MATCH"];
 
     expect(matchIncludesParticipant(match, puuids)).toBe(true);
   });
 
   test("includes match with only last participant matching", () => {
-    const match = createMockMatch(["PUUID-NO-MATCH-1", "PUUID-NO-MATCH-2", "PUUID-MATCH"]);
+    const match = createMockMatch([
+      "PUUID-NO-MATCH-1",
+      "PUUID-NO-MATCH-2",
+      "PUUID-MATCH",
+    ]);
     const puuids = ["PUUID-MATCH"];
 
     expect(matchIncludesParticipant(match, puuids)).toBe(true);

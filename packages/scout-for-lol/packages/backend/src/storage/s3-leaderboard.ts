@@ -1,6 +1,9 @@
 import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { createS3Client } from "@scout-for-lol/backend/storage/s3-client.ts";
-import { CachedLeaderboardSchema, type CachedLeaderboard } from "@scout-for-lol/data/index";
+import {
+  CachedLeaderboardSchema,
+  type CachedLeaderboard,
+} from "@scout-for-lol/data/index";
 import configuration from "@scout-for-lol/backend/configuration.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import * as Sentry from "@sentry/bun";
@@ -30,7 +33,10 @@ function generateCurrentLeaderboardKey(competitionId: number): string {
  * Generate S3 key for historical leaderboard snapshot
  * Format: leaderboards/competition-{id}/snapshots/YYYY-MM-DD.json
  */
-function generateSnapshotLeaderboardKey(competitionId: number, date: Date): string {
+function generateSnapshotLeaderboardKey(
+  competitionId: number,
+  date: Date,
+): string {
   const year = date.getUTCFullYear();
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
   const day = String(date.getUTCDate()).padStart(2, "0");
@@ -52,7 +58,9 @@ function generateSnapshotLeaderboardKey(competitionId: number, date: Date): stri
  * @param leaderboard Leaderboard data to cache
  * @returns Promise that resolves when both saves complete
  */
-export async function saveCachedLeaderboard(leaderboard: CachedLeaderboard): Promise<void> {
+export async function saveCachedLeaderboard(
+  leaderboard: CachedLeaderboard,
+): Promise<void> {
   const bucket = configuration.s3BucketName;
 
   if (!bucket) {
@@ -62,14 +70,19 @@ export async function saveCachedLeaderboard(leaderboard: CachedLeaderboard): Pro
     return;
   }
 
-  logger.info(`[S3Leaderboard] 💾 Caching leaderboard for competition ${leaderboard.competitionId.toString()}`);
+  logger.info(
+    `[S3Leaderboard] 💾 Caching leaderboard for competition ${leaderboard.competitionId.toString()}`,
+  );
 
   try {
     const client = createS3Client();
     const body = JSON.stringify(leaderboard, null, 2);
 
     const currentKey = generateCurrentLeaderboardKey(leaderboard.competitionId);
-    const snapshotKey = generateSnapshotLeaderboardKey(leaderboard.competitionId, new Date(leaderboard.calculatedAt));
+    const snapshotKey = generateSnapshotLeaderboardKey(
+      leaderboard.competitionId,
+      new Date(leaderboard.calculatedAt),
+    );
 
     logger.info(`[S3Leaderboard] 📝 Upload details:`, {
       bucket,
@@ -146,7 +159,9 @@ export async function saveCachedLeaderboard(leaderboard: CachedLeaderboard): Pro
  * @param competitionId Competition ID to load leaderboard for
  * @returns Cached leaderboard or null if not found or invalid
  */
-export async function loadCachedLeaderboard(competitionId: number): Promise<CachedLeaderboard | null> {
+export async function loadCachedLeaderboard(
+  competitionId: number,
+): Promise<CachedLeaderboard | null> {
   const bucket = configuration.s3BucketName;
 
   if (!bucket) {
@@ -158,7 +173,9 @@ export async function loadCachedLeaderboard(competitionId: number): Promise<Cach
 
   const key = generateCurrentLeaderboardKey(competitionId);
 
-  logger.info(`[S3Leaderboard] 📥 Loading cached leaderboard for competition ${competitionId.toString()}`);
+  logger.info(
+    `[S3Leaderboard] 📥 Loading cached leaderboard for competition ${competitionId.toString()}`,
+  );
 
   try {
     const client = createS3Client();
@@ -182,9 +199,15 @@ export async function loadCachedLeaderboard(competitionId: number): Promise<Cach
     try {
       jsonData = JSON.parse(bodyString);
     } catch (error) {
-      logger.error(`[S3Leaderboard] Failed to parse JSON from S3 key ${key}:`, error);
+      logger.error(
+        `[S3Leaderboard] Failed to parse JSON from S3 key ${key}:`,
+        error,
+      );
       Sentry.captureException(error, {
-        tags: { source: "s3-leaderboard-json-parse", competitionId: competitionId.toString() },
+        tags: {
+          source: "s3-leaderboard-json-parse",
+          competitionId: competitionId.toString(),
+        },
       });
       return null;
     }
@@ -197,7 +220,10 @@ export async function loadCachedLeaderboard(competitionId: number): Promise<Cach
         result.error,
       );
       Sentry.captureException(result.error, {
-        tags: { source: "s3-leaderboard-validation", competitionId: competitionId.toString() },
+        tags: {
+          source: "s3-leaderboard-validation",
+          competitionId: competitionId.toString(),
+        },
       });
       return null;
     }
@@ -216,7 +242,9 @@ export async function loadCachedLeaderboard(competitionId: number): Promise<Cach
     const notFoundResult = AwsS3NotFoundErrorSchema.safeParse(error);
 
     if (notFoundResult.success) {
-      logger.info(`[S3Leaderboard] No cached leaderboard found for competition ${competitionId.toString()}`);
+      logger.info(
+        `[S3Leaderboard] No cached leaderboard found for competition ${competitionId.toString()}`,
+      );
       return null;
     }
 
@@ -225,7 +253,10 @@ export async function loadCachedLeaderboard(competitionId: number): Promise<Cach
       error,
     );
     Sentry.captureException(error, {
-      tags: { source: "s3-leaderboard-load", competitionId: competitionId.toString() },
+      tags: {
+        source: "s3-leaderboard-load",
+        competitionId: competitionId.toString(),
+      },
     });
     return null;
   }

@@ -8,7 +8,9 @@ export function ArenaReport(props: { match: ArenaMatch }) {
 
   const sortedTeams = [...match.teams]
     .sort((a, b) => a.placement - b.placement)
-    .filter((team) => team.players.some((p) => highlightNames.includes(p.riotIdGameName)));
+    .filter((team) =>
+      team.players.some((p) => highlightNames.includes(p.riotIdGameName)),
+    );
 
   return (
     <div
@@ -25,7 +27,11 @@ export function ArenaReport(props: { match: ArenaMatch }) {
       <MatchHeader match={match} highlightNames={highlightNames} />
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         {sortedTeams.map((team) => (
-          <TeamCard key={team.teamId} team={team} highlightNames={highlightNames} />
+          <TeamCard
+            key={team.teamId}
+            team={team}
+            highlightNames={highlightNames}
+          />
         ))}
       </div>
     </div>

@@ -215,11 +215,10 @@ async function fetchFromGitHubReleases(repo: string, oldVersion: string, newVers
 
       for (const release of parsed.data) {
         const tag = release.tag_name;
-        if (!tag) continue;
+        if (!tag) {continue;}
 
         // Check if this version is in range
-        if (isVersionInRange(tag, oldVersion, newVersion)) {
-          if (release.body && release.body.length > 10) {
+        if (isVersionInRange(tag, oldVersion, newVersion) && release.body && release.body.length > 10) {
             notes.push({
               version: tag,
               body: release.body,
@@ -228,7 +227,6 @@ async function fetchFromGitHubReleases(repo: string, oldVersion: string, newVers
               publishedAt: release.published_at,
             });
           }
-        }
 
         // If we've gone past the old version, stop
         if (isVersionLessThanOrEqual(tag, oldVersion)) {
@@ -325,7 +323,7 @@ function parseChangelog(content: string, oldVersion: string, newVersion: string)
   // Extract content between version headers
   for (let i = 0; i < versionPositions.length; i++) {
     const current = versionPositions[i];
-    if (!current) continue;
+    if (!current) {continue;}
 
     const next = versionPositions[i + 1];
     const end = next ? next.start : content.length;
@@ -339,7 +337,7 @@ function parseChangelog(content: string, oldVersion: string, newVersion: string)
 
       // Remove the header line
       const bodyStart = sectionContent.indexOf("\n");
-      const body = bodyStart >= 0 ? sectionContent.slice(bodyStart + 1).trim() : "";
+      const body = bodyStart === -1 ? "" : sectionContent.slice(bodyStart + 1).trim();
 
       if (body.length > 10) {
         notes.push({
@@ -453,7 +451,7 @@ Summarize the changes into these categories (only include categories that have c
 Be concise but informative. Focus on user-facing changes.
 
 Commit messages:
-${content.slice(0, 10000)}`;
+${content.slice(0, 10_000)}`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -513,7 +511,7 @@ function normalizeVersion(version: string): string {
   let normalized = version.replace(/^v/, "");
 
   // Handle chart-name-version format (e.g., "grafana-10.3.0")
-  const chartVersionRegex = /^[a-zA-Z-]+-(\d+\.\d+\.\d+.*)$/;
+  const chartVersionRegex = /^[a-z-]+-(\d+\.\d+\.\d.*)$/i;
   const chartVersionMatch = chartVersionRegex.exec(normalized);
   if (chartVersionMatch?.[1]) {
     normalized = chartVersionMatch[1];
@@ -536,8 +534,8 @@ function compareVersions(v1: string, v2: string): number {
     const p1 = parts1[i] ?? 0;
     const p2 = parts2[i] ?? 0;
 
-    if (p1 < p2) return -1;
-    if (p1 > p2) return 1;
+    if (p1 < p2) {return -1;}
+    if (p1 > p2) {return 1;}
   }
 
   return 0;
@@ -547,8 +545,8 @@ function compareVersions(v1: string, v2: string): number {
  * Convert a version part to a number for comparison
  */
 function partToNumber(part: string): number {
-  const num = parseInt(part, 10);
-  return isNaN(num) ? 0 : num;
+  const num = Number.parseInt(part, 10);
+  return Number.isNaN(num) ? 0 : num;
 }
 
 /**

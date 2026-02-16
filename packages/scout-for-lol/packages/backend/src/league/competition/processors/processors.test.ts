@@ -1,10 +1,25 @@
 import { describe, expect, it } from "bun:test";
-import type { ChampionId, LeaguePuuid, RawMatch, RawPerks, Rank, Ranks } from "@scout-for-lol/data";
-import { AccountIdSchema, ChampionIdSchema, PlayerIdSchema, rankToLeaguePoints } from "@scout-for-lol/data";
+import type {
+  ChampionId,
+  LeaguePuuid,
+  RawMatch,
+  RawPerks,
+  Rank,
+  Ranks,
+} from "@scout-for-lol/data";
+import {
+  AccountIdSchema,
+  ChampionIdSchema,
+  PlayerIdSchema,
+  rankToLeaguePoints,
+} from "@scout-for-lol/data";
 import { processCriteria } from "@scout-for-lol/backend/league/competition/processors/index.ts";
 import type { PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.ts";
 
-import { testAccountId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  testAccountId,
+  testPuuid,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
 // ============================================================================
 // Test Fixtures - Players
 // ============================================================================
@@ -183,7 +198,12 @@ function createDefaultChallenges() {
   };
 }
 
-function createParticipant(puuid: LeaguePuuid, championId: ChampionId, win: boolean, participantId: number) {
+function createParticipant(
+  puuid: LeaguePuuid,
+  championId: ChampionId,
+  win: boolean,
+  participantId: number,
+) {
   return {
     puuid,
     championId,
@@ -382,7 +402,9 @@ function createMatch(
       gameStartTimestamp: Date.now(),
       gameType: "MATCHED_GAME",
       mapId: 11,
-      participants: participants.map((p, index) => createParticipant(p.puuid, p.championId, p.win, index + 1)),
+      participants: participants.map((p, index) =>
+        createParticipant(p.puuid, p.championId, p.win, index + 1),
+      ),
       platformId: "NA1",
       queueId,
       teams: [],
@@ -478,25 +500,61 @@ describe("processMostGamesPlayed", () => {
     const matches = [
       // SOLO queue matches
       createMatch(420, [
-        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("a"),
+          championId: ChampionIdSchema.parse(1),
+          win: true,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
       createMatch(420, [
-        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("a"),
+          championId: ChampionIdSchema.parse(1),
+          win: true,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
       // ARENA matches
       createMatch(1700, [
-        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("a"),
+          championId: ChampionIdSchema.parse(1),
+          win: true,
+        },
+        {
+          puuid: testPuuid("b"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
       createMatch(1700, [
-        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("b"),
+          championId: ChampionIdSchema.parse(1),
+          win: true,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
     ];
 
-    const result = processCriteria({ type: "MOST_GAMES_PLAYED", queue: "SOLO" }, matches, [playerA, playerB]);
+    const result = processCriteria(
+      { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+      matches,
+      [playerA, playerB],
+    );
 
     const playerAEntry = result.find((e) => e.playerId === playerA.id);
     const playerBEntry = result.find((e) => e.playerId === playerB.id);
@@ -509,21 +567,49 @@ describe("processMostGamesPlayed", () => {
     const matches = [
       // SOLO queue matches
       createMatch(420, [
-        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("a"),
+          championId: ChampionIdSchema.parse(1),
+          win: true,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
       // ARENA matches
       createMatch(1700, [
-        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("a"),
+          championId: ChampionIdSchema.parse(1),
+          win: true,
+        },
+        {
+          puuid: testPuuid("b"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
       createMatch(1700, [
-        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("b"),
+          championId: ChampionIdSchema.parse(1),
+          win: true,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
     ];
 
-    const result = processCriteria({ type: "MOST_GAMES_PLAYED", queue: "ARENA" }, matches, [playerA, playerB]);
+    const result = processCriteria(
+      { type: "MOST_GAMES_PLAYED", queue: "ARENA" },
+      matches,
+      [playerA, playerB],
+    );
 
     const playerAEntry = result.find((e) => e.playerId === playerA.id);
     const playerBEntry = result.find((e) => e.playerId === playerB.id);
@@ -536,26 +622,62 @@ describe("processMostGamesPlayed", () => {
     const matches = [
       // SOLO queue
       createMatch(420, [
-        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("a"),
+          championId: ChampionIdSchema.parse(1),
+          win: true,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
       createMatch(420, [
-        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("a"),
+          championId: ChampionIdSchema.parse(1),
+          win: true,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
       // FLEX queue
       createMatch(440, [
-        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("a"),
+          championId: ChampionIdSchema.parse(1),
+          win: true,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
       // ARENA (should not count)
       createMatch(1700, [
-        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("b"),
+          championId: ChampionIdSchema.parse(1),
+          win: true,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
     ];
 
-    const result = processCriteria({ type: "MOST_GAMES_PLAYED", queue: "RANKED_ANY" }, matches, [playerA, playerB]);
+    const result = processCriteria(
+      { type: "MOST_GAMES_PLAYED", queue: "RANKED_ANY" },
+      matches,
+      [playerA, playerB],
+    );
 
     const playerAEntry = result.find((e) => e.playerId === playerA.id);
     const playerBEntry = result.find((e) => e.playerId === playerB.id);
@@ -577,11 +699,16 @@ describe("processHighestRank", () => {
       [playerC.id]: { solo: diamondIII },
     };
 
-    const result = processCriteria({ type: "HIGHEST_RANK", queue: "SOLO" }, [], allParticipants, {
-      currentRanks,
-      startSnapshots: {},
-      endSnapshots: {},
-    });
+    const result = processCriteria(
+      { type: "HIGHEST_RANK", queue: "SOLO" },
+      [],
+      allParticipants,
+      {
+        currentRanks,
+        startSnapshots: {},
+        endSnapshots: {},
+      },
+    );
 
     // Check that all players are included
     expect(result.length).toBe(3);
@@ -596,9 +723,15 @@ describe("processHighestRank", () => {
     expect(playerCEntry?.score).toEqual(diamondIII);
 
     // Verify LP metadata for ordering
-    expect(playerAEntry?.metadata?.["leaguePoints"]).toBe(rankToLeaguePoints(diamondII));
-    expect(playerCEntry?.metadata?.["leaguePoints"]).toBe(rankToLeaguePoints(diamondIII));
-    expect(playerBEntry?.metadata?.["leaguePoints"]).toBe(rankToLeaguePoints(platinumI));
+    expect(playerAEntry?.metadata?.["leaguePoints"]).toBe(
+      rankToLeaguePoints(diamondII),
+    );
+    expect(playerCEntry?.metadata?.["leaguePoints"]).toBe(
+      rankToLeaguePoints(diamondIII),
+    );
+    expect(playerBEntry?.metadata?.["leaguePoints"]).toBe(
+      rankToLeaguePoints(platinumI),
+    );
   });
 
   it("should use unranked (Iron IV 0 LP) for players without rank", () => {
@@ -607,11 +740,16 @@ describe("processHighestRank", () => {
       // playerB has no rank
     };
 
-    const result = processCriteria({ type: "HIGHEST_RANK", queue: "SOLO" }, [], [playerA, playerB], {
-      currentRanks,
-      startSnapshots: {},
-      endSnapshots: {},
-    });
+    const result = processCriteria(
+      { type: "HIGHEST_RANK", queue: "SOLO" },
+      [],
+      [playerA, playerB],
+      {
+        currentRanks,
+        startSnapshots: {},
+        endSnapshots: {},
+      },
+    );
 
     const playerBEntry = result.find((e) => e.playerId === playerB.id);
     expect(playerBEntry?.score).toEqual({
@@ -640,17 +778,24 @@ describe("processMostRankClimb", () => {
       [playerB.id]: { solo: platinumI }, // Platinum II → Platinum I = +100 LP
     };
 
-    const result = processCriteria({ type: "MOST_RANK_CLIMB", queue: "SOLO" }, [], [playerA, playerB], {
-      currentRanks: {},
-      startSnapshots,
-      endSnapshots,
-    });
+    const result = processCriteria(
+      { type: "MOST_RANK_CLIMB", queue: "SOLO" },
+      [],
+      [playerA, playerB],
+      {
+        currentRanks: {},
+        startSnapshots,
+        endSnapshots,
+      },
+    );
 
     const playerAEntry = result.find((e) => e.playerId === playerA.id);
     const playerBEntry = result.find((e) => e.playerId === playerB.id);
 
-    const playerALPGain = rankToLeaguePoints(diamondIV) - rankToLeaguePoints(goldIV);
-    const playerBLPGain = rankToLeaguePoints(platinumI) - rankToLeaguePoints(platinumII);
+    const playerALPGain =
+      rankToLeaguePoints(diamondIV) - rankToLeaguePoints(goldIV);
+    const playerBLPGain =
+      rankToLeaguePoints(platinumI) - rankToLeaguePoints(platinumII);
 
     expect(playerAEntry?.score).toBe(playerALPGain);
     expect(playerBEntry?.score).toBe(playerBLPGain);
@@ -668,11 +813,16 @@ describe("processMostRankClimb", () => {
       [playerB.id]: { solo: goldI }, // PlayerB got ranked later
     };
 
-    const result = processCriteria({ type: "MOST_RANK_CLIMB", queue: "SOLO" }, [], [playerA, playerB], {
-      currentRanks: {},
-      startSnapshots,
-      endSnapshots,
-    });
+    const result = processCriteria(
+      { type: "MOST_RANK_CLIMB", queue: "SOLO" },
+      [],
+      [playerA, playerB],
+      {
+        currentRanks: {},
+        startSnapshots,
+        endSnapshots,
+      },
+    );
 
     // Only playerA should be in the result
     expect(result.length).toBe(1);
@@ -690,11 +840,16 @@ describe("processMostRankClimb", () => {
       // PlayerB has no END snapshot
     };
 
-    const result = processCriteria({ type: "MOST_RANK_CLIMB", queue: "SOLO" }, [], [playerA, playerB], {
-      currentRanks: {},
-      startSnapshots,
-      endSnapshots,
-    });
+    const result = processCriteria(
+      { type: "MOST_RANK_CLIMB", queue: "SOLO" },
+      [],
+      [playerA, playerB],
+      {
+        currentRanks: {},
+        startSnapshots,
+        endSnapshots,
+      },
+    );
 
     // Only playerA should be in the result
     expect(result.length).toBe(1);
@@ -712,11 +867,16 @@ describe("processMostRankClimb", () => {
       [playerB.id]: { flex: goldI },
     };
 
-    const result = processCriteria({ type: "MOST_RANK_CLIMB", queue: "SOLO" }, [], [playerA, playerB], {
-      currentRanks: {},
-      startSnapshots,
-      endSnapshots,
-    });
+    const result = processCriteria(
+      { type: "MOST_RANK_CLIMB", queue: "SOLO" },
+      [],
+      [playerA, playerB],
+      {
+        currentRanks: {},
+        startSnapshots,
+        endSnapshots,
+      },
+    );
 
     // Only playerA should be in the result (has solo rank)
     expect(result.length).toBe(1);
@@ -734,11 +894,16 @@ describe("processMostRankClimb", () => {
       [playerB.id]: { solo: platinumIV }, // PlayerB climbed after placement
     };
 
-    const result = processCriteria({ type: "MOST_RANK_CLIMB", queue: "SOLO" }, [], [playerA, playerB], {
-      currentRanks: {},
-      startSnapshots,
-      endSnapshots,
-    });
+    const result = processCriteria(
+      { type: "MOST_RANK_CLIMB", queue: "SOLO" },
+      [],
+      [playerA, playerB],
+      {
+        currentRanks: {},
+        startSnapshots,
+        endSnapshots,
+      },
+    );
 
     // Both players should be in the result
     expect(result.length).toBe(2);
@@ -750,8 +915,10 @@ describe("processMostRankClimb", () => {
     expect(playerBEntry).toBeDefined();
 
     // Both should have their respective LP gains calculated correctly
-    const playerALPGain = rankToLeaguePoints(diamondIV) - rankToLeaguePoints(goldIV);
-    const playerBLPGain = rankToLeaguePoints(platinumIV) - rankToLeaguePoints(silverIV);
+    const playerALPGain =
+      rankToLeaguePoints(diamondIV) - rankToLeaguePoints(goldIV);
+    const playerBLPGain =
+      rankToLeaguePoints(platinumIV) - rankToLeaguePoints(silverIV);
 
     expect(playerAEntry?.score).toBe(playerALPGain);
     expect(playerBEntry?.score).toBe(playerBLPGain);
@@ -767,33 +934,85 @@ describe("processMostWinsPlayer", () => {
     const matches = [
       // PlayerA: 2 wins
       createMatch(420, [
-        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("a"),
+          championId: ChampionIdSchema.parse(1),
+          win: true,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
       createMatch(420, [
-        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("a"),
+          championId: ChampionIdSchema.parse(1),
+          win: true,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
       createMatch(420, [
-        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: false },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: true },
+        {
+          puuid: testPuuid("a"),
+          championId: ChampionIdSchema.parse(1),
+          win: false,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: true,
+        },
       ]),
       // PlayerB: 3 wins
       createMatch(420, [
-        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("b"),
+          championId: ChampionIdSchema.parse(1),
+          win: true,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
       createMatch(420, [
-        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("b"),
+          championId: ChampionIdSchema.parse(1),
+          win: true,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
       createMatch(420, [
-        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("b"),
+          championId: ChampionIdSchema.parse(1),
+          win: true,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
     ];
 
-    const result = processCriteria({ type: "MOST_WINS_PLAYER", queue: "SOLO" }, matches, [playerA, playerB]);
+    const result = processCriteria(
+      { type: "MOST_WINS_PLAYER", queue: "SOLO" },
+      matches,
+      [playerA, playerB],
+    );
 
     const playerAEntry = result.find((e) => e.playerId === playerA.id);
     const playerBEntry = result.find((e) => e.playerId === playerB.id);
@@ -817,40 +1036,100 @@ describe("processMostWinsChampion", () => {
     const matches = [
       // PlayerA: 2 Yasuo wins, 1 Yasuo loss
       createMatch(420, [
-        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(yasuoId), win: true },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("a"),
+          championId: ChampionIdSchema.parse(yasuoId),
+          win: true,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
       createMatch(420, [
-        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(yasuoId), win: true },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("a"),
+          championId: ChampionIdSchema.parse(yasuoId),
+          win: true,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
       createMatch(420, [
-        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(yasuoId), win: false },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: true },
+        {
+          puuid: testPuuid("a"),
+          championId: ChampionIdSchema.parse(yasuoId),
+          win: false,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: true,
+        },
       ]),
       // PlayerA with other champion (should not count)
       createMatch(420, [
-        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("a"),
+          championId: ChampionIdSchema.parse(1),
+          win: true,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
       // PlayerB: 1 Yasuo win
       createMatch(420, [
-        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(yasuoId), win: true },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("b"),
+          championId: ChampionIdSchema.parse(yasuoId),
+          win: true,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
       // PlayerB with other champion (should not count)
       createMatch(420, [
-        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("b"),
+          championId: ChampionIdSchema.parse(1),
+          win: true,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
       createMatch(420, [
-        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+        {
+          puuid: testPuuid("b"),
+          championId: ChampionIdSchema.parse(1),
+          win: true,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: false,
+        },
       ]),
     ];
 
     const result = processCriteria(
-      { type: "MOST_WINS_CHAMPION", championId: ChampionIdSchema.parse(yasuoId), queue: "SOLO" },
+      {
+        type: "MOST_WINS_CHAMPION",
+        championId: ChampionIdSchema.parse(yasuoId),
+        queue: "SOLO",
+      },
       matches,
       [playerA, playerB],
     );
@@ -875,45 +1154,97 @@ describe("processHighestWinRate", () => {
       // PlayerA: 15 wins, 5 losses (75% win rate, 20 games)
       ...Array.from({ length: 15 }, () =>
         createMatch(420, [
-          { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
-          { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+          {
+            puuid: testPuuid("a"),
+            championId: ChampionIdSchema.parse(1),
+            win: true,
+          },
+          {
+            puuid: testPuuid("other"),
+            championId: ChampionIdSchema.parse(2),
+            win: false,
+          },
         ]),
       ),
       ...Array.from({ length: 5 }, () =>
         createMatch(420, [
-          { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: false },
-          { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: true },
+          {
+            puuid: testPuuid("a"),
+            championId: ChampionIdSchema.parse(1),
+            win: false,
+          },
+          {
+            puuid: testPuuid("other"),
+            championId: ChampionIdSchema.parse(2),
+            win: true,
+          },
         ]),
       ),
       // PlayerB: 8 wins, 2 losses (80% win rate, but only 10 games - exactly at threshold)
       ...Array.from({ length: 8 }, () =>
         createMatch(420, [
-          { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: true },
-          { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+          {
+            puuid: testPuuid("b"),
+            championId: ChampionIdSchema.parse(1),
+            win: true,
+          },
+          {
+            puuid: testPuuid("other"),
+            championId: ChampionIdSchema.parse(2),
+            win: false,
+          },
         ]),
       ),
       ...Array.from({ length: 2 }, () =>
         createMatch(420, [
-          { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: false },
-          { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: true },
+          {
+            puuid: testPuuid("b"),
+            championId: ChampionIdSchema.parse(1),
+            win: false,
+          },
+          {
+            puuid: testPuuid("other"),
+            championId: ChampionIdSchema.parse(2),
+            win: true,
+          },
         ]),
       ),
       // PlayerC: 10 wins, 10 losses (50% win rate, 20 games)
       ...Array.from({ length: 10 }, () =>
         createMatch(420, [
-          { puuid: testPuuid("c"), championId: ChampionIdSchema.parse(1), win: true },
-          { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+          {
+            puuid: testPuuid("c"),
+            championId: ChampionIdSchema.parse(1),
+            win: true,
+          },
+          {
+            puuid: testPuuid("other"),
+            championId: ChampionIdSchema.parse(2),
+            win: false,
+          },
         ]),
       ),
       ...Array.from({ length: 10 }, () =>
         createMatch(420, [
-          { puuid: testPuuid("c"), championId: ChampionIdSchema.parse(1), win: false },
-          { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: true },
+          {
+            puuid: testPuuid("c"),
+            championId: ChampionIdSchema.parse(1),
+            win: false,
+          },
+          {
+            puuid: testPuuid("other"),
+            championId: ChampionIdSchema.parse(2),
+            win: true,
+          },
         ]),
       ),
     ];
 
-    const result = processCriteria({ type: "HIGHEST_WIN_RATE", minGames: 10, queue: "SOLO" }, matches, allParticipants);
+    const result = processCriteria(
+      { type: "HIGHEST_WIN_RATE", minGames: 10, queue: "SOLO" },
+      matches,
+      allParticipants,
+    );
 
     // All players should be included (all have >= 10 games)
     expect(result.length).toBe(3);
@@ -932,27 +1263,52 @@ describe("processHighestWinRate", () => {
       // PlayerA: 8 wins, 1 loss (only 9 games, below min of 10)
       ...Array.from({ length: 8 }, () =>
         createMatch(420, [
-          { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
-          { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+          {
+            puuid: testPuuid("a"),
+            championId: ChampionIdSchema.parse(1),
+            win: true,
+          },
+          {
+            puuid: testPuuid("other"),
+            championId: ChampionIdSchema.parse(2),
+            win: false,
+          },
         ]),
       ),
       createMatch(420, [
-        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: false },
-        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: true },
+        {
+          puuid: testPuuid("a"),
+          championId: ChampionIdSchema.parse(1),
+          win: false,
+        },
+        {
+          puuid: testPuuid("other"),
+          championId: ChampionIdSchema.parse(2),
+          win: true,
+        },
       ]),
       // PlayerB: 10 wins, 0 losses (exactly 10 games, should be included)
       ...Array.from({ length: 10 }, () =>
         createMatch(420, [
-          { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: true },
-          { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
+          {
+            puuid: testPuuid("b"),
+            championId: ChampionIdSchema.parse(1),
+            win: true,
+          },
+          {
+            puuid: testPuuid("other"),
+            championId: ChampionIdSchema.parse(2),
+            win: false,
+          },
         ]),
       ),
     ];
 
-    const result = processCriteria({ type: "HIGHEST_WIN_RATE", minGames: 10, queue: "SOLO" }, matches, [
-      playerA,
-      playerB,
-    ]);
+    const result = processCriteria(
+      { type: "HIGHEST_WIN_RATE", minGames: 10, queue: "SOLO" },
+      matches,
+      [playerA, playerB],
+    );
 
     // Only PlayerB should be included (PlayerA has < 10 games)
     expect(result.length).toBe(1);
@@ -979,31 +1335,57 @@ describe("processCriteria dispatcher", () => {
     // If any criteria type is missing, TypeScript would fail to compile
 
     expect(() =>
-      processCriteria({ type: "MOST_GAMES_PLAYED", queue: "SOLO" }, emptyMatches, emptyParticipants),
-    ).not.toThrow();
-
-    expect(() =>
-      processCriteria({ type: "HIGHEST_RANK", queue: "SOLO" }, emptyMatches, emptyParticipants, emptySnapshots),
-    ).not.toThrow();
-
-    expect(() =>
-      processCriteria({ type: "MOST_RANK_CLIMB", queue: "SOLO" }, emptyMatches, emptyParticipants, emptySnapshots),
-    ).not.toThrow();
-
-    expect(() =>
-      processCriteria({ type: "MOST_WINS_PLAYER", queue: "SOLO" }, emptyMatches, emptyParticipants),
-    ).not.toThrow();
-
-    expect(() =>
       processCriteria(
-        { type: "MOST_WINS_CHAMPION", championId: ChampionIdSchema.parse(1), queue: "SOLO" },
+        { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
         emptyMatches,
         emptyParticipants,
       ),
     ).not.toThrow();
 
     expect(() =>
-      processCriteria({ type: "HIGHEST_WIN_RATE", minGames: 10, queue: "SOLO" }, emptyMatches, emptyParticipants),
+      processCriteria(
+        { type: "HIGHEST_RANK", queue: "SOLO" },
+        emptyMatches,
+        emptyParticipants,
+        emptySnapshots,
+      ),
+    ).not.toThrow();
+
+    expect(() =>
+      processCriteria(
+        { type: "MOST_RANK_CLIMB", queue: "SOLO" },
+        emptyMatches,
+        emptyParticipants,
+        emptySnapshots,
+      ),
+    ).not.toThrow();
+
+    expect(() =>
+      processCriteria(
+        { type: "MOST_WINS_PLAYER", queue: "SOLO" },
+        emptyMatches,
+        emptyParticipants,
+      ),
+    ).not.toThrow();
+
+    expect(() =>
+      processCriteria(
+        {
+          type: "MOST_WINS_CHAMPION",
+          championId: ChampionIdSchema.parse(1),
+          queue: "SOLO",
+        },
+        emptyMatches,
+        emptyParticipants,
+      ),
+    ).not.toThrow();
+
+    expect(() =>
+      processCriteria(
+        { type: "HIGHEST_WIN_RATE", minGames: 10, queue: "SOLO" },
+        emptyMatches,
+        emptyParticipants,
+      ),
     ).not.toThrow();
   });
 });

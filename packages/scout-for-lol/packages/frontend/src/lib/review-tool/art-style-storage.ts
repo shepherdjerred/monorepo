@@ -31,7 +31,9 @@ export async function loadCustomArtStyles(): Promise<CustomArtStyle[]> {
 /**
  * Save custom art styles to IndexedDB
  */
-export async function saveCustomArtStyles(styles: CustomArtStyle[]): Promise<void> {
+export async function saveCustomArtStyles(
+  styles: CustomArtStyle[],
+): Promise<void> {
   for (const style of styles) {
     await putItem(STORES.ART_STYLES, style);
   }

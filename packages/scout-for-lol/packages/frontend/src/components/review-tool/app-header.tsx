@@ -9,7 +9,11 @@ type AppHeaderProps = {
   onAnalyticsToggle: () => void;
 };
 
-export function AppHeader({ showAnalytics, onSettingsClick, onAnalyticsToggle }: AppHeaderProps) {
+export function AppHeader({
+  showAnalytics,
+  onSettingsClick,
+  onAnalyticsToggle,
+}: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-surface-200/50 shadow-sm">
       <div className="max-w-[1800px] mx-auto">
@@ -19,7 +23,12 @@ export function AppHeader({ showAnalytics, onSettingsClick, onAnalyticsToggle }:
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shadow-glow">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -29,16 +38,29 @@ export function AppHeader({ showAnalytics, onSettingsClick, onAnalyticsToggle }:
                 </svg>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-surface-900">Review Generator</h1>
-                <p className="text-xs text-surface-500">Scout for LoL Dev Tools</p>
+                <h1 className="text-xl font-bold text-surface-900">
+                  Review Generator
+                </h1>
+                <p className="text-xs text-surface-500">
+                  Scout for LoL Dev Tools
+                </p>
               </div>
             </div>
           </div>
 
           {/* Right actions */}
           <div className="flex items-center gap-2">
-            <Button variant={showAnalytics ? "primary" : "ghost"} size="sm" onClick={onAnalyticsToggle}>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <Button
+              variant={showAnalytics ? "primary" : "ghost"}
+              size="sm"
+              onClick={onAnalyticsToggle}
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -50,7 +72,12 @@ export function AppHeader({ showAnalytics, onSettingsClick, onAnalyticsToggle }:
             </Button>
 
             <Button variant="secondary" size="sm" onClick={onSettingsClick}>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"

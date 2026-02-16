@@ -28,14 +28,19 @@ export async function updateUsageMetrics(): Promise<void> {
     const { prisma } = await import("../database/index.js");
 
     // Get total counts
-    const [playersCount, accountsCount, activeCompetitionsCount, totalCompetitionsCount, subscriptionsCount] =
-      await Promise.all([
-        prisma.player.count(),
-        prisma.account.count(),
-        prisma.competition.count({ where: { isCancelled: false } }),
-        prisma.competition.count(),
-        prisma.subscription.count(),
-      ]);
+    const [
+      playersCount,
+      accountsCount,
+      activeCompetitionsCount,
+      totalCompetitionsCount,
+      subscriptionsCount,
+    ] = await Promise.all([
+      prisma.player.count(),
+      prisma.account.count(),
+      prisma.competition.count({ where: { isCancelled: false } }),
+      prisma.competition.count(),
+      prisma.subscription.count(),
+    ]);
 
     // Update basic counts
     playersTrackedTotal.set(playersCount);

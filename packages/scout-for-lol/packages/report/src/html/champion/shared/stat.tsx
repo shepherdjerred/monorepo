@@ -13,9 +13,17 @@ type StatProps = {
  * Generic stat component for displaying a main value and a calculated rate
  * Used by KDA, Gold, and CreepScore components
  */
-export function Stat({ mainValue, rateValue, rateLabel, highlight, ratePrecision = 2 }: StatProps) {
+export function Stat({
+  mainValue,
+  rateValue,
+  rateLabel,
+  highlight,
+  ratePrecision = 2,
+}: StatProps) {
   const formattedRate =
-    ratePrecision === 0 ? round(rateValue, 0).toLocaleString() : round(rateValue, ratePrecision).toLocaleString();
+    ratePrecision === 0
+      ? round(rateValue, 0).toLocaleString()
+      : round(rateValue, ratePrecision).toLocaleString();
 
   return (
     <div
@@ -26,7 +34,11 @@ export function Stat({ mainValue, rateValue, rateLabel, highlight, ratePrecision
         width: "30rem",
       }}
     >
-      <span style={{ fontWeight: 700, color: highlight ? palette.gold[1] : "" }}>{mainValue}</span>
+      <span
+        style={{ fontWeight: 700, color: highlight ? palette.gold[1] : "" }}
+      >
+        {mainValue}
+      </span>
       <span>
         {formattedRate} {rateLabel}
       </span>

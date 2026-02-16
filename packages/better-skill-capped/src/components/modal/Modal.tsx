@@ -2,7 +2,7 @@ import classNames from "classnames";
 import * as React from "react";
 import "./Modal.css";
 
-export interface ModalProps {
+export type ModalProps = {
   title: string;
   children: React.ReactNode;
   onClose: () => void;

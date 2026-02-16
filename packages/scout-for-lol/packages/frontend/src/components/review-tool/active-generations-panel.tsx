@@ -3,7 +3,12 @@
  */
 type ActiveGeneration = {
   id: string;
-  progress?: { step: string; message?: string; currentStage?: number; totalStages?: number };
+  progress?: {
+    step: string;
+    message?: string;
+    currentStage?: number;
+    totalStages?: number;
+  };
   startTime: number;
 };
 
@@ -17,7 +22,13 @@ type ActiveGenerationsPanelProps = {
 type StageStatus = "complete" | "active" | "pending";
 
 /** Pill-style progress bar with 5 connected segments */
-function PipelinePillProgress({ currentStage, totalStages }: { currentStage: number; totalStages: number }) {
+function PipelinePillProgress({
+  currentStage,
+  totalStages,
+}: {
+  currentStage: number;
+  totalStages: number;
+}) {
   const stages = 5;
 
   return (
@@ -63,7 +74,9 @@ export function ActiveGenerationsPanel({
 
   return (
     <div className="bg-white rounded-lg border border-surface-200 p-4">
-      <h3 className="text-lg font-bold text-surface-900 mb-3">In Progress ({activeGenerations.size})</h3>
+      <h3 className="text-lg font-bold text-surface-900 mb-3">
+        In Progress ({activeGenerations.size})
+      </h3>
       <div className="space-y-2">
         {Array.from(activeGenerations.values()).map((gen) => {
           const isSelected = gen.id === selectedHistoryId;
@@ -81,17 +94,26 @@ export function ActiveGenerationsPanel({
                 onSelectGeneration(gen.id);
               }}
               className={`w-full text-left p-3 rounded border transition-colors ${
-                isSelected ? "border-blue-500 bg-blue-50" : "border-yellow-200 bg-yellow-50 hover:bg-yellow-100"
+                isSelected
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-yellow-200 bg-yellow-50 hover:bg-yellow-100"
               }`}
             >
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-yellow-600" />
-                  <span className="text-yellow-600 text-xs font-semibold">GENERATING</span>
+                  <span className="text-yellow-600 text-xs font-semibold">
+                    GENERATING
+                  </span>
                 </div>
-                <span className="text-xs text-surface-500 tabular-nums">{elapsedSeconds}s</span>
+                <span className="text-xs text-surface-500 tabular-nums">
+                  {elapsedSeconds}s
+                </span>
               </div>
-              <PipelinePillProgress currentStage={currentStage} totalStages={totalStages} />
+              <PipelinePillProgress
+                currentStage={currentStage}
+                totalStages={totalStages}
+              />
             </button>
           );
         })}

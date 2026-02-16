@@ -45,16 +45,27 @@ export function toReadableRegion(region: Region): string {
 }
 
 export type LeagueSummonerId = z.infer<typeof LeagueSummonerIdSchema>;
-export const LeagueSummonerIdSchema = z.string().min(0).max(63).brand<"LeagueSummonerId">();
+export const LeagueSummonerIdSchema = z
+  .string()
+  .min(0)
+  .max(63)
+  .brand<"LeagueSummonerId">();
 export type LeaguePuuid = z.infer<typeof LeaguePuuidSchema>;
-export const LeaguePuuidSchema = z.string().min(78).max(78).brand<"LeaguePuuid">();
+export const LeaguePuuidSchema = z
+  .string()
+  .min(78)
+  .max(78)
+  .brand<"LeaguePuuid">();
 
 // https://developer.riotgames.com/docs/summoner-name-to-riot-id-faq
 // a riot ID looks like this: game_name#tag_line
 export type RiotId = z.infer<typeof RiotIdSchema>;
 export const RiotIdSchema = z
   .string()
-  .regex(/^[\p{L}0-9 ]{3,16}#[\p{L}0-9]{3,5}$/u, "Riot ID must be in the format <game_name>#<tag_line>")
+  .regex(
+    /^[\p{L}0-9 ]{3,16}#[\p{L}0-9]{3,5}$/u,
+    "Riot ID must be in the format <game_name>#<tag_line>",
+  )
   .transform((val) => {
     const [gameName, tagLine] = val.split("#");
     return { game_name: gameName, tag_line: tagLine };

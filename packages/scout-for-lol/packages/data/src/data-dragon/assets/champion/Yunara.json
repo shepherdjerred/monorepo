@@ -72,7 +72,11 @@
           "description": "Yunara gains Attack Speed, bonus damage On-Hit, and her Attacks spread to nearby enemies.",
           "tooltip": "<spellPassive>Passive</spellPassive>: Yunara deal <magicDamage>{{ calc_passive_damage }} magic damage</magicDamage> <OnHit>%i:OnHit% On-Hit</OnHit> and attacking grants <evolve>{{ resource_nonchampion }} Unleash</evolve> (<evolve>{{ resource_champion }} Unleash</evolve> for champions).<br /><br /><spellPassive>Active</spellPassive>: Yunara consumes <evolve>{{ resource_max }} Unleash</evolve> and for {{ buff_duration }} seconds gains <attackSpeed>{{ calc_attack_speed }} Attack Speed</attackSpeed> and deals an additional <magicDamage>{{ calc_damage }} magic damage</magicDamage> <OnHit>%i:OnHit% On-Hit</OnHit>. During this time, her Attacks spread to nearby enemies dealing them <physicalDamage>{{ calc_damage_spread }} physical damage</physicalDamage>.<br /><br /><keywordMajor>Transcendent State</keywordMajor>: This Ability is instantly activated for {{ spell.yunarar:buff_duration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Passive On-Hit Damage", "Attack Speed", "Active On-Hit Damage"],
+            "label": [
+              "Passive On-Hit Damage",
+              "Attack Speed",
+              "Active On-Hit Damage"
+            ],
             "effect": [
               "{{ damage_passive }} -> {{ damage_passiveNL }}",
               "{{ attack_speed*100.000000 }}% -> {{ attack_speednl*100.000000 }}%",
@@ -98,7 +102,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " Mana",
           "maxammo": "-1",
@@ -122,7 +138,10 @@
           "tooltip": "Yunara lets rip a prayer bead that deals <magicDamage>{{ calc_damage_initial }} magic damage</magicDamage> and <status>Slows by {{ calc_slow }} decaying over {{ slow_duration }} seconds</status>. It deals an additional <magicDamage>{{ calc_damage_per_second }} magic damage</magicDamage> per second.<br /><br /><keywordMajor>Transcendent State - Arc of Ruin</keywordMajor>: Yunara fires a laser that deals <magicDamage>{{ spell.yunarar:calc_rw_damage }} magic damage</magicDamage> and <status>Slows by {{ spell.yunarar:calc_rw_slow_amount }} decaying over {{ spell.yunarar:rw_slow_duration }} second</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Damage Per Second"],
-            "effect": ["{{ damage }} -> {{ damageNL }}", "{{ damage*0.600000 }} -> {{ damagenl*0.600000 }}"]
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ damage*0.600000 }} -> {{ damagenl*0.600000 }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [10, 10, 10, 10, 10],
@@ -143,7 +162,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " Mana",
           "maxammo": "-1",
@@ -191,7 +222,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " Mana",
           "maxammo": "-1",
@@ -214,7 +257,11 @@
           "description": "Yunara enters a Transcendent State that upgrades her basic Abilities.",
           "tooltip": "Yunara enters a <keywordMajor>Transcendent State</keywordMajor> for {{ buff_duration }} seconds upgrading her basic Abilities for the duration.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Arc of Ruin | Damage", "Untouchable Shadow | Dash Speed"],
+            "label": [
+              "Cooldown",
+              "Arc of Ruin | Damage",
+              "Untouchable Shadow | Dash Speed"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ rw_damage_base }} -> {{ rw_damage_baseNL }}",
@@ -240,7 +287,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

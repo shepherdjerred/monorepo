@@ -1,6 +1,6 @@
 import type { TServiceParams } from "@digital-alchemy/core";
 import type { ENTITY_STATE } from "@digital-alchemy/hass";
-import { shouldStartCleaning, withTimeout } from "../util.ts";
+import { shouldStartCleaning, startRoombaWithVerification, withTimeout } from "../util.ts";
 import { instrumentWorkflow } from "../metrics.ts";
 
 export function leavingHome({ hass, logger }: TServiceParams) {
@@ -50,6 +50,7 @@ export function leavingHome({ hass, logger }: TServiceParams) {
           if (shouldStartCleaning(roomba.state)) {
             logger.debug("Commanding Roomba to start cleaning");
             await roomba.start();
+            startRoombaWithVerification(hass, logger, roomba);
           }
         })(),
         { amount: 3, unit: "m" },
@@ -64,12 +65,10 @@ export function leavingHome({ hass, logger }: TServiceParams) {
       newState: ENTITY_STATE<"person.jerred"> | undefined,
       oldState: ENTITY_STATE<"person.jerred"> | undefined,
     ) => {
-      if (oldState && newState && newState.state === "not_home" && oldState.state === "home") {
-        // Only trigger if Shuxin is also not home (house is now empty)
-        if (personShuxin.state === "not_home") {
+      if (oldState && newState && newState.state === "not_home" && oldState.state === "home" && // Only trigger if Shuxin is also not home (house is now empty)
+        personShuxin.state === "not_home") {
           await runLeavingHome();
         }
-      }
     },
   );
 
@@ -78,12 +77,10 @@ export function leavingHome({ hass, logger }: TServiceParams) {
       newState: ENTITY_STATE<"person.shuxin"> | undefined,
       oldState: ENTITY_STATE<"person.shuxin"> | undefined,
     ) => {
-      if (oldState && newState && newState.state === "not_home" && oldState.state === "home") {
-        // Only trigger if Jerred is also not home (house is now empty)
-        if (personJerred.state === "not_home") {
+      if (oldState && newState && newState.state === "not_home" && oldState.state === "home" && // Only trigger if Jerred is also not home (house is now empty)
+        personJerred.state === "not_home") {
           await runLeavingHome();
         }
-      }
     },
   );
 }

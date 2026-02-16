@@ -212,19 +212,36 @@ describe("Snapshot Data Validation", () => {
   });
 
   test("should get correct schema for each criteria type", () => {
-    expect(getSnapshotSchemaForCriteria({ type: "HIGHEST_RANK", queue: "SOLO" })).toBe(RankSnapshotDataSchema);
-    expect(getSnapshotSchemaForCriteria({ type: "MOST_RANK_CLIMB", queue: "FLEX" })).toBe(RankSnapshotDataSchema);
-    expect(getSnapshotSchemaForCriteria({ type: "MOST_GAMES_PLAYED", queue: "SOLO" })).toBe(
-      GamesPlayedSnapshotDataSchema,
-    );
-    expect(getSnapshotSchemaForCriteria({ type: "MOST_WINS_PLAYER", queue: "RANKED_ANY" })).toBe(
-      WinsSnapshotDataSchema,
-    );
-    expect(getSnapshotSchemaForCriteria({ type: "MOST_WINS_CHAMPION", championId: ChampionIdSchema.parse(157) })).toBe(
-      WinsSnapshotDataSchema,
-    );
-    expect(getSnapshotSchemaForCriteria({ type: "HIGHEST_WIN_RATE", queue: "SOLO", minGames: 10 })).toBe(
-      WinsSnapshotDataSchema,
-    );
+    expect(
+      getSnapshotSchemaForCriteria({ type: "HIGHEST_RANK", queue: "SOLO" }),
+    ).toBe(RankSnapshotDataSchema);
+    expect(
+      getSnapshotSchemaForCriteria({ type: "MOST_RANK_CLIMB", queue: "FLEX" }),
+    ).toBe(RankSnapshotDataSchema);
+    expect(
+      getSnapshotSchemaForCriteria({
+        type: "MOST_GAMES_PLAYED",
+        queue: "SOLO",
+      }),
+    ).toBe(GamesPlayedSnapshotDataSchema);
+    expect(
+      getSnapshotSchemaForCriteria({
+        type: "MOST_WINS_PLAYER",
+        queue: "RANKED_ANY",
+      }),
+    ).toBe(WinsSnapshotDataSchema);
+    expect(
+      getSnapshotSchemaForCriteria({
+        type: "MOST_WINS_CHAMPION",
+        championId: ChampionIdSchema.parse(157),
+      }),
+    ).toBe(WinsSnapshotDataSchema);
+    expect(
+      getSnapshotSchemaForCriteria({
+        type: "HIGHEST_WIN_RATE",
+        queue: "SOLO",
+        minGames: 10,
+      }),
+    ).toBe(WinsSnapshotDataSchema);
   });
 });

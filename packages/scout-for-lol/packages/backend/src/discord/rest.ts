@@ -23,7 +23,9 @@ const commands = [
 
 logger.info("📋 Commands to register:");
 commands.forEach((command, index) => {
-  logger.info(`  ${(index + 1).toString()}. ${command.name}: ${command.description}`);
+  logger.info(
+    `  ${(index + 1).toString()}. ${command.name}: ${command.description}`,
+  );
 });
 
 logger.info("🔑 Initializing Discord REST client");
@@ -31,11 +33,16 @@ const rest = new REST().setToken(configuration.discordToken);
 
 void (async () => {
   try {
-    logger.info(`🚀 Starting registration of ${commands.length.toString()} application (/) commands`);
+    logger.info(
+      `🚀 Starting registration of ${commands.length.toString()} application (/) commands`,
+    );
     logger.info(`🎯 Target application ID: ${configuration.applicationId}`);
 
     const startTime = Date.now();
-    const data = await rest.put(Routes.applicationCommands(configuration.applicationId), { body: commands });
+    const data = await rest.put(
+      Routes.applicationCommands(configuration.applicationId),
+      { body: commands },
+    );
     const registrationTime = Date.now() - startTime;
 
     logger.info(
@@ -48,7 +55,9 @@ void (async () => {
     if (commandsResult.success) {
       logger.info("📝 Registered commands details:");
       commandsResult.data.forEach((command, index) => {
-        logger.info(`  ${(index + 1).toString()}. ${command.name} (ID: ${command.id})`);
+        logger.info(
+          `  ${(index + 1).toString()}. ${command.name} (ID: ${command.id})`,
+        );
       });
     }
 
@@ -60,7 +69,11 @@ void (async () => {
     });
 
     // Log additional error context
-    const ErrorDetailsSchema = z.object({ name: z.string(), message: z.string(), stack: z.string().optional() });
+    const ErrorDetailsSchema = z.object({
+      name: z.string(),
+      message: z.string(),
+      stack: z.string().optional(),
+    });
     const errorResult = ErrorDetailsSchema.safeParse(error);
     if (errorResult.success) {
       logger.error("❌ Error name:", errorResult.data.name);
@@ -71,11 +84,17 @@ void (async () => {
     }
 
     // Check for specific Discord API errors
-    const objectResult = z.object({ status: z.unknown() }).catchall(z.unknown()).safeParse(error);
+    const objectResult = z
+      .object({ status: z.unknown() })
+      .catchall(z.unknown())
+      .safeParse(error);
     if (objectResult.success) {
       const discordError = objectResult.data;
       logger.error("❌ HTTP Status:", discordError.status);
-      logger.error("❌ Response body:", discordError["rawError"] ?? discordError["body"]);
+      logger.error(
+        "❌ Response body:",
+        discordError["rawError"] ?? discordError["body"],
+      );
     }
 
     process.exit(1);

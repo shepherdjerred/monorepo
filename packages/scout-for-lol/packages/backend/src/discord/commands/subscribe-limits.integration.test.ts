@@ -1,9 +1,24 @@
 import { afterAll, describe, test, expect, beforeEach } from "bun:test";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.ts";
-import { addLimitOverride, clearLimitOverrides } from "@scout-for-lol/backend/configuration/flags.ts";
-import { type DiscordGuildId, type DiscordAccountId, type DiscordChannelId } from "@scout-for-lol/data";
-import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.ts";
+import {
+  testGuildId,
+  testAccountId,
+  testChannelId,
+  testPuuid,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  addLimitOverride,
+  clearLimitOverrides,
+} from "@scout-for-lol/backend/configuration/flags.ts";
+import {
+  type DiscordGuildId,
+  type DiscordAccountId,
+  type DiscordChannelId,
+} from "@scout-for-lol/data";
+import {
+  createTestDatabase,
+  deleteIfExists,
+} from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Constants for testing
 const DEFAULT_PLAYER_SUBSCRIPTION_LIMIT = 75;
@@ -112,7 +127,13 @@ describe("Subscribe Command - Subscription Limits", () => {
     // Create a smaller subset for faster testing
     const testLimit = Math.min(5, DEFAULT_PLAYER_SUBSCRIPTION_LIMIT);
 
-    await createSubscribedPlayers({ count: testLimit, serverId, channelId, discordUserId, now });
+    await createSubscribedPlayers({
+      count: testLimit,
+      serverId,
+      channelId,
+      discordUserId,
+      now,
+    });
 
     // Verify we created the correct number of subscribed players
     const subscribedPlayerCount = await testPrisma.player.count({
@@ -144,7 +165,14 @@ describe("Subscribe Command - Subscription Limits", () => {
     });
 
     // Create 3 players WITHOUT subscriptions
-    await createUnsubscribedPlayers({ count: 3, serverId, channelId, discordUserId, now, prefix: "Unsubscribed" });
+    await createUnsubscribedPlayers({
+      count: 3,
+      serverId,
+      channelId,
+      discordUserId,
+      now,
+      prefix: "Unsubscribed",
+    });
 
     // Verify only players with subscriptions are counted
     const subscribedPlayerCount = await testPrisma.player.count({
@@ -331,7 +359,13 @@ describe("Subscribe Command - Account Limits", () => {
     // Create a smaller subset for faster testing
     const testAccountLimit = Math.min(5, DEFAULT_ACCOUNT_LIMIT);
 
-    await createUnsubscribedPlayers({ count: testAccountLimit, serverId, channelId, discordUserId, now });
+    await createUnsubscribedPlayers({
+      count: testAccountLimit,
+      serverId,
+      channelId,
+      discordUserId,
+      now,
+    });
 
     // Verify we created the correct number of accounts
     const accountCount = await testPrisma.account.count({
@@ -360,7 +394,14 @@ describe("Subscribe Command - Account Limits", () => {
     });
 
     // Create 3 accounts WITHOUT subscriptions
-    await createUnsubscribedPlayers({ count: 3, serverId, channelId, discordUserId, now, prefix: "Unsubscribed" });
+    await createUnsubscribedPlayers({
+      count: 3,
+      serverId,
+      channelId,
+      discordUserId,
+      now,
+      prefix: "Unsubscribed",
+    });
 
     // Verify total account count is 8 (5 + 3)
     const accountCount = await testPrisma.account.count({

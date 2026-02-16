@@ -33,14 +33,18 @@ export type TimelineEnrichment = {
  * This creates a lookup table that maps participant IDs to human-readable
  * champion names and team names ("Blue"/"Red" instead of 100/200).
  */
-export function buildTimelineEnrichment(rawMatch: RawMatch): TimelineEnrichment {
-  const participants: ParticipantLookup[] = rawMatch.info.participants.map((p, index) => ({
-    participantId: index + 1,
-    championName: p.championName,
-    team: p.teamId === 100 ? "Blue" : "Red",
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- riotIdGameName is optional
-    summonerName: p.riotIdGameName ?? p.summonerName ?? "Unknown",
-  }));
+export function buildTimelineEnrichment(
+  rawMatch: RawMatch,
+): TimelineEnrichment {
+  const participants: ParticipantLookup[] = rawMatch.info.participants.map(
+    (p, index) => ({
+      participantId: index + 1,
+      championName: p.championName,
+      team: p.teamId === 100 ? "Blue" : "Red",
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- riotIdGameName is optional
+      summonerName: p.riotIdGameName ?? p.summonerName ?? "Unknown",
+    }),
+  );
 
   return {
     participants,
@@ -64,7 +68,10 @@ export type EnrichedTimelineData = {
 /**
  * Create enriched timeline data for AI consumption
  */
-export function enrichTimelineData(rawTimeline: RawTimeline, rawMatch: RawMatch): EnrichedTimelineData {
+export function enrichTimelineData(
+  rawTimeline: RawTimeline,
+  rawMatch: RawMatch,
+): EnrichedTimelineData {
   return {
     timeline: rawTimeline,
     context: buildTimelineEnrichment(rawMatch),

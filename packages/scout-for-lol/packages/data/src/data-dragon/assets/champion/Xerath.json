@@ -148,7 +148,19 @@
             [1.5, 1.5, 1.5, 1.5, 1.5],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "75/115/155/195/235", "4", "0.5", "145", "0.5", "-0.2", "0.1", "0.5", "1.5", "0"],
+          "effectBurn": [
+            null,
+            "75/115/155/195/235",
+            "4",
+            "0.5",
+            "145",
+            "0.5",
+            "-0.2",
+            "0.1",
+            "0.5",
+            "1.5",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
@@ -171,7 +183,12 @@
           "description": "Calls down a barrage of arcane energy, slowing and dealing magic damage to all enemies in an area. Targets in the middle receive additional damage and a stronger slow.",
           "tooltip": "Xerath calls down a blast of arcane energy, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slowing</status> them by {{ slowamount*100 }}% for {{ slowduration }} seconds. Enemies in the center take <magicDamage>{{ sweetspottotaldamage }} magic damage</magicDamage> instead and are <status>Slowed</status> by {{ sweetspotslowamount*100 }}%, decaying over {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Max Slow", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Max Slow",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ sweetspotslowamount*100.000000 }}% -> {{ sweetspotslowamountnl*100.000000 }}%",
@@ -198,7 +215,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
@@ -222,7 +251,11 @@
           "tooltip": "Xerath fires an orb of raw magic, <status>Stunning</status> the first enemy hit for up to {{ maxstunduration }} seconds based on distance travelled, and dealing <magicDamage>{{ tooltiptotaldamage }} magic damage</magicDamage>. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}", "{{ cost }} -> {{ costNL }}"]
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [13, 12.5, 12, 11.5, 11],
@@ -243,7 +276,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "70/100/130/160/190", "2.25", "0.17", "1125", "0.75", "0", "0", "0.5", "0", "0"],
+          "effectBurn": [
+            null,
+            "70/100/130/160/190",
+            "2.25",
+            "0.17",
+            "1125",
+            "0.75",
+            "0",
+            "0",
+            "0.5",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
@@ -266,7 +311,12 @@
           "description": "Xerath immobilizes himself and gains numerous long-range barrages.",
           "tooltip": "Xerath ascends to his true form and channels for {{ e1 }} seconds. During this time he may <recast>Recast</recast> up to {{ e2 }} times.<br /><br /><recast>Recast:</recast> Xerath launches a magical artillery, dealing <magicDamage>{{ tooltiptotaldamage }} magic damage</magicDamage>. For each champion hit, the artillery deals an additional <magicDamage>{{ rampdamagecalc }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Number of Shots", "Consecutive Bonus Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Number of Shots",
+              "Consecutive Bonus Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e3 }} -> {{ e3NL }}",
               "{{ e2 }} -> {{ e2NL }}",
@@ -293,7 +343,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "10", "4/5/6", "170/220/270", "200", "5000", "0.6", "0.5", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "10",
+            "4/5/6",
+            "170/220/270",
+            "200",
+            "5000",
+            "0.6",
+            "0.5",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

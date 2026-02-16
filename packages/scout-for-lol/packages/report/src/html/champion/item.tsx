@@ -34,7 +34,9 @@ function renderItem(item: number) {
           alt=""
           style={{
             backgroundColor: palette.blue[5],
-            border: isPrismatic ? `.15rem solid transparent` : `.01rem solid ${palette.gold.bright}`,
+            border: isPrismatic
+              ? `.15rem solid transparent`
+              : `.01rem solid ${palette.gold.bright}`,
             width: "100%",
             height: "100%",
             position: "absolute",
@@ -77,11 +79,18 @@ function renderItem(item: number) {
   }
 }
 
-export function renderItems(items: number[], visionScore: number, isArena = false) {
+export function renderItems(
+  items: number[],
+  visionScore: number,
+  isArena = false,
+) {
   if (isArena) {
     // Arena: render up to 6 items, padding with empty slots
     const itemsToRender = items.slice(0, 6);
-    const paddedItems: number[] = [...itemsToRender, ...Array<number>(6 - itemsToRender.length).fill(0)];
+    const paddedItems: number[] = [
+      ...itemsToRender,
+      ...Array<number>(6 - itemsToRender.length).fill(0),
+    ];
     const renderedItems = map(paddedItems, renderItem);
 
     return <div style={{ display: "flex", gap: "1rem" }}>{renderedItems}</div>;
@@ -91,7 +100,10 @@ export function renderItems(items: number[], visionScore: number, isArena = fals
     const visionItem = items[6]; // 7th item (index 6) is always the vision ward slot
 
     // Pad regular items to always show 6 slots
-    const paddedRegularItems: number[] = [...regularItems, ...Array<number>(6 - regularItems.length).fill(0)];
+    const paddedRegularItems: number[] = [
+      ...regularItems,
+      ...Array<number>(6 - regularItems.length).fill(0),
+    ];
     const renderedRegularItems = map(paddedRegularItems, renderItem);
 
     // Vision item slot

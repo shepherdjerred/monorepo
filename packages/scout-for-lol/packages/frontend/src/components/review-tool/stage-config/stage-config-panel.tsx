@@ -1,7 +1,15 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@scout-for-lol/frontend/components/review-tool/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@scout-for-lol/frontend/components/review-tool/ui/card";
 import { Label } from "@scout-for-lol/frontend/components/review-tool/ui/label";
 import { Switch } from "@scout-for-lol/frontend/components/review-tool/ui/switch";
-import type { ReviewTextStageConfig, StageConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import type {
+  ReviewTextStageConfig,
+  StageConfig,
+} from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import {
   TIMELINE_SUMMARY_SYSTEM_PROMPT,
   MATCH_SUMMARY_SYSTEM_PROMPT,
@@ -43,16 +51,31 @@ type StageConfigPanelProps =
  * This function is exhaustive - TypeScript will error if a new stage is added
  * to PromptStageName without updating this switch statement.
  */
-function getDefaultPrompts(stageName: PromptStageName): { system?: string; user?: string } {
+function getDefaultPrompts(stageName: PromptStageName): {
+  system?: string;
+  user?: string;
+} {
   switch (stageName) {
     case "timelineSummary":
-      return { system: TIMELINE_SUMMARY_SYSTEM_PROMPT, user: TIMELINE_SUMMARY_USER_PROMPT };
+      return {
+        system: TIMELINE_SUMMARY_SYSTEM_PROMPT,
+        user: TIMELINE_SUMMARY_USER_PROMPT,
+      };
     case "matchSummary":
-      return { system: MATCH_SUMMARY_SYSTEM_PROMPT, user: MATCH_SUMMARY_USER_PROMPT };
+      return {
+        system: MATCH_SUMMARY_SYSTEM_PROMPT,
+        user: MATCH_SUMMARY_USER_PROMPT,
+      };
     case "reviewText":
-      return { system: REVIEW_TEXT_SYSTEM_PROMPT, user: REVIEW_TEXT_USER_PROMPT };
+      return {
+        system: REVIEW_TEXT_SYSTEM_PROMPT,
+        user: REVIEW_TEXT_USER_PROMPT,
+      };
     case "imageDescription":
-      return { system: IMAGE_DESCRIPTION_SYSTEM_PROMPT, user: IMAGE_DESCRIPTION_USER_PROMPT };
+      return {
+        system: IMAGE_DESCRIPTION_SYSTEM_PROMPT,
+        user: IMAGE_DESCRIPTION_USER_PROMPT,
+      };
     case "imageGeneration":
       // Image generation only has a user prompt (Gemini doesn't use system prompts)
       return { user: IMAGE_GENERATION_USER_PROMPT };
@@ -70,7 +93,9 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
         <CardHeader className="flex items-start justify-between">
           <div>
             <CardTitle>{title}</CardTitle>
-            {description && <p className="mt-1 text-xs text-surface-600">{description}</p>}
+            {description && (
+              <p className="mt-1 text-xs text-surface-600">{description}</p>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Label className="text-xs text-surface-600">Enabled</Label>
@@ -95,8 +120,12 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
           {defaults.system && (
             <div className="flex items-center justify-between rounded-md border border-surface-200 px-3 py-2">
               <div>
-                <Label className="text-xs text-surface-600">System prompt</Label>
-                <p className="text-xs text-surface-500">Instructions for the AI model (context, formatting rules).</p>
+                <Label className="text-xs text-surface-600">
+                  System prompt
+                </Label>
+                <p className="text-xs text-surface-500">
+                  Instructions for the AI model (context, formatting rules).
+                </p>
               </div>
               <PromptEditor
                 label={`${title} - System Prompt`}
@@ -115,8 +144,12 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
           {defaults.user && (
             <div className="flex items-center justify-between rounded-md border border-surface-200 px-3 py-2">
               <div>
-                <Label className="text-xs text-surface-600">User prompt template</Label>
-                <p className="text-xs text-surface-500">Template with variables that get replaced with match data.</p>
+                <Label className="text-xs text-surface-600">
+                  User prompt template
+                </Label>
+                <p className="text-xs text-surface-500">
+                  Template with variables that get replaced with match data.
+                </p>
               </div>
               <PromptEditor
                 label={`${title} - User Prompt Template`}
@@ -142,7 +175,9 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
       <CardHeader className="flex items-start justify-between">
         <div>
           <CardTitle>{title}</CardTitle>
-          {description && <p className="mt-1 text-xs text-surface-600">{description}</p>}
+          {description && (
+            <p className="mt-1 text-xs text-surface-600">{description}</p>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -158,7 +193,9 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
           <div className="flex items-center justify-between rounded-md border border-surface-200 px-3 py-2">
             <div>
               <Label className="text-xs text-surface-600">System prompt</Label>
-              <p className="text-xs text-surface-500">Instructions for the AI model (context, formatting rules).</p>
+              <p className="text-xs text-surface-500">
+                Instructions for the AI model (context, formatting rules).
+              </p>
             </div>
             <PromptEditor
               label={`${title} - System Prompt`}
@@ -177,8 +214,12 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
         {defaults.user && (
           <div className="flex items-center justify-between rounded-md border border-surface-200 px-3 py-2">
             <div>
-              <Label className="text-xs text-surface-600">User prompt template</Label>
-              <p className="text-xs text-surface-500">Template with variables that get replaced with match data.</p>
+              <Label className="text-xs text-surface-600">
+                User prompt template
+              </Label>
+              <p className="text-xs text-surface-500">
+                Template with variables that get replaced with match data.
+              </p>
             </div>
             <PromptEditor
               label={`${title} - User Prompt Template`}

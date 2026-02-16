@@ -29,10 +29,19 @@ export async function executeCommand<T>(options: {
   schema: z.ZodType<T>;
   argsBuilder: (interaction: ChatInputCommandInteraction) => unknown;
   commandName: string;
-  handler: (context: { data: T; userId: string; username: string }) => Promise<void>;
+  handler: (context: {
+    data: T;
+    userId: string;
+    username: string;
+  }) => Promise<void>;
 }): Promise<void> {
   const { interaction, schema, argsBuilder, commandName, handler } = options;
-  const validation = await validateCommandArgs(interaction, schema, argsBuilder, commandName);
+  const validation = await validateCommandArgs(
+    interaction,
+    schema,
+    argsBuilder,
+    commandName,
+  );
 
   if (!validation.success) {
     return;

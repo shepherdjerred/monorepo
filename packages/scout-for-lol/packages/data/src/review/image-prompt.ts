@@ -15,9 +15,12 @@ import IMAGE_GENERATION_PROMPT_TEMPLATE from "./prompts/user/4-image-generation.
  * @param artStyle - The art style to apply to the generated image
  * @returns The prompt to send to Gemini for image generation
  */
-export function generateImagePrompt(imageDescription: string, artStyle: ArtStyle): string {
-  return IMAGE_GENERATION_PROMPT_TEMPLATE.replaceAll("<IMAGE_DESCRIPTION>", imageDescription).replaceAll(
-    "<ART_STYLE>",
-    artStyle.description,
-  );
+export function generateImagePrompt(
+  imageDescription: string,
+  artStyle: ArtStyle,
+): string {
+  return IMAGE_GENERATION_PROMPT_TEMPLATE.replaceAll(
+    "<IMAGE_DESCRIPTION>",
+    imageDescription,
+  ).replaceAll("<ART_STYLE>", artStyle.description);
 }

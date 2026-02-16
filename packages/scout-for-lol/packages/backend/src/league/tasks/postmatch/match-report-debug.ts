@@ -1,5 +1,9 @@
 import { z } from "zod";
-import type { PlayerConfigEntry, MatchId, RawMatch } from "@scout-for-lol/data/index";
+import type {
+  PlayerConfigEntry,
+  MatchId,
+  RawMatch,
+} from "@scout-for-lol/data/index";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("postmatch-match-report-debug");
@@ -36,15 +40,27 @@ export function logErrorDetails(
   }
 
   // Log basic error info
-  logger.error(`[generateMatchReport] ❌ Error generating match report for ${matchId}`);
+  logger.error(
+    `[generateMatchReport] ❌ Error generating match report for ${matchId}`,
+  );
   if (errorResult.success) {
-    logger.error(`[generateMatchReport] ❌ Error name: ${errorResult.data.name ?? "Unknown"}`);
-    logger.error(`[generateMatchReport] ❌ Error message: ${errorResult.data.message}`);
+    logger.error(
+      `[generateMatchReport] ❌ Error name: ${errorResult.data.name ?? "Unknown"}`,
+    );
+    logger.error(
+      `[generateMatchReport] ❌ Error message: ${errorResult.data.message}`,
+    );
     if (errorResult.data.cause) {
-      logger.error(`[generateMatchReport] ❌ Error cause:`, errorResult.data.cause);
+      logger.error(
+        `[generateMatchReport] ❌ Error cause:`,
+        errorResult.data.cause,
+      );
     }
   } else {
-    logger.error(`[generateMatchReport] ❌ Error (non-standard format):`, error);
+    logger.error(
+      `[generateMatchReport] ❌ Error (non-standard format):`,
+      error,
+    );
   }
 
   // Always log stack trace if available
@@ -61,32 +77,53 @@ export function logErrorDetails(
   logger.error(`  - Game Mode: ${matchData.info.gameMode}`);
   logger.error(`  - Game Type: ${matchData.info.gameType}`);
   logger.error(`  - Map ID: ${matchData.info.mapId.toString()}`);
-  logger.error(`  - Participants: ${matchData.info.participants.length.toString()}`);
+  logger.error(
+    `  - Participants: ${matchData.info.participants.length.toString()}`,
+  );
   logger.error(`  - Game Duration: ${matchData.info.gameDuration.toString()}s`);
-  logger.error(`  - Game Start: ${new Date(matchData.info.gameStartTimestamp).toISOString()}`);
+  logger.error(
+    `  - Game Start: ${new Date(matchData.info.gameStartTimestamp).toISOString()}`,
+  );
 
   // Log tracked players context
   logger.error(`[generateMatchReport] 👥 Tracked players context:`);
-  logger.error(`  - Total tracked players: ${trackedPlayers.length.toString()}`);
-  logger.error(`  - Tracked player aliases: ${trackedPlayers.map((p) => p.alias).join(", ")}`);
-  logger.error(`  - Tracked player PUUIDs: ${trackedPlayers.map((p) => p.league.leagueAccount.puuid).join(", ")}`);
+  logger.error(
+    `  - Total tracked players: ${trackedPlayers.length.toString()}`,
+  );
+  logger.error(
+    `  - Tracked player aliases: ${trackedPlayers.map((p) => p.alias).join(", ")}`,
+  );
+  logger.error(
+    `  - Tracked player PUUIDs: ${trackedPlayers.map((p) => p.league.leagueAccount.puuid).join(", ")}`,
+  );
 
   // Try to determine which step failed by checking if playersInMatch was computed
   try {
     const playersInMatch = trackedPlayers.filter((player) =>
-      matchData.metadata.participants.includes(player.league.leagueAccount.puuid),
+      matchData.metadata.participants.includes(
+        player.league.leagueAccount.puuid,
+      ),
     );
     logger.error(`  - Players in match: ${playersInMatch.length.toString()}`);
-    logger.error(`  - Players in match aliases: ${playersInMatch.map((p) => p.alias).join(", ")}`);
+    logger.error(
+      `  - Players in match aliases: ${playersInMatch.map((p) => p.alias).join(", ")}`,
+    );
   } catch (contextError) {
     logger.error(`  - Could not determine players in match:`, contextError);
   }
 
   // Log full error object as JSON for complex errors
   try {
-    const errorJson = JSON.stringify(error, Object.getOwnPropertyNames(error), 2);
+    const errorJson = JSON.stringify(
+      error,
+      Object.getOwnPropertyNames(error),
+      2,
+    );
     logger.error(`[generateMatchReport] ❌ Full error JSON:\n${errorJson}`);
   } catch (jsonError) {
-    logger.error(`[generateMatchReport] ❌ Could not serialize error to JSON:`, jsonError);
+    logger.error(
+      `[generateMatchReport] ❌ Could not serialize error to JSON:`,
+      jsonError,
+    );
   }
 }

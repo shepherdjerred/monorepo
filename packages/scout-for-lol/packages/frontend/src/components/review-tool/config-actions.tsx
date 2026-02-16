@@ -7,7 +7,11 @@ type ConfigActionsProps = {
   onReset: () => void;
 };
 
-export function ConfigActions({ onExport, onImport, onReset }: ConfigActionsProps) {
+export function ConfigActions({
+  onExport,
+  onImport,
+  onReset,
+}: ConfigActionsProps) {
   return (
     <div className="p-6 mt-8 border-t border-surface-200">
       <div className="flex gap-3 flex-wrap">
@@ -16,7 +20,12 @@ export function ConfigActions({ onExport, onImport, onReset }: ConfigActionsProp
           className="px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
           title="Export settings, custom personalities, and art styles"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -31,7 +40,12 @@ export function ConfigActions({ onExport, onImport, onReset }: ConfigActionsProp
           className="px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
           title="Import config from JSON"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -46,7 +60,12 @@ export function ConfigActions({ onExport, onImport, onReset }: ConfigActionsProp
           className="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
           title="Reset settings to defaults"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"

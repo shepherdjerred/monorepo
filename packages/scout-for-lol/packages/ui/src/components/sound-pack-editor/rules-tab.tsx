@@ -12,7 +12,9 @@ export function RulesTab() {
   const editor = useSoundPackEditor();
   const [showTemplates, setShowTemplates] = useState(false);
 
-  const templatesByCategory = (["multikill", "objective", "player", "game"] as const).map((category) => ({
+  const templatesByCategory = (
+    ["multikill", "objective", "player", "game"] as const
+  ).map((category) => ({
     category,
     label: TEMPLATE_CATEGORY_LABELS[category],
     templates: RULE_TEMPLATES.filter((t) => t.category === category),
@@ -28,7 +30,8 @@ export function RulesTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-600">
-          Rules are evaluated in priority order. The first matching rule&apos;s sounds will play.
+          Rules are evaluated in priority order. The first matching rule&apos;s
+          sounds will play.
         </p>
         <div className="flex gap-2">
           <button
@@ -58,7 +61,9 @@ export function RulesTab() {
           <h3 className="font-medium">Choose a template</h3>
           {templatesByCategory.map(({ category, label, templates }) => (
             <div key={category}>
-              <h4 className="text-sm font-medium text-gray-700 mb-2">{label}</h4>
+              <h4 className="text-sm font-medium text-gray-700 mb-2">
+                {label}
+              </h4>
               <div className="flex flex-wrap gap-2">
                 {templates.map((template) => (
                   <button
@@ -82,7 +87,9 @@ export function RulesTab() {
       {editor.soundPack.rules.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <p>No rules configured.</p>
-          <p className="text-sm mt-1">Add a rule to customize sounds based on game events.</p>
+          <p className="text-sm mt-1">
+            Add a rule to customize sounds based on game events.
+          </p>
         </div>
       ) : (
         <div className="space-y-3">

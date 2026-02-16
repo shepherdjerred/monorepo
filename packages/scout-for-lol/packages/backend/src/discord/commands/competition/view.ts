@@ -5,7 +5,7 @@ import { z } from "zod";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.ts";
 import type { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.ts";
-import { formatScore } from "@scout-for-lol/backend/discord/embeds/competition.ts";
+import { formatScore } from "@scout-for-lol/backend/discord/embeds/competition-format-helpers.ts";
 import { loadCachedLeaderboard } from "@scout-for-lol/backend/storage/s3-leaderboard.ts";
 import { replyWithErrorFromException } from "@scout-for-lol/backend/discord/commands/competition/utils/replies.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
@@ -60,7 +60,9 @@ const ParticipantWithPlayerSchema = z.object({
  * Execute /competition view command
  * Shows detailed competition information and leaderboard
  */
-export async function executeCompetitionView(interaction: ChatInputCommandInteraction): Promise<void> {
+export async function executeCompetitionView(
+  interaction: ChatInputCommandInteraction,
+): Promise<void> {
   // ============================================================================
   // Step 1: Extract and validate input
   // ============================================================================
@@ -71,7 +73,11 @@ export async function executeCompetitionView(interaction: ChatInputCommandIntera
   // Step 2: Fetch competition
   // ============================================================================
 
-  const competition = await fetchCompetitionWithErrorHandling(interaction, competitionId, "Competition View");
+  const competition = await fetchCompetitionWithErrorHandling(
+    interaction,
+    competitionId,
+    "Competition View",
+  );
   if (!competition) {
     return;
   }
@@ -87,7 +93,11 @@ export async function executeCompetitionView(interaction: ChatInputCommandIntera
     participants = await getParticipants(prisma, competitionId, "JOINED", true);
   } catch (error) {
     logger.error(`[Competition View] Error fetching participants:`, error);
-    await replyWithErrorFromException(interaction, error, "fetching participants");
+    await replyWithErrorFromException(
+      interaction,
+      error,
+      "fetching participants",
+    );
     return;
   }
 
@@ -115,7 +125,9 @@ async function buildCompetitionEmbed(
     throw new Error("Competition cannot be null");
   }
 
-  const embed = new EmbedBuilder().setTitle(`🏆 ${competition.title}`).setDescription(competition.description);
+  const embed = new EmbedBuilder()
+    .setTitle(`🏆 ${competition.title}`)
+    .setDescription(competition.description);
 
   // Set color based on status
   const color = match(status)
@@ -140,10 +152,18 @@ async function buildCompetitionEmbed(
   });
 
   // Add owner
-  embed.addFields({ name: "Owner", value: `<@${competition.ownerId}>`, inline: true });
+  embed.addFields({
+    name: "Owner",
+    value: `<@${competition.ownerId}>`,
+    inline: true,
+  });
 
   // Add channel
-  embed.addFields({ name: "Channel", value: `<#${competition.channelId}>`, inline: true });
+  embed.addFields({
+    name: "Channel",
+    value: `<#${competition.channelId}>`,
+    inline: true,
+  });
 
   // Add visibility
   const visibilityText = match(competition.visibility)
@@ -170,7 +190,9 @@ async function buildCompetitionEmbed(
 
   // Add footer with criteria description
   const criteriaDescription = getCriteriaDescription(competition.criteria);
-  embed.setFooter({ text: `${criteriaDescription} • Competition ID: ${competition.id.toString()}` });
+  embed.setFooter({
+    text: `${criteriaDescription} • Competition ID: ${competition.id.toString()}`,
+  });
   embed.setTimestamp(new Date());
 
   return embed;
@@ -202,7 +224,8 @@ function getStatusText(
     })
     .with("ENDED", () => {
       if (competition.endDate) {
-        const dateStr = formatHumanDateTime(competition.endDate).split(" ")[0] ?? "";
+        const dateStr =
+          formatHumanDateTime(competition.endDate).split(" ")[0] ?? "";
         return `🔴 Ended (Completed ${dateStr})`;
       }
       return "🔴 Ended";
@@ -214,11 +237,22 @@ function getStatusText(
 /**
  * Add participant list to embed (for DRAFT status)
  */
-function addParticipantList(embed: EmbedBuilder, participants: Awaited<ReturnType<typeof getParticipants>>): void {
-  embed.addFields({ name: "👥 Participants", value: "━━━━━━━━━━━━━━━━━━━━━", inline: false });
+function addParticipantList(
+  embed: EmbedBuilder,
+  participants: Awaited<ReturnType<typeof getParticipants>>,
+): void {
+  embed.addFields({
+    name: "👥 Participants",
+    value: "━━━━━━━━━━━━━━━━━━━━━",
+    inline: false,
+  });
 
   if (participants.length === 0) {
-    embed.addFields({ name: "\u200B", value: "No participants yet.", inline: false });
+    embed.addFields({
+      name: "\u200B",
+      value: "No participants yet.",
+      inline: false,
+    });
     return;
   }
 
@@ -238,7 +272,11 @@ function addParticipantList(embed: EmbedBuilder, participants: Awaited<ReturnTyp
   embed.addFields({ name: "\u200B", value: participantList, inline: false });
 
   // Add note about leaderboard availability
-  embed.addFields({ name: "📊 Leaderboard", value: "━━━━━━━━━━━━━━━━━━━━━", inline: false });
+  embed.addFields({
+    name: "📊 Leaderboard",
+    value: "━━━━━━━━━━━━━━━━━━━━━",
+    inline: false,
+  });
   embed.addFields({
     name: "\u200B",
     value: "Leaderboard will be available when the competition starts.",
@@ -261,14 +299,22 @@ async function addLeaderboard(
     .with("CANCELLED", () => "📊 Standings (at cancellation)")
     .otherwise(() => "📊 Leaderboard");
 
-  embed.addFields({ name: title, value: "━━━━━━━━━━━━━━━━━━━━━", inline: false });
+  embed.addFields({
+    name: title,
+    value: "━━━━━━━━━━━━━━━━━━━━━",
+    inline: false,
+  });
 
   // Try to load from cache
-  logger.info(`[Competition View] Attempting to load cached leaderboard for competition ${competition.id.toString()}`);
+  logger.info(
+    `[Competition View] Attempting to load cached leaderboard for competition ${competition.id.toString()}`,
+  );
   const cached = await loadCachedLeaderboard(competition.id);
 
   if (!cached) {
-    logger.info(`[Competition View] No cached leaderboard found for competition ${competition.id.toString()}`);
+    logger.info(
+      `[Competition View] No cached leaderboard found for competition ${competition.id.toString()}`,
+    );
     embed.addFields({
       name: "\u200B",
       value:
@@ -278,7 +324,9 @@ async function addLeaderboard(
     return;
   }
 
-  logger.info(`[Competition View] Using cached leaderboard from ${cached.calculatedAt}`);
+  logger.info(
+    `[Competition View] Using cached leaderboard from ${cached.calculatedAt}`,
+  );
 
   // Map cached entries to RankedLeaderboardEntry type to ensure type compatibility
   const leaderboard = cached.entries.map((entry) => ({
@@ -294,7 +342,8 @@ async function addLeaderboard(
   if (leaderboard.length === 0) {
     embed.addFields({
       name: "\u200B",
-      value: "No participants have scores yet. Play some games to appear on the leaderboard!",
+      value:
+        "No participants have scores yet. Play some games to appear on the leaderboard!",
       inline: false,
     });
     return;
@@ -305,7 +354,11 @@ async function addLeaderboard(
   const leaderboardText = top10
     .map((entry) => {
       const medal = getMedalEmoji(entry.rank);
-      const score = formatScore(entry.score, competition.criteria, entry.metadata);
+      const score = formatScore(
+        entry.score,
+        competition.criteria,
+        entry.metadata,
+      );
       return `${medal} **${entry.rank.toString()}.** ${entry.playerName} - ${score}`;
     })
     .join("\n");
@@ -357,7 +410,9 @@ function getMedalEmoji(rank: number): string {
  * Get human-readable description of criteria
  */
 function getCriteriaDescription(
-  criteria: NonNullable<Awaited<ReturnType<typeof getCompetitionById>>>["criteria"],
+  criteria: NonNullable<
+    Awaited<ReturnType<typeof getCompetitionById>>
+  >["criteria"],
 ): string {
   return match(criteria)
     .with({ type: "MOST_GAMES_PLAYED" }, (c) => {
