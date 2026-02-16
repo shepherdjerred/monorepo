@@ -1,0 +1,24 @@
+# {Tag} : A predefined placeholder. Available for each item only.
+# {\nTag} : Line breaks when this item is displayed.
+# SHOP.INFO: §f{ShopLore}{\nPermission}{\nTax}{\nShopBalance}{\nShopHour}{\nShopPosition}
+# SHOP.ITEM_INFO: §f{\nItemMetaLore}{\nSell}{\nBuy}{\nStock}{\nPricingType}
+# {\nTradeLore}
+# TRADE_VIEW.BUY: §f{Price}{\nStock}{\nDeliveryCharge}
+# {\nTradeLore}
+# TRADE_VIEW.SELL: §f{Price}{\nStock}{\nDeliveryCharge}
+# {\nTradeLore}
+# TRADE_VIEW.BALANCE: §f{PlayerBalance}{\nShopBalance}
+
+SHOP:
+  INFO: §f{ShopLore}{\nPermission}{\nTax}{\nShopBalance}{\nShopHour}{\nShopPosition}
+  ITEM_INFO: |-
+    §f{\nItemMetaLore}{\nSell}{\nBuy}{\nStock}{\nPricingType}
+    {\nTradeLore}
+TRADE_VIEW:
+  BUY: |-
+    §f{Price}{\nStock}{\nDeliveryCharge}
+    {\nTradeLore}
+  SELL: |-
+    §f{Price}{\nStock}{\nDeliveryCharge}
+    {\nTradeLore}
+  BALANCE: §f{PlayerBalance}{\nShopBalance}

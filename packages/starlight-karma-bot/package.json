@@ -4,7 +4,6 @@
   "type": "module",
   "private": true,
   "trustedDependencies": [
-    "husky",
     "sqlite3"
   ],
   "scripts": {
@@ -14,8 +13,7 @@
     "typecheck": "bunx tsc --noEmit",
     "lint": "bunx eslint --cache .",
     "format": "bunx prettier --check .",
-    "prettier": "bunx prettier --write .",
-    "prepare": "husky"
+    "prettier": "bunx prettier --write ."
   },
   "dependencies": {
     "@sentry/bun": "^8.0.0",
@@ -27,9 +25,17 @@
     "sqlite3": "^5.1.7",
     "typeorm": "^0.3.20"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shepherdjerred/monorepo.git",
+    "directory": "packages/starlight-karma-bot"
+  },
+  "homepage": "https://github.com/shepherdjerred/monorepo/tree/main/packages/starlight-karma-bot",
+  "bugs": {
+    "url": "https://github.com/shepherdjerred/monorepo/issues"
+  },
   "devDependencies": {
-    "@commitlint/cli": "^20.0.0",
-    "@commitlint/config-conventional": "^20.0.0",
+    "@shepherdjerred/eslint-config": "workspace:*",
     "@eslint/js": "^9.30.1",
     "@total-typescript/ts-reset": "^0.6.1",
     "@types/bun": "^1.2.18",
@@ -38,21 +44,8 @@
     "bun-types": "latest",
     "eslint": "^9.30.1",
     "eslint-plugin-unicorn": "^61.0.2",
-    "husky": "^9.1.7",
     "jiti": "^2.6.0",
-    "lint-staged": "^16.2.3",
-    "markdownlint-cli2": "^0.18.0",
-    "prettier": "3.6.2",
     "typescript": "^5",
     "typescript-eslint": "^8.35.1"
   },
-  "lint-staged": {
-    "*": "bunx prettier --ignore-unknown --write",
-    "*.md": "bunx markdownlint-cli2 --fix",
-    ".github/workflows/*.{yml,yaml}": "actionlint",
-    "src/**/*.{ts,tsx}": [
-      "bunx eslint --cache --fix",
-      "bash -c 'bunx tsc --noEmit'"
-    ]
-  }
 }

@@ -1,3 +1,0 @@
-self-hosted-runner:
-  labels:
-    - better-skill-capped-runner-set

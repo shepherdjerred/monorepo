@@ -1,0 +1,6 @@
+apiVersion: v2
+name: freshrss
+description: FreshRSS feed reader
+type: application
+version: "$version"
+appVersion: "$appVersion"

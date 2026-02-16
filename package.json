@@ -2,7 +2,19 @@
   "name": "@shepherdjerred/share",
   "type": "module",
   "private": true,
-  "workspaces": ["packages/*", "!packages/clauderon", "packages/clauderon/web/*", "packages/clauderon/docs"],
+  "workspaces": [
+    "packages/*",
+    "!packages/clauderon",
+    "packages/clauderon/web/*",
+    "packages/clauderon/docs",
+    "!packages/anki",
+    "!packages/castle-casters",
+    "!packages/dotfiles",
+    "!packages/macos-cross-compiler",
+    "!packages/discord-plays-pokemon",
+    "!packages/scout-for-lol",
+    "!packages/homelab"
+  ],
   "scripts": {
     "build": "bun run --filter='./packages/**' build",
     "test": "bun run --filter='./packages/**' test",

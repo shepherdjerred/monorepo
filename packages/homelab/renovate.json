@@ -1,0 +1,68 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update versions.ts",
+      "managerFilePatterns": ["**/versions.ts"],
+      "matchStrings": [
+        "\\/\\/ renovate: datasource=(?<datasource>[0-9a-z-\\.]+?)?(?: registryUrl=(?<registryUrl>.*?)?)?(?: versioning=(?<versioning>[a-z-]+?)?)?(?: packageName=(?<packageName>[^\\s]+?))?\\s*\"(?<depName>.+?)\":\\s*\"(?<currentValue>.+?)?(?:@(?<currentDigest>.+?))?\"",
+        "\\/\\/ renovate: datasource=(?<datasource>[0-9a-z-\\.]+?)?(?: registryUrl=(?<registryUrl>.*?)?)?(?: versioning=(?<versioning>[a-z-]+?)?)?(?: packageName=(?<packageName>[^\\s]+?))?\\s*(?<depName>[a-zA-Z0-9_-]+):\\s*\"(?<currentValue>.+?)?(?:@(?<currentDigest>.+?))?\""
+      ]
+    }
+  ],
+  "customDatasources": {
+    "papermc": {
+      "defaultRegistryUrlTemplate": "https://fill.papermc.io/v3/projects/paper",
+      "format": "json",
+      "transformTemplates": [
+        "{\"releases\": $map($reduce($each(versions, function($v) { $v }), $append, []), function($v) { {\"version\": $v} }), \"sourceUrl\": \"https://github.com/PaperMC/Paper\", \"homepage\": \"https://papermc.io\"}"
+      ]
+    }
+  },
+  "automerge": true,
+  "packageRules": [
+    {
+      "matchDatasources": ["docker"],
+      "pinDigests": true
+    },
+    {
+      "matchPackageNames": ["dagger-helm", "gha-runner-scale-set-controller", "gha-runner-scale-set"],
+      "pinDigests": false
+    },
+    {
+      "groupName": "cdk8s",
+      "matchPackageNames": ["/^cdk8s/"]
+    },
+    {
+      "description": "Critical infrastructure - no delay, no automerge",
+      "matchPackageNames": ["paper", "siderolabs/talos", "kubernetes/kubernetes"],
+      "automerge": false,
+      "minimumReleaseAge": "0 days",
+      "schedule": ["at any time"]
+    },
+    {
+      "description": "Prod images - no delay, no automerge",
+      "matchPackageNames": ["shepherdjerred/scout-for-lol/prod", "shepherdjerred/starlight-karma-bot/prod"],
+      "automerge": false,
+      "minimumReleaseAge": "0 days",
+      "schedule": ["at any time"]
+    },
+    {
+      "description": "Minecraft - no delay, no automerge",
+      "matchPackageNames": ["itzg/minecraft-server", "minecraft", "mc-router"],
+      "automerge": false,
+      "minimumReleaseAge": "0 days",
+      "schedule": ["at any time"]
+    },
+    {
+      "matchPackageNames": ["ghcr.io/shepherdjerred/dotfiles"],
+      "minimumReleaseAge": "0 days"
+    }
+  ],
+  "schedule": ["after 3am on Sunday"],
+  "minimumReleaseAge": "30 days",
+  "prHourlyLimit": 5,
+  "reviewers": ["shepherdjerred"]
+}

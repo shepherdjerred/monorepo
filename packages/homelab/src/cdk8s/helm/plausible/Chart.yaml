@@ -1,0 +1,6 @@
+apiVersion: v2
+name: plausible
+description: Plausible Analytics - Privacy-friendly analytics
+type: application
+version: "$version"
+appVersion: "$appVersion"

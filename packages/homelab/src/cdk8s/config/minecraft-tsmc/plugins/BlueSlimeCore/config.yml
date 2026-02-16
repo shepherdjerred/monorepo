@@ -1,0 +1,24 @@
+# Set this option to false if you do not want the update checker to run.
+# Default: true
+update-checker: true
+
+# Set this to true if you are having issues and wish to see more console output.
+# Default: false
+debug-mode: false
+
+# Set this to true to enable the command logger.
+# Default: false
+command-logger: false
+
+# Set this to true to cache the language for a player when they join.
+# When this is false, the plugin will wait until the first time a translated message is sent to the player.
+# Default: true
+cache-language-on-join: true
+
+# Set this to 'false' to keep the cached language for players that have already left the server.
+# This may cause confusion for players that relog to reset their language.
+cache-language-remove-on-quit: true
+
+# Set this to 'false' to ignore client-side language changes from players.
+# This may cause confusion for players that actually want a different language.
+cache-language-update-on-change: true

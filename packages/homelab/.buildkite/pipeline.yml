@@ -1,0 +1,14 @@
+steps:
+  - label: ":dagger: CI"
+    command: .buildkite/ci.sh
+    timeout_in_minutes: 60
+    agents:
+      queue: "default"
+    plugins:
+      - kubernetes:
+          podSpecPatch: |
+            containers:
+              - name: container-0
+                envFrom:
+                  - secretRef:
+                      name: buildkite-ci-secrets

@@ -1,0 +1,56 @@
+---
+description: TypeScript coding standards, naming conventions, git practices, and linting/formatting rules for maintaining code quality and consistency.
+---
+# Code Standards & TypeScript Guidelines
+
+## TypeScript Configuration
+
+- Use strict TypeScript configuration as defined in [tsconfig.json](mdc:src/cdk8s/tsconfig.json)
+- Prefer explicit typing over `any` type
+- Leverage TypeScript's type system for better code reliability
+
+## Runtime & Dependencies
+
+- **Prefer Bun APIs**: Use Bun's built-in utilities instead of Node.js imports (e.g., use `Bun.file()` instead of `node:fs`, `Bun.env` instead of `process.env`)
+- **Avoid `node:` imports**: This project uses [Bun](https://bun.com/docs) as its runtime, which provides faster, more modern alternatives to Node.js built-ins
+- **Web Standards First**: When available, prefer Web standard APIs (e.g., `fetch`, `Response`, `ReadableStream`) that work across runtimes
+
+## Code Style
+
+- **File Names**: Use kebab-case for file names and Kubernetes resource names
+- **Variables & Functions**: Use camelCase for TypeScript variables and functions
+- **Imports**: Use modern ES modules syntax (`import`/`export`)
+- **Functional Programming**: Prefer functional programming patterns where appropriate
+- **No Index Files**: Do not create `index.ts` files for the sake of exporting/importing and re-exporting. This pattern is useful in libraries but not needed in applications where direct imports are clearer and simpler
+
+## Naming Conventions
+
+- **Kubernetes Resources**: kebab-case (e.g., `my-service`, `my-deployment`)
+- **TypeScript**: camelCase (e.g., `myFunction`, `myVariable`)
+- **Constants**: UPPER_SNAKE_CASE (e.g., `DEFAULT_PORT`)
+- **Types/Interfaces**: PascalCase (e.g., `MyInterface`, `ConfigType`)
+
+## Git Conventions
+
+- Use conventional commits for all commit messages
+- Format: `<type>: <description>`
+- Types: `feat`, `fix`, `docs`, `refactor`, `chore`, `test`
+- Examples:
+  - `feat: add new nginx ingress controller`
+  - `fix: resolve memory leak in ha service`
+  - `docs: update deployment instructions`
+
+## Code Quality
+
+- Follow existing patterns in the codebase
+- Use meaningful variable and function names
+- Add inline comments for complex Kubernetes configurations
+- Implement proper error handling with meaningful error messages
+- Consider performance implications of resource usage
+
+## Linting & Formatting
+
+- Follow ESLint configuration in [eslint.config.mjs](mdc:src/ha/eslint.config.mjs)
+- Use Prettier configuration from [.prettierrc](mdc:src/ha/.prettierrc)
+- **Fix, Don't Suppress**: Do not ignore ESLint rules or TypeScript compiler errors. Always err on the side of fixing issues rather than suppressing them
+- **Suppression as Last Resort**: If suppression is absolutely necessary, request user approval first and leave a comment noting that the suppression was AI-generated with the reason for the suppression

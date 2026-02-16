@@ -1,0 +1,87 @@
+---
+description: Guidelines for working with CDK8s and Home Assistant workspaces, including structure, development workflow, and cross-workspace dependency management.
+---
+# Workspace-Specific Guidelines
+
+## Workspace Architecture
+This project uses a workspace-based architecture with two main workspaces:
+- **[src/cdk8s/](mdc:src/cdk8s)** - Kubernetes infrastructure definitions
+- **[src/ha/](mdc:src/ha)** - Home Assistant application code
+
+## CDK8s Workspace (`src/cdk8s/`)
+
+### Structure
+- **[src/](mdc:src/cdk8s/src)** - Main CDK8s application code
+- **[imports/](mdc:src/cdk8s/imports)** - Generated Kubernetes API imports
+- **[dist/](mdc:src/cdk8s/dist)** - Generated Kubernetes manifests
+- **[helm/](mdc:src/cdk8s/helm)** - Helm chart configurations
+- **[config/](mdc:src/cdk8s/config)** - Configuration files
+- **[secrets/](mdc:src/cdk8s/secrets)** - Secret management
+- **[talos/](mdc:src/cdk8s/talos)** - Talos Linux specific configurations
+
+### Key Files
+- **[package.json](mdc:src/cdk8s/package.json)** - Workspace dependencies
+- **[cdk8s.yaml](mdc:src/cdk8s/cdk8s.yaml)** - CDK8s configuration
+- **[tsconfig.json](mdc:src/cdk8s/tsconfig.json)** - TypeScript configuration
+- **[update-imports.ts](mdc:src/cdk8s/scripts/update-imports.ts)** - Import update script
+- **[generate-helm-types.ts](mdc:src/cdk8s/scripts/generate-helm-types.ts)** - Helm types generation script
+- **[patch.ts](mdc:src/cdk8s/scripts/patch.ts)** - Patching utilities
+
+### Working with CDK8s
+- Run commands from the `src/cdk8s/` directory
+- Use `bun install` to install dependencies
+- Generate manifests with `bun run synth`
+- Update imports with `bun run update-imports.ts`
+- Generate Helm types with `bun run generate-helm-types.ts`
+
+## Home Assistant Workspace (`src/ha/`)
+
+### Structure
+- **[src/](mdc:src/ha/src)** - Home Assistant application source code
+- **[package.json](mdc:src/ha/package.json)** - Workspace dependencies and scripts
+- **[tsconfig.json](mdc:src/ha/tsconfig.json)** - TypeScript configuration
+- **[eslint.config.mjs](mdc:src/ha/eslint.config.mjs)** - ESLint configuration
+- **[.prettierrc](mdc:src/ha/.prettierrc)** - Prettier formatting configuration
+
+### Environment Configuration
+- **[example.env](mdc:src/ha/example.env)** - Environment variable template
+- Copy to `.env` for local development
+- Use 1Password integration for production secrets
+
+### Working with Home Assistant
+- Run commands from the `src/ha/` directory
+- Use `bun install` to install dependencies
+- Run development server with `bun run dev`
+- Build application with `bun run build`
+- Lint code with `bun run lint`
+
+## Cross-Workspace Commands
+- Use `bun run --filter=*` for cross-workspace commands
+- Maintain consistent package.json structures across workspaces
+- Use workspace-specific scripts defined in root [package.json](mdc:package.json)
+
+## Development Workflow
+
+### Local Development
+1. Navigate to the appropriate workspace directory
+2. Install dependencies: `bun install`
+3. Make changes following workspace-specific patterns
+4. Test changes locally
+5. Run quality checks (lint, typecheck, test)
+
+### Building and Deployment
+- Use Dagger targets for building both workspaces
+- CDK8s: `dagger call build-k-8-s-manifests`
+- Home Assistant: `dagger call build-ha`
+- Combined: `dagger call check-all`
+
+## Shared Dependencies
+- Both workspaces use Bun as runtime and package manager
+- Maintain consistent TypeScript configurations
+- Follow the same code style and quality standards
+
+## Workspace Isolation
+- Each workspace has its own dependencies and build process
+- Avoid cross-workspace imports unless necessary
+- Maintain separate configuration files
+- Use proper workspace boundaries

@@ -1,0 +1,13 @@
+customization:
+  extraKernelArgs:
+    # Power saving for NAS workload
+    - cpufreq.default_governor=powersave
+    - intel_pstate=passive
+    # Limit deep C-states to reduce wake latency (good for NAS responsiveness)
+    - processor.max_cstate=2
+  systemExtensions:
+    officialExtensions:
+      - siderolabs/i915
+      - siderolabs/intel-ucode
+      - siderolabs/tailscale
+      - siderolabs/zfs

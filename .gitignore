@@ -14,6 +14,9 @@ packages/birmel/prisma/data/
 # Playwright test results
 test-results/
 
+# discord-plays-pokemon workspace build artifacts
+packages/dpp/
+
 # Claude Code local session files (root level only)
 /.claude/
 !/.claude/settings.json

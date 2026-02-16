@@ -1,3 +1,0 @@
-self-hosted-runner:
-  labels:
-    - castle-casters-runner-set

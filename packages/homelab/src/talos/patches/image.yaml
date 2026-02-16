@@ -1,0 +1,33 @@
+machine:
+  install:
+    # https://factory.talos.dev/
+    # Image ID generated from image.yaml schematic - includes extraKernelArgs for SecureBoot
+    image: factory.talos.dev/metal-installer-secureboot/a0f205c1e29abaf83e16257c04c83267b5a54feac3861eedc1080edab9827fc3:v1.12.0
+    disk: /dev/nvme0n1
+    wipe: true
+  sysfs:
+    # RAPL power limits for i9-14900K (PL1=125W, PL2=253W)
+    devices.virtual.powercap.intel-rapl.intel-rapl:0.constraint_0_power_limit_uw: "125000000"
+    devices.virtual.powercap.intel-rapl.intel-rapl:0.constraint_1_power_limit_uw: "253000000"
+    # ZFS ARC tuning for 128GB RAM system
+    # With ~50GB available after k8s workloads, allow ARC to use up to 48GB
+    # Max ARC size: 48GB
+    module.zfs.parameters.zfs_arc_max: "51539607552"
+    # Min ARC size: 8GB (ensures cache isn't starved during memory pressure)
+    module.zfs.parameters.zfs_arc_min: "8589934592"
+    # Favor metadata in ARC (default 500, higher = more metadata)
+    # Workload is metadata-heavy (many snapshots/small files)
+    module.zfs.parameters.zfs_arc_meta_balance: "750"
+    # Increase prefetch limit for sequential reads (default 10)
+    module.zfs.parameters.zfs_prefetch_disable: "0"
+    # Enable compressed ARC (stores compressed data in ARC, saves memory)
+    module.zfs.parameters.zfs_compressed_arc_enabled: "1"
+    # Tune L2ARC (if you have an SSD cache device)
+    # Write boost on empty L2ARC (faster warmup)
+    module.zfs.parameters.l2arc_noprefetch: "0"
+  network:
+    hostname: torvalds
+  kernel:
+    modules:
+      - name: i915
+      - name: zfs

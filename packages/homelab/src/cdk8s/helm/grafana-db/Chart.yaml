@@ -1,0 +1,6 @@
+apiVersion: v2
+name: grafana-db
+description: Grafana PostgreSQL database
+type: application
+version: "$version"
+appVersion: "$appVersion"

@@ -1,0 +1,62 @@
+---
+description: Documentation standards, reference guidelines, and best practices for maintaining comprehensive project documentation and technical references.
+---
+# Documentation & Reference Guidelines
+
+## Documentation Standards
+- Document complex infrastructure decisions with clear reasoning
+- Include deployment instructions for new services
+- Maintain up-to-date README files in each workspace
+- Use inline comments for complex Kubernetes configurations
+- Follow Markdown best practices for all documentation
+
+## README Guidelines
+- Each workspace should have its own README file
+- Include setup instructions, dependencies, and usage examples
+- Document any special configuration requirements
+- Keep README files concise but comprehensive
+- Update documentation when making significant changes
+
+## Code Documentation
+- Use TSDoc comments for TypeScript functions and classes
+- Document complex Kubernetes resource configurations
+- Explain non-obvious infrastructure decisions
+- Include examples for common use cases
+- Document any workarounds or temporary solutions
+
+## Reference Documentation
+When encountering unfamiliar APIs, patterns, or needing implementation guidance:
+
+### Primary Documentation Sources
+- **[Dagger](mdc:https:/docs.dagger.io)** - CI/CD workflows, containerized operations, and Dagger API reference
+- **[Bun](mdc:https:/bun.sh/docs)** - Runtime, package manager, bundler, and test runner features
+- **[CDK8s](mdc:https:/cdk8s.io/docs/latest)** - Kubernetes constructs, TypeScript APIs, and manifest generation
+- **[Kubernetes](mdc:https:/kubernetes.io/docs/home)** - Core concepts, API reference, and best practices
+- **[TypeScript](mdc:https:/www.typescriptlang.org/docs)** - Language features, compiler options, and type system
+- **[Digital Alchemy](mdc:https:/docs.digital-alchemy.app)** - Home Assistant integrations and automation patterns
+
+### Documentation Best Practices
+- Search official documentation when needed for accurate information
+- Prefer official documentation over third-party sources
+- Reference current versions and compatibility requirements
+- Use documentation examples as templates for implementation patterns
+- Consult relevant documentation first before implementation
+
+## Version Compatibility
+- Always check version compatibility between dependencies
+- Reference the correct documentation version for your dependency versions
+- Document any version-specific workarounds or considerations
+- Keep documentation up-to-date with dependency updates
+
+## Error Documentation
+- Document known issues and their solutions
+- Include troubleshooting guides for common problems
+- Document recovery procedures for failure scenarios
+- Maintain a knowledge base of operational issues
+- Share lessons learned from incidents
+
+## Project Files
+- Main README: [README.md](mdc:README.md)
+- Project roadmap: [ROADMAP.md](mdc:ROADMAP.md)
+- License information: [LICENSE](mdc:LICENSE)
+- Git configuration: [.gitignore](mdc:.gitignore) and [.gitattributes](mdc:.gitattributes)

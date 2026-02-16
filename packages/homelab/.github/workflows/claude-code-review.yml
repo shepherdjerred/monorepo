@@ -1,0 +1,80 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  claude-review:
+    # Only run for PRs from @shepherdjerred
+    if: github.event.pull_request.user.login == 'shepherdjerred'
+    runs-on: [homelab-runner-set]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: 1password/load-secrets-action/configure@v3
+        with:
+          connect-host: http://onepassword-connect.1password.svc.cluster.local:8080
+          connect-token: ${{ secrets.OP_CONNECT_TOKEN }}
+
+      - uses: 1password/load-secrets-action@v3
+        with:
+          export-env: true
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/CLAUDE_CODE_OAUTH_TOKEN
+
+      - name: Run Claude Code Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ env.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            Review this PR for a Kubernetes homelab infrastructure monorepo. Focus on things linters and type checkers can't catch.
+
+            ## Repository Structure
+            - `src/cdk8s/` - CDK8s Kubernetes infrastructure-as-code
+            - `src/cdk8s/src/resources/` - K8s resources organized by domain (monitoring/, mail/, torrents/, media/, etc.)
+            - `src/ha/` - Home Assistant automations
+            - `src/helm-types/` - Helm chart TypeScript type generator
+            - `.dagger/` - CI/CD pipeline (Dagger TypeScript SDK)
+
+            ## What to Review
+
+            **Architecture & Design**
+            - Does this change belong where it's placed? Should it be in a different module/directory?
+            - Does it follow existing patterns in similar code, or unnecessarily diverge?
+            - Are there simpler approaches that would work?
+            - Will this be maintainable long-term?
+
+            **Logic & Correctness**
+            - Are there obvious bugs or edge cases not handled?
+            - Does the code actually do what it claims to do?
+            - Are there race conditions, resource leaks, or failure modes?
+
+            **Security**
+            - Hardcoded secrets or credentials?
+            - Sensitive data exposure in logs/errors?
+            - Unsafe handling of external input?
+
+            **Git Hygiene**
+            - Are commit messages descriptive and following conventional commits (feat:, fix:, chore:)?
+            - Is the PR title clear about what this changes?
+            - Are changes atomic and focused, or should this be split up?
+
+            ## Output
+
+            Be direct and specific. For each issue:
+            - Reference the file and line
+            - Explain what's wrong
+            - Suggest a fix
+
+            Skip praise and filler. If the PR looks good, just say so briefly.

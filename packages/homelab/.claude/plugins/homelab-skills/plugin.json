@@ -1,0 +1,16 @@
+{
+  "name": "homelab-skills",
+  "version": "1.0.0",
+  "description": "Knowledge skills for the Kubernetes homelab infrastructure monorepo",
+  "skills": [
+    { "path": "skills/helm-types-gen.md" },
+    { "path": "skills/torvalds-deployment.md" },
+    { "path": "skills/argocd-app-patterns.md" },
+    { "path": "skills/cdk8s-abstractions.md" },
+    { "path": "skills/version-management.md" },
+    { "path": "skills/storage-backup.md" },
+    { "path": "skills/tailscale-networking.md" },
+    { "path": "skills/linuxserver-containers.md" },
+    { "path": "skills/gitops-flow.md" }
+  ]
+}

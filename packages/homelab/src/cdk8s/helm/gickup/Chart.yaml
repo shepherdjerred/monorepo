@@ -1,0 +1,6 @@
+apiVersion: v2
+name: gickup
+description: Gickup Git repository backup
+type: application
+version: "$version"
+appVersion: "$appVersion"

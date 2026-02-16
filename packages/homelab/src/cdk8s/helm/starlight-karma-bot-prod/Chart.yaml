@@ -1,0 +1,6 @@
+apiVersion: v2
+name: starlight-karma-bot-prod
+description: Starlight Karma Bot - Production environment
+type: application
+version: "$version"
+appVersion: "$appVersion"

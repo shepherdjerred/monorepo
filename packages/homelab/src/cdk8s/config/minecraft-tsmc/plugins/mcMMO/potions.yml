@@ -1,0 +1,1788 @@
+#
+#  Settings for Concoctions
+#  Last updated on 2.1.217-b${BUILD_NUMBER}
+###
+Concoctions:
+  Tier_One_Ingredients:
+    - BLAZE_POWDER
+    - FERMENTED_SPIDER_EYE
+    - GHAST_TEAR
+    - GLOWSTONE_DUST
+    - GOLDEN_CARROT
+    - MAGMA_CREAM
+    - NETHER_WART
+    - REDSTONE
+    - GLISTERING_MELON_SLICE
+    - SPIDER_EYE
+    - SUGAR
+    - GUNPOWDER
+    - WATER_LILY
+    - PUFFERFISH
+    - DRAGON_BREATH
+  Tier_Two_Ingredients:
+    - CARROT
+    - SLIME_BALL
+    - PHANTOM_MEMBRANE
+  Tier_Three_Ingredients:
+    - QUARTZ
+    - RABBIT_FOOT
+  Tier_Four_Ingredients:
+    - APPLE
+    - ROTTEN_FLESH
+  Tier_Five_Ingredients:
+    - BROWN_MUSHROOM
+    - INK_SAC
+  Tier_Six_Ingredients:
+    - FERN
+  Tier_Seven_Ingredients:
+    - POISONOUS_POTATO
+  Tier_Eight_Ingredients:
+    - GOLDEN_APPLE
+
+#
+# Settings for Potions
+#
+#   <identifier>:                       Identifier to reference by, backwards compatible to use as data values
+#       Name: <name>                    Custom display name for this potion (optional)
+#       Material: <material>            Material for this potion, defaults to POTION
+#       Data:  <data_value>             Data value for this potion (if this is not present it will read from identifier)
+#       Color: <color>                  Custom color for the potion in RGB integer (e.g. 0xFF000, optional)
+#       Lore: ["lore1","lore2"...]      Custom lore for this potion (section is optional)
+#       Children:                       The potential children of this potion (section is optional)
+#           <INGREDIENT>: <NEW_IDENTIFIER>      The ingredient used, and resultant potion's identifier
+#       Effects:                        List of strings for the potion's effects (section is optional)
+#           - "<POTION_EFFECT> [EFFECT_TIER] [DURATION_TICKS]"
+#
+
+###
+Potions:
+  POTION_OF_EMPTY:
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_EMPTY
+  POTION_OF_WATER:
+    Material: POTION
+    PotionData:
+      PotionType: WATER
+    Children:
+      SPIDER_EYE: POTION_OF_MUNDANE
+      FERMENTED_SPIDER_EYE: POTION_OF_WEAKNESS
+      GLOWSTONE_DUST: POTION_OF_THICK
+      GUNPOWDER: SPLASH_POTION_OF_WATER
+      GHAST_TEAR: POTION_OF_MUNDANE
+      MAGMA_CREAM: POTION_OF_MUNDANE
+      SUGAR: POTION_OF_MUNDANE
+      GLISTERING_MELON_SLICE: POTION_OF_MUNDANE
+      NETHER_WART: POTION_OF_AWKWARD
+      BLAZE_POWDER: POTION_OF_MUNDANE
+      REDSTONE: POTION_OF_MUNDANE
+      RABBIT_FOOT: POTION_OF_MUNDANE
+  POTION_OF_WATER_UNCRAFTABLE:
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Children:
+      SPIDER_EYE: POTION_OF_MUNDANE
+      FERMENTED_SPIDER_EYE: POTION_OF_WEAKNESS
+      GLOWSTONE_DUST: POTION_OF_THICK
+      GUNPOWDER: SPLASH_POTION_OF_WATER
+      GHAST_TEAR: POTION_OF_MUNDANE
+      MAGMA_CREAM: POTION_OF_MUNDANE
+      SUGAR: POTION_OF_MUNDANE
+      GLISTERING_MELON_SLICE: POTION_OF_MUNDANE
+      NETHER_WART: POTION_OF_AWKWARD
+      BLAZE_POWDER: POTION_OF_MUNDANE
+      REDSTONE: POTION_OF_MUNDANE
+      RABBIT_FOOT: POTION_OF_MUNDANE
+  POTION_OF_MUNDANE:
+    Material: POTION
+    PotionData:
+      PotionType: MUNDANE
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_MUNDANE
+  POTION_OF_THICK:
+    Material: POTION
+    PotionData:
+      PotionType: THICK
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_THICK
+  POTION_OF_AWKWARD:
+    Material: POTION
+    PotionData:
+      PotionType: AWKWARD
+    Children:
+      QUARTZ: POTION_OF_ABSORPTION
+      GUNPOWDER: SPLASH_POTION_OF_AWKWARD
+      BROWN_MUSHROOM: POTION_OF_NAUSEA
+      SLIME_BALL: POTION_OF_DULLNESS
+      GLISTERING_MELON_SLICE: POTION_OF_HEALING
+      INK_SAC: POTION_OF_BLINDNESS
+      APPLE: POTION_OF_HEALTH_BOOST
+      GOLDEN_APPLE: POTION_OF_RESISTANCE
+      FERN: POTION_OF_SATURATION
+      MAGMA_CREAM: POTION_OF_FIRE_RESISTANCE
+      PHANTOM_MEMBRANE: POTION_OF_SLOW_FALLING
+      CARROT: POTION_OF_HASTE
+      BLAZE_POWDER: POTION_OF_STRENGTH
+      POISONOUS_POTATO: POTION_OF_DECAY
+      GOLDEN_CARROT: POTION_OF_NIGHT_VISION
+      SUGAR: POTION_OF_SWIFTNESS
+      ROTTEN_FLESH: POTION_OF_HUNGER
+      SPIDER_EYE: POTION_OF_POISON
+      PUFFERFISH: POTION_OF_WATER_BREATHING
+      GHAST_TEAR: POTION_OF_REGENERATION
+      TURTLE_HELMET: POTION_OF_TURTLE_MASTER
+      RABBIT_FOOT: POTION_OF_LEAPING
+  POTION_OF_NIGHT_VISION:
+    Material: POTION
+    PotionData:
+      PotionType: NIGHT_VISION
+    Children:
+      REDSTONE: POTION_OF_NIGHT_VISION_EXTENDED
+      GUNPOWDER: SPLASH_POTION_OF_NIGHT_VISION
+      FERMENTED_SPIDER_EYE: POTION_OF_INVISIBILITY
+  POTION_OF_NIGHT_VISION_EXTENDED:
+    Material: POTION
+    PotionData:
+      PotionType: NIGHT_VISION
+      Extended: true
+    Children:
+      FERMENTED_SPIDER_EYE: POTION_OF_INVISIBILITY_EXTENDED
+      GUNPOWDER: SPLASH_POTION_OF_NIGHT_VISION_EXTENDED
+  POTION_OF_INVISIBILITY:
+    Material: POTION
+    PotionData:
+      PotionType: INVISIBILITY
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_INVISIBILITY
+      REDSTONE: POTION_OF_INVISIBILITY_EXTENDED
+  POTION_OF_INVISIBILITY_EXTENDED:
+    Material: POTION
+    PotionData:
+      PotionType: INVISIBILITY
+      Extended: true
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_INVISIBILITY_EXTENDED
+  POTION_OF_LEAPING:
+    Material: POTION
+    PotionData:
+      PotionType: JUMP
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_LEAPING
+      FERMENTED_SPIDER_EYE: POTION_OF_SLOWNESS
+      GLOWSTONE_DUST: POTION_OF_LEAPING_II
+      REDSTONE: POTION_OF_LEAPING_EXTENDED
+  POTION_OF_LEAPING_EXTENDED:
+    Material: POTION
+    PotionData:
+      PotionType: JUMP
+      Extended: true
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_LEAPING_EXTENDED
+  POTION_OF_LEAPING_II:
+    Material: POTION
+    PotionData:
+      PotionType: JUMP
+      Upgraded: true
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_LEAPING_II
+  POTION_OF_FIRE_RESISTANCE:
+    Material: POTION
+    PotionData:
+      PotionType: FIRE_RESISTANCE
+    Children:
+      FERMENTED_SPIDER_EYE: POTION_OF_SLOWNESS
+      REDSTONE: POTION_OF_FIRE_RESISTANCE_EXTENDED
+      GUNPOWDER: SPLASH_POTION_OF_FIRE_RESISTANCE
+  POTION_OF_FIRE_RESISTANCE_EXTENDED:
+    Material: POTION
+    PotionData:
+      PotionType: FIRE_RESISTANCE
+      Extended: true
+    Children:
+      FERMENTED_SPIDER_EYE: POTION_OF_SLOWNESS_EXTENDED
+      GUNPOWDER: SPLASH_POTION_OF_FIRE_RESISTANCE_EXTENDED
+  POTION_OF_SWIFTNESS:
+    Material: POTION
+    PotionData:
+      PotionType: SPEED
+    Children:
+      FERMENTED_SPIDER_EYE: POTION_OF_SLOWNESS
+      GLOWSTONE_DUST: POTION_OF_SWIFTNESS_II
+      REDSTONE: POTION_OF_SWIFTNESS_EXTENDED
+      GUNPOWDER: SPLASH_POTION_OF_SWIFTNESS
+  POTION_OF_SWIFTNESS_II:
+    Material: POTION
+    PotionData:
+      PotionType: SPEED
+      Upgraded: true
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_SWIFTNESS_II
+      FERMENTED_SPIDER_EYE: POTION_OF_SLOWNESS_EXTENDED
+  POTION_OF_SWIFTNESS_EXTENDED:
+    Material: POTION
+    PotionData:
+      PotionType: SPEED
+      Extended: true
+    Children:
+      FERMENTED_SPIDER_EYE: POTION_OF_SLOWNESS_EXTENDED
+      GUNPOWDER: SPLASH_POTION_OF_SWIFTNESS_EXTENDED
+  POTION_OF_SLOWNESS:
+    Material: POTION
+    PotionData:
+      PotionType: SLOWNESS
+    Children:
+      REDSTONE: POTION_OF_SLOWNESS_EXTENDED
+      GUNPOWDER: SPLASH_POTION_OF_SLOWNESS
+  POTION_OF_SLOWNESS_EXTENDED:
+    Material: POTION
+    PotionData:
+      PotionType: SLOWNESS
+      Extended: true
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_SLOWNESS_EXTENDED
+  POTION_OF_SLOWNESS_II:
+    Material: POTION
+    PotionData:
+      PotionType: SLOWNESS
+      Upgraded: true
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_SLOWNESS_II
+      REDSTONE: POTION_OF_SLOWNESS_EXTENDED
+  POTION_OF_WATER_BREATHING:
+    Material: POTION
+    PotionData:
+      PotionType: WATER_BREATHING
+    Children:
+      REDSTONE: POTION_OF_WATER_BREATHING_EXTENDED
+      GUNPOWDER: SPLASH_POTION_OF_WATER_BREATHING
+      FERMENTED_SPIDER_EYE: POTION_OF_HARMING
+  POTION_OF_WATER_BREATHING_EXTENDED:
+    Material: POTION
+    PotionData:
+      PotionType: WATER_BREATHING
+      Extended: true
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_WATER_BREATHING_EXTENDED
+  POTION_OF_HEALING:
+    Material: POTION
+    PotionData:
+      PotionType: INSTANT_HEAL
+    Children:
+      FERMENTED_SPIDER_EYE: POTION_OF_HARMING
+      GLOWSTONE_DUST: POTION_OF_HEALING_II
+      GUNPOWDER: SPLASH_POTION_OF_HEALING
+  POTION_OF_HEALING_II:
+    Material: POTION
+    PotionData:
+      PotionType: INSTANT_HEAL
+      Upgraded: true
+    Children:
+      FERMENTED_SPIDER_EYE: POTION_OF_HARMING_II
+      GUNPOWDER: SPLASH_POTION_OF_HEALING_II
+  POTION_OF_HARMING:
+    Material: POTION
+    PotionData:
+      PotionType: INSTANT_DAMAGE
+    Children:
+      GLOWSTONE_DUST: POTION_OF_HARMING_II
+      GUNPOWDER: SPLASH_POTION_OF_HARMING
+  POTION_OF_HARMING_II:
+    Material: POTION
+    PotionData:
+      PotionType: INSTANT_DAMAGE
+      Upgraded: true
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_HARMING_II
+  POTION_OF_POISON:
+    Material: POTION
+    PotionData:
+      PotionType: POISON
+    Children:
+      GLOWSTONE_DUST: POTION_OF_POISON_II
+      FERMENTED_SPIDER_EYE: POTION_OF_HARMING
+      GUNPOWDER: SPLASH_POTION_OF_POISON
+      REDSTONE: POTION_OF_POISON_EXTENDED
+  POTION_OF_POISON_EXTENDED:
+    Material: POTION
+    PotionData:
+      PotionType: POISON
+      Extended: true
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_POISON_EXTENDED
+      FERMENTED_SPIDER_EYE: POTION_OF_HARMING_II
+  POTION_OF_POISON_II:
+    Material: POTION
+    PotionData:
+      PotionType: POISON
+      Upgraded: true
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_POISON_II
+      FERMENTED_SPIDER_EYE: POTION_OF_HARMING_II
+  POTION_OF_REGENERATION:
+    Material: POTION
+    PotionData:
+      PotionType: REGEN
+    Children:
+      GLOWSTONE_DUST: POTION_OF_REGENERATION_II
+      GUNPOWDER: SPLASH_POTION_OF_REGENERATION
+      REDSTONE: POTION_OF_REGENERATION_EXTENDED
+  POTION_OF_REGENERATION_II:
+    Material: POTION
+    PotionData:
+      PotionType: REGEN
+      Upgraded: true
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_REGENERATION_II
+  POTION_OF_REGENERATION_EXTENDED:
+    Material: POTION
+    PotionData:
+      PotionType: REGEN
+      Extended: true
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_REGENERATION_EXTENDED
+  POTION_OF_STRENGTH:
+    Material: POTION
+    PotionData:
+      PotionType: STRENGTH
+    Children:
+      REDSTONE: POTION_OF_STRENGTH_EXTENDED
+      GLOWSTONE_DUST: POTION_OF_STRENGTH_II
+      GUNPOWDER: SPLASH_POTION_OF_STRENGTH
+  POTION_OF_STRENGTH_EXTENDED:
+    Material: POTION
+    PotionData:
+      PotionType: STRENGTH
+      Extended: true
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_STRENGTH_EXTENDED
+  POTION_OF_STRENGTH_II:
+    Material: POTION
+    PotionData:
+      PotionType: STRENGTH
+      Upgraded: true
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_STRENGTH_II
+  POTION_OF_WEAKNESS:
+    Material: POTION
+    PotionData:
+      PotionType: WEAKNESS
+    Children:
+      REDSTONE: POTION_OF_WEAKNESS_EXTENDED
+      GUNPOWDER: SPLASH_POTION_OF_WEAKNESS
+  POTION_OF_WEAKNESS_EXTENDED:
+    Material: POTION
+    PotionData:
+      PotionType: WEAKNESS
+      Extended: true
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_WEAKNESS_EXTENDED
+  POTION_OF_LUCK:
+    Material: POTION
+    PotionData:
+      PotionType: LUCK
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_LUCK
+  POTION_OF_TURTLE_MASTER:
+    Material: POTION
+    PotionData:
+      PotionType: TURTLE_MASTER
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_TURTLE_MASTER
+      GLOWSTONE_DUST: POTION_OF_TURTLE_MASTER_II
+      REDSTONE: POTION_OF_TURTLE_MASTER_EXTENDED
+  POTION_OF_TURTLE_MASTER_EXTENDED:
+    Material: POTION
+    PotionData:
+      PotionType: TURTLE_MASTER
+      Extended: true
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_TURTLE_MASTER_EXTENDED
+  POTION_OF_TURTLE_MASTER_II:
+    Material: POTION
+    PotionData:
+      PotionType: TURTLE_MASTER
+      Upgraded: true
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_TURTLE_MASTER_II
+  POTION_OF_SLOW_FALLING:
+    Material: POTION
+    PotionData:
+      PotionType: SLOW_FALLING
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_SLOW_FALLING
+      REDSTONE: POTION_OF_SLOW_FALLING_EXTENDED
+  POTION_OF_SLOW_FALLING_EXTENDED:
+    Material: POTION
+    PotionData:
+      PotionType: SLOW_FALLING
+      Extended: true
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_SLOW_FALLING_EXTENDED
+  POTION_OF_ABSORPTION:
+    Name: Potion Of Absorption
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["ABSORPTION 0 1800"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_ABSORPTION
+      GLOWSTONE_DUST: POTION_OF_ABSORPTION_II
+      REDSTONE: POTION_OF_ABSORPTION_EXTENDED
+  POTION_OF_BLINDNESS:
+    Name: Potion Of Blindness
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["BLINDNESS 0 225"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_BLINDNESS
+      GLOWSTONE_DUST: POTION_OF_BLINDNESS_II
+      REDSTONE: POTION_OF_BLINDNESS_EXTENDED
+  POTION_OF_DECAY:
+    Name: Potion Of Decay
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["WITHER 0 450"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_DECAY
+      REDSTONE: POTION_OF_DECAY_EXTENDED
+      GLOWSTONE_DUST: POTION_OF_DECAY_II
+  POTION_OF_DULLNESS:
+    Name: Potion Of Dullness
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["SLOW_DIGGING 0 3600"]
+    Children:
+      GLOWSTONE_DUST: POTION_OF_DULLNESS_II
+      REDSTONE: POTION_OF_DULLNESS_EXTENDED
+      GUNPOWDER: SPLASH_POTION_OF_DULLNESS
+  POTION_OF_HASTE:
+    Name: Potion Of Haste
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["FAST_DIGGING 0 3600"]
+    Children:
+      REDSTONE: POTION_OF_HASTE_EXTENDED
+      GLOWSTONE_DUST: POTION_OF_HASTE_II
+      GUNPOWDER: SPLASH_POTION_OF_HASTE
+  POTION_OF_HEALTH_BOOST:
+    Name: Potion Of Health Boost
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["HEALTH_BOOST 0 1800"]
+    Children:
+      GLOWSTONE_DUST: POTION_OF_HEALTH_BOOST_II
+      GUNPOWDER: SPLASH_POTION_OF_HEALTH_BOOST
+      REDSTONE: POTION_OF_HEALTH_BOOST_EXTENDED
+  POTION_OF_HUNGER:
+    Name: Potion Of Hunger
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["HUNGER 0 900"]
+    Children:
+      REDSTONE: POTION_OF_HUNGER_EXTENDED
+      GLOWSTONE_DUST: POTION_OF_HUNGER_II
+      GUNPOWDER: SPLASH_POTION_OF_HUNGER
+  POTION_OF_NAUSEA:
+    Name: Potion Of Nausea
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["CONFUSION 0 450"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_NAUSEA
+      REDSTONE: POTION_OF_NAUSEA_EXTENDED
+      GLOWSTONE_DUST: POTION_OF_NAUSEA_II
+  POTION_OF_RESISTANCE:
+    Name: Potion Of Resistance
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["DAMAGE_RESISTANCE 0 450"]
+    Children:
+      REDSTONE: POTION_OF_RESISTANCE_EXTENDED
+      GLOWSTONE_DUST: POTION_OF_RESISTANCE_II
+      GUNPOWDER: SPLASH_POTION_OF_RESISTANCE
+  POTION_OF_SATURATION:
+    Name: Potion Of Saturation
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["SATURATION 0 8"]
+    Children:
+      GLOWSTONE_DUST: POTION_OF_SATURATION_II
+      REDSTONE: POTION_OF_SATURATION_EXTENDED
+      GUNPOWDER: SPLASH_POTION_OF_SATURATION
+  POTION_OF_ABSORPTION_EXTENDED:
+    Name: Potion Of Absorption Extended
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["ABSORPTION 0 3600"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_ABSORPTION_EXTENDED
+  POTION_OF_BLINDNESS_EXTENDED:
+    Name: Potion Of Blindness Extended
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["BLINDNESS 0 450"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_BLINDNESS_EXTENDED
+  POTION_OF_DECAY_EXTENDED:
+    Name: Potion Of Decay Extended
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["WITHER 0 900"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_DECAY_EXTENDED
+  POTION_OF_DULLNESS_EXTENDED:
+    Name: Potion Of Dullness Extended
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["SLOW_DIGGING 0 7200"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_DULLNESS_EXTENDED
+  POTION_OF_HASTE_EXTENDED:
+    Name: Potion Of Haste Extended
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["FAST_DIGGING 0 7200"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_HASTE_EXTENDED
+  POTION_OF_HEALTH_BOOST_EXTENDED:
+    Name: Potion Of Health Boost Extended
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["HEALTH_BOOST 0 3600"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_HEALTH_BOOST_EXTENDED
+  POTION_OF_HUNGER_EXTENDED:
+    Name: Potion Of Hunger Extended
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["HUNGER 0 1800"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_HUNGER_EXTENDED
+  POTION_OF_NAUSEA_EXTENDED:
+    Name: Potion Of Nausea Extended
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["CONFUSION 0 900"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_NAUSEA_EXTENDED
+  POTION_OF_RESISTANCE_EXTENDED:
+    Name: Potion Of Resistance Extended
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["DAMAGE_RESISTANCE 0 900"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_RESISTANCE_EXTENDED
+  POTION_OF_SATURATION_EXTENDED:
+    Name: Potion Of Saturation Extended
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["SATURATION 0 16"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_SATURATION_EXTENDED
+  POTION_OF_ABSORPTION_II:
+    Name: Potion Of Absorption II
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["ABSORPTION 1 900"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_ABSORPTION_II
+  POTION_OF_BLINDNESS_II:
+    Name: Potion Of Blindness II
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["BLINDNESS 1 112"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_BLINDNESS_II
+  POTION_OF_DECAY_II:
+    Name: Potion Of Decay II
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["WITHER 1 225"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_DECAY_II
+  POTION_OF_DULLNESS_II:
+    Name: Potion Of Dullness II
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["SLOW_DIGGING 1 1800"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_DULLNESS_II
+  POTION_OF_HASTE_II:
+    Name: Potion Of Haste II
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["FAST_DIGGING 1 1800"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_HASTE_II
+  POTION_OF_HEALTH_BOOST_II:
+    Name: Potion Of Health Boost II
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["HEALTH_BOOST 1 900"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_HEALTH_BOOST_II
+  POTION_OF_HUNGER_II:
+    Name: Potion Of Hunger II
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["HUNGER 1 450"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_HUNGER_II
+  POTION_OF_NAUSEA_II:
+    Name: Potion Of Nausea II
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["CONFUSION 1 225"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_NAUSEA_II
+  POTION_OF_RESISTANCE_II:
+    Name: Potion Of Resistance II
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["DAMAGE_RESISTANCE 1 225"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_RESISTANCE_II
+  POTION_OF_SATURATION_II:
+    Name: Potion Of Saturation II
+    Material: POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["SATURATION 1 4"]
+    Children:
+      GUNPOWDER: SPLASH_POTION_OF_SATURATION_II
+  SPLASH_POTION_OF_EMPTY:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_EMPTY
+  SPLASH_POTION_OF_WATER:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: WATER
+    Children:
+      SUGAR: SPLASH_POTION_OF_MUNDANE
+      BLAZE_POWDER: SPLASH_POTION_OF_MUNDANE
+      GHAST_TEAR: SPLASH_POTION_OF_MUNDANE
+      FERMENTED_SPIDER_EYE: SPLASH_POTION_OF_WEAKNESS
+      GLOWSTONE_DUST: SPLASH_POTION_OF_THICK
+      GLISTERING_MELON_SLICE: SPLASH_POTION_OF_MUNDANE
+      DRAGON_BREATH: LINGERING_POTION_OF_WATER
+      NETHER_WART: SPLASH_POTION_OF_AWKWARD
+      RABBIT_FOOT: SPLASH_POTION_OF_MUNDANE
+      SPIDER_EYE: SPLASH_POTION_OF_MUNDANE
+      REDSTONE: SPLASH_POTION_OF_MUNDANE
+      MAGMA_CREAM: SPLASH_POTION_OF_MUNDANE
+  SPLASH_POTION_OF_MUNDANE:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: MUNDANE
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_MUNDANE
+  SPLASH_POTION_OF_THICK:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: THICK
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_THICK
+  SPLASH_POTION_OF_AWKWARD:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: AWKWARD
+    Children:
+      GLISTERING_MELON_SLICE: SPLASH_POTION_OF_HEALING
+      SLIME_BALL: SPLASH_POTION_OF_DULLNESS
+      CARROT: SPLASH_POTION_OF_HASTE
+      TURTLE_HELMET: SPLASH_POTION_OF_TURTLE_MASTER
+      ROTTEN_FLESH: SPLASH_POTION_OF_HUNGER
+      GOLDEN_APPLE: SPLASH_POTION_OF_RESISTANCE
+      GHAST_TEAR: SPLASH_POTION_OF_REGENERATION
+      DRAGON_BREATH: LINGERING_POTION_OF_AWKWARD
+      BLAZE_POWDER: SPLASH_POTION_OF_STRENGTH
+      GOLDEN_CARROT: SPLASH_POTION_OF_NIGHT_VISION
+      APPLE: SPLASH_POTION_OF_HEALTH_BOOST
+      POISONOUS_POTATO: SPLASH_POTION_OF_DECAY
+      SUGAR: SPLASH_POTION_OF_SWIFTNESS
+      PHANTOM_MEMBRANE: SPLASH_POTION_OF_SLOW_FALLING
+      QUARTZ: SPLASH_POTION_OF_ABSORPTION
+      RABBIT_FOOT: SPLASH_POTION_OF_LEAPING
+      BROWN_MUSHROOM: SPLASH_POTION_OF_NAUSEA
+      TALL_GRASS: SPLASH_POTION_OF_SATURATION
+      MAGMA_CREAM: SPLASH_POTION_OF_FIRE_RESISTANCE
+      SPIDER_EYE: SPLASH_POTION_OF_POISON
+      INK_SAC: SPLASH_POTION_OF_BLINDNESS
+      PUFFERFISH: SPLASH_POTION_OF_WATER_BREATHING
+  SPLASH_POTION_OF_NIGHT_VISION:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: NIGHT_VISION
+    Children:
+      REDSTONE: SPLASH_POTION_OF_NIGHT_VISION_EXTENDED
+      DRAGON_BREATH: LINGERING_POTION_OF_NIGHT_VISION
+      FERMENTED_SPIDER_EYE: SPLASH_POTION_OF_INVISIBILITY
+  SPLASH_POTION_OF_NIGHT_VISION_EXTENDED:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: NIGHT_VISION
+      Extended: true
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_NIGHT_VISION_EXTENDED
+      FERMENTED_SPIDER_EYE: SPLASH_POTION_OF_INVISIBILITY_EXTENDED
+  SPLASH_POTION_OF_INVISIBILITY:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: INVISIBILITY
+    Children:
+      REDSTONE: SPLASH_POTION_OF_INVISIBILITY_EXTENDED
+      DRAGON_BREATH: LINGERING_POTION_OF_INVISIBILITY
+  SPLASH_POTION_OF_INVISIBILITY_EXTENDED:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: INVISIBILITY
+      Extended: true
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_INVISIBILITY_EXTENDED
+  SPLASH_POTION_OF_LEAPING:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: JUMP
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_LEAPING
+      FERMENTED_SPIDER_EYE: SPLASH_POTION_OF_SLOWNESS
+      GLOWSTONE_DUST: SPLASH_POTION_OF_LEAPING_II
+      REDSTONE: SPLASH_POTION_OF_LEAPING_EXTENDED
+  SPLASH_POTION_OF_LEAPING_II:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: JUMP
+      Upgraded: true
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_LEAPING_II
+  SPLASH_POTION_OF_LEAPING_EXTENDED:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: JUMP
+      Extended: true
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_LEAPING_EXTENDED
+  SPLASH_POTION_OF_FIRE_RESISTANCE:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: FIRE_RESISTANCE
+    Children:
+      REDSTONE: SPLASH_POTION_OF_FIRE_RESISTANCE_EXTENDED
+      FERMENTED_SPIDER_EYE: SPLASH_POTION_OF_SLOWNESS
+      DRAGON_BREATH: LINGERING_POTION_OF_FIRE_RESISTANCE
+  SPLASH_POTION_OF_FIRE_RESISTANCE_EXTENDED:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: FIRE_RESISTANCE
+      Extended: true
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_FIRE_RESISTANCE_EXTENDED
+      FERMENTED_SPIDER_EYE: SPLASH_POTION_OF_SLOWNESS_EXTENDED
+  SPLASH_POTION_OF_SWIFTNESS:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: SPEED
+    Children:
+      FERMENTED_SPIDER_EYE: SPLASH_POTION_OF_SLOWNESS
+      GLOWSTONE_DUST: SPLASH_POTION_OF_SWIFTNESS_II
+      DRAGON_BREATH: LINGERING_POTION_OF_SWIFTNESS
+      REDSTONE: SPLASH_POTION_OF_SWIFTNESS_EXTENDED
+  SPLASH_POTION_OF_SWIFTNESS_EXTENDED:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: SPEED
+      Extended: true
+    Children:
+      FERMENTED_SPIDER_EYE: SPLASH_POTION_OF_SLOWNESS_EXTENDED
+      DRAGON_BREATH: LINGERING_POTION_OF_SWIFTNESS_EXTENDED
+  SPLASH_POTION_OF_SWIFTNESS_II:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: SPEED
+      Upgraded: true
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_SWIFTNESS_II
+      FERMENTED_SPIDER_EYE: SPLASH_POTION_OF_SLOWNESS_EXTENDED
+  SPLASH_POTION_OF_SLOWNESS:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: SLOWNESS
+    Children:
+      REDSTONE: SPLASH_POTION_OF_SLOWNESS_EXTENDED
+      DRAGON_BREATH: LINGERING_POTION_OF_SLOWNESS
+  SPLASH_POTION_OF_SLOWNESS_EXTENDED:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: SLOWNESS
+      Extended: true
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_SLOWNESS_EXTENDED
+  SPLASH_POTION_OF_SLOWNESS_II:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: SLOWNESS
+      Upgraded: true
+    Children:
+      REDSTONE: SPLASH_POTION_OF_SLOWNESS_EXTENDED
+      DRAGON_BREATH: LINGERING_POTION_OF_SLOWNESS_II
+  SPLASH_POTION_OF_WATER_BREATHING:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: WATER_BREATHING
+    Children:
+      FERMENTED_SPIDER_EYE: SPLASH_POTION_OF_HARMING
+      REDSTONE: SPLASH_POTION_OF_WATER_BREATHING_EXTENDED
+      DRAGON_BREATH: LINGERING_POTION_OF_WATER_BREATHING
+  SPLASH_POTION_OF_WATER_BREATHING_EXTENDED:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: WATER_BREATHING
+      Extended: true
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_WATER_BREATHING_EXTENDED
+  SPLASH_POTION_OF_HEALING:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: INSTANT_HEAL
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_HEALING
+      FERMENTED_SPIDER_EYE: SPLASH_POTION_OF_HARMING
+      GLOWSTONE_DUST: SPLASH_POTION_OF_HEALING_II
+  SPLASH_POTION_OF_HEALING_II:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: INSTANT_HEAL
+      Upgraded: true
+    Children:
+      FERMENTED_SPIDER_EYE: SPLASH_POTION_OF_HARMING_II
+      DRAGON_BREATH: LINGERING_POTION_OF_HEALING_II
+  SPLASH_POTION_OF_HARMING:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: INSTANT_DAMAGE
+    Children:
+      GLOWSTONE_DUST: SPLASH_POTION_OF_HARMING_II
+      DRAGON_BREATH: LINGERING_POTION_OF_HARMING
+  SPLASH_POTION_OF_HARMING_II:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: INSTANT_DAMAGE
+      Upgraded: true
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_HARMING_II
+  SPLASH_POTION_OF_POISON:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: POISON
+    Children:
+      GLOWSTONE_DUST: SPLASH_POTION_OF_POISON_II
+      DRAGON_BREATH: LINGERING_POTION_OF_POISON
+      FERMENTED_SPIDER_EYE: SPLASH_POTION_OF_HARMING
+      REDSTONE: SPLASH_POTION_OF_POISON_EXTENDED
+  SPLASH_POTION_OF_POISON_EXTENDED:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: POISON
+      Extended: true
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_POISON_EXTENDED
+      FERMENTED_SPIDER_EYE: SPLASH_POTION_OF_HARMING_II
+  SPLASH_POTION_OF_POISON_II:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: POISON
+      Upgraded: true
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_POISON_II
+      FERMENTED_SPIDER_EYE: SPLASH_POTION_OF_HARMING_II
+  SPLASH_POTION_OF_REGENERATION:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: REGEN
+    Children:
+      GLOWSTONE_DUST: SPLASH_POTION_OF_REGENERATION_II
+      REDSTONE: SPLASH_POTION_OF_REGENERATION_EXTENDED
+      DRAGON_BREATH: LINGERING_POTION_OF_REGENERATION
+  SPLASH_POTION_OF_REGENERATION_EXTENDED:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: REGEN
+      Extended: true
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_REGENERATION_EXTENDED
+  SPLASH_POTION_OF_REGENERATION_II:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: REGEN
+      Upgraded: true
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_REGENERATION_II
+  SPLASH_POTION_OF_STRENGTH:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: STRENGTH
+    Children:
+      GLOWSTONE_DUST: SPLASH_POTION_OF_STRENGTH_II
+      REDSTONE: SPLASH_POTION_OF_STRENGTH_EXTENDED
+      DRAGON_BREATH: LINGERING_POTION_OF_STRENGTH
+  SPLASH_POTION_OF_STRENGTH_EXTENDED:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: STRENGTH
+      Extended: true
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_STRENGTH_EXTENDED
+  SPLASH_POTION_OF_STRENGTH_II:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: STRENGTH
+      Upgraded: true
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_STRENGTH_II
+  SPLASH_POTION_OF_WEAKNESS:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: WEAKNESS
+    Children:
+      REDSTONE: SPLASH_POTION_OF_WEAKNESS_EXTENDED
+      DRAGON_BREATH: LINGERING_POTION_OF_WEAKNESS
+  SPLASH_POTION_OF_WEAKNESS_EXTENDED:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: WEAKNESS
+      Extended: true
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_WEAKNESS_EXTENDED
+  SPLASH_POTION_OF_LUCK:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: LUCK
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_LUCK
+  SPLASH_POTION_OF_TURTLE_MASTER:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: TURTLE_MASTER
+    Children:
+      REDSTONE: SPLASH_POTION_OF_TURTLE_MASTER_EXTENDED
+      DRAGON_BREATH: LINGERING_POTION_OF_TURTLE_MASTER
+      GLOWSTONE_DUST: SPLASH_POTION_OF_TURTLE_MASTER_II
+  SPLASH_POTION_OF_TURTLE_MASTER_II:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: TURTLE_MASTER
+      Upgraded: true
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_TURTLE_MASTER_II
+  SPLASH_POTION_OF_TURTLE_MASTER_EXTENDED:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: TURTLE_MASTER
+      Extended: true
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_TURTLE_MASTER_EXTENDED
+  SPLASH_POTION_OF_SLOW_FALLING:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: SLOW_FALLING
+    Children:
+      REDSTONE: SPLASH_POTION_OF_SLOW_FALLING_EXTENDED
+      DRAGON_BREATH: LINGERING_POTION_OF_SLOW_FALLING
+  SPLASH_POTION_OF_SLOW_FALLING_EXTENDED:
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: SLOW_FALLING
+      Extended: true
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_SLOW_FALLING_EXTENDED
+  SPLASH_POTION_OF_ABSORPTION:
+    Name: Splash Potion Of Absorption
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["ABSORPTION 0 1350"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_ABSORPTION
+      REDSTONE: SPLASH_POTION_OF_ABSORPTION_EXTENDED
+      GLOWSTONE_DUST: SPLASH_POTION_OF_ABSORPTION_II
+  SPLASH_POTION_OF_BLINDNESS:
+    Name: Splash Potion Of Blindness
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["BLINDNESS 0 168"]
+    Children:
+      GLOWSTONE_DUST: SPLASH_POTION_OF_BLINDNESS_II
+      REDSTONE: SPLASH_POTION_OF_BLINDNESS_EXTENDED
+      DRAGON_BREATH: LINGERING_POTION_OF_BLINDNESS
+  SPLASH_POTION_OF_DECAY:
+    Name: Splash Potion Of Decay
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["WITHER 0 337"]
+    Children:
+      GLOWSTONE_DUST: SPLASH_POTION_OF_DECAY_II
+      REDSTONE: SPLASH_POTION_OF_DECAY_EXTENDED
+      DRAGON_BREATH: LINGERING_POTION_OF_DECAY
+  SPLASH_POTION_OF_DULLNESS:
+    Name: Splash Potion Of Dullness
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["SLOW_DIGGING 0 2700"]
+    Children:
+      REDSTONE: SPLASH_POTION_OF_DULLNESS_EXTENDED
+      DRAGON_BREATH: LINGERING_POTION_OF_DULLNESS
+      GLOWSTONE_DUST: SPLASH_POTION_OF_DULLNESS_II
+  SPLASH_POTION_OF_HASTE:
+    Name: Splash Potion Of Haste
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["FAST_DIGGING 0 2700"]
+    Children:
+      REDSTONE: SPLASH_POTION_OF_HASTE_EXTENDED
+      GLOWSTONE_DUST: SPLASH_POTION_OF_HASTE_II
+      DRAGON_BREATH: LINGERING_POTION_OF_HASTE
+  SPLASH_POTION_OF_HEALTH_BOOST:
+    Name: Splash Potion Of Health Boost
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["HEALTH_BOOST 0 1350"]
+    Children:
+      REDSTONE: SPLASH_POTION_OF_HEALTH_BOOST_EXTENDED
+      GLOWSTONE_DUST: SPLASH_POTION_OF_HEALTH_BOOST_II
+      DRAGON_BREATH: LINGERING_POTION_OF_HEALTH_BOOST
+  SPLASH_POTION_OF_HUNGER:
+    Name: Splash Potion Of Hunger
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["HUNGER 0 675"]
+    Children:
+      GLOWSTONE_DUST: SPLASH_POTION_OF_HUNGER_II
+      DRAGON_BREATH: LINGERING_POTION_OF_HUNGER
+      REDSTONE: SPLASH_POTION_OF_HUNGER_EXTENDED
+  SPLASH_POTION_OF_NAUSEA:
+    Name: Splash Potion Of Nausea
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["CONFUSION 0 337"]
+    Children:
+      REDSTONE: SPLASH_POTION_OF_NAUSEA_EXTENDED
+      GLOWSTONE_DUST: SPLASH_POTION_OF_NAUSEA_II
+      DRAGON_BREATH: LINGERING_POTION_OF_NAUSEA
+  SPLASH_POTION_OF_RESISTANCE:
+    Name: Splash Potion Of Resistance
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["DAMAGE_RESISTANCE 0 337"]
+    Children:
+      GLOWSTONE_DUST: SPLASH_POTION_OF_RESISTANCE_II
+      REDSTONE: SPLASH_POTION_OF_RESISTANCE_EXTENDED
+      DRAGON_BREATH: LINGERING_POTION_OF_RESISTANCE
+  SPLASH_POTION_OF_SATURATION:
+    Name: Splash Potion Of Saturation
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["SATURATION 0 6"]
+    Children:
+      GLOWSTONE_DUST: SPLASH_POTION_OF_SATURATION_II
+      REDSTONE: SPLASH_POTION_OF_SATURATION_EXTENDED
+      DRAGON_BREATH: LINGERING_POTION_OF_SATURATION
+  SPLASH_POTION_OF_ABSORPTION_EXTENDED:
+    Name: Splash Potion Of Absorption Extended
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["ABSORPTION 0 2700"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_ABSORPTION_EXTENDED
+  SPLASH_POTION_OF_BLINDNESS_EXTENDED:
+    Name: Splash Potion Of Blindness Extended
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["BLINDNESS 0 336"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_BLINDNESS_EXTENDED
+  SPLASH_POTION_OF_DECAY_EXTENDED:
+    Name: Splash Potion Of Decay Extended
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["WITHER 0 674"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_DECAY_EXTENDED
+  SPLASH_POTION_OF_DULLNESS_EXTENDED:
+    Name: Splash Potion Of Dullness Extended
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["SLOW_DIGGING 0 5400"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_DULLNESS_EXTENDED
+  SPLASH_POTION_OF_HASTE_EXTENDED:
+    Name: Splash Potion Of Haste Extended
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["FAST_DIGGING 0 5400"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_HASTE_EXTENDED
+  SPLASH_POTION_OF_HEALTH_BOOST_EXTENDED:
+    Name: Splash Potion Of Health Boost Extended
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["HEALTH_BOOST 0 2700"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_HEALTH_BOOST_EXTENDED
+  SPLASH_POTION_OF_HUNGER_EXTENDED:
+    Name: Splash Potion Of Hunger Extended
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["HUNGER 0 1350"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_HUNGER_EXTENDED
+  SPLASH_POTION_OF_NAUSEA_EXTENDED:
+    Name: Splash Potion Of Nausea Extended
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["CONFUSION 0 674"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_NAUSEA_EXTENDED
+  SPLASH_POTION_OF_RESISTANCE_EXTENDED:
+    Name: Splash Potion Of Resistance Extended
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["DAMAGE_RESISTANCE 0 674"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_RESISTANCE_EXTENDED
+  SPLASH_POTION_OF_SATURATION_EXTENDED:
+    Name: Splash Potion Of Saturation Extended
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["SATURATION 0 12"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_SATURATION_EXTENDED
+  SPLASH_POTION_OF_ABSORPTION_II:
+    Name: Splash Potion Of Absorption II
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["ABSORPTION 1 675"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_ABSORPTION_II
+  SPLASH_POTION_OF_BLINDNESS_II:
+    Name: Splash Potion Of Blindness II
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["BLINDNESS 1 84"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_BLINDNESS_II
+  SPLASH_POTION_OF_DECAY_II:
+    Name: Splash Potion Of Decay II
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["WITHER 1 168"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_DECAY_II
+  SPLASH_POTION_OF_DULLNESS_II:
+    Name: Splash Potion Of Dullness II
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["SLOW_DIGGING 1 1350"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_DULLNESS_II
+  SPLASH_POTION_OF_HASTE_II:
+    Name: Splash Potion Of Haste II
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["FAST_DIGGING 1 1350"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_HASTE_II
+  SPLASH_POTION_OF_HEALTH_BOOST_II:
+    Name: Splash Potion Of Health Boost II
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["HEALTH_BOOST 1 675"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_HEALTH_BOOST_II
+  SPLASH_POTION_OF_HUNGER_II:
+    Name: Splash Potion Of Hunger II
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["HUNGER 1 337"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_HUNGER_II
+  SPLASH_POTION_OF_NAUSEA_II:
+    Name: Splash Potion Of Nausea II
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["CONFUSION 1 168"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_NAUSEA_II
+  SPLASH_POTION_OF_RESISTANCE_II:
+    Name: Splash Potion Of Resistance II
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["DAMAGE_RESISTANCE 1 168"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_RESISTANCE_II
+  SPLASH_POTION_OF_SATURATION_II:
+    Name: Splash Potion Of Saturation II
+    Material: SPLASH_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["SATURATION 1 3"]
+    Children:
+      DRAGON_BREATH: LINGERING_POTION_OF_SATURATION_II
+  LINGERING_POTION_OF_EMPTY:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+  LINGERING_POTION_OF_WATER:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: WATER
+    Children:
+      REDSTONE: LINGERING_POTION_OF_MUNDANE
+      GLISTERING_MELON_SLICE: LINGERING_POTION_OF_MUNDANE
+      GHAST_TEAR: LINGERING_POTION_OF_MUNDANE
+      GLOWSTONE_DUST: LINGERING_POTION_OF_THICK
+      RABBIT_FOOT: LINGERING_POTION_OF_MUNDANE
+      FERMENTED_SPIDER_EYE: LINGERING_POTION_OF_WEAKNESS
+      NETHER_WART: LINGERING_POTION_OF_AWKWARD
+      BLAZE_POWDER: LINGERING_POTION_OF_MUNDANE
+      SUGAR: LINGERING_POTION_OF_MUNDANE
+      SPIDER_EYE: LINGERING_POTION_OF_MUNDANE
+      MAGMA_CREAM: LINGERING_POTION_OF_MUNDANE
+  LINGERING_POTION_OF_MUNDANE:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: MUNDANE
+  LINGERING_POTION_OF_THICK:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: THICK
+  LINGERING_POTION_OF_AWKWARD:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: AWKWARD
+    Children:
+      RABBIT_FOOT: LINGERING_POTION_OF_LEAPING
+      PHANTOM_MEMBRANE: LINGERING_POTION_OF_SLOW_FALLING
+      SLIME_BALL: LINGERING_POTION_OF_DULLNESS
+      GOLDEN_CARROT: LINGERING_POTION_OF_NIGHT_VISION
+      QUARTZ: LINGERING_POTION_OF_ABSORPTION
+      GLISTERING_MELON_SLICE: LINGERING_POTION_OF_HEALING
+      GHAST_TEAR: LINGERING_POTION_OF_REGENERATION
+      INK_SAC: LINGERING_POTION_OF_BLINDNESS
+      BLAZE_POWDER: LINGERING_POTION_OF_STRENGTH
+      CARROT: LINGERING_POTION_OF_HASTE
+      TURTLE_HELMET: LINGERING_POTION_OF_TURTLE_MASTER
+      SUGAR: LINGERING_POTION_OF_SWIFTNESS
+      TALL_GRASS: LINGERING_POTION_OF_SATURATION
+      APPLE: LINGERING_POTION_OF_HEALTH_BOOST
+      GOLDEN_APPLE: LINGERING_POTION_OF_RESISTANCE
+      POISONOUS_POTATO: LINGERING_POTION_OF_DECAY
+      SPIDER_EYE: LINGERING_POTION_OF_POISON
+      BROWN_MUSHROOM: LINGERING_POTION_OF_NAUSEA
+      ROTTEN_FLESH: LINGERING_POTION_OF_HUNGER
+      MAGMA_CREAM: LINGERING_POTION_OF_FIRE_RESISTANCE
+      PUFFERFISH: LINGERING_POTION_OF_WATER_BREATHING
+  LINGERING_POTION_OF_NIGHT_VISION:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: NIGHT_VISION
+    Children:
+      FERMENTED_SPIDER_EYE: LINGERING_POTION_OF_INVISIBILITY
+      REDSTONE: LINGERING_POTION_OF_NIGHT_VISION_EXTENDED
+  LINGERING_POTION_OF_NIGHT_VISION_EXTENDED:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: NIGHT_VISION
+      Extended: true
+    Children:
+      FERMENTED_SPIDER_EYE: LINGERING_POTION_OF_INVISIBILITY_EXTENDED
+  LINGERING_POTION_OF_INVISIBILITY:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: INVISIBILITY
+    Children:
+      REDSTONE: LINGERING_POTION_OF_INVISIBILITY_EXTENDED
+  LINGERING_POTION_OF_INVISIBILITY_EXTENDED:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: INVISIBILITY
+      Extended: true
+  LINGERING_POTION_OF_LEAPING:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: JUMP
+    Children:
+      REDSTONE: LINGERING_POTION_OF_LEAPING_EXTENDED
+      FERMENTED_SPIDER_EYE: LINGERING_POTION_OF_SLOWNESS
+      GLOWSTONE_DUST: LINGERING_POTION_OF_LEAPING_II
+  LINGERING_POTION_OF_LEAPING_II:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: JUMP
+      Upgraded: true
+  LINGERING_POTION_OF_LEAPING_EXTENDED:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: JUMP
+      Extended: true
+  LINGERING_POTION_OF_FIRE_RESISTANCE:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: FIRE_RESISTANCE
+    Children:
+      FERMENTED_SPIDER_EYE: LINGERING_POTION_OF_SLOWNESS
+      REDSTONE: LINGERING_POTION_OF_FIRE_RESISTANCE_EXTENDED
+  LINGERING_POTION_OF_FIRE_RESISTANCE_EXTENDED:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: FIRE_RESISTANCE
+      Extended: true
+    Children:
+      FERMENTED_SPIDER_EYE: LINGERING_POTION_OF_SLOWNESS_EXTENDED
+  LINGERING_POTION_OF_SWIFTNESS:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: SPEED
+    Children:
+      GLOWSTONE_DUST: LINGERING_POTION_OF_SWIFTNESS_II
+      FERMENTED_SPIDER_EYE: LINGERING_POTION_OF_SLOWNESS
+      REDSTONE: LINGERING_POTION_OF_SWIFTNESS_EXTENDED
+  LINGERING_POTION_OF_SWIFTNESS_EXTENDED:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: SPEED
+      Extended: true
+    Children:
+      FERMENTED_SPIDER_EYE: LINGERING_POTION_OF_SLOWNESS_EXTENDED
+  LINGERING_POTION_OF_SWIFTNESS_II:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: SPEED
+      Upgraded: true
+    Children:
+      FERMENTED_SPIDER_EYE: LINGERING_POTION_OF_SLOWNESS_EXTENDED
+  LINGERING_POTION_OF_SLOWNESS:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: SLOWNESS
+    Children:
+      REDSTONE: LINGERING_POTION_OF_SLOWNESS_EXTENDED
+  LINGERING_POTION_OF_SLOWNESS_EXTENDED:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: SLOWNESS
+      Extended: true
+  LINGERING_POTION_OF_SLOWNESS_II:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: SLOWNESS
+      Upgraded: true
+    Children:
+      REDSTONE: LINGERING_POTION_OF_SLOWNESS_EXTENDED
+  LINGERING_POTION_OF_WATER_BREATHING:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: WATER_BREATHING
+    Children:
+      FERMENTED_SPIDER_EYE: LINGERING_POTION_OF_HARMING
+      REDSTONE: LINGERING_POTION_OF_WATER_BREATHING_EXTENDED
+  LINGERING_POTION_OF_WATER_BREATHING_EXTENDED:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: WATER_BREATHING
+      Extended: true
+  LINGERING_POTION_OF_HEALING:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: INSTANT_HEAL
+    Children:
+      GLOWSTONE_DUST: LINGERING_POTION_OF_HEALING_II
+      FERMENTED_SPIDER_EYE: LINGERING_POTION_OF_HARMING
+  LINGERING_POTION_OF_HEALING_II:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: INSTANT_HEAL
+      Upgraded: true
+    Children:
+      FERMENTED_SPIDER_EYE: LINGERING_POTION_OF_HARMING_II
+  LINGERING_POTION_OF_HARMING:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: INSTANT_DAMAGE
+    Children:
+      GLOWSTONE_DUST: LINGERING_POTION_OF_HARMING_II
+  LINGERING_POTION_OF_HARMING_II:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: INSTANT_DAMAGE
+      Upgraded: true
+  LINGERING_POTION_OF_POISON:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: POISON
+    Children:
+      REDSTONE: LINGERING_POTION_OF_POISON_EXTENDED
+      FERMENTED_SPIDER_EYE: LINGERING_POTION_OF_HARMING
+      GLOWSTONE_DUST: LINGERING_POTION_OF_POISON_II
+  LINGERING_POTION_OF_POISON_EXTENDED:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: POISON
+      Extended: true
+    Children:
+      FERMENTED_SPIDER_EYE: LINGERING_POTION_OF_HARMING_II
+  LINGERING_POTION_OF_POISON_II:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: POISON
+      Upgraded: true
+    Children:
+      FERMENTED_SPIDER_EYE: LINGERING_POTION_OF_HARMING_II
+  LINGERING_POTION_OF_REGENERATION:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: REGEN
+    Children:
+      GLOWSTONE_DUST: LINGERING_POTION_OF_REGENERATION_II
+      REDSTONE: LINGERING_POTION_OF_REGENERATION_EXTENDED
+  LINGERING_POTION_OF_REGENERATION_II:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: REGEN
+      Upgraded: true
+  LINGERING_POTION_OF_REGENERATION_EXTENDED:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: REGEN
+      Extended: true
+  LINGERING_POTION_OF_STRENGTH:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: STRENGTH
+    Children:
+      GLOWSTONE_DUST: LINGERING_POTION_OF_STRENGTH_II
+      REDSTONE: LINGERING_POTION_OF_STRENGTH_EXTENDED
+  LINGERING_POTION_OF_STRENGTH_EXTENDED:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: STRENGTH
+      Extended: true
+  LINGERING_POTION_OF_STRENGTH_II:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: STRENGTH
+      Upgraded: true
+  LINGERING_POTION_OF_WEAKNESS:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: WEAKNESS
+    Children:
+      REDSTONE: LINGERING_POTION_OF_WEAKNESS_EXTENDED
+  LINGERING_POTION_OF_WEAKNESS_EXTENDED:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: WEAKNESS
+      Extended: true
+  LINGERING_POTION_OF_LUCK:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: LUCK
+  LINGERING_POTION_OF_TURTLE_MASTER:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: TURTLE_MASTER
+    Children:
+      REDSTONE: LINGERING_POTION_OF_TURTLE_MASTER_EXTENDED
+      GLOWSTONE_DUST: LINGERING_POTION_OF_TURTLE_MASTER_II
+  LINGERING_POTION_OF_TURTLE_MASTER_II:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: TURTLE_MASTER
+      Upgraded: true
+  LINGERING_POTION_OF_TURTLE_MASTER_EXTENDED:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: TURTLE_MASTER
+      Extended: true
+  LINGERING_POTION_OF_SLOW_FALLING:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: SLOW_FALLING
+    Children:
+      REDSTONE: LINGERING_POTION_OF_SLOW_FALLING_EXTENDED
+  LINGERING_POTION_OF_SLOW_FALLING_EXTENDED:
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: SLOW_FALLING
+      Extended: true
+  LINGERING_POTION_OF_ABSORPTION:
+    Name: Lingering Potion Of Absorption
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["ABSORPTION 0 450"]
+    Children:
+      REDSTONE: LINGERING_POTION_OF_ABSORPTION_EXTENDED
+      GLOWSTONE_DUST: LINGERING_POTION_OF_ABSORPTION_II
+  LINGERING_POTION_OF_BLINDNESS:
+    Name: Lingering Potion Of Blindness
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["BLINDNESS 0 56"]
+    Children:
+      REDSTONE: LINGERING_POTION_OF_BLINDNESS_EXTENDED
+      GLOWSTONE_DUST: LINGERING_POTION_OF_BLINDNESS_II
+  LINGERING_POTION_OF_DECAY:
+    Name: Lingering Potion Of Decay
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["WITHER 0 112"]
+    Children:
+      GLOWSTONE_DUST: LINGERING_POTION_OF_DECAY_II
+      REDSTONE: LINGERING_POTION_OF_DECAY_EXTENDED
+  LINGERING_POTION_OF_DULLNESS:
+    Name: Lingering Potion Of Dullness
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["SLOW_DIGGING 0 900"]
+    Children:
+      REDSTONE: LINGERING_POTION_OF_DULLNESS_EXTENDED
+      GLOWSTONE_DUST: LINGERING_POTION_OF_DULLNESS_II
+  LINGERING_POTION_OF_HASTE:
+    Name: Lingering Potion Of Haste
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["FAST_DIGGING 0 900"]
+    Children:
+      GLOWSTONE_DUST: LINGERING_POTION_OF_HASTE_II
+      REDSTONE: LINGERING_POTION_OF_HASTE_EXTENDED
+  LINGERING_POTION_OF_HEALTH_BOOST:
+    Name: Lingering Potion Of Health Boost
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["HEALTH_BOOST 0 450"]
+    Children:
+      REDSTONE: LINGERING_POTION_OF_HEALTH_BOOST_EXTENDED
+      GLOWSTONE_DUST: LINGERING_POTION_OF_HEALTH_BOOST_II
+  LINGERING_POTION_OF_HUNGER:
+    Name: Lingering Potion Of Hunger
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["HUNGER 0 225"]
+    Children:
+      GLOWSTONE_DUST: LINGERING_POTION_OF_HUNGER_II
+      REDSTONE: LINGERING_POTION_OF_HUNGER_EXTENDED
+  LINGERING_POTION_OF_NAUSEA:
+    Name: Lingering Potion Of Nausea
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["CONFUSION 0 112"]
+    Children:
+      REDSTONE: LINGERING_POTION_OF_NAUSEA_EXTENDED
+      GLOWSTONE_DUST: LINGERING_POTION_OF_NAUSEA_II
+  LINGERING_POTION_OF_RESISTANCE:
+    Name: Lingering Potion Of Resistance
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["DAMAGE_RESISTANCE 0 112"]
+    Children:
+      REDSTONE: LINGERING_POTION_OF_RESISTANCE_EXTENDED
+      GLOWSTONE_DUST: LINGERING_POTION_OF_RESISTANCE_II
+  LINGERING_POTION_OF_SATURATION:
+    Name: Lingering Potion Of Saturation
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["SATURATION 0 2"]
+    Children:
+      REDSTONE: LINGERING_POTION_OF_SATURATION_EXTENDED
+      GLOWSTONE_DUST: LINGERING_POTION_OF_SATURATION_II
+  LINGERING_POTION_OF_ABSORPTION_EXTENDED:
+    Name: Lingering Potion Of Absorption Extended
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["ABSORPTION 0 900"]
+  LINGERING_POTION_OF_BLINDNESS_EXTENDED:
+    Name: Lingering Potion Of Blindness Extended
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["BLINDNESS 0 112"]
+  LINGERING_POTION_OF_DECAY_EXTENDED:
+    Name: Lingering Potion Of Decay Extended
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["WITHER 0 224"]
+  LINGERING_POTION_OF_DULLNESS_EXTENDED:
+    Name: Lingering Potion Of Dullness Extended
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["SLOW_DIGGING 0 1800"]
+  LINGERING_POTION_OF_HASTE_EXTENDED:
+    Name: Lingering Potion Of Haste Extended
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["FAST_DIGGING 0 1800"]
+  LINGERING_POTION_OF_HEALTH_BOOST_EXTENDED:
+    Name: Lingering Potion Of Health Boost Extended
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["HEALTH_BOOST 0 900"]
+  LINGERING_POTION_OF_HUNGER_EXTENDED:
+    Name: Lingering Potion Of Hunger Extended
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["HUNGER 0 450"]
+  LINGERING_POTION_OF_NAUSEA_EXTENDED:
+    Name: Lingering Potion Of Nausea Extended
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["CONFUSION 0 224"]
+  LINGERING_POTION_OF_RESISTANCE_EXTENDED:
+    Name: Lingering Potion Of Resistance Extended
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["DAMAGE_RESISTANCE 0 224"]
+  LINGERING_POTION_OF_SATURATION_EXTENDED:
+    Name: Lingering Potion Of Saturation Extended
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["SATURATION 0 4"]
+  LINGERING_POTION_OF_ABSORPTION_II:
+    Name: Lingering Potion Of Absorption II
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["ABSORPTION 1 225"]
+  LINGERING_POTION_OF_BLINDNESS_II:
+    Name: Lingering Potion Of Blindness II
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["BLINDNESS 1 28"]
+  LINGERING_POTION_OF_DECAY_II:
+    Name: Lingering Potion Of Decay II
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["WITHER 1 56"]
+  LINGERING_POTION_OF_DULLNESS_II:
+    Name: Lingering Potion Of Dullness II
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["SLOW_DIGGING 1 450"]
+  LINGERING_POTION_OF_HASTE_II:
+    Name: Lingering Potion Of Haste II
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["FAST_DIGGING 1 450"]
+  LINGERING_POTION_OF_HEALTH_BOOST_II:
+    Name: Lingering Potion Of Health Boost II
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["HEALTH_BOOST 1 225"]
+  LINGERING_POTION_OF_HUNGER_II:
+    Name: Lingering Potion Of Hunger II
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["HUNGER 1 112"]
+  LINGERING_POTION_OF_NAUSEA_II:
+    Name: Lingering Potion Of Nausea II
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["CONFUSION 1 56"]
+  LINGERING_POTION_OF_RESISTANCE_II:
+    Name: Lingering Potion Of Resistance II
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["DAMAGE_RESISTANCE 1 56"]
+  LINGERING_POTION_OF_SATURATION_II:
+    Name: Lingering Potion Of Saturation II
+    Material: LINGERING_POTION
+    PotionData:
+      PotionType: UNCRAFTABLE
+    Effects: ["SATURATION 1 1"]

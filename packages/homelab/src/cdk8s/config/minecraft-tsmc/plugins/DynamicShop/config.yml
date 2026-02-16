@@ -1,0 +1,43 @@
+# Language: ex) en-US,ko-KR
+# UseShopCommand: Set this to false if you want to disable '/shop'
+# DeliveryChargeScale: This is only used for shop with the 'delivery charge' flag. 0.01 ~
+# NumberOfPlayer: This is used to calculate the recommended median. 3~100
+# UseLegacyStockStabilization: false = Changed by n% of the gap with median. true = Changed by n% of median.
+# DisplayStockAsStack: ex) true: 10Stacks, false: 640
+# Version: Do NOT edit this
+
+Language: en-US
+Prefix: §3DShop3 §7| §f
+Command:
+  UseShopCommand: true
+  OpenStartPageInsteadOfDefaultShop: true
+  DefaultShopName: SampleShop
+  PermissionCheckWhenCreatingAShopList: false
+Shop:
+  SalesTax: 25
+  DeliveryChargeScale: 0.3
+  DeliveryChargeMin: 1
+  DeliveryChargeMax: 25
+  NumberOfPlayer: 10
+  UseLegacyStockStabilization: false
+UI:
+  DisplayStockAsStack: false
+  OpenStartPageWhenClickCloseButton: true
+  CloseButtonIcon: BARRIER
+  PageButtonIcon: PAPER
+  ShopInfoButtonIcon: OAK_SIGN
+  IntFormat: "###,###"
+  DoubleFormat: "###,##0.00"
+  LocalizedItemName: true
+  UsePlaceholderAPI: true
+  UseHexColorCode: true
+  EnableInventoryClickSearch:
+    StartPage: true
+    Shop: true
+Log:
+  SaveLogs: true
+  LogFileNameFormat: MM_dd_yyyy
+  CullLogs: true
+  LogCullAgeMinutes: 7200
+  LogCullTimeMinutes: 120
+Version: 7

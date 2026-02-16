@@ -1,0 +1,5 @@
+message:
+  enabled: true
+  context: "&7Villager trading is disabled"
+disabled-worlds:
+  - example-world

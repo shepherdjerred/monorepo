@@ -1,0 +1,174 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  dagger-ci:
+    runs-on: [homelab-runner-set]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Check if version-only change
+        id: check-versions
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          VERSION_FILES="src/cdk8s/src/versions.ts .dagger/src/versions.ts"
+
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            git fetch origin "$BASE_SHA" --depth=1
+            CHANGED_FILES=$(git diff --name-only "$BASE_SHA" HEAD)
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD~1)
+          fi
+
+          VERSION_ONLY="true"
+          for file in $CHANGED_FILES; do
+            if [[ ! " $VERSION_FILES " =~ [[:space:]]${file}[[:space:]] ]]; then
+              VERSION_ONLY="false"
+              break
+            fi
+          done
+
+          echo "version_only=$VERSION_ONLY" >> "$GITHUB_OUTPUT"
+          echo "Detected version_only=$VERSION_ONLY"
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: 1password/load-secrets-action/configure@v3
+        with:
+          connect-host: http://onepassword-connect.1password.svc.cluster.local:8080
+          connect-token: ${{ secrets.OP_CONNECT_TOKEN }}
+
+      - uses: 1password/load-secrets-action@v3
+        with:
+          export-env: true
+        env:
+          DAGGER_CLOUD_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/DAGGER_CLOUD_TOKEN
+          ARGOCD_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/ARGOCD_TOKEN
+          HASS_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/HASS_TOKEN
+          CHARTMUSEUM_PASSWORD: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/CHARTMUSEUM_PASSWORD
+          NPM_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/NPM_TOKEN
+          GH_PAT: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/GH_TOKEN
+          CLOUDFLARE_API_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/CLOUDFLARE_API_TOKEN
+          CLOUDFLARE_ACCOUNT_ID: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/CLOUDFLARE_ACCOUNT_ID
+          AWS_ACCESS_KEY_ID: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/AWS_ACCESS_KEY_ID
+          AWS_SECRET_ACCESS_KEY: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/AWS_SECRET_ACCESS_KEY
+          GH_TOFU_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/GH_TOFU_TOKEN
+
+      - name: Extract kubectl version
+        id: kubectl-version
+        run: |
+          KUBECTL_VERSION=$(bun -e "
+            const versions = await import('./src/cdk8s/src/versions.ts');
+            console.log(versions.default['kubernetes/kubernetes']);
+          ")
+          echo "version=$KUBECTL_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Cache kubectl
+        uses: actions/cache@v5
+        id: kubectl-cache
+        with:
+          path: ~/.local/bin/kubectl
+          key: kubectl-${{ steps.kubectl-version.outputs.version }}-linux-amd64
+
+      - name: Install kubectl
+        if: steps.kubectl-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/.local/bin
+          curl -LO "https://dl.k8s.io/release/${{ steps.kubectl-version.outputs.version }}/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          mv kubectl ~/.local/bin/
+
+      - name: Add kubectl to PATH
+        run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Extract Dagger version
+        id: dagger-version
+        run: |
+          DAGGER_IMAGE=$(kubectl get pod --selector=name=dagger-dagger-helm-engine --namespace=dagger -o jsonpath='{.items[0].spec.containers[0].image}')
+          DAGGER_VERSION="${DAGGER_IMAGE##*:v}"
+          echo "version=$DAGGER_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Install Dagger CLI
+        run: |
+          curl -fsSL https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION="${{ steps.dagger-version.outputs.version }}" BIN_DIR="$HOME/.local/bin" sh
+
+      - name: Get Dagger Engine Pod Name
+        run: |
+          DAGGER_ENGINE_POD_NAME="$(kubectl get pod --selector=name=dagger-dagger-helm-engine --namespace=dagger --output=jsonpath='{.items[0].metadata.name}')"
+          echo "_EXPERIMENTAL_DAGGER_RUNNER_HOST=kube-pod://$DAGGER_ENGINE_POD_NAME?namespace=dagger" >> "$GITHUB_ENV"
+
+      - name: Run Dagger CI pipeline
+        env:
+          CHARTMUSEUM_USERNAME: sjerred
+          HASS_BASE_URL: https://homeassistant.tailnet-1a49.ts.net
+          GHCR_PASSWORD: ${{ github.token }}
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+            ENV_NAME="prod"
+            ARGOCD_TOKEN_VAL="env://ARGOCD_TOKEN"
+            GHCR_USERNAME_VAL="${{ github.actor }}"
+            GHCR_PASSWORD_VAL="env://GHCR_PASSWORD"
+            CHART_VERSION_VAL="$(( ${{ github.run_number }} + 2246 ))"
+            CHARTMUSEUM_USERNAME_VAL="sjerred"
+            CHARTMUSEUM_PASSWORD_VAL="env://CHARTMUSEUM_PASSWORD"
+            GITHUB_TOKEN_VAL="env://GH_PAT"
+            NPM_TOKEN_VAL="env://NPM_TOKEN"
+          else
+            ENV_NAME="dev"
+            ARGOCD_TOKEN_VAL="dummy"
+            GHCR_USERNAME_VAL="dummy"
+            GHCR_PASSWORD_VAL="dummy"
+            CHART_VERSION_VAL="dummy"
+            CHARTMUSEUM_USERNAME_VAL="dummy"
+            CHARTMUSEUM_PASSWORD_VAL="dummy"
+            GITHUB_TOKEN_VAL=""
+            NPM_TOKEN_VAL=""
+          fi
+
+          VERSION_ONLY_FLAG=""
+          if [[ "${{ steps.check-versions.outputs.version_only }}" == "true" ]]; then
+            VERSION_ONLY_FLAG="--version-only"
+          fi
+
+          RELEASE_ARGS=""
+          if [[ -n "$GITHUB_TOKEN_VAL" && -n "$NPM_TOKEN_VAL" ]]; then
+            RELEASE_ARGS="--github-token $GITHUB_TOKEN_VAL --npm-token $NPM_TOKEN_VAL"
+          fi
+
+          # shellcheck disable=SC2086
+          dagger call ci \
+            --source=. \
+            --argocd-token "$ARGOCD_TOKEN_VAL" \
+            --ghcr-username "$GHCR_USERNAME_VAL" \
+            --ghcr-password "$GHCR_PASSWORD_VAL" \
+            --chart-version "$CHART_VERSION_VAL" \
+            --chart-museum-username "$CHARTMUSEUM_USERNAME_VAL" \
+            --chart-museum-password "$CHARTMUSEUM_PASSWORD_VAL" \
+            --hass-base-url env://HASS_BASE_URL \
+            --hass-token env://HASS_TOKEN \
+            --cloudflare-api-token env://CLOUDFLARE_API_TOKEN \
+            --cloudflare-account-id env://CLOUDFLARE_ACCOUNT_ID \
+            --aws-access-key-id env://AWS_ACCESS_KEY_ID \
+            --aws-secret-access-key env://AWS_SECRET_ACCESS_KEY \
+            --tofu-github-token env://GH_TOFU_TOKEN \
+            --env "$ENV_NAME" \
+            $VERSION_ONLY_FLAG \
+            $RELEASE_ARGS
+
+permissions:
+  contents: write
+  packages: write
+  pull-requests: write

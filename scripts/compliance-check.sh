@@ -5,7 +5,7 @@ ERRORS=0
 for dir in packages/*/; do
   PKG=$(basename "$dir")
   case "$PKG" in
-    resume|eslint-config|clauderon|claude-plugin|a2ui-poc|discord-claude|fonts) continue ;;
+    resume|eslint-config|clauderon|claude-plugin|a2ui-poc|discord-claude|fonts|anki|castle-casters|dotfiles|macos-cross-compiler|discord-plays-pokemon|scout-for-lol|homelab|dpp) continue ;;
   esac
 
   # Check for eslint config

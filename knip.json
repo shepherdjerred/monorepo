@@ -13,12 +13,28 @@
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]
     },
-    "packages/dagger-utils": {
+    "packages/bun-decompile": {
+      "entry": ["src/index.ts", "src/lib/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/astro-opengraph-images": {
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]
     },
-    "packages/bun-decompile": {
-      "entry": ["src/index.ts", "src/lib/index.ts"],
+    "packages/better-skill-capped": {
+      "entry": ["src/index.tsx"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/sjer.red": {
+      "entry": ["src/**/*.astro", "astro.config.ts"],
+      "project": ["src/**/*.{ts,tsx,astro}"]
+    },
+    "packages/webring": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/starlight-karma-bot": {
+      "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]
     }
   },

@@ -1,0 +1,48 @@
+source:
+  github:
+    - token_file: /secrets/password
+      user: shepherdjerred
+      wiki: true
+      issues: true
+      starred: false
+      filter:
+        excludearchived: false
+        excludeforks: false
+    - token_file: /secrets/password
+      includeorgs:
+        - shepherdjerred-homework
+        - shepherdjerred-minecraft
+        - harding-capstone
+        - sj-omscs
+        - the-storm-mc
+        - Code-Craft-Crew
+      wiki: true
+      issues: true
+      filter:
+        excludearchived: false
+        excludeforks: false
+destination:
+  local:
+    - path: /backup
+      structured: true # Organize by hoster/user/repo
+      zip: true
+      keep: 10 # Keep last 10 backups
+      bare: false # Clone as bare repositories
+      mirror: true # Create mirror clones
+      lfs: true # Include LFS objects
+# Cron schedule - run backups daily at 2 AM
+cron: "0 2 * * *"
+
+# Logging configuration
+log:
+  timeformat: "2006-01-02 15:04:05"
+  file-logging:
+    dir: /backup/logs
+    file: gickup.log
+    maxage: 30 # Keep logs for 30 days
+
+# Prometheus metrics for monitoring
+metrics:
+  prometheus:
+    endpoint: /metrics
+    listen_addr: ":6178"

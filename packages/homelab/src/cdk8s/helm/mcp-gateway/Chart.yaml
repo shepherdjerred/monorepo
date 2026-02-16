@@ -1,0 +1,6 @@
+apiVersion: v2
+name: mcp-gateway
+description: MCP Gateway for aggregating MCP servers behind a single endpoint
+type: application
+version: "$version"
+appVersion: "$appVersion"

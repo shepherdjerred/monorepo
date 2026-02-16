@@ -1,0 +1,13 @@
+defaults:
+  default: unlimited
+groups:
+  SampleGroup:
+    default: unlimited
+    chest: 5
+  SampleGroup2:
+    default: 5
+players:
+  Notch:
+    default: unlimited
+limits:
+  showEmpty: true

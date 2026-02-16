@@ -32,12 +32,6 @@ pre-commit:
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
 
-                - name: eslint-dagger-utils
-                  root: "packages/dagger-utils/"
-                  glob: "packages/dagger-utils/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
                 - name: eslint-eslint-config
                   root: "packages/eslint-config/"
                   glob: "packages/eslint-config/**/*.{ts,tsx,js,jsx}"
@@ -82,6 +76,48 @@ pre-commit:
                 - name: eslint-docs
                   root: "packages/clauderon/docs/"
                   glob: "packages/clauderon/docs/**/*.{ts,tsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-astro-opengraph-images
+                  root: "packages/astro-opengraph-images/"
+                  glob: "packages/astro-opengraph-images/**/*.{ts,tsx,js,jsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-better-skill-capped
+                  root: "packages/better-skill-capped/"
+                  glob: "packages/better-skill-capped/**/*.{ts,tsx,js,jsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-sjer-red
+                  root: "packages/sjer.red/"
+                  glob: "packages/sjer.red/**/*.{ts,tsx,js,jsx,astro}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-webring
+                  root: "packages/webring/"
+                  glob: "packages/webring/**/*.{ts,tsx,js,jsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-starlight-karma-bot
+                  root: "packages/starlight-karma-bot/"
+                  glob: "packages/starlight-karma-bot/**/*.{ts,tsx,js,jsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-scout-for-lol
+                  root: "packages/scout-for-lol/"
+                  glob: "packages/scout-for-lol/**/*.{ts,tsx,js,jsx,astro}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-discord-plays-pokemon
+                  root: "packages/discord-plays-pokemon/"
+                  glob: "packages/discord-plays-pokemon/**/*.{ts,tsx,js,jsx}"
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
 
@@ -154,11 +190,6 @@ pre-commit:
             glob: "packages/bun-decompile/**/*.{ts,tsx}"
             run: bun run typecheck
 
-          - name: dagger-utils-typecheck
-            root: "packages/dagger-utils/"
-            glob: "packages/dagger-utils/**/*.{ts,tsx}"
-            run: bun run typecheck
-
           - name: eslint-config-typecheck
             root: "packages/eslint-config/"
             glob: "packages/eslint-config/**/*.{ts,tsx}"
@@ -198,6 +229,41 @@ pre-commit:
             root: "packages/clauderon/mobile/"
             glob: "packages/clauderon/mobile/**/*.{ts,tsx}"
             run: bun run test
+
+          - name: astro-opengraph-images-typecheck
+            root: "packages/astro-opengraph-images/"
+            glob: "packages/astro-opengraph-images/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: better-skill-capped-typecheck
+            root: "packages/better-skill-capped/"
+            glob: "packages/better-skill-capped/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: sjer-red-typecheck
+            root: "packages/sjer.red/"
+            glob: "packages/sjer.red/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: webring-typecheck
+            root: "packages/webring/"
+            glob: "packages/webring/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: starlight-karma-bot-typecheck
+            root: "packages/starlight-karma-bot/"
+            glob: "packages/starlight-karma-bot/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: scout-for-lol-typecheck
+            root: "packages/scout-for-lol/"
+            glob: "packages/scout-for-lol/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: discord-plays-pokemon-typecheck
+            root: "packages/discord-plays-pokemon/"
+            glob: "packages/discord-plays-pokemon/**/*.{ts,tsx}"
+            run: bun run typecheck
 
           - name: full-typecheck
             glob: "tsconfig.base.json"

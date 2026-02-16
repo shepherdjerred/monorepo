@@ -1,0 +1,55 @@
+# DiscordSRV Configuration
+# This config uses environment variable placeholders that are substituted at container startup.
+# See: https://docker-minecraft-server.readthedocs.io/en/latest/configuration/interpolating/
+
+# Bot token read from DISCORDSRV_TOKEN env var (native DiscordSRV support)
+BotToken: ""
+
+# Channel mappings - format: {"in-game-channel": "discord-channel-id"}
+# The first channel is the default for all messages
+Channels: { "global": "${CFG_DISCORD_CHANNEL_ID}" }
+
+# Console channel for server logs and remote commands (set to empty string to disable)
+DiscordConsoleChannelId: "${CFG_DISCORD_CONSOLE_CHANNEL_ID}"
+
+# Discord invite link shown to players via /discord command
+DiscordInviteLink: "${CFG_DISCORD_INVITE_LINK}"
+
+# Enable bidirectional chat
+DiscordChatChannelDiscordToMinecraft: true
+DiscordChatChannelMinecraftToDiscord: true
+
+# Bot status displayed in Discord
+DiscordGameStatus: ["playing Minecraft"]
+DiscordOnlineStatus: ONLINE
+
+# Require linked accounts for Discord->Minecraft chat (set false for open servers)
+DiscordChatChannelRequireLinkedAccount: false
+
+# Show player count in bot status
+StatusUpdateRateInMinutes: 2
+
+# Join/leave messages
+MinecraftPlayerJoinMessageEnabled: true
+MinecraftPlayerLeaveMessageEnabled: true
+MinecraftPlayerFirstJoinMessageEnabled: true
+
+# Death messages
+MinecraftPlayerDeathMessageEnabled: true
+
+# Achievement messages
+MinecraftPlayerAchievementMessagesEnabled: true
+
+# Console channel settings
+DiscordConsoleChannelLogRefreshRateInSeconds: 5
+DiscordConsoleChannelUsageEnabled: true
+DiscordConsoleChannelBlacklistActsAsWhitelist: false
+DiscordConsoleChannelBlacklistedCommands: ["?", "op", "deop", "ban", "pardon", "ban-ip", "pardon-ip"]
+
+# Experiment: use webhooks for chat messages (shows player heads as avatars)
+Experiment_WebhookChatMessageDelivery: false
+
+# Debug mode (disable in production)
+Debug: false
+DebugJDA: false
+DebugJDARestActions: false

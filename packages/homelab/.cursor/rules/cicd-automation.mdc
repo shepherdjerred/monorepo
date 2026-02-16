@@ -1,0 +1,101 @@
+---
+description: CI/CD pipeline automation using Dagger, including build targets, quality assurance, deployment strategies, and optimization guidelines for containerized workflows.
+---
+# CI/CD & Automation with Dagger
+
+## Dagger Configuration
+- Use Dagger for all CI/CD pipelines as configured in [dagger.json](mdc:dagger.json)
+- Access Dagger functions via `.dagger/` directory
+- List available targets with `dagger functions`
+- Execute targets with `dagger call <target>`
+
+## Available Dagger Targets
+
+### Core Build Targets
+- **`build-k-8-s-manifests`** - Builds Kubernetes manifests using CDK8s
+- **`build-ha`** - Builds the Home Assistant (HA) app
+- **`build-and-apply-cdk-8-s`** - Builds manifests with CDK8s and applies them to cluster
+
+### Quality Assurance
+- **`check-all`** - Runs type check, test, and lint for HA, and type check for CDK8s in parallel
+- **`lint-ha`** - Lints the Home Assistant app using ESLint
+
+### Deployment
+- **`apply-k-8-s-config`** - Applies Kubernetes manifests from specified directory using kubectl
+- **`ci`** - Complete CI pipeline: kube-linter, ArgoCD sync, builds, and publishing
+
+### Helm Management
+- **`helm-build`** - Builds Helm chart, updates version/appVersion, exports artifacts
+- **`helm-publish`** - Publishes packaged Helm chart to ChartMuseum repo
+
+## Exporting Files and Directories
+
+### Dagger Export Functionality
+- **Directory/File Export**: Dagger functions that return `Directory` or `File` can be exported to the local filesystem
+- **Export Syntax**: Use `dagger call <function> export --path=<local-path>` to save outputs locally
+- **Just-in-Time**: Dagger functions return just-in-time directories and files that can be exported on-demand
+
+### Export Examples
+```bash
+# Export helm chart build artifacts
+dagger call helm-build --source=src/cdk8s/helm --version=1.0.0 export --path=./helm-dist
+
+# Export CDK8s manifests
+dagger call build-k-8-s-manifests export --path=./k8s-manifests
+
+# Export any Directory/File-returning function
+dagger call <function-name> <args> export --path=<local-directory>
+```
+
+### Export Best Practices
+- **Use built-in export** instead of implementing custom export functions
+- **Prefer relative paths** for local exports to maintain portability
+- **Clean up exports** after inspection to avoid cluttering workspace
+- **Directory.export() issues**: Avoid using `Directory.export()` in custom functions - use Dagger's built-in export command instead
+
+## CI/CD Best Practices
+
+### GitOps Workflow
+- Prefer GitOps approach with ArgoCD for deployments
+- All changes should flow through Git repositories
+- Use ArgoCD for automated synchronization
+
+### Development Environment
+- **Dev Environment CI**: When running the `ci` target for dev environment, use dummy values for secrets
+- Prevent accidental exposure of real credentials in development
+- Enable safe testing with mock values
+
+### Secret Management
+- Use 1Password for secret management
+- Never expose real secrets in development environments
+- Implement proper secret rotation strategies
+
+### Backup Strategies
+- Implement proper backup strategies for stateful workloads
+- Test backup and restore procedures regularly
+- Document recovery processes
+
+### Quality Gates
+- Use kube-linter configuration from [.kube-linter.yaml](mdc:.kube-linter.yaml)
+- Ensure all Kubernetes manifests pass linting
+- Implement proper testing at each stage
+
+## Code Quality & Optimization
+
+### Dagger Function Patterns
+- **Extract common container setup** into helper functions to reduce duplication
+- **Use shared caching strategies** across related functions
+- **Follow layered container architecture** as defined in [.dagger/src/base.ts](mdc:.dagger/src/base.ts)
+- **Optimize for Docker layer caching** to improve build performance
+
+### Helm Pipeline Optimization
+- **Shared `getHelmContainer()` helper** - Common setup for all helm functions in [.dagger/src/helm.ts](mdc:.dagger/src/helm.ts)
+- **Version management** - Automatic updating of Chart.yaml version and appVersion fields
+- **Artifact packaging** - Consistent chart packaging and export strategies
+- **Cache efficiency** - Proper use of cache volumes for helm registry data
+
+## Automation Guidelines
+- Follow Renovate configuration for automated dependency updates
+- Use conventional commits for automated changelog generation
+- Implement proper versioning strategies
+- Consider rollback procedures for all deployments

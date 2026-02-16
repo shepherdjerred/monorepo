@@ -11,8 +11,8 @@ import {
   getGitHubContainer,
   REVIEW_VERDICT_SCHEMA,
   type ReviewVerdict,
-} from "@shepherdjerred/dagger-utils/containers";
-import type { ExecResult } from "@shepherdjerred/dagger-utils";
+} from "./lib/containers/index.js";
+import type { ExecResult } from "./lib/index.js";
 
 const REPO = "shepherdjerred/monorepo";
 
