@@ -1,0 +1,362 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Singed": {
+      "id": "Singed",
+      "key": "27",
+      "name": "Singed",
+      "title": "the Mad Chemist",
+      "image": {
+        "full": "Singed.png",
+        "sprite": "champion4.png",
+        "group": "champion",
+        "x": 96,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "27000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "27001",
+          "num": 1,
+          "name": "Riot Squad Singed",
+          "chromas": false
+        },
+        {
+          "id": "27002",
+          "num": 2,
+          "name": "Hextech Singed",
+          "chromas": false
+        },
+        {
+          "id": "27003",
+          "num": 3,
+          "name": "Surfer Singed",
+          "chromas": false
+        },
+        {
+          "id": "27004",
+          "num": 4,
+          "name": "Mad Scientist Singed",
+          "chromas": false
+        },
+        {
+          "id": "27005",
+          "num": 5,
+          "name": "Augmented Singed",
+          "chromas": false
+        },
+        {
+          "id": "27006",
+          "num": 6,
+          "name": "Snow Day Singed",
+          "chromas": false
+        },
+        {
+          "id": "27007",
+          "num": 7,
+          "name": "SSW Singed",
+          "chromas": false
+        },
+        {
+          "id": "27008",
+          "num": 8,
+          "name": "Black Scourge Singed",
+          "chromas": false
+        },
+        {
+          "id": "27009",
+          "num": 9,
+          "name": "Beekeeper Singed",
+          "chromas": false
+        },
+        {
+          "id": "27010",
+          "num": 10,
+          "name": "Resistance Singed",
+          "chromas": true
+        },
+        {
+          "id": "27019",
+          "num": 19,
+          "name": "Astronaut Singed",
+          "chromas": true
+        },
+        {
+          "id": "27028",
+          "num": 28,
+          "name": "Arcane Shimmer Lab Singed",
+          "chromas": false
+        }
+      ],
+      "lore": "Singed is a brilliant alchemist of dubious morality, whose experiments would turn the stomach of even the most cutthroat criminal. Selling his skills to the highest bidder, he cares little for how his noxious concoctions are used, with the ensuing chaos an experiment in itself. His most infamous work is “shimmer”, which enabled the chembarons to turn Zaun into their personal playground—but fueled by madness, Singed is always working on something new, with each endeavor more depraved than the last...",
+      "blurb": "Singed is a brilliant alchemist of dubious morality, whose experiments would turn the stomach of even the most cutthroat criminal. Selling his skills to the highest bidder, he cares little for how his noxious concoctions are used, with the ensuing chaos...",
+      "allytips": [
+        "Poison Trail is very effective at farming and harassing, allowing Singed to dominate the flow of whatever lane he's in.",
+        "Use Insanity Potion to trick your opponents into chasing you through your Poison Trail.",
+        "Flinging enemies into your tower can deal heavy amounts of damage to them."
+      ],
+      "enemytips": [
+        "Keep your distance to avoid being Flung back into Singed's allies.",
+        "Singed needs to run close to your team to be effective. Try to take advantage of this by using crowd control effects on him while attacking his allies.",
+        "Be careful when chasing Singed. He's very difficult to bring down, and can leave his Poison Trail to damage you in your pursuit."
+      ],
+      "tags": ["Tank", "Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 4,
+        "defense": 8,
+        "magic": 7,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 650,
+        "hpperlevel": 96,
+        "mp": 330,
+        "mpperlevel": 45,
+        "movespeed": 345,
+        "armor": 34,
+        "armorperlevel": 4.2,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 9.5,
+        "hpregenperlevel": 0.55,
+        "mpregen": 7.5,
+        "mpregenperlevel": 0.55,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 63,
+        "attackdamageperlevel": 3.4,
+        "attackspeedperlevel": 1.9,
+        "attackspeed": 0.7
+      },
+      "spells": [
+        {
+          "id": "PoisonTrail",
+          "name": "Poison Trail",
+          "description": "Leaves a trail of poison behind Singed, dealing damage to enemies caught in the path.",
+          "tooltip": "<toggle>Toggle:</toggle> Singed lays a poisonous trail that deals <magicDamage>{{ damagepersecond }} magic damage</magicDamage> per second.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage"],
+            "effect": ["{{ basedamagepersecond }} -> {{ basedamagepersecondNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [0, 0, 0, 0, 0],
+          "cooldownBurn": "0",
+          "cost": [13, 13, 13, 13, 13],
+          "costBurn": "13",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " Mana per Second",
+          "maxammo": "-1",
+          "range": [20, 20, 20, 20, 20],
+          "rangeBurn": "20",
+          "image": {
+            "full": "PoisonTrail.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 288,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} Mana per Second"
+        },
+        {
+          "id": "MegaAdhesive",
+          "name": "Mega Adhesive",
+          "description": "Throws a vial of mega adhesive on the ground, slowing and grounding enemies who walk on it.",
+          "tooltip": "Singed hurls a cask of sticky liquid, <status>Grounding</status> and <status>Slowing</status> enemies in the area by {{ slowpercent }}% for {{ wduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Slow", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ slowpercent }}% -> {{ slowpercentNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [17, 16, 15, 14, 13],
+          "cooldownBurn": "17/16/15/14/13",
+          "cost": [60, 70, 80, 90, 100],
+          "costBurn": "60/70/80/90/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1000, 1000, 1000, 1000, 1000],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "MegaAdhesive.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 336,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Fling",
+          "name": "Fling",
+          "description": "Damages target enemy unit and flings them into the air behind Singed. If the target Singed flings lands in his Mega Adhesive, they are also rooted.",
+          "tooltip": "Singed flings an enemy over his shoulder, dealing <magicDamage>{{ basedamage }} plus {{ e3 }}% max Health magic damage</magicDamage>.<br /><br />If Singed flings a target into his <spellName>Mega Adhesive</spellName>, they are <status>Rooted</status> for {{ e2 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Maximum Health Damage", "Root Duration", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ e3 }}% -> {{ e3NL }}%",
+              "{{ e2 }} -> {{ e2NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldownBurn": "10/9.5/9/8.5/8",
+          "cost": [60, 70, 80, 90, 100],
+          "costBurn": "60/70/80/90/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [50, 60, 70, 80, 90],
+            [1, 1.25, 1.5, 1.75, 2],
+            [6, 6.5, 7, 7.5, 8],
+            [420, 420, 420, 420, 420],
+            [300, 300, 300, 300, 300],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "50/60/70/80/90",
+            "1/1.25/1.5/1.75/2",
+            "6/6.5/7/7.5/8",
+            "420",
+            "300",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [125, 125, 125, 125, 125],
+          "rangeBurn": "125",
+          "image": {
+            "full": "Fling.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 384,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "InsanityPotion",
+          "name": "Insanity Potion",
+          "description": "Singed drinks a potent brew of chemicals, granting him increased combat stats, and making his Poison Trail apply Grievous Wounds.",
+          "tooltip": "Singed drinks a potent brew of chemicals, granting him {{ statamount }} <scaleAP>Ability Power</scaleAP>, <scaleArmor>Armor</scaleArmor>, <scaleMR>Magic Resist</scaleMR>, <speed>Move Speed</speed>, <healing>Health Regen</healing>, and <scaleMana>Mana Regen</scaleMana> for {{ duration }} seconds. During this effect, Singed's <spellName>Poison Trail</spellName> also applies {{ grievousamount*100 }}% Grievous Wounds for {{ grievousduration }} second.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Bonus Stats"],
+            "effect": ["{{ statamount }} -> {{ statamountNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [100, 100, 100],
+          "cooldownBurn": "100",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [20, 20, 20],
+          "rangeBurn": "20",
+          "image": {
+            "full": "InsanityPotion.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 432,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Noxious Slipstream",
+        "description": "Singed drafts off nearby champions, gaining a burst of Move Speed when passing them.",
+        "image": {
+          "full": "Singed_Passive.png",
+          "sprite": "passive4.png",
+          "group": "passive",
+          "x": 96,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

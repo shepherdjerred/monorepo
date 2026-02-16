@@ -1,0 +1,94 @@
+---
+description: When and how to use type assertions correctly
+globs: "*.ts,*.tsx"
+alwaysApply: false
+---
+
+# Type Assertions Policy
+
+## Core Rule: Validate, Don't Assert
+
+**ALWAYS prefer Zod validation over type assertions.**
+
+## Acceptable Assertions
+
+Only these forms are allowed:
+
+### 1. `as unknown` (Widening)
+
+```typescript
+const unknownValue = someData as unknown;
+```
+
+### 2. `as const` (Literal Type)
+
+```typescript
+const config = { type: "production" as const };
+```
+
+## Never Use
+
+```typescript
+// ❌ Direct cast
+const user = data as User;
+
+// ❌ Any cast
+const value = data as any;
+
+// ❌ Error cast
+const message = (error as Error).message;
+```
+
+## The Zod-First Pattern
+
+```typescript
+// 1. Validate with Zod
+const DataSchema = z.object({ id: z.string(), name: z.string() });
+const validated = DataSchema.parse(unknownData);
+
+// 2. Use safely (TypeScript knows the type)
+console.log(validated.id, validated.name);
+
+// 3. Assert only if needed for third-party library
+return validated as unknown as ThirdPartyInterface;
+```
+
+## Import Types
+
+Use `import type` for type-only imports:
+
+```typescript
+// ✅ CORRECT
+import { createUser, type CreateUserInput } from "./api.ts";
+import type { User } from "./types.ts";
+
+// ❌ WRONG - function used at runtime
+import type { createUser } from "./api.ts";
+```
+
+## Template Literals
+
+Never use unknown values in template literals:
+
+```typescript
+// ❌ const msg = `Error: ${error}`;
+
+// ✅
+const ErrorSchema = z.object({ message: z.string() });
+const result = ErrorSchema.safeParse(error);
+const msg = result.success ? `Error: ${result.data.message}` : "Unknown error";
+```
+
+## Why This Matters
+
+1. **Runtime Safety** - Zod catches invalid data before errors
+2. **Compile Safety** - TypeScript catches type mismatches
+3. **Linter Compliance** - Follows `no-type-assertions` rule
+4. **Maintainability** - Clear validation logic
+
+## Related Documentation
+
+- **ESLint Rule:** `eslint-custom-rules.mdc` (Rule 1: no-type-assertions)
+- **Type Safety:** `type-safety-strategy.mdc` - Overall strategy
+- **Zod Patterns:** `zod-validation-patterns.mdc` - Validation patterns
+- **Error Handling:** `error-handling-patterns.mdc` - Error validation

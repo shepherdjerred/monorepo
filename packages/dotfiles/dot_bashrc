@@ -1,0 +1,49 @@
+# ~/.bashrc - Sourced by interactive non-login shells
+
+# Source environment setup (PATH, mise)
+[[ -f ~/.bash_env ]] && source ~/.bash_env
+
+# Aliases (interactive only)
+alias vim=lvim
+alias ls=eza
+alias grep=rg
+alias cat=bat
+alias htop=btop
+alias top=btop
+
+# Environment
+export SHELL=bash
+export EDITOR=lvim
+export LANG=en_US.UTF-8
+
+# Setup Dagger engine with caching
+_setup_dagger_engine() {
+    local cache_dir="$HOME/.cache/dagger"
+    local cache_file="$cache_dir/pod_name"
+    local cache_ttl=3600  # 1 hour in seconds
+
+    mkdir -p "$cache_dir"
+
+    # Check if cache exists and is fresh
+    if [[ -f "$cache_file" ]]; then
+        local cache_age=$(($(date +%s) - $(stat -c %Y "$cache_file" 2>/dev/null || stat -f %m "$cache_file" 2>/dev/null)))
+        if [[ $cache_age -lt $cache_ttl ]]; then
+            export _EXPERIMENTAL_DAGGER_RUNNER_HOST="$(cat "$cache_file")"
+            return
+        fi
+    fi
+
+    # Try to get the pod name
+    if command -v kubectl &> /dev/null; then
+        local pod_name
+        pod_name="$(kubectl get pod --selector=name=dagger-dagger-helm-engine --namespace=dagger --output=jsonpath='{.items[0].metadata.name}' 2>/dev/null)"
+
+        if [[ -n "$pod_name" ]]; then
+            local runner_host="kube-pod://${pod_name}?namespace=dagger"
+            echo "$runner_host" > "$cache_file"
+            export _EXPERIMENTAL_DAGGER_RUNNER_HOST="$runner_host"
+        fi
+    fi
+}
+
+_setup_dagger_engine

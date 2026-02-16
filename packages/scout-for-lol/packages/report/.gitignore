@@ -1,0 +1,10 @@
+.env
+*.env
+*.png
+!src/html/**/*.png
+chats.json
+state.json
+matches
+npm
+**/__snapshots__/*.png
+*.svg

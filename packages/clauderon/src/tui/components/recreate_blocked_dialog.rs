@@ -12,7 +12,7 @@ use crate::tui::app::App;
 ///
 /// This dialog is shown when a session cannot be safely recreated
 /// (e.g., Sprites with auto_destroy=true where data would be lost)
-pub fn render(frame: &mut Frame, app: &App, area: Rect) {
+pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
     let Some(session) = app.get_recreate_session() else {
         return;
     };

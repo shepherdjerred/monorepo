@@ -1,0 +1,62 @@
+---
+title: Homelab 3 - ArgoCD
+description: ArgoCD
+date: 2024-06-26Z-0700
+isDraft: true
+---
+
+## ArgoCD
+
+So, with cdk8s I have an execellent way to author my Kubernetes manifests. How do I deploy them?
+
+[ArgoCD](https://argo-cd.readthedocs.io/en/stable/)!
+
+The workflow is actually quite simple. I store my Kubernetes manifests in a [GitHub repo](https://github.com/shepherdjerred/homelab/tree/main/cdk8s/dist) and I point ArgoCD to it.
+
+How do I configure ArgoCD? With cdk8s, of course:
+
+```typescript
+// @noErrors
+import { Chart } from "https://esm.sh/cdk8s@2.68.58";
+import { Application } from "../../imports/argoproj.io.ts";
+
+export function createLamportApp(chart: Chart) {
+  return new Application(chart, "lamport-app", {
+    metadata: {
+      name: "lamport",
+    },
+    spec: {
+      project: "default",
+      source: {
+        repoUrl: "https://github.com/shepherdjerred/homelab",
+        path: "cdk8s/dist/",
+        targetRevision: "main",
+      },
+      destination: {
+        server: "https://kubernetes.default.svc",
+        namespace: "lamport",
+      },
+      syncPolicy: {
+        automated: {},
+        syncOptions: ["CreateNamespace=true"],
+      },
+    },
+  });
+}
+```
+
+## Ingress and HTTPS with Tailscale
+
+## Direct connections and local networks
+
+## Persistant volumes
+
+## Backups
+
+## Monitoring
+
+## GPUs
+
+## Helm, Kustomize, and operators
+
+## Keeping things up-to-date

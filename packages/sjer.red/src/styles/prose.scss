@@ -1,0 +1,13 @@
+.prose {
+  font-family: "Lora Variable", Charter, "Bitstream Charter", "Sitka Text", Cambria, serif;
+  max-width: 100%;
+  padding: 0;
+
+  a {
+    color: #2563eb;
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
+}

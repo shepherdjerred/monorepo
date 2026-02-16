@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "vitest.explorer",
+    "astro-build.astro-vscode",
+    "unifiedjs.vscode-mdx",
+    "earthly.earthfile-syntax-highlighting",
+    "glehmann.earthlyls"
+  ]
+}

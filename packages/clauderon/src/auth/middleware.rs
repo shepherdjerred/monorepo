@@ -11,12 +11,13 @@ use uuid::Uuid;
 use super::session::SessionStore;
 
 /// Extension key for storing the authenticated user ID
-#[derive(Clone)]
+#[derive(Clone, Copy, Debug)]
 pub struct AuthenticatedUserId(pub Uuid);
 
 /// Auth middleware state
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct AuthMiddlewareState {
+    /// Session store for validating auth cookies.
     pub session_store: SessionStore,
 }
 
@@ -40,8 +41,8 @@ pub async fn auth_middleware(
         .ok_or(StatusCode::UNAUTHORIZED)?;
 
     // Parse session ID
-    let session_id = Uuid::parse_str(session_cookie.value()).map_err(|_| {
-        tracing::warn!("Invalid session ID format");
+    let session_id = Uuid::parse_str(session_cookie.value()).map_err(|e| {
+        tracing::warn!(error = %e, "Invalid session ID format");
         StatusCode::UNAUTHORIZED
     })?;
 

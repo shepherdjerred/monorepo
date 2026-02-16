@@ -1,0 +1,14 @@
+node_modules
+.env
+bun.lockb
+*.sqlite
+*.sqlite-journal
+data/
+.eslintcache
+*.tsbuildinfo
+.idea
+*.iml
+dist/
+
+# Dagger
+.dagger/sdk/

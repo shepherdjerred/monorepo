@@ -10,8 +10,11 @@ use tracing::instrument;
 /// Represents a parsed 1Password secret reference (op://vault/item/field).
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct OpReference {
+    /// 1Password vault name.
     pub vault: String,
+    /// Item name within the vault.
     pub item: String,
+    /// Field name within the item.
     pub field: String,
 }
 
@@ -53,9 +56,9 @@ impl OpReference {
         }
 
         Ok(Self {
-            vault: parts[0].to_string(),
-            item: parts[1].to_string(),
-            field: parts[2].to_string(),
+            vault: parts[0].to_owned(),
+            item: parts[1].to_owned(),
+            field: parts[2].to_owned(),
         })
     }
 
@@ -65,17 +68,18 @@ impl OpReference {
     #[must_use]
     pub fn to_cli_args(&self) -> Vec<String> {
         vec![
-            "item".to_string(),
-            "get".to_string(),
+            "item".to_owned(),
+            "get".to_owned(),
             format!("{}/{}", self.vault, self.item),
-            "--fields".to_string(),
+            "--fields".to_owned(),
             self.field.clone(),
-            "--reveal".to_string(),
+            "--reveal".to_owned(),
         ]
     }
 }
 
 /// Client for interacting with 1Password CLI.
+#[derive(Debug)]
 pub struct OnePasswordClient {
     op_path: String,
 }
@@ -151,8 +155,7 @@ impl OnePasswordClient {
 
         let value = String::from_utf8(output.stdout)
             .context("Failed to parse op CLI output as UTF-8")?
-            .trim()
-            .to_string();
+            .trim().to_owned();
 
         if value.is_empty() {
             anyhow::bail!(
@@ -330,9 +333,9 @@ mod tests {
     #[test]
     fn test_to_cli_args() {
         let op_ref = OpReference {
-            vault: "Production".to_string(),
-            item: "GitHub".to_string(),
-            field: "token".to_string(),
+            vault: "Production".to_owned(),
+            item: "GitHub".to_owned(),
+            field: "token".to_owned(),
         };
         let args = op_ref.to_cli_args();
         assert_eq!(
@@ -351,9 +354,9 @@ mod tests {
     #[test]
     fn test_to_cli_args_with_spaces() {
         let op_ref = OpReference {
-            vault: "My Vault".to_string(),
-            item: "My Item".to_string(),
-            field: "my_field".to_string(),
+            vault: "My Vault".to_owned(),
+            item: "My Item".to_owned(),
+            field: "my_field".to_owned(),
         };
         let args = op_ref.to_cli_args();
         assert_eq!(

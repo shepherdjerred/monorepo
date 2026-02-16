@@ -5,10 +5,10 @@ use axum::{
 use include_dir::{Dir, include_dir};
 
 /// Embedded frontend build directory
-static DIST_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/web/frontend/dist");
+static DIST_DIR: Dir<'static> = include_dir!("$CARGO_MANIFEST_DIR/web/frontend/dist");
 
 /// Embedded docs build directory
-static DOCS_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/docs/dist");
+static DOCS_DIR: Dir<'static> = include_dir!("$CARGO_MANIFEST_DIR/docs/dist");
 
 /// Serve static files from the embedded frontend build
 pub async fn serve_static(uri: Uri) -> Response {
@@ -50,7 +50,8 @@ pub async fn serve_docs(uri: Uri) -> Response {
 }
 
 /// Serve a specific file with appropriate content type
-fn serve_file(file: &include_dir::File) -> Response {
+#[expect(clippy::unwrap_used, reason = "MIME types from mime_guess are always valid header values")]
+fn serve_file(file: &include_dir::File<'_>) -> Response {
     let mime = mime_guess::from_path(file.path()).first_or_octet_stream();
     let mime_type = mime.as_ref();
 

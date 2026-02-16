@@ -1,0 +1,341 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Swain": {
+      "id": "Swain",
+      "key": "50",
+      "name": "Swain",
+      "title": "the Noxian Grand General",
+      "image": {
+        "full": "Swain.png",
+        "sprite": "champion4.png",
+        "group": "champion",
+        "x": 432,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "50000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "50001",
+          "num": 1,
+          "name": "Northern Front Swain",
+          "chromas": false
+        },
+        {
+          "id": "50002",
+          "num": 2,
+          "name": "Bilgewater Swain",
+          "chromas": false
+        },
+        {
+          "id": "50003",
+          "num": 3,
+          "name": "Tyrant Swain",
+          "chromas": false
+        },
+        {
+          "id": "50004",
+          "num": 4,
+          "name": "Dragon Master Swain",
+          "chromas": true
+        },
+        {
+          "id": "50011",
+          "num": 11,
+          "name": "Hextech Swain",
+          "chromas": false
+        },
+        {
+          "id": "50012",
+          "num": 12,
+          "name": "Crystal Rose Swain",
+          "chromas": true
+        },
+        {
+          "id": "50021",
+          "num": 21,
+          "name": "Winterblessed Swain",
+          "chromas": true
+        },
+        {
+          "id": "50032",
+          "num": 32,
+          "name": "Chosen of the Wolf Swain",
+          "chromas": true
+        },
+        {
+          "id": "50033",
+          "num": 33,
+          "name": "Prestige Chosen of the Wolf Swain",
+          "chromas": false
+        }
+      ],
+      "lore": "Jericho Swain is the visionary ruler of Noxus, an expansionist nation that reveres only strength. Though he was cast down and crippled in the Ionian wars, his left arm severed, he seized control of the empire with ruthless determination… and a new, demonic hand. Now, Swain commands from the front lines, marching against a coming darkness that only he can see—in glimpses gathered by shadowy ravens from the corpses all around him. In a swirl of sacrifice and secrets, the greatest secret of all is that the true enemy lies within.",
+      "blurb": "Jericho Swain is the visionary ruler of Noxus, an expansionist nation that reveres only strength. Though he was cast down and crippled in the Ionian wars, his left arm severed, he seized control of the empire with ruthless determination… and a new...",
+      "allytips": [
+        "If you're having trouble rooting an enemy with Nevermove, try throwing it at opponents when they are near their minions so the explosion surprises them.",
+        "While laning, try to use Death's Hand's piercing damage to damage opponents from a safe distance.",
+        "Vision of Empire is quite difficult to land on its own, look for skirmishes around the map where enemies may be distracted or crowd controlled so you can land it more easily.",
+        "Demonic Ascension may make Swain very hard to kill but he's pretty easy to get away from. Try building items that can slow opponents to keep them in range if their mobility is overwhelming."
+      ],
+      "enemytips": [
+        "Swain's passive is very potent if you are immobilized. Make sure to be extra careful around enemies who have immobilizing effects.",
+        "High mobility counters all of Swain's basic abilities: Death's Hand does more damage the closer he is, Vision of Empire has a very long delay and Nevermove must start returning back to him to be dangerous.",
+        "Buying an item with Grievous Wounds will make Swain much easier to kill during his Demonic Ascension."
+      ],
+      "tags": ["Mage", "Support"],
+      "partype": "Mana",
+      "info": {
+        "attack": 2,
+        "defense": 6,
+        "magic": 9,
+        "difficulty": 8
+      },
+      "stats": {
+        "hp": 595,
+        "hpperlevel": 99,
+        "mp": 400,
+        "mpperlevel": 29,
+        "movespeed": 330,
+        "armor": 25,
+        "armorperlevel": 4.7,
+        "spellblock": 31,
+        "spellblockperlevel": 1.55,
+        "attackrange": 525,
+        "hpregen": 3,
+        "hpregenperlevel": 0.5,
+        "mpregen": 10,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 58,
+        "attackdamageperlevel": 2.7,
+        "attackspeedperlevel": 2.11,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "SwainQ",
+          "name": "Death's Hand",
+          "description": "Swain unleashes several bolts of eldritch power that pierce through enemies. Enemies hit take more damage for each bolt they are struck by.",
+          "tooltip": "Swain unleashes 5 eldritch bolts, dealing <magicDamage>{{ initialdamage }} magic damage</magicDamage> plus <magicDamage>{{ extraboltdamage }} magic damage</magicDamage> per bolt past the first (max <magicDamage>{{ maxdamage }} magic damage</magicDamage>).{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Bolt Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [7, 6, 5, 4, 3],
+          "cooldownBurn": "7/6/5/4/3",
+          "cost": [40, 45, 50, 55, 60],
+          "costBurn": "40/45/50/55/60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [750, 750, 750, 750, 750],
+          "rangeBurn": "750",
+          "image": {
+            "full": "SwainQ.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 192,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SwainW",
+          "name": "Vision of Empire",
+          "description": "Swain opens a demon eye that deals damage and slows enemies. Champions hit are revealed and also grant Swain a Soul Fragment.",
+          "tooltip": "Swain opens a demon eye, revealing a location for 1.5 seconds, then deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slows</status> by {{ slow*-100 }}% for {{ slowduration }} seconds.<br /><br />Champions hit grant Swain a <span class=\"size18 colorFF3F3F\">Soul Fragment</span> and are revealed for {{ revealduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow", "Range", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slow*-100.000000 }}% -> {{ slownl*-100.000000 }}%",
+              "{{ castrange }} -> {{ castrangeNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [22, 21, 20, 19, 18],
+          "cooldownBurn": "22/21/20/19/18",
+          "cost": [60, 65, 70, 75, 80],
+          "costBurn": "60/65/70/75/80",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [5500, 6000, 6500, 7000, 7500],
+          "rangeBurn": "5500/6000/6500/7000/7500",
+          "image": {
+            "full": "SwainW.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 240,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SwainE",
+          "name": "Nevermove",
+          "description": "Swain launches a wave of demonic power forward. It then returns to Swain and roots enemies it hits. Swain can then choose to pull all rooted champions closer. This ability has a shorter cooldown during Demonic Ascension.",
+          "tooltip": "Swain launches a wave of demonic power that returns, detonating on the first enemy hit to deal <magicDamage>{{ secondarydamage }} magic damage</magicDamage> and <status>Root</status> enemies in the area for {{ rootduration }} seconds.<br /><br /><status>Rooting</status> a champion allows Swain to reactivate this ability to pull all champions <status>Rooted</status> by <spellName>Nevermove</spellName> toward him, gaining a <span class=\"size18 colorFF3F3F\">Soul Fragment</span> for each.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ e2damage }} -> {{ e2damageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 11.5, 11, 10.5, 10],
+          "cooldownBurn": "12/11.5/11/10.5/10",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [850, 850, 850, 850, 850],
+          "rangeBurn": "850",
+          "image": {
+            "full": "SwainE.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 288,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SwainR",
+          "name": "Demonic Ascension",
+          "description": "Swain transforms into a demon and drains health from nearby enemy champions, minions, and neutral monsters. Swain can cast Demonflare to decimate and slow nearby enemies with a nova of soulfire. This form is indefinite as long as Swain drains enemy champions.",
+          "tooltip": "Swain frees the demon, which deals <magicDamage>{{ damagecalc }} magic damage</magicDamage> and drains <healing>{{ healingcalc }} Health</healing> per second from nearby enemies. His Demonic Energy depletes over time but can be recharged indefinitely by draining enemy Champions and is fully restored on Champion takedowns.<br /><br />After {{ demonflarecastdelay }} seconds and every {{ demonflarecooldowntooltip }} seconds thereafter, Swain can cast <spellName>Demonflare</spellName> while transformed, which deals <magicDamage>{{ demonflaredamagetotal }} magic damage</magicDamage> and <status>Slows</status> enemies by {{ demonflareslowamount*100 }}%, decaying over {{ demonflareslowduration }}s.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Drain Damage", "Drain Heal", "Demonflare Damage"],
+            "effect": [
+              "{{ damagepersecond }} -> {{ damagepersecondNL }}",
+              "{{ healpersecond }} -> {{ healpersecondNL }}",
+              "{{ demonflaredamagebase }} -> {{ demonflaredamagebaseNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 120, 120],
+          "cooldownBurn": "120",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [650, 650, 650],
+          "rangeBurn": "650",
+          "image": {
+            "full": "SwainR.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 336,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Ravenous Flock",
+        "description": "Swain's ravens collect <i>Soul Fragments</i> that heal him and permanently increase his maximum health.",
+        "image": {
+          "full": "Swain_P.png",
+          "sprite": "passive4.png",
+          "group": "passive",
+          "x": 432,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

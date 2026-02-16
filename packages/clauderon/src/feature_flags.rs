@@ -6,9 +6,9 @@ use typeshare::typeshare;
 /// Feature flags configuration for the daemon.
 /// Flags are loaded at startup and require daemon restart to change.
 #[typeshare]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default)]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools, reason = "independent feature flag toggles")]
 pub struct FeatureFlags {
     /// Enable experimental WebAuthn passwordless authentication
     pub enable_webauthn_auth: bool,
@@ -69,7 +69,7 @@ impl FeatureFlags {
 
         // 2. Override from TOML config file (~/.clauderon/config.toml)
         if let Some(toml_flags) = Self::load_from_toml()? {
-            flags.merge(&toml_flags);
+            flags.merge(toml_flags);
         }
 
         // 3. Override from environment variables (highest priority after CLI)
@@ -78,7 +78,7 @@ impl FeatureFlags {
 
         // 4. Override from CLI arguments (highest priority)
         if let Some(cli_flags) = cli_overrides {
-            flags.merge_from_cli(&cli_flags);
+            flags.merge_from_cli(cli_flags);
         }
 
         Ok(flags)
@@ -130,7 +130,7 @@ impl FeatureFlags {
     }
 
     /// Merge another FeatureFlags struct into this one (non-default values override)
-    fn merge(&mut self, other: &Self) {
+    fn merge(&mut self, other: Self) {
         // Only merge fields that differ from defaults
         let defaults = Self::default();
 
@@ -189,7 +189,7 @@ impl FeatureFlags {
     }
 
     /// Merge CLI overrides (which are Option<bool> to distinguish "not set")
-    fn merge_from_cli(&mut self, cli: &CliFeatureFlags) {
+    fn merge_from_cli(&mut self, cli: CliFeatureFlags) {
         if let Some(val) = cli.enable_webauthn_auth {
             self.enable_webauthn_auth = val;
         }
@@ -241,15 +241,23 @@ impl FeatureFlags {
 }
 
 /// CLI feature flag overrides (passed from clap)
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct CliFeatureFlags {
+    /// Override WebAuthn authentication.
     pub enable_webauthn_auth: Option<bool>,
+    /// Override AI-generated session metadata.
     pub enable_ai_metadata: Option<bool>,
+    /// Override automatic reconciliation.
     pub enable_auto_reconcile: Option<bool>,
+    /// Override proxy port reuse.
     pub enable_proxy_port_reuse: Option<bool>,
+    /// Override usage tracking.
     pub enable_usage_tracking: Option<bool>,
+    /// Override Kubernetes backend availability.
     pub enable_kubernetes_backend: Option<bool>,
+    /// Override experimental model support.
     pub enable_experimental_models: Option<bool>,
+    /// Override read-only mode.
     pub enable_readonly_mode: Option<bool>,
 }
 
@@ -417,16 +425,19 @@ impl ServerConfig {
 /// CLI server config overrides (passed from clap)
 #[derive(Debug, Clone, Default)]
 pub struct CliServerConfig {
+    /// Override bind address (e.g., "0.0.0.0:3000").
     pub bind_addr: Option<String>,
+    /// Override CORS origin URL.
     pub origin: Option<String>,
+    /// Disable authentication entirely.
     pub disable_auth: Option<bool>,
+    /// Override organization ID for usage tracking.
     pub org_id: Option<String>,
 }
 
 /// Parse boolean from environment variable
 /// Supports: true/false, 1/0, yes/no, on/off (case insensitive)
 /// Note: Kept for test coverage of parse_env_bool_not_set
-#[allow(dead_code)]
 fn parse_env_bool(key: &str) -> bool {
     std::env::var(key)
         .ok()
@@ -499,7 +510,7 @@ mod tests {
             ..Default::default()
         };
 
-        base.merge(&override_flags);
+        base.merge(override_flags);
         assert!(base.enable_webauthn_auth);
         // Other flags should remain at default
         assert!(base.enable_ai_metadata);
@@ -521,7 +532,7 @@ mod tests {
 
         // Merge with defaults - should not change anything
         let defaults = FeatureFlags::default();
-        base.merge(&defaults);
+        base.merge(defaults);
 
         // Base should remain unchanged since we only merged defaults
         assert!(base.enable_webauthn_auth);
@@ -541,7 +552,7 @@ mod tests {
             ..Default::default()
         };
 
-        flags.merge_from_cli(&cli);
+        flags.merge_from_cli(cli);
         assert!(flags.enable_webauthn_auth);
         assert!(flags.enable_usage_tracking);
         // Other flags should remain at default
@@ -562,7 +573,7 @@ mod tests {
             ..Default::default()
         };
 
-        flags.merge_from_cli(&cli);
+        flags.merge_from_cli(cli);
         // Should remain true since CLI didn't provide a value
         assert!(flags.enable_webauthn_auth);
     }

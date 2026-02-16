@@ -23,6 +23,7 @@ struct CommandResult {
 ///
 /// The sprite CLI must be installed and authenticated via `sprite login` or
 /// the SPRITES_TOKEN environment variable.
+#[derive(Debug, Clone, Copy)]
 pub struct SpritesBackend {
     config: SpritesConfig,
 }
@@ -172,8 +173,7 @@ impl SpritesBackend {
 
         let url = String::from_utf8(output.stdout)
             .map_err(|e| anyhow::anyhow!("Invalid UTF-8 in git remote URL: {}", e))?
-            .trim()
-            .to_string();
+            .trim().to_owned();
 
         if url.is_empty() {
             anyhow::bail!("No git remote configured for {}", workdir.display());
@@ -215,8 +215,7 @@ impl SpritesBackend {
 
         let branch = String::from_utf8(output.stdout)
             .map_err(|e| anyhow::anyhow!("Invalid UTF-8 in branch name: {}", e))?
-            .trim()
-            .to_string();
+            .trim().to_owned();
 
         Ok(branch)
     }
@@ -276,7 +275,7 @@ impl SpritesBackend {
 
             // Determine target path in sprite
             let target_path = if repo.is_primary {
-                "/home/sprite/workspace".to_string()
+                "/home/sprite/workspace".to_owned()
             } else {
                 format!("/home/sprite/repos/{}", repo.mount_name)
             };
@@ -600,7 +599,7 @@ impl SpritesBackend {
 
         // Determine working directory
         let work_path = if workdir.as_os_str().is_empty() {
-            "/home/sprite/workspace".to_string()
+            "/home/sprite/workspace".to_owned()
         } else {
             format!("/home/sprite/workspace/{}", workdir.display())
         };
@@ -679,7 +678,7 @@ impl ExecutionBackend for SpritesBackend {
                     error = %e,
                     "Failed to get current branch, using 'main'"
                 );
-                "main".to_string()
+                "main".to_owned()
             });
 
             vec![SessionRepository {
@@ -687,7 +686,7 @@ impl ExecutionBackend for SpritesBackend {
                 subdirectory: options.initial_workdir.clone(),
                 worktree_path: workdir.to_path_buf(),
                 branch_name: branch,
-                mount_name: "primary".to_string(),
+                mount_name: "primary".to_owned(),
                 is_primary: true,
                 base_branch: None,
             }]
@@ -855,10 +854,10 @@ impl ExecutionBackend for SpritesBackend {
         // User must have `sprite` CLI installed
         // Use -s global flag to specify which sprite
         vec![
-            "sprite".to_string(),
-            "-s".to_string(),
-            id.to_string(),
-            "console".to_string(),
+            "sprite".to_owned(),
+            "-s".to_owned(),
+            id.to_owned(),
+            "console".to_owned(),
         ]
     }
 

@@ -1,0 +1,392 @@
+---
+description: Zod validation patterns and best practices
+globs: "*.ts,*.tsx"
+---
+
+# Zod Validation Patterns
+
+## Schema Naming Convention
+
+**All Zod schemas MUST use PascalCase naming.**
+
+```typescript
+// ✅ CORRECT:
+const ErrorSchema = z.object({ message: z.string() });
+const UserDataSchema = z.object({ id: z.string(), name: z.string() });
+const ResponseSchema = z.object({ status: z.number() });
+
+// ❌ WRONG:
+const errorSchema = z.object({ message: z.string() });  // camelCase
+const user_data_schema = z.object({ id: z.string() });   // snake_case
+```
+
+## Validate All External Data
+
+Validate ALL external data with Zod: user input, API responses, environment variables, JSON.parse results, error objects.
+
+```typescript
+// ✅ CORRECT
+const input: unknown = JSON.parse(rawString);
+const validated = DataSchema.parse(input);
+
+// ❌ WRONG
+const input = JSON.parse(rawString);  // Type is 'any', unsafe
+```
+
+**See:** `type-safety-strategy.mdc` for overall validation workflow.
+
+## Union vs Discriminated Union
+
+### Use `z.union()` for Complex Intersections
+
+When you have many field combinations, use `z.union()` with intersections:
+
+```typescript
+const Schema = z.union([
+  BaseSchema.and(OptionA).and(FeatureA),
+  BaseSchema.and(OptionA).and(FeatureB),
+  BaseSchema.and(OptionB).and(FeatureA),
+  BaseSchema.and(OptionB).and(FeatureB),
+]);
+```
+
+### Use `z.discriminatedUnion()` for Simple Cases
+
+When you have a clear discriminator with non-overlapping types:
+
+```typescript
+const Schema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("A"), fieldA: z.string() }),
+  z.object({ type: z.literal("B"), fieldB: z.number() }),
+]);
+```
+
+## Deprecated APIs
+
+**Never use deprecated Zod methods:**
+
+```typescript
+// ❌ WRONG:
+z.object({...}).passthrough()
+
+// ✅ CORRECT:
+z.object({...}).catchall(z.unknown())
+```
+
+## Record Types
+
+Always specify both key and value types for `z.record()`:
+
+```typescript
+// ❌ WRONG:
+z.record(z.unknown())  // Missing key type
+
+// ✅ CORRECT:
+z.record(z.string(), z.unknown())
+```
+
+## Refinements for Complex Validation
+
+Use `.refine()` for validation that can't be expressed in the schema:
+
+```typescript
+const DateArgsSchema = z.object({
+  startDate: z.string(),
+  endDate: z.string(),
+}).refine(
+  (data) => {
+    try {
+      const start = new Date(data.startDate);
+      const end = new Date(data.endDate);
+      return !isNaN(start.getTime()) && !isNaN(end.getTime());
+    } catch {
+      return false;
+    }
+  },
+  { message: "Invalid date format" }
+);
+```
+
+## Parse vs SafeParse
+
+**Use `.parse()`** when invalid data is exceptional (throws on failure).
+
+**Use `.safeParse()`** when validation failure is expected (returns result object).
+
+```typescript
+const validated = Schema.parse(input);  // Throws
+
+const result = Schema.safeParse(input);  // Returns { success, data/error }
+if (result.success) { /* use result.data */ }
+```
+
+## Error Messages
+
+Use `zod-validation-error` for user-friendly messages:
+
+```typescript
+import { fromError } from "zod-validation-error";
+
+try {
+  const validated = Schema.parse(input);
+} catch (error) {
+  const validationError = fromError(error);
+  throw new Error(`Invalid input: ${validationError.message}`);
+}
+```
+
+## JSON Parsing Pattern
+
+Always validate JSON.parse() results:
+
+```typescript
+// ✅ CORRECT:
+const rawData: unknown = JSON.parse(jsonString);
+
+// Check it's an object first
+if (typeof rawData !== "object" || rawData === null) {
+  throw new Error("Expected object");
+}
+
+// Then validate with Zod
+const result = DataSchema.safeParse(rawData);
+if (!result.success) {
+  throw new Error(`Invalid data: ${result.error.message}`);
+}
+```
+
+## Optional vs Nullable vs Undefined
+
+Be explicit about optionality:
+
+```typescript
+// Field can be missing:
+z.object({ field: z.string().optional() })
+
+// Field must be present but can be null:
+z.object({ field: z.string().nullable() })
+
+// Field can be missing OR null:
+z.object({ field: z.string().nullable().optional() })
+
+// Default value if missing:
+z.object({ field: z.string().default("default") })
+```
+
+## Transform vs Preprocess
+
+### Use `.transform()` for type conversion
+
+```typescript
+const Schema = z.string().transform((val) => parseInt(val, 10));
+```
+
+### Use `.preprocess()` for data cleaning
+
+```typescript
+const Schema = z.preprocess(
+  (val) => typeof val === "string" ? val.trim() : val,
+  z.string().min(1)
+);
+```
+
+## Type Extraction
+
+Extract TypeScript types from schemas, not the other way around:
+
+```typescript
+// ✅ CORRECT: Schema is source of truth
+const UserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+type User = z.infer<typeof UserSchema>;
+
+// ❌ WRONG: Duplicating type information
+type User = { id: string; name: string };
+const UserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+```
+
+## ESLint Rules for Zod
+
+This project includes three custom ESLint rules that enforce Zod usage:
+
+### Rule: `zod-schema-naming`
+
+**Enforces:** All Zod schemas must use PascalCase with `Schema` suffix
+
+```typescript
+// ✅ CORRECT
+const UserSchema = z.object({ });
+const CompetitionDataSchema = z.object({ });
+
+// ❌ WRONG (triggers linter)
+const userSchema = z.object({ });      // camelCase
+const user_schema = z.object({ });     // snake_case
+const UserSchemaData = z.object({ });  // Wrong ending
+```
+
+**Error message:** "All Zod schemas must be named with PascalCase and end with 'Schema'"
+
+**Related:** See `eslint-custom-rules.mdc` for full details
+
+### Rule: `no-redundant-zod-parse`
+
+**Enforces:** Don't parse the same schema twice on the same value
+
+```typescript
+// ✅ CORRECT
+const UserSchema = z.object({ id: z.string() });
+const user = UserSchema.parse(data);
+console.log(user.id);  // Reuse, don't re-parse
+
+// ❌ WRONG (triggers linter)
+const user1 = UserSchema.parse(data);
+const user2 = UserSchema.parse(data);  // Redundant!
+```
+
+**Error message:** "Don't parse the same schema multiple times. Zod validates once, so reuse the result."
+
+**Related:** See `eslint-custom-rules.mdc` for full details
+
+### Rule: `prefer-zod-validation`
+
+**Enforces:** Use Zod instead of `typeof`, `instanceof`, `Array.isArray`, etc.
+
+```typescript
+// ✅ CORRECT
+const StringSchema = z.string();
+const result = StringSchema.safeParse(value);
+if (result.success) {
+  processString(result.data);
+}
+
+// ❌ WRONG (triggers linter)
+if (typeof value === "string" && value.length > 0) {
+  // Complex condition = violation
+  processString(value);
+}
+```
+
+**Error messages:**
+
+- "Prefer Zod schema validation over typeof operator"
+- "Prefer Zod schema validation over Array.isArray()"
+- "Prefer Zod schema validation over instanceof operator"
+- "Prefer Zod schema validation over Number.isInteger()"
+
+**Exceptions:**
+
+- Simple primitive checks like `typeof x === "string"` are OK in basic if statements
+- `instanceof Error` is always allowed for error handling
+
+**Related:** See `eslint-custom-rules.mdc` for full details
+
+## Running Checks
+
+```bash
+# All Zod-related checks are part of normal linting
+bun run lint
+mise run lint
+
+# These rules are enforced
+bun run typecheck  # zod-schema-naming via TypeScript
+```
+
+## Common ESLint Violations with Fixes
+
+### Violation 1: Schema naming
+
+```typescript
+// ❌ BEFORE
+const userDataSchema = z.object({ id: z.string() });
+
+// ✅ AFTER
+const UserDataSchema = z.object({ id: z.string() });
+```
+
+### Violation 2: Double parsing
+
+```typescript
+// ❌ BEFORE
+const data = UserSchema.parse(input);
+const validated = UserSchema.safeParse(data);  // Redundant!
+
+// ✅ AFTER
+const data = UserSchema.parse(input);
+// Use data directly, no re-parse needed
+```
+
+### Violation 3: Using typeof with Zod
+
+```typescript
+// ❌ BEFORE
+if (typeof value === "string" && value.includes("test")) {
+  process(value);
+}
+
+// ✅ AFTER
+const StringSchema = z.string().includes("test");
+const result = StringSchema.safeParse(value);
+if (result.success) {
+  process(result.data);
+}
+```
+
+### Violation 4: Missing schema validation
+
+```typescript
+// ❌ BEFORE
+const id = (data as unknown).id;  // Type assertion without validation
+
+// ✅ AFTER
+const DataSchema = z.object({ id: z.string() });
+const validated = DataSchema.parse(data);
+const id = validated.id;
+```
+
+## Tips for Satisfying ESLint
+
+1. **Always name schemas with PascalCase + Schema suffix**
+   - Automatically passes `zod-schema-naming`
+
+2. **Parse once and reuse the result**
+   - Automatically passes `no-redundant-zod-parse`
+
+3. **Prefer Zod validation over type checks**
+   - Use `StringSchema.safeParse()` instead of `typeof x === "string"`
+   - Use `z.array()` instead of `Array.isArray()`
+   - Use `z.number().int()` instead of `Number.isInteger()`
+
+4. **Define schemas at module level, use throughout**
+   - Promotes reuse and prevents redundant parsing
+
+```typescript
+// ✅ GOOD PATTERN
+const UserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string().email(),
+});
+
+function processUser(input: unknown) {
+  const user = UserSchema.parse(input);
+  // Use user throughout the function
+}
+
+function validateUser(input: unknown) {
+  const result = UserSchema.safeParse(input);
+  return result.success;
+}
+```
+
+## Related Documentation
+
+- **ESLint Custom Rules:** See `eslint-custom-rules.mdc`
+- **Type Assertions:** See `type-assertions-policy.mdc`
+- **Type Safety:** See `type-safety-strategy.mdc`
+- **Code Quality:** See `code-quality-checklist.mdc`
+- **Running Checks:** See `mise-and-dagger-usage.mdc`

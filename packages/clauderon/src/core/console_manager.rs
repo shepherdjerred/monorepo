@@ -256,7 +256,7 @@ impl ConsoleSession {
         self.write_tx
             .send(WriteRequest::Bytes(data))
             .await
-            .map_err(|_| anyhow::anyhow!("Console PTY write channel closed"))
+            .map_err(|e| anyhow::anyhow!("Console PTY write channel closed: {e}"))
     }
 
     async fn resize(&self, rows: u16, cols: u16) {
@@ -272,7 +272,7 @@ impl ConsoleSession {
         self.write_tx
             .send(WriteRequest::Signal { signal })
             .await
-            .map_err(|_| anyhow::anyhow!("Console PTY write channel closed"))
+            .map_err(|e| anyhow::anyhow!("Console PTY write channel closed: {e}"))
     }
 
     async fn shutdown(&self) {
@@ -410,18 +410,27 @@ impl ConsoleSession {
     }
 }
 
+/// Manages PTY console sessions, one per clauderon session.
 #[derive(Default)]
 pub struct ConsoleManager {
     sessions: Mutex<HashMap<Uuid, Arc<ConsoleSession>>>,
 }
 
+impl std::fmt::Debug for ConsoleManager {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ConsoleManager").finish_non_exhaustive()
+    }
+}
+
 impl ConsoleManager {
+    /// Create a new empty console manager.
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
-    #[allow(clippy::missing_errors_doc)]
+    /// Get or create a console session for the given session ID.
+    #[expect(clippy::missing_errors_doc, reason = "internal API, error conditions are self-evident")]
     pub async fn ensure_session(
         &self,
         session_id: Uuid,
@@ -460,6 +469,7 @@ impl ConsoleManager {
         Ok(handle)
     }
 
+    /// Remove and shut down a console session.
     pub async fn remove_session(&self, session_id: Uuid) {
         let session = self.sessions.lock().await.remove(&session_id);
         if let Some(session) = session {
@@ -468,9 +478,16 @@ impl ConsoleManager {
     }
 }
 
+/// Handle to an active console session, providing I/O operations.
 #[derive(Clone)]
 pub struct ConsoleSessionHandle {
     session: Arc<ConsoleSession>,
+}
+
+impl std::fmt::Debug for ConsoleSessionHandle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ConsoleSessionHandle").finish_non_exhaustive()
+    }
 }
 
 impl ConsoleSessionHandle {
@@ -478,6 +495,7 @@ impl ConsoleSessionHandle {
         Self { session }
     }
 
+    /// Subscribe to terminal output events.
     #[must_use]
     pub fn subscribe(&self) -> broadcast::Receiver<Vec<u8>> {
         self.session.subscribe()
@@ -493,16 +511,19 @@ impl ConsoleSessionHandle {
         self.session.snapshot_and_subscribe().await
     }
 
-    #[allow(clippy::missing_errors_doc)]
+    /// Write input data to the PTY.
+    #[expect(clippy::missing_errors_doc, reason = "internal API, error conditions are self-evident")]
     pub async fn send_input(&self, data: Vec<u8>) -> anyhow::Result<()> {
         self.session.send_input(data).await
     }
 
+    /// Resize the terminal to the given dimensions.
     pub async fn resize(&self, rows: u16, cols: u16) {
         self.session.resize(rows, cols).await;
     }
 
-    #[allow(clippy::missing_errors_doc)]
+    /// Send a Unix signal to the PTY process.
+    #[expect(clippy::missing_errors_doc, reason = "internal API, error conditions are self-evident")]
     #[tracing::instrument(skip(self), fields(signal = ?signal))]
     pub async fn send_signal(&self, signal: SignalType) -> anyhow::Result<()> {
         self.session.send_signal(signal).await

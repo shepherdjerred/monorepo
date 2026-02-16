@@ -9,7 +9,7 @@ use ratatui::{
 use crate::tui::app::{App, SessionFilter};
 
 /// Render the filter header showing available filters with counts
-pub fn render(frame: &mut Frame, app: &App, area: Rect) {
+pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
     let filters = [
         SessionFilter::All,
         SessionFilter::Running,

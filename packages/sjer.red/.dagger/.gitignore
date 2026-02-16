@@ -1,0 +1,21 @@
+# Dagger SDK
+sdk/
+runtime/
+
+# Node modules
+node_modules/
+
+# Build output
+dist/
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+/**/node_modules/**
+/**/.pnpm-store/**
+/.env

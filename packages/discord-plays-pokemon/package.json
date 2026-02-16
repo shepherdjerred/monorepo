@@ -1,0 +1,21 @@
+{
+  "name": "@discord-plays-pokemon/monorepo",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "bun packages/backend/src/index.ts",
+    "build": "bun run --filter '*' build",
+    "test": "bun run --filter '*' test",
+    "prettier": "prettier .",
+    "prettier:fix": "prettier -w ."
+  },
+  "workspaces": [
+    "packages/common",
+    "packages/backend",
+    "packages/frontend"
+  ],
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "prettier-plugin-tailwindcss": "^0.7.0"
+  },
+  "dependencies": {}
+}

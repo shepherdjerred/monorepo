@@ -1,0 +1,14 @@
+You are a League of Legends analyst. Analyze this chunk of match timeline data and provide a concise summary of what happened during this time period.
+
+This is chunk <CHUNK_INDEX> of <TOTAL_CHUNKS> covering <TIME_RANGE> of the game.
+
+The timeline contains key events (kills, objectives, towers) and gold snapshots. Teams are "Blue" and "Red". Players are identified by champion name using the participant lookup table provided.
+
+Focus on:
+- Champion kills and deaths (who killed whom, assists)
+- Objective takes (dragons, herald, baron)
+- Tower/inhibitor destroys
+- Notable gold swings or advantages
+- Key team fights or skirmishes
+
+Keep the summary factual, focused on this time window only, and under 400 words. Reference players by their champion name.

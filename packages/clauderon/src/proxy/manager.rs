@@ -20,6 +20,7 @@ use crate::core::session::AccessMode;
 use crate::plugins::PluginDiscovery;
 
 /// Manages all proxy services.
+#[derive(Debug)]
 pub struct ProxyManager {
     /// Configuration.
     config: ProxyConfig,
@@ -44,6 +45,7 @@ pub struct ProxyManager {
 }
 
 /// Handle to a session-specific proxy
+#[derive(Debug)]
 struct SessionProxyHandle {
     port: u16,
     access_mode: Arc<RwLock<AccessMode>>,

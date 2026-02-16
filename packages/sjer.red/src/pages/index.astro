@@ -1,0 +1,17 @@
+---
+import About from "@components/About.mdx";
+import Container from "@components/Container.astro";
+import NavbarLayout from "@layouts/NavbarLayout.astro";
+---
+
+<NavbarLayout>
+  <div class="pt-1 md:pt-10 pb-6 dark:bg-black">
+    <div class="flex flex-col items-center m-10 md:m-0">
+      <Container width="normal">
+        <section class="prose dark:prose-invert">
+          <About />
+        </section>
+      </Container>
+    </div>
+  </div>
+</NavbarLayout>

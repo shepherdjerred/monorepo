@@ -1,0 +1,58 @@
+{
+  "name": "starlight-karma-bot",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "trustedDependencies": [
+    "husky",
+    "sqlite3"
+  ],
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "health": "bun run src/health.ts",
+    "migrate:legacy-karma": "bun run src/migrate-legacy-karma.ts",
+    "typecheck": "bunx tsc --noEmit",
+    "lint": "bunx eslint --cache .",
+    "format": "bunx prettier --check .",
+    "prettier": "bunx prettier --write .",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@sentry/bun": "^8.0.0",
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1",
+    "env-var": "^7.4.1",
+    "lodash": "^4.17.21",
+    "reflect-metadata": "^0.2.1",
+    "sqlite3": "^5.1.7",
+    "typeorm": "^0.3.20"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.0.0",
+    "@commitlint/config-conventional": "^20.0.0",
+    "@eslint/js": "^9.30.1",
+    "@total-typescript/ts-reset": "^0.6.1",
+    "@types/bun": "^1.2.18",
+    "@types/lodash": "^4.17.0",
+    "@typescript-eslint/utils": "^8.46.1",
+    "bun-types": "latest",
+    "eslint": "^9.30.1",
+    "eslint-plugin-unicorn": "^61.0.2",
+    "husky": "^9.1.7",
+    "jiti": "^2.6.0",
+    "lint-staged": "^16.2.3",
+    "markdownlint-cli2": "^0.18.0",
+    "prettier": "3.6.2",
+    "typescript": "^5",
+    "typescript-eslint": "^8.35.1"
+  },
+  "lint-staged": {
+    "*": "bunx prettier --ignore-unknown --write",
+    "*.md": "bunx markdownlint-cli2 --fix",
+    ".github/workflows/*.{yml,yaml}": "actionlint",
+    "src/**/*.{ts,tsx}": [
+      "bunx eslint --cache --fix",
+      "bash -c 'bunx tsc --noEmit'"
+    ]
+  }
+}

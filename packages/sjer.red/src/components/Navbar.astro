@@ -1,0 +1,16 @@
+---
+import Container from "./Container.astro";
+import NavbarItem from "./NavbarItem.astro";
+const pathname = new URL(Astro.request.url).pathname;
+---
+
+<nav class="bg-black text-white">
+  <Container width="normal">
+    <ul class="flex flex-wrap content-center place-content-center sm:justify-start gap-2 pt-2 pb-2">
+      <NavbarItem href="/" isHighlighted={pathname === "/"}>Home</NavbarItem>
+      <NavbarItem href="/projects/" isHighlighted={pathname.includes("projects")}>Projects</NavbarItem>
+      <NavbarItem href="/blog/" isHighlighted={pathname.includes("blog")}>Blog</NavbarItem>
+      <NavbarItem href="/bookmarks/" isHighlighted={pathname === "/bookmarks/"}>Bookmarks</NavbarItem>
+    </ul>
+  </Container>
+</nav>

@@ -1,0 +1,90 @@
+[user]
+	name = Jerred Shepherd
+	email = github@sjer.red
+{{ if eq .chezmoi.os "darwin" }}
+	signingkey = ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDxNpFK/kKbp53DJarquYTeNZXLnYNbSjQiEti24vRqHIRmD3wvLpX1NiiIY7xnP3rwEY8s1NjHarKXLYmCBrOZKkBxu5U6ROyLMCCfhCXBcJXUVJng1PmoJ4+hlIPWq3I136Y4ZP1xiKWKVuMa6vC06wqA5m6bh5TEqDNOP+cW6dn3qX7sy0qNtiZU8VmJ5fM9kHA02bZf3YYlK4780ESVY8RU3zOTZDvnOZUuIRLpMgsDH3eqyu2AKvnMNPrNxSYGffd6PXeng2rIEaV49/LnO1Cw61vDWYUL8jULzZ+SqE5ydnOUGfqguOTEYbtaXhBrYECgDCDGvRXF0VAaj3D7
+[gpg]
+	format = ssh
+[gpg "ssh"]
+	program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
+[commit]
+  gpgsign = true
+{{ end }}
+
+[diff]
+  tool = difftastic
+  external = difft
+[difftool]
+  prompt = false
+[difftool "difftastic"]
+  cmd = difft "$LOCAL" "$REMOTE"
+[pager]
+  difftool = true
+
+[core]
+  pager = delta
+  excludesFile = ~/.gitignore
+  autoclrf = true
+[interactive]
+  diffFilter = delta --color-only
+[delta]
+  navigate = true
+  dark = true
+  syntax-theme = Catppuccin Mocha
+[merge]
+  conflictstyle = diff3
+{{ if eq .chezmoi.os "darwin" }}
+  tool = smerge
+{{ end }}
+[diff]
+  algorithm = histogram
+  colorMoved = plain
+  mnemonicPrefix = true
+  renames = true
+
+[mergetool "smerge"]
+  cmd = smerge mergetool \"$BASE\" \"$LOCAL\" \"$REMOTE\" -o \"$MERGED\"
+  trustExitCode = true
+
+[push]
+  autoSetupRemote = true
+  default = simple
+  followTags = true
+[pull]
+  rebase = true
+[rebase]
+  autoSquash = true
+  autoStash = true
+  updateRefs = true
+
+[column]
+  ui = auto
+[branch]
+  sort = -committerdate
+[tag]
+  sort = version:refname
+[init]
+  defaultBranch = main
+[fetch]
+  prune = true
+  pruneTags = true
+  all = true
+
+[help]
+  autocorrect = prompt
+[commit]
+  verbose = true
+[rerere]
+  enabled = true
+  autoupdate = true
+[core]
+  excludesfile = ~/.gitignore
+
+[core]
+  fsmonitor = true
+  untrackedCache = true
+[merge]
+  conflictstyle = zdiff3
+
+[include]
+  path = ~/.gitconfig-theme

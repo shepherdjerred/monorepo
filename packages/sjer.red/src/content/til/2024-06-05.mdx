@@ -1,0 +1,45 @@
+---
+title: "Asymmetric Cryptography in Go"
+date: 2024-06-05Z-0700
+---
+
+I've been implementing a feature at work that involves asymmetric cryptography. It has been a pretty fun exercise in stitching together Go APIs while reading about best practices.
+
+Here's a few things I've learned over the last couple of days:
+
+- Go's cryptography [isn't FIPS compliant](https://kupczynski.info/posts/fips-golang/).
+- Go has an implementation of [ECDSA](https://pkg.go.dev/crypto/ecdsa) (Elliptic Curve Digital Signature Algorithm), but it doesn't have any elliptic curve asymmetric encryption algorithms.
+  - The best asymmetric algorithm that Go has is [RSA](https://pkg.go.dev/crypto/rsa)
+- Go has an implementation of [PEM](https://pkg.go.dev/encoding/pem) (Privacy Enhanced Mail) data encoding which can be used to encode public/private in a familiar format. You've probably seen this format with SSH keys:
+  ```
+  -----BEGIN PUBLIC KEY-----
+  MIIEpAIBAAKCAQEAuOuUOwNRMbqc0jMEVTOyKuVUu0bk0zD5iwIggBHpDhV58DSJ
+  SK7OFIFHVMy6FKg2B3Y50srfVJ45OE9Vsb9hfErUNA/PB5meHGEI+yPKeni4GAfy
+  <and so on>
+  -----END PUBLIC KEY-----
+  ```
+- The [legacy PEM format](https://www.rfc-editor.org/rfc/rfc1421) has support for plaintext headers like so:
+
+  ```
+  -----BEGIN PUBLIC KEY-----
+  Data: Some value I don't mind being plaintext
+
+  MIIEpAIBAAKCAQEAuOuUOwNRMbqc0jMEVTOyKuVUu0bk0zD5iwIggBHpDhV58DSJ
+  SK7OFIFHVMy6FKg2B3Y50srfVJ45OE9Vsb9hfErUNA/PB5meHGEI+yPKeni4GAfy
+  <and so on>
+  -----END PUBLIC KEY-----
+  ```
+
+  - The [newer RFC](https://www.rfc-editor.org/rfc/rfc7468) eplicitly doesn't support headers, though:
+    > Unlike legacy PEM encoding [RFC1421](https://www.rfc-editor.org/rfc/rfc1421), OpenPGP ASCII armor, and the
+    > OpenSSH key file format, textual encoding does _not_ define or permit
+    > headers to be encoded alongside the data.
+
+- Go's APIs for encrypting, decrypting, signing, and verifying data are quite pleasant to use!
+  - The [Go examples](https://pkg.go.dev/crypto/rsa#pkg-examples) illustrate this quite well.
+- When signing data, Go will first have you run that data through a hash algorithm (e.g. [SHA256](https://pkg.go.dev/crypto/sha256)). This actually makes quite a bit of sense, and it helps me better understand why secure hashing is important for cryptography.
+- OWASP (Open Worldwide Application Security Project) has a great section on [encryption algorithms](https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html#algorithms) which can help guide those less familiar with the specifics of encryption.
+- There are a few algorithms for signing and encryption data with RSA. Go implements PKCS1v15 and OAEP for encryption, and PKCS1v15 and PSS for signing.
+  - This [Stack Exchange answer](https://security.stackexchange.com/questions/183179/what-is-rsa-oaep-rsa-pss-in-simple-terms/183330#183330) goes into the details of these algorithms.
+
+While I'm generally not a huge fan of Go, I do think the standard library has some nice packages, and the encryption library is definitely one of them.

@@ -1,3 +1,9 @@
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::create_dir,
+    reason = "integration tests use expect/unwrap/create_dir for simplicity"
+)]
 //! Integration tests for proxy configuration flow.
 //!
 //! These tests verify that proxy configuration properly flows through

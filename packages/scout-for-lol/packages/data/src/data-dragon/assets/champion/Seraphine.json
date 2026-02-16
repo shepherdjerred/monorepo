@@ -1,0 +1,342 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Seraphine": {
+      "id": "Seraphine",
+      "key": "147",
+      "name": "Seraphine",
+      "title": "the Starry-Eyed Songstress",
+      "image": {
+        "full": "Seraphine.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 336,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "147000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "147001",
+          "num": 1,
+          "name": "K/DA ALL OUT Seraphine Indie",
+          "chromas": false
+        },
+        {
+          "id": "147002",
+          "num": 2,
+          "name": "K/DA ALL OUT Seraphine Rising Star",
+          "chromas": false
+        },
+        {
+          "id": "147003",
+          "num": 3,
+          "name": "K/DA ALL OUT Seraphine Superstar",
+          "chromas": false
+        },
+        {
+          "id": "147004",
+          "num": 4,
+          "name": "Graceful Phoenix Seraphine",
+          "chromas": true
+        },
+        {
+          "id": "147014",
+          "num": 14,
+          "name": "Ocean Song Seraphine",
+          "chromas": true
+        },
+        {
+          "id": "147015",
+          "num": 15,
+          "name": "Prestige Ocean Song Seraphine",
+          "chromas": false
+        },
+        {
+          "id": "147024",
+          "num": 24,
+          "name": "Faerie Court Seraphine",
+          "chromas": true
+        },
+        {
+          "id": "147034",
+          "num": 34,
+          "name": "Star Guardian Seraphine",
+          "chromas": true
+        },
+        {
+          "id": "147043",
+          "num": 43,
+          "name": "Battle Dove Seraphine",
+          "chromas": true
+        },
+        {
+          "id": "147050",
+          "num": 50,
+          "name": "Dumpling Darlings Seraphine",
+          "chromas": true
+        },
+        {
+          "id": "147059",
+          "num": 59,
+          "name": "Firecracker Seraphine",
+          "chromas": true
+        }
+      ],
+      "lore": "Born in Piltover to Zaunite parents, Seraphine can hear the souls of others—the world sings to her, and she sings back. Though these sounds overwhelmed her in her youth, she now draws on them for inspiration, turning the chaos into a symphony. She performs for the sister cities to remind their citizens that they're not alone, that they're stronger together, and that, in her eyes, their potential is limitless.",
+      "blurb": "Born in Piltover to Zaunite parents, Seraphine can hear the souls of others—the world sings to her, and she sings back. Though these sounds overwhelmed her in her youth, she now draws on them for inspiration, turning the chaos into a symphony. She...",
+      "allytips": [],
+      "enemytips": [],
+      "tags": ["Support", "Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 0,
+        "defense": 0,
+        "magic": 0,
+        "difficulty": 0
+      },
+      "stats": {
+        "hp": 570,
+        "hpperlevel": 95,
+        "mp": 360,
+        "mpperlevel": 40,
+        "movespeed": 330,
+        "armor": 26,
+        "armorperlevel": 4.2,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 525,
+        "hpregen": 6.5,
+        "hpregenperlevel": 0.6,
+        "mpregen": 11.5,
+        "mpregenperlevel": 0.95,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 50,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 2,
+        "attackspeed": 0.669
+      },
+      "spells": [
+        {
+          "id": "SeraphineQ",
+          "name": "High Note",
+          "description": "Seraphine deals damage in an area.",
+          "tooltip": "Seraphine projects a pure note, dealing <magicDamage>{{ explosiondamage }} magic damage</magicDamage>, increased against champions and monsters by the target's missing Health percentage up to <magicDamage>{{ totalempowereddamage }} damage</magicDamage> below {{ executethreshold*100 }}% Health.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Initial Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldownBurn": "8/7.5/7/6.5/6",
+          "cost": [60, 70, 80, 90, 100],
+          "costBurn": "60/70/80/90/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [900, 900, 900, 900, 900],
+          "rangeBurn": "900",
+          "image": {
+            "full": "SeraphineQ.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 288,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SeraphineW",
+          "name": "Surround Sound",
+          "description": "Seraphine Shields and Hastes nearby allies. If she is already Shielded she will Heal nearby allies as well.",
+          "tooltip": "Seraphine spurs her nearby allied champions in song, granting them <speed>{{ hastevalueallies }} Move Speed</speed>, herself <speed>{{ wmsbonustotal }} decaying Move Speed</speed> and both <shield>{{ shieldvalueseraphine }} Shield</shield> for {{ shieldduration }} seconds.<br /><br />If Seraphine is already <shield>Shielded</shield>, she calls out to her allies to join her, restoring <healing>{{ wmissinghpheal }}% missing Health</healing> to them after a {{ whealsplitdelay }} second delay.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Shield Amount", "Percent Healed", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ shieldstrength }} -> {{ shieldstrengthNL }}",
+              "{{ wmissinghpbase }} -> {{ wmissinghpbaseNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [22, 22, 22, 22, 22],
+          "cooldownBurn": "22",
+          "cost": [70, 75, 80, 85, 90],
+          "costBurn": "70/75/80/85/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [800, 800, 800, 800, 800],
+          "rangeBurn": "800",
+          "image": {
+            "full": "SeraphineW.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 336,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SeraphineE",
+          "name": "Beat Drop",
+          "description": "Seraphine deals damage and impairs the movement of enemies in a line.",
+          "tooltip": "Seraphine unleashes a heavy soundwave, dealing <magicDamage>{{ finaldamage }} magic damage</magicDamage> to enemies in a line and <status>Slowing</status> them by {{ slowvalue }}% for {{ slowduration }} seconds.<br /><br />Enemies that are already <status>Slowed</status> are <status>Rooted</status> instead, and <status>Immobilized</status> enemies are <status>Stunned</status>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow Duration", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowduration }} -> {{ slowdurationNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [11, 10.5, 10, 9.5, 9],
+          "cooldownBurn": "11/10.5/10/9.5/9",
+          "cost": [60, 60, 60, 60, 60],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1300, 1300, 1300, 1300, 1300],
+          "rangeBurn": "1300",
+          "image": {
+            "full": "SeraphineE.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 384,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SeraphineR",
+          "name": "Encore",
+          "description": "Seraphine deals damage and charms enemies hit, refreshing the range with every allied or enemy champion hit.",
+          "tooltip": "Seraphine takes the stage, projecting a captivating force that <status>Charms</status> for {{ rchannelduration }} seconds and deals <magicDamage>{{ r1totaldamage }} magic damage</magicDamage>.<br /><br />Any champions struck (including allies) become part of the performance, extending the range of this Ability. Allied champions gain maximum <keywordMajor>Notes</keywordMajor>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Initial Damage", "Charm Duration", "Cooldown"],
+            "effect": [
+              "{{ r1basedamage }} -> {{ r1basedamageNL }}",
+              "{{ rchannelduration }} -> {{ rchanneldurationNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [160, 140, 120],
+          "cooldownBurn": "160/140/120",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [25000, 25000, 25000],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "SeraphineR.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 432,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Stage Presence",
+        "description": "Every third basic spell will cast twice from Seraphine. Additionally, casting spells near allies grants her bonus magic damage and range on her next basic attack.",
+        "image": {
+          "full": "Seraphine_Passive.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 336,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

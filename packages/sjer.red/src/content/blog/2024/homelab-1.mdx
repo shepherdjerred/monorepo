@@ -1,0 +1,90 @@
+---
+title: Homelab 1 - Setting up K3s
+description: Setting up K3s
+date: 2024-06-26Z-0700
+hackerNews: https://news.ycombinator.com/item?id=40803984
+---
+
+This series of posts will detail the setup of my homelab. It goes into the technical details of how I setup a single-node K3s Kubernetes cluster using cdk8s and Deno to generate all of the required YAML manifests. This is a practical deployment with:
+
+- Automated backups
+- Monitoring and alerting
+- Automated deployments
+- Automatic image/chart upgrades
+- Support for GPU acceleration
+- Secure secrets with 1Password
+- Secure remote access through Tailscale
+- Direct access for game servers and certain protocols like mDNS
+
+## Table of Contents
+
+## Background
+
+I've had a homelab for around a decade. The hardware itself has gone from repurposed parts in college (a Core Duo served me very well from 2017-2022) to a very beefy server today:
+
+- [Intel Core i9-14900K 3.2 GHz 24-Core](https://pcpartpicker.com/product/ZLjRsY/intel-core-i9-14900k-32-ghz-24-core-processor-bx8071514900k)
+- 2 x [Corsair Vengeance 32 GB (2 x 16 GB) DDR5-5600](https://pcpartpicker.com/product/J2zXsY/corsair-vengeance-32-gb-2-x-16-gb-ddr5-5600-cl40-memory-cmk32gx5m2b5600c40)
+- [Samsung 990 Pro 4 TB](https://pcpartpicker.com/product/VWxRsY/samsung-990-pro-heatsink-4-tb-m2-2280-pcie-40-x4-nvme-solid-state-drive-mz-v9p4t0cw)
+- 5 x [Seagate BarraCuda 4 TB 5400 RPM](https://pcpartpicker.com/product/jD3H99/seagate-barracuda-4tb-35-5400rpm-internal-hard-drive-st4000dm004)
+
+(The full build is on [PCPartPicker](https://pcpartpicker.com/user/RiotShielder/saved/#view=bnTM3C))
+
+Over the years I've tried quite a few ways to manage it:
+
+- Manually installing everything without any automation
+- Artisinal, hand-written bash scripts
+- Ansible
+- Docker Compose
+
+Those methods were mostly informed by what I was wanting to learn. That trend hasn't changed with my move to Kubernetes. I had no experience with K8s back in December, and today I use it to manage my homelab quite successfully. Kubernetes is overkill for a homelab, but it does provide a great learning environment for me where the consequences are relatively low (as long as my backups keep working).
+
+I name each iteration of my server so that I can disambiguate between references of older installations. Previously I named my servers after Greek/Roman gods, but now I'm using the names of famous computer scientists. The name of the latest iteration is "lamport", named after [Leslie Lamport](https://en.wikipedia.org/wiki/Leslie_Lamport) who is known for his work in distributed systems.
+
+## Operating System
+
+Because I was planning on running everything in Kubernetes, I considered using [Talos](https://www.talos.dev/) rather than my usual choice of Ubuntu Server. Talos is an immutable Linux distribution with support for Kubernetes baked-in. I ultimately didn't choose Talos because at the time required a dedicated drive for the operating system, meaning my entire 4TB SSD would be taken up by Talos.
+
+I ultimately chose Ubuntu Server which has served me well for years despite the community seeming to be unhappy with some of the recent choices by Canonical. I didn't do anything special for my installation other than setting up my RAID 5 array with `mdadm` and `fstab`.
+
+## Kubernetes
+
+Similar to how there are multiple flavors of Linux distributions, there are many distributios of Kubernetes. I chose to use [K3s](https://k3s.io/) since it has a reputation of being lightweight, easy-to-use, and stable.
+
+You can configure K3s by creating a file at `/etc/rancher/k3s/config.yaml`. There are some options that _cannot_ be changed after K3s is installed. The one most relevant to me is IPv6 support. Be sure to look through the [configuration options](https://docs.k3s.io/advanced).
+
+Installation is straightforward:
+
+```bash
+$ curl -sfL https://get.k3s.io | sh -
+```
+
+And... that's it! You now have a Kubernetes cluster running on your machine. You can use `kubectl` to interact with your cluster. I also use [Aptakube](https://aptakube.com/) on my MacBook when I want a GUI for monitoring my cluster.
+
+I use [Tailscale](https://tailscale.com/) to securely access my homelab. Tailscale is a Wireguard-based VPN that's, quite honestly, fun to use. You can use your favorite VPN to access your homelab, or if you're brave you can expose it to the public internet.
+
+Credentials for your cluster are stored at `/etc/rancher/k3s/k3s.yaml`. You can copy this file to `~/.kube/config` on your local machine to use `kubectl`. Note: you'll also need to change the `server` field to point to the address of your server.
+
+## Bootstrapping
+
+This does require a small amount of manual bootstrapping, which I describe in my [repository README](https://github.com/shepherdjerred/homelab/blob/main/README.md). Whenever I setup a new cluster/node, I need to:
+
+- Install ArgoCD: `kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml`
+- Create a secrets to access my 1Password vaults
+- Deploy the manifests in this repo: `kubectl apply -f cdk8s/dist/apps.k8s.yaml`
+
+I've recreated my cluster a couple of times and I've been very pleased with how easy it is to get everything back up and running. It takes me just a few minutes from installing K3s to having all of my services back up and running.
+
+## Conclusion
+
+I've shown how I setup my cluster with K3s. In future posts I'll cover:
+
+- Using Deno and cdk8s to generate manifests
+- Automating deployments with ArgoCD
+- Ingress with HTTPS and Tailscale
+- Direct connections to pods
+- mDNS
+- Persistent volumes
+- Backups
+- Monitoring
+- Helm, Kustomize, and operators
+- Keeping things up-to-date

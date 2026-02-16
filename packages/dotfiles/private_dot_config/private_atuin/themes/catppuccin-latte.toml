@@ -1,0 +1,12 @@
+[theme]
+name = "catppuccin-latte"
+
+[colors]
+AlertInfo = "#40a02b"
+AlertWarn = "#fe640b"
+AlertError = "#d20f39"
+Annotation = "#8839ef"
+Base = "#4c4f69"
+Guidance = "#7c7f93"
+Important = "#d20f39"
+Title = "#8839ef"

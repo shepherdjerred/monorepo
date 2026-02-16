@@ -1,0 +1,63 @@
+---
+import { type CollectionEntry, getCollection } from "astro:content";
+import BlogPost from "../../layouts/BlogPost.astro";
+import { type Configuration, type Result, run } from "webring";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog");
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: post,
+  }));
+}
+type Props = CollectionEntry<"blog">;
+
+const post = Astro.props;
+const { Content } = await post.render();
+
+export const config: Configuration = {
+  sources: [
+    {
+      url: "https://drewdevault.com/blog/index.xml",
+      title: "Drew DeVault",
+      filter: (preview) => preview.includes("open source"),
+    },
+    {
+      url: "https://danluu.com/atom.xml",
+      title: "Dan Luu",
+    },
+    {
+      url: "https://jakelazaroff.com/rss.xml",
+      title: "Jake Lazaroff",
+    },
+  ],
+  // the output will return the three most recent posts from the above sources
+  number: 3,
+  // the output will return santized HTML truncated to 300 characters
+  truncate: 50,
+  // if this is defined, we'll cache the results
+  cache: {
+    // the file to use as a cache
+    cache_file: "webring.json",
+    // how long the cache should remain valid for
+    cache_duration_minutes: 60,
+  },
+  shuffle: true,
+};
+
+export const result: Result = await run(config);
+---
+
+<BlogPost {...post.data}>
+  <Content />
+  <h2>Posts from blogs I read</h2>
+  <ul>
+    {
+      result.map((post) => (
+        <li>
+          <a href={post.url}>{post.title}</a>: {post.preview}
+        </li>
+      ))
+    }
+  </ul>
+</BlogPost>

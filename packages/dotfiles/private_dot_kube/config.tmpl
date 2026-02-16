@@ -1,0 +1,20 @@
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: {{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/qbowip7zr7cggo5p5tam7g6rxe/certificate-authority-data" }}
+    server: https://torvalds:6443
+  name: torvalds
+contexts:
+- context:
+    cluster: torvalds
+    namespace: default
+    user: admin@torvalds
+  name: admin@torvalds
+current-context: admin@torvalds
+kind: Config
+preferences: {}
+users:
+- name: admin@torvalds
+  user:
+    client-certificate-data: {{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/qbowip7zr7cggo5p5tam7g6rxe/client-certificate-data" }}
+    client-key-data: {{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/qbowip7zr7cggo5p5tam7g6rxe/client-key-data" }}

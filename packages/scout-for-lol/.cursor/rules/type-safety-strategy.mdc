@@ -1,0 +1,213 @@
+---
+description: Overall type safety strategy - validate at boundaries with Zod
+globs: "*.ts,*.tsx"
+alwaysApply: true
+---
+
+# Type Safety Strategy
+
+## The Core Principle: Validate at Boundaries
+
+**External data enters your code at "boundaries". Validate there with Zod, then trust TypeScript everywhere else.**
+
+### Boundaries Are
+
+- API endpoints (request bodies, query params)
+- Database queries (when structure is uncertain)
+- User input (forms, commands)
+- File I/O (JSON.parse, config files)
+- Third-party libraries (untyped or poorly typed)
+- Error objects in catch blocks
+
+## The Type Safety Workflow
+
+1. **Define Schema** - Create Zod schema
+2. **Extract Type** - Use `z.infer<typeof Schema>`
+3. **Validate at Boundary** - Parse unknown data
+4. **Use Safely** - TypeScript knows the type everywhere else
+
+```typescript
+const UserSchema = z.object({ name: z.string(), email: z.string().email() });
+type User = z.infer<typeof UserSchema>;
+
+function handleInput(rawInput: unknown): User {
+  return UserSchema.parse(rawInput);  // Validate at boundary
+}
+
+function processUser(user: User): void {
+  console.log(user.name);  // Safe - already validated
+}
+```
+
+**See:** `zod-validation-patterns.mdc` for detailed Zod patterns.
+
+## When TypeScript Fights You, Step Back
+
+If you're fighting TypeScript with multiple type assertions:
+
+1. **Stop** - You're probably doing it wrong
+2. **Validate** - Add Zod validation at the boundary
+3. **Simplify** - Use simple if/else instead of complex abstractions
+4. **Trust** - Let TypeScript's built-in narrowing work
+
+### Example: Complex Union Issue
+
+```typescript
+// ❌ FIGHTING TypeScript:
+const result = args as SomeType;  // Multiple assertions needed
+const data = match(result.type)
+  .with("A", () => {
+    if (!result.fieldA) throw new Error("...");  // TypeScript doesn't see it
+    return result.fieldA as string;  // More assertions!
+  })
+  .exhaustive();
+
+// ✅ WORKING WITH TypeScript:
+// 1. Validate once at boundary
+const args = Schema.parse(rawInput);
+
+// 2. Use simple narrowing
+if (args.type === "A") {
+  // TypeScript automatically knows fieldA exists
+  return { data: args.fieldA };
+}
+```
+
+## Layers of Safety
+
+Build safety in layers:
+
+### Layer 1: Runtime Validation (Zod)
+
+Catches invalid data before it enters your code
+
+### Layer 2: Type System (TypeScript)
+
+Catches logic errors at compile time
+
+### Layer 3: Linter (ESLint)
+
+Catches patterns that bypass the first two layers
+
+All three layers must work together. Don't bypass any layer:
+
+- ❌ Type assertions bypass Layer 2
+- ❌ `any` types bypass Layers 2 and 3
+- ❌ Skip Zod validation bypasses Layer 1
+
+## The Decision Tree
+
+When you encounter unknown data:
+
+```
+Is the data from outside your code?
+├─ YES → Validate with Zod first
+│   └─ Schema defined?
+│       ├─ YES → Use it
+│       └─ NO → Create schema first
+│
+└─ NO → Trust TypeScript types
+    └─ TypeScript complaining?
+        ├─ Type error → Fix the actual issue
+        └─ Union not narrowing → Use simple if/else
+```
+
+## Common Scenarios
+
+### API Response
+
+```typescript
+const json: unknown = await response.json();
+const validated = ResponseSchema.parse(json);
+```
+
+### Database JSON Field
+
+```typescript
+const config: unknown = JSON.parse(user.configJson);
+const validated = ConfigSchema.parse(config);
+```
+
+### Error Handling
+
+```typescript
+catch (error) {
+  const result = ErrorSchema.safeParse(error);
+  const message = result.success ? result.data.message : String(error);
+}
+```
+
+**See:** `error-handling-patterns.mdc`, `zod-validation-patterns.mdc` for details.
+
+## Avoid These Anti-Patterns
+
+### ❌ The Premature Cast
+
+```typescript
+const data = unknownData as MyType;  // Hope it's right!
+```
+
+**Instead**: Validate first, then use
+
+### ❌ The Any Escape Hatch
+
+```typescript
+const data: any = getData();  // Disable all checking
+```
+
+**Instead**: Define proper types or use unknown + Zod
+
+### ❌ The Type Guard Override
+
+```typescript
+function isMyType(value: unknown): value is MyType {
+  return true;  // Trust me bro
+}
+```
+
+**Instead**: Use Zod schemas for runtime checks
+
+### ❌ The Multiple Assertion Chain
+
+```typescript
+const x = (data as unknown) as Type1;
+const y = (x as unknown) as Type2;
+```
+
+**Instead**: Validate with Zod at the source
+
+### ❌ The Non-Null Assertion
+
+```typescript
+const value = maybeValue!;  // It's definitely there! (maybe)
+```
+
+**Instead**: Use optional chaining or Zod
+
+## Success Metrics
+
+Your code is type-safe when:
+
+✅ No `any` types (except in third-party library typings)
+✅ No type assertions except `as const` and `as unknown as Type`
+✅ All external data validated with Zod
+✅ ESLint passes with no warnings
+✅ TypeScript compiles with no errors
+✅ No non-null assertions (`!`)
+✅ Error handling uses Zod validation
+
+## The Payoff
+
+When you follow this strategy:
+
+1. **Fewer bugs**: Invalid data caught at boundaries
+2. **Better DX**: TypeScript autocomplete works correctly
+3. **Easier refactoring**: Type errors show what needs updating
+4. **Self-documenting**: Zod schemas document expected structure
+5. **Faster iteration**: Get it right the first time, not after 5 linter passes
+
+## Remember
+
+> "If TypeScript is fighting you, you're probably fighting type safety. Stop fighting and start validating."
+
+The effort to validate properly at boundaries is ALWAYS less than debugging production issues from invalid data.

@@ -1,3 +1,9 @@
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::unused_result_ok,
+    reason = "integration tests use expect/unwrap/.ok() for simplicity"
+)]
 //! Integration tests for clauderon authentication proxy.
 //!
 //! These tests verify the full end-to-end flow: container -> proxy -> real service

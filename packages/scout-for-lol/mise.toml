@@ -1,0 +1,40 @@
+[tools]
+bun = "latest"
+
+[tasks.dev]
+description = "Create all files needed for development"
+run = "bun install && (cd packages/backend/ && bun db:generate) && dagger develop"
+
+[tasks.ci]
+run = "dagger call ci --git-sha='HEAD' --version='dev'"
+
+[tasks.generate]
+description = "Generate Prisma client and other generated code"
+run = "cd packages/backend && bun run db:generate"
+
+[tasks.check]
+depends = ["generate"]
+run = [
+    "bun run typecheck",
+    "bun run lint",
+    "bun run format",
+    "bun run test",
+    "bun run knip",
+    "bun run duplication-check",
+]
+
+[tasks.typecheck]
+description = "Run TypeScript type checking for all packages"
+run = "bun run typecheck"
+
+[tasks.lint]
+description = "Run ESLint for all packages"
+run = "bun run lint"
+
+[tasks.format]
+description = "Check code formatting for all packages"
+run = "bun run format"
+
+[tasks.test]
+description = "Run tests for all packages"
+run = "bun run test"

@@ -1,0 +1,354 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Nunu": {
+      "id": "Nunu",
+      "key": "20",
+      "name": "Nunu & Willump",
+      "title": "the Boy and His Yeti",
+      "image": {
+        "full": "Nunu.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 240,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "20000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "20001",
+          "num": 1,
+          "name": "Sasquatch Nunu & Willump",
+          "chromas": false
+        },
+        {
+          "id": "20002",
+          "num": 2,
+          "name": "Workshop Nunu & Willump",
+          "chromas": false
+        },
+        {
+          "id": "20003",
+          "num": 3,
+          "name": "Grungy Nunu & Willump",
+          "chromas": false
+        },
+        {
+          "id": "20004",
+          "num": 4,
+          "name": "Nunu & Willump Bot",
+          "chromas": false
+        },
+        {
+          "id": "20005",
+          "num": 5,
+          "name": "Demolisher Nunu & Willump",
+          "chromas": false
+        },
+        {
+          "id": "20006",
+          "num": 6,
+          "name": "TPA Nunu & Willump",
+          "chromas": false
+        },
+        {
+          "id": "20007",
+          "num": 7,
+          "name": "Zombie Nunu & Willump",
+          "chromas": false
+        },
+        {
+          "id": "20008",
+          "num": 8,
+          "name": "Papercraft Nunu & Willump",
+          "chromas": true
+        },
+        {
+          "id": "20016",
+          "num": 16,
+          "name": "Space Groove Nunu & Willump",
+          "chromas": true
+        },
+        {
+          "id": "20026",
+          "num": 26,
+          "name": "Nunu & Beelump",
+          "chromas": true
+        },
+        {
+          "id": "20035",
+          "num": 35,
+          "name": "Cosmic Paladins Nunu & Willump",
+          "chromas": true
+        },
+        {
+          "id": "20044",
+          "num": 44,
+          "name": "Fright Night Nunu & Willump",
+          "chromas": true
+        }
+      ],
+      "lore": "Once upon a time, there was a boy who wanted to prove he was a hero by slaying a fearsome monster—only to discover that the beast, a lonely and magical yeti, merely needed a friend. Bound together by ancient power and a shared love of snowballs, Nunu and Willump now ramble wildly across the Freljord, breathing life into imagined adventures. They hope that somewhere out there, they will find Nunu's mother. If they can save her, maybe they will be heroes after all…",
+      "blurb": "Once upon a time, there was a boy who wanted to prove he was a hero by slaying a fearsome monster—only to discover that the beast, a lonely and magical yeti, merely needed a friend. Bound together by ancient power and a shared love of snowballs, Nunu...",
+      "allytips": [
+        "Consume allows Nunu to stay in a lane against ranged opponents.",
+        "You can choose to interrupt Absolute Zero early for partial damage if an opponent is about to run out of range.",
+        "It's often beneficial to delay the casting of Absolute Zero until the initial round of disables are used. Try to hang back before rushing into a team fight."
+      ],
+      "enemytips": [
+        "Interrupting the charge up on Absolute Zero will lower the amount of damage your team takes.",
+        "Using Summoner Flash is a surefire way to escape Absolute Zero.",
+        "Biggest Snowball Ever moves very fast but cannot turn as quickly, so don't try to escape it by running away in a straight line.  Instead, make sudden, sharp turns."
+      ],
+      "tags": ["Tank", "Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 4,
+        "defense": 6,
+        "magic": 7,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 610,
+        "hpperlevel": 90,
+        "mp": 280,
+        "mpperlevel": 42,
+        "movespeed": 345,
+        "armor": 29,
+        "armorperlevel": 4.2,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 5,
+        "hpregenperlevel": 0.8,
+        "mpregen": 7,
+        "mpregenperlevel": 0.5,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 61,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 2.25,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "NunuQ",
+          "name": "Consume",
+          "description": "Willump takes a bite out of a minion, monster, or enemy champion, dealing damage and healing himself.",
+          "tooltip": "Nunu asks Willump to take a bite of an enemy, dealing <trueDamage>{{ monsterminiondamage }} true damage</trueDamage> and restoring <healing>{{ monsterhealing }} Health</healing> when used against a minion or jungle monster. Against a champion, it instead deals <magicDamage>{{ totalchampiondamage }} magic damage</magicDamage> and restores <healing>{{ championhealing }} Health</healing>.<br /><br />The <healing>healing</healing> is increased by {{ lowhealthhealingscalar*100 }}% when Nunu and Willump are below {{ lowhealththreshhold*100 }}% Health.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Monster Damage", "Champion Damage", "Heal", "Cooldown"],
+            "effect": [
+              "{{ monsterminiondamage }} -> {{ monsterminiondamageNL }}",
+              "{{ championdamage }} -> {{ championdamageNL }}",
+              "{{ basehealing }} -> {{ basehealingNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [13, 12, 11, 10, 9],
+          "cooldownBurn": "13/12/11/10/9",
+          "cost": [60, 60, 60, 60, 60],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " Mana",
+          "maxammo": "-1",
+          "range": [125, 125, 125, 125, 125],
+          "rangeBurn": "125",
+          "image": {
+            "full": "NunuQ.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 384,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} Mana"
+        },
+        {
+          "id": "NunuW",
+          "name": "Biggest Snowball Ever!",
+          "description": "Willump creates a snowball that grows in size and speed as he rolls it.  The snowball damages and knocks up enemies.",
+          "tooltip": "Nunu and Willump create a snowball that grows in size and speed as they roll it. They turn slower while rolling it, but can increase turning speed by holding the turn.<br /><br />The snowball does between <magicDamage>{{ noimpactsnowballdamage }}</magicDamage> and <magicDamage>{{ maximumsnowballdamage }} magic damage</magicDamage>, and <status>Knocks Up</status> for between {{ baseknockupduration }} and {{ maximumstunduration }} seconds when it collides with a champion, large monster or wall. These values scale up with distance rolled.<br /><br />Nunu and Willump can <recast>Recast</recast> to let the snowball go early.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Base Damage", "@AbilityResourceName@ Cost"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cost }} -> {{ costNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 14, 14, 14, 14],
+          "cooldownBurn": "14",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [7500, 7500, 7500, 7500, 7500],
+          "rangeBurn": "7500",
+          "image": {
+            "full": "NunuW.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 432,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "NunuE",
+          "name": "Snowball Barrage",
+          "description": "Nunu throws multiple snowballs that damage enemies.  When he's finished, Willump roots any champions or large monsters that were hit by a snowball.",
+          "tooltip": "Nunu throws three snowballs, dealing <magicDamage>{{ totalsnowballdamage }} magic damage</magicDamage> per snowball and <status>Slowing</status> enemies hit by all three by {{ slowamount*-100 }}% for {{ slowduration }} second. Nunu can <recast>Recast</recast> this up to twice more.<br /><br />After {{ totalspellduration }} seconds, Nunu <status>Roots</status> all nearby enemies that had been <status>Slowed</status> by the snowballs for {{ rootduration }} seconds and deals an additional <magicDamage>{{ totalrootdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Movement Slow", "Cooldown", "Mana Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowamount*-100.000000 }}% -> {{ slowamountnl*-100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 13, 12, 11, 10],
+          "cooldownBurn": "14/13/12/11/10",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [625, 625, 625, 625, 625],
+          "rangeBurn": "625",
+          "image": {
+            "full": "NunuE.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 0,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "NunuR",
+          "name": "Absolute Zero",
+          "description": "Nunu & Willump create a powerful blizzard in an area that slows enemies and deals massive damage at the end.",
+          "tooltip": "Nunu and Willump channel a powerful blizzard for up to {{ channelduration }} seconds. Enemies inside are <status>Slowed</status> by {{ slowstartamount*-100 }}%, increasing to {{ maxslowamount*-100 }}% over the duration. Nunu and Willump also gain <shield>{{ totalshieldamount }} Shield</shield> for the duration before decaying over {{ shielddecayduration }} seconds afterwards.<br /><br />When the blizzard ends, it detonates, dealing up to <magicDamage>{{ maximumdamage }} magic damage</magicDamage> based on channel time. Nunu and Willump can <recast>Recast</recast> to end the blizzard early.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Shield Amount", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ baseshieldamount }} -> {{ baseshieldamountNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [110, 100, 90],
+          "cooldownBurn": "110/100/90",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [650, 650, 650],
+          "rangeBurn": "650",
+          "image": {
+            "full": "NunuR.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 48,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Call of the Freljord",
+        "description": "Nunu increases the attack speed and Move Speed of Willump and a nearby ally, and causes Willump's basic attacks to damage enemies around the target.",
+        "image": {
+          "full": "NunuPassive.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 240,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

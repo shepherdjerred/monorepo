@@ -14,7 +14,7 @@ use crate::core::session::ResourceState;
 use crate::tui::app::App;
 
 /// Render the startup health modal
-pub fn render(frame: &mut Frame, app: &App, area: Rect) {
+pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
     let sessions = app.sessions_needing_attention();
     if sessions.is_empty() {
         return;
@@ -24,8 +24,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let dialog_width = 60.min(area.width.saturating_sub(4));
     let session_count = sessions.len();
     // 4 lines for header/title + 2 for buttons + session count (capped at 8)
-    // Safe cast: capped at 8, well within u16 range
-    #[allow(clippy::cast_possible_truncation)]
+    #[expect(clippy::cast_possible_truncation, reason = "capped at 8, well within u16 range")]
     let dialog_height = (6 + session_count.min(8) as u16).min(area.height.saturating_sub(4));
 
     let dialog_area = centered_rect(dialog_width, dialog_height, area);
@@ -66,7 +65,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(description, chunks[0]);
 
     // Session list
-    let items: Vec<ListItem> = sessions
+    let items: Vec<ListItem<'_>> = sessions
         .iter()
         .take(8) // Cap at 8 to avoid overflow
         .map(|report| {
@@ -142,7 +141,7 @@ fn state_display(state: &ResourceState) -> (&'static str, Color) {
 /// Truncate a string to max length with ellipsis
 fn truncate(s: &str, max_len: usize) -> String {
     if s.len() <= max_len {
-        s.to_string()
+        s.to_owned()
     } else {
         format!("{}...", &s[..max_len.saturating_sub(3)])
     }

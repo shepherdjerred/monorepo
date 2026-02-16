@@ -1,0 +1,30 @@
+---
+import Layout from "./Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import PageHeader from "../components/PageHeader.astro";
+
+const { frontmatter } = Astro.props;
+const { title, subtitle } = frontmatter;
+---
+
+<Layout>
+  <div class="bg-white dark:bg-gray-900">
+    <Navbar />
+
+    <div class="relative px-6 pt-14 lg:px-8">
+      <div class="mx-auto max-w-4xl py-32 sm:py-48 lg:py-56">
+        <PageHeader
+          title={title}
+          subtitle={subtitle}
+        />
+
+        <article class="prose dark:prose-invert max-w-none mt-12">
+          <slot />
+        </article>
+      </div>
+    </div>
+
+    <Footer />
+  </div>
+</Layout>

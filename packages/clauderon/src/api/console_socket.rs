@@ -218,7 +218,7 @@ async fn send_console_error(
     message: &str,
 ) -> anyhow::Result<()> {
     let error = ConsoleMessage::Error {
-        message: message.to_string(),
+        message: message.to_owned(),
     };
     let payload = serde_json::to_string(&error)?;
     writer.write_all(payload.as_bytes()).await?;

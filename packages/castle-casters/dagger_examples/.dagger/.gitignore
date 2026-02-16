@@ -1,0 +1,9 @@
+node_modules/
+dist/
+build/
+.cache/
+*.log
+/sdk
+/**/node_modules/**
+/**/.pnpm-store/**
+/.env

@@ -55,12 +55,12 @@ async fn test_kubernetes_config_validation() {
     // that the configuration structure is sound
 
     let config = KubernetesConfig {
-        namespace: "test-namespace".to_string(),
-        image: "test-image:latest".to_string(),
-        cpu_request: "100m".to_string(),
-        cpu_limit: "1000m".to_string(),
-        memory_request: "128Mi".to_string(),
-        memory_limit: "512Mi".to_string(),
+        namespace: "test-namespace".to_owned(),
+        image: "test-image:latest".to_owned(),
+        cpu_request: "100m".to_owned(),
+        cpu_limit: "1000m".to_owned(),
+        memory_request: "128Mi".to_owned(),
+        memory_limit: "512Mi".to_owned(),
         ..Default::default()
     };
 

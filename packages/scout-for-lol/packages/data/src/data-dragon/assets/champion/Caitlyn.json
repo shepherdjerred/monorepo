@@ -1,0 +1,397 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Caitlyn": {
+      "id": "Caitlyn",
+      "key": "51",
+      "name": "Caitlyn",
+      "title": "the Sheriff of Piltover",
+      "image": {
+        "full": "Caitlyn.png",
+        "sprite": "champion0.png",
+        "group": "champion",
+        "x": 0,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "51000",
+          "num": 0,
+          "name": "default",
+          "chromas": true
+        },
+        {
+          "id": "51001",
+          "num": 1,
+          "name": "Resistance Caitlyn",
+          "chromas": false
+        },
+        {
+          "id": "51002",
+          "num": 2,
+          "name": "Sheriff Caitlyn",
+          "chromas": false
+        },
+        {
+          "id": "51003",
+          "num": 3,
+          "name": "Safari Caitlyn",
+          "chromas": false
+        },
+        {
+          "id": "51004",
+          "num": 4,
+          "name": "Arctic Warfare Caitlyn",
+          "chromas": false
+        },
+        {
+          "id": "51005",
+          "num": 5,
+          "name": "Officer Caitlyn",
+          "chromas": false
+        },
+        {
+          "id": "51006",
+          "num": 6,
+          "name": "Headhunter Caitlyn",
+          "chromas": false
+        },
+        {
+          "id": "51010",
+          "num": 10,
+          "name": "Lunar Wraith Caitlyn",
+          "chromas": true
+        },
+        {
+          "id": "51011",
+          "num": 11,
+          "name": "Pulsefire Caitlyn",
+          "chromas": true
+        },
+        {
+          "id": "51013",
+          "num": 13,
+          "name": "Pool Party Caitlyn",
+          "chromas": true
+        },
+        {
+          "id": "51019",
+          "num": 19,
+          "name": "Arcade Caitlyn",
+          "chromas": false
+        },
+        {
+          "id": "51020",
+          "num": 20,
+          "name": "Prestige Arcade Caitlyn",
+          "chromas": false
+        },
+        {
+          "id": "51022",
+          "num": 22,
+          "name": "Battle Academia Caitlyn",
+          "chromas": true
+        },
+        {
+          "id": "51028",
+          "num": 28,
+          "name": "Arcane Enforcer Caitlyn",
+          "chromas": false
+        },
+        {
+          "id": "51029",
+          "num": 29,
+          "name": "Prestige Arcade Caitlyn (2022)",
+          "chromas": false
+        },
+        {
+          "id": "51030",
+          "num": 30,
+          "name": "Snow Moon Caitlyn",
+          "chromas": true
+        },
+        {
+          "id": "51039",
+          "num": 39,
+          "name": "Heartthrob Caitlyn",
+          "chromas": true
+        },
+        {
+          "id": "51048",
+          "num": 48,
+          "name": "DRX Caitlyn",
+          "chromas": true
+        },
+        {
+          "id": "51050",
+          "num": 50,
+          "name": "Arcane Commander Caitlyn",
+          "chromas": true
+        },
+        {
+          "id": "51051",
+          "num": 51,
+          "name": "Prestige Arcane Commander Caitlyn",
+          "chromas": true
+        },
+        {
+          "id": "51054",
+          "num": 54,
+          "name": "Firecracker Caitlyn",
+          "chromas": true
+        }
+      ],
+      "lore": "Renowned as its finest peacekeeper, Caitlyn Kiramman is also Piltover's best shot at ridding the city of its elusive criminal elements. She is often paired with Vi, acting as a cool counterpoint to her partner's more impetuous nature. Even though she carries a one-of-a-kind hextech rifle, Caitlyn's most powerful weapon is her superior intellect, allowing her to lay elaborate traps for any lawbreakers foolish enough to operate in the City of Progress.",
+      "blurb": "Renowned as its finest peacekeeper, Caitlyn Kiramman is also Piltover's best shot at ridding the city of its elusive criminal elements. She is often paired with Vi, acting as a cool counterpoint to her partner's more impetuous nature. Even though she...",
+      "allytips": [
+        "Make use of her Yordle Snap Traps by placing them pre-emptively to ensure that you'll have one off of cooldown during combat.",
+        "Avoid using Ace in the Hole in large team melees as it might be blocked by the wrong target.",
+        "Fire 90 Caliber Net away from the opponent to close the gap or hop over walls."
+      ],
+      "enemytips": [
+        "Keep behind allied minions if Caitlyn is harassing you with Piltover Peacemaker (it deals less damage with each subsequent target).",
+        "You can intercept Ace in the Hole's missile from hitting an ally if you stand in its path."
+      ],
+      "tags": ["Marksman"],
+      "partype": "Mana",
+      "info": {
+        "attack": 8,
+        "defense": 2,
+        "magic": 2,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 580,
+        "hpperlevel": 107,
+        "mp": 315,
+        "mpperlevel": 40,
+        "movespeed": 325,
+        "armor": 27,
+        "armorperlevel": 4.7,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 650,
+        "hpregen": 3.5,
+        "hpregenperlevel": 0.55,
+        "mpregen": 7.4,
+        "mpregenperlevel": 0.7,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 62,
+        "attackdamageperlevel": 3.8,
+        "attackspeedperlevel": 4,
+        "attackspeed": 0.681
+      },
+      "spells": [
+        {
+          "id": "CaitlynQ",
+          "name": "Piltover Peacemaker",
+          "description": "Caitlyn revs up her rifle for 1 second to unleash a penetrating shot that deals physical damage (deals less damage to subsequent targets).",
+          "tooltip": "Caitlyn revs her rifle to fire a piercing shot dealing <physicalDamage>{{ initialdamage }} physical damage</physicalDamage>. After the bolt strikes the first target, it opens into a wider shot that deals <physicalDamage>{{ secondarydamage }} physical damage</physicalDamage>.<br /><br />Enemies revealed by <spellName>Yordle Snap Trap</spellName> always take full damage.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Total AD Ratio", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ tadratio*100.000000 }}% -> {{ tadrationl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [10, 9, 8, 7, 6],
+          "cooldownBurn": "10/9/8/7/6",
+          "cost": [55, 60, 65, 70, 75],
+          "costBurn": "55/60/65/70/75",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [50, 50, 50, 50, 50],
+            [1, 1, 1, 1, 1],
+            [1.3, 1.45, 1.6, 1.75, 1.9],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "50", "1", "1.3/1.45/1.6/1.75/1.9", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1250, 1250, 1250, 1250, 1250],
+          "rangeBurn": "1250",
+          "image": {
+            "full": "CaitlynQ.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 384,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "CaitlynW",
+          "name": "Yordle Snap Trap",
+          "description": "Caitlyn sets a trap that, when sprung, reveals and immobilizes the enemy champion for 1.5 seconds, granting Caitlyn an empowered Headshot.",
+          "tooltip": "Caitlyn sets a trap that <status>Roots</status> the first champion that steps on it for {{ rootduration }} seconds and granting <keywordStealth>True Sight</keywordStealth> of them for 3 seconds. Traps last for {{ trapduration }} seconds, and {{ maximumtraps }} traps may be active at once. This Ability has {{ maximumcharges }} charges ({{ ammorechargetime }} second refresh).<br /><br />Targets rooted by this Ability take an additional <physicalDamage>{{ headshotbonusdamage }} physical damage</physicalDamage> from <keywordMajor>Headshot</keywordMajor>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Bonus Headshot Damage on Trapped Targets", "Recharge Time", "Maximum Traps", "Trap Duration"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}",
+              "{{ maximumtraps }} -> {{ maximumtrapsNL }}",
+              "{{ trapduration }} -> {{ trapdurationNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [0.5, 0.5, 0.5, 0.5, 0.5],
+          "cooldownBurn": "0.5",
+          "cost": [20, 20, 20, 20, 20],
+          "costBurn": "20",
+          "datavalues": {},
+          "effect": [
+            null,
+            [2, 2, 2, 2, 2],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [30, 30, 30, 30, 30],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "2", "0", "0", "0", "0", "0", "30", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "2",
+          "range": [800, 800, 800, 800, 800],
+          "rangeBurn": "800",
+          "image": {
+            "full": "CaitlynW.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 432,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "CaitlynE",
+          "name": "90 Caliber Net",
+          "description": "Caitlyn fires a heavy net to slow her target. The recoil knocks Caitlyn back.",
+          "tooltip": "Caitlyn fires a net, pushing her backwards. The net <status>Slows</status> the first target hit by {{ e3 }}% for {{ e2 }} second and deals <magicDamage>{{ netdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [16, 14, 12, 10, 8],
+          "cooldownBurn": "16/14/12/10/8",
+          "cost": [75, 75, 75, 75, 75],
+          "costBurn": "75",
+          "datavalues": {},
+          "effect": [
+            null,
+            [80, 130, 180, 230, 280],
+            [1, 1, 1, 1, 1],
+            [50, 50, 50, 50, 50],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "80/130/180/230/280", "1", "50", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [750, 750, 750, 750, 750],
+          "rangeBurn": "750",
+          "image": {
+            "full": "CaitlynE.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 0,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "CaitlynR",
+          "name": "Ace in the Hole",
+          "description": "Caitlyn takes time to line up the perfect shot, dealing massive damage to a single target at a huge range. Enemy champions can intercept the bullet for their ally.",
+          "tooltip": "Caitlyn takes a moment to channel and line up the perfect shot, then she fires, dealing <physicalDamage>{{ rtotaldamage }} physical damage</physicalDamage>, but other enemy champions can intercept it. This Ability grants <keywordStealth>True Sight</keywordStealth> of the target during the channel.<br /><br /><rules>Damage scales with Caitlyn's Critical Strike chance and Critical Strike Damage.</rules>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage"],
+            "effect": ["{{ rbasedamage }} -> {{ rbasedamageNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [90, 90, 90],
+          "cooldownBurn": "90",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [3500, 3500, 3500],
+          "rangeBurn": "3500",
+          "image": {
+            "full": "CaitlynR.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 48,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Headshot",
+        "description": "Every few basic attacks, or against a target she has trapped or netted, Caitlyn will fire a headshot dealing bonus damage that scales with her critical strike chance. On trapped or netted targets, Caitlyn's Headshot attack range is doubled.",
+        "image": {
+          "full": "Caitlyn_Headshot.png",
+          "sprite": "passive0.png",
+          "group": "passive",
+          "x": 0,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

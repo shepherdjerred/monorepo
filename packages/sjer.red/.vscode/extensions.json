@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "astro-build.astro-vscode",
+    "dbaeumer.vscode-eslint",
+    "davidanson.vscode-markdownlint",
+    "esbenp.prettier-vscode",
+    "unifiedjs.vscode-mdx",
+    "github.vscode-github-actions",
+    "orta.vscode-twoslash"
+  ],
+  "unwantedRecommendations": []
+}

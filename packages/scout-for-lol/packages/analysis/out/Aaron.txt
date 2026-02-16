@@ -1,0 +1,60 @@
+author: Aaron (186665676134547461)
+messages: 4455
+volume: avg_words 4.69, median_words 4.0, p90_words 9.0, avg_chars 29.18, p90_chars 52.0
+lexical: ttr 0.173, hapax 0.099, caps/msg 0.0
+sentences: avg_words 5.195
+words: avg_len 4.423, variety 3619, typos/msg 2.176
+tokens: the (1.0), you (0.9907407407407407), to (0.6277777777777778), wbg (0.6139227715078311), 2g2 (0.6103740849673235), is (0.5314814814814814), swiss (0.48402376465095626), it (0.4740740740740741)
+char_trigrams:  th (1087), the (839), ing (642), you (637), he  (629),  to (542)
+style_markers: dude (25), really (25), idk (21), yo (17), actually (16), bro (15)
+laughter: \blmao\b (24), \bl+o+l+\b (21), \b(rofl|lmfao)\b (6), \bha+ha+\b (4)
+emoji: 🤣 (16), 🙂 (11), 🤔 (9), 😂 (9), 😅 (7), 😢 (5)
+openers: you (130), we (113), what (63), im (63), the (62) | we need (42), ll be (23), aw yup (22), love you (14), happy birthday (14)
+closers: you (74), man (71), it (62), me (60), thinking (40) | of legends (17), need more (15), in here (13), play league (10), lp delivery (10)
+cadence: : (733), . (386), ? (256), ' (153), , (103), ! (83) | repeats ??? (7), ?? (5), !! (5), !!! (4) | ?/msg 0.057 !/msg 0.019 .../msg 0.01
+formatting: links/msg 0.0 mentions/msg 0.095 quotes/msg 0.0 code/msg 0.0 multiline/msg 0.003 stretch/msg 0.062 shout/msg 0.05
+hours: 20, 19, 22
+mentions: 202595851678384137 (73), 208425244128444418 (53), 263577791105073152 (33), 410595870380392458 (33), 189534213391908865 (31)
+representative: you
+interesting:
+ 1. (0.573) I’m you and you are me
+ 2. (0.53) What in the 😂
+ 3. (0.524) <@192392483383017472> we need you
+ 4. (0.524) We need you
+ 5. (0.524) <@189534213391908865> we need you
+ 6. (0.524) <@456226577798135808> WE need you
+ 7. (0.516) is the thing
+ 8. (0.506) The common denominator is you (;
+ 9. (0.493) You and Virmel
+10. (0.478) We miss you 😢
+11. (0.47) in the botlane
+12. (0.469) I believe in you
+13. (0.469) you get on
+14. (0.468) in the backround
+15. (0.459) You saying you don't like it?
+16. (0.456) <@208425244128444418> they need you
+17. (0.454) And you say that
+18. (0.452) Up to you Irfan
+19. (0.449) for the dub
+20. (0.448) for you anything
+quotes:
+- "love league of legends" (10)
+- "beep beep 15 lp delivery" (10)
+- "we need 5th" (7)
+- "we need you" (6)
+- "get in here" (6)
+- "we need more" (5)
+- "we need you man" (4)
+- "glitter boy for life" (3)
+- "best player in server" (3)
+- "what the fuck" (3)
+- "just got home" (3)
+- "fucking glitter boy for life" (2)
+- "if you do" (2)
+- "fucking love you guys" (2)
+- "still at work" (2)
+- "who the fuck" (2)
+- "never too much" (2)
+- "what is this stuff" (2)
+- "proud of you" (2)
+- "same man same" (2)

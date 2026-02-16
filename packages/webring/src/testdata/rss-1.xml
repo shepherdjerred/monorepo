@@ -1,0 +1,2135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Jerred&apos;s Blog</title>
+    <description>My personal blog</description>
+    <link>https://sjer.red/</link>
+    <item>
+      <title>TIL: Using Twoslash with Shiki and Astro</title>
+      <link>https://sjer.red/blog/til/2024-07-01/</link>
+      <guid isPermaLink="true">https://sjer.red/blog/til/2024-07-01/</guid>
+      <description>TIL: Using Twoslash with Shiki and Astro</description>
+      <pubDate>Mon, 01 Jul 2024 00:00:00 GMT</pubDate>
+      <content:encoded>&lt;p&gt;Do you want code snippets like below on your Astro site?&lt;/p&gt;
+        &lt;p&gt;Note: you can hover over types to see their definitions.&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;interface IdLabel {
+        id: number /* some fields */;
+        }
+        interface NameLabel {
+        name: string /* other fields */;
+        }
+        type NameOrId&amp;lt;T extends number | string&amp;gt; = T extends number ? IdLabel :
+        NameLabel;
+        // This comment should not be included
+
+        // ---cut---
+        function createLabel&amp;lt;T extends number | string&amp;gt;(idOrName: T):
+        NameOrId&amp;lt;T&amp;gt; {
+        throw &quot;unimplemented&quot;;
+        }
+
+        let a = createLabel(&quot;typescript&quot;);
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;It&apos;s super easy. In your &lt;code&gt;astro.config.ts&lt;/code&gt; file, add
+        the following:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;import { defineConfig } from &quot;astro/config&quot;;
+        // ---cut---
+        import { rendererRich, transformerTwoslash } from &quot;@shikijs/twoslash&quot;;
+
+        export default defineConfig({
+        markdown: {
+        shikiConfig: {
+        transformers: [
+        transformerTwoslash({
+        renderer: rendererRich(),
+        }),
+        ],
+        },
+        },
+        });
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;Import this CSS in your layout:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;import &quot;@shikijs/twoslash/style-rich.css&quot;;
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;Add the following CSS and import it in your layout:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;// fixes an issue where type popups are cut off
+        .astro-code {
+        overflow: visible !important;
+        }
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;Bonus: enable an automatic light &amp;amp; dark mode. Add the following CSS from
+        &lt;a
+        href=&quot;https://shiki.style/guide/dual-themes#query-based-dark-mode&quot;&gt;Shiki&apos;s
+        documentation&lt;/a&gt;:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;@media (prefers-color-scheme: dark) {
+        .shiki,
+        .shiki span {
+        color: var(--shiki-dark) !important;
+        background-color: var(--shiki-dark-bg) !important;
+        /* Optional, if you also want font styles */
+        font-style: var(--shiki-dark-font-style) !important;
+        font-weight: var(--shiki-dark-font-weight) !important;
+        text-decoration: var(--shiki-dark-text-decoration) !important;
+        }
+        }
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;Add the following to your &lt;code&gt;astro.config.ts&lt;/code&gt;:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;import { defineConfig } from &quot;astro/config&quot;;
+        // ---cut---
+        export default defineConfig({
+        markdown: {
+        shikiConfig: {
+        theme: &quot;github-dark&quot;,
+        themes: {
+        light: &quot;github-light&quot;,
+        dark: &quot;github-dark&quot;,
+        },
+        },
+        },
+        });
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;You can try it on this site by toggling your browser&apos;s or operating
+        system&apos;s dark mode.&lt;/p&gt;
+        &lt;p&gt;Check out &lt;a
+        href=&quot;https://shikijs.github.io/twoslash/&quot;&gt;Shiki&apos;s Twoslash
+        documentation&lt;/a&gt; for details.&lt;/p&gt;
+      </content:encoded>
+    </item>
+    <item>
+      <title>Homelab 1 - Setting up K3s</title>
+      <link>https://sjer.red/blog/2024/homelab-1/</link>
+      <guid isPermaLink="true">https://sjer.red/blog/2024/homelab-1/</guid>
+      <description>Setting up K3s</description>
+      <pubDate>Wed, 26 Jun 2024 00:00:00 GMT</pubDate>
+      <content:encoded>&lt;p&gt;This series of posts will detail the setup of my homelab. It goes
+        into the technical details of how I setup a single-node K3s Kubernetes cluster using cdk8s
+        and Deno to generate all of the required YAML manifests. This is a practical deployment
+        with:&lt;/p&gt;
+        &lt;ul&gt;
+        &lt;li&gt;Automated backups&lt;/li&gt;
+        &lt;li&gt;Monitoring and alerting&lt;/li&gt;
+        &lt;li&gt;Automated deployments&lt;/li&gt;
+        &lt;li&gt;Automatic image/chart upgrades&lt;/li&gt;
+        &lt;li&gt;Support for GPU acceleration&lt;/li&gt;
+        &lt;li&gt;Secure secrets with 1Password&lt;/li&gt;
+        &lt;li&gt;Secure remote access through Tailscale&lt;/li&gt;
+        &lt;li&gt;Direct access for game servers and certain protocols like mDNS&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;h2&gt;Table of Contents&lt;/h2&gt;
+        &lt;h2&gt;Background&lt;/h2&gt;
+        &lt;p&gt;I&apos;ve had a homelab for around a decade. The hardware itself has gone from
+        repurposed parts in college (a Core Duo served me very well from 2017-2022) to a very beefy
+        server today:&lt;/p&gt;
+        &lt;ul&gt;
+        &lt;li&gt;&lt;a
+        href=&quot;https://pcpartpicker.com/product/ZLjRsY/intel-core-i9-14900k-32-ghz-24-core-processor-bx8071514900k&quot;&gt;Intel
+        Core i9-14900K 3.2 GHz 24-Core&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;2 x &lt;a
+        href=&quot;https://pcpartpicker.com/product/J2zXsY/corsair-vengeance-32-gb-2-x-16-gb-ddr5-5600-cl40-memory-cmk32gx5m2b5600c40&quot;&gt;Corsair
+        Vengeance 32 GB (2 x 16 GB) DDR5-5600&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a
+        href=&quot;https://pcpartpicker.com/product/VWxRsY/samsung-990-pro-heatsink-4-tb-m2-2280-pcie-40-x4-nvme-solid-state-drive-mz-v9p4t0cw&quot;&gt;Samsung
+        990 Pro 4 TB&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;5 x &lt;a
+        href=&quot;https://pcpartpicker.com/product/jD3H99/seagate-barracuda-4tb-35-5400rpm-internal-hard-drive-st4000dm004&quot;&gt;Seagate
+        BarraCuda 4 TB 5400 RPM&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;p&gt;(The full build is on &lt;a
+        href=&quot;https://pcpartpicker.com/user/RiotShielder/saved/#view=bnTM3C&quot;&gt;PCPartPicker&lt;/a&gt;)&lt;/p&gt;
+        &lt;p&gt;Over the years I&apos;ve tried quite a few ways to manage it:&lt;/p&gt;
+        &lt;ul&gt;
+        &lt;li&gt;Manually installing everything without any automation&lt;/li&gt;
+        &lt;li&gt;Artisinal, hand-written bash scripts&lt;/li&gt;
+        &lt;li&gt;Ansible&lt;/li&gt;
+        &lt;li&gt;Docker Compose&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;p&gt;Those methods were mostly informed by what I was wanting to learn. That trend
+        hasn&apos;t changed with my move to Kubernetes. I had no experience with K8s back in
+        December, and today I use it to manage my homelab quite successfully. Kubernetes is overkill
+        for a homelab, but it does provide a great learning environment for me where the
+        consequences are relatively low (as long as my backups keep working).&lt;/p&gt;
+        &lt;p&gt;I name each iteration of my server so that I can disambiguate between references of
+        older installations. Previously I named my servers after Greek/Roman gods, but now I&apos;m
+        using the names of famous computer scientists. The name of the latest iteration is
+        &quot;lamport&quot;, named after &lt;a
+        href=&quot;https://en.wikipedia.org/wiki/Leslie_Lamport&quot;&gt;Leslie Lamport&lt;/a&gt;
+        who is known for his work in distributed systems.&lt;/p&gt;
+        &lt;h2&gt;Operating System&lt;/h2&gt;
+        &lt;p&gt;Because I was planning on running everything in Kubernetes, I considered using
+        &lt;a href=&quot;https://www.talos.dev/&quot;&gt;Talos&lt;/a&gt; rather than my usual choice
+        of Ubuntu Server. Talos is an immutable Linux distribution with support for Kubernetes
+        baked-in. I ultimately didn&apos;t choose Talos because at the time required a dedicated
+        drive for the operating system, meaning my entire 4TB SSD would be taken up by
+        Talos.&lt;/p&gt;
+        &lt;p&gt;I ultimately chose Ubuntu Server which has served me well for years despite the
+        community seeming to be unhappy with some of the recent choices by Canonical. I didn&apos;t
+        do anything special for my installation other than setting up my RAID 5 array with
+        &lt;code&gt;mdadm&lt;/code&gt; and &lt;code&gt;fstab&lt;/code&gt;.&lt;/p&gt;
+        &lt;h2&gt;Kubernetes&lt;/h2&gt;
+        &lt;p&gt;Similar to how there are multiple flavors of Linux distributions, there are many
+        distributios of Kubernetes. I chose to use &lt;a
+        href=&quot;https://k3s.io/&quot;&gt;K3s&lt;/a&gt; since it has a reputation of being
+        lightweight, easy-to-use, and stable.&lt;/p&gt;
+        &lt;p&gt;You can configure K3s by creating a file at
+        &lt;code&gt;/etc/rancher/k3s/config.yaml&lt;/code&gt;. There are some options that
+        &lt;em&gt;cannot&lt;/em&gt; be changed after K3s is installed. The one most relevant to me
+        is IPv6 support. Be sure to look through the &lt;a
+        href=&quot;https://docs.k3s.io/advanced&quot;&gt;configuration options&lt;/a&gt;.&lt;/p&gt;
+        &lt;p&gt;Installation is straightforward:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;$ curl -sfL https://get.k3s.io | sh -
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;And... that&apos;s it! You now have a Kubernetes cluster running on your machine.
+        You can use &lt;code&gt;kubectl&lt;/code&gt; to interact with your cluster. I also use &lt;a
+        href=&quot;https://aptakube.com/&quot;&gt;Aptakube&lt;/a&gt; on my MacBook when I want a GUI
+        for monitoring my cluster.&lt;/p&gt;
+        &lt;p&gt;I use &lt;a href=&quot;https://tailscale.com/&quot;&gt;Tailscale&lt;/a&gt; to
+        securely access my homelab. Tailscale is a Wireguard-based VPN that&apos;s, quite honestly,
+        fun to use. You can use your favorite VPN to access your homelab, or if you&apos;re brave
+        you can expose it to the public internet.&lt;/p&gt;
+        &lt;p&gt;Credentials for your cluster are stored at
+        &lt;code&gt;/etc/rancher/k3s/k3s.yaml&lt;/code&gt;. You can copy this file to
+        &lt;code&gt;~/.kube/config&lt;/code&gt; on your local machine to use
+        &lt;code&gt;kubectl&lt;/code&gt;. Note: you&apos;ll also need to change the
+        &lt;code&gt;server&lt;/code&gt; field to point to the address of your server.&lt;/p&gt;
+        &lt;h2&gt;Bootstrapping&lt;/h2&gt;
+        &lt;p&gt;This does require a small amount of manual bootstrapping, which I describe in my
+        &lt;a
+        href=&quot;https://github.com/shepherdjerred/homelab/blob/main/README.md&quot;&gt;repository
+        README&lt;/a&gt;. Whenever I setup a new cluster/node, I need to:&lt;/p&gt;
+        &lt;ul&gt;
+        &lt;li&gt;Install ArgoCD: &lt;code&gt;kubectl apply -n argocd -f
+        https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml&lt;/code&gt;&lt;/li&gt;
+        &lt;li&gt;Create a secrets to access my 1Password vaults&lt;/li&gt;
+        &lt;li&gt;Deploy the manifests in this repo: &lt;code&gt;kubectl apply -f
+        cdk8s/dist/apps.k8s.yaml&lt;/code&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;p&gt;I&apos;ve recreated my cluster a couple of times and I&apos;ve been very pleased
+        with how easy it is to get everything back up and running. It takes me just a few minutes
+        from installing K3s to having all of my services back up and running.&lt;/p&gt;
+        &lt;h2&gt;Conclusion&lt;/h2&gt;
+        &lt;p&gt;I&apos;ve shown how I setup my cluster with K3s. In future posts I&apos;ll
+        cover:&lt;/p&gt;
+        &lt;ul&gt;
+        &lt;li&gt;Using Deno and cdk8s to generate manifests&lt;/li&gt;
+        &lt;li&gt;Automating deployments with ArgoCD&lt;/li&gt;
+        &lt;li&gt;Ingress with HTTPS and Tailscale&lt;/li&gt;
+        &lt;li&gt;Direct connections to pods&lt;/li&gt;
+        &lt;li&gt;mDNS&lt;/li&gt;
+        &lt;li&gt;Persistent volumes&lt;/li&gt;
+        &lt;li&gt;Backups&lt;/li&gt;
+        &lt;li&gt;Monitoring&lt;/li&gt;
+        &lt;li&gt;Helm, Kustomize, and operators&lt;/li&gt;
+        &lt;li&gt;Keeping things up-to-date&lt;/li&gt;
+        &lt;/ul&gt;
+      </content:encoded>
+    </item>
+    <item>
+      <title>TIL: Asymmetric Cryptography in Go</title>
+      <link>https://sjer.red/blog/til/2024-06-05/</link>
+      <guid isPermaLink="true">https://sjer.red/blog/til/2024-06-05/</guid>
+      <description>TIL: Asymmetric Cryptography in Go</description>
+      <pubDate>Wed, 05 Jun 2024 00:00:00 GMT</pubDate>
+      <content:encoded>&lt;p&gt;I&apos;ve been implementing a feature at work that involves
+        asymmetric cryptography. It has been a pretty fun exercise in stitching together Go APIs
+        while reading about best practices.&lt;/p&gt;
+        &lt;p&gt;Here&apos;s a few things I&apos;ve learned over the last couple of days:&lt;/p&gt;
+        &lt;ul&gt;
+        &lt;li&gt;
+        &lt;p&gt;Go&apos;s cryptography &lt;a
+        href=&quot;https://kupczynski.info/posts/fips-golang/&quot;&gt;isn&apos;t FIPS
+        compliant&lt;/a&gt;.&lt;/p&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+        &lt;p&gt;Go has an implementation of &lt;a
+        href=&quot;https://pkg.go.dev/crypto/ecdsa&quot;&gt;ECDSA&lt;/a&gt; (Elliptic Curve Digital
+        Signature Algorithm), but it doesn&apos;t have any elliptic curve asymmetric encryption
+        algorithms.&lt;/p&gt;
+        &lt;ul&gt;
+        &lt;li&gt;The best asymmetric algorithm that Go has is &lt;a
+        href=&quot;https://pkg.go.dev/crypto/rsa&quot;&gt;RSA&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+        &lt;p&gt;Go has an implementation of &lt;a
+        href=&quot;https://pkg.go.dev/encoding/pem&quot;&gt;PEM&lt;/a&gt; (Privacy Enhanced Mail)
+        data encoding which can be used to encode public/private in a familiar format. You&apos;ve
+        probably seen this format with SSH keys:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;-----BEGIN PUBLIC KEY-----
+        MIIEpAIBAAKCAQEAuOuUOwNRMbqc0jMEVTOyKuVUu0bk0zD5iwIggBHpDhV58DSJ
+        SK7OFIFHVMy6FKg2B3Y50srfVJ45OE9Vsb9hfErUNA/PB5meHGEI+yPKeni4GAfy
+        &amp;lt;and so on&amp;gt;
+        -----END PUBLIC KEY-----
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+        &lt;p&gt;The &lt;a href=&quot;https://www.rfc-editor.org/rfc/rfc1421&quot;&gt;legacy PEM
+        format&lt;/a&gt; has support for plaintext headers like so:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;-----BEGIN PUBLIC KEY-----
+        Data: Some value I don&apos;t mind being plaintext
+        MIIEpAIBAAKCAQEAuOuUOwNRMbqc0jMEVTOyKuVUu0bk0zD5iwIggBHpDhV58DSJ
+        SK7OFIFHVMy6FKg2B3Y50srfVJ45OE9Vsb9hfErUNA/PB5meHGEI+yPKeni4GAfy
+        &amp;lt;and so on&amp;gt;
+        -----END PUBLIC KEY-----
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;ul&gt;
+        &lt;li&gt;The &lt;a href=&quot;https://www.rfc-editor.org/rfc/rfc7468&quot;&gt;newer
+        RFC&lt;/a&gt; eplicitly doesn&apos;t support headers, though:
+        &lt;blockquote&gt;
+        &lt;p&gt;Unlike legacy PEM encoding &lt;a
+        href=&quot;https://www.rfc-editor.org/rfc/rfc1421&quot;&gt;RFC1421&lt;/a&gt;, OpenPGP ASCII
+        armor, and the
+        OpenSSH key file format, textual encoding does &lt;em&gt;not&lt;/em&gt; define or permit
+        headers to be encoded alongside the data.&lt;/p&gt;
+        &lt;/blockquote&gt;
+        &lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+        &lt;p&gt;Go&apos;s APIs for encrypting, decrypting, signing, and verifying data are quite
+        pleasant to use!&lt;/p&gt;
+        &lt;ul&gt;
+        &lt;li&gt;The &lt;a href=&quot;https://pkg.go.dev/crypto/rsa#pkg-examples&quot;&gt;Go
+        examples&lt;/a&gt; illustrate this quite well.&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+        &lt;p&gt;When signing data, Go will first have you run that data through a hash algorithm
+        (e.g. &lt;a href=&quot;https://pkg.go.dev/crypto/sha256&quot;&gt;SHA256&lt;/a&gt;). This
+        actually makes quite a bit of sense, and it helps me better understand why secure hashing is
+        important for cryptography.&lt;/p&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+        &lt;p&gt;OWASP (Open Worldwide Application Security Project) has a great section on &lt;a
+        href=&quot;https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html#algorithms&quot;&gt;encryption
+        algorithms&lt;/a&gt; which can help guide those less familiar with the specifics of
+        encryption.&lt;/p&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+        &lt;p&gt;There are a few algorithms for signing and encryption data with RSA. Go implements
+        PKCS1v15 and OAEP for encryption, and PKCS1v15 and PSS for signing.&lt;/p&gt;
+        &lt;ul&gt;
+        &lt;li&gt;This &lt;a
+        href=&quot;https://security.stackexchange.com/questions/183179/what-is-rsa-oaep-rsa-pss-in-simple-terms/183330#183330&quot;&gt;Stack
+        Exchange answer&lt;/a&gt; goes into the details of these algorithms.&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;p&gt;While I&apos;m generally not a huge fan of Go, I do think the standard library has
+        some nice packages, and the encryption library is definitely one of them.&lt;/p&gt;
+      </content:encoded>
+    </item>
+    <item>
+      <title>TIL: Closures in Groovy</title>
+      <link>https://sjer.red/blog/til/2024-05-24/</link>
+      <guid isPermaLink="true">https://sjer.red/blog/til/2024-05-24/</guid>
+      <description>TIL: Closures in Groovy</description>
+      <pubDate>Fri, 24 May 2024 00:00:00 GMT</pubDate>
+      <content:encoded>&lt;p&gt;import Socratic from &quot;../../../components/Socratic.astro&quot;;
+        import Dialog from &quot;../../../components/Dialog.astro&quot;;
+        import Divider from &quot;../../../components/Divider.astro&quot;;&lt;/p&gt;
+        &lt;p&gt;I interact with &lt;a href=&quot;https://groovy-lang.org/&quot;&gt;Groovy&lt;/a&gt;
+        solely because &lt;a href=&quot;https://www.jenkins.io/&quot;&gt;Jenkins&lt;/a&gt; uses it
+        to define pipelines.&lt;/p&gt;
+        &lt;p&gt;Pros:&lt;/p&gt;
+        &lt;ul&gt;
+        &lt;li&gt;It&apos;s in the Java ecosystem&lt;/li&gt;
+        &lt;li&gt;It&apos;s a &quot;real&quot; language (turing complete unlike YAML)&lt;/li&gt;
+        &lt;li&gt;It&apos;s not YAML&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;p&gt;Cons:&lt;/p&gt;
+        &lt;ul&gt;
+        &lt;li&gt;No static typing&lt;/li&gt;
+        &lt;li&gt;Linters/formatters aren&apos;t great&lt;/li&gt;
+        &lt;li&gt;Jenkins is quite hard to work with and has surprisingly poor tooling&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;p&gt;While updating some Groovy scripts, I wanted to update a utiltiy method to take a
+        closure in a nicer way. The method looked like this:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;def hello(clo, first = &quot;John&quot;, last = &quot;Doe&quot;) {
+        println &quot;Hello, $first $last&quot;
+        clo()
+        }
+
+        // usage
+        foo(clo: { println &quot;I didn&apos;t see you there!&quot; }, first: &quot;Jerred&quot;,
+        last: &quot;Shepherd&quot;)
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;I&apos;ve seen methods that look a bit prettier when called, like this:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;def bar(someArg, Closure clo) {
+        clo()
+        }
+
+        bar(someArg) {
+        println &apos;hello&apos;
+        }
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;Note that the closure is passed as the last argument. This allows the closure to be
+        passed in braces after the method call. This looks quite a bit nicer!&lt;/p&gt;
+        &lt;p&gt;&amp;lt;Dialog&amp;gt;
+        &amp;lt;Socratic perspective=&quot;student&quot;&amp;gt;
+        It looks like Groovy has some nice syntatic sugar: named and default parameters are both
+        pretty nice to have.
+        &amp;lt;/Socratic&amp;gt;
+        &amp;lt;Divider /&amp;gt;
+        &amp;lt;Socratic perspective=&quot;teacher&quot;&amp;gt;
+        Groovy does have some nice features, but{&quot; &quot;}
+        &amp;lt;a
+        href=&quot;https://groovy-lang.org/objectorientation.html#_named_parameters&quot;&amp;gt;named
+        parameters&amp;lt;/a&amp;gt; have some rough
+        edges. The documentation doesn&apos;t clearly cover how to use named parameters with default
+        parameters or closures.
+        &amp;lt;/Socratic&amp;gt;
+        &amp;lt;/Dialog&amp;gt;&lt;/p&gt;
+        &lt;p&gt;Originally, I wanted to combine named parameters, default parameters, and a closure
+        as the last argument. Unfortunately, this doesn&apos;t seem possible. Here&apos;s what I
+        came up with:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;def baz(first = &quot;John&quot;, last = &quot;Doe&quot;, Closure
+        clo) {
+        println &quot;Hello, $first $last&quot;
+        clo()
+        }
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;The result of running this:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;baz(first: &quot;Jerred&quot;, last: &quot;Shepherd&quot;) {
+        println &quot;I didn&apos;t see you there!&quot;
+        }
+        Hello, [first:Jerred, last:Shepherd] Doe
+        I didn&apos;t see you there!
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;Groovy implements named parameters as a map. Unfortunately, it seems that Groovy is
+        using the both the &lt;code&gt;first&lt;/code&gt; and &lt;code&gt;last&lt;/code&gt;
+        parameters as a map value and passing that to the &lt;code&gt;first&lt;/code&gt;
+        argument.&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;// Groovy takes this:
+        baz(first: &quot;Jerred&quot;, last: &quot;Shepherd&quot;)
+
+        // and implicitly converts it to this:
+        baz([first: &quot;Jerred&quot;, last: &quot;Shepherd&quot;], null)
+
+        // so, when calling baz, we&apos;re passing the map as the first argument and null as the
+        second argument
+        // this leads to Groovy using the map as the first argument, and the default value of
+        &quot;Doe&quot; as the second argument
+        Hello, [first:Jerred, last:Shepherd] Doe
+        I didn&apos;t see you there!
+
+        // instead, we want Groovy to print:
+        Hello, Jerred Shepherd
+        I didn&apos;t see you there!
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;Closures are still pretty cool, but it&apos;s frustrating to figure out the syntax
+        for how some of these features interact. Additionally, the feedback loop for Groovy with
+        Jenkins is long, so if you don&apos;t know the language, it&apos;s hard to make
+        progress.&lt;/p&gt;
+      </content:encoded>
+    </item>
+    <item>
+      <title>Compilers Project Setup</title>
+      <link>https://sjer.red/blog/2024/compilers-setup/</link>
+      <guid isPermaLink="true">https://sjer.red/blog/2024/compilers-setup/</guid>
+      <description>My 8803 Compilers Project Setup</description>
+      <pubDate>Tue, 23 Jan 2024 00:00:00 GMT</pubDate>
+      <content:encoded>&lt;p&gt;This semester I&apos;m taking &lt;a
+        href=&quot;https://omscs.gatech.edu/cs-8803-o08-compilers-theory-and-practice&quot;&gt;CS
+        8803 Compilers at Georgia Tech&lt;/a&gt;. I&apos;ve heard this class is quite challenging,
+        but so far I&apos;ve had a blast and cannot wait to learn more.&lt;/p&gt;
+        &lt;p&gt;The class has you build a compiler across several phases. It&apos;s unique in that
+        it sets &lt;em&gt;very&lt;/em&gt; few constraints for your implementation. The only real
+        technical requirement is that you use C++ and Java, and &lt;a
+        href=&quot;https://www.antlr.org&quot;&gt;ANTLR&lt;/a&gt; for the front-end.&lt;/p&gt;
+        &lt;p&gt;All of this freedom leaves a lot of questions for students, especially if
+        they&apos;re not used to writing large applications by themselves.&lt;/p&gt;
+        &lt;p&gt;I&apos;m sharing some of the decisions I&apos;ve made for my project. Almost all of
+        this is specific to Java, so if you&apos;re using C++, you will find little to help
+        you.&lt;/p&gt;
+        &lt;p&gt;Let&apos;s get to it! If you have any questions, I&apos;d be happy to answer them.
+        Shoot me an email: &lt;a
+        href=&quot;mailto:compilers@sjer.red&quot;&gt;compilers@sjer.red&lt;/a&gt;.&lt;/p&gt;
+        &lt;h2&gt;Maven&lt;/h2&gt;
+        &lt;p&gt;You should absolutely be using Maven, especially considering class explicitly
+        supports it. Maven makes your life &lt;em&gt;much&lt;/em&gt; easier. It handles all of your
+        dependencies and the lifecycle of building and tests your project.&lt;/p&gt;
+        &lt;p&gt;Maven is still a fairly relevant technology in the Java world today. It surpassed
+        &lt;a href=&quot;https://ant.apache.org&quot;&gt;Ant&lt;/a&gt;, and it still a very popular
+        choice for projects today. The more modern alternative is &lt;a
+        href=&quot;https://gradle.org&quot;&gt;Gradle&lt;/a&gt;. You might be able to use Gradle,
+        but you&apos;d have to ask the course staff.&lt;/p&gt;
+        &lt;p&gt;Here&apos;s my full &lt;a
+        href=&quot;https://gist.github.com/shepherdjerred/d36b1815f50be9fc2b03f686989987e5&quot;&gt;&lt;code&gt;pom.xml&lt;/code&gt;&lt;/a&gt;
+        so that you can see how I&apos;ve set all of this up.&lt;/p&gt;
+        &lt;h2&gt;Earthly&lt;/h2&gt;
+        &lt;p&gt;&lt;a href=&quot;https://earthly.dev&quot;&gt;Earthly&lt;/a&gt; is one of my
+        favorite tools. It&apos;s essentially a combination of Docker and Make. You define a set of
+        targets. Each instruction is run in a containerized environment. This gives you the
+        simplicity and ergonomics of Make, with all the isolation benefits of Docker.&lt;/p&gt;
+        &lt;p&gt;I use Earthly to build the &lt;code&gt;.zip&lt;/code&gt; that I submit, and to
+        ensure that the &lt;code&gt;.zip&lt;/code&gt; is buildable in the Docker environment that
+        Gradescope uses.&lt;/p&gt;
+        &lt;p&gt;Here&apos;s what my Earthfile looks like:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;# This declares the version of Earthly to use
+        VERSION 0.7
+
+        # This builds the Dockerfile that the course staff provides
+        image:
+        FROM DOCKERFILE resources/docker/
+        WORKDIR /workspace/
+
+        # Download Maven dependencies
+        deps:
+        FROM +image
+        COPY pom.xml .
+        CACHE /root/.m2/repository/
+        RUN mvn dependency:resolve
+        RUN rm pom.xml
+
+        # Zip up my submission. Save the .zip file as a local artifact.
+        zip:
+        FROM ubuntu:jammy
+        WORKDIR /workspace/
+
+        RUN apt update
+        RUN apt install -y zip
+
+        COPY src/main/ src/main/
+        COPY pom.xml lombok.config Makefile .
+        COPY +tiger/Tiger.g4 .
+        RUN zip -r submission.zip .
+
+        SAVE ARTIFACT submission.zip AS LOCAL submission.zip
+
+        # Unzip my submission an attempt to build it.
+        build:
+        FROM +deps
+        COPY +zip/submission.zip .
+        RUN unzip submission.zip
+        RUN make all
+        SAVE ARTIFACT cs8803_bin/tigerc.jar AS LOCAL cs8803_bin/tigerc.jar
+
+        # I specify my Tiger Lexer and Parser in separate files, within a directory that is idomatic
+        for ANTLR
+        # The project PDF says that a single Tiger.g4 file must exist at the root of the project,
+        which is what this target creates.
+        tiger:
+        FROM ubuntu:jammy
+        COPY src/main/antlr4/com/shepherdjerred/compiler/TigerLexer.g4 .
+        COPY src/main/antlr4/com/shepherdjerred/compiler/TigerParser.g4 .
+        # discard the first 5 lines of TigerParser
+        RUN tail -n +6 TigerParser.g4 &amp;gt; TigerParser.g4
+        # combine the two files into one
+        RUN cat TigerLexer.g4 TigerParser.g4 &amp;gt; Tiger.g4
+        # replace lexer grammar TigerLexer; with grammer Tiger;
+        RUN sed -i &apos;s/lexer grammar TigerLexer;/grammar Tiger;/g&apos; Tiger.g4
+        SAVE ARTIFACT Tiger.g4
+
+        # Runs my tests
+        test:
+        FROM +deps
+        COPY src/ src/
+        COPY lombok.config pom.xml .
+        RUN mvn test
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;To execute an Earthfile, all you need is the &lt;a
+        href=&quot;https://earthly.dev/get-earthly&quot;&gt;Earthly CLI&lt;/a&gt; and Docker.
+        Everything else is containerized! For example, I wouldn&apos;t need Java, Maven, or Make to
+        build this project. If I wanted to set up CI with GitHub Actions, all I would need to do is
+        use the &lt;a href=&quot;https://github.com/earthly/actions-setup&quot;&gt;Earthly Setup
+        Action&lt;/a&gt; and then run my target, e.g. &lt;code&gt;earthly
+        +test&lt;/code&gt;.&lt;/p&gt;
+        &lt;h2&gt;IDE&lt;/h2&gt;
+        &lt;p&gt;&lt;a href=&quot;https://www.jetbrains.com/idea/&quot;&gt;IntelliJ IDEA&lt;/a&gt;
+        is objectively the best Java IDE. If you&apos;re comfortable with VS Code and you don&apos;t
+        plan to write Java in the future, then sticking with VS Code is okay. If you plan to do more
+        work in Java, then I would &lt;em&gt;highly&lt;/em&gt; suggest IntelliJ.&lt;/p&gt;
+        &lt;p&gt;Java has a reputation as a mediocre language. That may be true, but where it shines
+        is in the ecosystem. IntelliJ is a perfect example of this. It has incredibly powerful
+        analysis and refactoring capabilities, and very tightly integrates with Java tools like
+        Maven.&lt;/p&gt;
+        &lt;p&gt;As an example, I was able to develop my ANTLR grammar using a &lt;a
+        href=&quot;https://plugins.jetbrains.com/plugin/7358-antlr-v4&quot;&gt;plugin&lt;/a&gt;
+        which allowed easy testing.&lt;/p&gt;
+        &lt;p&gt;As a student, you can get a copy of IntelliJ for free with &lt;a
+        href=&quot;https://www.jetbrains.com/community/education/#students&quot;&gt;JetBrain&apos;s
+        education program&lt;/a&gt;.&lt;/p&gt;
+        &lt;h2&gt;Libraries&lt;/h2&gt;
+        &lt;p&gt;I use a ton of libraries because Java has &lt;em&gt;so&lt;/em&gt; many great
+        libraries. Here&apos;s what I&apos;m currently using in my project. Some of them
+        &lt;em&gt;might&lt;/em&gt; be overkill, e.g. Log4J2.&lt;/p&gt;
+        &lt;ul&gt;
+        &lt;li&gt;&lt;a href=&quot;https://junit.org/junit5/&quot;&gt;JUnit 5&lt;/a&gt;
+        &lt;ul&gt;
+        &lt;li&gt;So much better than the default JUnit 4. I&apos;ll show why in the testing
+        section.&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;/li&gt;
+        &lt;li&gt;&lt;a href=&quot;https://projectlombok.org&quot;&gt;Lombok&lt;/a&gt;
+        &lt;ul&gt;
+        &lt;li&gt;Generate Java code at compile time. Java is a verbose language — Lombok makes it
+        better.&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;/li&gt;
+        &lt;li&gt;&lt;a href=&quot;https://github.com/google/guava&quot;&gt;Guava&lt;/a&gt;
+        &lt;ul&gt;
+        &lt;li&gt;I haven&apos;t used this yet, but I often reach for some of its
+        utilities.&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;/li&gt;
+        &lt;li&gt;&lt;a href=&quot;https://logging.apache.org/log4j/2.x/&quot;&gt;Log4J2&lt;/a&gt;
+        &lt;ul&gt;
+        &lt;li&gt;As mentioned above, I use this for logging.&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;/li&gt;
+        &lt;li&gt;&lt;a href=&quot;http://immutables.github.io&quot;&gt;Immutables&lt;/a&gt;
+        &lt;ul&gt;
+        &lt;li&gt;Generates immutable objects. I prefer a more functional style of programming that
+        avoids mutation. I suspect this will come in handy in later phases of the project. I&apos;ve
+        used this both at AWS and in the Distributed Systems course — in both cases, it was quite
+        helpful.&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;/li&gt;
+        &lt;li&gt;&lt;a href=&quot;https://picocli.info&quot;&gt;picocli&lt;/a&gt;
+        &lt;ul&gt;
+        &lt;li&gt;For my commands. Super easy to use, although you could probably get away with the
+        native Java libraries.&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;h2&gt;Testing&lt;/h2&gt;
+        &lt;p&gt;Testing the most important aspect of software development. Do yourself a favor and
+        come up with an effective strategy to test your work now. Having a solid testing methodology
+        will allow you to quickly verify your work, and will give you confidence that your code
+        works if you ever go back and refactor.&lt;/p&gt;
+        &lt;p&gt;This might sound like a lot of work for a school project, but I think this
+        investment is worth it considering we&apos;re building a compiler for the
+        semester.&lt;/p&gt;
+        &lt;p&gt;JUnit is the de facto standard for testing Java. JUnit 4 is the most common version
+        today, but JUnit 5 has some brilliant features.&lt;/p&gt;
+        &lt;p&gt;One example is parameterized testing. For example, I have tests that check all the
+        sample files given to us by the course staff. I use a parameterized test to run the same
+        test on each file. This is much better than having a separate test for each file, and easily
+        allows you to add test cases.&lt;/p&gt;
+        &lt;p&gt;Here&apos;s what a test looks like:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;public static Stream&amp;lt;String&amp;gt; TestBadLexer() {
+        var files =
+        Paths.get(&quot;src/test/resources/official/bad/lexer&quot;).toFile().listFiles();
+        assert files != null;
+        return Arrays.stream(files).map(File::getAbsolutePath);
+        }
+
+        @ParameterizedTest
+        @MethodSource()
+        public void TestBadLexer(String file) {
+        var compiler = new TigerCompiler();
+        assertThrows(LexerException.class, () -&amp;gt; compiler.compile(file, false));
+        }
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;JUnit will use the static method named &lt;code&gt;TestBadLexer&lt;/code&gt; that
+        supplies a list of filenames to the &lt;code&gt;TestBadLexer&lt;/code&gt; as the first
+        argument. My test then checks that the appropriate error is thrown.&lt;/p&gt;
+        &lt;p&gt;Another great strategy is &lt;a
+        href=&quot;https://kentcdodds.com/blog/effective-snapshot-testing&quot;&gt;snapshot
+        testing&lt;/a&gt;. This allows you to save some test output to a file. On subsequent runs,
+        the test output is compared with the saved output. If the output is different, the test
+        fails.&lt;/p&gt;
+        &lt;p&gt;If the test fails, you can visually inspect the different. If the change is
+        expected, you can update the snapshot. If the change is unexpected, you can investigate
+        further.&lt;/p&gt;
+        &lt;p&gt;I use this for investigating the &lt;code&gt;.tokens&lt;/code&gt; file I produce. I
+        chose to use the &lt;a
+        href=&quot;https://github.com/origin-energy/java-snapshot-testing&quot;&gt;java-snapshot-testing
+        library&lt;/a&gt;. It&apos;s not as ergonomic as what I&apos;ve experienced in other
+        languages like TypeScript and Go, but it does seem to work well.&lt;/p&gt;
+        &lt;p&gt;Here&apos;s an example test:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;@Test
+        @SneakyThrows
+        public void TestHelloWorldTokens() {
+        Path tokensFile = Paths.get(&quot;src/test/resources/hello.tokens&quot;);
+        Files.deleteIfExists(tokensFile);
+
+        var compiler = new TigerCompiler();
+        var file = &quot;src/test/resources/hello.tiger&quot;;
+        // the `true` argument tells the compiler to write the tokens to a file
+        compiler.compile(file, true);
+
+        assert Files.exists(tokensFile);
+
+        expect.toMatchSnapshot(Files.readString(tokensFile));
+
+        Files.delete(tokensFile);
+        }
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;It saves a file named &lt;code&gt;__snapshots__/MainTest.snap&lt;/code&gt;. The
+        file looks like this:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;com.shepherdjerred.compiler.MainTest.TestHelloWorldTokens=[
+        &amp;lt;PROGRAM, &quot;program&quot;&amp;gt;
+        &amp;lt;ID, &quot;demo_print&quot;&amp;gt;
+        &amp;lt;LET, &quot;let&quot;&amp;gt;
+        [the rest of the file goes on]
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;Let&apos;s say that I introduce a bug and a token is missing. This is an example of
+        the error I would see:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;au.com.origin.snapshots.exceptions.SnapshotMatchException: Error(s)
+        matching snapshot(s) (1 failure)
+
+        Missing content at line 18:
+        [&quot;&amp;lt;INT, &quot;int&quot;&amp;gt;&quot;,
+        &quot;&amp;lt;COMMA, &quot;,&quot;&amp;gt;&quot;,
+        &quot;&amp;lt;ID, &quot;z&quot;&amp;gt;&quot;]
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;I can then investigate why the snapshot no longer matches, and update it if the
+        changes look correct.&lt;/p&gt;
+        &lt;p&gt;Here&apos;s my full &lt;a
+        href=&quot;https://gist.github.com/shepherdjerred/4b13eed30431a91d5ad887932ba923c9&quot;&gt;&lt;code&gt;MainTest.java&lt;/code&gt;&lt;/a&gt;
+        file so that you can see how I&apos;ve set all of this up.&lt;/p&gt;
+        &lt;h2&gt;Conclusion&lt;/h2&gt;
+        &lt;p&gt;I hope this was some use to you, and that you&apos;re as excited as I am for this
+        semester. If you need any advice about project setup or have some suggestions, feel free to
+        reach out!&lt;/p&gt;
+      </content:encoded>
+    </item>
+    <item>
+      <title>Screen Time</title>
+      <link>https://sjer.red/blog/2023/screen-time/</link>
+      <guid isPermaLink="true">https://sjer.red/blog/2023/screen-time/</guid>
+      <description>How I use my phone less</description>
+      <pubDate>Sun, 01 Oct 2023 00:00:00 GMT</pubDate>
+      <content:encoded>&lt;h2&gt;Table of Contents&lt;/h2&gt;
+        &lt;h2&gt;Introduction&lt;/h2&gt;
+        &lt;p&gt;Like many, I once used my phone quite often. Too often.&lt;/p&gt;
+        &lt;p&gt;At some point, my usage started feeling out of control and impulsive. I&apos;d pull
+        out my phone in public, like waiting in line or walking past a stranger. I&apos;d read
+        through Hacker News and The New York Times both when waking up and before bed. When I felt
+        bored, I&apos;d find something to distract me. Sometimes, it would be Instagram Reels
+        (Instagram&apos;s version of TikTok), which would often absorb an hour of my day. At my
+        worst, I would compulsively open up random apps and check if there was anything new. Slack,
+        Discord, Email, whatever.&lt;/p&gt;
+        &lt;p&gt;I view technology like phones and laptops as a tool -- something to help me out. I
+        don&apos;t want them to rule my life, even if computing is a significant part of my
+        day-to-day life. I wanted to make my interaction with my phone more intentional.&lt;/p&gt;
+        &lt;p&gt;I don&apos;t think getting the raw number of hours down is super important, as long
+        as my interaction and relationship with my phone is intentional usage rather than
+        compulsive. I want to be more thoughtful about how I use my time and interact with others. I
+        want to replace shallow interaction on social media with more meaningful, intentional time
+        spent with those I care about.&lt;/p&gt;
+        &lt;p&gt;In 2020 and 2021, my screen time increased to around 3 hours daily. At some point,
+        I decided that I wanted to use my phone less, so I started taking small steps towards that
+        goal. I wrote this to share what worked for me so others could take away some
+        ideas.&lt;/p&gt;
+        &lt;p&gt;This post is centered around iPhones since that&apos;s what I have. That&apos;s
+        important to note since both platforms have different features and capabilities. Android has
+        similar features, so most steps should have loose equivalents.&lt;/p&gt;
+        &lt;p&gt;Please also note that I took the below steps over about two years. It would be
+        &lt;em&gt;very&lt;/em&gt; hard to do everything all at once. I&apos;ve organized the actions
+        in order so that the most approachable steps are first and the more extreme ones
+        last.&lt;/p&gt;
+        &lt;h2&gt;Keep your Phone Far&lt;/h2&gt;
+        &lt;p&gt;I used to keep my phone right at my bedside at night.&lt;/p&gt;
+        &lt;p&gt;Since my phone was by my bed, I would use it every day in the morning and at night.
+        This would easily eat up an hour of my day. During the day, I kept my phone on my desk or
+        somewhere near me. This meant it was effortless to quickly check things or be sucked in
+        because it was too easy to access.&lt;/p&gt;
+        &lt;p&gt;At night, I moved my phone charger from my nightstand to another room in my house.
+        This meant that using my phone at night and in the morning would require much more effort.
+        And, as a bonus, it meant I had to get out of bed to turn off my phone alarm, making it much
+        less likely that I snooze the alarm and fall back asleep.&lt;/p&gt;
+        &lt;p&gt;This step represents a general concept that&apos;ll be repeated, making using your
+        phone harder and requiring more thought. The more effort it takes, the less you will use it.
+        Ideally, at least for me, I&apos;ll only be using my phone when it&apos;s genuinely
+        beneficial for me.&lt;/p&gt;
+        &lt;h2&gt;Track your Screen Time&lt;/h2&gt;
+        &lt;p&gt;If you don&apos;t already have it enabled, you should turn on &lt;a
+        href=&quot;https://support.apple.com/en-us/HT208982&quot;&gt;Screen Time&lt;/a&gt;. This
+        will allow you to track your phone usage and determine what works for you. Additionally, you
+        can set time limits for specific apps.&lt;/p&gt;
+        &lt;p&gt;For example, if you use some apps more than you would like, you can give yourself a
+        daily time limit. When you reach your time limit, iOS will notify you. You&apos;ll be given
+        the choice to exit the app or override the time limit.&lt;/p&gt;
+        &lt;p&gt;I would always override the limit, so I configured iOS to require a PIN to override
+        the time limit. I quickly adapted to just typing in the PIN from memory, so I eventually
+        used a random PIN that I didn&apos;t know and stored it somewhere. I kept my PIN in
+        1Password, although you could use Notes or scribble it on paper and put it in your phone
+        case.&lt;/p&gt;
+        &lt;h2&gt;Disable Notifications&lt;/h2&gt;
+        &lt;p&gt;Notifications are the antithesis of what technology should be. Your phone should
+        &lt;em&gt;not&lt;/em&gt; be telling you when to look at it -- looking at your phone should
+        be &lt;em&gt;your&lt;/em&gt; choice.&lt;/p&gt;
+        &lt;p&gt;Sometimes, notifications are more helpful than harmful, like receiving phone calls
+        or text messages. I recommend turning off all notifications on your phone, including text
+        messages.&lt;/p&gt;
+        &lt;h2&gt;Use a Worse Phone&lt;/h2&gt;
+        &lt;p&gt;Phones are enticing, which makes you want to use them. By making your phone less
+        pleasant to use, you&apos;ll want to use it less. The easiest thing you can do is use an
+        older phone. Don&apos;t upgrade to the latest iPhone; keep the one you have now until it
+        breaks or no longer receives software updates.&lt;/p&gt;
+        &lt;p&gt;Aside from that, you can &lt;a
+        href=&quot;https://www.theverge.com/23637672/grayscale-iphone-android-pixel-samsung-galaxy-how-to&quot;&gt;configure
+        your iPhone to be in grayscale&lt;/a&gt;. I also enabled a shortcut to toggle between
+        grayscale and color whenever I triple-clicked the power button to properly view things like
+        photos sent to me.&lt;/p&gt;
+        &lt;p&gt;It was incredible how much this helped me. I&apos;d open up Facebook or Instagram
+        and wouldn&apos;t end up scrolling for 20-30 minutes.&lt;/p&gt;
+        &lt;p&gt;Lastly, I configured my iPhone to be less bright. You can &lt;a
+        href=&quot;https://osxdaily.com/2014/03/21/reduce-white-point-ios/&quot;&gt;reduce the white
+        point&lt;/a&gt; so that your screen is less bright, independently of the brightness slider.
+        This made the phone very hard to use outdoors, meaning I no longer would pull out my phone
+        when walking past strangers or doing some outdoor social activity.&lt;/p&gt;
+        &lt;h2&gt;Delete your Apps&lt;/h2&gt;
+        &lt;p&gt;Having an app on your phone for every service you use is easy. Things like social
+        media, email, finances. Many of these apps are pretty convenient to have. That convenience
+        makes it very easy to get sucked into those apps. Ask yourself if you
+        &lt;em&gt;really&lt;/em&gt; need these apps on your phone or if you could rely on some other
+        device like your laptop.&lt;/p&gt;
+        &lt;p&gt;For instance, I had a bunch of apps that I didn&apos;t need on my phone:&lt;/p&gt;
+        &lt;ul&gt;
+        &lt;li&gt;Social Media (Instagram, Facebook, Twitter, Reddit, Discord)&lt;/li&gt;
+        &lt;li&gt;Finance (Budgeting, Bank apps, Robinhood)&lt;/li&gt;
+        &lt;li&gt;Email&lt;/li&gt;
+        &lt;li&gt;Calendar&lt;/li&gt;
+        &lt;li&gt;Messaging (Telegram, Facebook Messenger)&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;p&gt;I deleted all of the above and now rely on the web equivalents. You don&apos;t
+        necessarily need to delete everything all at once. Start with just a few apps and slowly
+        pare down what&apos;s on your phone.&lt;/p&gt;
+        &lt;p&gt;Deleting messaging apps is probably the most challenging part of this. You&apos;ll
+        have to let your friends know that you no longer have that app on your phone and that you
+        should be reached through text (or your messaging app of choice) instead.&lt;/p&gt;
+        &lt;h2&gt;Switch Browsers&lt;/h2&gt;
+        &lt;p&gt;Eventually, I ended up without distracting apps on my phone, but unfortunately, I
+        still had a web browser. After deleting Facebook and Instagram, I started using the web
+        versions on my phone. I opened those sites way more often than I would&apos;ve
+        liked.&lt;/p&gt;
+        &lt;p&gt;iOS doesn&apos;t allow you to delete the Safari browser, meaning there&apos;s no
+        way to stop yourself from using the web on your iPhone. The next best thing is to use a web
+        browser that&apos;s harder to use. I switched my default browser from Safari to Firefox
+        Focus. Firefox Focus doesn&apos;t have the concept of tabs -- you can only have one site
+        open at a time. It also doesn&apos;t store history, bookmarks, cookies, or anything else,
+        meaning you must type in whatever site you want to go to and log in every time. This made it
+        much harder to use Instagram and Facebook, so I went there less often.&lt;/p&gt;
+        &lt;p&gt;Of course, I still had Safari installed, so I could always open that up, but I
+        never found myself doing that, so I consider that a win.&lt;/p&gt;
+        &lt;h2&gt;Delete Social Media Accounts&lt;/h2&gt;
+        &lt;p&gt;This is hard, and I don&apos;t expect most to do it. For me, it made a lot of
+        sense. Even after deleting apps from my phone, I scrolled through Facebook, LinkedIn,
+        Reddit, etc. on my laptop. I didn&apos;t feel like I was getting much value from that
+        behavior, so I deleted my accounts.&lt;/p&gt;
+        &lt;p&gt;Facebook is nice for staying in touch with others, especially those who live
+        further away or whom I don&apos;t talk to often. I decided that, for me, these connections
+        were not as meaningful. If I want to stay in contact with someone (or vice-versa), we will
+        find a way. People communicated before Facebook and other social media, so if we care about
+        each other, it will happen even if it does require more effort.&lt;/p&gt;
+        &lt;h2&gt;Batch Consumption&lt;/h2&gt;
+        &lt;p&gt;I&apos;m still experimenting with what to do for news.&lt;/p&gt;
+        &lt;p&gt;I didn&apos;t want to be disconnected from the world, so I subscribed to the New
+        York Times and read Hacker News frequently.&lt;/p&gt;
+        &lt;p&gt;I generally read the New York Times website once or twice a day for the news. That
+        was a big time sink without any clear value added to my life. I decided to try reading a
+        physical newspaper by getting the Sunday edition delivered to my house. That reduced my
+        screen time, but it still wasn&apos;t adding value and was an even bigger time sink because
+        of how big the paper was. I would spend hours on Sundays reading about things that
+        didn&apos;t impact me.&lt;/p&gt;
+        &lt;p&gt;My latest attempt is a subscription to &lt;a
+        href=&quot;https://www.slow-journalism.com/&quot;&gt;Delayed Gratification&lt;/a&gt;, a
+        magazine published four times a year with news from the last quarter. Ideally, this means I
+        read the news only a few days each year, and the stories I read are of higher quality and
+        importance.&lt;/p&gt;
+        &lt;p&gt;I&apos;ve found a lot of value in Hacker News. I&apos;ve learned so much from the
+        site; I could not give it up without a negative impact. At first, I enabled the
+        &lt;code&gt;noprocrast&lt;/code&gt; feature, which did help, but I felt I could do better.
+        For a time, I used the &lt;a href=&quot;https://hckrnews.com/&quot;&gt;hckr news
+        site&lt;/a&gt; to view only the most important stories every day. I was still checking that
+        site too much, so I moved over to &lt;a
+        href=&quot;https://hackernewsletter.com/&quot;&gt;Hacker Newsletter&lt;/a&gt;.&lt;/p&gt;
+        &lt;h2&gt;Conclusion&lt;/h2&gt;
+        &lt;p&gt;With the steps above, over two years, I&apos;ve reduced my daily screen time from
+        its peak of about 3 hours to about 15-20 minutes. This varies based on a few factors, like
+        my mental health. Generally, the more I use my phone, the worse I am. It indicates that
+        I&apos;m bored or trying to fill time. There are some exceptions to this, like when I&apos;m
+        intentionally reading some long-form piece on my phone, which I do from time to
+        time.&lt;/p&gt;
+        &lt;p&gt;I hope these steps were helpful and can serve as a starting point for those looking
+        to have a more intentional relationship with technology. Please reach out to me if
+        you&apos;d like to discuss anything!&lt;/p&gt;
+      </content:encoded>
+    </item>
+    <item>
+      <title>Writing</title>
+      <link>https://sjer.red/blog/2023/writing/</link>
+      <guid isPermaLink="true">https://sjer.red/blog/2023/writing/</guid>
+      <description>If you can&apos;t write then you can&apos;t think.</description>
+      <pubDate>Thu, 28 Sep 2023 00:00:00 GMT</pubDate>
+      <content:encoded>&lt;p&gt;Writing is hard. You&apos;re condensing &lt;em&gt;your&lt;/em&gt;
+        thoughts into more general concepts that can (hopefully) be understood by others. It&apos;s
+        equivalent to compressing a giant file (your mind) into some smaller artifact (some
+        scribbles on a page).&lt;/p&gt;
+        &lt;p&gt;Writing is valuable. It&apos;s how we can give the gift of knowledge to the future.
+        One can learn some concept and teach it to others with no investment other than the time
+        spent compressing that knowledge.&lt;/p&gt;
+        &lt;p&gt;Writing is introspective and philosophical. Writing delves into the nature of
+        knowledge. What&apos;s worth sharing with others?&lt;/p&gt;
+        &lt;p&gt;The process of writing is good practice for thinking. It forces you to focus on
+        communicating clearly. It makes you think about language and how to effectively convey
+        concepts. It makes you consider if your examples are truly clear and engaging, or just a
+        distraction not adding any value.&lt;/p&gt;
+        &lt;p&gt;I&apos;m really bad at writing. My thoughts are chaotic and disorganized and hard
+        to communicate. Praciting writing gives me the chance to hone what I&apos;ve been thinking
+        about, and work &quot;muscles&quot; to help me communicate more clearly.&lt;/p&gt;
+      </content:encoded>
+    </item>
+    <item>
+      <title>XState</title>
+      <link>https://sjer.red/blog/2023/xstate/</link>
+      <guid isPermaLink="true">https://sjer.red/blog/2023/xstate/</guid>
+      <description>State Machines reduce edge cases</description>
+      <pubDate>Thu, 14 Sep 2023 00:00:00 GMT</pubDate>
+      <content:encoded>&lt;p&gt;import { Image } from &quot;astro:assets&quot;;
+        import channel from &quot;./xstate/channel.png&quot;;
+        import game from &quot;./xstate/game.png&quot;;
+        import diagram from &quot;./xstate/diagram.png&quot;;
+        import simulation from &quot;./xstate/simulation.mp4&quot;;&lt;/p&gt;
+        &lt;p&gt;My current side project, &lt;a
+        href=&quot;https://github.com/shepherdjerred/discord-plays-pokemon&quot;&gt;Discord Plays
+        Pokemon&lt;/a&gt;, has a lot of dependencies. The application streams video with Discord,
+        which presents a challenge. Discord does not provide APIs for streaming video, and I
+        didn&apos;t want to have to reverse-engineer the client. I chose to automate interactions
+        with Discord&apos;s web application using Selenium, which has yielded great results. It can
+        programmatically stream video to a specific voice channel. This has worked very well so far
+        -- users are able to play real-time games of Pokemon with each other just using
+        Discord&apos;s text chat!&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+        &amp;lt;Image src={channel} alt=&quot;A screenshot of Discord text chat with two users
+        inputting commands&quot; height=&quot;100px&quot; /&amp;gt;
+        &amp;lt;figcaption&amp;gt;
+        Two users can input commands at the same time. &lt;code&gt;D&lt;/code&gt; means to simulate
+        a down-button press once, and &lt;code&gt;10r&lt;/code&gt; means to
+        simulate a right-button press ten times.&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;If the command is valid, the bot will react to the message with a 👍
+        once
+        the command is applied to the game.
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;p&gt;I brute-forced a lot of this code to get the bot working quickly. While it works
+        well, adding new features was not easy. I wanted only to have the bot stream if a user was
+        in the voice chat. This requires tracking the state of the bot. Was the bot able to log in
+        to Discord? Is the bot streaming or not? Has there been any error? How do I switch between
+        browser tabs since there is one tab for Discord and another for the &lt;a
+        href=&quot;https://www.emulatorjs.com/&quot;&gt;browser-based emulator&lt;/a&gt;?&lt;/p&gt;
+        &lt;p&gt;Switching between tabs was an easy problem to fix. I created two instances of
+        Firefox -- one for the stream and another for the video. This eliminated a whole class of
+        errors at a slight performance cost.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+        &amp;lt;Image src={game} alt=&quot;A screenshot of Discord streaming Pokemon&quot; /&amp;gt;
+        &amp;lt;figcaption&amp;gt;Video is streamed in real-time with instant feedback for the
+        applied inputs.&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;p&gt;Tracking the state, however, was not something I wanted to do. There are a lot of
+        subtle edge cases that I didn&apos;t want to deal with. I felt state machines would be
+        applicable, but I had never used them in TypeScript.&lt;/p&gt;
+        &lt;p&gt;I found the &lt;a href=&quot;https://xstate.js.org/&quot;&gt;XState&lt;/a&gt;
+        project and immediately fell in love. The project is incredibly polished and has excellent
+        support for VS Code and TypeScript. I ported over my old code to a state machine, although
+        understanding the concepts that XState introduced took some time.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+        &amp;lt;Image
+        src={diagram}
+        alt=&quot;A screenshot of VS Code with a code pane to the left and a state machine diagram
+        to the right.&quot;
+        /&amp;gt;
+        &amp;lt;figcaption&amp;gt;XState integrates well with VS Code.&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;p&gt;I was surprised at how helpful the XState VS Code plugin was. It allows me to see a
+        diagram of my state machine. You can simulate state transitions to understand what your
+        state machine will do.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+        &amp;lt;video controls&amp;gt;
+        &amp;lt;source src={simulation} type=&quot;video/mp4&quot; /&amp;gt;
+        &amp;lt;/video&amp;gt;
+        &amp;lt;figcaption&amp;gt;The XState VS Code extension lets you step through your state
+        transitions.&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;p&gt;Aside from the coolness of the extension, the library itself is quite polished and
+        well-documented. Porting over my old code was simple because of how well XState integrates
+        with promises.&lt;/p&gt;
+        &lt;p&gt;Here&apos;s an example of the state machine&apos;s state for starting a Discord
+        video stream. The method in &lt;code&gt;src&lt;/code&gt; is invoked when the
+        &lt;code&gt;starting_stream&lt;/code&gt; state is reached. Once the promise is complete,
+        &lt;code&gt;onDone&lt;/code&gt; is called, which transitions the machine to the
+        &lt;code&gt;streaming&lt;/code&gt; state.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;// @noErrors
+        starting_stream: {
+        invoke: {
+        src: async ({ driver }, _event) =&amp;gt; {
+        await joinVoiceChat(driver);
+        return await shareScreen(driver);
+        },
+        onDone: {
+        target: &quot;streaming&quot;,
+        },
+        onError: {
+        target: &quot;is_error&quot;,
+        actions: (_context, event) =&amp;gt; {
+        console.error(event);
+        },
+        },
+        },
+        },
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;&amp;lt;figcaption&amp;gt;The state for starting a Discord
+        stream.&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;p&gt;I even wrote some quick unit tests to ensure it works properly. This test was much
+        easier to write than tests without a state machine.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;// @noErrors
+        test(&quot;able to reach the streaming state&quot;, (done) =&amp;gt; {
+        const actor = interpret(streamMachine)
+        .onTransition((state) =&amp;gt; {
+        if (state.matches(&quot;is_ready&quot;)) {
+        actor.send({ type: &quot;start_stream&quot; });
+        }
+        if (state.matches(&quot;is_streaming&quot;)) {
+        done();
+        }
+        });
+        actor.start();
+        });
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;&amp;lt;figcaption&amp;gt;Unit testing a state machine is straightforward. This
+        would&apos;ve been a &lt;em&gt;lot&lt;/em&gt; more code without
+        XState!&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;p&gt;Hooking the entire thing up to the application wasn&apos;t hard, either. This
+        allows the bot to enter the voice channel and stream only when people are in the
+        channel.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;// @noErrors
+        const stream = interpret(streamMachine);
+
+        stream.start();
+
+        handleChannelUpdate(async (channel_count) =&amp;gt; {
+        if (channel_count &amp;gt; 0) {
+        stream.send({ type: &quot;start_stream&quot; });
+        } else {
+        stream.send({ type: &quot;end_stream&quot; });
+        }
+        }
+
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;&amp;lt;figcaption&amp;gt;A complex set of interactions become so
+        easy.&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;p&gt;Overall, using XState feels like a huge win. I can be more confident about how I
+        interact with Selenium and Discord. I hope to move more of my application to XState, which
+        will significantly help when implementing new input methods and notification
+        systems.&lt;/p&gt;
+      </content:encoded>
+    </item>
+    <item>
+      <title>Astro</title>
+      <link>https://sjer.red/blog/2023/astro/</link>
+      <guid isPermaLink="true">https://sjer.red/blog/2023/astro/</guid>
+      <description>Astro brings great tooling to static HTML</description>
+      <pubDate>Sun, 10 Sep 2023 00:00:00 GMT</pubDate>
+      <content:encoded>&lt;p&gt;It&apos;s incredibly easy to find poorly made single-page
+        applications (SPA) today. These applications break user expectations by not acting like
+        standard webpages. The page title doesn&apos;t update on navigation, the back/forward
+        buttons don&apos;t work, the scroll position is not saved, and refreshing the page causes
+        surprising behavior.&lt;/p&gt;
+        &lt;p&gt;A particularly bad site might be poorly optimized and take a while to load on a
+        slow connection or perform poorly when rendered client-side.&lt;/p&gt;
+        &lt;p&gt;SPAs tend to be written with libraries like React and Vue. They are great for
+        developer productivity, and I find them a joy to use. What I don&apos;t like is the amount
+        of work that goes into making them feel like first-class citizens of the web. You have the
+        handle the above, and so much more! What about SEO or users that disable
+        JavaScript?&lt;/p&gt;
+        &lt;p&gt;Many sites do need the interactivity that these libraries provide, but there are
+        plenty that don&apos;t. Content-heavy sites, like this one, are mostly read and have little
+        client-side interaction that would require JavaScript. You could write the site with plain
+        HTML/CSS, but you lose the excellent tooling that React provides. Alternatives include
+        server-side rendering with a host like Vercel or static site generation with heavy software
+        like Gatsby.&lt;/p&gt;
+        &lt;p&gt;I was determined not to compromise. I didn&apos;t want to buy into Vercel and
+        certainly didn&apos;t want a super complicated build process with a bunch of
+        buy-in.&lt;/p&gt;
+        &lt;p&gt;Enter &lt;a href=&quot;https://astro.build/&quot;&gt;Astro&lt;/a&gt;.&lt;/p&gt;
+        &lt;p&gt;It&apos;s a perfect fit. By default, it outputs sites with zero JavaScript. Using
+        familiar React-ish syntax, you can pass props or call JS at compile time in your components.
+        You get the development speed up while also providing sites that perform great and respect
+        your users.&lt;/p&gt;
+        &lt;p&gt;The feature list is jam-packed, and everything seems to work. The documentation is
+        thorough, and it is a joy to use.&lt;/p&gt;
+        &lt;p&gt;I migrated this blog over to Astro in a couple of days, and I was able to add a
+        bunch of new functionality with little effort, such as generated Open Graph images and an
+        RSS feed that updates automatically.&lt;/p&gt;
+        &lt;p&gt;The site now has zero client-side JavaScript and does not need a server beyond
+        static file hosting. The code is pretty similar to what it was before.&lt;/p&gt;
+        &lt;p&gt;I would highly recommend checking out &lt;a
+        href=&quot;https://astro.build/&quot;&gt;Astro&lt;/a&gt;. I&apos;m only scratching the
+        surface of what you can do with it.&lt;/p&gt;
+      </content:encoded>
+    </item>
+    <item>
+      <title>Software Testing</title>
+      <link>https://sjer.red/blog/2023/software-testing/</link>
+      <guid isPermaLink="true">https://sjer.red/blog/2023/software-testing/</guid>
+      <description>Integration tests deserve the most attention</description>
+      <pubDate>Fri, 18 Aug 2023 00:00:00 GMT</pubDate>
+      <content:encoded>&lt;p&gt;You should verify every desired behavior of your project.&lt;/p&gt;
+        &lt;p&gt;Tests exist to verify some behavior of the object being tested. Some tests can be
+        manual, such as manually executing a program and verifying that the program works as
+        you&apos;d expect. When performing manual testing, the project requirements live in your
+        head and aren&apos;t particularly durable. If you return to a project months later, you
+        might not know the desired behavior. Additionally, manual testing requires valuable time and
+        effort to perform. Manual testing does not scale. As you add more functionality, you will
+        need more time, discipline, and the ability to test your project&apos;s behavior
+        manually.&lt;/p&gt;
+        &lt;p&gt;Automated tests help by explicitly defining the expected behavior, and it provides
+        a way to run tests with near-zero manual effort. If the automated tests are easy to run,
+        then you can quickly make a change, run the tests, and verify that your change worked as
+        expected. If your automated tests have low coverage, you will have less confidence and
+        resort to manual testing.&lt;/p&gt;
+        &lt;p&gt;Your tests will essentially become the &quot;source of truth&quot; for the expected
+        behavior of your project.&lt;/p&gt;
+        &lt;p&gt;There are many forms of automated testing, to name a few: unit, integration, and
+        end-to-end.&lt;/p&gt;
+        &lt;p&gt;What kind of tests you should write largely depends on what type of software
+        you&apos;re testing. The classic testing pyramid would suggest that you write many unit
+        tests. I think that this is entirely wrong.&lt;/p&gt;
+        &lt;blockquote&gt;
+        &lt;p&gt;Unit tests can be great if the project is well-architected and if the project is in
+        a language that lends itself well to unit testing. I&apos;ve had a great experience with
+        unit testing in Java and absolutely terrible experiences with JavaScript.&lt;/p&gt;
+        &lt;/blockquote&gt;
+        &lt;p&gt;Testing is essential, but that doesn&apos;t mean you should dump unlimited time
+        into it. You&apos;ll catch the most bugs by running tests in an environment that is as close
+        to production as possible. These are usually called integration tests or end-to-end
+        tests.&lt;/p&gt;
+        &lt;p&gt;The tradeoff is that being &quot;closer to production&quot; usually means
+        &quot;really hard or slow to run&quot;.&lt;/p&gt;
+        &lt;p&gt;So, what kind of tests should you write?&lt;/p&gt;
+        &lt;p&gt;If the primary purpose of your project is to provide an API, you should write tests
+        that check that your API contract is followed to the letter. You might want to have
+        performance tests to ensure that it can have the desired response time.&lt;/p&gt;
+        &lt;p&gt;If you&apos;re writing a software library, you&apos;ll want many unit tests to
+        verify the behavior of the methods you expose. You might want some integration tests, but
+        you might be able to get away without any.&lt;/p&gt;
+        &lt;p&gt;For web applications, you should skip unit tests. Your application depends on the
+        browser, so do your testing in a &lt;em&gt;real&lt;/em&gt; browser. Communicate with
+        &lt;em&gt;real&lt;/em&gt; APIs and not mocks. You might want unit tests only for parts of
+        your application that are not dependent on the browser or particularly tricky
+        behavior.&lt;/p&gt;
+      </content:encoded>
+    </item>
+    <item>
+      <title>Debugging C in VS Code</title>
+      <link>https://sjer.red/blog/2022/c-debugging-vscode/</link>
+      <guid isPermaLink="true">https://sjer.red/blog/2022/c-debugging-vscode/</guid>
+      <description>Using VS Code to debug C is pretty easy</description>
+      <pubDate>Sun, 23 Oct 2022 00:00:00 GMT</pubDate>
+      <content:encoded>&lt;p&gt;Knowing how to use a debugger for the tools that you use is one of
+        the best investments you can make.&lt;/p&gt;
+        &lt;p&gt;Debuggers help you explore the state of your program. They provide feedback much
+        faster than other debugging methods, like print statements. They also allow you to see
+        &lt;em&gt;everything&lt;/em&gt;, whereas a print statement will only show what you choose to
+        print. This can be very helpful when part of a program that you expect to be working
+        correctly is actually misbehaving.&lt;/p&gt;
+        &lt;p&gt;Advanced Operating Systems, the course that I&apos;m currently taking for my
+        Masters are Georgia Tech, requires that you spend a fair bit of time working in C. C is a
+        fine language, but it is very cumbersome to debug programs without a debugger. Save yourself
+        some frustration and set your debugging environment up before you start working on your
+        program.&lt;/p&gt;
+        &lt;p&gt;VS Code makes this very easy.&lt;/p&gt;
+        &lt;h2&gt;Setup&lt;/h2&gt;
+        &lt;ol&gt;
+        &lt;li&gt;
+        &lt;p&gt;Install the &lt;a
+        href=&quot;https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools&quot;&gt;C/C++
+        extension&lt;/a&gt;&lt;/p&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+        &lt;p&gt;Open up the &quot;Run and Debug&quot; pane&lt;/p&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+        &lt;p&gt;Click the cog icon to open up the launch.json file which contains your debugging
+        configuration&lt;/p&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+        &lt;p&gt;Copy this into the launch.json file:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;{
+        &quot;name&quot;: &quot;debug&quot;,
+        &quot;type&quot;: &quot;cppdbg&quot;,
+        &quot;request&quot;: &quot;launch&quot;,
+        &quot;program&quot;: &quot;${workspaceFolder}/&amp;lt;path to your compiled
+        binary&amp;gt;&quot;,
+        &quot;args&quot;: [&quot;&amp;lt;your program arguments&amp;gt;&quot;],
+        &quot;stopAtEntry&quot;: false,
+        &quot;cwd&quot;: &quot;${fileDirname}&quot;,
+        &quot;environment&quot;: [],
+        &quot;externalConsole&quot;: false,
+        &quot;MIMode&quot;: &quot;gdb&quot;,
+        &quot;setupCommands&quot;: [
+        {
+        &quot;description&quot;: &quot;Enable pretty-printing for gdb&quot;,
+        &quot;text&quot;: &quot;-enable-pretty-printing&quot;,
+        &quot;ignoreFailures&quot;: true
+        },
+        {
+        &quot;description&quot;: &quot;Set Disassembly Flavor to Intel&quot;,
+        &quot;text&quot;: &quot;-gdb-set disassembly-flavor intel&quot;,
+        &quot;ignoreFailures&quot;: true
+        }
+        ]
+        }
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+        &lt;p&gt;Save the file and click on &quot;Start Debugging&quot;&lt;/p&gt;
+        &lt;/li&gt;
+        &lt;/ol&gt;
+        &lt;p&gt;VS Code will launch your binary and attach a debuggger. You can do all of the usual
+        debugger things like set breakpoints and inspect program state.&lt;/p&gt;
+      </content:encoded>
+    </item>
+    <item>
+      <title>Pointer Math in C</title>
+      <link>https://sjer.red/blog/2022/c-pointer-math/</link>
+      <guid isPermaLink="true">https://sjer.red/blog/2022/c-pointer-math/</guid>
+      <description>2D arrays in C can be tricky</description>
+      <pubDate>Sat, 15 Oct 2022 00:00:00 GMT</pubDate>
+      <content:encoded>&lt;p&gt;C is a very confusing language.&lt;/p&gt;
+        &lt;p&gt;The world is built on C, and some people are able to get &lt;em&gt;very&lt;/em&gt;
+        good at it, but I am not one of those people.&lt;/p&gt;
+        &lt;p&gt;I pick it up for class, learn it, use it, appreciate it, and then forget it. Why
+        would I want to write an application in C? I&apos;m not a systems programmer, so I
+        don&apos;t touch it.&lt;/p&gt;
+        &lt;p&gt;One side effect of this usage pattern is that I quickly forget how pointers and
+        manual memory management work.&lt;/p&gt;
+        &lt;p&gt;Pointers are the semantics of &lt;code&gt;calloc&lt;/code&gt; and
+        &lt;code&gt;free&lt;/code&gt; are easy enough to refresh on. It takes me a little while to
+        remember if I need to use &lt;code&gt;*&lt;/code&gt;, &lt;code&gt;&amp;amp;&lt;/code&gt;,
+        &lt;code&gt;-&amp;gt;&lt;/code&gt;, or &lt;code&gt;.&lt;/code&gt; when working with
+        pointers. That&apos;s not a big deal though -- again, I can refresh myself on the syntax
+        rather easily.&lt;/p&gt;
+        &lt;p&gt;One thing that does trip me up (and led to a very annoying bug in a barrier
+        algorithm) is 2D arrays, or rather representing a 2D array as a pointer.&lt;/p&gt;
+        &lt;p&gt;Here&apos;s what I did.&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;int x;
+        int y;
+        int *array;
+
+        array = calloc(x * y, sizeof(int))
+
+        for (int i = 0; i &amp;lt; x; i++) {
+        for (int j = 0; j &amp;lt; y; j++&amp;gt;) {
+        item = array[i + j];
+        }
+        }
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;Now, this seems somewhat reasonable at first. The problem is that there is going to
+        be a collision. &lt;code&gt;x = 0, y = 1&lt;/code&gt; and &lt;code&gt;x = 1, y =
+        0&lt;/code&gt; will refer to the same slots in the array, which shouldn&apos;t
+        happen!&lt;/p&gt;
+        &lt;p&gt;My next attempted was to change the array access to &lt;code&gt;array[i *
+        j]&lt;/code&gt;. This also doesn&apos;t work. Consider when &lt;code&gt;i = 0&lt;/code&gt;
+        or &lt;code&gt;j = 0&lt;/code&gt;. Any multiplication by zero is zero, so these will all
+        refer to the same slot.&lt;/p&gt;
+        &lt;p&gt;The correct solution is rather simple. The access should be &lt;code&gt;array[(i *
+        y) + j]&lt;/code&gt;. Let&apos;s prove this with an example.&lt;/p&gt;
+        &lt;p&gt;With &lt;code&gt;x = 2&lt;/code&gt; and &lt;code&gt;y = 3&lt;/code&gt;. These are
+        the possible values of &lt;code&gt;i&lt;/code&gt; and &lt;code&gt;j&lt;/code&gt;:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;i = 0, j = 0
+        i = 0, j = 1
+        i = 0, j = 2
+        i = 1, j = 0
+        i = 1, j = 1
+        i = 1, j = 2
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;Now, lets see which slot in the array each pair will fit into.&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;i = 0, j = 0; (0 * 3) + 0 = 0
+        i = 0, j = 1; (0 * 3) + 1 = 1
+        i = 0, j = 2; (0 * 3) + 2 = 2
+        i = 1, j = 0; (1 * 3) + 0 = 3
+        i = 1, j = 1; (1 * 3) + 1 = 4
+        i = 1, j = 2; (1 * 3) + 2 = 5
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;A unique index for each item! This is exactly what we wanted.&lt;/p&gt;
+        &lt;p&gt;You should perform these accesses based on the usage patterns of your data. The
+        example above uses the x value as the column and the y value as the row. Accesses to
+        sequential x values will be faster than accesses to sequential y values because of
+        locality.&lt;/p&gt;
+      </content:encoded>
+    </item>
+    <item>
+      <title>My struggles with C and libvirt</title>
+      <link>https://sjer.red/blog/2022/libvirt/</link>
+      <guid isPermaLink="true">https://sjer.red/blog/2022/libvirt/</guid>
+      <description>Libvirt is pretty unintuitive</description>
+      <pubDate>Thu, 06 Oct 2022 00:00:00 GMT</pubDate>
+      <content:encoded>&lt;p&gt;I recently completed a project for my Advanced Operating Systems
+        course at Georgia Tech. I found that the project was hard not because of the problem itself.
+        It&apos;s hard because it must be done in C, using &lt;a
+        href=&quot;https://libvirt.org/&quot;&gt;libvirt&lt;/a&gt; APIs which are poorly documented,
+        using a test setup that is brittle.&lt;/p&gt;
+        &lt;p&gt;This article will hopefully save others some pain.&lt;/p&gt;
+        &lt;p&gt;I&apos;ll be providing examples of how to call relevant libvirt APIs, and some
+        other useful information&lt;/p&gt;
+        &lt;h2&gt;General Tips&lt;/h2&gt;
+        &lt;h3&gt;Set up warnings&lt;/h3&gt;
+        &lt;p&gt;Before you do anything, enable every single warning that you can for the C
+        compiler. The compiler can catch so many mistakes for you if you tell it to. This includes
+        issues like implicit casting, incorrect printf calls, ineffectual assignments, and so much
+        more.&lt;/p&gt;
+        &lt;p&gt;Update your Makefile to enable some warnings, for example:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;GCCFLAGS += -Wall -Wextra -Wpedantic \
+        -Wformat=2 -Wno-unused-parameter -Wshadow \
+        -Wwrite-strings -Wstrict-prototypes -Wold-style-definition \
+        -Wredundant-decls -Wnested-externs -Wmissing-include-dirs \
+        -Wjump-misses-init -Wlogical-op -std=c11 \
+        -Wstrict-overflow -fno-strict-aliasing \
+        -Wconversion
+
+        compile:
+        gcc -g vcpu_scheduler.c -o vcpu_scheduler -lvirt -lm $(GCCFLAGS)
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;h3&gt;Refresh on C&lt;/h3&gt;
+        &lt;p&gt;I hadn&apos;t written C single my senior year of college. Like many, I&apos;ve been
+        spoiled by high-level languages that give you modern luxeries like lists and generics. I
+        found that spending some time reading up on modern C and pointers both helped me
+        out.&lt;/p&gt;
+        &lt;p&gt;I found these resources useful:&lt;/p&gt;
+        &lt;ul&gt;
+        &lt;li&gt;&lt;a href=&quot;https://matt.sh/howto-c&quot;&gt;How to C&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;h3&gt;Development Environment&lt;/h3&gt;
+        &lt;p&gt;The entire class will be scrambling to setup their development environment for the
+        first week or so. I personally installed Linux on my desktop and used that to work with
+        &lt;a href=&quot;https://code.visualstudio.com/docs/remote/ssh&quot;&gt;VS Code SSH
+        Remote&lt;/a&gt;, but there are plenty of other valid ways to work.&lt;/p&gt;
+        &lt;h2&gt;C/libvirt patterns&lt;/h2&gt;
+        &lt;p&gt;Now, onto some useful patterns.&lt;/p&gt;
+        &lt;h2&gt;Counting Host CPUs&lt;/h2&gt;
+        &lt;p&gt;C heavily uses output variables. Methods will often return ints that represent
+        either a status code (e.g. was there an error or not), or the number of records returned, or
+        both.&lt;/p&gt;
+        &lt;p&gt;This method returns 0 on success, and -1 on failure.&lt;/p&gt;
+        &lt;p&gt;It&apos;s always good to check return codes. Nothing nothing nothing is more
+        frustrating than being confused about why straightforward code is failing -- this is one way
+        to prevent that from happening.&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;virNodeInfo node_info;
+        if (virNodeGetInfo(conn, &amp;amp;node_info) == -1) {
+        exit(1);
+        }
+        unsigned int num_cpus = node_info.cpus;
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;h2&gt;Listing domains&lt;/h2&gt;
+        &lt;p&gt;This method takes a pointer. It will allocate a list of domains at the pointer, and
+        the return value contains the number of items returned. You can iterate over the items using
+        this information.&lt;/p&gt;
+        &lt;p&gt;Also, this method requires a bit of cleanup. You didn&apos;t dynamically allocate
+        any memory, but the method you called did. Clean up so that you don&apos;t leak
+        memory.&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;virDomainPtr *domain_list;
+        int num_domains = virConnectListAllDomains(conn, &amp;amp;domain_list, 0);
+        // don&apos;t forget to cleanup!
+        for (int i_domain = 0; i_domain &amp;lt; num_domains; i_domain++) {
+        virDomainFree(domain_list[i_domain]);
+        }
+        free(domain_list);
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;h2&gt;Pin a vCPU to a pCPU&lt;/h2&gt;
+        &lt;p&gt;This one is rough.&lt;/p&gt;
+        &lt;p&gt;I think you can form the CPU map manually, but I just call libvirt and let it form
+        it for me, then I pin CPUs as I like.&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;unsigned char *map;
+        if (virNodeGetCPUMap(conn, &amp;amp;map, NULL, 0) == -1) {
+        exit(1);
+        }
+
+        // Use CPU 0
+        VIR_USE_CPU(map, 0);
+        // Don&apos;t use CPU 1
+        VIR_UNUSE_CPU(map, 1);
+
+        int maplen = VIR_CPU_MAPLEN(number_of_physical_cpus);
+
+        // apply these settings to vcpu #0 in the given domain
+        virDomainPinVcpu(domain, 0, map, maplen);
+        free(map);
+        &lt;/code&gt;&lt;/pre&gt;
+      </content:encoded>
+    </item>
+    <item>
+      <title>Language Doesn&apos;t Matter</title>
+      <link>https://sjer.red/blog/2022/language-doesnt-matter/</link>
+      <guid isPermaLink="true">https://sjer.red/blog/2022/language-doesnt-matter/</guid>
+      <description>It doesn&apos;t matter what programming language you learn first</description>
+      <pubDate>Sun, 01 May 2022 00:00:00 GMT</pubDate>
+      <content:encoded>&lt;p&gt;Programming is rife with opinions. Everyone has a favorite IDE,
+        framework, paradigm, test framework, and programming language. Engineers are very vocal
+        about their preferences and often leave no room for a difference in opinion or even the idea
+        that a contender may serve as a reasonable replacement for their favored choice. Before
+        someone begins programming they have a myriad of choices to make before starting. The
+        biggest of those choices might be what language to learn.&lt;/p&gt;
+        &lt;p&gt;Language makes an impact on how one thinks about problems and their solutions. Any
+        language is capable of expressing the same idea in multiple distinct ways. Hand the same
+        task to two developers who prefer different programming paradigms, say functional vs
+        procedural, and they will end up with two completely different-looking programs even if they
+        write those programs in the same language.&lt;/p&gt;
+        &lt;p&gt;Some programming languages are better than others, especially when framed in the
+        context of performing some specific task. Nobody is going to want to write a web application
+        in assembly, but assembly is the perfect language to use when milking every ounce of
+        performance from a machine. JavaScript is a great language for web applications, but many
+        believe that it isn&apos;t suited for desktop application development due to its heavy
+        runtime and often poor performance.&lt;/p&gt;
+        &lt;p&gt;The other side of the equation is what programming language you know best. C may be
+        the best language for the task, but if you&apos;re intimately familiar with Python then it
+        makes sense to do a little more work getting your Python program than learning an entirely
+        new language (especially if that language is infamous for how difficult it is to correctly
+        write).&lt;/p&gt;
+        &lt;p&gt;Beginners should learn any general-purpose language that they&apos;re excited about
+        unless they have a specific task they want to accomplish. That language might be C++, Java,
+        Go, Python, or JavaScript. There may be better, newer languages out there, but that
+        doesn&apos;t really matter. Languages are easy to learn after your first (as long as the
+        paradigms match).&lt;/p&gt;
+        &lt;p&gt;Picking a programming language shouldn&apos;t be a barrier to those entering the
+        field. We as engineers should put aside our personal preferences and instead let new
+        developers choose whatever language they&apos;re excited about.&lt;/p&gt;
+      </content:encoded>
+    </item>
+    <item>
+      <title>Rust is Exciting</title>
+      <link>https://sjer.red/blog/2021/rust-is-exciting/</link>
+      <guid isPermaLink="true">https://sjer.red/blog/2021/rust-is-exciting/</guid>
+      <description>Rust has a lot of potential</description>
+      <pubDate>Sat, 19 Jun 2021 00:00:00 GMT</pubDate>
+      <content:encoded>&lt;p&gt;Rust is an exciting language. I recently bought The Rust Programming
+        Language Book. It&apos;s quite dense with a lot of concepts I haven&apos;t thought about
+        since college. Working in high-level programming languages such as Java, Python, and
+        TypeScript have allowed me to mostly forget about the woes of low-level programming. Rust
+        has both re-introduced me to these problems, and then immediately solved them with the
+        advanced static analysis that its compiler provides.&lt;/p&gt;
+        &lt;p&gt;I&apos;m still a beginner with Rust. That&apos;s the exciting part. I have so many
+        questions; so many things to figure out. It&apos;s a challenge. It&apos;s a lot to learn. It
+        reminds me of when I first started programming. There was a mountain of work to do, and an
+        endless number of things to figure out. Eventually it gets easier and you become productive.
+        You write small applications just because you can — because you want to prove that you know
+        what you think you know.&lt;/p&gt;
+        &lt;p&gt;Rust is full of features. Many of them deal with safety, such as the ownership
+        system and borrow checker. It helps to guarantee memory safety, and coincidentally also
+        helps when writing code that will be executed concurrently. These features are important,
+        but what I&apos;m really excited about are the language features — the features that make a
+        language a joy to work in. Rust has plenty of these. Interoperability with C, pattern
+        matching, the lack of a null type, Cargo, immutability-by-default, functional programming
+        constructs built-in, macros, a compiler with the most helpful error messages I&apos;ve ever
+        seen, tuples, and pattern-matching. I&apos;m just scratching the service. The type system
+        and syntax isn&apos;t quite as good as TypeScript, which I hold as the absolute gold
+        standard (even if it isn&apos;t perfect).&lt;/p&gt;
+        &lt;p&gt;What&apos;s particularly exciting is the applicability of Rust. I tend to use
+        Python or Java for small shell scripts/programs. It works great for me, but it&apos;s not
+        especially portable. If I want to share my creations with my team members I have to provide
+        explicit instructions about which runtime versions must be used, and any possible
+        dependencies. Rust is a bit different. Since it produces native binaries I can simply hand
+        them the executable (provided the dependencies are bundled) and let them have at
+        it.&lt;/p&gt;
+        &lt;p&gt;I&apos;m excited to be a beginner again. I&apos;m excited to learn about things
+        I&apos;ll never use in my day job. I&apos;m excited to get good at writing Rust code.
+        I&apos;m excited for the future of programming languages, which will hopefully follow in
+        Rust&apos;s footsteps.&lt;/p&gt;
+      </content:encoded>
+    </item>
+    <item>
+      <title>On Perfection</title>
+      <link>https://sjer.red/blog/2021/on-perfection/</link>
+      <guid isPermaLink="true">https://sjer.red/blog/2021/on-perfection/</guid>
+      <description>Being perfect is usually a poor choice</description>
+      <pubDate>Sat, 27 Feb 2021 00:00:00 GMT</pubDate>
+      <content:encoded>&lt;p&gt;This is a bit of stream of consciousness with some light editing. I
+        wrote it quickly on my iPad, so it&apos;s pretty rough. It&apos;s better than nothing
+        though.&lt;/p&gt;
+        &lt;p&gt;I&apos;ve always thought of myself as a perfectionist especially when it comes to
+        the code that I write and the projects that I work on. This tenancy can be useful since it
+        has allowed me to dive deep into many topics, but it also limits my productivity. I&apos;ve
+        spent so much time learning how to model data and implement data access layer code that I
+        never had the opportunity to build anything of consequence with what I learned. I know quite
+        a lot about Java and the JVM, but it only comes in handy once in a while.&lt;/p&gt;
+        &lt;p&gt;Factorio is one of my favorite games. It&apos;s a game with a simple premise.
+        You&apos;re stuck on an alien planet and need to get off of it by building a factory which
+        can ultimately produce a spaceship.&lt;/p&gt;
+        &lt;p&gt;I found that the game perfectly captures many aspects of programming. One thing
+        that it made me realize is the clear trade-off of doing something right versus a
+        quick-and-dirty hack to just get some item in my factory on the production line.&lt;/p&gt;
+        &lt;p&gt;I&apos;ve noticed that I&apos;m much more critical when reading code not written by
+        me. I&apos;ll give myself a pass because I had to get this code shipped today, or because I
+        was focused on fixing the real problems. I like writing good code. Not necessarily because
+        it has any concrete, intrinsic value, but because writing good code makes me a programmer. I
+        do think that there are many advantages to my functional, OOP, data-oriented
+        style.&lt;/p&gt;
+        &lt;p&gt;It can be especially crippling when I have a deadline and perception that I&apos;m
+        unable to do things right. It&apos;s oft said that the best is the enemy of the good, and
+        that&apos;s something that I truly struggle with. Why would I do something if I can&apos;t
+        do it my way — if I can&apos;t do it perfectly? Obviously I&apos;d do it because it needs to
+        be done, but that&apos;s not something I get motivation from. That&apos;s not why I&apos;m a
+        programmer. I&apos;m a programmer because I enjoy making things that work, with code that I
+        can take pride in.&lt;/p&gt;
+      </content:encoded>
+    </item>
+    <item>
+      <title>Introduction</title>
+      <link>https://sjer.red/blog/2021/introduction/</link>
+      <guid isPermaLink="true">https://sjer.red/blog/2021/introduction/</guid>
+      <description>Introducing my blog</description>
+      <pubDate>Tue, 12 Jan 2021 00:00:00 GMT</pubDate>
+      <content:encoded>&lt;p&gt;A few months ago I discovered fast.ai&apos;s fastbook. It was
+        released in August with an accompanying set of YouTube videos that serves as an introductory
+        course in the topic of deep learning. The content is made very approachable by the authors
+        Jeremy Howard, Rachel Thomas, and Sylvain Gugger.&lt;/p&gt;
+        &lt;p&gt;I already had a cursory knowledge of AI having taken a class in college, but I
+        wanted to dive deeper into the inner workings — ideally all the way to the metal. I
+        purchased the book on Amazon in August, but I&apos;ve been slow to go through it since some
+        of the video lectures are rather long, and I learn far better by reading and doing versus
+        listening.&lt;/p&gt;
+        &lt;p&gt;This week I&apos;ve decided to pick up where I left off. I had been thinking about
+        starting a early today (why not), and one of the sections of the book/lecture specifically
+        calls out the advantages of starting your own blog which is rather strange for a book about
+        deep learning. Anyway, that section of the book pushed me over the edge, so now here we
+        are.&lt;/p&gt;
+        &lt;p&gt;To give a quick introduction of myself: My name is Jerred Shepherd. I&apos;m a
+        software engineer working at Amazon Web Services. I work on problems regarding distributed
+        systems and scalability which has been really fun. I love computers and programming, and I
+        often spend my free time working on side projects as a hobby.&lt;/p&gt;
+      </content:encoded>
+    </item>
+    <item>
+      <title>Intro to 3D Graphics with OpenGL</title>
+      <link>https://sjer.red/blog/2019/opengl/</link>
+      <guid isPermaLink="true">https://sjer.red/blog/2019/opengl/</guid>
+      <description>An introduction to 3D graphics rendering and OpenGL.</description>
+      <pubDate>Wed, 03 Apr 2019 00:00:00 GMT</pubDate>
+      <content:encoded>&lt;p&gt;import cube from
+        &quot;./opengl/img/textured-cube.mp4&quot;;&lt;/p&gt;
+        &lt;p&gt;This is an adaptation of my senior &lt;a
+        href=&quot;https://github.com/shepherdjerred-homework/seminar-paper&quot;&gt;seminar
+        paper&lt;/a&gt;, originally written in LaTeX. You can view the original &lt;a
+        href=&quot;/opengl.pdf&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+        &lt;h2&gt;Table of Contents&lt;/h2&gt;
+        &lt;h2&gt;Introduction&lt;/h2&gt;
+        &lt;p&gt;Computer graphics is an essential component to any consumer facing computer.
+        Efficiently rendering computer graphics requires the use of specialized hardware in the form
+        of graphics processing units. GPUs work differently than the CPUs which programmers are
+        experienced with. This difference is due to the GPUs approach to parallelization. Graphics
+        APIs have been created to help programmers write performant and portable code for GPUs. This
+        post will introduce the core concepts of 3D graphics rendering and OpenGL, a popular and
+        widely-supported graphics API.&lt;/p&gt;
+        &lt;p&gt;Computers have become widespread and have touched many aspects of modern-day life.
+        From new forms of entertainment such as video games to artificial intelligence, they have
+        revolutionized the way to work, learn, and play. Computer graphics in particular have been a
+        driving force behind the adoption of computers because they allow users to easily interact
+        with computers. Programmers use computer graphics to display user interfaces, render video
+        games, and even animate entire films. Every day millions of people interact with interfaces
+        on phones, laptops, and other devices that allow them to focus on the work they are doing
+        rather than how they communicate with their device.&lt;/p&gt;
+        &lt;p&gt;Plenty of tools to manipulate 2D and 3D graphics already exist, such as: 3D object
+        editors, image processing applications, UI libraries, and game engines. These tools allow
+        programmers to quickly get work done, but they may not know how their work is being
+        accomplished. Without this understanding it may be harder for the programmer to debug or
+        optimize their code. By learning the lower-level concepts of computer graphics, one is able
+        to better use higher-level abstractions and tools.&lt;/p&gt;
+        &lt;p&gt;This paper intends to introduce the reader to the broad concepts of graphics
+        processing. This includes the purpose of graphics processing units, why graphics APIs exist,
+        and an introduction to a commonly used cross-platform graphics API --- OpenGL. OpenGL will
+        be discussed so that the reader has an overview of the concepts of OpenGL and can create an
+        OpenGL program. This paper will focus on the use OpenGL version 3.2 which is widely
+        supported and is very similar to the most recent version of OpenGL, which is 4.7.&lt;/p&gt;
+        &lt;h2&gt;Background&lt;/h2&gt;
+        &lt;p&gt;Computer graphics is predisposed towards parallel processing due to the repetitive
+        and independent nature of the calculations that it requires (p.~4, sellers2016). Graphics
+        processing units (GPUs) were created in order to meet the unique hardware requirements of
+        computer graphics and are fundamentally different from more traditional central processing
+        units (CPUs). While CPUs generally have a few very fast cores, GPUs take another approach by
+        having a large number of slow cores. Figure 1 illustrates this difference in architecture.
+        It shows the massive difference in arithmetic logic units (ALUs) between CPUs and GPUs.
+        These ALUs give GPUs an edge over CPUs when performing mathematical operations and are a
+        core part of the parallel processing capability that GPUs possess.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+
+        &amp;lt;figcaption&amp;gt;Figure 1, a comparison of typical CPU and GPU architectures
+        (larkin2016).&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;p&gt;A difference also exists between the two in their approach to threading. An
+        application running on a CPU may generally have only few threads running due to the high
+        cost of creation and context switches. GPUs have lower cost thread creation and can more
+        quickly context switch, and they often require tens of thousands of threads in order to
+        fully reach their processing potential (larkin2016). Despite the slower performance of an
+        individual GPU core, GPUs easily outperform CPUs in tasks related to graphics processing due
+        to their parallel processing capabilities. Figure 2 shows the historical theoretical
+        performance gap between CPUs and GPUs in giga floating-point operations per second
+        (GFLOP/s), which is a common measure of graphical computation speed. The graph shows that
+        GPUs have a clear performance advantage, with the gap becoming exponentially larger as time
+        goes on.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+
+        &amp;lt;figcaption&amp;gt;
+        Figure 2, a performance comparison of CPUs and GPUs in theoretical peak GLFOP/s over 14
+        years (galloy2013).
+        &amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;p&gt;Using GPUs effectively is especially important when rendering user interfaces,
+        which generally should remain responsive at all times. Because of the architectural
+        differences between GPUs and CPUs, GPUs are programmed differently than CPUs so that their
+        peak performance can be reached. In addition to writing high-level code which is compiled
+        into assembly, GPUs are also programmed by using APIs that are exposed by the manufacturer
+        of the graphics card. GPU manufacturers may support proprietary APIs which is very common on
+        cards that are made to be used in systems such as game consoles and arcade machines, or they
+        may implement standardized APIs such as OpenGL, Metal, Vulkan, or DirectX.&lt;/p&gt;
+        &lt;p&gt;While using a proprietary API may allow a programmer to get more performance out of
+        the hardware they are targeting, it will severely limit the application&apos;s portability.
+        A program that is written to run on a GPU using OpenGL should be compatible with any other
+        GPU implementing the same version of OpenGL. These APIs help programmers to focus on the
+        code they are writing rather than what hardware the code will be executed on. The APIs are
+        created so that they are at a low enough level that maximum performance can be achieved
+        while also being at a high enough level so that programmers can easily use them (p.~4,
+        sellers2016).&lt;/p&gt;
+        &lt;h2&gt;Graphics Rendering&lt;/h2&gt;
+        &lt;p&gt;Computer displays, such as monitors, use a 2D matrix of pixels to display images.
+        The dimensions of this matrix are referred to as the display&apos;s resolution.
+        Traditionally each pixel of a color display has a red, blue, and green value, which together
+        determine the color of the pixel. Graphics rendering is how the color of these pixels are
+        determined so that objects such as text, images, and user interfaces can be conveyed
+        (mckesson2018). The higher the resolution of a display the more detail that can be shown on
+        elements that are drawn. For reference, displays commonly range from standard HD at
+        1280x720, to very high resolutions such as 3840 x 2160, referred to as 4K. Standard HD is
+        becoming less common while 4K is slowing gaining market share, especially on high-end
+        monitors, TVs, and other consumer electronics.&lt;/p&gt;
+        &lt;p&gt;Graphics rendering is done by positioning primitives such as points, lines, and
+        triangles in a 3D space. After these primitives are defined, their locations are
+        transformed, and they are drawn on the screen through a process called rasterization
+        (mckesson2018). Figure 3 shows a simple example of the rasterization process. The figure
+        begins by defining a triangle primitive which is composed of three 3D vectors. The
+        rasterizer then determines which fragments the triangle overlaps through a process called
+        scan conversion. One way to do this is to include pixels if their centers are contained
+        within the element. Rasterization then produces list of fragments. A fragment is an element
+        that contributes to the final color of a pixel (sellers2016). The fragments are assigned a
+        color in later steps of the rendering process, which may be changed even further in the
+        process when effects such as lighting are taken into account.&lt;/p&gt;
+        &lt;p&gt;Although these three primitives may seem simple and insignificant, they are
+        actually the backbone of graphics rendering. Complex 3D models such as those shown in video
+        games are really just meshes of many small, connected triangles. Squares and other
+        quadrilaterals can be created by connecting two triangles together at their
+        hypotenuses.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+        &amp;lt;div class=&quot;bg-white&quot;&amp;gt;&amp;lt;/div&amp;gt;
+        &amp;lt;figcaption&amp;gt;Figure 3, a visualization of how a single 2D triangle is
+        rasterized (mckesson2018).&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;h3&gt;Matrices&lt;/h3&gt;
+        &lt;p&gt;A two-dimensional object can be drawn by simply defining its x and y coordinates.
+        Three-dimensional objects will not be drawn correctly because the z coordinate does not
+        affect the size of the object. The z coordinate represents how close a point is to a viewer
+        with larger numbers being closer, therefore as the z coordinate increases the object should
+        increase in size as well. This can be fixed by using a projection matrix and matrix
+        multiplication. A projection matrix effects what is visible on the screen, and how it is
+        projected onto it (sellers2016). Each (x, y, z, w) coordinate will be multiplied by a 4x4
+        matrix, with the result being the location of the coordinate when projected onto the
+        display.&lt;/p&gt;
+        &lt;p&gt;Before the matrix can be created, the aspect ratio, field of view (FOV), z-near,
+        and z-far variables must be determined. The aspect ratio is equal to a display&apos;s width
+        in pixels divided by its height in pixels. z-near and z-far represent the closest and
+        furthest possible z coordinate values respectively. The FOV is the angle of the scene that
+        will be rendered on the screen. Figure 4 illustrates of these four variables. Figure 5 shows
+        an example of a 4x4 projection matrix used for 3D rendering. Orthogonal projection matrices
+        exist for 2D rendering however they are outside of the scope of this paper.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+
+        &amp;lt;figcaption&amp;gt;
+        Figure 4, projection matrix concepts (hernandez2019). The camera represents the position of
+        the viewer.
+        &amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+
+        &amp;lt;figcaption&amp;gt;
+        Figure 5, a projection matrix where a is the aspect ratio, &lt;code&gt;fov&lt;/code&gt; is
+        the field of view, &lt;code&gt;z_f&lt;/code&gt; is z-far, and &lt;code&gt;z_n&lt;/code&gt;
+        is
+        z-near (hernandez2019).
+        &amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;p&gt;While a projection matrix defines how all rendered geometry appears, a model matrix
+        can be used to transform individual elements. Like a projection matrix, a model matrix is a
+        4v4 matrix. It is used to translate, rotate, and scale individual objects on the screen.
+        Model matrices are very important in 3D rendering, as they allow objects to be positioned
+        precisely in scenes without having to manually calculate vertex locations. Like the
+        projection matrix, the model matrix is applied by multiplying the position of each vertex by
+        the matrix. The result is the new position of the vertex with translation, rotation, and
+        scaling applied.&lt;/p&gt;
+        &lt;h2&gt;OpenGL&lt;/h2&gt;
+        &lt;p&gt;OpenGL is both a specification and a graphics API which is commonly implemented on
+        modern graphics cards. The specification defines how the use of API should affect the
+        graphics card. Like other graphics APIs, this allows users to use the underlying graphics
+        hardware portably. OpenGL&apos;s development began at a computer hardware manufacturer named
+        Silicon Graphics Inc. (SGI). SGI created its own proprietary graphics API named IrisGL which
+        was used on its workstations and graphics hardware. IrisGL was cleaned up and formalized
+        into OpenGL. The first version of OpenGL was released to the public as version 1.0 in 1992
+        (openglwiki2018). This initial version has been revised many times, with the latest version
+        being 4.6, which was released on July 31st, 2017 (openglwiki2018).&lt;/p&gt;
+        &lt;p&gt;API bindings exist for C/C++ off of which all other language bindings are based
+        (openglwiki2018). Bindings exist for a wide variety of other languages such as python, C#,
+        and LISP and for every major operating system (openglwiki2018). The Lightweight Java Game
+        Library (lwjgl) is a popular Java library that provides bindings for the OpenGL API and it
+        will be used for example in this paper.&lt;/p&gt;
+        &lt;p&gt;Before OpenGL can be used, an OpenGL context (i.e. a desktop window) must be
+        created. Many libraries exist to do this in a cross-platform manner. One popular library
+        that is bundled with lwjgl is the Graphics Library Framework (GLFW), which makes it very
+        easy to create an OpenGL context with lwjgl. Figure 6 shows the code necessary to initialize
+        the GLFW framework, create an operating system window with GLFW, and then finally bind an
+        OpenGL context to the window for drawing. Now that a window and OpenGL context have been
+        created, OpenGL methods can now be called, and the window is ready for drawing.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+        ```java
+        // Initialize GLFW
+        glfwInit();&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;// Create a new window with a given width, height, and title
+        long window = glfwCreateWindow(300, 300, &quot;Hello World!&quot;, NULL, NULL);
+
+        // Set the newly created window at the current OpenGL context
+        glfwMakeContextCurrent(window);
+
+        // Show the window
+        glfwShowWindow(window);
+
+        // Creates OpenGL bindings using the current context
+        GL.createCapabilities();
+        ```
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;&amp;lt;figcaption&amp;gt;Figure 6&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;h2&gt;VBOs, VAOs, and Uniforms&lt;/h2&gt;
+        &lt;p&gt;OpenGL provides the standard primitives used in graphics rendering --- points,
+        lines, and triangles. All of these primitives are represented as float arrays which can be
+        passed to OpenGL for rendering. These float arrays are stored in vertex buffer objects
+        (VBOs). VBOs are used to allocate memory on graphics hardware and are bound along with other
+        objects to vertex array objects (VAOs). Creating a VBO with OpenGL is a simple task, but it
+        would be beneficial to understand how the OpenGL APIs work before going further into the
+        subject.&lt;/p&gt;
+        &lt;p&gt;The OpenGL API has state that is shared globally, which includes what vertex array
+        objects and vertex buffer objects are currently bound. Communication between the CPU and GPU
+        is relatively slow so it should be minimized. Minimizing communication is done by buffering
+        data to be drawn ahead of time and reusing the buffered data whenever possible. Due to the
+        limitations of the Java Virtual Machine (JVM) all memory being shared with native libraries
+        must be allocated off of the JVM heap (lwjglwiki). lwjgl provides utilities to easily
+        allocate this memory through the MemoryStack class. Data created on this stack can be sent
+        to the graphics hardware with lwjgl. Unsigned integers, referred to as names, are used to
+        uniquely identify OpenGL elements such as VBOs and VAOs. Many OpenGL functions take these
+        names as arguments or rely on the currently bound VBO or VAO.&lt;/p&gt;
+        &lt;p&gt;Figure 7 shows the code needed to store the vertices of a triangle on a graphics
+        card. Line two asks OpenGL to create a new buffer name and store it. Next that buffer is
+        bound so that all subsequent operations that require an array buffer will use it. An array
+        of floats representing the vertices of a triangle are created, stored in native memory, and
+        the finally transferred to the graphics card on line 22. A VBO is now stored on the graphics
+        card, but a VAO must first be created and bound before the VBO can be used.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+        ```java
+        // Create a VBO and store its name
+        glVboName = glGenBuffers();&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;// Bind the VBO created in the last step
+        glBindBuffer(GL_ARRAY_BUFFER, glVboName);
+
+        float[] vertices = new float[]{
+        0.0f, 0.5f, 0.0f,
+        -0.5f, -0.5f, 0.0f,
+        0.5f, -0.5f, 0.0f
+        };
+
+        try (var stack = MemoryStack.stackPush()) {
+        // Allocate a native buffer to store the vertices
+        var vertexBuffer = stack.mallocFloat(vertices.length);
+
+        // Put the previously declared vertices into the float buffer
+        vertexBuffer.put(vertices);
+        vertexBuffer.flip();
+
+        // Send the vertices to the graphics hardware
+        glBufferData(GL_ARRAY_BUFFER, vertexBuffer, GL_STATIC_DRAW);
+        }
+        ```
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;&amp;lt;figcaption&amp;gt;Figure 7&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;p&gt;A vertex array object stores state so that drawing can be done quickly and is
+        required to be created before anything can be drawn. A VAO is bound and then set up so that
+        when an object needs to be drawn in the future it only needs to be rebound without any
+        further instruction before drawing. A vertex array simply keeps pointers to buffers which
+        can and should be bound to multiple VAOs to save memory on the graphics hardware. Figure 8
+        shows the relationship between vertex array objects and vertex buffer objects. Notice how
+        the VAO has what is essentially an array of pointers to buffers. OpenGL allows you to set
+        the pointer at each index to buffers that contain information about what is being drawn.
+        Vertex buffer objects often contain vertex position coordinates, but they can contain other
+        data used to render the element such as color and texture data.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+
+        &amp;lt;figcaption&amp;gt;Figure 8, two VAOs with one VBO each
+        (devries2019).&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;p&gt;As shown in Figure 9, creating a VAO is similar to creating a VBO. The
+        glGenVertexArrays method allocates space for a VAO on the graphics card and returns its
+        name. The name is then bound with the glBindVertexArray method so that all future methods
+        that require a bound VAO use the newly created VAO. The previously created VBO is rebound on
+        line 8 to ensure that the VAO points to the correct VBO. Line 11 sets the 0th index of the
+        bound VAO to the currently bound VBO object. Its other arguments define the size, type, and
+        layout of the data. The last step is to enable the 0th index on the VAO --- otherwise OpenGL
+        will not pass the buffer when rendering.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+        ```java
+        // Create a VAO and store its name
+        glVaoName = glGenVertexArrays();&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;// Bind the VAO that was just created
+        glBindVertexArray(glVaoName);
+
+        // Bind the previously created VBO
+        glBindBuffer(GL_ARRAY_BUFFER, glVboName);
+
+        // Have the first VAO index point to the bound VBO
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+
+        // Enable the first VAO index
+        glEnableVertexAttribArray(0);
+        ```
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;&amp;lt;figcaption&amp;gt;Figure 9&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;p&gt;VAOs cannot bind more than 4 elements of a VBO array, making it hard to pass large
+        amounts of data to shaders while rendering. Buffers also must be set per VAO which can make
+        code repetitive if some buffer is shared between many VAOs. Uniforms are a type of variable
+        which aim to solve this problem. Uniforms can store not only vectors, but also matrices.
+        They are intended for use where data is common between several elements. Figure 10 shows a
+        uniform being created to store a 4x4 projection matrix.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+        ```java
+        // Create a new perspective matrix
+        var matrix = new Matrix4f().perspective(FIELD_OF_VIEW, aspectRatio, Z_NEAR,
+        Z_FAR);&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;// Get the name of the matrix
+        glUniformName = glGetUniformLocation(glShaderProgramName, &quot;projectionMatrix&quot;);
+
+        // Move the matrix to native memory, and then buffer it
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+        FloatBuffer fb = stack.mallocFloat(16);
+        matrix.get(fb);
+        glUniformMatrix4fv(glUniformName, false, fb);
+        }
+        ```
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;&amp;lt;figcaption&amp;gt;Figure 10&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;h3&gt;Indexed Rendering&lt;/h3&gt;
+        &lt;p&gt;Consider the case of drawing a square. This would require two right triangles of
+        equal dimensions, each connected at their hypotenuses. Each triangle would only have one
+        unique coordinate, with the other two being shared at the hypotenuses. Right now, this would
+        have to be sent as six coordinates as show in Figure 11, instead of only four. While these
+        two extra coordinates may seem insignificant, this inefficient use of graphics memory may
+        cause problems, especially when rendering complex scenes with hundreds or thousands of
+        triangles. This problem can be solved with indexed rendering.&lt;/p&gt;
+        &lt;p&gt;Indexing adds a layer of indirection when rendering. Rather than directly passing
+        the coordinates to draw to OpenGL, a list of indices is passed. OpenGL then uses this list
+        to access the true data in its buffers. The code to create an element buffer is very similar
+        to that of creating VAOs and VBOs, so it will be omitted. Instead, a comparison of the data
+        being passed to OpenGL will be provided.&lt;/p&gt;
+        &lt;p&gt;The figure below shows a comparison of the code to draw a square with and without
+        indexing. Notice how on Figure 12 each vertex is defined once, and then the vertices used
+        for each triangle is defined in a separate array. The numbers in the indices array
+        represents which index in the vertices array should be used when drawing. For example, the
+        value 0 in the indices array refers to the 0th entry in the vertices array, which is the
+        top-left vertex.&lt;/p&gt;
+        &lt;p&gt;Creating a square without indexing.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+        &lt;code&gt;java float[] vertices = new float[]{ // Format: x, y, z // Triangle one 0.0f,
+        0.0f, 0.0f, // Top left 0.0f, -1f, 0.0f, // Bottom left 1f, 0.0f, 0.0f, // Top right //
+        Triangle two 0.0f, -1f, 0.0f, // Bottom left -1f, -1f, 0.0f, // Bottom right 0.0f, -1f, 0.0f
+        // Top right }; &lt;/code&gt;&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figcaption&amp;gt;Figure 11, creating a square without
+        indexing.&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+        ```java
+        float[] vertices = new float[]{
+        0.0f, 0.0f, 0.0f, // Top left
+        0.0f, -1f, 0.0f, // Bottom left
+        1f, 0.0f, 0.0f, // Top right
+        -1f, -1f, 0.0f, // Bottom right
+        };&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;int[] indices = new int[] {
+        0, 1, 2, // Triangle One
+        0, 2, 3 // Triangle Two
+        };
+        ```
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;&amp;lt;figcaption&amp;gt;Figure 12, creating a square with
+        indexing.&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;h2&gt;The Rendering Pipeline&lt;/h2&gt;
+        &lt;p&gt;Now that a VAO and VBO have been created, OpenGL is almost ready to draw. The only
+        thing left to do is to tell OpenGL what to do with the data it receives from VAOs, VBOs, and
+        uniforms. When OpenGL receives a draw command, it runs the VAO through a pipeline in order
+        to determine what to draw and how to draw it. This pipeline is responsible for positioning,
+        rasterizing, and coloring primitives. The pipeline is divided into several stages, many of
+        which are configurable through programs written in the OpenGL shading language (GLSL).
+        Figure 13 shows a simplified view of the OpenGL pipeline and Figure 14 shows how the input
+        is transformed throughout the pipeline. While OpenGL allows several of its stages to be
+        programmed or configured by the user, some of the stages are fixed-function, meaning that
+        OpenGL does not allow any customization to the stage. A couple of notable fixed-function
+        stages include the vertex fetch stage, the primitive assembly stage, and per-sample
+        processing. The vertex fetch stage is the first stage in the pipeline and feeds the pipeline
+        with data from VAOs and VBOs. The primitive assembly stage performs an optimization known as
+        face culling to ensure that only visible triangles are processed. Per-sample processing is
+        the final stage in the OpenGL pipeline and ensures that previously drawn elements are not
+        overwritten unless the new element&apos;s depth is higher through a process called depth
+        testing and writes fragments to the framebuffer to be displayed.&lt;/p&gt;
+        &lt;p&gt;While there are several configurable stages in the pipeline, only two must be
+        defined for rendering to occur. These two stages are the vertex shader and fragment shader.
+        The vertex shader tells OpenGL where a primitive is located, while the fragment shader
+        contributes to the final color of a primitive during rendering.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+
+        &amp;lt;figcaption&amp;gt;
+        Figure 13, a simplified OpenGL pipeline (sellers2016). Boxes with square corners are
+        programmable by the user.
+        &amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+        &amp;lt;div class=&quot;bg-white&quot;&amp;gt;&amp;lt;/div&amp;gt;
+        &amp;lt;figcaption&amp;gt;Figure 14, visualization of data flowing through the OpenGL
+        pipeline (overvoorde2019).&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;p&gt;In order to customize the OpenGL pipeline a shader program must first be created.
+        Once it is created, shaders can be compiled, attached to the program, and then linked. This
+        final executable is run on the graphics hardware and executed by OpenGL when rendering.
+        Figure 15 shows the code needed to create an OpenGL shader program.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+        ```java
+        // Create IDs for a shader program and vertex shader
+        glShaderProgramName = glCreateProgram();
+        glVertexShaderName = glCreateShader(GL_VERTEX_SHADER);&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;// Associate the shader with a string containing its source code
+        glShaderSource(glVertexShaderName, vertexShaderSource);
+
+        // Compile the stored source for the shader
+        glCompileShader(glVertexShaderName);
+
+        // Associate a shader with a shader program
+        glAttachShader(glShaderProgramName, glVertexShaderName);
+
+        // Create an executable from the attached shaders
+        glLinkProgram(glShaderProgramName);
+
+        // Set OpenGL to use the shader program when rendering
+        glUseProgram(glShaderProgramName);
+        ```
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;&amp;lt;figcaption&amp;gt;Figure 15&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;h3&gt;Writing Shaders&lt;/h3&gt;
+        &lt;p&gt;As mentioned before writing shaders is done in the OpenGL shading language which is
+        based off of C. Figure 16 shows a simple vertex shader program. The first line declares the
+        version of OpenGL that the shader is using which is OpenGL 3.3 for this shader. Lines
+        starting with &quot;layout&quot; tell OpenGL what input the shader is expecting. In this
+        case this shader expects two inputs --- vectors of size 3 and size 4. The location indicates
+        which index of the VAO these vectors should be found. The 0th index was set in Figure 16 and
+        represents the position of the element. The creation of the 1st index was omitted for
+        brevity, however as the shader program shows it represents the color of the element. Lines
+        starting with &quot;out&quot; indicate what data this shader passes on to future stages in
+        the pipeline. Uniforms are global variables set. This shader contains only one uniform which
+        is a 4x4 projection matrix.&lt;/p&gt;
+        &lt;p&gt;The main function is where the work is being done. gl_Position is a special
+        variable that tells OpenGL the final position of an element. It is assigned to the input
+        position after it is multiplied by the projection matrix. This position is passed on, as
+        well as the color that was passed to the shader.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+        ```glsl
+        #version 330 core&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;// A vector of 3 floats at index 0 of the VAO
+        layout (location = 0) in vec3 position;
+
+        // A vector of 4 floats at index 1 of the VAO
+        layout (location = 1) in vec4 inColor;
+
+        // Output a vector of 4 floats
+        out vec4 color;
+
+        // A global 4x4 matrix
+        uniform mat4 projectionMatrix;
+
+        void main() {
+        // Transform the position of the vertex by the projection matrix
+        gl_Position = projectionMatrix \* vec4(position, 1.0);
+
+        // Pass the color to the fragment shader
+        color = inColor;
+        }
+        ```
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;&amp;lt;figcaption&amp;gt;Figure 16&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;p&gt;The fragment shader partially determines the color of pixels. Figure 17 shows a
+        basic fragment shader which receives a color from the vertex shader in Figure 16 and outputs
+        the color as-is.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+        ```glsl
+        #version 330 core&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;// A vector of 4 floats in
+        in vec4 color;
+
+        // A vector of 4 floats out
+        out vec4 outColor;
+
+        void main() {
+        // Set the outgoing color to the incoming color
+        outColor = color;
+        }
+        ```
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;&amp;lt;figcaption&amp;gt;Figure 17&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;h3&gt;Textures&lt;/h3&gt;
+        &lt;p&gt;Textures allow images to be stored and used while rendering. While OpenGL supports
+        many kinds of textures, only standard 2D textures will be covered here. The process for
+        creating a texture follows the same pattern as VBOs. A texture name must first be created
+        and bound, and then data can be loaded into the texture. This code is show in Figure 18.
+        Once the texture is initialized, it can be used in a fragment shader.&lt;/p&gt;
+        &lt;p&gt;The fragment shader uses a special kind of uniform type called a sampler. Samplers
+        represent textures in shaders (sellers2016). The fragment shader uses a special function
+        called &lt;code&gt;texture&lt;/code&gt;, which takes a sampler and a coordinate. The
+        coordinate represents where in the texture image the fragment should get its data from. In
+        example 19 the shader receives the coordinate from the vertex shader.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+        ```java
+        // Create and bind a texture
+        glTextureName = glGenTextures();
+        glBindTexture(GL_TEXTURE_2D, glTextureName);&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;// Load a texture into the bound texture buffer
+        glTexImage2D(GL_TEXTURE_2D,
+        0,
+        GL_RGBA,
+        width,
+        height,
+        0,
+        GL_RGBA,
+        GL_UNSIGNED_BYTE,
+        imageData);
+        ```
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;&amp;lt;figcaption&amp;gt;Figure 18, creating a texture buffer and loading image
+        data into it.&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+        ```glsl
+        #version 330 core&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;vec2 textureCoord;
+
+        out vec4 outColor;
+
+        // Uses the bound texture
+        uniform sampler2D textureSampler;
+
+        void main() {
+        outColor = texture(textureSampler, textureCoord);
+        }
+        ```
+        &lt;/code&gt;&lt;/pre&gt;
+        &lt;p&gt;&amp;lt;figcaption&amp;gt;Figure 19, loading texture data in the fragment
+        shader.&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;h2&gt;Conclusion&lt;/h2&gt;
+        &lt;p&gt;With all of these concepts a basic OpenGL program can be created. Figure 20 shows a
+        program (Full program source available &lt;a
+        href=&quot;https://github.com/ShepherdJerred-homework/seminar-application&quot;&gt;here&lt;/a&gt;)
+        that renders a simple textured cube that rotates. It uses all of the previously covered
+        material, and most of the code samples used above. While this program is simple, it composes
+        many concepts and lays the foundation for more complex applications. Games can be created
+        with only these concepts. The only further work with graphics would be to render more
+        elements and make the objects more complex.&lt;/p&gt;
+        &lt;p&gt;&amp;lt;figure&amp;gt;
+        &amp;lt;video controls&amp;gt;
+        &amp;lt;source src={cube} type=&quot;video/mp4&quot; /&amp;gt;
+        &amp;lt;/video&amp;gt;
+        &amp;lt;figcaption&amp;gt;Figure 20, a spinning textured cube.&amp;lt;/figcaption&amp;gt;
+        &amp;lt;/figure&amp;gt;&lt;/p&gt;
+        &lt;p&gt;Computer graphics are crucial to providing easy-to-use experiences for users, and
+        in creating modern day entertainment and other visual media. OpenGL allows you to render
+        graphics by writing simple shader programs and feeding the OpenGL pipeline with input data.
+        This data can then efficiently be rendered and displayed on-screen to users. The pipeline
+        can transform input and allows programmers to modify how their input is rendered. While
+        there is a lot of overhead in graphics rendering, it allows the user to get the most out of
+        their graphics hardware.&lt;/p&gt;
+        &lt;h2&gt;References&lt;/h2&gt;
+        &lt;pre&gt;&lt;code&gt;@misc{hernandez2019,
+        author = &quot;Antonio Hernández Bejarano&quot;,
+        title = &quot;Lwjglgamedev&quot;,
+        url = &quot;ahbejarano.gitbook.io/lwjglgamedev/&quot;,
+        }
+
+        @misc{devries2019,
+        author = &quot;Joey de Vries&quot;,
+        title = &quot;Learn OpenGL&quot;,
+        url = &quot;learnopengl.com/&quot;
+        }
+
+        @misc{galloy2013,
+        author = &quot;Michael Galloy&quot;,
+        title = &quot;CPU vs GPU Performance.&quot;,
+        url = &quot;michaelgalloy.com/2013/06/11/cpu-vs-gpu-performance.html&quot;
+        }
+
+        @misc{larkin2016,
+        author = &quot;Jeff Larkin&quot;,
+        title = &quot;GPU Fundamentals.&quot;,
+        url =
+        &quot;www.icl.utk.edu/~luszczek/teaching/courses/fall2016/cosc462/pdf/GPU\_Fundamentals.pdf&quot;
+        }
+
+        @misc{lwjgl,
+        author = &quot;lwjgl&quot;,
+        title = &quot;Lightweight Java Game Library&quot;,
+        url = &quot;www.lwjgl.org&quot;
+        }
+
+        @misc{lwjglwiki,
+        author = &quot;lwjgl wiki&quot;,
+        title = &quot;Lwjgl Wiki&quot;,
+        url = &quot;github.com/LWJGL/lwjgl3-wiki/&quot;
+        }
+
+        @misc{masserann2018,
+        author = &quot;Arnaud Masserann&quot;,
+        title = &quot;OpenGL Tutorial&quot;,
+        url = &quot;www.opengl-tutorial.org/&quot;
+        }
+
+        @misc{mckesson2018,
+        author = &quot;Jason L. McKesson&quot;,
+        title = &quot;Learning Modern 3D Graphics Programming.&quot;,
+        url = &quot;paroj.github.io/gltut/&quot;
+        }
+
+        @misc{openglwiki2018,
+        author = &quot;Khronos&quot;,
+        title = &quot;OpenGL Wiki&quot;,
+        url = &quot;www.khronos.org/opengl/wiki/Main\_Page&quot;
+        }
+
+        @misc{overvoorde2019,
+        author = &quot;Alexander Overvoorde&quot;,
+        title = &quot;OpenGL Tutorial&quot;,
+        url = &quot;open.gl/&quot;
+        }
+
+        @book{sellers2016,
+        author = &quot;Graham Sellers, et al.&quot;,
+        title = &quot;OpenGL Superbible: Comprehensive Tutorial and Reference&quot;,
+        year = &quot;2016&quot;,
+        publisher = &quot;Addison-Wesley&quot;
+        }
+        &lt;/code&gt;&lt;/pre&gt;
+      </content:encoded>
+    </item>
+  </channel>
+</rss>

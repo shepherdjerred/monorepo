@@ -1,0 +1,338 @@
+{
+  "https://vitalik.eth.limo/general/2024/01/31/end.html": {
+    "title": "The end of my childhood"
+  },
+  "https://qsantos.fr/2024/01/04/dynamic-programming-is-not-black-magic/": {
+    "title": "Dynamic Programming is not Black Magic"
+  },
+  "https://www.experimental-history.com/p/so-you-wanna-de-bog-yourself": {
+    "title": "So you wanna de-bog yourself",
+    "description": "What I found in the mire"
+  },
+  "https://sashachapin.substack.com/p/some-painful-questions-we-ask-ourselves": {
+    "title": "Some Painful Questions We Ask Ourselves",
+    "description": "discernment is good, discernment is hard"
+  },
+  "https://www.gregegan.net/FOUNDATIONS/": {
+    "title": "Foundations"
+  },
+  "https://danluu.com/culture/": {
+    "title": "Culture matters"
+  },
+  "https://protohackers.com/": {
+    "title": "Protohackers"
+  },
+  "https://danluu.com/startup-tradeoffs/": {
+    "title": "Big companies v. startups"
+  },
+  "https://research.swtch.com/testing": {
+    "title": "Go Testing By Example"
+  },
+  "https://bbycroft.net/llm": {
+    "title": "LLM Visualization",
+    "description": "A 3D animated visualization of an LLM with a walkthrough"
+  },
+  "https://course.fast.ai/": {
+    "title": "Practical Deep Learning for Coders"
+  },
+  "https://skip.house/blog/nix-in-practice/": {
+    "title": "An overview of Nix in practice",
+    "description": "An surface-level exploration of Nix as a technology, and what I find most useful about it"
+  },
+  "https://www.feynmanlectures.caltech.edu/": {
+    "title": "The Feynman Lectures"
+  },
+  "https://ocw.mit.edu/courses/18-s097-applied-category-theory-january-iap-2019/": {
+    "title": "Applied Category Theory"
+  },
+  "https://d3s.mff.cuni.cz/teaching/nprg077/": {
+    "title": "Write your own tiny programming systems"
+  },
+  "https://martin.kleppmann.com/2011/03/07/accounting-for-computer-scientists.html": {
+    "title": "Accounting for Computer Scientists"
+  },
+  "https://www.encona.com/posts/debits-and-credits": {
+    "title": "Debits and Credits",
+    "description": "Debits and credits are easy to understand"
+  },
+  "https://www.recurse.com/": {
+    "title": "The Recurse Center",
+    "description": "A self-directed, community-driven educational retreat for programmers in New York City"
+  },
+  "https://www.inkandswitch.com/local-first/": {
+    "title": "Local-first software: You own your data, in spite of the cloud"
+  },
+  "https://math.ucr.edu/home/baez/act_course/": {
+    "title": "Applied Category Theory Course"
+  },
+  "http://indiehackers.com": {
+    "title": "Indie Hackers: Work Together to Build Profitable Online Businesses",
+    "description": "Connect with developers sharing the strategies and revenue numbers behind their companies and side projects"
+  },
+  "https://practicaltypography.com/": {
+    "title": "Butterick's Practical Typography"
+  },
+  "https://www.joshwcomeau.com/react/server-components/": {
+    "title": "Making Sense of React Server Components"
+  },
+  "https://exist.io/": {
+    "title": "Exist "
+  },
+  "https://www.susanrigetti.com/physics": {
+    "title": "Physics"
+  },
+  "https://www.testingjavascript.com/": {
+    "title": "Testing JavaScript"
+  },
+  "https://xata.io/blog/postgres-full-text-search-engine": {
+    "title": "Create an advanced search engine with PostgreSQL"
+  },
+  "https://weaknuclearforce.wordpress.com/": {
+    "title": "weak nuclear force"
+  },
+  "https://notes.eatonphil.com/2023-05-25-raft.html": {
+    "title": "Implementing the Raft distributed consensus protocol in Go"
+  },
+  "https://drewdevault.com/2023/05/01/2023-05-01-Burnout.html": {
+    "title": "Burnout"
+  },
+  "https://www.3blue1brown.com/": {
+    "title": "3Blue1Brown",
+    "description": "Mathematics with a distinct visual perspective. Linear algebra, calculus, neural networks, topology, and more"
+  },
+  "https://ciechanow.ski/bicycle/": {
+    "title": "Bicycle"
+  },
+  "https://www.cs.cornell.edu/courses/cs6120/2020fa/self-guided/": {
+    "title": "CS 6120: The Self-Guided Course"
+  },
+  "https://fly.io/dist-sys/": {
+    "title": "Fly.io Distributed Systems Challenge"
+  },
+  "https://explained-from-first-principles.com/email/": {
+    "title": "Email explained from first principles"
+  },
+  "https://tynan.com/letstalk/": {
+    "title": "Conversation Skills Essentials"
+  },
+  "https://stevens.netmeister.org/631/": {
+    "title": "Advanced Programming in the UNIX Environment"
+  },
+  "https://www.experimental-history.com/p/the-five-tools-of-hedonic-design": {
+    "title": "The Five Tools of Hedonic Design",
+    "description": "Hacking the happiness treadmill"
+  },
+  "https://diataxis.fr/": {
+    "title": "Diátaxis"
+  },
+  "https://sashachapin.substack.com/p/making-normal-conversations-better": {
+    "title": "Making Normal Conversations Better",
+    "description": "some notes on an endless skill"
+  },
+  "https://www.experimental-history.com/p/good-conversations-have-lots-of-doorknobs": {
+    "title": "Good conversations have lots of doorknobs"
+  },
+  "https://danluu.com/wat/": {
+    "title": "Normalization of deviance"
+  },
+  "https://danluu.com/cocktail-ideas/": {
+    "title": "Cocktail party ideas"
+  },
+  "https://gmays.com/how-im-relearning-math-as-an-adult/": {
+    "title": "How I'm (re)learning math as an adult"
+  },
+  "https://www.homeautomationguy.io/": {
+    "title": "Home Automation Guy"
+  },
+  "https://awesomekling.github.io/Excellence-is-a-habit-but-so-is-failure/": {
+    "title": "Exellence is a habit but so is failure",
+    "description": "We often hear that making small incremental improvements every day can lead to great things. This popular piece of advice rings true, and it’s a powerful reminder to keep pushing ourselves forward.\n\n"
+  },
+  "https://diary.geekodour.org/": {
+    "title": "geekodour"
+  },
+  "https://www.morling.dev/blog/the-code-review-pyramid/": {
+    "title": "The Code Review Pyramid"
+  },
+  "https://hyperboleandahalf.blogspot.com/2013/05/depression-part-two.html": {
+    "title": "Hyperbole and a Half: Depression Part Two"
+  },
+  "https://ludic.mataroa.blog/blog/your-organization-probably-doesnt-want-to-improve-things/": {
+    "title": "Your Organization Probably Doesn't Want To Improve Things"
+  },
+  "https://milan.cvitkovic.net/writing/things_youre_allowed_to_do/": {
+    "title": "Things you're allowed to do"
+  },
+  "https://parhelia.conorbarnes.com/p/the-placeholder-girlfriend": {
+    "title": "The Placeholder Girlfriend",
+    "description": "It became real when I saw the list. When I saw the rubric"
+  },
+  "https://usefulfictions.substack.com/p/how-to-be-more-agentic": {
+    "title": "How to be More Agentic",
+    "description": "On a supposedly difficult thing"
+  },
+  "https://sashachapin.substack.com/p/things-you-learn-dating-cate-hall": {
+    "title": "Things you learn dating Cate Hall",
+    "description": "an unlikely person"
+  },
+  "https://www.epicweb.dev/fully-typed-web-apps": {
+    "title": "Fully Typed Web Apps",
+    "description": "The secret to fully typed web apps is typing the boundaries"
+  },
+  "https://vinnie.dev/using-zod-at-the-edge-of-our-typescript-type-system/": {
+    "title": "Using ZOD at the edge of our TypeScript type system"
+  },
+  "https://furia.com": {
+    "title": "furialog"
+  },
+  "https://fly.io/blog/": {
+    "title": "The Fly.io Blog"
+  },
+  "https://tonsky.me": {
+    "title": "Nikita Tonsky"
+  },
+  "https://explained-from-first-principles.com": {
+    "title": "Explained from First Principles",
+    "description": "Explained from First Principles is a technology, science, and philosophy blog for curious people"
+  },
+  "http://wiki.c2.com": {
+    "title": "C2 Wiki"
+  },
+  "https://samwho.dev": {
+    "title": "samwho",
+    "description": "Personal website of Sam Rose"
+  },
+  "https://paulgraham.com/articles.html": {
+    "title": "Essays"
+  },
+  "https://www.ben-evans.com": {
+    "title": "Benedict Evans",
+    "description": "What matters in tech?"
+  },
+  "https://awesomekling.github.io": {
+    "title": "Andreas Kling – I like computers!",
+    "description": "I like computers!"
+  },
+  "https://drewdevault.com": {
+    "title": "Drew DeVault's blog"
+  },
+  "https://xeiaso.net/blog/": {
+    "title": "Xe Iaso's blog",
+    "description": "Xe Iaso's personal website"
+  },
+  "https://www.joshwcomeau.com": {
+    "title": "Josh W. Comeau's blog",
+    "description": "Friendly tutorials for developers. Focus on React, CSS, Animation, and more!"
+  },
+  "https://sive.rs": {
+    "title": "Derek Sivers' blog"
+  },
+  "https://jakelazaroff.com": {
+    "title": "Jake Lazaroff's blog",
+    "description": "Just a programmer trying to make a home for myself on the WWW"
+  },
+  "https://danluu.com/p95-skill/": {
+    "title": "95%-ile isn't that good"
+  },
+  "https://theluddite.org/": {
+    "title": "The Luddite",
+    "description": "An anticapitalist tech blog. Embrace the technology that liberates us. Smash that which does not"
+  },
+  "https://aphyr.com/": {
+    "title": "Aphyr"
+  },
+  "https://gwern.net/": {
+    "title": "Gwern",
+    "description": "Personal website of Gwern Branwen (writer, self-experimenter, and programmer)"
+  },
+  "https://www.writingruxandrabio.com/p/the-weird-nerd-comes-with-trade-offs": {
+    "title": "The Weird Nerd comes with trade-offs",
+    "description": "A metascience post of sorts that argues we should take human capital more seriously"
+  },
+  "https://www.autodidacts.io/holistic-perfectionism/": {
+    "title": "Perfectionism is optimizing at the wrong scale"
+  },
+  "https://realmensch.org/2017/08/25/the-parable-of-the-two-programmers/": {
+    "title": "The Parable of the Two Programmers",
+    "description": "A classic anecdote about skill vs. experience in programming"
+  },
+  "https://manuel.kiessling.net/2011/04/07/why-developing-without-tests-is-like-driving-a-car-without-brakes-2/": {
+    "title": "Why developing without tests is like driving a car without brakes"
+  },
+  "https://experimentalhistory.substack.com/p/why-arent-smart-people-happier": {
+    "title": "Why aren't smart people happier?",
+    "description": "A new way to think about brainpower"
+  },
+  "https://danilafe.com/blog/blog_microfeatures/": {
+    "title": "Microfeatures I Love in Blogs and Personal Websites",
+    "description": "Pleasant but seemingly minor features in personal sites"
+  },
+  "https://ludic.mataroa.blog/blog/on-burnout-mental-health-and-not-being-okay/": {
+    "title": "On Burnout, Mental Health, And Not Being Okay"
+  },
+  "https://ludic.mataroa.blog/blog/the-complex-problem-of-lying-for-jobs/": {
+    "title": "The Complex Problem Of Lying For Jobs"
+  },
+  "https://www.kalzumeus.com/2011/10/28/dont-call-yourself-a-programmer/": {
+    "title": "Don't Call Yourself A Programmer, And Other Career Advice"
+  },
+  "https://www.kalzumeus.com/2012/01/23/salary-negotiation/": {
+    "title": "Salary Negotiation: Make More Money, Be More Valued",
+    "description": "Salary negotiation advice, mostly for engineers"
+  },
+  "https://ludic.mataroa.blog/blog/the-corporate-facade-is-more-complicated-than-i-thought/": {
+    "title": "The Corporate Facade Is More Complicated Than I Thought"
+  },
+  "https://staffeng.com/": {
+    "title": "Stories of reaching Staff-plus engineering roles",
+    "description": "Stories of folks reaching Staff Engineer roles"
+  },
+  "https://yosefk.com/blog/advantages-of-incompetent-management.html": {
+    "title": "Advantages of incompetent management"
+  },
+  "https://lethain.com/magnitudes-of-exploration/": {
+    "title": "Magnitudes of exploration"
+  },
+  "https://cse.buffalo.edu/~rapaport/howtostudy.html": {
+    "title": "HOW TO STUDY"
+  },
+  "https://www.stevenbuccini.com/8-hard-truths-on-getting-laid-off": {
+    "title": "8 Hard Truths I learned when I got laid off from my SWE job"
+  },
+  "https://jepsen.io/consistency": {
+    "title": "Consistency Models"
+  },
+  "https://www.kitchensoap.com/2012/10/25/on-being-a-senior-engineer/": {
+    "title": "On Being A Senior Engineer"
+  },
+  "https://www.alexreichert.com/blog/finishing": {
+    "title": "On finishing things"
+  },
+  "https://yosefk.com/blog/people-can-read-their-managers-mind.html": {
+    "title": "People can read their manager's mind"
+  },
+  "https://www.aleksandrhovhannisyan.com/blog/62-5-percent-font-size-trick/": {
+    "title": "The 62.5% Font Size Trick"
+  },
+  "https://typescale.com": {
+    "title": "Typescale"
+  },
+  "https://sinja.io/blog/web-typography-quick-guide": {
+    "title": "Quick guide to web typography for developers",
+    "description": "80/20 guide on how to make your blog posts look pretty"
+  },
+  "https://sohl-dickstein.github.io/2022/11/06/strong-Goodhart.html": {
+    "title": "Too much efficiency makes everything worse"
+  },
+  "https://www.seangoedecke.com/how-to-ship/": {
+    "title": "How I ship projects at big tech companies",
+    "description": "What I think about when I'm lead engineer on a project",
+    "added": "2024-11-12T04:05:13.456Z"
+  },
+  "https://quarter--mile.com/You-Could-Just-Choose-Optimism": {
+    "title": "You Could Just Choose Optimism — Quarter Mile",
+    "description": "You Could Just Choose Optimism There’s something strange and a little awe-inspiring about hearing someone ask for champagne on a two-hour domestic flight....",
+    "added": "2025-11-06T01:32:37.174Z",
+    "tags": []
+  }
+}

@@ -1,0 +1,60 @@
+author: Irfan (410595870380392458)
+messages: 5901
+volume: avg_words 5.66, median_words 5.0, p90_words 11.0, avg_chars 33.31, p90_chars 60.0
+lexical: ttr 0.121, hapax 0.06, caps/msg 0.0
+sentences: avg_words 5.884
+words: avg_len 4.225, variety 4029, typos/msg 2.501
+tokens: the (1.0), you (0.7583955223880597), to (0.7052238805970149), it (0.4076492537313433), for (0.3666044776119403), is (0.34701492537313433), in (0.3423507462686567), that (0.33861940298507465)
+char_trigrams:  th (2401), the (1599), he  (1160),  to (1148), you (1064), ing (1021)
+style_markers: probably (74), dude (72), bro (53), really (53), idk (45), maybe (40)
+laughter: \bl+o+l+\b (67), \blmao\b (19), \bha+ha+\b (1)
+emoji: 😭 (38), 😡 (28), 😔 (24), 😠 (22), 😦 (21), 👀 (19)
+openers: oh (196), you (190), can (125), we (119), what (105) | oh yup (89), what the (47), start the (40), can't wait (34), can you (31)
+closers: man (237), it (116), right (87), too (77), lol (63) | stream it (37), the lobby (30), what the (26), right there (16), of legends (13)
+cadence: ? (1573), ' (1309), . (822), ! (686), : (312), ... (188) | repeats ?? (112), !! (68), !!! (9), ??? (5) | ?/msg 0.267 !/msg 0.116 .../msg 0.032
+formatting: links/msg 0.003 mentions/msg 0.117 quotes/msg 0.0 code/msg 0.0 multiline/msg 0.002 stretch/msg 0.074 shout/msg 0.013
+hours: 20, 19, 18
+mentions: 202595851678384137 (181), 208425244128444418 (79), 108659981309468672 (47), 331238905619677185 (42), 160509172704739328 (40)
+representative: What the
+interesting:
+ 1. (0.478) all the way to the top?
+ 2. (0.462) You have 5 in the call...
+ 3. (0.456) for the motherland
+ 4. (0.455) <@202595851678384137> need you in the jungle!
+ 5. (0.447) what the where's the lobby....
+ 6. (0.445) going to the ave in the dark <:o_o:881294686495576144>
+ 7. (0.427) Can you use the command to join the customs?
+ 8. (0.421) You can’t take the mosque <@208425244128444418>
+ 9. (0.419) On the switch
+10. (0.412) <@!202595851678384137> we need you!
+11. (0.412) <@208425244128444418> we need you!
+12. (0.412) we need you
+13. (0.406) with the hard R?
+14. (0.406) What’s the lobby?
+15. (0.394) You want to respect the guy that left the server
+16. (0.394) What the you’re snitching?
+17. (0.39) What the spoilers
+18. (0.389) <@327908907714478080> you good man?
+19. (0.389) what the fuck
+20. (0.389) <@528096854831792159> we need you man
+quotes:
+- "start the lobby" (19)
+- "oh yup stream it" (9)
+- "miss that guy man" (8)
+- "who says no" (8)
+- "come back pls" (5)
+- "start the thread" (5)
+- "start the poll" (5)
+- "tennis with joel johnson" (5)
+- "start the queue" (5)
+- "ooh me me me" (5)
+- "what's up guys" (4)
+- "ooh me me" (4)
+- "we need you" (4)
+- "need one more" (4)
+- "any flex players" (4)
+- "same man same" (4)
+- "edward sucks yeah" (4)
+- "be there in hours" (4)
+- "miss you man" (3)
+- "play some bangers" (3)

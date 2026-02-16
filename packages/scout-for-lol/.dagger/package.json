@@ -1,0 +1,23 @@
+{
+  "name": "@scout-for-lol/dagger",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Dagger module ready'",
+    "test": "echo 'No tests configured for Dagger module'",
+    "lint": "bunx eslint src",
+    "format": "bunx prettier --check src",
+    "format:write": "bunx prettier --write src",
+    "typecheck": "bunx tsc --noEmit"
+  },
+  "dependencies": {
+    "@shepherdjerred/dagger-utils": "^0.8.0",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "dagger": {
+    "runtime": "bun"
+  }
+}

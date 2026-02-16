@@ -1,0 +1,156 @@
+{
+  "safe_rm_targets": [
+    "node_modules", "dist", "build", "out", ".next", ".output",
+    ".cache", ".vite", ".turbo", "target", "coverage",
+    "__pycache__", ".pytest_cache", ".mypy_cache"
+  ],
+  "deny": [
+    {
+      "reason": "Privilege escalation",
+      "regex": "\\bsudo\\b|\\bsu\\s",
+      "globs": ["sudo *", "su *"]
+    },
+    {
+      "reason": "Mass recursive deletion",
+      "regex": "rm\\s+.*(-rf|-fr|-r\\s+-f|-f\\s+-r)",
+      "globs": ["rm -rf /*", "rm -rf ~*", "rm -fr /*", "rm -fr ~*"]
+    },
+    {
+      "reason": "Disk destruction",
+      "regex": "dd\\s+.*of=/dev/|\\bmkfs\\b",
+      "globs": ["dd *", "mkfs*"]
+    },
+    {
+      "reason": "System shutdown",
+      "regex": "\\b(shutdown|reboot|halt)\\b|\\binit\\s+[06]\\b",
+      "globs": ["shutdown*", "reboot*", "halt*"]
+    },
+    {
+      "reason": "Fork bomb or kill all",
+      "regex": ":\\(\\)\\s*\\{|kill\\s+-9\\s+-1",
+      "globs": []
+    },
+    {
+      "reason": "Pipe to shell (remote code execution)",
+      "regex": "(curl|wget).*\\|\\s*(ba)?sh",
+      "globs": []
+    },
+    {
+      "reason": "Permission bomb on root",
+      "regex": "chmod\\s+(-R\\s+)?777\\s+/",
+      "globs": []
+    },
+    {
+      "reason": "Kubernetes namespace/node/PV deletion",
+      "regex": "kubectl\\s+delete\\s+(namespace|ns|node|pv |pvc |persistentvolume)",
+      "globs": [
+        "kubectl delete namespace *", "kubectl delete ns *",
+        "kubectl delete node*",
+        "kubectl delete pv *", "kubectl delete pv/*",
+        "kubectl delete pvc *", "kubectl delete pvc/*",
+        "kubectl delete persistentvolume*", "kubectl delete persistentvolumeclaim*"
+      ]
+    },
+    {
+      "reason": "Kubernetes node drain",
+      "regex": "kubectl\\s+drain\\s+",
+      "globs": ["kubectl drain *"]
+    },
+    {
+      "reason": "Talos cluster destruction",
+      "regex": "talosctl\\s+(reset|wipe)",
+      "globs": ["talosctl reset*", "talosctl wipe*"]
+    },
+    {
+      "reason": "ArgoCD cluster removal",
+      "regex": "argocd\\s+cluster\\s+rm",
+      "globs": ["argocd cluster rm*"]
+    },
+    {
+      "reason": "Helm release destruction",
+      "regex": "helm\\s+uninstall",
+      "globs": ["helm uninstall*"]
+    },
+    {
+      "reason": "AWS resource destruction",
+      "regex": "aws\\s+(s3\\s+rb|ec2\\s+terminate|iam\\s+delete)",
+      "globs": ["aws s3 rb*", "aws ec2 terminate*", "aws iam delete*"]
+    },
+    {
+      "reason": "GitHub repo deletion",
+      "regex": "gh\\s+repo\\s+delete",
+      "globs": ["gh repo delete*"]
+    },
+    {
+      "reason": "1Password vault deletion",
+      "regex": "op\\s+vault\\s+delete",
+      "globs": ["op vault delete*"]
+    },
+    {
+      "reason": "Docker data destruction",
+      "regex": "docker\\s+(system\\s+prune|volume\\s+(prune|rm))",
+      "globs": ["docker system prune*", "docker volume prune*", "docker volume rm*"]
+    },
+    {
+      "reason": "Velero backup deletion",
+      "regex": "velero\\s+backup\\s+delete",
+      "globs": ["velero backup delete*"]
+    },
+    {
+      "reason": "Coder workspace deletion",
+      "regex": "coder\\s+delete",
+      "globs": ["coder delete*"]
+    }
+  ],
+  "ask": [
+    { "reason": "Force push", "globs": ["git push --force*", "git push -f *"] },
+    { "reason": "Destructive git reset", "globs": ["git reset --hard*"] },
+    { "reason": "Git clean", "globs": ["git clean -f*"] },
+    { "reason": "Force delete branch", "globs": ["git branch -D*"] },
+    { "reason": "Drop git stash", "globs": ["git stash drop*", "git stash clear*"] },
+    { "reason": "Package publish", "globs": ["npm publish*", "bun publish*"] },
+    { "reason": "Docker image push", "globs": ["docker push*"] },
+    { "reason": "Homebrew install/uninstall", "globs": ["brew install*", "brew uninstall*"] },
+    { "reason": "Global package install", "globs": ["npm install -g*", "bun install -g*"] },
+    {
+      "reason": "Kubernetes resource mutation",
+      "globs": [
+        "kubectl delete *", "kubectl apply *", "kubectl scale *",
+        "kubectl edit *", "kubectl rollout *", "kubectl cordon *",
+        "kubectl uncordon *", "kubectl patch *", "kubectl label *",
+        "kubectl annotate *", "kubectl taint *"
+      ]
+    },
+    { "reason": "Talos config change", "globs": ["talosctl apply-config*", "talosctl upgrade*"] },
+    { "reason": "Helm deployment", "globs": ["helm install*", "helm upgrade*", "helm rollback*"] },
+    {
+      "reason": "ArgoCD app mutation",
+      "globs": ["argocd app delete*", "argocd app sync*", "argocd app set*", "argocd app create*"]
+    },
+    {
+      "reason": "GitHub PR/issue/release mutation",
+      "globs": ["gh pr merge*", "gh pr close*", "gh issue close*", "gh release create*", "gh release delete*"]
+    },
+    { "reason": "1Password item mutation", "globs": ["op item delete*", "op item edit*", "op item create*"] },
+    { "reason": "Docker container lifecycle", "globs": ["docker rm *", "docker stop *", "docker kill *", "docker compose down*"] },
+    { "reason": "Velero operations", "globs": ["velero restore*", "velero schedule*"] },
+    { "reason": "AWS S3 mutations", "globs": ["aws s3 rm*", "aws s3 cp*", "aws s3 mv*", "aws s3 sync*"] },
+    { "reason": "Coder workspace operations", "globs": ["coder create*", "coder stop*"] },
+    { "reason": "Tailscale disconnect", "globs": ["tailscale down*"] }
+  ],
+  "warn_commands": [
+    { "regex": "op\\s+(item\\s+get|read\\s)", "message": "Reading 1Password secret — be mindful of where this data ends up" },
+    { "regex": "kubectl\\s+get\\s+secret", "message": "Reading Kubernetes secret" },
+    { "regex": "kubectl\\s+exec\\s", "message": "Entering container shell" },
+    { "regex": "aws\\s+(secretsmanager\\s+get|ssm\\s+get-parameter)", "message": "Reading AWS secret" }
+  ],
+  "warn_files": [
+    { "pattern": "\\.ssh/", "message": "Accessing SSH key" },
+    { "pattern": "\\.aws/", "message": "Accessing AWS credentials" },
+    { "pattern": "\\.gnupg/", "message": "Accessing GPG keyring" },
+    { "pattern": "\\.kube/config", "message": "Accessing kubeconfig" },
+    { "pattern": "\\.env", "message": "Accessing environment file" },
+    { "pattern": "\\.pem$", "message": "Accessing certificate file" },
+    { "pattern": "\\.key$", "message": "Accessing key file" }
+  ]
+}

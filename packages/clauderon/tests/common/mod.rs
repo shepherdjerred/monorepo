@@ -1,3 +1,11 @@
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::print_stdout,
+    clippy::print_stderr,
+    clippy::create_dir,
+    reason = "test utilities use expect/unwrap/println for simplicity"
+)]
 //! Shared test utilities for integration tests
 
 use std::path::Path;

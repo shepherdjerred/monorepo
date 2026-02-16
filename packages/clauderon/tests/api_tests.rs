@@ -18,9 +18,9 @@ fn test_request_serialization() {
 #[test]
 fn test_create_session_request_serialization() {
     let request = Request::CreateSession(CreateSessionRequest {
-        repo_path: "/home/user/project".to_string(),
+        repo_path: "/home/user/project".to_owned(),
         repositories: None,
-        initial_prompt: "Fix the bug".to_string(),
+        initial_prompt: "Fix the bug".to_owned(),
         backend: BackendType::Zellij,
         agent: AgentType::ClaudeCode,
         model: None,
@@ -54,7 +54,7 @@ fn test_create_session_request_serialization() {
 #[test]
 fn test_get_session_request_serialization() {
     let request = Request::GetSession {
-        id: "abc123".to_string(),
+        id: "abc123".to_owned(),
     };
 
     let json = serde_json::to_string(&request).unwrap();
@@ -65,7 +65,7 @@ fn test_get_session_request_serialization() {
 #[test]
 fn test_response_serialization() {
     let response = Response::Created {
-        id: "session-123".to_string(),
+        id: "session-123".to_owned(),
         warnings: None,
     };
 
@@ -86,8 +86,8 @@ fn test_response_serialization() {
 #[test]
 fn test_response_created_with_warnings() {
     let response = Response::Created {
-        id: "session-456".to_string(),
-        warnings: Some(vec!["Post-checkout hook failed".to_string()]),
+        id: "session-456".to_owned(),
+        warnings: Some(vec!["Post-checkout hook failed".to_owned()]),
     };
 
     let json = serde_json::to_string(&response).unwrap();
@@ -107,8 +107,8 @@ fn test_response_created_with_warnings() {
 #[test]
 fn test_error_response_serialization() {
     let response = Response::Error {
-        code: "NOT_FOUND".to_string(),
-        message: "Session not found".to_string(),
+        code: "NOT_FOUND".to_owned(),
+        message: "Session not found".to_owned(),
     };
 
     let json = serde_json::to_string(&response).unwrap();
@@ -159,9 +159,9 @@ fn test_agent_type_serialization() {
 fn test_print_mode_serialization() {
     // Test with print_mode = true
     let request = Request::CreateSession(CreateSessionRequest {
-        repo_path: "/tmp/repo".to_string(),
+        repo_path: "/tmp/repo".to_owned(),
         repositories: None,
-        initial_prompt: "Generate a hello world".to_string(),
+        initial_prompt: "Generate a hello world".to_owned(),
         backend: BackendType::Docker,
         agent: AgentType::ClaudeCode,
         model: None,

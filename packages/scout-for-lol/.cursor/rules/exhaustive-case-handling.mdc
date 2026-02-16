@@ -1,0 +1,226 @@
+---
+description: Exhaustive case handling for discriminated unions and enums
+globs: "*.ts,*.tsx"
+alwaysApply: false
+---
+# Exhaustive Case Handling
+
+## The Problem: Dangerous `else` Blocks
+
+**Plain `else` blocks silently handle new cases when unions/enums are extended, causing bugs.**
+
+### ❌ DANGEROUS
+
+```typescript
+type Action = "add" | "remove";
+
+function handleAction(action: Action) {
+  if (action === "add") {
+    doAdd();
+  } else {
+    // If we add "update" to Action, this silently treats it as "remove"!
+    doRemove();
+  }
+}
+```
+
+**What happens:** Developer adds `"update"` to the `Action` type. TypeScript doesn't complain. Code treats "update" as "remove". Bug shipped to production.
+
+## The Solution: Exhaustive Matching
+
+When handling discriminated unions or enums with **multiple enumerable cases**, always use exhaustive pattern matching.
+
+### ✅ CORRECT: Use ts-pattern
+
+```typescript
+import { match } from "ts-pattern";
+
+type Action = "add" | "remove" | "update";
+
+function handleAction(action: Action) {
+  return match(action)
+    .with("add", () => doAdd())
+    .with("remove", () => doRemove())
+    .with("update", () => doUpdate())
+    .exhaustive(); // TypeScript errors if a case is missing!
+}
+```
+
+**What happens:** Developer adds `"archive"` to `Action`. TypeScript immediately shows a compile error at `.exhaustive()`. Bug caught before running code.
+
+### ✅ ALSO CORRECT: Explicit else-if with never check
+
+```typescript
+type Action = "add" | "remove" | "update";
+
+function handleAction(action: Action) {
+  if (action === "add") {
+    return doAdd();
+  } else if (action === "remove") {
+    return doRemove();
+  } else if (action === "update") {
+    return doUpdate();
+  }
+
+  // Exhaustive check - TypeScript errors if a case is missing
+  const _exhaustive: never = action;
+  throw new Error(`Unhandled action: ${String(_exhaustive)}`);
+}
+```
+
+## When to Apply This Rule
+
+**Use exhaustive matching when:**
+
+1. ✅ Handling string literal unions (`"add" | "remove" | "update"`)
+2. ✅ Handling enum types (`Status.Pending | Status.Success | Status.Error`)
+3. ✅ Handling discriminated unions with type field
+4. ✅ Handling Zod enum values after parsing
+5. ✅ Cases are known and enumerable at compile time
+
+**Example: Discord command options**
+
+```typescript
+// ❌ BAD: If we add a third action, it falls through to remove
+const action = interaction.options.getString("action", true); // "add" | "remove"
+
+if (action === "add") {
+  await addParticipant();
+} else {
+  await removeParticipant(); // Silently handles any new action!
+}
+
+// ✅ GOOD: New actions cause compile errors
+await match(action)
+  .with("add", async () => await addParticipant())
+  .with("remove", async () => await removeParticipant())
+  .exhaustive(); // Error if we add "update" action!
+```
+
+## When `else` IS Acceptable
+
+Plain `else` blocks are fine for:
+
+### 1. Binary choices (only two possible values)
+
+```typescript
+// ✅ OK - boolean has exactly two values, won't change
+if (isEnabled) {
+  enable();
+} else {
+  disable();
+}
+```
+
+### 2. Truly open-ended defaults
+
+```typescript
+// ✅ OK - handling "all other numbers" is the intent
+if (count === 0) {
+  return "none";
+} else if (count === 1) {
+  return "one";
+} else {
+  return `${count} items`; // Intentionally handles 2, 3, 4, ...
+}
+```
+
+### 3. Presence checks
+
+```typescript
+// ✅ OK - checking if value exists
+if (value) {
+  process(value);
+} else {
+  handleMissing();
+}
+```
+
+## Comparison: else vs else-if vs ts-pattern
+
+| Pattern | Safety | When to Use |
+|---------|--------|-------------|
+| `else` | ❌ Unsafe | Only for binary choices or true defaults |
+| `else if` + `never` | ✅ Safe | Complex logic that ts-pattern can't handle |
+| `ts-pattern` + `.exhaustive()` | ✅ Safe | Simple case handling (preferred) |
+
+## Real-World Examples
+
+### Example 1: Discord Command
+
+```typescript
+// Discord: /competition action:create|edit|delete
+
+// ❌ DANGEROUS
+if (action === "create") {
+  await createCompetition();
+} else if (action === "edit") {
+  await editCompetition();
+} else {
+  await deleteCompetition();  // "archive" would be deleted!
+}
+
+// ✅ SAFE
+await match(action)
+  .with("create", async () => await createCompetition())
+  .with("edit", async () => await editCompetition())
+  .with("delete", async () => await deleteCompetition())
+  .exhaustive();  // Error if we add "archive"
+```
+
+### Example 2: API Response Status
+
+```typescript
+type ApiResponse =
+  | { status: "success"; data: Data }
+  | { status: "error"; error: Error }
+  | { status: "loading" };
+
+// ✅ SAFE with exhaustive check
+function handleResponse(response: ApiResponse): string {
+  if (response.status === "success") {
+    return response.data.toString();
+  } else if (response.status === "error") {
+    return response.error.message;
+  } else if (response.status === "loading") {
+    return "Loading...";
+  }
+
+  const _exhaustive: never = response;
+  throw new Error(`Unhandled status: ${String(_exhaustive)}`);
+}
+```
+
+### Example 3: Competition Lifecycle
+
+```typescript
+type CompetitionStatus = "draft" | "active" | "ended" | "cancelled";
+
+// ✅ SAFE
+function getStatusColor(status: CompetitionStatus): string {
+  if (status === "draft") return "gray";
+  if (status === "active") return "green";
+  if (status === "ended") return "blue";
+  if (status === "cancelled") return "red";
+
+  const _exhaustive: never = status;
+  throw new Error(`Unhandled status: ${String(_exhaustive)}`);
+}
+```
+
+## Code Review Checklist
+
+When reviewing code with if/else chains:
+
+- [ ] Is this handling a discriminated union or enum?
+- [ ] Are there more than 2 possible values?
+- [ ] Could new values be added in the future?
+- [ ] Does the `else` block assume what the value is?
+
+**If yes to all:** Request refactor to exhaustive matching.
+
+## Key Principle
+
+> **Make illegal states unrepresentable, and make unhandled cases uncompilable.**
+
+Use TypeScript's type system to catch bugs at compile time, not runtime.

@@ -1,0 +1,5 @@
+/sdk/*
+!/sdk/package.json
+/**/node_modules/**
+/**/.pnpm-store/**
+/.env

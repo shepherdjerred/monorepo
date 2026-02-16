@@ -202,7 +202,7 @@ pub async fn run_daemon_with_http(
             Arc::clone(&console_state),
             dev_mode,
             db_pool,
-            (*feature_flags_arc).clone(),
+            *feature_flags_arc,
             server_config,
         );
 
@@ -314,7 +314,7 @@ async fn run_http_server(
     use crate::auth::{AuthState, SessionStore, WebAuthnHandler};
 
     // Get bind address from config (CLI → env → TOML → default)
-    let bind_addr = server_config.bind_addr().to_string();
+    let bind_addr = server_config.bind_addr().to_owned();
 
     // Check if auth is explicitly disabled via config
     let auth_disabled = server_config.is_auth_disabled();
@@ -341,7 +341,7 @@ async fn run_http_server(
     let auth_state = if requires_auth {
         // Get WebAuthn origin from config (CLI → env → TOML)
         let rp_origin = match server_config.origin() {
-            Some(origin) => origin.to_string(),
+            Some(origin) => origin.to_owned(),
             None => {
                 anyhow::bail!(
                     "Origin is required for non-localhost bindings\n\
@@ -395,7 +395,7 @@ async fn run_http_server(
             .unwrap_or("localhost");
 
         // RP ID defaults to origin hostname (can be overridden)
-        let rp_id = std::env::var("CLAUDERON_RP_ID").unwrap_or_else(|_| origin_host.to_string());
+        let rp_id = std::env::var("CLAUDERON_RP_ID").unwrap_or_else(|_| origin_host.to_owned());
 
         tracing::info!(
             "WebAuthn configured with origin: {}, RP ID: {}",
@@ -533,7 +533,7 @@ async fn handle_connection(stream: UnixStream, manager: Arc<SessionManager>) -> 
             Err(e) => {
                 tracing::warn!(error = %e, input = %line.trim(), "Failed to parse request");
                 let response = Response::Error {
-                    code: "PARSE_ERROR".to_string(),
+                    code: "PARSE_ERROR".to_owned(),
                     message: e.to_string(),
                 };
                 let json = serde_json::to_string(&response)?;

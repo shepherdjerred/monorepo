@@ -1,0 +1,43 @@
+---
+import type { CollectionEntry } from "astro:content";
+import * as R from "remeda";
+import type { JSX } from "astro/jsx-runtime";
+import LeetCodeEntry from "./LeetCodeEntry.astro";
+import FormattedDate from "@components/FormattedDate.astro";
+
+type Props = {
+  date: Date;
+  entries: CollectionEntry<"leetcode">[];
+};
+
+const { date, entries } = Astro.props;
+
+// create some text that's something like x easy, y medium, z hard
+
+const counts = R.pipe(
+  entries,
+  R.groupBy((entry) => {
+    return entry.id.replace(/\/.*/, "");
+  }),
+  R.entries(),
+  R.map(([difficulty, entries]) => `${entries.length.toString()} ${difficulty}`),
+  R.sortBy((count) => {
+    const [_, difficulty] = count.split(" ");
+    if (difficulty === "easy") return 3;
+    if (difficulty === "medium") return 2;
+    if (difficulty === "hard") return 1;
+    return 0;
+  }),
+  R.join(", ")
+);
+---
+
+<div>
+  <hgroup class="text-black mb-2 bg-white pr-8 pl-8 pt-4 pb-4">
+    <h2 class="text-2xl font-bold"><FormattedDate date={date} /></h2>
+    <p>{entries.length} questions | {counts}</p>
+  </hgroup>
+  <div class="flex flex-col gap-6">
+    {R.map(entries, (entry): JSX.Element => <LeetCodeEntry entry={entry} />)}
+  </div>
+</div>

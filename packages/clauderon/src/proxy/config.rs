@@ -26,7 +26,7 @@ pub struct OnePasswordConfig {
 }
 
 fn default_op_path() -> String {
-    "op".to_string()
+    "op".to_owned()
 }
 
 impl Default for OnePasswordConfig {
@@ -174,17 +174,29 @@ pub struct CodexTokenUpdate {
 /// Credentials for various services.
 #[derive(Debug, Clone)]
 pub struct Credentials {
+    /// GitHub personal access token.
     pub github_token: Option<String>,
+    /// Anthropic OAuth token for Claude API.
     pub anthropic_oauth_token: Option<String>,
+    /// OpenAI API key.
     pub openai_api_key: Option<String>,
+    /// Codex OAuth tokens (access, refresh, id, account).
     pub codex_tokens: Arc<RwLock<CodexTokens>>,
+    /// PagerDuty API token.
     pub pagerduty_token: Option<String>,
+    /// Sentry auth token.
     pub sentry_auth_token: Option<String>,
+    /// Grafana API key.
     pub grafana_api_key: Option<String>,
+    /// npm registry token.
     pub npm_token: Option<String>,
+    /// Docker registry token.
     pub docker_token: Option<String>,
+    /// Kubernetes API token.
     pub k8s_token: Option<String>,
+    /// Talos API token.
     pub talos_token: Option<String>,
+    /// Path to Codex auth.json file.
     pub codex_auth_json_path: Option<PathBuf>,
 }
 
@@ -246,7 +258,7 @@ impl Credentials {
             let path = secrets_dir.join(name);
             std::fs::read_to_string(&path)
                 .ok()
-                .map(|s| s.trim().to_string())
+                .map(|s| s.trim().to_owned())
         };
 
         Self {
@@ -294,9 +306,13 @@ impl Credentials {
             }
             Err(_) => {
                 // No runtime available, create a new one just for this operation
-                let rt = tokio::runtime::Runtime::new()
-                    .expect("Failed to create tokio runtime for credential loading");
-                rt.block_on(Self::load_with_priority(config))
+                match tokio::runtime::Runtime::new() {
+                    Ok(rt) => rt.block_on(Self::load_with_priority(config)),
+                    Err(e) => {
+                        tracing::error!(error = %e, "Failed to create tokio runtime for credential loading");
+                        Self::load_sync(config)
+                    }
+                }
             }
         }
     }
@@ -399,7 +415,7 @@ impl Credentials {
             if let Ok(value) = std::env::var(env_key) {
                 if Self::is_op_reference(&value) {
                     if let Ok(op_ref) = OpReference::parse(&value) {
-                        references.insert(credential_key.to_string(), op_ref);
+                        references.insert(credential_key.to_owned(), op_ref);
                     }
                 }
             }
@@ -585,6 +601,7 @@ impl Credentials {
         }
     }
 
+    /// Get the current Codex access token.
     #[must_use]
     pub fn codex_access_token(&self) -> Option<String> {
         self.codex_tokens
@@ -593,6 +610,7 @@ impl Credentials {
             .and_then(|t| t.access_token.clone())
     }
 
+    /// Get the current Codex refresh token.
     #[must_use]
     pub fn codex_refresh_token(&self) -> Option<String> {
         self.codex_tokens
@@ -601,6 +619,7 @@ impl Credentials {
             .and_then(|t| t.refresh_token.clone())
     }
 
+    /// Get the current Codex account ID.
     #[must_use]
     pub fn codex_account_id(&self) -> Option<String> {
         self.codex_tokens
@@ -617,6 +636,7 @@ impl Credentials {
             .unwrap_or_default()
     }
 
+    /// Update Codex tokens from a token refresh response.
     pub fn update_codex_tokens(&self, update: CodexTokenUpdate) {
         let mut updated_tokens = None;
         if let Ok(mut guard) = self.codex_tokens.write() {
@@ -715,15 +735,15 @@ fn persist_codex_auth_json(
         id_token: tokens
             .id_token
             .clone()
-            .unwrap_or_else(|| "invalid.invalid.invalid".to_string()),
+            .unwrap_or_else(|| "invalid.invalid.invalid".to_owned()),
         access_token: tokens
             .access_token
             .clone()
-            .unwrap_or_else(|| "missing-access-token".to_string()),
+            .unwrap_or_else(|| "missing-access-token".to_owned()),
         refresh_token: tokens
             .refresh_token
             .clone()
-            .unwrap_or_else(|| "missing-refresh-token".to_string()),
+            .unwrap_or_else(|| "missing-refresh-token".to_owned()),
         account_id: tokens.account_id.clone(),
     };
     auth_json.openai_api_key = openai_api_key.cloned();

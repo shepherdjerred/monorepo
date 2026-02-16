@@ -1,0 +1,306 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Mel": {
+      "id": "Mel",
+      "key": "800",
+      "name": "Mel",
+      "title": "the Soul's Reflection",
+      "image": {
+        "full": "Mel.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 48,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "800000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "800001",
+          "num": 1,
+          "name": "Arcane Councilor Mel",
+          "chromas": true
+        },
+        {
+          "id": "800010",
+          "num": 10,
+          "name": "Prestige Winterblessed Mel",
+          "chromas": true
+        }
+      ],
+      "lore": "Mel Medarda is the presumed heir of the Medarda family, once one of the most powerful in Noxus. In appearance she is a graceful aristocrat, but beneath the surface lies a skilled politician who makes it her business to know everything about everyone she meets. After an encounter with the mysterious Black Rose, Mel discovered the depths of her mother's deception and, for once, faced a situation potentially beyond her control. With newly awakened magical abilities, she sailed home in search of answers—and though many still seek to temper the light within her, Mel's soul remains forever defiant.",
+      "blurb": "Mel Medarda is the presumed heir of the Medarda family, once one of the most powerful in Noxus. In appearance she is a graceful aristocrat, but beneath the surface lies a skilled politician who makes it her business to know everything about everyone she...",
+      "allytips": [
+        "Mel can reflect enemy projectiles, including powerful spells. Wait until she casts Rebuttal before throwing powerful projectiles her way.",
+        "The more Mel hits you, the more Overwhelm stacks she applies. If your health drops too low her next hit will kill you, so back off for a couple seconds to let the Overwhelm stacks fall off."
+      ],
+      "enemytips": [
+        "Mel can reflect enemy projectiles, including powerful spells. Wait until she casts Rebuttal before throwing powerful projectiles her way.",
+        "The more Mel hits you, the more Overwhelm stacks she applies. If your health drops too low her next hit will kill you, so back off for a couple seconds to let the Overwhelm stacks fall off."
+      ],
+      "tags": ["Mage", "Support"],
+      "partype": "Mana",
+      "info": {
+        "attack": 2,
+        "defense": 4,
+        "magic": 9,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 630,
+        "hpperlevel": 93,
+        "mp": 480,
+        "mpperlevel": 28,
+        "movespeed": 330,
+        "armor": 21,
+        "armorperlevel": 5.2,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 550,
+        "hpregen": 6,
+        "hpregenperlevel": 0.55,
+        "mpregen": 9,
+        "mpregenperlevel": 0.9,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 54,
+        "attackdamageperlevel": 3.3,
+        "attackspeedperlevel": 2.5,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "MelQ",
+          "name": "Radiant Volley",
+          "description": "Mel fires a barrage of projectiles that explode around a target location, dealing damage repeatedly to enemies within the area.",
+          "tooltip": "Mel unleashes a barrage of {{ explosioncount }} projectiles that explode in the area around a target location.<br /><br />The first explosion hit deals <magicDamage>{{ initialexplosiondamage }} magic damage</magicDamage> and each subsequent explosion deals <magicDamage>{{ totalexplosiondamage }} magic damage</magicDamage>, adding up to <magicDamage>{{ alldamagehit }} magic damage</magicDamage> total.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Initial Damage", "Explosion Damage", "Explosion Count", "Cooldown", "Mana Cost"],
+            "effect": [
+              "{{ initialdamage }} -> {{ initialdamageNL }}",
+              "{{ explosiondamage }} -> {{ explosiondamageNL }}",
+              "{{ explosioncount }} -> {{ explosioncountNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [10, 9, 8, 7, 6],
+          "cooldownBurn": "10/9/8/7/6",
+          "cost": [70, 75, 80, 85, 90],
+          "costBurn": "70/75/80/85/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [950, 950, 950, 950, 950],
+          "rangeBurn": "950",
+          "image": {
+            "full": "MelQ.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 96,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "MelW",
+          "name": "Rebuttal",
+          "description": "Mel forms a barrier around herself that reflects enemy projectiles back at the attacker, prevents her from taking damage, and grants her movement speed.",
+          "tooltip": "Mel forms a barrier around herself that reflects projectiles from enemy champions, gaining <shield>{{ shieldamount }} Shields</shield> for {{ duration }} seconds and <speed>{{ movespeed*100 }}% decaying Move Speed</speed> for {{ movespeedduration }} seconds.<br /><br />Reflected projectiles deal <magicDamage>{{ damagepercent }} original damage as magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Reflected Damage", "Shield Amount", "Cooldown", "Mana Cost"],
+            "effect": [
+              "{{ basedamagepercent*100.000000 }}% -> {{ basedamagepercentnl*100.000000 }}%",
+              "{{ baseshieldamount }} -> {{ baseshieldamountNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [35, 32, 29, 26, 23],
+          "cooldownBurn": "35/32/29/26/23",
+          "cost": [80, 60, 40, 20, 0],
+          "costBurn": "80/60/40/20/0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [250, 250, 250, 250, 250],
+          "rangeBurn": "250",
+          "image": {
+            "full": "MelW.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 144,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "MelE",
+          "name": "Solar Snare",
+          "description": "Mel fires a radiant orb forward, rooting those at its center while the area around it slows enemies and deals damage over time.",
+          "tooltip": "Mel fires a radiating orb, <status>Rooting</status> enemies at its center for {{ rootduration }} seconds and dealing <magicDamage>{{ damage }} magic damage</magicDamage>.<br /><br />The orb builds up a hostile area around it that <status>Slows</status> enemies by {{ areaslowamount*100 }}% and deals <magicDamage>{{ areadamagepersecond }} magic damage per second</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Damage Per Second", "Cooldown", "Mana Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ baseareadamage }} -> {{ baseareadamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [11, 10.5, 10, 9.5, 9],
+          "cooldownBurn": "11/10.5/10/9.5/9",
+          "cost": [50, 60, 70, 80, 90],
+          "costBurn": "50/60/70/80/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1000, 1000, 1000, 1000, 1000],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "MelE.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 192,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "MelR",
+          "name": "Golden Eclipse",
+          "description": "Mel strikes all enemies marked with Overwhelm regardless of their distance from her, dealing additional damage for each stack of Overwhelm.<br><br>Ranks of Golden Eclipse increase Overwhelm's damage.",
+          "tooltip": "<spellPassive>Passive</spellPassive>: <keywordMajor>Overwhelm</keywordMajor> damage is increased to <magicDamage>{{ passiveflatdamage }} magic damage plus {{ passivestackdamage }} magic damage per stack</magicDamage>.<br /><br /><spellActive>Active</spellActive>: Mel unleashes her power on all enemies affected by <keywordMajor>Overwhelm</keywordMajor>, dealing <magicDamage>{{ ultflatdamage }} magic damage plus {{ ultstackdamage }} magic damage per <keywordMajor>Overwhelm</keywordMajor> stack</magicDamage>.<br /><br /><rules>Can only be cast when an enemy champion is affected by <keywordMajor>Overwhelm</keywordMajor>.</rules>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "<spellName>Golden Eclipse</spellName> Flat Damage",
+              "<spellName>Golden Eclipse</spellName> Stack Damage",
+              "Cooldown",
+              "<keywordMajor>Overwhelm</keywordMajor> Flat Damage",
+              "<keywordMajor>Overwhelm</keywordMajor> Stack Damage"
+            ],
+            "effect": [
+              "{{ baseultflatdamage }} -> {{ baseultflatdamageNL }}",
+              "{{ baseultstackdamage }} -> {{ baseultstackdamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basepassiveflatdamage }} -> {{ basepassiveflatdamageNL }}",
+              "{{ basepassivestackdamage }} -> {{ basepassivestackdamageNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 100, 80],
+          "cooldownBurn": "120/100/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [25000, 25000, 25000],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "MelR.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 240,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Searing Brilliance",
+        "description": "Whenever Mel uses an ability, she gains three bonus projectiles (up to nine maximum) on her next attack.<br><br>When Mel deals damage through an ability or attack, she applies Overwhelm, which can stack infinitely. If the enemy is hit by Mel with enough Overwhelm damage, the stacks are consumed to execute the target.",
+        "image": {
+          "full": "Mel_Passive.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 48,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

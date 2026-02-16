@@ -1,0 +1,374 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Fiora": {
+      "id": "Fiora",
+      "key": "114",
+      "name": "Fiora",
+      "title": "the Grand Duelist",
+      "image": {
+        "full": "Fiora.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 192,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "114000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "114001",
+          "num": 1,
+          "name": "Royal Guard Fiora",
+          "chromas": false
+        },
+        {
+          "id": "114002",
+          "num": 2,
+          "name": "Nightraven Fiora",
+          "chromas": false
+        },
+        {
+          "id": "114003",
+          "num": 3,
+          "name": "Headmistress Fiora",
+          "chromas": true
+        },
+        {
+          "id": "114004",
+          "num": 4,
+          "name": "PROJECT: Fiora",
+          "chromas": true
+        },
+        {
+          "id": "114005",
+          "num": 5,
+          "name": "Pool Party Fiora",
+          "chromas": true
+        },
+        {
+          "id": "114022",
+          "num": 22,
+          "name": "Soaring Sword Fiora",
+          "chromas": false
+        },
+        {
+          "id": "114023",
+          "num": 23,
+          "name": "Heartpiercer Fiora",
+          "chromas": true
+        },
+        {
+          "id": "114031",
+          "num": 31,
+          "name": "iG Fiora",
+          "chromas": true
+        },
+        {
+          "id": "114041",
+          "num": 41,
+          "name": "Pulsefire Fiora",
+          "chromas": false
+        },
+        {
+          "id": "114050",
+          "num": 50,
+          "name": "Lunar Beast Fiora",
+          "chromas": false
+        },
+        {
+          "id": "114051",
+          "num": 51,
+          "name": "Prestige Lunar Beast Fiora",
+          "chromas": false
+        },
+        {
+          "id": "114060",
+          "num": 60,
+          "name": "Bewitching Fiora",
+          "chromas": false
+        },
+        {
+          "id": "114069",
+          "num": 69,
+          "name": "Faerie Court Fiora",
+          "chromas": true
+        },
+        {
+          "id": "114080",
+          "num": 80,
+          "name": "Dragonmancer Fiora",
+          "chromas": false
+        },
+        {
+          "id": "114089",
+          "num": 89,
+          "name": "Battle Queen Fiora",
+          "chromas": true
+        },
+        {
+          "id": "114098",
+          "num": 98,
+          "name": "Victorious Fiora",
+          "chromas": true
+        }
+      ],
+      "lore": "The most feared duelist in all Valoran, Fiora is as renowned for her brusque manner and cunning mind as she is for the speed of her bluesteel rapier. Born to House Laurent in the kingdom of Demacia, Fiora took control of the family from her father in the wake of a scandal that nearly destroyed them. House Laurent's reputation was sundered, but Fiora bends her every effort to restore her family's honor and return them to their rightful place among the great and good of Demacia.",
+      "blurb": "The most feared duelist in all Valoran, Fiora is as renowned for her brusque manner and cunning mind as she is for the speed of her bluesteel rapier. Born to House Laurent in the kingdom of Demacia, Fiora took control of the family from her father in...",
+      "allytips": [
+        "Thanks to Duelist's Dance, Fiora excels at quick trades. Use the Move Speed boost from striking a Vital to escape unscathed or set up for the next one.",
+        "Grand Challenge allows Fiora to take down even the most durable opponents and then recover if successful, so do not hesitate to attack the enemy's front line."
+      ],
+      "enemytips": [
+        "Duelist's Dance shows you where Fiora will try to attack from, so be ready to punish her when she tries.",
+        "Be careful when casting immobilizing disables on Fiora. If her Riposte is available, she can turn their power against you."
+      ],
+      "tags": ["Fighter", "Assassin"],
+      "partype": "Mana",
+      "info": {
+        "attack": 10,
+        "defense": 4,
+        "magic": 2,
+        "difficulty": 3
+      },
+      "stats": {
+        "hp": 620,
+        "hpperlevel": 99,
+        "mp": 300,
+        "mpperlevel": 60,
+        "movespeed": 345,
+        "armor": 33,
+        "armorperlevel": 4.7,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 150,
+        "hpregen": 8.5,
+        "hpregenperlevel": 0.55,
+        "mpregen": 8,
+        "mpregenperlevel": 0.7,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 66,
+        "attackdamageperlevel": 3.3,
+        "attackspeedperlevel": 3.2,
+        "attackspeed": 0.69
+      },
+      "spells": [
+        {
+          "id": "FioraQ",
+          "name": "Lunge",
+          "description": "Fiora lunges in a direction and stabs a nearby enemy, dealing physical damage and applying on-hit effects.",
+          "tooltip": "Fiora lunges in a direction and stabs the closest enemy, ward, or structure, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. The strike will prioritize <keywordMajor>Vitals</keywordMajor> and enemies it will kill.<br /><br />If Fiora strikes an enemy, this Ability's Cooldown is reduced by {{ cdrefundpercent*100 }}%.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Bonus AD Ratio", "Cooldown"],
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ badratio*100.000000 }}% -> {{ badrationl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [13, 11.25, 9.5, 7.75, 6],
+          "cooldownBurn": "13/11.25/9.5/7.75/6",
+          "cost": [20, 20, 20, 20, 20],
+          "costBurn": "20",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [400, 400, 400, 400, 400],
+          "rangeBurn": "400",
+          "image": {
+            "full": "FioraQ.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 192,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "FioraW",
+          "name": "Riposte",
+          "description": "Fiora parries all incoming damage and disables for a short time, then stabs in a direction. This stab slows the first enemy champion hit, or stuns them if Fiora blocked an immobilizing effect with this ability.",
+          "tooltip": "Fiora parries all incoming damage, disables, and negative effects for {{ parryduration }} seconds, then stabs. The stab deals <magicDamage>{{ stabdamage }} magic damage</magicDamage> to the first champion hit and <status>Slows</status> <speed>Move Speed</speed> by {{ msslowpercent*-100 }}%<attackSpeed> and Attack Speed by {{ attackslowpercent*-100 }}% </attackSpeed> for {{ ccduration }} seconds. If Fiora parries an <status>Immobilizing</status> effect, the stabbed enemy is <status>Stunned</status> rather than <status>Slowed</status>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [24, 22, 20, 18, 16],
+          "cooldownBurn": "24/22/20/18/16",
+          "cost": [50, 50, 50, 50, 50],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [750, 750, 750, 750, 750],
+          "rangeBurn": "750",
+          "image": {
+            "full": "FioraW.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 240,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "FioraE",
+          "name": "Bladework",
+          "description": "Fiora has increased attack speed for the next two attacks. The first attack slows the target, and the second attack will critically strike.",
+          "tooltip": "Fiora gains <attackSpeed>{{ aspercent*100 }}% Attack Speed</attackSpeed> for her next two Attacks. The first Attack <status>Slows</status> by {{ slowpercent*-100 }}% for {{ slowduration }} second. The second Attack always critically strikes for <physicalDamage>{{ attacktwopercenttad*100 }}% damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Critical Strike Damage", "Cooldown", "Attack Speed"],
+            "effect": [
+              "{{ attacktwopercenttad*100.000000 }}% -> {{ attacktwopercenttadnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ aspercent*100.000000 }}% -> {{ aspercentnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [11, 10, 9, 8, 7],
+          "cooldownBurn": "11/10/9/8/7",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [425, 425, 425, 425, 425],
+          "rangeBurn": "425",
+          "image": {
+            "full": "FioraE.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 288,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "FioraR",
+          "name": "Grand Challenge",
+          "description": "Fiora reveals all four Vitals on an enemy champion and gains Move Speed while near them. If Fiora hits all four Vitals or if the target dies after she has hit at least one, Fiora and her allies in the area are healed over the next few seconds.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> <spellName>Duelist's Dance</spellName> <speed>Move Speed</speed> bonus is increased to {{ percentms*100 }}%.<br /><br /><spellActive>Active:</spellActive> Fiora reveals all four <keywordMajor>Vitals</keywordMajor> on a champion for a max of <trueDamage>{{ spell.fiorapassive:rdamagetotal }} max Health true damage</trueDamage> and gains <spellName>Duelist's Dance's</spellName> <speed>Move Speed</speed> bonus while near the target.<br /><br />If Fiora strikes all four <keywordMajor>Vitals</keywordMajor> within {{ markduration }} seconds or if the target dies after she has hit at least one, Fiora restores <healing>{{ healpersecondcalc }} Health per second</healing> to surrounding allied champions for {{ healduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Duelist Move Speed", "Heal Per Second"],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ percentms*100.000000 }}% -> {{ percentmsnl*100.000000 }}%",
+              "{{ healpersecond }} -> {{ healpersecondNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [110, 90, 70],
+          "cooldownBurn": "110/90/70",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [500, 500, 500],
+          "rangeBurn": "500",
+          "image": {
+            "full": "FioraR.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 336,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Duelist's Dance",
+        "description": "Fiora has revealed a <keywordMajor>Vital</keywordMajor> on this Champion. If she hits the <keywordMajor>Vital</keywordMajor>, she <healing>restores Health</healing> and gains <speed>Move Speed</speed>.",
+        "image": {
+          "full": "Fiora_P.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 192,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

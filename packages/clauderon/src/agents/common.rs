@@ -30,6 +30,7 @@ const IDLE_PATTERNS: &[&str] = &[
 ];
 
 /// Common logic for AI agent adapters
+#[derive(Debug, Copy, Clone)]
 pub struct CommonAgentLogic {
     /// Timestamp of last detected activity
     last_activity: Instant,

@@ -1,0 +1,118 @@
+---
+title: Discord Plays Pokémon
+description: How I build Discord Plays Pokémon
+date: 2024-10-14Z-0700
+---
+
+import demo from "./pokemon/demo2.mp4";
+
+This is a half-baked post I decided to publish because it was clear I wasn't ever going to finish it. You can find the source code of this project on [GitHub](https://github.com/shepherdjerred/discord-plays-pokemon).
+
+## Idea
+
+Twitch Plays Pokémon, but for Discord
+
+<figure>
+  <video controls>
+    <source src={demo} type="video/mp4" />
+  </video>
+  <figcaption>Demo</figcaption>
+</figure>
+
+## Prior Art
+
+- https://github.com/DrSkunk/discord-plays-pokemon (takes screenshots, no video)
+- https://github.com/mabotkin/discord-plays-pokemon (sends video to a web interface, not Discord)
+
+## Technical goals
+
+- Low-cost to deploy on AWS.
+  - It therefore shouldn't require many cores or a GPU
+- Require as few dependencies on the host as possible.
+- 100% automation, no manual action required.
+
+## Challenges
+
+- Discord doesn't have a way for bots to stream video (there are APIs for audio), so we must use a "selfbot" or a "userbot". This is against Discord's terms of service, but it's the only way forward. There are also no documented APIs for this.
+  - https://github.com/discord/discord-api-docs/issues/1995#issuecomment-678550660
+  - If Discord had an official API, this would've been a lot easier. I didn't want to rely on an unofficial API because it would be prone to breakage.
+
+## Initial approach - webcam
+
+Use a headful browser (Chrome) running Pokémon with [EmulatorJS](https://emulatorjs.org/). Stream the video of headless browser to Discord. Use the stream video as a webcam input and pipe the audio as a microphone input.
+
+- Create a virtual display using `xvfb` and `xvfb-run`: https://github.com/shepherdjerred/discord-plays-pokemon/blob/b8b67522ca05e0dd37c740741d7a94569d372a69/Dockerfile#L21-L25
+- Use `ffmpeg` and `v4l2loopback` to create a virtual webcam device with v4l2: https://github.com/shepherdjerred/discord-plays-pokemon/blob/b8b67522ca05e0dd37c740741d7a94569d372a69/load.sh#L16
+- Stream emulator output to the virtual webcam using `ffmpeg`: https://github.com/shepherdjerred/discord-plays-pokemon/blob/b8b67522ca05e0dd37c740741d7a94569d372a69/src/emulator.ts#L31-L42
+- Turn on camera in Discord: https://github.com/shepherdjerred/discord-plays-pokemon/blob/b8b67522ca05e0dd37c740741d7a94569d372a69/src/discord.ts#L46
+
+This would require that the host could install kernel modules since there is a dependency on [DKMS](https://en.wikipedia.org/wiki/Dynamic_Kernel_Module_Support).
+
+### Result
+
+I was able to get audio working, but not video.
+
+## Pivoting - using screen share
+
+I really wanted to get the webcam approach working because it felt relatively elegant, but I knew I could get it done quicker if I compromised. I used a real desktop environment with xvfb and no webcam. I used Discord's screen share functionality instead.
+
+- https://github.com/shepherdjerred/discord-plays-pokemon/commit/f54df7233a15f16001428b6180ebbee9f15096a9
+- https://github.com/shepherdjerred/discord-plays-pokemon/commit/fe5c4ed5e110a253ff214676513469a2342497bb
+
+After about two hours of effort, this yielded a working albeit slow proof-of-concept. xvfb is not hardware accelerated, so everything is happenning in software. This is a problem when you are encoding video. The application worked, but it was unacceptable slow. Even the audio was significantly delayed. I tried downsizing the resolution from 1280x720 to 640x576, but it was still too slow.
+
+## Make it fast - hardware acceleration
+
+Next, I needed to make the application fast.
+
+Attempting GPU acceleration with Nvidia and Chrome
+
+- https://github.com/shepherdjerred/discord-plays-pokemon/commit/301cf153dd49f53d942e41a78eee6f4707476588
+- https://github.com/shepherdjerred/discord-plays-pokemon/commit/4c4843ece8777e27eb22de99df74de66700e6306
+
+```bash
+      "--disable-software-rasterizer",
+      "--disable-frame-rate-limit",
+      "--disable-gpu-driver-bug-workarounds",
+      "--disable-gpu-driver-workarounds",
+      "--disable-gpu-vsync",
+      "--enable-accelerated-2d-canvas",
+      "--enable-accelerated-video-decode",
+      "--enable-accelerated-mjpeg-decode",
+      "--enable-unsafe-webgpu",
+      "--enable-features=Vulkan,UseSkiaRenderer,VaapiVideoEncoder,VaapiVideoDecoder,CanvasOopRasterization",
+      "--disable-features=UseOzonePlatform,UseChromeOSDirectVideoDecoder",
+      "--enable-gpu-compositing",
+      "--enable-native-gpu-memory-buffers",
+      "--enable-gpu-rasterization",
+      "--enable-oop-rasterization",
+      "--enable-raw-draw",
+      "--enable-zero-copy",
+      "--ignore-gpu-blocklist",
+      "--use-gl=desktop"
+```
+
+Selkies: https://github.com/shepherdjerred/discord-plays-pokemon/commit/f510a9f000ea2f143a1a83ec1590d8f84f4a9db5
+
+Chrome didn't support Web RTC hardware acceleration on Linux, but Firefox did
+
+- https://github.com/shepherdjerred/discord-plays-pokemon/commit/082fa39ce9dfc7fb0e1df7817fe7dc5e958cb62e
+
+Switch to Selenium due to Puppeteer limitations:
+
+- https://github.com/shepherdjerred/discord-plays-pokemon/commit/7696cbe9a92641e33470ddd8411fea408b189076
+
+## Polish
+
+- Disable screensaver
+- Auto-saving
+- Auto-loading game
+- Auto-loading most recent save
+- Turning bot off during inactivity
+- Web interface
+- Automatically setting Discord preferences for audio/video
+- Fully automating the process
+
+## Resources
+
+- https://aixxe.net/2021/04/discord-video-bot

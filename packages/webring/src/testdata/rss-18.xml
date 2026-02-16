@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+  <link href="https://explained-from-first-principles.com/feed.xml" rel="self" type="application/atom+xml"/>
+  <link href="https://explained-from-first-principles.com/" rel="alternate" type="text/html" hreflang="en"/>
+  <updated>2024-06-03T16:30:05+00:00</updated>
+  <id>https://explained-from-first-principles.com/feed.xml</id>
+  <title>Explained from First Principles</title>
+  <subtitle>Explained from First Principles is a technology, science, and philosophy blog for curious people.</subtitle>
+  <author>
+    <name>Kaspar Etter</name>
+    <email>contact@ef1p.com</email>
+  </author>
+  
+  <entry>
+    <title>Number theory explained from first principles</title>
+    <link href="https://explained-from-first-principles.com/number-theory/" rel="alternate" type="text/html" title="Number theory explained from first principles"/>
+    <published>2022-09-17T00:00:00+00:00</published>
+    <updated>2023-02-27T00:00:00+00:00</updated>
+    <id>https://explained-from-first-principles.com/number-theory/</id>
+    <category term="Mathematics"/>
+    <summary>A lot of modern cryptography builds on insights from number theory, which has been studied for centuries.</summary>
+    <media:thumbnail url="https://explained-from-first-principles.com/pages/number-theory/generated/thumbnail.png" xmlns:media="http://search.yahoo.com/mrss/"/>
+    <media:content medium="image" url="https://explained-from-first-principles.com/pages/number-theory/generated/thumbnail.png" xmlns:media="http://search.yahoo.com/mrss/"/>
+  </entry>
+  
+  <entry>
+    <title>Email explained from first principles</title>
+    <link href="https://explained-from-first-principles.com/email/" rel="alternate" type="text/html" title="Email explained from first principles"/>
+    <published>2021-05-07T00:00:00+00:00</published>
+    <updated>2022-12-09T00:00:00+00:00</updated>
+    <id>https://explained-from-first-principles.com/email/</id>
+    <category term="Technologies"/>
+    <summary>Modern email is a patchwork of protocols and extensions. Here is one article to understand them all.</summary>
+    <media:thumbnail url="https://explained-from-first-principles.com/pages/email/generated/thumbnail.png" xmlns:media="http://search.yahoo.com/mrss/"/>
+    <media:content medium="image" url="https://explained-from-first-principles.com/pages/email/generated/thumbnail.png" xmlns:media="http://search.yahoo.com/mrss/"/>
+  </entry>
+  
+  <entry>
+    <title>The Internet explained from first principles</title>
+    <link href="https://explained-from-first-principles.com/internet/" rel="alternate" type="text/html" title="The Internet explained from first principles"/>
+    <published>2020-08-05T00:00:00+00:00</published>
+    <updated>2021-10-21T00:00:00+00:00</updated>
+    <id>https://explained-from-first-principles.com/internet/</id>
+    <category term="Technologies"/>
+    <summary>Learn more about this critical infrastructure, which you likely use for hours every day.</summary>
+    <media:thumbnail url="https://explained-from-first-principles.com/pages/internet/generated/thumbnail.png" xmlns:media="http://search.yahoo.com/mrss/"/>
+    <media:content medium="image" url="https://explained-from-first-principles.com/pages/internet/generated/thumbnail.png" xmlns:media="http://search.yahoo.com/mrss/"/>
+  </entry>
+  
+</feed>

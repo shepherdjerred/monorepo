@@ -1,0 +1,379 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Janna": {
+      "id": "Janna",
+      "key": "40",
+      "name": "Janna",
+      "title": "the Storm's Fury",
+      "image": {
+        "full": "Janna.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 432,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "40000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "40001",
+          "num": 1,
+          "name": "Tempest Janna",
+          "chromas": false
+        },
+        {
+          "id": "40002",
+          "num": 2,
+          "name": "Hextech Janna",
+          "chromas": false
+        },
+        {
+          "id": "40003",
+          "num": 3,
+          "name": "Frost Queen Janna",
+          "chromas": false
+        },
+        {
+          "id": "40004",
+          "num": 4,
+          "name": "Victorious Janna",
+          "chromas": false
+        },
+        {
+          "id": "40005",
+          "num": 5,
+          "name": "Forecast Janna",
+          "chromas": false
+        },
+        {
+          "id": "40006",
+          "num": 6,
+          "name": "Fnatic Janna",
+          "chromas": false
+        },
+        {
+          "id": "40007",
+          "num": 7,
+          "name": "Star Guardian Janna",
+          "chromas": false
+        },
+        {
+          "id": "40008",
+          "num": 8,
+          "name": "Sacred Sword Janna",
+          "chromas": true
+        },
+        {
+          "id": "40013",
+          "num": 13,
+          "name": "Bewitching Janna",
+          "chromas": true
+        },
+        {
+          "id": "40020",
+          "num": 20,
+          "name": "Guardian of the Sands Janna",
+          "chromas": true
+        },
+        {
+          "id": "40027",
+          "num": 27,
+          "name": "Battle Queen Janna",
+          "chromas": true
+        },
+        {
+          "id": "40036",
+          "num": 36,
+          "name": "Crystal Rose Janna",
+          "chromas": true
+        },
+        {
+          "id": "40045",
+          "num": 45,
+          "name": "Cyber Halo Janna",
+          "chromas": true
+        },
+        {
+          "id": "40046",
+          "num": 46,
+          "name": "Prestige Cyber Halo Janna",
+          "chromas": false
+        },
+        {
+          "id": "40056",
+          "num": 56,
+          "name": "Heavenscale Janna",
+          "chromas": true
+        },
+        {
+          "id": "40066",
+          "num": 66,
+          "name": "Dawnbringer Janna",
+          "chromas": false
+        }
+      ],
+      "lore": "Armed with the power of Runeterra's gales, Janna is a mysterious, elemental wind spirit who protects the dispossessed of Zaun. Some believe she was brought into existence by the pleas of Runeterra's sailors who prayed for fair winds as they navigated treacherous waters and braved rough tempests. Her favor and protection has since been called into the depths of Zaun, where Janna has become a beacon of hope to those in need. No one knows where or when she will appear, but more often than not, she's come to help.",
+      "blurb": "Armed with the power of Runeterra's gales, Janna is a mysterious, elemental wind spirit who protects the dispossessed of Zaun. Some believe she was brought into existence by the pleas of Runeterra's sailors who prayed for fair winds as they navigated...",
+      "allytips": [
+        "Eye of the Storm can be used on allied turrets.",
+        "Quickly firing a Howling Gale without the charge up can be used to heavily disable the other team.",
+        "Timing Janna's ultimate can push enemies away from a wounded ally or even separate enemies."
+      ],
+      "enemytips": [
+        "Save an interrupt ability for when Janna uses her ultimate.",
+        "Listen for the charge up sound on Howling Gale in case Janna is trying to hit you with it from off screen or from brush.",
+        "Janna's at her strongest when buffing another ally. If you can harass her ally, it will weaken her ability to fight you."
+      ],
+      "tags": ["Support", "Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 3,
+        "defense": 5,
+        "magic": 7,
+        "difficulty": 7
+      },
+      "stats": {
+        "hp": 570,
+        "hpperlevel": 90,
+        "mp": 360,
+        "mpperlevel": 50,
+        "movespeed": 325,
+        "armor": 28,
+        "armorperlevel": 4.5,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 550,
+        "hpregen": 5.5,
+        "hpregenperlevel": 0.55,
+        "mpregen": 11.5,
+        "mpregenperlevel": 0.4,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 47,
+        "attackdamageperlevel": 2.5,
+        "attackspeedperlevel": 3,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "HowlingGale",
+          "name": "Howling Gale",
+          "description": "By creating a localized change in pressure and temperature, Janna is able to create a small storm that grows in size with time. She can activate the spell again to release the storm. On release this storm will fly towards the direction it was cast in, dealing damage and knocking away any enemies in its path.",
+          "tooltip": "Janna summons a tornado that grows stronger over {{ maxduration }} seconds then blows along its path. It deals <magicDamage>{{ minimumdamage }} - {{ maxdamage }} magic damage</magicDamage> and <status>Knocks Up</status> for {{ baseknockup }} - {{ maxknockup }} seconds. The distance, damage, and <status>Knock Up</status> duration increase based on how much the tornado grew. Janna can <recast>Recast</recast> to send the tornado early.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Damage Per Second Charged", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ mindamage }} -> {{ mindamageNL }}",
+              "{{ bonusdamage }} -> {{ bonusdamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 14, 14, 14, 14],
+          "cooldownBurn": "14",
+          "cost": [90, 95, 100, 105, 110],
+          "costBurn": "90/95/100/105/110",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1075, 1075, 1075, 1075, 1075],
+          "rangeBurn": "1075",
+          "image": {
+            "full": "HowlingGale.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 192,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SowTheWind",
+          "name": "Zephyr",
+          "description": "Janna summons an air elemental that passively increases her Move Speed and enables her to pass through units. She may also activate this ability to deal damage and slow an enemy's Move Speed.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Janna gains <speed>{{ totalms }} Move Speed</speed> and is Ghosted.<br /><br /><spellActive>Active:</spellActive> Janna's elemental strikes an enemy, <status>Slowing</status> them by {{ totalslow }} for {{ slowduration }} seconds, and dealing <magicDamage>{{ totaldamage }} + {{ spell.tailwindself:bonusdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow", "Passive Move Speed", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowpercent }}% -> {{ slowpercentNL }}%",
+              "{{ mspercent*100.000000 }}% -> {{ mspercentnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldownBurn": "8/7.5/7/6.5/6",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [4294967295, 4294967295, 4294967295, 4294967295, 4294967295],
+          "rangeBurn": "4294967295",
+          "image": {
+            "full": "SowTheWind.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 240,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "EyeOfTheStorm",
+          "name": "Eye Of The Storm",
+          "description": "Janna conjures a defensive gale that shields an ally champion or turret from incoming damage and increases their Attack Damage.",
+          "tooltip": "Janna grants an ally champion or turret <shield>{{ totalshield }} Shield</shield> for {{ shieldduration }} seconds. While shielded, they gain <scaleAD>{{ totalad }} Attack Damage</scaleAD>.<br /><br />Janna refunds {{ ecdrefundforcc*100 }}% of the cooldown whenever she impairs an enemy champion's movement with an Ability.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Shield Health", "Attack Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ baseshield }} -> {{ baseshieldNL }}",
+              "{{ bonusad }} -> {{ bonusadNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [16, 15, 14, 13, 12],
+          "cooldownBurn": "16/15/14/13/12",
+          "cost": [70, 75, 80, 85, 90],
+          "costBurn": "70/75/80/85/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [800, 800, 800, 800, 800],
+          "rangeBurn": "800",
+          "image": {
+            "full": "EyeOfTheStorm.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 288,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "ReapTheWhirlwind",
+          "name": "Monsoon",
+          "description": "Janna surrounds herself in a magical storm, throwing enemies back. After the storm has settled, soothing winds heal nearby allies while the ability is active.",
+          "tooltip": "Janna summons a magical monsoon, <status>Knocking Back</status> nearby enemies then healing nearby allies for <healing>{{ totalheal }} Health</healing> over {{ e3 }} seconds. Moving or using an Ability ends the monsoon early.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Heal Per Second", "Cooldown"],
+            "effect": ["{{ healbasepersecond }} -> {{ healbasepersecondNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [130, 115, 100],
+          "cooldownBurn": "130/115/100",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [300, 450, 600],
+            [3, 3, 3],
+            [700, 700, 700],
+            [875, 875, 875],
+            [875, 875, 875],
+            [1200, 1200, 1200],
+            [10, 10, 10],
+            [0.5, 0.5, 0.5],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "300/450/600", "3", "700", "875", "875", "1200", "10", "0.5", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [725, 725, 725],
+          "rangeBurn": "725",
+          "image": {
+            "full": "ReapTheWhirlwind.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 336,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Tailwind",
+        "description": "Janna's allies gain Move Speed moving towards her.<br><br>Janna deals a portion of bonus Move Speed as bonus magic damage on hit and with Zephyr.",
+        "image": {
+          "full": "JannaP.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 432,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

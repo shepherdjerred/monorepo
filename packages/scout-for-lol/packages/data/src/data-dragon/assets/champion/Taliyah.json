@@ -1,0 +1,312 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Taliyah": {
+      "id": "Taliyah",
+      "key": "163",
+      "name": "Taliyah",
+      "title": "the Stoneweaver",
+      "image": {
+        "full": "Taliyah.png",
+        "sprite": "champion4.png",
+        "group": "champion",
+        "x": 144,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "163000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "163001",
+          "num": 1,
+          "name": "Freljord Taliyah",
+          "chromas": false
+        },
+        {
+          "id": "163002",
+          "num": 2,
+          "name": "SSG Taliyah",
+          "chromas": true
+        },
+        {
+          "id": "163003",
+          "num": 3,
+          "name": "Pool Party Taliyah",
+          "chromas": true
+        },
+        {
+          "id": "163011",
+          "num": 11,
+          "name": "Star Guardian Taliyah",
+          "chromas": true
+        },
+        {
+          "id": "163021",
+          "num": 21,
+          "name": "Crystalis Motus Taliyah",
+          "chromas": true
+        },
+        {
+          "id": "163024",
+          "num": 24,
+          "name": "Durand's Legacy Taliyah",
+          "chromas": false
+        }
+      ],
+      "lore": "Taliyah is a nomadic mage from Shurima, torn between teenage wonder and adult responsibility. She has crossed nearly all of Valoran on a journey to learn the true nature of her growing powers, though more recently she has returned to protect her tribe. Some have mistaken her compassion for weakness and paid the ultimate price—for beneath Taliyah's youthful demeanor is a will strong enough to move mountains, and a spirit fierce enough to make the earth itself tremble.",
+      "blurb": "Taliyah is a nomadic mage from Shurima, torn between teenage wonder and adult responsibility. She has crossed nearly all of Valoran on a journey to learn the true nature of her growing powers, though more recently she has returned to protect her tribe...",
+      "allytips": [
+        "Try to throw enemies into Unraveled Earth using Seismic Shove.",
+        "Remember, you don't always have to ride Weaver's Wall.",
+        "Once you have Rylai's Crystal Scepter, casting Threaded Volley at enemies chasing you is a great way of making them regret everything."
+      ],
+      "enemytips": [
+        "When Taliyah casts Unraveled Earth in the lane, be on the lookout for Seismic Shove. If she throws you into her minefield, the throws and stones will break your bones.",
+        "Taliyah's Threaded Volley is locked into a direction. If she's throwing rocks at you, dodge to the side!"
+      ],
+      "tags": ["Mage", "Support"],
+      "partype": "Mana",
+      "info": {
+        "attack": 1,
+        "defense": 7,
+        "magic": 8,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 550,
+        "hpperlevel": 104,
+        "mp": 470,
+        "mpperlevel": 30,
+        "movespeed": 330,
+        "armor": 18,
+        "armorperlevel": 4.7,
+        "spellblock": 28,
+        "spellblockperlevel": 1.3,
+        "attackrange": 525,
+        "hpregen": 6.5,
+        "hpregenperlevel": 0.65,
+        "mpregen": 8,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 58,
+        "attackdamageperlevel": 3.3,
+        "attackspeedperlevel": 1.36,
+        "attackspeed": 0.658
+      },
+      "spells": [
+        {
+          "id": "TaliyahQ",
+          "name": "Threaded Volley",
+          "description": "Taliyah throws a volley of rocks in a target direction, moving freely as she casts. This creates Worked Ground below her. If Taliyah casts Threaded Volley on Worked Ground, she consumes the ground to throw a stronger boulder that slows enemies.",
+          "tooltip": "Taliyah hurls 5 rocks, each dealing <magicDamage>{{ rockdamage }} magic damage</magicDamage> in an area around the first enemy hit while creating Worked Ground at that area. Subsequent hits against the same enemy deal {{ extramissilereduceddamagepercent }}% less damage.<br /><br />Casts on worked ground cost {{ e7 }} Mana and have {{ workedgroundcdr*100 }}% less Cooldown, consume the Worked Ground, and hurl a boulder that <status>Slows</status> enemies it hits by {{ slowpercent*100 }}% for {{ slowduration }} seconds, dealing <magicDamage>{{ bigrockdamage }} magic damage</magicDamage> to the primary target. Monsters hit by the boulder are <status>Stunned</status> for {{ monsterstunduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow", "Monster Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowpercent*100.000000 }}% -> {{ slowpercentnl*100.000000 }}%",
+              "{{ monsterbonusflatdamage }} -> {{ monsterbonusflatdamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [7, 6, 5, 4, 3],
+          "cooldownBurn": "7/6/5/4/3",
+          "cost": [55, 60, 65, 70, 75],
+          "costBurn": "55/60/65/70/75",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [30, 30, 30, 30, 30],
+            [10, 10, 10, 10, 10],
+            [400, 400, 400, 400, 400],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "30", "10", "400", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1000, 1000, 1000, 1000, 1000],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "TaliyahQ.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 0,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "TaliyahWVC",
+          "name": "Seismic Shove",
+          "description": "Taliyah causes an area of ground to erupt and throws enemies within it in a direction of her choosing.",
+          "tooltip": "Taliyah quakes the earth, <status>Knocking</status> enemies in an area in the chosen direction.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ cost }} -> {{ costNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 12.5, 11, 9.5, 8],
+          "cooldownBurn": "14/12.5/11/9.5/8",
+          "cost": [40, 30, 20, 10, 0],
+          "costBurn": "40/30/20/10/0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0.5, 0.5, 0.5, 0.5, 0.5],
+            [400, 400, 400, 400, 400],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0.5", "400", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [900, 900, 900, 900, 900],
+          "rangeBurn": "900",
+          "image": {
+            "full": "TaliyahWVC.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 48,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "TaliyahE",
+          "name": "Unraveled Earth",
+          "description": "Taliyah creates a slowing minefield. If enemies dash through it or are knocked through it, the mines explode and stun them.",
+          "tooltip": "Taliyah scatters loose stones in an area, <status>Slowing</status> enemies hit by {{ slowpercent*100 }}% and dealing <magicDamage>{{ scatterdamage }} magic damage</magicDamage>. The stones detonate when enemies dash or are <status>Knocked</status> through them, <status>Stunning</status> for the remaining movement duration + {{ stunduration }} seconds and dealing <magicDamage>{{ detonationdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Detonation Damage"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ basedetonationdamage }} -> {{ basedetonationdamageNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 14, 14, 14, 14],
+          "cooldownBurn": "14",
+          "cost": [90, 90, 90, 90, 90],
+          "costBurn": "90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [4, 4, 4, 4, 4],
+            [85, 85, 85, 85, 85],
+            [0, 0, 0, 0, 0],
+            [4, 4, 4, 4, 4],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "4", "85", "0", "4", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [950, 950, 950, 950, 950],
+          "rangeBurn": "950",
+          "image": {
+            "full": "TaliyahE.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 96,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "TaliyahR",
+          "name": "Weaver's Wall",
+          "description": "Taliyah creates a very long wall and then surfs it.",
+          "tooltip": "Taliyah creates a massive earthen wall for {{ e1 }} seconds. If she immediately <recast>Recasts</recast>, she will ride along the wall as it unravels. Moving or being immobilized will end the ride.<br /><br />This ability cannot be cast if Taliyah has taken damage from Champions or structures within the last {{ damagelockouttime }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Wall length", "Cooldown"],
+            "effect": ["{{ walllength }} -> {{ walllengthNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [180, 150, 120],
+          "cooldownBurn": "180/150/120",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [4, 4, 4],
+            [2500, 4500, 6500],
+            [0.1, 0.1, 0.1],
+            [2500, 2500, 2500],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "4", "2500/4500/6500", "0.1", "2500", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [2500, 4500, 6500],
+          "rangeBurn": "2500/4500/6500",
+          "image": {
+            "full": "TaliyahR.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 144,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Rock Surfing",
+        "description": "Taliyah gains Move Speed near walls.",
+        "image": {
+          "full": "Taliyah_Passive.png",
+          "sprite": "passive4.png",
+          "group": "passive",
+          "x": 144,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

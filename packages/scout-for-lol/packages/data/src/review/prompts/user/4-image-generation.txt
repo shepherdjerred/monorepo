@@ -1,0 +1,8 @@
+Generate a creative and visually striking image based on this art direction:
+
+<IMAGE_DESCRIPTION>
+
+Important guidelines:
+- Create the image exactly as described above
+- Focus on visual storytelling and emotional impact
+- Make it feel like cover art or a key moment illustration

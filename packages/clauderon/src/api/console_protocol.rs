@@ -1,18 +1,28 @@
 use serde::{Deserialize, Serialize};
 
+/// Console WebSocket protocol messages for terminal multiplexing.
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum ConsoleMessage {
+    /// Request to attach to a session's terminal.
     Attach {
+        /// Target session identifier.
         session_id: String,
+        /// Terminal rows to allocate.
         rows: u16,
+        /// Terminal columns to allocate.
         cols: u16,
     },
+    /// Confirmation that attachment succeeded.
     Attached,
+    /// Error message from the server.
     Error {
+        /// Human-readable error description.
         message: String,
     },
+    /// Terminal output data from the session.
     Output {
+        /// Raw terminal output bytes.
         data: String,
     },
     /// Initial snapshot of terminal state when connecting.
@@ -29,14 +39,21 @@ pub enum ConsoleMessage {
         /// Current cursor column (0-indexed).
         cursor_col: u16,
     },
+    /// Keyboard input data to send to the session.
     Input {
+        /// Raw input bytes to write to the PTY.
         data: String,
     },
+    /// Request to resize the terminal.
     Resize {
+        /// New terminal row count.
         rows: u16,
+        /// New terminal column count.
         cols: u16,
     },
+    /// Send a Unix signal to the PTY process.
     Signal {
+        /// Signal type to deliver.
         signal: SignalType,
     },
 }

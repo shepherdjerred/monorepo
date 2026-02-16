@@ -1,3 +1,8 @@
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    reason = "integration tests use expect/unwrap for simplicity"
+)]
 //! Integration tests for 1Password credential loading.
 //!
 //! These tests verify that credential priority works correctly across
@@ -30,9 +35,9 @@ fn test_op_reference_parsing() {
 #[test]
 fn test_op_reference_to_cli_args() {
     let op_ref = OpReference {
-        vault: "Production".to_string(),
-        item: "GitHub".to_string(),
-        field: "token".to_string(),
+        vault: "Production".to_owned(),
+        item: "GitHub".to_owned(),
+        field: "token".to_owned(),
     };
 
     let args = op_ref.to_cli_args();
@@ -56,7 +61,7 @@ fn test_op_reference_to_cli_args() {
 async fn test_onepassword_client_availability() {
     use clauderon::proxy::onepassword::OnePasswordClient;
 
-    let client = OnePasswordClient::new("op".to_string());
+    let client = OnePasswordClient::new("op".to_owned());
     let available = client.is_available().await;
 
     // This test will pass if op CLI is installed, fail otherwise
@@ -69,15 +74,15 @@ async fn test_onepassword_client_availability() {
 async fn test_fetch_credential_from_onepassword() {
     use clauderon::proxy::onepassword::{OnePasswordClient, OpReference};
 
-    let client = OnePasswordClient::new("op".to_string());
+    let client = OnePasswordClient::new("op".to_owned());
 
     // This test requires a test vault with a known item
     // Example: Create a vault called "Test" with an item "TestItem"
     // containing a field "testfield" with value "testvalue"
     let op_ref = OpReference {
-        vault: "Test".to_string(),
-        item: "TestItem".to_string(),
-        field: "testfield".to_string(),
+        vault: "Test".to_owned(),
+        item: "TestItem".to_owned(),
+        field: "testfield".to_owned(),
     };
 
     match client.fetch_credential(&op_ref).await {
@@ -112,12 +117,10 @@ mod mock_tests {
     }
 
     impl MockOnePasswordClient {
-        #[allow(dead_code)]
         fn new_with_credentials(credentials: std::collections::HashMap<String, String>) -> Self {
             Self { credentials }
         }
 
-        #[allow(dead_code)]
         fn get_credential(&self, reference: &str) -> Option<String> {
             self.credentials.get(reference).cloned()
         }
@@ -127,14 +130,14 @@ mod mock_tests {
     fn test_mock_onepassword_client() {
         let mut creds = std::collections::HashMap::new();
         creds.insert(
-            "op://Test/GitHub/token".to_string(),
-            "mock-github-token".to_string(),
+            "op://Test/GitHub/token".to_owned(),
+            "mock-github-token".to_owned(),
         );
 
         let mock_client = MockOnePasswordClient::new_with_credentials(creds);
 
         let token = mock_client.get_credential("op://Test/GitHub/token");
-        assert_eq!(token, Some("mock-github-token".to_string()));
+        assert_eq!(token, Some("mock-github-token".to_owned()));
 
         let missing = mock_client.get_credential("op://Test/Missing/field");
         assert_eq!(missing, None);

@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  dagger-ci:
+    runs-on: [macos-cross-compiler-runner-set]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Extract kubectl version
+        id: kubectl-version
+        run: |
+          KUBECTL_VERSION=v1.34.1
+          echo "version=$KUBECTL_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Cache kubectl
+        uses: actions/cache@v4
+        id: kubectl-cache
+        with:
+          path: ~/.local/bin/kubectl
+          key: kubectl-${{ steps.kubectl-version.outputs.version }}-linux-amd64
+
+      - name: Install kubectl
+        if: steps.kubectl-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/.local/bin
+          curl -LO "https://dl.k8s.io/release/${{ steps.kubectl-version.outputs.version }}/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          mv kubectl ~/.local/bin/
+
+      - name: Add kubectl to PATH
+        run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Extract Dagger version
+        id: dagger-version
+        run: |
+          DAGGER_IMAGE=$(kubectl get pod --selector=name=dagger-dagger-helm-engine --namespace=dagger -o jsonpath='{.items[0].spec.containers[0].image}')
+          DAGGER_VERSION="${DAGGER_IMAGE##*:v}"
+          echo "version=$DAGGER_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Install Dagger CLI
+        run: |
+          curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=${{ steps.dagger-version.outputs.version }} BIN_DIR=$HOME/.local/bin sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Get Dagger Engine Pod Name
+        run: |
+          DAGGER_ENGINE_POD_NAME="$(kubectl get pod --selector=name=dagger-dagger-helm-engine --namespace=dagger --output=jsonpath='{.items[0].metadata.name}')"
+          echo "_EXPERIMENTAL_DAGGER_RUNNER_HOST=kube-pod://$DAGGER_ENGINE_POD_NAME?namespace=dagger" >> "$GITHUB_ENV"
+
+      - name: Install dependencies
+        run: |
+          cd .dagger
+          bun install
+
+      - name: Determine environment
+        id: env
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "env=prod" >> "$GITHUB_OUTPUT"
+          else
+            echo "env=dev" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Dagger CI
+        env:
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_PASSWORD: ${{ github.token }}
+        working-directory: .dagger
+        run: |
+          ARGS=(--source=..)
+
+          if [[ "${{ steps.env.outputs.env }}" == "prod" ]]; then
+            ARGS+=(--ghcr-username="$GHCR_USERNAME" --ghcr-password=env://GHCR_PASSWORD)
+          fi
+
+          dagger call ci "${ARGS[@]}"
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cross-compiler-test-results
+          path: out/
+          retention-days: 30
+
+permissions:
+  contents: read
+  packages: write

@@ -1,0 +1,40 @@
+# Git
+.git/
+.gitignore
+.github/
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# IDE
+.vscode/
+.idea/
+.cursor/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts and caches
+node_modules/
+*.pyc
+__pycache__/
+.cache/
+
+# Documentation (if you don't need it in the image)
+README.md
+*.md
+docs/

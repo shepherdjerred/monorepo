@@ -1,0 +1,331 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Zac": {
+      "id": "Zac",
+      "key": "154",
+      "name": "Zac",
+      "title": "the Secret Weapon",
+      "image": {
+        "full": "Zac.png",
+        "sprite": "champion5.png",
+        "group": "champion",
+        "x": 240,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "154000",
+          "num": 0,
+          "name": "default",
+          "chromas": true
+        },
+        {
+          "id": "154001",
+          "num": 1,
+          "name": "Special Weapon Zac",
+          "chromas": false
+        },
+        {
+          "id": "154002",
+          "num": 2,
+          "name": "Pool Party Zac",
+          "chromas": false
+        },
+        {
+          "id": "154006",
+          "num": 6,
+          "name": "SKT T1 Zac",
+          "chromas": false
+        },
+        {
+          "id": "154007",
+          "num": 7,
+          "name": "Battlecast Zac",
+          "chromas": true
+        },
+        {
+          "id": "154014",
+          "num": 14,
+          "name": "Empyrean Zac",
+          "chromas": true
+        },
+        {
+          "id": "154024",
+          "num": 24,
+          "name": "Zesty Dip Zac",
+          "chromas": true
+        }
+      ],
+      "lore": "Zac is the product of a toxic spill that ran through a chemtech seam and pooled in an isolated cavern deep in Zaun's Sump. Despite such humble origins, Zac has grown from primordial ooze into a thinking being who dwells in the city's pipes, occasionally emerging to help those who cannot help themselves or to rebuild the broken infrastructure of Zaun.",
+      "blurb": "Zac is the product of a toxic spill that ran through a chemtech seam and pooled in an isolated cavern deep in Zaun's Sump. Despite such humble origins, Zac has grown from primordial ooze into a thinking being who dwells in the city's pipes, occasionally...",
+      "allytips": [
+        "Picking up goo chunks is very important to staying alive.",
+        "When Cell Division is ready, try to die in a position that makes it difficult for the enemy team to kill your bloblets.",
+        "Charging Elastic Slingshot from the fog of war will give opponents less time to react."
+      ],
+      "enemytips": [
+        "Zac heals from the goo that separates from him. You can crush the goo pieces by stepping on them.",
+        "Kill all of Zac's bloblets when he splits apart to stop him from reforming.",
+        "Silences, stuns, roots and knockups will all interrupt Zac when he is charging Elastic Slingshot."
+      ],
+      "tags": ["Tank", "Fighter"],
+      "partype": "None",
+      "info": {
+        "attack": 3,
+        "defense": 7,
+        "magic": 7,
+        "difficulty": 8
+      },
+      "stats": {
+        "hp": 685,
+        "hpperlevel": 109,
+        "mp": 0,
+        "mpperlevel": 0,
+        "movespeed": 340,
+        "armor": 33,
+        "armorperlevel": 4.7,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 175,
+        "hpregen": 5,
+        "hpregenperlevel": 0.5,
+        "mpregen": 0,
+        "mpregenperlevel": 0,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 60,
+        "attackdamageperlevel": 3.4,
+        "attackspeedperlevel": 1.6,
+        "attackspeed": 0.736
+      },
+      "spells": [
+        {
+          "id": "ZacQ",
+          "name": "Stretching Strikes",
+          "description": "Zac stretches an arm, grabbing an enemy. Attacking a different enemy will cause him to throw both targets towards each other.",
+          "tooltip": "Zac stretches his arm out, attaching it to the first enemy hit to deal <magicDamage>{{ totaldamage }} magic damage</magicDamage> and briefly <status>Slow</status> them. Zac's next Attack gains increased range and applies the same damage and <status>Slow</status>. <br /><br />If Zac hits a <i>different</i> enemy with this Attack, he <status>Knocks Up</status> both towards each other. If they collide, they and surrounding enemies take <magicDamage>{{ totaldamage }} magic damage</magicDamage> and are briefly <status>Slowed</status>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 12.5, 11, 9.5, 8],
+          "cooldownBurn": "14/12.5/11/9.5/8",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [40, 55, 70, 85, 100],
+            [8, 8, 8, 8, 8],
+            [800, 800, 800, 800, 800],
+            [-0.4, -0.4, -0.4, -0.4, -0.4],
+            [0.5, 0.5, 0.5, 0.5, 0.5],
+            [2.5, 2.5, 2.5, 2.5, 2.5],
+            [900, 900, 900, 900, 900],
+            [700, 700, 700, 700, 700],
+            [300, 300, 300, 300, 300],
+            [300, 300, 300, 300, 300]
+          ],
+          "effectBurn": [null, "40/55/70/85/100", "8", "800", "-0.4", "0.5", "2.5", "900", "700", "300", "300"],
+          "vars": [],
+          "costType": "% of current Health ({{ healthcosttooltip }})",
+          "maxammo": "-1",
+          "range": [800, 800, 800, 800, 800],
+          "rangeBurn": "800",
+          "image": {
+            "full": "ZacQ.png",
+            "sprite": "spell16.png",
+            "group": "spell",
+            "x": 384,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ e2 }}% of current Health ({{ healthcosttooltip }})"
+        },
+        {
+          "id": "ZacW",
+          "name": "Unstable Matter",
+          "description": "Zac explodes outward towards nearby enemies, dealing a percentage of their maximum health as magic damage.",
+          "tooltip": "Zac's body erupts, dealing <magicDamage>{{ basedamage }} + {{ displaypercentdamage }} max Health magic damage</magicDamage> to nearby enemies.<br /><br />Absorbing <keywordMajor>Goo</keywordMajor> reduces this Ability's Cooldown by 1 second.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Flat Damage", "Maximum Health Damage"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ basemaxhealthdamage*100.000000 }}% -> {{ basemaxhealthdamagenl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [5, 5, 5, 5, 5],
+          "cooldownBurn": "5",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [40, 50, 60, 70, 80],
+            [4, 4, 4, 4, 4],
+            [0.04, 0.05, 0.06, 0.07, 0.08],
+            [1, 1, 1, 1, 1],
+            [200, 200, 200, 200, 200],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "40/50/60/70/80", "4", "0.04/0.05/0.06/0.07/0.08", "1", "200", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "% of current Health ({{ tooltiphealthcost }})",
+          "maxammo": "-1",
+          "range": [350, 350, 350, 350, 350],
+          "rangeBurn": "350",
+          "image": {
+            "full": "ZacW.png",
+            "sprite": "spell16.png",
+            "group": "spell",
+            "x": 432,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ e2 }}% of current Health ({{ tooltiphealthcost }})"
+        },
+        {
+          "id": "ZacE",
+          "name": "Elastic Slingshot",
+          "description": "Zac attaches his arms to the ground and stretches back, launching himself forward.",
+          "tooltip": "<charge>Begin Charging:</charge> Zac pulls himself taut, charging up a dash over {{ e4 }} seconds.<br /><br /><release>Release:</release> Zac launches himself and <status>Knocks Up</status> enemies where he lands for up to {{ maxstun }} second (based on charge time), dealing them <magicDamage>{{ damage }} magic damage</magicDamage>. Zac spawns an extra chunk of <keywordMajor>Goo</keywordMajor> for each enemy champion hit.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Range", "Cooldown"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ e3 }} -> {{ e3NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [22, 19, 16, 13, 10],
+          "cooldownBurn": "22/19/16/13/10",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [60, 105, 150, 195, 240],
+            [4, 4, 4, 4, 4],
+            [1200, 1350, 1500, 1650, 1800],
+            [0.9, 1, 1.1, 1.2, 1.3],
+            [0.5, 0.5, 0.5, 0.5, 0.5],
+            [500, 500, 500, 500, 500],
+            [1350, 1350, 1350, 1350, 1350],
+            [0.6, 0.6, 0.6, 0.6, 0.6],
+            [265, 265, 265, 265, 265],
+            [1, 1, 1, 1, 1]
+          ],
+          "effectBurn": [
+            null,
+            "60/105/150/195/240",
+            "4",
+            "1200/1350/1500/1650/1800",
+            "0.9/1/1.1/1.2/1.3",
+            "0.5",
+            "500",
+            "1350",
+            "0.6",
+            "265",
+            "1"
+          ],
+          "vars": [],
+          "costType": "% of current Health ({{ healthcosttooltip }})",
+          "maxammo": "-1",
+          "range": [300, 300, 300, 300, 300],
+          "rangeBurn": "300",
+          "image": {
+            "full": "ZacE.png",
+            "sprite": "spell17.png",
+            "group": "spell",
+            "x": 0,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ e2 }}% of current Health ({{ healthcosttooltip }})"
+        },
+        {
+          "id": "ZacR",
+          "name": "Let's Bounce!",
+          "description": "Zac bounces four times, knocking up enemies hit and slowing them.",
+          "tooltip": "Zac bounces {{ bounces }} times. The first bounce to hit each enemy <status>Knocks</status> them back and deals <magicDamage>{{ damageperbounce }} magic damage</magicDamage>. Subsequent bounces deal <magicDamage>{{ damagepersubsequentbounce }} magic damage</magicDamage> and <status>Slow</status> by {{ slowamount*100 }}% for {{ slowduration }} second.<br /><br />Zac gains up to <speed>{{ endingms*100 }}% Move Speed</speed> over time and can cast <spellName>Unstable Matter</spellName> while bouncing.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Base Bounce Damage", "Cooldown"],
+            "effect": ["{{ basedamagebounce }} -> {{ basedamagebounceNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 105, 90],
+          "cooldownBurn": "120/105/90",
+          "cost": [0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [150, 250, 350],
+            [1.1, 1.1, 1.1],
+            [700, 850, 1000],
+            [-0.3, -0.4, -0.5],
+            [2.5, 2.5, 2.5],
+            [275, 275, 275],
+            [300, 300, 300],
+            [1, 1, 1],
+            [0.25, 0.25, 0.25],
+            [0.1, 0.1, 0.1]
+          ],
+          "effectBurn": [
+            null,
+            "150/250/350",
+            "1.1",
+            "700/850/1000",
+            "-0.3/-0.4/-0.5",
+            "2.5",
+            "275",
+            "300",
+            "1",
+            "0.25",
+            "0.1"
+          ],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [300, 300, 300],
+          "rangeBurn": "300",
+          "image": {
+            "full": "ZacR.png",
+            "sprite": "spell17.png",
+            "group": "spell",
+            "x": 48,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        }
+      ],
+      "passive": {
+        "name": "Cell Division",
+        "description": "Each time Zac hits an enemy with an ability, he sheds a chunk of himself that can be reabsorbed to restore Health. Upon taking fatal damage, Zac splits into 4 bloblets that attempt to recombine. If any bloblets remain, he will revive with an amount of Health depending on the Health of the surviving bloblets. Each bloblet has a percentage of Zac's maximum Health, Armor and Magic Resistance. This ability has a 5 minute cooldown.",
+        "image": {
+          "full": "ZacPassive.png",
+          "sprite": "passive5.png",
+          "group": "passive",
+          "x": 240,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

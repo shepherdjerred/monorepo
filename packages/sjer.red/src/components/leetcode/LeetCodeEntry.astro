@@ -1,0 +1,36 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+type Props = {
+  entry: CollectionEntry<"leetcode">;
+};
+
+const { id, body } = Astro.props.entry;
+const { title } = Astro.props.entry.data;
+const difficulty = id.replace(/\/.*/, "");
+
+const preview = (body ?? "")
+  .slice(0, 300)
+  .replace(/## Problem/, "")
+  .replace(/Example[\s\S]*/, "")
+  .trim()
+  .concat("...");
+---
+
+<div class="flex flex-col bg-black p-6 rounded-md">
+  <div class="p-2">
+    <span>
+      <a href={id} class="text-2xl font-bold text-white underline hover:bg-white hover:text-black">
+        {title}
+      </a>
+    </span>
+  </div>
+  <div class="ml-2 mr-2">
+    <div class="text-sm text-white">
+      <span class="capitalize">{difficulty}</span>
+    </div>
+    <p class="text-white mt-2">
+      {preview}
+    </p>
+  </div>
+</div>

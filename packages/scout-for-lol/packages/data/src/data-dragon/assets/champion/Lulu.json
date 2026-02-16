@@ -1,0 +1,369 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Lulu": {
+      "id": "Lulu",
+      "key": "117",
+      "name": "Lulu",
+      "title": "the Fae Sorceress",
+      "image": {
+        "full": "Lulu.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 240,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "117000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "117001",
+          "num": 1,
+          "name": "Bittersweet Lulu",
+          "chromas": false
+        },
+        {
+          "id": "117002",
+          "num": 2,
+          "name": "Wicked Lulu",
+          "chromas": false
+        },
+        {
+          "id": "117003",
+          "num": 3,
+          "name": "Dragon Trainer Lulu",
+          "chromas": true
+        },
+        {
+          "id": "117004",
+          "num": 4,
+          "name": "Winter Wonder Lulu",
+          "chromas": false
+        },
+        {
+          "id": "117005",
+          "num": 5,
+          "name": "Pool Party Lulu",
+          "chromas": true
+        },
+        {
+          "id": "117006",
+          "num": 6,
+          "name": "Star Guardian Lulu",
+          "chromas": false
+        },
+        {
+          "id": "117014",
+          "num": 14,
+          "name": "Cosmic Enchantress Lulu",
+          "chromas": true
+        },
+        {
+          "id": "117015",
+          "num": 15,
+          "name": "Pajama Guardian Lulu",
+          "chromas": false
+        },
+        {
+          "id": "117026",
+          "num": 26,
+          "name": "Space Groove Lulu",
+          "chromas": true
+        },
+        {
+          "id": "117027",
+          "num": 27,
+          "name": "Prestige Space Groove Lulu",
+          "chromas": false
+        },
+        {
+          "id": "117037",
+          "num": 37,
+          "name": "Monster Tamer Lulu",
+          "chromas": true
+        },
+        {
+          "id": "117046",
+          "num": 46,
+          "name": "Cafe Cuties Lulu",
+          "chromas": true
+        },
+        {
+          "id": "117055",
+          "num": 55,
+          "name": "Arcana Lulu",
+          "chromas": false
+        }
+      ],
+      "lore": "The yordle mage Lulu is known for conjuring dreamlike illusions and fanciful creatures as she roams Runeterra with her fairy companion Pix. Lulu shapes reality on a whim, warping the fabric of the world, and what she views as the constraints of this mundane, physical realm. While others might consider her magic at best unnatural, and at worst dangerous, she believes everyone could use a touch of enchantment.",
+      "blurb": "The yordle mage Lulu is known for conjuring dreamlike illusions and fanciful creatures as she roams Runeterra with her fairy companion Pix. Lulu shapes reality on a whim, warping the fabric of the world, and what she views as the constraints of this...",
+      "allytips": [
+        "Glitterlance can be fired at odd angles depending on where your cursor is - Moving your cursor closer to Pix and Lulu will change your area of effect size considerably.",
+        "Consider casting Help, Pix! on ranged attackers for the Pix boost and Wild Growth on Tanks or Fighters for the added initiation power."
+      ],
+      "enemytips": [
+        "The shots from Lulu's faerie can be intercepted - hide behind your minions to avoid the additional Faerie attacks.",
+        "Lulu excels when opponents heavily commit. Don't give her this chance! Use heavy harass tactics instead to force Lulu and her partner out of lane."
+      ],
+      "tags": ["Support", "Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 4,
+        "defense": 5,
+        "magic": 7,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 565,
+        "hpperlevel": 92,
+        "mp": 350,
+        "mpperlevel": 55,
+        "movespeed": 330,
+        "armor": 26,
+        "armorperlevel": 4.6,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 550,
+        "hpregen": 6,
+        "hpregenperlevel": 0.6,
+        "mpregen": 11,
+        "mpregenperlevel": 0.6,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 47,
+        "attackdamageperlevel": 2.6,
+        "attackspeedperlevel": 2.25,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "LuluQ",
+          "name": "Glitterlance",
+          "description": "Pix and Lulu each fire a bolt of magical energy that damages and heavily slows all enemies it hits.",
+          "tooltip": "Lulu and Pix each fire a piercing bolt dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slowing</status> by {{ slowamount*-100 }}%, decaying over {{ slowduration }} seconds.<br /><br />Enemies take <magicDamage>{{ bonusmissiledamage }} magic damage</magicDamage> from additional bolts.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "@AbilityResourceName@ Cost"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cost }} -> {{ costNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [7, 7, 7, 7, 7],
+          "cooldownBurn": "7",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [925, 925, 925, 925, 925],
+          "rangeBurn": "925",
+          "image": {
+            "full": "LuluQ.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 384,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "LuluW",
+          "name": "Whimsy",
+          "description": "If cast on an ally, grants them Attack Speed and Move Speed for a short time. If cast on an enemy, turns them into an adorable critter that can't attack or cast spells.",
+          "tooltip": "When used on an ally, Lulu grants <speed>{{ totalms }} Move Speed</speed> and <attackSpeed>{{ e7 }}% Attack Speed</attackSpeed> for {{ e5 }} seconds.<br /><br />When used on an enemy, Lulu <status>Polymorphs</status> them for {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Move Speed and Attack Speed Duration", "Attack Speed", "Polymorph Duration"],
+            "effect": [
+              "{{ e5 }} -> {{ e5NL }}",
+              "{{ effect7amount*100.000000 }}% -> {{ effect7amountnl*100.000000 }}%",
+              "{{ e3 }} -> {{ e3NL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [18, 18, 18, 18, 18],
+          "cooldownBurn": "18",
+          "cost": [65, 65, 65, 65, 65],
+          "costBurn": "65",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0.25, 0.25, 0.25, 0.25, 0.25],
+            [0, 0, 0, 0, 0],
+            [1.2, 1.4, 1.6, 1.8, 2],
+            [-60, -60, -60, -60, -60],
+            [3, 3.25, 3.5, 3.75, 4],
+            [0.01, 0.01, 0.01, 0.01, 0.01],
+            [20, 22.5, 25, 27.5, 30],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "0.25",
+            "0",
+            "1.2/1.4/1.6/1.8/2",
+            "-60",
+            "3/3.25/3.5/3.75/4",
+            "0.01",
+            "20/22.5/25/27.5/30",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [650, 650, 650, 650, 650],
+          "rangeBurn": "650",
+          "image": {
+            "full": "LuluW.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 432,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "LuluE",
+          "name": "Help, Pix!",
+          "description": "If cast on an ally, commands Pix to jump to an ally and shield them. He then follows them and aids their attacks. If cast on an enemy, commands Pix to jump to an enemy and damage them. He then follows them and grants you vision of that enemy.",
+          "tooltip": "When used on an ally, Pix jumps to them and grants <spellName>Pix, Faerie Companion</spellName> for {{ e1 }} seconds. If the ally is a champion, Pix also grants <shield>{{ totalshield }} Shield</shield> for {{ e7 }} seconds.<br /><br />When used on an enemy champion, Pix hampers them, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and granting <keywordStealth>True Sight</keywordStealth> of them for {{ e6 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Shield Amount", "Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ baseshield }} -> {{ baseshieldNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldownBurn": "10/9.5/9/8.5/8",
+          "cost": [60, 65, 70, 75, 80],
+          "costBurn": "60/65/70/75/80",
+          "datavalues": {},
+          "effect": [
+            null,
+            [6, 6, 6, 6, 6],
+            [0, 0, 0, 0, 0],
+            [50, 50, 50, 50, 50],
+            [0, 0, 0, 0, 0],
+            [25, 25, 25, 25, 25],
+            [4, 4, 4, 4, 4],
+            [2.5, 2.5, 2.5, 2.5, 2.5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "6", "0", "50", "0", "25", "4", "2.5", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [650, 650, 650, 650, 650],
+          "rangeBurn": "650",
+          "image": {
+            "full": "LuluE.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 0,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "LuluR",
+          "name": "Wild Growth",
+          "description": "Lulu enlarges an ally, knocking nearby enemies into the air and granting the ally a large amount of bonus health. For the next few seconds, that ally gains an aura that slows nearby enemies.",
+          "tooltip": "Lulu enlarges an ally, <status>Knocking Up</status> surrounding enemies for {{ knockbackduration }} second. The enlarged ally gains <healing>{{ totalbonushealth }} max Health</healing> and <status>Slows</status> surrounding enemies by {{ slowpercent }}% for {{ buffduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Bonus Health", "Slow", "Cooldown"],
+            "effect": [
+              "{{ bonushealth }} -> {{ bonushealthNL }}",
+              "{{ slowpercent }}% -> {{ slowpercentNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 100, 80],
+          "cooldownBurn": "120/100/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [900, 900, 900],
+          "rangeBurn": "900",
+          "image": {
+            "full": "LuluR.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 48,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Pix, Faerie Companion",
+        "description": "Pix fires magical bolts of energy whenever the champion he's following attacks another enemy unit. These bolts are homing, but can be intercepted by other units.",
+        "image": {
+          "full": "Lulu_PixFaerieCompanion.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 240,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

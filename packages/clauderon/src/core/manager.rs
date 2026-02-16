@@ -162,6 +162,14 @@ pub struct SessionManager {
     server_config: Option<Arc<crate::feature_flags::ServerConfig>>,
 }
 
+impl std::fmt::Debug for SessionManager {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SessionManager")
+            .field("max_sessions", &self.max_sessions)
+            .finish_non_exhaustive()
+    }
+}
+
 impl SessionManager {
     /// Create a new session manager with dependency injection
     ///
@@ -224,6 +232,7 @@ impl SessionManager {
             KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?,
         );
 
+        #[expect(clippy::clone_on_ref_ptr, reason = "clone needed for implicit coercion to Arc<dyn Trait>")]
         Self::new(
             store,
             Arc::new(GitBackend::new()),
@@ -255,6 +264,7 @@ impl SessionManager {
             KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?,
         );
 
+        #[expect(clippy::clone_on_ref_ptr, reason = "clone needed for implicit coercion to Arc<dyn Trait>")]
         Self::new(
             store,
             Arc::new(GitBackend::new()),
@@ -317,6 +327,7 @@ impl SessionManager {
         Ok(())
     }
 
+    /// Get a shared reference to the console manager.
     #[must_use]
     pub fn console_manager(&self) -> Arc<ConsoleManager> {
         Arc::clone(&self.console_manager)
@@ -535,7 +546,7 @@ impl SessionManager {
             session_id,
             new_backend_id: backend_id,
             success: true,
-            message: "Session started successfully".to_string(),
+            message: "Session started successfully".to_owned(),
         })
     }
 
@@ -604,7 +615,7 @@ impl SessionManager {
             session_id,
             new_backend_id: backend_id,
             success: true,
-            message: "Sprite woken successfully".to_string(),
+            message: "Sprite woken successfully".to_owned(),
         })
     }
 
@@ -636,7 +647,7 @@ impl SessionManager {
             .ok_or_else(|| {
                 RecreateError::Blocked(crate::core::session::RecreateBlockedError {
                     session_id,
-                    reason: "Session not found".to_string(),
+                    reason: "Session not found".to_owned(),
                     suggestions: vec![],
                 })
             })?;
@@ -648,8 +659,8 @@ impl SessionManager {
                     session_id,
                     reason,
                     suggestions: vec![
-                        "Push your changes to git before recreating".to_string(),
-                        "Create a new session instead".to_string(),
+                        "Push your changes to git before recreating".to_owned(),
+                        "Create a new session instead".to_owned(),
                     ],
                 },
             ));
@@ -673,7 +684,7 @@ impl SessionManager {
             session_id,
             new_backend_id,
             success: true,
-            message: "Session recreated successfully".to_string(),
+            message: "Session recreated successfully".to_owned(),
         })
     }
 
@@ -722,7 +733,7 @@ impl SessionManager {
             session_id,
             new_backend_id,
             success: true,
-            message: "Session recreated fresh (data reset)".to_string(),
+            message: "Session recreated fresh (data reset)".to_owned(),
         })
     }
 
@@ -834,7 +845,7 @@ impl SessionManager {
     /// Example: `/path/to/my-repo` → `my-repo`
     fn generate_mount_name(repo_path: &std::path::Path) -> String {
         repo_path.file_name().and_then(|n| n.to_str()).map_or_else(
-            || "repo".to_string(),
+            || "repo".to_owned(),
             |s| {
                 // Convert to lowercase and replace underscores with hyphens
                 s.to_lowercase().replace('_', "-")
@@ -884,7 +895,7 @@ impl SessionManager {
     /// # Returns
     ///
     /// Returns the UUID of the newly created session (in Creating status)
-    #[allow(clippy::too_many_arguments, clippy::fn_params_excessive_bools)]
+    #[expect(clippy::too_many_arguments, clippy::fn_params_excessive_bools, reason = "session creation requires many configuration parameters")]
     pub async fn start_session_creation(
         self: &Arc<Self>,
         repo_path: String,
@@ -970,7 +981,7 @@ impl SessionManager {
             // Legacy mode: convert single repo_path to repository input
             vec![crate::api::protocol::CreateRepositoryInput {
                 repo_path: repo_path.clone(),
-                mount_name: Some("primary".to_string()),
+                mount_name: Some("primary".to_owned()),
                 is_primary: true,
                 base_branch: None,
             }]
@@ -1079,7 +1090,7 @@ impl SessionManager {
             initial_prompt: initial_prompt.clone(),
             backend,
             agent,
-            model: model.clone(),
+            model,
             dangerous_skip_checks,
             dangerous_copy_creds,
             access_mode,
@@ -1098,7 +1109,7 @@ impl SessionManager {
         session.set_progress(crate::api::protocol::ProgressStep {
             step: 0,
             total: 5,
-            message: "Queued for creation".to_string(),
+            message: "Queued for creation".to_owned(),
         });
 
         let session_id = session.id;
@@ -1192,7 +1203,7 @@ impl SessionManager {
     /// Complete session creation in background (spawned by start_session_creation)
     ///
     /// This method should not be called directly - it's spawned as a background task.
-    #[allow(clippy::too_many_arguments, clippy::fn_params_excessive_bools)]
+    #[expect(clippy::too_many_arguments, clippy::fn_params_excessive_bools, reason = "session creation requires many configuration parameters")]
     async fn complete_session_creation(
         &self,
         session_id: Uuid,
@@ -1223,7 +1234,7 @@ impl SessionManager {
             // Mark session as failed
             let mut sessions = self.sessions.write().await;
             if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
-                session.set_error(SessionStatus::Failed, "System is shutting down".to_string());
+                session.set_error(SessionStatus::Failed, "System is shutting down".to_owned());
                 if let Err(e) = self.store.save_session(session).await {
                     tracing::error!("Failed to save shutdown error: {}", e);
                 }
@@ -1261,7 +1272,7 @@ impl SessionManager {
 
         // Execute creation steps
         let result: anyhow::Result<()> = async {
-            update_progress(1, "Creating git worktrees".to_string()).await;
+            update_progress(1, "Creating git worktrees".to_owned()).await;
 
             // Create worktrees for all repositories in parallel
             let worktree_futures: Vec<_> = repos_for_task
@@ -1393,7 +1404,7 @@ impl SessionManager {
                 }
             }
 
-            update_progress(2, "Setting up session proxy".to_string()).await;
+            update_progress(2, "Setting up session proxy".to_owned()).await;
             // Create per-session proxy for container backends (Docker and Apple Container)
             #[cfg(target_os = "macos")]
             let needs_proxy = matches!(backend, BackendType::Docker | BackendType::AppleContainer);
@@ -1431,7 +1442,7 @@ impl SessionManager {
                 None // Non-container backends don't need proxy
             };
 
-            update_progress(3, "Preparing agent environment".to_string()).await;
+            update_progress(3, "Preparing agent environment".to_owned()).await;
             // Prepend plan mode instruction if enabled
             let transformed_prompt = if plan_mode {
                 format!(
@@ -1442,7 +1453,7 @@ impl SessionManager {
                 initial_prompt.clone()
             };
 
-            update_progress(4, "Starting backend resource".to_string()).await;
+            update_progress(4, "Starting backend resource".to_owned()).await;
 
             // Parse container image configuration from request
             let container_image_config = if let Some(image) = container_image {
@@ -1500,7 +1511,7 @@ impl SessionManager {
             // Create backend resource
             let create_options = crate::backends::CreateOptions {
                 agent,
-                model: model.as_ref().map(|m| m.to_cli_flag().to_string()),
+                model: model.as_ref().map(|m| m.to_cli_flag().to_owned()),
                 print_mode,
                 plan_mode,
                 session_proxy_port: proxy_port,
@@ -1570,7 +1581,7 @@ impl SessionManager {
                 }
             };
 
-            update_progress(5, "Finalizing session".to_string()).await;
+            update_progress(5, "Finalizing session".to_owned()).await;
 
             // Update session with backend ID and Running status
             {
@@ -1754,7 +1765,7 @@ impl SessionManager {
             image_count = images.len()
         )
     )]
-    #[allow(clippy::too_many_arguments, clippy::fn_params_excessive_bools)]
+    #[expect(clippy::too_many_arguments, clippy::fn_params_excessive_bools, reason = "session creation requires many configuration parameters")]
     pub async fn create_session(
         &self,
         repo_path: String,
@@ -1780,7 +1791,7 @@ impl SessionManager {
 
         // Multi-repository sessions are not supported in synchronous mode (used for print mode)
         // Use start_session_creation() for multi-repo support
-        if repositories.is_some() && !repositories.as_ref().unwrap().is_empty() {
+        if repositories.as_ref().is_some_and(|r| !r.is_empty()) {
             anyhow::bail!(
                 "Multi-repository sessions are not supported in synchronous/print mode. \
                 Use asynchronous session creation for multi-repo support."
@@ -1888,7 +1899,7 @@ impl SessionManager {
             initial_prompt: initial_prompt.clone(),
             backend,
             agent,
-            model: model.clone(),
+            model,
             dangerous_skip_checks,
             dangerous_copy_creds,
             access_mode,
@@ -2024,7 +2035,7 @@ impl SessionManager {
         // Create backend resource
         let create_options = crate::backends::CreateOptions {
             agent,
-            model: model.as_ref().map(|m| m.to_cli_flag().to_string()),
+            model: model.as_ref().map(|m| m.to_cli_flag().to_owned()),
             print_mode,
             plan_mode,
             session_proxy_port: proxy_port,
@@ -2598,7 +2609,7 @@ impl SessionManager {
                 session.set_progress(crate::api::protocol::ProgressStep {
                     step: 0,
                     total: 4,
-                    message: "Queued for deletion".to_string(),
+                    message: "Queued for deletion".to_owned(),
                 });
 
                 // Save to database
@@ -2642,7 +2653,7 @@ impl SessionManager {
             if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
                 session.set_error(
                     SessionStatus::Failed,
-                    "System is shutting down during deletion".to_string(),
+                    "System is shutting down during deletion".to_owned(),
                 );
                 if let Err(e) = self.store.save_session(session).await {
                     tracing::error!("Failed to save shutdown error: {}", e);
@@ -2695,7 +2706,7 @@ impl SessionManager {
 
         // Execute deletion steps
         let result: anyhow::Result<()> = async {
-            update_progress(1, "Destroying backend resources".to_string()).await;
+            update_progress(1, "Destroying backend resources".to_owned()).await;
             // Delete backend resources
             if let Some(ref backend_id) = backend_id {
                 match backend {
@@ -2718,7 +2729,7 @@ impl SessionManager {
                 }
             }
 
-            update_progress(2, "Removing session proxy".to_string()).await;
+            update_progress(2, "Removing session proxy".to_owned()).await;
             // Destroy per-session proxy if it exists for container backends (Docker and Apple Container)
             #[cfg(target_os = "macos")]
             let needs_proxy_cleanup =
@@ -2739,7 +2750,7 @@ impl SessionManager {
                 }
             }
 
-            update_progress(3, "Removing git worktree".to_string()).await;
+            update_progress(3, "Removing git worktree".to_owned()).await;
             // Delete git worktree
             let _ = self.git.delete_worktree(&repo_path, &worktree_path).await;
 
@@ -2752,7 +2763,7 @@ impl SessionManager {
                 );
             }
 
-            update_progress(4, "Cleaning up database".to_string()).await;
+            update_progress(4, "Cleaning up database".to_owned()).await;
             // Record deletion event
             let event = Event::new(session_id, EventType::SessionDeleted { reason: None });
             self.store.record_event(&event).await?;
@@ -2929,7 +2940,7 @@ impl SessionManager {
             .deletion_semaphore
             .acquire()
             .await
-            .map_err(|_| anyhow::anyhow!("System is shutting down"))?;
+            .map_err(|e| anyhow::anyhow!("System is shutting down: {e}"))?;
 
         // Get session and validate it's Docker
         let session = self
@@ -4011,14 +4022,14 @@ impl SessionManager {
 
         // Execute gh pr merge
         let mut args = vec![
-            "pr".to_string(),
-            "merge".to_string(),
+            "pr".to_owned(),
+            "merge".to_owned(),
             pr_number.to_string(),
-            method.to_gh_flag().to_string(),
+            method.to_gh_flag().to_owned(),
         ];
 
         if delete_branch {
-            args.push("--delete-branch".to_string());
+            args.push("--delete-branch".to_owned());
         }
 
         let output = tokio::process::Command::new("gh")
@@ -4322,7 +4333,7 @@ impl SessionManager {
             let mask_credential = |value: &str| -> String {
                 if value.len() <= 12 {
                     // Don't reveal any chars for short tokens to avoid leaking info
-                    "****".to_string()
+                    "****".to_owned()
                 } else {
                     format!(
                         "{start}****...{end}",
@@ -4335,11 +4346,11 @@ impl SessionManager {
             // Helper to determine credential source
             let credential_source = |env_var: &str, file_name: &str| -> (Option<String>, bool) {
                 if std::env::var(env_var).is_ok() {
-                    (Some("environment".to_string()), true) // readonly
+                    (Some("environment".to_owned()), true) // readonly
                 } else {
                     let path = secrets_dir.join(file_name);
                     if path.exists() {
-                        (Some("file".to_string()), false) // not readonly
+                        (Some("file".to_owned()), false) // not readonly
                     } else {
                         (None, false)
                     }
@@ -4363,8 +4374,8 @@ impl SessionManager {
             // GitHub
             let (source, readonly) = credential_source("GITHUB_TOKEN", "github_token");
             credentials.push(CredentialStatus {
-                name: "GitHub".to_string(),
-                service_id: "github".to_string(),
+                name: "GitHub".to_owned(),
+                service_id: "github".to_owned(),
                 available: creds.github_token.is_some(),
                 source,
                 readonly,
@@ -4375,8 +4386,8 @@ impl SessionManager {
             let (source, readonly) =
                 credential_source("CLAUDE_CODE_OAUTH_TOKEN", "anthropic_oauth_token");
             credentials.push(CredentialStatus {
-                name: "Anthropic".to_string(),
-                service_id: "anthropic".to_string(),
+                name: "Anthropic".to_owned(),
+                service_id: "anthropic".to_owned(),
                 available: creds.anthropic_oauth_token.is_some(),
                 source,
                 readonly,
@@ -4390,11 +4401,11 @@ impl SessionManager {
             let (source, readonly) = if std::env::var("OPENAI_API_KEY").is_ok()
                 || std::env::var("CODEX_API_KEY").is_ok()
             {
-                (Some("environment".to_string()), true)
+                (Some("environment".to_owned()), true)
             } else {
                 let path = secrets_dir.join("openai_api_key");
                 if path.exists() {
-                    (Some("file".to_string()), false)
+                    (Some("file".to_owned()), false)
                 } else if codex_auth_source.is_some() && creds.openai_api_key.is_some() {
                     (codex_auth_source.clone(), true)
                 } else {
@@ -4402,23 +4413,23 @@ impl SessionManager {
                 }
             };
             credentials.push(CredentialStatus {
-                name: "OpenAI".to_string(),
-                service_id: "openai".to_string(),
+                name: "OpenAI".to_owned(),
+                service_id: "openai".to_owned(),
                 available: creds.openai_api_key.is_some(),
                 source,
                 readonly,
                 masked_value: creds.openai_api_key.as_ref().map(|v| mask_credential(v)),
             });
             let (source, readonly) = if codex_env_present {
-                (Some("environment".to_string()), true)
+                (Some("environment".to_owned()), true)
             } else if codex_auth_source.is_some() {
                 (codex_auth_source.clone(), true)
             } else {
                 (None, true)
             };
             credentials.push(CredentialStatus {
-                name: "ChatGPT".to_string(),
-                service_id: "chatgpt".to_string(),
+                name: "ChatGPT".to_owned(),
+                service_id: "chatgpt".to_owned(),
                 available: creds.codex_access_token().is_some(),
                 source,
                 readonly,
@@ -4431,8 +4442,8 @@ impl SessionManager {
             // PagerDuty
             let (source, readonly) = credential_source("PAGERDUTY_TOKEN", "pagerduty_token");
             credentials.push(CredentialStatus {
-                name: "PagerDuty".to_string(),
-                service_id: "pagerduty".to_string(),
+                name: "PagerDuty".to_owned(),
+                service_id: "pagerduty".to_owned(),
                 available: creds.pagerduty_token.is_some(),
                 source,
                 readonly,
@@ -4442,8 +4453,8 @@ impl SessionManager {
             // Sentry
             let (source, readonly) = credential_source("SENTRY_AUTH_TOKEN", "sentry_auth_token");
             credentials.push(CredentialStatus {
-                name: "Sentry".to_string(),
-                service_id: "sentry".to_string(),
+                name: "Sentry".to_owned(),
+                service_id: "sentry".to_owned(),
                 available: creds.sentry_auth_token.is_some(),
                 source,
                 readonly,
@@ -4453,8 +4464,8 @@ impl SessionManager {
             // Grafana
             let (source, readonly) = credential_source("GRAFANA_API_KEY", "grafana_api_key");
             credentials.push(CredentialStatus {
-                name: "Grafana".to_string(),
-                service_id: "grafana".to_string(),
+                name: "Grafana".to_owned(),
+                service_id: "grafana".to_owned(),
                 available: creds.grafana_api_key.is_some(),
                 source,
                 readonly,
@@ -4464,8 +4475,8 @@ impl SessionManager {
             // npm
             let (source, readonly) = credential_source("NPM_TOKEN", "npm_token");
             credentials.push(CredentialStatus {
-                name: "npm".to_string(),
-                service_id: "npm".to_string(),
+                name: "npm".to_owned(),
+                service_id: "npm".to_owned(),
                 available: creds.npm_token.is_some(),
                 source,
                 readonly,
@@ -4475,8 +4486,8 @@ impl SessionManager {
             // Docker
             let (source, readonly) = credential_source("DOCKER_TOKEN", "docker_token");
             credentials.push(CredentialStatus {
-                name: "Docker".to_string(),
-                service_id: "docker".to_string(),
+                name: "Docker".to_owned(),
+                service_id: "docker".to_owned(),
                 available: creds.docker_token.is_some(),
                 source,
                 readonly,
@@ -4486,8 +4497,8 @@ impl SessionManager {
             // Kubernetes
             let (source, readonly) = credential_source("K8S_TOKEN", "k8s_token");
             credentials.push(CredentialStatus {
-                name: "Kubernetes".to_string(),
-                service_id: "k8s".to_string(),
+                name: "Kubernetes".to_owned(),
+                service_id: "k8s".to_owned(),
                 available: creds.k8s_token.is_some(),
                 source,
                 readonly,
@@ -4497,8 +4508,8 @@ impl SessionManager {
             // Talos
             let (source, readonly) = credential_source("TALOS_TOKEN", "talos_token");
             credentials.push(CredentialStatus {
-                name: "Talos".to_string(),
-                service_id: "talos".to_string(),
+                name: "Talos".to_owned(),
+                service_id: "talos".to_owned(),
                 available: creds.talos_token.is_some(),
                 source,
                 readonly,
@@ -4508,16 +4519,15 @@ impl SessionManager {
             // Collect proxy status (only Talos gateway is global)
             if pm.is_talos_configured() {
                 proxies.push(ProxyStatus {
-                    name: "Talos mTLS Gateway".to_string(),
+                    name: "Talos mTLS Gateway".to_owned(),
                     port: pm.talos_gateway_port(),
                     active: true,
-                    proxy_type: "global".to_string(),
+                    proxy_type: "global".to_owned(),
                 });
             }
 
             // Count session-specific proxies
-            // Safe to cast to u32: unlikely to have more than 4 billion sessions
-            #[allow(clippy::cast_possible_truncation)]
+            #[expect(clippy::cast_possible_truncation, reason = "unlikely to have more than 4 billion sessions")]
             {
                 active_session_proxies = pm.active_session_proxy_count().await as u32;
             }
@@ -4630,12 +4640,11 @@ impl SessionManager {
         // Validate token format first
         if let Err(e) = ClaudeApiClient::validate_token_format(oauth_token) {
             return Err(UsageError {
-                error_type: "invalid_token_format".to_string(),
-                message: "OAuth token has invalid format".to_string(),
+                error_type: "invalid_token_format".to_owned(),
+                message: "OAuth token has invalid format".to_owned(),
                 details: Some(e.to_string()),
                 suggestion: Some(
-                    "Set CLAUDE_CODE_OAUTH_TOKEN to a valid token starting with 'sk-ant-'"
-                        .to_string(),
+                    "Set CLAUDE_CODE_OAUTH_TOKEN to a valid token starting with 'sk-ant-'".to_owned(),
                 ),
             });
         }
@@ -4650,10 +4659,10 @@ impl SessionManager {
                 let error_str = e.to_string();
                 if error_str.contains("401") || error_str.contains("403") {
                     return Err(UsageError {
-                        error_type: "invalid_token".to_string(),
-                        message: "OAuth token is invalid or expired".to_string(),
+                        error_type: "invalid_token".to_owned(),
+                        message: "OAuth token is invalid or expired".to_owned(),
                         details: Some(error_str),
-                        suggestion: Some("Get a fresh token from claude.ai settings".to_string()),
+                        suggestion: Some("Get a fresh token from claude.ai settings".to_owned()),
                     });
                 }
 
@@ -4665,7 +4674,7 @@ impl SessionManager {
 
                 let org_id = if let Some(override_id) = org_id_override {
                     tracing::debug!("Using org_id from config");
-                    override_id.to_string()
+                    override_id.to_owned()
                 } else {
                     match std::env::var("CLAUDE_ORG_ID")
                         .or_else(|_| std::env::var("ANTHROPIC_ORG_ID"))
@@ -4673,15 +4682,14 @@ impl SessionManager {
                         Ok(id) => id,
                         Err(_) => {
                             return Err(UsageError {
-                                error_type: "missing_org_id".to_string(),
-                                message: "Failed to get organization ID".to_string(),
+                                error_type: "missing_org_id".to_owned(),
+                                message: "Failed to get organization ID".to_owned(),
                                 details: Some(format!(
                                     "API error: {}. No org_id in config or CLAUDE_ORG_ID env var set.",
                                     error_str
                                 )),
                                 suggestion: Some(
-                                    "Set org_id in config.toml, or CLAUDE_ORG_ID environment variable, or use --org-id CLI flag"
-                                        .to_string(),
+                                    "Set org_id in config.toml, or CLAUDE_ORG_ID environment variable, or use --org-id CLI flag".to_owned(),
                                 ),
                             });
                         }
@@ -4699,26 +4707,26 @@ impl SessionManager {
                 let error_str = e.to_string();
                 if error_str.contains("401") || error_str.contains("403") {
                     return Err(UsageError {
-                        error_type: "unauthorized".to_string(),
-                        message: "Not authorized to access usage data".to_string(),
+                        error_type: "unauthorized".to_owned(),
+                        message: "Not authorized to access usage data".to_owned(),
                         details: Some(error_str),
                         suggestion: Some(
-                            "Verify token has access to this organization".to_string(),
+                            "Verify token has access to this organization".to_owned(),
                         ),
                     });
                 } else if error_str.contains("404") {
                     return Err(UsageError {
-                        error_type: "not_found".to_string(),
+                        error_type: "not_found".to_owned(),
                         message: format!("Organization {} not found", org_id),
                         details: Some(error_str),
-                        suggestion: Some("Verify CLAUDE_ORG_ID is correct".to_string()),
+                        suggestion: Some("Verify CLAUDE_ORG_ID is correct".to_owned()),
                     });
                 }
                 return Err(UsageError {
-                    error_type: "api_error".to_string(),
-                    message: "Failed to fetch usage data from Claude.ai".to_string(),
+                    error_type: "api_error".to_owned(),
+                    message: "Failed to fetch usage data from Claude.ai".to_owned(),
                     details: Some(error_str),
-                    suggestion: Some("Check network connectivity and try again".to_string()),
+                    suggestion: Some("Check network connectivity and try again".to_owned()),
                 });
             }
         };

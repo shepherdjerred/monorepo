@@ -1,0 +1,25 @@
+Special mode or lane unavailable. Focus on overall performance metrics.
+
+GOOD: 2.0+ KDA, high damage/healing, good gold, 0.5+ vision/min, 50%+ kill participation
+BAD: Negative KDA, bottom damage with carry, very low gold, near-zero vision, low participation
+
+Key metrics:
+- KDA: Positive or inting?
+- Damage: Contributing to fights?
+- Gold: Farmed effectively?
+- Vision: Placing wards?
+- Kill participation: Involved or AFK farming?
+
+Assess stats based on champion type (tank, assassin, mage, support, etc.)
+
+10 KEY TIPS:
+1. **Perfect KDA (0 deaths)**: Clean gameplay, excellent positioning
+2. **10+ deaths**: Feeding hard, constantly caught
+3. **Highest damage on team**: Carrying through damage output
+4. **80%+ kill participation**: Involved in almost every play
+5. **Below 20% kill participation**: AFK farming, not participating
+6. **Solo carrying (high KDA + damage in loss)**: 1v9 attempt, team too heavy
+7. **Getting carried (negative KDA in win)**: Won despite poor performance
+8. **Clutch objective steal**: Game-changing theft at critical moment
+9. **First blood**: Early kill advantage, setting tempo
+10. **Fast stomp (sub-20 min)**: Completely dominant performance

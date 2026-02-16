@@ -1,0 +1,327 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "TahmKench": {
+      "id": "TahmKench",
+      "key": "223",
+      "name": "Tahm Kench",
+      "title": "The River King",
+      "image": {
+        "full": "TahmKench.png",
+        "sprite": "champion4.png",
+        "group": "champion",
+        "x": 96,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "223000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "223001",
+          "num": 1,
+          "name": "Master Chef Tahm Kench",
+          "chromas": false
+        },
+        {
+          "id": "223002",
+          "num": 2,
+          "name": "Urf Kench",
+          "chromas": false
+        },
+        {
+          "id": "223003",
+          "num": 3,
+          "name": "Coin Emperor Tahm Kench",
+          "chromas": true
+        },
+        {
+          "id": "223011",
+          "num": 11,
+          "name": "Arcana Tahm Kench",
+          "chromas": false
+        },
+        {
+          "id": "223020",
+          "num": 20,
+          "name": "High Noon Tahm Kench",
+          "chromas": false
+        },
+        {
+          "id": "223030",
+          "num": 30,
+          "name": "Shan Hai Scrolls Tahm Kench",
+          "chromas": false
+        }
+      ],
+      "lore": "Known by many names throughout history, the demon Tahm Kench travels the waterways of Runeterra, feeding his insatiable appetite with the misery of others. Though he may appear singularly charming and proud, he swaggers through the physical realm like a vagabond in search of unsuspecting prey. His lashing tongue can stun even a heavily armored warrior from a dozen paces, and to fall into his rumbling belly is to tumble into an abyss from which there is little hope of return.",
+      "blurb": "Known by many names throughout history, the demon Tahm Kench travels the waterways of Runeterra, feeding his insatiable appetite with the misery of others. Though he may appear singularly charming and proud, he swaggers through the physical realm like a...",
+      "allytips": [
+        "Your most important function as a support is to keep fragile allies safe. Keep Devour's range and cooldown in mind and position accordingly!",
+        "Consider carefully when to use Thick Skin's active. Sometimes shielding early to avoid further damage is good, but sometimes the healing is more beneficial."
+      ],
+      "enemytips": [
+        "When you see Tahm Kench use the shield from Thick Skin, remember that he just opted out of a good deal of healing. He will also not accumulate new gray health until Thick Skin comes off cooldown. Use this to your advantage!",
+        "Watch out for Kench's Abyssal Dive - you can cancel it's channel with immobilizing crowd control effects."
+      ],
+      "tags": ["Tank", "Support"],
+      "partype": "Mana",
+      "info": {
+        "attack": 3,
+        "defense": 9,
+        "magic": 6,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 640,
+        "hpperlevel": 103,
+        "mp": 325,
+        "mpperlevel": 50,
+        "movespeed": 335,
+        "armor": 39,
+        "armorperlevel": 4.7,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 175,
+        "hpregen": 6.5,
+        "hpregenperlevel": 0.55,
+        "mpregen": 8,
+        "mpregenperlevel": 1,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 56,
+        "attackdamageperlevel": 3.2,
+        "attackspeedperlevel": 2.5,
+        "attackspeed": 0.658
+      },
+      "spells": [
+        {
+          "id": "TahmKenchQ",
+          "name": "Tongue Lash",
+          "description": "Tahm Kench lashes out with his tongue, damaging and slowing the first unit hit and healing himself if he strikes an enemy champion.<br><br>Applies a stack of  <spellName>An Acquired Taste</spellName> to enemy champions. If the champion already has 3 stacks of <spellName>An Acquired Taste</spellName>, they are stunned and the stacks are consumed.",
+          "tooltip": "Deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first enemy hit and <status>Slows</status> them by {{ slowamount*100 }}% for {{ slowduration }} seconds. <br /><br />On champion hit, heals Tahm for <healing>{{ baseheal }} +{{ percenthealthhealing*100 }}% of his missing Health</healing> and applies a stack of <spellName>An Acquired Taste</spellName> dealing <magicDamage>{{ spell.tahmkenchpassive:totaldamage }} extra magic damage</magicDamage>. If that champion already had 3 stacks of <spellName>An Acquired Taste</spellName>, they will also be <status>Stunned</status> for {{ stunduration }} seconds, consuming the stacks.<br /><br />Activate <span class=\"color0bf7de\">Devour</span> while your tongue is in midair to devour enemy champions who already have 3 stacks of <spellName>An Acquired Taste</spellName> from a distance when you hit them.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Base Damage",
+              "Healing",
+              "Percent Missing Health Healing",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ baseheal }} -> {{ basehealNL }}",
+              "{{ percenthealthhealing*100.000000 }}% -> {{ percenthealthhealingnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [7, 6.5, 6, 5.5, 5],
+          "cooldownBurn": "7/6.5/6/5.5/5",
+          "cost": [50, 46, 42, 38, 34],
+          "costBurn": "50/46/42/38/34",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [900, 900, 900, 900, 900],
+          "rangeBurn": "900",
+          "image": {
+            "full": "TahmKenchQ.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 288,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "TahmKenchW",
+          "name": "Abyssal Dive",
+          "description": "Dive down and then re-appear at target location, damaging and knocking up all enemies in an area.",
+          "tooltip": "Dive down and then re-appear at target location, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Knock Up</status> all enemies in an area for {{ knockupduration }} second. Hitting at least one enemy champion refunds {{ champrefund*100 }}% of the Cooldown and <scaleMana>Mana</scaleMana> cost. <br /><br /><span class=\"color0bf7de\">Devoured</span> allies can be taken along for the ride (but can always hop out early).{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Damage", "Range", "@AbilityResourceName@ Cost", "Cooldown Refund"],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ castrange }} -> {{ castrangeNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ champrefund*100.000000 }}% -> {{ champrefundnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [21, 20, 19, 18, 17],
+          "cooldownBurn": "21/20/19/18/17",
+          "cost": [60, 75, 90, 105, 120],
+          "costBurn": "60/75/90/105/120",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1000, 1050, 1100, 1150, 1200],
+          "rangeBurn": "1000/1050/1100/1150/1200",
+          "image": {
+            "full": "TahmKenchW.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 336,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "TahmKenchE",
+          "name": "Thick Skin",
+          "description": "<passive>Passive:</passive> Tahm Kench stores a percent of the damage he takes and heals based on it while out of combat.<br><br><active>Active:</active> Convert all stored damage into a temporary shield.",
+          "tooltip": "<passive>Passive:</passive> {{ greyhealthratio*100 }}% of damage Tahm Kench takes is stored by his <spellName>Thick Skin</spellName>, increased to {{ greyhealthratioenhanced*100 }}% if there are at least {{ enhancedthreshold }} nearby enemy champions. If Kench has not taken damage within {{ ooctimer }} seconds, <spellName>Thick Skin</spellName> will rapidly be consumed to heal Tahm for {{ greyhealthhealingratio }} of its value.<br /><br /><active>Active:</active> Convert all your stored <spellName>Thick Skin</spellName> into a <shield>Shield</shield>, lasting {{ shieldduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["% Damage to Thick Skin", "% Damage to Thick Skin Enhanced"],
+            "effect": [
+              "{{ greyhealthratio*100.000000 }}% -> {{ greyhealthrationl*100.000000 }}%",
+              "{{ greyhealthratioenhanced*100.000000 }}% -> {{ greyhealthratioenhancednl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [3, 3, 3, 3, 3],
+          "cooldownBurn": "3",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [2400, 2400, 2400, 2400, 2400],
+          "rangeBurn": "2400",
+          "image": {
+            "full": "TahmKenchE.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 384,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "TahmKenchRWrapper",
+          "name": "Devour",
+          "description": "Tahm Kench devours a champion for a few seconds, dealing magic damage if they are an enemy, or shielding them if they are an ally.",
+          "tooltip": "Tahm Kench devours a champion for a few seconds. He can <recast>Recast</recast> to spit them out.<br /><br /><specialRules>Enemy Champions:</specialRules> Require 3 stacks of <spellName>An Acquired Taste</spellName>. Are devoured for up to {{ enemyduration }} seconds and take <magicDamage>{{ basedamage }} (+{{ percenthpdamage }} of their Max Health) magic damage</magicDamage>. Tahm Kench is <status>Slowed</status> by {{ slowamount*100 }}% and <keywordName>Grounded</keywordName> during this effect.<br /><br /><specialRules>Ally Champions:</specialRules> Are devoured for up to {{ allyduration }} seconds and are granted <shield>{{ totalshield }} Shield</shield> which decays gradually after being spit out. Allies can also choose to exit early. Tahm Kench is <status>Grounded</status> during this effect, but can cast <keywordName>Abyssal Dive</keywordName> and gains <speed>{{ allyspeedamount*100 }}% Move Speed</speed> for {{ allyduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Shield Amount", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ baseshield }} -> {{ baseshieldNL }}",
+              "{{ datacooldown }} -> {{ datacooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [0, 0, 0],
+          "cooldownBurn": "0",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " Mana",
+          "maxammo": "-1",
+          "range": [25000, 25000, 25000],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "TahmKenchRWrapper.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 432,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ datamanacost }} Mana"
+        }
+      ],
+      "passive": {
+        "name": "An Acquired Taste",
+        "description": "Tahm Kench puts the heft of his immense body behind his attacks, gaining extra damage based on his total health. Damaging enemy champions builds stacks of <spellName>An Acquired Taste</spellName>. At three stacks, he can use <spellName>Devour</spellName> on an enemy champion.",
+        "image": {
+          "full": "TahmKenchP.png",
+          "sprite": "passive4.png",
+          "group": "passive",
+          "x": 96,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

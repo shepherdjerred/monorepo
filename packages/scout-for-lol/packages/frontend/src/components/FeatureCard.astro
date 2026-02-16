@@ -1,0 +1,25 @@
+---
+import Card from "./Card.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  icon?: string | undefined; // SVG content as string or astro-icon name
+  iconColor?: string | undefined;
+}
+
+const { title, description, icon, iconColor = "bg-indigo-600" } = Astro.props;
+
+// Determine if icon is an astro-icon name or HTML
+const isIconName = icon && !icon.includes("<");
+---
+
+<Card
+  title={title}
+  description={description}
+  icon={isIconName ? icon : undefined}
+  iconHtml={!isIconName ? icon : undefined}
+  iconColor={iconColor}
+  asList={true}
+  layout="left"
+/>

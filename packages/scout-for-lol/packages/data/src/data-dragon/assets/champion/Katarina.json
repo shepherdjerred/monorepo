@@ -1,0 +1,385 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Katarina": {
+      "id": "Katarina",
+      "key": "55",
+      "name": "Katarina",
+      "title": "the Sinister Blade",
+      "image": {
+        "full": "Katarina.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 0,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "55000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "55001",
+          "num": 1,
+          "name": "Mercenary Katarina",
+          "chromas": false
+        },
+        {
+          "id": "55002",
+          "num": 2,
+          "name": "Red Card Katarina",
+          "chromas": false
+        },
+        {
+          "id": "55003",
+          "num": 3,
+          "name": "Bilgewater Katarina",
+          "chromas": false
+        },
+        {
+          "id": "55004",
+          "num": 4,
+          "name": "Kitty Cat Katarina",
+          "chromas": false
+        },
+        {
+          "id": "55005",
+          "num": 5,
+          "name": "High Command Katarina",
+          "chromas": false
+        },
+        {
+          "id": "55006",
+          "num": 6,
+          "name": "Sandstorm Katarina",
+          "chromas": false
+        },
+        {
+          "id": "55007",
+          "num": 7,
+          "name": "Slay Belle Katarina",
+          "chromas": false
+        },
+        {
+          "id": "55008",
+          "num": 8,
+          "name": "Warring Kingdoms Katarina",
+          "chromas": true
+        },
+        {
+          "id": "55009",
+          "num": 9,
+          "name": "PROJECT: Katarina",
+          "chromas": false
+        },
+        {
+          "id": "55010",
+          "num": 10,
+          "name": "Death Sworn Katarina",
+          "chromas": false
+        },
+        {
+          "id": "55012",
+          "num": 12,
+          "name": "Battle Academia Katarina",
+          "chromas": true
+        },
+        {
+          "id": "55021",
+          "num": 21,
+          "name": "Blood Moon Katarina",
+          "chromas": true
+        },
+        {
+          "id": "55029",
+          "num": 29,
+          "name": "Battle Queen Katarina",
+          "chromas": true
+        },
+        {
+          "id": "55037",
+          "num": 37,
+          "name": "High Noon Katarina",
+          "chromas": true
+        },
+        {
+          "id": "55047",
+          "num": 47,
+          "name": "Faerie Court Katarina",
+          "chromas": true
+        },
+        {
+          "id": "55048",
+          "num": 48,
+          "name": "Prestige Faerie Court Katarina",
+          "chromas": false
+        },
+        {
+          "id": "55059",
+          "num": 59,
+          "name": "Chosen of the Wolf Katarina",
+          "chromas": false
+        },
+        {
+          "id": "55060",
+          "num": 60,
+          "name": "Prestige Masque of the Black Rose Katarina",
+          "chromas": true
+        },
+        {
+          "id": "55070",
+          "num": 70,
+          "name": "Petals of Spring Katarina",
+          "chromas": false
+        }
+      ],
+      "lore": "Decisive in judgment and lethal in combat, Katarina is a Noxian assassin of the highest caliber. Eldest daughter to the legendary General Du Couteau, she made her talents known with swift kills against unsuspecting enemies. Her fiery ambition has driven her to pursue heavily-guarded targets, even at the risk of endangering her allies—but no matter the mission, Katarina will not hesitate to execute her duty amid a whirlwind of serrated daggers.",
+      "blurb": "Decisive in judgment and lethal in combat, Katarina is a Noxian assassin of the highest caliber. Eldest daughter to the legendary General Du Couteau, she made her talents known with swift kills against unsuspecting enemies. Her fiery ambition has driven...",
+      "allytips": [
+        "Picking up Daggers will significantly reduce Shunpo's cooldown.",
+        "Try waiting until the other team is distracted with fighting your team, and use Shunpo to teleport into the fray and unleash a devastating Death Lotus.",
+        "Using Shunpo on an allied Champion, Dagger, or minion can be a great escape tactic."
+      ],
+      "enemytips": [
+        "Katarina's abilities deal magic damage, so even if she's building Attack Damage items, get magic resistance to counter her.",
+        "Try to save a disable for when Katarina uses her Death Lotus."
+      ],
+      "tags": ["Assassin", "Mage"],
+      "partype": "None",
+      "info": {
+        "attack": 4,
+        "defense": 3,
+        "magic": 9,
+        "difficulty": 8
+      },
+      "stats": {
+        "hp": 672,
+        "hpperlevel": 108,
+        "mp": 0,
+        "mpperlevel": 0,
+        "movespeed": 335,
+        "armor": 32,
+        "armorperlevel": 4.7,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 7.5,
+        "hpregenperlevel": 0.7,
+        "mpregen": 0,
+        "mpregenperlevel": 0,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 58,
+        "attackdamageperlevel": 3.2,
+        "attackspeedperlevel": 2.74,
+        "attackspeed": 0.658
+      },
+      "spells": [
+        {
+          "id": "KatarinaQ",
+          "name": "Bouncing Blade",
+          "description": "Katarina throws a <font color='#FFF673'>Dagger</font> at the target that then bounces to nearby enemies before ricocheting onto the ground.",
+          "tooltip": "Katarina throws a <keywordMajor>Dagger</keywordMajor>, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the target and {{ maxbounces }} nearby enemies. The <keywordMajor>Dagger</keywordMajor> then ricochets onto the ground behind the primary target.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Base Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [11, 10, 9, 8, 7],
+          "cooldownBurn": "11/10/9/8/7",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [2, 2, 2, 2, 2],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "2", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [625, 625, 625, 625, 625],
+          "rangeBurn": "625",
+          "image": {
+            "full": "KatarinaQ.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 384,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "KatarinaW",
+          "name": "Preparation",
+          "description": "Katarina gains a burst of Move Speed, tossing a <font color='#FFF673'>Dagger</font> into the air directly above herself.",
+          "tooltip": "Katarina tosses a <keywordMajor>Dagger</keywordMajor> into the air and gains <speed>{{ e4 }}% Move Speed</speed> decaying over {{ e2 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Move Speed", "Cooldown"],
+            "effect": ["{{ e4 }}% -> {{ e4NL }}%", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [15, 14, 13, 12, 11],
+          "cooldownBurn": "15/14/13/12/11",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [1.25, 1.25, 1.25, 1.25, 1.25],
+            [0, 0, 0, 0, 0],
+            [50, 60, 70, 80, 90],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "1.25", "0", "50/60/70/80/90", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [25000, 25000, 25000, 25000, 25000],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "KatarinaW.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 432,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "KatarinaEWrapper",
+          "name": "Shunpo",
+          "description": "Katarina blinks to the target, striking it if its an enemy, or striking the nearest enemy otherwise.",
+          "tooltip": "Katarina blinks in the wink of an eye to the target ally, enemy, or <keywordMajor>Dagger</keywordMajor>. If it is an enemy, Katarina strikes for <magicDamage>{{ totaldamage }} magic damage</magicDamage> - otherwise she strikes the nearest enemy in range.<br /><br />Picking up a <keywordMajor>Dagger</keywordMajor> will reduce this Ability's Cooldown by <scaleLevel>{{ daggercooldownreduction }}</scaleLevel> seconds (<scaleLevel>{{ tooltipdaggerreduction }}</scaleLevel>). Katarina can blink to any location near the target.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 11, 10, 9, 8],
+          "cooldownBurn": "12/11/10/9/8",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [725, 725, 725, 725, 725],
+          "rangeBurn": "725",
+          "image": {
+            "full": "KatarinaEWrapper.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 0,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "KatarinaR",
+          "name": "Death Lotus",
+          "description": "Katarina becomes a flurry of blades, dealing massive magic damage while she channels to the 3 nearest enemy champions.",
+          "tooltip": "Katarina becomes a flurry of blades, rapidly attacking the three nearest enemy champions with a flurry of knives. Each knife deals <magicDamage>{{ damagecalc }} magic damage</magicDamage> and <physicalDamage>{{ addamagecalc }} physical damage</physicalDamage>, and applies {{ grievousamount*100 }}% Grievous Wounds for {{ grievousduration }} seconds.<br /><br />Total over {{ duration }} seconds to each enemy: <magicDamage>{{ totaldamagecalc }} magic damage</magicDamage> and <physicalDamage>{{ totaladdamagecalc }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage Per Knife", "Cooldown", "On Hit Damage Modifier"],
+            "effect": [
+              "{{ damagepertick }} -> {{ damagepertickNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ onhitratio*100.000000 }}% -> {{ onhitrationl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [75, 60, 45],
+          "cooldownBurn": "75/60/45",
+          "cost": [0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [550, 550, 550],
+          "rangeBurn": "550",
+          "image": {
+            "full": "KatarinaR.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 48,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        }
+      ],
+      "passive": {
+        "name": "Voracity",
+        "description": "Whenever an enemy champion dies that Katarina has damaged recently, her remaining ability cooldowns are dramatically reduced.<br><br>If Katarina picks up a <font color='#FFF673'>Dagger</font>, she uses it to slash through all nearby enemies, dealing magic damage.",
+        "image": {
+          "full": "Katarina_Passive.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 0,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

@@ -1,0 +1,104 @@
+---
+title: My struggles with C and libvirt
+description: Libvirt is pretty unintuitive
+date: 2022-10-06Z-0700
+---
+
+I recently completed a project for my Advanced Operating Systems course at Georgia Tech. I found that the project was hard not because of the problem itself. It's hard because it must be done in C, using [libvirt](https://libvirt.org/) APIs which are poorly documented, using a test setup that is brittle.
+
+This article will hopefully save others some pain.
+
+I'll be providing examples of how to call relevant libvirt APIs, and some other useful information
+
+## General Tips
+
+### Set up warnings
+
+Before you do anything, enable every single warning that you can for the C compiler. The compiler can catch so many mistakes for you if you tell it to. This includes issues like implicit casting, incorrect printf calls, ineffectual assignments, and so much more.
+
+Update your Makefile to enable some warnings, for example:
+
+```makefile
+GCCFLAGS += -Wall -Wextra -Wpedantic \
+          -Wformat=2 -Wno-unused-parameter -Wshadow \
+          -Wwrite-strings -Wstrict-prototypes -Wold-style-definition \
+          -Wredundant-decls -Wnested-externs -Wmissing-include-dirs \
+		  -Wjump-misses-init -Wlogical-op -std=c11 \
+		  -Wstrict-overflow -fno-strict-aliasing \
+		  -Wconversion
+
+compile:
+    gcc -g vcpu_scheduler.c -o vcpu_scheduler -lvirt -lm $(GCCFLAGS)
+```
+
+### Refresh on C
+
+I hadn't written C single my senior year of college. Like many, I've been spoiled by high-level languages that give you modern luxeries like lists and generics. I found that spending some time reading up on modern C and pointers both helped me out.
+
+I found these resources useful:
+
+- [How to C](https://matt.sh/howto-c)
+
+### Development Environment
+
+The entire class will be scrambling to setup their development environment for the first week or so. I personally installed Linux on my desktop and used that to work with [VS Code SSH Remote](https://code.visualstudio.com/docs/remote/ssh), but there are plenty of other valid ways to work.
+
+## C/libvirt patterns
+
+Now, onto some useful patterns.
+
+## Counting Host CPUs
+
+C heavily uses output variables. Methods will often return ints that represent either a status code (e.g. was there an error or not), or the number of records returned, or both.
+
+This method returns 0 on success, and -1 on failure.
+
+It's always good to check return codes. Nothing nothing nothing is more frustrating than being confused about why straightforward code is failing -- this is one way to prevent that from happening.
+
+```c
+virNodeInfo node_info;
+if (virNodeGetInfo(conn, &node_info) == -1) {
+  exit(1);
+}
+unsigned int num_cpus = node_info.cpus;
+```
+
+## Listing domains
+
+This method takes a pointer. It will allocate a list of domains at the pointer, and the return value contains the number of items returned. You can iterate over the items using this information.
+
+Also, this method requires a bit of cleanup. You didn't dynamically allocate any memory, but the method you called did. Clean up so that you don't leak memory.
+
+```c
+virDomainPtr *domain_list;
+int num_domains = virConnectListAllDomains(conn, &domain_list, 0);
+// don't forget to cleanup!
+for (int i_domain = 0; i_domain < num_domains; i_domain++) {
+  virDomainFree(domain_list[i_domain]);
+}
+free(domain_list);
+```
+
+## Pin a vCPU to a pCPU
+
+This one is rough.
+
+I think you can form the CPU map manually, but I just call libvirt and let it form it for me, then I pin CPUs as I like.
+
+```c
+unsigned char *map;
+if (virNodeGetCPUMap(conn, &map, NULL, 0) == -1) {
+  exit(1);
+}
+
+// Use CPU 0
+VIR_USE_CPU(map, 0);
+// Don't use CPU 1
+VIR_UNUSE_CPU(map, 1);
+
+int maplen = VIR_CPU_MAPLEN(number_of_physical_cpus);
+
+// apply these settings to vcpu #0 in the given domain
+virDomainPinVcpu(domain, 0, map, maplen);
+free(map);
+```

@@ -11,6 +11,7 @@ use crate::core::AgentType;
 /// not in containers. This means Claude Code plugins are automatically available
 /// at ~/.claude/plugins/ without any special configuration or mounting.
 /// No plugin-specific handling is needed for this backend.
+#[derive(Debug, Copy, Clone)]
 pub struct ZellijBackend;
 
 impl ZellijBackend {
@@ -24,9 +25,9 @@ impl ZellijBackend {
     #[must_use]
     pub fn build_create_session_args(name: &str) -> Vec<String> {
         vec![
-            "attach".to_string(),
-            "--create-background".to_string(),
-            name.to_string(),
+            "attach".to_owned(),
+            "--create-background".to_owned(),
+            name.to_owned(),
         ]
     }
 
@@ -91,13 +92,13 @@ impl ZellijBackend {
             .join(" ");
 
         vec![
-            "action".to_string(),
-            "new-pane".to_string(),
-            "--cwd".to_string(),
+            "action".to_owned(),
+            "new-pane".to_owned(),
+            "--cwd".to_owned(),
             workdir.display().to_string(),
-            "--".to_string(),
-            "bash".to_string(),
-            "-c".to_string(),
+            "--".to_owned(),
+            "bash".to_owned(),
+            "-c".to_owned(),
             agent_cmd,
         ]
     }
@@ -105,7 +106,67 @@ impl ZellijBackend {
     /// Build the attach command arguments (exposed for testing)
     #[must_use]
     pub fn build_attach_args(name: &str) -> Vec<String> {
-        vec!["zellij".to_string(), "attach".to_string(), name.to_string()]
+        vec!["zellij".to_owned(), "attach".to_owned(), name.to_owned()]
+    }
+
+    // Legacy method names for backward compatibility during migration
+
+    /// Create a new Zellij session (legacy name)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session creation fails.
+    #[deprecated(note = "Use ExecutionBackend::create instead")]
+    pub async fn create_session(
+        &self,
+        name: &str,
+        workdir: &Path,
+        initial_prompt: &str,
+    ) -> anyhow::Result<String> {
+        self.create(
+            name,
+            workdir,
+            initial_prompt,
+            super::traits::CreateOptions {
+                agent: AgentType::ClaudeCode,
+                model: None, // Use default model
+                print_mode: false,
+                plan_mode: true, // Default to plan mode
+                session_proxy_port: None,
+                images: vec![],
+                dangerous_skip_checks: false,
+                dangerous_copy_creds: false, // Zellij is local, no copy-creds needed
+                session_id: None,
+                initial_workdir: std::path::PathBuf::new(),
+                http_port: None,
+                container_image: None,
+                container_resources: None,
+                repositories: vec![], // Legacy single-repo mode
+                storage_class_override: None,
+                volume_mode: false,
+            },
+        )
+        .await
+    }
+
+    /// Check if a Zellij session exists (legacy name)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the Zellij command fails.
+    #[deprecated(note = "Use ExecutionBackend::exists instead")]
+    pub async fn session_exists(&self, name: &str) -> anyhow::Result<bool> {
+        self.exists(name).await
+    }
+
+    /// Delete a Zellij session (legacy name)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the Zellij command fails.
+    #[deprecated(note = "Use ExecutionBackend::delete instead")]
+    pub async fn delete_session(&self, name: &str) -> anyhow::Result<()> {
+        self.delete(name).await
     }
 }
 
@@ -192,7 +253,7 @@ impl ExecutionBackend for ZellijBackend {
             "Created Zellij session"
         );
 
-        Ok(name.to_string())
+        Ok(name.to_owned())
     }
 
     /// Check if a Zellij session exists
@@ -296,67 +357,6 @@ impl ExecutionBackend for ZellijBackend {
     }
 }
 
-// Legacy method names for backward compatibility during migration
-impl ZellijBackend {
-    /// Create a new Zellij session (legacy name)
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the session creation fails.
-    #[deprecated(note = "Use ExecutionBackend::create instead")]
-    pub async fn create_session(
-        &self,
-        name: &str,
-        workdir: &Path,
-        initial_prompt: &str,
-    ) -> anyhow::Result<String> {
-        self.create(
-            name,
-            workdir,
-            initial_prompt,
-            super::traits::CreateOptions {
-                agent: AgentType::ClaudeCode,
-                model: None, // Use default model
-                print_mode: false,
-                plan_mode: true, // Default to plan mode
-                session_proxy_port: None,
-                images: vec![],
-                dangerous_skip_checks: false,
-                dangerous_copy_creds: false, // Zellij is local, no copy-creds needed
-                session_id: None,
-                initial_workdir: std::path::PathBuf::new(),
-                http_port: None,
-                container_image: None,
-                container_resources: None,
-                repositories: vec![], // Legacy single-repo mode
-                storage_class_override: None,
-                volume_mode: false,
-            },
-        )
-        .await
-    }
-
-    /// Check if a Zellij session exists (legacy name)
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the Zellij command fails.
-    #[deprecated(note = "Use ExecutionBackend::exists instead")]
-    pub async fn session_exists(&self, name: &str) -> anyhow::Result<bool> {
-        self.exists(name).await
-    }
-
-    /// Delete a Zellij session (legacy name)
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the Zellij command fails.
-    #[deprecated(note = "Use ExecutionBackend::delete instead")]
-    pub async fn delete_session(&self, name: &str) -> anyhow::Result<()> {
-        self.delete(name).await
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -368,11 +368,11 @@ mod tests {
         let args = ZellijBackend::build_create_session_args("test-session");
 
         assert!(
-            args.contains(&"--create-background".to_string()),
+            args.contains(&"--create-background".to_owned()),
             "Expected --create-background flag: {args:?}"
         );
         assert!(
-            args.contains(&"attach".to_string()),
+            args.contains(&"attach".to_owned()),
             "Expected 'attach' subcommand: {args:?}"
         );
     }
@@ -392,7 +392,7 @@ mod tests {
         );
 
         assert!(
-            args.contains(&"--cwd".to_string()),
+            args.contains(&"--cwd".to_owned()),
             "Expected --cwd flag: {args:?}"
         );
 
@@ -471,7 +471,7 @@ mod tests {
         );
 
         assert!(
-            args.contains(&"bash".to_string()),
+            args.contains(&"bash".to_owned()),
             "Expected bash shell: {args:?}"
         );
     }
@@ -490,7 +490,7 @@ mod tests {
         );
 
         assert!(
-            args.contains(&"--".to_string()),
+            args.contains(&"--".to_owned()),
             "Expected '--' separator before shell command: {args:?}"
         );
 
@@ -524,8 +524,8 @@ mod tests {
     #[test]
     fn test_command_includes_images() {
         let images = vec![
-            "/path/to/image1.png".to_string(),
-            "/path/to/image2.jpg".to_string(),
+            "/path/to/image1.png".to_owned(),
+            "/path/to/image2.jpg".to_owned(),
         ];
         let args = ZellijBackend::build_new_pane_args(
             &PathBuf::from("/workspace"),
@@ -552,7 +552,7 @@ mod tests {
     /// Test that image paths with single quotes are properly escaped
     #[test]
     fn test_image_path_escaping() {
-        let images = vec!["/path/with'quote/image.png".to_string()];
+        let images = vec!["/path/with'quote/image.png".to_owned()];
         let args = ZellijBackend::build_new_pane_args(
             &PathBuf::from("/workspace"),
             "test prompt",

@@ -1,0 +1,368 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Shen": {
+      "id": "Shen",
+      "key": "98",
+      "name": "Shen",
+      "title": "the Eye of Twilight",
+      "image": {
+        "full": "Shen.png",
+        "sprite": "champion4.png",
+        "group": "champion",
+        "x": 0,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "98000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "98001",
+          "num": 1,
+          "name": "Frozen Shen",
+          "chromas": false
+        },
+        {
+          "id": "98002",
+          "num": 2,
+          "name": "Yellow Jacket Shen",
+          "chromas": false
+        },
+        {
+          "id": "98003",
+          "num": 3,
+          "name": "Surgeon Shen",
+          "chromas": true
+        },
+        {
+          "id": "98004",
+          "num": 4,
+          "name": "Blood Moon Shen",
+          "chromas": false
+        },
+        {
+          "id": "98005",
+          "num": 5,
+          "name": "Warlord Shen",
+          "chromas": true
+        },
+        {
+          "id": "98006",
+          "num": 6,
+          "name": "TPA Shen",
+          "chromas": false
+        },
+        {
+          "id": "98015",
+          "num": 15,
+          "name": "Pulsefire Shen",
+          "chromas": true
+        },
+        {
+          "id": "98016",
+          "num": 16,
+          "name": "Infernal Shen",
+          "chromas": true
+        },
+        {
+          "id": "98022",
+          "num": 22,
+          "name": "PsyOps Shen",
+          "chromas": true
+        },
+        {
+          "id": "98040",
+          "num": 40,
+          "name": "Shockblade Shen",
+          "chromas": true
+        },
+        {
+          "id": "98049",
+          "num": 49,
+          "name": "Ashen Guardian Shen",
+          "chromas": true
+        },
+        {
+          "id": "98051",
+          "num": 51,
+          "name": "Three Honors Shen",
+          "chromas": false
+        }
+      ],
+      "lore": "Among the secretive, Ionian warriors known as the Kinkou, Shen serves as their leader, the Eye of Twilight. He longs to remain free from the confusion of emotion, prejudice, and ego, and walks the unseen path of dispassionate judgment between the spirit realm and the physical world. Tasked with enforcing the equilibrium between them, Shen wields blades of steel and arcane energy against any who would threaten it.",
+      "blurb": "Among the secretive, Ionian warriors known as the Kinkou, Shen serves as their leader, the Eye of Twilight. He longs to remain free from the confusion of emotion, prejudice, and ego, and walks the unseen path of dispassionate judgment between the spirit...",
+      "allytips": [
+        "Keep an eye on allies and be ready to save them with your teleport.",
+        "Leverage your Energy to get a long-term advantage over Mana users."
+      ],
+      "enemytips": [
+        "Be ready to dodge Shen's taunt and punish him if he misses.",
+        "Once Shen reaches level 6, watch out for his global-range ultimate, which can turn fights quickly."
+      ],
+      "tags": ["Tank"],
+      "partype": "Energy",
+      "info": {
+        "attack": 3,
+        "defense": 9,
+        "magic": 3,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 610,
+        "hpperlevel": 99,
+        "mp": 400,
+        "mpperlevel": 0,
+        "movespeed": 340,
+        "armor": 34,
+        "armorperlevel": 4.2,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 8.5,
+        "hpregenperlevel": 0.75,
+        "mpregen": 50,
+        "mpregenperlevel": 0,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 64,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 3,
+        "attackspeed": 0.751
+      },
+      "spells": [
+        {
+          "id": "ShenQ",
+          "name": "Twilight Assault",
+          "description": "Shen recalls his spirit blade to attack with it, dealing damage based on the target's max health. The attacks are greatly empowered if it collides with an enemy champion, and all collided enemies are slowed while running away from Shen.",
+          "tooltip": "Shen recalls his <keywordMajor>Spirit Blade</keywordMajor>. Enemies hit by the pull are <status>Slowed</status> by {{ e4 }}% while moving away from Shen for the next {{ e5 }} seconds.<br /><br />Additionally, Shen's next {{ e3 }} Attacks deal an additional <magicDamage>{{ baseflatdamage }}</magicDamage> plus <magicDamage>{{ basepercenthealth }} max Health magic damage</magicDamage>. If Shen hit an enemy champion with the <keywordMajor>Spirit Blade</keywordMajor>, the damage is increased to <magicDamage>{{ baseflatdamage }}</magicDamage> plus <magicDamage>{{ emppercenthealth }} max Health magic damage</magicDamage> and he gains <attackSpeed>{{ e9 }}% Attack Speed</attackSpeed> for those Attacks.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Base Percent Damage",
+              "Enhanced Percent Damage",
+              "Slow",
+              "@AbilityResourceName@ Cost",
+              "Monster Damage Cap",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ e2 }}% -> {{ e2NL }}%",
+              "{{ e6 }}% -> {{ e6NL }}%",
+              "{{ e4 }}% -> {{ e4NL }}%",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ e7 }} -> {{ e7NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [8, 7.25, 6.5, 5.75, 5],
+          "cooldownBurn": "8/7.25/6.5/5.75/5",
+          "cost": [140, 130, 120, 110, 100],
+          "costBurn": "140/130/120/110/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [1, 1, 1, 1, 1],
+            [2, 2.5, 3, 3.5, 4],
+            [3, 3, 3, 3, 3],
+            [25, 30, 35, 40, 45],
+            [2, 2, 2, 2, 2],
+            [5, 5.5, 6, 6.5, 7],
+            [120, 140, 160, 180, 200],
+            [8, 8, 8, 8, 8],
+            [50, 50, 50, 50, 50],
+            [75, 75, 75, 75, 75]
+          ],
+          "effectBurn": [
+            null,
+            "1",
+            "2/2.5/3/3.5/4",
+            "3",
+            "25/30/35/40/45",
+            "2",
+            "5/5.5/6/6.5/7",
+            "120/140/160/180/200",
+            "8",
+            "50",
+            "75"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [400, 400, 400, 400, 400],
+          "rangeBurn": "400",
+          "image": {
+            "full": "ShenQ.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 384,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "ShenW",
+          "name": "Spirit's Refuge",
+          "description": "Attacks that would hit Shen or his allies near his spirit blade are blocked.",
+          "tooltip": "Shen creates a defensive zone at his <keywordMajor>Spirit Blade</keywordMajor> for {{ e1 }} seconds. Attacks against allied champions in the zone are blocked. <br /><br />If there are no champions to protect in the zone when it starts, it will wait for up to {{ e2 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [16, 14.5, 13, 11.5, 10],
+          "cooldownBurn": "16/14.5/13/11.5/10",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [1.75, 1.75, 1.75, 1.75, 1.75],
+            [2, 2, 2, 2, 2],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "1.75", "2", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [400, 400, 400, 400, 400],
+          "rangeBurn": "400",
+          "image": {
+            "full": "ShenW.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 432,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "ShenE",
+          "name": "Shadow Dash",
+          "description": "Shen dashes in a direction, taunting enemies in his path.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Dealing damage with <spellName>Twilight Assault</spellName> or this Ability recovers <keywordMajor>{{ energyrefund }} Energy</keywordMajor>.<br /><br /><spellActive>Active:</spellActive> Shen dashes, <status>Taunting</status> champions and jungle monsters for {{ ccduration }} seconds and dealing <physicalDamage>{{ tauntdamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [18, 16, 14, 12, 10],
+          "cooldownBurn": "18/16/14/12/10",
+          "cost": [150, 150, 150, 150, 150],
+          "costBurn": "150",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [600, 600, 600, 600, 600],
+          "rangeBurn": "600",
+          "image": {
+            "full": "ShenE.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 0,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "ShenR",
+          "name": "Stand United",
+          "description": "Shen shields target allied champion from incoming damage, and soon after teleports to their location.",
+          "tooltip": "Shen grants an allied champion anywhere on the map between <shield>{{ shield }}</shield> and <shield>{{ maxshield }} Shield</shield> based on their missing Health for {{ shieldduration }} seconds (max Shield at 60% missing Health). After channeling for {{ channelduration }} seconds, Shen teleports to his ally's location with his <keywordMajor>Spirit Blade</keywordMajor>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Minimum Shield Health", "Maximum Shield Health", "Cooldown"],
+            "effect": [
+              "{{ baseshieldamount }} -> {{ baseshieldamountNL }}",
+              "{{ baseshieldamount*1.600000 }} -> {{ baseshieldamountnl*1.600000 }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [200, 180, 160],
+          "cooldownBurn": "200/180/160",
+          "cost": [0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [35000, 35000, 35000],
+          "rangeBurn": "35000",
+          "image": {
+            "full": "ShenR.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 48,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        }
+      ],
+      "passive": {
+        "name": "Ki Barrier",
+        "description": "After casting a spell, Shen gets a shield. Affecting other champions reduces the cooldown of this effect.",
+        "image": {
+          "full": "Shen_Passive.png",
+          "sprite": "passive4.png",
+          "group": "passive",
+          "x": 0,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

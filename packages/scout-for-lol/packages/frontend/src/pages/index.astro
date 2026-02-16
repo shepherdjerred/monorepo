@@ -1,0 +1,248 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import WhatsNewBanner from "../components/WhatsNewBanner.astro";
+import Hero from "../components/Hero.astro";
+import SectionHeader from "../components/SectionHeader.astro";
+import FeatureCard from "../components/FeatureCard.astro";
+import FeatureGrid from "../components/FeatureGrid.astro";
+import FeatureWithImage from "../components/FeatureWithImage.astro";
+import StatCard from "../components/StatCard.astro";
+import CTA from "../components/CTA.astro";
+import GalleryItem from "../components/GalleryItem.astro";
+import BenefitCard from "../components/BenefitCard.astro";
+import ProcessStep from "../components/ProcessStep.astro";
+---
+
+<Layout>
+  <div class="bg-white dark:bg-gray-900">
+    <Navbar activePage="home" />
+    <WhatsNewBanner />
+
+    <Hero
+      title="Scout for League of Legends"
+      subtitle="Get notifications when your friends finish League matches and beautiful post-match reports with detailed stats, all delivered directly to your Discord server."
+      showGradient={true}
+      ctaButtons={[
+        { text: 'Add to Discord', href: 'https://discord.com/oauth2/authorize?client_id=1182800769188110366', variant: 'primary' },
+        { text: 'View Documentation', href: '/docs', variant: 'secondary' }
+      ]}
+    />
+
+    <!-- Features Section -->
+    <div id="features" class="py-24 sm:py-32">
+      <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <SectionHeader
+          badge="Everything you need"
+          title="Never miss a League match again"
+          subtitle="Scout automatically tracks your friends' League of Legends matches and provides rich notifications and detailed post-match analysis."
+        />
+        <FeatureGrid>
+          <FeatureCard
+            icon="heroicons:bell"
+            title="Match Notifications"
+            description="Get notifications when subscribed players finish a League match."
+          />
+          <FeatureCard
+            icon="heroicons:document-text"
+            title="Detailed Post-Match Reports"
+            description="Beautiful, automatically generated post-match reports with KDA, damage, gold, items, and performance statistics. See a preview below!"
+          />
+          <FeatureCard
+            icon="heroicons:users"
+            title="Multi-Region Support"
+            description="Track players across all League of Legends regions including NA, EUW, EUNE, KR, and more."
+          />
+          <FeatureCard
+            icon="heroicons:trophy"
+            title="Competitions & Leaderboards"
+            description="Create custom competitions with configurable criteria, use League seasons or custom dates, and track your server's performance on leaderboards."
+          />
+          <FeatureCard
+            icon="heroicons:bolt"
+            title="Arena Mode Support"
+            description="Full support for League's Arena mode with detailed reports for all 16 players, augments, and placements."
+          />
+        </FeatureGrid>
+      </div>
+    </div>
+
+    <!-- Match Report Preview -->
+    <div class="py-24 sm:py-32">
+      <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <SectionHeader
+          badge="Report Preview"
+          title="See what your reports look like"
+          subtitle="Every match is automatically analyzed and formatted into a beautiful, easy-to-read report that shows all the key statistics and performance data."
+        />
+
+        <div class="mx-auto mt-16 max-w-5xl">
+          <GalleryItem
+            imageSrc="/match.png"
+            imageAlt="Example League of Legends match report showing team compositions, player statistics, KDA, damage dealt, gold earned, and items"
+          />
+
+          <div class="mx-auto mt-12 max-w-2xl lg:max-w-none">
+            <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+              <BenefitCard
+                title="Complete Stats"
+                description="KDA, damage, gold, CS, items, and more - everything you need to analyze the match."
+                icon="heroicons:check-circle"
+                color="green"
+              />
+              <BenefitCard
+                title="Team Overview"
+                description="Clear team compositions with champion portraits and roles for easy identification."
+                icon="heroicons:users"
+                color="blue"
+              />
+              <BenefitCard
+                title="Ranked Progress"
+                description="Track rank changes and LP gains/losses with beautiful rank emblems."
+                icon="heroicons:sparkles"
+                color="purple"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features Gallery Section -->
+    <div class="bg-white dark:bg-gray-900 py-24 sm:py-32">
+      <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <SectionHeader
+          badge="Feature Showcase"
+          title="See Scout in Action"
+          subtitle="Beautiful reports, leaderboards, and notifications that keep your community engaged with League of Legends."
+        />
+
+        <div class="space-y-16 mt-16">
+          <!-- Arena Mode Reports -->
+          <FeatureWithImage
+            title="Complete Arena Coverage"
+            description="Full support for League's Arena mode with detailed stats for all 16 players, augments tracking, and placement results. Scout automatically detects Arena matches and generates comprehensive reports."
+            imageSrc="/arena-discord.png"
+            imageAlt="Arena mode match notification in Discord showing detailed stats for all 16 players"
+            imagePosition="left"
+            badge={{ text: 'Arena Mode', icon: 'heroicons:bolt', color: 'purple' }}
+            checklist={[
+              'Track all 16 players in each Arena match',
+              'See augment selections and synergies',
+              'Beautiful placement and ranking display'
+            ]}
+          />
+
+          <!-- Ranked Notifications -->
+          <FeatureWithImage
+            title="Real-Time Match Notifications"
+            description="Get instant notifications when your friends finish their ranked games. See their performance, LP gains/losses, and rank changes in beautiful, easy-to-read Discord messages."
+            imageSrc="/solo-discord.png"
+            imageAlt="Ranked match notification showing player stats, KDA, and LP gains in Discord"
+            imagePosition="right"
+            badge={{ text: 'Ranked Tracking', icon: 'heroicons:bell', color: 'blue' }}
+            checklist={[
+              'Instant notifications for Solo Queue and Flex',
+              'LP tracking and rank change indicators',
+              'Comprehensive stats and performance metrics'
+            ]}
+          />
+
+          <!-- Leaderboards -->
+          <FeatureWithImage
+            title="Custom Leaderboards"
+            description="Create custom competitions for your server with flexible criteria and time periods. Track LP gains, most wins, champion mastery, and more. Perfect for friendly competition!"
+            imageSrc="/leaderboard-lp.png"
+            imageAlt="Server leaderboard showing LP competition rankings"
+            imagePosition="left"
+            badge={{ text: 'Competitions', icon: 'heroicons:trophy', color: 'yellow' }}
+            checklist={[
+              'Flexible competition criteria (LP, wins, games played)',
+              'Support for all game modes including Arena',
+              'Use League seasons or custom date ranges'
+            ]}
+          />
+
+          <!-- All Queue Types -->
+          <div
+            class="bg-linear-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-8 lg:p-12"
+          >
+            <div class="text-center mb-12">
+              <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Support for All Queue Types</h3>
+              <p class="text-lg text-gray-600 dark:text-gray-300">
+                Scout tracks matches across all League of Legends game modes
+              </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <StatCard
+                title="Ranked Queues"
+                description="Solo/Duo and Flex Queue with full rank tracking and LP history"
+                gradient="yellow"
+                icon="heroicons:trophy"
+              />
+              <StatCard
+                title="Arena Mode"
+                description="Complete Arena coverage with augments and placements"
+                gradient="purple"
+                icon="heroicons:bolt"
+              />
+              <StatCard
+                title="Normal Games"
+                description="Track normal draft and blind pick games with the same great reports"
+                gradient="blue"
+                icon="heroicons:users"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="bg-gray-50 dark:bg-gray-800 py-24 sm:py-32">
+      <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <SectionHeader
+          badge="Simple setup"
+          title="Get started in minutes"
+          centered={true}
+        />
+        <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+          <dl class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+            <ProcessStep
+              number={1}
+              title="Add Scout to your server"
+            >
+              <p class="text-gray-600 dark:text-gray-300">Click 'Add to Discord' and authorize Scout with the necessary permissions to send messages to your channels.</p>
+            </ProcessStep>
+            <ProcessStep
+              number={2}
+              title="Subscribe to players"
+            >
+              <p class="text-gray-600 dark:text-gray-300">Use /subscription add to add League players you want to track. Specify their Riot ID, region, and a friendly alias.</p>
+            </ProcessStep>
+            <ProcessStep
+              number={3}
+              title="Enjoy automatic updates"
+            >
+              <p class="text-gray-600 dark:text-gray-300">Scout will automatically notify your channel when tracked players start matches and post detailed reports when games end.</p>
+            </ProcessStep>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA Section -->
+    <CTA
+      variant="indigo"
+      title="Ready to track your friends' League matches?"
+      description="Add Scout to your Discord server and never miss another epic play or hilarious fail from your League friends."
+      buttons={[
+        { text: 'Add to Discord', href: 'https://discord.com/oauth2/authorize?client_id=1182800769188110366', variant: 'primary' },
+        { text: 'Read the docs', href: '/docs', variant: 'secondary' }
+      ]}
+    />
+
+    <Footer variant="homepage" />
+  </div>
+</Layout>

@@ -1,0 +1,14 @@
+[tools]
+bun = "latest"
+
+[tasks.dev]
+description = "Set up development environment"
+run = "(cd .dagger && bun install) && dagger develop"
+
+[tasks.ci]
+description = "Run CI pipeline"
+run = "dagger call ci --env=dev"
+
+[tasks.build]
+description = "Build cross-compiler"
+run = "dagger call build"

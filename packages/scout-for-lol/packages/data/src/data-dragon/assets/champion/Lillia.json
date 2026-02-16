@@ -1,0 +1,301 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Lillia": {
+      "id": "Lillia",
+      "key": "876",
+      "name": "Lillia",
+      "title": "the Bashful Bloom",
+      "image": {
+        "full": "Lillia.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 96,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "876000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "876001",
+          "num": 1,
+          "name": "Spirit Blossom Lillia",
+          "chromas": true
+        },
+        {
+          "id": "876010",
+          "num": 10,
+          "name": "Nightbringer Lillia",
+          "chromas": true
+        },
+        {
+          "id": "876019",
+          "num": 19,
+          "name": "Shan Hai Scrolls Lillia",
+          "chromas": true
+        },
+        {
+          "id": "876028",
+          "num": 28,
+          "name": "Faerie Court Lillia",
+          "chromas": true
+        },
+        {
+          "id": "876037",
+          "num": 37,
+          "name": "Bowling League Lillia",
+          "chromas": true
+        },
+        {
+          "id": "876046",
+          "num": 46,
+          "name": "Petals of Spring Lillia",
+          "chromas": true
+        }
+      ],
+      "lore": "Intensely shy, the fae fawn Lillia skittishly wanders Ionia's forests. Hiding just out of sight of mortals—whose mysterious natures have long captivated, but intimidated, her—Lillia hopes to discover why their dreams no longer reach the ancient Dreaming Tree. She now travels Ionia with a magical branch in hand, in an effort to find people's unrealized dreams. Only then can Lillia herself bloom and help others untangle their fears to find the sparkle within. Eep!",
+      "blurb": "Intensely shy, the fae fawn Lillia skittishly wanders Ionia's forests. Hiding just out of sight of mortals—whose mysterious natures have long captivated, but intimidated, her—Lillia hopes to discover why their dreams no longer reach the ancient Dreaming...",
+      "allytips": [],
+      "enemytips": [],
+      "tags": ["Fighter", "Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 0,
+        "defense": 2,
+        "magic": 10,
+        "difficulty": 8
+      },
+      "stats": {
+        "hp": 605,
+        "hpperlevel": 105,
+        "mp": 410,
+        "mpperlevel": 50,
+        "movespeed": 330,
+        "armor": 22,
+        "armorperlevel": 4.5,
+        "spellblock": 32,
+        "spellblockperlevel": 1.55,
+        "attackrange": 325,
+        "hpregen": 2.5,
+        "hpregenperlevel": 0.55,
+        "mpregen": 11.5,
+        "mpregenperlevel": 0.95,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 61,
+        "attackdamageperlevel": 3.1,
+        "attackspeedperlevel": 2.7,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "LilliaQ",
+          "name": "Blooming Blows",
+          "description": "Passively, Lillia gains stacking Move Speed when hitting enemies with spells. She can activate this to deal magic damage to nearby enemies, dealing extra true damage on the edge.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Lillia's Ability hits grant <speed>{{ prancespeed }} Move Speed</speed> for {{ pranceduration }} seconds, stacking up to {{ prancemaxstacks }} times.<br /><br /><spellActive>Active:</spellActive> Lillia whirls her censer, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>, plus an additional <trueDamage>{{ bonustruedamage }} true damage</trueDamage> at the outer edge.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Move Speed", "Magic Damage", "True Damage"],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ prancebonusperstack*100.000000 }}% -> {{ prancebonusperstacknl*100.000000 }}%",
+              "{{ flatdamagebase }} -> {{ flatdamagebaseNL }}",
+              "{{ flatdamagetrue }} -> {{ flatdamagetrueNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [6, 5.5, 5, 4.5, 4],
+          "cooldownBurn": "6/5.5/5/4.5/4",
+          "cost": [65, 65, 65, 65, 65],
+          "costBurn": "65",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [450, 450, 450, 450, 450],
+          "rangeBurn": "450",
+          "image": {
+            "full": "LilliaQ.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 288,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "LilliaW",
+          "name": "Watch Out! Eep!",
+          "description": "Lillia deals damage in a nearby area, dealing heavy damage in the center.",
+          "tooltip": "Lillia winds up a huge strike, dealing <magicDamage>{{ flatdamage }} magic damage</magicDamage>. Enemies in the center take <magicDamage>{{ flatdamagesweetspot }} damage</magicDamage> instead.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ flatdamagebase }} -> {{ flatdamagebaseNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 13, 12, 11, 10],
+          "cooldownBurn": "14/13/12/11/10",
+          "cost": [50, 50, 50, 50, 50],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [500, 500, 500, 500, 500],
+          "rangeBurn": "500",
+          "image": {
+            "full": "LilliaW.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 336,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "LilliaE",
+          "name": "Swirlseed",
+          "description": "Lillia hurls a seed that damages and slows those it lands on. If it doesn't hit anything, it will continue rolling until it hits a wall or target.",
+          "tooltip": "Lillia lobs a swirlseed overhead, dealing <magicDamage>{{ impactdamagetotal }} magic damage</magicDamage> where it lands and revealing and <status>Slowing</status> them by {{ slowamount*100 }}% for {{ slowduration }} seconds. If no enemies are hit, the seed rolls until it hits an enemy or collides with terrain.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ impactdamage }} -> {{ impactdamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 12, 12, 12, 12],
+          "cooldownBurn": "12",
+          "cost": [70, 70, 70, 70, 70],
+          "costBurn": "70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [700, 700, 700, 700, 700],
+          "rangeBurn": "700",
+          "image": {
+            "full": "LilliaE.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 384,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "LilliaR",
+          "name": "Lilting Lullaby",
+          "description": "Lillia causes all enemies with Dream Dust on them to become Drowsy before falling asleep. Those enemies will take extra damage on being forcibly woken up.",
+          "tooltip": "Lillia causes all enemy champions with <keywordMajor>Dream Dust</keywordMajor> to become <status>Drowsy</status> for {{ drowsyduration }} seconds. Afterward, they fall <status>Asleep</status> for {{ sleepduration }} seconds.<br /><br />When awakened by damage, they take an additional <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Break Damage"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ breakdamagebase }} -> {{ breakdamagebaseNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [140, 120, 100],
+          "cooldownBurn": "140/120/100",
+          "cost": [50, 50, 50],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1600, 1600, 1600],
+          "rangeBurn": "1600",
+          "image": {
+            "full": "LilliaR.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 432,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Dream-Laden Bough",
+        "description": "Hitting a champion or monster with a skill will deal additional max Health damage over time.",
+        "image": {
+          "full": "Lillia_Icon_Passive.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 96,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

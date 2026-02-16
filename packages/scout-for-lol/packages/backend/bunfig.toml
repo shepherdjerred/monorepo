@@ -1,0 +1,21 @@
+[test]
+# Preload test setup to configure environment before tests run
+preload = ["./test-setup.ts"]
+
+# Enable coverage with reasonable thresholds
+coverageThreshold = { lines = 0.70, functions = 0.70 }
+
+# Exclude generated code and test files from coverage
+coveragePathIgnorePatterns = [
+  "**/generated/**",
+  "**/*.test.ts",
+  "**/*.integration.test.ts",
+  "**/node_modules/**",
+  "**/__tests__/**"
+]
+
+# Coverage reporters: text for console, lcov for tooling integration
+coverageReporter = ["text", "lcov"]
+
+# Coverage output directory
+coverageDir = "./coverage"

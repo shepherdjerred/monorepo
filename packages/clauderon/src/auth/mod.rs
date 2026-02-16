@@ -1,7 +1,12 @@
+/// WebAuthn registration and login HTTP handlers.
 pub mod handlers;
+/// Authentication middleware for protected routes.
 pub mod middleware;
+/// Cookie-based session management.
 pub mod session;
+/// Auth request/response types and database models.
 pub mod types;
+/// WebAuthn configuration and challenge handling.
 pub mod webauthn;
 
 // Re-export commonly used types

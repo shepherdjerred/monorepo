@@ -1,0 +1,7 @@
+# ~/.bash_profile - Sourced by login shells
+
+# Source environment for all login shells
+[[ -f ~/.bash_env ]] && source ~/.bash_env
+
+# Source bashrc for interactive login shells
+[[ -f ~/.bashrc ]] && source ~/.bashrc

@@ -1,0 +1,22 @@
+---
+import Badge from "./Badge.astro";
+
+interface Props {
+  title: string;
+  subtitle?: string;
+  badge?: string;
+  centered?: boolean;
+}
+
+const { title, subtitle, badge, centered = true } = Astro.props;
+---
+
+<div class={`mx-auto max-w-2xl ${centered ? "lg:text-center" : ""}`}>
+  {badge && <Badge text={badge} color="indigo" />}
+  <p
+    class={`mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-5xl ${centered ? "lg:text-balance" : ""}`}
+  >
+    {title}
+  </p>
+  {subtitle && <p class="mt-6 text-lg/8 text-gray-600 dark:text-gray-300">{subtitle}</p>}
+</div>

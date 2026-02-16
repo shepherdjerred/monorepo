@@ -1,0 +1,17 @@
+---
+import FooterWrapper from "@components/FooterWrapper.astro";
+import Base from "./BaseLayout.astro";
+import Navbar from "@components/Navbar.astro";
+import type { ComponentProps } from "astro/types";
+
+type Props = ComponentProps<typeof Base>;
+---
+
+<Base {...Astro.props}>
+  <FooterWrapper>
+    <Navbar />
+    <div transition:animate="fade" class="bg-gray-100 dark:bg-black">
+      <slot />
+    </div>
+  </FooterWrapper>
+</Base>

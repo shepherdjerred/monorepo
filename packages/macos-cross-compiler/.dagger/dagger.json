@@ -1,0 +1,8 @@
+{
+  "name": "macos-cross-compiler",
+  "engineVersion": "v0.19.8",
+  "sdk": {
+    "source": "typescript"
+  },
+  "source": "."
+}

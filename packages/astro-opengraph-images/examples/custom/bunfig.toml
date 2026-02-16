@@ -1,0 +1,4 @@
+[build]
+# Use automatic JSX runtime (react-jsx)
+jsx = "automatic"
+jsxImportSource = "react"

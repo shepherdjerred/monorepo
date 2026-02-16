@@ -1,3 +1,8 @@
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    reason = "E2E tests use expect/unwrap for simplicity"
+)]
 //! End-to-end tests for CI poller GitHub API integration
 //!
 //! These tests require:

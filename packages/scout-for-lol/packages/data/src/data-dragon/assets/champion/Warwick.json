@@ -1,0 +1,391 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Warwick": {
+      "id": "Warwick",
+      "key": "19",
+      "name": "Warwick",
+      "title": "the Uncaged Wrath of Zaun",
+      "image": {
+        "full": "Warwick.png",
+        "sprite": "champion5.png",
+        "group": "champion",
+        "x": 240,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "19000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "19001",
+          "num": 1,
+          "name": "Grey Warwick",
+          "chromas": true
+        },
+        {
+          "id": "19002",
+          "num": 2,
+          "name": "Urf the Manatee",
+          "chromas": false
+        },
+        {
+          "id": "19003",
+          "num": 3,
+          "name": "Big Bad Warwick",
+          "chromas": false
+        },
+        {
+          "id": "19004",
+          "num": 4,
+          "name": "Tundra Hunter Warwick",
+          "chromas": false
+        },
+        {
+          "id": "19005",
+          "num": 5,
+          "name": "Feral Warwick",
+          "chromas": false
+        },
+        {
+          "id": "19006",
+          "num": 6,
+          "name": "Firefang Warwick",
+          "chromas": false
+        },
+        {
+          "id": "19007",
+          "num": 7,
+          "name": "Hyena Warwick",
+          "chromas": false
+        },
+        {
+          "id": "19008",
+          "num": 8,
+          "name": "Marauder Warwick",
+          "chromas": false
+        },
+        {
+          "id": "19009",
+          "num": 9,
+          "name": "Urfwick",
+          "chromas": false
+        },
+        {
+          "id": "19010",
+          "num": 10,
+          "name": "Lunar Guardian Warwick",
+          "chromas": true
+        },
+        {
+          "id": "19016",
+          "num": 16,
+          "name": "PROJECT: Warwick",
+          "chromas": true
+        },
+        {
+          "id": "19035",
+          "num": 35,
+          "name": "Old God Warwick",
+          "chromas": false
+        },
+        {
+          "id": "19045",
+          "num": 45,
+          "name": "Winterblessed Warwick",
+          "chromas": false
+        },
+        {
+          "id": "19046",
+          "num": 46,
+          "name": "Prestige Winterblessed Warwick",
+          "chromas": false
+        },
+        {
+          "id": "19056",
+          "num": 56,
+          "name": "Arcane Vander Warwick",
+          "chromas": false
+        }
+      ],
+      "lore": "Warwick is a monster who hunts the gray alleys of Zaun. Transformed by agonizing experiments, his body is fused with an intricate system of chambers and pumps, machinery filling his veins with alchemical rage. He bursts from the shadows to prey upon those criminals who terrorize the city's depths. Warwick is drawn to blood, driven mad by its scent… and none who spill it can escape him.",
+      "blurb": "Warwick is a monster who hunts the gray alleys of Zaun. Transformed by agonizing experiments, his body is fused with an intricate system of chambers and pumps, machinery filling his veins with alchemical rage. He bursts from the shadows to prey upon...",
+      "allytips": [
+        "Follow your Blood Hunt trails to low health enemy champions.",
+        "Infinite Duress (R)'s distance scales with any Move Speed you gain, even from ally buffs and summoner spells.",
+        "Jaws of the Beast (Q) will follow enemies who run, dash or teleport if you keep the button held down."
+      ],
+      "enemytips": [
+        "Warwick's attacks heal him at low health. Save your disables to finish him off.",
+        "Warwick is empowered versus low health enemies. Manage your health to keep him at bay.",
+        "Warwick's ultimate cast range scales with his Move Speed."
+      ],
+      "tags": ["Fighter", "Tank"],
+      "partype": "Mana",
+      "info": {
+        "attack": 9,
+        "defense": 5,
+        "magic": 3,
+        "difficulty": 3
+      },
+      "stats": {
+        "hp": 620,
+        "hpperlevel": 99,
+        "mp": 280,
+        "mpperlevel": 35,
+        "movespeed": 335,
+        "armor": 33,
+        "armorperlevel": 4.4,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 4,
+        "hpregenperlevel": 0.75,
+        "mpregen": 7.45,
+        "mpregenperlevel": 0.6,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 65,
+        "attackdamageperlevel": 2.5,
+        "attackspeedperlevel": 2,
+        "attackspeed": 0.638
+      },
+      "spells": [
+        {
+          "id": "WarwickQ",
+          "name": "Jaws of the Beast",
+          "description": "Warwick lunges forward and bites his target, dealing damage based on their maximum health and healing for damage dealt.",
+          "tooltip": "<tap>Tap:</tap> Warwick lunges forward and bites, dealing <magicDamage>{{ basebitedamage }} plus {{ targetpercenthpdamage }}% max Health magic damage</magicDamage> and <healing>healing for {{ e3 }}% of the damage dealt</healing>.<br /><br /><hold>Hold:</hold> Warwick lunges and clamps his jaws on the target, leaping behind them. While clamped, Warwick follows all movement of the target. After releasing his hold, he does the same damage and healing.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Healing", "% Health damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ e3 }}% -> {{ e3NL }}%",
+              "{{ targetpercenthpdamage }}% -> {{ targetpercenthpdamageNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldownBurn": "8/7.5/7/6.5/6",
+          "cost": [80, 85, 90, 95, 100],
+          "costBurn": "80/85/90/95/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [100, 150, 200, 250, 300],
+            [25, 37.5, 50, 62.5, 75],
+            [150, 165, 180, 195, 210],
+            [450, 450, 450, 450, 450],
+            [200, 200, 200, 200, 200],
+            [300, 300, 300, 300, 300],
+            [425, 425, 425, 425, 425],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "100/150/200/250/300",
+            "25/37.5/50/62.5/75",
+            "150/165/180/195/210",
+            "450",
+            "200",
+            "300",
+            "425",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [365, 365, 365, 365, 365],
+          "rangeBurn": "365",
+          "image": {
+            "full": "WarwickQ.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 384,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "WarwickW",
+          "name": "Blood Hunt",
+          "description": "Warwick senses enemies below 50% health, gaining Move Speed toward and attack speed against them. When they fall below 25% health, he frenzies and these bonuses triple.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Warwick can sense champions below 50% Health, gaining <speed>{{ passivemsbonus }}% Move Speed</speed> towards them. Spells and attacks against enemies below 50% Health grant <speed>{{ passiveasbonus }}% Attack Speed</speed>. These effects are increased by 200% against enemies below 25% Health. <br /><br /><spellActive>Active:</spellActive> Warwick can briefly sense all enemies, and gains this Ability's passive effect against the closest champion for 8 seconds, regardless of Health. If no champions are found, this Ability's cooldown is reduced by 30%.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Move Speed", "Attack Speed", "Cooldown"],
+            "effect": [
+              "{{ passivemsbonus }}% -> {{ passivemsbonusNL }}%",
+              "{{ passiveasbonus }}% -> {{ passiveasbonusNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [80, 70, 60, 50, 40],
+          "cooldownBurn": "80/70/60/50/40",
+          "cost": [55, 55, 55, 55, 55],
+          "costBurn": "55",
+          "datavalues": {},
+          "effect": [
+            null,
+            [35, 42.5, 50, 57.5, 65],
+            [70, 80, 90, 100, 110],
+            [10, 15, 20, 25, 30],
+            [80, 90, 100, 110, 120],
+            [30, 30, 30, 30, 30],
+            [8, 8, 8, 8, 8],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "35/42.5/50/57.5/65",
+            "70/80/90/100/110",
+            "10/15/20/25/30",
+            "80/90/100/110/120",
+            "30",
+            "8",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "2",
+          "range": [4000, 4000, 4000, 4000, 4000],
+          "rangeBurn": "4000",
+          "image": {
+            "full": "WarwickW.png",
+            "sprite": "spell15.png",
+            "group": "spell",
+            "x": 432,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "WarwickE",
+          "name": "Primal Howl",
+          "description": "Warwick gains damage reduction for 2.5 seconds. At the end, or if re-activated, he howls, causing nearby enemies to flee for 1 second.",
+          "tooltip": "Warwick gains {{ e1 }}% damage reduction for 2.5 seconds. After it ends, Warwick howls, <status>Fearing</status> nearby enemies for {{ e3 }} second. Warwick can <recast>Recast</recast> to end the Ability early.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage Reduction", "Cooldown"],
+            "effect": ["{{ e1 }}% -> {{ e1NL }}%", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [15, 14, 13, 12, 11],
+          "cooldownBurn": "15/14/13/12/11",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [35, 40, 45, 50, 55],
+            [2.75, 2.75, 2.75, 2.75, 2.75],
+            [1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1],
+            [800, 800, 800, 800, 800],
+            [400, 400, 400, 400, 400],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "35/40/45/50/55", "2.75", "1", "1", "800", "400", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [375, 375, 375, 375, 375],
+          "rangeBurn": "375",
+          "image": {
+            "full": "WarwickE.png",
+            "sprite": "spell16.png",
+            "group": "spell",
+            "x": 0,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "WarwickR",
+          "name": "Infinite Duress",
+          "description": "Warwick leaps in a direction (scaling with his bonus Move Speed), suppressing the first champion he collides with for 1.5 seconds.",
+          "tooltip": "Warwick leaps a huge distance that scales with his <speed>Move Speed</speed>, <status>Suppressing</status> the first champion he collides with while he channels for {{ rduration }} seconds. He attacks that champion 3 times over the duration, dealing <magicDamage>{{ damagecumulative }} magic damage</magicDamage>. Warwick <healing>heals for 100% of all damage dealt</healing> during the channel.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ rbasedamage }} -> {{ rbasedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [110, 90, 70],
+          "cooldownBurn": "110/90/70",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [25000, 25000, 25000],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "WarwickR.png",
+            "sprite": "spell16.png",
+            "group": "spell",
+            "x": 48,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Eternal Hunger",
+        "description": "Warwick's basic attacks deal bonus magic damage. If Warwick is below 50% health, he heals the same amount. If Warwick is below 25% health, this healing triples.",
+        "image": {
+          "full": "WarwickP.png",
+          "sprite": "passive5.png",
+          "group": "passive",
+          "x": 240,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

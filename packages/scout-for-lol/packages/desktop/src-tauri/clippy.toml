@@ -1,0 +1,3 @@
+# Clippy configuration for strict linting
+# Enforce pedantic lints for high code quality
+cognitive-complexity-threshold = 30

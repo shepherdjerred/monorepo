@@ -1,0 +1,312 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Ivern": {
+      "id": "Ivern",
+      "key": "427",
+      "name": "Ivern",
+      "title": "the Green Father",
+      "image": {
+        "full": "Ivern.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 384,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "427000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "427001",
+          "num": 1,
+          "name": "Candy King Ivern",
+          "chromas": false
+        },
+        {
+          "id": "427002",
+          "num": 2,
+          "name": "Dunkmaster Ivern",
+          "chromas": true
+        },
+        {
+          "id": "427011",
+          "num": 11,
+          "name": "Old God Ivern",
+          "chromas": true
+        },
+        {
+          "id": "427020",
+          "num": 20,
+          "name": "Astronaut Ivern",
+          "chromas": true
+        },
+        {
+          "id": "427030",
+          "num": 30,
+          "name": "Spirit Blossom Ivern",
+          "chromas": false
+        }
+      ],
+      "lore": "Ivern Bramblefoot, known to many as the Green Father, is a peculiar half man, half tree who roams Runeterra's forests, cultivating life everywhere he goes. He knows the secrets of the natural world, and holds deep friendships with all things that grow, fly, and scuttle. Ivern wanders the wilderness, imparting strange wisdom to any he meets, enriching the forests, and occasionally entrusting loose-lipped butterflies with his secrets.",
+      "blurb": "Ivern Bramblefoot, known to many as the Green Father, is a peculiar half man, half tree who roams Runeterra's forests, cultivating life everywhere he goes. He knows the secrets of the natural world, and holds deep friendships with all things that grow...",
+      "allytips": [
+        "Try to help allies follow up a good Rootcaller hit with Triggerseed!",
+        "Use Brushmaker to set up future ambush spots!",
+        "Daisy can block skillshots and slow down enemies. Use her to peel for your teammates!"
+      ],
+      "enemytips": [
+        "Ivern can be deceptively slippery. Be careful chasing him too far.",
+        "Ivern's brush has a long duration. Watch out for ambushes!",
+        "Be careful when fighting Ivern alone if he has Daisy ready to help!"
+      ],
+      "tags": ["Support", "Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 3,
+        "defense": 5,
+        "magic": 7,
+        "difficulty": 7
+      },
+      "stats": {
+        "hp": 630,
+        "hpperlevel": 99,
+        "mp": 450,
+        "mpperlevel": 60,
+        "movespeed": 330,
+        "armor": 27,
+        "armorperlevel": 4.7,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 475,
+        "hpregen": 7,
+        "hpregenperlevel": 0.85,
+        "mpregen": 6,
+        "mpregenperlevel": 0.75,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 50,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 3.4,
+        "attackspeed": 0.644
+      },
+      "spells": [
+        {
+          "id": "IvernQ",
+          "name": "Rootcaller",
+          "description": "Ivern conjures a vine, dealing damage and rooting enemy targets hit. Ivern's allies can dash to the rooted target.",
+          "tooltip": "Ivern conjures a vine dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Rooting</status> the first enemy hit for {{ rootduration }} seconds. Allies that Attack a <status>Rooted</status> enemy dash into Attack Range. <br /><br /><recast>Recast:</recast> Ivern dashes directly onto the <status>Rooted</status> enemy.<br /><br /><rules>Hitting non-epic monsters reduces <spellName>Rootcaller's</spellName> cooldown by 50%.</rules>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Root Duration", "Damage", "Cooldown"],
+            "effect": [
+              "{{ rootduration }} -> {{ rootdurationNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 13, 12, 11, 10],
+          "cooldownBurn": "14/13/12/11/10",
+          "cost": [60, 60, 60, 60, 60],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1125, 1125, 1125, 1125, 1125],
+          "rangeBurn": "1125",
+          "image": {
+            "full": "IvernQ.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 0,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "IvernW",
+          "name": "Brushmaker",
+          "description": "In brush, Ivern and his nearby allies attacks deal bonus magic damage. Ivern can activate this ability to create a patch of brush.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> While in brush and for {{ buffduration }} seconds after leaving, Ivern's Attacks deal an additional <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Nearby allies will gain this effect for {{ allybuffduration }} seconds and deal <magicDamage>{{ totalallydamage }} magic damage</magicDamage>.<br /><br /><spellActive>Active:</spellActive> Ivern grows a patch of Brush, revealing the area for {{ revealduration }} seconds. The Brush persists until Ivern's team loses vision within it, or up to {{ maxbrushduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Magic Damage", "Ally Magic Damage"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ allybasedamage }} -> {{ allybasedamageNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [0.5, 0.5, 0.5, 0.5, 0.5],
+          "cooldownBurn": "0.5",
+          "cost": [30, 30, 30, 30, 30],
+          "costBurn": "30",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "3",
+          "range": [1150, 1150, 1150, 1150, 1150],
+          "rangeBurn": "1150",
+          "image": {
+            "full": "IvernW.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 48,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "IvernE",
+          "name": "Triggerseed",
+          "description": "Ivern places a shield on an ally which explodes after a short duration slowing and damaging enemies. The shield refreshes if it hits no enemies.",
+          "tooltip": "Ivern grants <shield>{{ totalshield }} Shield</shield> to an ally champion or Daisy. After {{ shieldduration }} seconds, it bursts, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slowing</status> enemies by {{ slowamount*100 }}% for {{ slowduration }} seconds.<br /><br />If <spellName>Triggerseed</spellName> detonates and no enemy champions are hit while the shield still persists, the ally will be shielded for <shield>{{ totalshield }} </shield>for {{ shieldduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Shield Amount", "Damage", "Slow", "Cooldown"],
+            "effect": [
+              "{{ baseshield }} -> {{ baseshieldNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowamount*100.000000 }}% -> {{ slowamountnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [11, 10, 9, 8, 7],
+          "cooldownBurn": "11/10/9/8/7",
+          "cost": [70, 70, 70, 70, 70],
+          "costBurn": "70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [750, 750, 750, 750, 750],
+          "rangeBurn": "750",
+          "image": {
+            "full": "IvernE.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 96,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "IvernR",
+          "name": "Daisy!",
+          "description": "Ivern summons his Sentinel friend Daisy to fight with him. Re-cast command Daisy to attack or move.",
+          "tooltip": "Ivern summons his sentinel friend Daisy to leap into the fray for {{ daisyduration }} seconds.<br /><br /><spellActive>Daisy, Slam!:</spellActive> Daisy's 3rd consecutive Attack on the same champion or epic monster will launch a shockwave, dealing<magicDamage> {{ totalshockwavedamage }} magic damage</magicDamage> to all enemies hit as well as <status>Knocking Up</status> for {{ shockwaveccduration }} second. This effect can only occur once every {{ shockwavecd }} seconds.<br /><br /><recast>Recast:</recast> Instruct Daisy to Attack or move.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Attack Damage", "Shockwave Damage", "Daisy Bonus Attack Speed", "Cooldown"],
+            "effect": [
+              "{{ daisyad }} -> {{ daisyadNL }}",
+              "{{ shockwavebasedamage }} -> {{ shockwavebasedamageNL }}",
+              "{{ daisyas }}% -> {{ daisyasNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [140, 130, 120],
+          "cooldownBurn": "140/130/120",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [600, 600, 600],
+          "rangeBurn": "600",
+          "image": {
+            "full": "IvernR.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 144,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Friend of the Forest",
+        "description": "Ivern cannot attack or be attacked by non-epic monsters. Ivern can create magical groves on jungle camps which grow over time. When the grove is fully grown, Ivern may free the monsters to receive gold and experience.",
+        "image": {
+          "full": "IvernP.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 384,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

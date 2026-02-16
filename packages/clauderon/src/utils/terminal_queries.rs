@@ -1,14 +1,22 @@
+/// Types of terminal query sequences that can be detected.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TerminalQuery {
+    /// Device Status Report (DSR) - ESC[5n
     DeviceStatus,
+    /// Cursor Position Report (CPR) - ESC[6n
     CursorPosition,
+    /// Primary Device Attributes (DA1) - ESC[c
     PrimaryDeviceAttributes,
+    /// Secondary Device Attributes (DA2) - ESC[>c
     SecondaryDeviceAttributes,
 }
 
+/// Parsed terminal output event, either raw output or a query sequence.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TerminalEvent {
+    /// Raw terminal output bytes (with queries stripped).
     Output(Vec<u8>),
+    /// A detected terminal query sequence.
     Query(TerminalQuery),
 }
 
@@ -19,6 +27,7 @@ pub struct TerminalQueryParser {
 }
 
 impl TerminalQueryParser {
+    /// Create a new parser with empty state.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -132,6 +141,7 @@ impl TerminalQueryParser {
     }
 }
 
+/// Build a response byte sequence for a terminal query, using the given cursor position.
 #[must_use]
 pub fn build_query_response(query: TerminalQuery, cursor: Option<(u16, u16)>) -> Vec<u8> {
     match query {

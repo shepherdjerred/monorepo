@@ -1,0 +1,9 @@
+// Configuration for markdownlint-cli2
+{
+  "config": {
+    "MD013": {
+      "line_length": 350,
+    },
+  },
+  "ignores": ["**/node_modules/**", "**/generated/**", "**/dist/**", "**/build/**", "ai_dev_log/**"],
+}

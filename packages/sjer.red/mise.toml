@@ -1,0 +1,34 @@
+[tools]
+bun = "latest"
+
+[tasks.dev]
+description = "Set up development environment"
+run = "bun install && (cd .dagger && bun install) && dagger develop"
+
+[tasks.ci]
+description = "Run CI pipeline"
+run = "dagger call ci --branch=dev --git-sha=HEAD"
+
+[tasks.check]
+description = "Run all checks"
+run = ["bun run lint", "bun run build", "bun run test"]
+
+[tasks.lint]
+description = "Run linting"
+run = "bun run lint"
+
+[tasks.build]
+description = "Build the site"
+run = "bun run build"
+
+[tasks.test]
+description = "Run Playwright tests"
+run = "bun run test"
+
+[tasks.start]
+description = "Start development server"
+run = "bun run dev"
+
+[tasks.preview]
+description = "Preview production build"
+run = "bun run preview"

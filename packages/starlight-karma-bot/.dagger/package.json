@@ -1,0 +1,17 @@
+{
+  "name": "@starlight-karma-bot/dagger",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Dagger module ready'",
+    "lint": "bunx eslint src",
+    "typecheck": "bunx tsc --noEmit"
+  },
+  "dependencies": {
+    "@shepherdjerred/dagger-utils": "^0.7.0",
+    "typescript": "^5.9.3"
+  },
+  "dagger": {
+    "runtime": "bun"
+  }
+}

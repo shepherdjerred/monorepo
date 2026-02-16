@@ -1,3 +1,4 @@
+/// Hook script installer for containers.
 pub mod installer;
 
 use serde::{Deserialize, Serialize};
@@ -18,6 +19,7 @@ pub struct HookMessage {
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
 
+/// Hook event types received from Claude Code.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", content = "data")]
 pub enum HookEvent {
@@ -25,7 +27,10 @@ pub enum HookEvent {
     UserPromptSubmit,
 
     /// Claude is about to use a tool - actively working
-    PreToolUse { tool_name: String },
+    PreToolUse {
+        /// Name of the tool being invoked.
+        tool_name: String,
+    },
 
     /// Claude needs permission - waiting for approval
     PermissionRequest,

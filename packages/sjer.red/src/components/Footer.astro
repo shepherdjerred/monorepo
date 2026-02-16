@@ -1,0 +1,35 @@
+---
+import { Icon } from "astro-icon/components";
+import Container from "./Container.astro";
+---
+
+<div class:list={[`w-full bg-black text-white p-5 text-center border-t-2 border-white`]}>
+  <Container width="normal">
+    <div class="flex flex-col md:flex-row md:justify-between gap-10">
+      <div>
+        Live in Seattle? <a href="mailto:coffee@sjer.red" class="underline hover:bg-white hover:text-black"
+          >Let's grab coffee</a
+        >!
+      </div>
+      <div class="flex flex-wrap gap-4 md:justify-end content-center place-content-center">
+        <a href="https://github.com/shepherdjerred" class="hover:bg-white hover:text-black p-1"
+          ><Icon name="mdi:github" /> <span class="underline">github</span></a
+        >
+        <a href="/rss.xml" class="hover:bg-white hover:text-black p-1"
+          ><Icon name="mdi:rss" /> <span class="underline">rss</span></a
+        >
+        <a href="mailto:contact@sjer.red" class="hover:bg-white hover:text-black p-1">
+          <Icon name="mdi:email" />
+          <span class="underline">email</span>
+        </a>
+      </div>
+    </div>
+  </Container>
+
+  <style lang="css">
+    [data-icon] {
+      width: 24px;
+      display: inline;
+    }
+  </style>
+</div>

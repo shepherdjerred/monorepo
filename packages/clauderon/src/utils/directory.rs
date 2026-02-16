@@ -74,9 +74,9 @@ mod tests {
         let temp_path = temp_dir.path();
 
         // Create some dirs and files
-        fs::create_dir(temp_path.join("dir1")).unwrap();
-        fs::create_dir(temp_path.join("dir2")).unwrap();
-        fs::create_dir(temp_path.join("aaa_first")).unwrap();
+        fs::create_dir_all(temp_path.join("dir1")).unwrap();
+        fs::create_dir_all(temp_path.join("dir2")).unwrap();
+        fs::create_dir_all(temp_path.join("aaa_first")).unwrap();
         File::create(temp_path.join("file.txt")).unwrap();
         File::create(temp_path.join("another.txt")).unwrap();
 

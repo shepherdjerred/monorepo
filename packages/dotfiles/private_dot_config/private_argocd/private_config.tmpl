@@ -1,0 +1,12 @@
+contexts:
+  - name: default
+    server: argocd.tailnet-1a49.ts.net
+    user: default
+current-context: default
+servers:
+  - server: argocd.tailnet-1a49.ts.net
+    insecure: false
+    grpc-web-root-path: ""
+users:
+  - name: default
+    auth-token: {{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/nfviaka4ibphb2aodeoeow46zq/ARGOCD_TOKEN" }}

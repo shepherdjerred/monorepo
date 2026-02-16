@@ -1,0 +1,5 @@
+{{- if eq .chezmoi.os "darwin" -}}
+{{-   include ".Brewfile_darwin" -}}
+{{- else if eq .chezmoi.os "linux" -}}
+{{-   include ".Brewfile_linux" -}}
+{{- end -}}

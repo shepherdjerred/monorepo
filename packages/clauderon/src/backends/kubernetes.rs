@@ -48,7 +48,7 @@ fn sanitize_git_config_value(value: &str) -> String {
 fn validate_image_name(image: &str) -> anyhow::Result<()> {
     // Create a temporary ImageConfig to reuse Docker's validation logic
     let image_config = ImageConfig {
-        image: image.to_string(),
+        image: image.to_owned(),
         pull_policy: super::container_config::ImagePullPolicy::IfNotPresent,
         registry_auth: None,
     };
@@ -60,6 +60,14 @@ pub struct KubernetesBackend {
     config: KubernetesConfig,
     proxy_config: Option<KubernetesProxyConfig>,
     client: Client,
+}
+
+impl std::fmt::Debug for KubernetesBackend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("KubernetesBackend")
+            .field("config", &self.config)
+            .finish_non_exhaustive()
+    }
 }
 
 impl KubernetesBackend {
@@ -115,7 +123,7 @@ impl KubernetesBackend {
             );
         }
 
-        let url = String::from_utf8(output.stdout)?.trim().to_string();
+        let url = String::from_utf8(output.stdout)?.trim().to_owned();
         if url.is_empty() {
             anyhow::bail!("Git remote URL is empty");
         }
@@ -299,23 +307,23 @@ impl KubernetesBackend {
             Api::namespaced(self.client.clone(), &self.config.namespace);
 
         let mut resources = BTreeMap::new();
-        resources.insert("storage".to_string(), Quantity(size.to_string()));
+        resources.insert("storage".to_owned(), Quantity(size.to_owned()));
 
         // Determine access mode based on config
         let access_modes = if self.config.use_rwo_cache {
-            vec!["ReadWriteOnce".to_string()]
+            vec!["ReadWriteOnce".to_owned()]
         } else {
-            vec!["ReadWriteMany".to_string()]
+            vec!["ReadWriteMany".to_owned()]
         };
 
         let pvc = PersistentVolumeClaim {
             metadata: ObjectMeta {
-                name: Some(name.to_string()),
+                name: Some(name.to_owned()),
                 namespace: Some(self.config.namespace.clone()),
                 labels: Some({
                     let mut labels = BTreeMap::new();
-                    labels.insert("clauderon.io/managed".to_string(), "true".to_string());
-                    labels.insert("clauderon.io/type".to_string(), "cache".to_string());
+                    labels.insert("clauderon.io/managed".to_owned(), "true".to_owned());
+                    labels.insert("clauderon.io/type".to_owned(), "cache".to_owned());
                     labels
                 }),
                 ..Default::default()
@@ -364,22 +372,22 @@ impl KubernetesBackend {
                 );
 
                 let mut rwo_labels = BTreeMap::new();
-                rwo_labels.insert("clauderon.io/managed".to_string(), "true".to_string());
-                rwo_labels.insert("clauderon.io/type".to_string(), "cache".to_string());
+                rwo_labels.insert("clauderon.io/managed".to_owned(), "true".to_owned());
+                rwo_labels.insert("clauderon.io/type".to_owned(), "cache".to_owned());
                 rwo_labels.insert(
-                    "clauderon.io/access-mode".to_string(),
-                    "rwo-fallback".to_string(),
+                    "clauderon.io/access-mode".to_owned(),
+                    "rwo-fallback".to_owned(),
                 );
 
                 let rwo_pvc = PersistentVolumeClaim {
                     metadata: ObjectMeta {
-                        name: Some(name.to_string()),
+                        name: Some(name.to_owned()),
                         namespace: Some(self.config.namespace.clone()),
                         labels: Some(rwo_labels),
                         ..Default::default()
                     },
                     spec: Some(PersistentVolumeClaimSpec {
-                        access_modes: Some(vec!["ReadWriteOnce".to_string()]),
+                        access_modes: Some(vec!["ReadWriteOnce".to_owned()]),
                         storage_class_name: options
                             .storage_class_override
                             .clone()
@@ -439,7 +447,7 @@ impl KubernetesBackend {
         let pvc_name = format!("{pod_name}-workspace");
         let mut resources = BTreeMap::new();
         resources.insert(
-            "storage".to_string(),
+            "storage".to_owned(),
             Quantity(self.config.workspace_pvc_size.clone()),
         );
 
@@ -449,18 +457,18 @@ impl KubernetesBackend {
                 namespace: Some(self.config.namespace.clone()),
                 labels: Some({
                     let mut labels = BTreeMap::new();
-                    labels.insert("clauderon.io/managed".to_string(), "true".to_string());
-                    labels.insert("clauderon.io/type".to_string(), "workspace".to_string());
+                    labels.insert("clauderon.io/managed".to_owned(), "true".to_owned());
+                    labels.insert("clauderon.io/type".to_owned(), "workspace".to_owned());
                     labels.insert(
-                        "clauderon.io/session-id".to_string(),
-                        session_id.to_string(),
+                        "clauderon.io/session-id".to_owned(),
+                        session_id.to_owned(),
                     );
                     labels
                 }),
                 ..Default::default()
             },
             spec: Some(PersistentVolumeClaimSpec {
-                access_modes: Some(vec!["ReadWriteOnce".to_string()]),
+                access_modes: Some(vec!["ReadWriteOnce".to_owned()]),
                 storage_class_name: options
                     .storage_class_override
                     .clone()
@@ -507,7 +515,7 @@ impl KubernetesBackend {
         });
 
         let mut data = BTreeMap::new();
-        data.insert("claude.json".to_string(), claude_config.to_string());
+        data.insert("claude.json".to_owned(), claude_config.to_string());
 
         let cm = ConfigMap {
             metadata: ObjectMeta {
@@ -515,7 +523,7 @@ impl KubernetesBackend {
                 namespace: Some(self.config.namespace.clone()),
                 labels: Some({
                     let mut labels = BTreeMap::new();
-                    labels.insert("clauderon.io/managed".to_string(), "true".to_string());
+                    labels.insert("clauderon.io/managed".to_owned(), "true".to_owned());
                     labels
                 }),
                 ..Default::default()
@@ -548,11 +556,11 @@ impl KubernetesBackend {
             Err(_) => dummy_auth_json_string(None)?,
         };
         let config_toml = std::fs::read_to_string(&config_path)
-            .unwrap_or_else(|_| dummy_config_toml().to_string());
+            .unwrap_or_else(|_| dummy_config_toml().to_owned());
 
         let mut data = BTreeMap::new();
-        data.insert("auth.json".to_string(), auth_json);
-        data.insert("config.toml".to_string(), config_toml);
+        data.insert("auth.json".to_owned(), auth_json);
+        data.insert("config.toml".to_owned(), config_toml);
 
         let cm = ConfigMap {
             metadata: ObjectMeta {
@@ -560,7 +568,7 @@ impl KubernetesBackend {
                 namespace: Some(self.config.namespace.clone()),
                 labels: Some({
                     let mut labels = BTreeMap::new();
-                    labels.insert("clauderon.io/managed".to_string(), "true".to_string());
+                    labels.insert("clauderon.io/managed".to_owned(), "true".to_owned());
                     labels
                 }),
                 ..Default::default()
@@ -598,7 +606,7 @@ impl KubernetesBackend {
 
         let mut data = BTreeMap::new();
         data.insert(
-            "managed-settings.json".to_string(),
+            "managed-settings.json".to_owned(),
             managed_settings.to_string(),
         );
 
@@ -608,7 +616,7 @@ impl KubernetesBackend {
                 namespace: Some(self.config.namespace.clone()),
                 labels: Some({
                     let mut labels = BTreeMap::new();
-                    labels.insert("clauderon.io/managed".to_string(), "true".to_string());
+                    labels.insert("clauderon.io/managed".to_owned(), "true".to_owned());
                     labels
                 }),
                 ..Default::default()
@@ -635,7 +643,7 @@ impl KubernetesBackend {
             .context("Failed to read kubeconfig from ~/.clauderon/kube/config")?;
 
         let mut data = BTreeMap::new();
-        data.insert("config".to_string(), kube_config_content);
+        data.insert("config".to_owned(), kube_config_content);
 
         let cm = ConfigMap {
             metadata: ObjectMeta {
@@ -643,7 +651,7 @@ impl KubernetesBackend {
                 namespace: Some(self.config.namespace.clone()),
                 labels: Some({
                     let mut labels = BTreeMap::new();
-                    labels.insert("clauderon.io/managed".to_string(), "true".to_string());
+                    labels.insert("clauderon.io/managed".to_owned(), "true".to_owned());
                     labels
                 }),
                 ..Default::default()
@@ -684,15 +692,15 @@ impl KubernetesBackend {
         let ca_cert = std::fs::read_to_string(&ca_cert_path)?;
 
         let mut data = BTreeMap::new();
-        data.insert("proxy-ca.pem".to_string(), ca_cert);
+        data.insert("proxy-ca.pem".to_owned(), ca_cert);
 
         let cm = ConfigMap {
             metadata: ObjectMeta {
-                name: Some("clauderon-proxy-ca".to_string()),
+                name: Some("clauderon-proxy-ca".to_owned()),
                 namespace: Some(self.config.namespace.clone()),
                 labels: Some({
                     let mut labels = BTreeMap::new();
-                    labels.insert("clauderon.io/managed".to_string(), "true".to_string());
+                    labels.insert("clauderon.io/managed".to_owned(), "true".to_owned());
                     labels
                 }),
                 ..Default::default()
@@ -715,29 +723,29 @@ impl KubernetesBackend {
     ) -> Container {
         let mut env = vec![
             EnvVar {
-                name: "GIT_REMOTE_URL".to_string(),
-                value: Some(git_remote_url.to_string()),
+                name: "GIT_REMOTE_URL".to_owned(),
+                value: Some(git_remote_url.to_owned()),
                 ..Default::default()
             },
             EnvVar {
-                name: "BRANCH_NAME".to_string(),
-                value: Some(branch_name.to_string()),
+                name: "BRANCH_NAME".to_owned(),
+                value: Some(branch_name.to_owned()),
                 ..Default::default()
             },
         ];
 
         if let Some(name) = git_user_name {
             env.push(EnvVar {
-                name: "GIT_AUTHOR_NAME".to_string(),
-                value: Some(name.to_string()),
+                name: "GIT_AUTHOR_NAME".to_owned(),
+                value: Some(name.to_owned()),
                 ..Default::default()
             });
         }
 
         if let Some(email) = git_user_email {
             env.push(EnvVar {
-                name: "GIT_AUTHOR_EMAIL".to_string(),
-                value: Some(email.to_string()),
+                name: "GIT_AUTHOR_EMAIL".to_owned(),
+                value: Some(email.to_owned()),
                 ..Default::default()
             });
         }
@@ -776,14 +784,14 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
 "#;
 
         Container {
-            name: "git-clone".to_string(),
-            image: Some("alpine/git:latest".to_string()),
-            command: Some(vec!["/bin/sh".to_string(), "-c".to_string()]),
-            args: Some(vec![script.to_string()]),
+            name: "git-clone".to_owned(),
+            image: Some("alpine/git:latest".to_owned()),
+            command: Some(vec!["/bin/sh".to_owned(), "-c".to_owned()]),
+            args: Some(vec![script.to_owned()]),
             env: Some(env),
             volume_mounts: Some(vec![VolumeMount {
-                name: "workspace".to_string(),
-                mount_path: "/workspace".to_string(),
+                name: "workspace".to_owned(),
+                mount_path: "/workspace".to_owned(),
                 ..Default::default()
             }]),
             ..Default::default()
@@ -791,10 +799,6 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
     }
 
     /// Build main container for Claude Code
-    #[allow(
-        clippy::too_many_arguments,
-        reason = "Kubernetes API surface requires many configuration parameters"
-    )]
     fn build_main_container(
         &self,
         _pod_name: &str,
@@ -805,28 +809,28 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
     ) -> Container {
         let mut env = vec![
             EnvVar {
-                name: "HOME".to_string(),
-                value: Some("/workspace".to_string()),
+                name: "HOME".to_owned(),
+                value: Some("/workspace".to_owned()),
                 ..Default::default()
             },
             EnvVar {
-                name: "TERM".to_string(),
-                value: Some("xterm-256color".to_string()),
+                name: "TERM".to_owned(),
+                value: Some("xterm-256color".to_owned()),
                 ..Default::default()
             },
             EnvVar {
-                name: "CARGO_HOME".to_string(),
-                value: Some("/workspace/.cargo".to_string()),
+                name: "CARGO_HOME".to_owned(),
+                value: Some("/workspace/.cargo".to_owned()),
                 ..Default::default()
             },
             EnvVar {
-                name: "RUSTC_WRAPPER".to_string(),
-                value: Some("sccache".to_string()),
+                name: "RUSTC_WRAPPER".to_owned(),
+                value: Some("sccache".to_owned()),
                 ..Default::default()
             },
             EnvVar {
-                name: "SCCACHE_DIR".to_string(),
-                value: Some("/workspace/.cache/sccache".to_string()),
+                name: "SCCACHE_DIR".to_owned(),
+                value: Some("/workspace/.cache/sccache".to_owned()),
                 ..Default::default()
             },
         ];
@@ -834,33 +838,33 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
         // Add git user config
         if let Some(name) = git_user_name {
             env.push(EnvVar {
-                name: "GIT_AUTHOR_NAME".to_string(),
-                value: Some(name.to_string()),
+                name: "GIT_AUTHOR_NAME".to_owned(),
+                value: Some(name.to_owned()),
                 ..Default::default()
             });
             env.push(EnvVar {
-                name: "GIT_COMMITTER_NAME".to_string(),
-                value: Some(name.to_string()),
+                name: "GIT_COMMITTER_NAME".to_owned(),
+                value: Some(name.to_owned()),
                 ..Default::default()
             });
         }
 
         if let Some(email) = git_user_email {
             env.push(EnvVar {
-                name: "GIT_AUTHOR_EMAIL".to_string(),
-                value: Some(email.to_string()),
+                name: "GIT_AUTHOR_EMAIL".to_owned(),
+                value: Some(email.to_owned()),
                 ..Default::default()
             });
             env.push(EnvVar {
-                name: "GIT_COMMITTER_EMAIL".to_string(),
-                value: Some(email.to_string()),
+                name: "GIT_COMMITTER_EMAIL".to_owned(),
+                value: Some(email.to_owned()),
                 ..Default::default()
             });
         }
         if options.agent == AgentType::Codex {
             env.push(EnvVar {
-                name: "CODEX_HOME".to_string(),
-                value: Some("/workspace/.codex".to_string()),
+                name: "CODEX_HOME".to_owned(),
+                value: Some("/workspace/.codex".to_owned()),
                 ..Default::default()
             });
         }
@@ -895,43 +899,43 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                 if let Some(proxy_url) = proxy_url {
                     env.extend_from_slice(&[
                         EnvVar {
-                            name: "HTTP_PROXY".to_string(),
+                            name: "HTTP_PROXY".to_owned(),
                             value: Some(proxy_url.clone()),
                             ..Default::default()
                         },
                         EnvVar {
-                            name: "HTTPS_PROXY".to_string(),
+                            name: "HTTPS_PROXY".to_owned(),
                             value: Some(proxy_url),
                             ..Default::default()
                         },
                         EnvVar {
-                            name: "NO_PROXY".to_string(),
-                            value: Some("localhost,127.0.0.1,kubernetes.default.svc".to_string()),
+                            name: "NO_PROXY".to_owned(),
+                            value: Some("localhost,127.0.0.1,kubernetes.default.svc".to_owned()),
                             ..Default::default()
                         },
                         EnvVar {
-                            name: "SSL_CERT_FILE".to_string(),
-                            value: Some("/etc/clauderon/proxy-ca.pem".to_string()),
+                            name: "SSL_CERT_FILE".to_owned(),
+                            value: Some("/etc/clauderon/proxy-ca.pem".to_owned()),
                             ..Default::default()
                         },
                         EnvVar {
-                            name: "NODE_EXTRA_CA_CERTS".to_string(),
-                            value: Some("/etc/clauderon/proxy-ca.pem".to_string()),
+                            name: "NODE_EXTRA_CA_CERTS".to_owned(),
+                            value: Some("/etc/clauderon/proxy-ca.pem".to_owned()),
                             ..Default::default()
                         },
                         EnvVar {
-                            name: "REQUESTS_CA_BUNDLE".to_string(),
-                            value: Some("/etc/clauderon/proxy-ca.pem".to_string()),
+                            name: "REQUESTS_CA_BUNDLE".to_owned(),
+                            value: Some("/etc/clauderon/proxy-ca.pem".to_owned()),
                             ..Default::default()
                         },
                         EnvVar {
-                            name: "GH_TOKEN".to_string(),
-                            value: Some("clauderon-proxy".to_string()),
+                            name: "GH_TOKEN".to_owned(),
+                            value: Some("clauderon-proxy".to_owned()),
                             ..Default::default()
                         },
                         EnvVar {
-                            name: "GITHUB_TOKEN".to_string(),
-                            value: Some("clauderon-proxy".to_string()),
+                            name: "GITHUB_TOKEN".to_owned(),
+                            value: Some("clauderon-proxy".to_owned()),
                             ..Default::default()
                         },
                     ]);
@@ -939,27 +943,27 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                     match options.agent {
                         AgentType::ClaudeCode => {
                             env.push(EnvVar {
-                                name: "CLAUDE_CODE_OAUTH_TOKEN".to_string(),
-                                value: Some("sk-ant-oat01-clauderon-proxy-placeholder".to_string()),
+                                name: "CLAUDE_CODE_OAUTH_TOKEN".to_owned(),
+                                value: Some("sk-ant-oat01-clauderon-proxy-placeholder".to_owned()),
                                 ..Default::default()
                             });
                         }
                         AgentType::Codex => {
                             env.push(EnvVar {
-                                name: "OPENAI_API_KEY".to_string(),
-                                value: Some("sk-openai-clauderon-proxy-placeholder".to_string()),
+                                name: "OPENAI_API_KEY".to_owned(),
+                                value: Some("sk-openai-clauderon-proxy-placeholder".to_owned()),
                                 ..Default::default()
                             });
                             env.push(EnvVar {
-                                name: "CODEX_API_KEY".to_string(),
-                                value: Some("sk-openai-clauderon-proxy-placeholder".to_string()),
+                                name: "CODEX_API_KEY".to_owned(),
+                                value: Some("sk-openai-clauderon-proxy-placeholder".to_owned()),
                                 ..Default::default()
                             });
                         }
                         AgentType::Gemini => {
                             env.push(EnvVar {
-                                name: "GEMINI_API_KEY".to_string(),
-                                value: Some("sk-gemini-clauderon-proxy-placeholder".to_string()),
+                                name: "GEMINI_API_KEY".to_owned(),
+                                value: Some("sk-gemini-clauderon-proxy-placeholder".to_owned()),
                                 ..Default::default()
                             });
                         }
@@ -970,15 +974,15 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
 
         // Add KUBECONFIG environment variable
         env.push(EnvVar {
-            name: "KUBECONFIG".to_string(),
-            value: Some("/etc/clauderon/kube/config".to_string()),
+            name: "KUBECONFIG".to_owned(),
+            value: Some("/etc/clauderon/kube/config".to_owned()),
             ..Default::default()
         });
 
         // Enable 24-bit truecolor support for Claude Code terminal output
         env.push(EnvVar {
-            name: "COLORTERM".to_string(),
-            value: Some("truecolor".to_string()),
+            name: "COLORTERM".to_owned(),
+            value: Some("truecolor".to_owned()),
             ..Default::default()
         });
 
@@ -999,7 +1003,7 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                     let escaped = arg.replace('\'', "'\\''");
                     format!("'{escaped}'")
                 } else {
-                    arg.to_string()
+                    arg.to_owned()
                 }
             };
 
@@ -1016,19 +1020,19 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
             match options.agent {
                 AgentType::ClaudeCode => {
                     // Build base args (without session-id, we add it in wrapper)
-                    let mut base_args = vec!["claude".to_string()];
+                    let mut base_args = vec!["claude".to_owned()];
                     if options.print_mode {
-                        base_args.push("--print".to_string());
-                        base_args.push("--verbose".to_string());
+                        base_args.push("--print".to_owned());
+                        base_args.push("--verbose".to_owned());
                     }
                     if options.plan_mode {
-                        base_args.push("--plan".to_string());
+                        base_args.push("--plan".to_owned());
                     }
                     if options.dangerous_skip_checks {
-                        base_args.push("--dangerously-skip-permissions".to_string());
+                        base_args.push("--dangerously-skip-permissions".to_owned());
                     }
                     for image in &translated_images {
-                        base_args.push("--image".to_string());
+                        base_args.push("--image".to_owned());
                         base_args.push(image.clone());
                     }
 
@@ -1037,7 +1041,7 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
 
                         // Build create command with all args
                         let mut create_cmd = base_args.clone();
-                        create_cmd.insert(1, "--session-id".to_string());
+                        create_cmd.insert(1, "--session-id".to_owned());
                         create_cmd.insert(2, session_id_str.clone());
                         if !escaped_prompt.is_empty() {
                             create_cmd.push(escaped_prompt);
@@ -1060,7 +1064,7 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
 
                         // Generate wrapper script
                         let project_path = if options.initial_workdir.as_os_str().is_empty() {
-                            "-workspace".to_string()
+                            "-workspace".to_owned()
                         } else {
                             format!(
                                 "-workspace-{}",
@@ -1111,13 +1115,13 @@ if [ -f /etc/clauderon/codex/config.toml ]; then
     cp /etc/clauderon/codex/config.toml "$CODEX_HOME/config.toml"
 fi"#;
                     if options.print_mode {
-                        let mut cmd_vec = vec!["codex".to_string()];
+                        let mut cmd_vec = vec!["codex".to_owned()];
                         if options.dangerous_skip_checks {
-                            cmd_vec.push("--full-auto".to_string());
+                            cmd_vec.push("--full-auto".to_owned());
                         }
-                        cmd_vec.push("exec".to_string());
+                        cmd_vec.push("exec".to_owned());
                         for image in &translated_images {
-                            cmd_vec.push("--image".to_string());
+                            cmd_vec.push("--image".to_owned());
                             cmd_vec.push(image.clone());
                         }
                         if !escaped_prompt.is_empty() {
@@ -1130,12 +1134,12 @@ fi"#;
                             .join(" ");
                         format!("{codex_preamble}\n{cmd}")
                     } else {
-                        let mut create_cmd_vec = vec!["codex".to_string()];
+                        let mut create_cmd_vec = vec!["codex".to_owned()];
                         if options.dangerous_skip_checks {
-                            create_cmd_vec.push("--full-auto".to_string());
+                            create_cmd_vec.push("--full-auto".to_owned());
                         }
                         for image in &translated_images {
-                            create_cmd_vec.push("--image".to_string());
+                            create_cmd_vec.push("--image".to_owned());
                             create_cmd_vec.push(image.clone());
                         }
                         if !escaped_prompt.is_empty() {
@@ -1147,12 +1151,12 @@ fi"#;
                             .collect::<Vec<_>>()
                             .join(" ");
 
-                        let mut resume_cmd_vec = vec!["codex".to_string()];
+                        let mut resume_cmd_vec = vec!["codex".to_owned()];
                         if options.dangerous_skip_checks {
-                            resume_cmd_vec.push("--full-auto".to_string());
+                            resume_cmd_vec.push("--full-auto".to_owned());
                         }
-                        resume_cmd_vec.push("resume".to_string());
-                        resume_cmd_vec.push("--last".to_string());
+                        resume_cmd_vec.push("resume".to_owned());
+                        resume_cmd_vec.push("--last".to_owned());
                         let resume_cmd = resume_cmd_vec
                             .iter()
                             .map(|a| quote_arg(a))
@@ -1176,18 +1180,18 @@ fi"#,
                 }
                 AgentType::Gemini => {
                     // Build base args (similar to Claude Code)
-                    let mut base_args = vec!["gemini".to_string()];
+                    let mut base_args = vec!["gemini".to_owned()];
                     if options.print_mode {
-                        base_args.push("--print".to_string());
+                        base_args.push("--print".to_owned());
                     }
                     if options.plan_mode {
-                        base_args.push("--plan".to_string());
+                        base_args.push("--plan".to_owned());
                     }
                     if options.dangerous_skip_checks {
-                        base_args.push("--dangerously-skip-permissions".to_string());
+                        base_args.push("--dangerously-skip-permissions".to_owned());
                     }
                     for image in &translated_images {
-                        base_args.push("--image".to_string());
+                        base_args.push("--image".to_owned());
                         base_args.push(image.clone());
                     }
 
@@ -1196,7 +1200,7 @@ fi"#,
 
                         // Build create command
                         let mut create_cmd = base_args.clone();
-                        create_cmd.insert(1, "--session-id".to_string());
+                        create_cmd.insert(1, "--session-id".to_owned());
                         create_cmd.insert(2, session_id_str.clone());
                         if !escaped_prompt.is_empty() {
                             create_cmd.push(escaped_prompt);
@@ -1219,7 +1223,7 @@ fi"#,
 
                         // Generate wrapper script
                         let project_path = if options.initial_workdir.as_os_str().is_empty() {
-                            "-workspace".to_string()
+                            "-workspace".to_owned()
                         } else {
                             format!(
                                 "-workspace-{}",
@@ -1265,29 +1269,29 @@ fi"#,
         // Volume mounts
         let mut volume_mounts = vec![
             VolumeMount {
-                name: "workspace".to_string(),
-                mount_path: "/workspace".to_string(),
+                name: "workspace".to_owned(),
+                mount_path: "/workspace".to_owned(),
                 ..Default::default()
             },
             VolumeMount {
-                name: "cargo-cache".to_string(),
-                mount_path: "/workspace/.cargo".to_string(),
+                name: "cargo-cache".to_owned(),
+                mount_path: "/workspace/.cargo".to_owned(),
                 ..Default::default()
             },
             VolumeMount {
-                name: "sccache-cache".to_string(),
-                mount_path: "/workspace/.cache/sccache".to_string(),
+                name: "sccache-cache".to_owned(),
+                mount_path: "/workspace/.cache/sccache".to_owned(),
                 ..Default::default()
             },
             VolumeMount {
-                name: "claude-config".to_string(),
-                mount_path: "/workspace/.claude.json".to_string(),
-                sub_path: Some("claude.json".to_string()),
+                name: "claude-config".to_owned(),
+                mount_path: "/workspace/.claude.json".to_owned(),
+                sub_path: Some("claude.json".to_owned()),
                 ..Default::default()
             },
             VolumeMount {
-                name: "uploads".to_string(),
-                mount_path: "/workspace/.clauderon/uploads".to_string(),
+                name: "uploads".to_owned(),
+                mount_path: "/workspace/.clauderon/uploads".to_owned(),
                 ..Default::default()
             },
         ];
@@ -1296,9 +1300,9 @@ fi"#,
         if let Some(ref proxy_config) = self.proxy_config {
             if proxy_config.enabled {
                 volume_mounts.push(VolumeMount {
-                    name: "proxy-ca".to_string(),
-                    mount_path: "/etc/clauderon/proxy-ca.pem".to_string(),
-                    sub_path: Some("proxy-ca.pem".to_string()),
+                    name: "proxy-ca".to_owned(),
+                    mount_path: "/etc/clauderon/proxy-ca.pem".to_owned(),
+                    sub_path: Some("proxy-ca.pem".to_owned()),
                     read_only: Some(true),
                     ..Default::default()
                 });
@@ -1308,8 +1312,8 @@ fi"#,
             if let Some(ref proxy_config) = self.proxy_config {
                 if proxy_config.enabled {
                     volume_mounts.push(VolumeMount {
-                        name: "codex-config".to_string(),
-                        mount_path: "/etc/clauderon/codex".to_string(),
+                        name: "codex-config".to_owned(),
+                        mount_path: "/etc/clauderon/codex".to_owned(),
                         read_only: Some(true),
                         ..Default::default()
                     });
@@ -1321,9 +1325,9 @@ fi"#,
         if let Some(ref proxy_config) = self.proxy_config {
             if proxy_config.enabled {
                 volume_mounts.push(VolumeMount {
-                    name: "managed-settings".to_string(),
-                    mount_path: "/etc/claude-code/managed-settings.json".to_string(),
-                    sub_path: Some("managed-settings.json".to_string()),
+                    name: "managed-settings".to_owned(),
+                    mount_path: "/etc/claude-code/managed-settings.json".to_owned(),
+                    sub_path: Some("managed-settings.json".to_owned()),
                     read_only: Some(true),
                     ..Default::default()
                 });
@@ -1332,8 +1336,8 @@ fi"#,
 
         // Add kubeconfig mount for kubectl access
         volume_mounts.push(VolumeMount {
-            name: "kube-config".to_string(),
-            mount_path: "/etc/clauderon/kube".to_string(),
+            name: "kube-config".to_owned(),
+            mount_path: "/etc/clauderon/kube".to_owned(),
             read_only: Some(true),
             ..Default::default()
         });
@@ -1364,25 +1368,25 @@ fi"#,
         if let Some(ref resource_override) = options.container_resources {
             // Use override resources
             if let Some(ref cpu) = resource_override.cpu {
-                requests.insert("cpu".to_string(), Quantity(cpu.clone()));
-                limits.insert("cpu".to_string(), Quantity(cpu.clone()));
+                requests.insert("cpu".to_owned(), Quantity(cpu.clone()));
+                limits.insert("cpu".to_owned(), Quantity(cpu.clone()));
             } else {
                 // No CPU override, use config
-                requests.insert("cpu".to_string(), Quantity(self.config.cpu_request.clone()));
-                limits.insert("cpu".to_string(), Quantity(self.config.cpu_limit.clone()));
+                requests.insert("cpu".to_owned(), Quantity(self.config.cpu_request.clone()));
+                limits.insert("cpu".to_owned(), Quantity(self.config.cpu_limit.clone()));
             }
 
             if let Some(ref memory) = resource_override.memory {
-                requests.insert("memory".to_string(), Quantity(memory.clone()));
-                limits.insert("memory".to_string(), Quantity(memory.clone()));
+                requests.insert("memory".to_owned(), Quantity(memory.clone()));
+                limits.insert("memory".to_owned(), Quantity(memory.clone()));
             } else {
                 // No memory override, use config
                 requests.insert(
-                    "memory".to_string(),
+                    "memory".to_owned(),
                     Quantity(self.config.memory_request.clone()),
                 );
                 limits.insert(
-                    "memory".to_string(),
+                    "memory".to_owned(),
                     Quantity(self.config.memory_limit.clone()),
                 );
             }
@@ -1394,27 +1398,27 @@ fi"#,
             );
         } else {
             // No override, use config defaults
-            requests.insert("cpu".to_string(), Quantity(self.config.cpu_request.clone()));
+            requests.insert("cpu".to_owned(), Quantity(self.config.cpu_request.clone()));
             requests.insert(
-                "memory".to_string(),
+                "memory".to_owned(),
                 Quantity(self.config.memory_request.clone()),
             );
-            limits.insert("cpu".to_string(), Quantity(self.config.cpu_limit.clone()));
+            limits.insert("cpu".to_owned(), Quantity(self.config.cpu_limit.clone()));
             limits.insert(
-                "memory".to_string(),
+                "memory".to_owned(),
                 Quantity(self.config.memory_limit.clone()),
             );
         }
 
         Container {
-            name: "claude".to_string(),
+            name: "claude".to_owned(),
             image: Some(image),
-            image_pull_policy: Some(image_pull_policy.to_string()),
+            image_pull_policy: Some(image_pull_policy.to_owned()),
             stdin: Some(true), // REQUIRED for kubectl attach
             tty: Some(true),   // REQUIRED for kubectl attach
-            command: Some(vec!["bash".to_string(), "-c".to_string()]),
+            command: Some(vec!["bash".to_owned(), "-c".to_owned()]),
             args: Some(vec![agent_cmd]),
-            working_dir: Some("/workspace".to_string()),
+            working_dir: Some("/workspace".to_owned()),
             env: Some(env),
             volume_mounts: Some(volume_mounts),
             resources: Some(ResourceRequirements {
@@ -1433,7 +1437,7 @@ fi"#,
     }
 
     /// Build pod specification
-    #[allow(
+    #[expect(
         clippy::too_many_arguments,
         reason = "Kubernetes pod spec requires many configuration parameters"
     )]
@@ -1462,7 +1466,7 @@ fi"#,
         // Build volumes
         let mut volumes = vec![
             Volume {
-                name: "workspace".to_string(),
+                name: "workspace".to_owned(),
                 persistent_volume_claim: Some(
                     k8s_openapi::api::core::v1::PersistentVolumeClaimVolumeSource {
                         claim_name: format!("{pod_name}-workspace"),
@@ -1472,27 +1476,27 @@ fi"#,
                 ..Default::default()
             },
             Volume {
-                name: "cargo-cache".to_string(),
+                name: "cargo-cache".to_owned(),
                 persistent_volume_claim: Some(
                     k8s_openapi::api::core::v1::PersistentVolumeClaimVolumeSource {
-                        claim_name: "clauderon-cargo-cache".to_string(),
+                        claim_name: "clauderon-cargo-cache".to_owned(),
                         ..Default::default()
                     },
                 ),
                 ..Default::default()
             },
             Volume {
-                name: "sccache-cache".to_string(),
+                name: "sccache-cache".to_owned(),
                 persistent_volume_claim: Some(
                     k8s_openapi::api::core::v1::PersistentVolumeClaimVolumeSource {
-                        claim_name: "clauderon-sccache".to_string(),
+                        claim_name: "clauderon-sccache".to_owned(),
                         ..Default::default()
                     },
                 ),
                 ..Default::default()
             },
             Volume {
-                name: "claude-config".to_string(),
+                name: "claude-config".to_owned(),
                 config_map: Some(k8s_openapi::api::core::v1::ConfigMapVolumeSource {
                     name: format!("{pod_name}-config"),
                     ..Default::default()
@@ -1500,10 +1504,10 @@ fi"#,
                 ..Default::default()
             },
             Volume {
-                name: "uploads".to_string(),
+                name: "uploads".to_owned(),
                 persistent_volume_claim: Some(
                     k8s_openapi::api::core::v1::PersistentVolumeClaimVolumeSource {
-                        claim_name: "clauderon-uploads".to_string(),
+                        claim_name: "clauderon-uploads".to_owned(),
                         ..Default::default()
                     },
                 ),
@@ -1515,9 +1519,9 @@ fi"#,
         if let Some(ref proxy_config) = self.proxy_config {
             if proxy_config.enabled {
                 volumes.push(Volume {
-                    name: "proxy-ca".to_string(),
+                    name: "proxy-ca".to_owned(),
                     config_map: Some(k8s_openapi::api::core::v1::ConfigMapVolumeSource {
-                        name: "clauderon-proxy-ca".to_string(),
+                        name: "clauderon-proxy-ca".to_owned(),
                         ..Default::default()
                     }),
                     ..Default::default()
@@ -1528,7 +1532,7 @@ fi"#,
             if let Some(ref proxy_config) = self.proxy_config {
                 if proxy_config.enabled {
                     volumes.push(Volume {
-                        name: "codex-config".to_string(),
+                        name: "codex-config".to_owned(),
                         config_map: Some(k8s_openapi::api::core::v1::ConfigMapVolumeSource {
                             name: format!("{pod_name}-codex-config"),
                             ..Default::default()
@@ -1543,7 +1547,7 @@ fi"#,
         if let Some(ref proxy_config) = self.proxy_config {
             if proxy_config.enabled {
                 volumes.push(Volume {
-                    name: "managed-settings".to_string(),
+                    name: "managed-settings".to_owned(),
                     config_map: Some(k8s_openapi::api::core::v1::ConfigMapVolumeSource {
                         name: format!("{pod_name}-managed-settings"),
                         ..Default::default()
@@ -1555,7 +1559,7 @@ fi"#,
 
         // Add kubeconfig volume for kubectl access
         volumes.push(Volume {
-            name: "kube-config".to_string(),
+            name: "kube-config".to_owned(),
             config_map: Some(k8s_openapi::api::core::v1::ConfigMapVolumeSource {
                 name: format!("{pod_name}-kube-config"),
                 ..Default::default()
@@ -1564,23 +1568,23 @@ fi"#,
         });
 
         let mut labels = BTreeMap::new();
-        labels.insert("clauderon.io/managed".to_string(), "true".to_string());
+        labels.insert("clauderon.io/managed".to_owned(), "true".to_owned());
         labels.insert(
-            "clauderon.io/session-id".to_string(),
-            session_id.to_string(),
+            "clauderon.io/session-id".to_owned(),
+            session_id.to_owned(),
         );
         labels.insert(
-            "clauderon.io/session-name".to_string(),
-            session_name.to_string(),
+            "clauderon.io/session-name".to_owned(),
+            session_name.to_owned(),
         );
-        labels.insert("clauderon.io/backend".to_string(), "kubernetes".to_string());
+        labels.insert("clauderon.io/backend".to_owned(), "kubernetes".to_owned());
 
         // Add host aliases for host-gateway mode
         use crate::backends::kubernetes_config::ProxyMode;
         let host_aliases = if self.config.proxy_mode == ProxyMode::HostGateway {
             if let Some(ref host_ip) = self.config.host_gateway_ip {
                 Some(vec![HostAlias {
-                    hostnames: Some(vec!["host-gateway".to_string()]),
+                    hostnames: Some(vec!["host-gateway".to_owned()]),
                     ip: host_ip.clone(),
                 }])
             } else {
@@ -1600,7 +1604,7 @@ fi"#,
 
         Pod {
             metadata: ObjectMeta {
-                name: Some(pod_name.to_string()),
+                name: Some(pod_name.to_owned()),
                 namespace: Some(self.config.namespace.clone()),
                 labels: Some(labels),
                 annotations,
@@ -1610,7 +1614,7 @@ fi"#,
                 init_containers: Some(vec![init_container]),
                 containers: vec![main_container],
                 volumes: Some(volumes),
-                restart_policy: Some("Never".to_string()),
+                restart_policy: Some("Never".to_owned()),
                 service_account_name: Some(self.config.service_account.clone()),
                 security_context: Some(PodSecurityContext {
                     fs_group: Some(1000),
@@ -1905,14 +1909,14 @@ impl ExecutionBackend for KubernetesBackend {
 
     fn attach_command(&self, id: &str) -> Vec<String> {
         vec![
-            "kubectl".to_string(),
-            "attach".to_string(),
-            "-it".to_string(),
-            "-n".to_string(),
+            "kubectl".to_owned(),
+            "attach".to_owned(),
+            "-it".to_owned(),
+            "-n".to_owned(),
             self.config.namespace.clone(),
-            id.to_string(),
-            "-c".to_string(),
-            "claude".to_string(),
+            id.to_owned(),
+            "-c".to_owned(),
+            "claude".to_owned(),
         ]
     }
 
@@ -1920,7 +1924,7 @@ impl ExecutionBackend for KubernetesBackend {
         let pods: Api<Pod> = Api::namespaced(self.client.clone(), &self.config.namespace);
 
         let log_params = LogParams {
-            container: Some("claude".to_string()),
+            container: Some("claude".to_owned()),
             tail_lines: Some(lines.try_into().unwrap_or(100)),
             ..Default::default()
         };
@@ -1979,13 +1983,13 @@ impl ExecutionBackend for KubernetesBackend {
                     Some("Failed") => {
                         let reason = status
                             .and_then(|s| s.message.clone())
-                            .unwrap_or_else(|| "Pod failed".to_string());
+                            .unwrap_or_else(|| "Pod failed".to_owned());
                         Ok(BackendResourceHealth::Error { message: reason })
                     }
                     Some("Unknown") | None => {
                         let reason = status
                             .and_then(|s| s.message.clone())
-                            .unwrap_or_else(|| "Pod in unknown state".to_string());
+                            .unwrap_or_else(|| "Pod in unknown state".to_owned());
                         Ok(BackendResourceHealth::Error { message: reason })
                     }
                     Some(other) => Ok(BackendResourceHealth::Error {
@@ -2025,6 +2029,6 @@ mod tests {
         assert_eq!(cmd[0], "kubectl");
         assert_eq!(cmd[1], "attach");
         assert_eq!(cmd[2], "-it");
-        assert!(cmd.contains(&"test-pod".to_string()));
+        assert!(cmd.contains(&"test-pod".to_owned()));
     }
 }

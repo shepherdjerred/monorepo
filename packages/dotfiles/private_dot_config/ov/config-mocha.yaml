@@ -1,0 +1,66 @@
+# ov config - Catppuccin Mocha theme
+General:
+  TabWidth: 8
+  Header: 0
+  AlternateRows: false
+  ColumnMode: false
+  LineNumMode: false
+  WrapMode: true
+  ColumnDelimiter: ","
+  MarkStyleWidth: 1
+  Style:
+    Alternate:
+      Background: "#313244"  # surface0
+    Header:
+      Bold: true
+      Foreground: "#cdd6f4"  # text
+    Body:
+      Foreground: "#cdd6f4"  # text
+    LineNumber:
+      Bold: true
+      Foreground: "#6c7086"  # overlay0
+    SearchHighlight:
+      Background: "#f9e2af"  # yellow
+      Foreground: "#1e1e2e"  # base
+    ColumnHighlight:
+      Background: "#45475a"  # surface1
+    MarkLine:
+      Background: "#cba6f7"  # mauve
+      Foreground: "#1e1e2e"  # base
+    SectionLine:
+      Background: "#89b4fa"  # blue
+      Foreground: "#1e1e2e"  # base
+    VerticalHeader:
+      Background: "#313244"  # surface0
+    Ruler:
+      Background: "#313244"  # surface0
+      Foreground: "#cdd6f4"  # text
+      Bold: true
+    HeaderBorder:
+      Foreground: "#6c7086"  # overlay0
+    VerticalHeaderBorder:
+      Background: "#45475a"  # surface1
+    MultiColorHighlight:
+      - Foreground: "#f38ba8"  # red
+      - Foreground: "#94e2d5"  # teal
+      - Foreground: "#f9e2af"  # yellow
+      - Foreground: "#cba6f7"  # mauve
+      - Foreground: "#a6e3a1"  # green
+      - Foreground: "#89b4fa"  # blue
+      - Foreground: "#f5c2e7"  # pink
+    ColumnRainbow:
+      - Foreground: "#cdd6f4"  # text
+      - Foreground: "#f38ba8"  # red
+      - Foreground: "#94e2d5"  # teal
+      - Foreground: "#fab387"  # peach
+      - Foreground: "#a6e3a1"  # green
+      - Foreground: "#89b4fa"  # blue
+      - Foreground: "#f9e2af"  # yellow
+    JumpTargetLine:
+      Underline: true
+      Foreground: "#cba6f7"  # mauve
+
+StyleOverStrike:
+  Bold: true
+StyleOverLine:
+  Underline: true

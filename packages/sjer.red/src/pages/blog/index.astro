@@ -1,0 +1,33 @@
+---
+import Background from "@components/Background.astro";
+import BlogYear from "@components/blog/BlogYear.astro";
+import Container from "@components/Container.astro";
+import NavbarLayout from "@layouts/NavbarLayout.astro";
+import type { JSX } from "astro/jsx-runtime";
+import { getCollection } from "astro:content";
+import * as R from "remeda";
+
+const blogEntries = await getCollection("blog");
+const tilEntries = await getCollection("til");
+
+const groups = R.pipe(
+  [...blogEntries, ...tilEntries],
+  R.sortBy((entry) => entry.data.date),
+  R.reverse(),
+  R.filter((entry) => !entry.data.isDraft),
+  R.groupBy((entry) => entry.data.date.getFullYear()),
+  R.entries(),
+  R.sortBy(([year]) => year),
+  R.reverse()
+);
+---
+
+<NavbarLayout title="Blog" description="Jerred Shepherd's blog">
+  <Background extraCss="bg-black">
+    <Container width="normal">
+      <div class="flex flex-col gap-12 mt-6 mb-6">
+        {R.map(groups, ([year, entries]): JSX.Element => <BlogYear year={year} entries={entries} />)}
+      </div>
+    </Container>
+  </Background>
+</NavbarLayout>

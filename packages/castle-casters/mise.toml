@@ -1,0 +1,19 @@
+[tools]
+bun = "latest"
+java = "21"
+
+[tasks.dev]
+description = "Set up development environment"
+run = "(cd .dagger && bun install) && dagger develop"
+
+[tasks.ci]
+description = "Run CI pipeline"
+run = "dagger call ci-with-artifacts"
+
+[tasks.build]
+description = "Build the project with Gradle"
+run = "./gradlew build"
+
+[tasks.test]
+description = "Run tests with Gradle"
+run = "./gradlew test"

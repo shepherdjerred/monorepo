@@ -1,0 +1,331 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Camille": {
+      "id": "Camille",
+      "key": "164",
+      "name": "Camille",
+      "title": "the Steel Shadow",
+      "image": {
+        "full": "Camille.png",
+        "sprite": "champion0.png",
+        "group": "champion",
+        "x": 48,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "164000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "164001",
+          "num": 1,
+          "name": "Program Camille",
+          "chromas": false
+        },
+        {
+          "id": "164002",
+          "num": 2,
+          "name": "Coven Camille",
+          "chromas": true
+        },
+        {
+          "id": "164010",
+          "num": 10,
+          "name": "iG Camille",
+          "chromas": true
+        },
+        {
+          "id": "164011",
+          "num": 11,
+          "name": "Arcana Camille",
+          "chromas": true
+        },
+        {
+          "id": "164021",
+          "num": 21,
+          "name": "Strike Commander Camille",
+          "chromas": true
+        },
+        {
+          "id": "164031",
+          "num": 31,
+          "name": "Winterblessed Camille",
+          "chromas": true
+        },
+        {
+          "id": "164032",
+          "num": 32,
+          "name": "Prestige Winterblessed Camille",
+          "chromas": false
+        },
+        {
+          "id": "164044",
+          "num": 44,
+          "name": "Petals of Spring Camille",
+          "chromas": true
+        }
+      ],
+      "lore": "Weaponized to operate outside the boundaries of the law, Camille is the Principal Intelligencer of Clan Ferros—an elegant and elite agent who ensures the Piltover machine and its Zaunite underbelly runs smoothly. Adaptable and precise, she views sloppy technique as an embarrassment that must be put to order. With a mind as sharp as the blades she bears, Camille's pursuit of superiority through hextech body augmentation has left many to wonder if she is now more machine than woman.",
+      "blurb": "Weaponized to operate outside the boundaries of the law, Camille is the Principal Intelligencer of Clan Ferros—an elegant and elite agent who ensures the Piltover machine and its Zaunite underbelly runs smoothly. Adaptable and precise, she views sloppy...",
+      "allytips": [
+        "Try waiting until the other team is distracted with fighting your team, and use Hookshot to pick off vulnerable targets.",
+        "Use the CC from your abilities to land both of your Precision Protocol attacks on enemies."
+      ],
+      "enemytips": [
+        "Camille's shield only works against one damage type, so hit her when she's vulnerable to your damage.",
+        "The Hextech Ultimatum has a very short range to cast, so try to flash away from her before she gets close."
+      ],
+      "tags": ["Fighter", "Assassin"],
+      "partype": "Mana",
+      "info": {
+        "attack": 8,
+        "defense": 6,
+        "magic": 3,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 650,
+        "hpperlevel": 99,
+        "mp": 339,
+        "mpperlevel": 52,
+        "movespeed": 340,
+        "armor": 35,
+        "armorperlevel": 4.5,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 8.5,
+        "hpregenperlevel": 0.8,
+        "mpregen": 8.15,
+        "mpregenperlevel": 0.75,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 68,
+        "attackdamageperlevel": 3.8,
+        "attackspeedperlevel": 2.5,
+        "attackspeed": 0.644
+      },
+      "spells": [
+        {
+          "id": "CamilleQ",
+          "name": "Precision Protocol",
+          "description": "Camille's next attack deals bonus damage and grants bonus Move Speed. This spell can be recast for a short period of time, doing significantly increased bonus damage if Camille delays a period of time between the two attacks.",
+          "tooltip": "Camille's next Attack deals an additional <physicalDamage>{{ bonusdamage }} physical damage</physicalDamage> and grants her <speed>{{ msbonus*100 }}% Move Speed</speed> for {{ msduration }} second. This ability can be <recast>Recast</recast> in the next {{ qtotalrecasttime }} seconds.<br /><br />If the <recast>Recast</recast> Attack hits at least {{ qrampuptime }} seconds after the first, the bonus damage is increased to <physicalDamage>{{ empoweredbonusdamage }}</physicalDamage> and {{ damageconversionpercentage }} of the Attack's damage is converted into <trueDamage>true damage</trueDamage>.<br /><br /><rules>This Ability triggers spell effects upon dealing damage.</rules>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Total AD Ratio", "Move Speed", "Cooldown"],
+            "effect": [
+              "{{ tadratio*100.000000 }}% -> {{ tadrationl*100.000000 }}%",
+              "{{ msbonus*100.000000 }}% -> {{ msbonusnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [9, 8, 7, 6, 5],
+          "cooldownBurn": "9/8/7/6/5",
+          "cost": [25, 25, 25, 25, 25],
+          "costBurn": "25",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [325, 325, 325, 325, 325],
+          "rangeBurn": "325",
+          "image": {
+            "full": "CamilleQ.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 96,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "CamilleW",
+          "name": "Tactical Sweep",
+          "description": "Camille blasts in a cone after a delay, dealing damage. Enemies in the outer half are slowed and take extra damage, while also healing Camille.",
+          "tooltip": "Camille winds up and slices, dealing <physicalDamage>{{ basedamagetotal }} physical damage</physicalDamage>.<br /><br />Enemies hit by the outer half are <status>Slowed</status> by {{ slowpercentage }}% decaying over {{ slowduration }} seconds, and they take an additional <physicalDamage>{{ outeredgetooltip }} max Health physical damage</physicalDamage>. Camille restores <healing>{{ outerconehealingratio }}% of the bonus damage dealt to champions as Health</healing>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["@AbilityResourceName@ Cost", "Damage", "Maximum Health Damage", "Cooldown"],
+            "effect": [
+              "{{ cost }} -> {{ costNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ outerconemaxhpdamage*100.000000 }}% -> {{ outerconemaxhpdamagenl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [15, 14, 13, 12, 11],
+          "cooldownBurn": "15/14/13/12/11",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [610, 610, 610, 610, 610],
+          "rangeBurn": "610",
+          "image": {
+            "full": "CamilleW.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 144,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "CamilleE",
+          "name": "Hookshot",
+          "description": "Camille pulls herself to a wall, leaping off and knocking up enemy champions upon landing.",
+          "tooltip": "Camille fires a hookshot that attaches to terrain, pulling her to it for 1 second and allowing this Ability to be <recast>Recast</recast>.<br /><br /><recast>Recast:</recast> Camille dashes from the wall, colliding with the first enemy champion hit. Upon landing, she deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to nearby enemies and <status>Stuns</status> enemy champions for {{ knockupduration }} seconds. Dashes towards enemy champions travel twice as far and grant <attackSpeed>{{ asbuff*100 }}% Attack Speed</attackSpeed> for {{ asduration }} seconds on impact.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Damage", "Attack Speed"],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ asbuff*100.000000 }}% -> {{ asbuffnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [16, 15, 14, 13, 12],
+          "cooldownBurn": "16/15/14/13/12",
+          "cost": [70, 70, 70, 70, 70],
+          "costBurn": "70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [800, 800, 800, 800, 800],
+          "rangeBurn": "800",
+          "image": {
+            "full": "CamilleE.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 192,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "CamilleR",
+          "name": "The Hextech Ultimatum",
+          "description": "Camille dashes to target champion, anchoring them to the area. She also deals bonus magic damage to the target with her basic attacks.",
+          "tooltip": "Camille briefly becomes Untargetable and leaps onto an enemy champion, interrupting channels and locking them into an area they cannot escape by any means for {{ rduration }} seconds. Other nearby enemies are <status>Knocked Away</status>. Her Attacks against the trapped enemy deal an additional <magicDamage>{{ rpercentcurrenthpdamage }}% current Health magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Current Health Damage", "Duration", "Cooldown"],
+            "effect": [
+              "{{ rpercentcurrenthpdamage }}% -> {{ rpercentcurrenthpdamageNL }}%",
+              "{{ rduration }} -> {{ rdurationNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [140, 115, 90],
+          "cooldownBurn": "140/115/90",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [475, 475, 475],
+          "rangeBurn": "475",
+          "image": {
+            "full": "CamilleR.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 240,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Adaptive Defenses",
+        "description": "Basic attacks on champions grant a shield equal to a percentage of Camille's maximum health against their damage type (Physical or Magic) for a brief duration.",
+        "image": {
+          "full": "Camille_Passive.png",
+          "sprite": "passive0.png",
+          "group": "passive",
+          "x": 48,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

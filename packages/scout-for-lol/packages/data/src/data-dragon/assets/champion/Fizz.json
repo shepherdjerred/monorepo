@@ -1,0 +1,381 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Fizz": {
+      "id": "Fizz",
+      "key": "105",
+      "name": "Fizz",
+      "title": "the Tidal Trickster",
+      "image": {
+        "full": "Fizz.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 240,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "105000",
+          "num": 0,
+          "name": "default",
+          "chromas": true
+        },
+        {
+          "id": "105001",
+          "num": 1,
+          "name": "Atlantean Fizz",
+          "chromas": false
+        },
+        {
+          "id": "105002",
+          "num": 2,
+          "name": "Tundra Fizz",
+          "chromas": false
+        },
+        {
+          "id": "105003",
+          "num": 3,
+          "name": "Fisherman Fizz",
+          "chromas": false
+        },
+        {
+          "id": "105004",
+          "num": 4,
+          "name": "Void Fizz",
+          "chromas": false
+        },
+        {
+          "id": "105008",
+          "num": 8,
+          "name": "Cottontail Fizz",
+          "chromas": false
+        },
+        {
+          "id": "105009",
+          "num": 9,
+          "name": "Super Galaxy Fizz",
+          "chromas": false
+        },
+        {
+          "id": "105010",
+          "num": 10,
+          "name": "Omega Squad Fizz",
+          "chromas": true
+        },
+        {
+          "id": "105014",
+          "num": 14,
+          "name": "Fuzz Fizz",
+          "chromas": false
+        },
+        {
+          "id": "105015",
+          "num": 15,
+          "name": "Prestige Fuzz Fizz",
+          "chromas": false
+        },
+        {
+          "id": "105016",
+          "num": 16,
+          "name": "Little Devil Fizz",
+          "chromas": true
+        },
+        {
+          "id": "105025",
+          "num": 25,
+          "name": "Prestige Fuzz Fizz (2022)",
+          "chromas": false
+        },
+        {
+          "id": "105026",
+          "num": 26,
+          "name": "Astronaut Fizz",
+          "chromas": true
+        },
+        {
+          "id": "105035",
+          "num": 35,
+          "name": "Rain Shepherd Fizz",
+          "chromas": true
+        }
+      ],
+      "lore": "Fizz is an amphibious yordle, who dwells among the reefs surrounding Bilgewater. He often retrieves and returns the tithes cast into the sea by superstitious captains, but even the saltiest of sailors know better than to cross him—for many are the tales of those who have underestimated this slippery character. Often mistaken for some manner of capricious ocean spirit, he seems able to command the beasts of the deep, and delights in confounding his allies and enemies alike.",
+      "blurb": "Fizz is an amphibious yordle, who dwells among the reefs surrounding Bilgewater. He often retrieves and returns the tithes cast into the sea by superstitious captains, but even the saltiest of sailors know better than to cross him—for many are the tales...",
+      "allytips": [
+        "Since Fizz can move through units, find opportunities in lane to walk through minions and apply Seastone Trident's passive - following it up with the ability's active attack after a few seconds.",
+        "Fizz's ultimate ability, Chum the Waters, can be aimed at an enemy or towards the area where you think they'll be going.",
+        "Fizz's spells scale off Ability Power - consider getting items like Zhonya's Hourglass or Banshee's Veil against teams that have high burst threat - and items like Lich Bane or Rabadon's Deathcap if you think you can survive without the Health."
+      ],
+      "enemytips": [
+        "Fizz's attacks becomes more deadly for a few seconds after he uses his empowered attack - keep him away while his trident is glowing!",
+        "Fizz is a slippery target when his abilities are not on cooldown - bait him into using them early and follow up with crowd control or hard-hitting attacks!"
+      ],
+      "tags": ["Assassin", "Fighter"],
+      "partype": "Mana",
+      "info": {
+        "attack": 6,
+        "defense": 4,
+        "magic": 7,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 640,
+        "hpperlevel": 106,
+        "mp": 317,
+        "mpperlevel": 52,
+        "movespeed": 335,
+        "armor": 26,
+        "armorperlevel": 4.6,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 175,
+        "hpregen": 8,
+        "hpregenperlevel": 0.7,
+        "mpregen": 6,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 58,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 3.1,
+        "attackspeed": 0.658
+      },
+      "spells": [
+        {
+          "id": "FizzQ",
+          "name": "Urchin Strike",
+          "description": "Fizz dashes through his target, dealing magic damage and applying on hit effects.",
+          "tooltip": "Fizz dashes through an enemy, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> plus <magicDamage>{{ qdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldownBurn": "8/7.5/7/6.5/6",
+          "cost": [50, 50, 50, 50, 50],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [10, 25, 40, 55, 70],
+            [0, 0, 0, 0, 0],
+            [650, 750, 850, 950, 1050],
+            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [600, 600, 600, 600, 600],
+            [1, 1, 1, 1, 1],
+            [0.35, 0.35, 0.35, 0.35, 0.35],
+            [40, 40, 40, 40, 40],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "10/25/40/55/70",
+            "0",
+            "650/750/850/950/1050",
+            "1.5",
+            "600",
+            "1",
+            "0.35",
+            "40",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [550, 550, 550, 550, 550],
+          "rangeBurn": "550",
+          "image": {
+            "full": "FizzQ.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 384,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "FizzW",
+          "name": "Seastone Trident",
+          "description": "Fizz's attacks bleed his enemies, dealing magic damage over several seconds. Fizz can empower his next attack to deal bonus damage and empower his further attacks for a short time.",
+          "tooltip": "<spellPassive>Passive</spellPassive>: Fizz's Attacks cause his enemies to bleed, dealing <magicDamage>{{ dotdamage }} magic damage</magicDamage> over {{ bleedduration }} seconds. <br /><br /><spellActive>Active</spellActive>: Fizz's next Attack deals an additional <magicDamage>{{ activedamage }} magic damage</magicDamage>. If this Attack kills its target, Fizz refunds <scaleMana>{{ onkillmanarefund }} Mana</scaleMana> and reduces the cooldown of this Ability to {{ onkillnewcooldown }} second. If it does not kill, Fizz's Attacks deal an additional <magicDamage>{{ onhitbuffdamage }} magic damage</magicDamage> for {{ onhitbuffduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Passive Damage",
+              "Active Damage",
+              "On-Hit Damage",
+              "Mana Refund",
+              "@AbilityResourceName@ Cost",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ dotbasedamage }} -> {{ dotbasedamageNL }}",
+              "{{ activebasedamage }} -> {{ activebasedamageNL }}",
+              "{{ onhitbuffbasedamage }} -> {{ onhitbuffbasedamageNL }}",
+              "{{ onkillmanarefund }} -> {{ onkillmanarefundNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [7, 6, 5, 4, 3],
+          "cooldownBurn": "7/6/5/4/3",
+          "cost": [30, 40, 50, 60, 70],
+          "costBurn": "30/40/50/60/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [600, 600, 600, 600, 600],
+          "rangeBurn": "600",
+          "image": {
+            "full": "FizzW.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 432,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "FizzE",
+          "name": "Playful / Trickster",
+          "description": "Fizz hops into the air, landing gracefully upon his spear and becoming untargetable. From this position, Fizz can either slam the ground or choose to jump again before smashing back down.",
+          "tooltip": "Fizz hops onto his trident, becoming Untargetable for 0.75 seconds, after which he deals <magicDamage>{{ edamage }} magic damage</magicDamage> to nearby enemies and <status>Slows</status> them by {{ slowamount*100 }}% for {{ slowduration }} seconds. <br /><br />Fizz can <recast>Recast</recast> this Ability while Untargetable to dash again, which ends the effect early, deals damage in a smaller area, and doesn't <status>Slow</status>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage", "Slow"],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowamount*100.000000 }}% -> {{ slowamountnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [16, 14, 12, 10, 8],
+          "cooldownBurn": "16/14/12/10/8",
+          "cost": [75, 80, 85, 90, 95],
+          "costBurn": "75/80/85/90/95",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [400, 400, 400, 400, 400],
+          "rangeBurn": "400",
+          "image": {
+            "full": "FizzE.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 0,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "FizzR",
+          "name": "Chum the Waters",
+          "description": "Fizz tosses a fish in a direction that attaches to any champion that touches it, slowing the target. After a short delay, a shark erupts from the ground, knocking up the target and knocking any nearby enemies aside. All enemies hit are dealt magic damage and slowed.",
+          "tooltip": "Fizz launches a fish that attaches to the first champion hit. The victim is afflicted with <keywordStealth>True Sight</keywordStealth> and <status>Slowed</status> by between 40% to 80% based on how far the fish travelled before attaching. <br /><br />After {{ detonationtime }} seconds a shark erupts on the target, <status>Knocking Up</status> the target with the fish for 1 second, <status>Knocking Back</status> everything else, and dealing between <magicDamage>{{ smallsharkdamage }} to {{ bigsharkdamage }} magic damage</magicDamage> based on how far the fish travelled before attaching.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Small Shark Damage", "Medium Shark Damage", "Big Shark Damage"],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ smalldamage }} -> {{ smalldamageNL }}",
+              "{{ smalldamage*1.250000 }} -> {{ smalldamagenl*1.250000 }}",
+              "{{ smalldamage*1.500000 }} -> {{ smalldamagenl*1.500000 }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 100, 80],
+          "cooldownBurn": "120/100/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1300, 1300, 1300],
+          "rangeBurn": "1300",
+          "image": {
+            "full": "FizzR.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 48,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Nimble Fighter",
+        "description": "Fizz can move through units and takes a flat amount of reduced damage from all sources",
+        "image": {
+          "full": "Fizz_P.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 240,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

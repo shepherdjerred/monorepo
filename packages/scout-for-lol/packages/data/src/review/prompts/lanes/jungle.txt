@@ -1,0 +1,23 @@
+Jungle is most influential early game - controls objectives (drakes/barons/heralds), ganks lanes, out-paths enemy jungler.
+
+GOOD: 60%+ kill participation, 1.0+ vision/min, 3+ objectives, 5+ CS/min, 2.0+ KDA, early impact
+BAD: Below 40% participation, below 0.5 vision/min, 0-1 objectives, below 4 CS/min, deaths in own jungle
+
+Key metrics:
+- Kill participation: Should be involved in most kills (high assists)
+- Vision: 0.5+ decent, 0.8+ good. Low vision = jungle diff
+- Objectives: Did they secure or int them? Check objective kills
+- CS: Farm junglers 6+, ganking junglers 4-5+. Below 4 = doing nothing
+- Early impact: First blood participation matters more than late cleanup
+
+10 KEY TIPS:
+1. **80%+ kill participation**: Peak presence, involved in almost every play
+2. **4+ dragons secured**: Objective dominance, controlling soul
+3. **Baron steal with smite**: Clutch 50/50 fight
+4. **Below 0.3 vision/min**: Unacceptable for jungler
+5. **0 objectives in 30+ min game**: Complete diff, enemy took everything
+6. **3+ successful ganks before 10 min**: Terrorizing lanes early
+7. **Herald charge top for 3 plates**: Efficient objective conversion
+8. **Below 3 CS/min**: Neither farming nor ganking effectively
+9. **1.3+ vision/min**: Support-level vision, excellent map control
+10. **Securing soul point dragon**: Critical objective at most important moment

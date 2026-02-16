@@ -1,0 +1,327 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Trundle": {
+      "id": "Trundle",
+      "key": "48",
+      "name": "Trundle",
+      "title": "the Troll King",
+      "image": {
+        "full": "Trundle.png",
+        "sprite": "champion4.png",
+        "group": "champion",
+        "x": 432,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "48000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "48001",
+          "num": 1,
+          "name": "Lil' Slugger Trundle",
+          "chromas": false
+        },
+        {
+          "id": "48002",
+          "num": 2,
+          "name": "Junkyard Trundle",
+          "chromas": false
+        },
+        {
+          "id": "48003",
+          "num": 3,
+          "name": "Traditional Trundle",
+          "chromas": false
+        },
+        {
+          "id": "48004",
+          "num": 4,
+          "name": "Constable Trundle",
+          "chromas": false
+        },
+        {
+          "id": "48005",
+          "num": 5,
+          "name": "Worldbreaker Trundle",
+          "chromas": false
+        },
+        {
+          "id": "48006",
+          "num": 6,
+          "name": "Dragonslayer Trundle",
+          "chromas": true
+        },
+        {
+          "id": "48012",
+          "num": 12,
+          "name": "Fright Night Trundle",
+          "chromas": true
+        },
+        {
+          "id": "48021",
+          "num": 21,
+          "name": "Esports Fan Trundle",
+          "chromas": true
+        }
+      ],
+      "lore": "Trundle is a hulking and devious troll with a particularly vicious streak, and there is nothing he cannot bludgeon into submission—not even the Freljord itself. Fiercely territorial, he chases down anyone foolish enough to enter his domain. Then, his massive club of True Ice at the ready, he chills his enemies to the bone and impales them with jagged, frozen pillars, laughing as they bleed out onto the tundra.",
+      "blurb": "Trundle is a hulking and devious troll with a particularly vicious streak, and there is nothing he cannot bludgeon into submission—not even the Freljord itself. Fiercely territorial, he chases down anyone foolish enough to enter his domain. Then, his...",
+      "allytips": [
+        "Trundle excels at fighting within his Frozen Domain. Try to draw enemies onto it.",
+        "Use Subjugate to soften a powerful enemy tank or to create a target for your team to focus fire.",
+        "Chomp is good for lowering the physical damage of enemies; try to focus it on enemy physical damage dealers."
+      ],
+      "enemytips": [
+        "Trundle is very powerful at location-based combat. Try to draw him off of his Frozen Domain.",
+        "Make sure to get out of his Pillar of Ice as quickly as possible, as it significantly slows you down."
+      ],
+      "tags": ["Fighter", "Tank"],
+      "partype": "Mana",
+      "info": {
+        "attack": 7,
+        "defense": 6,
+        "magic": 2,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 650,
+        "hpperlevel": 110,
+        "mp": 340,
+        "mpperlevel": 45,
+        "movespeed": 350,
+        "armor": 37,
+        "armorperlevel": 4.5,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 175,
+        "hpregen": 6,
+        "hpregenperlevel": 0.75,
+        "mpregen": 7.5,
+        "mpregenperlevel": 0.6,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 68,
+        "attackdamageperlevel": 4.5,
+        "attackspeedperlevel": 2.9,
+        "attackspeed": 0.67
+      },
+      "spells": [
+        {
+          "id": "TrundleTrollSmash",
+          "name": "Chomp",
+          "description": "Trundle bites his opponent, dealing damage, briefly slowing and sapping some of their Attack Damage.",
+          "tooltip": "Trundle's next Attack deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and briefly <status>Slows</status> by {{ slowamount*100 }}%, then Trundle gains <physicalDamage>{{ bonusad }} Attack Damage</physicalDamage> for {{ sapdebuffduration }} seconds and the enemy loses <physicalDamage>{{ sappedad*-1 }} Attack Damage</physicalDamage> for the same duration.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Attack Damage Ratio", "Attack Damage", "Attack Damage Removed"],
+            "effect": [
+              "{{ bonusdamage }} -> {{ bonusdamageNL }}",
+              "{{ adscaling*100.000000 }}% -> {{ adscalingnl*100.000000 }}%",
+              "{{ bonusad }} -> {{ bonusadNL }}",
+              "{{ sappedad*-1.000000 }} -> {{ sappedadnl*-1.000000 }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [3.5, 3.5, 3.5, 3.5, 3.5],
+          "cooldownBurn": "3.5",
+          "cost": [20, 20, 20, 20, 20],
+          "costBurn": "20",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [300, 300, 300, 300, 300],
+          "rangeBurn": "300",
+          "image": {
+            "full": "TrundleTrollSmash.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 192,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "trundledesecrate",
+          "name": "Frozen Domain",
+          "description": "Trundle turns target location into his domain, gaining Attack Speed, Move Speed, and increased healing from all sources while on it.",
+          "tooltip": "Trundle freezes an area for {{ e4 }} seconds. While inside he gains <speed>{{ e1 }}% Move Speed</speed>, <attackSpeed>{{ e2 }}% Attack Speed</attackSpeed>, and {{ e3 }}% increased healing.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Move Speed", "Attack Speed", "Cooldown"],
+            "effect": [
+              "{{ effect1amount*100.000000 }}% -> {{ effect1amountnl*100.000000 }}%",
+              "{{ effect2amount*100.000000 }}% -> {{ effect2amountnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [18, 17, 16, 15, 14],
+          "cooldownBurn": "18/17/16/15/14",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [20, 28, 36, 44, 52],
+            [30, 45, 60, 75, 90],
+            [25, 25, 25, 25, 25],
+            [8, 8, 8, 8, 8],
+            [775, 775, 775, 775, 775],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "20/28/36/44/52", "30/45/60/75/90", "25", "8", "775", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [750, 750, 750, 750, 750],
+          "rangeBurn": "750",
+          "image": {
+            "full": "trundledesecrate.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 240,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "TrundleCircle",
+          "name": "Pillar of Ice",
+          "description": "Trundle creates an ice pillar at target location, becoming impassable terrain and slowing all nearby enemy units.",
+          "tooltip": "Trundle creates an icy pillar for {{ e1 }} seconds, briefly <status>Knocking Back</status> enemies directly over it and <status>Slowing</status> nearby enemies by {{ e2 }}%.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Slow"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ e2 }}% -> {{ e2NL }}%"]
+          },
+          "maxrank": 5,
+          "cooldown": [21, 19.5, 18, 16.5, 15],
+          "cooldownBurn": "21/19.5/18/16.5/15",
+          "cost": [75, 75, 75, 75, 75],
+          "costBurn": "75",
+          "datavalues": {},
+          "effect": [
+            null,
+            [6, 6, 6, 6, 6],
+            [34, 38, 42, 46, 50],
+            [360, 360, 360, 360, 360],
+            [225, 225, 225, 225, 225],
+            [150, 150, 150, 150, 150],
+            [225, 225, 225, 225, 225],
+            [400, 400, 400, 400, 400],
+            [60, 60, 60, 60, 60],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "6", "34/38/42/46/50", "360", "225", "150", "225", "400", "60", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1000, 1000, 1000, 1000, 1000],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "TrundleCircle.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 288,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "TrundlePain",
+          "name": "Subjugate",
+          "description": "Trundle immediately steals a percent of his target's Health, Armor and Magic Resistance. Over the next 4 seconds the amount of Health, Armor, and Magic Resistance stolen is doubled.",
+          "tooltip": "Trundle drains the lifeforce of an enemy champion, dealing <magicDamage>{{ totalpercenthpdamage }} max Health magic damage</magicDamage> and stealing <scaleArmor>{{ armormrshred*100 }}% Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> over {{ actualdurationofdrainbuff }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Health Drain", "Cooldown"],
+            "effect": [
+              "{{ percenthpdamage*100.000000 }}% -> {{ percenthpdamagenl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 100, 80],
+          "cooldownBurn": "120/100/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [650, 650, 650],
+          "rangeBurn": "650",
+          "image": {
+            "full": "TrundlePain.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 336,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "King's Tribute",
+        "description": "When an enemy unit dies near Trundle, he heals for a percent of its maximum Health.",
+        "image": {
+          "full": "Trundle_Passive.png",
+          "sprite": "passive4.png",
+          "group": "passive",
+          "x": 432,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

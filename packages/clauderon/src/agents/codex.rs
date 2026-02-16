@@ -2,6 +2,7 @@ use super::common::CommonAgentLogic;
 use super::traits::{Agent, AgentState};
 
 /// Codex agent adapter
+#[derive(Debug, Copy, Clone)]
 pub struct CodexAgent {
     /// Common agent logic
     common_logic: CommonAgentLogic,
@@ -47,34 +48,34 @@ impl Agent for CodexAgent {
         session_id: Option<&uuid::Uuid>,
         model: Option<&str>,
     ) -> Vec<String> {
-        let mut cmd = vec!["codex".to_string()];
+        let mut cmd = vec!["codex".to_owned()];
 
         // Add session ID first if provided
         if let Some(id) = session_id {
-            cmd.push("--session-id".to_string());
+            cmd.push("--session-id".to_owned());
             cmd.push(id.to_string());
         }
 
         // Add model flag if provided
         if let Some(model_name) = model {
-            cmd.push("--model".to_string());
-            cmd.push(model_name.to_string());
+            cmd.push("--model".to_owned());
+            cmd.push(model_name.to_owned());
         }
 
         // Use full auto mode when dangerous skip checks is enabled
         if dangerous_skip_checks {
-            cmd.push("--full-auto".to_string());
+            cmd.push("--full-auto".to_owned());
         }
 
         // Add image arguments
         for image in images {
-            cmd.push("--image".to_string());
+            cmd.push("--image".to_owned());
             cmd.push(image.clone());
         }
 
         // Add prompt last
         if !prompt.is_empty() {
-            cmd.push(prompt.to_string());
+            cmd.push(prompt.to_owned());
         }
 
         cmd
@@ -110,8 +111,8 @@ mod tests {
     fn test_start_command_with_images_and_full_auto() {
         let agent = CodexAgent::new();
         let images = vec![
-            "/path/to/image1.png".to_string(),
-            "/path/to/image2.jpg".to_string(),
+            "/path/to/image1.png".to_owned(),
+            "/path/to/image2.jpg".to_owned(),
         ];
         let cmd = agent.start_command("Analyze these images", &images, true, None, None);
         assert_eq!(cmd.len(), 7); // codex, --full-auto, --image, path1, --image, path2, prompt

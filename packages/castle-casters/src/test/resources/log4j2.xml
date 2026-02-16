@@ -1,0 +1,20 @@
+<Configuration status="info">
+    <Appenders>
+        <File name="FILE" fileName="logs/test/logic.log">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </File>
+        <Console name="STDOUT" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="trace">
+            <AppenderRef ref="FILE"/>
+            <AppenderRef ref="STDOUT" level="INFO"/>
+        </Root>
+        <Logger name="com.github.bentorfs.ai" level="INFO" additivity="false">
+            <AppenderRef ref="FILE"/>
+            <AppenderRef ref="STDOUT" level="INFO"/>
+        </Logger>
+    </Loggers>
+</Configuration>

@@ -1,0 +1,146 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import InfoBox from "../components/InfoBox.astro";
+import { Icon } from "astro-icon/components";
+import Button from "../components/Button.astro";
+---
+
+<Layout>
+  <div class="bg-white dark:bg-gray-900">
+    <Navbar activePage="support" />
+
+    <!-- Main Content -->
+    <div class="relative px-6 pt-14 lg:px-8">
+      <div class="mx-auto max-w-3xl py-32 sm:py-48 lg:py-56">
+        <Header variant="page" title="Get Support" subtitle="Need help with Scout? We're here to assist you." />
+
+        <!-- Feature Request Callout -->
+        <div class="mb-12">
+          <InfoBox variant="success" title="Have an idea for Scout?">
+            We welcome feature requests! Share your ideas on
+            <a
+              href="https://discord.gg/qmRewyHXFE"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-green-800 dark:text-green-200 hover:underline font-medium">Discord</a
+            > or open an issue on
+            <a
+              href="https://github.com/shepherdjerred/scout-for-lol/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-green-800 dark:text-green-200 hover:underline font-medium">GitHub</a
+            >.
+          </InfoBox>
+        </div>
+
+        <!-- Support Options -->
+        <div class="space-y-8">
+          <!-- Discord Support -->
+          <div class="hover:shadow-lg transition-shadow bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-8">
+            <div class="flex flex-row items-start mb-4">
+              <div class="shrink-0">
+                <Icon name="simple-icons:discord" class="h-12 w-12 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <h3 class="ml-6 text-2xl font-semibold text-gray-900 dark:text-white">Join the Discord Server</h3>
+            </div>
+            <div>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">
+                Get quick help from the community and the Scout team. Perfect for:
+              </p>
+              <ul class="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-300 mb-6">
+                <li>Quick questions and troubleshooting</li>
+                <li>Feature requests and suggestions</li>
+                <li>General discussion and tips</li>
+                <li>Support from the community</li>
+              </ul>
+              <Button href="https://discord.gg/qmRewyHXFE" external={true} variant="primary" color="indigo">
+                Join Discord Server
+                <Icon name="heroicons:arrow-top-right-on-square" class="ml-2 -mr-1 h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+
+          <!-- GitHub Issues -->
+          <div class="hover:shadow-lg transition-shadow bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-8">
+            <div class="flex flex-row items-start mb-4">
+              <div class="shrink-0">
+                <Icon name="simple-icons:github" class="h-12 w-12 text-gray-900 dark:text-white" />
+              </div>
+              <h3 class="ml-6 text-2xl font-semibold text-gray-900 dark:text-white">Open a GitHub Issue</h3>
+            </div>
+            <div>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">
+                Report bugs, request features, or track existing issues. Best for:
+              </p>
+              <ul class="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-300 mb-6">
+                <li>Bug reports with detailed information</li>
+                <li>Feature requests with specific use cases</li>
+                <li>Technical discussions and documentation</li>
+                <li>Tracking issue resolution and updates</li>
+              </ul>
+              <Button
+                href="https://github.com/shepherdjerred/scout-for-lol/issues"
+                external={true}
+                variant="primary"
+                color="gray"
+              >
+                Open an Issue
+                <Icon name="heroicons:arrow-top-right-on-square" class="ml-2 -mr-1 h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Help Tips -->
+        <section class="mt-16">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Before Asking for Help</h2>
+          <InfoBox variant="info">
+            <ul class="space-y-3 text-gray-600 dark:text-gray-300">
+              <li class="flex items-start">
+                <Icon name="heroicons:check-circle" class="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-3 shrink-0" />
+                <span
+                  ><strong>Check the documentation:</strong> Visit our <a
+                    href="/docs"
+                    class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 underline">documentation page</a
+                  > for comprehensive guides and command references.</span
+                >
+              </li>
+              <li class="flex items-start">
+                <Icon name="heroicons:check-circle" class="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-3 shrink-0" />
+                <span
+                  ><strong>Use the /help command:</strong> Type <code
+                    class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-sm text-gray-900 dark:text-gray-100">/help</code
+                  > in Discord to see available commands and quick tips.</span
+                >
+              </li>
+              <li class="flex items-start">
+                <Icon name="heroicons:check-circle" class="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-3 shrink-0" />
+                <span
+                  ><strong>Search existing issues:</strong> Your question might already be answered in <a
+                    href="https://github.com/shepherdjerred/scout-for-lol/issues"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 underline">existing GitHub issues</a
+                  >.</span
+                >
+              </li>
+            </ul>
+          </InfoBox>
+        </section>
+
+        <!-- Back to Home -->
+        <div class="mt-16 text-center">
+          <Button href="/" variant="text" class="inline-flex items-center">
+            <Icon name="heroicons:arrow-left" class="mr-2 h-5 w-5" />
+            Back to Home
+          </Button>
+        </div>
+      </div>
+    </div>
+
+    <Footer />
+  </div>
+</Layout>

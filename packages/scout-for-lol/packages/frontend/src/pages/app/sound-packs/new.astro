@@ -1,0 +1,229 @@
+---
+import AppLayout from "../../../layouts/app/AppLayout.astro";
+---
+
+<AppLayout title="Create Sound Pack">
+  <div class="p-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center gap-3">
+        <a href="/app/sound-packs" class="text-slate-400 hover:text-slate-300">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </a>
+        <h1 class="text-3xl font-bold text-white">Create Sound Pack</h1>
+      </div>
+      <p class="mt-2 text-slate-400">Set up a new sound pack with default sounds for game events</p>
+    </div>
+
+    <!-- Form -->
+    <form id="create-form" class="space-y-8">
+      <!-- Basic Info -->
+      <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+        <h2 class="mb-6 text-lg font-semibold text-white">Basic Information</h2>
+        <div class="grid gap-6 sm:grid-cols-2">
+          <div>
+            <label for="name" class="mb-2 block text-sm font-medium text-slate-300">Name</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              required
+              placeholder="My Sound Pack"
+              class="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+          <div>
+            <label for="version" class="mb-2 block text-sm font-medium text-slate-300">Version</label>
+            <input
+              type="text"
+              id="version"
+              name="version"
+              value="1.0.0"
+              placeholder="1.0.0"
+              class="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+          <div class="sm:col-span-2">
+            <label for="description" class="mb-2 block text-sm font-medium text-slate-300">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              rows="3"
+              placeholder="Describe your sound pack..."
+              class="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            ></textarea>
+          </div>
+          <div class="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="isPublic"
+              name="isPublic"
+              class="h-4 w-4 rounded border-slate-700 bg-slate-800 text-indigo-500 focus:ring-indigo-500"
+            />
+            <label for="isPublic" class="text-sm text-slate-300">Make this sound pack public</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+        <h2 class="mb-6 text-lg font-semibold text-white">Settings</h2>
+        <div class="space-y-6">
+          <div>
+            <label for="masterVolume" class="mb-2 block text-sm font-medium text-slate-300">
+              Master Volume: <span id="volume-display">100%</span>
+            </label>
+            <input
+              type="range"
+              id="masterVolume"
+              name="masterVolume"
+              min="0"
+              max="200"
+              value="100"
+              class="w-full"
+            />
+            <p class="mt-1 text-xs text-slate-500">Adjust the overall volume for all sounds</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="normalization"
+              name="normalization"
+              checked
+              class="h-4 w-4 rounded border-slate-700 bg-slate-800 text-indigo-500 focus:ring-indigo-500"
+            />
+            <div>
+              <label for="normalization" class="text-sm text-slate-300">Audio Normalization</label>
+              <p class="text-xs text-slate-500">Normalize audio levels to prevent clipping</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Card -->
+      <div class="rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-6">
+        <div class="flex items-start gap-4">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-500/20">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-semibold text-indigo-400">About Sound Packs</h3>
+            <p class="mt-1 text-sm text-slate-400">
+              Sound packs define which sounds play during game events. After creating your pack,
+              you'll be able to add default sounds for each event type (kills, objectives, etc.)
+              and create custom rules for contextual sounds.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center justify-end gap-4">
+        <a
+          href="/app/sound-packs"
+          class="rounded-lg border border-slate-700 px-6 py-2 font-medium text-slate-300 transition-colors hover:bg-slate-800"
+        >
+          Cancel
+        </a>
+        <button
+          type="submit"
+          id="submit-btn"
+          class="flex items-center gap-2 rounded-lg bg-indigo-500 px-6 py-2 font-medium text-white transition-colors hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <span id="submit-text">Create Sound Pack</span>
+          <svg id="submit-spinner" class="hidden h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </button>
+      </div>
+    </form>
+
+    <!-- Error Message -->
+    <div id="error-message" class="mt-4 hidden rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-400"></div>
+  </div>
+</AppLayout>
+
+<script>
+import { getApiClient } from "../../../lib/trpc";
+
+// Update volume display
+const volumeSlider = document.getElementById("masterVolume") as HTMLInputElement;
+const volumeDisplay = document.getElementById("volume-display");
+
+volumeSlider?.addEventListener("input", () => {
+  if (volumeDisplay) {
+    volumeDisplay.textContent = `${volumeSlider.value}%`;
+  }
+});
+
+// Handle form submission
+const form = document.getElementById("create-form") as HTMLFormElement;
+const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
+const submitText = document.getElementById("submit-text");
+const submitSpinner = document.getElementById("submit-spinner");
+const errorMessage = document.getElementById("error-message");
+
+form?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  // Get form values
+  const formData = new FormData(form);
+  const name = formData.get("name") as string;
+  const version = formData.get("version") as string || "1.0.0";
+  const description = formData.get("description") as string || null;
+  const isPublic = formData.has("isPublic");
+  const masterVolume = parseInt(formData.get("masterVolume") as string || "100", 10) / 100;
+  const normalization = formData.has("normalization");
+
+  // Validate
+  if (!name) {
+    showError("Please enter a name for your sound pack");
+    return;
+  }
+
+  // Show loading state
+  submitBtn.disabled = true;
+  submitText?.classList.add("hidden");
+  submitSpinner?.classList.remove("hidden");
+  errorMessage?.classList.add("hidden");
+
+  try {
+    const client = getApiClient();
+    const result = await client.soundPack.create.mutate({
+      name,
+      version,
+      description,
+      isPublic,
+      settings: {
+        masterVolume,
+        normalization,
+      },
+      defaults: {},
+      rules: [],
+    });
+
+    // Redirect to the new sound pack
+    window.location.href = `/app/sound-packs/edit?id=${result.dbId}`;
+  } catch (error) {
+    console.error("Failed to create sound pack:", error);
+    showError(error instanceof Error ? error.message : "Failed to create sound pack");
+
+    // Reset button state
+    submitBtn.disabled = false;
+    submitText?.classList.remove("hidden");
+    submitSpinner?.classList.add("hidden");
+  }
+});
+
+function showError(message: string) {
+  if (errorMessage) {
+    errorMessage.textContent = message;
+    errorMessage.classList.remove("hidden");
+  }
+}
+</script>

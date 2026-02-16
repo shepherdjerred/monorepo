@@ -1,0 +1,306 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Kled": {
+      "id": "Kled",
+      "key": "240",
+      "name": "Kled",
+      "title": "the Cantankerous Cavalier",
+      "image": {
+        "full": "Kled.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 288,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "240000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "240001",
+          "num": 1,
+          "name": "Sir Kled",
+          "chromas": false
+        },
+        {
+          "id": "240002",
+          "num": 2,
+          "name": "Count Kledula",
+          "chromas": true
+        },
+        {
+          "id": "240009",
+          "num": 9,
+          "name": "Marauder Kled",
+          "chromas": true
+        },
+        {
+          "id": "240018",
+          "num": 18,
+          "name": "Kibble-Head Kled",
+          "chromas": true
+        }
+      ],
+      "lore": "A warrior as fearless as he is ornery, the yordle Kled embodies the furious bravado of Noxus. He is an icon beloved by the empire's soldiers, distrusted by its officers, and loathed by the nobility. Many claim Kled has fought in every campaign the legions have waged, has “acquired” every military title, and has never once backed down from a fight. Though the truth of the matter is often questionable, one part of his legend is undeniable: Charging into battle on his un-trusty steed, Skaarl, Kled fights to protect what's his… and to take whatever he can get.",
+      "blurb": "A warrior as fearless as he is ornery, the yordle Kled embodies the furious bravado of Noxus. He is an icon beloved by the empire's soldiers, distrusted by its officers, and loathed by the nobility. Many claim Kled has fought in every campaign the...",
+      "allytips": [
+        "Kled generates some courage by killing minions, but gets much more from fighting Champions.",
+        "The last hit of Violent Tendencies deals more damage than the first three - make sure you hit it!",
+        "Chaaaaaaaarge!!! can be cast at a great range. Try and predict where the enemy team will be by the time you reach them."
+      ],
+      "enemytips": [
+        "Kled generates courage by damaging enemies with his Pocket Pistol and basic attacks, killing minions, and attacking structures or epic monsters.",
+        "Watch Kled's courage bar when he's off his mount - when it reaches 100%, he will remount and regain a significant amount of health.",
+        "Kled is much more threatening when he has Violent Tendencies ready."
+      ],
+      "tags": ["Fighter"],
+      "partype": "Courage",
+      "info": {
+        "attack": 8,
+        "defense": 2,
+        "magic": 2,
+        "difficulty": 7
+      },
+      "stats": {
+        "hp": 410,
+        "hpperlevel": 84,
+        "mp": 100,
+        "mpperlevel": 0,
+        "movespeed": 345,
+        "armor": 35,
+        "armorperlevel": 5.2,
+        "spellblock": 28,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 6,
+        "hpregenperlevel": 0.75,
+        "mpregen": 0,
+        "mpregenperlevel": 0,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 65,
+        "attackdamageperlevel": 3.5,
+        "attackspeedperlevel": 3.5,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "KledQ",
+          "name": "Bear Trap on a Rope",
+          "description": "Kled throws a bear trap that damages and hooks an enemy champion. If shackled for a short duration, the target takes additional physical damage and is yanked toward Kled.<br><br>When dismounted, this ability is replaced by Pocket Pistol, a ranged gun blast that knocks back Kled and restores courage.",
+          "tooltip": "<keywordMajor>Mounted:</keywordMajor> Kled throws a bear trap that deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and hooks onto the first enemy champion or large jungle monster hit.<br /><br />If Kled stays near a hooked enemy for {{ tetherpoptime }} seconds, he yanks out the trap, dealing <physicalDamage>{{ totalyankdamage }} physical damage</physicalDamage>, <status>Pulling</status> them, and <status>Slowing</status> by {{ slowamount*-100 }}% for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Throw Damage", "Rip Damage", "Slow", "Cooldown"],
+            "effect": [
+              "{{ firsthitbasedamage }} -> {{ firsthitbasedamageNL }}",
+              "{{ firsthitbasedamage*2.000000 }} -> {{ firsthitbasedamagenl*2.000000 }}",
+              "{{ slowamount*-100.000000 }}% -> {{ slowamountnl*-100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [11, 10, 9, 8, 7],
+          "cooldownBurn": "11/10/9/8/7",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [800, 800, 800, 800, 800],
+          "rangeBurn": "800",
+          "image": {
+            "full": "KledQ.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 96,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "KledW",
+          "name": "Violent Tendencies",
+          "description": "Kled gains massive attack speed for four attacks. The fourth attack deals more damage.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Kled's next Attack grants <attackSpeed>{{ attackspeed*100 }}% Attack Speed</attackSpeed> for four Attacks or {{ activeduration }} seconds.<br /><br />The fourth hit deals an additional <physicalDamage>{{ baseflatdamage }} plus {{ percentdamage }} max Health physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Flat Damage", "Percentage Damage", "Cooldown"],
+            "effect": [
+              "{{ baseflatdamage }} -> {{ baseflatdamageNL }}",
+              "{{ 4hitmaxhealthdamage }}% -> {{ 4hitmaxhealthdamageNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [13, 12, 11, 10, 9],
+          "cooldownBurn": "13/12/11/10/9",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [0, 0, 0, 0, 0],
+          "rangeBurn": "0",
+          "image": {
+            "full": "KledW.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 144,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "KledE",
+          "name": "Jousting",
+          "description": "Kled dashes, dealing physical damage and gaining a short burst of speed. Kled can cast this ability again to dash back through his initial target, dealing the same damage.",
+          "tooltip": "Kled dashes, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to enemies he passes through, pulling minions and small monsters towards him.<br /><br />If this Ability hits an enemy champion or large jungle monster, Kled gains <speed>{{ movespeed*100 }}% Move Speed</speed> for {{ movespeedduration }} second(s) and can <recast>Recast</recast> within {{ recastwindow }} seconds to dash back through the same target.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [13, 12, 11, 10, 9],
+          "cooldownBurn": "13/12/11/10/9",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [550, 550, 550, 550, 550],
+          "rangeBurn": "550",
+          "image": {
+            "full": "KledE.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 192,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "KledR",
+          "name": "Chaaaaaaaarge!!!",
+          "description": "Kled and Skaarl charge to a location, leaving a speed-granting trail behind them and gaining a shield. Skaarl locks onto and rams the first enemy champion encountered.",
+          "tooltip": "Kled charges toward an area, leaving a trail that grants allies increasing <speed>Move Speed</speed>. While charging and for 2 seconds after Kled gains up to <shield>{{ maximumshield }} Shield</shield>. Skaarl rams the first enemy champion encountered, dealing <magicDamage>{{ minimumdamagetooltip }}</magicDamage> to <magicDamage>{{ maximumchargedamage }} max Health magic damage</magicDamage> (based on distance travelled) and briefly <status>Knocking Back</status>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Maximum Damage", "Maximum Shield Health", "Range", "Cooldown"],
+            "effect": [
+              "{{ percenthpbase*3.000000 }}% -> {{ percenthpbasenl*3.000000 }}%",
+              "{{ shieldcapbase }} -> {{ shieldcapbaseNL }}",
+              "{{ tooltiprange }} -> {{ tooltiprangeNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [140, 125, 110],
+          "cooldownBurn": "140/125/110",
+          "cost": [0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [3500, 4000, 4500],
+          "rangeBurn": "3500/4000/4500",
+          "image": {
+            "full": "KledR.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 240,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        }
+      ],
+      "passive": {
+        "name": "Skaarl, the Cowardly Lizard",
+        "description": "Kled rides his trusty steed, Skaarl, who takes damage for him. When Skaarl's health depletes, Kled dismounts.<br><br>While dismounted, Kled's abilities change and he deals less damage to champions. Kled can restore Skaarl's courage by fighting enemies. At maximum courage, Kled remounts with a portion of Skaarl's health.",
+        "image": {
+          "full": "Kled_P.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 288,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

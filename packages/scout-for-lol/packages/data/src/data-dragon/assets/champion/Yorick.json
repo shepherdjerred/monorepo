@@ -1,0 +1,343 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Yorick": {
+      "id": "Yorick",
+      "key": "83",
+      "name": "Yorick",
+      "title": "Shepherd of Souls",
+      "image": {
+        "full": "Yorick.png",
+        "sprite": "champion5.png",
+        "group": "champion",
+        "x": 48,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "83000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "83001",
+          "num": 1,
+          "name": "Undertaker Yorick",
+          "chromas": false
+        },
+        {
+          "id": "83002",
+          "num": 2,
+          "name": "Pentakill Yorick",
+          "chromas": false
+        },
+        {
+          "id": "83003",
+          "num": 3,
+          "name": "Arclight Yorick",
+          "chromas": false
+        },
+        {
+          "id": "83004",
+          "num": 4,
+          "name": "Meowrick",
+          "chromas": true
+        },
+        {
+          "id": "83012",
+          "num": 12,
+          "name": "Resistance Yorick",
+          "chromas": true
+        },
+        {
+          "id": "83021",
+          "num": 21,
+          "name": "Pentakill III: Lost Chapter Yorick",
+          "chromas": true
+        },
+        {
+          "id": "83030",
+          "num": 30,
+          "name": "Spirit Blossom Yorick",
+          "chromas": true
+        },
+        {
+          "id": "83040",
+          "num": 40,
+          "name": "Dark Star Yorick",
+          "chromas": true
+        },
+        {
+          "id": "83050",
+          "num": 50,
+          "name": "High Noon Yorick",
+          "chromas": true
+        }
+      ],
+      "lore": "The last survivor of a long-forgotten religious order, Yorick is both blessed and cursed with power over the dead. Trapped on the Shadow Isles, his only companions are the rotting corpses and shrieking wraiths that he gathers to him. Yorick's monstrous actions belie his noble purpose: to free his home from the curse of the Ruination.",
+      "blurb": "The last survivor of a long-forgotten religious order, Yorick is both blessed and cursed with power over the dead. Trapped on the Shadow Isles, his only companions are the rotting corpses and shrieking wraiths that he gathers to him. Yorick's monstrous...",
+      "allytips": [
+        "You do not need to cast Awakening to regain the ability to cast Last Rites.",
+        "The Maiden will attempt to assist you in a fight, so choose your targets well.",
+        "You can send the Maiden down a lane alone, be careful though, as she represents a large portion of your combat power."
+      ],
+      "enemytips": [
+        "You can cast Smite on Mist Walkers and the Maiden of the Mist to damage or kill them.",
+        "Try to thin out Yorick's minions before you engage him, Mist Walkers will die from a basic attack or a single target spell.",
+        "You can attack Dark Procession to break the wall down."
+      ],
+      "tags": ["Fighter", "Tank"],
+      "partype": "Mana",
+      "info": {
+        "attack": 6,
+        "defense": 6,
+        "magic": 4,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 650,
+        "hpperlevel": 114,
+        "mp": 300,
+        "mpperlevel": 60,
+        "movespeed": 340,
+        "armor": 36,
+        "armorperlevel": 4.5,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 175,
+        "hpregen": 8,
+        "hpregenperlevel": 0.8,
+        "mpregen": 7.5,
+        "mpregenperlevel": 0.75,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 62,
+        "attackdamageperlevel": 5,
+        "attackspeedperlevel": 2,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "YorickQ",
+          "name": "Last Rites",
+          "description": "Yorick deals bonus damage on his next attack and heals himself. If the target is a champion or large monster or if the target dies, a grave will be dug.",
+          "tooltip": "Yorick's next Attack deals an additional <physicalDamage>{{ bonusdamage }} physical damage</physicalDamage> and restores <healing>{{ qheal }} plus {{ missinghealthratio }}% of his missing Health</healing>, reduced by {{ healreduction }}% against non-Champions. If this Attack hits a Champion or large Monster or kills the target, it leaves a grave.<br /><br />When there are 3 or more graves nearby and this Ability has already been used, Yorick can <recast>Recast</recast> to raise <keywordMajor>Mist Walkers</keywordMajor> from all nearby graves.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Bonus Damage:", "Healing", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ missinghealthratio }}% -> {{ missinghealthratioNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [6, 5.5, 5, 4.5, 4],
+          "cooldownBurn": "6/5.5/5/4.5/4",
+          "cost": [20, 20, 20, 20, 20],
+          "costBurn": "20",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [0, 0, 0, 0, 0],
+          "rangeBurn": "0",
+          "image": {
+            "full": "YorickQ.png",
+            "sprite": "spell16.png",
+            "group": "spell",
+            "x": 96,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "YorickW",
+          "name": "Dark Procession",
+          "description": "Yorick summons a destructible wall at target location that will block enemy movement.",
+          "tooltip": "Yorick summons a wall of spirits blocking enemies' path, but not allies'. The wall has <healing>{{ wallhealthtooltip }} Health</healing> and disappears after {{ circleduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Health"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ wallhealthtooltip }} -> {{ wallhealthtooltipNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [20, 18, 16, 14, 12],
+          "cooldownBurn": "20/18/16/14/12",
+          "cost": [70, 70, 70, 70, 70],
+          "costBurn": "70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [600, 600, 600, 600, 600],
+          "rangeBurn": "600",
+          "image": {
+            "full": "YorickW.png",
+            "sprite": "spell16.png",
+            "group": "spell",
+            "x": 144,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "YorickE",
+          "name": "Mourning Mist",
+          "description": "Yorick throws a globule of Black Mist that reduces armor, damages, slows and marks enemies. Summoned units gain move speed when moving towards marked targets. ",
+          "tooltip": "Yorick throws a globule of Black Mist that deals <magicDamage>{{ calc_healthdamage }} max Health magic damage</magicDamage>, <status>Slows</status> by {{ calc_slow }} for {{ slowduration }} seconds and marks champions and monsters for {{ markduration }} seconds. Marked enemies continuously <spellName>Awaken</spellName> nearby graves (but not exceeding the maximum of {{ spell.yorickpassive:yorickpassiveghoulmax }}) and suffer <scaleArmor>{{ armorshred*100 }}% reduced Armor</scaleArmor>.<br /><br />Yorick and his summoned units gain <speed>{{ hasteamount*100 }}% Move Speed</speed> toward the mark. <keywordMajor>Mist Walkers</keywordMajor> will leap once at marked enemies that get away from them.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Armor Reduction %",
+              "Move Speed",
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Maximum Health Damage"
+            ],
+            "effect": [
+              "{{ armorshred*100.000000 }}% -> {{ armorshrednl*100.000000 }}%",
+              "{{ hasteamount*100.000000 }}% -> {{ hasteamountnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ healthdamage }}% -> {{ healthdamageNL }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 11, 10, 9, 8],
+          "cooldownBurn": "12/11/10/9/8",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [700, 700, 700, 700, 700],
+          "rangeBurn": "700",
+          "image": {
+            "full": "YorickE.png",
+            "sprite": "spell16.png",
+            "group": "spell",
+            "x": 192,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "YorickR",
+          "name": "Eulogy of the Isles",
+          "description": "Yorick summons the Maiden of the Mist that causes Yorick's attacks against the Maiden's target to deal bonus damage. The Maiden will also automatically raise Walkers from dead enemies.",
+          "tooltip": "Yorick summons the <keywordMajor>Maiden of the Mist</keywordMajor> with <healing>{{ yorickbigghoulhealth }} Health</healing> and <magicDamage>{{ yorickbigghouldamage }} Magic Attack Damage</magicDamage> plus {{ rghoulnumbers }} <keywordMajor>Mist Walkers</keywordMajor>. The <keywordMajor>Maiden</keywordMajor> automatically raises <keywordMajor>Mist Walkers</keywordMajor> from nearby enemy deaths and marks enemy Champions with her attacks. When Yorick damages the <keywordMajor>Maiden's</keywordMajor> target, he deals <magicDamage>{{ rmarkdamagepercent }}% max Health magic damage</magicDamage>.<br /><br />After 10 seconds, Yorick can <recast>Recast</recast> this Ability to free the <keywordMajor>Maiden</keywordMajor>, sending her down the nearest lane.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Attack Damage", "Mark Damage", "Mist Walkers", "Cooldown"],
+            "effect": [
+              "{{ rbigghoulbonusad }} -> {{ rbigghoulbonusadNL }}",
+              "{{ rmarkdamagepercent }}% -> {{ rmarkdamagepercentNL }}%",
+              "{{ rghoulnumbers }} -> {{ rghoulnumbersNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [160, 130, 100],
+          "cooldownBurn": "160/130/100",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [600, 600, 600],
+          "rangeBurn": "600",
+          "image": {
+            "full": "YorickR.png",
+            "sprite": "spell16.png",
+            "group": "spell",
+            "x": 240,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Shepherd of Souls",
+        "description": "<font color='#FF9900'>The Cursed Horde:</font> Yorick can summon Mist Walkers to swarm and attack nearby enemies.",
+        "image": {
+          "full": "Yorick_P.png",
+          "sprite": "passive5.png",
+          "group": "passive",
+          "x": 48,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

@@ -14,7 +14,7 @@ use super::components::{
 use crate::core::BackendType;
 
 /// Render the entire UI
-pub fn render(frame: &mut Frame, app: &App) {
+pub fn render(frame: &mut Frame<'_>, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -80,7 +80,7 @@ pub fn render(frame: &mut Frame, app: &App) {
     }
 }
 
-fn render_main_content(frame: &mut Frame, app: &App, area: Rect) {
+fn render_main_content(frame: &mut Frame<'_>, app: &App, area: Rect) {
     if let Some(error) = &app.connection_error {
         render_connection_error(frame, error, area);
     } else if app.mode == AppMode::Attached
@@ -95,7 +95,7 @@ fn render_main_content(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 /// Render the attached terminal view.
-fn render_attached_terminal(frame: &mut Frame, app: &App, area: Rect) {
+fn render_attached_terminal(frame: &mut Frame<'_>, app: &App, area: Rect) {
     use super::attached::TerminalWidget;
 
     if let Some(pty_session) = app.attached_pty_session() {
@@ -162,7 +162,7 @@ fn render_attached_terminal(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(paragraph, area);
 }
 
-fn render_connection_error(frame: &mut Frame, error: &str, area: Rect) {
+fn render_connection_error(frame: &mut Frame<'_>, error: &str, area: Rect) {
     let block = Block::default()
         .title(" Clauderon ")
         .borders(Borders::ALL)
@@ -175,7 +175,7 @@ fn render_connection_error(frame: &mut Frame, error: &str, area: Rect) {
             Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
         )),
         Line::from(""),
-        Line::from(error.to_string()),
+        Line::from(error.to_owned()),
         Line::from(""),
         Line::from("Make sure the daemon is running:"),
         Line::from(Span::styled(
@@ -189,7 +189,7 @@ fn render_connection_error(frame: &mut Frame, error: &str, area: Rect) {
     frame.render_widget(paragraph, area);
 }
 
-fn render_confirm_delete(frame: &mut Frame, app: &App, area: Rect) {
+fn render_confirm_delete(frame: &mut Frame<'_>, app: &App, area: Rect) {
     let block = Block::default()
         .title(" Confirm Delete ")
         .borders(Borders::ALL)
@@ -215,7 +215,7 @@ fn render_confirm_delete(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(paragraph, area);
 }
 
-fn render_confirm_merge(frame: &mut Frame, app: &App, area: Rect) {
+fn render_confirm_merge(frame: &mut Frame<'_>, app: &App, area: Rect) {
     let block = Block::default()
         .title(" Merge Pull Request ")
         .borders(Borders::ALL)
@@ -263,7 +263,7 @@ fn render_confirm_merge(frame: &mut Frame, app: &App, area: Rect) {
     }
 }
 
-fn render_help(frame: &mut Frame, app: &App, area: Rect) {
+fn render_help(frame: &mut Frame<'_>, app: &App, area: Rect) {
     let block = Block::default()
         .title(" Help ")
         .borders(Borders::ALL)
@@ -389,7 +389,7 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 /// Render the signal menu dialog.
-fn render_signal_menu(frame: &mut Frame, app: &App, area: Rect) {
+fn render_signal_menu(frame: &mut Frame<'_>, app: &App, area: Rect) {
     let Some(menu) = &app.signal_menu else {
         return;
     };
@@ -399,7 +399,7 @@ fn render_signal_menu(frame: &mut Frame, app: &App, area: Rect) {
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Yellow));
 
-    let items: Vec<ListItem> = menu
+    let items: Vec<ListItem<'_>> = menu
         .signals
         .iter()
         .enumerate()

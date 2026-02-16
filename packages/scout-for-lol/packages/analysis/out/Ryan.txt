@@ -1,0 +1,62 @@
+author: Ryan (200067001035653131)
+messages: 4904
+volume: avg_words 5.65, median_words 4.0, p90_words 12.0, avg_chars 34.09, p90_chars 68.0
+lexical: ttr 0.155, hapax 0.09, caps/msg 0.0
+sentences: avg_words 5.922
+words: avg_len 4.153, variety 4285, typos/msg 2.374
+tokens: to (1.0), the (0.8102016607354685), you (0.800711743772242), is (0.4887307236061684), and (0.3973902728351127), it (0.39501779359430605), this (0.3748517200474496), my (0.3736654804270463)
+char_trigrams:  th (1727),  to (1074), ing (1068), the (1058),  i  (949), ng  (930)
+style_markers: pls (67), maybe (59), actually (48), bro (41), really (40), idk (35)
+laughter: \bl+o+l+\b (270), \bha+ha+\b (7)
+emoji: 😦 (18), 😂 (18), 🙂 (8), 🤣 (7), 🤔 (7), 🎂 (6)
+openers: what (161), lol (119), am (105), you (100), yeah (95) | do you (29), we need (29), what is (27), anyone want (26), what the (21)
+closers: lol (177), me (83), it (72), you (68), man (66) | to play (17), thank you (16), the jeep (14), right now (12), is this (11)
+cadence: . (1429), ? (1022), ' (433), , (312), ! (213), ... (213) | repeats ?? (43), ??? (40), ?! (36), !!! (15) | ?/msg 0.208 !/msg 0.043 .../msg 0.043
+formatting: links/msg 0.013 mentions/msg 0.135 quotes/msg 0.001 code/msg 0.0 multiline/msg 0.025 stretch/msg 0.152 shout/msg 0.049
+hours: 18, 17, 19
+mentions: 160509172704739328 (85), 208404668026454016 (69), 189534213391908865 (58), 126546653665558528 (56), 208425244128444418 (54)
+representative: the
+interesting:
+ 1. (0.52) you have to get on
+ 2. (0.49) You want to play the finsls?
+ 3. (0.476) Can you push it to 7???
+ 4. (0.473) You see.... I have to go to Renton
+ 5. (0.468) <@189534213391908865>  WHAT HAVE YOU DONE TO ME
+ 6. (0.464) you have to come now <@121887985896521732>
+ 7. (0.461) <@456226577798135808> you need to come to get in line
+ 8. (0.456) you just attach it to the battery
+ 9. (0.454) to the zombie gods
+10. (0.451) <@126546653665558528>  did you want to play?
+11. (0.451) <@126546653665558528>  so you going to come ?
+12. (0.447) i am going to slap you
+13. (0.442) <@263577791105073152> Is that you man
+14. (0.436) Time to talk to girls
+15. (0.434) https://www.instagram.com/reel/CpWpOGwguZp/?igshid=YmMyMTA2M2Y=
+
+<@189534213391908865>  this you need this
+16. (0.432) you going to be in network?
+17. (0.429) you got this
+18. (0.429) You got this
+19. (0.429) In the jeep
+20. (0.427) <@&962497446943027211> time to play?
+quotes:
+- "anyone want to play" (11)
+- "where you at" (7)
+- "what the hell" (6)
+- "what is this" (4)
+- "the jeep stays" (4)
+- "we ahve lets go please for the love of god" (4)
+- "we need more" (4)
+- "get in here" (3)
+- "get back here" (3)
+- "what the fuck" (3)
+- "need duo partner" (3)
+- "you got this" (2)
+- "what the fuck man" (2)
+- "how dare you" (2)
+- "where are you" (2)
+- "get back in here" (2)
+- "when is this" (2)
+- "what is that" (2)
+- "how did this happen" (2)
+- "this server is falling apart" (2)

@@ -1,0 +1,20 @@
+---
+import type { CollectionEntry } from "astro:content";
+import * as R from "remeda";
+import BlogEntry from "./BlogEntry.astro";
+import type { JSX } from "astro/jsx-runtime";
+
+type Props = {
+  year: string;
+  entries: CollectionEntry<"blog" | "til">[];
+};
+
+const { year, entries } = Astro.props;
+---
+
+<div>
+  <h2 class="text-white font-bold text-2xl mb-2">{year}</h2>
+  <div class="flex flex-col gap-6">
+    {R.map(entries, (entry): JSX.Element => <BlogEntry entry={entry} />)}
+  </div>
+</div>

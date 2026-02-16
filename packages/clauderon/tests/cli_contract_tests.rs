@@ -244,7 +244,7 @@ fn test_zellij_create_background_schema() {
 
     // Must have --create-background flag
     assert!(
-        args.contains(&"--create-background".to_string()),
+        args.contains(&"--create-background".to_owned()),
         "Must have --create-background flag: {args:?}"
     );
 

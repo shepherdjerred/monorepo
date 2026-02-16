@@ -1,0 +1,141 @@
+---
+import { Icon } from "astro-icon/components";
+import { cn } from "@scout-for-lol/frontend/lib/utils.ts";
+import {
+  Card as ShadcnCard,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@scout-for-lol/frontend/components/ui/card";
+import { iconColors, gradientColors, type ColorVariant } from "../lib/colors";
+
+interface Props {
+  title: string;
+  description?: string | undefined;
+
+  // Icon or number display
+  icon?: string | undefined; // astro-icon name (e.g., "heroicons:check-circle")
+  iconHtml?: string | undefined; // Raw HTML for custom icons
+  number?: number | undefined;
+
+  // Styling
+  layout?: "centered" | "left" | undefined;
+  color?: ColorVariant | undefined;
+  iconColor?: string | undefined; // Custom color class for icon background
+  gradient?: string | undefined; // Gradient key from gradientColors
+
+  // Container styling
+  withCard?: boolean | undefined; // Wrap in card with shadow
+  class?: string | undefined; // Changed from className to class
+
+  // For dt/dd usage (like FeatureCard)
+  asList?: boolean | undefined;
+}
+
+const {
+  title,
+  description,
+  icon,
+  iconHtml,
+  number,
+  layout = "centered",
+  color = "green",
+  iconColor,
+  gradient,
+  withCard = false,
+  asList = false,
+  class: classNames, // Destructure class as classNames
+} = Astro.props;
+
+// Determine icon background color
+const iconBgClass =
+  iconColor ||
+  (withCard && gradient
+    ? `bg-linear-to-br ${gradientColors[gradient] || gradientColors["yellow"]}`
+    : number
+      ? "bg-indigo-600 text-white"
+      : iconColors[color]);
+
+const iconSize = withCard ? "w-24 h-24 mb-4" : number ? "h-10 w-10" : "h-12 w-12";
+const iconInnerSize = withCard ? "w-12 h-12" : "h-6 w-6";
+---
+
+{
+  withCard ? (
+    <ShadcnCard className={cn("flex flex-col gap-0", layout === "centered" ? "text-center" : "", classNames)}>
+      <CardHeader>
+        <div
+          class={cn(
+            iconSize,
+            layout === "centered" ? "mx-auto" : "",
+            "rounded-lg flex items-center justify-center",
+            iconBgClass,
+          )}
+        >
+          {icon && <Icon name={icon} class={cn(iconInnerSize, "text-white")} />}
+          {iconHtml && <div set:html={iconHtml} class={cn(iconInnerSize, "text-white")} />}
+          {number && <span class="font-semibold text-white">{number}</span>}
+        </div>
+        <CardTitle>{title}</CardTitle>
+        {description && <CardDescription>{description}</CardDescription>}
+      </CardHeader>
+      <CardContent>
+        <slot />
+      </CardContent>
+    </ShadcnCard>
+  ) : asList ? (
+    <div class={cn(asList ? "relative pl-16" : "flex flex-col", classNames)}>
+      <dt class="text-base font-semibold text-gray-900 dark:text-white">
+        <div class={cn("absolute left-0 top-0", "flex size-10 items-center justify-center rounded-lg", iconBgClass)}>
+          {icon && <Icon name={icon} class="size-6 text-white" />}
+          {iconHtml && <div set:html={iconHtml} class="size-6 text-white" />}
+          {number && <span class="font-semibold text-white">{number}</span>}
+        </div>
+        {title}
+      </dt>
+      {description && <dd class="mt-2 text-base text-gray-600 dark:text-gray-300">{description}</dd>}
+      <slot />
+    </div>
+  ) : number ? (
+    <div class={cn(layout === "centered" ? "text-center" : "")}>
+      <dt class="flex items-center gap-x-3 text-base font-semibold text-gray-900 dark:text-white">
+        <div
+          class={cn(
+            iconSize,
+            "flex items-center justify-center rounded-lg",
+            iconBgClass,
+            "font-semibold text-white",
+            layout === "centered" ? "mx-auto" : "",
+          )}
+        >
+          {number}
+        </div>
+        {title}
+      </dt>
+      {description && (
+        <dd class="mt-4 flex flex-auto flex-col text-base text-gray-600 dark:text-gray-300">
+          <p class="flex-auto">{description}</p>
+        </dd>
+      )}
+      <slot />
+    </div>
+  ) : (
+    <div class={cn(layout === "centered" ? "text-center" : "flex flex-col")}>
+      <div
+        class={cn(
+          iconSize,
+          layout === "centered" ? "mx-auto" : "",
+          "flex items-center justify-center rounded-lg",
+          iconBgClass,
+        )}
+      >
+        {icon && <Icon name={icon} class={iconInnerSize} />}
+        {iconHtml && <div set:html={iconHtml} class={iconInnerSize} />}
+      </div>
+      <h3 class={cn(layout === "centered" ? "mt-4" : "mt-0", "text-lg font-semibold text-gray-900 dark:text-white")}>{title}</h3>
+      {description && <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{description}</p>}
+      <slot />
+    </div>
+  )
+}

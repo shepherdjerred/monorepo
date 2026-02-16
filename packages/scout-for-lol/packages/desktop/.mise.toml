@@ -1,0 +1,63 @@
+# mise configuration for desktop package
+
+[tools]
+rust = "stable"
+
+[tasks.fmt]
+description = "Format Rust code"
+run = "cd src-tauri && cargo fmt"
+
+[tasks.lint]
+description = "Lint Rust code with clippy"
+run = "cd src-tauri && cargo clippy --all-targets --all-features -- -D warnings"
+
+[tasks.test]
+description = "Run Rust tests"
+run = "cd src-tauri && cargo test"
+
+[tasks.check]
+description = "Run all checks (fmt, lint, test)"
+depends = ["fmt", "lint", "test"]
+
+[tasks.build]
+description = "Build desktop application (Linux)"
+run = "bun run build:linux"
+
+[tasks."build-macos"]
+description = "Build desktop application for macOS (universal binary)"
+run = "bun run build:macos"
+
+[tasks."build-macos-arm"]
+description = "Build desktop application for macOS Apple Silicon"
+run = "bun run build:macos:arm"
+
+[tasks."build-macos-intel"]
+description = "Build desktop application for macOS Intel"
+run = "bun run build:macos:intel"
+
+[tasks."build-linux"]
+description = "Build desktop application for Linux"
+run = "bun run build:linux"
+
+[tasks."build-windows"]
+description = "Build desktop application for Windows (x86_64)"
+run = "bun run build:windows"
+
+[tasks."build-windows-arm"]
+description = "Build desktop application for Windows ARM64"
+run = "bun run build:windows:arm"
+
+[tasks.setup]
+description = "Install cross-compilation targets and toolchains"
+run = """
+# Install build dependencies (requires sudo)
+sudo apt-get update && sudo apt-get install -y mingw-w64 cmake nsis
+
+# Install Rust targets
+rustup target add x86_64-pc-windows-gnu
+rustup target add aarch64-pc-windows-msvc
+"""
+
+[tasks.dev]
+description = "Run development server"
+run = "bun run dev"

@@ -1,0 +1,881 @@
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/"><channel>
+  <title>Paul Graham: Essays</title>
+  <link>http://www.paulgraham.com/</link>
+  <description>Scraped feed provided by aaronsw.com</description>
+  <item>
+    <link>http://www.paulgraham.com/superlinear.html</link>
+    <title>Superlinear Returns</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/greatwork.html</link>
+    <title>How to Do Great Work</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/getideas.html</link>
+    <title>How to Get New Ideas</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/read.html</link>
+    <title>The Need to Read</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/want.html</link>
+    <title>What You (Want to)* Want</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/alien.html</link>
+    <title>Alien Truth</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/users.html</link>
+    <title>What I've Learned from Users</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/heresy.html</link>
+    <title>Heresy</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/words.html</link>
+    <title>Putting Ideas into Words</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/goodtaste.html</link>
+    <title>Is There Such a Thing as Good Taste?</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/smart.html</link>
+    <title>Beyond Smart</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/weird.html</link>
+    <title>Weird Languages</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/hwh.html</link>
+    <title>How to Work Hard</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/own.html</link>
+    <title>A Project of One's Own</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/fn.html</link>
+    <title>Fierce Nerds</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/newideas.html</link>
+    <title>Crazy New Ideas</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/nft.html</link>
+    <title>An NFT That Saves Lives</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/real.html</link>
+    <title>The Real Reason to End the Death Penalty</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/richnow.html</link>
+    <title>How People Get Rich Now</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/simply.html</link>
+    <title>Write Simply</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/donate.html</link>
+    <title>Donate Unrestricted</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/worked.html</link>
+    <title>What I Worked On</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/earnest.html</link>
+    <title>Earnestness</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/ace.html</link>
+    <title>Billionaires Build</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/airbnbs.html</link>
+    <title>The Airbnbs</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/think.html</link>
+    <title>How to Think for Yourself</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/early.html</link>
+    <title>Early Work</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/wtax.html</link>
+    <title>Modeling a Wealth Tax</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/conformism.html</link>
+    <title>The Four Quadrants of Conformism</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/orth.html</link>
+    <title>Orthodox Privilege</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/cred.html</link>
+    <title>Coronavirus and Credibility</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/useful.html</link>
+    <title>How to Write Usefully</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/noob.html</link>
+    <title>Being a Noob</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/fh.html</link>
+    <title>Haters</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/mod.html</link>
+    <title>The Two Kinds of Moderate</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/fp.html</link>
+    <title>Fashionable Problems</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/kids.html</link>
+    <title>Having Kids</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/lesson.html</link>
+    <title>The Lesson to Unlearn</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/nov.html</link>
+    <title>Novelty and Heresy</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/genius.html</link>
+    <title>The Bus Ticket Theory of Genius</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/sun.html</link>
+    <title>General and Surprising</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/pow.html</link>
+    <title>Charisma / Power</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/disc.html</link>
+    <title>The Risk of Discovery</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/pgh.html</link>
+    <title>How to Make Pittsburgh a Startup Hub</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/vb.html</link>
+    <title>Life is Short</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/ineq.html</link>
+    <title>Economic Inequality</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/re.html</link>
+    <title>The Refragmentation</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/jessica.html</link>
+    <title>Jessica Livingston</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/bias.html</link>
+    <title>A Way to Detect Bias</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/talk.html</link>
+    <title>Write Like You Talk</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/aord.html</link>
+    <title>Default Alive or Default Dead?</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/safe.html</link>
+    <title>Why It's Safe for Founders to Be Nice</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/name.html</link>
+    <title>Change Your Name</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/altair.html</link>
+    <title>What Microsoft Is this the Altair Basic of?</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/ronco.html</link>
+    <title>The Ronco Principle</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/work.html</link>
+    <title>What Doesn't Seem Like Work?</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/corpdev.html</link>
+    <title>Don't Talk to Corp Dev</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/95.html</link>
+    <title>Let the Other 95% of Great Programmers In</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/ecw.html</link>
+    <title>How to Be an Expert in a Changing World</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/know.html</link>
+    <title>How You Know</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/pinch.html</link>
+    <title>The Fatal Pinch</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/mean.html</link>
+    <title>Mean People Fail</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/before.html</link>
+    <title>Before the Startup</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/fr.html</link>
+    <title>How to Raise Money</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/herd.html</link>
+    <title>Investor Herd Dynamics</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/convince.html</link>
+    <title>How to Convince Investors</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/ds.html</link>
+    <title>Do Things that Don't Scale</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/invtrend.html</link>
+    <title>Startup Investing Trends</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/startupideas.html</link>
+    <title>How to Get Startup Ideas</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/hw.html</link>
+    <title>The Hardware Renaissance</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/growth.html</link>
+    <title>Startup = Growth</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/swan.html</link>
+    <title>Black Swan Farming</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/todo.html</link>
+    <title>The Top of My Todo List</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/speak.html</link>
+    <title>Writing and Speaking</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/ycstart.html</link>
+    <title>How Y Combinator Started</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/property.html</link>
+    <title>Defining Property</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/ambitious.html</link>
+    <title>Frighteningly Ambitious Startup Ideas</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/word.html</link>
+    <title>A Word to the Resourceful</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/schlep.html</link>
+    <title>Schlep Blindness</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/vw.html</link>
+    <title>Snapshot: Viaweb, June 1998</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/hubs.html</link>
+    <title>Why Startup Hubs Work</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/patentpledge.html</link>
+    <title>The Patent Pledge</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/airbnb.html</link>
+    <title>Subject: Airbnb</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/control.html</link>
+    <title>Founder Control</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/tablets.html</link>
+    <title>Tablets</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/founders.html</link>
+    <title>What We Look for in Founders</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/superangels.html</link>
+    <title>The New Funding Landscape</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/seesv.html</link>
+    <title>Where to See Silicon Valley</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/hiresfund.html</link>
+    <title>High Resolution Fundraising </title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/yahoo.html</link>
+    <title>What Happened to Yahoo </title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/future.html</link>
+    <title>The Future of Startup Funding </title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/addiction.html</link>
+    <title>The Acceleration of Addictiveness</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/top.html</link>
+    <title>The Top Idea in Your Mind </title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/selfindulgence.html</link>
+    <title>How to Lose Time and Money </title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/organic.html</link>
+    <title>Organic Startup Ideas</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/apple.html</link>
+    <title>Apple's Mistake</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/really.html</link>
+    <title>What Startups Are Really Like</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/discover.html</link>
+    <title>Persuade xor Discover </title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/publishing.html</link>
+    <title>Post-Medium Publishing</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/nthings.html</link>
+    <title>The List of N Things</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/determination.html</link>
+    <title>The Anatomy of Determination </title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/kate.html</link>
+    <title>What Kate Saw in Silicon Valley  </title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/segway.html</link>
+    <title>The Trouble with the Segway</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/ramenprofitable.html</link>
+    <title>Ramen Profitable</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/makersschedule.html</link>
+    <title>Maker's Schedule, Manager's Schedule </title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/revolution.html</link>
+    <title>A Local Revolution?</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/twitter.html</link>
+    <title>Why Twitter is a Big Deal</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/foundervisa.html</link>
+    <title>The Founder Visa</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/5founders.html</link>
+    <title>Five Founders</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/relres.html</link>
+    <title>Relentlessly Resourceful</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/angelinvesting.html</link>
+    <title>How to Be an Angel Investor</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/convergence.html</link>
+    <title>Why TV Lost</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/maybe.html</link>
+    <title>Can You Buy a Silicon Valley?  Maybe.</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/hackernews.html</link>
+    <title>What I've Learned from Hacker News</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/13sentences.html</link>
+    <title>Startups in 13 Sentences</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/identity.html</link>
+    <title>Keep Your Identity Small  </title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/credentials.html</link>
+    <title>After Credentials</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/divergence.html</link>
+    <title>Could VC be a Casualty of the Recession?</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/highres.html</link>
+    <title>The High-Res Society</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/artistsship.html</link>
+    <title>The Other Half of "Artists Ship"  </title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/badeconomy.html</link>
+    <title>Why to Start a Startup in a Bad Economy</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/fundraising.html</link>
+    <title>A Fundraising Survival Guide</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/prcmc.html</link>
+    <title>The Pooled-Risk Company Management Company</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/cities.html</link>
+    <title>Cities and Ambition</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/distraction.html</link>
+    <title>Disconnecting Distraction</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/lies.html</link>
+    <title>Lies We Tell Kids</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/good.html</link>
+    <title>Be Good</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/googles.html</link>
+    <title>Why There Aren't More Googles</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/heroes.html</link>
+    <title>Some Heroes</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/disagree.html</link>
+    <title>How to Disagree</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/boss.html</link>
+    <title>You Weren't Meant to Have a Boss</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/ycombinator.html</link>
+    <title>A New Venture Animal</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/trolls.html</link>
+    <title>Trolls</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/newthings.html</link>
+    <title>Six Principles for Making New Things</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/startuphubs.html</link>
+    <title>Why to Move to a Startup Hub</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/webstartups.html</link>
+    <title>The Future of Web Startups</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/philosophy.html</link>
+    <title>How to Do Philosophy</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/colleges.html</link>
+    <title>News from the Front</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/die.html</link>
+    <title>How Not to Die</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/head.html</link>
+    <title>Holding a Program in One's Head</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/stuff.html</link>
+    <title>Stuff</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/equity.html</link>
+    <title>The Equity Equation</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/unions.html</link>
+    <title>An Alternative Theory of Unions</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/guidetoinvestors.html</link>
+    <title>The Hacker's Guide to Investors</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/judgement.html</link>
+    <title>Two Kinds of Judgement</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/microsoft.html</link>
+    <title>Microsoft is Dead</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/notnot.html</link>
+    <title>Why to Not Not Start a Startup</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/wisdom.html</link>
+    <title>Is It Worth Being Wise?</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/foundersatwork.html</link>
+    <title>Learning from Founders</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/goodart.html</link>
+    <title>How Art Can Be Good</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/startupmistakes.html</link>
+    <title>The 18 Mistakes That Kill Startups</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/mit.html</link>
+    <title>A Student's Guide to Startups</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/investors.html</link>
+    <title>How to Present to Investors</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/copy.html</link>
+    <title>Copy What You Like</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/island.html</link>
+    <title>The Island Test</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/marginal.html</link>
+    <title>The Power of the Marginal</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/america.html</link>
+    <title>Why Startups Condense in America</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/siliconvalley.html</link>
+    <title>How to Be Silicon Valley</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/startuplessons.html</link>
+    <title>The Hardest Lessons for Startups to Learn</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/randomness.html</link>
+    <title>See Randomness</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/softwarepatents.html</link>
+    <title>Are Software Patents Evil?</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/6631327.html</link>
+    <title>6,631,372</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/whyyc.html</link>
+    <title>Why YC</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/love.html</link>
+    <title>How to Do What You Love</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/procrastination.html</link>
+    <title>Good and Bad Procrastination</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/web20.html</link>
+    <title>Web 2.0</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/startupfunding.html</link>
+    <title>How to Fund a Startup</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/vcsqueeze.html</link>
+    <title>The Venture Capital Squeeze</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/ideas.html</link>
+    <title>Ideas for Startups</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/sfp.html</link>
+    <title>What I Did this Summer</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/inequality.html</link>
+    <title>Inequality and Risk</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/ladder.html</link>
+    <title>After the Ladder</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/opensource.html</link>
+    <title>What Business Can Learn from Open Source</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/hiring.html</link>
+    <title>Hiring is Obsolete</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/submarine.html</link>
+    <title>The Submarine</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/bronze.html</link>
+    <title>Why Smart People Have Bad Ideas</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/mac.html</link>
+    <title>Return of the Mac</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/writing44.html</link>
+    <title>Writing,  Briefly</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/college.html</link>
+    <title>Undergraduation</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/venturecapital.html</link>
+    <title>A Unified Theory of VC Suckage</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/start.html</link>
+    <title>How to Start a Startup</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/hs.html</link>
+    <title>What You'll Wish You'd Known</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/usa.html</link>
+    <title>Made in USA</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/charisma.html</link>
+    <title>It's Charisma, Stupid</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/polls.html</link>
+    <title>Bradley's Ghost</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/laundry.html</link>
+    <title>A Version 1.0</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/bubble.html</link>
+    <title>What the Bubble Got Right</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/essay.html</link>
+    <title>The Age of the Essay</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/pypar.html</link>
+    <title>The Python Paradox</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/gh.html</link>
+    <title>Great Hackers</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/gap.html</link>
+    <title>Mind the Gap</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/wealth.html</link>
+    <title>How to Make Wealth</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/gba.html</link>
+    <title>The Word "Hacker"</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/say.html</link>
+    <title>What You Can't Say</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/ffb.html</link>
+    <title>Filters that Fight Back</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/hp.html</link>
+    <title>Hackers and Painters</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/iflisp.html</link>
+    <title>If Lisp is So Great</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/hundred.html</link>
+    <title>The Hundred-Year Language</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/nerds.html</link>
+    <title>Why Nerds are Unpopular</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/better.html</link>
+    <title>Better Bayesian Filtering</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/desres.html</link>
+    <title>Design and Research</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/spam.html</link>
+    <title>A Plan for Spam</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/icad.html</link>
+    <title>Revenge of the Nerds</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/power.html</link>
+    <title>Succinctness is Power</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/fix.html</link>
+    <title>What Languages Fix</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/taste.html</link>
+    <title>Taste for Makers</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/noop.html</link>
+    <title>Why Arc Isn't Especially Object-Oriented</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/diff.html</link>
+    <title>What Made Lisp Different</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/road.html</link>
+    <title>The Other Road Ahead</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/rootsoflisp.html</link>
+    <title>The Roots of Lisp</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/langdes.html</link>
+    <title>Five Questions about Language Design</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/popular.html</link>
+    <title>Being Popular</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/javacover.html</link>
+    <title>Java's Cover</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/avg.html</link>
+    <title>Beating the Averages</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/lwba.html</link>
+    <title>Lisp for Web-Based Applications</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/https://sep.turbifycdn.com/ty/cdn/paulgraham/acl1.txt?t=1702479238&amp;</link>
+    <title>Chapter 1 of Ansi Common Lisp</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/https://sep.turbifycdn.com/ty/cdn/paulgraham/acl2.txt?t=1702479238&amp;</link>
+    <title>Chapter 2 of Ansi Common Lisp</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/progbot.html</link>
+    <title>Programming Bottom-Up</title>
+  </item>
+  <item>
+    <link>http://www.paulgraham.com/prop62.html</link>
+    <title>This Year We Can End the Death Penalty in California</title>
+  </item>
+</channel></rss>

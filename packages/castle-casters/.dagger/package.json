@@ -1,0 +1,7 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@shepherdjerred/dagger-utils": "^0.8.0",
+    "typescript": "^5.5.4"
+  }
+}

@@ -1,0 +1,333 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Senna": {
+      "id": "Senna",
+      "key": "235",
+      "name": "Senna",
+      "title": "the Redeemer",
+      "image": {
+        "full": "Senna.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 288,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "235000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "235001",
+          "num": 1,
+          "name": "True Damage Senna",
+          "chromas": true
+        },
+        {
+          "id": "235009",
+          "num": 9,
+          "name": "Prestige True Damage Senna",
+          "chromas": false
+        },
+        {
+          "id": "235010",
+          "num": 10,
+          "name": "High Noon Senna",
+          "chromas": true
+        },
+        {
+          "id": "235016",
+          "num": 16,
+          "name": "PROJECT: Senna",
+          "chromas": true
+        },
+        {
+          "id": "235026",
+          "num": 26,
+          "name": "Lunar Eclipse Senna",
+          "chromas": true
+        },
+        {
+          "id": "235027",
+          "num": 27,
+          "name": "Prestige Lunar Eclipse Senna",
+          "chromas": false
+        },
+        {
+          "id": "235036",
+          "num": 36,
+          "name": "Bewitching Senna",
+          "chromas": true
+        },
+        {
+          "id": "235046",
+          "num": 46,
+          "name": "Star Guardian Senna",
+          "chromas": true
+        },
+        {
+          "id": "235056",
+          "num": 56,
+          "name": "Winterblessed Senna",
+          "chromas": false
+        },
+        {
+          "id": "235063",
+          "num": 63,
+          "name": "Masked Justice Senna",
+          "chromas": false
+        }
+      ],
+      "lore": "Cursed from childhood to be haunted by the supernatural Black Mist, Senna joined a sacred order known as the Sentinels of Light, and fiercely fought back—only to be killed, her soul imprisoned in a lantern by the cruel specter Thresh. But refusing to lose hope, within the lantern Senna learned to use the Mist, and reemerged to new life, forever changed. Now wielding darkness along with light, Senna seeks to end the Black Mist by turning it against itself—with every blast of her relic weapon, redeeming the souls lost within.",
+      "blurb": "Cursed from childhood to be haunted by the supernatural Black Mist, Senna joined a sacred order known as the Sentinels of Light, and fiercely fought back—only to be killed, her soul imprisoned in a lantern by the cruel specter Thresh. But refusing to...",
+      "allytips": [],
+      "enemytips": [],
+      "tags": ["Support", "Marksman"],
+      "partype": "Mana",
+      "info": {
+        "attack": 7,
+        "defense": 2,
+        "magic": 6,
+        "difficulty": 7
+      },
+      "stats": {
+        "hp": 530,
+        "hpperlevel": 89,
+        "mp": 350,
+        "mpperlevel": 45,
+        "movespeed": 330,
+        "armor": 25,
+        "armorperlevel": 4,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 600,
+        "hpregen": 3.5,
+        "hpregenperlevel": 0.55,
+        "mpregen": 11.5,
+        "mpregenperlevel": 0.7,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 50,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 2.6,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "SennaQ",
+          "name": "Piercing Darkness",
+          "description": "From the twin barrels of her Relic Cannon, Senna fires a unified beam of light and shadow through a target, healing allies and damaging enemies.",
+          "tooltip": "Senna shoots a bolt of piercing shadow through an ally or enemy, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to enemies and <status>Slowing</status> them by {{ totalslow }} for {{ slowduration }} second(s). Restores <healing>{{ totalheal }} Health</healing> to allied champions. <br /><br />Attacks reduce this Ability's Cooldown by {{ cdreductiononhit }} second.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Healing", "Slow Duration", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ baseheal }} -> {{ basehealNL }}",
+              "{{ slowduration }} -> {{ slowdurationNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [15, 15, 15, 15, 15],
+          "cooldownBurn": "15",
+          "cost": [70, 80, 90, 100, 110],
+          "costBurn": "70/80/90/100/110",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [600, 600, 600, 600, 600],
+          "rangeBurn": "600",
+          "image": {
+            "full": "SennaQ.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 96,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SennaW",
+          "name": "Last Embrace",
+          "description": "Senna sends forth a wave of Black Mist. If it hits an enemy it latches onto them hungrily, rooting them and everything nearby after a brief delay.",
+          "tooltip": "Senna sends forth the Black Mist, dealing <physicalDamage>{{ damage }} physical damage</physicalDamage> to the first enemy hit. After a {{ delaytime }} second delay the target and other nearby enemies are <status>Rooted</status> for {{ rootduration }} second(s).{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Root Duration", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ rootduration }} -> {{ rootdurationNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [11, 11, 11, 11, 11],
+          "cooldownBurn": "11",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1250, 1250, 1250, 1250, 1250],
+          "rangeBurn": "1250",
+          "image": {
+            "full": "SennaW.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 144,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SennaE",
+          "name": "Curse of the Black Mist",
+          "description": "Senna draws the Mist she has stored in her weapon into a storm around her, embracing darkness and becoming a wraith within. Allies who enter the area are camouflaged and also appear as wraiths as the Mist shrouds them. Wraiths gain increased Move Speed, are unselectable, and hide their identities.",
+          "tooltip": "Senna dissolves into a cloud of Black Mist for {{ buffduration }} seconds, becoming a Wraith. Allied champions who enter the Mist are <keywordStealth>Camouflaged</keywordStealth> and become Wraiths when they leave. Wraiths gain <speed>{{ totalms }} Move Speed</speed>, are Unselectable, and hide their identities as long as no enemy champions are nearby.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Duration", "Cooldown"],
+            "effect": ["{{ buffduration }} -> {{ buffdurationNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [26, 24.5, 23, 21.5, 20],
+          "cooldownBurn": "26/24.5/23/21.5/20",
+          "cost": [70, 70, 70, 70, 70],
+          "costBurn": "70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [400, 400, 400, 400, 400],
+          "rangeBurn": "400",
+          "image": {
+            "full": "SennaE.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 192,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SennaR",
+          "name": "Dawning Shadow",
+          "description": "Senna calls upon the relic stones of fallen Sentinels, splitting her relic cannon into a holy array of shadow and light. She then fires a global beam that shields allies from harm, while damaging enemies caught in the center.",
+          "tooltip": "Senna fires a beam of light that deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to all enemy champions hit. Allied champions hit in a wider area receive <shield>{{ totalshield }} Shield</shield> for {{ shieldduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Shield Amount", "Cooldown"],
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ shield }} -> {{ shieldNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [140, 120, 100],
+          "cooldownBurn": "140/120/100",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [25000, 25000, 25000],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "SennaR.png",
+            "sprite": "spell12.png",
+            "group": "spell",
+            "x": 240,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Absolution",
+        "description": "When units die near Senna, their souls are periodically trapped by the Black Mist. Senna can attack these souls to free them, absorbing the Mist that held them in death. Mist fuels her Relic Cannon's power with increased Attack Damage, Attack Range, and Critical Strike Chance. <br><br>Attacks from Senna's Relic Cannon take longer to fire, deal bonus damage, and briefly grant her a portion of her target's Move Speed.",
+        "image": {
+          "full": "Senna_Passive.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 288,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}
