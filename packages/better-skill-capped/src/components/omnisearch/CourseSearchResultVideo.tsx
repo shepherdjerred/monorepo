@@ -1,15 +1,15 @@
-import { Video } from "../../model/Video";
-import { Course } from "../../model/Course";
+import type { Video } from "@shepherdjerred/better-skill-capped/model/Video";
+import type { Course } from "@shepherdjerred/better-skill-capped/model/Course";
 import Highlighter from "react-highlight-words";
 import React from "react";
-import { getCourseVideoUrl, getStreamUrl } from "../../utils/UrlUtilities";
-import { Bookmarkable } from "../../model/Bookmark";
+import { getCourseVideoUrl, getStreamUrl } from "@shepherdjerred/better-skill-capped/utils/UrlUtilities";
+import type { Bookmarkable } from "@shepherdjerred/better-skill-capped/model/Bookmark";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBookmark, faCloudDownloadAlt, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-import { Watchable } from "../../model/WatchStatus";
+import type { Watchable } from "@shepherdjerred/better-skill-capped/model/WatchStatus";
 import classNames from "classnames";
 
-export interface SearchResultVideoProps {
+export type SearchResultVideoProps = {
   matchedStrings: string[];
   course: Course;
   video: Video;

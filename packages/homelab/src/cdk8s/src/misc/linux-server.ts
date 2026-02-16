@@ -1,4 +1,5 @@
-import { ContainerProps, EnvValue } from "cdk8s-plus-31";
+import type { ContainerProps} from "cdk8s-plus-31";
+import { EnvValue } from "cdk8s-plus-31";
 import { commonProps, ROOT_GID, ROOT_UID } from "./common.ts";
 import { merge } from "lodash";
 

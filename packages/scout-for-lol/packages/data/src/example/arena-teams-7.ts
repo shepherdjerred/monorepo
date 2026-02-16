@@ -1,5 +1,9 @@
 import { type ArenaTeam } from "@scout-for-lol/data";
-import { createArenaChampion, createArenaMetrics, createTeamSupport } from "./arena-factories.ts";
+import {
+  createArenaChampion,
+  createArenaMetrics,
+  createTeamSupport,
+} from "./arena-factories.ts";
 
 export function getTeam7(): ArenaTeam {
   return {

@@ -1,0 +1,50 @@
+import { recommended } from "../eslint-config/local.ts";
+
+export default [
+  ...recommended({
+    tsconfigRootDir: import.meta.dirname,
+    ignores: [
+      "**/generated/**/*",
+      "**/dist/**/*",
+      "**/build/**/*",
+      "**/.cache/**/*",
+      "**/node_modules/**/*",
+      "**/.astro/**/*",
+      "**/*.md",
+      "**/*.mdx",
+      "**/*.mjs",
+      "**/*.js",
+      "**/*.cjs",
+      "out/",
+      "out-claude/",
+      "scripts/",
+    ],
+    naming: false,
+    customRules: {
+      zod: false,
+      bun: true,
+      codeOrganization: false,
+      typeSafety: false,
+      promiseStyle: false,
+    },
+  }),
+  {
+    rules: {
+      "no-console": "off",
+      "no-restricted-imports": "off",
+      "max-depth": ["error", { max: 6 }],
+      "max-lines": ["error", { max: 1000, skipBlankLines: false, skipComments: false }],
+      "max-params": ["error", { max: 7 }],
+      complexity: ["warn", { max: 25 }],
+      "unicorn/import-style": "off",
+      "unicorn/no-array-sort": "off",
+      "unicorn/text-encoding-identifier-case": "off",
+      "unicorn/prefer-number-properties": "off",
+      "unicorn/prefer-default-parameters": "warn",
+      "regexp/no-super-linear-backtracking": "warn",
+      "@typescript-eslint/switch-exhaustiveness-check": "warn",
+      "eslint-comments/require-description": "warn",
+      "@typescript-eslint/no-shadow": "warn",
+    },
+  },
+];

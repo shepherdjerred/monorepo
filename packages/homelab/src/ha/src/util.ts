@@ -1,6 +1,7 @@
 import type { TServiceParams } from "@digital-alchemy/core";
 import type { ByIdProxy, PICK_ENTITY } from "@digital-alchemy/hass";
 import { match } from "ts-pattern";
+import { instrumentWorkflow } from "./metrics.ts";
 
 export type Time = {
   amount: number;
@@ -130,6 +131,35 @@ export function shouldStopCleaning(state: ByIdProxy<"vacuum.roomba">["state"]) {
     .with("idle", () => true)
     .with("unavailable", () => false)
     .exhaustive();
+}
+
+export function startRoombaWithVerification(
+  hass: TServiceParams["hass"],
+  logger: TServiceParams["logger"],
+  roomba: ByIdProxy<"vacuum.roomba">,
+  options?: { delayMinutes?: number },
+) {
+  const delay = options?.delayMinutes ?? 3;
+
+  setTimeout(() => {
+    void instrumentWorkflow("roomba_verification", async () => {
+      const state = roomba.state;
+      if (state === "cleaning") {
+        logger.info("Roomba verification passed: cleaning in progress");
+        return;
+      }
+
+      const message = `Roomba failed to start cleaning. Expected 'cleaning' but got '${state}'`;
+      logger.error(message);
+
+      await hass.call.notify.notify({
+        title: "Roomba Alert",
+        message,
+      });
+
+      throw new Error(message);
+    });
+  }, delay * 60 * 1000);
 }
 
 export function runIf(condition: boolean, promiseFactory: () => Promise<unknown>): Promise<unknown> {

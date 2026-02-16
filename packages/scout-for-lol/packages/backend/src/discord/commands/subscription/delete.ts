@@ -1,6 +1,9 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index";
+import {
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data/index";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { fromError } from "zod-validation-error";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
@@ -14,7 +17,9 @@ const ArgsSchema = z.object({
   guildId: DiscordGuildIdSchema,
 });
 
-export async function executeSubscriptionDelete(interaction: ChatInputCommandInteraction) {
+export async function executeSubscriptionDelete(
+  interaction: ChatInputCommandInteraction,
+) {
   logger.info("🔕 Starting subscription deletion process");
 
   let args: z.infer<typeof ArgsSchema>;
@@ -27,7 +32,9 @@ export async function executeSubscriptionDelete(interaction: ChatInputCommandInt
     });
 
     logger.info(`✅ Command arguments validated successfully`);
-    logger.info(`📋 Args: alias=${args.alias}, channel=${args.channel}, guildId=${args.guildId}`);
+    logger.info(
+      `📋 Args: alias=${args.alias}, channel=${args.channel}, guildId=${args.guildId}`,
+    );
   } catch (error) {
     logger.error(`❌ Invalid command arguments:`, error);
     const validationError = fromError(error);
@@ -66,7 +73,9 @@ export async function executeSubscriptionDelete(interaction: ChatInputCommandInt
       return;
     }
 
-    logger.info(`📝 Found player: ${player.alias} (ID: ${player.id.toString()})`);
+    logger.info(
+      `📝 Found player: ${player.alias} (ID: ${player.id.toString()})`,
+    );
 
     // Find the subscription for this player in this channel
     const subscription = await prisma.subscription.findUnique({
@@ -80,13 +89,19 @@ export async function executeSubscriptionDelete(interaction: ChatInputCommandInt
     });
 
     if (!subscription) {
-      logger.info(`⚠️  Subscription not found for player ${alias} in channel ${channel}`);
+      logger.info(
+        `⚠️  Subscription not found for player ${alias} in channel ${channel}`,
+      );
 
       // Check if player has subscriptions in other channels
-      const otherSubscriptions = player.subscriptions.filter((sub) => sub.channelId !== channel);
+      const otherSubscriptions = player.subscriptions.filter(
+        (sub) => sub.channelId !== channel,
+      );
 
       if (otherSubscriptions.length > 0) {
-        const channelList = otherSubscriptions.map((sub) => `<#${sub.channelId}>`).join(", ");
+        const channelList = otherSubscriptions
+          .map((sub) => `<#${sub.channelId}>`)
+          .join(", ");
         await interaction.editReply({
           content: `ℹ️ **No subscription found**\n\nPlayer "${alias}" is not subscribed in <#${channel}>.\n\nThey are currently subscribed in: ${channelList}`,
         });
@@ -109,14 +124,20 @@ export async function executeSubscriptionDelete(interaction: ChatInputCommandInt
     logger.info(`✅ Subscription deleted successfully`);
 
     // Check if player has any remaining subscriptions
-    const remainingSubscriptions = player.subscriptions.filter((sub) => sub.id !== subscription.id);
+    const remainingSubscriptions = player.subscriptions.filter(
+      (sub) => sub.id !== subscription.id,
+    );
     const accountCount = player.accounts.length;
-    const accountList = player.accounts.map((acc) => `• ${acc.alias} (${acc.region})`).join("\n");
+    const accountList = player.accounts
+      .map((acc) => `• ${acc.alias} (${acc.region})`)
+      .join("\n");
 
     let responseMessage = `✅ **Subscription removed**\n\nPlayer "${alias}" will no longer receive updates in <#${channel}>.`;
 
     if (remainingSubscriptions.length > 0) {
-      const channelList = remainingSubscriptions.map((sub) => `<#${sub.channelId}>`).join(", ");
+      const channelList = remainingSubscriptions
+        .map((sub) => `<#${sub.channelId}>`)
+        .join(", ");
       responseMessage += `\n\nThis player is still subscribed in: ${channelList}`;
     } else {
       responseMessage += `\n\n⚠️  This player has no more active subscriptions. The player and their ${accountCount.toString()} account${accountCount === 1 ? "" : "s"} will be kept in the database but can be cleaned up later.`;

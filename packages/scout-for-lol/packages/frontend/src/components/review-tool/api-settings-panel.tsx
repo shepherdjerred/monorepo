@@ -35,7 +35,11 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
       alert("API config imported successfully!");
     } catch (error) {
       const errorResult = ErrorSchema.safeParse(error);
-      alert(errorResult.success ? errorResult.data.message : "Failed to import config");
+      alert(
+        errorResult.success
+          ? errorResult.data.message
+          : "Failed to import config",
+      );
     }
   };
 
@@ -43,10 +47,15 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
     <div className="space-y-6">
       {/* API Keys */}
       <div>
-        <h3 className="text-sm font-semibold text-surface-700 mb-3">API Keys</h3>
+        <h3 className="text-sm font-semibold text-surface-700 mb-3">
+          API Keys
+        </h3>
         <div className="space-y-4">
           <div>
-            <label htmlFor="openai-api-key" className="block text-sm font-medium text-surface-700 mb-1">
+            <label
+              htmlFor="openai-api-key"
+              className="block text-sm font-medium text-surface-700 mb-1"
+            >
               OpenAI API Key
             </label>
             <input
@@ -56,7 +65,10 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
               onChange={(e) => {
                 onChange({
                   ...config,
-                  api: { ...config.api, openaiApiKey: e.target.value || undefined },
+                  api: {
+                    ...config.api,
+                    openaiApiKey: e.target.value || undefined,
+                  },
                 });
               }}
               className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
@@ -64,7 +76,10 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
             />
           </div>
           <div>
-            <label htmlFor="gemini-api-key" className="block text-sm font-medium text-surface-700 mb-1">
+            <label
+              htmlFor="gemini-api-key"
+              className="block text-sm font-medium text-surface-700 mb-1"
+            >
               Gemini API Key
             </label>
             <input
@@ -74,7 +89,10 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
               onChange={(e) => {
                 onChange({
                   ...config,
-                  api: { ...config.api, geminiApiKey: e.target.value || undefined },
+                  api: {
+                    ...config.api,
+                    geminiApiKey: e.target.value || undefined,
+                  },
                 });
               }}
               className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
@@ -86,10 +104,15 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
 
       {/* S3/R2 Configuration */}
       <div className="pt-4 border-t border-surface-200">
-        <h3 className="text-sm font-semibold text-surface-700 mb-3">S3 / R2 Configuration (Optional)</h3>
+        <h3 className="text-sm font-semibold text-surface-700 mb-3">
+          S3 / R2 Configuration (Optional)
+        </h3>
         <div className="space-y-4">
           <div>
-            <label htmlFor="s3-bucket-name" className="block text-sm font-medium text-surface-700 mb-1">
+            <label
+              htmlFor="s3-bucket-name"
+              className="block text-sm font-medium text-surface-700 mb-1"
+            >
               Bucket Name
             </label>
             <input
@@ -99,7 +122,10 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
               onChange={(e) => {
                 onChange({
                   ...config,
-                  api: { ...config.api, s3BucketName: e.target.value || undefined },
+                  api: {
+                    ...config.api,
+                    s3BucketName: e.target.value || undefined,
+                  },
                 });
               }}
               className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
@@ -107,7 +133,10 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
             />
           </div>
           <div>
-            <label htmlFor="aws-access-key-id" className="block text-sm font-medium text-surface-700 mb-1">
+            <label
+              htmlFor="aws-access-key-id"
+              className="block text-sm font-medium text-surface-700 mb-1"
+            >
               Access Key ID
             </label>
             <input
@@ -117,7 +146,10 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
               onChange={(e) => {
                 onChange({
                   ...config,
-                  api: { ...config.api, awsAccessKeyId: e.target.value || undefined },
+                  api: {
+                    ...config.api,
+                    awsAccessKeyId: e.target.value || undefined,
+                  },
                 });
               }}
               className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
@@ -125,7 +157,10 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
             />
           </div>
           <div>
-            <label htmlFor="aws-secret-access-key" className="block text-sm font-medium text-surface-700 mb-1">
+            <label
+              htmlFor="aws-secret-access-key"
+              className="block text-sm font-medium text-surface-700 mb-1"
+            >
               Secret Access Key
             </label>
             <input
@@ -135,7 +170,10 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
               onChange={(e) => {
                 onChange({
                   ...config,
-                  api: { ...config.api, awsSecretAccessKey: e.target.value || undefined },
+                  api: {
+                    ...config.api,
+                    awsSecretAccessKey: e.target.value || undefined,
+                  },
                 });
               }}
               className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
@@ -143,7 +181,10 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
             />
           </div>
           <div>
-            <label htmlFor="s3-endpoint" className="block text-sm font-medium text-surface-700 mb-1">
+            <label
+              htmlFor="s3-endpoint"
+              className="block text-sm font-medium text-surface-700 mb-1"
+            >
               Endpoint URL (for Cloudflare R2)
             </label>
             <input
@@ -153,16 +194,24 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
               onChange={(e) => {
                 onChange({
                   ...config,
-                  api: { ...config.api, s3Endpoint: e.target.value || undefined },
+                  api: {
+                    ...config.api,
+                    s3Endpoint: e.target.value || undefined,
+                  },
                 });
               }}
               className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
               placeholder="https://<account-id>.r2.cloudflarestorage.com"
             />
-            <p className="mt-1 text-xs text-surface-500">Leave empty for AWS S3. For R2, use your account endpoint.</p>
+            <p className="mt-1 text-xs text-surface-500">
+              Leave empty for AWS S3. For R2, use your account endpoint.
+            </p>
           </div>
           <div>
-            <label htmlFor="aws-region" className="block text-sm font-medium text-surface-700 mb-1">
+            <label
+              htmlFor="aws-region"
+              className="block text-sm font-medium text-surface-700 mb-1"
+            >
               Region
             </label>
             <input
@@ -178,14 +227,18 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
               className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
               placeholder="us-east-1 or auto for R2"
             />
-            <p className="mt-1 text-xs text-surface-500">For R2, use &quot;auto&quot; or &quot;us-east-1&quot;</p>
+            <p className="mt-1 text-xs text-surface-500">
+              For R2, use &quot;auto&quot; or &quot;us-east-1&quot;
+            </p>
           </div>
         </div>
       </div>
 
       {/* Import/Export */}
       <div className="pt-4 border-t border-surface-200">
-        <h3 className="text-sm font-semibold text-surface-700 mb-3">Share API Config</h3>
+        <h3 className="text-sm font-semibold text-surface-700 mb-3">
+          Share API Config
+        </h3>
 
         {!showImportExport ? (
           <div className="flex gap-2">
@@ -237,7 +290,8 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
         )}
 
         <p className="text-xs text-surface-500 mt-2">
-          Export creates a base64-encoded blob with API keys. Only share with trusted users.
+          Export creates a base64-encoded blob with API keys. Only share with
+          trusted users.
         </p>
       </div>
 

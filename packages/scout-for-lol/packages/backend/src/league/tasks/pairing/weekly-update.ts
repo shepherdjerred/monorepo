@@ -8,16 +8,29 @@ import {
   type IndividualPlayerStats,
   DiscordChannelIdSchema,
 } from "@scout-for-lol/data/index";
-import { getServerPlayers, createAliasToDiscordIdMap } from "./get-server-players.ts";
+import {
+  getServerPlayers,
+  createAliasToDiscordIdMap,
+} from "./get-server-players.ts";
 import type { ServerPlayer } from "./get-server-players.ts";
-import { calculatePairingStats } from "./calculate-pairings.ts";
 import { getCurrentWeekInfo } from "./s3-cache.ts";
-import { startTask, finishTask, isRunning, getTaskInfo } from "./pairing-task-state.ts";
+import {
+  findSurrenderLeaders,
+  calculateAllModeStats,
+} from "./weekly-update-helpers.ts";
+import {
+  startTask,
+  finishTask,
+  isRunning,
+  getTaskInfo,
+} from "./pairing-task-state.ts";
 import { subWeeks, startOfISOWeek, endOfISOWeek } from "date-fns";
 import * as Sentry from "@sentry/bun";
 
 // Channel ID for Common Denominator updates
-const COMMON_DENOMINATOR_CHANNEL_ID = DiscordChannelIdSchema.parse("1337631455085334650");
+const COMMON_DENOMINATOR_CHANNEL_ID = DiscordChannelIdSchema.parse(
+  "1337631455085334650",
+);
 
 const logger = createLogger("pairing-weekly-update");
 
@@ -53,9 +66,13 @@ function getMedal(rank: number): string {
 /**
  * Get pairings that meet the minimum games requirement for ranking
  */
-function getQualifiedPairings(pairings: PairingStatsEntry[]): PairingStatsEntry[] {
+function getQualifiedPairings(
+  pairings: PairingStatsEntry[],
+): PairingStatsEntry[] {
   return pairings
-    .filter((p) => p.totalGames >= MIN_GAMES_FOR_RANKING && p.players.length >= 2)
+    .filter(
+      (p) => p.totalGames >= MIN_GAMES_FOR_RANKING && p.players.length >= 2,
+    )
     .sort((a, b) => b.winRate - a.winRate);
 }
 
@@ -71,7 +88,8 @@ type FormatTop3EntryOptions = {
  * Format a top-3 pairing entry line
  */
 function formatTop3Entry(options: FormatTop3EntryOptions): string {
-  const { entry, rank, aliasToDiscordId, useMentions, showGamesCount } = options;
+  const { entry, rank, aliasToDiscordId, useMentions, showGamesCount } =
+    options;
   const medal = getMedal(rank);
   if (showGamesCount) {
     return `${medal} ${rank.toString()}. ${formatPairing(entry, aliasToDiscordId, useMentions)} - ${formatWinRate(entry.winRate)} (${entry.totalGames.toString()} games)`;
@@ -85,7 +103,11 @@ function formatTop3Entry(options: FormatTop3EntryOptions): string {
  * @param aliasToDiscordId - Map of alias to Discord ID for mentions
  * @param useMentions - Whether to use @mentions (defaults to true)
  */
-function formatPairing(entry: PairingStatsEntry, aliasToDiscordId: Map<string, string>, useMentions = true): string {
+function formatPairing(
+  entry: PairingStatsEntry,
+  aliasToDiscordId: Map<string, string>,
+  useMentions = true,
+): string {
   const formattedPlayers = [...entry.players].sort().map((alias) => {
     if (useMentions) {
       const discordId = aliasToDiscordId.get(alias);
@@ -112,7 +134,10 @@ function formatSurrenderRate(surrenders: number, totalGames: number): string {
 /**
  * Generate the ranked (Solo/Flex) section of the message
  */
-function generateRankedSection(stats: ServerPairingStats, aliasToDiscordId: Map<string, string>): string {
+function generateRankedSection(
+  stats: ServerPairingStats,
+  aliasToDiscordId: Map<string, string>,
+): string {
   const lines: string[] = [];
 
   lines.push("## Ranked (Solo/Flex)");
@@ -143,10 +168,20 @@ function generateRankedSection(stats: ServerPairingStats, aliasToDiscordId: Map<
 
   // Most Games Together (top 3)
   lines.push("### Most Games Together");
-  const mostGamesPairings = [...qualifiedPairings].sort((a, b) => b.totalGames - a.totalGames).slice(0, 3);
+  const mostGamesPairings = [...qualifiedPairings]
+    .sort((a, b) => b.totalGames - a.totalGames)
+    .slice(0, 3);
   mostGamesPairings.forEach((entry, index) => {
     const rank = index + 1;
-    lines.push(formatTop3Entry({ entry, rank, aliasToDiscordId, useMentions: false, showGamesCount: false }));
+    lines.push(
+      formatTop3Entry({
+        entry,
+        rank,
+        aliasToDiscordId,
+        useMentions: false,
+        showGamesCount: false,
+      }),
+    );
   });
 
   lines.push("");
@@ -169,14 +204,16 @@ function generateRankedSection(stats: ServerPairingStats, aliasToDiscordId: Map<
   });
 
   // Add separator if there are more pairings between top and bottom
-  const middleCount = qualifiedPairings.length - LEADERBOARD_TOP_BOTTOM_COUNT * 2;
+  const middleCount =
+    qualifiedPairings.length - LEADERBOARD_TOP_BOTTOM_COUNT * 2;
   if (middleCount > 0) {
     lines.push(`...${middleCount.toString()} more pairings...`);
   }
 
   // Bottom entries (if different from top) with @mentions for bottom 3
   if (qualifiedPairings.length > LEADERBOARD_TOP_BOTTOM_COUNT) {
-    const bottomStartRank = qualifiedPairings.length - bottomPairings.length + 1;
+    const bottomStartRank =
+      qualifiedPairings.length - bottomPairings.length + 1;
     bottomPairings.forEach((entry, index) => {
       const rank = bottomStartRank + index;
       const isBottom3 = index >= bottomPairings.length - 3;
@@ -211,7 +248,9 @@ function generateAbbreviatedSection(
   const qualifiedPairings = getQualifiedPairings(stats.pairings);
 
   if (qualifiedPairings.length === 0) {
-    lines.push(`*Not enough games played together (minimum ${MIN_GAMES_FOR_RANKING.toString()} games required)*`);
+    lines.push(
+      `*Not enough games played together (minimum ${MIN_GAMES_FOR_RANKING.toString()} games required)*`,
+    );
     return lines.join("\n");
   }
 
@@ -220,7 +259,15 @@ function generateAbbreviatedSection(
   const topPairings = qualifiedPairings.slice(0, 3);
   topPairings.forEach((entry, index) => {
     const rank = index + 1;
-    lines.push(formatTop3Entry({ entry, rank, aliasToDiscordId, useMentions: true, showGamesCount: true }));
+    lines.push(
+      formatTop3Entry({
+        entry,
+        rank,
+        aliasToDiscordId,
+        useMentions: true,
+        showGamesCount: true,
+      }),
+    );
   });
 
   lines.push("");
@@ -238,7 +285,9 @@ function generateAbbreviatedSection(
   });
 
   lines.push("");
-  lines.push(`*Based on ${stats.totalMatchesAnalyzed.toString()} ${gameMode} games from the past month.*`);
+  lines.push(
+    `*Based on ${stats.totalMatchesAnalyzed.toString()} ${gameMode} games from the past month.*`,
+  );
 
   return lines.join("\n");
 }
@@ -263,7 +312,9 @@ function generateMessage(
 
   // Add Arena section (abbreviated)
   if (arenaStats.totalMatchesAnalyzed > 0) {
-    lines.push(generateAbbreviatedSection(arenaStats, aliasToDiscordId, "Arena"));
+    lines.push(
+      generateAbbreviatedSection(arenaStats, aliasToDiscordId, "Arena"),
+    );
     lines.push("");
   }
 
@@ -276,82 +327,22 @@ function generateMessage(
 }
 
 /**
- * Find players who surrender the most (sorted by surrender rate, then by count)
- * Requires minimum games to qualify for ranking
- */
-function findSurrenderLeaders(individualStats: IndividualPlayerStats[]): IndividualPlayerStats[] {
-  if (individualStats.length === 0) {
-    return [];
-  }
-
-  // Filter to players with surrenders, minimum games, and sort by surrender rate (descending)
-  const playersWithSurrenders = individualStats
-    .filter((p) => p.surrenders > 0 && p.totalGames >= MIN_GAMES_FOR_RANKING)
-    .map((p) => ({
-      ...p,
-      surrenderRate: p.surrenders / p.totalGames,
-    }))
-    .sort((a, b) => {
-      // Sort by surrender rate first, then by total surrenders
-      if (b.surrenderRate !== a.surrenderRate) {
-        return b.surrenderRate - a.surrenderRate;
-      }
-      return b.surrenders - a.surrenders;
-    });
-
-  if (playersWithSurrenders.length === 0) {
-    return [];
-  }
-
-  // Get the top surrender rate and return all players with that rate
-  const topRate = playersWithSurrenders[0]?.surrenderRate ?? 0;
-  const leaders = playersWithSurrenders
-    .filter((p) => Math.abs(p.surrenderRate - topRate) < 0.001) // floating point comparison
-    .sort((a, b) => a.alias.localeCompare(b.alias)); // Sort names alphabetically
-
-  return leaders;
-}
-
-/**
- * Options for calculating stats across all game modes
- */
-type CalculateAllModeStatsOptions = {
-  players: ServerPlayer[];
-  startDate: Date;
-  endDate: Date;
-  serverId: string;
-};
-
-/**
- * Calculate stats for all game modes
- */
-async function calculateAllModeStats(
-  options: CalculateAllModeStatsOptions,
-): Promise<{ ranked: ServerPairingStats; arena: ServerPairingStats; aram: ServerPairingStats }> {
-  const { players, startDate, endDate, serverId } = options;
-
-  // Calculate stats for each game mode in parallel
-  const [ranked, arena, aram] = await Promise.all([
-    calculatePairingStats({ players, startDate, endDate, serverId, gameMode: "ranked" }),
-    calculatePairingStats({ players, startDate, endDate, serverId, gameMode: "arena" }),
-    calculatePairingStats({ players, startDate, endDate, serverId, gameMode: "aram" }),
-  ]);
-
-  return { ranked, arena, aram };
-}
-
-/**
  * Run the weekly Common Denominator update
  * Returns information about whether the task ran and any error message
  */
-export async function runWeeklyPairingUpdate(): Promise<{ success: boolean; message: string }> {
+export async function runWeeklyPairingUpdate(): Promise<{
+  success: boolean;
+  message: string;
+}> {
   const serverId = MY_SERVER;
   const channelId = COMMON_DENOMINATOR_CHANNEL_ID;
 
   // Check if already running
   if (isRunning()) {
     const taskInfo = getTaskInfo();
-    const runningFor = taskInfo.startedAt ? Math.round((Date.now() - taskInfo.startedAt.getTime()) / 1000) : 0;
+    const runningFor = taskInfo.startedAt
+      ? Math.round((Date.now() - taskInfo.startedAt.getTime()) / 1000)
+      : 0;
     const message = `Pairing update is already running (started ${runningFor.toString()}s ago)`;
     logger.warn(`[WeeklyPairing] ${message}`);
     return { success: false, message };
@@ -360,7 +351,9 @@ export async function runWeeklyPairingUpdate(): Promise<{ success: boolean; mess
   // Start the task and get abort signal
   startTask();
 
-  logger.info(`[WeeklyPairing] Running weekly pairing update for server ${serverId}`);
+  logger.info(
+    `[WeeklyPairing] Running weekly pairing update for server ${serverId}`,
+  );
 
   try {
     // Get all players for the server
@@ -379,7 +372,9 @@ export async function runWeeklyPairingUpdate(): Promise<{ success: boolean; mess
     // Calculate stats for the past month (last 4 weeks)
     const { year: currentYear, weekNumber: currentWeek } = getCurrentWeekInfo();
 
-    logger.info(`[WeeklyPairing] Current week: ${currentYear.toString()}-W${currentWeek.toString()}`);
+    logger.info(
+      `[WeeklyPairing] Current week: ${currentYear.toString()}-W${currentWeek.toString()}`,
+    );
 
     // Calculate for the past month (4 weeks before current week)
     const now = new Date();
@@ -387,10 +382,17 @@ export async function runWeeklyPairingUpdate(): Promise<{ success: boolean; mess
     const startDate = startOfISOWeek(monthAgo);
     const endDate = endOfISOWeek(now);
 
-    logger.info(`[WeeklyPairing] Calculating stats from ${startDate.toISOString()} to ${endDate.toISOString()}`);
+    logger.info(
+      `[WeeklyPairing] Calculating stats from ${startDate.toISOString()} to ${endDate.toISOString()}`,
+    );
 
     // Calculate stats for all game modes
-    const { ranked, arena, aram } = await calculateAllModeStats({ players, startDate, endDate, serverId });
+    const { ranked, arena, aram } = await calculateAllModeStats({
+      players,
+      startDate,
+      endDate,
+      serverId,
+    });
 
     logger.info(
       `[WeeklyPairing] Calculated stats: Ranked=${ranked.totalMatchesAnalyzed.toString()}, Arena=${arena.totalMatchesAnalyzed.toString()}, ARAM=${aram.totalMatchesAnalyzed.toString()} matches`,
@@ -405,10 +407,14 @@ export async function runWeeklyPairingUpdate(): Promise<{ success: boolean; mess
 
     // Log all qualified pairings to console for debugging (ranked only)
     const qualifiedPairings = ranked.pairings
-      .filter((p) => p.totalGames >= MIN_GAMES_FOR_RANKING && p.players.length >= 2)
+      .filter(
+        (p) => p.totalGames >= MIN_GAMES_FOR_RANKING && p.players.length >= 2,
+      )
       .sort((a, b) => b.winRate - a.winRate);
 
-    logger.info(`[WeeklyPairing] Full ranked pairings list (${qualifiedPairings.length.toString()} total):`);
+    logger.info(
+      `[WeeklyPairing] Full ranked pairings list (${qualifiedPairings.length.toString()} total):`,
+    );
     qualifiedPairings.forEach((entry, index) => {
       const rank = index + 1;
       logger.info(
@@ -422,13 +428,17 @@ export async function runWeeklyPairingUpdate(): Promise<{ success: boolean; mess
     const fullMessage = `@everyone\n\n${message}`;
     const messageChunks = splitMessageIntoChunks(fullMessage);
 
-    logger.info(`[WeeklyPairing] Message split into ${messageChunks.length.toString()} chunk(s)`);
+    logger.info(
+      `[WeeklyPairing] Message split into ${messageChunks.length.toString()} chunk(s)`,
+    );
 
     // Send each chunk sequentially to maintain order
     for (let i = 0; i < messageChunks.length; i++) {
       const chunk = messageChunks[i];
       if (chunk) {
-        logger.info(`[WeeklyPairing] Sending chunk ${(i + 1).toString()}/${messageChunks.length.toString()}`);
+        logger.info(
+          `[WeeklyPairing] Sending chunk ${(i + 1).toString()}/${messageChunks.length.toString()}`,
+        );
         await sendChannelMessage(
           {
             content: chunk,
@@ -439,12 +449,22 @@ export async function runWeeklyPairingUpdate(): Promise<{ success: boolean; mess
       }
     }
 
-    const totalMatches = ranked.totalMatchesAnalyzed + arena.totalMatchesAnalyzed + aram.totalMatchesAnalyzed;
-    logger.info("[WeeklyPairing] Successfully posted weekly Common Denominator update");
-    return { success: true, message: `Completed: ${totalMatches.toString()} matches analyzed across all modes` };
+    const totalMatches =
+      ranked.totalMatchesAnalyzed +
+      arena.totalMatchesAnalyzed +
+      aram.totalMatchesAnalyzed;
+    logger.info(
+      "[WeeklyPairing] Successfully posted weekly Common Denominator update",
+    );
+    return {
+      success: true,
+      message: `Completed: ${totalMatches.toString()} matches analyzed across all modes`,
+    };
   } catch (error) {
     logger.error("[WeeklyPairing] Error running weekly pairing update:", error);
-    Sentry.captureException(error, { tags: { source: "weekly-pairing-update", serverId } });
+    Sentry.captureException(error, {
+      tags: { source: "weekly-pairing-update", serverId },
+    });
     throw error;
   } finally {
     finishTask();

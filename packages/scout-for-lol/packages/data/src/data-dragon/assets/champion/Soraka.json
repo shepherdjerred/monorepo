@@ -210,7 +210,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -233,7 +245,12 @@
           "description": "Soraka sacrifices a portion of her own health to heal another friendly champion.",
           "tooltip": "Soraka restores <healing>{{ totalheal }} Health</healing> to another allied champion.<br /><br />If Soraka is affected by <keywordMajor>Rejuvenation</keywordMajor>, the Health cost will be reduced by {{ percenthealthcostrefund*100 }}%, and the target will gain <keywordMajor>Rejuvenation</keywordMajor> for {{ spell.sorakaq:hotduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Healing", "Cooldown", "@AbilityResourceName@ Cost", "Health Cost Reduction"],
+            "label": [
+              "Healing",
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Health Cost Reduction"
+            ],
             "effect": [
               "{{ baseheal }} -> {{ basehealNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -260,7 +277,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "% Max Health, {{ cost }} Mana",
           "maxammo": "-1",
@@ -283,7 +312,12 @@
           "description": "Creates a zone at a location that silences all enemies inside. When the zone expires, all enemies still inside are rooted.",
           "tooltip": "Soraka creates a starfield that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to champions. The field lingers for {{ rootdelay }} seconds, <status>Silencing</status> enemies inside. When the zone disappears, champions inside the zone are <status>Rooted</status> for {{ rootduration }} second(s) and take <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "Root Duration", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "Root Duration",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -310,7 +344,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -334,7 +380,10 @@
           "tooltip": "Soraka calls upon divine powers, restoring <healing>{{ healingcalc }} Health</healing> to all allied champions, regardless of distance. Healing is increased to <healing>{{ ampedhealing }}</healing> on targets below 40% Health.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Healing", "Cooldown"],
-            "effect": ["{{ baseheal }} -> {{ basehealNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ baseheal }} -> {{ basehealNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [150, 135, 120],
@@ -355,7 +404,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

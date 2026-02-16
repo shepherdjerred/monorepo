@@ -1,7 +1,21 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { createCompetition, type CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.ts";
-import type { CompetitionCriteria, CompetitionId, LeaguePuuid, PlayerId, Region } from "@scout-for-lol/data";
-import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  createCompetition,
+  type CreateCompetitionInput,
+} from "@scout-for-lol/backend/database/competition/queries.ts";
+import type {
+  CompetitionCriteria,
+  CompetitionId,
+  LeaguePuuid,
+  PlayerId,
+  Region,
+} from "@scout-for-lol/data";
+import {
+  testGuildId,
+  testAccountId,
+  testChannelId,
+  testPuuid,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
 import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a test database
@@ -33,7 +47,11 @@ async function createTestCompetition(
   return { competitionId: competition.id };
 }
 
-async function createTestPlayer(alias: string, puuid: LeaguePuuid, region: Region): Promise<{ playerId: PlayerId }> {
+async function createTestPlayer(
+  alias: string,
+  puuid: LeaguePuuid,
+  region: Region,
+): Promise<{ playerId: PlayerId }> {
   const now = new Date();
   const player = await prisma.player.create({
     data: {
@@ -61,7 +79,10 @@ async function createTestPlayer(alias: string, puuid: LeaguePuuid, region: Regio
   return { playerId: player.id };
 }
 
-async function addTestParticipant(competitionId: CompetitionId, playerId: PlayerId): Promise<void> {
+async function addTestParticipant(
+  competitionId: CompetitionId,
+  playerId: PlayerId,
+): Promise<void> {
   const now = new Date();
   await prisma.competitionParticipant.create({
     data: {
@@ -100,7 +121,11 @@ describe("Competition Lifecycle - Query for Starting", () => {
     const startDate = new Date("2025-01-15T10:00:00Z");
     const endDate = new Date("2025-01-20T12:00:00Z");
 
-    const { competitionId } = await createTestCompetition(criteria, startDate, endDate);
+    const { competitionId } = await createTestCompetition(
+      criteria,
+      startDate,
+      endDate,
+    );
 
     // Query for competitions to start
     const competitionsToStart = await prisma.competition.findMany({
@@ -161,7 +186,11 @@ describe("Competition Lifecycle - Query for Starting", () => {
     const startDate = new Date("2025-01-15T10:00:00Z");
     const endDate = new Date("2025-01-20T12:00:00Z");
 
-    const { competitionId } = await createTestCompetition(criteria, startDate, endDate);
+    const { competitionId } = await createTestCompetition(
+      criteria,
+      startDate,
+      endDate,
+    );
 
     // Cancel the competition
     await prisma.competition.update({
@@ -197,10 +226,18 @@ describe("Competition Lifecycle - Query for Starting", () => {
     const startDate = new Date("2025-01-15T10:00:00Z");
     const endDate = new Date("2025-01-20T12:00:00Z");
 
-    const { competitionId } = await createTestCompetition(criteria, startDate, endDate);
+    const { competitionId } = await createTestCompetition(
+      criteria,
+      startDate,
+      endDate,
+    );
 
     // Add a player and create START snapshot
-    const { playerId } = await createTestPlayer("Player1", testPuuid("lifecycle-player1"), "AMERICA_NORTH");
+    const { playerId } = await createTestPlayer(
+      "Player1",
+      testPuuid("lifecycle-player1"),
+      "AMERICA_NORTH",
+    );
     await addTestParticipant(competitionId, playerId);
 
     await prisma.competitionSnapshot.create({
@@ -247,10 +284,18 @@ describe("Competition Lifecycle - Query for Ending", () => {
     const startDate = new Date("2025-01-15T10:00:00Z");
     const endDate = new Date("2025-01-20T10:00:00Z"); // Past
 
-    const { competitionId } = await createTestCompetition(criteria, startDate, endDate);
+    const { competitionId } = await createTestCompetition(
+      criteria,
+      startDate,
+      endDate,
+    );
 
     // Add a player and create START snapshot
-    const { playerId } = await createTestPlayer("Player1", testPuuid("lifecycle-player1"), "AMERICA_NORTH");
+    const { playerId } = await createTestPlayer(
+      "Player1",
+      testPuuid("lifecycle-player1"),
+      "AMERICA_NORTH",
+    );
     await addTestParticipant(competitionId, playerId);
 
     await prisma.competitionSnapshot.create({
@@ -299,10 +344,18 @@ describe("Competition Lifecycle - Query for Ending", () => {
     const startDate = new Date("2025-01-15T10:00:00Z");
     const endDate = new Date("2025-01-20T10:00:00Z"); // Future
 
-    const { competitionId } = await createTestCompetition(criteria, startDate, endDate);
+    const { competitionId } = await createTestCompetition(
+      criteria,
+      startDate,
+      endDate,
+    );
 
     // Add START snapshot
-    const { playerId } = await createTestPlayer("Player1", testPuuid("lifecycle-player1"), "AMERICA_NORTH");
+    const { playerId } = await createTestPlayer(
+      "Player1",
+      testPuuid("lifecycle-player1"),
+      "AMERICA_NORTH",
+    );
     await addTestParticipant(competitionId, playerId);
 
     await prisma.competitionSnapshot.create({
@@ -387,10 +440,18 @@ describe("Competition Lifecycle - Query for Ending", () => {
     const startDate = new Date("2025-01-15T10:00:00Z");
     const endDate = new Date("2025-01-20T10:00:00Z");
 
-    const { competitionId } = await createTestCompetition(criteria, startDate, endDate);
+    const { competitionId } = await createTestCompetition(
+      criteria,
+      startDate,
+      endDate,
+    );
 
     // Add START and END snapshots
-    const { playerId } = await createTestPlayer("Player1", testPuuid("lifecycle-player1"), "AMERICA_NORTH");
+    const { playerId } = await createTestPlayer(
+      "Player1",
+      testPuuid("lifecycle-player1"),
+      "AMERICA_NORTH",
+    );
     await addTestParticipant(competitionId, playerId);
 
     await prisma.competitionSnapshot.create({
@@ -460,7 +521,11 @@ describe("Competition Lifecycle - Multiple Competitions", () => {
     );
 
     // Competition 2: Should NOT start (future start date)
-    await createTestCompetition(criteria, new Date("2025-01-19T10:00:00Z"), new Date("2025-01-25T10:00:00Z"));
+    await createTestCompetition(
+      criteria,
+      new Date("2025-01-19T10:00:00Z"),
+      new Date("2025-01-25T10:00:00Z"),
+    );
 
     // Competition 3: Should end (past end date, has START, no END)
     const { competitionId: comp3 } = await createTestCompetition(
@@ -477,7 +542,11 @@ describe("Competition Lifecycle - Multiple Competitions", () => {
     );
 
     // Add START snapshots for comp3 and comp4
-    const { playerId } = await createTestPlayer("Player1", testPuuid("lifecycle-player1"), "AMERICA_NORTH");
+    const { playerId } = await createTestPlayer(
+      "Player1",
+      testPuuid("lifecycle-player1"),
+      "AMERICA_NORTH",
+    );
 
     await addTestParticipant(comp3, playerId);
     await addTestParticipant(comp4, playerId);

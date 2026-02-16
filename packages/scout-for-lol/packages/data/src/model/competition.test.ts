@@ -1553,7 +1553,10 @@ describe("parseCompetition", () => {
     const raw: Competition = {
       ...baseRawCompetition,
       criteriaType: "MOST_WINS_CHAMPION",
-      criteriaConfig: JSON.stringify({ championId: ChampionIdSchema.parse(157), queue: "SOLO" }),
+      criteriaConfig: JSON.stringify({
+        championId: ChampionIdSchema.parse(157),
+        queue: "SOLO",
+      }),
     };
 
     const parsed = parseCompetition(raw);
@@ -1623,7 +1626,9 @@ describe("parseCompetition", () => {
       criteriaConfig: JSON.stringify("not an object"),
     };
 
-    expect(() => parseCompetition(raw)).toThrow(/criteriaConfig must be an object/);
+    expect(() => parseCompetition(raw)).toThrow(
+      /criteriaConfig must be an object/,
+    );
   });
 
   test("throws when criteriaConfig is null", () => {
@@ -1632,7 +1637,9 @@ describe("parseCompetition", () => {
       criteriaConfig: JSON.stringify(null),
     };
 
-    expect(() => parseCompetition(raw)).toThrow(/criteriaConfig must be an object/);
+    expect(() => parseCompetition(raw)).toThrow(
+      /criteriaConfig must be an object/,
+    );
   });
 
   test("throws when criteriaType doesn't match config", () => {

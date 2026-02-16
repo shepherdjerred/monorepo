@@ -1,5 +1,6 @@
 import { Deployment, DeploymentStrategy, EnvValue, Secret, Volume } from "cdk8s-plus-31";
-import { Chart, Size } from "cdk8s";
+import type { Chart} from "cdk8s";
+import { Size } from "cdk8s";
 import { withCommonProps } from "../../misc/common.ts";
 import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
 import versions from "../../versions.ts";

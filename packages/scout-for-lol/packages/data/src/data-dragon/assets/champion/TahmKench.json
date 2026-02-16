@@ -142,7 +142,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -165,7 +177,13 @@
           "description": "Dive down and then re-appear at target location, damaging and knocking up all enemies in an area.",
           "tooltip": "Dive down and then re-appear at target location, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Knock Up</status> all enemies in an area for {{ knockupduration }} second. Hitting at least one enemy champion refunds {{ champrefund*100 }}% of the Cooldown and <scaleMana>Mana</scaleMana> cost. <br /><br /><span class=\"color0bf7de\">Devoured</span> allies can be taken along for the ride (but can always hop out early).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage", "Range", "@AbilityResourceName@ Cost", "Cooldown Refund"],
+            "label": [
+              "Cooldown",
+              "Damage",
+              "Range",
+              "@AbilityResourceName@ Cost",
+              "Cooldown Refund"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -193,7 +211,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -216,7 +246,10 @@
           "description": "<passive>Passive:</passive> Tahm Kench stores a percent of the damage he takes and heals based on it while out of combat.<br><br><active>Active:</active> Convert all stored damage into a temporary shield.",
           "tooltip": "<passive>Passive:</passive> {{ greyhealthratio*100 }}% of damage Tahm Kench takes is stored by his <spellName>Thick Skin</spellName>, increased to {{ greyhealthratioenhanced*100 }}% if there are at least {{ enhancedthreshold }} nearby enemy champions. If Kench has not taken damage within {{ ooctimer }} seconds, <spellName>Thick Skin</spellName> will rapidly be consumed to heal Tahm for {{ greyhealthhealingratio }} of its value.<br /><br /><active>Active:</active> Convert all your stored <spellName>Thick Skin</spellName> into a <shield>Shield</shield>, lasting {{ shieldduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["% Damage to Thick Skin", "% Damage to Thick Skin Enhanced"],
+            "label": [
+              "% Damage to Thick Skin",
+              "% Damage to Thick Skin Enhanced"
+            ],
             "effect": [
               "{{ greyhealthratio*100.000000 }}% -> {{ greyhealthrationl*100.000000 }}%",
               "{{ greyhealthratioenhanced*100.000000 }}% -> {{ greyhealthratioenhancednl*100.000000 }}%"
@@ -241,7 +274,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -290,7 +335,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " Mana",
           "maxammo": "-1",

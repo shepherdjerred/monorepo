@@ -11,24 +11,24 @@ import {
 } from "./types.js";
 import { fetch } from "./fetch.js";
 import { asyncMapFilterUndefined } from "./util.js";
-import * as fs from "fs/promises";
+import * as fs from "node:fs/promises";
 
-async function loadCache({ cache_file }: CacheConfiguration): Promise<Cache> {
+async function loadCache({ cache_file: cacheFilePath }: CacheConfiguration): Promise<Cache> {
   try {
-    await fs.access(cache_file);
-    const cacheFile = await fs.readFile(cache_file);
-    return CacheSchema.parse(JSON.parse(cacheFile.toString()));
-  } catch (_e) {
+    await fs.access(cacheFilePath);
+    const cacheFileContent = await fs.readFile(cacheFilePath);
+    return CacheSchema.parse(JSON.parse(cacheFileContent.toString()));
+  } catch {
     return {};
   }
 }
 
-async function saveCache({ cache_file }: CacheConfiguration, cache: Cache) {
-  const dir = cache_file.split("/").slice(0, -1).join("/");
+async function saveCache({ cache_file: cacheFilePath }: CacheConfiguration, cache: Cache) {
+  const dir = cacheFilePath.split("/").slice(0, -1).join("/");
   if (dir !== "") {
-    await fs.mkdir(cache_file.split("/").slice(0, -1).join("/"), { recursive: true });
+    await fs.mkdir(cacheFilePath.split("/").slice(0, -1).join("/"), { recursive: true });
   }
-  await fs.writeFile(cache_file, JSON.stringify(cache));
+  await fs.writeFile(cacheFilePath, JSON.stringify(cache));
 }
 
 function toCacheEntry(result: ResultEntry, now: Date): [string, CacheEntry] {
@@ -68,15 +68,15 @@ export async function fetchWithCache(
   if (cacheEntry) {
     const now = new Date();
     if (now.getTime() - cacheEntry.timestamp.getTime() < config.cache.cache_duration_minutes * 60 * 1000) {
-      console.log(`Cache entry found for ${source.url}.`);
-      return Promise.resolve(cacheEntry.data);
+      console.warn(`Cache entry found for ${source.url}.`);
+      return cacheEntry.data;
     } else {
-      console.log(`Cache entry for ${source.url} is too old.`);
+      console.warn(`Cache entry for ${source.url} is too old.`);
     }
   } else {
-    console.log(`No cache entry for ${source.url}.`);
+    console.warn(`No cache entry for ${source.url}.`);
   }
 
-  console.log(`Fetching ${source.url}`);
+  console.warn(`Fetching ${source.url}`);
   return fetch(source, config.truncate);
 }

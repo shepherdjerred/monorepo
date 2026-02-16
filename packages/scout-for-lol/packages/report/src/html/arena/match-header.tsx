@@ -1,7 +1,13 @@
 import { type ArenaMatch } from "@scout-for-lol/data";
 import { formatDuration } from "@scout-for-lol/report/html/arena/utils.ts";
 
-export function MatchHeader({ match, highlightNames }: { match: ArenaMatch; highlightNames: string[] }) {
+export function MatchHeader({
+  match,
+  highlightNames,
+}: {
+  match: ArenaMatch;
+  highlightNames: string[];
+}) {
   const trackedTeams = match.teams.filter((team) =>
     team.players.some((p) => highlightNames.includes(p.riotIdGameName)),
   );
@@ -14,7 +20,14 @@ export function MatchHeader({ match, highlightNames }: { match: ArenaMatch; high
     const isVictory = trackedTeam.placement <= 4;
 
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 24, marginBottom: 8 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 24,
+          marginBottom: 8,
+        }}
+      >
         <div
           style={{
             fontSize: 48,
@@ -33,7 +46,15 @@ export function MatchHeader({ match, highlightNames }: { match: ArenaMatch; high
   }
 
   return (
-    <div style={{ display: "flex", fontSize: 48, opacity: 0.9, marginBottom: 8, gap: 0 }}>
+    <div
+      style={{
+        display: "flex",
+        fontSize: 48,
+        opacity: 0.9,
+        marginBottom: 8,
+        gap: 0,
+      }}
+    >
       {formatDuration(match.durationInSeconds)}
     </div>
   );

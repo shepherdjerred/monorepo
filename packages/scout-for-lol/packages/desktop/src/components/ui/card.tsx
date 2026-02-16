@@ -12,17 +12,34 @@ function Card({ className, variant = "default", ...props }: CardProps) {
     bordered: "bg-gray-800/60 border-gray-600",
   };
 
-  return <div className={cn("rounded-xl border shadow-lg", variantStyles[variant], className)} {...props} />;
+  return (
+    <div
+      className={cn(
+        "rounded-xl border shadow-lg",
+        variantStyles[variant],
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
 type CardHeaderProps = HTMLAttributes<HTMLDivElement> & {
   action?: ReactNode;
 };
 
-function CardHeader({ className, action, children, ...props }: CardHeaderProps) {
+function CardHeader({
+  className,
+  action,
+  children,
+  ...props
+}: CardHeaderProps) {
   return (
     <div
-      className={cn("flex items-center justify-between border-b border-gray-700/50 px-6 py-6", className)}
+      className={cn(
+        "flex items-center justify-between border-b border-gray-700/50 px-6 py-6",
+        className,
+      )}
       {...props}
     >
       <div className="flex flex-col gap-2">{children}</div>
@@ -37,14 +54,23 @@ type CardTitleProps = HTMLAttributes<HTMLHeadingElement> & {
 
 function CardTitle({ className, icon, children, ...props }: CardTitleProps) {
   return (
-    <h3 className={cn("flex items-center gap-2.5 text-lg font-semibold text-gray-100", className)} {...props}>
+    <h3
+      className={cn(
+        "flex items-center gap-2.5 text-lg font-semibold text-gray-100",
+        className,
+      )}
+      {...props}
+    >
       {icon && <span className="text-discord-blurple">{icon}</span>}
       {children}
     </h3>
   );
 }
 
-function CardDescription({ className, ...props }: HTMLAttributes<HTMLParagraphElement>) {
+function CardDescription({
+  className,
+  ...props
+}: HTMLAttributes<HTMLParagraphElement>) {
   return <p className={cn("text-sm text-gray-400", className)} {...props} />;
 }
 
@@ -53,7 +79,22 @@ function CardContent({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
 }
 
 function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("flex items-center gap-3 border-t border-gray-700/50 px-6 py-5", className)} {...props} />;
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-3 border-t border-gray-700/50 px-6 py-5",
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent };
+export {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardDescription,
+  CardContent,
+};

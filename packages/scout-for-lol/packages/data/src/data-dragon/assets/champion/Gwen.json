@@ -105,7 +105,10 @@
           "tooltip": "<spellPassive>Passive</spellPassive>: Gwen gains 1 stack when she hits an enemy with an attack (max 4, lasts {{ buffduration }} seconds).<br /><br /><spellActive>Active</spellActive>: Consumes stacks. Gwen snips once for <magicDamage>{{ miniswipedamage }} magic damage</magicDamage>, snips again for each ammo consumed, and then snips a final time for <magicDamage>{{ finalswipedamage }} magic damage</magicDamage>. <br /><br />The center of each strikes converts {{ truedamageconversion*100 }}% of the damage into <trueDamage>true damage</trueDamage> instead and applies <spellName>A Thousand Cuts</spellName> to enemies hit.<br /><rules><br />Deals {{ minionmod*100 }}% damage to minions.<br />Minions below {{ executethreshold*100 }}% health take {{ executebonus }}% bonus damage instead of reduced damage.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Final Strike Damage"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ swipedamagebase }} -> {{ swipedamagebaseNL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ swipedamagebase }} -> {{ swipedamagebaseNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [6.5, 5.75, 5, 4.25, 3.5],
@@ -126,7 +129,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -150,7 +165,10 @@
           "tooltip": "Gwen summons the Hallowed Mist, making her Untargetable to all enemies (except towers) outside the zone for {{ zoneduration }} seconds or until she leaves it. While in the Mist, Gwen gains {{ totalresists }} <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR>.<br /><br />Gwen can <recast>Recast</recast> this Ability once to call the Mist to her. This will automatically <recast>Recast</recast> the first time Gwen attempts to leave the zone.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Bonus Resistances", "Cooldown"],
-            "effect": ["{{ baseresists }} -> {{ baseresistsNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ baseresists }} -> {{ baseresistsNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [22, 21, 20, 19, 18],
@@ -171,7 +189,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -220,7 +250,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -269,7 +311,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import "./TipsButton.css";
 
-export interface TipsButtonProps {
+export type TipsButtonProps = {
   onClick: () => void;
 }
 

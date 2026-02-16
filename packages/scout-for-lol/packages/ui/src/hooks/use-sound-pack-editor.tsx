@@ -4,10 +4,32 @@
  * Provides state management and operations for editing sound packs.
  */
 
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
-import type { SoundPack, SoundRule, SoundPool, SoundEntry, EventType } from "@scout-for-lol/data";
-import { createEmptySoundPack, createEmptySoundPool, createEmptyRule, generateId } from "@scout-for-lol/data";
-import type { SoundPackAdapter, Champion, LocalPlayer } from "@scout-for-lol/ui/types/adapter.ts";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  type ReactNode,
+} from "react";
+import type {
+  SoundPack,
+  SoundRule,
+  SoundPool,
+  SoundEntry,
+  EventType,
+} from "@scout-for-lol/data";
+import {
+  createEmptySoundPack,
+  createEmptySoundPool,
+  createEmptyRule,
+  generateId,
+} from "@scout-for-lol/data";
+import type {
+  SoundPackAdapter,
+  Champion,
+  LocalPlayer,
+} from "@scout-for-lol/ui/types/adapter.ts";
 
 // =============================================================================
 // Context Types
@@ -43,8 +65,15 @@ type SoundPackEditorActions = {
 
   // Default sounds operations
   setDefaultPool: (eventType: EventType, pool: SoundPool) => void;
-  addDefaultSound: (eventType: EventType, entry: Omit<SoundEntry, "id">) => void;
-  updateDefaultSound: (eventType: EventType, soundId: string, updates: Partial<SoundEntry>) => void;
+  addDefaultSound: (
+    eventType: EventType,
+    entry: Omit<SoundEntry, "id">,
+  ) => void;
+  updateDefaultSound: (
+    eventType: EventType,
+    soundId: string,
+    updates: Partial<SoundEntry>,
+  ) => void;
   removeDefaultSound: (eventType: EventType, soundId: string) => void;
 
   // Rule operations
@@ -55,11 +84,17 @@ type SoundPackEditorActions = {
 
   // Rule sound operations
   addRuleSound: (ruleId: string, entry: Omit<SoundEntry, "id">) => void;
-  updateRuleSound: (ruleId: string, soundId: string, updates: Partial<SoundEntry>) => void;
+  updateRuleSound: (
+    ruleId: string,
+    soundId: string,
+    updates: Partial<SoundEntry>,
+  ) => void;
   removeRuleSound: (ruleId: string, soundId: string) => void;
 
   // Preview operations
-  previewSound: (source: { type: "file"; path: string } | { type: "url"; url: string }) => Promise<void>;
+  previewSound: (
+    source: { type: "file"; path: string } | { type: "url"; url: string },
+  ) => Promise<void>;
   stopPreview: () => void;
 
   // Utility
@@ -75,7 +110,8 @@ type SoundPackEditorContextValue = SoundPackEditorState &
 // Context
 // =============================================================================
 
-const SoundPackEditorContext = createContext<SoundPackEditorContextValue | null>(null);
+const SoundPackEditorContext =
+  createContext<SoundPackEditorContextValue | null>(null);
 
 // =============================================================================
 // Provider
@@ -88,7 +124,11 @@ type SoundPackEditorProviderProps = {
   initialPack?: SoundPack;
 };
 
-export function SoundPackEditorProvider({ adapter, children, initialPack }: SoundPackEditorProviderProps) {
+export function SoundPackEditorProvider({
+  adapter,
+  children,
+  initialPack,
+}: SoundPackEditorProviderProps) {
   const [soundPack, setSoundPack] = useState<SoundPack>(
     initialPack ?? createEmptySoundPack(generateId(), "My Sound Pack"),
   );
@@ -239,70 +279,84 @@ export function SoundPackEditorProvider({ adapter, children, initialPack }: Soun
   // Default sounds operations
   // ==========================================================================
 
-  const setDefaultPool = useCallback((eventType: EventType, pool: SoundPool) => {
-    setSoundPack((prev) => ({
-      ...prev,
-      defaults: { ...prev.defaults, [eventType]: pool },
-    }));
-    setIsDirty(true);
-  }, []);
-
-  const addDefaultSound = useCallback((eventType: EventType, entry: Omit<SoundEntry, "id">) => {
-    setSoundPack((prev) => {
-      const existingPool = prev.defaults[eventType] ?? createEmptySoundPool();
-      return {
+  const setDefaultPool = useCallback(
+    (eventType: EventType, pool: SoundPool) => {
+      setSoundPack((prev) => ({
         ...prev,
-        defaults: {
-          ...prev.defaults,
-          [eventType]: {
-            ...existingPool,
-            sounds: [...existingPool.sounds, { ...entry, id: generateId() }],
-          },
-        },
-      };
-    });
-    setIsDirty(true);
-  }, []);
+        defaults: { ...prev.defaults, [eventType]: pool },
+      }));
+      setIsDirty(true);
+    },
+    [],
+  );
 
-  const updateDefaultSound = useCallback((eventType: EventType, soundId: string, updates: Partial<SoundEntry>) => {
-    setSoundPack((prev) => {
-      const existingPool = prev.defaults[eventType];
-      if (!existingPool) {
-        return prev;
-      }
-      return {
-        ...prev,
-        defaults: {
-          ...prev.defaults,
-          [eventType]: {
-            ...existingPool,
-            sounds: existingPool.sounds.map((s) => (s.id === soundId ? { ...s, ...updates } : s)),
+  const addDefaultSound = useCallback(
+    (eventType: EventType, entry: Omit<SoundEntry, "id">) => {
+      setSoundPack((prev) => {
+        const existingPool = prev.defaults[eventType] ?? createEmptySoundPool();
+        return {
+          ...prev,
+          defaults: {
+            ...prev.defaults,
+            [eventType]: {
+              ...existingPool,
+              sounds: [...existingPool.sounds, { ...entry, id: generateId() }],
+            },
           },
-        },
-      };
-    });
-    setIsDirty(true);
-  }, []);
+        };
+      });
+      setIsDirty(true);
+    },
+    [],
+  );
 
-  const removeDefaultSound = useCallback((eventType: EventType, soundId: string) => {
-    setSoundPack((prev) => {
-      const existingPool = prev.defaults[eventType];
-      if (!existingPool) {
-        return prev;
-      }
-      return {
-        ...prev,
-        defaults: {
-          ...prev.defaults,
-          [eventType]: {
-            ...existingPool,
-            sounds: existingPool.sounds.filter((s) => s.id !== soundId),
+  const updateDefaultSound = useCallback(
+    (eventType: EventType, soundId: string, updates: Partial<SoundEntry>) => {
+      setSoundPack((prev) => {
+        const existingPool = prev.defaults[eventType];
+        if (!existingPool) {
+          return prev;
+        }
+        return {
+          ...prev,
+          defaults: {
+            ...prev.defaults,
+            [eventType]: {
+              ...existingPool,
+              sounds: existingPool.sounds.map((s) =>
+                s.id === soundId ? { ...s, ...updates } : s,
+              ),
+            },
           },
-        },
-      };
-    });
-    setIsDirty(true);
-  }, []);
+        };
+      });
+      setIsDirty(true);
+    },
+    [],
+  );
+
+  const removeDefaultSound = useCallback(
+    (eventType: EventType, soundId: string) => {
+      setSoundPack((prev) => {
+        const existingPool = prev.defaults[eventType];
+        if (!existingPool) {
+          return prev;
+        }
+        return {
+          ...prev,
+          defaults: {
+            ...prev.defaults,
+            [eventType]: {
+              ...existingPool,
+              sounds: existingPool.sounds.filter((s) => s.id !== soundId),
+            },
+          },
+        };
+      });
+      setIsDirty(true);
+    },
+    [],
+  );
 
   // ==========================================================================
   // Rule operations
@@ -317,13 +371,18 @@ export function SoundPackEditorProvider({ adapter, children, initialPack }: Soun
     setIsDirty(true);
   }, []);
 
-  const updateRule = useCallback((ruleId: string, updates: Partial<SoundRule>) => {
-    setSoundPack((prev) => ({
-      ...prev,
-      rules: prev.rules.map((r) => (r.id === ruleId ? { ...r, ...updates } : r)),
-    }));
-    setIsDirty(true);
-  }, []);
+  const updateRule = useCallback(
+    (ruleId: string, updates: Partial<SoundRule>) => {
+      setSoundPack((prev) => ({
+        ...prev,
+        rules: prev.rules.map((r) =>
+          r.id === ruleId ? { ...r, ...updates } : r,
+        ),
+      }));
+      setIsDirty(true);
+    },
+    [],
+  );
 
   const removeRule = useCallback((ruleId: string) => {
     setSoundPack((prev) => ({
@@ -349,41 +408,49 @@ export function SoundPackEditorProvider({ adapter, children, initialPack }: Soun
   // Rule sound operations
   // ==========================================================================
 
-  const addRuleSound = useCallback((ruleId: string, entry: Omit<SoundEntry, "id">) => {
-    setSoundPack((prev) => ({
-      ...prev,
-      rules: prev.rules.map((r) =>
-        r.id === ruleId
-          ? {
-              ...r,
-              sounds: {
-                ...r.sounds,
-                sounds: [...r.sounds.sounds, { ...entry, id: generateId() }],
-              },
-            }
-          : r,
-      ),
-    }));
-    setIsDirty(true);
-  }, []);
+  const addRuleSound = useCallback(
+    (ruleId: string, entry: Omit<SoundEntry, "id">) => {
+      setSoundPack((prev) => ({
+        ...prev,
+        rules: prev.rules.map((r) =>
+          r.id === ruleId
+            ? {
+                ...r,
+                sounds: {
+                  ...r.sounds,
+                  sounds: [...r.sounds.sounds, { ...entry, id: generateId() }],
+                },
+              }
+            : r,
+        ),
+      }));
+      setIsDirty(true);
+    },
+    [],
+  );
 
-  const updateRuleSound = useCallback((ruleId: string, soundId: string, updates: Partial<SoundEntry>) => {
-    setSoundPack((prev) => ({
-      ...prev,
-      rules: prev.rules.map((r) =>
-        r.id === ruleId
-          ? {
-              ...r,
-              sounds: {
-                ...r.sounds,
-                sounds: r.sounds.sounds.map((s) => (s.id === soundId ? { ...s, ...updates } : s)),
-              },
-            }
-          : r,
-      ),
-    }));
-    setIsDirty(true);
-  }, []);
+  const updateRuleSound = useCallback(
+    (ruleId: string, soundId: string, updates: Partial<SoundEntry>) => {
+      setSoundPack((prev) => ({
+        ...prev,
+        rules: prev.rules.map((r) =>
+          r.id === ruleId
+            ? {
+                ...r,
+                sounds: {
+                  ...r.sounds,
+                  sounds: r.sounds.sounds.map((s) =>
+                    s.id === soundId ? { ...s, ...updates } : s,
+                  ),
+                },
+              }
+            : r,
+        ),
+      }));
+      setIsDirty(true);
+    },
+    [],
+  );
 
   const removeRuleSound = useCallback((ruleId: string, soundId: string) => {
     setSoundPack((prev) => ({
@@ -408,7 +475,9 @@ export function SoundPackEditorProvider({ adapter, children, initialPack }: Soun
   // ==========================================================================
 
   const previewSound = useCallback(
-    async (source: { type: "file"; path: string } | { type: "url"; url: string }) => {
+    async (
+      source: { type: "file"; path: string } | { type: "url"; url: string },
+    ) => {
       try {
         await adapter.playSound(source);
       } catch (e) {
@@ -474,7 +543,11 @@ export function SoundPackEditorProvider({ adapter, children, initialPack }: Soun
     clearError,
   };
 
-  return <SoundPackEditorContext.Provider value={value}>{children}</SoundPackEditorContext.Provider>;
+  return (
+    <SoundPackEditorContext.Provider value={value}>
+      {children}
+    </SoundPackEditorContext.Provider>
+  );
 }
 
 // =============================================================================
@@ -488,7 +561,9 @@ export function SoundPackEditorProvider({ adapter, children, initialPack }: Soun
 export function useSoundPackEditor(): SoundPackEditorContextValue {
   const context = useContext(SoundPackEditorContext);
   if (!context) {
-    throw new Error("useSoundPackEditor must be used within a SoundPackEditorProvider");
+    throw new Error(
+      "useSoundPackEditor must be used within a SoundPackEditorProvider",
+    );
   }
   return context;
 }

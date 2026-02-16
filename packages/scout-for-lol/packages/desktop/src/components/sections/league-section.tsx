@@ -7,7 +7,10 @@ import {
   CardDescription,
   CardContent,
 } from "@scout-for-lol/desktop/components/ui/card.tsx";
-import { StatusIndicator, Badge } from "@scout-for-lol/desktop/components/ui/badge.tsx";
+import {
+  StatusIndicator,
+  Badge,
+} from "@scout-for-lol/desktop/components/ui/badge.tsx";
 
 type LcuStatus = {
   connected: boolean;
@@ -22,7 +25,12 @@ type LeagueSectionProps = {
   onDisconnect: () => void;
 };
 
-export function LeagueSection({ lcuStatus, loading, onConnect, onDisconnect }: LeagueSectionProps) {
+export function LeagueSection({
+  lcuStatus,
+  loading,
+  onConnect,
+  onDisconnect,
+}: LeagueSectionProps) {
   const isConnecting = loading?.includes("League");
 
   return (
@@ -30,7 +38,9 @@ export function LeagueSection({ lcuStatus, loading, onConnect, onDisconnect }: L
       {/* Header */}
       <div className="space-y-2">
         <h2 className="text-2xl font-bold text-gray-100">League Client</h2>
-        <p className="text-gray-400">Connect to your League of Legends client to enable game monitoring</p>
+        <p className="text-gray-400">
+          Connect to your League of Legends client to enable game monitoring
+        </p>
       </div>
 
       {/* Main Card */}
@@ -40,7 +50,13 @@ export function LeagueSection({ lcuStatus, loading, onConnect, onDisconnect }: L
           <CardDescription>
             <div className="mt-2">
               <StatusIndicator
-                status={isConnecting ? "connecting" : lcuStatus.connected ? "connected" : "disconnected"}
+                status={
+                  isConnecting
+                    ? "connecting"
+                    : lcuStatus.connected
+                      ? "connected"
+                      : "disconnected"
+                }
               />
             </div>
           </CardDescription>
@@ -55,7 +71,9 @@ export function LeagueSection({ lcuStatus, loading, onConnect, onDisconnect }: L
               </div>
               <div className="flex-1">
                 <p className="text-sm text-gray-400">Logged in as</p>
-                <p className="text-lg font-semibold text-gray-100">{lcuStatus.summonerName}</p>
+                <p className="text-lg font-semibold text-gray-100">
+                  {lcuStatus.summonerName}
+                </p>
               </div>
               {lcuStatus.inGame && (
                 <Badge variant="success" dot pulse>
@@ -68,7 +86,9 @@ export function LeagueSection({ lcuStatus, loading, onConnect, onDisconnect }: L
           {/* Connection Info */}
           {!lcuStatus.connected && (
             <div className="rounded-lg border border-gray-700/50 bg-gray-900/30 p-6">
-              <h4 className="mb-4 text-sm font-medium text-gray-200">How it works</h4>
+              <h4 className="mb-4 text-sm font-medium text-gray-200">
+                How it works
+              </h4>
               <ul className="space-y-4 text-sm text-gray-400">
                 <li className="flex items-start gap-3">
                   <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-discord-blurple" />
@@ -80,7 +100,10 @@ export function LeagueSection({ lcuStatus, loading, onConnect, onDisconnect }: L
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-discord-blurple" />
-                  <span>Enable &quot;Live Client Data API&quot; in League settings for full features</span>
+                  <span>
+                    Enable &quot;Live Client Data API&quot; in League settings
+                    for full features
+                  </span>
                 </li>
               </ul>
             </div>

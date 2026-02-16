@@ -190,7 +190,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -239,7 +251,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "700", "0.75", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "700",
+            "0.75",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -263,7 +287,11 @@
           "tooltip": "Alistar begins trampling the ground, becoming Ghosted and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> over {{ e3 }} seconds to nearby enemies. Each pulse that damages a champion grants a stack.<br /><br />At {{ e5 }} stacks, Alistar's next Attack against champions <status>Stuns</status> for {{ e6 }} second and deals an additional <magicDamage>{{ attackbonusdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ cost }} -> {{ costNL }}", "{{ e1 }} -> {{ e1NL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ e1 }} -> {{ e1NL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [12, 11.5, 11, 10.5, 10],
@@ -284,7 +312,19 @@
             [15, 15, 15, 15, 15],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "80/110/140/170/200", "50", "5", "350", "5", "1", "5", "20", "15", "0"],
+          "effectBurn": [
+            null,
+            "80/110/140/170/200",
+            "50",
+            "5",
+            "350",
+            "5",
+            "1",
+            "5",
+            "20",
+            "15",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -308,7 +348,10 @@
           "tooltip": "Alistar immediately cleanses all <status>Disabling</status> effects and takes {{ rdamagereduction }}% reduced damage for {{ rduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Damage Reduction"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ rdamagereduction }}% -> {{ rdamagereductionNL }}%"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ rdamagereduction }}% -> {{ rdamagereductionNL }}%"
+            ]
           },
           "maxrank": 3,
           "cooldown": [120, 100, 80],
@@ -329,7 +372,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

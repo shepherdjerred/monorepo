@@ -13,8 +13,17 @@ export function Kda({
   assists: number;
   highlight: boolean;
 }) {
-  const kdaRatio = deaths === 0 ? kills + assists : round((kills + assists) / deaths, 2);
+  const kdaRatio =
+    deaths === 0 ? kills + assists : round((kills + assists) / deaths, 2);
   const mainValue = `${kills.toString()} / ${deaths.toString()} / ${assists.toString()}`;
 
-  return <Stat mainValue={mainValue} rateValue={kdaRatio} rateLabel="KDA" highlight={highlight} ratePrecision={2} />;
+  return (
+    <Stat
+      mainValue={mainValue}
+      rateValue={kdaRatio}
+      rateLabel="KDA"
+      highlight={highlight}
+      ratePrecision={2}
+    />
+  );
 }

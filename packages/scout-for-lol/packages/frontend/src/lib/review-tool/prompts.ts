@@ -144,16 +144,19 @@ const RAW_BUILTIN_PERSONALITIES: Personality[] = [
 ];
 
 const discardedPersonalities: string[] = [];
-const BUILTIN_PERSONALITIES_INTERNAL: Personality[] = RAW_BUILTIN_PERSONALITIES.filter((p) => {
-  if (p.styleCard.trim().length === 0) {
-    discardedPersonalities.push(p.id);
-    return false;
-  }
-  return true;
-});
+const BUILTIN_PERSONALITIES_INTERNAL: Personality[] =
+  RAW_BUILTIN_PERSONALITIES.filter((p) => {
+    if (p.styleCard.trim().length === 0) {
+      discardedPersonalities.push(p.id);
+      return false;
+    }
+    return true;
+  });
 
 if (discardedPersonalities.length > 0) {
-  console.warn(`[review-tool] Discarded personalities missing style cards: ${discardedPersonalities.join(", ")}`);
+  console.warn(
+    `[review-tool] Discarded personalities missing style cards: ${discardedPersonalities.join(", ")}`,
+  );
 }
 
 export const BUILTIN_PERSONALITIES = BUILTIN_PERSONALITIES_INTERNAL;
@@ -181,8 +184,12 @@ export function getBasePrompt(): string {
  */
 export function selectRandomPersonality(): Personality {
   // Exclude generic from random selection
-  const selectablePersonalities = BUILTIN_PERSONALITIES_INTERNAL.filter((p) => p.id !== "generic");
-  const randomIndex = Math.floor(Math.random() * selectablePersonalities.length);
+  const selectablePersonalities = BUILTIN_PERSONALITIES_INTERNAL.filter(
+    (p) => p.id !== "generic",
+  );
+  const randomIndex = Math.floor(
+    Math.random() * selectablePersonalities.length,
+  );
   const selected = selectablePersonalities[randomIndex];
   if (!selected) {
     throw new Error("Failed to select personality");

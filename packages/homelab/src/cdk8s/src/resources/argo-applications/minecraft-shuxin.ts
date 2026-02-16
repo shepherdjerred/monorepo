@@ -1,4 +1,5 @@
-import { Chart, Size } from "cdk8s";
+import type { Chart} from "cdk8s";
+import { Size } from "cdk8s";
 import { Application } from "../../../generated/imports/argoproj.io.ts";
 import versions from "../../versions.ts";
 import { createIngress } from "../../misc/tailscale.ts";
@@ -87,11 +88,11 @@ export function createMinecraftShuxinApp(chart: Chart) {
           service: {
             enabled: true,
             type: "NodePort",
-            port: 19132,
-            nodePort: 30003,
+            port: 19_132,
+            nodePort: 30_003,
           },
           protocol: "UDP",
-          containerPort: 19132,
+          containerPort: 19_132,
           name: "bedrock",
           ingress: {
             enabled: false,

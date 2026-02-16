@@ -17,7 +17,8 @@ export function SettingsTab() {
           label="Master Volume"
         />
         <p className="text-xs text-gray-500 mt-2">
-          Multiplied with each sound&apos;s individual volume. Set to 200% to make all sounds louder.
+          Multiplied with each sound&apos;s individual volume. Set to 200% to
+          make all sounds louder.
         </p>
       </div>
 
@@ -37,8 +38,8 @@ export function SettingsTab() {
           <span className="text-sm">Normalize audio levels</span>
         </label>
         <p className="text-xs text-gray-500 mt-2">
-          When enabled, all sounds are analyzed and adjusted to have consistent volume levels before the per-sound
-          volume is applied.
+          When enabled, all sounds are analyzed and adjusted to have consistent
+          volume levels before the per-sound volume is applied.
         </p>
       </div>
 
@@ -47,7 +48,10 @@ export function SettingsTab() {
         <h3 className="font-medium mb-3">Pack Information</h3>
         <div className="space-y-3">
           <div>
-            <label htmlFor="version" className="block text-sm text-gray-600 mb-1">
+            <label
+              htmlFor="version"
+              className="block text-sm text-gray-600 mb-1"
+            >
               Version
             </label>
             <input
@@ -62,7 +66,10 @@ export function SettingsTab() {
             />
           </div>
           <div>
-            <label htmlFor="author" className="block text-sm text-gray-600 mb-1">
+            <label
+              htmlFor="author"
+              className="block text-sm text-gray-600 mb-1"
+            >
               Author
             </label>
             <input
@@ -70,21 +77,28 @@ export function SettingsTab() {
               type="text"
               value={editor.soundPack.author ?? ""}
               onChange={(e) => {
-                editor.updatePack({ author: e.currentTarget.value || undefined });
+                editor.updatePack({
+                  author: e.currentTarget.value || undefined,
+                });
               }}
               className="w-full px-3 py-2 border rounded text-sm"
               placeholder="Your name"
             />
           </div>
           <div>
-            <label htmlFor="description" className="block text-sm text-gray-600 mb-1">
+            <label
+              htmlFor="description"
+              className="block text-sm text-gray-600 mb-1"
+            >
               Description
             </label>
             <textarea
               id="description"
               value={editor.soundPack.description ?? ""}
               onChange={(e) => {
-                editor.updatePack({ description: e.currentTarget.value || undefined });
+                editor.updatePack({
+                  description: e.currentTarget.value || undefined,
+                });
               }}
               className="w-full px-3 py-2 border rounded text-sm"
               rows={3}

@@ -154,7 +154,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -177,7 +189,12 @@
           "description": "Sylas lunges at an enemy with magical force dealing damage and healing himself against enemy champions.",
           "tooltip": "Sylas lunges at an enemy with magical force dealing <magicDamage>{{ mindamage }} magic damage</magicDamage>. Against champions, Sylas restores between <healing>{{ minhealing }}</healing> and <healing>{{ maxhealing }} Health</healing> based on his missing Health (max healing at or below {{ maxexecutethreshold*100 }}% Health).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Healing", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Healing",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ healing }} -> {{ healingNL }}",
@@ -204,7 +221,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -228,7 +257,10 @@
           "tooltip": "Sylas quickly dashes, and prepares a <recast>Recast</recast> for 3.5 seconds.<br /><br /><recast>Recast:</recast> Sylas throws his chains, pulling himself to the first enemy hit, dealing <magicDamage>{{ damage }} magic damage</magicDamage>, and <status>Knocking Up</status> for {{ knockupduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ pulldamage }} -> {{ pulldamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ pulldamage }} -> {{ pulldamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [13, 12, 11, 10, 9],
@@ -249,7 +281,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -294,7 +338,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

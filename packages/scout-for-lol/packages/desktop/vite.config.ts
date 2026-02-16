@@ -4,7 +4,9 @@ import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 const host: string | undefined =
-  typeof process.env["TAURI_DEV_HOST"] === "string" ? process.env["TAURI_DEV_HOST"] : undefined;
+  typeof process.env["TAURI_DEV_HOST"] === "string"
+    ? process.env["TAURI_DEV_HOST"]
+    : undefined;
 const isDebug = Boolean(process.env["TAURI_DEBUG"]);
 
 // https://vitejs.dev/config/

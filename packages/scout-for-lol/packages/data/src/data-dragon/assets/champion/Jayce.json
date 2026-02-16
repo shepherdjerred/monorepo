@@ -172,7 +172,19 @@
             [0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -196,7 +208,10 @@
           "tooltip": "<keywordMajor>Mercury Hammer - Passive:</keywordMajor> Jayce's <keywordMajor>Hammer</keywordMajor> Attacks grant <scaleMana>{{ spell.jaycestaticfield:managain }} Mana</scaleMana>.<br /><br /><keywordMajor>Mercury Hammer - Active:</keywordMajor> Jayce creates an electric aura dealing <magicDamage>{{ spell.jaycestaticfield:damage }} magic damage</magicDamage> over {{ spell.jaycestaticfield:duration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Mana Restore"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ managain }} -> {{ managainNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ managain }} -> {{ managainNL }}"
+            ]
           },
           "maxrank": 6,
           "cooldown": [10, 10, 10, 10, 10, 10],
@@ -217,7 +232,19 @@
             [0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -266,7 +293,19 @@
             [0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -295,7 +334,19 @@
           "costBurn": "0",
           "datavalues": {},
           "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",

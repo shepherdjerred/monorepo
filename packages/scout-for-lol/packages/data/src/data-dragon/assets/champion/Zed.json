@@ -159,7 +159,10 @@
           "tooltip": "Zed and his <keywordMajor>Shadows</keywordMajor> throw their shurikens, each dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to the first enemy they pass through, and <physicalDamage>{{ passthroughdamage }} physical damage</physicalDamage> to each additional enemy.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "@AbilityResourceName@ Cost"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cost }} -> {{ costNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [6, 6, 6, 6, 6],
@@ -180,7 +183,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -203,8 +218,16 @@
           "description": "<font color='#FF9900'>Passive:</font> Zed gains energy whenever he and his shadows strike an enemy with the same ability. Energy can only be gained once per cast ability.<br><br><font color='#FF9900'>Active:</font> Zed's shadow dashes forward, remaining in place for a few seconds. Reactivating Living Shadow will cause Zed to switch positions with this shadow.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Zed gains <keywordMajor>{{ e3 }} Energy</keywordMajor> whenever he and his <keywordMajor>Shadows</keywordMajor> strike an enemy with the same Ability.<br /><br /><spellActive>Active:</spellActive> Zed's <keywordMajor>Shadow</keywordMajor> dashes forward, remaining in place for {{ e5 }} seconds. <recast>Recasting</recast> this Ability will cause Zed to switch positions with this <keywordMajor>Shadow</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Energy Return", "@AbilityResourceName@ Cost", "Cooldown"],
-            "effect": ["{{ e3 }} -> {{ e3NL }}", "{{ cost }} -> {{ costNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "label": [
+              "Energy Return",
+              "@AbilityResourceName@ Cost",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ e3 }} -> {{ e3NL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [20, 19, 18, 17, 16],
@@ -225,7 +248,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "5.25", "0.2", "30/35/40/45/50", "5.25", "5", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "5.25",
+            "0.2",
+            "30/35/40/45/50",
+            "5.25",
+            "5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -274,7 +309,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -322,7 +369,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",

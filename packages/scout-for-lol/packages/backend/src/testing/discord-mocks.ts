@@ -60,7 +60,9 @@ export function mockUser(overrides: Record<string, unknown> = {}): User {
  * Create a mock Discord GuildMember object
  * @lintignore
  */
-export function mockGuildMember(overrides: Record<string, unknown> = {}): GuildMember {
+export function mockGuildMember(
+  overrides: Record<string, unknown> = {},
+): GuildMember {
   const defaults: Record<string, unknown> = {
     id: testAccountId("2"),
     user: mockUser(),
@@ -76,7 +78,8 @@ export function mockGuildMember(overrides: Record<string, unknown> = {}): GuildM
     pending: false,
     communicationDisabledUntil: null,
     permissions: {
-      has: (permission: bigint) => permission === PermissionFlagsBits.ViewChannel,
+      has: (permission: bigint) =>
+        permission === PermissionFlagsBits.ViewChannel,
     },
   };
 
@@ -179,7 +182,9 @@ export function mockGuild(overrides: Record<string, unknown> = {}): Guild {
 /**
  * Create a mock Discord TextChannel object
  */
-export function mockTextChannel(overrides: Record<string, unknown> = {}): TextChannel {
+export function mockTextChannel(
+  overrides: Record<string, unknown> = {},
+): TextChannel {
   const defaults: Record<string, unknown> = {
     id: testChannelId("1"),
     name: "general",
@@ -214,7 +219,8 @@ export function mockTextChannel(overrides: Record<string, unknown> = {}): TextCh
     fetchWebhooks: () => Promise.resolve(new Map()),
     permissionsFor: (_target: unknown) => ({
       has: (permission: bigint) =>
-        permission === PermissionFlagsBits.ViewChannel || permission === PermissionFlagsBits.SendMessages,
+        permission === PermissionFlagsBits.ViewChannel ||
+        permission === PermissionFlagsBits.SendMessages,
     }),
     send: (_content: unknown) =>
       Promise.resolve({
@@ -233,7 +239,9 @@ export function mockTextChannel(overrides: Record<string, unknown> = {}): TextCh
  * Create a mock Discord DMChannel object
  * @lintignore
  */
-export function mockDMChannel(overrides: Record<string, unknown> = {}): DMChannel {
+export function mockDMChannel(
+  overrides: Record<string, unknown> = {},
+): DMChannel {
   const defaults: Record<string, unknown> = {
     id: testChannelId("2"),
     type: ChannelType.DM,
@@ -340,7 +348,9 @@ export function mockClient(overrides: Record<string, unknown> = {}): Client {
  * Create a mock PermissionsBitField object
  * @lintignore
  */
-export function mockPermissions(permissions: bigint = PermissionFlagsBits.ViewChannel): PermissionsBitField {
+export function mockPermissions(
+  permissions: bigint = PermissionFlagsBits.ViewChannel,
+): PermissionsBitField {
   // eslint-disable-next-line custom-rules/no-type-assertions -- ok for Discord test mocks only
   return {
     bitfield: permissions,

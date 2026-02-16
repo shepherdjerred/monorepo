@@ -8,7 +8,11 @@ import type {
   CreateCompetitionInput,
   UpdateCompetitionInput,
 } from "@scout-for-lol/backend/database/competition/queries.ts";
-import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  testGuildId,
+  testAccountId,
+  testChannelId,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
 import {
   CompetitionIdSchema,
   getCompetitionStatus,
@@ -17,7 +21,10 @@ import {
   type DiscordChannelId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
-import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.ts";
+import {
+  createTestDatabase,
+  deleteIfExists,
+} from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a test database for integration tests
 const { prisma } = createTestDatabase("competition-edit-test");
@@ -499,7 +506,9 @@ describe("Partial updates", () => {
     expect(afterUpdatedTime).not.toBeNull();
     expect(beforeUpdatedTime).not.toBeNull();
     if (afterUpdatedTime && beforeUpdatedTime) {
-      expect(afterUpdatedTime.getTime()).toBeGreaterThan(beforeUpdatedTime.getTime());
+      expect(afterUpdatedTime.getTime()).toBeGreaterThan(
+        beforeUpdatedTime.getTime(),
+      );
     }
   });
 
@@ -534,6 +543,8 @@ describe("Error cases", () => {
       title: "Should Fail",
     };
 
-    await expect(updateCompetition(prisma, nonExistentId, updateInput)).rejects.toThrow();
+    await expect(
+      updateCompetition(prisma, nonExistentId, updateInput),
+    ).rejects.toThrow();
   });
 });

@@ -1,5 +1,6 @@
 import { merge } from "lodash";
-import { ContainerProps, EnvValue } from "cdk8s-plus-31";
+import type { ContainerProps} from "cdk8s-plus-31";
+import { EnvValue } from "cdk8s-plus-31";
 
 export const ROOT_UID = 0;
 export const ROOT_GID = 0;

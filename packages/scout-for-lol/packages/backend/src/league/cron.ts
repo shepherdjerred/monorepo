@@ -9,7 +9,10 @@ import { runWeeklyPairingUpdate } from "@scout-for-lol/backend/league/tasks/pair
 import { client } from "@scout-for-lol/backend/discord/client.ts";
 import { createCronJob } from "@scout-for-lol/backend/league/cron/helpers.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import { getFlag, MY_SERVER } from "@scout-for-lol/backend/configuration/flags.ts";
+import {
+  getFlag,
+  MY_SERVER,
+} from "@scout-for-lol/backend/configuration/flags.ts";
 
 const logger = createLogger("league-cron");
 
@@ -104,9 +107,13 @@ export function startCronJobs() {
     schedule: "0 0 18 * * 0", // 6 PM UTC on Sundays
     jobName: "weekly_pairing_update",
     task: async () => {
-      const isEnabled = getFlag("common_denominator_enabled", { server: MY_SERVER });
+      const isEnabled = getFlag("common_denominator_enabled", {
+        server: MY_SERVER,
+      });
       if (!isEnabled) {
-        logger.info("📈 Common Denominator update skipped - feature not enabled for this server");
+        logger.info(
+          "📈 Common Denominator update skipped - feature not enabled for this server",
+        );
         return;
       }
       await runWeeklyPairingUpdate();

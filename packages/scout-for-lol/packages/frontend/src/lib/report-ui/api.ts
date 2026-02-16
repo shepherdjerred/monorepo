@@ -94,11 +94,14 @@ export async function fetchMatchFromRiot(
   apiToken: string,
 ): Promise<{ match: null; error?: string }> {
   try {
-    const response = await fetch(`${RIOT_API_BASE}/lol/match/v5/matches/${matchId}`, {
-      headers: {
-        "X-Riot-Token": apiToken,
+    const response = await fetch(
+      `${RIOT_API_BASE}/lol/match/v5/matches/${matchId}`,
+      {
+        headers: {
+          "X-Riot-Token": apiToken,
+        },
       },
-    });
+    );
 
     if (!response.ok) {
       if (response.status === 404) {

@@ -18,7 +18,10 @@ export function AugmentsDisplay({ augments }: { augments: Augment[] }) {
       {augmentPairs.map((pair, pairIdx) => (
         <div key={pairIdx} style={{ display: "flex", gap: 12 }}>
           {pair.map((augment, augIdx) => (
-            <div key={augIdx} style={{ display: "flex", fontSize: 22, opacity: 0.75 }}>
+            <div
+              key={augIdx}
+              style={{ display: "flex", fontSize: 22, opacity: 0.75 }}
+            >
               {renderAugment(augment)}
             </div>
           ))}

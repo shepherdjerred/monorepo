@@ -1,4 +1,8 @@
-import { AugmentSchema, type Augment, type FullAugment } from "@scout-for-lol/data";
+import {
+  AugmentSchema,
+  type Augment,
+  type FullAugment,
+} from "@scout-for-lol/data";
 import { arenaAugmentCache } from "@scout-for-lol/data/data-dragon/arena-augments.ts";
 
 // Use the local cached arena augments data.

@@ -142,7 +142,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -165,8 +177,16 @@
           "description": "Urgot slows himself while he unloads his weapon on nearby enemies. Prioritizes enemy champions Urgot has recently struck with other abilities and triggers Echoing Flames.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Urgot's other Abilities mark the last champion hit for 5 seconds.<br /><br /><spellActive>Active:</spellActive> Urgot begins firing his chain gun at the closest enemy, prioritizing marked enemies. He Attacks them {{ e8 }} times a second dealing <physicalDamage>{{ damagepershot }} physical damage</physicalDamage> per shot. Urgot can move while firing and has {{ e2 }}% <status>Slow</status> resistance, but loses <speed>{{ e5 }} Move Speed</speed>.<br /><br />At max rank, this Ability lasts indefinitely and can be <toggle>Toggled</toggle> on and off.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Attack Damage Per Shot", "@AbilityResourceName@ Cost"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ e7 }}% -> {{ e7NL }}%", "{{ cost }} -> {{ costNL }}"]
+            "label": [
+              "Cooldown",
+              "Attack Damage Per Shot",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ e7 }}% -> {{ e7NL }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [12, 9, 6, 3, 0],
@@ -222,7 +242,12 @@
           "description": "Urgot charges in a direction, shielding himself and trampling non-champion enemies. If he catches an enemy champion, he will stop and hurl them out of his way.",
           "tooltip": "Urgot charges forward, gaining <shield>{{ etotalshieldhealth }} Shield</shield> for {{ eshieldduration }} seconds. The first champion hit is <status>Stunned</status> for {{ stunduration }} seconds and thrown behind Urgot. All enemies Urgot collides with take <physicalDamage>{{ edamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Shield Amount", "@AbilityResourceName@ Cost", "Cooldown"],
+            "label": [
+              "Damage",
+              "Shield Amount",
+              "@AbilityResourceName@ Cost",
+              "Cooldown"
+            ],
             "effect": [
               "{{ ebasedamage }} -> {{ ebasedamageNL }}",
               "{{ eshieldbasehealth }} -> {{ eshieldbasehealthNL }}",
@@ -249,7 +274,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -273,7 +310,10 @@
           "tooltip": "Urgot fires a chem-drill, impaling the first champion hit, dealing <physicalDamage>{{ rcalculateddamage }} physical damage</physicalDamage> and <status>Slowing</status> for {{ rslowduration }} seconds by 1% per 1% missing Health, up to {{ rmovespeedmod }}%.<br /><br />If the impaled victim falls below {{ rhealththreshold }}% Health, Urgot can <recast>Recast</recast> this Ability, <status>Suppressing</status> the victim and dragging them to himself. On reaching Urgot, they are killed and nearby enemies are <status>Feared</status> for {{ rfearduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ rbasedamage }} -> {{ rbasedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ rbasedamage }} -> {{ rbasedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [100, 85, 70],
@@ -294,7 +334,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

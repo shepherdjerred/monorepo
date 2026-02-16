@@ -57,10 +57,16 @@ export function MatchList({
             >
               <div className="flex justify-between items-start mb-1">
                 <div className="flex items-center gap-2">
-                  <div className="text-xs font-medium text-surface-900">{match.champion}</div>
+                  <div className="text-xs font-medium text-surface-900">
+                    {match.champion}
+                  </div>
                   <div className="text-xs text-surface-500">({match.lane})</div>
                 </div>
-                {isSelected && <div className="text-xs font-semibold text-brand-600">✓ Selected</div>}
+                {isSelected && (
+                  <div className="text-xs font-semibold text-brand-600">
+                    ✓ Selected
+                  </div>
+                )}
               </div>
               <div className="text-xs text-surface-600 space-y-0.5">
                 <div>{match.playerName}</div>

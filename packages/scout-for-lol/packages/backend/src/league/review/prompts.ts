@@ -1,4 +1,7 @@
-import { PersonalityMetadataSchema, type Personality } from "@scout-for-lol/data/index";
+import {
+  PersonalityMetadataSchema,
+  type Personality,
+} from "@scout-for-lol/data/index";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 // Static imports for lane context files
@@ -34,7 +37,10 @@ function getStyleCardsDir(): string {
   const dataPackageUrl = import.meta.resolve("@scout-for-lol/data");
   const url = new URL(dataPackageUrl);
   // Navigate from data/src/index.ts -> packages/data/src/review/prompts/style-cards
-  return url.pathname.replace(/\/src\/index\.ts$/, "/src/review/prompts/style-cards");
+  return url.pathname.replace(
+    /\/src\/index\.ts$/,
+    "/src/review/prompts/style-cards",
+  );
 }
 
 const PROMPTS_DIR = getPromptsDir();
@@ -82,7 +88,9 @@ async function loadPersonality(basename: string): Promise<Personality> {
     .toLowerCase()
     .replace(/[^a-z0-9._-]+/g, "_")
     .replace(/^_+|_+$/g, "");
-  const styleCardCandidates = Array.from(new Set([normalizedBasename, normalizedDisplayName]));
+  const styleCardCandidates = Array.from(
+    new Set([normalizedBasename, normalizedDisplayName]),
+  );
 
   let styleCard: string | undefined;
   for (const candidate of styleCardCandidates) {
@@ -129,7 +137,9 @@ export async function selectRandomPersonality(): Promise<Personality> {
  * Select a personality using balanced pseudo-random selection.
  * All personalities have equal probability of being selected.
  */
-function selectBalancedReviewer(availablePersonalities: Personality[]): Personality {
+function selectBalancedReviewer(
+  availablePersonalities: Personality[],
+): Personality {
   if (availablePersonalities.length === 0) {
     throw new Error("No personalities available for selection");
   }
@@ -187,11 +197,15 @@ async function listValidPersonalities(): Promise<Personality[]> {
   }
 
   if (discarded.length > 0) {
-    logger.warn(`[ai-review] Discarded personalities due to incomplete data: ${discarded.join("; ")}`);
+    logger.warn(
+      `[ai-review] Discarded personalities due to incomplete data: ${discarded.join("; ")}`,
+    );
   }
 
   if (valid.length === 0) {
-    throw new Error("No personalities with complete data (metadata + instructions + style card).");
+    throw new Error(
+      "No personalities with complete data (metadata + instructions + style card).",
+    );
   }
 
   cachedPersonalities = valid;
@@ -210,7 +224,10 @@ const LANE_CONTEXTS: Record<string, string> = {
 /**
  * Get lane context based on player's lane
  */
-export function getLaneContext(lane: string | undefined): { content: string; filename: string } {
+export function getLaneContext(lane: string | undefined): {
+  content: string;
+  filename: string;
+} {
   const lowerLane = lane?.toLowerCase();
   let filename = "lanes/generic.txt";
   let content = genericLane;

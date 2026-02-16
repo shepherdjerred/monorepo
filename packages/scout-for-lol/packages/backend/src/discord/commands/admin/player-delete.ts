@@ -21,7 +21,9 @@ const ArgsSchema = z.object({
   guildId: DiscordGuildIdSchema,
 });
 
-export async function executePlayerDelete(interaction: ChatInputCommandInteraction) {
+export async function executePlayerDelete(
+  interaction: ChatInputCommandInteraction,
+) {
   const validation = await validateCommandArgs(
     interaction,
     ArgsSchema,
@@ -87,7 +89,9 @@ export async function executePlayerDelete(interaction: ChatInputCommandInteracti
     );
 
     if (activeCompetitions.length > 0) {
-      const competitionTitles = activeCompetitions.map((cp) => `• ${cp.competition.title}`).join("\n");
+      const competitionTitles = activeCompetitions
+        .map((cp) => `• ${cp.competition.title}`)
+        .join("\n");
       logger.info(
         `⚠️  Player "${alias}" is participating in ${activeCompetitions.length.toString()} active competition(s)`,
       );
@@ -112,7 +116,9 @@ export async function executePlayerDelete(interaction: ChatInputCommandInteracti
           },
         });
 
-        logger.info(`✅ Deleted ${player.subscriptions.length.toString()} subscriptions`);
+        logger.info(
+          `✅ Deleted ${player.subscriptions.length.toString()} subscriptions`,
+        );
 
         // 2. Delete all accounts
         await tx.account.deleteMany({
@@ -130,7 +136,9 @@ export async function executePlayerDelete(interaction: ChatInputCommandInteracti
           },
         });
 
-        logger.info(`✅ Deleted ${player.competitionParticipants.length.toString()} competition participations`);
+        logger.info(
+          `✅ Deleted ${player.competitionParticipants.length.toString()} competition participations`,
+        );
 
         // 4. Delete all competition snapshots
         await tx.competitionSnapshot.deleteMany({

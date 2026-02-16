@@ -1,4 +1,9 @@
-import { type CompletedMatch, type ArenaMatch, LeaguePuuidSchema, DiscordAccountIdSchema } from "@scout-for-lol/data";
+import {
+  type CompletedMatch,
+  type ArenaMatch,
+  LeaguePuuidSchema,
+  DiscordAccountIdSchema,
+} from "@scout-for-lol/data";
 import { getArenaExampleMatch } from "./arena-example.ts";
 
 type MatchType = "ranked" | "unranked" | "aram" | "arena";
@@ -265,7 +270,9 @@ export function getExampleMatch(matchType: MatchType = "ranked"): AnyMatch {
         players: base.players.map((p) => ({
           ...p,
           lane: "middle",
-          laneOpponent: p.laneOpponent ? { ...p.laneOpponent, lane: "middle" } : undefined,
+          laneOpponent: p.laneOpponent
+            ? { ...p.laneOpponent, lane: "middle" }
+            : undefined,
         })),
         teams: {
           blue: base.teams.blue.map((p) => ({ ...p, lane: "middle" })),

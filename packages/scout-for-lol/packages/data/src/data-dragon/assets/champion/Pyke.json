@@ -173,7 +173,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -218,7 +230,19 @@
             [1.15, 1.15, 1.15, 1.15, 1.15],
             [5, 5, 5, 5, 5]
           ],
-          "effectBurn": [null, "45", "0", "0.3", "0.03", "80", "0.55", "8", "0.01", "1.15", "5"],
+          "effectBurn": [
+            null,
+            "45",
+            "0",
+            "0.3",
+            "0.03",
+            "80",
+            "0.55",
+            "8",
+            "0.01",
+            "1.15",
+            "5"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -242,7 +266,10 @@
           "tooltip": "Pyke dashes, leaving a drowned phantom behind him that returns to him shortly. The phantom <status>Stuns</status> for {{ stunduration }} seconds and deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to champions.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [15, 14, 13, 12, 11],
@@ -263,7 +290,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "100/150/200/250/300", "1.25", "550", "1", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "100/150/200/250/300",
+            "1.25",
+            "550",
+            "1",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -308,7 +347,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

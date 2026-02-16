@@ -159,7 +159,10 @@
           "tooltip": "Diana unleashes an arc of lunar energy, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and marking with <keywordMajor>Moonlight</keywordMajor> for {{ moonlightduration }} seconds. <br /><br /><keywordMajor>Moonlight</keywordMajor> reveals enemies that are not <keywordStealth>stealthed</keywordStealth>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Damage"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ basedamage }} -> {{ basedamageNL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [8, 7.5, 7, 6.5, 6],
@@ -180,7 +183,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "1", "1.5", "3", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "1",
+            "1.5",
+            "3",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -203,7 +218,12 @@
           "description": "Diana creates three orbiting spheres that detonate on contact with enemies to deal damage in an area. She also gains a temporary shield that absorbs damage. If her third sphere detonates, the shield gains additional strength.",
           "tooltip": "Diana creates three orbiting spheres for {{ shieldduration }} seconds that explode on contact, each dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>, up to a max of <magicDamage>{{ totalmaxdamage }} damage</magicDamage>.<br /><br />Diana also gains <shield>{{ shieldvalue }} Shield</shield> for the same duration. When the last sphere detonates, she gains an additional <shield>{{ shieldvalue }} Shield</shield> and refreshes the duration.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Shield Amount", "@AbilityResourceName@ Cost", "Cooldown"],
+            "label": [
+              "Damage",
+              "Shield Amount",
+              "@AbilityResourceName@ Cost",
+              "Cooldown"
+            ],
             "effect": [
               "{{ orbdamage }} -> {{ orbdamageNL }}",
               "{{ shieldbase }} -> {{ shieldbaseNL }}",
@@ -230,7 +250,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "5", "0", "0", "1", "4", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "5",
+            "0",
+            "0",
+            "1",
+            "4",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -279,7 +311,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "4/4/4/0/0", "40/60/80/100/120", "50/75/100/0/0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "4/4/4/0/0",
+            "40/60/80/100/120",
+            "50/75/100/0/0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -328,7 +372,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "-0.35/-0.4/-0.45", "2", "0.5", "3", "4", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "-0.35/-0.4/-0.45",
+            "2",
+            "0.5",
+            "3",
+            "4",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

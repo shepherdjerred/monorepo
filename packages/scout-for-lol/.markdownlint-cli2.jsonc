@@ -5,5 +5,11 @@
       "line_length": 350,
     },
   },
-  "ignores": ["**/node_modules/**", "**/generated/**", "**/dist/**", "**/build/**", "ai_dev_log/**"],
+  "ignores": [
+    "**/node_modules/**",
+    "**/generated/**",
+    "**/dist/**",
+    "**/build/**",
+    "ai_dev_log/**",
+  ],
 }

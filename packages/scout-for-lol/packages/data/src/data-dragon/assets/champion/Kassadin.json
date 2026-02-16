@@ -128,7 +128,12 @@
           "description": "Kassadin fires an orb of void energy at a target, dealing damage and interrupting channels. The excess energy forms around himself, granting a temporary shield that absorbs magic damage.",
           "tooltip": "Kassadin fires an orb of void energy, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and interrupting channels. Kassadin also gains <shield>{{ totalshield }} Magic Shield</shield> for 1.5 seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Shield Amount", "@AbilityResourceName@ Cost", "Cooldown"],
+            "label": [
+              "Damage",
+              "Shield Amount",
+              "@AbilityResourceName@ Cost",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ shieldamount }} -> {{ shieldamountNL }}",
@@ -155,7 +160,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "65/95/125/155/185", "0", "80/110/140/170/200", "1.5", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "65/95/125/155/185",
+            "0",
+            "80/110/140/170/200",
+            "1.5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -178,7 +195,11 @@
           "description": "Passive: Kassadin's basic attacks deal bonus magic damage. Active: Kassadin's next basic attack deals significant bonus magic damage and restores Mana.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Kassadin's Attacks deal an additional <magicDamage>{{ onhitdamage }} magic damage</magicDamage>.<br /><br /><spellActive>Active:</spellActive> Kassadin charges his blade, causing his next Attack to deal <magicDamage>{{ activedamage }} magic damage</magicDamage> and restore <scaleMana>{{ missingmanaratio }}% missing Mana</scaleMana>, increased to <scaleMana>{{ championmissingmanaratio }}%</scaleMana> against champions.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Active Damage", "Base Mana Restore", "Champion Mana Restore"],
+            "label": [
+              "Active Damage",
+              "Base Mana Restore",
+              "Champion Mana Restore"
+            ],
             "effect": [
               "{{ activebasedamage }} -> {{ activebasedamageNL }}",
               "{{ missingmanaratio }}% -> {{ missingmanaratioNL }}%",
@@ -239,7 +260,12 @@
           "description": "Kassadin draws energy from spells cast in his vicinity. Upon charging up, Kassadin can use Force Pulse to damage and slow enemies in a cone in front of him.",
           "tooltip": "<spellPassive>Passive:</spellPassive> <spellName>Force Pulse's</spellName> Cooldown is reduced by {{ reductionperspellcast }} second whenever any Ability is used near Kassadin.<br /><br /><spellActive>Active:</spellActive> Kassadin unleashes a void pulse, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slowing</status> by {{ e2 }}% for {{ e3 }} second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Slow",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ e2 }}% -> {{ e2NL }}%",
@@ -266,7 +292,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "50/60/70/80/90", "1", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "50/60/70/80/90",
+            "1",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -315,7 +353,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

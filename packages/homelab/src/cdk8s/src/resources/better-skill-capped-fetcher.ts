@@ -1,4 +1,5 @@
-import { Chart, Size } from "cdk8s";
+import type { Chart} from "cdk8s";
+import { Size } from "cdk8s";
 import { PersistentVolumeAccessMode, PersistentVolumeClaim, PersistentVolumeMode } from "cdk8s-plus-31";
 import { KubeCronJob, Quantity } from "../../generated/imports/k8s.ts";
 import { OnePasswordItem } from "../../generated/imports/onepassword.com.ts";

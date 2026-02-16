@@ -5,7 +5,11 @@
  * This helps avoid token limits when processing long games.
  */
 
-import type { RawTimeline, RawTimelineFrame, RawTimelineEvent } from "@scout-for-lol/data/league/raw-timeline.schema";
+import type {
+  RawTimeline,
+  RawTimelineFrame,
+  RawTimelineEvent,
+} from "@scout-for-lol/data/league/raw-timeline.schema";
 import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema";
 import type { ParticipantLookup } from "./timeline-enricher.ts";
 
@@ -64,7 +68,9 @@ function formatTime(ms: number): string {
  * @param rawTimeline - The raw timeline data from Riot API
  * @returns Array of timeline chunks, ordered by time
  */
-export function splitTimelineIntoChunks(rawTimeline: RawTimeline): TimelineChunk[] {
+export function splitTimelineIntoChunks(
+  rawTimeline: RawTimeline,
+): TimelineChunk[] {
   const frames = rawTimeline.info.frames;
   if (frames.length === 0) {
     return [];
@@ -127,14 +133,19 @@ export function splitTimelineIntoChunks(rawTimeline: RawTimeline): TimelineChunk
  * @param rawMatch - The raw match data for participant info
  * @returns Enriched chunk ready for AI consumption
  */
-export function enrichTimelineChunk(chunk: TimelineChunk, rawMatch: RawMatch): EnrichedTimelineChunk {
-  const participants: ParticipantLookup[] = rawMatch.info.participants.map((p, index) => ({
-    participantId: index + 1,
-    championName: p.championName,
-    team: p.teamId === 100 ? "Blue" : "Red",
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- riotIdGameName is optional
-    summonerName: p.riotIdGameName ?? p.summonerName ?? "Unknown",
-  }));
+export function enrichTimelineChunk(
+  chunk: TimelineChunk,
+  rawMatch: RawMatch,
+): EnrichedTimelineChunk {
+  const participants: ParticipantLookup[] = rawMatch.info.participants.map(
+    (p, index) => ({
+      participantId: index + 1,
+      championName: p.championName,
+      team: p.teamId === 100 ? "Blue" : "Red",
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- riotIdGameName is optional
+      summonerName: p.riotIdGameName ?? p.summonerName ?? "Unknown",
+    }),
+  );
 
   return {
     chunk,

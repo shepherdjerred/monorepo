@@ -28,7 +28,9 @@ Update `src-tauri/tauri.conf.json`:
       "active": true,
       "dialog": true,
       "pubkey": "YOUR_PUBLIC_KEY_HERE",
-      "endpoints": ["https://releases.myserver.com/{{target}}/{{current_version}}"]
+      "endpoints": [
+        "https://releases.myserver.com/{{target}}/{{current_version}}"
+      ]
     }
   }
 }
@@ -136,7 +138,9 @@ For simpler setup, use GitHub Releases:
 {
   "plugins": {
     "updater": {
-      "endpoints": ["https://github.com/shepherdjerred/scout-for-lol/releases/latest/download/latest.json"]
+      "endpoints": [
+        "https://github.com/shepherdjerred/scout-for-lol/releases/latest/download/latest.json"
+      ]
     }
   }
 }

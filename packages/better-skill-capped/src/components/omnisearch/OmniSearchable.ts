@@ -1,6 +1,6 @@
-import { Commentary } from "../../model/Commentary";
-import { Course } from "../../model/Course";
-import { Video } from "../../model/Video";
+import type { Commentary } from "@shepherdjerred/better-skill-capped/model/Commentary";
+import type { Course } from "@shepherdjerred/better-skill-capped/model/Course";
+import type { Video } from "@shepherdjerred/better-skill-capped/model/Video";
 
 type OmniSearchable = Video | Course | Commentary;
 

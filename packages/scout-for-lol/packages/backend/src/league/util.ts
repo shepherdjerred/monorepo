@@ -13,12 +13,18 @@ export function logErrors(fn: () => Promise<unknown>) {
       const startTime = Date.now();
       await fn();
       const executionTime = Date.now() - startTime;
-      logger.info(`✅ Function ${functionName} completed successfully in ${executionTime.toString()}ms`);
+      logger.info(
+        `✅ Function ${functionName} completed successfully in ${executionTime.toString()}ms`,
+      );
     } catch (e) {
       logger.error(`❌ Function ${functionName} failed:`, e);
 
       // Log additional error context
-      const ErrorDetailsSchema = z.object({ name: z.string(), message: z.string(), stack: z.string().optional() });
+      const ErrorDetailsSchema = z.object({
+        name: z.string(),
+        message: z.string(),
+        stack: z.string().optional(),
+      });
       const errorResult = ErrorDetailsSchema.safeParse(e);
       if (errorResult.success) {
         logger.error(`❌ Error name: ${errorResult.data.name}`);

@@ -19,7 +19,11 @@ const logger = createLogger("discord-dm");
  * @param message - Message content to send
  * @returns true if message was sent successfully, false otherwise
  */
-export async function sendDM(client: Client, userId: DiscordAccountId, message: string): Promise<boolean> {
+export async function sendDM(
+  client: Client,
+  userId: DiscordAccountId,
+  message: string,
+): Promise<boolean> {
   try {
     const user = await client.users.fetch(userId);
     await user.send(message);
@@ -29,7 +33,9 @@ export async function sendDM(client: Client, userId: DiscordAccountId, message: 
     // Check for specific Discord API error codes
     if (error instanceof DiscordAPIError && error.code === 50007) {
       // 50007 = Cannot send messages to this user
-      logger.info(`[DM] User ${userId} has DMs disabled or has blocked the bot`);
+      logger.info(
+        `[DM] User ${userId} has DMs disabled or has blocked the bot`,
+      );
     } else {
       const errorMsg = getErrorMessage(error);
       logger.error(`[DM] Failed to send DM to user ${userId}:`, errorMsg);

@@ -163,7 +163,7 @@ export class S3StaticSites extends Construct {
 
     for (const site of props.sites) {
       // DNS is managed by OpenTofu — disable cloudflare-operator DNS updates
-      new TunnelBinding(this, `tunnel-${site.hostname.replace(/\./g, "-")}`, {
+      new TunnelBinding(this, `tunnel-${site.hostname.replaceAll('.', "-")}`, {
         metadata: {
           namespace,
         },
@@ -183,9 +183,9 @@ export class S3StaticSites extends Construct {
       });
 
       // Create Probe for HTTP monitoring via blackbox-exporter
-      new Probe(this, `probe-${site.hostname.replace(/\./g, "-")}`, {
+      new Probe(this, `probe-${site.hostname.replaceAll('.', "-")}`, {
         metadata: {
-          name: `static-site-${site.hostname.replace(/\./g, "-")}`,
+          name: `static-site-${site.hostname.replaceAll('.', "-")}`,
           namespace,
           labels: { release: "prometheus" },
         },

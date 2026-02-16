@@ -1,4 +1,4 @@
-import { Chart } from "cdk8s";
+import type { Chart } from "cdk8s";
 import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
 import { S3StaticSites } from "../../misc/s3-static-site.ts";
 import { staticSites, S3_ENDPOINT, S3_CREDENTIALS_SECRET_NAME } from "./sites.ts";

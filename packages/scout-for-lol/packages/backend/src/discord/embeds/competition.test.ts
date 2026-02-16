@@ -9,10 +9,14 @@ import type { RankedLeaderboardEntry } from "@scout-for-lol/backend/league/compe
 import {
   generateLeaderboardEmbed,
   generateCompetitionDetailsEmbed,
-  formatScore,
 } from "@scout-for-lol/backend/discord/embeds/competition.ts";
+import { formatScore } from "@scout-for-lol/backend/discord/embeds/competition-format-helpers.ts";
 
-import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  testGuildId,
+  testAccountId,
+  testChannelId,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
 // ============================================================================
 // Test Data Factories
 // ============================================================================
@@ -20,7 +24,9 @@ import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backen
 /**
  * Create a test competition with sensible defaults
  */
-function createTestCompetition(overrides: Partial<CompetitionWithCriteria> = {}): CompetitionWithCriteria {
+function createTestCompetition(
+  overrides: Partial<CompetitionWithCriteria> = {},
+): CompetitionWithCriteria {
   return {
     id: CompetitionIdSchema.parse(1),
     serverId: testGuildId("12300"),
@@ -95,15 +101,23 @@ describe("generateLeaderboardEmbed", () => {
 
   it("should display top 10 participants when there are more than 10", () => {
     const competition = createTestCompetition();
-    const leaderboard: RankedLeaderboardEntry[] = Array.from({ length: 15 }, (_, i) =>
-      createTestLeaderboardEntry(i + 1, 100 - i, `Player${(i + 1).toString()}`),
+    const leaderboard: RankedLeaderboardEntry[] = Array.from(
+      { length: 15 },
+      (_, i) =>
+        createTestLeaderboardEntry(
+          i + 1,
+          100 - i,
+          `Player${(i + 1).toString()}`,
+        ),
     );
 
     const embed = generateLeaderboardEmbed(competition, leaderboard);
     const embedData = embed.toJSON();
 
     // Should have standings field
-    const standingsField = embedData.fields?.find((f) => f.name.includes("Standings"));
+    const standingsField = embedData.fields?.find((f) =>
+      f.name.includes("Standings"),
+    );
     expect(standingsField).toBeDefined();
     expect(standingsField?.value).toBeDefined();
 
@@ -112,7 +126,9 @@ describe("generateLeaderboardEmbed", () => {
     expect(lines.length).toBe(10);
 
     // Should have indicator for more participants
-    const indicatorField = embedData.fields?.find((f) => f.value.includes("Showing top 10 of 15"));
+    const indicatorField = embedData.fields?.find((f) =>
+      f.value.includes("Showing top 10 of 15"),
+    );
     expect(indicatorField).toBeDefined();
   });
 
@@ -135,7 +151,9 @@ describe("generateLeaderboardEmbed", () => {
     const embed = generateLeaderboardEmbed(competition, leaderboard);
     const embedData = embed.toJSON();
 
-    const standingsField = embedData.fields?.find((f) => f.name.includes("Standings"));
+    const standingsField = embedData.fields?.find((f) =>
+      f.name.includes("Standings"),
+    );
     const standingsText = standingsField?.value ?? "";
 
     // Check that both tied entries have rank 2
@@ -156,7 +174,9 @@ describe("generateLeaderboardEmbed", () => {
     const embed = generateLeaderboardEmbed(competition, leaderboard);
     const embedData = embed.toJSON();
 
-    const standingsField = embedData.fields?.find((f) => f.name.includes("Standings"));
+    const standingsField = embedData.fields?.find((f) =>
+      f.name.includes("Standings"),
+    );
     const standingsText = standingsField?.value ?? "";
 
     expect(standingsText).toContain("🥇");
@@ -171,7 +191,9 @@ describe("generateLeaderboardEmbed", () => {
     const embed = generateLeaderboardEmbed(competition, leaderboard);
     const embedData = embed.toJSON();
 
-    const standingsField = embedData.fields?.find((f) => f.name.includes("Standings"));
+    const standingsField = embedData.fields?.find((f) =>
+      f.name.includes("Standings"),
+    );
     expect(standingsField?.value).toContain("No participants have scores yet");
   });
 
@@ -196,12 +218,16 @@ describe("generateLeaderboardEmbed", () => {
       endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 15),
     });
 
-    const leaderboard: RankedLeaderboardEntry[] = [createTestLeaderboardEntry(1, 100, "Player1")];
+    const leaderboard: RankedLeaderboardEntry[] = [
+      createTestLeaderboardEntry(1, 100, "Player1"),
+    ];
 
     const embed = generateLeaderboardEmbed(competition, leaderboard);
     const embedData = embed.toJSON();
 
-    const standingsField = embedData.fields?.find((f) => f.name.includes("Current Standings"));
+    const standingsField = embedData.fields?.find((f) =>
+      f.name.includes("Current Standings"),
+    );
     expect(standingsField).toBeDefined();
   });
 
@@ -211,12 +237,16 @@ describe("generateLeaderboardEmbed", () => {
       endDate: new Date(Date.now() - 1000 * 60 * 60 * 24),
     });
 
-    const leaderboard: RankedLeaderboardEntry[] = [createTestLeaderboardEntry(1, 100, "Player1")];
+    const leaderboard: RankedLeaderboardEntry[] = [
+      createTestLeaderboardEntry(1, 100, "Player1"),
+    ];
 
     const embed = generateLeaderboardEmbed(competition, leaderboard);
     const embedData = embed.toJSON();
 
-    const standingsField = embedData.fields?.find((f) => f.name.includes("Final Standings"));
+    const standingsField = embedData.fields?.find((f) =>
+      f.name.includes("Final Standings"),
+    );
     expect(standingsField).toBeDefined();
   });
 });
@@ -250,7 +280,9 @@ describe("generateCompetitionDetailsEmbed", () => {
     const channelField = embedData.fields?.find((f) => f.name === "Channel");
     expect(channelField?.value).toBe(`<#${channelId}>`);
 
-    const maxField = embedData.fields?.find((f) => f.name === "Max Participants");
+    const maxField = embedData.fields?.find(
+      (f) => f.name === "Max Participants",
+    );
     expect(maxField?.value).toBe("25");
   });
 
@@ -260,7 +292,9 @@ describe("generateCompetitionDetailsEmbed", () => {
     const embed = generateCompetitionDetailsEmbed(competition);
     const embedData = embed.toJSON();
 
-    const visibilityField = embedData.fields?.find((f) => f.name === "Visibility");
+    const visibilityField = embedData.fields?.find(
+      (f) => f.name === "Visibility",
+    );
     expect(visibilityField?.value).toBe("Invite Only");
   });
 
@@ -273,7 +307,9 @@ describe("generateCompetitionDetailsEmbed", () => {
     const embed = generateCompetitionDetailsEmbed(competition);
     const embedData = embed.toJSON();
 
-    const durationField = embedData.fields?.find((f) => f.name === "📅 Duration");
+    const durationField = embedData.fields?.find(
+      (f) => f.name === "📅 Duration",
+    );
     expect(durationField?.value).toContain("Start:");
     expect(durationField?.value).toContain("End:");
   });
@@ -288,7 +324,9 @@ describe("generateCompetitionDetailsEmbed", () => {
     const embed = generateCompetitionDetailsEmbed(competition);
     const embedData = embed.toJSON();
 
-    const durationField = embedData.fields?.find((f) => f.name === "📅 Duration");
+    const durationField = embedData.fields?.find(
+      (f) => f.name === "📅 Duration",
+    );
     expect(durationField?.value).toContain("Season-based");
     expect(durationField?.value).toContain("2025_SEASON_3_ACT_1");
   });
@@ -304,12 +342,16 @@ describe("generateCompetitionDetailsEmbed", () => {
     const embed = generateCompetitionDetailsEmbed(competition);
     const embedData = embed.toJSON();
 
-    const criteriaField = embedData.fields?.find((f) => f.name === "📊 Ranking Criteria");
+    const criteriaField = embedData.fields?.find(
+      (f) => f.name === "📊 Ranking Criteria",
+    );
     expect(criteriaField?.value).toBe("Highest rank in Flex Queue");
   });
 
   it("should include competition ID in footer", () => {
-    const competition = createTestCompetition({ id: CompetitionIdSchema.parse(42) });
+    const competition = createTestCompetition({
+      id: CompetitionIdSchema.parse(42),
+    });
 
     const embed = generateCompetitionDetailsEmbed(competition);
     const embedData = embed.toJSON();

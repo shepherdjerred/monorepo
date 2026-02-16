@@ -1,15 +1,15 @@
-import { roleToString } from "../../model/Role";
+import { roleToString } from "@shepherdjerred/better-skill-capped/model/Role";
 import React from "react";
-import { getStreamUrl } from "../../utils/UrlUtilities";
+import { getStreamUrl } from "@shepherdjerred/better-skill-capped/utils/UrlUtilities";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCloudDownloadAlt } from "@fortawesome/free-solid-svg-icons";
-import { Commentary } from "../../model/Commentary";
-import { ToggleBookmarkButton } from "../BookmarkToggleButton";
-import { ToggleWatchStatusButton } from "../ToggleWatchStatusButton";
-import { Bookmarkable } from "../../model/Bookmark";
-import { Watchable } from "../../model/WatchStatus";
+import type { Commentary } from "@shepherdjerred/better-skill-capped/model/Commentary";
+import { ToggleBookmarkButton } from "@shepherdjerred/better-skill-capped/components/BookmarkToggleButton";
+import { ToggleWatchStatusButton } from "@shepherdjerred/better-skill-capped/components/ToggleWatchStatusButton";
+import type { Bookmarkable } from "@shepherdjerred/better-skill-capped/model/Bookmark";
+import type { Watchable } from "@shepherdjerred/better-skill-capped/model/WatchStatus";
 
-export interface CommentarySearchResultProps {
+export type CommentarySearchResultProps = {
   commentary: Commentary;
   matchedStrings: string[];
   isBookmarked: boolean;

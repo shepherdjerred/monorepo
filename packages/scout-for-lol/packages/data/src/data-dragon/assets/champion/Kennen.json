@@ -134,7 +134,11 @@
           "tooltip": "Kennen throws a shuriken, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first enemy hit.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ cost }} -> {{ costNL }}", "{{ e1 }} -> {{ e1NL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ e1 }} -> {{ e1NL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [7, 6.25, 5.5, 4.75, 4],
@@ -155,7 +159,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "75/125/175/225/275", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "75/125/175/225/275",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -178,7 +194,12 @@
           "description": "Kennen passively deals extra damage and adds a Mark of the Storm to his target every few attacks, and he can activate this ability to damage and add another Mark of the Storm to targets who are already marked.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Every 5th Attack deals an additional <magicDamage>{{ totaldamagepassive }} magic damage</magicDamage>.<br /><br /><spellActive>Active:</spellActive> Kennen sends out a blast of electricity, dealing <magicDamage>{{ totaldamageactive }} magic damage</magicDamage> to nearby enemies affected by <spellName>Mark of the Storm</spellName>.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Bonus AD Ratio", "Damage (passive)", "Damage (active)"],
+            "label": [
+              "Cooldown",
+              "Bonus AD Ratio",
+              "Damage (passive)",
+              "Damage (active)"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ badratio*100.000000 }}% -> {{ badrationl*100.000000 }}%",
@@ -205,7 +226,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "70/95/120/145/170", "25", "0.7", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "70/95/120/145/170",
+            "25",
+            "0.7",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -254,7 +287,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "85/125/165/205/245", "40", "10/20/30/40/50", "1", "2", "0", "4", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "85/125/165/205/245",
+            "40",
+            "10/20/30/40/50",
+            "1",
+            "2",
+            "0",
+            "4",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -277,7 +322,12 @@
           "description": "Kennen summons a storm that strikes at nearby enemy champions for magical damage.",
           "tooltip": "Kennen unleashes a magical storm, dealing <magicDamage>{{ pertickdamagecalculated }} magic damage</magicDamage> to all nearby enemies every {{ kennenrtickrate }} seconds, and gaining <scaleArmor>{{ kennenrdefenses }} Armor</scaleArmor> and <scaleMR>{{ kennenrdefenses }} Magic Resist</scaleMR> for {{ kennenrduration }} seconds. Successive hits deal {{ damageamp*100 }}% increased damage for each hit the enemy has already suffered.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Armor Bonus", "Magic Resist Bonus", "Cooldown"],
+            "label": [
+              "Damage",
+              "Armor Bonus",
+              "Magic Resist Bonus",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ kennenrdefenses }} -> {{ kennenrdefensesNL }}",
@@ -304,7 +354,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",

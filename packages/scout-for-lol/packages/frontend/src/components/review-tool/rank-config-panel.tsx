@@ -4,7 +4,13 @@
 import { useMemo, useId } from "react";
 import { z } from "zod";
 import type { Rank, Tier, Division } from "@scout-for-lol/data";
-import { wasPromoted, wasDemoted, divisionToString, TierSchema, DivisionSchema } from "@scout-for-lol/data";
+import {
+  wasPromoted,
+  wasDemoted,
+  divisionToString,
+  TierSchema,
+  DivisionSchema,
+} from "@scout-for-lol/data";
 
 const TIERS: Tier[] = [
   "iron",
@@ -78,11 +84,16 @@ function RankEditor({ label, rank, onChange, idPrefix }: RankEditorProps) {
 
   return (
     <div className="space-y-2">
-      <span className="text-xs font-medium text-surface-600 uppercase tracking-wide">{label}</span>
+      <span className="text-xs font-medium text-surface-600 uppercase tracking-wide">
+        {label}
+      </span>
       <div className="grid grid-cols-3 gap-2">
         {/* Tier */}
         <div>
-          <label htmlFor={tierId} className="text-xs text-surface-500 mb-1 block">
+          <label
+            htmlFor={tierId}
+            className="text-xs text-surface-500 mb-1 block"
+          >
             Tier
           </label>
           <select
@@ -103,7 +114,10 @@ function RankEditor({ label, rank, onChange, idPrefix }: RankEditorProps) {
 
         {/* Division */}
         <div>
-          <label htmlFor={divisionId} className="text-xs text-surface-500 mb-1 block">
+          <label
+            htmlFor={divisionId}
+            className="text-xs text-surface-500 mb-1 block"
+          >
             Division
           </label>
           <select
@@ -153,7 +167,12 @@ type PresetButtonProps = {
   colorClass?: string;
 };
 
-function PresetButton({ label, active, onClick, colorClass = "bg-surface-100" }: PresetButtonProps) {
+function PresetButton({
+  label,
+  active,
+  onClick,
+  colorClass = "bg-surface-100",
+}: PresetButtonProps) {
   return (
     <button
       type="button"
@@ -172,7 +191,13 @@ function PresetButton({ label, active, onClick, colorClass = "bg-surface-100" }:
 // Preset configurations
 type Preset = "promotion" | "demotion" | "lp-gain" | "lp-loss" | "custom";
 
-const PresetSchema = z.enum(["promotion", "demotion", "lp-gain", "lp-loss", "custom"]);
+const PresetSchema = z.enum([
+  "promotion",
+  "demotion",
+  "lp-gain",
+  "lp-loss",
+  "custom",
+]);
 
 function getPreset(before: Rank, after: Rank): Preset {
   if (wasPromoted(before, after)) {
@@ -181,16 +206,27 @@ function getPreset(before: Rank, after: Rank): Preset {
   if (wasDemoted(before, after)) {
     return "demotion";
   }
-  if (after.lp > before.lp && before.tier === after.tier && before.division === after.division) {
+  if (
+    after.lp > before.lp &&
+    before.tier === after.tier &&
+    before.division === after.division
+  ) {
     return "lp-gain";
   }
-  if (after.lp < before.lp && before.tier === after.tier && before.division === after.division) {
+  if (
+    after.lp < before.lp &&
+    before.tier === after.tier &&
+    before.division === after.division
+  ) {
     return "lp-loss";
   }
   return "custom";
 }
 
-function applyPreset(preset: Preset, currentBefore: Rank): { before: Rank; after: Rank } {
+function applyPreset(
+  preset: Preset,
+  currentBefore: Rank,
+): { before: Rank; after: Rank } {
   const base: Rank = { ...currentBefore };
 
   switch (preset) {
@@ -215,10 +251,16 @@ function applyPreset(preset: Preset, currentBefore: Rank): { before: Rank; after
         }
       }
       // Promote within tier (e.g., Gold 2 -> Gold 1)
-      const newDivision = DivisionSchema.safeParse(Math.max(1, base.division - 1));
+      const newDivision = DivisionSchema.safeParse(
+        Math.max(1, base.division - 1),
+      );
       return {
         before: { ...base, lp: 100 },
-        after: { ...base, division: newDivision.success ? newDivision.data : 1, lp: 0 },
+        after: {
+          ...base,
+          division: newDivision.success ? newDivision.data : 1,
+          lp: 0,
+        },
       };
     }
 
@@ -238,10 +280,16 @@ function applyPreset(preset: Preset, currentBefore: Rank): { before: Rank; after
         }
       }
       // Demote within tier
-      const newDivision = DivisionSchema.safeParse(Math.min(4, base.division + 1));
+      const newDivision = DivisionSchema.safeParse(
+        Math.min(4, base.division + 1),
+      );
       return {
         before: { ...base, lp: 0 },
-        after: { ...base, division: newDivision.success ? newDivision.data : 4, lp: 75 },
+        after: {
+          ...base,
+          division: newDivision.success ? newDivision.data : 4,
+          lp: 75,
+        },
       };
     }
 
@@ -310,8 +358,12 @@ export function RankConfigPanel({ config, onChange }: RankConfigPanelProps) {
     <div className="card p-0 overflow-hidden">
       <div className="px-6 py-4 border-b border-surface-200/50 flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-surface-900">Rank Context</h2>
-          <p className="text-sm text-surface-500 mt-0.5">Configure rank before/after for the review</p>
+          <h2 className="text-lg font-semibold text-surface-900">
+            Rank Context
+          </h2>
+          <p className="text-sm text-surface-500 mt-0.5">
+            Configure rank before/after for the review
+          </p>
         </div>
         <label className="flex items-center gap-2 cursor-pointer">
           <input
@@ -326,10 +378,14 @@ export function RankConfigPanel({ config, onChange }: RankConfigPanelProps) {
         </label>
       </div>
 
-      <div className={`p-4 space-y-4 ${!config.enabled ? "opacity-50 pointer-events-none" : ""}`}>
+      <div
+        className={`p-4 space-y-4 ${!config.enabled ? "opacity-50 pointer-events-none" : ""}`}
+      >
         {/* Quick presets */}
         <div>
-          <span className="text-xs font-medium text-surface-600 uppercase tracking-wide mb-2 block">Quick Presets</span>
+          <span className="text-xs font-medium text-surface-600 uppercase tracking-wide mb-2 block">
+            Quick Presets
+          </span>
           <div className="flex flex-wrap gap-2">
             <PresetButton
               label="Promotion"
@@ -387,7 +443,11 @@ export function RankConfigPanel({ config, onChange }: RankConfigPanelProps) {
         </div>
 
         {/* Status indicator */}
-        <div className={`text-center py-2 px-4 rounded-lg text-sm font-medium ${statusClass}`}>{statusText}</div>
+        <div
+          className={`text-center py-2 px-4 rounded-lg text-sm font-medium ${statusClass}`}
+        >
+          {statusText}
+        </div>
       </div>
     </div>
   );

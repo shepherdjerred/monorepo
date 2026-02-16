@@ -1,6 +1,9 @@
 import type { Client } from "discord.js";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { getAbandonedGuilds, markGuildAsNotified } from "@scout-for-lol/backend/database/guild-permission-errors.ts";
+import {
+  getAbandonedGuilds,
+  markGuildAsNotified,
+} from "@scout-for-lol/backend/database/guild-permission-errors.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import * as Sentry from "@sentry/bun";
 import {
@@ -40,7 +43,9 @@ export async function checkAbandonedGuilds(client: Client): Promise<void> {
       return;
     }
 
-    logger.info(`[AbandonedGuilds] Found ${abandonedGuilds.length.toString()} potentially abandoned guild(s)`);
+    logger.info(
+      `[AbandonedGuilds] Found ${abandonedGuilds.length.toString()} potentially abandoned guild(s)`,
+    );
 
     // Record metric for detected abandoned guilds
     abandonedGuildsDetectedTotal.inc(abandonedGuilds.length);
@@ -49,16 +54,29 @@ export async function checkAbandonedGuilds(client: Client): Promise<void> {
       try {
         await handleAbandonedGuild(client, guildInfo);
       } catch (error) {
-        logger.error(`[AbandonedGuilds] Error handling abandoned guild ${guildInfo.serverId}:`, getErrorMessage(error));
-        Sentry.captureException(error, { tags: { source: "handle-abandoned-guild", serverId: guildInfo.serverId } });
+        logger.error(
+          `[AbandonedGuilds] Error handling abandoned guild ${guildInfo.serverId}:`,
+          getErrorMessage(error),
+        );
+        Sentry.captureException(error, {
+          tags: {
+            source: "handle-abandoned-guild",
+            serverId: guildInfo.serverId,
+          },
+        });
         // Continue with other guilds even if one fails
       }
     }
 
     logger.info("[AbandonedGuilds] Abandoned guild check complete");
   } catch (error) {
-    logger.error("[AbandonedGuilds] Error during abandoned guild check:", getErrorMessage(error));
-    Sentry.captureException(error, { tags: { source: "check-abandoned-guilds" } });
+    logger.error(
+      "[AbandonedGuilds] Error during abandoned guild check:",
+      getErrorMessage(error),
+    );
+    Sentry.captureException(error, {
+      tags: { source: "check-abandoned-guilds" },
+    });
     throw error;
   }
 }
@@ -68,7 +86,12 @@ export async function checkAbandonedGuilds(client: Client): Promise<void> {
  */
 async function handleAbandonedGuild(
   client: Client,
-  guildInfo: { serverId: DiscordGuildId; firstOccurrence: Date; lastOccurrence: Date; errorCount: number },
+  guildInfo: {
+    serverId: DiscordGuildId;
+    firstOccurrence: Date;
+    lastOccurrence: Date;
+    errorCount: number;
+  },
 ): Promise<void> {
   const { serverId, firstOccurrence, errorCount } = guildInfo;
 
@@ -100,7 +123,10 @@ async function handleAbandonedGuild(
     // Record metric for leaving guild
     guildsLeftTotal.inc({ reason: "abandoned" });
   } catch (error) {
-    logger.error(`[AbandonedGuilds] Failed to leave guild ${serverId}:`, getErrorMessage(error));
+    logger.error(
+      `[AbandonedGuilds] Failed to leave guild ${serverId}:`,
+      getErrorMessage(error),
+    );
 
     // Record failed leave attempt
     guildsLeftTotal.inc({ reason: "failed" });
@@ -114,21 +140,30 @@ async function handleAbandonedGuild(
   // Clean up database records for this guild
   await cleanupGuildData(serverId);
 
-  logger.info(`[AbandonedGuilds] ✅ Completed processing for guild ${guild.name} (${serverId})`);
+  logger.info(
+    `[AbandonedGuilds] ✅ Completed processing for guild ${guild.name} (${serverId})`,
+  );
 }
 
 /**
  * Notify server owner that bot is leaving due to persistent permission errors
  */
 async function notifyOwnerOfAbandonment(
-  guild: { id: string; name: string; fetchOwner: () => Promise<{ send: (message: string) => Promise<unknown> }> },
+  guild: {
+    id: string;
+    name: string;
+    fetchOwner: () => Promise<{ send: (message: string) => Promise<unknown> }>;
+  },
   firstErrorDate: Date,
   errorCount: number,
 ): Promise<void> {
   try {
     const owner = await guild.fetchOwner();
 
-    const daysSinceFirstError = differenceInCalendarDays(new Date(), firstErrorDate);
+    const daysSinceFirstError = differenceInCalendarDays(
+      new Date(),
+      firstErrorDate,
+    );
 
     const message = `👋 **Scout for LoL - Server Departure Notice**
 
@@ -161,7 +196,9 @@ Thank you for using Scout for LoL! Feel free to reach out if you have any questi
 *This is an automated message. Replies to this DM won't be monitored.*`;
 
     await owner.send(message);
-    logger.info(`[AbandonedGuilds] ✅ Notified owner of guild ${guild.id} about departure`);
+    logger.info(
+      `[AbandonedGuilds] ✅ Notified owner of guild ${guild.id} about departure`,
+    );
 
     // Record successful notification
     abandonmentNotificationsTotal.inc({ status: "success" });
@@ -169,10 +206,15 @@ Thank you for using Scout for LoL! Feel free to reach out if you have any questi
     // DM failures are expected (user may have DMs disabled)
     const errorMsg = getErrorMessage(error);
     if (errorMsg.includes("Cannot send messages to this user")) {
-      logger.info(`[AbandonedGuilds] Owner of guild ${guild.id} has DMs disabled - cannot notify`);
+      logger.info(
+        `[AbandonedGuilds] Owner of guild ${guild.id} has DMs disabled - cannot notify`,
+      );
       abandonmentNotificationsTotal.inc({ status: "dm_disabled" });
     } else {
-      logger.warn(`[AbandonedGuilds] Failed to notify owner of guild ${guild.id}:`, errorMsg);
+      logger.warn(
+        `[AbandonedGuilds] Failed to notify owner of guild ${guild.id}:`,
+        errorMsg,
+      );
       abandonmentNotificationsTotal.inc({ status: "failed" });
     }
     // Don't throw - we should still leave the guild even if we can't notify
@@ -191,14 +233,21 @@ async function cleanupGuildData(serverId: DiscordGuildId): Promise<void> {
     const deletedSubs = await prisma.subscription.deleteMany({
       where: { serverId },
     });
-    logger.info(`[AbandonedGuilds] Deleted ${deletedSubs.count.toString()} subscriptions`);
-    guildDataCleanupTotal.inc({ data_type: "subscriptions", status: "success" });
+    logger.info(
+      `[AbandonedGuilds] Deleted ${deletedSubs.count.toString()} subscriptions`,
+    );
+    guildDataCleanupTotal.inc({
+      data_type: "subscriptions",
+      status: "success",
+    });
 
     // Delete server permissions
     const deletedPerms = await prisma.serverPermission.deleteMany({
       where: { serverId },
     });
-    logger.info(`[AbandonedGuilds] Deleted ${deletedPerms.count.toString()} server permissions`);
+    logger.info(
+      `[AbandonedGuilds] Deleted ${deletedPerms.count.toString()} server permissions`,
+    );
     guildDataCleanupTotal.inc({ data_type: "permissions", status: "success" });
 
     // Note: We keep Player, Account, Competition, and related data
@@ -207,7 +256,10 @@ async function cleanupGuildData(serverId: DiscordGuildId): Promise<void> {
 
     logger.info(`[AbandonedGuilds] ✅ Cleanup complete for guild ${serverId}`);
   } catch (error) {
-    logger.error(`[AbandonedGuilds] Error during cleanup for guild ${serverId}:`, getErrorMessage(error));
+    logger.error(
+      `[AbandonedGuilds] Error during cleanup for guild ${serverId}:`,
+      getErrorMessage(error),
+    );
     guildDataCleanupTotal.inc({ data_type: "all", status: "failed" });
     // Don't throw - we've already left the guild
   }

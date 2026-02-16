@@ -1,5 +1,5 @@
 import type { TServiceParams } from "@digital-alchemy/core";
-import { shouldStartCleaning, withTimeout } from "../util.ts";
+import { shouldStartCleaning, startRoombaWithVerification, withTimeout } from "../util.ts";
 import { instrumentWorkflow } from "../metrics.ts";
 
 export function runVacuumIfNotHome({ hass, scheduler, logger }: TServiceParams) {
@@ -20,8 +20,7 @@ export function runVacuumIfNotHome({ hass, scheduler, logger }: TServiceParams) 
             logger.info("Run Vacuum if Not Home automation triggered");
 
             logger.debug("Checking conditions for vacuum execution");
-            if (isEveryoneAway()) {
-              if (shouldStartCleaning(roomba.state)) {
+            if (isEveryoneAway() && shouldStartCleaning(roomba.state)) {
                 logger.debug("Conditions met; starting Roomba");
 
                 await hass.call.notify.notify({
@@ -30,8 +29,8 @@ export function runVacuumIfNotHome({ hass, scheduler, logger }: TServiceParams) 
                 });
 
                 await roomba.start();
+                startRoombaWithVerification(hass, logger, roomba);
               }
-            }
           })(),
           { amount: 2, unit: "m" },
           "run_vacuum_if_not_home workflow",

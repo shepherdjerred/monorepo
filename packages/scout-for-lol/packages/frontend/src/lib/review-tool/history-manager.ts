@@ -41,19 +41,29 @@ const MAX_HISTORY_ENTRIES = 50;
 /**
  * Build config snapshot from validated config data
  */
-function buildConfigSnapshot(configData: z.infer<typeof ConfigSnapshotSchema>): HistoryEntry["configSnapshot"] {
+function buildConfigSnapshot(
+  configData: z.infer<typeof ConfigSnapshotSchema>,
+): HistoryEntry["configSnapshot"] {
   return {
     ...(configData.model !== undefined ? { model: configData.model } : {}),
-    ...(configData.personality !== undefined ? { personality: configData.personality } : {}),
-    ...(configData.imageDescription !== undefined ? { imageDescription: configData.imageDescription } : {}),
+    ...(configData.personality !== undefined
+      ? { personality: configData.personality }
+      : {}),
+    ...(configData.imageDescription !== undefined
+      ? { imageDescription: configData.imageDescription }
+      : {}),
   };
 }
 
 /**
  * Build generation result from validated result data
  */
-function buildGenerationResult(resultData: z.infer<typeof GenerationResultSchema>): GenerationResult {
-  const metadataValidation = GenerationMetadataSchema.safeParse(resultData.metadata);
+function buildGenerationResult(
+  resultData: z.infer<typeof GenerationResultSchema>,
+): GenerationResult {
+  const metadataValidation = GenerationMetadataSchema.safeParse(
+    resultData.metadata,
+  );
   const metadata = metadataValidation.success
     ? metadataValidation.data
     : {
@@ -137,7 +147,9 @@ async function migrateFromLocalStorage(): Promise<void> {
       result: z.unknown(),
       configSnapshot: z.unknown(),
       status: z.enum(["pending", "complete", "error"]),
-      rating: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
+      rating: z
+        .union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)])
+        .optional(),
       notes: z.string().optional(),
     });
 
@@ -146,7 +158,11 @@ async function migrateFromLocalStorage(): Promise<void> {
       return;
     }
 
-    console.log("[History] Migrating", arrayResult.data.length.toString(), "entries from localStorage to IndexedDB");
+    console.log(
+      "[History] Migrating",
+      arrayResult.data.length.toString(),
+      "entries from localStorage to IndexedDB",
+    );
 
     // Save each entry to IndexedDB
     for (const entry of arrayResult.data) {
@@ -199,7 +215,11 @@ export async function loadHistory(): Promise<HistoryEntry[]> {
 export function createPendingEntry(): string {
   try {
     const id = `gen-${Date.now().toString()}-${Math.random().toString(36).slice(2, 9)}`;
-    console.log("[History] Created pending entry ID:", id, "(not persisted yet)");
+    console.log(
+      "[History] Created pending entry ID:",
+      id,
+      "(not persisted yet)",
+    );
     return id;
   } catch {
     return "";
@@ -272,7 +292,11 @@ export async function clearHistory(): Promise<void> {
 /**
  * Update rating for a history entry
  */
-export async function updateHistoryRating(id: string, rating: 1 | 2 | 3 | 4, notes?: string): Promise<void> {
+export async function updateHistoryRating(
+  id: string,
+  rating: 1 | 2 | 3 | 4,
+  notes?: string,
+): Promise<void> {
   try {
     const entry = await db.getEntry(id);
     if (!entry) {

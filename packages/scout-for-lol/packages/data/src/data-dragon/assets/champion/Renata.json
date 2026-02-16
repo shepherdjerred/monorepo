@@ -118,7 +118,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -167,7 +179,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -190,7 +214,12 @@
           "description": "Renata sends out a pair of chemtech missiles, shielding allies and damaging and slowing enemies hit.",
           "tooltip": "Renata sends out a pair of chemtech missiles, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slowing</status> surrounding enemies and enemies hit by 30% for {{ slowduration }} seconds. Allies hit gain <shield>{{ shieldcalc }} Shield</shield> for {{ shieldduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "Shield Amount", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "Shield Amount",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -217,7 +246,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -241,7 +282,10 @@
           "tooltip": "Renata sends out a wave of chemicals, <status>Berserking</status> enemies for {{ berserkduration }} seconds, causing them to Attack the nearest unit, prioritizing their allies.<br /><br />While <status>Berserk</status>, enemies gain <attackSpeed>{{ bonusattackspeed*100 }}% Attack Speed</attackSpeed>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Duration"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ berserkduration }} -> {{ berserkdurationNL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ berserkduration }} -> {{ berserkdurationNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [150, 130, 110],
@@ -262,7 +306,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

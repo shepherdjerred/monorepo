@@ -40,8 +40,9 @@ export function jsonSchemaToTypeScript(schema: JSONSchemaProperty): string {
   }
 
   // Handle basic types
-  if (StringSchema.safeParse(schema.type).success) {
-    switch (schema.type) {
+  const stringTypeCheck = StringSchema.safeParse(schema.type);
+  if (stringTypeCheck.success) {
+    switch (stringTypeCheck.data) {
       case "string":
         return "string";
       case "number":
@@ -65,7 +66,7 @@ export function jsonSchemaToTypeScript(schema: JSONSchemaProperty): string {
   if (arrayTypeCheck.success) {
     return arrayTypeCheck.data
       .map((t: unknown) => {
-        if (!StringSchema.safeParse(t).success) return "unknown";
+        if (!StringSchema.safeParse(t).success) {return "unknown";}
         const typeStr = String(t);
         switch (typeStr) {
           case "string":
@@ -119,7 +120,7 @@ export function inferTypeFromValue(value: unknown): string | null {
   const stringCheck = StringSchema.safeParse(value);
   if (stringCheck.success) {
     const trimmed = stringCheck.data.trim();
-    if (trimmed !== "" && !isNaN(Number(trimmed)) && isFinite(Number(trimmed))) {
+    if (trimmed !== "" && !Number.isNaN(Number(trimmed)) && Number.isFinite(Number(trimmed))) {
       return "number";
     }
   }
@@ -153,7 +154,7 @@ export function typesAreCompatible(inferredType: string, schemaType: string): bo
 
   // Check if the inferred type is part of a union in the schema
   // For example: schemaType might be "number | \"default\"" and inferredType is "string"
-  const schemaTypes = schemaType.split("|").map((t) => t.trim().replace(/^["']|["']$/g, ""));
+  const schemaTypes = schemaType.split("|").map((t) => t.trim().replaceAll(/^["']|["']$/g, ""));
 
   // If schema is a union, check if inferred type is compatible with any part
   if (schemaTypes.length > 1) {
@@ -246,7 +247,7 @@ function convertValueToProperty(
     if (inferredType && !typesAreCompatible(inferredType, schemaType)) {
       const propName = propertyName ? `'${propertyName}': ` : "";
       console.warn(
-        `  ⚠️  Type mismatch for ${propName}Schema says '${schemaType}' but value suggests '${inferredType}' (value: ${String(value).substring(0, 50)})`,
+        `  ⚠️  Type mismatch for ${propName}Schema says '${schemaType}' but value suggests '${inferredType}' (value: ${String(value).slice(0, 50)})`,
       );
     }
 
@@ -260,7 +261,7 @@ function convertValueToProperty(
         description = yamlComment;
       }
     }
-    const defaultValue = schema.default !== undefined ? schema.default : value;
+    const defaultValue = schema.default === undefined ? value : schema.default;
 
     // If schema defines it as an object with properties, recurse
     const helmValueCheckForProps = HelmValueSchema.safeParse(value);
@@ -336,7 +337,7 @@ function convertValueToProperty(
 
     // If all elements have the same type, use that
     if (elementTypes.size === 1) {
-      const elementType = Array.from(elementTypes)[0];
+      const elementType = [...elementTypes][0];
       const elementProp = elementTypeProps[0];
       if (elementType && elementProp) {
         // For object array elements, we need to create a proper interface for the array element
@@ -363,7 +364,7 @@ function convertValueToProperty(
     }
 
     // If mixed types, use union type for common cases
-    const types = Array.from(elementTypes).sort();
+    const types = [...elementTypes].sort();
     if (types.length <= 3 && types.every((t) => ["string", "number", "boolean"].includes(t))) {
       return {
         type: `(${types.join(" | ")})[]`,
@@ -418,7 +419,7 @@ function convertValueToProperty(
   if (stringCheckForNumber.success) {
     const trimmed = stringCheckForNumber.data.trim();
     // Don't treat empty strings or purely whitespace as numbers
-    if (trimmed !== "" && !isNaN(Number(trimmed)) && isFinite(Number(trimmed))) {
+    if (trimmed !== "" && !Number.isNaN(Number(trimmed)) && Number.isFinite(Number(trimmed))) {
       return { type: "number", optional: true, description: yamlComment, default: value };
     }
   }

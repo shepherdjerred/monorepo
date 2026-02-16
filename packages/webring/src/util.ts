@@ -16,8 +16,11 @@ export async function asyncMap<T, U>(input: T[], fn: (x: T) => Promise<U>): Prom
 }
 
 export function filterUndefined<T>(input: (T | undefined)[]): T[] {
-  return R.pipe(
-    input,
-    R.filter((result) => result !== undefined),
-  ) as T[];
+  const result: T[] = [];
+  for (const item of input) {
+    if (item !== undefined) {
+      result.push(item);
+    }
+  }
+  return result;
 }

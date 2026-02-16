@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
-import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import type { ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
 import { pruneOrphanedPlayers } from "@scout-for-lol/backend/league/tasks/cleanup/prune-players.ts";
-import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  testGuildId,
+  testAccountId,
+  testChannelId,
+  testPuuid,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
 import { CompetitionIdSchema, type CompetitionId } from "@scout-for-lol/data";
 import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.ts";
 
@@ -10,7 +15,7 @@ import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database
 /**
  * Create test competition
  */
-async function createTestCompetition(prisma: PrismaClient, now: Date) {
+async function createTestCompetition(prisma: ExtendedPrismaClient, now: Date) {
   return prisma.competition.create({
     data: {
       serverId: testGuildId("1000000001"),
@@ -31,7 +36,11 @@ async function createTestCompetition(prisma: PrismaClient, now: Date) {
 /**
  * Create test player with subscription
  */
-async function createPlayerWithSubscription(prisma: PrismaClient, alias: string, now: Date) {
+async function createPlayerWithSubscription(
+  prisma: ExtendedPrismaClient,
+  alias: string,
+  now: Date,
+) {
   return prisma.player.create({
     data: {
       alias,
@@ -56,7 +65,7 @@ async function createPlayerWithSubscription(prisma: PrismaClient, alias: string,
  * Create test player with competition participation
  */
 async function createPlayerWithCompetition(options: {
-  prisma: PrismaClient;
+  prisma: ExtendedPrismaClient;
   alias: string;
   competitionId: CompetitionId;
   status: "JOINED" | "LEFT" | "INVITED";
@@ -76,7 +85,9 @@ async function createPlayerWithCompetition(options: {
           status,
           ...(status === "JOINED" ? { joinedAt: now } : {}),
           ...(status === "LEFT" ? { leftAt: now } : {}),
-          ...(status === "INVITED" ? { invitedBy: testAccountId("2000000000000"), invitedAt: now } : {}),
+          ...(status === "INVITED"
+            ? { invitedBy: testAccountId("2000000000000"), invitedAt: now }
+            : {}),
         },
       },
     },
@@ -86,7 +97,11 @@ async function createPlayerWithCompetition(options: {
 /**
  * Setup test database
  */
-function setupTestDatabase(): { prisma: PrismaClient; testDir: string; testDbPath: string } {
+function setupTestDatabase(): {
+  prisma: ExtendedPrismaClient;
+  testDir: string;
+  testDbPath: string;
+} {
   // Use the test database utility
   const { prisma, dbPath: testDbPath } = createTestDatabase(
     `prune-players-test-${Date.now().toString()}-${Math.random().toString(36).slice(2)}`,
@@ -97,7 +112,7 @@ function setupTestDatabase(): { prisma: PrismaClient; testDir: string; testDbPat
 }
 
 describe.serial("pruneOrphanedPlayers", () => {
-  let prisma: PrismaClient;
+  let prisma: ExtendedPrismaClient;
   let testDir: string;
 
   beforeEach(async () => {

@@ -1,9 +1,22 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { createCompetition, getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.ts";
+import {
+  createCompetition,
+  getCompetitionById,
+} from "@scout-for-lol/backend/database/competition/queries.ts";
 import type { CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.ts";
-import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.ts";
-import { type DiscordAccountId, type DiscordGuildId } from "@scout-for-lol/data";
-import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.ts";
+import {
+  testGuildId,
+  testAccountId,
+  testChannelId,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  type DiscordAccountId,
+  type DiscordGuildId,
+} from "@scout-for-lol/data";
+import {
+  createTestDatabase,
+  deleteIfExists,
+} from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a test database for integration tests
 const { prisma } = createTestDatabase("competition-cancel-test");
@@ -224,7 +237,10 @@ describe("Status with cancellation", () => {
         ? "CANCELLED"
         : competition.startDate && now < competition.startDate
           ? "PENDING"
-          : competition.startDate && competition.endDate && now >= competition.startDate && now <= competition.endDate
+          : competition.startDate &&
+              competition.endDate &&
+              now >= competition.startDate &&
+              now <= competition.endDate
             ? "ACTIVE"
             : "ENDED";
 
@@ -273,7 +289,10 @@ describe("Status with cancellation", () => {
         ? "CANCELLED"
         : before.startDate && now < before.startDate
           ? "PENDING"
-          : before.startDate && before.endDate && now >= before.startDate && now <= before.endDate
+          : before.startDate &&
+              before.endDate &&
+              now >= before.startDate &&
+              now <= before.endDate
             ? "ACTIVE"
             : "ENDED";
       expect(statusBefore).toBe("ACTIVE");
@@ -294,7 +313,10 @@ describe("Status with cancellation", () => {
         ? "CANCELLED"
         : after.startDate && now < after.startDate
           ? "PENDING"
-          : after.startDate && after.endDate && now >= after.startDate && now <= after.endDate
+          : after.startDate &&
+              after.endDate &&
+              now >= after.startDate &&
+              now <= after.endDate
             ? "ACTIVE"
             : "ENDED";
       expect(statusAfter).toBe("CANCELLED");

@@ -1,35 +1,35 @@
 import * as R from "remeda";
-import { fetchAllCached as fetchAllCached } from "./cache.js";
+import { fetchAllCached } from "./cache.js";
 import { fetchAll as fetchAllUncached } from "./fetch.js";
 import { type Configuration, type Result, CachedConfigurationSchema } from "./types.js";
 
 export async function run(config: Configuration): Promise<Result> {
   const { success, data } = CachedConfigurationSchema.safeParse(config);
 
-  let result: Result;
+  let fetched: Result;
   if (success) {
-    console.log(`Using cache at ${data.cache.cache_file}.`);
-    result = await fetchAllCached(data);
+    console.warn(`Using cache at ${data.cache.cache_file}.`);
+    fetched = await fetchAllCached(data);
   } else {
-    console.log("Cache disabled.");
-    result = await fetchAllUncached(config);
+    console.warn("Cache disabled.");
+    fetched = await fetchAllUncached(config);
   }
 
   let results = R.pipe(
-    result,
-    R.sortBy((result) => result.date.getTime()),
+    fetched,
+    R.sortBy((entry) => entry.date.getTime()),
     R.reverse(),
-    R.filter((result) => {
-      if (result.source.filter && result.preview) {
-        return result.source.filter(result.preview);
-      } else {
+    R.filter((entry) => {
+      const filterFn = entry.source.filter;
+      if (filterFn === undefined || entry.preview === undefined || entry.preview === "") {
         return true;
       }
+      return filterFn(entry.preview);
     }),
   );
 
   // shuffle if wanted
-  if (config.shuffle) {
+  if (config.shuffle === true) {
     results = R.shuffle(results);
   }
 
@@ -38,5 +38,3 @@ export async function run(config: Configuration): Promise<Result> {
 
   return results;
 }
-
-export * from "./types.js";

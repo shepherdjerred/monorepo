@@ -16,7 +16,15 @@ export function renderChangelogToHtml(content: ReactNode): string {
   return renderToStaticMarkup(content);
 }
 
-type ColorScheme = "yellow" | "indigo" | "blue" | "purple" | "green" | "red" | "pink" | "teal";
+type ColorScheme =
+  | "yellow"
+  | "indigo"
+  | "blue"
+  | "purple"
+  | "green"
+  | "red"
+  | "pink"
+  | "teal";
 
 type ChangelogSectionProps = {
   title: string;
@@ -93,19 +101,35 @@ const colorClasses: Record<
   },
 };
 
-function ChangelogSection({ title, color, items, className = "" }: ChangelogSectionProps) {
+function ChangelogSection({
+  title,
+  color,
+  items,
+  className = "",
+}: ChangelogSectionProps) {
   const colors = colorClasses[color];
 
   return (
-    <section className={`border-l-4 ${colors.border} ${colors.bg} rounded-r-lg p-4 ${className}`}>
-      <h3 className={`text-lg font-bold ${colors.titleText} mb-3 flex items-center gap-2`}>
-        <span className={`inline-block w-2 h-2 ${colors.dot} rounded-full`}></span>
+    <section
+      className={`border-l-4 ${colors.border} ${colors.bg} rounded-r-lg p-4 ${className}`}
+    >
+      <h3
+        className={`text-lg font-bold ${colors.titleText} mb-3 flex items-center gap-2`}
+      >
+        <span
+          className={`inline-block w-2 h-2 ${colors.dot} rounded-full`}
+        ></span>
         {title}
       </h3>
       <ul className="space-y-2 list-none pl-4">
         {items.map((item, index) => (
-          <li key={index} className="text-gray-700 dark:text-gray-300 flex items-start gap-3">
-            <span className={`${colors.arrow} font-bold text-lg leading-none`}>→</span>
+          <li
+            key={index}
+            className="text-gray-700 dark:text-gray-300 flex items-start gap-3"
+          >
+            <span className={`${colors.arrow} font-bold text-lg leading-none`}>
+              →
+            </span>
             <span>{item}</span>
           </li>
         ))}
@@ -144,7 +168,10 @@ export const changelog: ChangelogEntry[] = [
         <ChangelogSection
           title="Bug Fixes"
           color="green"
-          items={["Improved reliability and stability", "Various performance improvements"]}
+          items={[
+            "Improved reliability and stability",
+            "Various performance improvements",
+          ]}
           className="mt-6"
         />
       </>
@@ -181,7 +208,8 @@ export const changelog: ChangelogEntry[] = [
     date: "2025 11 23",
     banner: (
       <>
-        <strong>Clash indicator</strong> and <strong>promotions/demotions</strong> on match reports
+        <strong>Clash indicator</strong> and{" "}
+        <strong>promotions/demotions</strong> on match reports
       </>
     ),
     text: (
@@ -206,7 +234,8 @@ export const changelog: ChangelogEntry[] = [
     date: "2025 11 16",
     banner: (
       <>
-        <strong>Arena reports</strong> with augment icons, <strong>subscription limits</strong> increased, and more!
+        <strong>Arena reports</strong> with augment icons,{" "}
+        <strong>subscription limits</strong> increased, and more!
       </>
     ),
     text: (
@@ -214,7 +243,11 @@ export const changelog: ChangelogEntry[] = [
         <ChangelogSection
           title="Arena Reports"
           color="indigo"
-          items={["Add augment icons", "Reorganize report image layout", "Add team KDA"]}
+          items={[
+            "Add augment icons",
+            "Reorganize report image layout",
+            "Add team KDA",
+          ]}
           className="mb-6"
         />
         <ChangelogSection
@@ -227,7 +260,11 @@ export const changelog: ChangelogEntry[] = [
           ]}
           className="mb-6"
         />
-        <ChangelogSection title="Site" color="purple" items={["Add changelog and What's New page"]} />
+        <ChangelogSection
+          title="Site"
+          color="purple"
+          items={["Add changelog and What's New page"]}
+        />
       </>
     ),
     formatted: {

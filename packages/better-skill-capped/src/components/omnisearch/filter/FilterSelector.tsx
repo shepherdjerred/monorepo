@@ -1,13 +1,13 @@
 import React from "react";
 import RoleSelector from "./RoleSelector";
-import { Filters } from "./Filters";
-import { Role } from "../../../model/Role";
+import type { Filters } from "./Filters";
+import type { Role } from "@shepherdjerred/better-skill-capped/model/Role";
 import WatchStatusSelector from "./WatchStatusSelector";
 import BookmarkStatusSelector from "./BookmarkStatusSelector";
 import TypeSelector from "./TypeSelector";
-import Type from "../../../model/Type";
+import type Type from "@shepherdjerred/better-skill-capped/model/Type";
 
-export interface FilterSelectorProps {
+export type FilterSelectorProps = {
   filters: Filters;
   onFiltersUpdate: (newFilters: Filters) => void;
 }

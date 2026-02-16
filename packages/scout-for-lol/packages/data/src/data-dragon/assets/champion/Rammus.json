@@ -165,7 +165,19 @@
             [0, 0, 0, 0, 0],
             [1000, 1000, 1000, 1000, 1000]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "1000"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "1000"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -188,7 +200,12 @@
           "description": "Rammus goes into a defensive formation, vastly increasing his Armor and Magic Resistance, and returning damage to enemies that attack him.",
           "tooltip": "Rammus enters a defensive formation for {{ buffduration }} seconds, gaining <scaleArmor>{{ bonusarmortooltip }} Armor</scaleArmor> and <scaleMR>{{ bonusmrtooltip }} Magic Resist</scaleMR> and dealing <magicDamage>{{ returndamagecalc }} magic damage</magicDamage> to enemies that Attack him.<br /><br /><recast>Recast</recast>: Rammus ends this Ability early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Armor Bonus", "Magic Resist Bonus", "Percent Armor Bonus", "Percent Magic Resist Bonus"],
+            "label": [
+              "Armor Bonus",
+              "Magic Resist Bonus",
+              "Percent Armor Bonus",
+              "Percent Magic Resist Bonus"
+            ],
             "effect": [
               "{{ flatbonusarmor }} -> {{ flatbonusarmorNL }}",
               "{{ flatbonusmr }} -> {{ flatbonusmrNL }}",
@@ -215,7 +232,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -239,7 +268,10 @@
           "tooltip": "Rammus <status>Taunts</status> an enemy champion or monster for {{ duration }} seconds. Monsters are dealt <magicDamage>{{ monsterdamagecalc }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Duration", "Monster Damage"],
-            "effect": ["{{ duration }} -> {{ durationNL }}", "{{ monsterdamage }} -> {{ monsterdamageNL }}"]
+            "effect": [
+              "{{ duration }} -> {{ durationNL }}",
+              "{{ monsterdamage }} -> {{ monsterdamageNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [12, 12, 12, 12, 12],
@@ -260,7 +292,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -309,7 +353,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

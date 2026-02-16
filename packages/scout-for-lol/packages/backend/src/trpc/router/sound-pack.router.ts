@@ -6,7 +6,10 @@
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { router, protectedProcedure } from "@scout-for-lol/backend/trpc/trpc.ts";
+import {
+  router,
+  protectedProcedure,
+} from "@scout-for-lol/backend/trpc/trpc.ts";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import {
@@ -20,7 +23,10 @@ import {
   type SoundRule,
   type SoundPackId,
 } from "@scout-for-lol/data";
-import { selectSoundForEvent, type EventContext } from "@scout-for-lol/backend/sound-engine/index.ts";
+import {
+  selectSoundForEvent,
+  type EventContext,
+} from "@scout-for-lol/backend/sound-engine/index.ts";
 
 const logger = createLogger("soundpack-router");
 
@@ -95,62 +101,68 @@ export const soundPackRouter = router({
   /**
    * Get a single sound pack by ID
    */
-  get: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ input, ctx }) => {
-    // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation
-    const soundPackId = input.id as SoundPackId;
-    const pack = await prisma.soundPack.findFirst({
-      where: {
-        id: soundPackId,
-        OR: [{ userId: ctx.user.discordId }, { isPublic: true }],
-      },
-    });
-
-    if (!pack) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Sound pack not found",
+  get: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input, ctx }) => {
+      // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation
+      const soundPackId = input.id as SoundPackId;
+      const pack = await prisma.soundPack.findFirst({
+        where: {
+          id: soundPackId,
+          OR: [{ userId: ctx.user.discordId }, { isPublic: true }],
+        },
       });
-    }
 
-    return parseSoundPackFromDb(pack);
-  }),
+      if (!pack) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Sound pack not found",
+        });
+      }
+
+      return parseSoundPackFromDb(pack);
+    }),
 
   /**
    * Create a new sound pack
    */
-  create: protectedProcedure.input(SoundPackInputSchema).mutation(async ({ input, ctx }) => {
-    // Check for duplicate name
-    const existing = await prisma.soundPack.findFirst({
-      where: {
-        userId: ctx.user.discordId,
-        name: input.name,
-      },
-    });
-
-    if (existing) {
-      throw new TRPCError({
-        code: "CONFLICT",
-        message: "A sound pack with this name already exists",
+  create: protectedProcedure
+    .input(SoundPackInputSchema)
+    .mutation(async ({ input, ctx }) => {
+      // Check for duplicate name
+      const existing = await prisma.soundPack.findFirst({
+        where: {
+          userId: ctx.user.discordId,
+          name: input.name,
+        },
       });
-    }
 
-    const pack = await prisma.soundPack.create({
-      data: {
-        userId: ctx.user.discordId,
-        name: input.name,
-        version: input.version,
-        description: input.description ?? null,
-        isPublic: input.isPublic,
-        settings: JSON.stringify(input.settings),
-        defaults: JSON.stringify(input.defaults),
-        rules: JSON.stringify(input.rules),
-      },
-    });
+      if (existing) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "A sound pack with this name already exists",
+        });
+      }
 
-    logger.info(`Sound pack created: ${pack.name} by user ${ctx.user.discordUsername}`);
+      const pack = await prisma.soundPack.create({
+        data: {
+          userId: ctx.user.discordId,
+          name: input.name,
+          version: input.version,
+          description: input.description ?? null,
+          isPublic: input.isPublic,
+          settings: JSON.stringify(input.settings),
+          defaults: JSON.stringify(input.defaults),
+          rules: JSON.stringify(input.rules),
+        },
+      });
 
-    return parseSoundPackFromDb(pack);
-  }),
+      logger.info(
+        `Sound pack created: ${pack.name} by user ${ctx.user.discordUsername}`,
+      );
+
+      return parseSoundPackFromDb(pack);
+    }),
 
   /**
    * Update a sound pack
@@ -175,11 +187,20 @@ export const soundPackRouter = router({
       if (!existing) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Sound pack not found or you don't have permission to edit it",
+          message:
+            "Sound pack not found or you don't have permission to edit it",
         });
       }
 
-      const { name, version, description, isPublic, settings, defaults, rules } = input.data;
+      const {
+        name,
+        version,
+        description,
+        isPublic,
+        settings,
+        defaults,
+        rules,
+      } = input.data;
       const updateData: Record<string, unknown> = {};
       if (name !== undefined) {
         updateData["name"] = name;
@@ -216,31 +237,34 @@ export const soundPackRouter = router({
   /**
    * Delete a sound pack
    */
-  delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input, ctx }) => {
-    // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation
-    const soundPackId = input.id as SoundPackId;
-    const existing = await prisma.soundPack.findFirst({
-      where: {
-        id: soundPackId,
-        userId: ctx.user.discordId,
-      },
-    });
-
-    if (!existing) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Sound pack not found or you don't have permission to delete it",
+  delete: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation
+      const soundPackId = input.id as SoundPackId;
+      const existing = await prisma.soundPack.findFirst({
+        where: {
+          id: soundPackId,
+          userId: ctx.user.discordId,
+        },
       });
-    }
 
-    await prisma.soundPack.delete({
-      where: { id: soundPackId },
-    });
+      if (!existing) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message:
+            "Sound pack not found or you don't have permission to delete it",
+        });
+      }
 
-    logger.info(`Sound pack deleted: ${existing.name}`);
+      await prisma.soundPack.delete({
+        where: { id: soundPackId },
+      });
 
-    return { success: true };
-  }),
+      logger.info(`Sound pack deleted: ${existing.name}`);
+
+      return { success: true };
+    }),
 
   /**
    * Test rule evaluation for an event context
@@ -250,16 +274,38 @@ export const soundPackRouter = router({
       z.object({
         soundPackId: z.number(),
         context: z.object({
-          eventType: z.enum(["gameStart", "gameEnd", "firstBlood", "kill", "multiKill", "objective", "ace"]),
+          eventType: z.enum([
+            "gameStart",
+            "gameEnd",
+            "firstBlood",
+            "kill",
+            "multiKill",
+            "objective",
+            "ace",
+          ]),
           killerName: z.string().optional(),
           victimName: z.string().optional(),
           killerChampion: z.string().optional(),
           victimChampion: z.string().optional(),
           killerIsLocal: z.boolean().default(false),
           victimIsLocal: z.boolean().default(false),
-          multikillType: z.enum(["double", "triple", "quadra", "penta"]).optional(),
-          objectiveType: z.enum(["tower", "inhibitor", "dragon", "baron", "herald"]).optional(),
-          dragonType: z.enum(["infernal", "mountain", "ocean", "cloud", "hextech", "chemtech", "elder"]).optional(),
+          multikillType: z
+            .enum(["double", "triple", "quadra", "penta"])
+            .optional(),
+          objectiveType: z
+            .enum(["tower", "inhibitor", "dragon", "baron", "herald"])
+            .optional(),
+          dragonType: z
+            .enum([
+              "infernal",
+              "mountain",
+              "ocean",
+              "cloud",
+              "hextech",
+              "chemtech",
+              "elder",
+            ])
+            .optional(),
           isStolen: z.boolean().default(false),
           isAllyTeam: z.boolean().default(true),
           gameResult: z.enum(["victory", "defeat"]).optional(),
@@ -302,57 +348,63 @@ export const soundPackRouter = router({
   /**
    * Import a sound pack from JSON
    */
-  import: protectedProcedure.input(SoundPackSchema).mutation(async ({ input, ctx }) => {
-    // Generate a unique name if needed
-    let name = input.name;
-    let suffix = 1;
+  import: protectedProcedure
+    .input(SoundPackSchema)
+    .mutation(async ({ input, ctx }) => {
+      // Generate a unique name if needed
+      let name = input.name;
+      let suffix = 1;
 
-    while (
-      await prisma.soundPack.findFirst({
-        where: { userId: ctx.user.discordId, name },
-      })
-    ) {
-      name = `${input.name} (${String(suffix++)})`;
-    }
+      while (
+        await prisma.soundPack.findFirst({
+          where: { userId: ctx.user.discordId, name },
+        })
+      ) {
+        name = `${input.name} (${String(suffix++)})`;
+      }
 
-    const pack = await prisma.soundPack.create({
-      data: {
-        userId: ctx.user.discordId,
-        name,
-        version: input.version,
-        description: input.description ?? null,
-        isPublic: false,
-        settings: JSON.stringify(input.settings),
-        defaults: JSON.stringify(input.defaults),
-        rules: JSON.stringify(input.rules),
-      },
-    });
+      const pack = await prisma.soundPack.create({
+        data: {
+          userId: ctx.user.discordId,
+          name,
+          version: input.version,
+          description: input.description ?? null,
+          isPublic: false,
+          settings: JSON.stringify(input.settings),
+          defaults: JSON.stringify(input.defaults),
+          rules: JSON.stringify(input.rules),
+        },
+      });
 
-    logger.info(`Sound pack imported: ${pack.name} by user ${ctx.user.discordUsername}`);
+      logger.info(
+        `Sound pack imported: ${pack.name} by user ${ctx.user.discordUsername}`,
+      );
 
-    return parseSoundPackFromDb(pack);
-  }),
+      return parseSoundPackFromDb(pack);
+    }),
 
   /**
    * Export a sound pack as JSON
    */
-  export: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ input, ctx }) => {
-    // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation
-    const soundPackId = input.id as SoundPackId;
-    const pack = await prisma.soundPack.findFirst({
-      where: {
-        id: soundPackId,
-        OR: [{ userId: ctx.user.discordId }, { isPublic: true }],
-      },
-    });
-
-    if (!pack) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Sound pack not found",
+  export: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input, ctx }) => {
+      // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation
+      const soundPackId = input.id as SoundPackId;
+      const pack = await prisma.soundPack.findFirst({
+        where: {
+          id: soundPackId,
+          OR: [{ userId: ctx.user.discordId }, { isPublic: true }],
+        },
       });
-    }
 
-    return parseSoundPackFromDb(pack);
-  }),
+      if (!pack) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Sound pack not found",
+        });
+      }
+
+      return parseSoundPackFromDb(pack);
+    }),
 });

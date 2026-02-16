@@ -1,9 +1,20 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { createCompetition } from "@scout-for-lol/backend/database/competition/queries.ts";
 import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.ts";
-import { type DiscordGuildId, type DiscordAccountId, DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.ts";
-import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.ts";
+import {
+  type DiscordGuildId,
+  type DiscordAccountId,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
+import {
+  testGuildId,
+  testAccountId,
+  testChannelId,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  createTestDatabase,
+  deleteIfExists,
+} from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a test database
 const { prisma } = createTestDatabase("add-all-members-test");
@@ -25,7 +36,11 @@ afterAll(async () => {
 // Helper Functions
 // ============================================================================
 
-async function createCompetitionWithPlayers(serverId: DiscordGuildId, ownerId: DiscordAccountId, playerCount: number) {
+async function createCompetitionWithPlayers(
+  serverId: DiscordGuildId,
+  ownerId: DiscordAccountId,
+  playerCount: number,
+) {
   const now = new Date();
   const startDate = new Date(now.getTime() + 1000 * 60 * 60); // 1 hour from now
   const endDate = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 7); // 7 days from now
@@ -78,17 +93,28 @@ describe("Add all members to competition", () => {
   test("successfully adds all server players to competition", async () => {
     const serverId = testGuildId("12300");
     const ownerId = testAccountId("0");
-    const { competition, players } = await createCompetitionWithPlayers(serverId, ownerId, 5);
+    const { competition, players } = await createCompetitionWithPlayers(
+      serverId,
+      ownerId,
+      5,
+    );
 
     // Simulate the bulk add operation from the command
     const addResults = await Promise.allSettled(
       players.map((player) =>
-        addParticipant({ prisma, competitionId: competition.id, playerId: player.id, status: "JOINED" }),
+        addParticipant({
+          prisma,
+          competitionId: competition.id,
+          playerId: player.id,
+          status: "JOINED",
+        }),
       ),
     );
 
     // All should succeed
-    expect(addResults.every((result) => result.status === "fulfilled")).toBe(true);
+    expect(addResults.every((result) => result.status === "fulfilled")).toBe(
+      true,
+    );
     expect(addResults.length).toBe(5);
 
     // Verify all participants were added
@@ -106,15 +132,29 @@ describe("Add all members to competition", () => {
   test("handles partial failures when some players already joined", async () => {
     const serverId = testGuildId("45600");
     const ownerId = testAccountId("0");
-    const { competition, players } = await createCompetitionWithPlayers(serverId, ownerId, 3);
+    const { competition, players } = await createCompetitionWithPlayers(
+      serverId,
+      ownerId,
+      3,
+    );
 
     // Player A already joined manually
-    await addParticipant({ prisma, competitionId: competition.id, playerId: players[0]!.id, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competition.id,
+      playerId: players[0]!.id,
+      status: "JOINED",
+    });
 
     // Try to add all players (should fail for Player A)
     const addResults = await Promise.allSettled(
       players.map((player) =>
-        addParticipant({ prisma, competitionId: competition.id, playerId: player.id, status: "JOINED" }),
+        addParticipant({
+          prisma,
+          competitionId: competition.id,
+          playerId: player.id,
+          status: "JOINED",
+        }),
       ),
     );
 
@@ -124,7 +164,9 @@ describe("Add all members to competition", () => {
     expect(addResults[1]?.status).toBe("fulfilled");
     expect(addResults[2]?.status).toBe("fulfilled");
 
-    const successCount = addResults.filter((r) => r.status === "fulfilled").length;
+    const successCount = addResults.filter(
+      (r) => r.status === "fulfilled",
+    ).length;
     expect(successCount).toBe(2);
 
     // Verify final state: all 3 players are in the competition
@@ -140,7 +182,11 @@ describe("Add all members to competition", () => {
   test("adds all players when using Promise.allSettled (concurrent)", async () => {
     const serverId = testGuildId("78900");
     const ownerId = testAccountId("0");
-    const { competition, players } = await createCompetitionWithPlayers(serverId, ownerId, 5);
+    const { competition, players } = await createCompetitionWithPlayers(
+      serverId,
+      ownerId,
+      5,
+    );
 
     // Try to add all players concurrently
     // Note: Due to race condition, concurrent adds may exceed the limit
@@ -148,13 +194,20 @@ describe("Add all members to competition", () => {
     // all writes happen, multiple may have passed the check
     const addResults = await Promise.allSettled(
       players.map((player) =>
-        addParticipant({ prisma, competitionId: competition.id, playerId: player.id, status: "JOINED" }),
+        addParticipant({
+          prisma,
+          competitionId: competition.id,
+          playerId: player.id,
+          status: "JOINED",
+        }),
       ),
     );
 
     // With concurrent operations, all may succeed due to race condition
     // This is acceptable for the "add all members" use case - the admin wants everyone added
-    const successCount = addResults.filter((r) => r.status === "fulfilled").length;
+    const successCount = addResults.filter(
+      (r) => r.status === "fulfilled",
+    ).length;
 
     // At least some should succeed
     expect(successCount).toBeGreaterThan(0);
@@ -209,7 +262,12 @@ describe("Add all members to competition", () => {
     // Try to add all players (empty array)
     const addResults = await Promise.allSettled(
       players.map((player) =>
-        addParticipant({ prisma, competitionId: competition.id, playerId: player.id, status: "JOINED" }),
+        addParticipant({
+          prisma,
+          competitionId: competition.id,
+          playerId: player.id,
+          status: "JOINED",
+        }),
       ),
     );
 

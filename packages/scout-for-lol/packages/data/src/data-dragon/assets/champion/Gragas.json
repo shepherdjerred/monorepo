@@ -158,7 +158,11 @@
           "tooltip": "Gragas rolls a cask that explodes after {{ e4 }} seconds, dealing between <magicDamage>{{ mindamage }} magic damage</magicDamage> and <magicDamage>{{ maxdamage }} magic damage</magicDamage> and <status>Slowing</status> for between {{ e2 }} and {{ effect2amount*1.5 }}% for {{ e3 }} seconds. The damage and <status>Slow</status> increase with time the cask spent before exploding. <br /><br />Gragas can <recast>Recast</recast> to detonate the cask early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Slow", "Cooldown"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ e2 }} -> {{ e2NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ e2 }} -> {{ e2NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [10, 9, 8, 7, 6],
@@ -179,7 +183,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "80/120/160/200/240", "40/45/50/55/60", "2", "4", "2", "150", "70", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "80/120/160/200/240",
+            "40/45/50/55/60",
+            "2",
+            "4",
+            "2",
+            "150",
+            "70",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -227,7 +243,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -251,7 +279,10 @@
           "tooltip": "Gragas charges forward, colliding with the first enemy, <status>Knocking Up</status> nearby enemies for {{ stunduration }} second and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to them.<br /><br />This Ability's Cooldown is reduced by {{ cooldownrefund*100 }}% if Gragas collides with an enemy.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [14, 13.5, 13, 12.5, 12],
@@ -272,7 +303,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "1", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "1",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -296,7 +339,10 @@
           "tooltip": "Gragas hurls his cask, dealing <magicDamage>{{ damagedone }} magic damage</magicDamage> and <status>Knocking Away</status> enemies from the impact zone.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [100, 85, 70],
@@ -317,7 +363,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

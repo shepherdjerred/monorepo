@@ -5,10 +5,8 @@ import {
   ParticipantStatusSchema,
   type PlayerId,
 } from "@scout-for-lol/data";
-import {
-  type CompetitionParticipant,
-  type PrismaClient,
-} from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import type { CompetitionParticipant } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import type { ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
 import { isCompetitionActive } from "@scout-for-lol/backend/database/competition/validation.ts";
 import { match } from "ts-pattern";
 
@@ -29,7 +27,7 @@ import { match } from "ts-pattern";
  * @throws If competition not found, participant limit reached, or duplicate participant
  */
 export async function addParticipant(options: {
-  prisma: PrismaClient;
+  prisma: ExtendedPrismaClient;
   competitionId: CompetitionId;
   playerId: PlayerId;
   status: ParticipantStatus;
@@ -49,7 +47,11 @@ export async function addParticipant(options: {
 
   // Check if competition is active (not cancelled, not ended)
   // Season-based competitions now have endDate populated from the season
-  const active = isCompetitionActive(competition.isCancelled, competition.endDate, now);
+  const active = isCompetitionActive(
+    competition.isCancelled,
+    competition.endDate,
+    now,
+  );
 
   if (!active) {
     throw new Error("Cannot join an inactive competition");
@@ -64,7 +66,9 @@ export async function addParticipant(options: {
   });
 
   if (activeParticipantCount >= competition.maxParticipants) {
-    throw new Error(`Competition has reached maximum participants (${competition.maxParticipants.toString()})`);
+    throw new Error(
+      `Competition has reached maximum participants (${competition.maxParticipants.toString()})`,
+    );
   }
 
   // Check if participant already exists
@@ -84,7 +88,9 @@ export async function addParticipant(options: {
     }
 
     // If they're already joined or invited, this is a duplicate
-    throw new Error(`Player ${playerId.toString()} is already a participant with status ${existing.status}`);
+    throw new Error(
+      `Player ${playerId.toString()} is already a participant with status ${existing.status}`,
+    );
   }
 
   // Create the participant
@@ -115,7 +121,7 @@ export async function addParticipant(options: {
  * @throws If participant not found or not in INVITED status
  */
 export async function acceptInvitation(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   competitionId: number,
   playerId: number,
 ): Promise<CompetitionParticipant> {
@@ -133,7 +139,9 @@ export async function acceptInvitation(
   }
 
   if (participant.status !== "INVITED") {
-    throw new Error(`Cannot accept invitation - current status is ${participant.status}`);
+    throw new Error(
+      `Cannot accept invitation - current status is ${participant.status}`,
+    );
   }
 
   return await prisma.competitionParticipant.update({
@@ -164,7 +172,7 @@ export async function acceptInvitation(
  * @throws If participant not found or already left
  */
 export async function removeParticipant(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   competitionId: number,
   playerId: number,
 ): Promise<CompetitionParticipant> {
@@ -215,7 +223,7 @@ export async function removeParticipant(
  * @returns Array of participants
  */
 export async function getParticipants(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   competitionId: CompetitionId,
   statusFilter?: ParticipantStatus,
   includePlayer = false,
@@ -241,7 +249,7 @@ export async function getParticipants(
  * @returns Participant status or null if not a participant
  */
 export async function getParticipantStatus(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   competitionId: number,
   playerId: number,
 ): Promise<ParticipantStatus | null> {
@@ -264,7 +272,9 @@ export async function getParticipantStatus(
   // Validate status with Zod schema
   const statusResult = ParticipantStatusSchema.safeParse(participant.status);
   if (!statusResult.success) {
-    throw new Error(`Invalid participant status in database: ${participant.status}`);
+    throw new Error(
+      `Invalid participant status in database: ${participant.status}`,
+    );
   }
 
   return statusResult.data;
@@ -288,7 +298,7 @@ export async function getParticipantStatus(
  * @returns Object with canJoin boolean and optional reason string
  */
 export async function canJoinCompetition(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   competitionId: CompetitionId,
   playerId: PlayerId,
 ): Promise<{ canJoin: boolean; reason?: string }> {
@@ -304,7 +314,11 @@ export async function canJoinCompetition(
   // Check if competition is active
   // Season-based competitions now have endDate populated from the season
   const now = new Date();
-  const active = isCompetitionActive(competition.isCancelled, competition.endDate, now);
+  const active = isCompetitionActive(
+    competition.isCancelled,
+    competition.endDate,
+    now,
+  );
 
   if (!active) {
     if (competition.isCancelled) {
@@ -326,8 +340,14 @@ export async function canJoinCompetition(
   if (existingParticipant) {
     return match(existingParticipant.status)
       .with("JOINED", () => ({ canJoin: false, reason: "Already joined" }))
-      .with("INVITED", () => ({ canJoin: false, reason: "Already invited (use accept instead)" }))
-      .with("LEFT", () => ({ canJoin: false, reason: "Cannot rejoin after leaving" }))
+      .with("INVITED", () => ({
+        canJoin: false,
+        reason: "Already invited (use accept instead)",
+      }))
+      .with("LEFT", () => ({
+        canJoin: false,
+        reason: "Cannot rejoin after leaving",
+      }))
       .exhaustive();
   }
 

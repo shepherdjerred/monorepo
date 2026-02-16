@@ -4,7 +4,12 @@
  * Provides users with helpful resources and command overview
  */
 
-import { type ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder, Colors } from "discord.js";
+import {
+  type ChatInputCommandInteraction,
+  SlashCommandBuilder,
+  EmbedBuilder,
+  Colors,
+} from "discord.js";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("commands-help");
@@ -13,7 +18,9 @@ export const helpCommand = new SlashCommandBuilder()
   .setName("help")
   .setDescription("Get help and view available commands");
 
-export async function executeHelp(interaction: ChatInputCommandInteraction): Promise<void> {
+export async function executeHelp(
+  interaction: ChatInputCommandInteraction,
+): Promise<void> {
   logger.info("❓ Executing help command");
 
   const embed = new EmbedBuilder()

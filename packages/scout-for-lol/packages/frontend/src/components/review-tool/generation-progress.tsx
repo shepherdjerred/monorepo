@@ -49,15 +49,23 @@ function PipelinePillProgress({
   );
 }
 
-export function GenerationProgress({ progress, elapsedMs }: GenerationProgressProps) {
-  const { step, message, currentStage, totalStages, chunkIndex, chunkTotal } = progress;
+export function GenerationProgress({
+  progress,
+  elapsedMs,
+}: GenerationProgressProps) {
+  const { step, message, currentStage, totalStages, chunkIndex, chunkTotal } =
+    progress;
 
   const elapsedSeconds = Math.floor(elapsedMs / 1000);
   const isComplete = step === "complete";
 
   // Build display message with chunk info if applicable
   let displayMessage = message;
-  if (chunkIndex !== undefined && chunkTotal !== undefined && step === "timeline-chunk") {
+  if (
+    chunkIndex !== undefined &&
+    chunkTotal !== undefined &&
+    step === "timeline-chunk"
+  ) {
     displayMessage = `Processing timeline (${chunkIndex.toString()}/${chunkTotal.toString()})...`;
   }
 
@@ -75,7 +83,14 @@ export function GenerationProgress({ progress, elapsedMs }: GenerationProgressPr
                   fill="none"
                   viewBox="0 0 24 24"
                 >
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
                   <path
                     className="opacity-75"
                     fill="currentColor"
@@ -86,7 +101,11 @@ export function GenerationProgress({ progress, elapsedMs }: GenerationProgressPr
             )}
             {isComplete && (
               <div className="shrink-0">
-                <svg className="h-5 w-5 text-victory-500" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  className="h-5 w-5 text-victory-500"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path
                     fillRule="evenodd"
                     d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -96,14 +115,22 @@ export function GenerationProgress({ progress, elapsedMs }: GenerationProgressPr
               </div>
             )}
             <div className="flex-1">
-              <div className="text-sm font-medium text-brand-900">{isComplete ? "Complete!" : displayMessage}</div>
+              <div className="text-sm font-medium text-brand-900">
+                {isComplete ? "Complete!" : displayMessage}
+              </div>
             </div>
           </div>
-          <div className="text-sm font-mono text-brand-700">{elapsedSeconds}s</div>
+          <div className="text-sm font-mono text-brand-700">
+            {elapsedSeconds}s
+          </div>
         </div>
 
         {/* 5-stage pill progress bar */}
-        <PipelinePillProgress currentStage={currentStage ?? 0} totalStages={totalStages ?? 5} isComplete={isComplete} />
+        <PipelinePillProgress
+          currentStage={currentStage ?? 0}
+          totalStages={totalStages ?? 5}
+          isComplete={isComplete}
+        />
       </div>
     </div>
   );

@@ -1,4 +1,8 @@
-import type { RawMatch, CompetitionQueueType, RawParticipant } from "@scout-for-lol/data";
+import type {
+  RawMatch,
+  CompetitionQueueType,
+  RawParticipant,
+} from "@scout-for-lol/data";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
@@ -17,7 +21,11 @@ type WinBasedProcessorConfig<T> = {
   queue: CompetitionQueueType;
   participantFilter?: (participantData: RawParticipant) => boolean;
   scoreFn: (wins: number, games: number) => number;
-  metadataFn: (wins: number, games: number, criteria: T) => Record<string, unknown>;
+  metadataFn: (
+    wins: number,
+    games: number,
+    criteria: T,
+  ) => Record<string, unknown>;
   criteria: T;
   minGames?: number;
 };
@@ -26,10 +34,26 @@ type WinBasedProcessorConfig<T> = {
  * Create a win-based leaderboard processor with standardized pattern
  * This reduces duplication across processor files that follow the same structure
  */
-export function createWinBasedProcessor<T>(config: WinBasedProcessorConfig<T>): LeaderboardEntry[] {
-  const { matches, participants, queue, participantFilter, scoreFn, metadataFn, criteria, minGames } = config;
+export function createWinBasedProcessor<T>(
+  config: WinBasedProcessorConfig<T>,
+): LeaderboardEntry[] {
+  const {
+    matches,
+    participants,
+    queue,
+    participantFilter,
+    scoreFn,
+    metadataFn,
+    criteria,
+    minGames,
+  } = config;
 
-  const { wins: winCounts, games: totalGames } = countWinsAndGames(matches, participants, queue, participantFilter);
+  const { wins: winCounts, games: totalGames } = countWinsAndGames(
+    matches,
+    participants,
+    queue,
+    participantFilter,
+  );
 
   return buildWinBasedLeaderboard({
     winCounts,

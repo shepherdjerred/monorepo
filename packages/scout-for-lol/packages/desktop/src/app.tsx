@@ -7,7 +7,14 @@ import { BackendSection } from "./components/sections/backend-section.tsx";
 import { MonitorSection } from "./components/sections/monitor-section.tsx";
 import { DebugPanel } from "./components/sections/debug-panel.tsx";
 import { Alert } from "./components/ui/alert.tsx";
-import type { LcuStatus, BackendStatus, Config, LogEntry, LogPaths, Section } from "./types.ts";
+import type {
+  LcuStatus,
+  BackendStatus,
+  Config,
+  LogEntry,
+  LogPaths,
+  Section,
+} from "./types.ts";
 import { getErrorMessage } from "./types.ts";
 
 export default function App() {
@@ -76,7 +83,10 @@ export default function App() {
         try {
           const paths = await invoke<LogPaths>("get_log_paths");
           setLogPaths(paths);
-          addLog("info", `Log files: ${paths.logs_dir} (logs dir), ${paths.debug_log} (debug log)`);
+          addLog(
+            "info",
+            `Log files: ${paths.logs_dir} (logs dir), ${paths.debug_log} (debug log)`,
+          );
         } catch (pathErr) {
           console.error("Failed to load log paths:", pathErr);
         }
@@ -215,17 +225,26 @@ export default function App() {
 
         addLog("info", `Gameflow phase: ${diagnostics.gameflow_phase}`);
         if (diagnostics.live_client_data_available) {
-          addLog("info", `Live Client Data API: Available (status: ${String(diagnostics.live_client_data_status)})`);
+          addLog(
+            "info",
+            `Live Client Data API: Available (status: ${String(diagnostics.live_client_data_status)})`,
+          );
         } else {
           addLog("error", `Live Client Data API: NOT AVAILABLE`);
-          addLog("error", `To enable: League Client → Settings → Game → Enable Live Client Data API`);
+          addLog(
+            "error",
+            `To enable: League Client → Settings → Game → Enable Live Client Data API`,
+          );
           addLog("error", `Then restart League Client and reconnect.`);
           if (diagnostics.error_message) {
             addLog("error", `Error: ${diagnostics.error_message}`);
           }
         }
       } catch (diagErr) {
-        addLog("warning", `Could not get diagnostics: ${getErrorMessage(diagErr)}`);
+        addLog(
+          "warning",
+          `Could not get diagnostics: ${getErrorMessage(diagErr)}`,
+        );
       }
     } catch (err) {
       const errorMsg = getErrorMessage(err);
@@ -333,7 +352,9 @@ export default function App() {
         )}
 
         {/* Section Content */}
-        <div className="flex-1 overflow-y-auto px-8 py-8">{renderSection()}</div>
+        <div className="flex-1 overflow-y-auto px-8 py-8">
+          {renderSection()}
+        </div>
       </main>
 
       {/* Debug Panel */}

@@ -22,7 +22,9 @@ const EXCEPTIONAL_GAME_THRESHOLDS = {
   stompParticipationKda: 2,
 };
 
-export type ExceptionalGameResult = { isExceptional: false } | { isExceptional: true; reason: string };
+export type ExceptionalGameResult =
+  | { isExceptional: false }
+  | { isExceptional: true; reason: string };
 
 /**
  * Calculate KDA ratio, treating 0 deaths as perfect (returns Infinity)
@@ -47,7 +49,10 @@ type ParticipantStats = {
 /**
  * Check for exceptionally good performance
  */
-function checkExceptionallyGood(stats: ParticipantStats, kda: number): ExceptionalGameResult | undefined {
+function checkExceptionallyGood(
+  stats: ParticipantStats,
+  kda: number,
+): ExceptionalGameResult | undefined {
   const { kills, deaths, assists, pentaKills, quadraKills, win } = stats;
 
   if (pentaKills > 0) {
@@ -56,10 +61,18 @@ function checkExceptionallyGood(stats: ParticipantStats, kda: number): Exception
   if (quadraKills > 0) {
     return { isExceptional: true, reason: "quadrakill" };
   }
-  if (deaths === 0 && win && kills + assists >= EXCEPTIONAL_GAME_THRESHOLDS.minParticipationForPerfectGame) {
+  if (
+    deaths === 0 &&
+    win &&
+    kills + assists >=
+      EXCEPTIONAL_GAME_THRESHOLDS.minParticipationForPerfectGame
+  ) {
     return { isExceptional: true, reason: "perfect game (0 deaths with win)" };
   }
-  if (kda >= EXCEPTIONAL_GAME_THRESHOLDS.highKda && kills >= EXCEPTIONAL_GAME_THRESHOLDS.minKillsForHighKda) {
+  if (
+    kda >= EXCEPTIONAL_GAME_THRESHOLDS.highKda &&
+    kills >= EXCEPTIONAL_GAME_THRESHOLDS.minKillsForHighKda
+  ) {
     return { isExceptional: true, reason: `high KDA (${kda.toFixed(1)})` };
   }
   return undefined;
@@ -68,13 +81,22 @@ function checkExceptionallyGood(stats: ParticipantStats, kda: number): Exception
 /**
  * Check for exceptionally bad performance
  */
-function checkExceptionallyBad(stats: ParticipantStats, kda: number): ExceptionalGameResult | undefined {
+function checkExceptionallyBad(
+  stats: ParticipantStats,
+  kda: number,
+): ExceptionalGameResult | undefined {
   const { deaths, win, gameEndedInEarlySurrender } = stats;
 
   if (deaths >= EXCEPTIONAL_GAME_THRESHOLDS.manyDeaths) {
-    return { isExceptional: true, reason: `many deaths (${deaths.toString()})` };
+    return {
+      isExceptional: true,
+      reason: `many deaths (${deaths.toString()})`,
+    };
   }
-  if (kda <= EXCEPTIONAL_GAME_THRESHOLDS.lowKda && deaths >= EXCEPTIONAL_GAME_THRESHOLDS.minDeathsForLowKda) {
+  if (
+    kda <= EXCEPTIONAL_GAME_THRESHOLDS.lowKda &&
+    deaths >= EXCEPTIONAL_GAME_THRESHOLDS.minDeathsForLowKda
+  ) {
     return { isExceptional: true, reason: `very bad KDA (${kda.toFixed(1)})` };
   }
   if (gameEndedInEarlySurrender && !win) {
@@ -121,7 +143,9 @@ export function isExceptionalGame(
   durationInSeconds: number,
 ): ExceptionalGameResult {
   // Get the tracked players' participant data from the raw match
-  const trackedPuuids = new Set(playersInMatch.map((p) => p.league.leagueAccount.puuid));
+  const trackedPuuids = new Set(
+    playersInMatch.map((p) => p.league.leagueAccount.puuid),
+  );
   const trackedParticipants = matchData.info.participants
     .filter((p) => trackedPuuids.has(p.puuid))
     .map((p) => ({
@@ -140,7 +164,11 @@ export function isExceptionalGame(
 
   // Check each tracked player for exceptional performance
   for (const participant of trackedParticipants) {
-    const kda = calculateKda(participant.kills, participant.deaths, participant.assists);
+    const kda = calculateKda(
+      participant.kills,
+      participant.deaths,
+      participant.assists,
+    );
 
     const goodResult = checkExceptionallyGood(participant, kda);
     if (goodResult) {
@@ -154,7 +182,10 @@ export function isExceptionalGame(
   }
 
   // Check game duration extremes
-  const durationResult = checkDurationExtremes(trackedParticipants, durationInSeconds);
+  const durationResult = checkDurationExtremes(
+    trackedParticipants,
+    durationInSeconds,
+  );
   if (durationResult) {
     return durationResult;
   }

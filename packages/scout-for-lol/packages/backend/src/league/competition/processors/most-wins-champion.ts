@@ -19,7 +19,8 @@ export function processMostWinsChampion(
     matches,
     participants,
     queue: criteria.queue ?? "ALL",
-    participantFilter: (participantData) => participantData.championId === criteria.championId,
+    participantFilter: (participantData) =>
+      participantData.championId === criteria.championId,
     scoreFn: (wins) => wins, // Score is just wins
     metadataFn: (wins, games, criteria) => ({
       championId: criteria.championId,

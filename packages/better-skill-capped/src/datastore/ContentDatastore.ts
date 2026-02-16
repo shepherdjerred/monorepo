@@ -1,6 +1,6 @@
-import { Content } from "../model/Content";
+import type { Content } from "@shepherdjerred/better-skill-capped/model/Content";
 
-export interface ContentDatastore {
-  set(content: Content): void;
-  get(): Content;
+export type ContentDatastore = {
+  set: (content: Content) => void;
+  get: () => Content;
 }

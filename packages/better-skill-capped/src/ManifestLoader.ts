@@ -1,6 +1,6 @@
 import { LocalStorageManifestDatastore } from "./datastore/LocalStorageManifestDatastore";
 import axios from "axios";
-import { Manifest } from "./parser/Manifest";
+import type { Manifest } from "./parser/Manifest";
 
 export class ManifestLoader {
   async load(): Promise<Manifest> {

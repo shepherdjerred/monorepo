@@ -182,7 +182,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "70/120/170/220/270", "20/25/30/35/40", "3", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "70/120/170/220/270",
+            "20/25/30/35/40",
+            "3",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -205,7 +217,13 @@
           "description": "Malphite attacks with such force that it creates a sonic boom. For the next few seconds, his attacks create aftershocks in front of him.",
           "tooltip": "<spellPassive>Passive: </spellPassive>Malphite gains <scaleArmor>{{ bonusarmorpassive*100 }}% Armor (%i:scaleArmor%{{ f1 }})</scaleArmor>. This effect is increased to <scaleArmor>{{ bonusarmorpassive*300 }}% (%i:scaleArmor%{{ f2 }})</scaleArmor> while <spellName>Granite Shield</spellName> is active.<br /><br /><spellPassive>Active: </spellPassive>Malphite's next Attack deals an additional <physicalDamage>{{ totalbonusdamage }} physical damage</physicalDamage> and creates an aftershock which deals <physicalDamage>{{ thunderclapsplash }} physical damage</physicalDamage> in their direction. His Attacks continue to create aftershocks for the next {{ thunderclapbuffduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["@AbilityResourceName@ Cost", "Armor", "Damage", "Aftershock Splash Damage", "Cooldown"],
+            "label": [
+              "@AbilityResourceName@ Cost",
+              "Armor",
+              "Damage",
+              "Aftershock Splash Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ cost }} -> {{ costNL }}",
               "{{ bonusarmorpassive*100.000000 }}% -> {{ bonusarmorpassivenl*100.000000 }}%",
@@ -233,7 +251,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -256,7 +286,11 @@
           "description": "Malphite slams the ground, sending out a shockwave that deals magic damage based on his Armor and reduces the Attack Speed of enemies for a short duration.",
           "tooltip": "Malphite slams the ground, dealing <magicDamage>{{ edamagecalc }} magic damage</magicDamage> and reducing <attackSpeed>Attack Speed by {{ asreduction }}%</attackSpeed> for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Attack Speed Reduction", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Attack Speed Reduction",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ asreduction }}% -> {{ asreductionNL }}%",
@@ -282,7 +316,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -306,7 +352,10 @@
           "tooltip": "Malphite charges with the force of a landslide, dashing Unstoppably. At the end of the dash, Malphite <status>Knocks Up</status> for {{ knockupduration }} seconds and deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Damage"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ e2 }} -> {{ e2NL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ e2 }} -> {{ e2NL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [130, 115, 100],
@@ -327,7 +376,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "1.5/1.75/2", "200/300/400", "1.5", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "1.5/1.75/2",
+            "200/300/400",
+            "1.5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

@@ -1,4 +1,5 @@
-import { Chart, Size } from "cdk8s";
+import type { Chart} from "cdk8s";
+import { Size } from "cdk8s";
 import { Deployment, DeploymentStrategy, Service, Volume } from "cdk8s-plus-31";
 import { ZfsNvmeVolume } from "../misc/zfs-nvme-volume.ts";
 import { LINUXSERVER_GID, withCommonLinuxServerProps } from "../misc/linux-server.ts";

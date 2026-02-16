@@ -205,7 +205,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -229,7 +241,10 @@
           "tooltip": "Yasuo creates a drifting wall of wind that blocks all enemy projectiles for 4 seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Width", "Cooldown"],
-            "effect": ["{{ e5 }} -> {{ e5NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ e5 }} -> {{ e5NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [25, 23, 21, 19, 17],
@@ -286,7 +301,11 @@
           "tooltip": "Yasuo dashes through a target, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Each use of this Ability grants <magicDamage>{{ bonusdamageperstack }}</magicDamage> bonus damage to subsequent uses for {{ stackduration }} seconds, stacking up to {{ maxstacks }} times.<br /><br />This Ability has a {{ e2 }} second per-target Cooldown.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Per Unit Cooldown", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ e2 }} -> {{ e2NL }}", "{{ e3 }} -> {{ e3NL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ e2 }} -> {{ e2NL }}",
+              "{{ e3 }} -> {{ e3NL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [0.5, 0.4, 0.3, 0.2, 0.1],
@@ -307,7 +326,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "10/9/8/7/6", "0.5/0.4/0.3/0.2/0.1", "0", "0", "750", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "10/9/8/7/6",
+            "0.5/0.4/0.3/0.2/0.1",
+            "0",
+            "0",
+            "750",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -331,7 +362,10 @@
           "tooltip": "Yasuo teleports to an <status>Airborne</status> enemy champion, dealing <physicalDamage>{{ damage }} physical damage</physicalDamage> and holding all nearby <status>Airborne</status> enemies up for an additional {{ rknockupduration }} second. Yasuo also gains maximum <keywordMajor>Flow</keywordMajor>, but loses all <spellName>Steel Tempest</spellName> stacks.<br /><br />Afterwards, Yasuo's critical strikes ignore <scaleArmor>{{ rpercentarmorpen }}% bonus Armor</scaleArmor> for {{ rbuffduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ rbasedamage }} -> {{ rbasedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ rbasedamage }} -> {{ rbasedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [70, 50, 30],
@@ -352,7 +386,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",

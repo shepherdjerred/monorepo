@@ -22,7 +22,8 @@ import {
  * Rejects any non-digit characters to prevent silent ID collisions
  */
 const NumericIdentifierSchema = z.string().regex(/^\d+$/, {
-  message: "Test ID identifier must contain only digits. Invalid characters will cause ID collisions.",
+  message:
+    "Test ID identifier must contain only digits. Invalid characters will cause ID collisions.",
 });
 
 /**
@@ -44,7 +45,10 @@ export function testGuildId(identifier = "0"): DiscordGuildId {
   const validatedIdentifier = NumericIdentifierSchema.parse(identifier);
   const withPrefix = `3${validatedIdentifier}`;
   // Ensure length is between 17-20, truncate or pad as needed
-  const numericId = withPrefix.length > 20 ? withPrefix.slice(0, 20) : withPrefix.padEnd(18, "0");
+  const numericId =
+    withPrefix.length > 20
+      ? withPrefix.slice(0, 20)
+      : withPrefix.padEnd(18, "0");
   return DiscordGuildIdSchema.parse(numericId);
 }
 
@@ -67,7 +71,10 @@ export function testAccountId(identifier = "0"): DiscordAccountId {
   const validatedIdentifier = NumericIdentifierSchema.parse(identifier);
   const withPrefix = `2${validatedIdentifier}`;
   // Ensure length is between 17-18, truncate or pad as needed
-  const numericId = withPrefix.length > 18 ? withPrefix.slice(0, 18) : withPrefix.padEnd(18, "0");
+  const numericId =
+    withPrefix.length > 18
+      ? withPrefix.slice(0, 18)
+      : withPrefix.padEnd(18, "0");
   return DiscordAccountIdSchema.parse(numericId);
 }
 
@@ -90,7 +97,10 @@ export function testChannelId(identifier = "0"): DiscordChannelId {
   const validatedIdentifier = NumericIdentifierSchema.parse(identifier);
   const withPrefix = `1${validatedIdentifier}`;
   // Ensure length is between 17-20, truncate or pad as needed
-  const numericId = withPrefix.length > 20 ? withPrefix.slice(0, 20) : withPrefix.padEnd(18, "0");
+  const numericId =
+    withPrefix.length > 20
+      ? withPrefix.slice(0, 20)
+      : withPrefix.padEnd(18, "0");
   return DiscordChannelIdSchema.parse(numericId);
 }
 
@@ -115,7 +125,8 @@ export function testPuuid(identifier: string): LeaguePuuid {
 
   // First half with 'x', second half with '0' to create unique patterns
   const halfPadding = Math.floor(paddingNeeded / 2);
-  const padding = "x".repeat(halfPadding) + "0".repeat(paddingNeeded - halfPadding);
+  const padding =
+    "x".repeat(halfPadding) + "0".repeat(paddingNeeded - halfPadding);
 
   return LeaguePuuidSchema.parse(base + padding);
 }

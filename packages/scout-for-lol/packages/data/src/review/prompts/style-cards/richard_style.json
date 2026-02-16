@@ -82,7 +82,15 @@
     "disliked": [],
     "team_moods": "Engages in playful banter about League, often discussing roles and champions."
   },
-  "other_games": ["Valorant", "Overwatch", "Warframe", "No Man's Sky", "Apex Legends", "Mario Party", "Fortnite"],
+  "other_games": [
+    "Valorant",
+    "Overwatch",
+    "Warframe",
+    "No Man's Sky",
+    "Apex Legends",
+    "Mario Party",
+    "Fortnite"
+  ],
   "how_to_mimic": [
     "Use casual and informal language.",
     "Incorporate emojis for emphasis and humor.",

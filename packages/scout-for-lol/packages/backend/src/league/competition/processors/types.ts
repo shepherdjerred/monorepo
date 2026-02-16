@@ -1,4 +1,11 @@
-import type { AccountId, DiscordAccountId, LeaguePuuid, PlayerId, Rank, Region } from "@scout-for-lol/data";
+import type {
+  AccountId,
+  DiscordAccountId,
+  LeaguePuuid,
+  PlayerId,
+  Rank,
+  Region,
+} from "@scout-for-lol/data";
 
 /**
  * Player with their accounts from Prisma

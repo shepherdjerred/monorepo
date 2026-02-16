@@ -9,8 +9,13 @@ export const LeaguePointsSchema = z.number().brand("League Points");
 
 export const leaguePointsPerDivision = 100;
 
-export function leaguePointsDelta(oldRank: Rank | undefined, newRank: Rank): LeaguePoints {
-  return LeaguePointsSchema.parse(rankToLeaguePoints(newRank) - rankToLeaguePoints(oldRank));
+export function leaguePointsDelta(
+  oldRank: Rank | undefined,
+  newRank: Rank,
+): LeaguePoints {
+  return LeaguePointsSchema.parse(
+    rankToLeaguePoints(newRank) - rankToLeaguePoints(oldRank),
+  );
 }
 
 export function rankToLeaguePoints(rank: Rank | undefined): LeaguePoints {
@@ -18,7 +23,8 @@ export function rankToLeaguePoints(rank: Rank | undefined): LeaguePoints {
     return LeaguePointsSchema.parse(0);
   }
 
-  const divisionLp = (numberOfDivisions - rank.division) * leaguePointsPerDivision;
+  const divisionLp =
+    (numberOfDivisions - rank.division) * leaguePointsPerDivision;
   const tierLp = tierToLeaguePoints(rank.tier);
   return LeaguePointsSchema.parse(divisionLp + tierLp + rank.lp);
 }
@@ -40,7 +46,9 @@ export function tierToOrdinal(tier: Tier): number {
 
 function tierToLeaguePoints(tier: Tier): LeaguePoints {
   const multiplier = tierToOrdinal(tier);
-  return LeaguePointsSchema.parse(multiplier * numberOfDivisions * leaguePointsPerDivision);
+  return LeaguePointsSchema.parse(
+    multiplier * numberOfDivisions * leaguePointsPerDivision,
+  );
 }
 
 export function lpDiffToString(input: number): string {

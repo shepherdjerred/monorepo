@@ -147,7 +147,9 @@
           "tooltip": "<toggle>Toggle:</toggle> Singed lays a poisonous trail that deals <magicDamage>{{ damagepersecond }} magic damage</magicDamage> per second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage"],
-            "effect": ["{{ basedamagepersecond }} -> {{ basedamagepersecondNL }}"]
+            "effect": [
+              "{{ basedamagepersecond }} -> {{ basedamagepersecondNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [0, 0, 0, 0, 0],
@@ -168,7 +170,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " Mana per Second",
           "maxammo": "-1",
@@ -217,7 +231,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -240,7 +266,13 @@
           "description": "Damages target enemy unit and flings them into the air behind Singed. If the target Singed flings lands in his Mega Adhesive, they are also rooted.",
           "tooltip": "Singed flings an enemy over his shoulder, dealing <magicDamage>{{ basedamage }} plus {{ e3 }}% max Health magic damage</magicDamage>.<br /><br />If Singed flings a target into his <spellName>Mega Adhesive</spellName>, they are <status>Rooted</status> for {{ e2 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Maximum Health Damage", "Root Duration", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Maximum Health Damage",
+              "Root Duration",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ e3 }}% -> {{ e3NL }}%",
@@ -325,7 +357,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

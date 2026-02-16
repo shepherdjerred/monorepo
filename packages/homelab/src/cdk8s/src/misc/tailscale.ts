@@ -1,9 +1,10 @@
-import { Ingress, IngressBackend, IngressProps, Service } from "cdk8s-plus-31";
+import type { IngressProps, Service } from "cdk8s-plus-31";
+import { Ingress, IngressBackend } from "cdk8s-plus-31";
 import { ApiObject } from "cdk8s";
 import { JsonPatch } from "cdk8s";
 import { Construct } from "constructs";
 import { merge } from "lodash";
-import { Chart } from "cdk8s";
+import type { Chart } from "cdk8s";
 import { KubeIngress } from "../../generated/imports/k8s.ts";
 
 type ServiceObject = {
@@ -25,7 +26,7 @@ export class TailscaleIngress extends Construct {
 
     let base: IngressProps = {
       // unsafe cast, but we know that Ingress only needs the name and port
-      // eslint-disable-next-line no-restricted-syntax -- this is unavoidable
+       
       defaultBackend: IngressBackend.fromService(props.service as Service),
       tls: [
         {

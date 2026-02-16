@@ -1,4 +1,5 @@
-import { App, Chart, Size } from "cdk8s";
+import type { App} from "cdk8s";
+import { Chart, Size } from "cdk8s";
 import { ZfsSataVolume } from "../misc/zfs-sata-volume.ts";
 import { createBazarrDeployment } from "../resources/torrents/bazarr.ts";
 import { createTautulliDeployment } from "../resources/media/tautulli.ts";

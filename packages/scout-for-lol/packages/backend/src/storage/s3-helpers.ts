@@ -14,7 +14,11 @@ const logger = createLogger("storage-s3-helpers");
  * All assets for a game are grouped under games/{date}/{matchId}/
  * This makes it easy to find all assets related to a single game.
  */
-function generateS3Key(matchId: MatchId, assetType: string, extension: string): string {
+function generateS3Key(
+  matchId: MatchId,
+  assetType: string,
+  extension: string,
+): string {
   const now = new Date();
   const dateStr = format(now, "yyyy/MM/dd");
 
@@ -38,7 +42,9 @@ type SaveToS3Config = {
 /**
  * Generic function to save content to S3
  */
-export async function saveToS3(config: SaveToS3Config): Promise<string | undefined> {
+export async function saveToS3(
+  config: SaveToS3Config,
+): Promise<string | undefined> {
   const {
     matchId,
     assetType,
@@ -55,7 +61,9 @@ export async function saveToS3(config: SaveToS3Config): Promise<string | undefin
   const bucket = configuration.s3BucketName;
 
   if (!bucket) {
-    logger.warn(`[S3Storage] ⚠️  S3_BUCKET_NAME not configured, skipping ${errorContext} save for match: ${matchId}`);
+    logger.warn(
+      `[S3Storage] ⚠️  S3_BUCKET_NAME not configured, skipping ${errorContext} save for match: ${matchId}`,
+    );
     return undefined;
   }
 
@@ -101,13 +109,20 @@ export async function saveToS3(config: SaveToS3Config): Promise<string | undefin
 
     const uploadTime = Date.now() - startTime;
     const s3Url = `s3://${bucket}/${key}`;
-    logger.info(`[S3Storage] ✅ Successfully saved ${errorContext} ${matchId} to S3 in ${uploadTime.toString()}ms`);
+    logger.info(
+      `[S3Storage] ✅ Successfully saved ${errorContext} ${matchId} to S3 in ${uploadTime.toString()}ms`,
+    );
     logger.info(`[S3Storage] 🔗 S3 location: ${s3Url}`);
 
     return returnUrl ? s3Url : undefined;
   } catch (error) {
-    logger.error(`[S3Storage] ❌ Failed to save ${errorContext} ${matchId} to S3:`, error);
-    throw new Error(`Failed to save ${errorContext} ${matchId} to S3: ${getErrorMessage(error)}`);
+    logger.error(
+      `[S3Storage] ❌ Failed to save ${errorContext} ${matchId} to S3:`,
+      error,
+    );
+    throw new Error(
+      `Failed to save ${errorContext} ${matchId} to S3: ${getErrorMessage(error)}`,
+    );
   }
 }
 
@@ -115,7 +130,10 @@ export async function saveToS3(config: SaveToS3Config): Promise<string | undefin
  * Generate S3 key for failed validation payloads
  * Stored under failed-validations/{date}/{matchId}/ for easy identification
  */
-function generateFailedValidationS3Key(matchId: MatchId, assetType: string): string {
+function generateFailedValidationS3Key(
+  matchId: MatchId,
+  assetType: string,
+): string {
   const now = new Date();
   const dateStr = format(now, "yyyy/MM/dd");
   return `failed-validations/${dateStr}/${matchId}/${assetType}.json`;
@@ -132,12 +150,16 @@ type SaveFailedPayloadConfig = {
  * Save a failed validation payload to S3 for debugging
  * Stores the raw API response with metadata about the validation failure
  */
-export async function saveFailedPayloadToS3(config: SaveFailedPayloadConfig): Promise<void> {
+export async function saveFailedPayloadToS3(
+  config: SaveFailedPayloadConfig,
+): Promise<void> {
   const { matchId, assetType, rawPayload, validationError } = config;
   const bucket = configuration.s3BucketName;
 
   if (!bucket) {
-    logger.warn(`[S3Storage] ⚠️  S3_BUCKET_NAME not configured, skipping failed payload save for match: ${matchId}`);
+    logger.warn(
+      `[S3Storage] ⚠️  S3_BUCKET_NAME not configured, skipping failed payload save for match: ${matchId}`,
+    );
     return;
   }
 
@@ -174,9 +196,14 @@ export async function saveFailedPayloadToS3(config: SaveFailedPayloadConfig): Pr
     });
 
     await client.send(command);
-    logger.info(`[S3Storage] ✅ Saved failed ${assetType} payload to s3://${bucket}/${key}`);
+    logger.info(
+      `[S3Storage] ✅ Saved failed ${assetType} payload to s3://${bucket}/${key}`,
+    );
   } catch (error) {
     // Don't throw - this is a best-effort debug save
-    logger.error(`[S3Storage] ❌ Failed to save failed payload for ${matchId}:`, error);
+    logger.error(
+      `[S3Storage] ❌ Failed to save failed payload for ${matchId}:`,
+      error,
+    );
   }
 }

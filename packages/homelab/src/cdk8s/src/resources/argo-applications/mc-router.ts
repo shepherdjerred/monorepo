@@ -1,11 +1,11 @@
-import { Chart } from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
 import { Application } from "../../../generated/imports/argoproj.io.ts";
 import versions from "../../versions.ts";
 import type { HelmValuesForChart } from "../../misc/typed-helm-parameters.ts";
 
 // NodePort for mc-router to accept all Minecraft connections
-const MC_ROUTER_NODE_PORT = 30000;
+const MC_ROUTER_NODE_PORT = 30_000;
 
 export function createMcRouterApp(chart: Chart) {
   // Create namespace
@@ -19,7 +19,7 @@ export function createMcRouterApp(chart: Chart) {
     services: {
       minecraft: {
         type: "NodePort",
-        port: 25565,
+        port: 25_565,
         nodePort: MC_ROUTER_NODE_PORT,
       },
     },

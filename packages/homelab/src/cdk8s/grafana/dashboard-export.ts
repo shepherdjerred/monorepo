@@ -51,7 +51,7 @@ export function exportDashboardWithHelmEscaping(dashboard: unknown, prettyPrint 
   // The \b ensures we match word boundaries
   const templateVarRegex = /\{\{(\w+)\}\}/g;
 
-  const escapedJson = jsonString.replace(templateVarRegex, (_match, variableName: string) => {
+  const escapedJson = jsonString.replaceAll(templateVarRegex, (_match, variableName: string) => {
     // Create Helm-escaped syntax: {{ print "{{" }}variable{{ print "}}" }}
     return `{{ print "{{" }}${variableName}{{ print "}}" }}`;
   });

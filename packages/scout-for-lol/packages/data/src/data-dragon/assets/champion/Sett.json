@@ -152,7 +152,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -176,7 +188,10 @@
           "tooltip": "<spellPassive>Passive:</spellPassive> Sett stores {{ damagestored*100 }}% of damage taken as <keywordMajor>Grit</keywordMajor>, up to <keywordMajor>{{ maxgrit }}</keywordMajor>. <keywordMajor>Grit</keywordMajor> decays quickly {{ adrenalinestoragewindow }} seconds after the damage was taken.<br /><br /><spellActive>Active:</spellActive> Sett consumes all <keywordMajor>Grit</keywordMajor>, gaining a <shield>{{ shieldconversion*100 }}% Grit consumed Shield</shield> decaying over {{ shieldmaxduration }} seconds. Sett then delivers a massive punch, dealing <trueDamage>{{ damagecalc }} plus {{ damageconversion }} Grit consumed true damage</trueDamage> to enemies in the center (max <trueDamage>{{ f1 }} damage</trueDamage>). Enemies not in the center instead take <physicalDamage>physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Base Damage"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ basedamage }} -> {{ basedamageNL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [18, 16.5, 15, 13.5, 12],
@@ -197,7 +212,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -221,7 +248,10 @@
           "tooltip": "Sett smashes enemies on either side of him into each other, dealing <physicalDamage>{{ damagecalc }} physical damage</physicalDamage> and <status>Slowing</status> them by {{ slowamount*100 }}% for {{ slowduration }} seconds. If Sett grabbed at least one enemy on each side, all enemies are <status>Stunned</status> for {{ stunduration }} second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Base Damage"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ basedamage }} -> {{ basedamageNL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [16, 14.5, 13, 11.5, 10],
@@ -242,7 +272,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -291,7 +333,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",

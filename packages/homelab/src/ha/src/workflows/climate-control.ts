@@ -99,7 +99,9 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
 
     // Set office temperature only if PC isn't generating heat
     // PC generates 2-3°C of warmth in the office, making additional heating unnecessary
-    if (!isPcGeneratingHeat()) {
+    if (isPcGeneratingHeat()) {
+      logger.info(`Skipping office heating - PC is generating sufficient heat`);
+    } else {
       tasks.push(() =>
         hass.call.climate.set_temperature({
           entity_id: officeHeater.entity_id,
@@ -107,8 +109,6 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
           temperature: officeTemp,
         }),
       );
-    } else {
-      logger.info(`Skipping office heating - PC is generating sufficient heat`);
     }
 
     // TODO: Re-enable when living room thermostat is back online

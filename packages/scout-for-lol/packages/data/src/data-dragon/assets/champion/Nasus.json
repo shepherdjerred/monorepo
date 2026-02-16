@@ -153,7 +153,10 @@
           "tooltip": "Nasus' next Attack deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. Killing an enemy with this Attack permanently increases its damage by {{ basicstacks }}, increased to {{ bigstacks }} against champions, large minions and large jungle monsters.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Base Damage", "Cooldown"],
-            "effect": ["{{ bonusdamage }} -> {{ bonusdamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ bonusdamage }} -> {{ bonusdamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [7.5, 6.5, 5.5, 4.5, 3.5],
@@ -174,7 +177,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -198,7 +213,10 @@
           "tooltip": "Nasus ages a champion, <status>Slowing</status> them by {{ slowbase }}%, increasing to {{ maxslowtooltiponly }}% over {{ duration }} seconds. Their <attackSpeed>Attack Speed</attackSpeed> is also reduced by {{ attackspeedslowmult*100 }}% of the <status>Slow</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Max Slow", "Cooldown"],
-            "effect": ["{{ maxslowtooltiponly }}% -> {{ maxslowtooltiponlyNL }}%", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ maxslowtooltiponly }}% -> {{ maxslowtooltiponlyNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [15, 14, 13, 12, 11],
@@ -219,7 +237,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -242,7 +272,12 @@
           "description": "Nasus unleashes a spirit flame at a location, dealing damage and reducing the Armor of enemies who stand on it.",
           "tooltip": "Nasus ignites a spirit flame, dealing <magicDamage>{{ initialdamage }} magic damage</magicDamage>. Enemies in the area lose <scaleArmor>{{ e2 }}% Armor</scaleArmor> and take <magicDamage>{{ totaldotdamage }} magic damage</magicDamage> over {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Initial Damage", "Damage Per Second", "Armor Reduction %", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Initial Damage",
+              "Damage Per Second",
+              "Armor Reduction %",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ e4 }} -> {{ e4NL }}",
               "{{ e1 }} -> {{ e1NL }}",
@@ -304,7 +339,12 @@
           "description": "Nasus unleashes a mighty sandstorm that batters nearby enemies. While the storm rages, he gains increased Health, Attack Range, damages nearby enemies, has a reduced cooldown on Siphoning Strike, and gains bonus Armor and Magic Resistance.",
           "tooltip": "Nasus becomes empowered in the sandstorm for 15 seconds, increasing his <healing>maximum Health by {{ bonushealth }}</healing> and <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resistance</scaleMR> by {{ initialresistgain }}.<br /><br />While the storm rages, nearby enemies take <magicDamage>{{ damagecalc }} of their maximum Health as magic damage</magicDamage> each second and <spellName>Siphoning Strike</spellName> has a {{ qcdr*100 }}% reduced Cooldown.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Bonus Health", "Max Health %", "Bonus Armor and Magic Resistance", "Cooldown"],
+            "label": [
+              "Bonus Health",
+              "Max Health %",
+              "Bonus Armor and Magic Resistance",
+              "Cooldown"
+            ],
             "effect": [
               "{{ bonushealth }} -> {{ bonushealthNL }}",
               "{{ aoedamagepercent*100.000000 }}% -> {{ aoedamagepercentnl*100.000000 }}%",
@@ -331,7 +371,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

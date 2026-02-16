@@ -20,7 +20,11 @@ import { STORES, getItem, setItem } from "./storage.ts";
 /**
  * Calculate cost breakdown from generation metadata
  */
-export function calculateCost(metadata: GenerationMetadata, textModel: string, imageModel: string): CostBreakdown {
+export function calculateCost(
+  metadata: GenerationMetadata,
+  textModel: string,
+  imageModel: string,
+): CostBreakdown {
   return calculateCostShared(metadata, textModel, imageModel);
 }
 
@@ -83,7 +87,10 @@ function calculateImageCost(trace: ImageGenerationTrace): number {
 /**
  * Calculate per-stage cost breakdown from pipeline traces
  */
-export function calculatePipelineCosts(traces: PipelineTraces, _imageModel: string): PipelineCostBreakdown {
+export function calculatePipelineCosts(
+  traces: PipelineTraces,
+  _imageModel: string,
+): PipelineCostBreakdown {
   const result: PipelineCostBreakdown = {
     total: {
       textInputCost: 0,
@@ -122,7 +129,10 @@ export function calculatePipelineCosts(traces: PipelineTraces, _imageModel: stri
     result.total.imageCost = imageCost;
   }
 
-  result.total.totalCost = result.total.textInputCost + result.total.textOutputCost + result.total.imageCost;
+  result.total.totalCost =
+    result.total.textInputCost +
+    result.total.textOutputCost +
+    result.total.imageCost;
 
   return result;
 }
@@ -267,7 +277,9 @@ export class CostTracker {
     ];
 
     this.costs.forEach((cost, i) => {
-      lines.push(`  Request ${(i + 1).toString()}: ${formatCost(cost.totalCost)}`);
+      lines.push(
+        `  Request ${(i + 1).toString()}: ${formatCost(cost.totalCost)}`,
+      );
     });
 
     return lines.join("\n");

@@ -1,6 +1,12 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { grantPermission, hasPermission } from "@scout-for-lol/backend/database/competition/permissions.ts";
-import { testGuildId, testAccountId } from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  grantPermission,
+  hasPermission,
+} from "@scout-for-lol/backend/database/competition/permissions.ts";
+import {
+  testGuildId,
+  testAccountId,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
 import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a test database for integration tests
@@ -58,7 +64,12 @@ describe("Admin grants permission", () => {
     const userId = testAccountId("222222222222222222");
 
     // Before granting
-    const beforeGrant = await hasPermission(prisma, serverId, userId, "CREATE_COMPETITION");
+    const beforeGrant = await hasPermission(
+      prisma,
+      serverId,
+      userId,
+      "CREATE_COMPETITION",
+    );
     expect(beforeGrant).toBe(false);
 
     // Grant permission
@@ -70,7 +81,12 @@ describe("Admin grants permission", () => {
     });
 
     // After granting
-    const afterGrant = await hasPermission(prisma, serverId, userId, "CREATE_COMPETITION");
+    const afterGrant = await hasPermission(
+      prisma,
+      serverId,
+      userId,
+      "CREATE_COMPETITION",
+    );
     expect(afterGrant).toBe(true);
   });
 });
@@ -166,7 +182,9 @@ describe("Idempotent grants", () => {
     expect(secondGrant).not.toBeNull();
     if (secondGrant && firstGrant) {
       expect(secondGrant.grantedBy).toBe(admin2Id);
-      expect(secondGrant.grantedAt.getTime()).toBeGreaterThan(firstGrant.grantedAt.getTime());
+      expect(secondGrant.grantedAt.getTime()).toBeGreaterThan(
+        firstGrant.grantedAt.getTime(),
+      );
     }
   });
 });
@@ -225,11 +243,21 @@ describe("Server-specific permissions", () => {
     });
 
     // Check server 1 - should have permission
-    const hasOnServer1 = await hasPermission(prisma, server1Id, userId, "CREATE_COMPETITION");
+    const hasOnServer1 = await hasPermission(
+      prisma,
+      server1Id,
+      userId,
+      "CREATE_COMPETITION",
+    );
     expect(hasOnServer1).toBe(true);
 
     // Check server 2 - should NOT have permission
-    const hasOnServer2 = await hasPermission(prisma, server2Id, userId, "CREATE_COMPETITION");
+    const hasOnServer2 = await hasPermission(
+      prisma,
+      server2Id,
+      userId,
+      "CREATE_COMPETITION",
+    );
     expect(hasOnServer2).toBe(false);
   });
 
@@ -257,8 +285,18 @@ describe("Server-specific permissions", () => {
     });
 
     // Verify both permissions exist
-    const hasOnServer1 = await hasPermission(prisma, server1Id, userId, "CREATE_COMPETITION");
-    const hasOnServer2 = await hasPermission(prisma, server2Id, userId, "CREATE_COMPETITION");
+    const hasOnServer1 = await hasPermission(
+      prisma,
+      server1Id,
+      userId,
+      "CREATE_COMPETITION",
+    );
+    const hasOnServer2 = await hasPermission(
+      prisma,
+      server2Id,
+      userId,
+      "CREATE_COMPETITION",
+    );
 
     expect(hasOnServer1).toBe(true);
     expect(hasOnServer2).toBe(true);
@@ -307,9 +345,24 @@ describe("Multiple users", () => {
     });
 
     // Verify all have permission
-    const user1Has = await hasPermission(prisma, serverId, user1Id, "CREATE_COMPETITION");
-    const user2Has = await hasPermission(prisma, serverId, user2Id, "CREATE_COMPETITION");
-    const user3Has = await hasPermission(prisma, serverId, user3Id, "CREATE_COMPETITION");
+    const user1Has = await hasPermission(
+      prisma,
+      serverId,
+      user1Id,
+      "CREATE_COMPETITION",
+    );
+    const user2Has = await hasPermission(
+      prisma,
+      serverId,
+      user2Id,
+      "CREATE_COMPETITION",
+    );
+    const user3Has = await hasPermission(
+      prisma,
+      serverId,
+      user3Id,
+      "CREATE_COMPETITION",
+    );
 
     expect(user1Has).toBe(true);
     expect(user2Has).toBe(true);

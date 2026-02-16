@@ -1,4 +1,5 @@
-import { Chart, Size } from "cdk8s";
+import type { Chart} from "cdk8s";
+import { Size } from "cdk8s";
 import { Application } from "../../../generated/imports/argoproj.io.ts";
 import versions from "../../versions.ts";
 import { createIngress } from "../../misc/tailscale.ts";
@@ -264,7 +265,7 @@ export async function createPrometheusApp(chart: Chart) {
                 // Alertmanager will evaluate this Go template when sending to PagerDuty
                 // kube-prometheus-stack chart passes config values through without template processing
                 description: escapeAlertmanagerTemplate(
-                  "{{ range .Alerts }}{{ .Annotations.summary }}\\n{{ .Annotations.description }}\\n{{ end }}",
+                  String.raw`{{ range .Alerts }}{{ .Annotations.summary }}\n{{ .Annotations.description }}\n{{ end }}`,
                 ),
                 // Map alert severity label to PagerDuty severity (critical/warning/error/info)
                 // Check if GroupLabels exists first (nil during helm lint)

@@ -9,7 +9,7 @@ import { Karma } from "./karma.ts";
  * - Otherwise: log warning and skip migration (user must run manual migration)
  */
 export async function autoMigrateLegacyKarma(): Promise<void> {
-  console.log("[Migration] Checking for legacy karma records...");
+  console.warn("[Migration] Checking for legacy karma records...");
 
   // Count records that need migration
   const legacyCount = await dataSource
@@ -19,22 +19,22 @@ export async function autoMigrateLegacyKarma(): Promise<void> {
     .getCount();
 
   if (legacyCount === 0) {
-    console.log("[Migration] ✅ No legacy karma records found");
+    console.warn("[Migration] No legacy karma records found");
     return;
   }
 
-  console.log(`[Migration] Found ${legacyCount.toString()} legacy karma record(s) without a guildId`);
+  console.warn(`[Migration] Found ${legacyCount.toString()} legacy karma record(s) without a guildId`);
 
   // Determine which guild to assign legacy karma to
   const targetGuildId = "208425771172102144";
 
   // Strategy 1: Check environment variable
   const defaultGuildId = "208425771172102144";
-  console.log(`[Migration] Using default guild ID: ${defaultGuildId}`);
+  console.warn(`[Migration] Using default guild ID: ${defaultGuildId}`);
 
   // Perform the migration
   try {
-    console.log(`[Migration] Migrating ${legacyCount.toString()} legacy karma record(s) to guild ${targetGuildId}...`);
+    console.warn(`[Migration] Migrating ${legacyCount.toString()} legacy karma record(s) to guild ${targetGuildId}...`);
 
     const result = await dataSource
       .getRepository(Karma)
@@ -44,9 +44,9 @@ export async function autoMigrateLegacyKarma(): Promise<void> {
       .where("guildId IS NULL")
       .execute();
 
-    console.log(`[Migration] ✅ Successfully migrated ${String(result.affected)} karma record(s)`);
+    console.warn(`[Migration] Successfully migrated ${String(result.affected)} karma record(s)`);
   } catch (error: unknown) {
-    console.error("[Migration] ❌ Failed to migrate legacy karma:", error);
+    console.error("[Migration] Failed to migrate legacy karma:", error);
     // Don't throw - allow bot to continue starting up
   }
 }

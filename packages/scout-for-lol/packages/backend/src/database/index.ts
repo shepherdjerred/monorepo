@@ -29,6 +29,8 @@ export const prisma = basePrisma.$extends({
   },
 });
 
+export type ExtendedPrismaClient = typeof prisma;
+
 logger.info("✅ Database client initialized");
 
 export type PlayerAccountWithState = {
@@ -39,9 +41,11 @@ export type PlayerAccountWithState = {
 
 export async function getChannelsSubscribedToPlayers(
   puuids: LeaguePuuid[],
-  prismaClient: PrismaClient = prisma,
+  prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<{ channel: DiscordChannelId; serverId: string }[]> {
-  logger.info(`🔍 Fetching channels subscribed to ${puuids.length.toString()} players`);
+  logger.info(
+    `🔍 Fetching channels subscribed to ${puuids.length.toString()} players`,
+  );
   logger.info(`📋 PUUIDs: ${puuids.join(", ")}`);
 
   try {
@@ -64,14 +68,18 @@ export async function getChannelsSubscribedToPlayers(
     });
 
     const queryTime = Date.now() - startTime;
-    logger.info(`📊 Found ${accounts.length.toString()} accounts in ${queryTime.toString()}ms`);
+    logger.info(
+      `📊 Found ${accounts.length.toString()} accounts in ${queryTime.toString()}ms`,
+    );
 
     const result = uniqueBy(
       accounts.flatMap((account) =>
-        account.player.subscriptions.map((subscription): { channel: DiscordChannelId; serverId: string } => ({
-          channel: subscription.channelId,
-          serverId: subscription.serverId,
-        })),
+        account.player.subscriptions.map(
+          (subscription): { channel: DiscordChannelId; serverId: string } => ({
+            channel: subscription.channelId,
+            serverId: subscription.serverId,
+          }),
+        ),
       ),
       (server) => server.channel,
     );
@@ -80,7 +88,9 @@ export async function getChannelsSubscribedToPlayers(
     return result;
   } catch (error) {
     logger.error("❌ Error fetching subscribed channels:", error);
-    Sentry.captureException(error, { tags: { source: "db-get-subscribed-channels" } });
+    Sentry.captureException(error, {
+      tags: { source: "db-get-subscribed-channels" },
+    });
     throw error;
   }
 }
@@ -92,7 +102,9 @@ export async function getChannelsSubscribedToPlayers(
  * @param prismaClient - Prisma client instance
  * @returns Array of player accounts with their polling state
  */
-export async function getAccountsWithState(prismaClient: PrismaClient = prisma): Promise<PlayerAccountWithState[]> {
+export async function getAccountsWithState(
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<PlayerAccountWithState[]> {
   logger.info("🔍 Fetching all player accounts with state");
 
   try {
@@ -105,7 +117,9 @@ export async function getAccountsWithState(prismaClient: PrismaClient = prisma):
     });
 
     const queryTime = Date.now() - startTime;
-    logger.info(`📊 Found ${players.length.toString()} players in ${queryTime.toString()}ms`);
+    logger.info(
+      `📊 Found ${players.length.toString()} players in ${queryTime.toString()}ms`,
+    );
 
     // transform
     const result = players.flatMap((player): PlayerAccountWithState[] => {
@@ -135,12 +149,16 @@ export async function getAccountsWithState(prismaClient: PrismaClient = prisma):
       });
     });
 
-    logger.info(`📋 Returning ${result.length.toString()} player account entries with state`);
+    logger.info(
+      `📋 Returning ${result.length.toString()} player account entries with state`,
+    );
 
     return result;
   } catch (error) {
     logger.error("❌ Error fetching player accounts with state:", error);
-    Sentry.captureException(error, { tags: { source: "db-get-accounts-with-state" } });
+    Sentry.captureException(error, {
+      tags: { source: "db-get-accounts-with-state" },
+    });
     throw error;
   }
 }
@@ -156,7 +174,7 @@ export async function getAccountsWithState(prismaClient: PrismaClient = prisma):
 export async function updateLastProcessedMatch(
   puuid: LeaguePuuid,
   matchId: MatchId,
-  prismaClient: PrismaClient = prisma,
+  prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<void> {
   logger.info(`📝 Updating lastProcessedMatchId for ${puuid} to ${matchId}`);
 
@@ -176,7 +194,9 @@ export async function updateLastProcessedMatch(
     logger.info(`✅ Updated lastProcessedMatchId in ${queryTime.toString()}ms`);
   } catch (error) {
     logger.error("❌ Error updating lastProcessedMatchId:", error);
-    Sentry.captureException(error, { tags: { source: "db-update-last-processed-match", puuid } });
+    Sentry.captureException(error, {
+      tags: { source: "db-update-last-processed-match", puuid },
+    });
     throw error;
   }
 }
@@ -190,7 +210,7 @@ export async function updateLastProcessedMatch(
  */
 export async function getLastProcessedMatch(
   puuid: LeaguePuuid,
-  prismaClient: PrismaClient = prisma,
+  prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<MatchId | null> {
   try {
     const account = await prismaClient.account.findFirst({
@@ -202,10 +222,14 @@ export async function getLastProcessedMatch(
       },
     });
 
-    return account?.lastProcessedMatchId ? MatchIdSchema.parse(account.lastProcessedMatchId) : null;
+    return account?.lastProcessedMatchId
+      ? MatchIdSchema.parse(account.lastProcessedMatchId)
+      : null;
   } catch (error) {
     logger.error("❌ Error getting lastProcessedMatchId:", error);
-    Sentry.captureException(error, { tags: { source: "db-get-last-processed-match", puuid } });
+    Sentry.captureException(error, {
+      tags: { source: "db-get-last-processed-match", puuid },
+    });
     throw error;
   }
 }
@@ -221,9 +245,11 @@ export async function getLastProcessedMatch(
 export async function updateLastMatchTime(
   puuid: LeaguePuuid,
   matchTime: Date,
-  prismaClient: PrismaClient = prisma,
+  prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<void> {
-  logger.info(`📝 Updating lastMatchTime for ${puuid} to ${matchTime.toISOString()}`);
+  logger.info(
+    `📝 Updating lastMatchTime for ${puuid} to ${matchTime.toISOString()}`,
+  );
 
   try {
     await prismaClient.account.updateMany({
@@ -236,7 +262,9 @@ export async function updateLastMatchTime(
     });
   } catch (error) {
     logger.error("❌ Error updating lastMatchTime:", error);
-    Sentry.captureException(error, { tags: { source: "db-update-last-match-time", puuid } });
+    Sentry.captureException(error, {
+      tags: { source: "db-update-last-match-time", puuid },
+    });
     throw error;
   }
 }
@@ -252,9 +280,11 @@ export async function updateLastMatchTime(
 export async function updateLastCheckedAt(
   puuid: LeaguePuuid,
   checkedAt: Date,
-  prismaClient: PrismaClient = prisma,
+  prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<void> {
-  logger.info(`📝 Updating lastCheckedAt for ${puuid} to ${checkedAt.toISOString()}`);
+  logger.info(
+    `📝 Updating lastCheckedAt for ${puuid} to ${checkedAt.toISOString()}`,
+  );
 
   try {
     await prismaClient.account.updateMany({
@@ -267,7 +297,9 @@ export async function updateLastCheckedAt(
     });
   } catch (error) {
     logger.error("❌ Error updating lastCheckedAt:", error);
-    Sentry.captureException(error, { tags: { source: "db-update-last-checked-at", puuid } });
+    Sentry.captureException(error, {
+      tags: { source: "db-update-last-checked-at", puuid },
+    });
     throw error;
   }
 }

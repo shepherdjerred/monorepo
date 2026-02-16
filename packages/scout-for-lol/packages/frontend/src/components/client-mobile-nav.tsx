@@ -1,4 +1,8 @@
-import { Sheet, SheetContent, SheetTrigger } from "@scout-for-lol/frontend/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@scout-for-lol/frontend/components/ui/sheet";
 import { Button } from "@scout-for-lol/frontend/components/ui/button";
 
 type MobileNavItem = {
@@ -29,7 +33,11 @@ export function ClientMobileNav({ items, activePage, discordLink }: Props) {
             stroke="currentColor"
             className="h-6 w-6"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+            />
           </svg>
         </Button>
       </SheetTrigger>

@@ -22,27 +22,50 @@ import { getPlayer } from "@scout-for-lol/backend/league/model/player.ts";
 import type { MessageCreateOptions } from "discord.js";
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import { matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
-import { saveMatchToS3, saveImageToS3, saveSvgToS3, saveTimelineToS3 } from "@scout-for-lol/backend/storage/s3.ts";
-import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.ts";
+import {
+  saveMatchToS3,
+  saveImageToS3,
+  saveSvgToS3,
+  saveTimelineToS3,
+} from "@scout-for-lol/backend/storage/s3.ts";
+import {
+  toMatch,
+  toArenaMatch,
+} from "@scout-for-lol/backend/league/model/match.ts";
 import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.ts";
 import { match } from "ts-pattern";
 import { logErrorDetails } from "./match-report-debug.ts";
 import { fetchMatchTimeline } from "./match-data-fetcher.ts";
 import { isExceptionalGame } from "./exceptional-game.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import { saveMatchRankHistory, getLatestRankBefore } from "@scout-for-lol/backend/league/model/rank-history.ts";
+import {
+  saveMatchRankHistory,
+  getLatestRankBefore,
+} from "@scout-for-lol/backend/league/model/rank-history.ts";
 import { reportsGeneratedTotal } from "@scout-for-lol/backend/metrics/index.ts";
 
 const logger = createLogger("postmatch-match-report-generator");
 
-function captureError(error: unknown, source: string, matchId?: string, extra?: Record<string, string>): void {
-  Sentry.captureException(error, { tags: { source, ...(matchId && { matchId }), ...extra } });
+function captureError(
+  error: unknown,
+  source: string,
+  matchId?: string,
+  extra?: Record<string, string>,
+): void {
+  Sentry.captureException(error, {
+    tags: { source, ...(matchId && { matchId }), ...extra },
+  });
 }
 
 /** Format a natural language message about who finished the game */
-function formatGameCompletionMessage(playerAliases: string[], queueType: QueueType): string {
+function formatGameCompletionMessage(
+  playerAliases: string[],
+  queueType: QueueType,
+): string {
   const queueName = queueTypeToDisplayString(queueType);
-  const validAliases = z.array(z.string().min(1)).parse(playerAliases.filter((alias) => alias.trim().length > 0));
+  const validAliases = z
+    .array(z.string().min(1))
+    .parse(playerAliases.filter((alias) => alias.trim().length > 0));
 
   if (validAliases.length === 0) {
     return `Game finished: ${queueName}`;
@@ -70,17 +93,29 @@ async function createMatchImage(
   matchId: MatchId,
 ): Promise<[AttachmentBuilder, EmbedBuilder]> {
   const svgData =
-    matchToRender.queueType === "arena" ? await arenaMatchToSvg(matchToRender) : await matchToSvg(matchToRender);
+    matchToRender.queueType === "arena"
+      ? await arenaMatchToSvg(matchToRender)
+      : await matchToSvg(matchToRender);
   const svg = z.string().parse(svgData);
   const image = z.instanceof(Uint8Array).parse(await svgToPng(svg));
 
   // Save both PNG and SVG to S3 (fire and forget)
-  const queueTypeForStorage = matchToRender.queueType === "arena" ? "arena" : (matchToRender.queueType ?? "unknown");
-  const trackedPlayerAliases = matchToRender.players.map((p) => p.playerConfig.alias);
+  const queueTypeForStorage =
+    matchToRender.queueType === "arena"
+      ? "arena"
+      : (matchToRender.queueType ?? "unknown");
+  const trackedPlayerAliases = matchToRender.players.map(
+    (p) => p.playerConfig.alias,
+  );
   void (async () => {
     try {
       await Promise.all([
-        saveImageToS3(matchId, image, queueTypeForStorage, trackedPlayerAliases),
+        saveImageToS3(
+          matchId,
+          image,
+          queueTypeForStorage,
+          trackedPlayerAliases,
+        ),
         saveSvgToS3(matchId, svg, queueTypeForStorage, trackedPlayerAliases),
       ]);
     } catch (error) {
@@ -89,8 +124,12 @@ async function createMatchImage(
   })();
 
   const attachmentName = `${matchId}.png`;
-  const attachment = new AttachmentBuilder(Buffer.from(image)).setName(attachmentName);
-  const embed = new EmbedBuilder({ image: { url: `attachment://${attachmentName}` } });
+  const attachment = new AttachmentBuilder(Buffer.from(image)).setName(
+    attachmentName,
+  );
+  const embed = new EmbedBuilder({
+    image: { url: `attachment://${attachmentName}` },
+  });
   return [attachment, embed];
 }
 
@@ -98,7 +137,12 @@ async function createMatchImage(
  * Check if queue type is ranked
  */
 function isRankedQueue(queueType: QueueType | undefined): boolean {
-  return queueType === "solo" || queueType === "flex" || queueType === "clash" || queueType === "aram clash";
+  return (
+    queueType === "solo" ||
+    queueType === "flex" ||
+    queueType === "clash" ||
+    queueType === "aram clash"
+  );
 }
 
 /**
@@ -125,7 +169,10 @@ async function processArenaMatch(
 
   // Generate completion message
   const playerAliases = playersInMatch.map((p) => p.alias);
-  const completionMessage = formatGameCompletionMessage(playerAliases, arenaMatch.queueType);
+  const completionMessage = formatGameCompletionMessage(
+    playerAliases,
+    arenaMatch.queueType,
+  );
 
   return {
     content: completionMessage,
@@ -148,10 +195,15 @@ type StandardMatchContext = {
  * Check if AI reviews are enabled for any of the target guilds
  */
 function isAiReviewEnabledForAnyGuild(guildIds: DiscordGuildId[]): boolean {
-  return guildIds.some((guildId) => getFlag("ai_reviews_enabled", { server: guildId }));
+  return guildIds.some((guildId) =>
+    getFlag("ai_reviews_enabled", { server: guildId }),
+  );
 }
 
-type AiReviewResult = { text: string | undefined; image: Uint8Array | undefined };
+type AiReviewResult = {
+  text: string | undefined;
+  image: Uint8Array | undefined;
+};
 
 type AiReviewContext = {
   completedMatch: CompletedMatch;
@@ -165,8 +217,17 @@ type AiReviewContext = {
 /**
  * Generate AI review for a match if conditions are met
  */
-async function generateAiReviewIfEnabled(ctx: AiReviewContext): Promise<AiReviewResult> {
-  const { completedMatch, matchId, matchData, timelineData, playersInMatch, targetGuildIds } = ctx;
+async function generateAiReviewIfEnabled(
+  ctx: AiReviewContext,
+): Promise<AiReviewResult> {
+  const {
+    completedMatch,
+    matchId,
+    matchData,
+    timelineData,
+    playersInMatch,
+    targetGuildIds,
+  } = ctx;
   const aiReviewsEnabled = isAiReviewEnabledForAnyGuild(targetGuildIds);
   if (!aiReviewsEnabled) {
     logger.info(
@@ -179,11 +240,16 @@ async function generateAiReviewIfEnabled(ctx: AiReviewContext): Promise<AiReview
   const jerredOverride = hasJerred(playersInMatch);
 
   // Check if game is exceptional (good or bad performance)
-  const exceptionalResult = isExceptionalGame(matchData, playersInMatch, completedMatch.durationInSeconds);
+  const exceptionalResult = isExceptionalGame(
+    matchData,
+    playersInMatch,
+    completedMatch.durationInSeconds,
+  );
 
   // Only generate reviews for ranked games with exceptional performance, or Jerred override
   const isRanked = isRankedQueue(completedMatch.queueType);
-  const shouldGenerateReview = jerredOverride || (isRanked && exceptionalResult.isExceptional);
+  const shouldGenerateReview =
+    jerredOverride || (isRanked && exceptionalResult.isExceptional);
 
   if (!shouldGenerateReview) {
     const reason = !isRanked
@@ -195,15 +261,21 @@ async function generateAiReviewIfEnabled(ctx: AiReviewContext): Promise<AiReview
 
   // Log why we're generating the review
   if (jerredOverride) {
-    logger.info(`[generateMatchReport] Generating AI review - Jerred override enabled`);
+    logger.info(
+      `[generateMatchReport] Generating AI review - Jerred override enabled`,
+    );
   }
   if (exceptionalResult.isExceptional) {
-    logger.info(`[generateMatchReport] Exceptional game detected: ${exceptionalResult.reason}`);
+    logger.info(
+      `[generateMatchReport] Exceptional game detected: ${exceptionalResult.reason}`,
+    );
   }
 
   if (completedMatch.durationInSeconds < MIN_GAME_DURATION_SECONDS) {
     const durationMinutes = (completedMatch.durationInSeconds / 60).toFixed(1);
-    logger.info(`[generateMatchReport] Skipping AI review - game too short (${durationMinutes} min < 15 min)`);
+    logger.info(
+      `[generateMatchReport] Skipping AI review - game too short (${durationMinutes} min < 15 min)`,
+    );
     return { text: undefined, image: undefined };
   }
 
@@ -215,11 +287,18 @@ async function generateAiReviewIfEnabled(ctx: AiReviewContext): Promise<AiReview
   }
 
   try {
-    const review = await generateMatchReview(completedMatch, matchId, matchData, timelineData);
+    const review = await generateMatchReview(
+      completedMatch,
+      matchId,
+      matchData,
+      timelineData,
+    );
     return { text: review?.text, image: review?.image };
   } catch (error) {
     logger.error(`[generateMatchReport] Error generating AI review:`, error);
-    captureError(error, "ai-review-generation", matchId, { queueType: completedMatch.queueType ?? "unknown" });
+    captureError(error, "ai-review-generation", matchId, {
+      queueType: completedMatch.queueType ?? "unknown",
+    });
     return { text: undefined, image: undefined };
   }
 }
@@ -227,8 +306,17 @@ async function generateAiReviewIfEnabled(ctx: AiReviewContext): Promise<AiReview
 /**
  * Process standard match and generate Discord message
  */
-async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageCreateOptions> {
-  const { players, matchData, matchId, playersInMatch, timelineData, targetGuildIds } = ctx;
+async function processStandardMatch(
+  ctx: StandardMatchContext,
+): Promise<MessageCreateOptions> {
+  const {
+    players,
+    matchData,
+    matchId,
+    playersInMatch,
+    timelineData,
+    targetGuildIds,
+  } = ctx;
   logger.info(`[generateMatchReport] ⚔️  Processing as standard match`);
   // Process match for all tracked players
   if (players.length === 0) {
@@ -236,10 +324,14 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
   }
 
   const queueType = parseQueueType(matchData.info.queueId);
-  const queue = queueType === "solo" || queueType === "flex" ? queueType : undefined;
+  const queue =
+    queueType === "solo" || queueType === "flex" ? queueType : undefined;
 
   // Build rank map for each player by looking up previous rank and using current as "after"
-  const playerRanksMap = new Map<string, { before: Rank | undefined; after: Rank | undefined }>();
+  const playerRanksMap = new Map<
+    string,
+    { before: Rank | undefined; after: Rank | undefined }
+  >();
 
   if (queue) {
     await Promise.all(
@@ -248,7 +340,11 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
         const currentRank = player.ranks[queue]; // This is POST-match rank (already fetched by getPlayer)
 
         // Look up the most recent rank before this match
-        const previousRank = await getLatestRankBefore(puuid, queue, matchData.info.gameEndTimestamp);
+        const previousRank = await getLatestRankBefore(
+          puuid,
+          queue,
+          matchData.info.gameEndTimestamp,
+        );
 
         // Store this match's rank history
         await saveMatchRankHistory({
@@ -271,17 +367,21 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
   const completedMatch = toMatch(players, matchData, playerRanksMap);
 
   // Generate AI review (text and optional image) - gated by feature flag and queue type
-  const { text: reviewText, image: reviewImage } = await generateAiReviewIfEnabled({
-    completedMatch,
-    matchId,
-    matchData,
-    timelineData,
-    playersInMatch,
-    targetGuildIds,
-  });
+  const { text: reviewText, image: reviewImage } =
+    await generateAiReviewIfEnabled({
+      completedMatch,
+      matchId,
+      matchData,
+      timelineData,
+      playersInMatch,
+      targetGuildIds,
+    });
 
   // Create Discord message
-  const [matchReportAttachment, matchReportEmbed] = await createMatchImage(completedMatch, matchId);
+  const [matchReportAttachment, matchReportEmbed] = await createMatchImage(
+    completedMatch,
+    matchId,
+  );
 
   // Build files array - start with match report image
   const files = [matchReportAttachment];
@@ -289,7 +389,9 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
   // Add AI-generated image if available
   if (reviewImage) {
     const aiBuffer = Buffer.from(reviewImage);
-    const aiImageAttachment = new AttachmentBuilder(aiBuffer).setName("ai-review.png");
+    const aiImageAttachment = new AttachmentBuilder(aiBuffer).setName(
+      "ai-review.png",
+    );
     files.push(aiImageAttachment);
     logger.info(`[generateMatchReport] ✨ Added AI-generated image to message`);
   }
@@ -297,7 +399,10 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
   // Generate completion message
   const playerAliases = playersInMatch.map((p) => p.alias);
   const queueTypeForMessage = completedMatch.queueType ?? "custom";
-  const completionMessage = formatGameCompletionMessage(playerAliases, queueTypeForMessage);
+  const completionMessage = formatGameCompletionMessage(
+    playerAliases,
+    queueTypeForMessage,
+  );
 
   // Combine completion message with review text if available (always include text, even with image)
   let messageContent = completionMessage;
@@ -334,7 +439,9 @@ async function fetchTimelineIfStandardMatch(
 
   const playerRegion = firstPlayer.league.leagueAccount.region;
   try {
-    logger.info(`[generateMatchReport] 📊 Fetching timeline data for match ${matchId}`);
+    logger.info(
+      `[generateMatchReport] 📊 Fetching timeline data for match ${matchId}`,
+    );
     const timelineData = await fetchMatchTimeline(matchId, playerRegion);
     if (timelineData) {
       logger.info(
@@ -346,13 +453,19 @@ async function fetchTimelineIfStandardMatch(
         const trackedPlayerAliases = playersInMatch.map((p) => p.alias);
         await saveTimelineToS3(timelineData, trackedPlayerAliases);
       } catch (error) {
-        logger.error(`[generateMatchReport] Error saving timeline ${matchId} to S3:`, error);
+        logger.error(
+          `[generateMatchReport] Error saving timeline ${matchId} to S3:`,
+          error,
+        );
         // Continue processing even if S3 storage fails
       }
     }
     return timelineData;
   } catch (error) {
-    logger.error(`[generateMatchReport] ⚠️  Failed to fetch timeline, continuing without it:`, error);
+    logger.error(
+      `[generateMatchReport] ⚠️  Failed to fetch timeline, continuing without it:`,
+      error,
+    );
     captureError(error, "timeline-fetch-wrapper", matchId);
     return undefined;
   }
@@ -380,12 +493,16 @@ export async function generateMatchReport(
   options: GenerateMatchReportOptions,
 ): Promise<MessageCreateOptions | undefined> {
   const matchId = MatchIdSchema.parse(matchData.metadata.matchId);
-  logger.info(`[generateMatchReport] 🎮 Generating report for match ${matchId}`);
+  logger.info(
+    `[generateMatchReport] 🎮 Generating report for match ${matchId}`,
+  );
 
   try {
     // Determine which tracked players are in this match
     const playersInMatch = trackedPlayers.filter((player) =>
-      matchData.metadata.participants.includes(player.league.leagueAccount.puuid),
+      matchData.metadata.participants.includes(
+        player.league.leagueAccount.puuid,
+      ),
     );
 
     // Save match data to S3 (with tracked player aliases if any)
@@ -393,12 +510,17 @@ export async function generateMatchReport(
       const trackedPlayerAliases = playersInMatch.map((p) => p.alias);
       await saveMatchToS3(matchData, trackedPlayerAliases);
     } catch (error) {
-      logger.error(`[generateMatchReport] Error saving match ${matchId} to S3:`, error);
+      logger.error(
+        `[generateMatchReport] Error saving match ${matchId} to S3:`,
+        error,
+      );
       // Continue processing even if S3 storage fails
     }
 
     if (playersInMatch.length === 0) {
-      logger.info(`[generateMatchReport] ⚠️  No tracked players found in match ${matchId}`);
+      logger.info(
+        `[generateMatchReport] ⚠️  No tracked players found in match ${matchId}`,
+      );
       return undefined;
     }
 
@@ -407,14 +529,24 @@ export async function generateMatchReport(
     );
 
     // Get full player data with ranks
-    const players = await Promise.all(playersInMatch.map((playerConfig) => getPlayer(playerConfig)));
+    const players = await Promise.all(
+      playersInMatch.map((playerConfig) => getPlayer(playerConfig)),
+    );
 
     // Fetch timeline data for standard matches (to provide game progression context for AI reviews)
-    const timelineData = await fetchTimelineIfStandardMatch(matchData, matchId, playersInMatch);
+    const timelineData = await fetchTimelineIfStandardMatch(
+      matchData,
+      matchId,
+      playersInMatch,
+    );
 
     // Process match based on queue type
-    const result = await match<number, Promise<MessageCreateOptions>>(matchData.info.queueId)
-      .with(1700, () => processArenaMatch(players, matchData, matchId, playersInMatch))
+    const result = await match<number, Promise<MessageCreateOptions>>(
+      matchData.info.queueId,
+    )
+      .with(1700, () =>
+        processArenaMatch(players, matchData, matchId, playersInMatch),
+      )
       .otherwise(() =>
         processStandardMatch({
           players,

@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { type Champion, ChampionSchema } from "@scout-for-lol/data/model/champion";
+import {
+  type Champion,
+  ChampionSchema,
+} from "@scout-for-lol/data/model/champion";
 import { RosterSchema } from "@scout-for-lol/data/model/roster";
 import { TeamSchema } from "@scout-for-lol/data/model/team";
 import { LaneSchema } from "@scout-for-lol/data/model/lane";
@@ -44,7 +47,10 @@ export const CompletedMatchSchema = z.strictObject({
   }),
 });
 
-export function getLaneOpponent(player: Champion, opponents: Champion[]): Champion | undefined {
+export function getLaneOpponent(
+  player: Champion,
+  opponents: Champion[],
+): Champion | undefined {
   return pipe(
     opponents,
     filter((opponent) => opponent.lane === player.lane),

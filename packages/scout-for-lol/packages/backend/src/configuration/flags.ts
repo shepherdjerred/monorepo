@@ -53,7 +53,11 @@ type LimitConfig = {
   overrides: LimitOverride[];
 };
 
-export type LimitName = "player_subscriptions" | "accounts" | "competitions_per_owner" | "competitions_per_server";
+export type LimitName =
+  | "player_subscriptions"
+  | "accounts"
+  | "competitions_per_owner"
+  | "competitions_per_server";
 
 const ME = DiscordAccountIdSchema.parse("160509172704739328");
 export const MY_SERVER = DiscordGuildIdSchema.parse("1337623164146155593");
@@ -110,7 +114,10 @@ type FlagConfig = {
   overrides: FlagOverride[];
 };
 
-export type FlagName = "ai_reviews_enabled" | "common_denominator_enabled" | "debug";
+export type FlagName =
+  | "ai_reviews_enabled"
+  | "common_denominator_enabled"
+  | "debug";
 
 /**
  * Central registry for all boolean flags
@@ -155,13 +162,17 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
  * More specific matches (more attributes) get higher scores
  */
 function calculateSpecificity(attributes: FlagAttributes): number {
-  return Object.keys(attributes).filter((key) => attributes[key] !== undefined).length;
+  return Object.keys(attributes).filter((key) => attributes[key] !== undefined)
+    .length;
 }
 
 /**
  * Check if override attributes match the query attributes
  */
-function attributesMatch(overrideAttrs: FlagAttributes, queryAttrs: FlagAttributes): boolean {
+function attributesMatch(
+  overrideAttrs: FlagAttributes,
+  queryAttrs: FlagAttributes,
+): boolean {
   // All override attributes must match corresponding query attributes
   for (const [key, value] of Object.entries(overrideAttrs)) {
     if (value === undefined) {
@@ -221,7 +232,10 @@ function findBestMatch<T>(
  * }
  * ```
  */
-export function getLimit(name: LimitName, attributes: FlagAttributes = {}): number | "unlimited" {
+export function getLimit(
+  name: LimitName,
+  attributes: FlagAttributes = {},
+): number | "unlimited" {
   const config = LIMIT_REGISTRY[name];
   const override = findBestMatch(config.overrides, attributes);
   const value = override ?? config.default;
@@ -246,9 +260,15 @@ export function getLimit(name: LimitName, attributes: FlagAttributes = {}): numb
  * }
  * ```
  */
-export function getFlag(name: FlagName, attributes: FlagAttributes = {}): boolean {
+export function getFlag(
+  name: FlagName,
+  attributes: FlagAttributes = {},
+): boolean {
   const config = FLAG_REGISTRY[name];
-  const override: boolean | undefined = findBestMatch(config.overrides, attributes);
+  const override: boolean | undefined = findBestMatch(
+    config.overrides,
+    attributes,
+  );
   return override ?? config.default;
 }
 
@@ -257,7 +277,11 @@ export function getFlag(name: FlagName, attributes: FlagAttributes = {}): boolea
  *
  * Useful for dynamic overrides
  */
-export function addLimitOverride(name: LimitName, value: number | "unlimited", attributes: FlagAttributes): void {
+export function addLimitOverride(
+  name: LimitName,
+  value: number | "unlimited",
+  attributes: FlagAttributes,
+): void {
   const config = LIMIT_REGISTRY[name];
   config.overrides.push({ value, attributes });
 }
@@ -267,7 +291,11 @@ export function addLimitOverride(name: LimitName, value: number | "unlimited", a
  *
  * Useful for dynamic overrides like enabling features for specific servers
  */
-export function addFlagOverride(name: FlagName, value: boolean, attributes: FlagAttributes): void {
+export function addFlagOverride(
+  name: FlagName,
+  value: boolean,
+  attributes: FlagAttributes,
+): void {
   const config = FLAG_REGISTRY[name];
   config.overrides.push({ value, attributes });
 }

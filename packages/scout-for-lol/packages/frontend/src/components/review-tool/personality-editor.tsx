@@ -3,7 +3,10 @@
  */
 import { useState } from "react";
 import { z } from "zod";
-import type { Personality, PersonalityMetadata } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import type {
+  Personality,
+  PersonalityMetadata,
+} from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import { PersonalitySchema } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 
 const ErrorSchema = z.object({ message: z.string() });
@@ -14,9 +17,15 @@ type PersonalityEditorProps = {
   onCancel: () => void;
 };
 
-export function PersonalityEditor({ personality, onSave, onCancel }: PersonalityEditorProps) {
+export function PersonalityEditor({
+  personality,
+  onSave,
+  onCancel,
+}: PersonalityEditorProps) {
   const [name, setName] = useState(personality?.metadata.name ?? "");
-  const [instructions, setInstructions] = useState(personality?.instructions ?? "");
+  const [instructions, setInstructions] = useState(
+    personality?.instructions ?? "",
+  );
   const [styleCard, setStyleCard] = useState(personality?.styleCard ?? "");
   const [error, setError] = useState<string | null>(null);
 
@@ -53,10 +62,17 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
         </div>
 
         <div className="p-6 space-y-6">
-          {error && <div className="p-4 bg-red-50 border border-red-200 rounded text-red-800">{error}</div>}
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded text-red-800">
+              {error}
+            </div>
+          )}
 
           <div>
-            <label htmlFor="personality-name" className="block text-sm font-medium text-surface-700 mb-1">
+            <label
+              htmlFor="personality-name"
+              className="block text-sm font-medium text-surface-700 mb-1"
+            >
               Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -72,8 +88,12 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
           </div>
 
           <div>
-            <label htmlFor="personality-instructions" className="block text-sm font-medium text-surface-700 mb-1">
-              Instructions / System Prompt <span className="text-red-500">*</span>
+            <label
+              htmlFor="personality-instructions"
+              className="block text-sm font-medium text-surface-700 mb-1"
+            >
+              Instructions / System Prompt{" "}
+              <span className="text-red-500">*</span>
             </label>
             <textarea
               id="personality-instructions"
@@ -86,12 +106,16 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
               placeholder="Detailed instructions for how this reviewer should behave and write reviews..."
             />
             <p className="mt-1 text-sm text-surface-500">
-              This is the system prompt that defines how the reviewer thinks and writes.
+              This is the system prompt that defines how the reviewer thinks and
+              writes.
             </p>
           </div>
 
           <div>
-            <label htmlFor="personality-style-card" className="block text-sm font-medium text-surface-700 mb-1">
+            <label
+              htmlFor="personality-style-card"
+              className="block text-sm font-medium text-surface-700 mb-1"
+            >
               Style Card (required)
             </label>
             <textarea
@@ -105,7 +129,8 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
               placeholder="Paste the reviewer’s style card (JSON or text) here"
             />
             <p className="mt-1 text-sm text-surface-500">
-              Required. Paste the voice/style analysis used to steer this reviewer.
+              Required. Paste the voice/style analysis used to steer this
+              reviewer.
             </p>
           </div>
         </div>

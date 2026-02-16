@@ -5,11 +5,24 @@
  * Extracted from pipeline.ts to reduce file size.
  */
 
-import type { StageTrace, TimelineChunkTrace, PipelineStageName, OpenAIClient, ModelConfig } from "./pipeline-types.ts";
+import type {
+  StageTrace,
+  TimelineChunkTrace,
+  PipelineStageName,
+  OpenAIClient,
+  ModelConfig,
+} from "./pipeline-types.ts";
 import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema";
 import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema";
-import { generateTimelineSummary, generateTimelineChunkSummary, aggregateTimelineChunks } from "./timeline-stages.ts";
-import { splitTimelineIntoChunks, enrichTimelineChunk } from "./timeline-chunker.ts";
+import {
+  generateTimelineSummary,
+  generateTimelineChunkSummary,
+  aggregateTimelineChunks,
+} from "./timeline-stages.ts";
+import {
+  splitTimelineIntoChunks,
+  enrichTimelineChunk,
+} from "./timeline-chunker.ts";
 import {
   DEFAULT_TIMELINE_CHUNK_MODEL,
   DEFAULT_TIMELINE_AGGREGATE_MODEL,
@@ -41,7 +54,10 @@ export type TimelineSummaryParams = {
   model: ModelConfig;
   systemPrompt: string;
   userPrompt: string;
-  reportProgress: (stage: PipelineStageName, options?: ProgressReportOptions) => void;
+  reportProgress: (
+    stage: PipelineStageName,
+    options?: ProgressReportOptions,
+  ) => void;
 };
 
 /**
@@ -53,7 +69,16 @@ export type TimelineSummaryParams = {
 export async function runTimelineSummaryWithChunks(
   params: TimelineSummaryParams,
 ): Promise<TimelineSummaryResult | undefined> {
-  const { rawTimeline, rawMatch, laneContext, client, model, systemPrompt, userPrompt, reportProgress } = params;
+  const {
+    rawTimeline,
+    rawMatch,
+    laneContext,
+    client,
+    model,
+    systemPrompt,
+    userPrompt,
+    reportProgress,
+  } = params;
 
   // Split timeline into 10-minute chunks
   const chunks = splitTimelineIntoChunks(rawTimeline);

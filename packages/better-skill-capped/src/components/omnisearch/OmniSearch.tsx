@@ -1,13 +1,14 @@
-import { Bookmarkable } from "../../model/Bookmark";
-import { Watchable } from "../../model/WatchStatus";
+import type { Bookmarkable } from "@shepherdjerred/better-skill-capped/model/Bookmark";
+import type { Watchable } from "@shepherdjerred/better-skill-capped/model/WatchStatus";
 import React from "react";
 import Search from "./search/Search";
-import OmniSearchable, { searchableFields } from "./OmniSearchable";
+import type OmniSearchable from "./OmniSearchable";
+import { searchableFields } from "./OmniSearchable";
 import { OmniSearchResult } from "./OmniSearchResult";
-import { TipsButton } from "../TipsButton";
-import { TipsModal } from "../modal/TipsModal";
+import { TipsButton } from "@shepherdjerred/better-skill-capped/components/TipsButton";
+import { TipsModal } from "@shepherdjerred/better-skill-capped/components/modal/TipsModal";
 
-export interface OmniSearchProps {
+export type OmniSearchProps = {
   items: OmniSearchable[];
   isWatched: (item: Watchable) => boolean;
   isBookmarked: (item: Bookmarkable) => boolean;

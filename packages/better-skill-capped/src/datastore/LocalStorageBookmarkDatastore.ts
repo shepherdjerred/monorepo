@@ -1,9 +1,9 @@
-import { BookmarkDatastore } from "./BookmarkDatastore";
-import { Bookmark, Bookmarkable } from "../model/Bookmark";
-import { Content } from "../model/Content";
-import { isCommentary } from "../model/Commentary";
-import { isVideo } from "../model/Video";
-import { isCourse } from "../model/Course";
+import type { BookmarkDatastore } from "./BookmarkDatastore";
+import type { Bookmark, Bookmarkable } from "@shepherdjerred/better-skill-capped/model/Bookmark";
+import type { Content } from "@shepherdjerred/better-skill-capped/model/Content";
+import { isCommentary } from "@shepherdjerred/better-skill-capped/model/Commentary";
+import { isVideo } from "@shepherdjerred/better-skill-capped/model/Video";
+import { isCourse } from "@shepherdjerred/better-skill-capped/model/Course";
 
 const IDENTIFIER = "bookmarks";
 
@@ -22,7 +22,7 @@ export class LocalStorageBookmarkDatastore implements BookmarkDatastore {
   }
 
   get(): Bookmark[] {
-    const bookmarks: Bookmark[] = JSON.parse(window.localStorage.getItem(IDENTIFIER) ?? "[]") as Bookmark[];
+    const bookmarks: Bookmark[] = JSON.parse(globalThis.localStorage.getItem(IDENTIFIER) ?? "[]") as Bookmark[];
     const updatedBookmarks: Bookmark[] = bookmarks.flatMap((bookmark) => {
       let matchedItem: Bookmarkable | undefined;
 
@@ -62,6 +62,6 @@ export class LocalStorageBookmarkDatastore implements BookmarkDatastore {
   }
 
   private set(bookmarks: Bookmark[]) {
-    window.localStorage.setItem(IDENTIFIER, JSON.stringify(bookmarks));
+    globalThis.localStorage.setItem(IDENTIFIER, JSON.stringify(bookmarks));
   }
 }

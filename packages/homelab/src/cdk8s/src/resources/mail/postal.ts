@@ -9,7 +9,8 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
-import { Chart, Size } from "cdk8s";
+import type { Chart} from "cdk8s";
+import { Size } from "cdk8s";
 import { withCommonProps } from "../../misc/common.ts";
 import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
 import { createIngress } from "../../misc/tailscale.ts";
@@ -21,7 +22,7 @@ import type { PostalMariaDB } from "../../resources/postgres/postal-mariadb.ts";
 // Patched SMTPClient::Server to handle localhost and IP addresses
 // Bug: Postal's DNSResolver only does DNS lookups, not /etc/hosts
 // This causes localhost-based SMTP relays to fail with "No hosts to try"
-const PATCHED_SMTP_CLIENT_SERVER = `# frozen_string_literal: true
+const PATCHED_SMTP_CLIENT_SERVER = String.raw`# frozen_string_literal: true
 
 module SMTPClient
   class Server
@@ -52,7 +53,7 @@ module SMTPClient
       end
 
       # Handle IP addresses directly (IPv4 and IPv6)
-      if @hostname =~ /^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$/ || @hostname.include?(":")
+      if @hostname =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/ || @hostname.include?(":")
         ips << Endpoint.new(self, @hostname)
         return ips
       end
@@ -76,7 +77,7 @@ end
 // Patched smtp_sender.rb to fix SMTP relay bug in Postal 3.1.1
 // Bug: SMTPClient::Server.new was called with positional args instead of keyword args
 // Bug: The .map result wasn't assigned, so relays were never actually used
-const PATCHED_SMTP_SENDER = `# frozen_string_literal: true
+const PATCHED_SMTP_SENDER = String.raw`# frozen_string_literal: true
 
 class SMTPSender < BaseSender
 
@@ -126,7 +127,7 @@ class SMTPSender < BaseSender
     raw_message = message.raw_message
 
     if Postal::Config.postal.use_resent_sender_header?
-      raw_message = "Resent-Sender: #{mail_from}\\r\\n" + raw_message
+      raw_message = "Resent-Sender: #{mail_from}\r\n" + raw_message
     end
 
     rcpt_to = determine_rcpt_to_for_message(message)
@@ -156,9 +157,9 @@ class SMTPSender < BaseSender
     create_result("SoftFail", start_time) do |r|
       r.details = "Temporary SMTP delivery error when sending to #{@current_endpoint}"
       r.output = e.message
-      if e.message =~ /(\\d+) seconds/
+      if e.message =~ /(\d+) seconds/
         r.retry = ::Regexp.last_match(1).to_i + 10
-      elsif e.message =~ /(\\d+) minutes/
+      elsif e.message =~ /(\d+) minutes/
         r.retry = (::Regexp.last_match(1).to_i * 60) + 10
       else
         r.retry = true

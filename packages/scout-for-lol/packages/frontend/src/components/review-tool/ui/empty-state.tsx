@@ -10,7 +10,12 @@ export type EmptyStateProps = {
   action?: ReactNode;
 };
 
-export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
+export function EmptyState({
+  icon,
+  title,
+  description,
+  action,
+}: EmptyStateProps) {
   return (
     <div className="empty-state animate-fade-in">
       {icon && <div className="empty-state-icon">{icon}</div>}
@@ -24,7 +29,12 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
 // Common empty state icons
 export function SearchIcon({ className = "" }: { className?: string }) {
   return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -37,7 +47,12 @@ export function SearchIcon({ className = "" }: { className?: string }) {
 
 export function CloudIcon({ className = "" }: { className?: string }) {
   return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"

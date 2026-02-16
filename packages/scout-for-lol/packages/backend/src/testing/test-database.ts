@@ -1,4 +1,5 @@
 import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import type { ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
 
 /**
  * Path to the pre-generated template database.
@@ -6,17 +7,29 @@ import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/ind
  */
 const TEMPLATE_DB_PATH = `${import.meta.dir}/template.db`;
 
+function extendClient(client: PrismaClient): ExtendedPrismaClient {
+  return client.$extends({
+    query: {
+      $allModels: {
+        async $allOperations({ args, query }) {
+          return query(args);
+        },
+      },
+    },
+  });
+}
+
 /**
- * Creates an isolated test database and returns a PrismaClient instance configured to use it.
+ * Creates an isolated test database and returns an ExtendedPrismaClient instance configured to use it.
  *
  * Instead of running `prisma db push` for each test (which is slow and can trigger Bun segfaults),
  * this copies a pre-generated template database. This is much faster (~1ms vs ~500ms+).
  *
  * @param testName - A unique name for this test suite (used in the temp directory name)
- * @returns An object containing the PrismaClient instance and the database path
+ * @returns An object containing the ExtendedPrismaClient instance and the database path
  */
 export function createTestDatabase(testName: string): {
-  prisma: PrismaClient;
+  prisma: ExtendedPrismaClient;
   dbPath: string;
   dbUrl: string;
 } {
@@ -24,7 +37,8 @@ export function createTestDatabase(testName: string): {
   const checkResult = Bun.spawnSync(["test", "-f", TEMPLATE_DB_PATH]);
   if (checkResult.exitCode !== 0) {
     throw new Error(
-      `Test template database not found at ${TEMPLATE_DB_PATH}. ` + `Run 'bun run generate' to create it.`,
+      `Test template database not found at ${TEMPLATE_DB_PATH}. ` +
+        `Run 'bun run generate' to create it.`,
     );
   }
 
@@ -39,7 +53,7 @@ export function createTestDatabase(testName: string): {
   // Copy the template database (fast!)
   Bun.spawnSync(["cp", TEMPLATE_DB_PATH, testDbPath]);
 
-  const prisma = new PrismaClient({
+  const basePrisma = new PrismaClient({
     datasources: {
       db: {
         url: testDbUrl,
@@ -48,7 +62,7 @@ export function createTestDatabase(testName: string): {
   });
 
   return {
-    prisma,
+    prisma: extendClient(basePrisma),
     dbPath: testDbPath,
     dbUrl: testDbUrl,
   };
@@ -60,7 +74,9 @@ export function createTestDatabase(testName: string): {
  *
  * @param fn - A function that returns a Promise (e.g., prisma.table.deleteMany())
  */
-export async function deleteIfExists(fn: () => Promise<unknown>): Promise<void> {
+export async function deleteIfExists(
+  fn: () => Promise<unknown>,
+): Promise<void> {
   try {
     await fn();
   } catch {

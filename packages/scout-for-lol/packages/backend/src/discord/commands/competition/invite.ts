@@ -1,7 +1,10 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { addParticipant, getParticipantStatus } from "@scout-for-lol/backend/database/competition/participants.ts";
+import {
+  addParticipant,
+  getParticipantStatus,
+} from "@scout-for-lol/backend/database/competition/participants.ts";
 import { formatCriteriaType } from "@scout-for-lol/backend/discord/commands/competition/helpers.ts";
 import {
   replyWithError,
@@ -70,7 +73,9 @@ async function handleExistingParticipantStatus(
  * Execute /competition invite command
  * Allows competition owners to invite specific users to their competitions
  */
-export async function executeCompetitionInvite(interaction: ChatInputCommandInteraction): Promise<void> {
+export async function executeCompetitionInvite(
+  interaction: ChatInputCommandInteraction,
+): Promise<void> {
   // ============================================================================
   // Step 1: Extract and validate input
   // ============================================================================
@@ -87,7 +92,11 @@ export async function executeCompetitionInvite(interaction: ChatInputCommandInte
   // Step 2: Check if competition exists
   // ============================================================================
 
-  const competition = await fetchCompetitionWithErrorHandling(interaction, competitionId, "Competition Invite");
+  const competition = await fetchCompetitionWithErrorHandling(
+    interaction,
+    competitionId,
+    "Competition Invite",
+  );
   if (!competition) {
     return;
   }
@@ -135,8 +144,15 @@ Only the competition owner can invite participants. The owner of this competitio
       },
     });
   } catch (error) {
-    logger.error(`[Competition Invite] Error fetching player for user ${targetUser.id}:`, error);
-    await replyWithErrorFromException(interaction, error, "fetching player data");
+    logger.error(
+      `[Competition Invite] Error fetching player for user ${targetUser.id}:`,
+      error,
+    );
+    await replyWithErrorFromException(
+      interaction,
+      error,
+      "fetching player data",
+    );
     return;
   }
 
@@ -156,10 +172,21 @@ Only the competition owner can invite participants. The owner of this competitio
 
   let participantStatus;
   try {
-    participantStatus = await getParticipantStatus(prisma, competitionId, player.id);
+    participantStatus = await getParticipantStatus(
+      prisma,
+      competitionId,
+      player.id,
+    );
   } catch (error) {
-    logger.error(`[Competition Invite] Error checking participant status:`, error);
-    await replyWithErrorFromException(interaction, error, "checking participation status");
+    logger.error(
+      `[Competition Invite] Error checking participant status:`,
+      error,
+    );
+    await replyWithErrorFromException(
+      interaction,
+      error,
+      "checking participation status",
+    );
     return;
   }
 
@@ -221,8 +248,13 @@ Only the competition owner can invite participants. The owner of this competitio
       : competition.seasonId
         ? `Season ${competition.seasonId}`
         : "TBD";
-    const endDateStr = competition.endDate ? competition.endDate.toLocaleDateString() : "TBD";
-    const duration = competition.startDate && competition.endDate ? `${startDateStr} - ${endDateStr}` : startDateStr;
+    const endDateStr = competition.endDate
+      ? competition.endDate.toLocaleDateString()
+      : "TBD";
+    const duration =
+      competition.startDate && competition.endDate
+        ? `${startDateStr} - ${endDateStr}`
+        : startDateStr;
 
     await targetUser.send({
       content: truncateDiscordMessage(`📩 **Competition Invitation**
@@ -239,7 +271,10 @@ To join, use:
     });
     logger.info(`[Competition Invite] DM sent to user ${targetUser.id}`);
   } catch (error) {
-    logger.warn(`[Competition Invite] Failed to DM user ${targetUser.id}:`, getErrorMessage(error));
+    logger.warn(
+      `[Competition Invite] Failed to DM user ${targetUser.id}:`,
+      getErrorMessage(error),
+    );
     dmFailed = true;
   }
 

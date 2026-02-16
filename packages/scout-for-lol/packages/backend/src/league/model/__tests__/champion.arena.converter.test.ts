@@ -81,7 +81,9 @@ describe("participantToArenaChampion", () => {
   it("extracts and filters augments, keeps order", async () => {
     const dto = baseParticipant();
     const champ = await participantToArenaChampion(dto);
-    expect(champ.augments.map((a) => ("id" in a ? a.id : undefined))).toEqual([667, 123]);
+    expect(champ.augments.map((a) => ("id" in a ? a.id : undefined))).toEqual([
+      667, 123,
+    ]);
   });
 
   it("copies base champion fields", async () => {

@@ -1,5 +1,6 @@
 import { Deployment, DeploymentStrategy, EnvValue, Probe, Secret, Service } from "cdk8s-plus-31";
-import { Chart, Duration } from "cdk8s";
+import type { Chart} from "cdk8s";
+import { Duration } from "cdk8s";
 import { withCommonProps } from "../../misc/common.ts";
 import { createServiceMonitor } from "../../misc/service-monitor.ts";
 import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";

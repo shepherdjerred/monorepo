@@ -1,4 +1,4 @@
-import { PrometheusRuleSpecGroups } from "../../../../../generated/imports/monitoring.coreos.com";
+import type { PrometheusRuleSpecGroups } from "../../../../../generated/imports/monitoring.coreos.com";
 import { PrometheusRuleSpecGroupsRulesExpr } from "../../../../../generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "./shared";
 import { VELERO_SCHEDULES } from "../../../velero-schedules.ts";

@@ -1,7 +1,14 @@
 import { type ArenaTeam, type Augment } from "@scout-for-lol/data";
-import { createArenaChampion, createArenaMetrics, createTeamSupport } from "./arena-factories.ts";
+import {
+  createArenaChampion,
+  createArenaMetrics,
+  createTeamSupport,
+} from "./arena-factories.ts";
 
-export function getTeam1(masterAugment: Augment, courageAugment: Augment): ArenaTeam {
+export function getTeam1(
+  masterAugment: Augment,
+  courageAugment: Augment,
+): ArenaTeam {
   return {
     teamId: 1 as const,
     placement: 2 as const,
@@ -16,7 +23,14 @@ export function getTeam1(masterAugment: Augment, courageAugment: Augment): Arena
         items: [3074, 3071, 3071, 3036, 3035, 0, 3364],
         gold: 12450,
         damage: 28500,
-        augments: [masterAugment, masterAugment, masterAugment, masterAugment, masterAugment, masterAugment],
+        augments: [
+          masterAugment,
+          masterAugment,
+          masterAugment,
+          masterAugment,
+          masterAugment,
+          masterAugment,
+        ],
         arenaMetrics: createArenaMetrics({
           playerScore0: 8,
           playerScore1: 5,
@@ -44,7 +58,14 @@ export function getTeam1(masterAugment: Augment, courageAugment: Augment): Arena
         items: [3858, 3068, 3143, 3025, 3504, 0, 3364],
         gold: 10200,
         damage: 12300,
-        augments: [courageAugment, courageAugment, courageAugment, courageAugment, courageAugment, courageAugment],
+        augments: [
+          courageAugment,
+          courageAugment,
+          courageAugment,
+          courageAugment,
+          courageAugment,
+          courageAugment,
+        ],
         arenaMetrics: createArenaMetrics({
           playerScore0: 5,
           playerScore1: 12,

@@ -1,5 +1,5 @@
 import * as jsdom from "jsdom";
-import { readFile, writeFile } from "fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { z } from "zod";
 
 export const links = [
@@ -108,8 +108,8 @@ export const links = [
 const file = "src/bookmarks/bookmarks.json";
 
 try {
-  await readFile(file, "utf-8");
-} catch (_e) {
+  await readFile(file, "utf8");
+} catch {
   await writeFile(file, "{}");
 }
 
@@ -127,14 +127,14 @@ export const BookmarksSchema = z.record(z.string().url(), BookmarkSchema);
 
 export type Bookmarks = z.infer<typeof BookmarksSchema>;
 
-const bookmarksFromFile = BookmarksSchema.parse(JSON.parse(await readFile(file, "utf-8")));
+const bookmarksFromFile = BookmarksSchema.parse(JSON.parse(await readFile(file, "utf8")));
 
 const results = await Promise.all(
   links.map(async (link) => {
     if (bookmarksFromFile[link]) {
       return bookmarksFromFile[link];
     } else {
-      console.log(`Fetching ${link}`);
+      console.warn(`Fetching ${link}`);
       try {
         const response = await fetch(link, { redirect: "follow" });
         const text = await response.text();
@@ -146,11 +146,11 @@ const results = await Promise.all(
           tags: [],
         };
         const description = htmlDoc.querySelector("meta[name=description]")?.getAttribute("content");
-        if (description) {
+        if (description !== null && description !== "") {
           base.description = description;
         }
         return base;
-      } catch (_e) {
+      } catch {
         console.error(`Failed to fetch ${link}`);
         return {
           title: "Failed to fetch",

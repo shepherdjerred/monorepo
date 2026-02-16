@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-export const AugmentRaritySchema = z.union([z.literal("prismatic"), z.literal("gold"), z.literal("silver")]);
+export const AugmentRaritySchema = z.union([
+  z.literal("prismatic"),
+  z.literal("gold"),
+  z.literal("silver"),
+]);
 export type AugmentRarity = z.infer<typeof AugmentRaritySchema>;
 
 // Full augments are retrieved from the CommunityDragon API. The Riot API only provides the ID
@@ -25,5 +29,8 @@ export const MinimalAugmentSchema = z.strictObject({
 });
 export type MinimalAugment = z.infer<typeof MinimalAugmentSchema>;
 
-export const AugmentSchema = z.discriminatedUnion("type", [FullAugmentSchema, MinimalAugmentSchema]);
+export const AugmentSchema = z.discriminatedUnion("type", [
+  FullAugmentSchema,
+  MinimalAugmentSchema,
+]);
 export type Augment = z.infer<typeof AugmentSchema>;

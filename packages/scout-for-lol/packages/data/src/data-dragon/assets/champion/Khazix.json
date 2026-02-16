@@ -143,7 +143,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "80/105/130/155/180", "110", "50", "45", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "80/105/130/155/180",
+            "110",
+            "50",
+            "45",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -167,7 +179,11 @@
           "tooltip": "Kha'Zix fires a spike dealing <physicalDamage>{{ basedamage }} physical damage</physicalDamage> to the first enemy hit in a small area. If Kha'Zix is inside the area, he restores <healing>{{ healamount }} Health</healing>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Healing", "@AbilityResourceName@ Cost"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ baseheal }} -> {{ basehealNL }}", "{{ cost }} -> {{ costNL }}"]
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ baseheal }} -> {{ basehealNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [9, 9, 9, 9, 9],
@@ -188,7 +204,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "75/105/135/165/195", "55/75/95/115/135", "40", "2", "0", "2", "60", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "75/105/135/165/195",
+            "55/75/95/115/135",
+            "40",
+            "2",
+            "0",
+            "2",
+            "60",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -212,7 +240,10 @@
           "tooltip": "Kha'Zix leaps, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> upon landing.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [20, 18, 16, 14, 12],
@@ -233,7 +264,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "65/100/135/170/205", "30/35/40/45/50", "10", "2.5", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "65/100/135/170/205",
+            "30/35/40/45/50",
+            "10",
+            "2.5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -257,7 +300,10 @@
           "tooltip": "<spellActive>Active:</spellActive> Kha'Zix becomes <keywordStealth>Invisible</keywordStealth> for {{ stealthduration }} seconds and gains <speed>{{ bonusmovementspeedpercent*100 }}% Move Speed</speed>. Kha'zix may <recast>Recast</recast> this Ability once within {{ recastwindow }} seconds.<br /><br /><spellPassive>Passive:</spellPassive> Leveling up this Ability allows Kha'zix to <evolve>Evolve</evolve> one of his Abilities, granting it additional effects.<li><spellName>Taste Their Fear:</spellName> Gain Ability range, Attack range, and lowers Cooldown by {{ spell.khazixq:effect4amount }}% against <keywordMajor>Isolated</keywordMajor> targets.<li><spellName>Void Spike:</spellName> Fires 3 spikes and <status>Slows</status> by {{ spell.khazixw:effect3amount }}%, increased against <keywordMajor>Isolated</keywordMajor> targets.<li><spellName>Leap:</spellName> Increased range and refreshes Cooldown on champion takedown.<li><spellName>Void Assault:</spellName> <keywordStealth>Invisibility</keywordStealth> duration lasts {{ evolvedstealthduration }} seconds and gains second <recast>Recast</recast>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Evolutions Available", "Cooldown"],
-            "effect": ["{{ evolutionsavailable }} -> {{ evolutionsavailableNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ evolutionsavailable }} -> {{ evolutionsavailableNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [100, 85, 70],
@@ -278,7 +324,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

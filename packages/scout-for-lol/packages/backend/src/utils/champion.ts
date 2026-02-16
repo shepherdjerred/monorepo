@@ -1,4 +1,7 @@
-import { Champions, getChampionName } from "twisted/dist/constants/champions.js";
+import {
+  Champions,
+  getChampionName,
+} from "twisted/dist/constants/champions.js";
 import { z } from "zod";
 
 /**
@@ -12,19 +15,18 @@ const CHAMPION_ID_TO_NAME: Record<number, string> = Champions;
  * Built once on module load for efficient lookups
  * Normalized to lowercase for case-insensitive matching
  */
-const CHAMPION_NAME_TO_ID: Record<string, number> = Object.entries(CHAMPION_ID_TO_NAME).reduce<Record<string, number>>(
-  (acc, [id, name]) => {
-    // Champions object has both id->name and name->id mappings
-    // Filter to only string values to avoid duplicates and type errors
-    const nameValidation = z.string().safeParse(name);
-    if (nameValidation.success) {
-      const normalizedName = nameValidation.data.toLowerCase();
-      acc[normalizedName] = Number.parseInt(id, 10);
-    }
-    return acc;
-  },
-  {},
-);
+const CHAMPION_NAME_TO_ID: Record<string, number> = Object.entries(
+  CHAMPION_ID_TO_NAME,
+).reduce<Record<string, number>>((acc, [id, name]) => {
+  // Champions object has both id->name and name->id mappings
+  // Filter to only string values to avoid duplicates and type errors
+  const nameValidation = z.string().safeParse(name);
+  if (nameValidation.success) {
+    const normalizedName = nameValidation.data.toLowerCase();
+    acc[normalizedName] = Number.parseInt(id, 10);
+  }
+  return acc;
+}, {});
 
 /**
  * Get champion ID from champion name
@@ -83,7 +85,10 @@ export function getChampionDisplayName(championId: number): string {
  * searchChampions("yas") // [{name: "Yasuo", id: 157}]
  * searchChampions("twisted") // [{name: "Twisted Fate", id: 4}]
  */
-export function searchChampions(query: string, limit = 25): { name: string; id: number }[] {
+export function searchChampions(
+  query: string,
+  limit = 25,
+): { name: string; id: number }[] {
   const normalizedQuery = query.toLowerCase().replace(/['\s-]/g, "_");
 
   // Get all champions
@@ -97,7 +102,10 @@ export function searchChampions(query: string, limit = 25): { name: string; id: 
 
   // Filter by query
   const matches = allChampions.filter((champion) => {
-    return champion.searchName.includes(normalizedQuery) || champion.name.toLowerCase().includes(query.toLowerCase());
+    return (
+      champion.searchName.includes(normalizedQuery) ||
+      champion.name.toLowerCase().includes(query.toLowerCase())
+    );
   });
 
   // Sort by relevance: exact matches first, then starts-with, then contains

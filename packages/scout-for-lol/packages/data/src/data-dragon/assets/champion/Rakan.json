@@ -147,7 +147,10 @@
           "tooltip": "Rakan flings a magical feather that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first enemy hit.<br /><br />If the feather hits a champion or epic jungle monster, Rakan restores <healing>{{ totalheal }} Health</healing> to himself and nearby allies after {{ healdelay }} seconds or when he touches an allied champion.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [11, 10, 9, 8, 7],
@@ -168,7 +171,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -217,7 +232,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "70/120/170/220/270", "0", "1", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "70/120/170/220/270",
+            "0",
+            "1",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -240,8 +267,16 @@
           "description": "Flies to an allied champion granting them a shield. Can be re-cast for free for a short duration.",
           "tooltip": "Rakan dashes to an allied champion, granting them <shield>{{ totalshield }} Shield</shield> for {{ e3 }} seconds.<br /><br />Rakan can <recast>Recast</recast> this Ability once within {{ e2 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Shield Health", "Cooldown", "@AbilityResourceName@ Cost"],
-            "effect": ["{{ baseshield }} -> {{ baseshieldNL }}", "{{ e4 }} -> {{ e4NL }}", "{{ e5 }} -> {{ e5NL }}"]
+            "label": [
+              "Shield Health",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ baseshield }} -> {{ baseshieldNL }}",
+              "{{ e4 }} -> {{ e4NL }}",
+              "{{ e5 }} -> {{ e5NL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [0, 0, 0, 0, 0],
@@ -262,7 +297,19 @@
             [1250, 1250, 1250, 1250, 1250],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "5", "3", "20/18/16/14/12", "40/45/50/55/60", "700", "1000", "1150", "1250", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "5",
+            "3",
+            "20/18/16/14/12",
+            "40/45/50/55/60",
+            "700",
+            "1000",
+            "1150",
+            "1250",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -286,7 +333,11 @@
           "tooltip": "Rakan gains <speed>{{ e5 }}% Move Speed</speed> for {{ e2 }} seconds. Rakan deals <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> and <status>Charms</status> enemies for {{ e3 }} second(s) the first time he touches them. The first champion touched grants Rakan <speed>{{ e6 }}% decaying Move Speed</speed>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Charm Duration", "Damage", "Cooldown"],
-            "effect": ["{{ e3 }} -> {{ e3NL }}", "{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ e3 }} -> {{ e3NL }}",
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [130, 110, 90],
@@ -307,7 +358,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "100/200/300", "4", "1/1.25/1.5", "0.25", "75", "150", "150", "130/110/90", "0", "0"],
+          "effectBurn": [
+            null,
+            "100/200/300",
+            "4",
+            "1/1.25/1.5",
+            "0.25",
+            "75",
+            "150",
+            "150",
+            "130/110/90",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

@@ -9,7 +9,8 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
-import { ApiObject, Chart, JsonPatch, Size } from "cdk8s";
+import type { Chart} from "cdk8s";
+import { ApiObject, JsonPatch, Size } from "cdk8s";
 import { withCommonProps } from "../../misc/common.ts";
 import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "../../misc/tailscale.ts";
@@ -64,9 +65,9 @@ export function createPlexDeployment(
       ports: [
         {
           name: "port-32400-web",
-          number: 32400,
+          number: 32_400,
           hostIp: "0.0.0.0",
-          hostPort: 32400,
+          hostPort: 32_400,
           protocol: Protocol.TCP,
         },
         {
@@ -97,32 +98,32 @@ export function createPlexDeployment(
         },
         {
           name: "port-32469-dlna",
-          number: 32469,
-          hostPort: 32469,
+          number: 32_469,
+          hostPort: 32_469,
           protocol: Protocol.TCP,
         },
         {
           name: "port-32410-gdm",
-          number: 32410,
-          hostPort: 32410,
+          number: 32_410,
+          hostPort: 32_410,
           protocol: Protocol.UDP,
         },
         {
           name: "port-32412-gdm",
-          number: 32412,
-          hostPort: 32412,
+          number: 32_412,
+          hostPort: 32_412,
           protocol: Protocol.UDP,
         },
         {
           name: "port-32413-gdm",
-          number: 32413,
-          hostPort: 32413,
+          number: 32_413,
+          hostPort: 32_413,
           protocol: Protocol.UDP,
         },
         {
           name: "port-32414-gdm",
-          number: 32414,
-          hostPort: 32414,
+          number: 32_414,
+          hostPort: 32_414,
           protocol: Protocol.UDP,
         },
       ],
@@ -167,8 +168,8 @@ export function createPlexDeployment(
       securityContext: {
         ensureNonRoot: true,
         readOnlyRootFilesystem: true,
-        user: 65534, // nobody user
-        group: 65534,
+        user: 65_534, // nobody user
+        group: 65_534,
       },
       envVariables: {
         PLEX_SERVER: EnvValue.fromValue("http://localhost:32400"),
@@ -188,7 +189,7 @@ export function createPlexDeployment(
         app: "plex",
       },
     },
-    ports: [{ port: 32400 }],
+    ports: [{ port: 32_400 }],
   });
 
   new Service(chart, "plex-metrics-service", {

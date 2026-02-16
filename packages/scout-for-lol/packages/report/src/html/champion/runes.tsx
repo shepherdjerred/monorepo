@@ -1,5 +1,9 @@
 import { palette } from "@scout-for-lol/report/assets/colors.ts";
-import { getRuneInfo, getRuneTreeForRune, type Rune } from "@scout-for-lol/data";
+import {
+  getRuneInfo,
+  getRuneTreeForRune,
+  type Rune,
+} from "@scout-for-lol/data";
 import { getRuneIconUrl } from "@scout-for-lol/report/dataDragon/runes.ts";
 
 const keystoneSize = "3.75rem";
@@ -20,7 +24,9 @@ export function Runes({ runes }: { runes: Rune[] }) {
   // Fifth rune (index 4) is the first from secondary tree, use it to get secondary tree icon
   // Ranked games have 6 runes: 4 primary + 2 secondary
   const secondaryRune = runes[4];
-  const secondaryTree = secondaryRune ? getRuneTreeForRune(secondaryRune.id) : undefined;
+  const secondaryTree = secondaryRune
+    ? getRuneTreeForRune(secondaryRune.id)
+    : undefined;
 
   return (
     <div
@@ -31,7 +37,9 @@ export function Runes({ runes }: { runes: Rune[] }) {
       }}
     >
       {keystoneInfo && (
-        <div style={{ width: keystoneSize, height: keystoneSize, display: "flex" }}>
+        <div
+          style={{ width: keystoneSize, height: keystoneSize, display: "flex" }}
+        >
           <img
             src={getRuneIconUrl(keystoneInfo.icon)}
             alt={keystoneInfo.name}
@@ -46,7 +54,9 @@ export function Runes({ runes }: { runes: Rune[] }) {
         </div>
       )}
       {secondaryTree && (
-        <div style={{ width: keystoneSize, height: keystoneSize, display: "flex" }}>
+        <div
+          style={{ width: keystoneSize, height: keystoneSize, display: "flex" }}
+        >
           <img
             src={getRuneIconUrl(secondaryTree.treeIcon)}
             alt={secondaryTree.treeName}

@@ -1,5 +1,9 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  testGuildId,
+  testAccountId,
+  testChannelId,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
 import {
   type CreateCompetitionInput,
   cancelCompetition,
@@ -9,7 +13,10 @@ import {
   getCompetitionsByServer,
 } from "@scout-for-lol/backend/database/competition/queries.ts";
 import { ChampionIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.ts";
+import {
+  createTestDatabase,
+  deleteIfExists,
+} from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a test database
 const { prisma } = createTestDatabase("competition-queries-test");
@@ -171,7 +178,10 @@ describe("getCompetitionsByServer", () => {
       });
     }
 
-    const competitions = await getCompetitionsByServer(prisma, testGuildId("123456789012345678"));
+    const competitions = await getCompetitionsByServer(
+      prisma,
+      testGuildId("123456789012345678"),
+    );
     expect(competitions).toHaveLength(3);
   });
 
@@ -212,9 +222,13 @@ describe("getCompetitionsByServer", () => {
       criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
     });
 
-    const activeOnly = await getCompetitionsByServer(prisma, testGuildId("123456789012345678"), {
-      activeOnly: true,
-    });
+    const activeOnly = await getCompetitionsByServer(
+      prisma,
+      testGuildId("123456789012345678"),
+      {
+        activeOnly: true,
+      },
+    );
 
     expect(activeOnly).toHaveLength(1);
     expect(activeOnly[0]?.title).toBe("Active");
@@ -246,9 +260,13 @@ describe("getCompetitionsByServer", () => {
       criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
     });
 
-    const owner1Comps = await getCompetitionsByServer(prisma, testGuildId("123456789012345678"), {
-      ownerId: testAccountId("111111111111111111"),
-    });
+    const owner1Comps = await getCompetitionsByServer(
+      prisma,
+      testGuildId("123456789012345678"),
+      {
+        ownerId: testAccountId("111111111111111111"),
+      },
+    );
 
     expect(owner1Comps).toHaveLength(1);
     expect(owner1Comps[0]?.title).toBe("Owner 1 Competition");
@@ -265,7 +283,9 @@ describe("getActiveCompetitions", () => {
 
     for (let i = 0; i < 3; i++) {
       await createCompetition(prisma, {
-        serverId: DiscordGuildIdSchema.parse((100000000000000000 + i).toString()),
+        serverId: DiscordGuildIdSchema.parse(
+          (100000000000000000 + i).toString(),
+        ),
         ownerId: testAccountId("987654321098765432"),
         channelId: testChannelId("111222333444555666"),
         title: `Server ${i.toString()}`,

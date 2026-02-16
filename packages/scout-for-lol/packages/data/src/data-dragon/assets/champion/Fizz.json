@@ -152,7 +152,10 @@
           "tooltip": "Fizz dashes through an enemy, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> plus <magicDamage>{{ qdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [8, 7.5, 7, 6.5, 6],
@@ -244,7 +247,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -267,7 +282,12 @@
           "description": "Fizz hops into the air, landing gracefully upon his spear and becoming untargetable. From this position, Fizz can either slam the ground or choose to jump again before smashing back down.",
           "tooltip": "Fizz hops onto his trident, becoming Untargetable for 0.75 seconds, after which he deals <magicDamage>{{ edamage }} magic damage</magicDamage> to nearby enemies and <status>Slows</status> them by {{ slowamount*100 }}% for {{ slowduration }} seconds. <br /><br />Fizz can <recast>Recast</recast> this Ability while Untargetable to dash again, which ends the effect early, deals damage in a smaller area, and doesn't <status>Slow</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage", "Slow"],
+            "label": [
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Damage",
+              "Slow"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
@@ -294,7 +314,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -317,7 +349,12 @@
           "description": "Fizz tosses a fish in a direction that attaches to any champion that touches it, slowing the target. After a short delay, a shark erupts from the ground, knocking up the target and knocking any nearby enemies aside. All enemies hit are dealt magic damage and slowed.",
           "tooltip": "Fizz launches a fish that attaches to the first champion hit. The victim is afflicted with <keywordStealth>True Sight</keywordStealth> and <status>Slowed</status> by between 40% to 80% based on how far the fish travelled before attaching. <br /><br />After {{ detonationtime }} seconds a shark erupts on the target, <status>Knocking Up</status> the target with the fish for 1 second, <status>Knocking Back</status> everything else, and dealing between <magicDamage>{{ smallsharkdamage }} to {{ bigsharkdamage }} magic damage</magicDamage> based on how far the fish travelled before attaching.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Small Shark Damage", "Medium Shark Damage", "Big Shark Damage"],
+            "label": [
+              "Cooldown",
+              "Small Shark Damage",
+              "Medium Shark Damage",
+              "Big Shark Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ smalldamage }} -> {{ smalldamageNL }}",
@@ -344,7 +381,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

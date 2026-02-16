@@ -133,7 +133,12 @@
           "description": "Nocturne throws a shadow blade that deals damage, leaves a Dusk Trail, and causes champions to leave a Dusk Trail. While on the trail, Nocturne can move through units and has increased Move Speed and Attack Damage.",
           "tooltip": "Nocturne throws a shadow blade, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and leaving a dusk trail for {{ e3 }} seconds. Enemy champions hit also leave a trail. <br /><br />While on the trail, Nocturne is Ghosted and gains <speed>{{ movespeed }}% Move Speed</speed> and <physicalDamage>{{ bonustrailad }} Attack Damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Move Speed", "Bonus Attack Damage", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Move Speed",
+              "Bonus Attack Damage",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ movespeed }}% -> {{ movespeedNL }}%",
@@ -196,7 +201,10 @@
           "tooltip": "<spellPassive>Passive:</spellPassive> Nocturne gains <attackSpeed>{{ e1 }}% Attack Speed</attackSpeed>.<br /><br /><spellActive>Active:</spellActive> Nocturne creates a shadow barrier for 1.5 seconds that blocks the next enemy Ability. If an Ability is blocked, this Ability's passive effect is increased to <attackSpeed>{{ e1 }}% Attack Speed</attackSpeed> for {{ e4 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Bonus Attack Speed", "Cooldown"],
-            "effect": ["{{ e1 }}% -> {{ e1NL }}%", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ e1 }}% -> {{ e1NL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [20, 18, 16, 14, 12],
@@ -217,7 +225,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "60/70/80/90/100", "0.3/0.05/0.05/0.05/0.05", "1.5", "5", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "60/70/80/90/100",
+            "0.3/0.05/0.05/0.05/0.05",
+            "1.5",
+            "5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -240,7 +260,12 @@
           "description": "Nocturne plants a nightmare into his target's mind, dealing damage each second and applying fear to the target if they do not get out of range by the end of the duration.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Nocturne gains <speed>{{ tooltipfearms*100 }}% Move Speed</speed> toward <status>Feared</status> enemies.<br /><br /><spellActive>Active:</spellActive> Nocturne plants a nightmare tether into his target, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> over {{ e3 }} seconds. If the tether remains unbroken, the target is <status>Feared</status> for {{ e2 }} second(s).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Fear Duration", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Fear Duration",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ e2 }} -> {{ e2NL }}",
@@ -267,7 +292,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "80/125/170/215/260", "1.25/1.5/1.75/2/2.25", "2", "465", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "80/125/170/215/260",
+            "1.25/1.5/1.75/2/2.25",
+            "2",
+            "465",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -316,7 +353,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

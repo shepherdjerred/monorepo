@@ -1,15 +1,16 @@
-import React, { ChangeEvent } from "react";
+import type { ChangeEvent } from "react";
+import React from "react";
 import "./Searchbar.sass";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
-import { Container } from "../../Container";
+import { Container } from "@shepherdjerred/better-skill-capped/components/Container";
 
-export interface FilterBarProps {
+export type FilterBarProps = {
   onValueUpdate: (newValue: string) => void;
   placeholder: string;
 }
 
-export interface FilterBarState {
+export type FilterBarState = {
   value: string;
 }
 

@@ -6,7 +6,9 @@
 
 const args = Bun.argv.slice(2);
 if (args.length < 2) {
-  console.error("Usage: run-relevant-tests.ts <package-dir> <changed-files...>");
+  console.error(
+    "Usage: run-relevant-tests.ts <package-dir> <changed-files...>",
+  );
   throw new Error("Missing required arguments");
 }
 
@@ -18,16 +20,21 @@ const changedFiles = args.slice(1);
 const scriptDir = import.meta.dir;
 const findTestsScript = `${scriptDir}/find-dependent-tests.ts`;
 
-const findResult = Bun.spawnSync(["bun", findTestsScript, packageDir, ...changedFiles], {
-  stdout: "pipe",
-  stderr: "pipe",
-});
+const findResult = Bun.spawnSync(
+  ["bun", findTestsScript, packageDir, ...changedFiles],
+  {
+    stdout: "pipe",
+    stderr: "pipe",
+  },
+);
 
 if (findResult.exitCode !== 0) {
   const stderr = new TextDecoder().decode(findResult.stderr);
   console.error("Error finding test files:");
   console.error(stderr);
-  throw new Error(`find-dependent-tests failed with exit code ${String(findResult.exitCode)}`);
+  throw new Error(
+    `find-dependent-tests failed with exit code ${String(findResult.exitCode)}`,
+  );
 }
 
 // Parse test files from stdout (one per line)

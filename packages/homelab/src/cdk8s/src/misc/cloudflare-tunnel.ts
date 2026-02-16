@@ -1,4 +1,4 @@
-import { Chart } from "cdk8s";
+import type { Chart } from "cdk8s";
 import { TunnelBinding, TunnelBindingTunnelRefKind } from "../../generated/imports/networking.cfargotunnel.com.ts";
 
 // Secret name that the cloudflare-operator expects

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "bun:test";
-import type { RawMatch, RawParticipant, Rank, Ranks } from "@scout-for-lol/data";
+import type {
+  RawMatch,
+  RawParticipant,
+  Rank,
+  Ranks,
+} from "@scout-for-lol/data";
 import {
   AccountIdSchema,
   ChampionIdSchema,
@@ -10,7 +15,10 @@ import {
 import { processCriteria } from "@scout-for-lol/backend/league/competition/processors/index.ts";
 import type { PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.ts";
 
-import { testAccountId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  testAccountId,
+  testPuuid,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
 // ============================================================================
 // Test Fixtures - Load Real Match Data
 // ============================================================================
@@ -61,7 +69,10 @@ const testPlayers: PlayerWithAccounts[] = [
 /**
  * Create test player from PUUID
  */
-function createTestPlayerFromPuuid(puuid: string, index: number): PlayerWithAccounts {
+function createTestPlayerFromPuuid(
+  puuid: string,
+  index: number,
+): PlayerWithAccounts {
   return {
     id: PlayerIdSchema.parse(index + 1),
     alias: `Player${(index + 1).toString()}`,
@@ -80,7 +91,9 @@ function createTestPlayerFromPuuid(puuid: string, index: number): PlayerWithAcco
 /**
  * Create test player from participant
  */
-function createTestPlayerFromParticipant(participant: RawParticipant): PlayerWithAccounts {
+function createTestPlayerFromParticipant(
+  participant: RawParticipant,
+): PlayerWithAccounts {
   return {
     id: PlayerIdSchema.parse(1),
     alias: "TestPlayer",
@@ -104,16 +117,28 @@ function testEmptyMatchData() {
   const players = testPlayers;
 
   // Test all criteria types with empty matches
-  const gamesResult = processCriteria({ type: "MOST_GAMES_PLAYED", queue: "SOLO" }, emptyMatches, players);
+  const gamesResult = processCriteria(
+    { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+    emptyMatches,
+    players,
+  );
   expect(gamesResult).toBeDefined();
   expect(gamesResult.every((entry) => entry.score === 0)).toBe(true);
 
-  const winsResult = processCriteria({ type: "MOST_WINS_PLAYER", queue: "SOLO" }, emptyMatches, players);
+  const winsResult = processCriteria(
+    { type: "MOST_WINS_PLAYER", queue: "SOLO" },
+    emptyMatches,
+    players,
+  );
   expect(winsResult).toBeDefined();
   expect(winsResult.every((entry) => entry.score === 0)).toBe(true);
 
   const championResult = processCriteria(
-    { type: "MOST_WINS_CHAMPION", championId: ChampionIdSchema.parse(157), queue: "SOLO" },
+    {
+      type: "MOST_WINS_CHAMPION",
+      championId: ChampionIdSchema.parse(157),
+      queue: "SOLO",
+    },
     emptyMatches,
     players,
   );
@@ -130,10 +155,16 @@ describe("processCriteria integration tests", () => {
     const puuids = match.metadata.participants.slice(0, 2); // Take first 2 players
 
     // Create players with actual PUUIDs
-    const players: PlayerWithAccounts[] = puuids.map((puuid, index) => createTestPlayerFromPuuid(puuid, index));
+    const players: PlayerWithAccounts[] = puuids.map((puuid, index) =>
+      createTestPlayerFromPuuid(puuid, index),
+    );
 
     // Test MOST_GAMES_PLAYED
-    const gamesResult = processCriteria({ type: "MOST_GAMES_PLAYED", queue: "SOLO" }, [match], players);
+    const gamesResult = processCriteria(
+      { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+      [match],
+      players,
+    );
 
     expect(gamesResult).toBeDefined();
     expect(gamesResult.length).toBe(players.length);
@@ -164,21 +195,41 @@ describe("processCriteria integration tests", () => {
     // queueId 1700 = ARENA, 420 = SOLO, 440 = FLEX
     if (queueId === 420) {
       // SOLO queue match
-      const matchingResult = processCriteria({ type: "MOST_GAMES_PLAYED", queue: "SOLO" }, [match], [player]);
+      const matchingResult = processCriteria(
+        { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+        [match],
+        [player],
+      );
       expect(matchingResult[0]?.score).toBe(1);
 
-      const nonMatchingResult = processCriteria({ type: "MOST_GAMES_PLAYED", queue: "ARENA" }, [match], [player]);
+      const nonMatchingResult = processCriteria(
+        { type: "MOST_GAMES_PLAYED", queue: "ARENA" },
+        [match],
+        [player],
+      );
       expect(nonMatchingResult[0]?.score).toBe(0);
     } else if (queueId === 1700) {
       // ARENA queue match
-      const matchingResult = processCriteria({ type: "MOST_GAMES_PLAYED", queue: "ARENA" }, [match], [player]);
+      const matchingResult = processCriteria(
+        { type: "MOST_GAMES_PLAYED", queue: "ARENA" },
+        [match],
+        [player],
+      );
       expect(matchingResult[0]?.score).toBe(1);
 
-      const nonMatchingResult = processCriteria({ type: "MOST_GAMES_PLAYED", queue: "SOLO" }, [match], [player]);
+      const nonMatchingResult = processCriteria(
+        { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+        [match],
+        [player],
+      );
       expect(nonMatchingResult[0]?.score).toBe(0);
     } else {
       // Unknown queue type - just verify ALL works
-      const allResult = processCriteria({ type: "MOST_GAMES_PLAYED", queue: "ALL" }, [match], [player]);
+      const allResult = processCriteria(
+        { type: "MOST_GAMES_PLAYED", queue: "ALL" },
+        [match],
+        [player],
+      );
       expect(allResult[0]?.score).toBe(1);
     }
   });
@@ -195,7 +246,11 @@ describe("processCriteria integration tests", () => {
 
     const player = createTestPlayerFromParticipant(firstParticipant);
 
-    const result = processCriteria({ type: "MOST_WINS_PLAYER", queue: "ALL" }, [match], [player]);
+    const result = processCriteria(
+      { type: "MOST_WINS_PLAYER", queue: "ALL" },
+      [match],
+      [player],
+    );
 
     expect(result.length).toBe(1);
     expect(result[0]?.playerId).toBe(player.id);
@@ -242,7 +297,11 @@ describe("processCriteria integration tests", () => {
       ],
     };
 
-    const result = processCriteria({ type: "MOST_GAMES_PLAYED", queue: "ALL" }, [match1, match2], [player]);
+    const result = processCriteria(
+      { type: "MOST_GAMES_PLAYED", queue: "ALL" },
+      [match1, match2],
+      [player],
+    );
 
     expect(result.length).toBe(1);
     expect(result[0]?.playerId).toBe(player.id);
@@ -251,7 +310,9 @@ describe("processCriteria integration tests", () => {
     expect(result[0]?.score).toBeGreaterThanOrEqual(1);
     expect(result[0]?.score).toBeLessThanOrEqual(2);
   });
+});
 
+describe("processCriteria integration tests - Rank & Filter", () => {
   it("should handle rank-based criteria with snapshot data", () => {
     const goldRank: Rank = {
       tier: "gold",
@@ -280,11 +341,16 @@ describe("processCriteria integration tests", () => {
       [player2.id]: { solo: goldRank },
     };
 
-    const result = processCriteria({ type: "HIGHEST_RANK", queue: "SOLO" }, [], testPlayers, {
-      currentRanks,
-      startSnapshots: {},
-      endSnapshots: {},
-    });
+    const result = processCriteria(
+      { type: "HIGHEST_RANK", queue: "SOLO" },
+      [],
+      testPlayers,
+      {
+        currentRanks,
+        startSnapshots: {},
+        endSnapshots: {},
+      },
+    );
 
     expect(result.length).toBe(2);
     expect(result[0]?.score).toEqual(platinumRank);
@@ -317,17 +383,27 @@ describe("processCriteria integration tests", () => {
 
     // Test with matching champion ID
     const matchingResult = processCriteria(
-      { type: "MOST_WINS_CHAMPION", championId: ChampionIdSchema.parse(firstParticipant.championId), queue: "ALL" },
+      {
+        type: "MOST_WINS_CHAMPION",
+        championId: ChampionIdSchema.parse(firstParticipant.championId),
+        queue: "ALL",
+      },
       [match],
       [player],
     );
 
-    expect(matchingResult[0]?.metadata?.["championId"]).toBe(firstParticipant.championId);
+    expect(matchingResult[0]?.metadata?.["championId"]).toBe(
+      firstParticipant.championId,
+    );
     expect(matchingResult[0]?.metadata?.["games"]).toBe(1);
 
     // Test with non-matching champion ID
     const nonMatchingResult = processCriteria(
-      { type: "MOST_WINS_CHAMPION", championId: ChampionIdSchema.parse(9999), queue: "ALL" }, // Champion ID that doesn't exist
+      {
+        type: "MOST_WINS_CHAMPION",
+        championId: ChampionIdSchema.parse(9999),
+        queue: "ALL",
+      }, // Champion ID that doesn't exist
       [match],
       [player],
     );
@@ -360,7 +436,11 @@ describe("processCriteria integration tests", () => {
     };
 
     // With only 1 match and minGames=1, player should be included
-    const result = processCriteria({ type: "HIGHEST_WIN_RATE", minGames: 1, queue: "ALL" }, [match], [player]);
+    const result = processCriteria(
+      { type: "HIGHEST_WIN_RATE", minGames: 1, queue: "ALL" },
+      [match],
+      [player],
+    );
 
     expect(result.length).toBe(1);
     expect(result[0]?.metadata?.["games"]).toBe(1);
@@ -371,7 +451,11 @@ describe("processCriteria integration tests", () => {
     expect(winRate === 0 || winRate === 1).toBe(true);
 
     // Test with minGames too high - should exclude player
-    const filteredResult = processCriteria({ type: "HIGHEST_WIN_RATE", minGames: 10, queue: "ALL" }, [match], [player]);
+    const filteredResult = processCriteria(
+      { type: "HIGHEST_WIN_RATE", minGames: 10, queue: "ALL" },
+      [match],
+      [player],
+    );
     expect(filteredResult.length).toBe(0);
   });
 });

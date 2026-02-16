@@ -1,4 +1,7 @@
-import type { ChatInputCommandInteraction, InteractionReplyOptions } from "discord.js";
+import type {
+  ChatInputCommandInteraction,
+  InteractionReplyOptions,
+} from "discord.js";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import * as Sentry from "@sentry/bun";
@@ -26,7 +29,10 @@ function buildSuccessReply(content: string): InteractionReplyOptions {
 /**
  * Reply with an error message (ephemeral)
  */
-export async function replyWithError(interaction: ChatInputCommandInteraction, content: string): Promise<void> {
+export async function replyWithError(
+  interaction: ChatInputCommandInteraction,
+  content: string,
+): Promise<void> {
   await interaction.reply(buildErrorReply(content));
 }
 
@@ -34,7 +40,9 @@ export async function replyWithError(interaction: ChatInputCommandInteraction, c
  * Reply with a standardized "no linked account" error.
  * This is shared across competition commands that require a linked League account.
  */
-export async function replyWithNoLinkedAccount(interaction: ChatInputCommandInteraction): Promise<void> {
+export async function replyWithNoLinkedAccount(
+  interaction: ChatInputCommandInteraction,
+): Promise<void> {
   await replyWithError(
     interaction,
     `❌ No League account linked
@@ -47,7 +55,10 @@ You need to link your League of Legends account first. Use:
 /**
  * Reply with a success message (ephemeral)
  */
-export async function replyWithSuccess(interaction: ChatInputCommandInteraction, content: string): Promise<void> {
+export async function replyWithSuccess(
+  interaction: ChatInputCommandInteraction,
+  content: string,
+): Promise<void> {
   await interaction.reply(buildSuccessReply(content));
 }
 
@@ -67,5 +78,7 @@ export async function replyWithErrorFromException(
       command: interaction.commandName,
     },
   });
-  await interaction.reply(buildErrorReply(`Error ${context}: ${getErrorMessage(error)}`));
+  await interaction.reply(
+    buildErrorReply(`Error ${context}: ${getErrorMessage(error)}`),
+  );
 }

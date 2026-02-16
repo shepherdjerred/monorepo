@@ -1,4 +1,5 @@
-import { Chart, Duration } from "cdk8s";
+import type { Chart} from "cdk8s";
+import { Duration } from "cdk8s";
 import { ConfigMap, DaemonSet, Volume, ServiceAccount, Probe } from "cdk8s-plus-31";
 import versions from "../../versions.ts";
 

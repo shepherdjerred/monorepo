@@ -188,7 +188,10 @@
           "tooltip": "Katarina throws a <keywordMajor>Dagger</keywordMajor>, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the target and {{ maxbounces }} nearby enemies. The <keywordMajor>Dagger</keywordMajor> then ricochets onto the ground behind the primary target.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Base Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [11, 10, 9, 8, 7],
@@ -209,7 +212,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "2", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "2",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -233,7 +248,10 @@
           "tooltip": "Katarina tosses a <keywordMajor>Dagger</keywordMajor> into the air and gains <speed>{{ e4 }}% Move Speed</speed> decaying over {{ e2 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Move Speed", "Cooldown"],
-            "effect": ["{{ e4 }}% -> {{ e4NL }}%", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ e4 }}% -> {{ e4NL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [15, 14, 13, 12, 11],
@@ -254,7 +272,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "1.25", "0", "50/60/70/80/90", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "1.25",
+            "0",
+            "50/60/70/80/90",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -278,7 +308,10 @@
           "tooltip": "Katarina blinks in the wink of an eye to the target ally, enemy, or <keywordMajor>Dagger</keywordMajor>. If it is an enemy, Katarina strikes for <magicDamage>{{ totaldamage }} magic damage</magicDamage> - otherwise she strikes the nearest enemy in range.<br /><br />Picking up a <keywordMajor>Dagger</keywordMajor> will reduce this Ability's Cooldown by <scaleLevel>{{ daggercooldownreduction }}</scaleLevel> seconds (<scaleLevel>{{ tooltipdaggerreduction }}</scaleLevel>). Katarina can blink to any location near the target.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [12, 11, 10, 9, 8],
@@ -299,7 +332,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -348,7 +393,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",

@@ -104,7 +104,11 @@
           "description": "Rek'Sai's next 3 basic attacks deal bonus Physical Damage to nearby enemies.<br><br>While Burrowed, Rek'Sai launches a burst of void-charged earth that damages and reveals enemies hit.",
           "tooltip": "<keywordMajor>Unburrowed:</keywordMajor> Rek'Sai's next 3 Attacks within {{ buffduration }} seconds gain <attackSpeed>{{ attackspeed*100 }}% Attack Speed</attackSpeed> and deal an additional <physicalDamage>{{ totaldamagetooltip }} physical damage</physicalDamage> to nearby enemies. Attacks refresh the duration of this Ability.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Queen's Wrath AD Ratio", "Queen's Wrath Cooldown", "Prey Seeker Damage"],
+            "label": [
+              "Queen's Wrath AD Ratio",
+              "Queen's Wrath Cooldown",
+              "Prey Seeker Damage"
+            ],
             "effect": [
               "{{ unburrowedadratio*100.000000 }}% -> {{ unburrowedadrationl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -130,7 +134,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "12/11/10/9/8", "5", "3", "300", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "12/11/10/9/8",
+            "5",
+            "3",
+            "300",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -153,7 +169,11 @@
           "description": "Rek'Sai burrows into the ground, gaining new abilities and increased Move Speed. Her vision range is reduced and she cannot use basic attacks.<br><br>While Burrowed, Rek'Sai may cast Unburrow to knock up and damage nearby enemies.",
           "tooltip": "<keywordMajor>Unburrowed:</keywordMajor> Rek'Sai burrows into the ground, gaining access to new Abilities but cannot Attack. She gains <speed>{{ burrowedmovespeed }} Move Speed</speed>, {{ visionradiusmod*-100 }}% reduced vision range, and nearby enemies that move and are otherwise unseen will have their positions revealed to Rek'sai and her allies.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Unburrow Damage", "Knock Up Immunity", "Burrowed Move Speed"],
+            "label": [
+              "Unburrow Damage",
+              "Knock Up Immunity",
+              "Burrowed Move Speed"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ knockupimmunity }} -> {{ knockupimmunityNL }}",
@@ -179,7 +199,19 @@
             [3, 3, 3, 3, 3],
             [0.3, 0.3, 0.3, 0.3, 0.3]
           ],
-          "effectBurn": [null, "1500", "0", "0", "0", "1", "10", "250", "175", "3", "0.3"],
+          "effectBurn": [
+            null,
+            "1500",
+            "0",
+            "0",
+            "0",
+            "1",
+            "10",
+            "250",
+            "175",
+            "3",
+            "0.3"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -202,7 +234,12 @@
           "description": "Rek'Sai bites her target, dealing physical damage, or bonus true damage if she has max Fury.<br><br>While Burrowed, Rek'Sai creates a re-usable, long lasting tunnel. Enemies can destroy it by standing on top of either entrance.",
           "tooltip": "<keywordMajor>Unburrowed:</keywordMajor> Rek'Sai bites a target, dealing <physicalDamage>{{ spell.reksaie:basedamage }} physical damage</physicalDamage>. At max <keywordMajor>Fury</keywordMajor>, the bite deals <trueDamage>{{ spell.reksaie:empowereddamage }} true damage</trueDamage> instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Base Damage", "Empowered Damage", "Tunnel Cast Cooldown", "Tunnel Use Cooldown"],
+            "label": [
+              "Base Damage",
+              "Empowered Damage",
+              "Tunnel Cast Cooldown",
+              "Tunnel Use Cooldown"
+            ],
             "effect": [
               "{{ empoweredbasedamage*0.800000 }} -> {{ empoweredbasedamagenl*0.800000 }}",
               "{{ empoweredbasedamage }} -> {{ empoweredbasedamageNL }}",
@@ -229,7 +266,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -278,7 +327,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",

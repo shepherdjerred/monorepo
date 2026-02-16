@@ -130,7 +130,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -154,7 +166,10 @@
           "tooltip": "<spellPassive>Passive:</spellPassive> While in brush and for {{ buffduration }} seconds after leaving, Ivern's Attacks deal an additional <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Nearby allies will gain this effect for {{ allybuffduration }} seconds and deal <magicDamage>{{ totalallydamage }} magic damage</magicDamage>.<br /><br /><spellActive>Active:</spellActive> Ivern grows a patch of Brush, revealing the area for {{ revealduration }} seconds. The Brush persists until Ivern's team loses vision within it, or up to {{ maxbrushduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Magic Damage", "Ally Magic Damage"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ allybasedamage }} -> {{ allybasedamageNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ allybasedamage }} -> {{ allybasedamageNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [0.5, 0.5, 0.5, 0.5, 0.5],
@@ -175,7 +190,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "3",
@@ -225,7 +252,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -248,7 +287,12 @@
           "description": "Ivern summons his Sentinel friend Daisy to fight with him. Re-cast command Daisy to attack or move.",
           "tooltip": "Ivern summons his sentinel friend Daisy to leap into the fray for {{ daisyduration }} seconds.<br /><br /><spellActive>Daisy, Slam!:</spellActive> Daisy's 3rd consecutive Attack on the same champion or epic monster will launch a shockwave, dealing<magicDamage> {{ totalshockwavedamage }} magic damage</magicDamage> to all enemies hit as well as <status>Knocking Up</status> for {{ shockwaveccduration }} second. This effect can only occur once every {{ shockwavecd }} seconds.<br /><br /><recast>Recast:</recast> Instruct Daisy to Attack or move.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Attack Damage", "Shockwave Damage", "Daisy Bonus Attack Speed", "Cooldown"],
+            "label": [
+              "Attack Damage",
+              "Shockwave Damage",
+              "Daisy Bonus Attack Speed",
+              "Cooldown"
+            ],
             "effect": [
               "{{ daisyad }} -> {{ daisyadNL }}",
               "{{ shockwavebasedamage }} -> {{ shockwavebasedamageNL }}",
@@ -275,7 +319,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

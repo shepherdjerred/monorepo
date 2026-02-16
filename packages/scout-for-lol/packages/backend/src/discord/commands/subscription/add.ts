@@ -33,12 +33,16 @@ export const ArgsSchema = z.object({
   guildId: DiscordGuildIdSchema,
 });
 
-export async function executeSubscriptionAdd(interaction: ChatInputCommandInteraction) {
+export async function executeSubscriptionAdd(
+  interaction: ChatInputCommandInteraction,
+) {
   const startTime = Date.now();
   const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;
 
-  logger.info(`🔔 Starting subscription process for user ${username} (${userId})`);
+  logger.info(
+    `🔔 Starting subscription process for user ${username} (${userId})`,
+  );
 
   const args = validateSubscriptionArgs(interaction, ArgsSchema);
   if (!args) {
@@ -67,7 +71,11 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
   });
 
   // Check subscription limit (only if creating a new player)
-  const subscriptionLimitPassed = await checkSubscriptionLimit(interaction, guildId, existingPlayer);
+  const subscriptionLimitPassed = await checkSubscriptionLimit(
+    interaction,
+    guildId,
+    existingPlayer,
+  );
   if (!subscriptionLimitPassed) {
     return;
   }
@@ -107,7 +115,9 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
     );
 
     const subscriptions = existingAccount.player.subscriptions;
-    const channelList = subscriptions.map((sub) => `<#${sub.channelId}>`).join(", ");
+    const channelList = subscriptions
+      .map((sub) => `<#${sub.channelId}>`)
+      .join(", ");
 
     await interaction.editReply({
       content: `ℹ️ **Account already subscribed**\n\nThe account **${riotId.game_name}#${riotId.tag_line}** is already subscribed as player "${existingAccount.player.alias}".\n\n${subscriptions.length > 0 ? `Currently posting to: ${channelList}` : "No active subscriptions."}`,
@@ -153,7 +163,9 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
       if (playerAccount) {
         if (result.isAddingToExistingPlayer) {
           const accountCount = playerAccount.player.accounts.length;
-          const accountList = playerAccount.player.accounts.map((acc) => `• ${acc.alias} (${acc.region})`).join("\n");
+          const accountList = playerAccount.player.accounts
+            .map((acc) => `• ${acc.alias} (${acc.region})`)
+            .join("\n");
 
           await interaction.editReply({
             content: `✅ **Account added successfully**\n\nAdded **${riotId.game_name}#${riotId.tag_line}** to player "${playerAccount.player.alias}".\n\nThis player is already subscribed in <#${channel}> and now has ${accountCount.toString()} account${accountCount === 1 ? "" : "s"}:\n${accountList}\n\nMatch updates for all accounts will continue to be posted there.`,
@@ -173,7 +185,9 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
   }
 
   const totalTime = Date.now() - startTime;
-  logger.info(`🎉 Subscription completed successfully in ${totalTime.toString()}ms`);
+  logger.info(
+    `🎉 Subscription completed successfully in ${totalTime.toString()}ms`,
+  );
 
   const responseMessage = buildSubscriptionResponse({
     riotId,

@@ -1,7 +1,8 @@
-import { Chart, Duration } from "cdk8s";
+import type { Chart} from "cdk8s";
+import { Duration } from "cdk8s";
 import { ConfigMap, Deployment, EnvValue, Probe, Secret, Service, Volume } from "cdk8s-plus-31";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import versions from "../../versions.ts";
 import { createServiceMonitor } from "../../misc/service-monitor.ts";
 import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
@@ -18,10 +19,10 @@ export async function createR2ExporterMonitoring(chart: Chart) {
   // Python f-strings use {{ and }} for literal braces, but Helm interprets these as template delimiters
   // Use placeholders to avoid double-replacement issues
   scriptContent = scriptContent
-    .replace(/\{\{/g, "__HELM_OPEN__")
-    .replace(/\}\}/g, "__HELM_CLOSE__")
-    .replace(/__HELM_OPEN__/g, '{{ "{{" }}')
-    .replace(/__HELM_CLOSE__/g, '{{ "}}" }}');
+    .replaceAll('{{', "__HELM_OPEN__")
+    .replaceAll('}}', "__HELM_CLOSE__")
+    .replaceAll('__HELM_OPEN__', '{{ "{{" }}')
+    .replaceAll('__HELM_CLOSE__', '{{ "}}" }}');
 
   // Create 1Password secret for Cloudflare API credentials
   const cloudflareSecret = new OnePasswordItem(chart, "r2-exporter-cloudflare-secret", {
@@ -91,8 +92,8 @@ export async function createR2ExporterMonitoring(chart: Chart) {
     securityContext: {
       ensureNonRoot: true,
       readOnlyRootFilesystem: true,
-      user: 65534, // nobody user
-      group: 65534,
+      user: 65_534, // nobody user
+      group: 65_534,
     },
   });
 

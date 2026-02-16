@@ -1,8 +1,18 @@
 /**
  * S3 integration for fetching match data (direct client-side)
  */
-import { S3Client, ListObjectsV2Command, GetObjectCommand, type ListObjectsV2CommandOutput } from "@aws-sdk/client-s3";
-import { RawMatchSchema, RawTimelineSchema, type RawMatch, type RawTimeline } from "@scout-for-lol/data";
+import {
+  S3Client,
+  ListObjectsV2Command,
+  GetObjectCommand,
+  type ListObjectsV2CommandOutput,
+} from "@aws-sdk/client-s3";
+import {
+  RawMatchSchema,
+  RawTimelineSchema,
+  type RawMatch,
+  type RawTimeline,
+} from "@scout-for-lol/data";
 import { getCachedDataAsync, setCachedData } from "./cache.ts";
 import { z } from "zod";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
@@ -103,7 +113,9 @@ function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
  * List matches from S3 for the last 7 days (direct client-side)
  * Results are cached: 10 minutes for today, 24 hours for older days
  */
-export async function listMatchesFromS3(config: S3Config): Promise<{ key: string; lastModified: Date | undefined }[]> {
+export async function listMatchesFromS3(
+  config: S3Config,
+): Promise<{ key: string; lastModified: Date | undefined }[]> {
   const allMatches: { key: string; lastModified: Date | undefined }[] = [];
 
   // Create S3 client
@@ -140,7 +152,10 @@ export async function listMatchesFromS3(config: S3Config): Promise<{ key: string
         const cacheTTL = daysBack === 0 ? 10 * 60 * 1000 : 24 * 60 * 60 * 1000;
 
         // Try to get from cache first
-        const cached: unknown = await getCachedDataAsync("r2-list", cacheParams);
+        const cached: unknown = await getCachedDataAsync(
+          "r2-list",
+          cacheParams,
+        );
 
         let matches: { key: string; lastModified: Date | undefined }[];
 
@@ -155,13 +170,17 @@ export async function listMatchesFromS3(config: S3Config): Promise<{ key: string
         const cachedResult = CachedMatchListSchema.safeParse(cached);
         if (cachedResult.success && cachedResult.data.length > 0) {
           // Convert cached string dates back to Date objects
-          matches = cachedResult.data.map((obj): { key: string; lastModified: Date | undefined } => {
-            const match: { key: string; lastModified: Date | undefined } = {
-              key: obj.key,
-              lastModified: obj.lastModified ? new Date(obj.lastModified) : undefined,
-            };
-            return match;
-          });
+          matches = cachedResult.data.map(
+            (obj): { key: string; lastModified: Date | undefined } => {
+              const match: { key: string; lastModified: Date | undefined } = {
+                key: obj.key,
+                lastModified: obj.lastModified
+                  ? new Date(obj.lastModified)
+                  : undefined,
+              };
+              return match;
+            },
+          );
         } else {
           // Fetch directly from S3
           matches = await fetchAllS3Objects(client, config.bucketName, prefix);
@@ -190,7 +209,10 @@ export async function listMatchesFromS3(config: S3Config): Promise<{ key: string
  * Fetch a match from S3 (direct client-side)
  * Results are cached for 7 days (match data is immutable)
  */
-export async function fetchMatchFromS3(config: S3Config, key: string): Promise<RawMatch | null> {
+export async function fetchMatchFromS3(
+  config: S3Config,
+  key: string,
+): Promise<RawMatch | null> {
   try {
     // Cache key parameters (exclude credentials for security)
     const cacheParams = {
@@ -241,7 +263,12 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<R
     const rawDataResult = RawMatchSchema.parse(rawData);
 
     // Cache the result for 7 days (match data is immutable)
-    await setCachedData("r2-get", cacheParams, rawDataResult, 7 * 24 * 60 * 60 * 1000);
+    await setCachedData(
+      "r2-get",
+      cacheParams,
+      rawDataResult,
+      7 * 24 * 60 * 60 * 1000,
+    );
 
     return rawDataResult;
   } catch (error) {
@@ -257,7 +284,10 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<R
  * @param matchKey - The S3 key for the match (e.g., games/2024/01/15/NA_123456789/match.json)
  * @returns The timeline data or null if not found
  */
-export async function fetchTimelineFromS3(config: S3Config, matchKey: string): Promise<RawTimeline | null> {
+export async function fetchTimelineFromS3(
+  config: S3Config,
+  matchKey: string,
+): Promise<RawTimeline | null> {
   try {
     // Derive timeline key from match key
     // Match key: games/2024/01/15/NA_123456789/match.json
@@ -273,7 +303,10 @@ export async function fetchTimelineFromS3(config: S3Config, matchKey: string): P
     };
 
     // Try to get from cache first (7 days TTL - timeline data is immutable)
-    const cached: unknown = await getCachedDataAsync("r2-timeline", cacheParams);
+    const cached: unknown = await getCachedDataAsync(
+      "r2-timeline",
+      cacheParams,
+    );
 
     const cachedResult = RawTimelineSchema.safeParse(cached);
     if (cachedResult.success) {
@@ -314,7 +347,12 @@ export async function fetchTimelineFromS3(config: S3Config, matchKey: string): P
     const rawDataResult = RawTimelineSchema.parse(rawData);
 
     // Cache the result for 7 days (timeline data is immutable)
-    await setCachedData("r2-timeline", cacheParams, rawDataResult, 7 * 24 * 60 * 60 * 1000);
+    await setCachedData(
+      "r2-timeline",
+      cacheParams,
+      rawDataResult,
+      7 * 24 * 60 * 60 * 1000,
+    );
 
     return rawDataResult;
   } catch (error) {

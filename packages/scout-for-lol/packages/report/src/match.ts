@@ -1,4 +1,9 @@
-import type { RawMatch, CompletedMatch, Player, Rank } from "@scout-for-lol/data";
+import type {
+  RawMatch,
+  CompletedMatch,
+  Player,
+  Rank,
+} from "@scout-for-lol/data";
 import {
   getLaneOpponent,
   invertTeam,
@@ -17,7 +22,10 @@ export function toMatch(
   rankBeforeMatch: Rank | undefined,
   rankAfterMatch: Rank | undefined,
 ): CompletedMatch {
-  const participant = findParticipant(player.config.league.leagueAccount.puuid, rawMatch.info.participants);
+  const participant = findParticipant(
+    player.config.league.leagueAccount.puuid,
+    rawMatch.info.participants,
+  );
   if (participant === undefined) {
     console.debug("Player PUUID:", player.config.league.leagueAccount.puuid);
     console.debug("Match Participants:", rawMatch.info.participants);
@@ -44,9 +52,14 @@ export function toMatch(
         playerConfig: player.config,
         rankBeforeMatch,
         rankAfterMatch,
-        wins: queueType === "solo" || queueType === "flex" ? (player.ranks[queueType]?.wins ?? undefined) : undefined,
+        wins:
+          queueType === "solo" || queueType === "flex"
+            ? (player.ranks[queueType]?.wins ?? undefined)
+            : undefined,
         losses:
-          queueType === "solo" || queueType === "flex" ? (player.ranks[queueType]?.losses ?? undefined) : undefined,
+          queueType === "solo" || queueType === "flex"
+            ? (player.ranks[queueType]?.losses ?? undefined)
+            : undefined,
         champion,
         outcome: getOutcome(participant),
         team: team,

@@ -91,7 +91,10 @@
           "tooltip": "Rell thrusts her lance, <status>Stunning</status> targets for {{ stunduration }} seconds, destroying all <shield>Shields</shield>, and dealing <magicDamage>{{ damage }} magic damage.</magicDamage>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [11, 10.5, 10, 9.5, 9],
@@ -112,7 +115,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -135,7 +150,12 @@
           "description": "Mounted: Rell Dismounts, crashing down in her armor, Knocking enemies up and gaining a large Shield. While dismounted, she gains Armor, Magic Resist, Attack Speed, and Attack Range, but is Slowed.<br><br>Dismounted: Rell forms her Mount, gaining a burst of speed and Knocking Up the next enemy she attacks.<br><br>",
           "tooltip": "<spellPassive>Passive - Mounted Alacrity:</spellPassive> Rell gains <speed>{{ spell.rellw_dismount:mountedmovespeed }} Move Speed</speed> while mounted.<br /><br /><spellActive>Active - Ferromancy: Crash Down:</spellActive> Rell leaps off her mount, <status>Knocking Up</status> enemies and dealing <magicDamage>{{ spell.rellw_dismount:dismountdamage }} magic damage</magicDamage>. Rell gains <shield>{{ spell.rellw_dismount:shield }} Shield</shield>, which lasts until she remounts.<br /><br />Rell then enters her armored form, gaining <scaleArmor>{{ spell.rellw_dismount:resistanceincrease*100 }}% increased Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR>, <attackSpeed>{{ spell.rellw_dismount:dismountedasboost*100 }}% Attack Speed</attackSpeed> and {{ spell.rellw_dismount:dismountedrangeboost }} Attack Range. In this armored form, she can use <spellName>Ferromancy: Mount Up</spellName>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Dismount Damage", "Shield Amount", "Flip Damage", "Passive Move Speed"],
+            "label": [
+              "Dismount Damage",
+              "Shield Amount",
+              "Flip Damage",
+              "Passive Move Speed"
+            ],
             "effect": [
               "{{ crashdowndamage }} -> {{ crashdowndamageNL }}",
               "{{ shieldbase }} -> {{ shieldbaseNL }}",
@@ -162,7 +182,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -210,7 +242,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -258,7 +302,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

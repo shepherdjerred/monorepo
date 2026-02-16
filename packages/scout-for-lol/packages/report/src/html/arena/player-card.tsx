@@ -15,7 +15,14 @@ export function PlayerCard({
   const damagePercent = round((player.damage / (maxTeamDamage || 1)) * 100, 0);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", marginBottom: 16, gap: 8 }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        marginBottom: 16,
+        gap: 8,
+      }}
+    >
       <ChampionInfo
         items={player.items}
         playerName={player.riotIdGameName}

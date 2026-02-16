@@ -128,7 +128,10 @@
           "tooltip": "Heimerdinger constructs a <keywordMajor>Turret</keywordMajor> that attacks nearby enemies. Heimerdinger can have {{ maxturrets }} turrets active at once. <keywordMajor>Turrets</keywordMajor> slowly build up charge. At max charge, they fire a stronger attack.<br /><br />If Heimerdinger gets too far away, his <keywordMajor>Turrets</keywordMajor> will deactivate after 8 seconds.<br /><br />This Ability has {{ maxkits }} charges.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cannon Damage", "Beam Damage"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ basedamagebeam }} -> {{ basedamagebeamNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ basedamagebeam }} -> {{ basedamagebeamNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [1, 1, 1, 1, 1],
@@ -149,7 +152,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "900", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "900",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " Turret Kit & {{ cost }} Mana",
           "maxammo": "3",
@@ -255,7 +270,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

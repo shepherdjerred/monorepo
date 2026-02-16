@@ -29,5 +29,7 @@ export function getRuneIconUrl(iconPath: string): string {
   if (cached) {
     return cached;
   }
-  throw new Error(`Rune icon ${iconPath} not found in cache. This should not happen.`);
+  throw new Error(
+    `Rune icon ${iconPath} not found in cache. This should not happen.`,
+  );
 }

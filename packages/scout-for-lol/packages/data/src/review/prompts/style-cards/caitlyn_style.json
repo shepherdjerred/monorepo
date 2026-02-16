@@ -81,7 +81,14 @@
     "lanes": ["Support", "Top"],
     "team_moods": "Casual and humorous, with a focus on fun over competitiveness."
   },
-  "other_games": ["Valorant", "Hearthstone", "Apex Legends", "Bloons TD 6", "Overwatch", "TFT"],
+  "other_games": [
+    "Valorant",
+    "Hearthstone",
+    "Apex Legends",
+    "Bloons TD 6",
+    "Overwatch",
+    "TFT"
+  ],
   "how_to_mimic": [
     "Use casual language and informal punctuation.",
     "Incorporate emojis frequently to express emotions.",

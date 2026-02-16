@@ -25,7 +25,9 @@ const ArgsSchema = z.object({
   guildId: DiscordGuildIdSchema,
 });
 
-export async function executePlayerEdit(interaction: ChatInputCommandInteraction) {
+export async function executePlayerEdit(
+  interaction: ChatInputCommandInteraction,
+) {
   const validation = await validateCommandArgs(
     interaction,
     ArgsSchema,
@@ -46,7 +48,12 @@ export async function executePlayerEdit(interaction: ChatInputCommandInteraction
 
   await executeWithTiming("player-edit", username, async () => {
     // Check if current player exists
-    const currentPlayer = await findPlayerByAliasWithSubscriptions(prisma, guildId, currentAlias, interaction);
+    const currentPlayer = await findPlayerByAliasWithSubscriptions(
+      prisma,
+      guildId,
+      currentAlias,
+      interaction,
+    );
     if (!currentPlayer) {
       return;
     }
@@ -70,7 +77,9 @@ export async function executePlayerEdit(interaction: ChatInputCommandInteraction
       return;
     }
 
-    logger.info(`💾 Updating player alias from "${currentAlias}" to "${newAlias}"`);
+    logger.info(
+      `💾 Updating player alias from "${currentAlias}" to "${newAlias}"`,
+    );
 
     try {
       const now = new Date();

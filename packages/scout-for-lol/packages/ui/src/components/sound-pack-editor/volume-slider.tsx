@@ -17,12 +17,20 @@ type VolumeSliderProps = {
   disabled?: boolean;
 };
 
-export function VolumeSlider({ value, onChange, label, className = "", disabled = false }: VolumeSliderProps) {
+export function VolumeSlider({
+  value,
+  onChange,
+  label,
+  className = "",
+  disabled = false,
+}: VolumeSliderProps) {
   const percentage = Math.round(value * 100);
 
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
-      {label && <label className="text-sm font-medium text-gray-700">{label}</label>}
+      {label && (
+        <label className="text-sm font-medium text-gray-700">{label}</label>
+      )}
       <div className="flex items-center gap-3">
         <input
           type="range"
@@ -35,7 +43,9 @@ export function VolumeSlider({ value, onChange, label, className = "", disabled 
           disabled={disabled}
           className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         />
-        <span className="w-12 text-sm text-gray-600 tabular-nums text-right">{percentage}%</span>
+        <span className="w-12 text-sm text-gray-600 tabular-nums text-right">
+          {percentage}%
+        </span>
       </div>
     </div>
   );

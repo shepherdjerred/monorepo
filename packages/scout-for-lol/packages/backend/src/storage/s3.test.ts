@@ -283,7 +283,9 @@ describe("S3 URL Format", () => {
     const key = "games/2025/10/16/NA1_1234567890/report.png";
     const expectedUrl = `s3://${bucket}/${key}`;
 
-    expect(expectedUrl).toBe("s3://my-bucket/games/2025/10/16/NA1_1234567890/report.png");
+    expect(expectedUrl).toBe(
+      "s3://my-bucket/games/2025/10/16/NA1_1234567890/report.png",
+    );
   });
 
   test("s3 URL format is parseable", () => {

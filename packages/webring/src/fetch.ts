@@ -1,13 +1,27 @@
 import Parser from "rss-parser";
 import sanitizeHtml from "sanitize-html";
 import * as truncateHtml from "truncate-html";
+import { z } from "zod";
 import { type Source, type ResultEntry, FeedEntrySchema, type Configuration } from "./types.js";
 import * as R from "remeda";
 import { asyncMapFilterUndefined } from "./util.js";
 
 // Handle ESM/CommonJS interop - truncate-html exports differently in different environments
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-const truncate: (html: string, length?: number) => string = (truncateHtml as any).default ?? truncateHtml;
+const TruncateFnSchema = z.function().args(z.string(), z.number().optional()).returns(z.string());
+const TruncateModuleSchema = z.object({ default: TruncateFnSchema });
+
+function truncate(html: string, length?: number): string {
+  const mod = truncateHtml as unknown;
+  const fnResult = TruncateFnSchema.safeParse(mod);
+  if (fnResult.success) {
+    return fnResult.data(html, length);
+  }
+  const modResult = TruncateModuleSchema.safeParse(mod);
+  if (modResult.success) {
+    return modResult.data.default(html, length);
+  }
+  throw new Error("truncate-html module could not be resolved");
+}
 
 export async function fetchAll(config: Configuration) {
   return await asyncMapFilterUndefined(config.sources, (source) => fetch(source, config.truncate));
@@ -39,10 +53,13 @@ export async function fetch(source: Source, length: number): Promise<ResultEntry
       url: firstItem.link,
       date: new Date(firstItem.date),
       source,
-      preview: preview ? truncate(sanitizeHtml(preview, { parseStyleAttributes: false }), length) : undefined,
+      preview:
+        preview !== undefined && preview !== ""
+          ? truncate(sanitizeHtml(preview, { parseStyleAttributes: false }), length)
+          : undefined,
     };
-  } catch (e) {
-    console.error(`Error fetching ${source.url}: ${e as string}`);
+  } catch (error) {
+    console.error(`Error fetching ${source.url}: ${String(error)}`);
     return undefined;
   }
 }

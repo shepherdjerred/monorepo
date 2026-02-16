@@ -139,7 +139,10 @@
           "tooltip": "Xin Zhao's next 3 Attacks deal an additional <physicalDamage>{{ bonusdamage }} physical damage</physicalDamage> and reduces his other Ability's Cooldowns by 1 second. The third Attack also <status>Knocks Up</status> for {{ e2 }} seconds.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Bonus Damage:", "Cooldown"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [7, 6.5, 6, 5.5, 5],
@@ -160,7 +163,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "15/30/45/60/75", "0.75", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "15/30/45/60/75",
+            "0.75",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -183,7 +198,12 @@
           "description": "Xin Zhao slashes in front of himself with his spear, then thrusts it forward, slowing affected enemies and marking them as Challenged.",
           "tooltip": "Xin Zhao slashes, dealing <physicalDamage>{{ slashdamage }} physical damage</physicalDamage>, then thrusts, dealing <physicalDamage>{{ thrustdamage }}</physicalDamage>. Enemies hit by the thrust are <status>Slowed</status> by {{ e6 }}% for {{ e7 }} seconds. <br /><br />Champions and Large Monsters hit by the thrust are marked as <keywordMajor>Challenged</keywordMajor> for {{ markduration }} seconds and revealed unless <keywordStealth>Stealthed</keywordStealth>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Slash Damage", "Thrust Damage", "@AbilityResourceName@ Cost", "Cooldown"],
+            "label": [
+              "Slash Damage",
+              "Thrust Damage",
+              "@AbilityResourceName@ Cost",
+              "Cooldown"
+            ],
             "effect": [
               "{{ slashbasedamage }} -> {{ slashbasedamageNL }}",
               "{{ thrustbasedamage }} -> {{ thrustbasedamageNL }}",
@@ -210,7 +230,19 @@
             [200, 200, 200, 200, 200],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0.5", "0.5", "0.5", "50", "1.5", "140", "200", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0.5",
+            "0.5",
+            "0.5",
+            "50",
+            "1.5",
+            "140",
+            "200",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -234,7 +266,10 @@
           "tooltip": "Xin Zhao charges an enemy, dealing <magicDamage>{{ chargedamage }} magic damage</magicDamage> to nearby enemies and <status>Slowing</status> them by {{ baseslowamount }}% for {{ e6 }} seconds.<br /><br />Xin Zhao also grants himself <attackSpeed>{{ e3 }}% Attack Speed</attackSpeed> for {{ e4 }} seconds.<br /><br />This Ability's range is increased on enemies that are <keywordMajor>Challenged</keywordMajor>. <br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Attack Speed"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ effect3amount*100.000000 }}% -> {{ effect3amountnl*100.000000 }}%"]
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ effect3amount*100.000000 }}% -> {{ effect3amountnl*100.000000 }}%"
+            ]
           },
           "maxrank": 5,
           "cooldown": [11, 11, 11, 11, 11],
@@ -255,7 +290,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "50/75/100/125/150", "-0.3", "40/50/60/70/80", "5", "250", "0.5", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "50/75/100/125/150",
+            "-0.3",
+            "40/50/60/70/80",
+            "5",
+            "250",
+            "0.5",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -279,7 +326,10 @@
           "tooltip": "<spellPassive>Passive:</spellPassive> The last champion Xin Zhao damaged with an Attack or <spellName>Audacious Charge</spellName> is <keywordMajor>Challenged</keywordMajor> for {{ markduration }} seconds.<br /><br /><spellActive>Active:</spellActive> Xin Zhao unleashes a sweep around him that deals <physicalDamage>{{ totaldamage }} plus {{ percentcurrenthealthdamage*100 }}% current Health physical damage</physicalDamage> and <status>Knocks Back</status> all <keywordMajor>non-Challenged</keywordMajor> enemies. <br />  <br />Afterwards, Xin Zhao becomes immune to damage from enemies outside the sweep range for {{ missiledefensebaseduration }} seconds. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [120, 110, 100],
@@ -300,7 +350,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

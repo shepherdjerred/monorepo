@@ -40,7 +40,9 @@ export function BackendSection({
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-white">Backend Connection</h2>
-        <p className="mt-1 text-gray-400">Configure the connection to the Scout backend service</p>
+        <p className="mt-1 text-gray-400">
+          Configure the connection to the Scout backend service
+        </p>
       </div>
 
       {/* Connection Status */}
@@ -60,7 +62,9 @@ export function BackendSection({
         </CardHeader>
         {backendStatus.lastError && (
           <CardContent>
-            <p className="text-sm text-red-400">Last error: {backendStatus.lastError}</p>
+            <p className="text-sm text-red-400">
+              Last error: {backendStatus.lastError}
+            </p>
           </CardContent>
         )}
       </Card>
@@ -70,13 +74,16 @@ export function BackendSection({
         <CardHeader>
           <CardTitle>Backend Configuration</CardTitle>
           <CardDescription>
-            Enter your API token and backend URL. You can get these from the Scout web dashboard after logging in with
-            Discord.
+            Enter your API token and backend URL. You can get these from the
+            Scout web dashboard after logging in with Discord.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label htmlFor="backend-url" className="mb-2 block text-sm font-medium text-gray-300">
+            <label
+              htmlFor="backend-url"
+              className="mb-2 block text-sm font-medium text-gray-300"
+            >
               Backend URL
             </label>
             <Input
@@ -88,11 +95,16 @@ export function BackendSection({
                 onBackendUrlChange(e.target.value);
               }}
             />
-            <p className="mt-1 text-xs text-gray-500">The URL of the Scout backend service</p>
+            <p className="mt-1 text-xs text-gray-500">
+              The URL of the Scout backend service
+            </p>
           </div>
 
           <div>
-            <label htmlFor="api-token" className="mb-2 block text-sm font-medium text-gray-300">
+            <label
+              htmlFor="api-token"
+              className="mb-2 block text-sm font-medium text-gray-300"
+            >
               API Token
             </label>
             <Input
@@ -104,19 +116,28 @@ export function BackendSection({
                 onApiTokenChange(e.target.value);
               }}
             />
-            <p className="mt-1 text-xs text-gray-500">Your personal API token from the Scout dashboard</p>
+            <p className="mt-1 text-xs text-gray-500">
+              Your personal API token from the Scout dashboard
+            </p>
           </div>
 
           <div className="flex gap-3">
-            <Button onClick={onConfigure} disabled={loading !== null || !apiToken || !backendUrl}>
-              {loading === "Configuring backend..." ? "Configuring..." : "Save Configuration"}
+            <Button
+              onClick={onConfigure}
+              disabled={loading !== null || !apiToken || !backendUrl}
+            >
+              {loading === "Configuring backend..."
+                ? "Configuring..."
+                : "Save Configuration"}
             </Button>
             <Button
               variant="secondary"
               onClick={onTestConnection}
               disabled={loading !== null || !backendStatus.connected}
             >
-              {loading === "Testing connection..." ? "Testing..." : "Test Connection"}
+              {loading === "Testing connection..."
+                ? "Testing..."
+                : "Test Connection"}
             </Button>
           </div>
         </CardContent>
@@ -126,7 +147,9 @@ export function BackendSection({
       <Card>
         <CardHeader>
           <CardTitle>Getting Started</CardTitle>
-          <CardDescription>How to set up your Scout backend connection</CardDescription>
+          <CardDescription>
+            How to set up your Scout backend connection
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-gray-400">
           <ol className="list-inside list-decimal space-y-2">
@@ -134,7 +157,9 @@ export function BackendSection({
             <li>Go to Settings and generate an API token</li>
             <li>Copy the backend URL and API token into the fields above</li>
             <li>Click &quot;Save Configuration&quot; to connect</li>
-            <li>Configure your voice channel and sound pack in the web dashboard</li>
+            <li>
+              Configure your voice channel and sound pack in the web dashboard
+            </li>
           </ol>
         </CardContent>
       </Card>

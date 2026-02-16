@@ -7,7 +7,11 @@ type MatchPaginationProps = {
   onPageChange: (page: number) => void;
 };
 
-export function MatchPagination({ currentPage, totalPages, onPageChange }: MatchPaginationProps) {
+export function MatchPagination({
+  currentPage,
+  totalPages,
+  onPageChange,
+}: MatchPaginationProps) {
   if (totalPages <= 1) {
     return null;
   }

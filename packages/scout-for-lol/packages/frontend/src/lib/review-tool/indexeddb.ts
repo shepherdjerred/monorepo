@@ -3,7 +3,11 @@
  * IndexedDB can handle much larger data than localStorage (hundreds of MB vs 5-10MB)
  */
 import { z } from "zod";
-import { openIndexedDB, executeRequest, getStore } from "./indexeddb-helpers.ts";
+import {
+  openIndexedDB,
+  executeRequest,
+  getStore,
+} from "./indexeddb-helpers.ts";
 
 const DB_NAME = "scout-review-history";
 const DB_VERSION = 1;
@@ -24,7 +28,9 @@ const DBHistoryEntrySchema = z.object({
     artStyle: z.string().optional(),
   }),
   status: z.enum(["pending", "complete", "error"]),
-  rating: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
+  rating: z
+    .union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)])
+    .optional(),
   notes: z.string().optional(),
 });
 
@@ -73,7 +79,10 @@ export async function getAllEntries(): Promise<DBHistoryEntry[]> {
   if (entriesResult.success) {
     const entries = entriesResult.data;
     // Sort by timestamp, newest first
-    entries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    entries.sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    );
     return entries;
   }
   return [];
@@ -82,7 +91,9 @@ export async function getAllEntries(): Promise<DBHistoryEntry[]> {
 /**
  * Get a specific entry by ID
  */
-export async function getEntry(id: string): Promise<DBHistoryEntry | undefined> {
+export async function getEntry(
+  id: string,
+): Promise<DBHistoryEntry | undefined> {
   const db = await openDB();
   const transaction = db.transaction([STORE_NAME], "readonly");
   const store = getStore(transaction, STORE_NAME);

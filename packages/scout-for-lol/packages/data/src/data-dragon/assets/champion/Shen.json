@@ -237,7 +237,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "1.75", "2", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "1.75",
+            "2",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -261,7 +273,10 @@
           "tooltip": "<spellPassive>Passive:</spellPassive> Dealing damage with <spellName>Twilight Assault</spellName> or this Ability recovers <keywordMajor>{{ energyrefund }} Energy</keywordMajor>.<br /><br /><spellActive>Active:</spellActive> Shen dashes, <status>Taunting</status> champions and jungle monsters for {{ ccduration }} seconds and dealing <physicalDamage>{{ tauntdamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [18, 16, 14, 12, 10],
@@ -282,7 +297,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -305,7 +332,11 @@
           "description": "Shen shields target allied champion from incoming damage, and soon after teleports to their location.",
           "tooltip": "Shen grants an allied champion anywhere on the map between <shield>{{ shield }}</shield> and <shield>{{ maxshield }} Shield</shield> based on their missing Health for {{ shieldduration }} seconds (max Shield at 60% missing Health). After channeling for {{ channelduration }} seconds, Shen teleports to his ally's location with his <keywordMajor>Spirit Blade</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Minimum Shield Health", "Maximum Shield Health", "Cooldown"],
+            "label": [
+              "Minimum Shield Health",
+              "Maximum Shield Health",
+              "Cooldown"
+            ],
             "effect": [
               "{{ baseshieldamount }} -> {{ baseshieldamountNL }}",
               "{{ baseshieldamount*1.600000 }} -> {{ baseshieldamountnl*1.600000 }}",
@@ -331,7 +362,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",

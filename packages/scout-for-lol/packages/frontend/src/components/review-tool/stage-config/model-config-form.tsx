@@ -9,13 +9,19 @@ type ModelConfigFormProps = {
   onChange: (next: ModelConfig) => void;
 };
 
-function handleNumberChange(event: ChangeEvent<HTMLInputElement>, fallback: number): number {
+function handleNumberChange(
+  event: ChangeEvent<HTMLInputElement>,
+  fallback: number,
+): number {
   const parsed = Number.parseInt(event.target.value, 10);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 export function ModelConfigForm({ value, onChange }: ModelConfigFormProps) {
-  const supportsTemperature = modelSupportsParameter(value.model, "temperature");
+  const supportsTemperature = modelSupportsParameter(
+    value.model,
+    "temperature",
+  );
   const supportsTopP = modelSupportsParameter(value.model, "topP");
 
   return (
@@ -40,14 +46,19 @@ export function ModelConfigForm({ value, onChange }: ModelConfigFormProps) {
           max={100000}
           value={value.maxTokens}
           onChange={(e) => {
-            onChange({ ...value, maxTokens: handleNumberChange(e, value.maxTokens) });
+            onChange({
+              ...value,
+              maxTokens: handleNumberChange(e, value.maxTokens),
+            });
           }}
         />
       </div>
       <div>
         <Label htmlFor="temperature">
           Temperature
-          {!supportsTemperature && <span className="ml-1 text-xs text-amber-600">(unsupported)</span>}
+          {!supportsTemperature && (
+            <span className="ml-1 text-xs text-amber-600">(unsupported)</span>
+          )}
         </Label>
         <Input
           id="temperature"
@@ -58,7 +69,10 @@ export function ModelConfigForm({ value, onChange }: ModelConfigFormProps) {
           value={value.temperature ?? ""}
           onChange={(e) => {
             const next = Number.parseFloat(e.target.value);
-            onChange({ ...value, temperature: Number.isFinite(next) ? next : undefined });
+            onChange({
+              ...value,
+              temperature: Number.isFinite(next) ? next : undefined,
+            });
           }}
           placeholder="0.7"
           disabled={!supportsTemperature}
@@ -66,7 +80,10 @@ export function ModelConfigForm({ value, onChange }: ModelConfigFormProps) {
       </div>
       <div>
         <Label htmlFor="topP">
-          Top P{!supportsTopP && <span className="ml-1 text-xs text-amber-600">(unsupported)</span>}
+          Top P
+          {!supportsTopP && (
+            <span className="ml-1 text-xs text-amber-600">(unsupported)</span>
+          )}
         </Label>
         <Input
           id="topP"
@@ -77,7 +94,10 @@ export function ModelConfigForm({ value, onChange }: ModelConfigFormProps) {
           value={value.topP ?? ""}
           onChange={(e) => {
             const next = Number.parseFloat(e.target.value);
-            onChange({ ...value, topP: Number.isFinite(next) ? next : undefined });
+            onChange({
+              ...value,
+              topP: Number.isFinite(next) ? next : undefined,
+            });
           }}
           placeholder="0.9"
           disabled={!supportsTopP}

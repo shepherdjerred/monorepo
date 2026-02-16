@@ -1,6 +1,10 @@
 import { describe, it, expect } from "bun:test";
 import type { RawParticipant } from "@scout-for-lol/data";
-import { groupArenaTeams, getArenaTeammate, toArenaSubteams } from "@scout-for-lol/backend/league/model/match.ts";
+import {
+  groupArenaTeams,
+  getArenaTeammate,
+  toArenaSubteams,
+} from "@scout-for-lol/backend/league/model/match.ts";
 
 import { testPuuid } from "@scout-for-lol/backend/testing/test-ids.ts";
 

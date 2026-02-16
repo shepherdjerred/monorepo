@@ -24,7 +24,8 @@ export function createCourageAugment() {
     rarity: "gold",
     apiName: "CourageoftheColossus",
     desc: "Gain Shield after Immobilizing or Grounding an enemy champion.",
-    tooltip: "Gain @TotalShield@ Shield after Immobilizing or Grounding an enemy champion.",
+    tooltip:
+      "Gain @TotalShield@ Shield after Immobilizing or Grounding an enemy champion.",
     iconLarge: "assets/ux/cherry/augments/icons/courageofthecolossus_large.png",
     iconSmall: "assets/ux/cherry/augments/icons/courageofthecolossus_small.png",
     calculations: {},

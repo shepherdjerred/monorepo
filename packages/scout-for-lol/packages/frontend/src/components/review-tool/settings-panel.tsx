@@ -3,7 +3,10 @@
  */
 import { useState, useSyncExternalStore } from "react";
 import { z } from "zod";
-import type { TabConfig, Personality } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import type {
+  TabConfig,
+  Personality,
+} from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import {
   createDefaultTabConfig,
   createDefaultPipelineStages,
@@ -75,22 +78,33 @@ function getStagesOrDefault(config: TabConfig) {
 
 export function SettingsPanel({ config, onChange }: SettingsPanelProps) {
   // Subscribe to custom data store
-  const customData = useSyncExternalStore(subscribeToCustomData, getCustomDataSnapshot, getCustomDataSnapshot);
+  const customData = useSyncExternalStore(
+    subscribeToCustomData,
+    getCustomDataSnapshot,
+    getCustomDataSnapshot,
+  );
   const { personalities: customPersonalities } = customData;
 
-  const [editingPersonality, setEditingPersonality] = useState<Personality | null>(null);
+  const [editingPersonality, setEditingPersonality] =
+    useState<Personality | null>(null);
   const [showPersonalityEditor, setShowPersonalityEditor] = useState(false);
 
   const [showImportModal, setShowImportModal] = useState(false);
 
-  const allPersonalities = [...BUILTIN_PERSONALITIES.filter((p) => p.id !== "generic"), ...customPersonalities];
+  const allPersonalities = [
+    ...BUILTIN_PERSONALITIES.filter((p) => p.id !== "generic"),
+    ...customPersonalities,
+  ];
 
   const handleCreateNewPersonality = () => {
     setEditingPersonality(null);
     setShowPersonalityEditor(true);
   };
 
-  const handleEditPersonality = (personality: Personality, createCopy = false) => {
+  const handleEditPersonality = (
+    personality: Personality,
+    createCopy = false,
+  ) => {
     if (createCopy) {
       // Create a copy of built-in personality with a new ID
       const copy: Personality = {
@@ -118,7 +132,9 @@ export function SettingsPanel({ config, onChange }: SettingsPanelProps) {
   };
 
   const handleSavePersonality = async (personality: Personality) => {
-    const existsInCustom = customPersonalities.some((p) => p.id === personality.id);
+    const existsInCustom = customPersonalities.some(
+      (p) => p.id === personality.id,
+    );
 
     if (editingPersonality && existsInCustom) {
       // Update existing custom personality
@@ -127,7 +143,9 @@ export function SettingsPanel({ config, onChange }: SettingsPanelProps) {
       // Create new custom personality (or copy of built-in)
       const newPersonality = {
         ...personality,
-        id: editingPersonality?.id ?? generatePersonalityId(personality.metadata.name),
+        id:
+          editingPersonality?.id ??
+          generatePersonalityId(personality.metadata.name),
       };
       await addCustomPersonality(newPersonality);
     }
@@ -144,7 +162,11 @@ export function SettingsPanel({ config, onChange }: SettingsPanelProps) {
       if (config.prompts.personalityId === id) {
         onChange({
           ...config,
-          prompts: { ...config.prompts, personalityId: "random", customPersonality: undefined },
+          prompts: {
+            ...config.prompts,
+            personalityId: "random",
+            customPersonality: undefined,
+          },
         });
       }
     }
@@ -156,7 +178,9 @@ export function SettingsPanel({ config, onChange }: SettingsPanelProps) {
         await downloadConfigBundle(config);
       } catch (error) {
         const errorResult = ErrorSchema.safeParse(error);
-        alert(`Failed to export config: ${errorResult.success ? errorResult.data.message : String(error)}`);
+        alert(
+          `Failed to export config: ${errorResult.success ? errorResult.data.message : String(error)}`,
+        );
       }
     })();
   };
@@ -174,7 +198,11 @@ export function SettingsPanel({ config, onChange }: SettingsPanelProps) {
   };
 
   const handleResetToDefaults = () => {
-    if (confirm("Reset settings to defaults? This will not affect custom personalities or art styles.")) {
+    if (
+      confirm(
+        "Reset settings to defaults? This will not affect custom personalities or art styles.",
+      )
+    ) {
       onChange(createDefaultTabConfig());
     }
   };
@@ -182,16 +210,23 @@ export function SettingsPanel({ config, onChange }: SettingsPanelProps) {
   return (
     <div className="card p-0 overflow-hidden">
       <div className="px-6 py-4 border-b border-surface-200/50">
-        <h2 className="text-lg font-semibold text-surface-900">Generation Settings</h2>
-        <p className="text-sm text-surface-500 mt-0.5">Configure how reviews are generated</p>
+        <h2 className="text-lg font-semibold text-surface-900">
+          Generation Settings
+        </h2>
+        <p className="text-sm text-surface-500 mt-0.5">
+          Configure how reviews are generated
+        </p>
       </div>
 
       <div className="divide-y divide-surface-200/50">
         <div className="px-4 py-5 bg-surface-50">
           <div className="mb-3">
-            <h3 className="text-base font-semibold text-surface-900">Pipeline stages</h3>
+            <h3 className="text-base font-semibold text-surface-900">
+              Pipeline stages
+            </h3>
             <p className="text-sm text-surface-500">
-              Configure the unified review pipeline stages used by frontend and backend.
+              Configure the unified review pipeline stages used by frontend and
+              backend.
             </p>
           </div>
           <StageConfigSections
@@ -220,7 +255,11 @@ export function SettingsPanel({ config, onChange }: SettingsPanelProps) {
         />
       </div>
 
-      <ConfigActions onExport={handleExportConfig} onImport={handleImportConfig} onReset={handleResetToDefaults} />
+      <ConfigActions
+        onExport={handleExportConfig}
+        onImport={handleImportConfig}
+        onReset={handleResetToDefaults}
+      />
 
       {/* Import Modal */}
       <ConfigImportModal

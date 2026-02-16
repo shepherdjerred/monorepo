@@ -1,4 +1,4 @@
-import { Chart } from "cdk8s";
+import type { Chart } from "cdk8s";
 import { ConfigMap } from "cdk8s-plus-31";
 import { exportGitckupDashboardJson } from "../../../grafana/gitckup-dashboard.ts";
 import { exportHaWorkflowDashboardJson } from "../../../grafana/ha-workflow-dashboard.ts";

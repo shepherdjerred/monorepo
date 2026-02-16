@@ -1,6 +1,6 @@
 import React from "react";
 
-export interface BookmarkStatusSelectorProps {
+export type BookmarkStatusSelectorProps = {
   onlyShowBookmarked: boolean;
   onlyShowUnbookmarked: boolean;
   onSelectionChange: (onlyShowBookmarked: boolean, onlyShowUnbookmarked: boolean) => void;

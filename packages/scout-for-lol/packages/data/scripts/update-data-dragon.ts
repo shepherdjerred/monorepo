@@ -106,13 +106,19 @@ async function getLatestVersion(): Promise<string> {
   return latestVersion;
 }
 
-async function downloadAsset<T>(version: string, filename: string, schema: z.ZodType<T>): Promise<T> {
+async function downloadAsset<T>(
+  version: string,
+  filename: string,
+  schema: z.ZodType<T>,
+): Promise<T> {
   const url = `${BASE_URL}/cdn/${version}/data/en_US/${filename}`;
   console.log(`Downloading ${filename} from ${url}...`);
 
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Failed to fetch ${filename}: ${String(response.status)} ${response.statusText}`);
+    throw new Error(
+      `Failed to fetch ${filename}: ${String(response.status)} ${response.statusText}`,
+    );
   }
 
   const data: unknown = await response.json();
@@ -148,7 +154,9 @@ async function downloadImagesInBatches(
           await downloadImage(item.url, item.path);
           completed++;
           if (completed % 20 === 0 || completed === total) {
-            console.log(`  Downloaded ${String(completed)}/${String(total)} images...`);
+            console.log(
+              `  Downloaded ${String(completed)}/${String(total)} images...`,
+            );
           }
         } catch (error) {
           console.warn(`  ⚠ Failed to download ${item.name}: ${String(error)}`);
@@ -176,16 +184,25 @@ async function writeJsonAssets(
 ): Promise<void> {
   console.log("\nWriting JSON assets to disk...");
 
-  await Bun.write(`${ASSETS_DIR}/summoner.json`, JSON.stringify(summoner, null, 2));
+  await Bun.write(
+    `${ASSETS_DIR}/summoner.json`,
+    JSON.stringify(summoner, null, 2),
+  );
   console.log("✓ Written summoner.json");
 
   await Bun.write(`${ASSETS_DIR}/item.json`, JSON.stringify(items, null, 2));
   console.log("✓ Written item.json");
 
-  await Bun.write(`${ASSETS_DIR}/runesReforged.json`, JSON.stringify(runes, null, 2));
+  await Bun.write(
+    `${ASSETS_DIR}/runesReforged.json`,
+    JSON.stringify(runes, null, 2),
+  );
   console.log("✓ Written runesReforged.json");
 
-  await Bun.write(`${ASSETS_DIR}/version.json`, JSON.stringify({ version }, null, 2));
+  await Bun.write(
+    `${ASSETS_DIR}/version.json`,
+    JSON.stringify({ version }, null, 2),
+  );
   console.log("✓ Written version.json");
 }
 
@@ -204,19 +221,29 @@ async function getChampionNames(version: string): Promise<string[]> {
   return championNames;
 }
 
-async function downloadSummonerSpellImages(version: string, summoner: SummonerData): Promise<number> {
+async function downloadSummonerSpellImages(
+  version: string,
+  summoner: SummonerData,
+): Promise<number> {
   console.log("\nDownloading summoner spell images...");
-  const spellImages = Object.entries(summoner.data).map(([spellName, spell]) => ({
-    url: `${BASE_URL}/cdn/${version}/img/spell/${spell.image.full}`,
-    path: `${IMG_DIR}/spell/${spell.image.full}`,
-    name: spellName,
-  }));
+  const spellImages = Object.entries(summoner.data).map(
+    ([spellName, spell]) => ({
+      url: `${BASE_URL}/cdn/${version}/img/spell/${spell.image.full}`,
+      path: `${IMG_DIR}/spell/${spell.image.full}`,
+      name: spellName,
+    }),
+  );
   await downloadImagesInBatches(spellImages, 5);
-  console.log(`✓ Downloaded ${String(spellImages.length)} summoner spell images`);
+  console.log(
+    `✓ Downloaded ${String(spellImages.length)} summoner spell images`,
+  );
   return spellImages.length;
 }
 
-async function downloadItemImages(version: string, items: ItemData): Promise<number> {
+async function downloadItemImages(
+  version: string,
+  items: ItemData,
+): Promise<number> {
   console.log("\nDownloading item images...");
   const itemImages = Object.keys(items.data).map((itemId) => ({
     url: `${BASE_URL}/cdn/${version}/img/item/${itemId}.png`,
@@ -228,7 +255,10 @@ async function downloadItemImages(version: string, items: ItemData): Promise<num
   return itemImages.length;
 }
 
-async function downloadChampionImages(version: string, championNames: string[]): Promise<number> {
+async function downloadChampionImages(
+  version: string,
+  championNames: string[],
+): Promise<number> {
   console.log("\nDownloading champion portraits...");
   const championImages = championNames.map((championName) => ({
     url: `${BASE_URL}/cdn/${version}/img/champion/${championName}.png`,
@@ -240,7 +270,10 @@ async function downloadChampionImages(version: string, championNames: string[]):
   return championImages.length;
 }
 
-async function downloadChampionData(version: string, championNames: string[]): Promise<number> {
+async function downloadChampionData(
+  version: string,
+  championNames: string[],
+): Promise<number> {
   console.log("\nDownloading individual champion data files...");
   let championDataCount = 0;
   for (const championName of championNames) {
@@ -249,7 +282,10 @@ async function downloadChampionData(version: string, championNames: string[]): P
       const response = await fetch(url);
       if (response.ok) {
         const data: unknown = await response.json();
-        await Bun.write(`${ASSETS_DIR}/champion/${championName}.json`, JSON.stringify(data, null, 2));
+        await Bun.write(
+          `${ASSETS_DIR}/champion/${championName}.json`,
+          JSON.stringify(data, null, 2),
+        );
         championDataCount++;
         if (championDataCount % 20 === 0) {
           console.log(
@@ -258,7 +294,9 @@ async function downloadChampionData(version: string, championNames: string[]): P
         }
       }
     } catch (error) {
-      console.warn(`  ⚠ Failed to download champion data for ${championName}: ${String(error)}`);
+      console.warn(
+        `  ⚠ Failed to download champion data for ${championName}: ${String(error)}`,
+      );
     }
   }
   console.log(`✓ Downloaded ${String(championDataCount)} champion data files`);
@@ -270,7 +308,8 @@ async function downloadRuneImages(runes: RuneTreeData): Promise<number> {
   const runeImages: { url: string; path: string; name: string }[] = [];
   for (const tree of runes) {
     // Add tree icon
-    const treeIconFilename = tree.icon.split("/").pop() ?? `tree_${String(tree.id)}.png`;
+    const treeIconFilename =
+      tree.icon.split("/").pop() ?? `tree_${String(tree.id)}.png`;
     runeImages.push({
       url: `https://ddragon.leagueoflegends.com/cdn/img/${tree.icon}`,
       path: `${IMG_DIR}/rune/${treeIconFilename}`,
@@ -280,7 +319,8 @@ async function downloadRuneImages(runes: RuneTreeData): Promise<number> {
     // Add all rune icons in the tree
     for (const slot of tree.slots) {
       for (const rune of slot.runes) {
-        const runeIconFilename = rune.icon.split("/").pop() ?? `rune_${String(rune.id)}.png`;
+        const runeIconFilename =
+          rune.icon.split("/").pop() ?? `rune_${String(rune.id)}.png`;
         runeImages.push({
           url: `https://ddragon.leagueoflegends.com/cdn/img/${rune.icon}`,
           path: `${IMG_DIR}/rune/${runeIconFilename}`,
@@ -312,7 +352,8 @@ const ArenaAugmentsApiResponseSchema = z.object({
   augments: z.array(ArenaAugmentApiSchema),
 });
 
-const ARENA_AUGMENTS_URL = "https://raw.communitydragon.org/latest/cdragon/arena/en_us.json";
+const ARENA_AUGMENTS_URL =
+  "https://raw.communitydragon.org/latest/cdragon/arena/en_us.json";
 
 function rarityNumberToString(rarity: number): "prismatic" | "gold" | "silver" {
   if (rarity === 1) {
@@ -338,12 +379,17 @@ type ArenaAugmentCacheEntry = {
   type: "full";
 };
 
-async function fetchAndSaveArenaAugments(): Promise<{ iconPaths: Set<string>; count: number }> {
+async function fetchAndSaveArenaAugments(): Promise<{
+  iconPaths: Set<string>;
+  count: number;
+}> {
   console.log("\nFetching Arena augments from CommunityDragon...");
 
   const response = await fetch(ARENA_AUGMENTS_URL);
   if (!response.ok) {
-    throw new Error(`Failed to fetch Arena augments: ${String(response.status)} ${response.statusText}`);
+    throw new Error(
+      `Failed to fetch Arena augments: ${String(response.status)} ${response.statusText}`,
+    );
   }
 
   const data: unknown = await response.json();
@@ -373,8 +419,13 @@ async function fetchAndSaveArenaAugments(): Promise<{ iconPaths: Set<string>; co
   }
 
   // Write arena-augments.json
-  await Bun.write(`${ASSETS_DIR}/arena-augments.json`, JSON.stringify(cache, null, 2));
-  console.log(`✓ Written arena-augments.json (${String(parsed.augments.length)} augments)`);
+  await Bun.write(
+    `${ASSETS_DIR}/arena-augments.json`,
+    JSON.stringify(cache, null, 2),
+  );
+  console.log(
+    `✓ Written arena-augments.json (${String(parsed.augments.length)} augments)`,
+  );
 
   return { iconPaths, count: parsed.augments.length };
 }
@@ -413,9 +464,17 @@ async function main(): Promise<void> {
     await createDirectories();
 
     // Download and validate each asset
-    const summoner = await downloadAsset(version, "summoner.json", SummonerSchema);
+    const summoner = await downloadAsset(
+      version,
+      "summoner.json",
+      SummonerSchema,
+    );
     const items = await downloadAsset(version, "item.json", ItemSchema);
-    const runes = await downloadAsset(version, "runesReforged.json", RuneTreeSchema);
+    const runes = await downloadAsset(
+      version,
+      "runesReforged.json",
+      RuneTreeSchema,
+    );
 
     // Write JSON assets to disk
     await writeJsonAssets(summoner, items, runes, version);
@@ -424,15 +483,31 @@ async function main(): Promise<void> {
     const championNames = await getChampionNames(version);
 
     // Download all images
-    const spellImagesCount = await downloadSummonerSpellImages(version, summoner);
+    const spellImagesCount = await downloadSummonerSpellImages(
+      version,
+      summoner,
+    );
     const itemImagesCount = await downloadItemImages(version, items);
-    const championImagesCount = await downloadChampionImages(version, championNames);
-    const championDataCount = await downloadChampionData(version, championNames);
+    const championImagesCount = await downloadChampionImages(
+      version,
+      championNames,
+    );
+    const championDataCount = await downloadChampionData(
+      version,
+      championNames,
+    );
     const runeImagesCount = await downloadRuneImages(runes);
     const augmentImagesCount = await downloadAugmentImages();
 
-    const totalImages = spellImagesCount + itemImagesCount + championImagesCount + runeImagesCount + augmentImagesCount;
-    console.log(`\n✅ Successfully updated Data Dragon assets to version ${version}`);
+    const totalImages =
+      spellImagesCount +
+      itemImagesCount +
+      championImagesCount +
+      runeImagesCount +
+      augmentImagesCount;
+    console.log(
+      `\n✅ Successfully updated Data Dragon assets to version ${version}`,
+    );
     console.log(`\nAssets written to: ${ASSETS_DIR}`);
     console.log(`Total images downloaded: ${String(totalImages)}`);
     console.log(`  - ${String(spellImagesCount)} summoner spell images`);
@@ -440,7 +515,9 @@ async function main(): Promise<void> {
     console.log(`  - ${String(championImagesCount)} champion portrait images`);
     console.log(`  - ${String(runeImagesCount)} rune images`);
     console.log(`  - ${String(augmentImagesCount)} augment images`);
-    console.log(`  - ${String(championDataCount)} champion data files (abilities/passives)`);
+    console.log(
+      `  - ${String(championDataCount)} champion data files (abilities/passives)`,
+    );
 
     // Update snapshots that depend on Data Dragon data
     console.log("\n📸 Updating snapshots...");
@@ -482,9 +559,12 @@ async function updateSnapshots(): Promise<void> {
         : testPath;
 
       console.log(`  Updating: ${testFile}`);
-      const result = await $`cd ${cwd} && bun test --update-snapshots ${testFile}`.quiet();
+      const result =
+        await $`cd ${cwd} && bun test --update-snapshots ${testFile}`.quiet();
       if (result.exitCode !== 0) {
-        console.warn(`    ⚠ Warning: snapshot update had non-zero exit code for ${testFile}`);
+        console.warn(
+          `    ⚠ Warning: snapshot update had non-zero exit code for ${testFile}`,
+        );
       }
     }
   }

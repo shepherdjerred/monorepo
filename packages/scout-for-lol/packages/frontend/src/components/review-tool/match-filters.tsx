@@ -30,7 +30,10 @@ export function MatchFilters({
     <div className="space-y-3 mb-3">
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label htmlFor="queue-type" className="block text-sm font-medium text-surface-700 mb-1">
+          <label
+            htmlFor="queue-type"
+            className="block text-sm font-medium text-surface-700 mb-1"
+          >
             Queue Type
           </label>
           <select
@@ -51,7 +54,10 @@ export function MatchFilters({
         </div>
 
         <div>
-          <label htmlFor="lane" className="block text-sm font-medium text-surface-700 mb-1">
+          <label
+            htmlFor="lane"
+            className="block text-sm font-medium text-surface-700 mb-1"
+          >
             Lane
           </label>
           <select
@@ -72,7 +78,10 @@ export function MatchFilters({
         </div>
 
         <div>
-          <label htmlFor="outcome" className="block text-sm font-medium text-surface-700 mb-1">
+          <label
+            htmlFor="outcome"
+            className="block text-sm font-medium text-surface-700 mb-1"
+          >
             Outcome
           </label>
           <select
@@ -91,7 +100,10 @@ export function MatchFilters({
       </div>
 
       <div>
-        <label htmlFor="player-game-name" className="block text-sm font-medium text-surface-700 mb-1">
+        <label
+          htmlFor="player-game-name"
+          className="block text-sm font-medium text-surface-700 mb-1"
+        >
           Player (Game Name)
         </label>
         <input
@@ -107,7 +119,10 @@ export function MatchFilters({
       </div>
 
       <div>
-        <label htmlFor="champion" className="block text-sm font-medium text-surface-700 mb-1">
+        <label
+          htmlFor="champion"
+          className="block text-sm font-medium text-surface-700 mb-1"
+        >
           Champion
         </label>
         <input

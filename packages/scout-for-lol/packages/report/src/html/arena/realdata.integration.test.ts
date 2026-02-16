@@ -11,7 +11,10 @@ function hashSvg(svg: string): string {
 
 const currentDir = new URL(".", import.meta.url).pathname;
 
-const RAW_FILE_PATHS = [`${currentDir}testdata/1.json`, `${currentDir}testdata/2.json`];
+const RAW_FILE_PATHS = [
+  `${currentDir}testdata/1.json`,
+  `${currentDir}testdata/2.json`,
+];
 
 for (const path of RAW_FILE_PATHS) {
   const fileNameOrUndefined = path.split("/").pop();
@@ -24,9 +27,19 @@ for (const path of RAW_FILE_PATHS) {
     const match = (await Bun.file(path).json()) as unknown;
     const svg = await arenaMatchToSvg(ArenaMatchSchema.parse(match));
     const png = await svgToPng(svg);
-    const outputFileName: string = path.split("/").pop()?.replace(".json", ".png") ?? "arena_real.png";
-    await Bun.write(new URL(`__snapshots__/${outputFileName}`, import.meta.url), png);
-    await Bun.write(new URL(`__snapshots__/${outputFileName.replace(".png", ".svg")}`, import.meta.url), svg);
+    const outputFileName: string =
+      path.split("/").pop()?.replace(".json", ".png") ?? "arena_real.png";
+    await Bun.write(
+      new URL(`__snapshots__/${outputFileName}`, import.meta.url),
+      png,
+    );
+    await Bun.write(
+      new URL(
+        `__snapshots__/${outputFileName.replace(".png", ".svg")}`,
+        import.meta.url,
+      ),
+      svg,
+    );
 
     // Now that assets are cached locally, SVG output is deterministic
     const svgHash = hashSvg(svg);

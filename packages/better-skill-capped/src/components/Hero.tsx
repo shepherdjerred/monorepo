@@ -1,7 +1,7 @@
 import React from "react";
 import classNames from "classnames/bind";
 
-export interface HeroProps {
+export type HeroProps = {
   title: string;
   subtitle?: string;
   color?: Color;

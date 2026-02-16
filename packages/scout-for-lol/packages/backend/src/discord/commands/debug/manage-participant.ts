@@ -1,7 +1,11 @@
 import type { ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import { match } from "ts-pattern";
-import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index";
+import {
+  CompetitionIdSchema,
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data/index";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.ts";
 import {
@@ -17,7 +21,9 @@ const logger = createLogger("debug-manage-participant");
 /**
  * Execute /debug manage-participant command
  */
-export async function executeDebugManageParticipant(interaction: ChatInputCommandInteraction) {
+export async function executeDebugManageParticipant(
+  interaction: ChatInputCommandInteraction,
+) {
   logger.info("🐛 Executing debug manage-participant command");
 
   // ============================================================================
@@ -31,7 +37,10 @@ export async function executeDebugManageParticipant(interaction: ChatInputComman
   });
 
   const rawAction = interaction.options.getString("action", true);
-  const rawCompetitionId = interaction.options.getInteger("competition-id", true);
+  const rawCompetitionId = interaction.options.getInteger(
+    "competition-id",
+    true,
+  );
   const targetUser = interaction.options.getUser("user", true);
 
   const optionsResult = ManageParticipantOptionsSchema.safeParse({
@@ -49,7 +58,9 @@ export async function executeDebugManageParticipant(interaction: ChatInputComman
   }
 
   const { action, competitionId } = optionsResult.data;
-  const serverId = interaction.guildId ? DiscordGuildIdSchema.parse(interaction.guildId) : null;
+  const serverId = interaction.guildId
+    ? DiscordGuildIdSchema.parse(interaction.guildId)
+    : null;
 
   if (!serverId) {
     await interaction.reply({
@@ -70,13 +81,20 @@ export async function executeDebugManageParticipant(interaction: ChatInputComman
   try {
     competition = await getCompetitionById(prisma, competitionId);
   } catch (error) {
-    logger.error(`[Debug Manage Participant] Error fetching competition ${competitionId.toString()}:`, error);
-    await interaction.editReply(`❌ Error fetching competition: ${getErrorMessage(error)}`);
+    logger.error(
+      `[Debug Manage Participant] Error fetching competition ${competitionId.toString()}:`,
+      error,
+    );
+    await interaction.editReply(
+      `❌ Error fetching competition: ${getErrorMessage(error)}`,
+    );
     return;
   }
 
   if (!competition) {
-    await interaction.editReply(`❌ Competition ${competitionId.toString()} not found`);
+    await interaction.editReply(
+      `❌ Competition ${competitionId.toString()} not found`,
+    );
     return;
   }
 
@@ -93,8 +111,13 @@ export async function executeDebugManageParticipant(interaction: ChatInputComman
       },
     });
   } catch (error) {
-    logger.error(`[Debug Manage Participant] Error fetching player for user ${targetUser.id}:`, error);
-    await interaction.editReply(`❌ Error fetching player data: ${getErrorMessage(error)}`);
+    logger.error(
+      `[Debug Manage Participant] Error fetching player for user ${targetUser.id}:`,
+      error,
+    );
+    await interaction.editReply(
+      `❌ Error fetching player data: ${getErrorMessage(error)}`,
+    );
     return;
   }
 
@@ -111,10 +134,19 @@ export async function executeDebugManageParticipant(interaction: ChatInputComman
 
   let participantStatus;
   try {
-    participantStatus = await getParticipantStatus(prisma, competitionId, player.id);
+    participantStatus = await getParticipantStatus(
+      prisma,
+      competitionId,
+      player.id,
+    );
   } catch (error) {
-    logger.error(`[Debug Manage Participant] Error checking participant status:`, error);
-    await interaction.editReply(`❌ Error checking participation status: ${getErrorMessage(error)}`);
+    logger.error(
+      `[Debug Manage Participant] Error checking participant status:`,
+      error,
+    );
+    await interaction.editReply(
+      `❌ Error checking participation status: ${getErrorMessage(error)}`,
+    );
     return;
   }
 
@@ -126,7 +158,9 @@ export async function executeDebugManageParticipant(interaction: ChatInputComman
     .with("add", async () => {
       // Check if already a participant
       if (participantStatus === "JOINED") {
-        await interaction.editReply(`ℹ️ @${targetUser.username} is already a participant in **${competition.title}**.`);
+        await interaction.editReply(
+          `ℹ️ @${targetUser.username} is already a participant in **${competition.title}**.`,
+        );
         return;
       }
 
@@ -170,14 +204,21 @@ export async function executeDebugManageParticipant(interaction: ChatInputComman
             `Participants: ${participantCount.toString()}/${competition.maxParticipants.toString()}`,
         );
       } catch (error) {
-        logger.error(`[Debug Manage Participant] Error adding participant:`, error);
-        await interaction.editReply(`❌ Error adding participant: ${getErrorMessage(error)}`);
+        logger.error(
+          `[Debug Manage Participant] Error adding participant:`,
+          error,
+        );
+        await interaction.editReply(
+          `❌ Error adding participant: ${getErrorMessage(error)}`,
+        );
       }
     })
     .with("kick", async () => {
       // Check if is a participant
       if (!participantStatus || participantStatus === "LEFT") {
-        await interaction.editReply(`ℹ️ @${targetUser.username} is not a participant in **${competition.title}**.`);
+        await interaction.editReply(
+          `ℹ️ @${targetUser.username} is not a participant in **${competition.title}**.`,
+        );
         return;
       }
 
@@ -202,8 +243,13 @@ export async function executeDebugManageParticipant(interaction: ChatInputComman
             `Participants: ${participantCount.toString()}/${competition.maxParticipants.toString()}`,
         );
       } catch (error) {
-        logger.error(`[Debug Manage Participant] Error removing participant:`, error);
-        await interaction.editReply(`❌ Error removing participant: ${getErrorMessage(error)}`);
+        logger.error(
+          `[Debug Manage Participant] Error removing participant:`,
+          error,
+        );
+        await interaction.editReply(
+          `❌ Error removing participant: ${getErrorMessage(error)}`,
+        );
       }
     })
     .exhaustive();

@@ -10,10 +10,18 @@
 
 import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema";
 import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema";
-import type { OpenAIClient, ModelConfig, StageTrace } from "./pipeline-types.ts";
+import type {
+  OpenAIClient,
+  ModelConfig,
+  StageTrace,
+} from "./pipeline-types.ts";
 import { enrichTimelineData } from "./timeline-enricher.ts";
 import type { EnrichedTimelineChunk } from "./timeline-chunker.ts";
-import { minifyJson, replacePromptVariables, callOpenAI } from "./pipeline-utils.ts";
+import {
+  minifyJson,
+  replacePromptVariables,
+  callOpenAI,
+} from "./pipeline-utils.ts";
 
 // ============================================================================
 // Stage 1a: Timeline Summary (Legacy - Full Timeline)
@@ -78,7 +86,13 @@ export async function generateTimelineChunkSummary(params: {
   systemPrompt: string;
   userPrompt: string;
 }): Promise<{ text: string; trace: StageTrace }> {
-  const { enrichedChunk, client, model, systemPrompt: systemPromptTemplate, userPrompt: userPromptTemplate } = params;
+  const {
+    enrichedChunk,
+    client,
+    model,
+    systemPrompt: systemPromptTemplate,
+    userPrompt: userPromptTemplate,
+  } = params;
 
   const { chunk, participants, gameDurationSeconds } = enrichedChunk;
 
@@ -127,7 +141,14 @@ export async function aggregateTimelineChunks(params: {
   systemPrompt: string;
   userPrompt: string;
 }): Promise<{ text: string; trace: StageTrace }> {
-  const { chunkSummaries, gameDurationSeconds, client, model, systemPrompt, userPrompt: userPromptTemplate } = params;
+  const {
+    chunkSummaries,
+    gameDurationSeconds,
+    client,
+    model,
+    systemPrompt,
+    userPrompt: userPromptTemplate,
+  } = params;
 
   const minutes = Math.floor(gameDurationSeconds / 60);
   const seconds = gameDurationSeconds % 60;
@@ -136,7 +157,10 @@ export async function aggregateTimelineChunks(params: {
   const formattedSummaries = chunkSummaries
     .map((summary, index) => {
       const startMin = index * 10;
-      const endMin = Math.min((index + 1) * 10, Math.ceil(gameDurationSeconds / 60));
+      const endMin = Math.min(
+        (index + 1) * 10,
+        Math.ceil(gameDurationSeconds / 60),
+      );
       return `## ${startMin.toString()}:00 - ${endMin.toString()}:00\n${summary}`;
     })
     .join("\n\n");

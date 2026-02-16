@@ -159,7 +159,10 @@
           "tooltip": "Nami hurls a bubble, <status>Stunning</status> for {{ e2 }} seconds and dealing <magicDamage>{{ totaldamagett }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [12, 11, 10, 9, 8],
@@ -180,7 +183,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "75/130/185/240/295", "1.5", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "75/130/185/240/295",
+            "1.5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -229,7 +244,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -278,7 +305,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "20/30/40/50/60", "15/20/25/30/35", "1", "3", "6", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "20/30/40/50/60",
+            "15/20/25/30/35",
+            "1",
+            "3",
+            "6",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -302,7 +341,10 @@
           "tooltip": "Nami summons a tidal wave, <status>Knocking Up</status> for 0.5 seconds, <status>Slowing</status> by {{ e4 }}%, and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. The duration of the <status>Slow</status> increases based on distance the wave traveled, up to {{ e5 }} seconds.<br /><br />Allies hit by the wave gain double the effect of <spellName>Surging Tides</spellName>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [120, 110, 100],
@@ -323,7 +365,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "150/250/350", "0.5", "2", "70", "4", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "150/250/350",
+            "0.5",
+            "2",
+            "70",
+            "4",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

@@ -7,18 +7,34 @@ import {
   getParticipants,
   removeParticipant,
 } from "@scout-for-lol/backend/database/competition/participants.ts";
-import { createCompetition, type CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.ts";
+import {
+  createCompetition,
+  type CreateCompetitionInput,
+} from "@scout-for-lol/backend/database/competition/queries.ts";
 import { ErrorSchema } from "@scout-for-lol/backend/utils/errors.ts";
-import type { CompetitionId, DiscordAccountId, PlayerId } from "@scout-for-lol/data";
+import type {
+  CompetitionId,
+  DiscordAccountId,
+  PlayerId,
+} from "@scout-for-lol/data";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
-import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.ts";
-import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.ts";
+import {
+  testGuildId,
+  testAccountId,
+  testChannelId,
+} from "@scout-for-lol/backend/testing/test-ids.ts";
+import {
+  createTestDatabase,
+  deleteIfExists,
+} from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a test database
 const { prisma } = createTestDatabase("participants-test");
 
 // Test helpers
-async function createTestCompetition(maxParticipants = 50): Promise<{ competitionId: CompetitionId }> {
+async function createTestCompetition(
+  maxParticipants = 50,
+): Promise<{ competitionId: CompetitionId }> {
   const now = new Date();
   const input: CreateCompetitionInput = {
     serverId: testGuildId("123456789012345678"),
@@ -43,7 +59,10 @@ async function createTestCompetition(maxParticipants = 50): Promise<{ competitio
   return { competitionId: competition.id };
 }
 
-async function createTestPlayer(alias: string, discordId: DiscordAccountId): Promise<{ playerId: PlayerId }> {
+async function createTestPlayer(
+  alias: string,
+  discordId: DiscordAccountId,
+): Promise<{ playerId: PlayerId }> {
   const now = new Date();
   const player = await prisma.player.create({
     data: {
@@ -75,7 +94,10 @@ afterAll(async () => {
 describe("addParticipant - JOINED status", () => {
   test("adds participant with JOINED status successfully", async () => {
     const { competitionId } = await createTestCompetition();
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
 
     const participant = await addParticipant({
       prisma,
@@ -95,7 +117,10 @@ describe("addParticipant - JOINED status", () => {
 
   test("sets joinedAt timestamp", async () => {
     const { competitionId } = await createTestCompetition();
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
 
     const before = new Date();
     const participant = await addParticipant({
@@ -108,8 +133,12 @@ describe("addParticipant - JOINED status", () => {
 
     expect(participant.joinedAt).not.toBeNull();
     if (participant.joinedAt) {
-      expect(participant.joinedAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
-      expect(participant.joinedAt.getTime()).toBeLessThanOrEqual(after.getTime());
+      expect(participant.joinedAt.getTime()).toBeGreaterThanOrEqual(
+        before.getTime(),
+      );
+      expect(participant.joinedAt.getTime()).toBeLessThanOrEqual(
+        after.getTime(),
+      );
     }
   });
 });
@@ -121,7 +150,10 @@ describe("addParticipant - JOINED status", () => {
 describe("addParticipant - INVITED status", () => {
   test("adds participant with INVITED status successfully", async () => {
     const { competitionId } = await createTestCompetition();
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
     const inviterId = testAccountId("222222222222222222");
 
     const participant = await addParticipant({
@@ -141,7 +173,10 @@ describe("addParticipant - INVITED status", () => {
 
   test("can transition from INVITED to JOINED", async () => {
     const { competitionId } = await createTestCompetition();
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
 
     await addParticipant({
       prisma,
@@ -167,13 +202,26 @@ describe("addParticipant - INVITED status", () => {
 describe("addParticipant - duplicate prevention", () => {
   test("throws error when adding same participant twice", async () => {
     const { competitionId } = await createTestCompetition();
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
 
-    await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: playerId,
+      status: "JOINED",
+    });
 
     let error: unknown = null;
     try {
-      await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" });
+      await addParticipant({
+        prisma,
+        competitionId: competitionId,
+        playerId: playerId,
+        status: "JOINED",
+      });
     } catch (e) {
       error = e;
     }
@@ -187,14 +235,27 @@ describe("addParticipant - duplicate prevention", () => {
 
   test("throws error when player has already left", async () => {
     const { competitionId } = await createTestCompetition();
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
 
-    await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: playerId,
+      status: "JOINED",
+    });
     await removeParticipant(prisma, competitionId, playerId);
 
     let error: unknown = null;
     try {
-      await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" });
+      await addParticipant({
+        prisma,
+        competitionId: competitionId,
+        playerId: playerId,
+        status: "JOINED",
+      });
     } catch (e) {
       error = e;
     }
@@ -215,13 +276,22 @@ describe("addParticipant - max participants", () => {
   test("allows adding up to maxParticipants", async () => {
     const { competitionId } = await createTestCompetition(3);
 
-    const discordIds = ["111111111111111111", "111111111111111112", "111111111111111113"];
+    const discordIds = [
+      "111111111111111111",
+      "111111111111111112",
+      "111111111111111113",
+    ];
     for (let i = 0; i < 3; i++) {
       const { playerId } = await createTestPlayer(
         `Player${i.toString()}`,
         DiscordAccountIdSchema.parse(discordIds[i] ?? "111111111111111111"),
       );
-      await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" });
+      await addParticipant({
+        prisma,
+        competitionId: competitionId,
+        playerId: playerId,
+        status: "JOINED",
+      });
     }
 
     const participants = await getParticipants(prisma, competitionId);
@@ -231,20 +301,37 @@ describe("addParticipant - max participants", () => {
   test("throws error when exceeding maxParticipants", async () => {
     const { competitionId } = await createTestCompetition(3);
 
-    const discordIds = ["111111111111111111", "111111111111111112", "111111111111111113"];
+    const discordIds = [
+      "111111111111111111",
+      "111111111111111112",
+      "111111111111111113",
+    ];
     for (let i = 0; i < 3; i++) {
       const { playerId } = await createTestPlayer(
         `Player${i.toString()}`,
         DiscordAccountIdSchema.parse(discordIds[i] ?? "111111111111111111"),
       );
-      await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" });
+      await addParticipant({
+        prisma,
+        competitionId: competitionId,
+        playerId: playerId,
+        status: "JOINED",
+      });
     }
 
-    const { playerId } = await createTestPlayer("Player4", testAccountId("444444444444444444"));
+    const { playerId } = await createTestPlayer(
+      "Player4",
+      testAccountId("444444444444444444"),
+    );
 
     let error: unknown = null;
     try {
-      await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" });
+      await addParticipant({
+        prisma,
+        competitionId: competitionId,
+        playerId: playerId,
+        status: "JOINED",
+      });
     } catch (e) {
       error = e;
     }
@@ -260,17 +347,41 @@ describe("addParticipant - max participants", () => {
     const { competitionId } = await createTestCompetition(2);
 
     // Add 2 participants
-    const { playerId: p1 } = await createTestPlayer("Player1", testAccountId("111111111111111111"));
-    const { playerId: p2 } = await createTestPlayer("Player2", testAccountId("222222222222222222"));
-    await addParticipant({ prisma, competitionId: competitionId, playerId: p1, status: "JOINED" });
-    await addParticipant({ prisma, competitionId: competitionId, playerId: p2, status: "JOINED" });
+    const { playerId: p1 } = await createTestPlayer(
+      "Player1",
+      testAccountId("111111111111111111"),
+    );
+    const { playerId: p2 } = await createTestPlayer(
+      "Player2",
+      testAccountId("222222222222222222"),
+    );
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: p1,
+      status: "JOINED",
+    });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: p2,
+      status: "JOINED",
+    });
 
     // One leaves
     await removeParticipant(prisma, competitionId, p1);
 
     // Should be able to add a new participant
-    const { playerId: p3 } = await createTestPlayer("Player3", testAccountId("333333333333333333"));
-    const participant = await addParticipant({ prisma, competitionId: competitionId, playerId: p3, status: "JOINED" });
+    const { playerId: p3 } = await createTestPlayer(
+      "Player3",
+      testAccountId("333333333333333333"),
+    );
+    const participant = await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: p3,
+      status: "JOINED",
+    });
 
     expect(participant.status).toBe("JOINED");
   });
@@ -283,9 +394,17 @@ describe("addParticipant - max participants", () => {
 describe("removeParticipant", () => {
   test("changes status to LEFT and sets leftAt", async () => {
     const { competitionId } = await createTestCompetition();
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
 
-    await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: playerId,
+      status: "JOINED",
+    });
 
     const before = new Date();
     const updated = await removeParticipant(prisma, competitionId, playerId);
@@ -301,9 +420,17 @@ describe("removeParticipant", () => {
 
   test("preserves joinedAt timestamp", async () => {
     const { competitionId } = await createTestCompetition();
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
 
-    const added = await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" });
+    const added = await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: playerId,
+      status: "JOINED",
+    });
     const originalJoinedAt = added.joinedAt;
 
     const removed = await removeParticipant(prisma, competitionId, playerId);
@@ -313,7 +440,10 @@ describe("removeParticipant", () => {
 
   test("throws error for non-existent participant", async () => {
     const { competitionId } = await createTestCompetition();
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
 
     let error: unknown = null;
     try {
@@ -331,9 +461,17 @@ describe("removeParticipant", () => {
 
   test("throws error when already left", async () => {
     const { competitionId } = await createTestCompetition();
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
 
-    await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: playerId,
+      status: "JOINED",
+    });
     await removeParticipant(prisma, competitionId, playerId);
 
     let error: unknown = null;
@@ -359,11 +497,25 @@ describe("getParticipants - filtering", () => {
   test("returns all participants by default", async () => {
     const { competitionId } = await createTestCompetition();
 
-    const { playerId: p1 } = await createTestPlayer("Player1", testAccountId("111111111111111111"));
-    const { playerId: p2 } = await createTestPlayer("Player2", testAccountId("222222222222222222"));
-    const { playerId: p3 } = await createTestPlayer("Player3", testAccountId("333333333333333333"));
+    const { playerId: p1 } = await createTestPlayer(
+      "Player1",
+      testAccountId("111111111111111111"),
+    );
+    const { playerId: p2 } = await createTestPlayer(
+      "Player2",
+      testAccountId("222222222222222222"),
+    );
+    const { playerId: p3 } = await createTestPlayer(
+      "Player3",
+      testAccountId("333333333333333333"),
+    );
 
-    await addParticipant({ prisma, competitionId: competitionId, playerId: p1, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: p1,
+      status: "JOINED",
+    });
     await addParticipant({
       prisma,
       competitionId,
@@ -371,7 +523,12 @@ describe("getParticipants - filtering", () => {
       status: "INVITED",
       invitedBy: testAccountId("444444444444444444"),
     });
-    await addParticipant({ prisma, competitionId: competitionId, playerId: p3, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: p3,
+      status: "JOINED",
+    });
     await removeParticipant(prisma, competitionId, p3);
 
     const all = await getParticipants(prisma, competitionId);
@@ -382,11 +539,25 @@ describe("getParticipants - filtering", () => {
   test("filters by status=JOINED", async () => {
     const { competitionId } = await createTestCompetition();
 
-    const { playerId: p1 } = await createTestPlayer("Player1", testAccountId("111111111111111111"));
-    const { playerId: p2 } = await createTestPlayer("Player2", testAccountId("222222222222222222"));
-    const { playerId: p3 } = await createTestPlayer("Player3", testAccountId("333333333333333333"));
+    const { playerId: p1 } = await createTestPlayer(
+      "Player1",
+      testAccountId("111111111111111111"),
+    );
+    const { playerId: p2 } = await createTestPlayer(
+      "Player2",
+      testAccountId("222222222222222222"),
+    );
+    const { playerId: p3 } = await createTestPlayer(
+      "Player3",
+      testAccountId("333333333333333333"),
+    );
 
-    await addParticipant({ prisma, competitionId: competitionId, playerId: p1, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: p1,
+      status: "JOINED",
+    });
     await addParticipant({
       prisma,
       competitionId,
@@ -394,7 +565,12 @@ describe("getParticipants - filtering", () => {
       status: "INVITED",
       invitedBy: testAccountId("444444444444444444"),
     });
-    await addParticipant({ prisma, competitionId: competitionId, playerId: p3, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: p3,
+      status: "JOINED",
+    });
 
     const joined = await getParticipants(prisma, competitionId, "JOINED");
 
@@ -405,10 +581,21 @@ describe("getParticipants - filtering", () => {
   test("filters by status=INVITED", async () => {
     const { competitionId } = await createTestCompetition();
 
-    const { playerId: p1 } = await createTestPlayer("Player1", testAccountId("111111111111111111"));
-    const { playerId: p2 } = await createTestPlayer("Player2", testAccountId("222222222222222222"));
+    const { playerId: p1 } = await createTestPlayer(
+      "Player1",
+      testAccountId("111111111111111111"),
+    );
+    const { playerId: p2 } = await createTestPlayer(
+      "Player2",
+      testAccountId("222222222222222222"),
+    );
 
-    await addParticipant({ prisma, competitionId: competitionId, playerId: p1, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: p1,
+      status: "JOINED",
+    });
     await addParticipant({
       prisma,
       competitionId,
@@ -439,9 +626,17 @@ describe("getParticipants - filtering", () => {
 describe("getParticipantStatus", () => {
   test("returns JOINED for joined participant", async () => {
     const { competitionId } = await createTestCompetition();
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
 
-    await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: playerId,
+      status: "JOINED",
+    });
 
     const status = await getParticipantStatus(prisma, competitionId, playerId);
 
@@ -450,7 +645,10 @@ describe("getParticipantStatus", () => {
 
   test("returns INVITED for invited participant", async () => {
     const { competitionId } = await createTestCompetition();
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
 
     await addParticipant({
       prisma,
@@ -467,9 +665,17 @@ describe("getParticipantStatus", () => {
 
   test("returns LEFT for participant who left", async () => {
     const { competitionId } = await createTestCompetition();
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
 
-    await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: playerId,
+      status: "JOINED",
+    });
     await removeParticipant(prisma, competitionId, playerId);
 
     const status = await getParticipantStatus(prisma, competitionId, playerId);
@@ -479,7 +685,10 @@ describe("getParticipantStatus", () => {
 
   test("returns null for non-participant", async () => {
     const { competitionId } = await createTestCompetition();
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
 
     const status = await getParticipantStatus(prisma, competitionId, playerId);
 
@@ -494,7 +703,10 @@ describe("getParticipantStatus", () => {
 describe("canJoinCompetition validation", () => {
   test("returns true for valid join scenario", async () => {
     const { competitionId } = await createTestCompetition();
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
 
     const result = await canJoinCompetition(prisma, competitionId, playerId);
 
@@ -504,7 +716,10 @@ describe("canJoinCompetition validation", () => {
 
   test("returns false for cancelled competition", async () => {
     const { competitionId } = await createTestCompetition();
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
 
     // Cancel the competition
     await prisma.competition.update({
@@ -540,7 +755,10 @@ describe("canJoinCompetition validation", () => {
     };
 
     const competition = await createCompetition(prisma, input);
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
 
     const result = await canJoinCompetition(prisma, competition.id, playerId);
 
@@ -558,10 +776,18 @@ describe("canJoinCompetition validation", () => {
         `Player${i.toString()}`,
         DiscordAccountIdSchema.parse(discordIds[i] ?? "111111111111111111"),
       );
-      await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" });
+      await addParticipant({
+        prisma,
+        competitionId: competitionId,
+        playerId: playerId,
+        status: "JOINED",
+      });
     }
 
-    const { playerId } = await createTestPlayer("Player3", testAccountId("333333333333333333"));
+    const { playerId } = await createTestPlayer(
+      "Player3",
+      testAccountId("333333333333333333"),
+    );
 
     const result = await canJoinCompetition(prisma, competitionId, playerId);
 
@@ -571,9 +797,17 @@ describe("canJoinCompetition validation", () => {
 
   test("returns false when already joined", async () => {
     const { competitionId } = await createTestCompetition();
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
 
-    await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: playerId,
+      status: "JOINED",
+    });
 
     const result = await canJoinCompetition(prisma, competitionId, playerId);
 
@@ -583,7 +817,10 @@ describe("canJoinCompetition validation", () => {
 
   test("returns false when already invited", async () => {
     const { competitionId } = await createTestCompetition();
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
 
     await addParticipant({
       prisma,
@@ -601,9 +838,17 @@ describe("canJoinCompetition validation", () => {
 
   test("returns false when previously left", async () => {
     const { competitionId } = await createTestCompetition();
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
 
-    await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: playerId,
+      status: "JOINED",
+    });
     await removeParticipant(prisma, competitionId, playerId);
 
     const result = await canJoinCompetition(prisma, competitionId, playerId);
@@ -620,11 +865,24 @@ describe("canJoinCompetition validation", () => {
 describe("Participant with Player relation", () => {
   test("can include Player data when querying participants", async () => {
     const { competitionId } = await createTestCompetition();
-    const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
+    const { playerId } = await createTestPlayer(
+      "TestPlayer",
+      testAccountId("111111111111111111"),
+    );
 
-    await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: playerId,
+      status: "JOINED",
+    });
 
-    const participants = await getParticipants(prisma, competitionId, undefined, true);
+    const participants = await getParticipants(
+      prisma,
+      competitionId,
+      undefined,
+      true,
+    );
 
     expect(participants).toHaveLength(1);
     const participant = participants[0];
@@ -647,6 +905,8 @@ describe("Participant with Player relation", () => {
 
     expect(withPlayer).not.toBeNull();
     expect(withPlayer?.player.alias).toBe("TestPlayer");
-    expect(withPlayer?.player.discordId).toBe(testAccountId("111111111111111111"));
+    expect(withPlayer?.player.discordId).toBe(
+      testAccountId("111111111111111111"),
+    );
   });
 });

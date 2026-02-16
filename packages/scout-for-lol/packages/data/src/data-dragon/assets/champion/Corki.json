@@ -165,7 +165,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -188,7 +200,11 @@
           "description": "Corki flies a short distance, dropping bombs that create a trail of fire that damages opponents who remain in it.",
           "tooltip": "Corki flies over and scorches a path, burning it for {{ trailduration }} seconds. Enemies in the fire take up to <magicDamage>{{ maximumdamage }} magic damage</magicDamage> over the duration.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage Over Time", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage Over Time",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -214,7 +230,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -237,7 +265,11 @@
           "description": "Corki's gatling gun rapidly fires in a cone in front of him, dealing damage and reducing enemy Armor and Magic Resist.",
           "tooltip": "Corki fires a gatling gun in front of him, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> over {{ sprayduration }} seconds and shredding up to <scaleArmor>{{ shredmax*-1 }} Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Defense Reduction", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Defense Reduction",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ shredmax*-1.000000 }} -> {{ shredmaxnl*-1.000000 }}",
@@ -263,7 +295,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -308,7 +352,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "4",

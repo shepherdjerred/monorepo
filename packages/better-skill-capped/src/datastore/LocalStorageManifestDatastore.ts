@@ -1,25 +1,21 @@
-import { Manifest } from "../parser/Manifest";
+import type { Manifest } from "@shepherdjerred/better-skill-capped/parser/Manifest";
 
 const IDENTIFIER = "content";
 const TIMESTAMP = IDENTIFIER + "-timestamp";
 
 export class LocalStorageManifestDatastore {
   set(manifest: Manifest): void {
-    window.localStorage.setItem(IDENTIFIER, JSON.stringify(manifest));
+    globalThis.localStorage.setItem(IDENTIFIER, JSON.stringify(manifest));
     this.setTime(new Date());
   }
 
   get(): Manifest | undefined {
-    const stored = window.localStorage.getItem(IDENTIFIER);
-    if (stored) {
-      return JSON.parse(stored) as Manifest;
-    } else {
-      return undefined;
-    }
+    const stored = globalThis.localStorage.getItem(IDENTIFIER);
+    return stored ? JSON.parse(stored) as Manifest : undefined;
   }
 
   isStale(): boolean {
-    const timestamp = window.localStorage.getItem(TIMESTAMP);
+    const timestamp = globalThis.localStorage.getItem(TIMESTAMP);
     if (!timestamp) {
       return true;
     }
@@ -29,6 +25,6 @@ export class LocalStorageManifestDatastore {
   }
 
   private setTime(date: Date): void {
-    window.localStorage.setItem(TIMESTAMP, JSON.stringify(date.valueOf()));
+    globalThis.localStorage.setItem(TIMESTAMP, JSON.stringify(date.valueOf()));
   }
 }

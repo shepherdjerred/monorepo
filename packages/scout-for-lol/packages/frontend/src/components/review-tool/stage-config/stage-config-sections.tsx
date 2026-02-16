@@ -8,7 +8,10 @@ type StageConfigSectionsProps = {
   onChange: (next: PipelineStagesConfig) => void;
 };
 
-export function StageConfigSections({ stages, onChange }: StageConfigSectionsProps) {
+export function StageConfigSections({
+  stages,
+  onChange,
+}: StageConfigSectionsProps) {
   return (
     <Accordion
       items={[

@@ -35,7 +35,9 @@ export async function saveMatchRankHistory(params: {
     },
   });
 
-  logger.info(`[saveMatchRankHistory] Saved rank history for ${puuid} in match ${matchId} (${queueType})`);
+  logger.info(
+    `[saveMatchRankHistory] Saved rank history for ${puuid} in match ${matchId} (${queueType})`,
+  );
 }
 
 /**
@@ -65,5 +67,7 @@ export async function getLatestRankBefore(
   }
 
   const record = records[0];
-  return record?.rankAfter ? RankSchema.parse(JSON.parse(record.rankAfter)) : undefined;
+  return record?.rankAfter
+    ? RankSchema.parse(JSON.parse(record.rankAfter))
+    : undefined;
 }

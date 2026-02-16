@@ -5,7 +5,11 @@
  */
 
 import { Readable } from "stream";
-import { GetObjectCommand, HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  GetObjectCommand,
+  HeadObjectCommand,
+  PutObjectCommand,
+} from "@aws-sdk/client-s3";
 import { createS3Client } from "@scout-for-lol/backend/storage/s3-client.ts";
 import type { SoundSource } from "@scout-for-lol/data";
 import configuration from "@scout-for-lol/backend/configuration.ts";
@@ -15,6 +19,41 @@ const logger = createLogger("audio-player");
 
 // In-memory tracking of URLs being downloaded
 const downloadingUrls = new Set<string>();
+
+/**
+ * Convert a web ReadableStream to a Node.js Readable stream.
+ * This bridges the type gap between Bun/web ReadableStream<Uint8Array> and
+ * Node.js Readable.fromWeb which expects a web-spec ReadableStream.
+ */
+function webStreamToReadable(
+  stream: ReadableStream<Uint8Array>,
+): Readable {
+  const reader = stream.getReader();
+  const readable = new Readable({
+    // Node requires a read implementation but we push data from the web stream reader
+    read() {
+      // no-op: data is pushed asynchronously via pump()
+    },
+  });
+
+  async function pump(): Promise<void> {
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) {
+          readable.push(null);
+          return;
+        }
+        readable.push(value);
+      }
+    } catch (err) {
+      readable.destroy(err instanceof Error ? err : new Error(String(err)));
+    }
+  }
+
+  void pump();
+  return readable;
+}
 
 /**
  * Get an audio stream from a sound source
@@ -29,8 +68,7 @@ export async function getAudioStream(source: SoundSource): Promise<Readable> {
       // Local file (shouldn't happen in production backend)
       const file = Bun.file(source.path);
       if (await file.exists()) {
-        // eslint-disable-next-line custom-rules/no-type-assertions -- Bun stream to Node stream conversion requires type coercion
-        return Readable.fromWeb(file.stream() as unknown as Parameters<typeof Readable.fromWeb>[0]);
+        return webStreamToReadable(file.stream());
       }
       throw new Error(`File not found: ${source.path}`);
     }
@@ -44,8 +82,8 @@ export async function getAudioStream(source: SoundSource): Promise<Readable> {
       if (!response.ok || !response.body) {
         throw new Error(`Failed to fetch audio from ${source.url}`);
       }
-      // eslint-disable-next-line custom-rules/no-type-assertions -- Web stream to Node stream conversion requires type coercion
-      return Readable.fromWeb(response.body as unknown as Parameters<typeof Readable.fromWeb>[0]);
+
+      return webStreamToReadable(response.body);
     }
   }
 }
@@ -220,7 +258,9 @@ async function downloadYouTubeAudio(url: string, s3Key: string): Promise<void> {
 /**
  * Pre-cache a YouTube URL (async, doesn't block)
  */
-export async function cacheYouTubeUrl(url: string): Promise<{ cached: boolean; key?: string }> {
+export async function cacheYouTubeUrl(
+  url: string,
+): Promise<{ cached: boolean; key?: string }> {
   if (!isYouTubeUrl(url)) {
     return { cached: false };
   }
@@ -246,7 +286,9 @@ export async function cacheYouTubeUrl(url: string): Promise<{ cached: boolean; k
 /**
  * Check if a URL is cached
  */
-export async function getCacheStatus(url: string): Promise<"cached" | "downloading" | "not-cached"> {
+export async function getCacheStatus(
+  url: string,
+): Promise<"cached" | "downloading" | "not-cached"> {
   if (downloadingUrls.has(url)) {
     return "downloading";
   }

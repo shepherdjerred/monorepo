@@ -1,7 +1,7 @@
-import { Role } from "./Role";
+import type { Role } from "./Role";
 import { isCommentary } from "./Commentary";
 
-export interface Video {
+export type Video = {
   role: Role;
   title: string;
   description: string;

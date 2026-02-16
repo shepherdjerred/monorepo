@@ -167,7 +167,7 @@ describe("exportDashboardWithHelmEscaping", () => {
     const result = exportDashboardWithHelmEscaping(dashboard);
 
     // Check that template variables are escaped
-    expect(result).toContain('rate(requests_total{env=\\"{{ print "{{" }}env{{ print "}}" }}\\"}[5m])');
+    expect(result).toContain(String.raw`rate(requests_total{env=\"{{ print "{{" }}env{{ print "}}" }}\"}[5m])`);
     expect(result).toContain('{{ print "{{" }}env{{ print "}}" }}');
     expect(result).toContain('{{ print "{{" }}status{{ print "}}" }}');
 

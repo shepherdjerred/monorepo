@@ -21,7 +21,9 @@ describe("seasons", () => {
         expect(season.displayName).toBeTruthy();
         expect(season.startDate).toBeInstanceOf(Date);
         expect(season.endDate).toBeInstanceOf(Date);
-        expect(season.startDate.getTime()).toBeLessThan(season.endDate.getTime());
+        expect(season.startDate.getTime()).toBeLessThan(
+          season.endDate.getTime(),
+        );
       }
     });
 
@@ -37,7 +39,11 @@ describe("seasons", () => {
 
   describe("SeasonIdSchema", () => {
     test("should accept valid season IDs", () => {
-      const validIds = ["2025_SEASON_3_ACT_1", "2026_SEASON_1_ACT_1", "2026_SEASON_1_ACT_2"] as const;
+      const validIds = [
+        "2025_SEASON_3_ACT_1",
+        "2026_SEASON_1_ACT_1",
+        "2026_SEASON_1_ACT_2",
+      ] as const;
       for (const id of validIds) {
         const result = SeasonIdSchema.safeParse(id);
         expect(result.success).toBe(true);
@@ -45,7 +51,13 @@ describe("seasons", () => {
     });
 
     test("should reject invalid season IDs", () => {
-      const invalidIds = ["invalid", "2026_SPLIT_1", "2024_SPLIT_3", "2024", ""];
+      const invalidIds = [
+        "invalid",
+        "2026_SPLIT_1",
+        "2024_SPLIT_3",
+        "2024",
+        "",
+      ];
       for (const id of invalidIds) {
         const result = SeasonIdSchema.safeParse(id);
         expect(result.success).toBe(false);
@@ -77,7 +89,9 @@ describe("seasons", () => {
         const current = seasons[i];
         const next = seasons[i + 1];
         if (current && next) {
-          expect(current.startDate.getTime()).toBeGreaterThanOrEqual(next.startDate.getTime());
+          expect(current.startDate.getTime()).toBeGreaterThanOrEqual(
+            next.startDate.getTime(),
+          );
         }
       }
     });
@@ -90,7 +104,9 @@ describe("seasons", () => {
       const current = getCurrentSeason();
       if (current) {
         const now = new Date();
-        expect(now.getTime()).toBeGreaterThanOrEqual(current.startDate.getTime());
+        expect(now.getTime()).toBeGreaterThanOrEqual(
+          current.startDate.getTime(),
+        );
         expect(now.getTime()).toBeLessThanOrEqual(current.endDate.getTime());
       }
     });
@@ -116,7 +132,9 @@ describe("seasons", () => {
       for (const choice of choices) {
         const season = getSeasonById(choice.value);
         if (season) {
-          expect(season.endDate.getTime()).toBeGreaterThanOrEqual(now.getTime());
+          expect(season.endDate.getTime()).toBeGreaterThanOrEqual(
+            now.getTime(),
+          );
         }
       }
     });

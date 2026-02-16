@@ -144,7 +144,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "40/65/90/115/140", "0", "500", "4/3.5/3/2.5/2", "100", "12", "0.35", "4", "0", "0"],
+          "effectBurn": [
+            null,
+            "40/65/90/115/140",
+            "0",
+            "500",
+            "4/3.5/3/2.5/2",
+            "100",
+            "12",
+            "0.35",
+            "4",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -168,7 +180,10 @@
           "tooltip": "<spellPassive>Passive:</spellPassive> Kindred gains stacks as they move and attack. At 100 stacks, Kindred's next Attack restores up to <healing>{{ attackheal }} Health</healing> based on their missing Health.<br /><br /><spellActive>Active:</spellActive> Kindred claims a territory, ordering Wolf to bite at the last enemy Lamb Attacked. Wolf's bites deal <magicDamage>{{ basewolfdamage }}</magicDamage> plus <magicDamage>{{ percentwolfdamage }} current Health magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ e5 }} -> {{ e5NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ e5 }} -> {{ e5NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [18, 17, 16, 15, 14],
@@ -189,7 +204,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "40/45/50/55/60", "1", "1.5", "8.5", "25/30/35/40/45", "800", "0.5", "0.5", "0", "0"],
+          "effectBurn": [
+            null,
+            "40/45/50/55/60",
+            "1",
+            "1.5",
+            "8.5",
+            "25/30/35/40/45",
+            "800",
+            "0.5",
+            "0.5",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -213,7 +240,10 @@
           "tooltip": "Kindred weakens an enemy, <status>Slowing</status> them by {{ totalslow }}% for {{ slowduration }} second.<br /><br />Kindred's third Attack against the target within {{ totalduration }} seconds of each other directs Wolf to pounce on the enemy, dealing an additional <physicalDamage>{{ basebitedamage }}</physicalDamage> plus <physicalDamage>{{ percentbitedamage }} missing Health physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [14, 12.5, 11, 9.5, 8],
@@ -234,7 +264,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -258,7 +300,10 @@
           "tooltip": "Kindred blesses the ground for {{ e2 }} seconds, allowing no unit, ally, enemy, or neutral to die while inside. Upon reaching 10% Health, units can't be damaged or healed while still inside the zone.<br /><br />When the blessing ends, all units inside heal for <healing>{{ e1 }} Health</healing>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Healing", "Cooldown"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [160, 140, 120],
@@ -279,7 +324,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "225/300/375", "4", "530", "400", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "225/300/375",
+            "4",
+            "530",
+            "400",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

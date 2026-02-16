@@ -1,4 +1,5 @@
-import { App, Chart } from "cdk8s";
+import type { App} from "cdk8s";
+import { Chart } from "cdk8s";
 import { KubeNetworkPolicy, IntOrString } from "../../generated/imports/k8s.ts";
 import { createFreshRssDeployment } from "../resources/freshrss.ts";
 

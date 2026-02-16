@@ -1,6 +1,9 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index";
+import {
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data/index";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
@@ -17,7 +20,9 @@ const ArgsSchema = z.object({
   guildId: DiscordGuildIdSchema,
 });
 
-export async function executePlayerMerge(interaction: ChatInputCommandInteraction) {
+export async function executePlayerMerge(
+  interaction: ChatInputCommandInteraction,
+) {
   const validation = await validateCommandArgs(
     interaction,
     ArgsSchema,
@@ -115,12 +120,18 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
           },
         });
 
-        logger.info(`✅ Moved ${sourcePlayer.accounts.length.toString()} accounts to target player`);
+        logger.info(
+          `✅ Moved ${sourcePlayer.accounts.length.toString()} accounts to target player`,
+        );
 
         // 2. Handle subscriptions - keep target's subscriptions, delete source's duplicates
         // Get all unique channel IDs from both players
-        const sourceChannelIds = new Set(sourcePlayer.subscriptions.map((sub) => sub.channelId));
-        const targetChannelIds = new Set(targetPlayer.subscriptions.map((sub) => sub.channelId));
+        const sourceChannelIds = new Set(
+          sourcePlayer.subscriptions.map((sub) => sub.channelId),
+        );
+        const targetChannelIds = new Set(
+          targetPlayer.subscriptions.map((sub) => sub.channelId),
+        );
 
         // Delete source subscriptions (including duplicates)
         await tx.subscription.deleteMany({
@@ -129,7 +140,9 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
           },
         });
 
-        logger.info(`✅ Removed ${sourcePlayer.subscriptions.length.toString()} subscriptions from source player`);
+        logger.info(
+          `✅ Removed ${sourcePlayer.subscriptions.length.toString()} subscriptions from source player`,
+        );
 
         // Create new subscriptions for channels that were only in source
         const uniqueSourceChannels = Array.from(sourceChannelIds).filter(
@@ -148,13 +161,19 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
             })),
           });
 
-          logger.info(`✅ Added ${uniqueSourceChannels.length.toString()} new subscriptions to target player`);
+          logger.info(
+            `✅ Added ${uniqueSourceChannels.length.toString()} new subscriptions to target player`,
+          );
         }
 
         // 3. Handle competition participants
         // For each competition, if both players are participants, keep target's and delete source's
-        const sourceCompetitionIds = new Set(sourcePlayer.competitionParticipants.map((cp) => cp.competitionId));
-        const targetCompetitionIds = new Set(targetPlayer.competitionParticipants.map((cp) => cp.competitionId));
+        const sourceCompetitionIds = new Set(
+          sourcePlayer.competitionParticipants.map((cp) => cp.competitionId),
+        );
+        const targetCompetitionIds = new Set(
+          targetPlayer.competitionParticipants.map((cp) => cp.competitionId),
+        );
 
         // Delete all source competition participants
         await tx.competitionParticipant.deleteMany({
@@ -168,15 +187,16 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
         );
 
         // Create new participants for competitions that were only in source
-        const uniqueSourceCompetitions = Array.from(sourceCompetitionIds).filter(
-          (competitionId) => !targetCompetitionIds.has(competitionId),
-        );
+        const uniqueSourceCompetitions = Array.from(
+          sourceCompetitionIds,
+        ).filter((competitionId) => !targetCompetitionIds.has(competitionId));
 
         if (uniqueSourceCompetitions.length > 0) {
           // Get the original participation data to preserve status and timestamps
-          const sourceParticipations = sourcePlayer.competitionParticipants.filter((cp) =>
-            uniqueSourceCompetitions.includes(cp.competitionId),
-          );
+          const sourceParticipations =
+            sourcePlayer.competitionParticipants.filter((cp) =>
+              uniqueSourceCompetitions.includes(cp.competitionId),
+            );
 
           await tx.competitionParticipant.createMany({
             data: sourceParticipations.map((cp) => ({
@@ -208,7 +228,9 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
 
         // Build a set of target's existing (competitionId, snapshotType) combinations
         const targetSnapshotKeys = new Set(
-          targetSnapshots.map((s) => `${s.competitionId.toString()}-${s.snapshotType}`),
+          targetSnapshots.map(
+            (s) => `${s.competitionId.toString()}-${s.snapshotType}`,
+          ),
         );
 
         // Separate source snapshots into conflicting and non-conflicting
@@ -229,7 +251,9 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
           await tx.competitionSnapshot.deleteMany({
             where: { id: { in: conflictingIds } },
           });
-          logger.info(`✅ Deleted ${conflictingIds.length.toString()} conflicting competition snapshots`);
+          logger.info(
+            `✅ Deleted ${conflictingIds.length.toString()} conflicting competition snapshots`,
+          );
         }
 
         // Move non-conflicting snapshots to target player
@@ -238,7 +262,9 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
             where: { id: { in: nonConflictingIds } },
             data: { playerId: targetPlayer.id },
           });
-          logger.info(`✅ Moved ${nonConflictingIds.length.toString()} competition snapshots to target player`);
+          logger.info(
+            `✅ Moved ${nonConflictingIds.length.toString()} competition snapshots to target player`,
+          );
         }
 
         // 5. Delete the source player
@@ -261,11 +287,15 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
         });
       });
 
-      const totalAccounts = sourcePlayer.accounts.length + targetPlayer.accounts.length;
+      const totalAccounts =
+        sourcePlayer.accounts.length + targetPlayer.accounts.length;
       const totalSubscriptions =
         targetPlayer.subscriptions.length +
         sourcePlayer.subscriptions.filter(
-          (sourceSub) => !targetPlayer.subscriptions.some((targetSub) => targetSub.channelId === sourceSub.channelId),
+          (sourceSub) =>
+            !targetPlayer.subscriptions.some(
+              (targetSub) => targetSub.channelId === sourceSub.channelId,
+            ),
         ).length;
 
       await interaction.reply({

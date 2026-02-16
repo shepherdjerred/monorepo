@@ -5,7 +5,12 @@
  */
 
 import { useState } from "react";
-import type { SoundPool, SoundEntry, SelectionMode, SoundSource } from "@scout-for-lol/data";
+import type {
+  SoundPool,
+  SoundEntry,
+  SelectionMode,
+  SoundSource,
+} from "@scout-for-lol/data";
 import { SoundEntryCard } from "./sound-entry-card.tsx";
 import type { CacheStatus } from "@scout-for-lol/ui/types/adapter.ts";
 
@@ -84,7 +89,9 @@ export function SoundPoolEditor({
     <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
-        {title && <h4 className="text-sm font-medium text-gray-700">{title}</h4>}
+        {title && (
+          <h4 className="text-sm font-medium text-gray-700">{title}</h4>
+        )}
         <div className="flex items-center gap-2">
           <label htmlFor="selection-mode" className="text-xs text-gray-500">
             Selection:
@@ -95,7 +102,11 @@ export function SoundPoolEditor({
             onChange={(e) => {
               const value = e.currentTarget.value;
               // Type guard for selection mode
-              if (value === "random" || value === "sequential" || value === "weighted") {
+              if (
+                value === "random" ||
+                value === "sequential" ||
+                value === "weighted"
+              ) {
                 onUpdate({ ...pool, selectionMode: value });
               }
             }}
@@ -112,7 +123,9 @@ export function SoundPoolEditor({
 
       {/* Sound entries */}
       {pool.sounds.length === 0 ? (
-        <div className="text-sm text-gray-500 italic py-2">No sounds configured</div>
+        <div className="text-sm text-gray-500 italic py-2">
+          No sounds configured
+        </div>
       ) : (
         <div className="space-y-2">
           {pool.sounds.map((entry) => (

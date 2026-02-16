@@ -10,21 +10,29 @@ export const PlayerSchema = z.strictObject({
   ranks: RanksSchema,
 });
 
-export type PlayerWithSoloQueueRank = z.infer<typeof PlayerWithSoloQueueRankSchema>;
+export type PlayerWithSoloQueueRank = z.infer<
+  typeof PlayerWithSoloQueueRankSchema
+>;
 export const PlayerWithSoloQueueRankSchema = PlayerSchema.extend({
   ranks: RanksSchema.extend({
     solo: RankSchema,
   }),
 });
 
-export function filterPlayersWithSoloQueueRank(players: Player[]): PlayerWithSoloQueueRank[] {
+export function filterPlayersWithSoloQueueRank(
+  players: Player[],
+): PlayerWithSoloQueueRank[] {
   return flatMap(players, (player) => {
     const result = PlayerWithSoloQueueRankSchema.safeParse(player);
     return result.success ? [result.data] : [];
   });
 }
 
-export function sortPlayersBySoloQueueRank(players: Player[]): PlayerWithSoloQueueRank[] {
+export function sortPlayersBySoloQueueRank(
+  players: Player[],
+): PlayerWithSoloQueueRank[] {
   const playersWithSoloQueueRank = filterPlayersWithSoloQueueRank(players);
-  return sortBy(playersWithSoloQueueRank, (player) => rankToLeaguePoints(player.ranks.solo)).reverse();
+  return sortBy(playersWithSoloQueueRank, (player) =>
+    rankToLeaguePoints(player.ranks.solo),
+  ).reverse();
 }

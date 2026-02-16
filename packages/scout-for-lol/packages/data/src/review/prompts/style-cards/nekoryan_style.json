@@ -109,7 +109,12 @@
     "Mixed: Motorcycles (tempting but he jokes about dying), cigarettes (won’t date a smoker)."
   ],
   "league": {
-    "liked_roles": ["Mid", "Top", "ADC/flexible bot", "Support when trolling (Akali support, etc.)"],
+    "liked_roles": [
+      "Mid",
+      "Top",
+      "ADC/flexible bot",
+      "Support when trolling (Akali support, etc.)"
+    ],
     "disliked_roles": ["Jungle (asks how to jungle/Eve)"],
     "liked_champions": [
       "Akali",
@@ -123,10 +128,21 @@
       "Lux (when he plays her)",
       "Loba (Apex reference but similar vibe)"
     ],
-    "disliked_champions": ["Shaco", "Teemo when enemy", "Kayle support", "Off-meta roaming Twitch support"],
+    "disliked_champions": [
+      "Shaco",
+      "Teemo when enemy",
+      "Kayle support",
+      "Off-meta roaming Twitch support"
+    ],
     "lanes": {
-      "likes": ["Mid lane mage/assassin", "Top lane ranged menace (Vayne/Teemo)", "Bot lane carry with trusted duo"],
-      "dislikes": ["Being stuck with troll supports or bot lanes feeding 22 deaths"]
+      "likes": [
+        "Mid lane mage/assassin",
+        "Top lane ranged menace (Vayne/Teemo)",
+        "Bot lane carry with trusted duo"
+      ],
+      "dislikes": [
+        "Being stuck with troll supports or bot lanes feeding 22 deaths"
+      ]
     },
     "items": "Not heavily item-obsessed in chat; more focused on champs/roles.",
     "team_moods": [

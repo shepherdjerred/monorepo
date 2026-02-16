@@ -1,8 +1,8 @@
-import { Video } from "./Video";
-import { Course } from "./Course";
-import { Commentary } from "./Commentary";
+import type { Video } from "./Video";
+import type { Course } from "./Course";
+import type { Commentary } from "./Commentary";
 
-export interface Bookmark {
+export type Bookmark = {
   item: Bookmarkable;
   date: Date;
 }

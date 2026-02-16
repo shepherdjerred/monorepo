@@ -26,7 +26,9 @@ export function Accordion({ items, className }: AccordionProps) {
             {item.title}
             <span className="text-surface-500">▾</span>
           </summary>
-          <div className="border-t border-surface-100 px-4 py-3">{item.content}</div>
+          <div className="border-t border-surface-100 px-4 py-3">
+            {item.content}
+          </div>
         </details>
       ))}
     </div>

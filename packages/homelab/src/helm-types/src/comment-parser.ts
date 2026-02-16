@@ -20,12 +20,12 @@ export function cleanYAMLComment(comment: string): string {
 
     // Skip empty lines
     if (currentLine.length === 0) {
-      if (inCodeBlock) inCodeBlock = false;
+      if (inCodeBlock) {inCodeBlock = false;}
       continue;
     }
 
     // Skip @default lines (we'll generate our own)
-    if (currentLine.startsWith("@default")) continue;
+    if (currentLine.startsWith("@default")) {continue;}
 
     // Detect various patterns that indicate this is an example/code block, not documentation
     const isExample =
@@ -53,7 +53,7 @@ export function cleanYAMLComment(comment: string): string {
       // Check if this line looks like normal prose (sentence case, punctuation)
       const looksLikeProse =
         /^[A-Z][\w\s]+[.!?]$/.test(currentLine) ||
-        /^[A-Z][\w\s,'"-]+:?\s*$/.test(currentLine) ||
+        /^[A-Z][\w\s,'"-]+(?::\s*)?$/.test(currentLine) ||
         currentLine.startsWith("Ref:") ||
         currentLine.startsWith("See:") ||
         currentLine.startsWith("http://") ||
@@ -96,7 +96,7 @@ export function parseYAMLComments(yamlContent: string): Map<string, string> {
 
     // Check if line is a comment
     if (trimmed.startsWith("#")) {
-      const comment = trimmed.substring(1).trim();
+      const comment = trimmed.slice(1).trim();
       if (comment) {
         // Track the indentation level of the comment
         const commentIndent = currentLine.search(/\S/);
@@ -106,14 +106,14 @@ export function parseYAMLComments(yamlContent: string): Map<string, string> {
     }
 
     // Check if line has a key
-    const keyMatch = /^(\s*)([a-zA-Z0-9_-]+)\s*:/.exec(currentLine);
+    const keyMatch = /^(\s*)([\w-]+)\s*:/.exec(currentLine);
     if (keyMatch) {
       const indent = keyMatch[1]?.length ?? 0;
       const key = keyMatch[2];
-      if (!key) continue;
+      if (!key) {continue;}
 
       // Update indent stack
-      const lastIndent = indentStack[indentStack.length - 1];
+      const lastIndent = indentStack.at(-1);
       while (indentStack.length > 0 && lastIndent && lastIndent.indent >= indent) {
         indentStack.pop();
       }

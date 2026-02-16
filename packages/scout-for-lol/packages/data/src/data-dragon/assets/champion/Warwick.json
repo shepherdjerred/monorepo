@@ -164,7 +164,12 @@
           "description": "Warwick lunges forward and bites his target, dealing damage based on their maximum health and healing for damage dealt.",
           "tooltip": "<tap>Tap:</tap> Warwick lunges forward and bites, dealing <magicDamage>{{ basebitedamage }} plus {{ targetpercenthpdamage }}% max Health magic damage</magicDamage> and <healing>healing for {{ e3 }}% of the damage dealt</healing>.<br /><br /><hold>Hold:</hold> Warwick lunges and clamps his jaws on the target, leaping behind them. While clamped, Warwick follows all movement of the target. After releasing his hold, he does the same damage and healing.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Healing", "% Health damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Healing",
+              "% Health damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ e3 }}% -> {{ e3NL }}%",
               "{{ targetpercenthpdamage }}% -> {{ targetpercenthpdamageNL }}%",
@@ -288,7 +293,10 @@
           "tooltip": "Warwick gains {{ e1 }}% damage reduction for 2.5 seconds. After it ends, Warwick howls, <status>Fearing</status> nearby enemies for {{ e3 }} second. Warwick can <recast>Recast</recast> to end the Ability early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage Reduction", "Cooldown"],
-            "effect": ["{{ e1 }}% -> {{ e1NL }}%", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ e1 }}% -> {{ e1NL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [15, 14, 13, 12, 11],
@@ -309,7 +317,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "35/40/45/50/55", "2.75", "1", "1", "800", "400", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "35/40/45/50/55",
+            "2.75",
+            "1",
+            "1",
+            "800",
+            "400",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -333,7 +353,10 @@
           "tooltip": "Warwick leaps a huge distance that scales with his <speed>Move Speed</speed>, <status>Suppressing</status> the first champion he collides with while he channels for {{ rduration }} seconds. He attacks that champion 3 times over the duration, dealing <magicDamage>{{ damagecumulative }} magic damage</magicDamage>. Warwick <healing>heals for 100% of all damage dealt</healing> during the channel.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ rbasedamage }} -> {{ rbasedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ rbasedamage }} -> {{ rbasedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [110, 90, 70],
@@ -354,7 +377,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

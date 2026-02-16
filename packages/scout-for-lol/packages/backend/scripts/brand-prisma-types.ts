@@ -59,7 +59,10 @@ function main() {
       transformCount += transformPayloadType(typeAlias);
     }
     // Process Where input types (query filters)
-    else if (typeName.includes("WhereUniqueInput") || typeName.includes("WhereInput")) {
+    else if (
+      typeName.includes("WhereUniqueInput") ||
+      typeName.includes("WhereInput")
+    ) {
       transformCount += transformWhereType(typeAlias);
     }
     // Process Create input types (all variations)
@@ -73,7 +76,10 @@ function main() {
       transformCount += transformInputType(typeAlias);
     }
     // Process Min/Max Aggregate output types (return actual values, not counts)
-    else if (typeName.includes("MinAggregateOutputType") || typeName.includes("MaxAggregateOutputType")) {
+    else if (
+      typeName.includes("MinAggregateOutputType") ||
+      typeName.includes("MaxAggregateOutputType")
+    ) {
       transformCount += transformAggregateType(typeAlias);
     }
     // Process GroupBy output types (return actual values)
@@ -102,16 +108,21 @@ function main() {
   }
 
   // Debug: Check if file was actually modified
-  const wasModified = sourceFile.getImportDeclarations().length > 0 || transformCount > 0;
+  const wasModified =
+    sourceFile.getImportDeclarations().length > 0 || transformCount > 0;
   logger.info(`File was modified: ${wasModified.toString()}`);
-  logger.info(`Import declarations before save: ${sourceFile.getImportDeclarations().length.toString()}`);
+  logger.info(
+    `Import declarations before save: ${sourceFile.getImportDeclarations().length.toString()}`,
+  );
 
   // Save the transformed file
   sourceFile.saveSync();
   logger.info("Save completed");
 
   logger.info(`✅ Transformed ${transformCount.toString()} properties`);
-  logger.info(`✅ Added imports: ${Array.from(BRANDED_TYPES_TO_IMPORT).join(", ")}`);
+  logger.info(
+    `✅ Added imports: ${Array.from(BRANDED_TYPES_TO_IMPORT).join(", ")}`,
+  );
   logger.info("🎉 Prisma types successfully branded!");
 }
 
@@ -138,13 +149,20 @@ function transformFieldTypeInContent(
     const brandedType = getBrandedType(fieldName, modelName);
     if (brandedType) {
       const newType = isNullable ? `${brandedType} | null` : brandedType;
-      const fieldReplacePattern = new RegExp(`${fieldName}:\\s*${baseType}(\\s*\\|\\s*null)?`);
-      transformedContent = transformedContent.replace(fieldReplacePattern, `${fieldName}: ${newType}`);
+      const fieldReplacePattern = new RegExp(
+        `${fieldName}:\\s*${baseType}(\\s*\\|\\s*null)?`,
+      );
+      transformedContent = transformedContent.replace(
+        fieldReplacePattern,
+        `${fieldName}: ${newType}`,
+      );
 
       BRANDED_TYPES_TO_IMPORT.add(brandedType);
       count++;
 
-      logger.info(`    ✓ ${modelName}.${fieldName}: ${originalType} → ${newType}`);
+      logger.info(
+        `    ✓ ${modelName}.${fieldName}: ${originalType} → ${newType}`,
+      );
     }
 
     match = fieldPattern.exec(content);
@@ -177,7 +195,7 @@ function transformPayloadType(typeAlias: TypeAliasDeclaration): number {
   logger.info(`Processing ${modelName}...`);
 
   const typeNode = typeAlias.getTypeNode();
-  if (!typeNode || typeNode.getKind() !== SyntaxKind.TypeLiteral) {
+  if (typeNode?.getKind() !== SyntaxKind.TypeLiteral) {
     return 0;
   }
 
@@ -222,7 +240,10 @@ function transformPayloadType(typeAlias: TypeAliasDeclaration): number {
 
     // Replace the entire scalars property with the transformed version
     if (totalCount > 0) {
-      const newScalarsText = fullText.replace(objectContent, stringResult.transformed);
+      const newScalarsText = fullText.replace(
+        objectContent,
+        stringResult.transformed,
+      );
       prop.replaceWithText(newScalarsText);
     }
   }
@@ -259,7 +280,11 @@ function transformInputType(typeAlias: TypeAliasDeclaration): number {
 function transformPropertyType(
   prop: PropertySignature,
   modelName: string,
-  transformFn: (fullText: string, brandedType: string, propName: string) => string | null,
+  transformFn: (
+    fullText: string,
+    brandedType: string,
+    propName: string,
+  ) => string | null,
 ): boolean {
   const propName = prop.getName();
   const propTypeNode = prop.getTypeNode();
@@ -285,9 +310,12 @@ function transformPropertyType(
   return false;
 }
 
-function transformSimpleObjectType(typeAlias: TypeAliasDeclaration, modelName: string): number {
+function transformSimpleObjectType(
+  typeAlias: TypeAliasDeclaration,
+  modelName: string,
+): number {
   const typeNode = typeAlias.getTypeNode();
-  if (!typeNode || typeNode.getKind() !== SyntaxKind.TypeLiteral) {
+  if (typeNode?.getKind() !== SyntaxKind.TypeLiteral) {
     return 0;
   }
 
@@ -304,36 +332,40 @@ function transformSimpleObjectType(typeAlias: TypeAliasDeclaration, modelName: s
     // Match patterns like: id?: number | IntFieldUpdateOperationsInput
     // OR: serverId?: string | StringFilter
     // We want to brand the primitive type part while keeping other types
-    const transformed = transformPropertyType(prop, modelName, (fullText, brandedType, propName) => {
-      const simpleNumberPattern = new RegExp(`${propName}\\??:\\s*number\\b`);
-      const simpleStringPattern = new RegExp(`${propName}\\??:\\s*string\\b`);
+    const transformed = transformPropertyType(
+      prop,
+      modelName,
+      (fullText, brandedType, propName) => {
+        const simpleNumberPattern = new RegExp(`${propName}\\??:\\s*number\\b`);
+        const simpleStringPattern = new RegExp(`${propName}\\??:\\s*string\\b`);
 
-      const numberMatch = simpleNumberPattern.exec(fullText);
-      const stringMatch = simpleStringPattern.exec(fullText);
+        const numberMatch = simpleNumberPattern.exec(fullText);
+        const stringMatch = simpleStringPattern.exec(fullText);
 
-      if (numberMatch) {
-        return fullText.replace(/:\s*number\b/, `: ${brandedType}`);
-      }
-
-      if (stringMatch) {
-        return fullText.replace(/:\s*string\b/, `: ${brandedType}`);
-      }
-
-      // Match union patterns: number | SomeOtherType OR string | SomeOtherType
-      const unionPattern = new RegExp(`${propName}\\??:\\s*([^\\n]+)`);
-      const unionMatch = unionPattern.exec(fullText);
-      if (unionMatch?.[1]) {
-        const typeExpression = unionMatch[1];
-        if (typeExpression.includes("number")) {
-          return fullText.replace(/\bnumber\b/, brandedType);
+        if (numberMatch) {
+          return fullText.replace(/:\s*number\b/, `: ${brandedType}`);
         }
-        if (typeExpression.includes("string")) {
-          return fullText.replace(/\bstring\b/, brandedType);
-        }
-      }
 
-      return null;
-    });
+        if (stringMatch) {
+          return fullText.replace(/:\s*string\b/, `: ${brandedType}`);
+        }
+
+        // Match union patterns: number | SomeOtherType OR string | SomeOtherType
+        const unionPattern = new RegExp(`${propName}\\??:\\s*([^\\n]+)`);
+        const unionMatch = unionPattern.exec(fullText);
+        if (unionMatch?.[1]) {
+          const typeExpression = unionMatch[1];
+          if (typeExpression.includes("number")) {
+            return fullText.replace(/\bnumber\b/, brandedType);
+          }
+          if (typeExpression.includes("string")) {
+            return fullText.replace(/\bstring\b/, brandedType);
+          }
+        }
+
+        return null;
+      },
+    );
 
     if (transformed) {
       count++;
@@ -347,12 +379,17 @@ function transformAggregateType(typeAlias: TypeAliasDeclaration): number {
   const typeName = typeAlias.getName();
   // Extract model name: SubscriptionMinAggregateOutputType → Subscription
   // or SubscriptionGroupByOutputType → Subscription
-  const modelName = typeName.replace(/MinAggregateOutputType|MaxAggregateOutputType|GroupByOutputType/, "");
+  const modelName = typeName.replace(
+    /MinAggregateOutputType|MaxAggregateOutputType|GroupByOutputType/,
+    "",
+  );
 
   return transformSimpleObjectType(typeAlias, modelName);
 }
 
-function transformFieldRefsInterface(interfaceDecl: InterfaceDeclaration): number {
+function transformFieldRefsInterface(
+  interfaceDecl: InterfaceDeclaration,
+): number {
   const interfaceName = interfaceDecl.getName();
   // Extract model name: SubscriptionFieldRefs → Subscription
   const modelName = interfaceName.replace(/FieldRefs$/, "");
@@ -370,18 +407,26 @@ function transformFieldRefsInterface(interfaceDecl: InterfaceDeclaration): numbe
     // We need to replace the second type parameter with the branded type
     // Pattern: FieldRef<"Model", 'Int'> → FieldRef<"Model", BrandedType>
     // Pattern: FieldRef<"Model", 'String'> → FieldRef<"Model", BrandedType>
-    const transformed = transformPropertyType(prop, modelName, (fullText, brandedType, _propName) => {
-      // Match the FieldRef type parameter (Int, String, DateTime, etc.)
-      const fieldRefPattern = /FieldRef<"[^"]+",\s*'(Int|String|DateTime|Boolean|Float|Decimal|BigInt|Bytes|Json)'\s*>/;
-      const match = fieldRefPattern.exec(fullText);
+    const transformed = transformPropertyType(
+      prop,
+      modelName,
+      (fullText, brandedType, _propName) => {
+        // Match the FieldRef type parameter (Int, String, DateTime, etc.)
+        const fieldRefPattern =
+          /FieldRef<"[^"]+",\s*'(Int|String|DateTime|Boolean|Float|Decimal|BigInt|Bytes|Json)'\s*>/;
+        const match = fieldRefPattern.exec(fullText);
 
-      if (match) {
-        // Replace the type parameter with the branded type (without quotes since it's a type, not a string literal)
-        return fullText.replace(fieldRefPattern, `FieldRef<"${modelName}", ${brandedType}>`);
-      }
+        if (match) {
+          // Replace the type parameter with the branded type (without quotes since it's a type, not a string literal)
+          return fullText.replace(
+            fieldRefPattern,
+            `FieldRef<"${modelName}", ${brandedType}>`,
+          );
+        }
 
-      return null;
-    });
+        return null;
+      },
+    );
 
     if (transformed) {
       count++;
@@ -435,7 +480,10 @@ const FIELD_TYPE_MAP: Record<string, string> = {
   userId: "DiscordAccountId",
 };
 
-function getBrandedType(propName: string, parentTypeName: string): string | null {
+function getBrandedType(
+  propName: string,
+  parentTypeName: string,
+): string | null {
   // Check if this is an 'id' field with model-specific branding
   if (propName === "id") {
     return MODEL_ID_MAP[parentTypeName] ?? null;

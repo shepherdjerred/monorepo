@@ -22,7 +22,9 @@ export async function loadCustomPersonalities(): Promise<Personality[]> {
 /**
  * Save custom personalities to IndexedDB
  */
-export async function saveCustomPersonalities(personalities: Personality[]): Promise<void> {
+export async function saveCustomPersonalities(
+  personalities: Personality[],
+): Promise<void> {
   // This function is kept for compatibility but not used anymore
   // Individual operations (add/update/delete) are preferred
   for (const personality of personalities) {
@@ -33,14 +35,18 @@ export async function saveCustomPersonalities(personalities: Personality[]): Pro
 /**
  * Add a custom personality
  */
-export async function addCustomPersonality(personality: Personality): Promise<void> {
+export async function addCustomPersonality(
+  personality: Personality,
+): Promise<void> {
   await putItem(STORES.PERSONALITIES, personality);
 }
 
 /**
  * Update a custom personality
  */
-export async function updateCustomPersonality(personality: Personality): Promise<boolean> {
+export async function updateCustomPersonality(
+  personality: Personality,
+): Promise<boolean> {
   return await putItem(STORES.PERSONALITIES, personality);
 }
 

@@ -220,7 +220,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -243,7 +255,10 @@
           "description": "Safeguard: Lee Sin rushes to target ally, shielding himself from damage. If the ally is a champion, they are also shielded. After using Safeguard, Lee Sin can cast Iron Will.<br>Iron Will: Lee Sin's intense training allows him to thrive in battle. Lee Sin gains Life Steal and Spell Vamp.",
           "tooltip": "Lee Sin dashes to an ally or ward. If the target is a champion, Lee Sin grants them and himself <shield>{{ shieldamount }} Shield</shield> for {{ shieldduration }} seconds and reduces this Ability's Cooldown by {{ w1cooldownrecovered*100 }}%. Lee Sin may <recast>Recast</recast> for the next {{ w1reactivatetime }} seconds.<br /><br /><recast>Recast:</recast> Lee Sin gains {{ lifestealandspellvamp }}% Life Steal and Spell Vamp for {{ lifestealandspellvamptime }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Safeguard Shield Absorption", "Iron Will Lifesteal / Spell Vamp %"],
+            "label": [
+              "Safeguard Shield Absorption",
+              "Iron Will Lifesteal / Spell Vamp %"
+            ],
             "effect": [
               "{{ shieldvalue }} -> {{ shieldvalueNL }}",
               "{{ lifestealandspellvamp }}% -> {{ lifestealandspellvampNL }}%"
@@ -268,7 +283,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -292,7 +319,10 @@
           "tooltip": "Lee Sin smashes the ground, sending out a shockwave that deals <magicDamage>{{ initialdamage }} magic damage</magicDamage> and reveals them for {{ slowduration }} seconds. If this hits an enemy, Lee Sin can <recast>Recast</recast> for the next {{ reactivatetime }} seconds.<br /><br /><recast>Recast:</recast> Lee Sin <status>Slows</status> nearby enemies struck by the shockwave by {{ slowamount }}% decaying over {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Tempest Damage", "Cripple Slow"],
-            "effect": ["{{ e1damage }} -> {{ e1damageNL }}", "{{ slowamount }}% -> {{ slowamountNL }}%"]
+            "effect": [
+              "{{ e1damage }} -> {{ e1damageNL }}",
+              "{{ slowamount }}% -> {{ slowamountNL }}%"
+            ]
           },
           "maxrank": 5,
           "cooldown": [8, 8, 8, 8, 8],
@@ -313,7 +343,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -362,7 +404,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",

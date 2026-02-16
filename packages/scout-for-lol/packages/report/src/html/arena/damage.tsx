@@ -1,6 +1,10 @@
 import { Damage as BaseDamage } from "@scout-for-lol/report/html/shared/damage.tsx";
 
-export function Damage(props: { value: number; percent: number; highlight: boolean }) {
+export function Damage(props: {
+  value: number;
+  percent: number;
+  highlight: boolean;
+}) {
   return (
     <BaseDamage
       {...props}

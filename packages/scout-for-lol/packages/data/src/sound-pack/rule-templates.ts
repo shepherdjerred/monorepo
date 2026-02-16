@@ -101,7 +101,14 @@ export const RULE_TEMPLATES: RuleTemplate[] = [
     name: "I Got a Kill",
     enabled: true,
     priority: 60,
-    conditions: [{ type: "player", field: "killer", players: [], includeLocalPlayer: true }],
+    conditions: [
+      {
+        type: "player",
+        field: "killer",
+        players: [],
+        includeLocalPlayer: true,
+      },
+    ],
     conditionLogic: "all",
   },
   {
@@ -110,7 +117,14 @@ export const RULE_TEMPLATES: RuleTemplate[] = [
     name: "I Died",
     enabled: true,
     priority: 60,
-    conditions: [{ type: "player", field: "victim", players: [], includeLocalPlayer: true }],
+    conditions: [
+      {
+        type: "player",
+        field: "victim",
+        players: [],
+        includeLocalPlayer: true,
+      },
+    ],
     conditionLogic: "all",
   },
   {
@@ -156,7 +170,9 @@ export const RULE_TEMPLATES: RuleTemplate[] = [
 /**
  * Get templates by category
  */
-export function getTemplatesByCategory(category: RuleTemplate["category"]): RuleTemplate[] {
+export function getTemplatesByCategory(
+  category: RuleTemplate["category"],
+): RuleTemplate[] {
   return RULE_TEMPLATES.filter((t) => t.category === category);
 }
 
@@ -185,7 +201,10 @@ export function createRuleFromTemplate(template: RuleTemplate): SoundRule {
 /**
  * Category labels for UI display
  */
-export const TEMPLATE_CATEGORY_LABELS: Record<RuleTemplate["category"], string> = {
+export const TEMPLATE_CATEGORY_LABELS: Record<
+  RuleTemplate["category"],
+  string
+> = {
   multikill: "Multi-kills",
   objective: "Objectives",
   player: "Player Events",

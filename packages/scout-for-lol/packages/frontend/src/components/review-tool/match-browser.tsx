@@ -5,7 +5,12 @@ import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { z } from "zod";
 import Fuse, { type FuseResult } from "fuse.js";
 import type { ApiSettings } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
-import type { CompletedMatch, ArenaMatch, RawMatch, RawTimeline } from "@scout-for-lol/data";
+import type {
+  CompletedMatch,
+  ArenaMatch,
+  RawMatch,
+  RawTimeline,
+} from "@scout-for-lol/data";
 import {
   listMatchesFromS3,
   fetchMatchFromS3,
@@ -17,7 +22,10 @@ import {
   extractMatchMetadataFromRawMatch,
   type MatchMetadata,
 } from "@scout-for-lol/frontend/lib/review-tool/match-converter";
-import { getCachedDataAsync, setCachedData } from "@scout-for-lol/frontend/lib/review-tool/cache";
+import {
+  getCachedDataAsync,
+  setCachedData,
+} from "@scout-for-lol/frontend/lib/review-tool/cache";
 import { MatchFilters } from "./match-filters.tsx";
 import { MatchList } from "./match-list.tsx";
 import { MatchPagination } from "./match-pagination.tsx";
@@ -40,13 +48,23 @@ const MatchMetadataArraySchema = z.array(
 );
 
 type MatchBrowserProps = {
-  onMatchSelected: (match: CompletedMatch | ArenaMatch, rawMatch: RawMatch, rawTimeline: RawTimeline | null) => void;
+  onMatchSelected: (
+    match: CompletedMatch | ArenaMatch,
+    rawMatch: RawMatch,
+    rawTimeline: RawTimeline | null,
+  ) => void;
   apiSettings: ApiSettings;
 };
 
-export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps) {
+export function MatchBrowser({
+  onMatchSelected,
+  apiSettings,
+}: MatchBrowserProps) {
   const [loading, setLoading] = useState(false);
-  const [loadingProgress, setLoadingProgress] = useState<{ current: number; total: number } | null>(null);
+  const [loadingProgress, setLoadingProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
   const [matches, setMatches] = useState<MatchMetadata[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [filterQueueType, setFilterQueueType] = useState<string>("all");
@@ -54,13 +72,19 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
   const [filterPlayer, setFilterPlayer] = useState<string>("");
   const [filterChampion, setFilterChampion] = useState<string>("");
   const [filterOutcome, setFilterOutcome] = useState<string>("all");
-  const [selectedMetadata, setSelectedMetadata] = useState<MatchMetadata | null>(null);
-  const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const [selectedMetadata, setSelectedMetadata] =
+    useState<MatchMetadata | null>(null);
+  const [abortController, setAbortController] =
+    useState<AbortController | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
 
   const s3Config = useMemo<S3Config | null>(() => {
-    if (apiSettings.s3BucketName && apiSettings.awsAccessKeyId && apiSettings.awsSecretAccessKey) {
+    if (
+      apiSettings.s3BucketName &&
+      apiSettings.awsAccessKeyId &&
+      apiSettings.awsSecretAccessKey
+    ) {
       return {
         bucketName: apiSettings.s3BucketName,
         accessKeyId: apiSettings.awsAccessKeyId,
@@ -91,17 +115,25 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
       };
 
       if (!forceRefresh) {
-        const cached: unknown = await getCachedDataAsync("match-metadata", cacheKey);
+        const cached: unknown = await getCachedDataAsync(
+          "match-metadata",
+          cacheKey,
+        );
         const cachedResult = MatchMetadataArraySchema.safeParse(cached);
 
         if (cachedResult.success && cachedResult.data.length > 0) {
           // Instant load from cache - no loading UI!
-          console.log(`[Cache HIT] Loaded ${cachedResult.data.length.toString()} matches from cache (IndexedDB)`);
+          console.log(
+            `[Cache HIT] Loaded ${cachedResult.data.length.toString()} matches from cache (IndexedDB)`,
+          );
           setMatches(cachedResult.data);
           setError(null);
           return;
         } else {
-          console.log(`[Cache MISS] Need to fetch matches`, { forceRefresh, hasCachedData: !!cached });
+          console.log(`[Cache MISS] Need to fetch matches`, {
+            forceRefresh,
+            hasCachedData: !!cached,
+          });
         }
       }
 
@@ -136,7 +168,10 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
             throw new Error("Loading cancelled");
           }
 
-          const batch = matchKeys.slice(i, Math.min(i + BATCH_SIZE, totalMatches));
+          const batch = matchKeys.slice(
+            i,
+            Math.min(i + BATCH_SIZE, totalMatches),
+          );
 
           // Fetch batch in parallel
           const batchResults = await Promise.allSettled(
@@ -157,7 +192,10 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
           }
 
           // Update progress
-          setLoadingProgress({ current: Math.min(i + BATCH_SIZE, totalMatches), total: totalMatches });
+          setLoadingProgress({
+            current: Math.min(i + BATCH_SIZE, totalMatches),
+            total: totalMatches,
+          });
 
           // Small delay between batches to be nice to the API
           if (i + BATCH_SIZE < totalMatches) {
@@ -166,17 +204,29 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
         }
 
         // Cache the metadata array for fast subsequent loads (24 hour TTL)
-        console.log(`[Cache WRITE] Caching ${matchData.length.toString()} matches for 24 hours`);
-        await setCachedData("match-metadata", cacheKey, matchData, 24 * 60 * 60 * 1000);
+        console.log(
+          `[Cache WRITE] Caching ${matchData.length.toString()} matches for 24 hours`,
+        );
+        await setCachedData(
+          "match-metadata",
+          cacheKey,
+          matchData,
+          24 * 60 * 60 * 1000,
+        );
 
         setMatches(matchData);
         setLoadingProgress(null);
       } catch (err) {
         const errorResult = ErrorSchema.safeParse(err);
-        if (errorResult.success && errorResult.data.message === "Loading cancelled") {
+        if (
+          errorResult.success &&
+          errorResult.data.message === "Loading cancelled"
+        ) {
           setError("Loading cancelled");
         } else {
-          setError(errorResult.success ? errorResult.data.message : String(err));
+          setError(
+            errorResult.success ? errorResult.data.message : String(err),
+          );
         }
       } finally {
         setLoading(false);
@@ -211,7 +261,10 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
       ]);
 
       if (rawMatch) {
-        const match = convertRawMatchToInternalFormat(rawMatch, metadata.playerName);
+        const match = convertRawMatchToInternalFormat(
+          rawMatch,
+          metadata.playerName,
+        );
         onMatchSelected(match, rawMatch, rawTimeline);
       }
     } catch (err) {
@@ -274,7 +327,14 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
     }
 
     return result;
-  }, [matches, filterQueueType, filterLane, filterPlayer, filterChampion, filterOutcome]);
+  }, [
+    matches,
+    filterQueueType,
+    filterLane,
+    filterPlayer,
+    filterChampion,
+    filterOutcome,
+  ]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredMatches.length / pageSize);
@@ -293,7 +353,9 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
           title="Storage Not Configured"
           description="Configure your Cloudflare R2 credentials in Settings to browse match data from your storage."
           action={
-            <div className="text-xs text-surface-400">Settings &rarr; API Configuration &rarr; Cloudflare R2</div>
+            <div className="text-xs text-surface-400">
+              Settings &rarr; API Configuration &rarr; Cloudflare R2
+            </div>
           }
         />
       </div>
@@ -314,7 +376,12 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
             disabled={loading}
             isLoading={loading && !loadingProgress}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -354,7 +421,11 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
       {error && (
         <div className="p-4 rounded-xl bg-defeat-50 border border-defeat-200 text-sm text-defeat-700 mb-4 animate-fade-in">
           <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-defeat-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <svg
+              className="w-5 h-5 text-defeat-500 shrink-0 mt-0.5"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
               <path
                 fillRule="evenodd"
                 d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -376,12 +447,18 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
           <div className="px-4 py-3 bg-surface-50 border-b border-surface-200 flex justify-between items-center">
             <span className="text-sm text-surface-600">
               <span className="font-medium text-surface-900">
-                {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, filteredMatches.length)}
+                {(currentPage - 1) * pageSize + 1}-
+                {Math.min(currentPage * pageSize, filteredMatches.length)}
               </span>
               {" of "}
-              <span className="font-medium text-surface-900">{filteredMatches.length}</span>
+              <span className="font-medium text-surface-900">
+                {filteredMatches.length}
+              </span>
               {matches.length !== filteredMatches.length && (
-                <span className="text-surface-400"> (filtered from {matches.length.toString()})</span>
+                <span className="text-surface-400">
+                  {" "}
+                  (filtered from {matches.length.toString()})
+                </span>
               )}
             </span>
             <select
@@ -411,7 +488,11 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
             }}
           />
 
-          <MatchPagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+          <MatchPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
       )}
 

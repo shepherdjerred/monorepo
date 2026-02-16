@@ -32,7 +32,9 @@ function createRankEntry(playerId: PlayerId, rank: Rank): LeaderboardEntry {
 /**
  * Helper to assign ranks to entries (mirrors the actual implementation)
  */
-function assignRanks(entries: LeaderboardEntry[]): (LeaderboardEntry & { rank: number })[] {
+function assignRanks(
+  entries: LeaderboardEntry[],
+): (LeaderboardEntry & { rank: number })[] {
   if (entries.length === 0) {
     return [];
   }
@@ -195,13 +197,33 @@ describe("Leaderboard Ranking Logic", () => {
       expect(ranked[0]).toMatchObject({ playerId: 1, score: 100, rank: 1 });
     });
   });
+});
 
+describe("Leaderboard Ranking Logic - Rank Scores", () => {
   describe("assignRanks - Rank scores", () => {
     test("should assign ranks correctly with no ties (different tiers)", () => {
       const entries = [
-        createRankEntry(PlayerIdSchema.parse(1), { tier: "diamond", division: 2, lp: 50, wins: 100, losses: 50 }),
-        createRankEntry(PlayerIdSchema.parse(2), { tier: "platinum", division: 1, lp: 75, wins: 80, losses: 60 }),
-        createRankEntry(PlayerIdSchema.parse(3), { tier: "gold", division: 3, lp: 20, wins: 50, losses: 50 }),
+        createRankEntry(PlayerIdSchema.parse(1), {
+          tier: "diamond",
+          division: 2,
+          lp: 50,
+          wins: 100,
+          losses: 50,
+        }),
+        createRankEntry(PlayerIdSchema.parse(2), {
+          tier: "platinum",
+          division: 1,
+          lp: 75,
+          wins: 80,
+          losses: 60,
+        }),
+        createRankEntry(PlayerIdSchema.parse(3), {
+          tier: "gold",
+          division: 3,
+          lp: 20,
+          wins: 50,
+          losses: 50,
+        }),
       ];
 
       const ranked = assignRanks(entries);
@@ -213,13 +235,31 @@ describe("Leaderboard Ranking Logic", () => {
     });
 
     test("should handle ties with same rank (same tier, division, and LP)", () => {
-      const sameRank: Rank = { tier: "gold", division: 2, lp: 50, wins: 50, losses: 50 };
+      const sameRank: Rank = {
+        tier: "gold",
+        division: 2,
+        lp: 50,
+        wins: 50,
+        losses: 50,
+      };
 
       const entries = [
-        createRankEntry(PlayerIdSchema.parse(1), { tier: "diamond", division: 4, lp: 0, wins: 100, losses: 50 }),
+        createRankEntry(PlayerIdSchema.parse(1), {
+          tier: "diamond",
+          division: 4,
+          lp: 0,
+          wins: 100,
+          losses: 50,
+        }),
         createRankEntry(PlayerIdSchema.parse(2), sameRank),
         createRankEntry(PlayerIdSchema.parse(3), sameRank),
-        createRankEntry(PlayerIdSchema.parse(4), { tier: "silver", division: 1, lp: 90, wins: 30, losses: 30 }),
+        createRankEntry(PlayerIdSchema.parse(4), {
+          tier: "silver",
+          division: 1,
+          lp: 90,
+          wins: 30,
+          losses: 30,
+        }),
       ];
 
       const ranked = assignRanks(entries);
@@ -233,9 +273,27 @@ describe("Leaderboard Ranking Logic", () => {
 
     test("should differentiate between same tier but different divisions", () => {
       const entries = [
-        createRankEntry(PlayerIdSchema.parse(1), { tier: "gold", division: 1, lp: 0, wins: 50, losses: 50 }),
-        createRankEntry(PlayerIdSchema.parse(2), { tier: "gold", division: 2, lp: 0, wins: 50, losses: 50 }),
-        createRankEntry(PlayerIdSchema.parse(3), { tier: "gold", division: 3, lp: 0, wins: 50, losses: 50 }),
+        createRankEntry(PlayerIdSchema.parse(1), {
+          tier: "gold",
+          division: 1,
+          lp: 0,
+          wins: 50,
+          losses: 50,
+        }),
+        createRankEntry(PlayerIdSchema.parse(2), {
+          tier: "gold",
+          division: 2,
+          lp: 0,
+          wins: 50,
+          losses: 50,
+        }),
+        createRankEntry(PlayerIdSchema.parse(3), {
+          tier: "gold",
+          division: 3,
+          lp: 0,
+          wins: 50,
+          losses: 50,
+        }),
       ];
 
       const ranked = assignRanks(entries);
@@ -248,9 +306,27 @@ describe("Leaderboard Ranking Logic", () => {
 
     test("should differentiate between same tier/division but different LP", () => {
       const entries = [
-        createRankEntry(PlayerIdSchema.parse(1), { tier: "gold", division: 2, lp: 90, wins: 50, losses: 50 }),
-        createRankEntry(PlayerIdSchema.parse(2), { tier: "gold", division: 2, lp: 50, wins: 50, losses: 50 }),
-        createRankEntry(PlayerIdSchema.parse(3), { tier: "gold", division: 2, lp: 10, wins: 50, losses: 50 }),
+        createRankEntry(PlayerIdSchema.parse(1), {
+          tier: "gold",
+          division: 2,
+          lp: 90,
+          wins: 50,
+          losses: 50,
+        }),
+        createRankEntry(PlayerIdSchema.parse(2), {
+          tier: "gold",
+          division: 2,
+          lp: 50,
+          wins: 50,
+          losses: 50,
+        }),
+        createRankEntry(PlayerIdSchema.parse(3), {
+          tier: "gold",
+          division: 2,
+          lp: 10,
+          wins: 50,
+          losses: 50,
+        }),
       ];
 
       const ranked = assignRanks(entries);
@@ -261,7 +337,9 @@ describe("Leaderboard Ranking Logic", () => {
       expect(ranked[2]).toMatchObject({ rank: 3 }); // 10 LP
     });
   });
+});
 
+describe("Leaderboard Ranking Logic - Score Equality", () => {
   describe("scoresAreEqual", () => {
     test("should return true for equal numeric scores", () => {
       expect(scoresAreEqual(100, 100)).toBe(true);
@@ -272,35 +350,89 @@ describe("Leaderboard Ranking Logic", () => {
     });
 
     test("should return true for equal Rank scores", () => {
-      const rank1: Rank = { tier: "gold", division: 2, lp: 50, wins: 50, losses: 50 };
-      const rank2: Rank = { tier: "gold", division: 2, lp: 50, wins: 60, losses: 40 }; // Different W/L doesn't matter
+      const rank1: Rank = {
+        tier: "gold",
+        division: 2,
+        lp: 50,
+        wins: 50,
+        losses: 50,
+      };
+      const rank2: Rank = {
+        tier: "gold",
+        division: 2,
+        lp: 50,
+        wins: 60,
+        losses: 40,
+      }; // Different W/L doesn't matter
 
       expect(scoresAreEqual(rank1, rank2)).toBe(true);
     });
 
     test("should return false for different Rank scores (different tiers)", () => {
-      const rank1: Rank = { tier: "gold", division: 2, lp: 50, wins: 50, losses: 50 };
-      const rank2: Rank = { tier: "silver", division: 2, lp: 50, wins: 50, losses: 50 };
+      const rank1: Rank = {
+        tier: "gold",
+        division: 2,
+        lp: 50,
+        wins: 50,
+        losses: 50,
+      };
+      const rank2: Rank = {
+        tier: "silver",
+        division: 2,
+        lp: 50,
+        wins: 50,
+        losses: 50,
+      };
 
       expect(scoresAreEqual(rank1, rank2)).toBe(false);
     });
 
     test("should return false for different Rank scores (different divisions)", () => {
-      const rank1: Rank = { tier: "gold", division: 1, lp: 50, wins: 50, losses: 50 };
-      const rank2: Rank = { tier: "gold", division: 2, lp: 50, wins: 50, losses: 50 };
+      const rank1: Rank = {
+        tier: "gold",
+        division: 1,
+        lp: 50,
+        wins: 50,
+        losses: 50,
+      };
+      const rank2: Rank = {
+        tier: "gold",
+        division: 2,
+        lp: 50,
+        wins: 50,
+        losses: 50,
+      };
 
       expect(scoresAreEqual(rank1, rank2)).toBe(false);
     });
 
     test("should return false for different Rank scores (different LP)", () => {
-      const rank1: Rank = { tier: "gold", division: 2, lp: 50, wins: 50, losses: 50 };
-      const rank2: Rank = { tier: "gold", division: 2, lp: 60, wins: 50, losses: 50 };
+      const rank1: Rank = {
+        tier: "gold",
+        division: 2,
+        lp: 50,
+        wins: 50,
+        losses: 50,
+      };
+      const rank2: Rank = {
+        tier: "gold",
+        division: 2,
+        lp: 60,
+        wins: 50,
+        losses: 50,
+      };
 
       expect(scoresAreEqual(rank1, rank2)).toBe(false);
     });
 
     test("should return false for mixed types (number vs Rank)", () => {
-      const rank: Rank = { tier: "gold", division: 2, lp: 50, wins: 50, losses: 50 };
+      const rank: Rank = {
+        tier: "gold",
+        division: 2,
+        lp: 50,
+        wins: 50,
+        losses: 50,
+      };
 
       expect(scoresAreEqual(100, rank)).toBe(false);
       expect(scoresAreEqual(rank, 100)).toBe(false);

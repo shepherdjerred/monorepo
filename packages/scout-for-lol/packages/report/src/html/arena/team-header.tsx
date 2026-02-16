@@ -10,14 +10,34 @@ export function TeamHeader({ team }: { team: ArenaTeam }) {
   const teamName = getArenaTeamName(team.teamId);
 
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: 16,
+      }}
+    >
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <PlacementBadge placement={team.placement} />
-        <span style={{ fontSize: 20, fontWeight: 600, opacity: 0.8 }}>Team {teamName}</span>
+        <span style={{ fontSize: 20, fontWeight: 600, opacity: 0.8 }}>
+          Team {teamName}
+        </span>
       </div>
       <TeamStats kills={teamKills} deaths={teamDeaths} assists={teamAssists} />
-      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 20, opacity: 0.7 }}>
-        Gold: <span style={{ fontSize: 24, fontWeight: 600, color: "#fbbf24" }}>{teamGold}</span>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          fontSize: 20,
+          opacity: 0.7,
+        }}
+      >
+        Gold:{" "}
+        <span style={{ fontSize: 24, fontWeight: 600, color: "#fbbf24" }}>
+          {teamGold}
+        </span>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
-import { Chart, Size } from "cdk8s";
+import type { Chart} from "cdk8s";
+import { Size } from "cdk8s";
 import { Application } from "../../../generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
 import { Schedule } from "../../../generated/imports/velero.io.ts";

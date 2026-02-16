@@ -1,4 +1,8 @@
-import { InteractionContextType, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
+import {
+  InteractionContextType,
+  PermissionFlagsBits,
+  SlashCommandBuilder,
+} from "discord.js";
 import { REGION_CHOICES } from "@scout-for-lol/backend/discord/commands/admin/utils/region-choices.ts";
 
 /**
@@ -14,10 +18,16 @@ export const adminCommand = new SlashCommandBuilder()
       .setName("player-edit")
       .setDescription("Edit a player's details")
       .addStringOption((option) =>
-        option.setName("current-alias").setDescription("The current alias of the player").setRequired(true),
+        option
+          .setName("current-alias")
+          .setDescription("The current alias of the player")
+          .setRequired(true),
       )
       .addStringOption((option) =>
-        option.setName("new-alias").setDescription("The new alias for the player").setRequired(true),
+        option
+          .setName("new-alias")
+          .setDescription("The new alias for the player")
+          .setRequired(true),
       ),
   )
   .addSubcommand((subcommand) =>
@@ -25,7 +35,10 @@ export const adminCommand = new SlashCommandBuilder()
       .setName("account-delete")
       .setDescription("Delete an account from a player")
       .addStringOption((option) =>
-        option.setName("riot-id").setDescription("The Riot ID of the account in format <name>#<tag>").setRequired(true),
+        option
+          .setName("riot-id")
+          .setDescription("The Riot ID of the account in format <name>#<tag>")
+          .setRequired(true),
       )
       .addStringOption((option) =>
         option
@@ -46,7 +59,10 @@ export const adminCommand = new SlashCommandBuilder()
           .setRequired(true),
       )
       .addStringOption((option) =>
-        option.setName("riot-id").setDescription("The Riot ID of the account in format <name>#<tag>").setRequired(true),
+        option
+          .setName("riot-id")
+          .setDescription("The Riot ID of the account in format <name>#<tag>")
+          .setRequired(true),
       )
       .addStringOption((option) =>
         option
@@ -61,7 +77,10 @@ export const adminCommand = new SlashCommandBuilder()
       .setName("account-transfer")
       .setDescription("Transfer an account from one player to another")
       .addStringOption((option) =>
-        option.setName("riot-id").setDescription("The Riot ID of the account in format <name>#<tag>").setRequired(true),
+        option
+          .setName("riot-id")
+          .setDescription("The Riot ID of the account in format <name>#<tag>")
+          .setRequired(true),
       )
       .addStringOption((option) =>
         option
@@ -80,11 +99,15 @@ export const adminCommand = new SlashCommandBuilder()
   .addSubcommand((subcommand) =>
     subcommand
       .setName("player-merge")
-      .setDescription("Merge two players into one (combines all accounts and subscriptions)")
+      .setDescription(
+        "Merge two players into one (combines all accounts and subscriptions)",
+      )
       .addStringOption((option) =>
         option
           .setName("source-alias")
-          .setDescription("The alias of the player to merge from (will be deleted)")
+          .setDescription(
+            "The alias of the player to merge from (will be deleted)",
+          )
           .setRequired(true),
       )
       .addStringOption((option) =>
@@ -97,9 +120,14 @@ export const adminCommand = new SlashCommandBuilder()
   .addSubcommand((subcommand) =>
     subcommand
       .setName("player-delete")
-      .setDescription("Delete a player and all their accounts and subscriptions")
+      .setDescription(
+        "Delete a player and all their accounts and subscriptions",
+      )
       .addStringOption((option) =>
-        option.setName("alias").setDescription("The alias of the player to delete").setRequired(true),
+        option
+          .setName("alias")
+          .setDescription("The alias of the player to delete")
+          .setRequired(true),
       )
       .addBooleanOption((option) =>
         option
@@ -111,9 +139,14 @@ export const adminCommand = new SlashCommandBuilder()
   .addSubcommand((subcommand) =>
     subcommand
       .setName("player-view")
-      .setDescription("View player details (accounts, subscriptions, competitions)")
+      .setDescription(
+        "View player details (accounts, subscriptions, competitions)",
+      )
       .addStringOption((option) =>
-        option.setName("alias").setDescription("The alias of the player to view").setRequired(true),
+        option
+          .setName("alias")
+          .setDescription("The alias of the player to view")
+          .setRequired(true),
       ),
   )
   .addSubcommand((subcommand) =>
@@ -121,10 +154,16 @@ export const adminCommand = new SlashCommandBuilder()
       .setName("player-link-discord")
       .setDescription("Link a Discord user to a player")
       .addStringOption((option) =>
-        option.setName("player-alias").setDescription("The alias of the player to link").setRequired(true),
+        option
+          .setName("player-alias")
+          .setDescription("The alias of the player to link")
+          .setRequired(true),
       )
       .addUserOption((option) =>
-        option.setName("discord-user").setDescription("The Discord user to link to this player").setRequired(true),
+        option
+          .setName("discord-user")
+          .setDescription("The Discord user to link to this player")
+          .setRequired(true),
       ),
   )
   .addSubcommand((subcommand) =>
@@ -132,6 +171,9 @@ export const adminCommand = new SlashCommandBuilder()
       .setName("player-unlink-discord")
       .setDescription("Unlink a Discord user from a player")
       .addStringOption((option) =>
-        option.setName("player-alias").setDescription("The alias of the player to unlink").setRequired(true),
+        option
+          .setName("player-alias")
+          .setDescription("The alias of the player to unlink")
+          .setRequired(true),
       ),
   );

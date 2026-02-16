@@ -146,7 +146,10 @@
           "tooltip": "Xayah throws two daggers, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> each and leaving two <keywordMajor>Feathers</keywordMajor>. Targets hit after the first take <physicalDamage>{{ multihitdamage }} damage</physicalDamage> from each dagger.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [10, 9.5, 9, 8.5, 8],
@@ -167,7 +170,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "45/60/75/90/105", "0.5", "0.33", "0.58", "3500", "3500", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "45/60/75/90/105",
+            "0.5",
+            "0.33",
+            "0.58",
+            "3500",
+            "3500",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -191,7 +206,11 @@
           "tooltip": "Xayah creates a storm of blades for {{ e2 }} seconds that grants her <attackSpeed>{{ e1 }}% Attack Speed</attackSpeed> and cause her Attacks to fire a secondary blade that deals {{ bonusdamagepercent }}% damage.<br /><br />When the secondary blade hits a champion, she grants herself <speed>{{ e3 }}% Move Speed</speed> for {{ e4 }} seconds.<br /><br />If Rakan is nearby he will also gain the effects of this Ability, except he gains <speed>Move Speed</speed> when <i>Xayah</i> strikes a target.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Attack Speed", "Cooldown", "@AbilityResourceName@ Cost"],
-            "effect": ["{{ e1 }}% -> {{ e1NL }}%", "{{ cooldown }} -> {{ cooldownNL }}", "{{ cost }} -> {{ costNL }}"]
+            "effect": [
+              "{{ e1 }}% -> {{ e1NL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [20, 19, 18, 17, 16],
@@ -212,7 +231,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "35/40/45/50/55", "4", "30", "1.5", "20", "1000", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "35/40/45/50/55",
+            "4",
+            "30",
+            "1.5",
+            "20",
+            "1000",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -236,7 +267,10 @@
           "tooltip": "Xayah calls all <keywordMajor>Feathers</keywordMajor> back to her, dealing <physicalDamage>{{ featherdamage }} physical damage</physicalDamage> each. If {{ featherthreshold }} or more <keywordMajor>Feathers</keywordMajor> hit an enemy, they are <status>Rooted</status> for {{ rootduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [12, 11, 10, 9, 8],
@@ -257,7 +291,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -281,7 +327,10 @@
           "tooltip": "Xayah leaps into the air becoming Untargetable and Ghosted for 1.5 seconds before raining down daggers that deal <physicalDamage>{{ damage }} physical damage</physicalDamage> and leave behind a line of <keywordMajor>Feathers</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ rbasedamage }} -> {{ rbasedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ rbasedamage }} -> {{ rbasedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [140, 120, 100],
@@ -302,7 +351,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

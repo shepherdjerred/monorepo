@@ -1,6 +1,6 @@
-import { Video } from "./Video";
+import type { Video } from "./Video";
 
-export interface CourseVideo {
+export type CourseVideo = {
   video: Video;
   alternateTitle?: string;
 }

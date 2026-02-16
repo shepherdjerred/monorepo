@@ -9,7 +9,7 @@ import {
   parseCompetition,
 } from "@scout-for-lol/data";
 import { match } from "ts-pattern";
-import { type PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import { type ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
 import { type CompetitionDates } from "@scout-for-lol/backend/database/competition/validation.ts";
 
 // ============================================================================
@@ -44,7 +44,7 @@ export type CreateCompetitionInput = {
  * @returns Created competition with parsed criteria
  */
 export async function createCompetition(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   input: CreateCompetitionInput,
 ): Promise<CompetitionWithCriteria> {
   const now = new Date();
@@ -103,7 +103,7 @@ export async function createCompetition(
  * @returns Competition with parsed criteria, or null if not found
  */
 export async function getCompetitionById(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   id: number,
 ): Promise<CompetitionWithCriteria | undefined> {
   const raw = await prisma.competition.findUnique({
@@ -127,7 +127,7 @@ export async function getCompetitionById(
  * @returns Array of competitions with parsed criteria
  */
 export async function getCompetitionsByServer(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   serverId: DiscordGuildId,
   options?: {
     activeOnly?: boolean;
@@ -164,7 +164,9 @@ export async function getCompetitionsByServer(
  * @param prisma - Prisma client instance
  * @returns Array of active competitions with parsed criteria
  */
-export async function getActiveCompetitions(prisma: PrismaClient): Promise<CompetitionWithCriteria[]> {
+export async function getActiveCompetitions(
+  prisma: ExtendedPrismaClient,
+): Promise<CompetitionWithCriteria[]> {
   const now = new Date();
 
   const raw = await prisma.competition.findMany({
@@ -212,7 +214,7 @@ export type UpdateCompetitionInput = {
  * @throws {Error} if competition not found
  */
 export async function updateCompetition(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   id: number,
   input: UpdateCompetitionInput,
 ): Promise<CompetitionWithCriteria> {
@@ -298,7 +300,7 @@ export async function updateCompetition(
  * @returns List of competitions using this channel
  */
 export async function getCompetitionsByChannelId(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   channelId: DiscordChannelId,
 ): Promise<CompetitionWithCriteria[]> {
   const raw = await prisma.competition.findMany({
@@ -318,7 +320,10 @@ export async function getCompetitionsByChannelId(
  * @returns Updated competition with parsed criteria
  * @throws {Error} if competition not found
  */
-export async function cancelCompetition(prisma: PrismaClient, id: number): Promise<CompetitionWithCriteria> {
+export async function cancelCompetition(
+  prisma: ExtendedPrismaClient,
+  id: number,
+): Promise<CompetitionWithCriteria> {
   const now = new Date();
 
   const raw = await prisma.competition.update({

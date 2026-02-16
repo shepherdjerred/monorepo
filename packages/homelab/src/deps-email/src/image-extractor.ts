@@ -118,7 +118,7 @@ async function renderHelmTemplate(
   version: string,
   values?: Record<string, unknown>,
 ): Promise<unknown[]> {
-  const repoName = `temp-${chartName.replace(/[^a-zA-Z0-9]/g, "-")}-${String(Date.now())}`;
+  const repoName = `temp-${chartName.replaceAll(/[^a-z0-9]/gi, "-")}-${String(Date.now())}`;
 
   try {
     // Add the helm repo
@@ -210,11 +210,11 @@ function extractImagesFromManifests(manifests: unknown[]): ImageRef[] {
 
   for (const manifest of manifests) {
     const parsed = K8sManifestSchema.safeParse(manifest);
-    if (!parsed.success) continue;
+    if (!parsed.success) {continue;}
 
     const { kind, spec } = parsed.data;
 
-    if (spec) {
+    if (spec && kind !== undefined) {
       switch (kind) {
         case "Deployment":
         case "StatefulSet":
@@ -275,7 +275,7 @@ function extractImagesFromManifests(manifests: unknown[]): ImageRef[] {
  * Extract images from a PodSpec (using Zod-validated data)
  */
 function extractFromPodSpec(podSpec: z.infer<typeof PodSpecSchema> | undefined, images: ImageRef[]): void {
-  if (!podSpec) return;
+  if (!podSpec) {return;}
 
   // Main containers
   if (podSpec.containers) {
@@ -366,7 +366,7 @@ const RecursiveImageSchema = z.looseObject({
  */
 function extractImagesRecursively(obj: unknown, images: ImageRef[], depth = 0): void {
   // Prevent infinite recursion
-  if (depth > 10) return;
+  if (depth > 10) {return;}
 
   // Try to parse as array
   const arrayResult = z.array(z.unknown()).safeParse(obj);
@@ -379,7 +379,7 @@ function extractImagesRecursively(obj: unknown, images: ImageRef[], depth = 0): 
 
   // Try to parse as object with optional image field
   const objResult = RecursiveImageSchema.safeParse(obj);
-  if (!objResult.success) return;
+  if (!objResult.success) {return;}
 
   const record = objResult.data;
 
@@ -412,7 +412,7 @@ function deduplicateImages(images: ImageRef[]): ImageRef[] {
     }
   }
 
-  return Array.from(seen.values());
+  return [...seen.values()];
 }
 
 /**

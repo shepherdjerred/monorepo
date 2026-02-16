@@ -1,5 +1,10 @@
 import type { ChatInputCommandInteraction } from "discord.js";
-import { DiscordAccountIdSchema, LeaguePuuidSchema, RegionSchema, type RiotId } from "@scout-for-lol/data/index";
+import {
+  DiscordAccountIdSchema,
+  LeaguePuuidSchema,
+  RegionSchema,
+  type RiotId,
+} from "@scout-for-lol/data/index";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import { backfillLastMatchTime } from "@scout-for-lol/backend/league/api/backfill-match-history.ts";
@@ -128,7 +133,10 @@ export async function createSubscriptionRecords(params: {
       },
     };
 
-    await backfillLastMatchTime(playerConfigEntry, LeaguePuuidSchema.parse(puuid));
+    await backfillLastMatchTime(
+      playerConfigEntry,
+      LeaguePuuidSchema.parse(puuid),
+    );
 
     // get the player for the account
     const playerAccount = await prisma.account.findUnique({
@@ -145,11 +153,15 @@ export async function createSubscriptionRecords(params: {
     });
 
     if (!playerAccount) {
-      logger.error(`❌ Failed to find player for account ID: ${account.id.toString()}`);
+      logger.error(
+        `❌ Failed to find player for account ID: ${account.id.toString()}`,
+      );
       return { success: false, error: "Error finding player for account" };
     }
 
-    logger.info(`📝 Found player record: ${playerAccount.player.alias} (ID: ${playerAccount.player.id.toString()})`);
+    logger.info(
+      `📝 Found player record: ${playerAccount.player.alias} (ID: ${playerAccount.player.id.toString()})`,
+    );
 
     // Check if subscription already exists for this player in this channel
     const existingSubscription = await prisma.subscription.findUnique({
@@ -163,7 +175,9 @@ export async function createSubscriptionRecords(params: {
     });
 
     if (existingSubscription) {
-      logger.info(`⚠️  Subscription already exists for player ${playerAccount.player.alias} in channel ${channel}`);
+      logger.info(
+        `⚠️  Subscription already exists for player ${playerAccount.player.alias} in channel ${channel}`,
+      );
       return {
         success: false,
         error: "SUBSCRIPTION_EXISTS",
@@ -198,7 +212,9 @@ export async function createSubscriptionRecords(params: {
     });
 
     const dbTime = Date.now() - dbStartTime;
-    logger.info(`✅ Subscription created with ID: ${subscription.id.toString()} (${dbTime.toString()}ms)`);
+    logger.info(
+      `✅ Subscription created with ID: ${subscription.id.toString()} (${dbTime.toString()}ms)`,
+    );
 
     return {
       success: true,
@@ -229,7 +245,9 @@ export function buildSubscriptionResponse(params: {
 
   if (isAddingToExistingPlayer) {
     const accountCount = playerAccount.player.accounts.length;
-    const accountList = playerAccount.player.accounts.map((acc) => `• ${acc.alias} (${acc.region})`).join("\n");
+    const accountList = playerAccount.player.accounts
+      .map((acc) => `• ${acc.alias} (${acc.region})`)
+      .join("\n");
     responseMessage += `\n\n✨ **Added to existing player "${alias}"**`;
     responseMessage += `\nThis player now has ${accountCount.toString()} account${accountCount === 1 ? "" : "s"}:\n${accountList}`;
   } else {
@@ -248,13 +266,23 @@ export function handleWelcomeMatch(params: {
   region: string;
   user: string | undefined;
 }): void {
-  const { interaction, isFirstSubscription, riotId, alias, puuid, region, user } = params;
+  const {
+    interaction,
+    isFirstSubscription,
+    riotId,
+    alias,
+    puuid,
+    region,
+    user,
+  } = params;
 
   if (!isFirstSubscription) {
     return;
   }
 
-  logger.info(`🎁 Triggering welcome match for ${riotId.game_name}#${riotId.tag_line}`);
+  logger.info(
+    `🎁 Triggering welcome match for ${riotId.game_name}#${riotId.tag_line}`,
+  );
 
   const playerConfigEntry = {
     alias: alias,

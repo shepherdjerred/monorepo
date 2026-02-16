@@ -1,7 +1,7 @@
-import { Role } from "../../../model/Role";
-import Type from "../../../model/Type";
+import type { Role } from "@shepherdjerred/better-skill-capped/model/Role";
+import type Type from "@shepherdjerred/better-skill-capped/model/Type";
 
-export interface Filters {
+export type Filters = {
   roles: Role[];
   types: Type[];
   onlyBookmarked: boolean;

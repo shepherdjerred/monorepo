@@ -45,7 +45,8 @@ export function processMostRankClimb(
       continue;
     }
 
-    const startRank = criteria.queue === "SOLO" ? startRanks.solo : startRanks.flex;
+    const startRank =
+      criteria.queue === "SOLO" ? startRanks.solo : startRanks.flex;
     const endRank = criteria.queue === "SOLO" ? endRanks.solo : endRanks.flex;
 
     // Skip if player doesn't have rank data for the specific queue

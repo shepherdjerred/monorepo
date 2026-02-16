@@ -19,7 +19,9 @@ const ArgsSchema = z.object({
   guildId: DiscordGuildIdSchema,
 });
 
-export async function executePlayerUnlinkDiscord(interaction: ChatInputCommandInteraction) {
+export async function executePlayerUnlinkDiscord(
+  interaction: ChatInputCommandInteraction,
+) {
   return executeCommand({
     interaction,
     schema: ArgsSchema,
@@ -32,7 +34,12 @@ export async function executePlayerUnlinkDiscord(interaction: ChatInputCommandIn
       const { playerAlias, guildId } = args;
 
       // Find the player
-      const player = await findPlayerByAliasWithSubscriptions(prisma, guildId, playerAlias, interaction);
+      const player = await findPlayerByAliasWithSubscriptions(
+        prisma,
+        guildId,
+        playerAlias,
+        interaction,
+      );
       if (!player) {
         return;
       }
@@ -53,12 +60,18 @@ export async function executePlayerUnlinkDiscord(interaction: ChatInputCommandIn
         // This should never happen due to validation, but TypeScript needs the check
         return;
       }
-      logger.info(`💾 Unlinking Discord ID ${previousDiscordId} from player "${playerAlias}"`);
+      logger.info(
+        `💾 Unlinking Discord ID ${previousDiscordId} from player "${playerAlias}"`,
+      );
 
       await executeDiscordLinkOperation(
         interaction,
         async () => {
-          const updatedPlayer = await updatePlayerDiscordId(prisma, playerNonNull.id, null);
+          const updatedPlayer = await updatePlayerDiscordId(
+            prisma,
+            playerNonNull.id,
+            null,
+          );
           // updatePlayerDiscordId always returns a player (update operation never returns null)
           // Check that result is not null
           if (!updatedPlayer) {

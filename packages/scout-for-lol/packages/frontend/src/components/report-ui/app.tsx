@@ -58,7 +58,9 @@ export function App() {
   const [matchType, setMatchType] = useState<MatchType>(getInitialMatchType());
   const [matchId, setMatchId] = useState("");
   const [region, setRegion] = useState("na1");
-  const [apiToken, setApiToken] = useState(localStorage.getItem("riot-api-token") ?? "");
+  const [apiToken, setApiToken] = useState(
+    localStorage.getItem("riot-api-token") ?? "",
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -135,7 +137,14 @@ export function App() {
             margin: "0 auto",
           }}
         >
-          <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#1f2937", margin: "16px 0" }}>
+          <h1
+            style={{
+              fontSize: "20px",
+              fontWeight: 700,
+              color: "#1f2937",
+              margin: "16px 0",
+            }}
+          >
             Scout for LoL - Report UI
           </h1>
           <div style={{ display: "flex", gap: "4px" }}>
@@ -164,11 +173,16 @@ export function App() {
       {/* Content area */}
       <div style={{ padding: "20px", maxWidth: "1400px", margin: "0 auto" }}>
         <h2 style={{ marginBottom: "8px" }}>Match Viewer</h2>
-        <p style={{ color: "#6b7280", marginBottom: "24px" }}>Browser-compatible report viewer for Scout for LoL</p>
+        <p style={{ color: "#6b7280", marginBottom: "24px" }}>
+          Browser-compatible report viewer for Scout for LoL
+        </p>
 
         {/* Example Match Selector */}
         <div style={{ marginBottom: "20px" }}>
-          <label htmlFor="match-type" style={{ marginRight: "10px", fontWeight: "bold" }}>
+          <label
+            htmlFor="match-type"
+            style={{ marginRight: "10px", fontWeight: "bold" }}
+          >
             Example Match Type:
           </label>
           <select
@@ -226,7 +240,11 @@ export function App() {
             />
             <small style={{ color: "#666" }}>
               Get a token at{" "}
-              <a href="https://developer.riotgames.com" target="_blank" rel="noreferrer">
+              <a
+                href="https://developer.riotgames.com"
+                target="_blank"
+                rel="noreferrer"
+              >
                 developer.riotgames.com
               </a>
               . Saved locally in browser storage.
@@ -288,7 +306,13 @@ export function App() {
             {isLoading ? "Loading..." : "Fetch Match"}
           </button>
 
-          {error && <div style={{ marginTop: "10px", color: "#d32f2f", fontSize: "14px" }}>⚠️ {error}</div>}
+          {error && (
+            <div
+              style={{ marginTop: "10px", color: "#d32f2f", fontSize: "14px" }}
+            >
+              ⚠️ {error}
+            </div>
+          )}
         </div>
 
         <section>

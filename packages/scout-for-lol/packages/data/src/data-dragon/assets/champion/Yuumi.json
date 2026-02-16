@@ -126,7 +126,13 @@
           "description": "Yuumi fires a missile, dealing damage and slowing first target hit. It deals bonus damage and an enchanced slow if it takes at least 1.35 seconds to get to its target. While on her Best Friend, the slow is always enhanced and grants bonus On-Hit damage to her ally.<br><br>While Attached, the missile can be controlled with your cursor for a brief period.",
           "tooltip": "Yuumi summons an errant missile that deals <magicDamage>{{ totalmissiledamage }} magic damage</magicDamage> to the first enemy and <status>Slows</status> the target for {{ slowamount }}%.<br /><br />If cast while <keywordMajor>Attached</keywordMajor>, Yuumi can control the missile using her mouse for a short period before it accelerates in a straight line. The accelerated missile deals <magicDamage>{{ totalmissiledamageempowered }} magic damage</magicDamage> and <status>Slows</status> the target for {{ empoweredslowamount }}% for {{ empoweredslowduration }} seconds, instead.<br /><br /><keywordMajor>Best Friend Bonus:</keywordMajor> <spellName>Prowling Projectile's</spellName> <status>Slow</status> will always be enhanced and hitting an enemy champion also grants them <magicDamage>{{ onhitdamagecalc }} magic damage</magicDamage> <OnHit>On-Hit %i:OnHit%</OnHit> for {{ buffduration }} seconds.<br /><br /><rules>The bonus On-Hit damage can be increased by {{ allycritchancemaxamp*100 }}% based her ally's Critical Strike Chance.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Base Damage", "Empowered Damage", "Empowered Slow Amount", "On-Hit Damage", "Mana Cost"],
+            "label": [
+              "Base Damage",
+              "Empowered Damage",
+              "Empowered Slow Amount",
+              "On-Hit Damage",
+              "Mana Cost"
+            ],
             "effect": [
               "{{ missiledamage }} -> {{ missiledamageNL }}",
               "{{ empoweredmissiledamage }} -> {{ empoweredmissiledamageNL }}",
@@ -154,7 +160,19 @@
             [0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -202,7 +220,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -225,7 +255,12 @@
           "description": "Shields Yuumi and boosts Move Speed and Attack Speed. If she's attached, she passes it to her ally instead.<br>",
           "tooltip": "Yuumi shields herself, blocking <shield>{{ totalshielding }} damage</shield> and gains <attackSpeed>{{ totalattackspeed }}% Attack Speed</attackSpeed> for {{ msduration }} seconds. While the shield persists, the target also gains <speed>{{ msamount }}% Move Speed</speed>.<br /><br />If Yuumi is <keywordMajor>Attached</keywordMajor>, this Ability affects her ally instead and also restores <magicDamage>{{ manarestore }} Mana</magicDamage> to them, increased by up to {{ maxmanapercincrease*100 }}% based on the target's missing Mana.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Shield Amount", "Attack Speed", "Mana Restore", "Mana Cost"],
+            "label": [
+              "Shield Amount",
+              "Attack Speed",
+              "Mana Restore",
+              "Mana Cost"
+            ],
             "effect": [
               "{{ baseshielding }} -> {{ baseshieldingNL }}",
               "{{ attackspeedamount }}% -> {{ attackspeedamountNL }}%",
@@ -252,7 +287,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
@@ -275,7 +322,11 @@
           "description": "Yuumi channels five waves that damage enemies and heal allies. Yuumi can move, attach, and cast Zoomies! while channeling. While on her Best Friend, this spell also follows her mouse.",
           "tooltip": "Yuumi channels for {{ ultduration }} seconds, launching {{ numberofwaves }} magical waves affecting both teams. If initially cast while <keywordMajor>Attached</keywordMajor>, Yuumi can steer the waves to follow her mouse.<br /><br />Enemies struck are dealt <magicDamage>{{ totalmissiledamage }} magic damage</magicDamage> and <status>Slowed</status> by {{ baseslow*-100 }}% for {{ ccduration }} seconds, increased by {{ bonusslowperwave*-100 }}% per wave hit.<br /><br />Ally champions are healed for <healing>{{ totalhealperwave }} health</healing> per wave. Excess healing is converted to a <shield>Shield</shield> instead.<br /><br /><keywordMajor>Best Friend Bonus:</keywordMajor> For her <keywordMajor>Best Friend</keywordMajor>, the heal is increased to <healing>{{ enhancedhealperwave }} health</healing>.<br /><br /><rules>Casting <spellName>You and Me!</spellName> will locks the waves in the current direction.<br />Yuumi can move and cast <spellName>Zoomies</spellName> while channeling.</rules><br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Base Damage Per Missile:", "Base Healing Per Wave"],
+            "label": [
+              "Cooldown",
+              "Base Damage Per Missile:",
+              "Base Healing Per Wave"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basemissiledamage }} -> {{ basemissiledamageNL }}",
@@ -301,7 +352,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

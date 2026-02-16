@@ -28,19 +28,19 @@ console.log("🔧 Applying Intel GPU resource patches...");
 const gpuReplacements = [
   {
     pattern: "gpu.intel.com/i915: null",
-    sedPattern: "s/\\(^[[:space:]]*\\)gpu\\.intel\\.com\\/i915: null/\\1gpu.intel.com\\/i915: 1/g",
+    sedPattern: String.raw`s/\(^[[:space:]]*\)gpu\.intel\.com\/i915: null/\1gpu.intel.com\/i915: 1/g`,
   },
   {
     pattern: "gpu.intel.com/i915: 0",
-    sedPattern: "s/\\(^[[:space:]]*\\)gpu\\.intel\\.com\\/i915: 0$/\\1gpu.intel.com\\/i915: 1/g",
+    sedPattern: String.raw`s/\(^[[:space:]]*\)gpu\.intel\.com\/i915: 0$/\1gpu.intel.com\/i915: 1/g`,
   },
   {
     pattern: "gpu.intel.com/i915: '0'",
-    sedPattern: "s/\\(^[[:space:]]*\\)gpu\\.intel\\.com\\/i915: '0'/\\1gpu.intel.com\\/i915: 1/g",
+    sedPattern: String.raw`s/\(^[[:space:]]*\)gpu\.intel\.com\/i915: '0'/\1gpu.intel.com\/i915: 1/g`,
   },
   {
     pattern: 'gpu.intel.com/i915: "0"',
-    sedPattern: 's/\\(^[[:space:]]*\\)gpu\\.intel\\.com\\/i915: "0"/\\1gpu.intel.com\\/i915: 1/g',
+    sedPattern: String.raw`s/\(^[[:space:]]*\)gpu\.intel\.com\/i915: "0"/\1gpu.intel.com\/i915: 1/g`,
   },
 ];
 

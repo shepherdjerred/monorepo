@@ -6,7 +6,12 @@
  */
 
 import { useState } from "react";
-import type { RuleCondition, MultikillType, ObjectiveType, DragonType } from "@scout-for-lol/data";
+import type {
+  RuleCondition,
+  MultikillType,
+  ObjectiveType,
+  DragonType,
+} from "@scout-for-lol/data";
 import type { Champion } from "@scout-for-lol/ui/types/adapter.ts";
 
 type ConditionBuilderProps = {
@@ -58,8 +63,14 @@ const CONDITION_TYPES: { value: ConditionType; label: string }[] = [
   { value: "gameResult", label: "Game Result" },
 ];
 
-export function ConditionBuilder({ conditions, onChange, champions, localPlayerName }: ConditionBuilderProps) {
-  const [newConditionType, setNewConditionType] = useState<ConditionType>("player");
+export function ConditionBuilder({
+  conditions,
+  onChange,
+  champions,
+  localPlayerName,
+}: ConditionBuilderProps) {
+  const [newConditionType, setNewConditionType] =
+    useState<ConditionType>("player");
 
   const addCondition = () => {
     let newCondition: RuleCondition;
@@ -69,7 +80,11 @@ export function ConditionBuilder({ conditions, onChange, champions, localPlayerN
         newCondition = { type: "player", field: "killer", players: [] };
         break;
       case "champion":
-        newCondition = { type: "champion", field: "killerChampion", champions: [] };
+        newCondition = {
+          type: "champion",
+          field: "killerChampion",
+          champions: [],
+        };
         break;
       case "multikill":
         newCondition = { type: "multikill", killTypes: [] };
@@ -174,25 +189,61 @@ type ConditionCardProps = {
   localPlayerName?: string | undefined;
 };
 
-function ConditionCard({ condition, onChange, onRemove, champions, localPlayerName }: ConditionCardProps) {
+function ConditionCard({
+  condition,
+  onChange,
+  onRemove,
+  champions,
+  localPlayerName,
+}: ConditionCardProps) {
   const renderConditionContent = () => {
     switch (condition.type) {
       case "player":
-        return <PlayerConditionEditor condition={condition} onChange={onChange} localPlayerName={localPlayerName} />;
+        return (
+          <PlayerConditionEditor
+            condition={condition}
+            onChange={onChange}
+            localPlayerName={localPlayerName}
+          />
+        );
       case "champion":
-        return <ChampionConditionEditor condition={condition} onChange={onChange} champions={champions} />;
+        return (
+          <ChampionConditionEditor
+            condition={condition}
+            onChange={onChange}
+            champions={champions}
+          />
+        );
       case "multikill":
-        return <MultikillConditionEditor condition={condition} onChange={onChange} />;
+        return (
+          <MultikillConditionEditor condition={condition} onChange={onChange} />
+        );
       case "objective":
-        return <ObjectiveConditionEditor condition={condition} onChange={onChange} />;
+        return (
+          <ObjectiveConditionEditor condition={condition} onChange={onChange} />
+        );
       case "dragonType":
-        return <DragonTypeConditionEditor condition={condition} onChange={onChange} />;
+        return (
+          <DragonTypeConditionEditor
+            condition={condition}
+            onChange={onChange}
+          />
+        );
       case "stolen":
-        return <StolenConditionEditor condition={condition} onChange={onChange} />;
+        return (
+          <StolenConditionEditor condition={condition} onChange={onChange} />
+        );
       case "team":
-        return <TeamConditionEditor condition={condition} onChange={onChange} />;
+        return (
+          <TeamConditionEditor condition={condition} onChange={onChange} />
+        );
       case "gameResult":
-        return <GameResultConditionEditor condition={condition} onChange={onChange} />;
+        return (
+          <GameResultConditionEditor
+            condition={condition}
+            onChange={onChange}
+          />
+        );
     }
   };
 
@@ -260,13 +311,19 @@ function PlayerConditionEditor({
 
       {/* Include local player checkbox */}
       {localPlayerName && (
-        <label htmlFor="include-local-player" className="flex items-center gap-2 text-sm">
+        <label
+          htmlFor="include-local-player"
+          className="flex items-center gap-2 text-sm"
+        >
           <input
             id="include-local-player"
             type="checkbox"
             checked={condition.includeLocalPlayer ?? false}
             onChange={(e) => {
-              onChange({ ...condition, includeLocalPlayer: e.currentTarget.checked });
+              onChange({
+                ...condition,
+                includeLocalPlayer: e.currentTarget.checked,
+              });
             }}
             className="rounded"
           />
@@ -277,7 +334,10 @@ function PlayerConditionEditor({
       {/* Player list */}
       <div className="flex flex-wrap gap-1">
         {condition.players.map((player) => (
-          <span key={player} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 rounded text-sm">
+          <span
+            key={player}
+            className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 rounded text-sm"
+          >
             {player}
             <button
               type="button"
@@ -311,7 +371,11 @@ function PlayerConditionEditor({
           placeholder="Summoner name"
           className="flex-1 px-2 py-1 border rounded text-sm"
         />
-        <button type="button" onClick={addPlayer} className="px-2 py-1 bg-gray-100 rounded text-sm hover:bg-gray-200">
+        <button
+          type="button"
+          onClick={addPlayer}
+          className="px-2 py-1 bg-gray-100 rounded text-sm hover:bg-gray-200"
+        >
           Add
         </button>
       </div>
@@ -333,7 +397,11 @@ function ChampionConditionEditor({
 
   const filteredChampions = query
     ? champions
-        .filter((c) => c.name.toLowerCase().includes(query.toLowerCase()) && !condition.champions.includes(c.id))
+        .filter(
+          (c) =>
+            c.name.toLowerCase().includes(query.toLowerCase()) &&
+            !condition.champions.includes(c.id),
+        )
         .slice(0, 8)
     : [];
 
@@ -373,7 +441,10 @@ function ChampionConditionEditor({
         {condition.champions.map((champId) => {
           const champ = champions.find((c) => c.id === champId);
           return (
-            <span key={champId} className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 rounded text-sm">
+            <span
+              key={champId}
+              className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 rounded text-sm"
+            >
               {champ?.name ?? champId}
               <button
                 type="button"
@@ -452,7 +523,11 @@ function MultikillConditionEditor({
       <span className="text-sm font-medium">Multi-kill type is:</span>
       <div className="flex flex-wrap gap-2">
         {MULTIKILL_TYPES.map((mt) => (
-          <label key={mt.value} htmlFor={`multikill-${mt.value}`} className="flex items-center gap-1 text-sm">
+          <label
+            key={mt.value}
+            htmlFor={`multikill-${mt.value}`}
+            className="flex items-center gap-1 text-sm"
+          >
             <input
               id={`multikill-${mt.value}`}
               type="checkbox"
@@ -489,7 +564,11 @@ function ObjectiveConditionEditor({
       <span className="text-sm font-medium">Objective type is:</span>
       <div className="flex flex-wrap gap-2">
         {OBJECTIVE_TYPES.map((ot) => (
-          <label key={ot.value} htmlFor={`objective-${ot.value}`} className="flex items-center gap-1 text-sm">
+          <label
+            key={ot.value}
+            htmlFor={`objective-${ot.value}`}
+            className="flex items-center gap-1 text-sm"
+          >
             <input
               id={`objective-${ot.value}`}
               type="checkbox"
@@ -526,7 +605,11 @@ function DragonTypeConditionEditor({
       <span className="text-sm font-medium">Dragon type is:</span>
       <div className="flex flex-wrap gap-2">
         {DRAGON_TYPES.map((dt) => (
-          <label key={dt.value} htmlFor={`dragon-${dt.value}`} className="flex items-center gap-1 text-sm">
+          <label
+            key={dt.value}
+            htmlFor={`dragon-${dt.value}`}
+            className="flex items-center gap-1 text-sm"
+          >
             <input
               id={`dragon-${dt.value}`}
               type="checkbox"
@@ -557,7 +640,10 @@ function StolenConditionEditor({
       <select
         value={condition.isStolen ? "stolen" : "not-stolen"}
         onChange={(e) => {
-          onChange({ ...condition, isStolen: e.currentTarget.value === "stolen" });
+          onChange({
+            ...condition,
+            isStolen: e.currentTarget.value === "stolen",
+          });
         }}
         className="px-2 py-1 border rounded text-sm bg-white"
       >

@@ -1,4 +1,5 @@
-import { App, Chart } from "cdk8s";
+import type { App} from "cdk8s";
+import { Chart } from "cdk8s";
 import { createGickupDeployment } from "../resources/gickup.ts";
 
 export async function createGickupChart(app: App) {

@@ -206,7 +206,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -255,7 +267,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "Passive",
           "maxammo": "-1",
@@ -279,7 +303,10 @@
           "tooltip": "Vayne fires a bolt that <status>Knocks Back</status> and deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. If the target collides with terrain, they take <physicalDamage>{{ empowereddamagett }} bonus physical damage</physicalDamage> and become <status>Stunned</status> for {{ stunduration }} seconds. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Damage"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ damage }} -> {{ damageNL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ damage }} -> {{ damageNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [20, 18, 16, 14, 12],
@@ -300,7 +327,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -323,7 +362,12 @@
           "description": "Readying herself for an epic confrontation, Vayne gains increased Attack Damage, Invisibility during Tumble, reduced Tumble cooldown, and more bonus Move Speed from Night Hunter",
           "tooltip": "Vayne gains <physicalDamage>{{ bonusattackdamage }} Attack Damage</physicalDamage> for {{ baseduration }} seconds, extended by {{ durationtoadd }} seconds whenever a champion damaged by Vayne dies within {{ damagedmarkerduration }} seconds. Additionally, during the duration:<li><spellName>Night Hunter</spellName> instead grants <speed>{{ movementspeed }} Move Speed</speed>.<li>The Cooldown of <spellName>Tumble</spellName> is reduced by {{ tumblecdreduction }}%, and grants <keywordStealth>Invisibility</keywordStealth> for {{ tumblestealthduration }} second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Duration", "Bonus AD", "Tumble Cooldown Reduction"],
+            "label": [
+              "Cooldown",
+              "Duration",
+              "Bonus AD",
+              "Tumble Cooldown Reduction"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ baseduration }} -> {{ basedurationNL }}",
@@ -350,7 +394,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

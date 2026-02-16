@@ -1,4 +1,4 @@
-import { Chart } from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Deployment, DeploymentStrategy, Secret, Volume } from "cdk8s-plus-31";
 import { withCommonProps } from "../misc/common.ts";
 import { OnePasswordItem } from "../../generated/imports/onepassword.com.ts";

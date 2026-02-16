@@ -133,7 +133,10 @@
           "tooltip": "Karthus creates a blast of magic, dealing <magicDamage>{{ qdamage }} magic damage</magicDamage>. If the blast hits only one enemy, it instead deals <magicDamage>{{ qsingletargetdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "@AbilityResourceName@ Cost"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cost }} -> {{ costNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [0, 0, 0, 0, 0],
@@ -154,7 +157,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "45/65/85/105/125", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "45/65/85/105/125",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "2",
@@ -199,7 +214,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "25", "800/900/1000/1100/1200", "40/50/60/70/80", "5", "5", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "25",
+            "800/900/1000/1100/1200",
+            "40/50/60/70/80",
+            "5",
+            "5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -222,8 +249,16 @@
           "description": "Karthus passively steals energy from his victims, gaining Mana on each kill. Alternatively, Karthus can surround himself in the souls of his prey, dealing damage to nearby enemies, but quickly draining his own Mana.",
           "tooltip": "<spellPassive>Passive: </spellPassive>When Karthus kills a unit, he restores <scaleMana>{{ e2 }} Mana</scaleMana>.<br /><br /><toggle>Toggle: </toggle>Karthus creates a necrotic aura, dealing <magicDamage>{{ totaldps }} magic damage</magicDamage> per second to nearby enemies.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage Per Second", "Mana Restore", "@AbilityResourceName@ Cost"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ e2 }} -> {{ e2NL }}", "{{ cost }} -> {{ costNL }}"]
+            "label": [
+              "Damage Per Second",
+              "Mana Restore",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ e2 }} -> {{ e2NL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [0.5, 0.5, 0.5, 0.5, 0.5],
@@ -244,7 +279,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "30/50/70/90/110", "10/20/30/40/50", "0.5", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "30/50/70/90/110",
+            "10/20/30/40/50",
+            "0.5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " Mana per Second",
           "maxammo": "-1",
@@ -268,7 +315,10 @@
           "tooltip": "Karthus channels for 3 seconds, then deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemy champions, regardless of distance.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [200, 180, 160],
@@ -289,7 +339,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

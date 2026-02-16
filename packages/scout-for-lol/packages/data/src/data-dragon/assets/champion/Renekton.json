@@ -163,7 +163,12 @@
           "description": "Renekton swings his blade, dealing moderate physical damage to all targets around him, and heals for a small portion of the damage dealt. If he has more than 50 Fury, his damage and heal are increased.",
           "tooltip": "Renekton swings his blade, dealing <physicalDamage>{{ basicdamage }} physical damage</physicalDamage> and restoring <healing>{{ nonchamphealing }} Health</healing> per non-champion and <healing>{{ champhealing }}</healing> per champion hit. He also generates <keywordMajor>{{ minionfurygain }} Fury</keywordMajor> per non-champion and <keywordMajor>{{ championfurygain }} Fury</keywordMajor> per champion.<br /><br /><keywordMajor>Fury Bonus</keywordMajor>: Damage is increased to <physicalDamage>{{ empdamage }} physical damage</physicalDamage> and healing is increased to <healing>{{ empnonchamphealing }} Health</healing> against non-champions and <healing>{{ empchamphealing }} Health</healing> against champions. Does not generate any <keywordMajor>Fury</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Healing per Champion", "Healing per non-Champion", "Maximum Heal"],
+            "label": [
+              "Damage",
+              "Healing per Champion",
+              "Healing per non-Champion",
+              "Maximum Heal"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ champheal }} -> {{ champhealNL }}",
@@ -190,7 +195,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -239,7 +256,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -262,7 +291,12 @@
           "description": "Renekton dashes, dealing damage to units along the way. Empowered, Renekton deals bonus damage and reduces the Armor of units hit.",
           "tooltip": "Renekton dashes, dealing <physicalDamage>{{ basicdamage }} physical damage</physicalDamage>. He generates <keywordMajor>{{ minionragegeneration }} Fury</keywordMajor> per non-champion and <keywordMajor>{{ championragegeneration }} Fury</keywordMajor> per champion hit. Hitting at least one enemy allows Renekton to <recast>Recast</recast> this Ability once for {{ dicetimer }} seconds. <br /><br /><keywordMajor>Fury Bonus</keywordMajor>: The <recast>Recast</recast> dash deals <physicalDamage>{{ empdamage }} physical damage</physicalDamage> instead and removes <scaleArmor>{{ enragedarmorshred }}% Armor</scaleArmor> for {{ shredtimer }} seconds. Does not generate <keywordMajor>Fury</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Empowered Damage", "Armor Reduction %", "Cooldown"],
+            "label": [
+              "Damage",
+              "Empowered Damage",
+              "Armor Reduction %",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ enragedbasedamage }} -> {{ enragedbasedamageNL }}",
@@ -289,7 +323,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -338,7 +384,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",

@@ -1,4 +1,5 @@
-import { App, Chart } from "cdk8s";
+import type { App} from "cdk8s";
+import { Chart } from "cdk8s";
 import { Namespace, ConfigMap } from "cdk8s-plus-31";
 import { KubeCronJob, Quantity } from "../../generated/imports/k8s.ts";
 import { EMAIL_DOMAINS, NO_EMAIL_DOMAINS } from "../resources/argo-applications/domains.ts";
@@ -187,8 +188,8 @@ if __name__ == "__main__":
                   },
                   securityContext: {
                     runAsNonRoot: true,
-                    runAsUser: 65534,
-                    runAsGroup: 65534,
+                    runAsUser: 65_534,
+                    runAsGroup: 65_534,
                     allowPrivilegeEscalation: false,
                   },
                 },

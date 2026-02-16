@@ -22,7 +22,10 @@ import {
 import * as Sentry from "@sentry/bun";
 import { selectRandomPersonality, getLaneContext } from "./prompts.ts";
 import { getOpenAIClient, getGeminiClient } from "./ai-clients.ts";
-import { savePipelineTracesToS3, savePipelineDebugToS3 } from "@scout-for-lol/backend/storage/pipeline-s3.ts";
+import {
+  savePipelineTracesToS3,
+  savePipelineDebugToS3,
+} from "@scout-for-lol/backend/storage/pipeline-s3.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("generator");
@@ -41,8 +44,12 @@ export type ReviewMetadata = {
  * Prefers "Jerred" if they're in the match, otherwise selects randomly.
  */
 function selectPlayerIndex(match: CompletedMatch | ArenaMatch): number {
-  const jerredIndex = match.players.findIndex((p) => p.playerConfig.alias.toLowerCase() === "jerred");
-  return jerredIndex !== -1 ? jerredIndex : Math.floor(Math.random() * match.players.length);
+  const jerredIndex = match.players.findIndex(
+    (p) => p.playerConfig.alias.toLowerCase() === "jerred",
+  );
+  return jerredIndex !== -1
+    ? jerredIndex
+    : Math.floor(Math.random() * match.players.length);
 }
 
 /**
@@ -66,7 +73,9 @@ export async function generateMatchReview(
   matchId: MatchId,
   rawMatchData: RawMatch,
   timelineData: RawTimeline,
-): Promise<{ text: string; image?: Uint8Array; metadata?: ReviewMetadata } | undefined> {
+): Promise<
+  { text: string; image?: Uint8Array; metadata?: ReviewMetadata } | undefined
+> {
   // Initialize clients
   const openaiClient = getOpenAIClient();
   if (!openaiClient) {
@@ -80,7 +89,9 @@ export async function generateMatchReview(
   const playerIndex = selectPlayerIndex(match);
   const selectedPlayer = match.players[playerIndex];
   if (!selectedPlayer) {
-    logger.info("No player found at selected index, skipping review generation");
+    logger.info(
+      "No player found at selected index, skipping review generation",
+    );
     return undefined;
   }
 
@@ -92,7 +103,11 @@ export async function generateMatchReview(
 
   // Determine lane context
   let laneForContext: string | undefined;
-  if (match.queueType !== "arena" && "lane" in selectedPlayer && typeof selectedPlayer.lane === "string") {
+  if (
+    match.queueType !== "arena" &&
+    "lane" in selectedPlayer &&
+    typeof selectedPlayer.lane === "string"
+  ) {
     laneForContext = selectedPlayer.lane;
   }
 
@@ -100,11 +115,16 @@ export async function generateMatchReview(
   const laneContextInfo = getLaneContext(laneForContext);
   const personality = await selectRandomPersonality();
 
-  logger.info(`Selected player ${(playerIndex + 1).toString()}/${match.players.length.toString()}: ${playerName}`);
-  logger.info(`Selected personality: ${personality.filename ?? personality.metadata.name}`);
+  logger.info(
+    `Selected player ${(playerIndex + 1).toString()}/${match.players.length.toString()}: ${playerName}`,
+  );
+  logger.info(
+    `Selected personality: ${personality.filename ?? personality.metadata.name}`,
+  );
   logger.info(`Selected lane context: ${laneContextInfo.filename}`);
 
-  const queueType = match.queueType === "arena" ? "arena" : (match.queueType ?? "unknown");
+  const queueType =
+    match.queueType === "arena" ? "arena" : (match.queueType ?? "unknown");
   const trackedPlayerAliases = match.players.map((p) => p.playerConfig.alias);
 
   // Call unified pipeline
@@ -118,9 +138,10 @@ export async function generateMatchReview(
   };
 
   // Build clients input
-  const clientsInput: Parameters<typeof generateFullMatchReview>[0]["clients"] = {
-    openai: openaiClient,
-  };
+  const clientsInput: Parameters<typeof generateFullMatchReview>[0]["clients"] =
+    {
+      openai: openaiClient,
+    };
   if (geminiClient !== undefined) {
     clientsInput.gemini = geminiClient;
   }

@@ -146,7 +146,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -169,7 +181,12 @@
           "description": "Camille blasts in a cone after a delay, dealing damage. Enemies in the outer half are slowed and take extra damage, while also healing Camille.",
           "tooltip": "Camille winds up and slices, dealing <physicalDamage>{{ basedamagetotal }} physical damage</physicalDamage>.<br /><br />Enemies hit by the outer half are <status>Slowed</status> by {{ slowpercentage }}% decaying over {{ slowduration }} seconds, and they take an additional <physicalDamage>{{ outeredgetooltip }} max Health physical damage</physicalDamage>. Camille restores <healing>{{ outerconehealingratio }}% of the bonus damage dealt to champions as Health</healing>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["@AbilityResourceName@ Cost", "Damage", "Maximum Health Damage", "Cooldown"],
+            "label": [
+              "@AbilityResourceName@ Cost",
+              "Damage",
+              "Maximum Health Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ cost }} -> {{ costNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -196,7 +213,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -245,7 +274,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -294,7 +335,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

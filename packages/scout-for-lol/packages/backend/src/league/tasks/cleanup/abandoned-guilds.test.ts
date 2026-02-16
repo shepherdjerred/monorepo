@@ -19,8 +19,12 @@ describe("Abandoned Guilds - Unit Tests", () => {
 describe("Abandoned Guild Metrics", () => {
   test("metrics should be exported and usable", async () => {
     // Import metrics
-    const { abandonedGuildsDetectedTotal, guildsLeftTotal, abandonmentNotificationsTotal, guildDataCleanupTotal } =
-      await import("../../../metrics/index.js");
+    const {
+      abandonedGuildsDetectedTotal,
+      guildsLeftTotal,
+      abandonmentNotificationsTotal,
+      guildDataCleanupTotal,
+    } = await import("../../../metrics/index.js");
 
     // Verify metrics exist and are counters
     expect(abandonedGuildsDetectedTotal).toBeDefined();
@@ -30,21 +34,36 @@ describe("Abandoned Guild Metrics", () => {
 
     // Verify they have inc() method (Counter behavior)
     const CounterSchema = z.object({ inc: z.function() }).loose();
-    expect(CounterSchema.safeParse(abandonedGuildsDetectedTotal).success).toBe(true);
+    expect(CounterSchema.safeParse(abandonedGuildsDetectedTotal).success).toBe(
+      true,
+    );
     expect(CounterSchema.safeParse(guildsLeftTotal).success).toBe(true);
-    expect(CounterSchema.safeParse(abandonmentNotificationsTotal).success).toBe(true);
+    expect(CounterSchema.safeParse(abandonmentNotificationsTotal).success).toBe(
+      true,
+    );
     expect(CounterSchema.safeParse(guildDataCleanupTotal).success).toBe(true);
   });
 
   test("metrics should increment without errors", async () => {
     // Import metrics
-    const { abandonedGuildsDetectedTotal, guildsLeftTotal, abandonmentNotificationsTotal, guildDataCleanupTotal } =
-      await import("../../../metrics/index.js");
+    const {
+      abandonedGuildsDetectedTotal,
+      guildsLeftTotal,
+      abandonmentNotificationsTotal,
+      guildDataCleanupTotal,
+    } = await import("../../../metrics/index.js");
 
     // Test incrementing each metric
     expect(() => abandonedGuildsDetectedTotal.inc(1)).not.toThrow();
     expect(() => guildsLeftTotal.inc({ reason: "abandoned" })).not.toThrow();
-    expect(() => abandonmentNotificationsTotal.inc({ status: "success" })).not.toThrow();
-    expect(() => guildDataCleanupTotal.inc({ data_type: "subscriptions", status: "success" })).not.toThrow();
+    expect(() =>
+      abandonmentNotificationsTotal.inc({ status: "success" }),
+    ).not.toThrow();
+    expect(() =>
+      guildDataCleanupTotal.inc({
+        data_type: "subscriptions",
+        status: "success",
+      }),
+    ).not.toThrow();
   });
 });

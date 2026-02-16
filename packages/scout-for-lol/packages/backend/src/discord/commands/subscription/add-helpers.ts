@@ -1,5 +1,9 @@
 import { type ChatInputCommandInteraction } from "discord.js";
-import { type DiscordGuildId, type Region, type RiotId } from "@scout-for-lol/data/index";
+import {
+  type DiscordGuildId,
+  type Region,
+  type RiotId,
+} from "@scout-for-lol/data/index";
 import { riotApi } from "@scout-for-lol/backend/league/api/api.ts";
 import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
 import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.js";
@@ -26,15 +30,21 @@ export async function checkSubscriptionLimit(
 ): Promise<boolean> {
   // Check subscription limit (only if creating a new player)
   if (existingPlayer) {
-    logger.info(`📌 Adding account to existing player (ID: ${existingPlayer.id.toString()}) - no limit check needed`);
+    logger.info(
+      `📌 Adding account to existing player (ID: ${existingPlayer.id.toString()}) - no limit check needed`,
+    );
     return true;
   }
 
-  const subscriptionLimit = getLimit("player_subscriptions", { server: guildId });
+  const subscriptionLimit = getLimit("player_subscriptions", {
+    server: guildId,
+  });
   const isUnlimited = subscriptionLimit === "unlimited";
 
   if (!isUnlimited) {
-    logger.info(`🔍 Checking subscription limit for server ${guildId}: ${subscriptionLimit.toString()} players`);
+    logger.info(
+      `🔍 Checking subscription limit for server ${guildId}: ${subscriptionLimit.toString()} players`,
+    );
 
     // Count unique players with subscriptions in this server
     const subscribedPlayerCount = await prisma.player.count({
@@ -46,7 +56,9 @@ export async function checkSubscriptionLimit(
       },
     });
 
-    logger.info(`📊 Current subscribed players: ${subscribedPlayerCount.toString()}/${subscriptionLimit.toString()}`);
+    logger.info(
+      `📊 Current subscribed players: ${subscribedPlayerCount.toString()}/${subscriptionLimit.toString()}`,
+    );
 
     if (subscribedPlayerCount >= subscriptionLimit) {
       logger.info(
@@ -86,7 +98,9 @@ export async function checkAccountLimit(
   const isUnlimitedAccounts = accountLimit === "unlimited";
 
   if (!isUnlimitedAccounts) {
-    logger.info(`🔍 Checking account limit for server ${guildId}: ${accountLimit.toString()} accounts`);
+    logger.info(
+      `🔍 Checking account limit for server ${guildId}: ${accountLimit.toString()} accounts`,
+    );
 
     // Count all accounts in this server
     const accountCount = await prisma.account.count({
@@ -95,7 +109,9 @@ export async function checkAccountLimit(
       },
     });
 
-    logger.info(`📊 Current accounts: ${accountCount.toString()}/${accountLimit.toString()}`);
+    logger.info(
+      `📊 Current accounts: ${accountCount.toString()}/${accountLimit.toString()}`,
+    );
 
     if (accountCount >= accountLimit) {
       logger.info(
@@ -110,7 +126,10 @@ export async function checkAccountLimit(
 
     // Warn if approaching limit (threshold or fewer slots remaining)
     const remainingAccountSlots = accountLimit - accountCount - 1;
-    if (remainingAccountSlots <= LIMIT_WARNING_THRESHOLD && remainingAccountSlots > 0) {
+    if (
+      remainingAccountSlots <= LIMIT_WARNING_THRESHOLD &&
+      remainingAccountSlots > 0
+    ) {
       await interaction.followUp({
         content: `⚠️  **Approaching account limit**\n\nYou will have ${remainingAccountSlots.toString()} account slot${remainingAccountSlots === 1 ? "" : "s"} remaining after this addition.\n\nIf you need more accounts, please contact us: ${DISCORD_SERVER_INVITE}`,
         ephemeral: true,
@@ -132,23 +151,38 @@ export async function resolveRiotIdToPuuid(
   riotId: RiotId,
   region: Region,
 ): Promise<string | null> {
-  logger.info(`🔍 Looking up Riot ID: ${riotId.game_name}#${riotId.tag_line} in region ${region}`);
+  logger.info(
+    `🔍 Looking up Riot ID: ${riotId.game_name}#${riotId.tag_line} in region ${region}`,
+  );
 
   try {
     const apiStartTime = Date.now();
-    const regionGroup = regionToRegionGroupForAccountAPI(mapRegionToEnum(region));
+    const regionGroup = regionToRegionGroupForAccountAPI(
+      mapRegionToEnum(region),
+    );
 
     logger.info(`🌐 Using region group: ${regionGroup}`);
 
-    const account = await withTimeout(riotApi.Account.getByRiotId(riotId.game_name, riotId.tag_line, regionGroup));
+    const account = await withTimeout(
+      riotApi.Account.getByRiotId(
+        riotId.game_name,
+        riotId.tag_line,
+        regionGroup,
+      ),
+    );
 
     const apiTime = Date.now() - apiStartTime;
     const puuid = account.response.puuid;
 
-    logger.info(`✅ Successfully resolved Riot ID to PUUID: ${puuid} (${apiTime.toString()}ms)`);
+    logger.info(
+      `✅ Successfully resolved Riot ID to PUUID: ${puuid} (${apiTime.toString()}ms)`,
+    );
     return puuid;
   } catch (error) {
-    logger.error(`❌ Failed to resolve Riot ID ${riotId.game_name}#${riotId.tag_line}:`, error);
+    logger.error(
+      `❌ Failed to resolve Riot ID ${riotId.game_name}#${riotId.tag_line}:`,
+      error,
+    );
     await interaction.editReply({
       content: `Error looking up Riot ID: ${getErrorMessage(error)}`,
     });

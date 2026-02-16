@@ -32,7 +32,9 @@ describe("notifyServerOwnerAboutPermissionError", () => {
     expect(sentMessages[0]?.message).toContain("Bot Permission Issue");
     expect(sentMessages[0]?.message).toContain("Test Server");
     expect(sentMessages[0]?.message).toContain("<#channel-456>");
-    expect(sentMessages[0]?.message).toContain("Missing Send Messages permission");
+    expect(sentMessages[0]?.message).toContain(
+      "Missing Send Messages permission",
+    );
   });
 
   test("handles case when guild is not found", async () => {
@@ -43,7 +45,13 @@ describe("notifyServerOwnerAboutPermissionError", () => {
     });
 
     // Should not throw
-    await expect(notifyServerOwnerAboutPermissionError(client, "server-123", "channel-456")).resolves.toBeUndefined();
+    await expect(
+      notifyServerOwnerAboutPermissionError(
+        client,
+        "server-123",
+        "channel-456",
+      ),
+    ).resolves.toBeUndefined();
   });
 
   test("handles case when owner fetch fails", async () => {
@@ -57,7 +65,13 @@ describe("notifyServerOwnerAboutPermissionError", () => {
     });
 
     // Should not throw
-    await expect(notifyServerOwnerAboutPermissionError(client, "server-123", "channel-456")).resolves.toBeUndefined();
+    await expect(
+      notifyServerOwnerAboutPermissionError(
+        client,
+        "server-123",
+        "channel-456",
+      ),
+    ).resolves.toBeUndefined();
   });
 
   test("handles case when DM send fails (user has DMs disabled)", async () => {
@@ -76,7 +90,13 @@ describe("notifyServerOwnerAboutPermissionError", () => {
     });
 
     // Should not throw - gracefully handles DM failures
-    await expect(notifyServerOwnerAboutPermissionError(client, "server-123", "channel-456")).resolves.toBeUndefined();
+    await expect(
+      notifyServerOwnerAboutPermissionError(
+        client,
+        "server-123",
+        "channel-456",
+      ),
+    ).resolves.toBeUndefined();
   });
 
   test("handles generic error during DM send", async () => {
@@ -95,7 +115,13 @@ describe("notifyServerOwnerAboutPermissionError", () => {
     });
 
     // Should not throw - gracefully handles all errors
-    await expect(notifyServerOwnerAboutPermissionError(client, "server-123", "channel-456")).resolves.toBeUndefined();
+    await expect(
+      notifyServerOwnerAboutPermissionError(
+        client,
+        "server-123",
+        "channel-456",
+      ),
+    ).resolves.toBeUndefined();
   });
 
   test("includes reason in message when provided", async () => {
@@ -115,7 +141,12 @@ describe("notifyServerOwnerAboutPermissionError", () => {
       },
     });
 
-    await notifyServerOwnerAboutPermissionError(client, "server-123", "channel-456", "Custom error reason");
+    await notifyServerOwnerAboutPermissionError(
+      client,
+      "server-123",
+      "channel-456",
+      "Custom error reason",
+    );
 
     expect(sentMessages[0]?.message).toContain("Custom error reason");
   });
@@ -137,7 +168,11 @@ describe("notifyServerOwnerAboutPermissionError", () => {
       },
     });
 
-    await notifyServerOwnerAboutPermissionError(client, "server-123", "channel-456");
+    await notifyServerOwnerAboutPermissionError(
+      client,
+      "server-123",
+      "channel-456",
+    );
 
     expect(sentMessages).toHaveLength(1);
     expect(sentMessages[0]?.message).toContain("Bot Permission Issue");

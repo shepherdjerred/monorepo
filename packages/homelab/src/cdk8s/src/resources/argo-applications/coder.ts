@@ -1,4 +1,4 @@
-import { Chart } from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Application } from "../../../generated/imports/argoproj.io.ts";
 import { Namespace } from "cdk8s-plus-31";
 import { PodMonitor } from "../../../generated/imports/monitoring.coreos.com.ts";

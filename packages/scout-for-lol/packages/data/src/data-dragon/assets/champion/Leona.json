@@ -197,7 +197,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "1", "10/35/60/85/110", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "1",
+            "10/35/60/85/110",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -220,7 +232,12 @@
           "description": "Leona raises her shield to gain Damage Reduction, Armor, and Magic Resist. When the duration first ends, if there are nearby enemies, she will deal magic damage to them and prolong the duration of the effect.",
           "tooltip": "Leona raises her shield, reducing incoming damage by {{ flatdamagereduction }} and gaining <scaleArmor>{{ bonusarmortooltip }} Armor</scaleArmor> and <scaleMR>{{ bonusmrtooltip }} Magic Resist</scaleMR> for {{ e3 }} seconds. Afterwards, her shield detonates, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> to nearby enemies. If she hits at least one, she retains the <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> bonuses for an additional {{ e3 }} seconds.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Armor and Magic Resist", "Damage Reduction", "Cooldown"],
+            "label": [
+              "Damage",
+              "Armor and Magic Resist",
+              "Damage Reduction",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ e4 }} -> {{ e4NL }}",
@@ -283,7 +300,11 @@
           "tooltip": "Leona thrusts with a sword of light, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>. The last champion struck will be <status>Rooted</status> for {{ e2 }} seconds and Leona will dash to them.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}", "{{ cost }} -> {{ costNL }}"]
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [12, 10.5, 9, 7.5, 6],
@@ -304,7 +325,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "50/90/130/170/210", "0.5", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "50/90/130/170/210",
+            "0.5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -328,7 +361,10 @@
           "tooltip": "Leona calls down a radiant beam of solar energy dealing <magicDamage>{{ explosioncalculateddamage }} magic damage</magicDamage> and <status>Slowing</status> by {{ slowpercent }}% for {{ ccduration }} seconds. Enemies in the center of the flare are <status>Stunned</status> instead of <status>Slowed</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ explosionbasedamage }} -> {{ explosionbasedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ explosionbasedamage }} -> {{ explosionbasedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [90, 75, 60],
@@ -349,7 +385,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "100", "3", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "100",
+            "3",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

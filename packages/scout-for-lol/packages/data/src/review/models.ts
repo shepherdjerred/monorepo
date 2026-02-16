@@ -37,7 +37,8 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
   "gpt-4o": {
     id: "gpt-4o",
     name: "GPT-4o",
-    description: "⚡ Fast & capable multimodal model • $2.50 input / $10 output per 1M tokens",
+    description:
+      "⚡ Fast & capable multimodal model • $2.50 input / $10 output per 1M tokens",
     capabilities: {
       supportsTemperature: true,
       supportsTopP: true,
@@ -50,7 +51,8 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
   "gpt-4o-mini": {
     id: "gpt-4o-mini",
     name: "GPT-4o Mini",
-    description: "💰 Most affordable GPT-4 level model • $0.15 input / $0.60 output per 1M tokens",
+    description:
+      "💰 Most affordable GPT-4 level model • $0.15 input / $0.60 output per 1M tokens",
     capabilities: {
       supportsTemperature: true,
       supportsTopP: true,
@@ -76,7 +78,8 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
   "chatgpt-4o-latest": {
     id: "chatgpt-4o-latest",
     name: "ChatGPT-4o (Latest)",
-    description: "🔄 Auto-updated to match ChatGPT • $5 input / $15 output per 1M tokens",
+    description:
+      "🔄 Auto-updated to match ChatGPT • $5 input / $15 output per 1M tokens",
     capabilities: {
       supportsTemperature: true,
       supportsTopP: true,
@@ -91,7 +94,8 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
   o1: {
     id: "o1",
     name: "O1",
-    description: "🧠 Advanced reasoning for complex problems • $15 input / $60 output per 1M tokens • No temp control",
+    description:
+      "🧠 Advanced reasoning for complex problems • $15 input / $60 output per 1M tokens • No temp control",
     capabilities: {
       supportsTemperature: false, // O-series models don't support temperature
       supportsTopP: false,
@@ -104,7 +108,8 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
   "o1-mini": {
     id: "o1-mini",
     name: "O1 Mini",
-    description: "🚀 Fast reasoning for code/math • $3 input / $12 output per 1M tokens • No temp control",
+    description:
+      "🚀 Fast reasoning for code/math • $3 input / $12 output per 1M tokens • No temp control",
     capabilities: {
       supportsTemperature: false,
       supportsTopP: false,
@@ -117,7 +122,8 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
   "o1-preview": {
     id: "o1-preview",
     name: "O1 Preview",
-    description: "🔬 Early O1 preview • $15 input / $60 output per 1M tokens • No temp control",
+    description:
+      "🔬 Early O1 preview • $15 input / $60 output per 1M tokens • No temp control",
     capabilities: {
       supportsTemperature: false,
       supportsTopP: false,
@@ -130,7 +136,8 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
   "o3-mini": {
     id: "o3-mini",
     name: "O3 Mini",
-    description: "🎯 Budget reasoning model • $1.10 input / $4.40 output per 1M tokens • No temp control",
+    description:
+      "🎯 Budget reasoning model • $1.10 input / $4.40 output per 1M tokens • No temp control",
     capabilities: {
       supportsTemperature: false,
       supportsTopP: false,
@@ -145,7 +152,8 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
   "gpt-4-turbo": {
     id: "gpt-4-turbo",
     name: "GPT-4 Turbo",
-    description: "📸 Vision + large context • $10 input / $30 output per 1M tokens",
+    description:
+      "📸 Vision + large context • $10 input / $30 output per 1M tokens",
     capabilities: {
       supportsTemperature: true,
       supportsTopP: true,
@@ -173,7 +181,8 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
   "gpt-4": {
     id: "gpt-4",
     name: "GPT-4",
-    description: "⚠️ Original GPT-4 (deprecated) • $30 input / $60 output per 1M tokens • Use gpt-4o instead",
+    description:
+      "⚠️ Original GPT-4 (deprecated) • $30 input / $60 output per 1M tokens • Use gpt-4o instead",
     capabilities: {
       supportsTemperature: true,
       supportsTopP: true,
@@ -189,7 +198,8 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
   "gpt-3.5-turbo": {
     id: "gpt-3.5-turbo",
     name: "GPT-3.5 Turbo",
-    description: "⚡ Fast & cheap for simple tasks • $0.50 input / $1.50 output per 1M tokens",
+    description:
+      "⚡ Fast & cheap for simple tasks • $0.50 input / $1.50 output per 1M tokens",
     capabilities: {
       supportsTemperature: true,
       supportsTopP: true,
@@ -217,7 +227,8 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
   "gpt-5": {
     id: "gpt-5",
     name: "GPT-5",
-    description: "🧠 GPT-5 base model • $1.25 input / $10 output per 1M tokens • No temp control",
+    description:
+      "🧠 GPT-5 base model • $1.25 input / $10 output per 1M tokens • No temp control",
     capabilities: {
       supportsTemperature: false,
       supportsTopP: false,
@@ -230,7 +241,8 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
   "gpt-5-mini": {
     id: "gpt-5-mini",
     name: "GPT-5 Mini",
-    description: "💰 Balanced GPT-5 variant • $0.25 input / $2 output per 1M tokens • No temp control",
+    description:
+      "💰 Balanced GPT-5 variant • $0.25 input / $2 output per 1M tokens • No temp control",
     capabilities: {
       supportsTemperature: false,
       supportsTopP: false,
@@ -243,7 +255,8 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
   "gpt-5-nano": {
     id: "gpt-5-nano",
     name: "GPT-5 Nano",
-    description: "⚡ Fastest, most cost-effective • $0.05 input / $0.40 output per 1M tokens • No temp control",
+    description:
+      "⚡ Fastest, most cost-effective • $0.05 input / $0.40 output per 1M tokens • No temp control",
     capabilities: {
       supportsTemperature: false,
       supportsTopP: false,
@@ -258,7 +271,8 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
   "gpt-5.1": {
     id: "gpt-5.1",
     name: "GPT-5.1",
-    description: "🚀 Latest GPT-5.1 • 400k context • $1.25 input / $10 output per 1M tokens • No temp control",
+    description:
+      "🚀 Latest GPT-5.1 • 400k context • $1.25 input / $10 output per 1M tokens • No temp control",
     capabilities: {
       supportsTemperature: false,
       supportsTopP: false,
@@ -334,7 +348,10 @@ export function getAllModelIds(): string[] {
 /**
  * Check if a model supports a specific parameter
  */
-export function modelSupportsParameter(modelId: string, parameter: "temperature" | "topP"): boolean {
+export function modelSupportsParameter(
+  modelId: string,
+  parameter: "temperature" | "topP",
+): boolean {
   const model = getModelInfo(modelId);
   if (!model) {
     // Default to false for unknown models to be safe
@@ -382,7 +399,10 @@ export function getImagePricing(model: string): number {
  * Get pricing for a specific text generation model
  * @throws Error if model pricing is not defined
  */
-export function getModelPricing(model: string): { input: number; output: number } {
+export function getModelPricing(model: string): {
+  input: number;
+  output: number;
+} {
   // Try to get pricing from centralized model info
   const modelInfo = getModelInfo(model);
   if (modelInfo) {
@@ -425,7 +445,11 @@ export type GenerationMetadata = {
 /**
  * Calculate cost breakdown from generation metadata
  */
-export function calculateCost(metadata: GenerationMetadata, textModel: string, imageModel: string): CostBreakdown {
+export function calculateCost(
+  metadata: GenerationMetadata,
+  textModel: string,
+  imageModel: string,
+): CostBreakdown {
   const modelPricing = getModelPricing(textModel);
   const imagePricing = getImagePricing(imageModel);
 

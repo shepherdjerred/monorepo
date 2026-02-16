@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { EVENT_TYPES, EVENT_TYPE_LABELS, createEmptySoundPool, type EventType } from "@scout-for-lol/data";
+import {
+  EVENT_TYPES,
+  EVENT_TYPE_LABELS,
+  createEmptySoundPool,
+  type EventType,
+} from "@scout-for-lol/data";
 import { useSoundPackEditor } from "@scout-for-lol/ui/hooks/use-sound-pack-editor.tsx";
 import { SoundPoolEditor } from "./sound-pool-editor.tsx";
 
@@ -10,16 +15,21 @@ export function DefaultsTab() {
   return (
     <div className="space-y-2">
       <p className="text-sm text-gray-600 mb-4">
-        Default sounds play when no rules match. Configure sounds for each event type.
+        Default sounds play when no rules match. Configure sounds for each event
+        type.
       </p>
 
       {EVENT_TYPES.map((eventType) => {
-        const pool = editor.soundPack.defaults[eventType] ?? createEmptySoundPool();
+        const pool =
+          editor.soundPack.defaults[eventType] ?? createEmptySoundPool();
         const info = EVENT_TYPE_LABELS[eventType];
         const isExpanded = expandedEvent === eventType;
 
         return (
-          <div key={eventType} className="border rounded-lg bg-white overflow-hidden">
+          <div
+            key={eventType}
+            className="border rounded-lg bg-white overflow-hidden"
+          >
             {/* Header */}
             <button
               type="button"
@@ -32,7 +42,9 @@ export function DefaultsTab() {
                 <span className="text-gray-400">{isExpanded ? "▼" : "▶"}</span>
                 <div className="text-left">
                   <div className="font-medium">{info.label}</div>
-                  <div className="text-xs text-gray-500">{info.description}</div>
+                  <div className="text-xs text-gray-500">
+                    {info.description}
+                  </div>
                 </div>
               </div>
               <span className="text-sm text-gray-500">

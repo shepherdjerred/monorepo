@@ -106,7 +106,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -130,7 +142,10 @@
           "tooltip": "Ambessa gains <shield>{{ calc_shield }} Shield</shield> for {{ shield_duration }} seconds and braces herself for {{ buff_duration }} seconds. She then slams the ground, dealing <physicalDamage>{{ calc_damage_low }} physical damage</physicalDamage> to nearby enemies, which increases to <physicalDamage>{{ calc_damage_high }} physical damage</physicalDamage> if she braced herself from damage from an enemy champion, large monster, or structure.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Damage"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ basedamage }} -> {{ basedamageNL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [18, 17, 16, 15, 14],
@@ -151,7 +166,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -175,7 +202,10 @@
           "tooltip": "Ambessa whips her chains around, dealing <physicalDamage>{{ calc_damage_flat }} physical damage</physicalDamage> and <status>Slowing</status> enemies by <status>{{ slow_amount*100 }}%</status>, which decays over {{ slow_duration }} second. Initiating <spellName>Drakehound's Step</spellName> from this Ability will trigger an additional strike.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Damage"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ damage_flat_base }} -> {{ damage_flat_baseNL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ damage_flat_base }} -> {{ damage_flat_baseNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [13, 12, 11, 10, 9],
@@ -196,7 +226,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -246,7 +288,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No cost",
           "maxammo": "-1",

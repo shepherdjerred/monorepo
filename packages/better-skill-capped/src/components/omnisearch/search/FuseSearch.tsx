@@ -2,7 +2,7 @@ import * as Fuse from "fuse.js";
 import React from "react";
 
 // Crisp abstractions are nice, but using Fuse's types is easier :)
-export interface FuseSearchProps<T> {
+export type FuseSearchProps<T> = {
   query?: string;
   items: T[];
   options: Fuse.IFuseOptions<T>;
@@ -12,12 +12,12 @@ export interface FuseSearchProps<T> {
   onResultsUpdate: (newResults: T[]) => void;
 }
 
-export interface FuseSearchState<T> {
+export type FuseSearchState<T> = {
   fuse: Fuse.default<T>;
   matchedItems: FuseSearchResult<T>[];
 }
 
-export interface FuseSearchResult<T> {
+export type FuseSearchResult<T> = {
   item: T;
   matchedStrings: string[];
 }
@@ -93,17 +93,12 @@ export class FuseSearch<T> extends React.PureComponent<FuseSearchProps<T>, FuseS
       return fuseResults.map((result) => {
         const { item, matches } = result;
         const matchedStrings = (matches ?? [])
-          .map((match) => {
+          .flatMap((match) => {
             const { indices, value } = match;
             return indices.map((index) => {
-              if (value !== undefined) {
-                return value.substring(index[0], index[1] + 1);
-              } else {
-                return "";
-              }
+              return value === undefined ? "" : value.substring(index[0], index[1] + 1);
             });
           })
-          .flat()
           // Filter out short matches (less than 4 chars) to avoid highlighting scattered letters
           .filter((str) => str.length >= 4)
           // Remove duplicates

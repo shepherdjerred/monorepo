@@ -163,7 +163,12 @@
           "description": "Jarvan IV extends his lance, dealing physical damage and lowering the Armor of enemies in its path. Additionally, this will pull Jarvan to his Demacian Standard, knocking up enemies in his path.",
           "tooltip": "Jarvan extends his lance, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and removing <scaleArmor>{{ e2 }}% Armor</scaleArmor> for {{ e3 }} seconds.<br /><br />If the lance connects with <spellName>Demacian Standard</spellName>, Jarvan will pull himself to it, <status>Knocking Up</status> those in his path for 0.75 seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Armor Reduction", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Armor Reduction",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ e2 }}% -> {{ e2NL }}%",
@@ -190,7 +195,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "80/120/160/200/240", "10/14/18/22/26", "3", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "80/120/160/200/240",
+            "10/14/18/22/26",
+            "3",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -270,7 +287,12 @@
           "description": "Jarvan IV carries the pride of Demacia, passively granting him bonus Attack Speed. Activating Demacian Standard allows Jarvan IV to place a Demacian flag that deals magic damage on impact and grants Attack Speed to nearby allied champions.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Jarvan gains <attackSpeed>{{ permanentattackspeed*100 }}% Attack Speed</attackSpeed>.<br /><br /><spellActive>Active:</spellActive> Jarvan throws a standard into the ground, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and granting allies near the standard <attackSpeed>{{ e3 }}% Attack Speed</attackSpeed> for {{ e4 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Passive Attack Speed", "Active Attack Speed", "Cooldown"],
+            "label": [
+              "Damage",
+              "Passive Attack Speed",
+              "Active Attack Speed",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e2 }} -> {{ e2NL }}",
               "{{ permanentattackspeed*100.000000 }}% -> {{ permanentattackspeednl*100.000000 }}%",
@@ -333,7 +355,10 @@
           "tooltip": "Jarvan heroically leaps to an enemy Champion, dealing <physicalDamage>{{ damagecalc }} physical damage</physicalDamage> to them and surrounding enemies and creating an arena of impassable terrain around them for {{ wallduration }} seconds.<br /><br />Jarvan can <recast>Recast</recast> to collapse the terrain.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [120, 105, 90],
@@ -354,7 +379,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

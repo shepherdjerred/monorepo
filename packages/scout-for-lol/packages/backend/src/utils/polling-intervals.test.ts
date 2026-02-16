@@ -23,57 +23,79 @@ describe("calculatePollingInterval", () => {
 
   test("returns MAX interval for undefined lastMatchTime", () => {
     // Use max interval to avoid excessive polling for players with unknown activity
-    expect(calculatePollingInterval(undefined, now)).toBe(POLLING_INTERVALS.MAX);
+    expect(calculatePollingInterval(undefined, now)).toBe(
+      POLLING_INTERVALS.MAX,
+    );
   });
 
   test("returns MIN interval for recent match (within 1 hour)", () => {
     const lastMatch = new Date("2024-01-15T11:30:00Z"); // 30 minutes ago
-    expect(calculatePollingInterval(lastMatch, now)).toBe(POLLING_INTERVALS.MIN);
+    expect(calculatePollingInterval(lastMatch, now)).toBe(
+      POLLING_INTERVALS.MIN,
+    );
   });
 
   test("returns HOUR_3 interval for match 2 hours ago", () => {
     const lastMatch = new Date("2024-01-15T10:00:00Z"); // 2 hours ago
-    expect(calculatePollingInterval(lastMatch, now)).toBe(POLLING_INTERVALS.HOUR_3);
+    expect(calculatePollingInterval(lastMatch, now)).toBe(
+      POLLING_INTERVALS.HOUR_3,
+    );
   });
 
   test("returns HOUR_6 interval for match 4 hours ago", () => {
     const lastMatch = new Date("2024-01-15T08:00:00Z"); // 4 hours ago
-    expect(calculatePollingInterval(lastMatch, now)).toBe(POLLING_INTERVALS.HOUR_6);
+    expect(calculatePollingInterval(lastMatch, now)).toBe(
+      POLLING_INTERVALS.HOUR_6,
+    );
   });
 
   test("returns HOUR_12 interval for match 8 hours ago", () => {
     const lastMatch = new Date("2024-01-15T04:00:00Z"); // 8 hours ago
-    expect(calculatePollingInterval(lastMatch, now)).toBe(POLLING_INTERVALS.HOUR_12);
+    expect(calculatePollingInterval(lastMatch, now)).toBe(
+      POLLING_INTERVALS.HOUR_12,
+    );
   });
 
   test("returns DAY_1 interval for match 16 hours ago", () => {
     const lastMatch = new Date("2024-01-14T20:00:00Z"); // 16 hours ago
-    expect(calculatePollingInterval(lastMatch, now)).toBe(POLLING_INTERVALS.DAY_1);
+    expect(calculatePollingInterval(lastMatch, now)).toBe(
+      POLLING_INTERVALS.DAY_1,
+    );
   });
 
   test("returns DAY_3 interval for match 2 days ago", () => {
     const lastMatch = new Date("2024-01-13T12:00:00Z"); // 2 days ago
-    expect(calculatePollingInterval(lastMatch, now)).toBe(POLLING_INTERVALS.DAY_3);
+    expect(calculatePollingInterval(lastMatch, now)).toBe(
+      POLLING_INTERVALS.DAY_3,
+    );
   });
 
   test("returns DAY_7 interval for match 5 days ago", () => {
     const lastMatch = new Date("2024-01-10T12:00:00Z"); // 5 days ago
-    expect(calculatePollingInterval(lastMatch, now)).toBe(POLLING_INTERVALS.DAY_7);
+    expect(calculatePollingInterval(lastMatch, now)).toBe(
+      POLLING_INTERVALS.DAY_7,
+    );
   });
 
   test("returns DAY_14 interval for match 10 days ago", () => {
     const lastMatch = new Date("2024-01-05T12:00:00Z"); // 10 days ago
-    expect(calculatePollingInterval(lastMatch, now)).toBe(POLLING_INTERVALS.DAY_14);
+    expect(calculatePollingInterval(lastMatch, now)).toBe(
+      POLLING_INTERVALS.DAY_14,
+    );
   });
 
   test("returns DAY_30 interval for match 20 days ago", () => {
     const lastMatch = new Date("2023-12-26T12:00:00Z"); // 20 days ago
-    expect(calculatePollingInterval(lastMatch, now)).toBe(POLLING_INTERVALS.DAY_30);
+    expect(calculatePollingInterval(lastMatch, now)).toBe(
+      POLLING_INTERVALS.DAY_30,
+    );
   });
 
   test("returns MAX interval for match 30+ days ago", () => {
     const lastMatch = new Date("2023-12-01T12:00:00Z"); // 45 days ago
-    expect(calculatePollingInterval(lastMatch, now)).toBe(POLLING_INTERVALS.MAX);
+    expect(calculatePollingInterval(lastMatch, now)).toBe(
+      POLLING_INTERVALS.MAX,
+    );
   });
 });
 
@@ -106,7 +128,13 @@ describe("shouldCheckPlayer", () => {
   describe("never checked before", () => {
     test("should always check if never checked before", () => {
       expect(shouldCheckPlayer(undefined, undefined, baseTime)).toBe(true);
-      expect(shouldCheckPlayer(new Date("2024-01-14T12:00:00Z"), undefined, baseTime)).toBe(true);
+      expect(
+        shouldCheckPlayer(
+          new Date("2024-01-14T12:00:00Z"),
+          undefined,
+          baseTime,
+        ),
+      ).toBe(true);
     });
   });
 
@@ -129,7 +157,9 @@ describe("shouldCheckPlayer", () => {
 
       // Checked 10 minutes ago - SHOULD check
       const checkedAWhileAgo = new Date("2024-01-15T11:50:00Z");
-      expect(shouldCheckPlayer(lastMatch, checkedAWhileAgo, baseTime)).toBe(true);
+      expect(shouldCheckPlayer(lastMatch, checkedAWhileAgo, baseTime)).toBe(
+        true,
+      );
 
       // Checked 15 minutes ago - SHOULD check
       const checkedLongAgo = new Date("2024-01-15T11:45:00Z");

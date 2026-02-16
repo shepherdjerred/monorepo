@@ -1,8 +1,20 @@
 import { describe, it, expect } from "bun:test";
-import type { RawChallenges, RawParticipant, Player, RawMatch } from "@scout-for-lol/data";
-import { ArenaMatchSchema, ArenaTeamSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
+import type {
+  RawChallenges,
+  RawParticipant,
+  Player,
+  RawMatch,
+} from "@scout-for-lol/data";
+import {
+  ArenaMatchSchema,
+  ArenaTeamSchema,
+  LeaguePuuidSchema,
+} from "@scout-for-lol/data";
 import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.ts";
-import { toArenaMatch, toArenaSubteams } from "@scout-for-lol/backend/league/model/match.ts";
+import {
+  toArenaMatch,
+  toArenaSubteams,
+} from "@scout-for-lol/backend/league/model/match.ts";
 
 function makeParticipant(
   overrides: Partial<RawParticipant> & {
@@ -136,7 +148,9 @@ describe("arena match integration", () => {
   it("builds valid arena subteams and players from RawMatch", async () => {
     const dto = makeArenaMatchDto();
     const subteams = await toArenaSubteams(dto.info.participants);
-    const players = await Promise.all(dto.info.participants.map(participantToArenaChampion));
+    const players = await Promise.all(
+      dto.info.participants.map(participantToArenaChampion),
+    );
 
     // Validate subteams against schema and basic expectations
     subteams.forEach((st) => {

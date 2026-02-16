@@ -153,7 +153,11 @@
           "tooltip": "Vladimir drains his target's lifeforce, dealing <magicDamage>{{ basedamagetooltip }} magic damage</magicDamage> and restoring <healing>{{ basehealtooltip }} Health</healing>. After using this Ability twice, Vladimir gains <speed>{{ movementspeedonq2 }}% Move Speed</speed> for 0.5 seconds and empowers the next use of this Ability for {{ e8 }} seconds.<br /><br />The empowered version of this Ability deals <magicDamage>{{ empowereddamagetooltip }} magic damage</magicDamage> instead and restores an additional <healing>{{ empoweredhealtooltip }} plus {{ empoweredhealpercenttooltip }} missing Health</healing>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Healing", "Cooldown"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ e2 }} -> {{ e2NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ e2 }} -> {{ e2NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [9, 7.9, 6.8, 5.7, 4.6],
@@ -174,7 +178,19 @@
             [35, 35, 35, 35, 35],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "80/100/120/140/160", "20/25/30/35/40", "0", "0", "5", "0.04", "85", "2.5", "35", "0"],
+          "effectBurn": [
+            null,
+            "80/100/120/140/160",
+            "20/25/30/35/40",
+            "0",
+            "0",
+            "5",
+            "0.04",
+            "85",
+            "2.5",
+            "35",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -198,7 +214,10 @@
           "tooltip": "Vladimir sinks into a pool of blood for 2 seconds, gaining <speed>{{ hasteboost*100 }}% decaying Move Speed</speed> for {{ hasteduration }} second and becoming <keyword>Untargetable</keyword> and <keyword>Ghosted</keyword> while <status>Slowing</status> enemies in the pool by {{ movespeedmod*-100 }}%.<br /><br />Vladimir deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> and restores <healing>{{ totalheal }} Health</healing> per enemy over the duration.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [28, 25, 22, 19, 16],
@@ -219,7 +238,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "% of current Health",
           "maxammo": "-1",
@@ -326,7 +357,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "150/250/350", "10", "100", "4", "40", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "150/250/350",
+            "10",
+            "100",
+            "4",
+            "40",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",

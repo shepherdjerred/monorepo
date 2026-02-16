@@ -121,7 +121,12 @@
           "description": "Tosses a bomb to target area that sticks to units that come near it (prioritizes Champions). It detonates after 3 seconds, dealing area of effect damage. If a Time Bomb is detonated early by another Time Bomb, it also stuns enemies.",
           "tooltip": "Zilean tosses a time-delayed bomb that sticks to the first unit which comes within a small area around it. After {{ e2 }} seconds it detonates, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br />Placing a second bomb on a unit that already has one detonates the first bomb immediately and <status>Stuns</status> enemies in the blast for {{ e4 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage", "Stun Duration:"],
+            "label": [
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Damage",
+              "Stun Duration:"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
@@ -148,7 +153,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "75/115/165/230/300", "3", "7", "1.1/1.2/1.3/1.4/1.5", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "75/115/165/230/300",
+            "3",
+            "7",
+            "1.1/1.2/1.3/1.4/1.5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -193,7 +210,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "20/30/40/50/60", "10", "35", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "20/30/40/50/60",
+            "10",
+            "35",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " Mana",
           "maxammo": "-1",
@@ -238,7 +267,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "2.5", "40/55/70/85/99", "1.5", "8", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "2.5",
+            "40/55/70/85/99",
+            "1.5",
+            "8",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -287,7 +328,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

@@ -14,16 +14,20 @@ import {
   LeaguePuuidSchema,
   RawSummonerLeagueSchema,
 } from "@scout-for-lol/data/index";
+import { assignRanks } from "@scout-for-lol/backend/league/competition/leaderboard-ranking.ts";
 import { sortBy } from "remeda";
 import { match } from "ts-pattern";
 import { z } from "zod";
-import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import type { ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
 import { queryMatchesByDateRange } from "@scout-for-lol/backend/storage/s3-query.ts";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
 } from "@scout-for-lol/backend/league/competition/processors/types.ts";
-import { processCriteria, type SnapshotData } from "@scout-for-lol/backend/league/competition/processors/index.ts";
+import {
+  processCriteria,
+  type SnapshotData,
+} from "@scout-for-lol/backend/league/competition/processors/index.ts";
 import { getSnapshot } from "@scout-for-lol/backend/league/competition/snapshots.ts";
 import { api } from "@scout-for-lol/backend/league/api/api.ts";
 import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
@@ -64,14 +68,21 @@ export type RankedLeaderboardEntry = LeaderboardEntry & {
  *   - 'create_snapshot': Just fetches current rank data without validation (used when creating new snapshots)
  */
 export async function fetchSnapshotData(options: {
-  prisma: PrismaClient;
+  prisma: ExtendedPrismaClient;
   competitionId: CompetitionId;
   criteria: CompetitionCriteria;
   participants: PlayerWithAccounts[];
   competitionStatus: ReturnType<typeof getCompetitionStatus>;
   purpose: "calculate_leaderboard" | "create_snapshot";
 }): Promise<SnapshotData | null> {
-  const { prisma, competitionId, criteria, participants, competitionStatus, purpose } = options;
+  const {
+    prisma,
+    competitionId,
+    criteria,
+    participants,
+    competitionStatus,
+    purpose,
+  } = options;
   // Only fetch snapshots for criteria that need them
   const needsSnapshots = match(criteria)
     .with({ type: "HIGHEST_RANK" }, () => true)
@@ -82,7 +93,9 @@ export async function fetchSnapshotData(options: {
     return null;
   }
 
-  logger.info(`[Leaderboard] Fetching snapshot data for ${participants.length.toString()} participants`);
+  logger.info(
+    `[Leaderboard] Fetching snapshot data for ${participants.length.toString()} participants`,
+  );
 
   const startSnapshots: Record<string, Ranks> = {};
   const endSnapshots: Record<string, Ranks> = {};
@@ -94,16 +107,22 @@ export async function fetchSnapshotData(options: {
       const playerId = participant.id;
 
       // Helper function to fetch current ranks from Riot API
-      const fetchCurrentRanks = async (): Promise<Record<LeaguePuuid, Ranks>> => {
+      const fetchCurrentRanks = async (): Promise<
+        Record<LeaguePuuid, Ranks>
+      > => {
         // Try each account until we get rank data
         const allRanks: Record<LeaguePuuid, Ranks> = {};
         for (const account of participant.accounts) {
           try {
             const region = account.region;
-            const response = await withTimeout(api.League.byPUUID(account.puuid, mapRegionToEnum(region)));
+            const response = await withTimeout(
+              api.League.byPUUID(account.puuid, mapRegionToEnum(region)),
+            );
 
             // Validate response with Zod schema to ensure proper types
-            const validatedResponse = z.array(RawSummonerLeagueSchema).parse(response.response);
+            const validatedResponse = z
+              .array(RawSummonerLeagueSchema)
+              .parse(response.response);
 
             const solo = getRank(validatedResponse, "RANKED_SOLO_5x5");
             const flex = getRank(validatedResponse, "RANKED_FLEX_SR");
@@ -128,7 +147,10 @@ export async function fetchSnapshotData(options: {
             // Just fetch current rank from Riot API - this will be saved as the snapshot
             const currentRankData = await fetchCurrentRanks();
             const firstAccountRanks = Object.values(currentRankData)[0];
-            if (firstAccountRanks && (firstAccountRanks.solo ?? firstAccountRanks.flex)) {
+            if (
+              firstAccountRanks &&
+              (firstAccountRanks.solo ?? firstAccountRanks.flex)
+            ) {
               currentRanks[playerId.toString()] = firstAccountRanks;
             }
           })
@@ -195,7 +217,10 @@ export async function fetchSnapshotData(options: {
                 const currentRankData = await fetchCurrentRanks();
                 // Use the first account's ranks (or merge multiple accounts if needed)
                 const firstAccountRanks = Object.values(currentRankData)[0];
-                if (firstAccountRanks && (firstAccountRanks.solo ?? firstAccountRanks.flex)) {
+                if (
+                  firstAccountRanks &&
+                  (firstAccountRanks.solo ?? firstAccountRanks.flex)
+                ) {
                   endSnapshots[playerId.toString()] = firstAccountRanks;
                 }
               })
@@ -211,7 +236,10 @@ export async function fetchSnapshotData(options: {
             // Just fetch current rank from Riot API - this will be saved as the snapshot
             const currentRankData = await fetchCurrentRanks();
             const firstAccountRanks = Object.values(currentRankData)[0];
-            if (firstAccountRanks && (firstAccountRanks.solo ?? firstAccountRanks.flex)) {
+            if (
+              firstAccountRanks &&
+              (firstAccountRanks.solo ?? firstAccountRanks.flex)
+            ) {
               currentRanks[playerId.toString()] = firstAccountRanks;
             }
           })
@@ -251,7 +279,10 @@ export async function fetchSnapshotData(options: {
                 const currentRankData = await fetchCurrentRanks();
                 // Use the first account's ranks (or merge multiple accounts if needed)
                 const firstAccountRanks = Object.values(currentRankData)[0];
-                if (firstAccountRanks && (firstAccountRanks.solo ?? firstAccountRanks.flex)) {
+                if (
+                  firstAccountRanks &&
+                  (firstAccountRanks.solo ?? firstAccountRanks.flex)
+                ) {
                   currentRanks[playerId.toString()] = firstAccountRanks;
                 }
               })
@@ -271,79 +302,6 @@ export async function fetchSnapshotData(options: {
     endSnapshots,
     currentRanks,
   };
-}
-
-// ============================================================================
-// Ranking Logic
-// ============================================================================
-
-/**
- * Check if two scores are equal
- */
-function scoresAreEqual(a: number | Rank, b: number | Rank): boolean {
-  const aNumResult = z.number().safeParse(a);
-  const bNumResult = z.number().safeParse(b);
-
-  // Both are numbers
-  if (aNumResult.success && bNumResult.success) {
-    return aNumResult.data === bNumResult.data;
-  }
-
-  const aRankResult = RankSchema.safeParse(a);
-  const bRankResult = RankSchema.safeParse(b);
-
-  // Both are Rank objects
-  if (aRankResult.success && bRankResult.success) {
-    const aLP = rankToLeaguePoints(aRankResult.data);
-    const bLP = rankToLeaguePoints(bRankResult.data);
-    return aLP === bLP;
-  }
-
-  // Mixed types or invalid - not equal
-  return false;
-}
-
-/**
- * Assign ranks to sorted leaderboard entries
- * Handles ties by giving the same rank and skipping subsequent ranks
- *
- * Example: [100, 80, 80, 60] → ranks [1, 2, 2, 4]
- */
-function assignRanks(entries: LeaderboardEntry[]): RankedLeaderboardEntry[] {
-  if (entries.length === 0) {
-    return [];
-  }
-
-  const ranked: RankedLeaderboardEntry[] = [];
-  let currentRank = 1;
-
-  for (let i = 0; i < entries.length; i++) {
-    const entry = entries[i];
-    if (!entry) {
-      continue;
-    } // Skip if undefined
-
-    // Check for ties with previous entry
-    if (i > 0) {
-      const previousEntry = entries[i - 1];
-      if (previousEntry && !scoresAreEqual(entry.score, previousEntry.score)) {
-        // Not a tie - update rank to current position
-        currentRank = i + 1;
-      }
-      // If it's a tie, keep the same rank
-    }
-
-    ranked.push({
-      playerId: entry.playerId,
-      playerName: entry.playerName,
-      score: entry.score,
-      ...(entry.metadata !== undefined && { metadata: entry.metadata }),
-      ...(entry.discordId !== undefined && { discordId: entry.discordId }),
-      rank: currentRank,
-    });
-  }
-
-  return ranked;
 }
 
 // ============================================================================
@@ -368,12 +326,14 @@ function assignRanks(entries: LeaderboardEntry[]): RankedLeaderboardEntry[] {
  * @throws Error if competition is in DRAFT status
  */
 export async function calculateLeaderboard(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   competition: CompetitionWithCriteria,
 ): Promise<RankedLeaderboardEntry[]> {
   const status = getCompetitionStatus(competition);
 
-  logger.info(`[Leaderboard] Calculating leaderboard for competition ${competition.id.toString()} (${status})`);
+  logger.info(
+    `[Leaderboard] Calculating leaderboard for competition ${competition.id.toString()} (${status})`,
+  );
 
   // DRAFT competitions don't have a leaderboard yet
   if (status === "DRAFT") {
@@ -431,7 +391,9 @@ export async function calculateLeaderboard(
   let matches: RawMatch[] = [];
 
   if (needsMatchData) {
-    logger.info(`[Leaderboard] Querying matches for ${puuids.length.toString()} accounts`);
+    logger.info(
+      `[Leaderboard] Querying matches for ${puuids.length.toString()} accounts`,
+    );
 
     // Determine date range
     // For active competitions, use current time as end date
@@ -440,9 +402,13 @@ export async function calculateLeaderboard(
 
     // Query matches from S3
     // If no start date (shouldn't happen for non-DRAFT), use empty results
-    matches = startDate ? await queryMatchesByDateRange(startDate, endDate, puuids) : [];
+    matches = startDate
+      ? await queryMatchesByDateRange(startDate, endDate, puuids)
+      : [];
 
-    logger.info(`[Leaderboard] Found ${matches.length.toString()} matches in date range`);
+    logger.info(
+      `[Leaderboard] Found ${matches.length.toString()} matches in date range`,
+    );
   } else {
     logger.info(
       `[Leaderboard] Criteria type ${competition.criteria.type} does not need match data - skipping S3 query`,
@@ -460,9 +426,16 @@ export async function calculateLeaderboard(
   });
 
   // Process matches with criteria processor
-  const entries = processCriteria(competition.criteria, matches, players, snapshotData ?? undefined);
+  const entries = processCriteria(
+    competition.criteria,
+    matches,
+    players,
+    snapshotData ?? undefined,
+  );
 
-  logger.info(`[Leaderboard] Processed ${entries.length.toString()} leaderboard entries`);
+  logger.info(
+    `[Leaderboard] Processed ${entries.length.toString()} leaderboard entries`,
+  );
 
   // Sort entries by score
   const sorted = sortBy(entries, [
@@ -487,7 +460,9 @@ export async function calculateLeaderboard(
   // Assign ranks with tie handling
   const ranked = assignRanks(sorted);
 
-  logger.info(`[Leaderboard] ✅ Leaderboard calculated with ${ranked.length.toString()} entries`);
+  logger.info(
+    `[Leaderboard] ✅ Leaderboard calculated with ${ranked.length.toString()} entries`,
+  );
 
   return ranked;
 }

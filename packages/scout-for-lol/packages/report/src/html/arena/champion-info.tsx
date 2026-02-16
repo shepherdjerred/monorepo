@@ -26,7 +26,15 @@ export function ChampionInfo({
   const actualItems = renderItems(items, 0, true);
 
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, marginBottom: 8 }}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: 16,
+        marginBottom: 8,
+      }}
+    >
       <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
         <img
           src={getChampionImage(championName)}
@@ -49,8 +57,12 @@ export function ChampionInfo({
             flexDirection: "column",
           }}
         >
-          <span style={{ color: highlight ? "#fbbf24" : "" }}>{playerName}</span>
-          <span style={{ color: highlight ? "#fbbf24" : "" }}>{championName}</span>
+          <span style={{ color: highlight ? "#fbbf24" : "" }}>
+            {playerName}
+          </span>
+          <span style={{ color: highlight ? "#fbbf24" : "" }}>
+            {championName}
+          </span>
         </div>
       </div>
       <div

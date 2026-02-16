@@ -9,7 +9,9 @@ if (typeof Bun !== "undefined") {
     Object.fromEntries(
       await Promise.all(
         LaneSchema.options.map(async (lane): Promise<[Lane, string]> => {
-          const image = await Bun.file(new URL(`./assets/${lane}.svg`, import.meta.url)).arrayBuffer();
+          const image = await Bun.file(
+            new URL(`./assets/${lane}.svg`, import.meta.url),
+          ).arrayBuffer();
           const bytes = new Uint8Array(image);
           // Use Buffer to avoid stack overflow with large arrays
           return [lane, Buffer.from(bytes).toString("base64")];
@@ -31,7 +33,11 @@ export function Lane({ lane }: { lane: Lane }) {
   return (
     <span style={{ width: "20rem", display: "flex", justifyContent: "center" }}>
       <div style={{ width: "8rem", height: "8rem", display: "flex" }}>
-        <img src={image} alt="" style={{ width: "100%", height: "100%", display: "block" }} />
+        <img
+          src={image}
+          alt=""
+          style={{ width: "100%", height: "100%", display: "block" }}
+        />
       </div>
     </span>
   );

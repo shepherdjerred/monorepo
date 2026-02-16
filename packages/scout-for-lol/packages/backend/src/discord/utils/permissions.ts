@@ -1,8 +1,11 @@
-import type { Channel, PermissionsBitField, Client, User } from "discord.js";
-import { PermissionFlagsBits } from "discord.js";
+import type { Channel, Client, User } from "discord.js";
+import { ChannelType, PermissionFlagsBits } from "discord.js";
 import { z } from "zod";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
-import { discordPermissionErrorsTotal, discordOwnerNotificationsTotal } from "@scout-for-lol/backend/metrics/index.ts";
+import {
+  discordPermissionErrorsTotal,
+  discordOwnerNotificationsTotal,
+} from "@scout-for-lol/backend/metrics/index.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("permissions");
@@ -30,22 +33,6 @@ export function isPermissionError(error: unknown): boolean {
 }
 
 /**
- * Schema for guild-based channels with permission checking
- * We use z.function() without parameters/returns as older Zod versions don't support it
- */
-const GuildChannelSchema = z.object({
-  permissionsFor: z.function(),
-  guild: z
-    .object({
-      members: z.object({
-        me: z.unknown().nullable(),
-        fetch: z.function(),
-      }),
-    })
-    .nullable(),
-});
-
-/**
  * Check if the bot has permission to send messages in a channel
  *
  * @param channel - The channel to check permissions for
@@ -68,9 +55,14 @@ export async function checkSendMessagePermission(
     };
   }
 
-  // Validate channel has permission checking methods
-  const guildChannelResult = GuildChannelSchema.safeParse(channel);
-  if (!guildChannelResult.success) {
+  // Check if this is a guild-based text channel
+  if (
+    channel.type !== ChannelType.GuildText &&
+    channel.type !== ChannelType.GuildAnnouncement &&
+    channel.type !== ChannelType.GuildVoice &&
+    channel.type !== ChannelType.GuildStageVoice &&
+    channel.type !== ChannelType.GuildForum
+  ) {
     return {
       hasPermission: false,
       reason: "Cannot check permissions for this channel type",
@@ -78,38 +70,30 @@ export async function checkSendMessagePermission(
   }
 
   try {
-    let targetForPermissions = guildChannelResult.data.guild?.members.me;
+    const guild = channel.guild;
+    let botMember = guild.members.me ?? null;
 
-    // If guild.members.me is not available, fetch the bot's guild member
-    if (!targetForPermissions && guildChannelResult.data.guild?.members.fetch && botUser.id) {
+    // If guild.members.me is not available, try to fetch the bot's guild member
+    if (!botMember && botUser.id) {
       try {
-        const fetchFunction = guildChannelResult.data.guild.members.fetch as unknown;
-
-        // eslint-disable-next-line custom-rules/no-type-assertions -- Type assertion is safe here because we checked the type above
-        targetForPermissions = await (fetchFunction as (userId: string) => Promise<unknown>)(botUser.id);
+        botMember = await guild.members.fetch(botUser.id);
       } catch (fetchError) {
-        // If fetch fails, we'll still try with botUser below
-        logger.warn(`[Permissions] Failed to fetch bot member: ${String(fetchError)}`);
+        logger.warn(
+          `[Permissions] Failed to fetch bot member: ${String(fetchError)}`,
+        );
       }
     }
 
-    // If we still don't have a member, fall back to botUser
-    // Note: This may fail with older Discord.js versions or certain configurations
-    targetForPermissions ??= botUser;
+    // Fall back to botUser if member not available
+    const target = botMember ?? botUser;
 
-    // Call permissionsFor - we know it exists from schema validation
-    // Type assertion needed: Zod schema confirms permissionsFor exists, but TypeScript can't track this
-    const permissionsForFunction = guildChannelResult.data.permissionsFor as unknown;
-
-    // eslint-disable-next-line custom-rules/no-type-assertions -- Type assertion is safe here because we checked the type above
-    const permissions = (permissionsForFunction as (target: unknown) => PermissionsBitField | null)(
-      targetForPermissions,
-    );
+    const permissions = channel.permissionsFor(target);
 
     if (!permissions) {
       return {
         hasPermission: false,
-        reason: "Cannot access channel - bot may not be in the server or channel may be deleted",
+        reason:
+          "Cannot access channel - bot may not be in the server or channel may be deleted",
       };
     }
 
@@ -143,7 +127,10 @@ export async function checkSendMessagePermission(
 /**
  * Get a user-friendly error message for permission failures
  */
-export function getPermissionErrorMessage(channelId: string, reason?: string): string {
+export function getPermissionErrorMessage(
+  channelId: string,
+  reason?: string,
+): string {
   const baseMessage = `Unable to send message to channel <#${channelId}>`;
 
   if (reason) {
@@ -156,9 +143,15 @@ export function getPermissionErrorMessage(channelId: string, reason?: string): s
 /**
  * Format error message for logging
  */
-export function formatPermissionErrorForLog(channelId: string, error: unknown, reason?: string): string {
+export function formatPermissionErrorForLog(
+  channelId: string,
+  error: unknown,
+  reason?: string,
+): string {
   const permissionCheck = reason ? ` (${reason})` : "";
-  const errorDetail = isPermissionError(error) ? " [Discord Permission Error]" : ` - ${String(error)}`;
+  const errorDetail = isPermissionError(error)
+    ? " [Discord Permission Error]"
+    : ` - ${String(error)}`;
   return `Failed to send message to channel ${channelId}${permissionCheck}${errorDetail}`;
 }
 
@@ -232,7 +225,9 @@ Need help? Check Discord's permission guide or contact your bot administrator.`;
         status: "dm_disabled",
       });
     } else {
-      logger.warn(`[PermissionNotify] Failed to notify server owner for guild ${serverId}: ${errorMsg}`);
+      logger.warn(
+        `[PermissionNotify] Failed to notify server owner for guild ${serverId}: ${errorMsg}`,
+      );
       discordOwnerNotificationsTotal.inc({
         guild_id: serverId,
         status: "dm_failed",

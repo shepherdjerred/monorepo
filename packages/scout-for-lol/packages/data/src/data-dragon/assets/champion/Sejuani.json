@@ -172,7 +172,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "625", "1000", "0.5", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "625",
+            "1000",
+            "0.5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -221,7 +233,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0.75", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0.75",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -266,7 +290,19 @@
             [250, 250, 250, 250, 250],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "1", "0", "0", "4", "5", "1100", "0", "0", "250", "0"],
+          "effectBurn": [
+            null,
+            "1",
+            "0",
+            "0",
+            "4",
+            "5",
+            "1100",
+            "0",
+            "0",
+            "250",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -290,7 +326,11 @@
           "tooltip": "Sejuani throws her True Ice bola, <status>Stunning</status> and revealing the first enemy champion hit for {{ e2 }} second and dealing <magicDamage>{{ minordamagetooltip }} magic damage</magicDamage>.<br /><br />If the bola travels at least 25% of its range, it <status>Stuns</status> and reveals for {{ e6 }} seconds instead. It then also creates an ice storm that <status>Slows</status> surrounding enemies by {{ e4 }}% for {{ e3 }} seconds. All affected enemies take <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Minimum Damage", "Maximum Damage", "Cooldown"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ e7 }} -> {{ e7NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ e7 }} -> {{ e7NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [120, 105, 90],
@@ -311,7 +351,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "125/150/175", "1", "2", "80", "1", "1.5", "200/300/400", "30", "0", "0"],
+          "effectBurn": [
+            null,
+            "125/150/175",
+            "1",
+            "2",
+            "80",
+            "1",
+            "1.5",
+            "200/300/400",
+            "30",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

@@ -126,7 +126,12 @@
           "description": "From the twin barrels of her Relic Cannon, Senna fires a unified beam of light and shadow through a target, healing allies and damaging enemies.",
           "tooltip": "Senna shoots a bolt of piercing shadow through an ally or enemy, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to enemies and <status>Slowing</status> them by {{ totalslow }} for {{ slowduration }} second(s). Restores <healing>{{ totalheal }} Health</healing> to allied champions. <br /><br />Attacks reduce this Ability's Cooldown by {{ cdreductiononhit }} second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Healing", "Slow Duration", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Healing",
+              "Slow Duration",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ baseheal }} -> {{ basehealNL }}",
@@ -153,7 +158,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -202,7 +219,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -226,7 +255,10 @@
           "tooltip": "Senna dissolves into a cloud of Black Mist for {{ buffduration }} seconds, becoming a Wraith. Allied champions who enter the Mist are <keywordStealth>Camouflaged</keywordStealth> and become Wraiths when they leave. Wraiths gain <speed>{{ totalms }} Move Speed</speed>, are Unselectable, and hide their identities as long as no enemy champions are nearby.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Duration", "Cooldown"],
-            "effect": ["{{ buffduration }} -> {{ buffdurationNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ buffduration }} -> {{ buffdurationNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [26, 24.5, 23, 21.5, 20],
@@ -247,7 +279,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -296,7 +340,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

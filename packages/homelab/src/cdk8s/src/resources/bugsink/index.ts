@@ -1,4 +1,5 @@
-import { Chart, Duration, Size } from "cdk8s";
+import type { Chart} from "cdk8s";
+import { Duration, Size } from "cdk8s";
 import { Cpu, Deployment, DeploymentStrategy, EnvValue, Probe, Secret, Service, Volume } from "cdk8s-plus-31";
 import { IntOrString, KubeCronJob, KubeNetworkPolicy, Quantity } from "../../../generated/imports/k8s.ts";
 import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
@@ -9,8 +10,8 @@ import versions from "../../versions.ts";
 
 export function createBugsinkDeployment(chart: Chart) {
   // Bugsink v2.0.7+ runs as non-root user with UID 14237
-  const UID = 14237;
-  const GID = 14237;
+  const UID = 14_237;
+  const GID = 14_237;
 
   // 1Password secret containing:
   // - secret-key: Django secret key (64+ chars, use: openssl rand -base64 64)
@@ -421,8 +422,8 @@ echo "Database URL built successfully"
 }
 
 export function createBugsinkHousekeepingCronJob(chart: Chart, bugsinkSecrets: OnePasswordItem) {
-  const UID = 14237;
-  const GID = 14237;
+  const UID = 14_237;
+  const GID = 14_237;
 
   // PostgreSQL credentials
   const postgresSecretName = "bugsink.bugsink-postgresql.credentials.postgresql.acid.zalan.do";

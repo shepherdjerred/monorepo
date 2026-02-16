@@ -57,10 +57,10 @@ export type PostalClientConfig = {
 };
 
 export class PostalClient {
-  private baseUrl: string;
-  private apiKey: string;
-  private defaultFrom: string;
-  private hostHeader?: string;
+  private readonly baseUrl: string;
+  private readonly apiKey: string;
+  private readonly defaultFrom: string;
+  private readonly hostHeader?: string;
 
   constructor(config: PostalClientConfig) {
     // Handle both full URLs (http://...) and bare hostnames
@@ -83,9 +83,9 @@ export class PostalClient {
     const singleRecipientParsed = z.string().safeParse(params.to);
     const recipients = recipientsParsed.success
       ? recipientsParsed.data
-      : singleRecipientParsed.success
+      : (singleRecipientParsed.success
         ? [singleRecipientParsed.data]
-        : [];
+        : []);
 
     const payload: PostalSendMessage = {
       to: recipients,

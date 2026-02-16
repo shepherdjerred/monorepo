@@ -18,6 +18,8 @@ export const preferZodValidation = createRule({
         "Repeated type checking on nested properties should use Zod validation instead. Validate the entire structure once with a Zod schema.",
       complexTypeChecking:
         "Complex type checking chain detected ({{count}} checks). Use Zod validation to validate the entire structure once with a schema.",
+      objectTypeCheck:
+        "Object shape checking with typeof/in operator chains should use Zod validation instead. Define a schema and use schema.safeParse(value) for runtime-validated types.",
     },
     schema: [],
   },
@@ -152,6 +154,63 @@ export const preferZodValidation = createRule({
         const parent = node.parent;
         if (parent.type === AST_NODE_TYPES.LogicalExpression) {
           return; // Let the parent handle it
+        }
+
+        // Collect all leaf terms of the && chain
+        const terms: TSESTree.Node[] = [];
+        function collectTerms(n: TSESTree.Node): void {
+          if (n.type === AST_NODE_TYPES.LogicalExpression && n.operator === "&&") {
+            collectTerms(n.left);
+            collectTerms(n.right);
+          } else {
+            terms.push(n);
+          }
+        }
+        if (node.operator === "&&") {
+          collectTerms(node);
+        }
+
+        // Detect object shape checking: typeof X === "object" && "field" in X
+        // Both checks must reference the same variable
+        function getIdentifierName(n: TSESTree.Node): string | null {
+          if (n.type === AST_NODE_TYPES.Identifier) return n.name;
+          return null;
+        }
+
+        const typeofObjectVars = new Set<string>();
+        const inCheckVars = new Set<string>();
+        for (const term of terms) {
+          if (
+            term.type === AST_NODE_TYPES.BinaryExpression &&
+            (term.operator === "===" || term.operator === "!==") &&
+            term.left.type === AST_NODE_TYPES.UnaryExpression &&
+            term.left.operator === "typeof" &&
+            term.right.type === AST_NODE_TYPES.Literal &&
+            term.right.value === "object"
+          ) {
+            const name = getIdentifierName(term.left.argument);
+            if (name) typeofObjectVars.add(name);
+          }
+          if (term.type === AST_NODE_TYPES.BinaryExpression && term.operator === "in") {
+            const name = getIdentifierName(term.right);
+            if (name) inCheckVars.add(name);
+          }
+        }
+
+        let hasObjectShapeCheck = false;
+        for (const v of typeofObjectVars) {
+          if (inCheckVars.has(v)) {
+            hasObjectShapeCheck = true;
+            break;
+          }
+        }
+
+        if (hasObjectShapeCheck) {
+          context.report({
+            node,
+            messageId: "objectTypeCheck",
+          });
+          return;
         }
 
         const typeCheckCount = countTypeChecks(node);

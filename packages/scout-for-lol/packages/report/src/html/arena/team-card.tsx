@@ -3,8 +3,16 @@ import { TeamHeader } from "@scout-for-lol/report/html/arena/team-header.tsx";
 import { PlayerCard } from "@scout-for-lol/report/html/arena/player-card.tsx";
 import { getTeamStyling } from "@scout-for-lol/report/html/arena/utils.ts";
 
-export function TeamCard({ team, highlightNames }: { team: ArenaTeam; highlightNames: string[] }) {
-  const hasTrackedPlayer = team.players.some((p) => highlightNames.includes(p.riotIdGameName));
+export function TeamCard({
+  team,
+  highlightNames,
+}: {
+  team: ArenaTeam;
+  highlightNames: string[];
+}) {
+  const hasTrackedPlayer = team.players.some((p) =>
+    highlightNames.includes(p.riotIdGameName),
+  );
   const teamStyle = getTeamStyling(team.placement, hasTrackedPlayer);
 
   const maxTeamDamage = Math.max(...team.players.map((p) => p.damage), 0);

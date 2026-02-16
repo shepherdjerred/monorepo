@@ -127,7 +127,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -150,7 +162,12 @@
           "description": "Zeri fires an electric pulse that slows and damages the first enemy hit. If the pulse hits a wall it expands into a long range laser.",
           "tooltip": "Zeri fires an electric pulse that deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Slows</status> the first enemy hit by {{ slowpercent*100 }}% for {{ slowduration }} seconds.<br /><br />If the pulse hits terrain, it expands into a laser that applies the effects in an area and Critically Strikes champions and monsters for <physicalDamage>{{ walldamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow", "@AbilityResourceName@ Cost", "Cooldown"],
+            "label": [
+              "Damage",
+              "Slow",
+              "@AbilityResourceName@ Cost",
+              "Cooldown"
+            ],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ slowpercent*100.000000 }}% -> {{ slowpercentnl*100.000000 }}%",
@@ -177,7 +194,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -200,7 +229,12 @@
           "description": "Zeri dashes a short distance and energizes her next 3 shots of Burst Fire, causing them to pierce through enemies. She will vault and grind over any terrain she touches.",
           "tooltip": "Zeri dashes a short distance and vaults over any terrain she touches, greatly extending the dash range. For the next {{ buffduration }} seconds, her shots of <spellName>Burst Fire</spellName> pierce dealing {{ pendamagepercent*100 }}% damage to enemies after the first and an additional <magicDamage>{{ bonusdamagetotal }} magic damage</magicDamage> On-Hit to the first target struck. <br /><br />Hitting an enemy champion with an Attack or Ability reduces this Ability's cooldown by {{ cdreductionperhit }} seconds. Critical strikes reduce the cooldown by {{ critcdreductionperhit }} seconds instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Percentage Damage", "Base Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Percentage Damage",
+              "Base Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ pendamagepercent*100.000000 }}% -> {{ pendamagepercentnl*100.000000 }}%",
               "{{ bonusdamagebase }} -> {{ bonusdamagebaseNL }}",
@@ -227,7 +261,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -251,7 +297,10 @@
           "tooltip": "Zeri discharges a nova of electricity, dealing <magicDamage>{{ totalactivedamage }} magic damage</magicDamage> to nearby enemies. If she hits an enemy champion, Zeri gains <attackSpeed>{{ baseaspercent*100 }}% Attack Speed</attackSpeed> and <speed>{{ basebonusms*100 }}% Move Speed</speed> for {{ rduration }} seconds. Hitting an enemy champion with an Attack or Ability extends this ability's duration and adds a stack of Overcharge for {{ maxhyperchargeduration }} seconds. Critical strikes add 2 additional stacks. Each stack grants <speed>{{ mspercent*100 }}% Move Speed</speed>.<br /><br />During this time, <spellName>Burst Fire</spellName> becomes a faster triple shot that chains <physicalDamage>{{ chainphysicaldamage }} physical damage</physicalDamage> to nearby enemies.<br /><br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ activedamage }} -> {{ activedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ activedamage }} -> {{ activedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [80, 75, 70],
@@ -272,7 +321,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

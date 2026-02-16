@@ -72,7 +72,13 @@
           "description": "Zaahen slashes twice on his next attack, dealing bonus damage and healing himself. Zaahen can recast this ability to have his next attack deal bonus damage and knock up his target.<br>",
           "tooltip": "Zaahen slashes twice on his next Attack, dealing <physicalDamage>{{ initialdamage }} bonus physical damage</physicalDamage> and restoring <healing>{{ healpercent*100 }}% of his max Health</healing>.<br /><br /><recast>Recast:</recast> Zaahen's next Attack deals <physicalDamage>{{ secondhitdamage }} bonus physical damage</physicalDamage> and <status>Knocks</status> the target Up for {{ knockupduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Recast Damage", "Cooldown", "Percent Healed", "Bonus AD Ratio"],
+            "label": [
+              "Damage",
+              "Recast Damage",
+              "Cooldown",
+              "Percent Healed",
+              "Bonus AD Ratio"
+            ],
             "effect": [
               "{{ q1basedamage }} -> {{ q1basedamageNL }}",
               "{{ q2basedamage }} -> {{ q2basedamageNL }}",
@@ -100,7 +106,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -124,7 +142,10 @@
           "tooltip": "Zaahen stabs in a direction, dealing <physicalDamage>{{ initialdamage }} physical damage</physicalDamage> to enemies hit, then <status>Pulls</status> them toward him, dealing <physicalDamage>{{ secondarydamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ initialbasedamage }} -> {{ initialbasedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ initialbasedamage }} -> {{ initialbasedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [16, 15, 14, 13, 12],
@@ -145,7 +166,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -168,7 +201,12 @@
           "description": "Zaahen dashes to a location and slices around himself.",
           "tooltip": "Zaahen dashes then slices around himself, dealing <physicalDamage>{{ basedamagecalc }} physical damage</physicalDamage> to nearby enemies.<br /><br />Enemies at the edge of the slice take <physicalDamage>{{ bonusdamagecalc }} physical damage</physicalDamage> <magicDamage>+{{ percenthpdamage*100 }}% of their maximum Health as magic damage</magicDamage> instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Base Damage", "Edge Damage", "Cooldown", "% Health damage"],
+            "label": [
+              "Base Damage",
+              "Edge Damage",
+              "Cooldown",
+              "% Health damage"
+            ],
             "effect": [
               "{{ damage_base }} -> {{ damage_baseNL }}",
               "{{ damagebonusbase }} -> {{ damagebonusbaseNL }}",
@@ -195,7 +233,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -244,7 +294,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

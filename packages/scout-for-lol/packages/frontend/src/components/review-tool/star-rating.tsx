@@ -15,7 +15,12 @@ const SIZES = {
   large: 32,
 };
 
-const RatingValueSchema = z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]);
+const RatingValueSchema = z.union([
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+]);
 
 export function StarRating({
   rating,
@@ -120,7 +125,8 @@ export function StarRating({
         <span
           style={{
             marginLeft: "8px",
-            fontSize: size === "small" ? "12px" : size === "medium" ? "14px" : "16px",
+            fontSize:
+              size === "small" ? "12px" : size === "medium" ? "14px" : "16px",
             color: "#6b7280",
             fontWeight: 500,
           }}

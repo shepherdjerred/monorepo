@@ -88,8 +88,38 @@ export const noReExports = createRule({
           return;
         }
 
-        // If there's a declaration (export function foo() {}, export class Bar {}, etc.), it's fine
+        // Check exported variable declarations that re-export imported values
+        // e.g. export const reexported = myFunction;
         if (node.declaration) {
+          if (node.declaration.type === AST_NODE_TYPES.VariableDeclaration) {
+            for (const declarator of node.declaration.declarations) {
+              if (
+                declarator.init &&
+                declarator.init.type === AST_NODE_TYPES.Identifier &&
+                importedIdentifiers.has(declarator.init.name)
+              ) {
+                context.report({
+                  node: declarator,
+                  messageId: "noReExportImported",
+                });
+              }
+            }
+          }
+          // Check exported type aliases that directly alias an imported type
+          // e.g. export type MyType = ImportedType;
+          if (node.declaration.type === AST_NODE_TYPES.TSTypeAliasDeclaration) {
+            const typeAnnotation = node.declaration.typeAnnotation;
+            if (
+              typeAnnotation.type === AST_NODE_TYPES.TSTypeReference &&
+              typeAnnotation.typeName.type === AST_NODE_TYPES.Identifier &&
+              importedIdentifiers.has(typeAnnotation.typeName.name)
+            ) {
+              context.report({
+                node: node.declaration,
+                messageId: "noReExportImported",
+              });
+            }
+          }
           return;
         }
 

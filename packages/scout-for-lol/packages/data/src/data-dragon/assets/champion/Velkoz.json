@@ -110,7 +110,11 @@
           "description": "Vel'Koz shoots a bolt of plasma that splits in two on reactivation or upon hitting an enemy. The bolt slows and damages on hit.",
           "tooltip": "Vel'Koz shoots a plasma bolt that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slows</status> by {{ slowamount*100 }}% decaying over {{ slowduration }} second(s). At the end of its range, on hitting a target, or on <recast>Recasting</recast>, the bolt splits and fires two new bolts at a 90 degree angle.<br /><br />Killing a unit with this restores <scaleMana>{{ tooltipmanarefund }} Mana</scaleMana>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Total Damage", "Slow Duration", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Total Damage",
+              "Slow Duration",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowduration }} -> {{ slowdurationNL }}",
@@ -136,7 +140,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -159,7 +175,12 @@
           "description": "Vel'Koz opens a rift to the void that deals an initial burst of damage, then explodes for a second burst of damage after a delay.",
           "tooltip": "Vel'Koz opens a rift to the void, dealing <magicDamage>{{ initialdamage }} magic damage</magicDamage>. The rift then erupts, dealing <magicDamage>{{ secondarydamage }} magic damage</magicDamage>.<br /><br />This Ability has 2 charges ({{ ammorechargetime }} second refresh).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Initial Damage", "Secondary Damage", "Recharge Time", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Initial Damage",
+              "Secondary Damage",
+              "Recharge Time",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ baseinitialdamage }} -> {{ baseinitialdamageNL }}",
               "{{ basesecondarydamage }} -> {{ basesecondarydamageNL }}",
@@ -247,7 +268,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -271,7 +304,10 @@
           "tooltip": "Vel'Koz channels a ray of energy that follows the cursor, dealing a total of <magicDamage>{{ totaldamage }} magic damage</magicDamage> over 2.5 seconds and <status>Slowing</status> by {{ e3 }}%. Deals <trueDamage>true damage</trueDamage> instead to enemies recently damaged by <spellName>Organic Deconstruction</spellName>.<br /><br />Enemies gain stacks of <keywordMajor>Deconstruction</keywordMajor> periodically while in the beam.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Total Damage", "Cooldown"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [100, 90, 80],
@@ -292,7 +328,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "450/700/925", "7", "20", "40", "175", "7", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "450/700/925",
+            "7",
+            "20",
+            "40",
+            "175",
+            "7",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

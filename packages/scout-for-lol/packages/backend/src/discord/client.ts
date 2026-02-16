@@ -71,8 +71,12 @@ try {
 
 client.on("ready", (readyClient) => {
   logger.info(`✅ Discord bot ready! Logged in as ${readyClient.user.tag}`);
-  logger.info(`🏢 Bot is in ${readyClient.guilds.cache.size.toString()} guilds`);
-  logger.info(`👥 Bot can see ${readyClient.users.cache.size.toString()} users`);
+  logger.info(
+    `🏢 Bot is in ${readyClient.guilds.cache.size.toString()} guilds`,
+  );
+  logger.info(
+    `👥 Bot can see ${readyClient.users.cache.size.toString()} users`,
+  );
 
   // Update connection status metric
   discordConnectionStatus.set(1);

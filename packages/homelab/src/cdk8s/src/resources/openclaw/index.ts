@@ -1,4 +1,5 @@
-import { Chart, Size } from "cdk8s";
+import type { Chart} from "cdk8s";
+import { Size } from "cdk8s";
 import { ConfigMap, Cpu, Deployment, DeploymentStrategy, EnvValue, Secret, Service, Volume } from "cdk8s-plus-31";
 import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
 import { KubeNetworkPolicy } from "../../../generated/imports/k8s.ts";
@@ -20,7 +21,7 @@ const OPENCLAW_CONFIG = {
     },
   },
   gateway: {
-    port: 18789,
+    port: 18_789,
     mode: "local",
     trustedProxies: ["10.244.0.0/16"], // Trust pod network for Tailscale ingress
     auth: {
@@ -83,7 +84,7 @@ const OPENCLAW_CONFIG = {
       },
       fetch: {
         enabled: true,
-        maxChars: 50000,
+        maxChars: 50_000,
         timeoutSeconds: 30,
       },
     },
@@ -286,7 +287,7 @@ export function createOpenclawDeployment(chart: Chart) {
       name: "openclaw",
       image: `ghcr.io/shepherdjerred/openclaw:${versions["shepherdjerred/openclaw"]}`,
       args: ["gateway", "--bind", "lan"],
-      ports: [{ number: 18789, name: "http" }],
+      ports: [{ number: 18_789, name: "http" }],
       securityContext: {
         user: UID,
         group: GID,
@@ -355,7 +356,7 @@ export function createOpenclawDeployment(chart: Chart) {
   // Service
   const service = new Service(chart, "openclaw-svc", {
     metadata: { name: "openclaw" },
-    ports: [{ port: 18789, name: "http" }],
+    ports: [{ port: 18_789, name: "http" }],
     selector: deployment,
   });
 

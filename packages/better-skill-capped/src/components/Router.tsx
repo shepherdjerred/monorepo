@@ -3,14 +3,14 @@ import React from "react";
 import { Footer } from "./Footer";
 import "./Wrapper.css";
 import { Color, Hero, Size } from "./Hero";
-import { Bookmark, Bookmarkable } from "../model/Bookmark";
-import { Watchable, WatchStatus } from "../model/WatchStatus";
+import type { Bookmark, Bookmarkable } from "@shepherdjerred/better-skill-capped/model/Bookmark";
+import type { Watchable, WatchStatus } from "@shepherdjerred/better-skill-capped/model/WatchStatus";
 import * as Sentry from "@sentry/react";
-import { Content } from "../model/Content";
+import type { Content } from "@shepherdjerred/better-skill-capped/model/Content";
 import { OmniSearch } from "./omnisearch/OmniSearch";
-import OmniSearchable from "./omnisearch/OmniSearchable";
+import type OmniSearchable from "./omnisearch/OmniSearchable";
 
-export interface RouterProps {
+export type RouterProps = {
   content?: Content;
   bookmarks: Bookmark[];
   onToggleBookmark: (item: Bookmarkable) => void;

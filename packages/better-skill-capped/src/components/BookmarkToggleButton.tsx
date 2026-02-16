@@ -1,10 +1,10 @@
-import { Bookmarkable } from "../model/Bookmark";
+import type { Bookmarkable } from "@shepherdjerred/better-skill-capped/model/Bookmark";
 import React from "react";
 import { ToggleButton } from "./ToggleButton";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBookmark } from "@fortawesome/free-solid-svg-icons";
 
-export interface BookmarkButtonProps {
+export type BookmarkButtonProps = {
   item: Bookmarkable;
   isBookmarked: boolean;
   onToggleBookmark: (item: Bookmarkable) => void;

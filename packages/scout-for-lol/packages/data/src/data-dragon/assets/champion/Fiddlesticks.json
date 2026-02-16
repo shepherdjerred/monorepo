@@ -164,7 +164,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -187,7 +199,12 @@
           "description": "Fiddlesticks drains health from nearby enemies, dealing bonus execute damage at the end of the duration.",
           "tooltip": "Fiddlesticks channels and drains the souls of nearby enemies, dealing <magicDamage>{{ draindamagecalc }} magic damage</magicDamage> per second for 2 seconds, plus <magicDamage>{{ percentfortooltip }}% missing Health magic damage</magicDamage> at the end. Fiddlesticks restores <healing>{{ vamppercentage }}% of damage as Health</healing>.<br /><br />If Fiddlesticks ends the channel without interruption, the remaining Cooldown is reduced by 60%.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage Per Second", "Missing Health Damage", "Percent Healed", "Cooldown"],
+            "label": [
+              "Damage Per Second",
+              "Missing Health Damage",
+              "Percent Healed",
+              "Cooldown"
+            ],
             "effect": [
               "{{ damagepersecond }} -> {{ damagepersecondNL }}",
               "{{ percentfortooltip }}% -> {{ percentfortooltipNL }}%",
@@ -214,7 +231,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -237,7 +266,12 @@
           "description": "Fiddlesticks slashes an area with its scythe, slowing all enemies hit and silencing enemies hit in the center of the slash.",
           "tooltip": "Fiddlesticks unleashes dark magic, dealing <magicDamage>{{ damage }} magic damage</magicDamage> and <status>Slowing</status> by {{ slowamount*-100 }}% for {{ silenceduration }} seconds. Enemies in the center are also <status>Silenced</status> for the duration.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Slow",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowamount*-100.000000 }}% -> {{ slowamountnl*-100.000000 }}%",
@@ -264,7 +298,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -288,7 +334,10 @@
           "tooltip": "Fiddlesticks channels for {{ channeltime }} seconds, then teleports and unleashes a murder of crows, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> over {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage Per Second", "Cooldown"],
-            "effect": ["{{ damagepersecond }} -> {{ damagepersecondNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ damagepersecond }} -> {{ damagepersecondNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [140, 110, 80],
@@ -309,7 +358,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "125/225/325", "5", "1.5", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "125/225/325",
+            "5",
+            "1.5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

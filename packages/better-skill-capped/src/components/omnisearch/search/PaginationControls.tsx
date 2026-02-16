@@ -1,13 +1,13 @@
 import React from "react";
 import classNames from "classnames/bind";
 
-export interface PaginationControlsProps {
+export type PaginationControlsProps = {
   currentPage: number;
   lastPage: number;
   onPageChange: (newPage: number) => void;
 }
 
-interface NumberedPageControlProps {
+type NumberedPageControlProps = {
   page: number;
   isCurrent?: boolean;
   onClick?: () => void;

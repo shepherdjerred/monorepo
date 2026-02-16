@@ -74,7 +74,11 @@ async function main(): Promise<void> {
   }
 
   // Read JSON output
-  const jsonPath = path.join(WORKSPACE_ROOT, "jscpd-report", "jscpd-report.json");
+  const jsonPath = path.join(
+    WORKSPACE_ROOT,
+    "jscpd-report",
+    "jscpd-report.json",
+  );
   const jsonFile = Bun.file(jsonPath);
 
   if (!(await jsonFile.exists())) {
@@ -92,7 +96,9 @@ async function main(): Promise<void> {
 
   const aggregateFailed = aggregatePercentage > AGGREGATE_THRESHOLD;
   if (aggregateFailed) {
-    console.log(`   ❌ FAIL: Exceeds ${AGGREGATE_THRESHOLD.toString()}% threshold\n`);
+    console.log(
+      `   ❌ FAIL: Exceeds ${AGGREGATE_THRESHOLD.toString()}% threshold\n`,
+    );
   } else {
     console.log(`   ✅ PASS\n`);
   }
@@ -107,9 +113,16 @@ async function main(): Promise<void> {
   }
 
   // Check per-file thresholds
-  console.log(`📄 Per-File Duplication Analysis (threshold: ${PER_FILE_THRESHOLD.toString()}%):\n`);
+  console.log(
+    `📄 Per-File Duplication Analysis (threshold: ${PER_FILE_THRESHOLD.toString()}%):\n`,
+  );
 
-  const failedFiles: { file: string; percentage: number; duplicatedLines: number; totalLines: number }[] = [];
+  const failedFiles: {
+    file: string;
+    percentage: number;
+    duplicatedLines: number;
+    totalLines: number;
+  }[] = [];
 
   for (const [file, stats] of fileStats.entries()) {
     const percentage = stats.percentage;
@@ -125,7 +138,9 @@ async function main(): Promise<void> {
   }
 
   if (failedFiles.length > 0) {
-    console.log(`❌ ${failedFiles.length.toString()} file(s) exceed ${PER_FILE_THRESHOLD.toString()}% duplication:\n`);
+    console.log(
+      `❌ ${failedFiles.length.toString()} file(s) exceed ${PER_FILE_THRESHOLD.toString()}% duplication:\n`,
+    );
 
     // Sort by percentage descending
     failedFiles.sort((a, b) => b.percentage - a.percentage);
@@ -152,7 +167,9 @@ async function main(): Promise<void> {
   if (duplicates.length > 0) {
     console.log(`🔍 Largest duplicate blocks:\n`);
 
-    const sortedDuplicates = duplicates.slice().sort((a, b) => b.lines - a.lines);
+    const sortedDuplicates = duplicates
+      .slice()
+      .sort((a, b) => b.lines - a.lines);
 
     for (const duplicate of sortedDuplicates.slice(0, 5)) {
       const file1 = path.relative(WORKSPACE_ROOT, duplicate.firstFile.name);
@@ -188,8 +205,12 @@ async function main(): Promise<void> {
   }
 
   console.log("\n✅ DUPLICATION CHECK PASSED\n");
-  console.log(`   - Aggregate duplication: ${aggregatePercentage.toFixed(2)}% ≤ ${AGGREGATE_THRESHOLD.toString()}%`);
-  console.log(`   - All files ≤ ${PER_FILE_THRESHOLD.toString()}% per-file duplication`);
+  console.log(
+    `   - Aggregate duplication: ${aggregatePercentage.toFixed(2)}% ≤ ${AGGREGATE_THRESHOLD.toString()}%`,
+  );
+  console.log(
+    `   - All files ≤ ${PER_FILE_THRESHOLD.toString()}% per-file duplication`,
+  );
   console.log("\n💡 View detailed report: jscpd-report/html/index.html\n");
 }
 

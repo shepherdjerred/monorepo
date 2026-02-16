@@ -1,4 +1,5 @@
-import { App, Chart } from "cdk8s";
+import type { App} from "cdk8s";
+import { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
 import { createBetterSkillCappedFetcher } from "../resources/better-skill-capped-fetcher.ts";
 

@@ -19,7 +19,12 @@ type CollapsibleSectionProps = {
   badge?: string;
 };
 
-function CollapsibleSection({ title, defaultOpen = false, children, badge }: CollapsibleSectionProps) {
+function CollapsibleSection({
+  title,
+  defaultOpen = false,
+  children,
+  badge,
+}: CollapsibleSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
@@ -38,9 +43,16 @@ function CollapsibleSection({ title, defaultOpen = false, children, badge }: Col
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
           </svg>
-          <span className="text-xs font-semibold text-surface-700">{title}</span>
+          <span className="text-xs font-semibold text-surface-700">
+            {title}
+          </span>
         </div>
         {badge && <span className="text-xs text-surface-500">{badge}</span>}
       </button>
@@ -78,10 +90,14 @@ function TraceCard({ label, trace, text }: TraceCardProps) {
             <div className="flex items-center gap-2">
               <span>{trace.durationMs}ms</span>
               {trace.tokensPrompt !== undefined && (
-                <span className="text-surface-500">{trace.tokensPrompt.toLocaleString()} input tokens</span>
+                <span className="text-surface-500">
+                  {trace.tokensPrompt.toLocaleString()} input tokens
+                </span>
               )}
               {trace.tokensCompletion !== undefined && (
-                <span className="text-surface-500">{trace.tokensCompletion.toLocaleString()} output tokens</span>
+                <span className="text-surface-500">
+                  {trace.tokensCompletion.toLocaleString()} output tokens
+                </span>
               )}
             </div>
           </div>
@@ -89,21 +105,31 @@ function TraceCard({ label, trace, text }: TraceCardProps) {
       </CardHeader>
       <CardContent className="space-y-2">
         {systemPrompt && (
-          <CollapsibleSection title="System prompt" badge={`${systemPromptLength.toLocaleString()} chars`}>
+          <CollapsibleSection
+            title="System prompt"
+            badge={`${systemPromptLength.toLocaleString()} chars`}
+          >
             <pre className="whitespace-pre-wrap rounded-md bg-surface-50 p-2 text-xs text-surface-800 max-h-64 overflow-auto">
               {systemPrompt}
             </pre>
           </CollapsibleSection>
         )}
         {userPrompt && (
-          <CollapsibleSection title="User prompt" badge={`${userPromptLength.toLocaleString()} chars`}>
+          <CollapsibleSection
+            title="User prompt"
+            badge={`${userPromptLength.toLocaleString()} chars`}
+          >
             <pre className="whitespace-pre-wrap rounded-md bg-surface-50 p-2 text-xs text-surface-800 max-h-64 overflow-auto">
               {userPrompt}
             </pre>
           </CollapsibleSection>
         )}
         {responseText && (
-          <CollapsibleSection title="Response" defaultOpen={true} badge={`${responseLength.toLocaleString()} chars`}>
+          <CollapsibleSection
+            title="Response"
+            defaultOpen={true}
+            badge={`${responseLength.toLocaleString()} chars`}
+          >
             <pre className="whitespace-pre-wrap rounded-md bg-surface-50 p-2 text-xs text-surface-800 max-h-64 overflow-auto">
               {responseText}
             </pre>
@@ -125,7 +151,9 @@ function ChunkTracesCard({ chunks, chunkSummaries }: ChunkTracesCardProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Stage 1a: Timeline Chunks ({chunks.length.toString()})</CardTitle>
+        <CardTitle>
+          Stage 1a: Timeline Chunks ({chunks.length.toString()})
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
         {chunks.map((chunk, index) => {
@@ -133,7 +161,10 @@ function ChunkTracesCard({ chunks, chunkSummaries }: ChunkTracesCardProps) {
           const summary = chunkSummaries?.[index];
 
           return (
-            <div key={index} className="rounded-md border border-surface-200 overflow-hidden">
+            <div
+              key={index}
+              className="rounded-md border border-surface-200 overflow-hidden"
+            >
               <button
                 type="button"
                 className="w-full flex items-center justify-between px-3 py-2 bg-surface-50 hover:bg-surface-100 text-left"
@@ -148,23 +179,36 @@ function ChunkTracesCard({ chunks, chunkSummaries }: ChunkTracesCardProps) {
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                   <span className="text-xs font-semibold text-surface-700">
                     Chunk {(chunk.chunkIndex + 1).toString()}: {chunk.timeRange}
                   </span>
                 </div>
-                <span className="text-xs text-surface-500">{chunk.trace.durationMs}ms</span>
+                <span className="text-xs text-surface-500">
+                  {chunk.trace.durationMs}ms
+                </span>
               </button>
               {isExpanded && (
                 <div className="p-2 space-y-2">
                   <div className="text-xs text-surface-600 space-y-1">
                     <div>Model: {chunk.trace.model.model}</div>
                     {chunk.trace.tokensPrompt !== undefined && (
-                      <div>Input tokens: {chunk.trace.tokensPrompt.toLocaleString()}</div>
+                      <div>
+                        Input tokens:{" "}
+                        {chunk.trace.tokensPrompt.toLocaleString()}
+                      </div>
                     )}
                     {chunk.trace.tokensCompletion !== undefined && (
-                      <div>Output tokens: {chunk.trace.tokensCompletion.toLocaleString()}</div>
+                      <div>
+                        Output tokens:{" "}
+                        {chunk.trace.tokensCompletion.toLocaleString()}
+                      </div>
                     )}
                   </div>
                   {summary && (
@@ -180,7 +224,8 @@ function ChunkTracesCard({ chunks, chunkSummaries }: ChunkTracesCardProps) {
           );
         })}
         <div className="text-xs text-surface-600 pt-2 border-t border-surface-200">
-          Total chunk processing time: {chunks.reduce((acc, c) => acc + c.trace.durationMs, 0)}ms
+          Total chunk processing time:{" "}
+          {chunks.reduce((acc, c) => acc + c.trace.durationMs, 0)}ms
         </div>
       </CardContent>
     </Card>
@@ -194,12 +239,16 @@ function TimelineSummarySection({
   traces: PipelineTraces;
   intermediate: PipelineIntermediateResults | undefined;
 }) {
-  const hasChunks = traces.timelineChunks !== undefined && traces.timelineChunks.length > 0;
+  const hasChunks =
+    traces.timelineChunks !== undefined && traces.timelineChunks.length > 0;
 
   if (hasChunks && traces.timelineChunks !== undefined) {
     return (
       <>
-        <ChunkTracesCard chunks={traces.timelineChunks} chunkSummaries={intermediate?.timelineChunkSummaries} />
+        <ChunkTracesCard
+          chunks={traces.timelineChunks}
+          chunkSummaries={intermediate?.timelineChunkSummaries}
+        />
         {traces.timelineAggregate && (
           <TraceCard
             label="Stage 1a: Timeline Aggregate"
@@ -220,8 +269,14 @@ function TimelineSummarySection({
   );
 }
 
-function ImageSettingsCard({ intermediate }: { intermediate: PipelineIntermediateResults | undefined }) {
-  const hasSettings = (intermediate?.selectedImagePrompts?.length ?? 0) > 0 || intermediate?.selectedArtStyle;
+function ImageSettingsCard({
+  intermediate,
+}: {
+  intermediate: PipelineIntermediateResults | undefined;
+}) {
+  const hasSettings =
+    (intermediate?.selectedImagePrompts?.length ?? 0) > 0 ||
+    intermediate?.selectedArtStyle;
 
   if (!hasSettings) {
     return null;
@@ -236,30 +291,38 @@ function ImageSettingsCard({ intermediate }: { intermediate: PipelineIntermediat
         {intermediate?.selectedArtStyle && (
           <div>
             <p className="text-surface-600 mb-1">Art style:</p>
-            <p className="text-surface-700 bg-surface-50 rounded-md p-2">{intermediate.selectedArtStyle}</p>
-          </div>
-        )}
-        {intermediate?.selectedImagePrompts && intermediate.selectedImagePrompts.length > 0 && (
-          <div>
-            <p className="text-surface-600 mb-1">
-              {intermediate.selectedImagePrompts.length.toString()} prompt
-              {intermediate.selectedImagePrompts.length === 1 ? "" : "s"} selected from personality:
+            <p className="text-surface-700 bg-surface-50 rounded-md p-2">
+              {intermediate.selectedArtStyle}
             </p>
-            <ul className="list-disc list-inside space-y-1">
-              {intermediate.selectedImagePrompts.map((prompt, index) => (
-                <li key={index} className="text-surface-700">
-                  {prompt}
-                </li>
-              ))}
-            </ul>
           </div>
         )}
+        {intermediate?.selectedImagePrompts &&
+          intermediate.selectedImagePrompts.length > 0 && (
+            <div>
+              <p className="text-surface-600 mb-1">
+                {intermediate.selectedImagePrompts.length.toString()} prompt
+                {intermediate.selectedImagePrompts.length === 1 ? "" : "s"}{" "}
+                selected from personality:
+              </p>
+              <ul className="list-disc list-inside space-y-1">
+                {intermediate.selectedImagePrompts.map((prompt, index) => (
+                  <li key={index} className="text-surface-700">
+                    {prompt}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
       </CardContent>
     </Card>
   );
 }
 
-function ImageGenerationCard({ trace }: { trace: PipelineTraces["imageGeneration"] }) {
+function ImageGenerationCard({
+  trace,
+}: {
+  trace: PipelineTraces["imageGeneration"];
+}) {
   if (!trace) {
     return null;
   }
@@ -273,14 +336,19 @@ function ImageGenerationCard({ trace }: { trace: PipelineTraces["imageGeneration
         </div>
       </CardHeader>
       <CardContent className="space-y-2 text-xs text-surface-800">
-        <CollapsibleSection title="Prompt" badge={`${trace.request.prompt.length.toLocaleString()} chars`}>
+        <CollapsibleSection
+          title="Prompt"
+          badge={`${trace.request.prompt.length.toLocaleString()} chars`}
+        >
           <pre className="whitespace-pre-wrap rounded-md bg-surface-50 p-2 max-h-64 overflow-auto">
             {trace.request.prompt}
           </pre>
         </CollapsibleSection>
         <div className="text-surface-700">
           Generated: {trace.response.imageGenerated ? "yes" : "no"}{" "}
-          {trace.response.imageSizeBytes ? `(${trace.response.imageSizeBytes.toLocaleString()} bytes)` : ""}
+          {trace.response.imageSizeBytes
+            ? `(${trace.response.imageSizeBytes.toLocaleString()} bytes)`
+            : ""}
         </div>
       </CardContent>
     </Card>
@@ -292,7 +360,10 @@ type PipelineTracesPanelProps = {
   intermediate: PipelineIntermediateResults | undefined;
 };
 
-export function PipelineTracesPanel({ traces, intermediate }: PipelineTracesPanelProps) {
+export function PipelineTracesPanel({
+  traces,
+  intermediate,
+}: PipelineTracesPanelProps) {
   if (!traces) {
     return null;
   }
@@ -300,8 +371,16 @@ export function PipelineTracesPanel({ traces, intermediate }: PipelineTracesPane
   return (
     <div className="space-y-3">
       <TimelineSummarySection traces={traces} intermediate={intermediate} />
-      <TraceCard label="Stage 1b: Match Summary" trace={traces.matchSummary} text={intermediate?.matchSummaryText} />
-      <TraceCard label="Stage 2: Review Text" trace={traces.reviewText} text={undefined} />
+      <TraceCard
+        label="Stage 1b: Match Summary"
+        trace={traces.matchSummary}
+        text={intermediate?.matchSummaryText}
+      />
+      <TraceCard
+        label="Stage 2: Review Text"
+        trace={traces.reviewText}
+        text={undefined}
+      />
       <ImageSettingsCard intermediate={intermediate} />
       <TraceCard
         label="Stage 3: Image Description"

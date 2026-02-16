@@ -118,7 +118,9 @@ describe("Champion utilities", () => {
 
     test("does not include empty champion", () => {
       const champions = getAllChampions();
-      expect(champions.find((c) => c.name.toLowerCase().includes("empty"))).toBeUndefined();
+      expect(
+        champions.find((c) => c.name.toLowerCase().includes("empty")),
+      ).toBeUndefined();
     });
 
     test("includes well-known champions", () => {

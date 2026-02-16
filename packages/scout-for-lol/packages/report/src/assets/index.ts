@@ -99,8 +99,16 @@ const spiegelConfigs = [
   },
 ] satisfies FontConfig[];
 
-const baseBeaufortFonts = generateFonts(font.title, "BeaufortForLoL-TTF", beaufortConfigs);
-const baseSpiegelFonts = generateFonts(font.body, "Spiegel-TTF", spiegelConfigs);
+const baseBeaufortFonts = generateFonts(
+  font.title,
+  "BeaufortForLoL-TTF",
+  beaufortConfigs,
+);
+const baseSpiegelFonts = generateFonts(
+  font.body,
+  "Spiegel-TTF",
+  spiegelConfigs,
+);
 
 /**
  * These fonts are used by satori.

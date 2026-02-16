@@ -1,4 +1,4 @@
-import { App } from "cdk8s";
+import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { createOnePasswordApp } from "../resources/argo-applications/1password.ts";
 import { createArgoCdApp } from "../resources/argo-applications/argocd.ts";

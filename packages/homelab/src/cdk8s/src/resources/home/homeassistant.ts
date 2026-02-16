@@ -1,5 +1,6 @@
 import { ConfigMap, Cpu, Deployment, DeploymentStrategy, Protocol, Service, Volume } from "cdk8s-plus-31";
-import { ApiObject, Chart, JsonPatch, Size } from "cdk8s";
+import type { Chart} from "cdk8s";
+import { ApiObject, JsonPatch, Size } from "cdk8s";
 import { ROOT_GID, ROOT_UID, withCommonProps } from "../../misc/common.ts";
 import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "../../misc/tailscale.ts";

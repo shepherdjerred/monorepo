@@ -125,7 +125,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -174,7 +186,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -198,7 +222,10 @@
           "tooltip": "Kled dashes, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to enemies he passes through, pulling minions and small monsters towards him.<br /><br />If this Ability hits an enemy champion or large jungle monster, Kled gains <speed>{{ movespeed*100 }}% Move Speed</speed> for {{ movespeedduration }} second(s) and can <recast>Recast</recast> within {{ recastwindow }} seconds to dash back through the same target.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [13, 12, 11, 10, 9],
@@ -219,7 +246,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
@@ -242,7 +281,12 @@
           "description": "Kled and Skaarl charge to a location, leaving a speed-granting trail behind them and gaining a shield. Skaarl locks onto and rams the first enemy champion encountered.",
           "tooltip": "Kled charges toward an area, leaving a trail that grants allies increasing <speed>Move Speed</speed>. While charging and for 2 seconds after Kled gains up to <shield>{{ maximumshield }} Shield</shield>. Skaarl rams the first enemy champion encountered, dealing <magicDamage>{{ minimumdamagetooltip }}</magicDamage> to <magicDamage>{{ maximumchargedamage }} max Health magic damage</magicDamage> (based on distance travelled) and briefly <status>Knocking Back</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Maximum Damage", "Maximum Shield Health", "Range", "Cooldown"],
+            "label": [
+              "Maximum Damage",
+              "Maximum Shield Health",
+              "Range",
+              "Cooldown"
+            ],
             "effect": [
               "{{ percenthpbase*3.000000 }}% -> {{ percenthpbasenl*3.000000 }}%",
               "{{ shieldcapbase }} -> {{ shieldcapbaseNL }}",
@@ -269,7 +313,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",

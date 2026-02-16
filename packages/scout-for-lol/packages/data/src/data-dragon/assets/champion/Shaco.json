@@ -189,7 +189,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -212,7 +224,12 @@
           "description": "Shaco creates a hidden animated Jack-in-the-Box. When triggered, it will fear and attack nearby enemies.",
           "tooltip": "Shaco creates a trap that stealths itself after {{ e5 }} seconds and lasts for {{ trapduration }} seconds. It activates when an enemy comes near or when revealed, <status>Fearing</status> nearby enemy Champions for {{ fearduration }} seconds, or {{ minionfearduration }} seconds for minions and jungle monsters.<br /><br />Once activated, the trap fires at all nearby enemies for 5 seconds, dealing <magicDamage>{{ aoedamage }} magic damage</magicDamage>, or <magicDamage>{{ stdamage }} damage</magicDamage> if focused on a single target.<br /><br />Jack in the Box's attacks deal an additional <magicDamage>{{ monsterbonusdamage }}</magicDamage> damage to monsters.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Fear Duration", "Bonus Monster Damage", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Fear Duration",
+              "Bonus Monster Damage",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ stbasedamage }} -> {{ stbasedamageNL }}",
               "{{ fearduration }} -> {{ feardurationNL }}",
@@ -299,7 +316,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -348,7 +377,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "6", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "6",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

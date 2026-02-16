@@ -122,7 +122,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -170,7 +182,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -193,7 +217,11 @@
           "description": "Naafiri dashes and damages enemies in an area around her, recalling her packmates and fully healing them.",
           "tooltip": "Naafiri surges forward, dealing <physicalDamage>{{ totaldamagefirstslash }} physical damage</physicalDamage>, then explodes in a flurry of blades, dealing <physicalDamage>{{ totaldamagesecondslash }} physical damage.</physicalDamage><br /><br /><keywordMajor>Packmates</keywordMajor> become Untargetable and are recalled to Naafiri <healing>restoring 100% Health</healing>. <br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage (First Slash)", "Damage (Second Slash)", "Cooldown"],
+            "label": [
+              "Damage (First Slash)",
+              "Damage (Second Slash)",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamagefirstslash }} -> {{ basedamagefirstslashNL }}",
               "{{ basedamagesecondhit }} -> {{ basedamagesecondhitNL }}",
@@ -219,7 +247,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -268,7 +308,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

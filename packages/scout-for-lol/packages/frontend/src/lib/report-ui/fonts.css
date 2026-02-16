@@ -3,13 +3,15 @@
 /* Beaufort For LoL */
 @font-face {
   font-family: "Beaufort For LoL";
-  src: url("/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Regular.ttf") format("truetype");
+  src: url("/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Regular.ttf")
+    format("truetype");
   font-weight: normal;
 }
 
 @font-face {
   font-family: "Beaufort For LoL";
-  src: url("/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Bold.ttf") format("truetype");
+  src: url("/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Bold.ttf")
+    format("truetype");
   font-weight: bold;
 }
 

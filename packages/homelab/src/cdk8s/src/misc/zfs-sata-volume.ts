@@ -1,8 +1,9 @@
 import { merge } from "lodash";
+import type {
+  PersistentVolumeClaimProps} from "cdk8s-plus-31";
 import {
   PersistentVolumeAccessMode,
   PersistentVolumeClaim,
-  PersistentVolumeClaimProps,
   PersistentVolumeMode,
 } from "cdk8s-plus-31";
 import { Construct } from "constructs";

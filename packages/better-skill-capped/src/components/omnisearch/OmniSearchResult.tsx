@@ -1,15 +1,17 @@
 import React from "react";
-import { Bookmarkable } from "../../model/Bookmark";
+import type { Bookmarkable } from "@shepherdjerred/better-skill-capped/model/Bookmark";
 import { CourseSearchResult } from "./CourseSearchResult";
-import { Watchable } from "../../model/WatchStatus";
+import type { Watchable } from "@shepherdjerred/better-skill-capped/model/WatchStatus";
 import { VideoSearchResult } from "./VideoSearchResult";
-import OmniSearchable from "./OmniSearchable";
-import { isCourse } from "../../model/Course";
-import { isVideo, Video } from "../../model/Video";
-import { Commentary, isCommentary } from "../../model/Commentary";
+import type OmniSearchable from "./OmniSearchable";
+import { isCourse } from "@shepherdjerred/better-skill-capped/model/Course";
+import type { Video } from "@shepherdjerred/better-skill-capped/model/Video";
+import { isVideo } from "@shepherdjerred/better-skill-capped/model/Video";
+import type { Commentary} from "@shepherdjerred/better-skill-capped/model/Commentary";
+import { isCommentary } from "@shepherdjerred/better-skill-capped/model/Commentary";
 import { CommentarySearchResult } from "./CommentarySearchResult";
 
-export interface OmniSearchResultProps {
+export type OmniSearchResultProps = {
   item: OmniSearchable;
   matchedStrings: string[];
   isWatched: (item: Watchable) => boolean;
@@ -48,7 +50,7 @@ export function OmniSearchResult({
       />
     );
   } else if (isVideo(item)) {
-    const video = item as Video;
+    const video = item;
     return (
       <VideoSearchResult
         key={video.uuid}
@@ -62,7 +64,7 @@ export function OmniSearchResult({
       />
     );
   } else if (isCommentary(item)) {
-    const commentary = item as Commentary;
+    const commentary = item;
     return (
       <CommentarySearchResult
         key={commentary.uuid}

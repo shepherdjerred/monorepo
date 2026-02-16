@@ -53,6 +53,10 @@ export const noTypeGuards = createRule({
      * Check if a function expression has a type predicate return type
      */
     function checkFunctionExpression(node: TSESTree.FunctionExpression): void {
+      // Skip if this is a method body — the MethodDefinition handler will report it
+      if (node.parent.type === AST_NODE_TYPES.MethodDefinition) {
+        return;
+      }
       if (isTypePredicate(node.returnType)) {
         context.report({
           node,

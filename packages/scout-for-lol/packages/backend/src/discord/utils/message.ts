@@ -88,7 +88,10 @@ export function truncateEmbedDescription(text: string): string {
 /**
  * Split a long line into chunks by character count
  */
-function splitLongLine(line: string, maxLength: number): { chunks: string[]; remaining: string } {
+function splitLongLine(
+  line: string,
+  maxLength: number,
+): { chunks: string[]; remaining: string } {
   const chunks: string[] = [];
   let remaining = line;
 
@@ -111,17 +114,22 @@ function processLine(
 ): { currentChunk: string; chunks: string[] } {
   // Line fits in current chunk
   if (currentChunk.length + line.length + 1 <= maxLength) {
-    const newChunk = currentChunk.length > 0 ? `${currentChunk}\n${line}` : line;
+    const newChunk =
+      currentChunk.length > 0 ? `${currentChunk}\n${line}` : line;
     return { currentChunk: newChunk, chunks };
   }
 
   // Need to start new chunk - save current if it has content
-  const updatedChunks = currentChunk.length > 0 ? [...chunks, currentChunk.trim()] : [...chunks];
+  const updatedChunks =
+    currentChunk.length > 0 ? [...chunks, currentChunk.trim()] : [...chunks];
 
   // Line itself is too long - split by characters
   if (line.length > maxLength) {
     const { chunks: lineChunks, remaining } = splitLongLine(line, maxLength);
-    return { currentChunk: remaining, chunks: [...updatedChunks, ...lineChunks] };
+    return {
+      currentChunk: remaining,
+      chunks: [...updatedChunks, ...lineChunks],
+    };
   }
 
   return { currentChunk: line, chunks: updatedChunks };

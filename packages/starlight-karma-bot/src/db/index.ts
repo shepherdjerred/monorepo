@@ -6,7 +6,7 @@ import { KarmaCounts } from "./karma-counts.ts";
 import { KarmaGiven } from "./karma-given.ts";
 import { KarmaReceived } from "./karma-received.ts";
 import { Person } from "./person.ts";
-import configuration from "../configuration.ts";
+import configuration from "#src/configuration.ts";
 
 export const dataSource = new DataSource({
   type: "sqlite",
@@ -18,6 +18,6 @@ export const dataSource = new DataSource({
   migrations: [],
 });
 
-console.log(`[Database] Initializing database connection to ${configuration.dataDir}/glitter.sqlite`);
+console.warn(`[Database] Initializing database connection to ${configuration.dataDir}/glitter.sqlite`);
 await dataSource.initialize();
-console.log("[Database] Database connection initialized successfully");
+console.warn("[Database] Database connection initialized successfully");

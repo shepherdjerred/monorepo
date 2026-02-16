@@ -139,7 +139,10 @@
           "tooltip": "Nautilus hurls his anchor forward. If it hits an enemy, Nautilus drags himself and the target together, dealing <magicDamage>{{ qdamagecalc }} magic damage</magicDamage> and <status>Stunning</status> them briefly. If the anchor hits terrain, Nautilus will drag himself towards it.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Damage"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ basedamage }} -> {{ basedamageNL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [14, 13, 12, 11, 10],
@@ -160,7 +163,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "70/115/160/205/250", "0", "0.5", "0.5", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "70/115/160/205/250",
+            "0",
+            "0.5",
+            "0.5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -209,7 +224,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -232,7 +259,13 @@
           "description": "Nautilus creates three exploding waves around himself. Each explosion damages and slows enemies.",
           "tooltip": "Nautilus creates three exploding waves around himself, each dealing <magicDamage>{{ damagecalc }} magic damage</magicDamage> to enemies in the area and <status>Slows</status> them by {{ slowpercent*100 }}% decaying over {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage", "Monster Damage", "Slow"],
+            "label": [
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Damage",
+              "Monster Damage",
+              "Slow"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
@@ -260,7 +293,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -283,7 +328,12 @@
           "description": "Nautilus fires a shockwave into the earth that chases an opponent. This shockwave rips up the earth above it, knocking enemies into the air. When it reaches the opponent, the shockwave erupts, knocking his target into the air and stunning them.",
           "tooltip": "Nautilus fires a shockwave that chases an enemy champion, dealing <magicDamage>{{ primarytargetdamage }} magic damage</magicDamage>, <status>Knocking</status> them <status>Up</status> and <status>Stunning</status> them for {{ stunduration }} seconds. Other enemies hit by the shockwave are also <status>Knocked Up</status> and <status>Stunned</status> and take <magicDamage>{{ secondarytargetdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Pass Through Damage", "Stun Duration:", "Explosion Damage"],
+            "label": [
+              "Cooldown",
+              "Pass Through Damage",
+              "Stun Duration:",
+              "Explosion Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ primarydamage }} -> {{ primarydamageNL }}",
@@ -310,7 +360,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

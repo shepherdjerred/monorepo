@@ -1,4 +1,5 @@
-import { App, Chart } from "cdk8s";
+import type { App} from "cdk8s";
+import { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
 import { createS3StaticSitesDeployment } from "../resources/s3-static-sites/index.ts";
 

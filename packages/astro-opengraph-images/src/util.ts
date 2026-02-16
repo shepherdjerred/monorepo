@@ -1,13 +1,22 @@
-import * as fs from "fs";
-import path from "path";
+import path from "node:path";
+import { access } from "node:fs/promises";
+
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 // some files, e.g. index or 404 pages, are served without a folder
 // other files, e.g. blog posts, are served from a folder
 // I don't fully understand how Astro decides this, so:
-export function getFilePath({ dir, page }: { dir: string; page: string }) {
+export async function getFilePath({ dir, page }: { dir: string; page: string }) {
   let target: string = path.join(dir, page, "index.html");
 
-  if (!fs.existsSync(target)) {
+  if (!(await fileExists(target))) {
     target = path.join(dir, page.slice(0, -1) + ".html");
   }
 
@@ -15,7 +24,7 @@ export function getFilePath({ dir, page }: { dir: string; page: string }) {
 }
 
 export function getImagePath({ url, site }: { url: URL; site: URL | undefined }): string {
-  if (!site) {
+  if (site === undefined) {
     throw new Error(
       "`site` must be set in your Astro configuration: https://docs.astro.build/en/reference/configuration-reference/#site",
     );
@@ -25,11 +34,7 @@ export function getImagePath({ url, site }: { url: URL; site: URL | undefined })
 
   // if url ends with a slash, it's a directory
   // add index.png to the end
-  if (target.endsWith("/")) {
-    target = target + "index.png";
-  } else {
-    target = target + ".png";
-  }
+  target = target.endsWith("/") ? target + "index.png" : target + ".png";
 
   // Astro creates these as top-level files rather than in a folder
   if (target === "/404/index.png") {

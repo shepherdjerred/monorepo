@@ -3,15 +3,29 @@ import { createS3Client } from "@scout-for-lol/backend/storage/s3-client.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import configuration from "@scout-for-lol/backend/configuration.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
-import { type ServerPairingStats, type WeeklyPairingCache, WeeklyPairingCacheSchema } from "@scout-for-lol/data/index";
-import { getISOWeek, getISOWeekYear, startOfISOWeek, endOfISOWeek, isBefore } from "date-fns";
+import {
+  type ServerPairingStats,
+  type WeeklyPairingCache,
+  WeeklyPairingCacheSchema,
+} from "@scout-for-lol/data/index";
+import {
+  getISOWeek,
+  getISOWeekYear,
+  startOfISOWeek,
+  endOfISOWeek,
+  isBefore,
+} from "date-fns";
 
 const logger = createLogger("pairing-s3-cache");
 
 /**
  * Generate S3 key for weekly pairing cache
  */
-function generateCacheKey(serverId: string, year: number, weekNumber: number): string {
+function generateCacheKey(
+  serverId: string,
+  year: number,
+  weekNumber: number,
+): string {
   return `pairing-stats/${serverId}/week-${year.toString()}-${weekNumber.toString().padStart(2, "0")}.json`;
 }
 
@@ -38,7 +52,10 @@ export function getCurrentWeekInfo(): { year: number; weekNumber: number } {
 /**
  * Get date range for a specific ISO week
  */
-export function getWeekDateRange(year: number, weekNumber: number): { start: Date; end: Date } {
+export function getWeekDateRange(
+  year: number,
+  weekNumber: number,
+): { start: Date; end: Date } {
   // Create a date in the middle of the target year
   const jan4 = new Date(year, 0, 4); // Jan 4 is always in week 1
   const weekStart = startOfISOWeek(jan4);
@@ -64,7 +81,9 @@ export async function loadCachedPairingStats(
   const bucket = configuration.s3BucketName;
 
   if (!bucket) {
-    logger.warn("[PairingCache] S3_BUCKET_NAME not configured, skipping cache read");
+    logger.warn(
+      "[PairingCache] S3_BUCKET_NAME not configured, skipping cache read",
+    );
     return null;
   }
 
@@ -91,17 +110,23 @@ export async function loadCachedPairingStats(
 
     // Only use cache if the week was complete when cached
     if (!validated.isComplete) {
-      logger.info("[PairingCache] Cache exists but week was not complete, ignoring");
+      logger.info(
+        "[PairingCache] Cache exists but week was not complete, ignoring",
+      );
       return null;
     }
 
-    logger.info(`[PairingCache] Successfully loaded cache for week ${year.toString()}-${weekNumber.toString()}`);
+    logger.info(
+      `[PairingCache] Successfully loaded cache for week ${year.toString()}-${weekNumber.toString()}`,
+    );
     return validated;
   } catch (error) {
     const message = getErrorMessage(error);
     // NoSuchKey is expected when cache doesn't exist
     if (message.includes("NoSuchKey") || message.includes("not found")) {
-      logger.info(`[PairingCache] No cache found for week ${year.toString()}-${weekNumber.toString()}`);
+      logger.info(
+        `[PairingCache] No cache found for week ${year.toString()}-${weekNumber.toString()}`,
+      );
     } else {
       logger.warn(`[PairingCache] Error loading cache: ${message}`);
     }
@@ -121,14 +146,18 @@ export async function saveCachedPairingStats(
   const bucket = configuration.s3BucketName;
 
   if (!bucket) {
-    logger.warn("[PairingCache] S3_BUCKET_NAME not configured, skipping cache write");
+    logger.warn(
+      "[PairingCache] S3_BUCKET_NAME not configured, skipping cache write",
+    );
     return false;
   }
 
   const isComplete = isWeekComplete(year, weekNumber);
 
   if (!isComplete) {
-    logger.info(`[PairingCache] Week ${year.toString()}-${weekNumber.toString()} not complete, skipping cache write`);
+    logger.info(
+      `[PairingCache] Week ${year.toString()}-${weekNumber.toString()} not complete, skipping cache write`,
+    );
     return false;
   }
 
@@ -163,10 +192,14 @@ export async function saveCachedPairingStats(
     });
 
     await client.send(command);
-    logger.info(`[PairingCache] Successfully saved cache for week ${year.toString()}-${weekNumber.toString()}`);
+    logger.info(
+      `[PairingCache] Successfully saved cache for week ${year.toString()}-${weekNumber.toString()}`,
+    );
     return true;
   } catch (error) {
-    logger.error(`[PairingCache] Error saving cache: ${getErrorMessage(error)}`);
+    logger.error(
+      `[PairingCache] Error saving cache: ${getErrorMessage(error)}`,
+    );
     return false;
   }
 }
@@ -183,13 +216,17 @@ export async function getPairingStatsForWeek(
   // Try to load from cache first (only for complete weeks)
   const cached = await loadCachedPairingStats(serverId, year, weekNumber);
   if (cached) {
-    logger.info(`[PairingCache] Using cached stats for week ${year.toString()}-${weekNumber.toString()}`);
+    logger.info(
+      `[PairingCache] Using cached stats for week ${year.toString()}-${weekNumber.toString()}`,
+    );
     return cached.stats;
   }
 
   // Calculate fresh stats
   const { start, end } = getWeekDateRange(year, weekNumber);
-  logger.info(`[PairingCache] Calculating fresh stats for week ${year.toString()}-${weekNumber.toString()}`);
+  logger.info(
+    `[PairingCache] Calculating fresh stats for week ${year.toString()}-${weekNumber.toString()}`,
+  );
 
   const stats = await calculateFn(start, end);
 

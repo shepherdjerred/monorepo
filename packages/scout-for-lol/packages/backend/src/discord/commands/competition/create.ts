@@ -1,4 +1,7 @@
-import { type ChatInputCommandInteraction, PermissionFlagsBits } from "discord.js";
+import {
+  type ChatInputCommandInteraction,
+  PermissionFlagsBits,
+} from "discord.js";
 import { z } from "zod";
 import {
   ChampionIdSchema,
@@ -10,9 +13,15 @@ import { fromError } from "zod-validation-error";
 import { match, P } from "ts-pattern";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { canCreateCompetition } from "@scout-for-lol/backend/database/competition/permissions.ts";
-import { type CreateCompetitionInput, createCompetition } from "@scout-for-lol/backend/database/competition/queries.ts";
+import {
+  type CreateCompetitionInput,
+  createCompetition,
+} from "@scout-for-lol/backend/database/competition/queries.ts";
 import { recordCreation } from "@scout-for-lol/backend/database/competition/rate-limit.ts";
-import { validateOwnerLimit, validateServerLimit } from "@scout-for-lol/backend/database/competition/validation.ts";
+import {
+  validateOwnerLimit,
+  validateServerLimit,
+} from "@scout-for-lol/backend/database/competition/validation.ts";
 import { getChampionId } from "@scout-for-lol/backend/utils/champion.ts";
 import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
@@ -72,7 +81,9 @@ type CreateCommandArgs = z.infer<typeof CreateCommandArgsSchema>;
 /**
  * Execute /competition create command
  */
-async function parseCreateArgs(interaction: ChatInputCommandInteraction): Promise<CreateCommandArgs | null> {
+async function parseCreateArgs(
+  interaction: ChatInputCommandInteraction,
+): Promise<CreateCommandArgs | null> {
   const username = interaction.user.username;
   try {
     const startDateStr = interaction.options.getString("start-date");
@@ -83,7 +94,9 @@ async function parseCreateArgs(interaction: ChatInputCommandInteraction): Promis
     const hasSeason = seasonStr !== null;
 
     if (!hasFixedDates && !hasSeason) {
-      throw new Error("Must specify either (start-date AND end-date) OR season");
+      throw new Error(
+        "Must specify either (start-date AND end-date) OR season",
+      );
     }
     if (hasFixedDates && hasSeason) {
       throw new Error("Cannot specify both fixed dates and season");
@@ -106,17 +119,24 @@ async function parseCreateArgs(interaction: ChatInputCommandInteraction): Promis
       champion: interaction.options.getString("champion") ?? undefined,
       minGames: interaction.options.getInteger("min-games") ?? undefined,
       visibility: interaction.options.getString("visibility") ?? undefined,
-      maxParticipants: interaction.options.getInteger("max-participants") ?? undefined,
-      addAllMembers: interaction.options.getBoolean("add-all-members") ?? undefined,
+      maxParticipants:
+        interaction.options.getInteger("max-participants") ?? undefined,
+      addAllMembers:
+        interaction.options.getBoolean("add-all-members") ?? undefined,
     });
 
     logger.info(`✅ Command arguments validated successfully`);
-    logger.info(`📋 Title: "${args.title}", Criteria: ${args.criteriaType}, Channel: ${args.channelId}`);
+    logger.info(
+      `📋 Title: "${args.title}", Criteria: ${args.criteriaType}, Channel: ${args.channelId}`,
+    );
     return args;
   } catch (error) {
     logger.error(`❌ Invalid command arguments from ${username}:`, error);
     const validationError = fromError(error);
-    await replyWithError(interaction, `**Invalid input:**\n${validationError.toString()}`);
+    await replyWithError(
+      interaction,
+      `**Invalid input:**\n${validationError.toString()}`,
+    );
     return null;
   }
 }
@@ -135,7 +155,9 @@ async function checkPermissionsForCreate(
     const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
 
     if (args.addAllMembers && !isAdmin) {
-      logger.warn(`⚠️  Non-admin ${username} attempted to use add-all-members option`);
+      logger.warn(
+        `⚠️  Non-admin ${username} attempted to use add-all-members option`,
+      );
       await interaction.reply({
         content: `**Permission denied:**\nThe \`add-all-members\` option requires Administrator permission.`,
         ephemeral: true,
@@ -143,10 +165,17 @@ async function checkPermissionsForCreate(
       return false;
     }
 
-    const permissionCheck = await canCreateCompetition(prisma, args.guildId, args.userId, member.permissions);
+    const permissionCheck = await canCreateCompetition(
+      prisma,
+      args.guildId,
+      args.userId,
+      member.permissions,
+    );
 
     if (!permissionCheck.allowed) {
-      logger.warn(`⚠️  Permission denied for ${username}: ${permissionCheck.reason ?? "unknown reason"}`);
+      logger.warn(
+        `⚠️  Permission denied for ${username}: ${permissionCheck.reason ?? "unknown reason"}`,
+      );
       await interaction.reply({
         content: `**Permission denied:**\n${permissionCheck.reason ?? "No permission"}`,
         ephemeral: true,
@@ -158,18 +187,26 @@ async function checkPermissionsForCreate(
     return true;
   } catch (error) {
     logger.error(`❌ Permission check failed:`, error);
-    await replyWithErrorFromException(interaction, error, "checking permissions");
+    await replyWithErrorFromException(
+      interaction,
+      error,
+      "checking permissions",
+    );
     return false;
   }
 }
 
-export async function executeCompetitionCreate(interaction: ChatInputCommandInteraction): Promise<void> {
+export async function executeCompetitionCreate(
+  interaction: ChatInputCommandInteraction,
+): Promise<void> {
   const startTime = Date.now();
   const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;
   const guildId = interaction.guildId;
 
-  logger.info(`🏆 Starting competition creation for user ${username} (${userId}) in guild ${guildId ?? "unknown"}`);
+  logger.info(
+    `🏆 Starting competition creation for user ${username} (${userId}) in guild ${guildId ?? "unknown"}`,
+  );
 
   // Step 1: Parse and validate Discord command options
   const args = await parseCreateArgs(interaction);
@@ -178,17 +215,24 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
   }
 
   // Step 2: Permission and rate limit checks
-  const hasPermission = await checkPermissionsForCreate(interaction, args, username);
+  const hasPermission = await checkPermissionsForCreate(
+    interaction,
+    args,
+    username,
+  );
   if (!hasPermission) {
     return;
   }
 
   // Match on full args object to properly narrow discriminated union types
   const criteria: CompetitionCriteria = match(args)
-    .with({ criteriaType: "MOST_GAMES_PLAYED", queue: P.select() }, (queue) => ({
-      type: "MOST_GAMES_PLAYED" as const,
-      queue,
-    }))
+    .with(
+      { criteriaType: "MOST_GAMES_PLAYED", queue: P.select() },
+      (queue) => ({
+        type: "MOST_GAMES_PLAYED" as const,
+        queue,
+      }),
+    )
     .with({ criteriaType: "HIGHEST_RANK", queue: P.select() }, (queue) => ({
       type: "HIGHEST_RANK" as const,
       queue,
@@ -280,7 +324,11 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     logger.info(`✅ Competition input built (fully type-safe)`);
   } catch (error) {
     logger.error(`❌ Failed to build competition input:`, error);
-    await replyWithErrorFromException(interaction, error, "building competition data");
+    await replyWithErrorFromException(
+      interaction,
+      error,
+      "building competition data",
+    );
     return;
   }
 
@@ -303,7 +351,11 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     logger.info(`✅ Business validation passed`);
   } catch (error) {
     logger.error(`❌ Business validation failed:`, error);
-    await replyWithErrorFromException(interaction, error, "validating competition");
+    await replyWithErrorFromException(
+      interaction,
+      error,
+      "validating competition",
+    );
     return;
   }
 
@@ -317,7 +369,9 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     const competition = await createCompetition(prisma, competitionInput);
 
     const dbTime = Date.now() - dbStartTime;
-    logger.info(`✅ Competition created with ID: ${competition.id.toString()} (${dbTime.toString()}ms)`);
+    logger.info(
+      `✅ Competition created with ID: ${competition.id.toString()} (${dbTime.toString()}ms)`,
+    );
 
     // Record creation for rate limiting
     recordCreation(args.guildId, userId);
@@ -328,7 +382,9 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
 
     let addedMembersCount = 0;
     if (args.addAllMembers) {
-      logger.info(`🔄 Adding all server members to competition ${competition.id.toString()}...`);
+      logger.info(
+        `🔄 Adding all server members to competition ${competition.id.toString()}...`,
+      );
       const addMembersStartTime = Date.now();
 
       try {
@@ -344,7 +400,9 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
           },
         });
 
-        logger.info(`📊 Found ${players.length.toString()} players in server ${args.guildId}`);
+        logger.info(
+          `📊 Found ${players.length.toString()} players in server ${args.guildId}`,
+        );
 
         // Add each player as a participant
         const addResults = await Promise.allSettled(
@@ -359,9 +417,13 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
         );
 
         // Count successful additions
-        addedMembersCount = addResults.filter((result) => result.status === "fulfilled").length;
+        addedMembersCount = addResults.filter(
+          (result) => result.status === "fulfilled",
+        ).length;
 
-        const failedCount = addResults.filter((result) => result.status === "rejected").length;
+        const failedCount = addResults.filter(
+          (result) => result.status === "rejected",
+        ).length;
 
         const addMembersTime = Date.now() - addMembersStartTime;
         logger.info(
@@ -375,14 +437,23 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     }
 
     const totalTime = Date.now() - startTime;
-    logger.info(`🎉 Competition creation completed successfully in ${totalTime.toString()}ms`);
+    logger.info(
+      `🎉 Competition creation completed successfully in ${totalTime.toString()}ms`,
+    );
 
     // ============================================================================
     // Step 8: Send success response
     // ============================================================================
 
-    const statusEmoji = getStatusEmoji(competition.startDate, competition.endDate);
-    const dateInfo = formatDateInfo(competition.startDate, competition.endDate, competition.seasonId);
+    const statusEmoji = getStatusEmoji(
+      competition.startDate,
+      competition.endDate,
+    );
+    const dateInfo = formatDateInfo(
+      competition.startDate,
+      competition.endDate,
+      competition.seasonId,
+    );
 
     // Build success message
     let successMessage = `✅ **Competition Created!**
@@ -409,6 +480,10 @@ ${competition.description}
     await replyWithSuccess(interaction, successMessage);
   } catch (error) {
     logger.error(`❌ Database error during competition creation:`, error);
-    await replyWithErrorFromException(interaction, error, "creating competition");
+    await replyWithErrorFromException(
+      interaction,
+      error,
+      "creating competition",
+    );
   }
 }

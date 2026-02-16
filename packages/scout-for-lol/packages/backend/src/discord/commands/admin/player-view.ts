@@ -22,8 +22,11 @@ const ArgsSchema = z.object({
 async function getRateLimitInfo(guildId: DiscordGuildId) {
   const accountLimitRaw = getLimit("accounts", { server: guildId });
   const accountLimit = accountLimitRaw === "unlimited" ? null : accountLimitRaw;
-  const subscriptionLimitRaw = getLimit("player_subscriptions", { server: guildId });
-  const subscriptionLimit = subscriptionLimitRaw === "unlimited" ? null : subscriptionLimitRaw;
+  const subscriptionLimitRaw = getLimit("player_subscriptions", {
+    server: guildId,
+  });
+  const subscriptionLimit =
+    subscriptionLimitRaw === "unlimited" ? null : subscriptionLimitRaw;
 
   const totalServerAccounts = await prisma.account.count({
     where: { serverId: guildId },
@@ -38,7 +41,12 @@ async function getRateLimitInfo(guildId: DiscordGuildId) {
     },
   });
 
-  return { accountLimit, subscriptionLimit, totalServerAccounts, totalServerPlayers };
+  return {
+    accountLimit,
+    subscriptionLimit,
+    totalServerAccounts,
+    totalServerPlayers,
+  };
 }
 
 function buildPlayerInfoSections(
@@ -46,7 +54,12 @@ function buildPlayerInfoSections(
   rateLimits: Awaited<ReturnType<typeof getRateLimitInfo>>,
 ): string[] {
   const sections: string[] = [];
-  const { accountLimit, subscriptionLimit, totalServerAccounts, totalServerPlayers } = rateLimits;
+  const {
+    accountLimit,
+    subscriptionLimit,
+    totalServerAccounts,
+    totalServerPlayers,
+  } = rateLimits;
 
   // Player Info Section
   sections.push(`# 👤 Player Info: ${player.alias}`);
@@ -80,7 +93,9 @@ function buildPlayerInfoSections(
   );
 
   // Subscriptions Section
-  sections.push(`\n## 🔔 Subscriptions (${player.subscriptions.length.toString()})`);
+  sections.push(
+    `\n## 🔔 Subscriptions (${player.subscriptions.length.toString()})`,
+  );
   if (player.subscriptions.length > 0) {
     for (const sub of player.subscriptions) {
       sections.push(
@@ -131,14 +146,21 @@ function buildPlayerInfoSections(
 
   // Debug Info Section
   sections.push(`\n## 🐛 Debug Info`);
-  sections.push(`**Created:** <t:${Math.floor(player.createdTime.getTime() / 1000).toString()}:F>`);
-  sections.push(`**Updated:** <t:${Math.floor(player.updatedTime.getTime() / 1000).toString()}:F>`);
+  sections.push(
+    `**Created:** <t:${Math.floor(player.createdTime.getTime() / 1000).toString()}:F>`,
+  );
+  sections.push(
+    `**Updated:** <t:${Math.floor(player.updatedTime.getTime() / 1000).toString()}:F>`,
+  );
   sections.push(`**Creator Discord ID:** ${player.creatorDiscordId}`);
 
   return sections;
 }
 
-async function sendPlayerInfo(interaction: ChatInputCommandInteraction, sections: string[]): Promise<void> {
+async function sendPlayerInfo(
+  interaction: ChatInputCommandInteraction,
+  sections: string[],
+): Promise<void> {
   const content = sections.join("\n");
 
   // Discord has a 2000 character limit for message content
@@ -191,7 +213,9 @@ async function sendPlayerInfo(interaction: ChatInputCommandInteraction, sections
   }
 }
 
-export async function executePlayerView(interaction: ChatInputCommandInteraction) {
+export async function executePlayerView(
+  interaction: ChatInputCommandInteraction,
+) {
   const validation = await validateCommandArgs(
     interaction,
     ArgsSchema,
@@ -210,12 +234,19 @@ export async function executePlayerView(interaction: ChatInputCommandInteraction
   const { alias, guildId } = args;
 
   await executeWithTiming("player-view", username, async () => {
-    const player = await findPlayerByAliasWithCompetitions(prisma, guildId, alias, interaction);
+    const player = await findPlayerByAliasWithCompetitions(
+      prisma,
+      guildId,
+      alias,
+      interaction,
+    );
     if (!player) {
       return;
     }
 
-    logger.info(`✅ Player found: ${player.alias} (ID: ${player.id.toString()})`);
+    logger.info(
+      `✅ Player found: ${player.alias} (ID: ${player.id.toString()})`,
+    );
 
     const rateLimits = await getRateLimitInfo(guildId);
     const sections = buildPlayerInfoSections(player, rateLimits);

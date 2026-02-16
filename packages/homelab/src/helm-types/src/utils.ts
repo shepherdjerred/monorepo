@@ -50,7 +50,7 @@ export function sanitizePropertyName(key: string): string {
   // Check if key needs quoting
   const needsQuoting =
     reservedKeywords.has(key) ||
-    /[^a-zA-Z0-9_$]/.test(key) || // Contains special characters
+    /[^\w$]/.test(key) || // Contains special characters
     /^\d/.test(key); // Starts with digit
 
   return needsQuoting ? `"${key}"` : key;
@@ -62,7 +62,7 @@ export function sanitizePropertyName(key: string): string {
 export function sanitizeTypeName(key: string): string {
   return (
     key
-      .replace(/[^a-zA-Z0-9]/g, "") // Remove all special characters
+      .replaceAll(/[^a-z0-9]/gi, "") // Remove all special characters
       .replace(/^\d+/, "") || // Remove leading digits
     "Property"
   ); // Fallback if empty

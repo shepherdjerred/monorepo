@@ -151,7 +151,13 @@
           "description": "Poppy swings her hammer, dealing damage and creating a zone that will slow enemies and explode after a delay.",
           "tooltip": "Poppy smashes the ground, dealing <physicalDamage>{{ basedamage }}</physicalDamage> plus <physicalDamage>{{ healthdamagepercent }}% max Health physical damage</physicalDamage> and making the ground unstable. <br /><br />The unstable area <status>Slows</status> enemies by {{ e3 }}% and erupts after {{ e4 }} second, dealing <physicalDamage>{{ basedamage }}</physicalDamage> plus <physicalDamage>{{ healthdamagepercent }}% max Health physical damage</physicalDamage> again.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow", "Cooldown", "@AbilityResourceName@ Cost", "Monster Cap"],
+            "label": [
+              "Damage",
+              "Slow",
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Monster Cap"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ e3 }}% -> {{ e3NL }}%",
@@ -215,7 +221,10 @@
           "tooltip": "<spellPassive>Passive:</spellPassive> Poppy gains <scaleArmor>{{ bonusarmor }} Armor</scaleArmor> and <scaleMR>{{ bonusmr }} Magic Resist</scaleMR>. This bonus is doubled if Poppy is below {{ passiveempoweredhealthpercent*100 }}% Health.<br /><br /><spellActive>Active:</spellActive> Poppy gains <speed>{{ e2 }}% Move Speed</speed> and projects a field around her for {{ e1 }} seconds that stops enemy dashes. Enemies who are stopped by the field are <status>Grounded</status> and <status>Slowed</status> by {{ slowamount*-100 }}% for {{ groundingduration }} seconds and take <magicDamage>{{ interruptdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Damage"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ e5 }} -> {{ e5NL }}"]
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ e5 }} -> {{ e5NL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [20, 18, 16, 14, 12],
@@ -236,7 +245,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "2", "40", "10", "0.5", "70/110/150/190/230", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "2",
+            "40",
+            "10",
+            "0.5",
+            "70/110/150/190/230",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -259,7 +280,12 @@
           "description": "Poppy dashes to the target and pushes it back. If the target is pushed into a wall, it is stunned.",
           "tooltip": "Poppy tackles an enemy, dealing <physicalDamage>{{ tackledamage }} physical damage</physicalDamage> and carrying them forward. If Poppy tackles them into terrain, the enemy is <status>Stunned</status> for {{ e3 }} seconds and take an additional <physicalDamage>{{ tackledamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Initial Damage", "Wall Damage", "Stun Duration:", "Cooldown"],
+            "label": [
+              "Initial Damage",
+              "Wall Damage",
+              "Stun Duration:",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ e2 }} -> {{ e2NL }}",
@@ -322,7 +348,10 @@
           "tooltip": "<charge>Begin Casting:</charge> Poppy begins charging her hammer for up to {{ channelmaxduration }} seconds, <status>Slowing</status> herself by {{ selfslow }}%.<br /><br /><release>Release:</release> Poppy smashes the ground, creating a shockwave that deals <physicalDamage>{{ damage }} physical damage</physicalDamage> to the first champion hit and surrounding enemies, <status>Knocks</status> them <status>Back</status> towards their Nexus, and makes them Untargetable while they fly. The range and <status>Knock Back</status> distance increase with charge duration.<br /><br />An uncharged swing deals <physicalDamage>{{ halfdamage }} physical damage</physicalDamage> and <status>Knocks Up</status> for {{ knockupdurationsnap }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [140, 120, 100],
@@ -343,7 +372,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

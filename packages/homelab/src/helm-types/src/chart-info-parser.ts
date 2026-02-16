@@ -14,20 +14,20 @@ export async function parseChartInfoFromVersions(versionsPath = "src/versions.ts
 
     // Look for renovate comments that indicate Helm charts
     if (line?.includes("renovate: datasource=helm") && nextLine) {
-      const repoUrlMatch = /registryUrl=([^\s]+)/.exec(line);
+      const repoUrlMatch = /registryUrl=(\S+)/.exec(line);
       const versionKeyMatch = /^\s*"?([^":]+)"?:/.exec(nextLine);
 
       if (repoUrlMatch && versionKeyMatch) {
         const repoUrl = repoUrlMatch[1];
         const versionKey = versionKeyMatch[1];
 
-        if (!repoUrl || !versionKey) continue;
+        if (!repoUrl || !versionKey) {continue;}
 
         // Extract version value
         const versionMatch = /:\s*"([^"]+)"/.exec(nextLine);
         if (versionMatch) {
           const version = versionMatch[1];
-          if (!version) continue;
+          if (!version) {continue;}
 
           // Try to determine chart name from the version key or URL
           let chartName = versionKey;

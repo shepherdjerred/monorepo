@@ -139,7 +139,12 @@
           "description": "Dr. Mundo throws an infected bonesaw, dealing damage to the first enemy hit based on their current health and slowing them.",
           "tooltip": "Dr. Mundo hurls his bonesaw, dealing <magicDamage>{{ currenthealthdamage*100 }}% current Health magic damage</magicDamage> to the first enemy hit and <status>Slowing</status> them by {{ slowamount*100 }}% for {{ slowduration }} seconds.<br /><br />If the bonesaw hits a champion or monster, Dr. Mundo restores <healing>{{ healthrestoreonhitchampionmonster }} Health</healing>. If it hits a non-champion or non-monster, Dr. Mundo instead restores <healing>{{ healthrestoreonhitminion }} Health</healing>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Current Health Damage", "Minimum Damage", "Monster Damage Cap", "Health Cost"],
+            "label": [
+              "Current Health Damage",
+              "Minimum Damage",
+              "Monster Damage Cap",
+              "Health Cost"
+            ],
             "effect": [
               "{{ currenthealthdamage*100.000000 }}% -> {{ currenthealthdamagenl*100.000000 }}%",
               "{{ minimumdamage }} -> {{ minimumdamageNL }}",
@@ -166,7 +171,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " Health",
           "maxammo": "-1",
@@ -215,7 +232,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "% Current Health",
           "maxammo": "-1",
@@ -238,7 +267,12 @@
           "description": "Passive - Dr. Mundo gains bonus Attack Damage, increasing based on his max Health.<br><br>Active - Dr. Mundo slams his “medical” bag into an enemy, dealing additional damage based on his missing Health. If the enemy dies they are swatted away, dealing damage to enemies they pass through.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Dr Mundo gains <physicalDamage>{{ passivebonusad }} Attack Damage</physicalDamage>.<br /><br /><spellActive>Active:</spellActive> Dr Mundo violently swings his \"medical\" bag, causing his next Attack to deal an additional <physicalDamage>{{ additionaldamage }} physical damage</physicalDamage>, increased by up to {{ maxdamageamptooltip }} based on his missing Health. If the enemy is killed, Mundo swats them away, dealing <physicalDamage>{{ additionaldamage }} physical damage</physicalDamage> to enemies they pass through.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Base Damage", "Health Cost", "Health Into Attack Damage"],
+            "label": [
+              "Cooldown",
+              "Base Damage",
+              "Health Cost",
+              "Health Into Attack Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -265,7 +299,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " Health",
           "maxammo": "-1",
@@ -314,7 +360,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",

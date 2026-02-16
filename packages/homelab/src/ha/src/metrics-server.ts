@@ -2,6 +2,8 @@ import type { TServiceParams } from "@digital-alchemy/core";
 import { Gauge } from "prom-client";
 import { registry, setConnectionChecker } from "./metrics.ts";
 
+const CRITICAL_DOMAINS = ["climate", "notify", "switch", "media_player", "vacuum", "cover"] as const;
+
 const websocketConnected = new Gauge({
   name: "ha_websocket_connected",
   help: "Whether the HA websocket is connected (1=connected, 0=disconnected)",
@@ -33,13 +35,22 @@ export function startMetricsServer({ logger, hass }: TServiceParams) {
 
       if (url.pathname === "/health") {
         const connectionState = hass.socket.connectionState;
-        const isHealthy = connectionState === "connected";
-        return new Response(JSON.stringify({ status: isHealthy ? "healthy" : "unhealthy", connectionState }), {
-          status: isHealthy ? 200 : 503,
-          headers: {
-            "Content-Type": "application/json",
+        // hass.call[d] is typed as always present, but at runtime domains may be
+        // undefined if HA core hasn't finished loading integrations yet
+        const call = hass.call as unknown as Record<string, unknown>;
+        const missingDomains = CRITICAL_DOMAINS.filter((d) => !call[d]);
+        const domainsReady = missingDomains.length === 0;
+        const isHealthy = connectionState === "connected" && domainsReady;
+        return Response.json(
+          {
+            status: isHealthy ? "healthy" : "unhealthy",
+            connectionState,
+            ...(missingDomains.length > 0 && { missingDomains }),
           },
-        });
+          {
+            status: isHealthy ? 200 : 503,
+          },
+        );
       }
 
       return new Response("Not Found", { status: 404 });

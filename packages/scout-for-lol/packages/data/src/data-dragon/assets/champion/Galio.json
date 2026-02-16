@@ -134,7 +134,11 @@
           "description": "Galio fires two windblasts that converge into a large tornado that deals damage over time.",
           "tooltip": "Galio fires two windblasts that deal <magicDamage>{{ qmissiledamage }} magic damage</magicDamage> each. When the windblasts meet, they combine into a tornado that deals <magicDamage>{{ percentsuperqdamagett }}% max Health magic damage</magicDamage> over {{ superqduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Windblast Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Windblast Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -160,7 +164,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -217,7 +233,19 @@
             [1.25, 1.25, 1.25, 1.25, 1.25],
             [4, 4, 4, 4, 4]
           ],
-          "effectBurn": [null, "25/30/35/40/45", "2", "15", "0.5", "0", "1", "1.5", "2", "1.25", "4"],
+          "effectBurn": [
+            null,
+            "25/30/35/40/45",
+            "2",
+            "15",
+            "0.5",
+            "0",
+            "1",
+            "1.5",
+            "2",
+            "1.25",
+            "4"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -241,7 +269,10 @@
           "tooltip": "Galio lunges forward with a mighty blow, <status>Knocking Up</status> for {{ knockupduration }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first champion hit. Other enemies in the way take <magicDamage>{{ pvedamage }} magic damage</magicDamage>.<br /><br />Galio's dash stops on hitting terrain.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [11, 10, 9, 8, 7],
@@ -262,7 +293,19 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -311,7 +354,19 @@
             [0, 0, 0],
             [0, 0, 0]
           ],
-          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
