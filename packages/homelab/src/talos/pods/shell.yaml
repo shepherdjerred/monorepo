@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: maintenance
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: shell
+  namespace: maintenance
+spec:
+  hostIPC: true
+  hostNetwork: true
+  hostPID: true
+  volumes:
+    - name: var-mnt
+      hostPath:
+        path: /var/mnt
+        type: Directory
+    - name: host-root
+      hostPath:
+        path: /
+        type: Directory
+  containers:
+    - command: ["sleep", "infinity"]
+      image: debian
+      name: shell
+      securityContext:
+        privileged: true
+        allowPrivilegeEscalation: true
+      volumeMounts:
+        - name: var-mnt
+          mountPath: /var/mnt
+        - name: host-root
+          mountPath: /host-root

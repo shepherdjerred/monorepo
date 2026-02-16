@@ -1,0 +1,6 @@
+apiVersion: v2
+name: birmel
+description: Birmel application
+type: application
+version: "$version"
+appVersion: "$appVersion"

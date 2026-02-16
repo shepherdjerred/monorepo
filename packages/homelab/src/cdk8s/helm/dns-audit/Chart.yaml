@@ -1,0 +1,8 @@
+apiVersion: v2
+name: dns-audit
+description: DNS audit CronJob for SPF/DMARC/DKIM/MX validation
+
+type: application
+
+version: "$version"
+appVersion: "$appVersion"

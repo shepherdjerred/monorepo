@@ -1,9 +1,0 @@
-node_modules/
-dist/
-build/
-*.log
-.env*
-!.env.example
-generated/
-.cache/
-out/

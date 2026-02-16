@@ -1,0 +1,6 @@
+apiVersion: v2
+name: golink
+description: Golink URL shortener
+type: application
+version: "$version"
+appVersion: "$appVersion"

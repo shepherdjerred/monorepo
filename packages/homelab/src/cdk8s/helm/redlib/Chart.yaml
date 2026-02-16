@@ -1,0 +1,6 @@
+apiVersion: v2
+name: redlib
+description: Redlib - Privacy-friendly Reddit frontend
+type: application
+version: "$version"
+appVersion: "$appVersion"

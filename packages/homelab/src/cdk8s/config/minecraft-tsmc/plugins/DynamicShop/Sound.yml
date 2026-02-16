@@ -1,0 +1,10 @@
+# Enter 0 to mute.
+# https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html
+
+sell: ENTITY_EXPERIENCE_ORB_PICKUP
+buy: ENTITY_EXPERIENCE_ORB_PICKUP
+editItem: ENTITY_PAINTING_PLACE
+deleteItem: BLOCK_GRAVEL_BREAK
+addItem: BLOCK_GRAVEL_PLACE
+click: BLOCK_METAL_STEP
+tradeview: ENTITY_CHICKEN_EGG

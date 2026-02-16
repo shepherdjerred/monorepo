@@ -1,0 +1,6 @@
+apiVersion: v2
+name: bugsink
+description: Bugsink - Self-hosted error tracking (Sentry SDK compatible)
+type: application
+version: "$version"
+appVersion: "$appVersion"

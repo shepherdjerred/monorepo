@@ -1,0 +1,8 @@
+apiVersion: v2
+name: s3-static-sites
+description: S3 static sites served via Caddy
+
+type: application
+
+version: "$version"
+appVersion: "$appVersion"

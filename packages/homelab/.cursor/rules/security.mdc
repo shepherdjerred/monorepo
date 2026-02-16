@@ -1,0 +1,75 @@
+---
+description: Security best practices covering secret management, container security, RBAC, network policies, and compliance standards for Kubernetes infrastructure.
+---
+# Security Best Practices
+
+## Secret Management
+- **Never hardcode secrets in code or manifests**
+- Use Kubernetes secrets with 1Password integration
+- Store secrets in [src/cdk8s/secrets/](mdc:src/cdk8s/secrets) directory
+- Implement proper secret rotation strategies
+- Use dummy values for secrets in development environments
+
+## Container Security
+- **Prefer non-root containers** for all deployments
+- Implement proper security contexts for all pods
+- Use read-only root filesystems where possible
+- Minimize container attack surface by using minimal base images
+- Regularly update base images and dependencies
+
+## Kubernetes RBAC
+- Implement proper Role-Based Access Control (RBAC)
+- Follow principle of least privilege
+- Create service accounts with minimal required permissions
+- Regularly audit RBAC policies
+- Document access control decisions
+
+## Network Security
+- Implement network policies where appropriate
+- Restrict inter-pod communication to necessary services only
+- Use proper ingress controls
+- Consider service mesh for advanced networking security
+- Document network architecture and security boundaries
+
+## Pod Security Standards
+- Follow Kubernetes Pod Security Standards
+- Use security contexts consistently:
+  - `runAsNonRoot: true`
+  - `readOnlyRootFilesystem: true`
+  - `allowPrivilegeEscalation: false`
+  - Drop unnecessary capabilities
+
+## Image Security
+- Pin Docker images with SHA hashes when possible
+- Use trusted base images from official repositories
+- Scan container images for vulnerabilities
+- Implement image signing and verification
+- Regularly update dependencies as managed by [renovate.json](mdc:renovate.json)
+
+## Configuration Security
+- Never expose sensitive configuration in ConfigMaps
+- Use Kubernetes Secrets for sensitive data
+- Encrypt secrets at rest
+- Implement proper backup encryption
+- Consider external secret management solutions
+
+## Monitoring & Auditing
+- Enable Kubernetes audit logging
+- Monitor for security events and anomalies
+- Implement proper logging for security analysis
+- Set up alerts for security violations
+- Regularly review access logs
+
+## Development Security
+- Use security-focused linting rules
+- Implement security testing in CI/CD pipelines
+- Follow secure coding practices in TypeScript
+- Review security implications of infrastructure changes
+- Document security decisions and trade-offs
+
+## Compliance & Standards
+- Follow industry security standards
+- Document compliance requirements
+- Implement security baselines
+- Regular security assessments
+- Maintain security documentation

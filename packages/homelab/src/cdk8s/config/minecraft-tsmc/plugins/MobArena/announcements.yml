@@ -1,0 +1,85 @@
+arena-start: Let the slaughter begin!
+arena-end: Arena finished.
+arena-does-not-exist: That arena does not exist. Type &e/ma arenas&r for a list.
+arena-end-global: Arena &e%&r finished! Type &e/ma j %&r to join a new game!
+arena-join-global: Arena &e%&r is about to start! Type &e/ma j %&r to join!
+arena-lboard-not-found: That arena does not have a leaderboard set up.
+arena-auto-start: Arena will auto-start in &c%&r seconds.
+arena-start-delay: Arena can start in &e%&r seconds.
+join-not-enabled: MobArena is not enabled.
+join-in-other-arena: You are already in an arena! Leave that one first.
+join-arena-not-enabled: This arena is not enabled.
+join-arena-not-setup: This arena has not been set up yet.
+join-arena-edit-mode: This arena is in edit mode.
+join-arena-permission: You don't have permission to join this arena.
+join-fee-required: "Insufficient funds. Price: &c%&r"
+join-fee-paid: "Price to join was: &c%&r"
+join-arena-is-running: This arena is already in progress.
+join-already-playing: You are already playing!
+join-arg-needed: You must specify an arena.
+join-no-permission: You don't have permission to join any arenas.
+join-too-far: You are too far away from the arena to join/spectate.
+join-empty-inv: You must empty your inventory to join the arena.
+join-player-limit-reached: The player limit of this arena has been reached.
+join-store-inv-fail: Failed to store inventory. Try again.
+join-existing-inv-restored: Your old inventory items have been restored.
+join-after-delay: Joining arena in &c%&r seconds...
+join-interrupted-by-damage: Join aborted due to taking damage.
+join-interrupted-by-movement: Join aborted due to movement.
+join-player-joined: You joined the arena. Have fun!
+leave-not-playing: You are not in the arena.
+leave-not-ready: You did not ready up in time! Next time, ready up by clicking an
+  iron block.
+leave-player-left: You left the arena. Thanks for playing!
+player-died: "&c%&r died!"
+golem-died: A friendly Golem has died!
+spec-player-spectate: Enjoy the show!
+spec-from-arena: Enjoy the rest of the show!
+spec-not-running: This arena isn't running.
+spec-empty-inv: Empty your inventory first!
+spec-already-playing: Can't spectate when in the arena!
+not-ready-players: "Not ready: &c%&r"
+force-start-running: Arena has already started.
+force-start-not-ready: Can't force start, no players are ready.
+force-start-started: Forced arena start.
+force-end-empty: No one is in the arena.
+force-end-ended: Forced arena end.
+force-end-idle: You weren't quick enough!
+rewards-give: Here are all of your rewards!
+lobby-drop-item: No sharing allowed at this time!
+lobby-player-ready: You have been flagged as ready!
+lobby-pick-class: You must first pick a class!
+lobby-class-full: This class can no longer be selected, class limit reached!
+lobby-not-enough-players: Not enough players to start. Need at least &c%&r players.
+lobby-right-click: Punch the sign. Don't right-click.
+lobby-class-picked: You have chosen &e%&r as your class!
+lobby-class-random: You will get a random class on arena start.
+lobby-class-permission: You don't have permission to use this class!
+lobby-class-price: This class costs &c%&r (paid on arena start).
+lobby-class-too-expensive: You can't afford that class (&c%&r)
+lobby-no-such-class: There is no class named &c%&r.
+not-in-lobby: You are not in the lobby
+warp-to-arena: Warping to the arena not allowed!
+warp-from-arena: Warping from the arena not allowed!
+wave-default: Wave &b#%&r!
+wave-special: Wave &b#%&r! [SPECIAL]
+wave-swarm: Wave &b#%&r! [SWARM]
+wave-supply: Wave &b#%&r! [SUPPLY]
+wave-upgrade: Wave &b#%&r! [UPGRADE]
+wave-boss: Wave &b#%&r! [BOSS]
+wave-boss-ability: "Boss used ability: &c%&r!"
+wave-boss-low-health: Boss is almost dead!
+wave-boss-killed: "&a%&r killed the boss!"
+wave-boss-reward-earned: "You earned: &e%"
+wave-reward: "You just earned a reward: &e%&r"
+misc-reward-added: "You were just given a reward: &e%&r"
+misc-list-players: "Live players: &a%&r"
+misc-list-arenas: "Available arenas: %"
+misc-command-not-allowed: You can't use that command in the arena!
+misc-no-access: You don't have access to this command.
+misc-not-from-console: You can't use this command from the console.
+misc-help: For a list of commands, type &e/ma help&r
+misc-multiple-matches: Did you mean one of these commands?
+misc-no-matches: Command not found. Type &e/ma help&r
+misc-ma-leave-reminder: Remember to use &e/ma leave&r when you are done.
+misc-none: "&6<none>&r"

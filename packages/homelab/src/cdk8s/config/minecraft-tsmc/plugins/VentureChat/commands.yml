@@ -1,0 +1,119 @@
+Version: 3.3.0
+# Restart server after editing this file!!!
+# Restart server after editing this file!!!
+# Restart server after editing this file!!!
+commands:
+  message:
+    aliases: [vmessage, msg, tell, whisper, pm]
+    enabled: true
+  ignore:
+    aliases: [vignore]
+    enabled: true
+  reply:
+    aliases: [vreply, r]
+    enabled: true
+  spy:
+    aliases: [vspy]
+    enabled: true
+  mute:
+    aliases: [mp, vmute]
+    enabled: true
+  unmute:
+    aliases: [ump, vunmute]
+    enabled: true
+  muteall:
+    aliases: [mpa, vmuteall]
+    enabled: true
+  unmuteall:
+    aliases: [umpa, vunmuteall]
+    enabled: true
+  channel:
+    aliases: [ch, vchannel, join]
+    enabled: true
+  listen:
+    aliases: [lis, vlisten]
+    enabled: true
+  leave:
+    aliases: [lev, vleave]
+    enabled: true
+  chlist:
+    aliases: [chl, vchlist]
+    enabled: true
+  chwho:
+    aliases: [chw, vchwho]
+    enabled: true
+  setchannel:
+    aliases: [sc, vsetchannel]
+    enabled: true
+  kickchannel:
+    aliases: [kc, vkickchannel]
+    enabled: true
+  kickchannelall:
+    aliases: [kca, vkickchannelall]
+    enabled: true
+  setchannelall:
+    aliases: [sca, vsetchannelall]
+    enabled: true
+  force:
+    aliases: [for, vforce]
+    enabled: true
+  forceall:
+    aliases: [fora, vforceall]
+    enabled: true
+  chatreload:
+    aliases: [cr, vchatreload]
+    enabled: true
+  commandspy:
+    aliases: [comspy, vcommandspy]
+    enabled: true
+  chatinfo:
+    aliases: [ci, vchatinfo]
+    enabled: true
+  channelinfo:
+    aliases: [chi, vchannelinfo]
+    enabled: true
+  venturechat:
+    aliases: [vc]
+    enabled: true
+  me:
+    aliases: [vme]
+    enabled: true
+  filter:
+    aliases: [fil, vfilter]
+    enabled: true
+  broadcast:
+    aliases: [bc, vbroadcast]
+    enabled: true
+  commandblock:
+    aliases: [cb, vcommandblock]
+    enabled: true
+  party:
+    aliases: [p, chatparty, cp, vparty]
+    enabled: true
+  clearchat:
+    aliases: [cc, vclearchat]
+    enabled: true
+  notifications:
+    aliases: [notify, vnotify]
+    enabled: true
+  removemessage:
+    aliases: [rm, vremovemessage]
+    enabled: true
+  rangedspy:
+    aliases: [rspy, vrangedspy]
+    enabled: true
+  venturechatgui:
+    aliases: [vchatgui]
+    enabled: true
+  messagetoggle:
+    aliases: [mtoggle, vmessagetoggle]
+    enabled: true
+  bungeetoggle:
+    aliases: [btoggle, vbungeetoggle]
+    enabled: true
+  config:
+    aliases: [vconfig]
+    enabled: false
+  edit:
+    aliases: [vedit]
+    enabled: false

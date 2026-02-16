@@ -1,0 +1,19 @@
+{
+  "name": "@homelab/dagger",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Dagger module ready'",
+    "test": "echo 'No tests configured for Dagger module'",
+    "typecheck": "grep -q '@ts-nocheck' sdk/client.gen.ts || sed -i '' '1s/^/\\/\\/ @ts-nocheck\\n/' sdk/client.gen.ts; bunx tsc --noEmit",
+    "lint": "bunx eslint .",
+    "lint:fix": "bunx eslint . --fix"
+  },
+  "dependencies": {
+    "typescript": "^5.5.4",
+    "zod": "^4.1.11"
+  },
+  "dagger": {
+    "runtime": "bun"
+  }
+}

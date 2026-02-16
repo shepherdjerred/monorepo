@@ -1,0 +1,7 @@
+.env
+src/hass/
+*.db
+package-lock.json
+node_modules/
+# hass.d.ts is auto-generated in CI, but we commit a placeholder for local dev
+# src/hass.d.ts

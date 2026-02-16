@@ -1,8 +1,0 @@
-{
-  "name": "better-skill-capped",
-  "engineVersion": "v0.19.8",
-  "sdk": {
-    "source": "typescript"
-  },
-  "source": ".dagger"
-}

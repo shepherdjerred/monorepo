@@ -1,0 +1,174 @@
+#
+# ____       _   _            ____  _                    _                       _  _
+#| __ )  ___| |_| |_ ___ _ __/ ___|| |    ___  ___ _ __ (_)_ __   __ _    __   _| || |
+#|  _ \ / _ \ __| __/ _ \ '__\___ \| |   / _ \/ _ \ '_ \| | '_ \ / _` |   \ \ / / || |_
+#| |_) |  __/ |_| ||  __/ |   ___) | |__|  __/  __/ |_) | | | | | (_| |    \ V /|__   _|
+#|____/ \___|\__|\__\___|_|  |____/|_____\___|\___| .__/|_|_| |_|\__, |     \_/    |_|
+#                                                 |_|            |___/
+
+# Want to add new translations or fix existing ones? Please let us know on Discord (https://discord.gg/AS46VGT) or GitHub!
+# All supported languages: https://github.com/Nuytemans-Dieter/BetterSleeping/tree/BetterSleeping-v4/src/main/resources/lang
+
+# CONFIGURATION GUIDE:
+
+# Using colors:
+# The symbol '&' is used for color codes
+# For SPIGOT ONLY in 1.16+: RGB support in one of the following formats: $(RED,GREEN,BLUE)$ OR &#RRGGBB
+# RED, GREEN and BLUE range from 0 to 255
+# RR, GG and BB follow the hex color codes, from 00 to ff
+# Any message can be disabled by setting the text to "ignored" or "", an example can be found below
+# some_setting: "ignored"
+# another_setting: ""
+
+# SINGULAR / PLURAL
+# BetterSleeping supports singular and plural nouns
+# This requires 3 contents: a (supported!) placeholder that will be replaced by a number, the singular form and the plural form
+# Example: [<num_sleeping>.player.players] --> <num_sleeping> will be replaced by the corresponding amount. This placeholder must be supported by the provided message.
+#   In this specific case:
+#     When <num_sleeping> is equal to 1: everything between the [] will be replaced by player
+#     When <num_sleeping> is NOT equal to 1: everything between the [] will be replaced by players
+# Note: For this, you can use any placeholder that is replaced by a number (see below)
+
+# How to use square brackets? [ and ]
+# BetterSleeping uses those to distinguish singular and plural words so you cannot directly use [ and ].
+# However, you can use |( and )| instead, they will be replaced by [ and ] respectively
+# |( This )| will become [ This ].
+
+# PLACEHOLDERS
+# <user>
+#     Replaced by:      The player who receives the message
+#     Can be used in:   All messages support this
+#     Example:          When user Freddy_Krueger receives any message, <user> is replaced by Freddy_Krueger
+# <player>
+#     Replaced by:      The player who did an action
+#     Can be used in:   bed_enter_broadcast, enough_sleeping
+#     Example:          When user Freddy_Krueger goes to bed, <player> is replaced by Freddy_Krueger
+# <num_sleeping>
+#     Replaced by:      The amount of sleeping players
+#     Can be used in:   bed_enter_message, bed_enter_broadcast, enough_sleeping, skipping_canceled
+#     Example:          When 10 people are online and 4 are sleeping, <num_sleeping> is replaced by 4
+# <needed_sleeping>
+#     Replaced by:      The amount of sleeping players that have to sleep in order to skip the night
+#     Can be used in:   bed_enter_message, bed_enter_broadcast, enough_sleeping
+#     Example:          When 4 players need to sleep, <needed_sleeping> is replaced by 4
+# <remaining_sleeping>
+#     Replaced by:      The amount of extra sleeping players that are needed
+#     Can be used in:   bed_enter_message, bed_enter_broadcast, enough_sleeping, skipping_canceled
+#     Example:          When 4 players are sleeping but 6 are needed, <remaining_sleeping> is replaced by 2
+# <time>
+#     Replaced by:      The amount of time in a context
+#     Can be used in:   sleep_spam
+#     Example:          When a player has just left their bed and has to wait 4 seconds before they can enter it again, <time> is replaced by 4
+# <var>
+#     Replaced by:      No_permission: the used command, buff_received: the amount of received buffs, debuff_received: the amount of received debuffs
+#     Can be used in:   no_permission, buff_received, debuff_received, some commands
+#     Example:          User executes /bs reload but has no access. <var> will be replaced by '/bs reload'
+
+# ----------------- #
+# Sleeping messages |
+# ----------------- #
+
+# A player receives this message when entering their bed
+bed_enter_message: "Sleep tight, <user>! (<num_sleeping>/<needed_sleeping>)"
+
+# All players in the same world get this message when someone enters their bed
+bed_enter_broadcast: "<player> is taking a nap, [<num_sleeping>.one player is.<num_sleeping> players are] sleeping now. <remaining_sleeping> [<remaining_sleeping>.sleeper.sleepers] needed."
+
+# This message is sent to all players in a world where enough players are sleeping
+enough_sleeping: "Enough players are sleeping now, the night will be over shortly."
+
+# Players receive this message in the morning
+# Placeholders: <num>: Amount of sleepers
+morning_message: "Good morning, <user>. Have a great day!"
+
+# Players that try to enter their bed too quickly after getting out of it
+sleep_spam: "You have to wait <time> more [<time>.second.seconds] before you can sleep again!"
+
+# This message is sent one minute before players can go to bed due to nighttime (disabled by default)
+sleep_possible_soon: ""
+
+# This message is sent when sleeping is possible due to a thunderstorm or nighttime (disabled by default)
+sleep_possible_now: ""
+
+# Used as title above the bossbar
+bossbar_title: "Sleepers: <num_sleeping>/<needed_sleeping>"
+
+# --------------- #
+# Buffs & debuffs |
+# --------------- #
+
+# Players who slept AND receive buffs will get this message
+buff_received: "You feel well rested and received [<var>.a buff.<var> buffs]."
+
+# Players who did not sleep AND receive debuffs will get this message
+debuff_received: "You did not sleep and feel tired, you received [<var>.a debuff.<var> debuffs]."
+
+# ----------- #
+# Permissions |
+# ----------- #
+
+# Sent when a command is not recognised
+# Placeholders: <command> the executed command
+unknown_command: "&cThe command '<command>' is unknown! Perform /bs4 help to see a list of commands"
+
+# The message a player gets when they don't have access to a command
+no_permission: "&cYou don't have permission to execute '<command>'!"
+
+# Sent when the console tries executing a player command, and when a player executes a console-only command
+wrong_executor: "&cYou cannot execute '<command>'!"
+
+# This message is sent when a player tries to sleep but they have got a bypass permission
+# Permissions include:
+#     - Having the node bettersleeping.bypass
+#     - Being in a bypassed gamemode
+#     - Being afk / vanished
+bypass_message: "&cYou are bypassed so you don't need to sleep, <user>. You will never get debuffs!"
+
+# -------- #
+# Commands |
+# -------- #
+
+# Sent to all players in a world when someone asks for players to sleep
+command_shout: "Someone is asking you to take a nap and accelerate the night (<num_sleeping>/<needed_sleeping>)"
+command_shout_cooldown: "&cSomeone recently shouted in this world, please wait <time> more [<time>.second.seconds]!"
+
+# Sent when someone tries to perform /bs4 sleep during the day
+command_sleep_notnight: "&cYou are not tired yet, please wait until nighttime."
+
+# Sent when someone attempts to get info on a disabled world
+world_disabled: "&cBetterSleeping is not enabled in your world."
+
+# These are shown when performing /bs4 help
+# Set one or more of these to "" to disable them from showing up
+command_help_header: "&3--=={BetterSleeping4 Help}==--"
+command_help_buffs: "/bs4 buffs: &fSee the list of (de)buffs you can get"
+command_help_reload: "/bs4 reload: &fReload BetterSleeping configuration"
+command_help_shout: "/bs4 shout: &fAnonymously ask players in your world to sleep"
+command_help_sleep: "/bs4 sleep: &fCount as a sleeper without going to bed"
+command_help_status: "/bs4 status: &fView the current status in your world"
+command_help_version: "/bs4 version: &fSee info about the BetterSleeping version"
+command_help_footer: "&3---==<>==---"
+
+# Shown when performing /bs4 status
+# Set one or more of these to "" to disable them from showing up
+command_status_header: "&3--=={BetterSleeping4 Status}==--"
+command_status_world: "Showing status of world: &f<worldname>"
+# Placeholders: <num_sleeping> and <needed_sleeping>
+command_status_sleeping: "Sleeping: &f<num_sleeping>/<needed_sleeping>"
+# Placeholder: <var>
+command_status_dayspeed: "Day speed: &fx<var>"
+# Placeholder: <var>
+command_status_nightspeed: "Night speed: &fx<var>"
+# Placeholder: <var>
+command_status_sleepingspeed: "Sleeping speed: &fx<var>"
+command_status_footer: "&3---==<>==---"
+
+# Shown when performing /bs4 buffs
+command_buffs_header: "&3--=={BetterSleeping4 Buffs}==--"
+command_buffs_nobuffs: "&cThere are no enabled sleeping buffs!"
+command_buffs_buffs: "When you sleep, you will get:"
+command_buffs_separator: "&3---===---"
+command_buffs_nodebuffs: "&cThere are no enabled sleeping debuffs!"
+command_buffs_bypassed: "You are bypassed so you will never get debuffs"
+command_buffs_debuffs: "When you don't sleep, you will get:"
+command_buffs_footer: "&3---==<>==---"

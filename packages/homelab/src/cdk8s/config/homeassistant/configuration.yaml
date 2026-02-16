@@ -1,0 +1,105 @@
+default_config:
+
+homekit:
+  - name: HA1
+    advertise_ip: 192.168.1.81
+    port: 21063
+    filter:
+      include_domains:
+        - climate
+        - cover
+        - fan
+        - humidifier
+        - alarm_control_panel
+        - remote
+        - water_heater
+        - sensor
+        - switch
+        - device_tracker
+        - binary_sensor
+        - input_select
+        - vacuum
+      exclude_entities:
+        - binary_sensor.jerred_iphone_focus
+        - binary_sensor.ipad_focus
+        - binary_sensor.roomba_bin_full
+      exclude_entity_globs:
+        - binary_sensor.*entertainment_configuration
+        - switch.adaptive_lighting_*
+        - sensor.the_victor_229_*
+        - sensor.average_*
+        - sensor.current_bill*
+        - sensor.typical_monthly*
+        - sensor.electricity_maps*
+        - sensor.refrigerator*
+        - binary_sensor.refrigerator*
+  - name: HA2
+    advertise_ip: 192.168.1.81
+    port: 21064
+    filter:
+      include_domains:
+        - light
+      exclude_entities:
+        - light.living_room_main
+        - light.office
+
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 0.0.0.0/0
+sonos:
+  media_player:
+    advertise_addr: 192.168.1.81
+
+recorder:
+  commit_interval: 10
+  purge_keep_days: 180
+
+# Text to speech
+tts:
+  - platform: google_translate
+ffmpeg:
+
+automation: !include automation.yaml
+scene: !include scenes.yaml
+script: !include scripts.yaml
+
+# Template sensors for monitoring
+# Note: Jinja2 templates are escaped for Helm compatibility ({{ "{{" }} ... {{ "}}" }})
+template:
+  - sensor:
+      - name: "Unavailable Entities Count"
+        unique_id: unavailable_entities_count
+        state: >
+          {{ "{{" }} states
+             | selectattr('state', 'in', ['unavailable', 'unknown'])
+             | rejectattr('domain', 'in', ['group', 'automation', 'scene', 'script', 'button', 'event', 'number', 'select', 'text', 'update'])
+             | list | count {{ "}}" }}
+        unit_of_measurement: "entities"
+        state_class: measurement
+        icon: mdi:alert-circle
+        attributes:
+          entities: >
+            {{ "{{" }} states
+               | selectattr('state', 'in', ['unavailable', 'unknown'])
+               | rejectattr('domain', 'in', ['group', 'automation', 'scene', 'script', 'button', 'event', 'number', 'select', 'text', 'update'])
+               | map(attribute='entity_id')
+               | list {{ "}}" }}
+
+prometheus:
+  namespace: homeassistant
+
+light:
+  - platform: group
+    name: "Bronze Lamp"
+    unique_id: bronze_lamp
+    entities:
+      - light.bronze_lamp_upper
+      - light.bronze_lamp_lower
+      - light.bronze_lamp_middle
+  - platform: group
+    name: "R&B Lamp"
+    unique_id: r_b_lamp
+    entities:
+      - light.room_and_board_1
+      - light.room_and_board_2

@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/recyclarr/recyclarr/master/schemas/config-schema.json
+radarr:
+  radarr:
+    base_url: http://media-radarr-service:7878
+    api_key: !env_var RADARR_API_KEY
+    delete_old_custom_formats: true
+    replace_existing_custom_formats: true
+    include:
+      - template: radarr-quality-definition-movie
+      - template: radarr-quality-profile-hd-bluray-web
+      - template: radarr-custom-formats-hd-bluray-web
+      - template: radarr-quality-profile-uhd-bluray-web
+      - template: radarr-custom-formats-uhd-bluray-web
+      - template: radarr-quality-profile-remux-web-1080p
+      - template: radarr-custom-formats-remux-web-1080p
+      - template: radarr-quality-profile-remux-web-2160p
+      - template: radarr-custom-formats-remux-web-2160p
+    media_naming:
+      folder: default
+      movie:
+        rename: true
+        standard: default

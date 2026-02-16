@@ -6,7 +6,6 @@
     "lint": "bunx eslint src"
   },
   "dependencies": {
-    "@shepherdjerred/dagger-utils": "^0.8.0",
     "typescript": "^5.8.0"
   },
   "dagger": {

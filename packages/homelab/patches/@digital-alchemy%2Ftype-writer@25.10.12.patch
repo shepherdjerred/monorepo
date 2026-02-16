@@ -1,0 +1,13 @@
+diff --git a/dist/tsdoc.service.mjs b/dist/tsdoc.service.mjs
+index e861ad6c9e68d5bb678300052f33b1781b40fd79..61bb3930c03f7dbca7e94a2b7c8f7c0f33ea3c15 100644
+--- a/dist/tsdoc.service.mjs
++++ b/dist/tsdoc.service.mjs
+@@ -5,7 +5,7 @@ export function TSDoc({ config }) {
+     // #MARK: escapeCommentContent
+     function escapeCommentContent(content) {
+         // Always sanitize content first to prevent comment breaking
+-        let sanitized = content.replace(/\*\//g, "[COMMENT_END]").replace(/\/\*/g, "[COMMENT_START]");
++        let sanitized = (content ?? "").replace(/\*\//g, "[COMMENT_END]").replace(/\/\*/g, "[COMMENT_START]");
+         if (config.type_build.SHORTEN_COMMENTS &&
+             sanitized.length > config.type_build.SHORTEN_COMMENTS) {
+             sanitized =

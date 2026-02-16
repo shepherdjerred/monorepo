@@ -65,10 +65,6 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
         workspaceSource.file("packages/bun-decompile/package.json"),
       )
       .withMountedFile(
-        "/workspace/packages/dagger-utils/package.json",
-        workspaceSource.file("packages/dagger-utils/package.json"),
-      )
-      .withMountedFile(
         "/workspace/packages/eslint-config/package.json",
         workspaceSource.file("packages/eslint-config/package.json"),
       )
@@ -97,7 +93,13 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
       )
       // Clauderon docs package (mount full directory in PHASE 1 for workspace validation)
       .withExec(["mkdir", "-p", "/workspace/packages/clauderon/docs"])
-      .withMountedDirectory("/workspace/packages/clauderon/docs", workspaceSource.directory("packages/clauderon/docs"));
+      .withMountedDirectory("/workspace/packages/clauderon/docs", workspaceSource.directory("packages/clauderon/docs"))
+      // New workspace members
+      .withMountedFile("/workspace/packages/astro-opengraph-images/package.json", workspaceSource.file("packages/astro-opengraph-images/package.json"))
+      .withMountedFile("/workspace/packages/better-skill-capped/package.json", workspaceSource.file("packages/better-skill-capped/package.json"))
+      .withMountedFile("/workspace/packages/sjer.red/package.json", workspaceSource.file("packages/sjer.red/package.json"))
+      .withMountedFile("/workspace/packages/webring/package.json", workspaceSource.file("packages/webring/package.json"))
+      .withMountedFile("/workspace/packages/starlight-karma-bot/package.json", workspaceSource.file("packages/starlight-karma-bot/package.json"));
   } else {
     container = container
       .withFile("/workspace/package.json", workspaceSource.file("package.json"))
@@ -106,10 +108,6 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
       .withFile(
         "/workspace/packages/bun-decompile/package.json",
         workspaceSource.file("packages/bun-decompile/package.json"),
-      )
-      .withFile(
-        "/workspace/packages/dagger-utils/package.json",
-        workspaceSource.file("packages/dagger-utils/package.json"),
       )
       .withFile(
         "/workspace/packages/eslint-config/package.json",
@@ -139,7 +137,13 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
         workspaceSource.file("packages/clauderon/web/frontend/package.json"),
       )
       // Clauderon docs package (copy full directory in PHASE 1 for workspace validation)
-      .withDirectory("/workspace/packages/clauderon/docs", workspaceSource.directory("packages/clauderon/docs"));
+      .withDirectory("/workspace/packages/clauderon/docs", workspaceSource.directory("packages/clauderon/docs"))
+      // New workspace members
+      .withFile("/workspace/packages/astro-opengraph-images/package.json", workspaceSource.file("packages/astro-opengraph-images/package.json"))
+      .withFile("/workspace/packages/better-skill-capped/package.json", workspaceSource.file("packages/better-skill-capped/package.json"))
+      .withFile("/workspace/packages/sjer.red/package.json", workspaceSource.file("packages/sjer.red/package.json"))
+      .withFile("/workspace/packages/webring/package.json", workspaceSource.file("packages/webring/package.json"))
+      .withFile("/workspace/packages/starlight-karma-bot/package.json", workspaceSource.file("packages/starlight-karma-bot/package.json"));
   }
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
@@ -151,17 +155,27 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
       .withMountedFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
       .withMountedDirectory("/workspace/packages/birmel", workspaceSource.directory("packages/birmel"))
       .withMountedDirectory("/workspace/packages/bun-decompile", workspaceSource.directory("packages/bun-decompile"))
-      .withMountedDirectory("/workspace/packages/dagger-utils", workspaceSource.directory("packages/dagger-utils"))
       .withMountedDirectory("/workspace/packages/eslint-config", workspaceSource.directory("packages/eslint-config"))
-      .withMountedDirectory("/workspace/packages/tools", workspaceSource.directory("packages/tools"));
+      .withMountedDirectory("/workspace/packages/tools", workspaceSource.directory("packages/tools"))
+      // New workspace members
+      .withMountedDirectory("/workspace/packages/astro-opengraph-images", workspaceSource.directory("packages/astro-opengraph-images"))
+      .withMountedDirectory("/workspace/packages/better-skill-capped", workspaceSource.directory("packages/better-skill-capped"))
+      .withMountedDirectory("/workspace/packages/sjer.red", workspaceSource.directory("packages/sjer.red"))
+      .withMountedDirectory("/workspace/packages/webring", workspaceSource.directory("packages/webring"))
+      .withMountedDirectory("/workspace/packages/starlight-karma-bot", workspaceSource.directory("packages/starlight-karma-bot"));
   } else {
     container = container
       .withFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
       .withDirectory("/workspace/packages/birmel", workspaceSource.directory("packages/birmel"))
       .withDirectory("/workspace/packages/bun-decompile", workspaceSource.directory("packages/bun-decompile"))
-      .withDirectory("/workspace/packages/dagger-utils", workspaceSource.directory("packages/dagger-utils"))
       .withDirectory("/workspace/packages/eslint-config", workspaceSource.directory("packages/eslint-config"))
-      .withDirectory("/workspace/packages/tools", workspaceSource.directory("packages/tools"));
+      .withDirectory("/workspace/packages/tools", workspaceSource.directory("packages/tools"))
+      // New workspace members
+      .withDirectory("/workspace/packages/astro-opengraph-images", workspaceSource.directory("packages/astro-opengraph-images"))
+      .withDirectory("/workspace/packages/better-skill-capped", workspaceSource.directory("packages/better-skill-capped"))
+      .withDirectory("/workspace/packages/sjer.red", workspaceSource.directory("packages/sjer.red"))
+      .withDirectory("/workspace/packages/webring", workspaceSource.directory("packages/webring"))
+      .withDirectory("/workspace/packages/starlight-karma-bot", workspaceSource.directory("packages/starlight-karma-bot"));
   }
 
   // PHASE 4: Re-run bun install to recreate workspace node_modules symlinks

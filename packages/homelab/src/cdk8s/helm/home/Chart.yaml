@@ -1,0 +1,6 @@
+apiVersion: v2
+name: home
+description: Home automation - Home Assistant
+type: application
+version: "$version"
+appVersion: "$appVersion"

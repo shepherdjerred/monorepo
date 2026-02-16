@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx"
+    // Note: verbatimModuleSyntax disabled because of cdk8s generation
+  },
+  "exclude": ["node_modules"]
+}

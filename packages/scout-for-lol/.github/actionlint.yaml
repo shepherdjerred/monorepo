@@ -1,3 +1,0 @@
-self-hosted-runner:
-  labels:
-    - scout-for-lol-runner-set

@@ -1,0 +1,321 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`Snapshot Tests should generate consistent output for basic types with comments 1`] = `
+"// Generated TypeScript types for basic Helm chart
+
+export type BasicHelmValues = {
+  /**
+   * Enable the deployment
+   *
+   * @default true
+   */
+  enabled?: boolean;
+  /**
+   * Number of replicas to run
+   *
+   * @default 3
+   */
+  replicas?: number;
+  /**
+   * Container image to use
+   *
+   * @default "nginx:latest"
+   */
+  image?: string;
+};
+
+export type BasicHelmParameters = {
+  "enabled"?: string;
+  "replicas"?: string;
+  "image"?: string;
+};
+"
+`;
+
+exports[`Snapshot Tests should generate consistent output for dotted keys 1`] = `
+"// Generated TypeScript types for dotted-keys Helm chart
+
+export type DottedKeysHelmValues = {
+  /**
+   * Default policy role
+   *
+   * @default "role:readonly"
+   */
+  "policy.default"?: string;
+  /**
+   * CSV policy definitions
+   *
+   * @default ""
+   */
+  "policy.csv"?: string;
+  /**
+   * Enable ingress
+   *
+   * @default true
+   */
+  "ingress.enabled"?: boolean;
+  /**
+   * Ingress hostname
+   *
+   * @default "example.com"
+   */
+  "ingress.hostname"?: string;
+};
+
+export type DottedkeysHelmParameters = {
+  "policy.default"?: string;
+  "policy.csv"?: string;
+  "ingress.enabled"?: string;
+  "ingress.hostname"?: string;
+};
+"
+`;
+
+exports[`Snapshot Tests should generate consistent output with escaped */ sequences 1`] = `
+"// Generated TypeScript types for escaped Helm chart
+
+export type EscapedHelmValues = {
+  /**
+   * Policy rules in the form: p, subject, resource, action, object, effect
+   * Example: p, role:admin, applications, *, *\\/*, allow
+   *
+   * @default "allow"
+   */
+  policy?: string;
+  /**
+   * Glob patterns: *\\/*.js, *\\/test/*, and *\\/*\\/*.ts should match
+   *
+   * @default ""
+   */
+  rules?: string;
+};
+
+export type EscapedHelmParameters = {
+  "policy"?: string;
+  "rules"?: string;
+};
+"
+`;
+
+exports[`Snapshot Tests should generate consistent output for nested structures 1`] = `
+"// Generated TypeScript types for nested Helm chart
+
+export type NestedHelmValuesServer = {
+  /**
+   * Number of server replicas
+   *
+   * @default 2
+   */
+  replicas?: number;
+  /**
+   * Service configuration
+   *
+   * @default {"type":"ClusterIP","port":80}
+   */
+  service?: NestedHelmValuesServerService;
+};
+
+export type NestedHelmValuesServerService = {
+  /**
+   * Kubernetes service type
+   *
+   * @default "ClusterIP"
+   */
+  type?: string;
+  /**
+   * Service port number
+   *
+   * @default 80
+   */
+  port?: number;
+};
+
+export type NestedHelmValuesIngress = {
+  /**
+   * Enable ingress controller
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  hosts?: string[];
+};
+
+export type NestedHelmValues = {
+  /**
+   * Server configuration
+   *
+   * @default {"replicas":2,"service":{"type":"ClusterIP","port":80}}
+   */
+  server?: NestedHelmValuesServer;
+  /**
+   * Ingress configuration
+   *
+   * @default {"enabled":false,"hosts":["example.com"]}
+   */
+  ingress?: NestedHelmValuesIngress;
+};
+
+export type NestedHelmParameters = {
+  "server.replicas"?: string;
+  "server.service.type"?: string;
+  "server.service.port"?: string;
+  "ingress.enabled"?: string;
+  "ingress.hosts"?: string;
+};
+"
+`;
+
+exports[`Snapshot Tests should generate consistent output for argo-cd rbac configuration 1`] = `
+"// Generated TypeScript types for argocd-rbac Helm chart
+
+export type ArgocdRbacHelmValuesRbac = {
+  /**
+   * Create RBAC resources
+   *
+   * @default true
+   */
+  create?: boolean;
+  /**
+   * Annotations for RBAC resources
+   *
+   * @default {}
+   */
+  annotations?: ArgocdRbacHelmValuesRbacAnnotations;
+  /**
+   * The name of the default role which Argo CD will falls back to, when authorizing API requests (optional).
+   * If omitted or empty, users may be still be able to login, but will see no apps, projects, etc...
+   *
+   * @default ""
+   */
+  "policy.default"?: string;
+  /**
+   * File containing user-defined policies and role definitions.
+   *
+   * @default ""
+   */
+  "policy.csv"?: string;
+  /**
+   * Policy rules are in the form:
+   * Role definitions and bindings are in the form:
+   * OIDC scopes to examine during rbac enforcement (in addition to \`sub\` scope).
+   * The scope value can be a string, or a list of strings.
+   *
+   * @default "[groups]"
+   */
+  scopes?: string;
+  /**
+   * Matcher function for Casbin, \`glob\` for glob matcher and \`regex\` for regex matcher.
+   *
+   * @default "glob"
+   */
+  "policy.matchMode"?: string;
+};
+
+export type ArgocdRbacHelmValuesRbacAnnotations = object;
+
+export type ArgocdRbacHelmValues = {
+  /**
+   * RBAC configuration for Argo CD
+   *
+   * @default {...} (6 keys)
+   */
+  rbac?: ArgocdRbacHelmValuesRbac;
+};
+
+export type ArgocdrbacHelmParameters = {
+  "rbac.create"?: string;
+  "rbac.policy.default"?: string;
+  "rbac.policy.csv"?: string;
+  "rbac.scopes"?: string;
+  "rbac.policy.matchMode"?: string;
+};
+"
+`;
+
+exports[`Snapshot Tests should generate consistent output for arrays and objects 1`] = `
+"// Generated TypeScript types for complex-types Helm chart
+
+export type ComplexTypesHelmValuesTolerationsElement = {
+  /**
+   * @default "node-role"
+   */
+  key?: string;
+  /**
+   * @default "Equal"
+   */
+  operator?: string;
+  /**
+   * @default "worker"
+   */
+  value?: string;
+  /**
+   * @default "NoSchedule"
+   */
+  effect?: string;
+};
+
+export type ComplexTypesHelmValuesNodeSelector = {
+  /**
+   * @default "linux"
+   */
+  "kubernetes.io/os"?: string;
+};
+
+export type ComplexTypesHelmValuesEnvElement = {
+  /**
+   * @default "LOG_LEVEL"
+   */
+  name?: string;
+  /**
+   * @default "info"
+   */
+  value?: string;
+};
+
+export type ComplexTypesHelmValues = {
+  tolerations?: ComplexTypesHelmValuesTolerationsElement[];
+  /**
+   * Node selector labels
+   *
+   * @default {"kubernetes.io/os":"linux"}
+   */
+  nodeSelector?: ComplexTypesHelmValuesNodeSelector;
+  env?: ComplexTypesHelmValuesEnvElement[];
+};
+
+export type ComplextypesHelmParameters = {
+  "tolerations.key"?: string;
+  "tolerations.operator"?: string;
+  "tolerations.value"?: string;
+  "tolerations.effect"?: string;
+  "nodeSelector.kubernetes.io/os"?: string;
+  "env.name"?: string;
+  "env.value"?: string;
+};
+"
+`;
+
+exports[`Snapshot Tests should generate consistent output with special characters in comments 1`] = `
+"// Generated TypeScript types for special-chars Helm chart
+
+export type SpecialCharsHelmValues = {
+  /**
+   * Configuration with special chars: \`backticks\`, (parentheses), [brackets], {braces}, <angles>, "quotes", and 'apostrophes'
+   *
+   * @default "default"
+   */
+  config?: string | number | boolean;
+  /**
+   * Glob pattern matching files like: **\\/*.js, src/**\\/test/*.ts, and *\\/node_modules/*
+   *
+   * @default "*.js"
+   */
+  pattern?: string;
+};
+
+export type SpecialcharsHelmParameters = {
+  "config"?: string;
+  "pattern"?: string;
+};
+"
+`;

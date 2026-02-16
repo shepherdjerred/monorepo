@@ -1,0 +1,6 @@
+apiVersion: v2
+name: scout-prod
+description: Scout for LoL - Production environment
+type: application
+version: "$version"
+appVersion: "$appVersion"

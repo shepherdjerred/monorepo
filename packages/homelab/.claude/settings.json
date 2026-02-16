@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"$CLAUDE_CODE_REMOTE\" != \"true\" ] && exit 0; command -v mise >/dev/null 2>&1 || curl -fsSL https://mise.run | sh; mise trust && mise run dev"
+          }
+        ]
+      }
+    ]
+  }
+}
