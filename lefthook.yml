@@ -1,0 +1,252 @@
+glob_matcher: doublestar
+
+pre-commit:
+  jobs:
+    # TIER 1: Fast checks (sequential, fail-fast)
+    - name: tier-1
+      group:
+        piped: true
+        jobs:
+          - name: check-suppressions
+            run: bun scripts/check-suppressions.ts
+
+          - name: staged-lint
+            group:
+              parallel: true
+              jobs:
+                # --- lockfile ---
+                - name: lockfile-check
+                  glob: "**/package.json"
+                  run: bun install --frozen-lockfile
+
+                # --- eslint per package (staged files only) ---
+                - name: eslint-birmel
+                  root: "packages/birmel/"
+                  glob: "packages/birmel/**/*.{ts,tsx,js,jsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-bun-decompile
+                  root: "packages/bun-decompile/"
+                  glob: "packages/bun-decompile/**/*.{ts,tsx,js,jsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-dagger-utils
+                  root: "packages/dagger-utils/"
+                  glob: "packages/dagger-utils/**/*.{ts,tsx,js,jsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-eslint-config
+                  root: "packages/eslint-config/"
+                  glob: "packages/eslint-config/**/*.{ts,tsx,js,jsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-tools
+                  root: "packages/tools/"
+                  glob: "packages/tools/**/*.{ts,tsx,js,jsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-web-shared
+                  root: "packages/clauderon/web/shared/"
+                  glob: "packages/clauderon/web/shared/**/*.{ts,tsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-web-client
+                  root: "packages/clauderon/web/client/"
+                  glob: "packages/clauderon/web/client/**/*.{ts,tsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-web-frontend
+                  root: "packages/clauderon/web/frontend/"
+                  glob: "packages/clauderon/web/frontend/**/*.{ts,tsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-mobile
+                  root: "packages/clauderon/mobile/"
+                  glob: "packages/clauderon/mobile/**/*.{ts,tsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: prettier-mobile
+                  root: "packages/clauderon/mobile/"
+                  glob: "packages/clauderon/mobile/**/*.{ts,tsx}"
+                  run: bunx prettier --check {staged_files}
+
+                - name: eslint-docs
+                  root: "packages/clauderon/docs/"
+                  glob: "packages/clauderon/docs/**/*.{ts,tsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-dagger
+                  root: ".dagger/"
+                  glob: ".dagger/**/*.ts"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                # --- cargo fmt ---
+                - name: cargo-fmt
+                  root: "packages/clauderon/"
+                  glob: "packages/clauderon/**/*.rs"
+                  run: cargo fmt
+
+                # --- shellcheck ---
+                - name: shellcheck
+                  glob: "**/*.sh"
+                  exclude:
+                    - "node_modules/**"
+                    - "**/node_modules/**"
+                    - "**/Pods/**"
+                  run: shellcheck --severity=warning {staged_files}
+
+    # TIER 2: Conditional checks (parallel)
+    - name: tier-2
+      group:
+        parallel: true
+        jobs:
+          # --- Rust ---
+          - name: cargo-clippy
+            root: "packages/clauderon/"
+            glob:
+              - "packages/clauderon/**/*.rs"
+              - "packages/clauderon/Cargo.toml"
+              - "packages/clauderon/Cargo.lock"
+            run: cargo clippy --all-targets --all-features -- -D warnings
+
+          - name: cargo-test
+            root: "packages/clauderon/"
+            glob:
+              - "packages/clauderon/**/*.rs"
+              - "packages/clauderon/Cargo.toml"
+              - "packages/clauderon/Cargo.lock"
+            run: cargo test
+
+          - name: cargo-deny
+            root: "packages/clauderon/"
+            glob:
+              - "packages/clauderon/**/*.rs"
+              - "packages/clauderon/Cargo.toml"
+              - "packages/clauderon/Cargo.lock"
+            skip:
+              - run: "! command -v cargo-deny >/dev/null 2>&1"
+            run: cargo deny check
+
+          # --- TypeScript typecheck per package ---
+          - name: birmel-typecheck
+            root: "packages/birmel/"
+            glob: "packages/birmel/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: birmel-test
+            root: "packages/birmel/"
+            glob: "packages/birmel/**/*.{ts,tsx}"
+            run: bunx prisma generate && bun run test
+
+          - name: bun-decompile-typecheck
+            root: "packages/bun-decompile/"
+            glob: "packages/bun-decompile/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: dagger-utils-typecheck
+            root: "packages/dagger-utils/"
+            glob: "packages/dagger-utils/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: eslint-config-typecheck
+            root: "packages/eslint-config/"
+            glob: "packages/eslint-config/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: tools-typecheck
+            root: "packages/tools/"
+            glob: "packages/tools/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: web-shared-typecheck
+            root: "packages/clauderon/web/shared/"
+            glob: "packages/clauderon/web/shared/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: web-client-typecheck
+            root: "packages/clauderon/web/client/"
+            glob: "packages/clauderon/web/client/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: web-frontend-typecheck
+            root: "packages/clauderon/web/frontend/"
+            glob: "packages/clauderon/web/frontend/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: mobile-typecheck
+            root: "packages/clauderon/mobile/"
+            glob: "packages/clauderon/mobile/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: mobile-format-check
+            root: "packages/clauderon/mobile/"
+            glob: "packages/clauderon/mobile/**/*.{ts,tsx}"
+            run: bun run format:check
+
+          - name: mobile-test
+            root: "packages/clauderon/mobile/"
+            glob: "packages/clauderon/mobile/**/*.{ts,tsx}"
+            run: bun run test
+
+          - name: full-typecheck
+            glob: "tsconfig.base.json"
+            run: bun run typecheck
+
+          # --- Actionlint ---
+          - name: actionlint
+            glob: ".github/workflows/**/*.yml"
+            skip:
+              - run: "! command -v actionlint >/dev/null 2>&1"
+            run: actionlint
+
+          # --- Knip ---
+          - name: knip
+            glob:
+              - "**/package.json"
+              - "**/knip.json"
+            run: bunx knip
+
+          # --- Compliance ---
+          - name: compliance-check
+            glob:
+              - "packages/*/package.json"
+              - "packages/*/eslint.config.*"
+              - "packages/*/tsconfig.json"
+            run: bash scripts/compliance-check.sh
+
+          # --- Quality ratchet ---
+          - name: quality-ratchet
+            glob: "**/*.{ts,tsx,rs}"
+            run: bash scripts/quality-ratchet.sh
+
+# POST-CHECKOUT HOOK
+post-checkout:
+  jobs:
+    - name: setup-worktree
+      run: |
+        if [ "{3}" = "0" ]; then exit 0; fi
+        GIT_DIR=$(git rev-parse --git-dir)
+        MARKER_FILE="$GIT_DIR/worktree-initialized"
+        if [ -f "$MARKER_FILE" ]; then exit 0; fi
+        echo "Setting up new worktree..."
+        if command -v mise > /dev/null 2>&1; then
+          echo "Running mise trust..."
+          mise trust
+          echo "Running mise dev..."
+          mise run dev
+        else
+          echo "mise not found, skipping dev setup"
+        fi
+        touch "$MARKER_FILE"
+        echo "Worktree setup complete!"

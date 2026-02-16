@@ -23,6 +23,7 @@ const SUPPRESSION_PATTERNS = [
 // Files where suppression patterns are legitimate (config, the script itself, etc.)
 const EXCLUDED_FILES = [
   "scripts/check-suppressions.ts",
+  "scripts/quality-ratchet.sh",
   "Cargo.toml",
   "clippy.toml",
   ".quality-baseline.json",

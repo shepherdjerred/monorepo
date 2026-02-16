@@ -15,8 +15,7 @@
     "build": "true",
     "test": "bunx --env-file=.env.test prisma generate && bun --env-file=.env.test test",
     "typecheck": "prisma generate && tsc --noEmit",
-    "lint": "eslint .",
-    "prepare": "husky"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.1",
