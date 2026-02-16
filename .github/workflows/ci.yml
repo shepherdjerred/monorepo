@@ -30,6 +30,7 @@ jobs:
         env:
           NPM_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/NPM_TOKEN
           GH_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/GH_TOKEN
+          OPENAI_API_KEY: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/OPENAI_API_KEY
           S3_ACCESS_KEY_ID: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/S3_ACCESS_KEY_ID
           S3_SECRET_ACCESS_KEY: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/S3_SECRET_ACCESS_KEY
 
@@ -132,3 +133,14 @@ jobs:
           fi
 
           dagger call ci "${ARGS[@]}"
+
+      - name: Update READMEs via Dagger
+        if: github.ref_name == 'main'
+        env:
+          BASE_BRANCH: ${{ github.ref_name }}
+        run: |
+          dagger call update-readmes \
+            --source=. \
+            --github-token=env:GH_TOKEN \
+            --openai-api-key=env:OPENAI_API_KEY \
+            --base-branch="$BASE_BRANCH"

@@ -7,7 +7,7 @@
     },
     "packages/eslint-config": {
       "release-type": "node",
-      "package-name": "@shepherdjerred/eslint-config"
+      "package-name": "eslint-config"
     },
     "packages/clauderon": {
       "release-type": "rust",
@@ -21,6 +21,11 @@
     "packages/webring": {
       "release-type": "node",
       "package-name": "webring"
+    },
+    "packages/homelab/src/helm-types": {
+      "release-type": "node",
+      "package-name": "@shepherdjerred/helm-types",
+      "component": "helm-types"
     }
   }
 }

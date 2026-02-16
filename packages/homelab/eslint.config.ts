@@ -2,15 +2,10 @@ import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
 import { defineConfig } from "eslint/config";
 import unicorn from "eslint-plugin-unicorn";
-import { zodSchemaNaming } from "./eslint-rules/zod-schema-naming.ts";
+import { zodSchemaNaming } from "../eslint-config/src/rules/zod-schema-naming.ts";
 
 /**
- * Bridge typescript-eslint rule to ESLint plugin system
- *
- * Type assertion required: @typescript-eslint/utils RuleContext includes extra methods
- * (getAncestors, getDeclaredVariables, getScope, markVariableAsUsed) that base ESLint
- * RuleContext doesn't have. At runtime, typescript-eslint provides a compatible context,
- * but TypeScript sees the types as incompatible. The rule works correctly at runtime.
+ * Bridge typescript-eslint rule to ESLint plugin system.
  */
 const customRulesPlugin = {
   rules: {

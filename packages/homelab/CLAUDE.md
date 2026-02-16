@@ -14,7 +14,7 @@ This is a Kubernetes homelab infrastructure monorepo using CDK8s for infrastruct
 - `src/cdk8s` - Kubernetes infrastructure as code
 - `src/ha` - Home Assistant automations
 - `src/helm-types` - Type-safe Helm chart parameter generator
-- `.dagger` - CI/CD pipeline module
+- `../../.dagger/src/homelab` - CI/CD pipeline module implementation
 
 ## Commands
 
@@ -124,7 +124,7 @@ When adding a new Kubernetes service/chart, you MUST complete ALL of these steps
    appVersion: "$appVersion"
    ```
 
-3. **Dagger Helm Registry** - `.dagger/src/helm.ts`
+3. **Dagger Helm Registry** - `../../.dagger/src/homelab/helm.ts`
    - Add `"{name}"` to the `HELM_CHARTS` array
 
 4. **ArgoCD Application** - `src/cdk8s/src/resources/argo-applications/{name}.ts`
@@ -135,9 +135,8 @@ When adding a new Kubernetes service/chart, you MUST complete ALL of these steps
 
 ## Git Workflow
 
-- Conventional commits enforced via commitlint
-- Pre-commit: lint-staged runs prettier, eslint, typecheck
-- Husky manages git hooks
+- Conventional commits and pre-commit checks are managed at monorepo root
+- Pre-commit checks run via root `lefthook.yml`
 
 ## Version Management
 

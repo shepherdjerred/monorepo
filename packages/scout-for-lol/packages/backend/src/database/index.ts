@@ -10,11 +10,24 @@ import {
 import { uniqueBy } from "remeda";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { databaseQueriesTotal } from "@scout-for-lol/backend/metrics/index.ts";
 
 const logger = createLogger("database");
 
 logger.info("🗄️  Initializing Prisma database client");
-export const prisma = new PrismaClient();
+
+const basePrisma = new PrismaClient();
+
+export const prisma = basePrisma.$extends({
+  query: {
+    $allModels: {
+      async $allOperations({ operation, args, query }) {
+        databaseQueriesTotal.inc({ operation });
+        return query(args);
+      },
+    },
+  },
+});
 
 logger.info("✅ Database client initialized");
 

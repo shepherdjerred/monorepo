@@ -5,9 +5,10 @@ import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
 import type { Region, MatchId, RawMatch, RawTimeline } from "@scout-for-lol/data/index.ts";
 import { RawMatchSchema, RawTimelineSchema } from "@scout-for-lol/data/index.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import { riotApiErrorsTotal } from "@scout-for-lol/backend/metrics/index.ts";
+import { riotApiErrorsTotal, riotApiRequestsTotal, updateRiotApiHealth } from "@scout-for-lol/backend/metrics/index.ts";
 import { saveFailedPayloadToS3 } from "@scout-for-lol/backend/storage/s3-helpers.ts";
 import { withTimeout } from "@scout-for-lol/backend/utils/timeout.ts";
+import * as Sentry from "@sentry/bun";
 
 const logger = createLogger("match-data-fetcher");
 
@@ -25,8 +26,17 @@ export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Pr
     const region = mapRegionToEnum(playerRegion);
     const regionGroup = regionToRegionGroup(region);
 
+    Sentry.addBreadcrumb({
+      category: "riot-api",
+      message: `Fetching match data for ${matchId}`,
+      data: { matchId, region: playerRegion, endpoint: "MatchV5.get" },
+      level: "info",
+    });
+
     logger.info(`[fetchMatchData] 📥 Fetching match data for ${matchId}`);
     const response = await withTimeout(api.MatchV5.get(matchId, regionGroup));
+    riotApiRequestsTotal.inc({ source: "match-data", status: "success" });
+    updateRiotApiHealth(true);
 
     // Validate and parse the API response to ensure it matches our schema
     try {
@@ -50,6 +60,9 @@ export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Pr
       return undefined;
     }
   } catch (e) {
+    riotApiRequestsTotal.inc({ source: "match-data", status: e instanceof Error && e.message.includes("timed out") ? "timeout" : "error" });
+    updateRiotApiHealth(false);
+
     const result = z.object({ status: z.number() }).safeParse(e);
     if (result.success) {
       const status = result.data.status;
@@ -59,6 +72,9 @@ export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Pr
       }
       logger.error(`[fetchMatchData] ❌ HTTP Error ${status.toString()} for match ${matchId}`);
       trackApiError("match-data-fetch", status.toString());
+      Sentry.captureException(e, {
+        tags: { source: "match-data-fetch", matchId, region: playerRegion, httpStatus: status.toString() },
+      });
     } else {
       logger.error(`[fetchMatchData] ❌ Error fetching match ${matchId}:`, e);
       trackApiError("match-data-fetch", "unknown");
@@ -81,11 +97,20 @@ export async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region)
     const region = mapRegionToEnum(playerRegion);
     const regionGroup = regionToRegionGroup(region);
 
+    Sentry.addBreadcrumb({
+      category: "riot-api",
+      message: `Fetching timeline data for ${matchId}`,
+      data: { matchId, region: playerRegion, endpoint: "MatchV5.timeline" },
+      level: "info",
+    });
+
     logger.info(`[fetchMatchTimeline] 📥 Fetching timeline data for ${matchId}`);
 
     // Use the timeline endpoint from the twisted library
     // The twisted library provides api.MatchV5.timeline() for Match V5 Timeline API
     const response = await withTimeout(api.MatchV5.timeline(matchId, regionGroup));
+    riotApiRequestsTotal.inc({ source: "match-timeline", status: "success" });
+    updateRiotApiHealth(true);
 
     // Validate and parse the API response to ensure it matches our schema
     try {
@@ -110,6 +135,9 @@ export async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region)
       return undefined;
     }
   } catch (e) {
+    riotApiRequestsTotal.inc({ source: "match-timeline", status: e instanceof Error && e.message.includes("timed out") ? "timeout" : "error" });
+    updateRiotApiHealth(false);
+
     const result = z.object({ status: z.number() }).safeParse(e);
     if (result.success) {
       const status = result.data.status;
@@ -119,6 +147,9 @@ export async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region)
       }
       logger.error(`[fetchMatchTimeline] ❌ HTTP Error ${status.toString()} for timeline ${matchId}`);
       trackApiError("timeline-data-fetch", status.toString());
+      Sentry.captureException(e, {
+        tags: { source: "timeline-data-fetch", matchId, region: playerRegion, httpStatus: status.toString() },
+      });
     } else {
       logger.error(`[fetchMatchTimeline] ❌ Error fetching timeline ${matchId}:`, e);
       trackApiError("timeline-data-fetch", "unknown");

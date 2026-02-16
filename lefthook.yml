@@ -10,6 +10,9 @@ pre-commit:
           - name: check-suppressions
             run: bun scripts/check-suppressions.ts
 
+          - name: migration-guard
+            run: bun scripts/guard-no-package-exclusions.ts
+
           - name: staged-lint
             group:
               parallel: true
@@ -118,6 +121,12 @@ pre-commit:
                 - name: eslint-discord-plays-pokemon
                   root: "packages/discord-plays-pokemon/"
                   glob: "packages/discord-plays-pokemon/**/*.{ts,tsx,js,jsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-homelab
+                  root: "packages/homelab/"
+                  glob: "packages/homelab/**/*.{ts,tsx,js,jsx}"
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
 
@@ -265,6 +274,11 @@ pre-commit:
             glob: "packages/discord-plays-pokemon/**/*.{ts,tsx}"
             run: bun run typecheck
 
+          - name: homelab-typecheck
+            root: "packages/homelab/"
+            glob: "packages/homelab/**/*.{ts,tsx}"
+            run: bun run typecheck
+
           - name: full-typecheck
             glob: "tsconfig.base.json"
             run: bun run typecheck
@@ -296,23 +310,3 @@ pre-commit:
             glob: "**/*.{ts,tsx,rs}"
             run: bash scripts/quality-ratchet.sh
 
-# POST-CHECKOUT HOOK
-post-checkout:
-  jobs:
-    - name: setup-worktree
-      run: |
-        if [ "{3}" = "0" ]; then exit 0; fi
-        GIT_DIR=$(git rev-parse --git-dir)
-        MARKER_FILE="$GIT_DIR/worktree-initialized"
-        if [ -f "$MARKER_FILE" ]; then exit 0; fi
-        echo "Setting up new worktree..."
-        if command -v mise > /dev/null 2>&1; then
-          echo "Running mise trust..."
-          mise trust
-          echo "Running mise dev..."
-          mise run dev
-        else
-          echo "mise not found, skipping dev setup"
-        fi
-        touch "$MARKER_FILE"
-        echo "Worktree setup complete!"

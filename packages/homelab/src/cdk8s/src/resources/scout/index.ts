@@ -1,5 +1,5 @@
-import { Deployment, DeploymentStrategy, EnvValue, Protocol, Secret, Service, Volume } from "cdk8s-plus-31";
-import { Chart, Size } from "cdk8s";
+import { Deployment, DeploymentStrategy, EnvValue, Probe, Protocol, Secret, Service, Volume } from "cdk8s-plus-31";
+import { Chart, Duration, Size } from "cdk8s";
 import { withCommonProps } from "../../misc/common.ts";
 import { createServiceMonitor } from "../../misc/service-monitor.ts";
 import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
@@ -116,6 +116,18 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         ensureNonRoot: false,
         readOnlyRootFilesystem: false,
       },
+      liveness: Probe.fromHttpGet("/ping", {
+        port: 3000,
+        initialDelaySeconds: Duration.seconds(10),
+        periodSeconds: Duration.seconds(10),
+        failureThreshold: 3,
+      }),
+      readiness: Probe.fromHttpGet("/healthz", {
+        port: 3000,
+        initialDelaySeconds: Duration.seconds(30),
+        periodSeconds: Duration.seconds(30),
+        failureThreshold: 3,
+      }),
       volumeMounts: [
         {
           path: "/data",

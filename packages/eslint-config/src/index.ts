@@ -1,5 +1,5 @@
 /**
- * @shepherdjerred/eslint-config
+ * packages/eslint-config
  *
  * A comprehensive ESLint configuration with custom rules for TypeScript projects.
  * Includes support for React, Astro, accessibility, and Bun-specific patterns.
@@ -35,6 +35,11 @@ export {
   noTypeGuards,
   requireTsExtensions,
   preferAsyncAwait,
+  noDtoNaming,
+  preferStructuredLogging,
+  noShadcnThemeTokens,
+  knipUnused,
+  noCodeDuplication,
 } from "./rules/index.js";
 
 // Import configs for the recommended preset
@@ -67,6 +72,14 @@ export type RecommendedOptions = BaseConfigOptions &
       typeSafety?: boolean;
       /** Enable async/await style enforcement */
       promiseStyle?: boolean;
+      /** Enable Raw* naming rule (no *Dto suffix) */
+      noDtoNaming?: boolean;
+      /** Enable structured logging rule */
+      structuredLogging?: boolean;
+      /** Enable shadcn token restriction rule */
+      noShadcnThemeTokens?: boolean;
+      /** Enable project-wide analysis rules (knip/jscpd) */
+      analysisRules?: boolean;
     };
   };
 
@@ -79,7 +92,7 @@ export type RecommendedOptions = BaseConfigOptions &
  * @example
  * ```ts
  * // eslint.config.ts
- * import { recommended } from "@shepherdjerred/eslint-config";
+ * import { recommended } from "../eslint-config/local.ts";
  *
  * export default recommended({
  *   tsconfigRootDir: import.meta.dirname,
@@ -100,6 +113,10 @@ export function recommended(options: RecommendedOptions = {}): TSESLint.FlatConf
       codeOrganization: true,
       typeSafety: true,
       promiseStyle: true,
+      noDtoNaming: false,
+      structuredLogging: false,
+      noShadcnThemeTokens: false,
+      analysisRules: false,
     },
     ...baseOptions
   } = options;
@@ -176,6 +193,35 @@ export function recommended(options: RecommendedOptions = {}): TSESLint.FlatConf
     };
   }
 
+  if (customRules.noDtoNaming) {
+    customRulesConfig.rules = {
+      ...customRulesConfig.rules,
+      "custom-rules/no-dto-naming": "error",
+    };
+  }
+
+  if (customRules.structuredLogging) {
+    customRulesConfig.rules = {
+      ...customRulesConfig.rules,
+      "custom-rules/prefer-structured-logging": "error",
+    };
+  }
+
+  if (customRules.noShadcnThemeTokens) {
+    customRulesConfig.rules = {
+      ...customRulesConfig.rules,
+      "custom-rules/no-shadcn-theme-tokens": "error",
+    };
+  }
+
+  if (customRules.analysisRules) {
+    customRulesConfig.rules = {
+      ...customRulesConfig.rules,
+      "custom-rules/knip-unused": "warn",
+      "custom-rules/no-code-duplication": "warn",
+    };
+  }
+
   configs.push(customRulesConfig);
 
   // Test file overrides - relax some rules for tests
@@ -215,6 +261,15 @@ export function recommended(options: RecommendedOptions = {}): TSESLint.FlatConf
     },
     rules: {
       "custom-rules/prisma-client-disconnect": "error",
+    },
+  });
+
+  // Config files may import local workspace entrypoints for shared lint config.
+  configs.push({
+    files: ["eslint.config.ts", "eslint.config.js", "eslint.config.mjs", "eslint.config.cjs"],
+    rules: {
+      "custom-rules/no-parent-imports": "off",
+      "import/no-relative-packages": "off",
     },
   });
 

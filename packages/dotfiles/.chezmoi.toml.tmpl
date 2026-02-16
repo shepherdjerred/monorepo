@@ -1,0 +1,7 @@
+{{- $monorepoPath := joinPath .chezmoi.homeDir "git/monorepo/packages/dotfiles" -}}
+{{- if stat $monorepoPath }}
+sourceDir = {{ $monorepoPath | quote }}
+{{- end }}
+
+[data]
+    codespaces = {{ env "CODESPACES" | not | not }}

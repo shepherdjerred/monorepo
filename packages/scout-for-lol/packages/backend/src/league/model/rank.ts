@@ -4,7 +4,7 @@ import { api } from "@scout-for-lol/backend/league/api/api";
 import { filter, first, pipe } from "remeda";
 import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region";
 import { z } from "zod";
-import { riotApiErrorsTotal } from "@scout-for-lol/backend/metrics/index.ts";
+import { riotApiErrorsTotal, riotApiRequestsTotal, updateRiotApiHealth } from "@scout-for-lol/backend/metrics/index.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import { withTimeout } from "@scout-for-lol/backend/utils/timeout.ts";
 
@@ -47,6 +47,8 @@ export async function getRanks(player: PlayerConfigEntry): Promise<Ranks> {
     const response = await withTimeout(
       api.League.byPUUID(player.league.leagueAccount.puuid, mapRegionToEnum(player.league.leagueAccount.region)),
     );
+    riotApiRequestsTotal.inc({ source: "rank", status: "success" });
+    updateRiotApiHealth(true);
 
     const parseResult = z.array(RawSummonerLeagueSchema).safeParse(response.response);
     if (!parseResult.success) {
@@ -59,6 +61,8 @@ export async function getRanks(player: PlayerConfigEntry): Promise<Ranks> {
       flex: getRank(validatedResponse, flex),
     };
   } catch (error) {
+    riotApiRequestsTotal.inc({ source: "rank", status: error instanceof Error && error.message.includes("timed out") ? "timeout" : "error" });
+    updateRiotApiHealth(false);
     logger.error(`Failed to fetch ranks for ${player.alias}:`, error);
     riotApiErrorsTotal.inc({ source: "rank-fetch", http_status: "unknown" });
     throw error;

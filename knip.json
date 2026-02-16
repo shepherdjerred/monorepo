@@ -36,6 +36,58 @@
     "packages/starlight-karma-bot": {
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]
+    },
+    "packages/homelab/src/cdk8s": {
+      "entry": ["src/app.ts", "scripts/**/*.ts"],
+      "project": ["src/**/*.ts", "scripts/**/*.ts"]
+    },
+    "packages/homelab/src/ha": {
+      "entry": ["src/**/*.ts", "generate-types.ts"],
+      "project": ["src/**/*.ts", "generate-types.ts"]
+    },
+    "packages/homelab/src/deps-email": {
+      "entry": ["src/main.ts", "src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/homelab/src/helm-types": {
+      "entry": ["src/index.ts", "src/cli.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/discord-plays-pokemon/packages/backend": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/discord-plays-pokemon/packages/common": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/discord-plays-pokemon/packages/frontend": {
+      "entry": ["src/main.tsx", "vite.config.ts"],
+      "project": ["src/**/*.{ts,tsx}", "*.ts"]
+    },
+    "packages/scout-for-lol/packages/backend": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts", "scripts/**/*.ts"]
+    },
+    "packages/scout-for-lol/packages/data": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts", "scripts/**/*.ts"]
+    },
+    "packages/scout-for-lol/packages/report": {
+      "entry": ["src/index.ts", "build.ts"],
+      "project": ["src/**/*.{ts,tsx}", "*.ts"]
+    },
+    "packages/scout-for-lol/packages/frontend": {
+      "entry": ["astro.config.ts", "src/**/*.tsx"],
+      "project": ["src/**/*.{ts,tsx,astro}", "*.ts"]
+    },
+    "packages/scout-for-lol/packages/desktop": {
+      "entry": ["src/main.tsx", "vite.config.ts"],
+      "project": ["src/**/*.{ts,tsx}", "*.ts"]
+    },
+    "packages/scout-for-lol/packages/ui": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.{ts,tsx}"]
     }
   },
   "ignore": ["**/generated/**", "**/dist/**", "archive/**"]

@@ -13,6 +13,11 @@ import { noParentImports } from "./no-parent-imports.js";
 import { noTypeGuards } from "./no-type-guards.js";
 import { requireTsExtensions } from "./require-ts-extensions.js";
 import { preferAsyncAwait } from "./prefer-async-await.js";
+import { noDtoNaming } from "./no-dto-naming.js";
+import { preferStructuredLogging } from "./prefer-structured-logging.js";
+import { noShadcnThemeTokens } from "./no-shadcn-theme-tokens.js";
+import { knipUnused } from "./knip-unused.js";
+import { noCodeDuplication } from "./jscpd-duplication.js";
 
 /**
  * Custom ESLint plugin with all rules
@@ -34,6 +39,11 @@ export const customRulesPlugin = {
     "no-type-guards": noTypeGuards,
     "require-ts-extensions": requireTsExtensions,
     "prefer-async-await": preferAsyncAwait,
+    "no-dto-naming": noDtoNaming,
+    "prefer-structured-logging": preferStructuredLogging,
+    "no-shadcn-theme-tokens": noShadcnThemeTokens,
+    "knip-unused": knipUnused,
+    "no-code-duplication": noCodeDuplication,
   },
 };
 
@@ -54,4 +64,9 @@ export {
   noTypeGuards,
   requireTsExtensions,
   preferAsyncAwait,
+  noDtoNaming,
+  preferStructuredLogging,
+  noShadcnThemeTokens,
+  knipUnused,
+  noCodeDuplication,
 };

@@ -7,28 +7,17 @@
     "src/cdk8s",
     "src/ha",
     "src/deps-email",
-    "src/helm-types",
-    ".dagger"
+    "src/helm-types"
   ],
-  "trustedDependencies": [
-    "husky"
-  ],
-  "dependencies": {
-    "@typescript-eslint/utils": "^8.46.1",
-    "husky": "^9.1.7",
-    "lint-staged": "^16.2.3"
-  },
   "devDependencies": {
-    "@commitlint/cli": "^20.0.0",
-    "@commitlint/config-conventional": "^20.0.0",
     "@eslint/js": "^9.30.1",
     "@total-typescript/ts-reset": "^0.6.1",
     "@types/bun": "^1.2.18",
+    "@typescript-eslint/utils": "^8.46.1",
     "eslint": "^9.30.1",
     "eslint-plugin-unicorn": "^62.0.0",
     "jiti": "^2.6.0",
     "markdownlint-cli2": "^0.20.0",
-    "prettier": "3.8.1",
     "typescript": "^5",
     "typescript-eslint": "^8.35.1"
   },
@@ -36,47 +25,9 @@
     "build": "bun run --filter=* build",
     "test": "bun run --filter=* test",
     "lint": "bun run --filter=* lint",
-    "typecheck": "bun run --filter=* typecheck",
-    "prettier": "bunx prettier --write .",
-    "prepare": "husky"
-  },
-  "lint-staged": {
-    "*": "bunx prettier --ignore-unknown --write",
-    "*.md": "bunx markdownlint-cli2 --fix",
-    "*.{ts,tsx,js,jsx}": "bun run scripts/check-suppressions.ts",
-    ".github/workflows/*.{yml,yaml}": "actionlint",
-    "src/ha/**/*.{ts,tsx}": [
-      "bash -c 'cd src/ha && bun run typecheck'",
-      "bash -c 'cd src/ha && bunx eslint --cache --fix'",
-      "bash -c 'cd src/ha && bun run test'"
-    ],
-    "src/deps-email/**/*.{ts,tsx}": [
-      "bash -c 'cd src/deps-email && bunx eslint --cache --fix'",
-      "bash -c 'cd src/deps-email && bun run typecheck'",
-      "bash -c 'cd src/deps-email && bun run test'"
-    ],
-    "src/cdk8s/**/*.{ts,tsx}": [
-      "bash -c 'cd src/cdk8s && bunx eslint --cache --fix'",
-      "bash -c 'cd src/cdk8s && bun run typecheck'",
-      "bash -c 'cd src/cdk8s && bun run test'",
-      "bash -c './scripts/lint-helm.sh'",
-      "bash -c 'cd src/cdk8s && bun run build && kube-linter lint --config ../../.kube-linter.yaml dist/*.k8s.yaml'"
-    ],
-    "src/cdk8s/helm/**/*": [
-      "bash -c './scripts/lint-helm.sh'"
-    ],
-    ".dagger/**/*.{ts,tsx}": [
-      "bash -c 'cd .dagger && bunx eslint --cache --fix'",
-      "bash -c 'cd .dagger && bun run typecheck'",
-      "bash -c 'cd .dagger && bun run test'"
-    ],
-    "src/helm-types/**/*.{ts,tsx}": [
-      "bash -c 'cd src/helm-types && bunx eslint --cache --fix'",
-      "bash -c 'cd src/helm-types && bun run typecheck'",
-      "bash -c 'cd src/helm-types && bun run test'"
-    ]
+    "typecheck": "bun run --filter=* typecheck"
   },
   "patchedDependencies": {
-    "@digital-alchemy/type-writer@25.10.12": "patches/@digital-alchemy%2Ftype-writer@25.10.12.patch"
+    "@digital-alchemy/type-writer@25.10.12": "packages/homelab/patches/@digital-alchemy%2Ftype-writer@25.10.12.patch"
   }
 }
