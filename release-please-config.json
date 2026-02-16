@@ -5,10 +5,6 @@
       "release-type": "node",
       "package-name": "@shepherdjerred/bun-decompile"
     },
-    "packages/eslint-config": {
-      "release-type": "node",
-      "package-name": "eslint-config"
-    },
     "packages/clauderon": {
       "release-type": "rust",
       "package-name": "clauderon",
