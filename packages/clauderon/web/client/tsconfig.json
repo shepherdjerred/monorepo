@@ -12,6 +12,6 @@
     "lib": ["ES2022", "DOM"],
     "types": ["bun"]
   },
-  "include": ["src/**/*", "eslint.config.ts"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "src/**/*.test.ts"]
 }

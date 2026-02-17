@@ -2,8 +2,8 @@
 
 import { $ } from "bun";
 import { existsSync } from "node:fs";
-import { readFile } from "node:fs/promises";
-import { dirname, relative } from "node:path";
+import { readdir, readFile } from "node:fs/promises";
+import { dirname, join, relative } from "node:path";
 
 type PackageMeta = {
   dir: string;
@@ -13,13 +13,23 @@ type PackageMeta = {
 
 async function getPackageJsonPaths(): Promise<string[]> {
   const paths: string[] = [];
-  const glob = new Bun.Glob("packages/**/package.json");
-  for await (const path of glob.scan(".")) {
-    if (path.includes("/node_modules/")) {
-      continue;
+
+  async function walk(dir: string): Promise<void> {
+    const entries = await readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.name === "node_modules" || entry.name === "dist" || entry.name === "build" || entry.name === ".git") {
+        continue;
+      }
+      const fullPath = join(dir, entry.name);
+      if (entry.isDirectory() && !entry.isSymbolicLink()) {
+        await walk(fullPath);
+      } else if (entry.name === "package.json") {
+        paths.push(fullPath);
+      }
     }
-    paths.push(path);
   }
+
+  await walk("packages");
   return paths.sort();
 }
 

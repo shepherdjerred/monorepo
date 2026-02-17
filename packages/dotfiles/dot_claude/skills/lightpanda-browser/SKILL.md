@@ -35,6 +35,8 @@ Never use bare `lightpanda` — it will hit the npm wrapper which just prints "P
 - `--strip_mode full` removes scripts, stylesheets, images, video, SVGs -- leaves just content
 - `--log_level fatal` silences all log output on stderr
 
+**NOTE: Output is always HTML, even with `--strip_mode full`.** This is expected and correct — `strip_mode` removes non-content elements but does NOT convert to markdown or plain text. The HTML output is clean and readable. Do NOT abandon lightpanda just because the output is HTML.
+
 ## CLI Reference
 
 ### Commands

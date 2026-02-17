@@ -88,7 +88,9 @@ function resolveDscCheck(check: DscCheck["check"], actual: string): boolean {
 
 function describeDscCheck(opts: DscCheck): string {
   if (typeof opts.check === "function") {
-    return "description" in opts ? (opts.description ?? "predicate") : "predicate";
+    return "description" in opts
+      ? (opts.description ?? "predicate")
+      : "predicate";
   }
   return opts.check;
 }

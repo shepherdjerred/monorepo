@@ -1,3 +1,6 @@
+[loader]
+".txt" = "text"
+
 [test]
 preload = ["./packages/backend/test-setup.ts"]
 
