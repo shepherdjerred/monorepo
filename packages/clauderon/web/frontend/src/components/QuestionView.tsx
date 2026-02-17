@@ -11,7 +11,7 @@ export function QuestionView({ message }: QuestionViewProps) {
     (tool) => tool.name === "AskUserQuestion",
   );
 
-  if (!questionTool?.input) {
+  if (questionTool?.input == null) {
     return null;
   }
 

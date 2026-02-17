@@ -10,7 +10,7 @@ type ChannelMetadata = {
 export function setupPlayerEvents(player: Player): void {
   player.events.on("playerStart", (queue, track) => {
     const channel = queue.metadata as ChannelMetadata | undefined;
-    if (channel?.send) {
+    if (channel?.send != null) {
       void channel.send(`🎵 Now playing: **${track.title}**`);
     }
 
@@ -35,14 +35,14 @@ export function setupPlayerEvents(player: Player): void {
 
   player.events.on("audioTrackAdd", (queue, track) => {
     const channel = queue.metadata as ChannelMetadata | undefined;
-    if (channel?.send) {
+    if (channel?.send != null) {
       void channel.send(`✅ Added to queue: **${track.title}**`);
     }
   });
 
   player.events.on("emptyQueue", (queue) => {
     const channel = queue.metadata as ChannelMetadata | undefined;
-    if (channel?.send) {
+    if (channel?.send != null) {
       void channel.send(
         "Queue finished! Add more songs to keep the party going.",
       );
@@ -63,7 +63,7 @@ export function setupPlayerEvents(player: Player): void {
   player.events.on("playerError", (queue, error) => {
     logger.error("Player playback error", error, { guildId: queue.guild.id });
     const channel = queue.metadata as ChannelMetadata | undefined;
-    if (channel?.send) {
+    if (channel?.send != null) {
       void channel.send("An error occurred during playback. Skipping...");
     }
   });

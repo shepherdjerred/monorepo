@@ -111,7 +111,7 @@ function getWorkflowStage(session: Session): WorkflowStage {
   }
 
   // No PR yet - still planning
-  if (!session.pr_url) {
+  if (session.pr_url == null || session.pr_url.length === 0) {
     return WorkflowStage.Planning;
   }
 
@@ -389,7 +389,7 @@ export function SessionCard({
                                 }
                               >
                                 {feature.name}
-                                {feature.note && (
+                                {feature.note != null && feature.note.length > 0 && (
                                   <span className="text-muted-foreground block text-xs mt-0.5">
                                     {feature.note}
                                   </span>
@@ -406,7 +406,7 @@ export function SessionCard({
               <Badge variant="secondary" className="font-mono text-xs">
                 {session.access_mode}
               </Badge>
-              {healthReport && healthReport.state.type !== "Healthy" && (
+              {healthReport != null && healthReport.state.type !== "Healthy" && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -440,7 +440,7 @@ export function SessionCard({
       </CardHeader>
       <CardContent className="px-6 pb-6">
         {/* Description - primary content */}
-        {session.description && (
+        {session.description != null && session.description.length > 0 && (
           <p className="text-base text-foreground/90 leading-relaxed mb-4">
             {session.description}
           </p>
@@ -452,14 +452,14 @@ export function SessionCard({
         )}
 
         {/* Workflow Progress - shows PR workflow stage progression */}
-        {session.pr_url && (
+        {session.pr_url != null && session.pr_url.length > 0 && (
           <div className="mb-4 p-3 bg-accent/5 border-2 border-accent/20 rounded">
             <WorkflowProgress session={session} />
           </div>
         )}
 
         {/* Repositories Section */}
-        {session.repositories && session.repositories.length > 1 && (
+        {session.repositories != null && session.repositories.length > 1 && (
           <details className="mb-3 border-2 border-primary/20 rounded">
             <summary className="cursor-pointer px-2 py-1 hover:bg-muted/50 text-xs font-mono font-semibold flex items-center gap-2">
               <span>📁 {session.repositories.length} Repositories</span>
@@ -492,7 +492,7 @@ export function SessionCard({
         {/* Status section - grouped and styled */}
         <div className="space-y-2 mb-4">
           {/* PR/CI Status - prominent */}
-          {session.pr_url && (
+          {session.pr_url != null && session.pr_url.length > 0 && (
             <div className="flex items-center gap-2 p-2 bg-accent/5 border-l-4 border-accent">
               <a
                 href={session.pr_url}
@@ -502,7 +502,7 @@ export function SessionCard({
               >
                 PR #{session.pr_url.split("/").pop()}
               </a>
-              {session.pr_check_status && (
+              {session.pr_check_status != null && session.pr_check_status.length > 0 && (
                 <span
                   className={cn(
                     "flex items-center gap-1.5 text-sm font-mono font-semibold",
@@ -560,7 +560,7 @@ export function SessionCard({
                   </div>
                 </TooltipTrigger>
                 <TooltipContent className="max-w-md">
-                  {session.worktree_changed_files &&
+                  {session.worktree_changed_files != null &&
                   session.worktree_changed_files.length > 0 ? (
                     <div className="space-y-2">
                       {(() => {
@@ -606,7 +606,7 @@ export function SessionCard({
           )}
 
           {/* Copy-creds mode notice */}
-          {session.dangerous_copy_creds && (
+          {session.dangerous_copy_creds === true && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -639,7 +639,7 @@ export function SessionCard({
           <Clock className="w-3 h-3" />
           <span>{formatRelativeTime(session.created_at)}</span>
           <span className="w-1 h-1 rounded-full bg-muted-foreground/50" />
-          {session.pr_url && getRepoUrlFromPrUrl(session.pr_url) ? (
+          {session.pr_url != null && session.pr_url.length > 0 && getRepoUrlFromPrUrl(session.pr_url) != null && getRepoUrlFromPrUrl(session.pr_url).length > 0 ? (
             <a
               href={`${String(getRepoUrlFromPrUrl(session.pr_url))}/tree/${session.branch_name}`}
               target="_blank"

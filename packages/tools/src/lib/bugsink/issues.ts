@@ -15,11 +15,11 @@ export async function getIssues(
 ): Promise<BugsinkIssue[]> {
   const params: Record<string, string> = {};
 
-  if (options.project) {
+  if (options.project != null && options.project.length > 0) {
     params["project"] = options.project;
   }
 
-  if (options.limit) {
+  if (options.limit != null) {
     params["limit"] = String(options.limit);
   }
 
@@ -39,7 +39,7 @@ export async function getIssue(issueId: string): Promise<BugsinkIssue | null> {
   const result = await bugsinkRequest<BugsinkIssue>(`/issues/${issueId}/`);
 
   if (!result.success) {
-    if (result.error?.includes("404")) {
+    if (result.error?.includes("404") === true) {
       return null;
     }
     throw new Error(result.error ?? "Failed to fetch issue");

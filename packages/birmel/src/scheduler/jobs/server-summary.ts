@@ -139,7 +139,7 @@ async function sendServerSummary(config: ServerSummaryConfig): Promise<void> {
     const guild = await client.guilds.fetch(config.guildId);
     const channel = await client.channels.fetch(config.channelId);
 
-    if (!channel?.isTextBased()) {
+    if (channel?.isTextBased() !== true) {
       logger.warn("Summary channel not found or not text-based", {
         guildId: config.guildId,
         channelId: config.channelId,

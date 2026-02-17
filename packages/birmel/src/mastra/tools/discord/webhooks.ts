@@ -77,7 +77,7 @@ export const manageWebhookTool = createTool({
         { value: ctx.channelId, fieldName: "channelId" },
         { value: ctx.webhookId, fieldName: "webhookId" },
       ]);
-      if (idError) {
+      if (idError != null && idError.length > 0) {
         return { success: false, message: idError };
       }
 
@@ -85,7 +85,7 @@ export const manageWebhookTool = createTool({
 
       switch (ctx.action) {
         case "list": {
-          if (!ctx.guildId) {
+          if (ctx.guildId == null || ctx.guildId.length === 0) {
             return {
               success: false,
               message: "guildId is required for listing webhooks",
@@ -93,7 +93,7 @@ export const manageWebhookTool = createTool({
           }
           const guild = await client.guilds.fetch(ctx.guildId);
           let webhooks;
-          if (ctx.channelId) {
+          if (ctx.channelId != null && ctx.channelId.length > 0) {
             const channel = await client.channels.fetch(ctx.channelId);
             if (!channel?.isTextBased() || !("fetchWebhooks" in channel)) {
               return {
@@ -147,7 +147,7 @@ export const manageWebhookTool = createTool({
         }
 
         case "modify": {
-          if (!ctx.webhookId) {
+          if (ctx.webhookId == null || ctx.webhookId.length === 0) {
             return {
               success: false,
               message: "webhookId is required for modifying a webhook",
@@ -185,7 +185,7 @@ export const manageWebhookTool = createTool({
         }
 
         case "delete": {
-          if (!ctx.webhookId) {
+          if (ctx.webhookId == null || ctx.webhookId.length === 0) {
             return {
               success: false,
               message: "webhookId is required for deleting a webhook",
@@ -208,7 +208,7 @@ export const manageWebhookTool = createTool({
                 "webhookId and webhookToken are required for executing a webhook",
             };
           }
-          if (!ctx.content) {
+          if (ctx.content == null || ctx.content.length === 0) {
             return {
               success: false,
               message: "content is required for executing a webhook",

@@ -275,7 +275,7 @@ function generateFunctionId(
   node: FunctionNode,
   _source: string,
   _index: number,
-  name: string,
+  name = "anon",
 ): string {
   const prefix = name || "anon";
   // Use start_end format to match babel-renamer.ts

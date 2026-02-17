@@ -114,7 +114,7 @@ export const manageThreadTool = createTool({
           { value: ctx.userId, fieldName: "userId" },
           { value: ctx.before, fieldName: "before" },
         ]);
-        if (idError) {
+        if (idError != null && idError.length > 0) {
           return { success: false, message: idError };
         }
 
@@ -130,7 +130,7 @@ export const manageThreadTool = createTool({
               };
             }
             const channel = await client.channels.fetch(ctx.channelId);
-            if (!channel?.isTextBased()) {
+            if (channel?.isTextBased() !== true) {
               return {
                 success: false,
                 message: "Channel must be a text channel to create threads",
@@ -139,7 +139,7 @@ export const manageThreadTool = createTool({
             const message = await channel.messages.fetch(ctx.messageId);
             const thread = await message.startThread({
               name: ctx.name,
-              autoArchiveDuration: ctx.autoArchiveDuration
+              autoArchiveDuration: ctx.autoArchiveDuration != null && ctx.autoArchiveDuration.length > 0
                 ? (Number.parseInt(ctx.autoArchiveDuration) as
                     | 60
                     | 1440
@@ -170,7 +170,7 @@ export const manageThreadTool = createTool({
                 message: "Channel must support threads",
               };
             }
-            const autoArchiveDuration = ctx.autoArchiveDuration
+            const autoArchiveDuration = ctx.autoArchiveDuration != null && ctx.autoArchiveDuration.length > 0
               ? (Number.parseInt(ctx.autoArchiveDuration) as
                   | 60
                   | 1440
@@ -186,7 +186,7 @@ export const manageThreadTool = createTool({
               autoArchiveDuration,
               // @ts-expect-error - ChannelType enum complexity with Discord.js types
               type: threadType,
-              ...(ctx.message && { message: { content: ctx.message } }),
+              ...(ctx.message != null && ctx.message.length > 0 && { message: { content: ctx.message } }),
             });
             logger.info("Standalone thread created", { threadId: thread.id });
             return {
@@ -197,14 +197,14 @@ export const manageThreadTool = createTool({
           }
 
           case "modify": {
-            if (!ctx.threadId) {
+            if (ctx.threadId == null || ctx.threadId.length === 0) {
               return {
                 success: false,
                 message: "threadId is required for modify",
               };
             }
             const thread = await client.channels.fetch(ctx.threadId);
-            if (!thread?.isThread()) {
+            if (thread?.isThread() !== true) {
               return {
                 success: false,
                 message: "Channel is not a thread",
@@ -252,7 +252,7 @@ export const manageThreadTool = createTool({
               };
             }
             const thread = await client.channels.fetch(ctx.threadId);
-            if (!thread?.isThread()) {
+            if (thread?.isThread() !== true) {
               return {
                 success: false,
                 message: "Channel is not a thread",
@@ -270,14 +270,14 @@ export const manageThreadTool = createTool({
           }
 
           case "get-messages": {
-            if (!ctx.threadId) {
+            if (ctx.threadId == null || ctx.threadId.length === 0) {
               return {
                 success: false,
                 message: "threadId is required for get-messages",
               };
             }
             const thread = await client.channels.fetch(ctx.threadId);
-            if (!thread?.isThread()) {
+            if (thread?.isThread() !== true) {
               return {
                 success: false,
                 message: "Channel is not a thread",
@@ -286,7 +286,7 @@ export const manageThreadTool = createTool({
             const fetchOptions: { limit: number; before?: string } = {
               limit: ctx.limit ?? 20,
             };
-            if (ctx.before) {
+            if (ctx.before != null && ctx.before.length > 0) {
               fetchOptions.before = ctx.before;
             }
             const messages = await thread.messages.fetch(fetchOptions);

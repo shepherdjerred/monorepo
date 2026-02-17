@@ -90,12 +90,12 @@ export const manageAutomodRuleTool = createTool({
         { value: ctx.guildId, fieldName: "guildId" },
         { value: ctx.ruleId, fieldName: "ruleId" },
       ]);
-      if (idError) {
+      if (idError != null && idError.length > 0) {
         return { success: false, message: idError };
       }
 
       const rolesError = validateSnowflakeArray(ctx.exemptRoles, "exemptRoles");
-      if (rolesError) {
+      if (rolesError != null && rolesError.length > 0) {
         return { success: false, message: rolesError };
       }
 
@@ -103,7 +103,7 @@ export const manageAutomodRuleTool = createTool({
         ctx.exemptChannels,
         "exemptChannels",
       );
-      if (channelsError) {
+      if (channelsError != null && channelsError.length > 0) {
         return { success: false, message: channelsError };
       }
 
@@ -127,7 +127,7 @@ export const manageAutomodRuleTool = createTool({
         }
 
         case "get": {
-          if (!ctx.ruleId) {
+          if (ctx.ruleId == null || ctx.ruleId.length === 0) {
             return {
               success: false,
               message: "ruleId is required for getting rule details",
@@ -171,8 +171,8 @@ export const manageAutomodRuleTool = createTool({
             eventType: 1, // MESSAGE_SEND
             triggerType: triggerTypeMap[ctx.triggerType],
             triggerMetadata: {
-              ...(ctx.keywords && { keywordFilter: ctx.keywords }),
-              ...(ctx.keywordPresets && {
+              ...(ctx.keywords != null && { keywordFilter: ctx.keywords }),
+              ...(ctx.keywordPresets != null && {
                 presets: ctx.keywordPresets.map(
                   (p: "PROFANITY" | "SEXUAL_CONTENT" | "SLURS") => presetMap[p],
                 ),
@@ -200,7 +200,7 @@ export const manageAutomodRuleTool = createTool({
         }
 
         case "modify": {
-          if (!ctx.ruleId) {
+          if (ctx.ruleId == null || ctx.ruleId.length === 0) {
             return {
               success: false,
               message: "ruleId is required for modifying a rule",
@@ -249,7 +249,7 @@ export const manageAutomodRuleTool = createTool({
         }
 
         case "delete": {
-          if (!ctx.ruleId) {
+          if (ctx.ruleId == null || ctx.ruleId.length === 0) {
             return {
               success: false,
               message: "ruleId is required for deleting a rule",
@@ -265,7 +265,7 @@ export const manageAutomodRuleTool = createTool({
         }
 
         case "toggle": {
-          if (!ctx.ruleId) {
+          if (ctx.ruleId == null || ctx.ruleId.length === 0) {
             return {
               success: false,
               message: "ruleId is required for toggling a rule",

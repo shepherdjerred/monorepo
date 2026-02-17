@@ -8,7 +8,7 @@ const PAGERDUTY_BASE_URL = "https://api.pagerduty.com";
 
 function getApiKey(): string {
   const apiKey = Bun.env["PAGERDUTY_API_KEY"];
-  if (!apiKey) {
+  if (apiKey == null || apiKey.length === 0) {
     throw new Error("PAGERDUTY_API_KEY environment variable is not set");
   }
   return apiKey;
@@ -22,7 +22,7 @@ export async function pagerDutyRequest<T>(
     const apiKey = getApiKey();
     const url = new URL(`${PAGERDUTY_BASE_URL}${endpoint}`);
 
-    if (params) {
+    if (params != null) {
       for (const [key, value] of Object.entries(params)) {
         if (Array.isArray(value)) {
           for (const v of value) {

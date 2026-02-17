@@ -13,7 +13,7 @@ export function validateSnowflake(
   value: string | null | undefined,
   fieldName: string,
 ): string | null {
-  if (!value) {
+  if (value == null || value.length === 0) {
     return null;
   } // Let required field checks handle missing values (null and undefined are ok)
 
@@ -37,7 +37,7 @@ export function validateSnowflakes(
 ): string | null {
   for (const { value, fieldName } of values) {
     const error = validateSnowflake(value, fieldName);
-    if (error) {
+    if (error != null && error.length > 0) {
       return error;
     }
   }
@@ -52,13 +52,13 @@ export function validateSnowflakeArray(
   values: string[] | null | undefined,
   fieldName: string,
 ): string | null {
-  if (!values) {
+  if (values == null) {
     return null;
   }
 
   for (const [i, value] of values.entries()) {
     const error = validateSnowflake(value, `${fieldName}[${String(i)}]`);
-    if (error) {
+    if (error != null && error.length > 0) {
       return error;
     }
   }

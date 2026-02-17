@@ -11,12 +11,12 @@ export class LocalStorageManifestDatastore {
 
   get(): Manifest | undefined {
     const stored = globalThis.localStorage.getItem(IDENTIFIER);
-    return stored ? (JSON.parse(stored) as Manifest) : undefined;
+    return stored === null ? undefined : (JSON.parse(stored) as Manifest);
   }
 
   isStale(): boolean {
     const timestamp = globalThis.localStorage.getItem(TIMESTAMP);
-    if (!timestamp) {
+    if (timestamp === null) {
       return true;
     }
     const storedTime = JSON.parse(timestamp) as number;

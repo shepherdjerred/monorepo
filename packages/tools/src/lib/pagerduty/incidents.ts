@@ -24,15 +24,15 @@ export async function getIncidents(
   const statuses = options.statuses ?? ["triggered", "acknowledged"];
   params["statuses[]"] = statuses;
 
-  if (options.limit) {
+  if (options.limit != null) {
     params["limit"] = String(options.limit);
   }
 
-  if (options.serviceIds && options.serviceIds.length > 0) {
+  if (options.serviceIds != null && options.serviceIds.length > 0) {
     params["service_ids[]"] = options.serviceIds;
   }
 
-  if (options.teamIds && options.teamIds.length > 0) {
+  if (options.teamIds != null && options.teamIds.length > 0) {
     params["team_ids[]"] = options.teamIds;
   }
 
@@ -56,7 +56,7 @@ export async function getIncident(
   );
 
   if (!result.success) {
-    if (result.error?.includes("404")) {
+    if (result.error?.includes("404") === true) {
       return null;
     }
     throw new Error(result.error ?? "Failed to fetch incident");

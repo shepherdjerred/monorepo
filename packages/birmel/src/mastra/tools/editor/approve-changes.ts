@@ -54,7 +54,7 @@ export const approveChangesTool = createTool({
           };
         }
 
-        if (!reqCtx) {
+        if (reqCtx == null) {
           return {
             success: false,
             message: "Could not determine request context.",
@@ -64,7 +64,7 @@ export const approveChangesTool = createTool({
         // Get session
         const session = await getSession(sessionId);
 
-        if (!session) {
+        if (session == null) {
           return {
             success: false,
             message: `Session '${sessionId}' not found.`,
@@ -107,7 +107,7 @@ export const approveChangesTool = createTool({
         }
 
         // Verify cloned repo path exists
-        if (!session.clonedRepoPath) {
+        if (session.clonedRepoPath == null || session.clonedRepoPath.length === 0) {
           return {
             success: false,
             message: "No cloned repository found for this session.",

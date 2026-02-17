@@ -25,7 +25,12 @@ function getSourceExtension(module: ModuleEntry): string {
       return ".toml";
     case "text":
       return ".txt";
-    default:
+    case "file":
+    case "js":
+    case "wasm":
+    case "napi":
+    case "sqlite":
+    case "unknown":
       return ".js";
   }
 }

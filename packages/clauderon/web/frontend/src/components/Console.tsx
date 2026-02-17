@@ -117,7 +117,7 @@ export function Console({
   // Dismiss error function
   const dismissError = () => {
     setError(null);
-    if (errorTimeoutRef.current) {
+    if (errorTimeoutRef.current != null) {
       clearTimeout(errorTimeoutRef.current);
     }
   };
@@ -139,12 +139,12 @@ export function Console({
 
   // Initialize terminal
   useEffect(() => {
-    if (!terminalRef.current) {
+    if (terminalRef.current == null) {
       return;
     }
 
     // Prevent duplicate initialization - check both flags synchronously
-    if (terminalInstanceRef.current || initializingRef.current) {
+    if (terminalInstanceRef.current != null || initializingRef.current) {
       return;
     }
 
@@ -154,12 +154,12 @@ export function Console({
 
     void (async () => {
       const container = terminalRef.current;
-      if (!container) {
+      if (container == null) {
         return;
       }
 
       // Clear any existing canvases in the container
-      while (container.firstChild) {
+      while (container.firstChild != null) {
         container.firstChild.remove();
       }
 
@@ -191,7 +191,7 @@ export function Console({
         fitAddon.fit();
 
         // Send size to backend
-        if (clientRef.current.client && clientRef.current.isConnected) {
+        if (clientRef.current.client != null && clientRef.current.isConnected) {
           clientRef.current.client.resize(terminal.rows, terminal.cols);
         }
 
@@ -206,14 +206,14 @@ export function Console({
       terminal.onData((data) => {
         const { client: currentClient, isConnected: currentConnected } =
           clientRef.current;
-        if (currentClient && currentConnected) {
+        if (currentClient != null && currentConnected) {
           currentClient.write(data);
         }
       });
 
       // Handle terminal resize events
       terminal.onResize(({ rows, cols }) => {
-        if (clientRef.current.client && clientRef.current.isConnected) {
+        if (clientRef.current.client != null && clientRef.current.isConnected) {
           clientRef.current.client.resize(rows, cols);
         }
       });
@@ -251,7 +251,7 @@ export function Console({
 
     const unsubscribe = client.onData((data: string) => {
       const terminal = terminalInstanceRef.current;
-      if (terminal) {
+      if (terminal != null) {
         terminal.write(data);
       }
     });
@@ -299,7 +299,7 @@ export function Console({
       setErrorKey((prev) => prev + 1);
 
       // Clear any existing timeout
-      if (errorTimeoutRef.current) {
+      if (errorTimeoutRef.current != null) {
         clearTimeout(errorTimeoutRef.current);
       }
 
@@ -314,7 +314,7 @@ export function Console({
       unsubscribeError();
 
       // Clean up timeout on unmount
-      if (errorTimeoutRef.current) {
+      if (errorTimeoutRef.current != null) {
         clearTimeout(errorTimeoutRef.current);
       }
     };
@@ -322,7 +322,7 @@ export function Console({
 
   // Handle connection status changes
   useEffect(() => {
-    if (isConnected && terminalInstanceRef.current && client) {
+    if (isConnected && terminalInstanceRef.current != null && client != null) {
       // Notify backend of terminal size
       client.resize(
         terminalInstanceRef.current.rows,
@@ -356,7 +356,7 @@ export function Console({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {onSwitchToChat && (
+              {onSwitchToChat != null && (
                 <button
                   onClick={onSwitchToChat}
                   className="cursor-pointer p-2 border-2 border-white bg-white/10 hover:bg-blue-600 hover:text-white transition-all duration-200 font-bold text-white"
@@ -378,7 +378,7 @@ export function Console({
           </div>
 
           {/* Error display */}
-          {error && (
+          {error != null && error.length > 0 && (
             <div
               key={errorKey}
               className="p-4 border-b-4 font-mono flex items-start justify-between gap-4 bg-destructive/10 text-destructive border-destructive"

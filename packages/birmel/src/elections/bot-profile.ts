@@ -22,7 +22,7 @@ export async function updateBotProfile(personaName: string): Promise<void> {
   }
 
   const client = getDiscordClient();
-  if (!client.user) {
+  if (client.user == null) {
     logger.error("Discord client user not available");
     return;
   }
@@ -56,7 +56,7 @@ export async function updateBotProfile(personaName: string): Promise<void> {
 
 async function updateBotAvatar(avatarUrl: string): Promise<void> {
   const client = getDiscordClient();
-  if (!client.user) {
+  if (client.user == null) {
     return;
   }
 
@@ -83,7 +83,7 @@ async function updateBotAvatar(avatarUrl: string): Promise<void> {
 
 async function updateBotBio(winnerDiscordId: string): Promise<void> {
   const client = getDiscordClient();
-  if (!client.user) {
+  if (client.user == null) {
     return;
   }
 
@@ -110,7 +110,7 @@ async function updateBotBio(winnerDiscordId: string): Promise<void> {
 
 async function updateBotUsername(personaName: string): Promise<void> {
   const client = getDiscordClient();
-  if (!client.user) {
+  if (client.user == null) {
     return;
   }
 

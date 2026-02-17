@@ -1,3 +1,4 @@
+import type { Message, Poll } from "discord.js";
 import { getDiscordClient } from "../client.js";
 import { loggers } from "../../utils/logger.js";
 import { prisma } from "../../database/index.js";
@@ -54,14 +55,14 @@ export async function createPoll(
     const duration = params.duration ?? 24;
     const expiresAt = new Date(Date.now() + duration * 60 * 60 * 1000);
 
-    const message = await channel.send({
+    const message: Message = await channel.send({
       poll: {
         question: {
           text: params.question,
         },
         answers: params.answers.map((answer) => ({
           text: answer.text,
-          ...(answer.emoji && { emoji: answer.emoji }),
+          ...(answer.emoji != null && answer.emoji.length > 0 && { emoji: answer.emoji }),
         })),
         duration,
         allowMultiselect: params.allowMultiselect ?? false,
@@ -69,7 +70,7 @@ export async function createPoll(
     });
 
     // Store poll metadata in database
-    if (message.guildId && message.poll && client.user) {
+    if (message.guildId != null && message.guildId.length > 0 && message.poll != null && client.user != null) {
       void prisma.pollRecord
         .create({
           data: {
@@ -112,6 +113,39 @@ export async function createPoll(
   }
 }
 
+function extractPollResults(poll: Poll): GetPollResultsData {
+  let totalVotes = 0;
+  const answers: PollAnswer[] = [];
+
+  for (const answer of poll.answers.values()) {
+    totalVotes += answer.voteCount;
+
+    const answerData: PollAnswer = {
+      id: answer.id,
+      text: answer.text ?? "",
+      voteCount: answer.voteCount,
+    };
+
+    if (answer.emoji != null) {
+      const emojiName: string | undefined =
+        answer.emoji.name ?? answer.emoji.id ?? undefined;
+      if (emojiName != null && emojiName.length > 0) {
+        answerData.emoji = emojiName;
+      }
+    }
+
+    answers.push(answerData);
+  }
+
+  return {
+    question: poll.question.text ?? "",
+    answers,
+    totalVotes,
+    isFinalized: poll.resultsFinalized,
+    ...(poll.expiresAt != null ? { expiresAt: poll.expiresAt.toISOString() } : {}),
+  };
+}
+
 export async function getPollResults(
   channelId: string,
   messageId: string,
@@ -120,61 +154,34 @@ export async function getPollResults(
     const client = getDiscordClient();
     const channel = await client.channels.fetch(channelId);
 
-    if (!channel?.isTextBased()) {
+    if (channel?.isTextBased() !== true) {
       return {
         success: false,
         message: "Channel must be a text channel",
       };
     }
 
-    const message = await channel.messages.fetch(messageId);
+    const message: Message = await channel.messages.fetch(messageId);
 
-    if (!message.poll) {
+    if (message.poll == null) {
       return {
         success: false,
         message: "Message does not contain a poll",
       };
     }
 
-    const poll = message.poll;
-    let totalVotes = 0;
-    const answers: PollAnswer[] = [];
-
-    for (const answer of poll.answers.values()) {
-      totalVotes += answer.voteCount;
-
-      const answerData: PollAnswer = {
-        id: answer.id,
-        text: answer.text ?? "",
-        voteCount: answer.voteCount,
-      };
-
-      if (answer.emoji) {
-        const emojiName = answer.emoji.name ?? answer.emoji.id ?? undefined;
-        if (emojiName) {
-          answerData.emoji = emojiName;
-        }
-      }
-
-      answers.push(answerData);
-    }
+    const data = extractPollResults(message.poll);
 
     logger.info("Poll results fetched", {
       messageId,
-      totalVotes,
-      answerCount: answers.length,
+      totalVotes: data.totalVotes,
+      answerCount: data.answers.length,
     });
 
     return {
       success: true,
-      message: `Poll results: ${totalVotes.toString()} total votes across ${answers.length.toString()} answers`,
-      data: {
-        question: poll.question.text ?? "",
-        answers,
-        totalVotes,
-        isFinalized: poll.resultsFinalized,
-        ...(poll.expiresAt && { expiresAt: poll.expiresAt.toISOString() }),
-      },
+      message: `Poll results: ${data.totalVotes.toString()} total votes across ${data.answers.length.toString()} answers`,
+      data,
     };
   } catch (error) {
     logger.error("Failed to fetch poll results", error, {
@@ -196,16 +203,16 @@ export async function endPoll(
     const client = getDiscordClient();
     const channel = await client.channels.fetch(channelId);
 
-    if (!channel?.isTextBased()) {
+    if (channel?.isTextBased() !== true) {
       return {
         success: false,
         message: "Channel must be a text channel",
       };
     }
 
-    const message = await channel.messages.fetch(messageId);
+    const message: Message = await channel.messages.fetch(messageId);
 
-    if (!message.poll) {
+    if (message.poll == null) {
       return {
         success: false,
         message: "Message does not contain a poll",

@@ -37,7 +37,7 @@ function formatIssue(issue: BugsinkIssue): string {
     `  - Events: ${String(issue.count)} (${String(issue.user_count)} users)`,
   );
 
-  if (issue.culprit) {
+  if (issue.culprit != null && issue.culprit.length > 0) {
     lines.push(`  - Culprit: \`${issue.culprit}\``);
   }
 
@@ -121,7 +121,7 @@ export async function issuesCommand(
       limit: options.limit,
     });
 
-    if (options.json) {
+    if (options.json === true) {
       console.log(formatJson(issues));
     } else {
       console.log(formatIssuesMarkdown(issues));

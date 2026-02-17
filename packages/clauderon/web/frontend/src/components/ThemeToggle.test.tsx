@@ -2,18 +2,18 @@ import { describe, expect, test, beforeEach } from "bun:test";
 
 // Mock localStorage
 const mockLocalStorage = (() => {
-  let store: Record<string, string> = {};
+  let store = new Map<string, string>();
 
   return {
-    getItem: (key: string) => store[key] ?? null,
+    getItem: (key: string) => store.get(key) ?? null,
     setItem: (key: string, value: string) => {
-      store[key] = value;
+      store.set(key, value);
     },
     removeItem: (key: string) => {
-      delete store[key];
+      store.delete(key);
     },
     clear: () => {
-      store = {};
+      store = new Map<string, string>();
     },
   };
 })();
@@ -24,10 +24,10 @@ const mockMatchMedia = (matches: boolean) => {
     matches,
     media: "(prefers-color-scheme: dark)",
     onchange: null,
-    addListener: () => {},
-    removeListener: () => {},
-    addEventListener: () => {},
-    removeEventListener: () => {},
+    addListener: () => { /* noop */ },
+    removeListener: () => { /* noop */ },
+    addEventListener: () => { /* noop */ },
+    removeEventListener: () => { /* noop */ },
     dispatchEvent: () => true,
   });
 };
@@ -35,9 +35,9 @@ const mockMatchMedia = (matches: boolean) => {
 describe("ThemeToggle localStorage behavior", () => {
   beforeEach(() => {
     mockLocalStorage.clear();
-    // @ts-expect-error - mocking
+    // @ts-expect-error - mocking global localStorage for test isolation
     global.localStorage = mockLocalStorage;
-    // @ts-expect-error - mocking
+    // @ts-expect-error - mocking global matchMedia for test isolation
     global.matchMedia = mockMatchMedia(false);
   });
 
@@ -59,24 +59,24 @@ describe("ThemeToggle localStorage behavior", () => {
 describe("ThemeToggle system preference detection", () => {
   beforeEach(() => {
     mockLocalStorage.clear();
-    // @ts-expect-error - mocking
+    // @ts-expect-error - mocking global localStorage for test isolation
     global.localStorage = mockLocalStorage;
-    // @ts-expect-error - mocking
+    // @ts-expect-error - mocking global window for test isolation
     global.window = global;
   });
 
   test("matchMedia detects dark mode preference", () => {
-    // @ts-expect-error - mocking
+    // @ts-expect-error - mocking global matchMedia for test isolation
     global.matchMedia = mockMatchMedia(true);
-    // @ts-expect-error - mocking
+    // @ts-expect-error - calling mocked matchMedia returns partial type
     const mediaQuery = global.matchMedia("(prefers-color-scheme: dark)");
     expect(mediaQuery.matches).toBe(true);
   });
 
   test("matchMedia detects light mode preference", () => {
-    // @ts-expect-error - mocking
+    // @ts-expect-error - mocking global matchMedia for test isolation
     global.matchMedia = mockMatchMedia(false);
-    // @ts-expect-error - mocking
+    // @ts-expect-error - calling mocked matchMedia returns partial type
     const mediaQuery = global.matchMedia("(prefers-color-scheme: dark)");
     expect(mediaQuery.matches).toBe(false);
   });
@@ -85,9 +85,9 @@ describe("ThemeToggle system preference detection", () => {
 describe("ThemeToggle theme persistence logic", () => {
   beforeEach(() => {
     mockLocalStorage.clear();
-    // @ts-expect-error - mocking
+    // @ts-expect-error - mocking global localStorage for test isolation
     global.localStorage = mockLocalStorage;
-    // @ts-expect-error - mocking
+    // @ts-expect-error - mocking global matchMedia for test isolation
     global.matchMedia = mockMatchMedia(false);
   });
 
@@ -95,7 +95,7 @@ describe("ThemeToggle theme persistence logic", () => {
     // Set localStorage to dark
     mockLocalStorage.setItem("theme", "dark");
     // But system prefers light
-    // @ts-expect-error - mocking
+    // @ts-expect-error - mocking global matchMedia for test isolation
     global.matchMedia = mockMatchMedia(false);
 
     // Should use localStorage value
@@ -108,9 +108,9 @@ describe("ThemeToggle theme persistence logic", () => {
     expect(mockLocalStorage.getItem("theme")).toBe(null);
 
     // System prefers dark
-    // @ts-expect-error - mocking
+    // @ts-expect-error - mocking global matchMedia for test isolation
     global.matchMedia = mockMatchMedia(true);
-    // @ts-expect-error - mocking
+    // @ts-expect-error - calling mocked matchMedia returns partial type
     const mediaQuery = global.matchMedia("(prefers-color-scheme: dark)");
 
     // Should detect system preference
@@ -130,9 +130,9 @@ describe("ThemeToggle theme persistence logic", () => {
 describe("ThemeToggle edge cases", () => {
   beforeEach(() => {
     mockLocalStorage.clear();
-    // @ts-expect-error - mocking
+    // @ts-expect-error - mocking global localStorage for test isolation
     global.localStorage = mockLocalStorage;
-    // @ts-expect-error - mocking
+    // @ts-expect-error - mocking global matchMedia for test isolation
     global.matchMedia = mockMatchMedia(false);
   });
 
@@ -154,11 +154,11 @@ describe("ThemeToggle edge cases", () => {
       setItem: () => {
         throw new Error("Storage access denied");
       },
-      removeItem: () => {},
-      clear: () => {},
+      removeItem: () => { /* noop */ },
+      clear: () => { /* noop */ },
     };
 
-    // @ts-expect-error - mocking
+    // @ts-expect-error - mocking global localStorage with broken implementation
     global.localStorage = brokenStorage;
 
     // Should not crash when trying to access localStorage

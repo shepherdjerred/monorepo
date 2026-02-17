@@ -60,7 +60,7 @@ export function formatHealthReport(report: HealthReport): string {
       }
     }
 
-    if (check.commands && check.commands.length > 0) {
+    if (check.commands != null && check.commands.length > 0) {
       lines.push("");
       lines.push("To investigate:");
       lines.push("```bash");

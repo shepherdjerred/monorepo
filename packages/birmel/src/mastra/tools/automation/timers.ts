@@ -121,7 +121,7 @@ export const manageTaskTool = createTool({
           }
 
           const parsed = parseFlexibleTime(ctx.when);
-          if (!parsed) {
+          if (parsed == null) {
             return {
               success: false,
               message: `Could not understand time: "${ctx.when}"`,
@@ -205,7 +205,7 @@ export const manageTaskTool = createTool({
         case "list": {
           const where = {
             guildId: ctx.guildId,
-            ...(ctx.includeExecuted ? {} : { executedAt: null }),
+            ...(ctx.includeExecuted === true ? {} : { executedAt: null }),
           };
 
           const tasks = await prisma.scheduledTask.findMany({
@@ -245,10 +245,10 @@ export const manageTaskTool = createTool({
             where: { id: ctx.taskId, guildId: ctx.guildId },
           });
 
-          if (!task) {
+          if (task == null) {
             return { success: false, message: "Task not found" };
           }
-          if (task.executedAt) {
+          if (task.executedAt != null) {
             return {
               success: false,
               message: "Cannot cancel an executed task",
@@ -288,7 +288,7 @@ export const manageTaskTool = createTool({
           }
 
           const recurringPattern = detectRecurringPattern(ctx.when);
-          if (recurringPattern) {
+          if (recurringPattern != null && recurringPattern.length > 0) {
             return {
               success: false,
               message: `This looks like a recurring reminder. Use schedule action with cron pattern: ${recurringPattern}`,
@@ -296,7 +296,7 @@ export const manageTaskTool = createTool({
           }
 
           const parsed = parseNaturalTime(ctx.when);
-          if (!parsed) {
+          if (parsed == null) {
             return {
               success: false,
               message: `Could not understand time: "${ctx.when}"`,

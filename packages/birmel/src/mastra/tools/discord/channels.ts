@@ -115,17 +115,17 @@ export const manageChannelTool = createTool({
           { value: ctx.parentId ?? undefined, fieldName: "parentId" },
           { value: ctx.targetId, fieldName: "targetId" },
         ]);
-        if (idError) {
+        if (idError != null && idError.length > 0) {
           return { success: false, message: idError };
         }
 
         // Validate channel IDs in positions array
-        if (ctx.positions) {
+        if (ctx.positions != null) {
           for (const pos of ctx.positions) {
             const posError = validateSnowflakes([
               { value: pos.channelId, fieldName: "positions.channelId" },
             ]);
-            if (posError) {
+            if (posError != null && posError.length > 0) {
               return { success: false, message: posError };
             }
           }
@@ -135,7 +135,7 @@ export const manageChannelTool = createTool({
 
         switch (ctx.action) {
           case "list": {
-            if (!ctx.guildId) {
+            if (ctx.guildId == null || ctx.guildId.length === 0) {
               return {
                 success: false,
                 message: "guildId is required for list",
@@ -157,14 +157,14 @@ export const manageChannelTool = createTool({
           }
 
           case "get": {
-            if (!ctx.channelId) {
+            if (ctx.channelId == null || ctx.channelId.length === 0) {
               return {
                 success: false,
                 message: "channelId is required for get",
               };
             }
             const channel = await client.channels.fetch(ctx.channelId);
-            if (!channel) {
+            if (channel == null) {
               return { success: false, message: "Channel not found" };
             }
             return {
@@ -217,7 +217,7 @@ export const manageChannelTool = createTool({
           }
 
           case "modify": {
-            if (!ctx.channelId) {
+            if (ctx.channelId == null || ctx.channelId.length === 0) {
               return {
                 success: false,
                 message: "channelId is required for modify",
@@ -248,7 +248,7 @@ export const manageChannelTool = createTool({
           }
 
           case "delete": {
-            if (!ctx.channelId) {
+            if (ctx.channelId == null || ctx.channelId.length === 0) {
               return {
                 success: false,
                 message: "channelId is required for delete",

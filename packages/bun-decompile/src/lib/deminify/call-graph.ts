@@ -399,9 +399,9 @@ export function getFunctionContext(
   // Build known names map from results
   const knownNames = new Map<string, string>();
   for (const [id, result] of deminifiedResults) {
-    const func = graph.functions.get(id);
-    if (func?.originalName && result.suggestedName) {
-      knownNames.set(func.originalName, result.suggestedName);
+    const graphFunc = graph.functions.get(id);
+    if (graphFunc?.originalName && result.suggestedName) {
+      knownNames.set(graphFunc.originalName, result.suggestedName);
     }
     // Add parameter and variable mappings
     for (const [orig, suggested] of Object.entries(result.parameterNames)) {

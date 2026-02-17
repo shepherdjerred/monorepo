@@ -20,7 +20,7 @@ async function getBrowser(): Promise<Browser> {
     throw new Error("Browser automation is disabled");
   }
 
-  if (browserInstance?.isConnected()) {
+  if (browserInstance?.isConnected() === true) {
     return browserInstance;
   }
 
@@ -38,7 +38,7 @@ async function getBrowser(): Promise<Browser> {
     ];
 
     // Add user agent if configured
-    if (config.browser.userAgent) {
+    if (config.browser.userAgent != null && config.browser.userAgent.length > 0) {
       launchArgs.push(`--user-agent=${config.browser.userAgent}`);
     }
 
@@ -61,7 +61,7 @@ async function getBrowser(): Promise<Browser> {
 }
 
 async function getPage(): Promise<Page> {
-  if (currentPage && !currentPage.isClosed()) {
+  if (currentPage != null && !currentPage.isClosed()) {
     return currentPage;
   }
 
@@ -75,7 +75,7 @@ async function getPage(): Promise<Page> {
         width: config.browser.viewportWidth,
         height: config.browser.viewportHeight,
       },
-      ...(config.browser.userAgent
+      ...(config.browser.userAgent != null && config.browser.userAgent.length > 0
         ? { userAgent: config.browser.userAgent }
         : {}),
     });
@@ -89,7 +89,7 @@ async function getPage(): Promise<Page> {
 }
 
 function resetSessionTimeout(): void {
-  if (sessionTimeout) {
+  if (sessionTimeout != null) {
     clearTimeout(sessionTimeout);
   }
 
@@ -100,19 +100,19 @@ function resetSessionTimeout(): void {
 }
 
 async function closeBrowser(): Promise<void> {
-  if (sessionTimeout) {
+  if (sessionTimeout != null) {
     clearTimeout(sessionTimeout);
     sessionTimeout = null;
   }
 
-  if (currentPage) {
+  if (currentPage != null) {
     await currentPage.close().catch(() => {
       /* ignore */
     });
     currentPage = null;
   }
 
-  if (browserInstance) {
+  if (browserInstance != null) {
     await browserInstance.close().catch(() => {
       /* ignore */
     });
@@ -171,7 +171,7 @@ export const browserAutomationTool = createTool({
     try {
       switch (ctx.action) {
         case "navigate": {
-          if (!ctx.url) {
+          if (ctx.url == null || ctx.url.length === 0) {
             return { success: false, message: "url is required for navigate" };
           }
           const page = await getPage();
@@ -219,7 +219,7 @@ export const browserAutomationTool = createTool({
         }
 
         case "click": {
-          if (!ctx.selector) {
+          if (ctx.selector == null || ctx.selector.length === 0) {
             return {
               success: false,
               message: "selector is required for click",
@@ -244,7 +244,7 @@ export const browserAutomationTool = createTool({
           await page.fill(ctx.selector, ctx.text, {
             timeout: ctx.timeout ?? 30_000,
           });
-          if (ctx.pressEnter) {
+          if (ctx.pressEnter === true) {
             await page.press(ctx.selector, "Enter");
           }
           logger.info("Typed text", {
@@ -258,7 +258,7 @@ export const browserAutomationTool = createTool({
           const page = await getPage();
           resetSessionTimeout();
           let text: string;
-          if (ctx.selector) {
+          if (ctx.selector != null && ctx.selector.length > 0) {
             const element = await page.waitForSelector(ctx.selector, {
               timeout: ctx.timeout ?? 30_000,
             });

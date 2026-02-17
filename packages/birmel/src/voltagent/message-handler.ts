@@ -67,10 +67,10 @@ export async function handleMessageWithStreaming(
 
     // 3. Build memory context sections
     let memoryContext = "";
-    if (serverMemory) {
+    if (serverMemory != null && serverMemory.length > 0) {
       memoryContext += `\n## Server Memory (permanent)\n${serverMemory}\n`;
     }
-    if (ownerMemory) {
+    if (ownerMemory != null && ownerMemory.length > 0) {
       memoryContext += `\n## Owner Memory (${persona})\n${ownerMemory}\n`;
     }
 

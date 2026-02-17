@@ -105,7 +105,7 @@ export async function incidentsCommand(
       limit: options.limit,
     });
 
-    if (options.json) {
+    if (options.json === true) {
       console.log(formatJson(incidents));
     } else {
       console.log(formatIncidentsMarkdown(incidents));

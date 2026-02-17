@@ -84,7 +84,7 @@ export function buildSystemPromptWithPersona(
     samples: string[];
   } | null,
 ): string {
-  if (!personaContext) {
+  if (personaContext == null) {
     return SYSTEM_PROMPT;
   }
 

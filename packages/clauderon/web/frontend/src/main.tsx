@@ -7,7 +7,7 @@ import { App } from "./App.tsx";
 import { SENTRY_DSN } from "./config.ts";
 
 // Initialize Sentry for error reporting (DSN is configured at build time)
-// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- SENTRY_DSN may be empty string at build time
 if (SENTRY_DSN) {
   Sentry.init({
     dsn: SENTRY_DSN,
@@ -17,7 +17,7 @@ if (SENTRY_DSN) {
 
 const root = document.querySelector("#root");
 
-if (!root) {
+if (root == null) {
   throw new Error("Root element not found");
 }
 

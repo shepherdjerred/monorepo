@@ -80,7 +80,7 @@ export const manageScheduledEventTool = createTool({
         { value: ctx.eventId, fieldName: "eventId" },
         { value: ctx.channelId, fieldName: "channelId" },
       ]);
-      if (idError) {
+      if (idError != null && idError.length > 0) {
         return { success: false, message: idError };
       }
 
@@ -114,7 +114,7 @@ export const manageScheduledEventTool = createTool({
                 "name and scheduledStartTime are required for creating an event",
             };
           }
-          const entityType = ctx.channelId
+          const entityType = ctx.channelId != null && ctx.channelId.length > 0
             ? GuildScheduledEventEntityType.Voice
             : GuildScheduledEventEntityType.External;
           const createOptions: Parameters<
@@ -146,7 +146,7 @@ export const manageScheduledEventTool = createTool({
         }
 
         case "modify": {
-          if (!ctx.eventId) {
+          if (ctx.eventId == null || ctx.eventId.length === 0) {
             return {
               success: false,
               message: "eventId is required for modifying an event",
@@ -189,7 +189,7 @@ export const manageScheduledEventTool = createTool({
         }
 
         case "delete": {
-          if (!ctx.eventId) {
+          if (ctx.eventId == null || ctx.eventId.length === 0) {
             return {
               success: false,
               message: "eventId is required for deleting an event",
@@ -205,7 +205,7 @@ export const manageScheduledEventTool = createTool({
         }
 
         case "get-users": {
-          if (!ctx.eventId) {
+          if (ctx.eventId == null || ctx.eventId.length === 0) {
             return {
               success: false,
               message: "eventId is required for getting event users",

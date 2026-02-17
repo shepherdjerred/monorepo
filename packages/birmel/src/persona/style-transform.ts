@@ -54,7 +54,7 @@ export function buildStyleContext(persona: string): StyleContext | null {
 
   const styleCard = loadStyleCard(persona);
 
-  if (!styleCard) {
+  if (styleCard == null) {
     logger.warn("No style card available for persona", { persona });
     return null;
   }
@@ -125,7 +125,7 @@ export function buildPersonaPrompt(persona: string): {
   samples: string[];
 } | null {
   const styleContext = buildStyleContext(persona);
-  if (!styleContext) {
+  if (styleContext == null) {
     return null;
   }
 
@@ -156,7 +156,7 @@ export async function stylizeResponse(
   }
 
   const styleContext = buildStyleContext(persona);
-  if (!styleContext) {
+  if (styleContext == null) {
     logger.debug("No style context available, returning original response");
     return response;
   }

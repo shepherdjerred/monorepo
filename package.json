@@ -27,6 +27,7 @@
     "jiti": "^2.6.1",
     "lefthook": "^2.1.1",
     "prisma": "^6.0.0",
+    "ts-morph": "^27.0.2",
     "typescript": "^5.9.3"
   }
 }

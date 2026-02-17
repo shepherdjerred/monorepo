@@ -6,7 +6,7 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 const databasePath = process.env["DATABASE_PATH"];
-const datasourceUrl = databasePath
+const datasourceUrl = databasePath != null && databasePath.length > 0
   ? (databasePath.startsWith("file:")
     ? databasePath
     : `file:${databasePath}`)
@@ -15,7 +15,7 @@ const datasourceUrl = databasePath
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    ...(datasourceUrl ? { datasourceUrl } : {}),
+    ...(datasourceUrl != null && datasourceUrl.length > 0 ? { datasourceUrl } : {}),
     log:
       process.env["LOG_LEVEL"] === "debug"
         ? ["query", "info", "warn", "error"]

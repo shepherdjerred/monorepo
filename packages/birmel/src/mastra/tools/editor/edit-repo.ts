@@ -96,7 +96,7 @@ export const editRepoTool = createTool({
         }
 
         // Get request context
-        if (!reqCtx) {
+        if (reqCtx == null) {
           return {
             success: false,
             message: "Could not determine request context.",
@@ -137,7 +137,7 @@ export const editRepoTool = createTool({
         }
 
         const repoConfig = getRepoConfig(repoName);
-        if (!repoConfig) {
+        if (repoConfig == null) {
           return {
             success: false,
             message: `Repository '${repoName}' configuration not found.`,
@@ -160,9 +160,9 @@ export const editRepoTool = createTool({
 
         // Clone repo on first edit if not already cloned
         let workingDirectory = session.clonedRepoPath;
-        if (!workingDirectory) {
+        if (workingDirectory == null || workingDirectory.length === 0) {
           const auth = await getAuth(reqCtx.userId);
-          if (!auth) {
+          if (auth == null) {
             return {
               success: false,
               message: "GitHub authentication required to clone repository.",
@@ -189,14 +189,14 @@ export const editRepoTool = createTool({
         const result = await executeEdit({
           prompt: instruction,
           workingDirectory,
-          ...(session.sdkSessionId && {
+          ...(session.sdkSessionId != null && session.sdkSessionId.length > 0 && {
             resumeSessionId: session.sdkSessionId,
           }),
           allowedPaths: repoConfig.allowedPaths,
         });
 
         // Update session with SDK session ID
-        if (result.sdkSessionId) {
+        if (result.sdkSessionId != null && result.sdkSessionId.length > 0) {
           await updateSdkSessionId(session.id, result.sdkSessionId);
         }
 
@@ -236,7 +236,7 @@ export const editRepoTool = createTool({
         const client = getDiscordClient();
         const channel = await client.channels.fetch(reqCtx.sourceChannelId);
 
-        if (channel && "send" in channel) {
+        if (channel != null && "send" in channel) {
           const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } =
             await getDiscordComponents();
           const embed = new EmbedBuilder()

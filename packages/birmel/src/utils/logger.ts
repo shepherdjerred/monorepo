@@ -42,7 +42,7 @@ function formatLogEntry(
     level,
     message,
     ...traceContext,
-    ...(moduleName ? { module: moduleName } : {}),
+    ...(moduleName != null && moduleName.length > 0 ? { module: moduleName } : {}),
     ...meta,
   };
 
@@ -111,7 +111,7 @@ function createLogger(moduleName?: string): Logger {
     },
 
     child(module: string): Logger {
-      const childModule = moduleName ? `${moduleName}.${module}` : module;
+      const childModule = moduleName != null && moduleName.length > 0 ? `${moduleName}.${module}` : module;
       return createLogger(childModule);
     },
   };

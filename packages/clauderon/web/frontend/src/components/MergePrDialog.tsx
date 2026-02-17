@@ -42,7 +42,7 @@ export function MergePrDialog({
   );
 
   const handleConfirm = () => {
-    if (selectedMethod) {
+    if (selectedMethod != null && selectedMethod.length > 0) {
       onConfirm(selectedMethod, deleteBranch);
     }
   };
@@ -84,7 +84,7 @@ export function MergePrDialog({
                 <SelectValue placeholder="Select merge method" />
               </SelectTrigger>
               <SelectContent>
-                {session.pr_merge_methods &&
+                {session.pr_merge_methods != null &&
                 session.pr_merge_methods.length > 0 ? (
                   session.pr_merge_methods.map((method) => (
                     <SelectItem key={method} value={method}>

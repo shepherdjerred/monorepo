@@ -52,7 +52,7 @@ export async function startOAuthServer(): Promise<void> {
     });
   }
 
-  if (!config.editor.github) {
+  if (config.editor.github == null) {
     logger.info("GitHub OAuth not configured, skipping OAuth server");
     return;
   }
@@ -90,7 +90,7 @@ export async function startOAuthServer(): Promise<void> {
  * Stop the OAuth server
  */
 export async function stopOAuthServer(): Promise<void> {
-  if (server) {
+  if (server != null) {
     await server.stop();
     server = null;
     logger.info("OAuth server stopped");

@@ -9,7 +9,7 @@ export function useConsole(sessionId: string | null) {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    if (!sessionId) {
+    if (sessionId == null || sessionId.length === 0) {
       return;
     }
 

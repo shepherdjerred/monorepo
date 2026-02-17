@@ -41,7 +41,6 @@ import {
 } from "./homelab/index.js";
 
 const PACKAGES = [
-  "eslint-config",
   "bun-decompile",
   "astro-opengraph-images",
   "webring",
@@ -1188,10 +1187,21 @@ export class Monorepo {
       if (releaseCreated) {
         outputs.push("\n--- NPM Publishing ---");
 
-        for (const pkg of PACKAGES) {
+        const npmPackages = [
+          ...PACKAGES.map((pkg) => ({
+            name: `@shepherdjerred/${pkg}`,
+            path: `packages/${pkg}`,
+          })),
+          {
+            name: "@shepherdjerred/helm-types",
+            path: "packages/homelab/src/helm-types",
+          },
+        ];
+
+        for (const pkg of npmPackages) {
           try {
             await container
-              .withWorkdir(`/workspace/packages/${pkg}`)
+              .withWorkdir(`/workspace/${pkg.path}`)
               .withSecretVariable("NPM_TOKEN", npmToken)
               .withExec([
                 "sh",
@@ -1210,11 +1220,11 @@ export class Monorepo {
               ])
               .stdout();
 
-            outputs.push(`✓ Published @shepherdjerred/${pkg}`);
+            outputs.push(`✓ Published ${pkg.name}`);
           } catch (error) {
             const errorMessage =
               error instanceof Error ? error.message : String(error);
-            const failureMsg = `Failed to publish @shepherdjerred/${pkg}: ${errorMessage}`;
+            const failureMsg = `Failed to publish ${pkg.name}: ${errorMessage}`;
             outputs.push(`✗ ${failureMsg}`);
             releaseErrors.push(failureMsg);
           }
@@ -1324,7 +1334,6 @@ export class Monorepo {
               gitSha,
               registryUsername,
               registryPassword,
-              githubToken,
             ),
           );
           appVersions["shepherdjerred/starlight-karma-bot/beta"] = version;
@@ -1345,7 +1354,6 @@ export class Monorepo {
                 s3SecretAccessKey,
                 registryUsername,
                 registryPassword,
-                githubToken,
               ),
             );
             appVersions["shepherdjerred/better-skill-capped-fetcher"] = version;
@@ -1425,8 +1433,6 @@ export class Monorepo {
             awsSecretAccessKey: s3SecretAccessKey!,
             ...(hassBaseUrl ? { hassBaseUrl } : {}),
             ...(hassToken ? { hassToken } : {}),
-            ...(githubToken ? { githubToken } : {}),
-            ...(npmToken ? { npmToken } : {}),
             ...(tofuGithubToken ? { tofuGithubToken } : {}),
             appVersions,
           };
@@ -2124,8 +2130,6 @@ retry = 3
     awsSecretAccessKey: Secret,
     hassBaseUrl?: Secret,
     hassToken?: Secret,
-    githubToken?: Secret,
-    npmToken?: Secret,
     tofuGithubToken?: Secret,
   ): Promise<string> {
     return ciHomelab(source, HomelabStage.Prod, {
@@ -2141,8 +2145,6 @@ retry = 3
       awsSecretAccessKey,
       ...(hassBaseUrl ? { hassBaseUrl } : {}),
       ...(hassToken ? { hassToken } : {}),
-      ...(githubToken ? { githubToken } : {}),
-      ...(npmToken ? { npmToken } : {}),
       ...(tofuGithubToken ? { tofuGithubToken } : {}),
     });
   }

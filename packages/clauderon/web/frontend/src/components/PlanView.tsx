@@ -63,7 +63,7 @@ export function PlanView({ message }: PlanViewProps) {
                         isChecked ? "text-green-600" : "text-muted-foreground"
                       }`}
                     />
-                    <span>{childText.replace(/\[(x| )\]\s*/, "")}</span>
+                    <span>{childText.replace(/\[(?:x| )\]\s*/, "")}</span>
                   </li>
                 );
               }

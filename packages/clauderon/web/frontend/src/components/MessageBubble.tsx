@@ -14,8 +14,8 @@ type MessageBubbleProps = {
 export function MessageBubble({ message }: MessageBubbleProps) {
   // Don't render if there's no displayable content
   const hasContent = message.content.trim();
-  const hasToolUses = message.toolUses && message.toolUses.length > 0;
-  const hasCodeBlocks = message.codeBlocks && message.codeBlocks.length > 0;
+  const hasToolUses = message.toolUses != null && message.toolUses.length > 0;
+  const hasCodeBlocks = message.codeBlocks != null && message.codeBlocks.length > 0;
 
   if (!hasContent && !hasToolUses && !hasCodeBlocks) {
     return null;
@@ -96,7 +96,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         )}
 
         {/* Tool uses with chunky borders */}
-        {message.toolUses && message.toolUses.length > 0 && (
+        {message.toolUses != null && message.toolUses.length > 0 && (
           <div className="space-y-3 mb-3">
             {message.toolUses.map((tool, idx) => (
               <div
@@ -108,12 +108,12 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-bold font-mono">{tool.name}</div>
-                  {tool.description && (
+                  {tool.description != null && tool.description.length > 0 && (
                     <div className="text-muted-foreground mt-1 font-mono text-xs break-all">
                       {tool.description}
                     </div>
                   )}
-                  {tool.result && (
+                  {tool.result != null && tool.result.length > 0 && (
                     <div className="mt-2 p-2 bg-background border-2 text-xs font-mono overflow-x-auto">
                       {tool.result}
                     </div>
@@ -125,7 +125,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         )}
 
         {/* Code blocks with syntax highlighting */}
-        {message.codeBlocks && message.codeBlocks.length > 0 && (
+        {message.codeBlocks != null && message.codeBlocks.length > 0 && (
           <div className="space-y-3">
             {message.codeBlocks.map((block, idx) => (
               <CodeBlock

@@ -99,7 +99,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
           setStorageClasses(classes);
           // Auto-select default storage class if available
           const defaultClass = classes.find((c) => c.is_default);
-          if (defaultClass && !formData.storage_class) {
+          if (defaultClass != null && !formData.storage_class) {
             setFormData((prev) => ({
               ...prev,
               storage_class: defaultClass.name,
@@ -146,7 +146,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   useEffect(() => {
     if (
       (formData.backend as string) === "Kubernetes" &&
-      featureFlags &&
+      featureFlags != null &&
       !featureFlags.enable_kubernetes_backend
     ) {
       setFormData((prev) => ({ ...prev, backend: "Docker" as BackendType }));
@@ -174,7 +174,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     } else {
       // When disabled: Keep only first repo, discard others immediately
       setRepositories((prev) => {
-        if (prev.length > 1 && prev[0]) {
+        if (prev.length > 1 && prev[0] != null) {
           return [prev[0]];
         }
         return prev;
@@ -387,7 +387,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     const newRepos = repositories.filter((r) => r.id !== id);
 
     // If removing primary, set the first remaining repo as primary
-    if (repoToRemove?.is_primary && newRepos.length > 0 && newRepos[0]) {
+    if (repoToRemove?.is_primary === true && newRepos.length > 0 && newRepos[0] != null) {
       newRepos[0].is_primary = true;
     }
 
@@ -401,7 +401,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
 
     // Single mode: Only first repo needs path
     if (!multiRepoEnabled) {
-      if (!repositories[0]?.repo_path.trim()) {
+      if (repositories[0]?.repo_path.trim() == null || repositories[0]?.repo_path.trim().length === 0) {
         return "Repository path is required";
       }
       return null;
@@ -482,7 +482,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     try {
       // Validate repositories
       const validationError = validateRepositories();
-      if (validationError) {
+      if (validationError != null && validationError.length > 0) {
         setError(validationError);
         setIsSubmitting(false);
         return;
@@ -491,7 +491,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       // Build CreateRepositoryInput array
       // Use repositories array if multi-repo enabled, or if base_branch is specified (for Sprites/K8s)
       const firstRepo = repositories[0];
-      if (!firstRepo) {
+      if (firstRepo == null) {
         throw new Error("No repository specified");
       }
       const needsRepositoriesArray = multiRepoEnabled || firstRepo.base_branch;
@@ -506,11 +506,11 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
 
       const request: CreateSessionRequest = {
         repo_path: firstRepo.repo_path, // Legacy field for backward compat
-        ...(repoInputs && { repositories: repoInputs }), // New multi-repo field
+        ...(repoInputs != null && { repositories: repoInputs }), // New multi-repo field
         initial_prompt: formData.initial_prompt,
         backend: formData.backend,
         agent: formData.agent,
-        ...(formData.model && { model: formData.model }),
+        ...(formData.model != null && { model: formData.model }),
         dangerous_skip_checks: formData.dangerous_skip_checks,
         print_mode: false,
         plan_mode: formData.plan_mode,
@@ -619,7 +619,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             className="p-6 space-y-6 overflow-y-auto"
             style={{ backgroundColor: "hsl(220, 15%, 95%)" }}
           >
-            {error && (
+            {error != null && error.length > 0 && (
               <div
                 className="p-4 border-4 font-mono"
                 style={{
@@ -873,7 +873,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 >
                   <option value="Docker">Docker</option>
                   <option value="Zellij">Zellij</option>
-                  {featureFlags?.enable_kubernetes_backend && (
+                  {featureFlags?.enable_kubernetes_backend === true && (
                     <option value="Kubernetes">Kubernetes</option>
                   )}
                   <option value="Sprites">Sprites</option>
@@ -900,7 +900,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                         <span>Claude Code</span>
                       </div>
                     </SelectItem>
-                    {featureFlags?.enable_experimental_models && (
+                    {featureFlags?.enable_experimental_models === true && (
                       <>
                         <SelectItem value={AgentType.Codex}>
                           <div className="flex items-center gap-2">
@@ -947,7 +947,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 </Label>
                 <select
                   id="model"
-                  value={formData.model ? JSON.stringify(formData.model) : ""}
+                  value={formData.model != null ? JSON.stringify(formData.model) : ""}
                   onChange={(e) => {
                     const value: SessionModel | undefined = e.target.value
                       ? (JSON.parse(e.target.value) as SessionModel)
@@ -965,7 +965,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 </select>
               </div>
 
-              {flags?.enable_readonly_mode && (
+              {flags?.enable_readonly_mode === true && (
                 <div className="space-y-2">
                   <Label htmlFor="access_mode" className="font-semibold">
                     Access Mode
@@ -1023,7 +1023,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                           >
                             {feature.name}
                           </span>
-                          {feature.note && (
+                          {feature.note != null && feature.note.length > 0 && (
                             <span className="text-xs block text-muted-foreground mt-0.5">
                               {feature.note}
                             </span>
@@ -1059,7 +1059,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
                 multiple
                 onChange={(e) => {
-                  if (e.target.files) {
+                  if (e.target.files != null) {
                     setSelectedFiles([...e.target.files]);
                   }
                 }}
@@ -1266,7 +1266,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               />
               <Label htmlFor="plan-mode" className="cursor-pointer">
                 Start in plan mode
-                {flags?.enable_readonly_mode ? " (read-only)" : ""}
+                {flags?.enable_readonly_mode === true ? " (read-only)" : ""}
               </Label>
             </div>
 

@@ -13,7 +13,7 @@ const GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token";
  */
 export function getAuthorizationUrl(userId: string, state?: string): string {
   const config = getGitHubConfig();
-  if (!config) {
+  if (config == null) {
     throw new Error("GitHub OAuth not configured");
   }
 
@@ -34,7 +34,7 @@ export async function exchangeCodeForToken(
   code: string,
 ): Promise<{ accessToken: string; refreshToken?: string; expiresAt?: Date }> {
   const config = getGitHubConfig();
-  if (!config) {
+  if (config == null) {
     throw new Error("GitHub OAuth not configured");
   }
 
@@ -72,7 +72,7 @@ export async function exchangeCodeForToken(
     error_description?: string;
   };
 
-  if (data.error) {
+  if (data.error != null && data.error.length > 0) {
     throw new Error(data.error_description ?? data.error);
   }
 
@@ -84,11 +84,11 @@ export async function exchangeCodeForToken(
     accessToken: data.access_token,
   };
 
-  if (data.refresh_token) {
+  if (data.refresh_token != null && data.refresh_token.length > 0) {
     result.refreshToken = data.refresh_token;
   }
 
-  if (data.expires_in) {
+  if (data.expires_in != null) {
     result.expiresAt = new Date(Date.now() + data.expires_in * 1000);
   }
 
@@ -134,12 +134,12 @@ export async function getAuth(userId: string): Promise<GitHubAuth | null> {
  */
 export async function hasValidAuth(userId: string): Promise<boolean> {
   const auth = await getAuth(userId);
-  if (!auth) {
+  if (auth == null) {
     return false;
   }
 
   // Check if token is expired
-  if (auth.expiresAt && auth.expiresAt < new Date()) {
+  if (auth.expiresAt != null && auth.expiresAt < new Date()) {
     return false;
   }
 

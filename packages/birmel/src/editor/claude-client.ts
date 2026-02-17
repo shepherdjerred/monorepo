@@ -63,7 +63,7 @@ export async function executeEdit(
       "Read,Write,Edit,Glob,Grep", // No Bash for security
     ];
 
-    if (resumeSessionId) {
+    if (resumeSessionId != null && resumeSessionId.length > 0) {
       args.push("--resume", resumeSessionId);
     }
 
@@ -176,7 +176,7 @@ type MessageHandlers = {
 
 function processMessage(msg: ClaudeMessage, handlers: MessageHandlers): void {
   // Capture session ID from init message
-  if (msg.type === "system" && msg.subtype === "init" && msg.session_id) {
+  if (msg.type === "system" && msg.subtype === "init" && msg.session_id != null && msg.session_id.length > 0) {
     handlers.setSessionId(msg.session_id);
   }
 
@@ -184,7 +184,7 @@ function processMessage(msg: ClaudeMessage, handlers: MessageHandlers): void {
   if (
     msg.type === "tool_result" &&
     msg.tool_name === "Read" &&
-    msg.result?.text
+    msg.result?.text != null && msg.result?.text.length > 0
   ) {
     // The tool input should have the file path - this is a simplified version
     // In practice, we'd need to correlate with the tool_use message
@@ -193,7 +193,7 @@ function processMessage(msg: ClaudeMessage, handlers: MessageHandlers): void {
   // Capture file writes/edits
   if (msg.type === "tool_use") {
     const input = msg.tool_input;
-    if (!input?.file_path) {
+    if (input?.file_path == null || input?.file_path.length === 0) {
       return;
     }
 
@@ -206,7 +206,7 @@ function processMessage(msg: ClaudeMessage, handlers: MessageHandlers): void {
       });
     }
 
-    if (msg.tool_name === "Edit" && input.old_string && input.new_string) {
+    if (msg.tool_name === "Edit" && input.old_string != null && input.old_string.length > 0 && input.new_string != null && input.new_string.length > 0) {
       // For edits, we track partial changes
       // In a full implementation, we'd need to reconstruct the full file
       handlers.addChange({
@@ -219,7 +219,7 @@ function processMessage(msg: ClaudeMessage, handlers: MessageHandlers): void {
   }
 
   // Capture assistant summary
-  if (msg.type === "assistant" && msg.content) {
+  if (msg.type === "assistant" && msg.content != null && msg.content.length > 0) {
     handlers.setSummary(msg.content);
   }
 }
@@ -229,12 +229,12 @@ function extractFinalSummary(output: string): string {
   const lines = output.split("\n");
   for (let i = lines.length - 1; i >= 0; i--) {
     const line = lines[i];
-    if (!line?.trim()) {
+    if (line?.trim() == null || line?.trim().length === 0) {
       continue;
     }
     try {
       const msg = JSON.parse(line) as ClaudeMessage;
-      if (msg.type === "assistant" && msg.content) {
+      if (msg.type === "assistant" && msg.content != null && msg.content.length > 0) {
         return msg.content;
       }
     } catch {

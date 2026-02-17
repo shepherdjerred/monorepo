@@ -55,7 +55,7 @@ export const manageEmojiTool = createTool({
         { value: ctx.guildId, fieldName: "guildId" },
         { value: ctx.emojiId, fieldName: "emojiId" },
       ]);
-      if (idError) {
+      if (idError != null && idError.length > 0) {
         return { success: false, message: idError };
       }
 
@@ -97,13 +97,13 @@ export const manageEmojiTool = createTool({
         }
 
         case "modify": {
-          if (!ctx.emojiId) {
+          if (ctx.emojiId == null || ctx.emojiId.length === 0) {
             return {
               success: false,
               message: "emojiId is required for modifying an emoji",
             };
           }
-          if (!ctx.name) {
+          if (ctx.name == null || ctx.name.length === 0) {
             return {
               success: false,
               message: "name is required for modifying an emoji",
@@ -124,7 +124,7 @@ export const manageEmojiTool = createTool({
         }
 
         case "delete": {
-          if (!ctx.emojiId) {
+          if (ctx.emojiId == null || ctx.emojiId.length === 0) {
             return {
               success: false,
               message: "emojiId is required for deleting an emoji",
@@ -207,7 +207,7 @@ export const manageStickerTool = createTool({
         { value: ctx.guildId, fieldName: "guildId" },
         { value: ctx.stickerId, fieldName: "stickerId" },
       ]);
-      if (idError) {
+      if (idError != null && idError.length > 0) {
         return { success: false, message: idError };
       }
 
@@ -257,7 +257,7 @@ export const manageStickerTool = createTool({
         }
 
         case "delete": {
-          if (!ctx.stickerId) {
+          if (ctx.stickerId == null || ctx.stickerId.length === 0) {
             return {
               success: false,
               message: "stickerId is required for deleting a sticker",

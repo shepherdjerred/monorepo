@@ -35,7 +35,7 @@ export function parseNaturalTime(
 
     // Take the first (most confident) result
     const result = results[0];
-    if (!result) {
+    if (result == null) {
       return null;
     }
 
@@ -150,7 +150,7 @@ export function parseFlexibleTime(
 
   // Strategy 3: Natural language
   const parsed = parseNaturalTime(text, referenceDate);
-  if (parsed) {
+  if (parsed != null) {
     return { type: "date", value: parsed.date };
   }
 

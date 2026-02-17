@@ -68,7 +68,7 @@ export const getSessionTool = createTool({
         };
       }
 
-      if (!reqCtx) {
+      if (reqCtx == null) {
         return {
           success: false,
           message: "Could not determine request context.",
@@ -76,10 +76,10 @@ export const getSessionTool = createTool({
       }
 
       // Get specific session
-      if (sessionId) {
+      if (sessionId != null && sessionId.length > 0) {
         const session = await getSession(sessionId);
 
-        if (!session) {
+        if (session == null) {
           return {
             success: false,
             message: `Session '${sessionId}' not found.`,

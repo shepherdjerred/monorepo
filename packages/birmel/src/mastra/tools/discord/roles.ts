@@ -82,17 +82,17 @@ export const manageRoleTool = createTool({
         { value: ctx.guildId, fieldName: "guildId" },
         { value: ctx.roleId, fieldName: "roleId" },
       ]);
-      if (idError) {
+      if (idError != null && idError.length > 0) {
         return { success: false, message: idError };
       }
 
       // Validate role IDs in positions array
-      if (ctx.positions) {
+      if (ctx.positions != null) {
         for (const pos of ctx.positions) {
           const posError = validateSnowflakes([
             { value: pos.roleId, fieldName: "positions.roleId" },
           ]);
-          if (posError) {
+          if (posError != null && posError.length > 0) {
             return { success: false, message: posError };
           }
         }
@@ -121,14 +121,14 @@ export const manageRoleTool = createTool({
         }
 
         case "get": {
-          if (!ctx.roleId) {
+          if (ctx.roleId == null || ctx.roleId.length === 0) {
             return {
               success: false,
               message: "roleId is required for getting role details",
             };
           }
           const role = await guild.roles.fetch(ctx.roleId);
-          if (!role) {
+          if (role == null) {
             return {
               success: false,
               message: "Role not found",
@@ -151,7 +151,7 @@ export const manageRoleTool = createTool({
         }
 
         case "create": {
-          if (!ctx.name) {
+          if (ctx.name == null || ctx.name.length === 0) {
             return {
               success: false,
               message: "name is required for creating a role",
@@ -183,14 +183,14 @@ export const manageRoleTool = createTool({
         }
 
         case "modify": {
-          if (!ctx.roleId) {
+          if (ctx.roleId == null || ctx.roleId.length === 0) {
             return {
               success: false,
               message: "roleId is required for modifying a role",
             };
           }
           const role = await guild.roles.fetch(ctx.roleId);
-          if (!role) {
+          if (role == null) {
             return {
               success: false,
               message: "Role not found",
@@ -224,14 +224,14 @@ export const manageRoleTool = createTool({
         }
 
         case "delete": {
-          if (!ctx.roleId) {
+          if (ctx.roleId == null || ctx.roleId.length === 0) {
             return {
               success: false,
               message: "roleId is required for deleting a role",
             };
           }
           const role = await guild.roles.fetch(ctx.roleId);
-          if (!role) {
+          if (role == null) {
             return {
               success: false,
               message: "Role not found",

@@ -236,20 +236,58 @@ export class Deminifier {
     }
 
     // Phase 3: Process functions (real-time mode)
+    const reassembled = await this.processRealTimeMode(
+      source,
+      graph,
+      functionsToProcess,
+      fileContext,
+      confidences,
+      emitProgress,
+    );
+
+    // Update final stats
+    const clientStats = this.client.getStats();
+    this.stats.inputTokensUsed = clientStats.inputTokensUsed;
+    this.stats.outputTokensUsed = clientStats.outputTokensUsed;
+    this.stats.timeTaken = Date.now() - startTime;
+
+    if (confidences.length > 0) {
+      this.stats.averageConfidence =
+        confidences.reduce((a, b) => a + b, 0) / confidences.length;
+    }
+
+    // Emit final progress
+    emitProgress({
+      phase: "reassembling",
+      current: 1,
+      total: 1,
+      currentItem: "Complete",
+    });
+
+    return reassembled;
+  }
+
+  /** Process functions in real-time mode (one at a time, in dependency order) */
+  private async processRealTimeMode(
+    source: string,
+    graph: CallGraph,
+    functionsToProcess: ExtractedFunction[],
+    fileContext: FileContext,
+    confidences: number[],
+    emitProgress: (progress: DeminifyProgress) => void,
+  ): Promise<string> {
     const processingOrder = getProcessingOrder(graph);
     const results = new Map<string, DeminifyResult>();
 
     const totalToProcess = functionsToProcess.length;
     let processed = 0;
 
-    // Process functions in dependency order
     for (const funcId of processingOrder) {
       const func = graph.functions.get(funcId);
       if (!func) {
         continue;
       }
 
-      // Skip if not in our filtered list
       if (!functionsToProcess.some((f) => f.id === funcId)) {
         continue;
       }
@@ -282,34 +320,13 @@ export class Deminifier {
       processed++;
     }
 
-    // Phase 4: Reassemble
     emitProgress({ phase: "reassembling", current: 0, total: 1 });
 
     const reassembled = reassemble(source, graph, results);
 
-    // Verify result
     if (!verifyReassembly(reassembled) && this.config.verbose) {
       console.warn("Warning: Reassembled code may have syntax errors");
     }
-
-    // Update final stats
-    const clientStats = this.client.getStats();
-    this.stats.inputTokensUsed = clientStats.inputTokensUsed;
-    this.stats.outputTokensUsed = clientStats.outputTokensUsed;
-    this.stats.timeTaken = Date.now() - startTime;
-
-    if (confidences.length > 0) {
-      this.stats.averageConfidence =
-        confidences.reduce((a, b) => a + b, 0) / confidences.length;
-    }
-
-    // Emit final progress
-    emitProgress({
-      phase: "reassembling",
-      current: 1,
-      total: 1,
-      currentItem: "Complete",
-    });
 
     return reassembled;
   }
@@ -574,14 +591,41 @@ export class Deminifier {
     console.log(`\nBatch submitted: ${batchId}`);
     console.log("Waiting for results (typically 30-60 minutes)...\n");
 
-    // Poll for completion using the appropriate client
+    // Poll for completion and get results
+    const results = await this.pollAndRetrieveBatchResults(
+      batchId,
+      isOpenAI,
+      contexts,
+      options,
+    );
+
+    // Update stats and cache results
+    await this.finalizeBatchResults(results, graph);
+
+    // Reassemble
+    console.log("Reassembling code...");
+    const reassembled = reassemble(source, graph, results);
+
+    if (!verifyReassembly(reassembled)) {
+      console.warn("Warning: Reassembled code may have syntax errors");
+    }
+
+    return reassembled;
+  }
+
+  /** Poll for batch completion and retrieve results */
+  private async pollAndRetrieveBatchResults(
+    batchId: string,
+    isOpenAI: boolean,
+    contexts: Map<string, DeminifyContext>,
+    options: DeminifyFileOptions,
+  ): Promise<Map<string, DeminifyResult>> {
     if (isOpenAI) {
       if (!this.openAIBatchClient) {
         throw new Error("OpenAI batch client not initialized");
       }
       await this.openAIBatchClient.waitForCompletion(batchId, {
         onStatusUpdate: (status: OpenAIBatchStatus) => {
-          // Convert to common format for callback
           const commonStatus: BatchStatus = {
             batchId: status.batchId,
             status: status.status === "completed" ? "ended" : "in_progress",
@@ -624,7 +668,6 @@ export class Deminifier {
 
     console.log("\n\nBatch complete! Retrieving results...");
 
-    // Get results using the appropriate client
     let results: Map<string, DeminifyResult>;
     if (isOpenAI) {
       if (!this.openAIBatchClient) {
@@ -639,8 +682,14 @@ export class Deminifier {
     }
 
     console.log(`Retrieved ${String(results.size)} results`);
+    return results;
+  }
 
-    // Update stats
+  /** Update stats, cache results, and clear batch state */
+  private async finalizeBatchResults(
+    results: Map<string, DeminifyResult>,
+    graph: CallGraph,
+  ): Promise<void> {
     this.stats.functionsProcessed = results.size;
     for (const result of results.values()) {
       if (result.confidence > 0) {
@@ -651,7 +700,6 @@ export class Deminifier {
       this.stats.averageConfidence /= results.size;
     }
 
-    // Cache results
     if (this.cache) {
       for (const [funcId, result] of results) {
         const func = graph.functions.get(funcId);
@@ -661,18 +709,7 @@ export class Deminifier {
       }
     }
 
-    // Clear saved state
     await clearBatchState(this.config.cacheDir);
-
-    // Reassemble
-    console.log("Reassembling code...");
-    const reassembled = reassemble(source, graph, results);
-
-    if (!verifyReassembly(reassembled)) {
-      console.warn("Warning: Reassembled code may have syntax errors");
-    }
-
-    return reassembled;
   }
 
   /** Resume a pending batch */

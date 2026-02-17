@@ -21,13 +21,13 @@ export async function healthCommand(
   options: HealthOptions = {},
 ): Promise<void> {
   // Get PR - either by number or from current branch
-  const pr = prNumber
+  const pr = prNumber != null && prNumber.length > 0
     ? await getPullRequest(prNumber, options.repo)
     : await getPullRequestForBranch(options.repo);
 
-  if (!pr) {
+  if (pr == null) {
     console.error(
-      prNumber
+      prNumber != null && prNumber.length > 0
         ? `Error: PR #${prNumber} not found`
         : "Error: No PR found for current branch",
     );
@@ -82,7 +82,7 @@ export async function healthCommand(
     nextSteps,
   };
 
-  if (options.json) {
+  if (options.json === true) {
     console.log(formatJson(report));
   } else {
     console.log(formatHealthReport(report));
@@ -178,7 +178,7 @@ async function checkCIHealth(
 
     if (failedJobs.length > 0) {
       const firstFailed = failedJobs[0];
-      if (firstFailed) {
+      if (firstFailed != null) {
         details.push(`Run ID: ${String(firstFailed.runId)}`);
         commands.push(
           `tools pr logs ${String(firstFailed.runId)} --failed-only`,

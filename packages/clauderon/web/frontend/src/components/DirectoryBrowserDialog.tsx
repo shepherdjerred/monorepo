@@ -31,7 +31,7 @@ export function DirectoryBrowserDialog({
       try {
         const response = await client.browseDirectory(currentPath);
 
-        if (response.error) {
+        if (response.error != null && response.error.length > 0) {
           setError(response.error);
           // Don't update entries if there's an error
         } else {
@@ -50,7 +50,7 @@ export function DirectoryBrowserDialog({
   }, [currentPath, client]);
 
   const handleNavigateToParent = () => {
-    if (parentPath) {
+    if (parentPath != null && parentPath.length > 0) {
       setCurrentPath(parentPath);
     }
   };
@@ -158,7 +158,7 @@ export function DirectoryBrowserDialog({
           </div>
 
           {/* Error Message */}
-          {error && (
+          {error != null && error.length > 0 && (
             <div
               className="m-4 p-4 border-4 font-mono"
               style={{
@@ -180,7 +180,7 @@ export function DirectoryBrowserDialog({
             ) : (
               <div className="space-y-1">
                 {/* Parent Directory */}
-                {parentPath && (
+                {parentPath != null && parentPath.length > 0 && (
                   <button
                     onClick={handleNavigateToParent}
                     className="cursor-pointer w-full text-left p-3 border-2 border-primary/30 hover:bg-primary/10 hover:border-primary hover:pl-4 transition-all duration-200 font-mono flex items-center gap-2"

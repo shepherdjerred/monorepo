@@ -71,7 +71,7 @@ export const manageGuildTool = createTool({
       const idError = validateSnowflakes([
         { value: ctx.guildId, fieldName: "guildId" },
       ]);
-      if (idError) {
+      if (idError != null && idError.length > 0) {
         return { success: false, message: idError };
       }
 
@@ -112,10 +112,10 @@ export const manageGuildTool = createTool({
 
         case "modify": {
           const updates: { name?: string; description?: string } = {};
-          if (ctx.name) {
+          if (ctx.name != null && ctx.name.length > 0) {
             updates.name = ctx.name;
           }
-          if (ctx.description) {
+          if (ctx.description != null && ctx.description.length > 0) {
             updates.description = ctx.description;
           }
           if (Object.keys(updates).length === 0) {
@@ -126,7 +126,7 @@ export const manageGuildTool = createTool({
         }
 
         case "set-icon": {
-          if (!ctx.iconUrl) {
+          if (ctx.iconUrl == null || ctx.iconUrl.length === 0) {
             return { success: false, message: "iconUrl is required" };
           }
           await guild.setIcon(ctx.iconUrl);
@@ -134,7 +134,7 @@ export const manageGuildTool = createTool({
         }
 
         case "set-banner": {
-          if (!ctx.bannerUrl) {
+          if (ctx.bannerUrl == null || ctx.bannerUrl.length === 0) {
             return { success: false, message: "bannerUrl is required" };
           }
           await guild.setBanner(ctx.bannerUrl);
@@ -150,7 +150,7 @@ export const manageGuildTool = createTool({
           });
           const entries = auditLogs.entries.map((entry) => {
             let targetId: string | null = null;
-            if (entry.target && "id" in entry.target && entry.target.id) {
+            if (entry.target && "id" in entry.target && entry.target.id != null && entry.target.id.length > 0) {
               targetId = entry.target.id;
             }
             return {

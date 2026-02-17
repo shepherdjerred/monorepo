@@ -89,7 +89,7 @@ export const managePollTool = createTool({
           { value: ctx.channelId, fieldName: "channelId" },
           { value: ctx.messageId, fieldName: "messageId" },
         ]);
-        if (idError) {
+        if (idError != null && idError.length > 0) {
           return { success: false, message: idError };
         }
 
@@ -114,13 +114,13 @@ export const managePollTool = createTool({
                 question: { text: ctx.question },
                 answers: ctx.answers.map((a) => ({
                   text: a.text,
-                  ...(a.emoji && { emoji: a.emoji }),
+                  ...(a.emoji != null && a.emoji.length > 0 && { emoji: a.emoji }),
                 })),
                 duration,
                 allowMultiselect: ctx.allowMultiselect ?? false,
               },
             });
-            if (message.guildId && message.poll && client.user) {
+            if (message.guildId != null && message.guildId.length > 0 && message.poll != null && client.user != null) {
               void prisma.pollRecord
                 .create({
                   data: {
@@ -150,14 +150,14 @@ export const managePollTool = createTool({
           }
 
           case "get-results": {
-            if (!ctx.messageId) {
+            if (ctx.messageId == null || ctx.messageId.length === 0) {
               return {
                 success: false,
                 message: "messageId is required for get-results",
               };
             }
             const message = await channel.messages.fetch(ctx.messageId);
-            if (!message.poll) {
+            if (message.poll == null) {
               return {
                 success: false,
                 message: "Message does not contain a poll",
@@ -172,7 +172,7 @@ export const managePollTool = createTool({
                 id: answer.id,
                 text: answer.text ?? "",
                 voteCount: answer.voteCount,
-                ...(answer.emoji?.name && { emoji: answer.emoji.name }),
+                ...(answer.emoji?.name != null && answer.emoji?.name.length > 0 && { emoji: answer.emoji.name }),
               });
             }
             return {
@@ -183,7 +183,7 @@ export const managePollTool = createTool({
                 answers,
                 totalVotes,
                 isFinalized: poll.resultsFinalized,
-                ...(poll.expiresAt && {
+                ...(poll.expiresAt != null && {
                   expiresAt: poll.expiresAt.toISOString(),
                 }),
               },
@@ -191,14 +191,14 @@ export const managePollTool = createTool({
           }
 
           case "end": {
-            if (!ctx.messageId) {
+            if (ctx.messageId == null || ctx.messageId.length === 0) {
               return {
                 success: false,
                 message: "messageId is required for end",
               };
             }
             const message = await channel.messages.fetch(ctx.messageId);
-            if (!message.poll) {
+            if (message.poll == null) {
               return {
                 success: false,
                 message: "Message does not contain a poll",

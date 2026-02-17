@@ -31,7 +31,7 @@ export const connectGitHubTool = createTool({
   }),
   execute: async ({ action }) => {
     const reqCtx = getRequestContext();
-    if (!reqCtx) {
+    if (reqCtx == null) {
       return {
         success: false,
         message: "Could not determine request context.",
@@ -39,7 +39,7 @@ export const connectGitHubTool = createTool({
     }
 
     const config = getGitHubConfig();
-    if (!config) {
+    if (config == null) {
       return { success: false, message: "GitHub OAuth is not configured." };
     }
     const isConnected = await hasValidAuth(reqCtx.userId);
@@ -85,7 +85,7 @@ export const connectGitHubTool = createTool({
     const client = getDiscordClient();
     const channel = await client.channels.fetch(reqCtx.sourceChannelId);
 
-    if (channel && "send" in channel) {
+    if (channel != null && "send" in channel) {
       const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } =
         await import("discord.js");
 

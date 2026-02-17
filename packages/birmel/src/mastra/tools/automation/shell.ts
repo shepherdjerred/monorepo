@@ -91,8 +91,8 @@ The tool captures stdout, stderr, exit code, and execution time.`,
       // Execute command using Bun.spawn
       const proc = Bun.spawn({
         cmd: [ctx.command, ...(ctx.args ?? [])],
-        ...(ctx.cwd ? { cwd: ctx.cwd } : {}),
-        ...(ctx.env ? { env: ctx.env } : {}),
+        ...(ctx.cwd != null && ctx.cwd.length > 0 ? { cwd: ctx.cwd } : {}),
+        ...(ctx.env != null ? { env: ctx.env } : {}),
         stdout: "pipe",
         stderr: "pipe",
         stdin: "ignore",

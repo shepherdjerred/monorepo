@@ -44,7 +44,7 @@ export const manageDatabaseTool = createTool({
       try {
         switch (input.action) {
           case "query": {
-            if (!input.query) {
+            if (input.query == null || input.query.length === 0) {
               return {
                 success: false,
                 message: "query is required for query action",
@@ -61,8 +61,7 @@ export const manageDatabaseTool = createTool({
             if (!trimmedQuery.includes("LIMIT")) {
               finalQuery += ` LIMIT ${String(input.limit ?? 100)}`;
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const rows = await prisma.$queryRawUnsafe<any[]>(
+            const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
               finalQuery,
               ...(input.params ?? []),
             );
@@ -77,7 +76,7 @@ export const manageDatabaseTool = createTool({
           case "schema": {
             let query = `SELECT name, sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_prisma%'`;
             const params: string[] = [];
-            if (input.tableName) {
+            if (input.tableName != null && input.tableName.length > 0) {
               query += " AND name = ?";
               params.push(input.tableName);
             }

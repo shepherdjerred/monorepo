@@ -155,7 +155,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
               </div>
             )}
 
-            {error && (
+            {error != null && error.length > 0 && (
               <div
                 className="p-4 border-4 font-mono"
                 style={{
@@ -168,7 +168,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
               </div>
             )}
 
-            {status && (
+            {status != null && (
               <>
                 {/* Credentials Section */}
                 <div>
@@ -229,7 +229,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                                     <div className="relative flex-1">
                                       <input
                                         type={
-                                          showCredentials.get(cred.service_id)
+                                          showCredentials.get(cred.service_id) === true
                                             ? "text"
                                             : "password"
                                         }
@@ -262,8 +262,8 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                                         }
                                       >
                                         {showCredentials.get(
-                                          cred.service_id,
-                                        ) ? (
+                                                                                                      cred.service_id,
+                                                                                                    ) === true ? (
                                           <EyeOff className="w-4 h-4" />
                                         ) : (
                                           <Eye className="w-4 h-4" />
@@ -291,7 +291,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                                       )}
                                     </button>
                                   </div>
-                                  {saveErrors.get(cred.service_id) && (
+                                  {saveErrors.get(cred.service_id) != null && saveErrors.get(cred.service_id).length > 0 && (
                                     <div className="text-sm text-destructive">
                                       {saveErrors.get(cred.service_id)}
                                     </div>
@@ -391,7 +391,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                 </div>
 
                 {/* Claude Code Usage Section */}
-                {status.claude_usage && (
+                {status.claude_usage != null && (
                   <div>
                     <div className="flex items-center gap-2 mb-4">
                       <TrendingUp className="w-5 h-5 text-primary" />
@@ -401,7 +401,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                     </div>
 
                     {/* Error Display */}
-                    {status.claude_usage.error && (
+                    {status.claude_usage.error != null && (
                       <div className="mb-4 p-4 border-4 border-red-500 bg-red-50 dark:bg-red-950 text-red-900 dark:text-red-100 font-mono rounded-md">
                         <div className="flex items-start gap-2">
                           <XCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
@@ -412,7 +412,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                               </strong>{" "}
                               {status.claude_usage.error.message}
                             </div>
-                            {status.claude_usage.error.details && (
+                            {status.claude_usage.error.details != null && status.claude_usage.error.details.length > 0 && (
                               <details className="text-sm opacity-80">
                                 <summary className="cursor-pointer">
                                   Technical details
@@ -422,7 +422,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                                 </pre>
                               </details>
                             )}
-                            {status.claude_usage.error.suggestion && (
+                            {status.claude_usage.error.suggestion != null && status.claude_usage.error.suggestion.length > 0 && (
                               <div className="mt-3 p-3 bg-white/50 dark:bg-black/20 rounded border-2 border-red-300 dark:border-red-700">
                                 <strong>💡 How to fix:</strong>
                                 <div className="mt-1">
@@ -467,7 +467,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                             subtitle="Weekly usage limit"
                           />
 
-                          {status.claude_usage.seven_day_sonnet && (
+                          {status.claude_usage.seven_day_sonnet != null && (
                             <UsageProgressBar
                               window={status.claude_usage.seven_day_sonnet}
                               title="7-Day Sonnet Window"

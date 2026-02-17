@@ -73,7 +73,7 @@ export const manageInviteTool = createTool({
         { value: ctx.guildId, fieldName: "guildId" },
         { value: ctx.channelId, fieldName: "channelId" },
       ]);
-      if (idError) {
+      if (idError != null && idError.length > 0) {
         return { success: false, message: idError };
       }
 
@@ -81,7 +81,7 @@ export const manageInviteTool = createTool({
 
       switch (ctx.action) {
         case "list": {
-          if (!ctx.guildId) {
+          if (ctx.guildId == null || ctx.guildId.length === 0) {
             return {
               success: false,
               message: "guildId is required for listing invites",
@@ -106,7 +106,7 @@ export const manageInviteTool = createTool({
         }
 
         case "create": {
-          if (!ctx.channelId) {
+          if (ctx.channelId == null || ctx.channelId.length === 0) {
             return {
               success: false,
               message: "channelId is required for creating an invite",
@@ -136,7 +136,7 @@ export const manageInviteTool = createTool({
         }
 
         case "delete": {
-          if (!ctx.inviteCode) {
+          if (ctx.inviteCode == null || ctx.inviteCode.length === 0) {
             return {
               success: false,
               message: "inviteCode is required for deleting an invite",
@@ -151,7 +151,7 @@ export const manageInviteTool = createTool({
         }
 
         case "get-vanity": {
-          if (!ctx.guildId) {
+          if (ctx.guildId == null || ctx.guildId.length === 0) {
             return {
               success: false,
               message: "guildId is required for getting vanity URL",
@@ -159,7 +159,7 @@ export const manageInviteTool = createTool({
           }
           const guild = await client.guilds.fetch(ctx.guildId);
           const vanity = await guild.fetchVanityData();
-          if (!vanity.code) {
+          if (vanity.code == null || vanity.code.length === 0) {
             return {
               success: true,
               message: "Server does not have a vanity URL",

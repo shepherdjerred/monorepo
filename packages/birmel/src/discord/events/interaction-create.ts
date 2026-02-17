@@ -80,7 +80,7 @@ async function handleEditorButton(
 
   // Get session
   const session = await getSession(sessionId);
-  if (!session) {
+  if (session == null) {
     await interaction.reply({
       content: "Session not found. It may have expired.",
       flags: 64,
@@ -128,7 +128,7 @@ async function handleApprove(
   await interaction.deferReply();
 
   const session = await getSession(sessionId);
-  if (!session) {
+  if (session == null) {
     await interaction.editReply({
       content: "Session not found.",
     });
@@ -163,7 +163,7 @@ async function handleApprove(
   }
 
   // Verify cloned repo path exists
-  if (!session.clonedRepoPath) {
+  if (session.clonedRepoPath == null || session.clonedRepoPath.length === 0) {
     await interaction.editReply({
       content: "No cloned repository found for this session.",
     });

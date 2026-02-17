@@ -36,7 +36,7 @@ export async function clearChannelMemory(channelId: string): Promise<void> {
 if (import.meta.main) {
   const channelId = process.argv[2];
 
-  if (!channelId) {
+  if (channelId == null || channelId.length === 0) {
     console.error(
       "Usage: bun run src/utils/clear-channel-memory.ts <channelId>",
     );

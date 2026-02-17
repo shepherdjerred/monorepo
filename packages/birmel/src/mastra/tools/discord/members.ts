@@ -63,7 +63,7 @@ export const manageMemberTool = createTool({
         { value: ctx.memberId, fieldName: "memberId" },
         { value: ctx.roleId, fieldName: "roleId" },
       ]);
-      if (idError) {
+      if (idError != null && idError.length > 0) {
         return { success: false, message: idError };
       }
 
@@ -72,7 +72,7 @@ export const manageMemberTool = createTool({
 
       switch (ctx.action) {
         case "get": {
-          if (!ctx.memberId) {
+          if (ctx.memberId == null || ctx.memberId.length === 0) {
             return { success: false, message: "memberId is required for get" };
           }
           const member = await guild.members.fetch(ctx.memberId);
@@ -91,7 +91,7 @@ export const manageMemberTool = createTool({
         }
 
         case "search": {
-          if (!ctx.query) {
+          if (ctx.query == null || ctx.query.length === 0) {
             return { success: false, message: "query is required for search" };
           }
           const members = await guild.members.search({
@@ -128,7 +128,7 @@ export const manageMemberTool = createTool({
         }
 
         case "modify": {
-          if (!ctx.memberId) {
+          if (ctx.memberId == null || ctx.memberId.length === 0) {
             return {
               success: false,
               message: "memberId is required for modify",
@@ -152,7 +152,7 @@ export const manageMemberTool = createTool({
           await member.setNickname(ctx.nickname);
           return {
             success: true,
-            message: ctx.nickname
+            message: ctx.nickname != null && ctx.nickname.length > 0
               ? `Set nickname to "${ctx.nickname}"`
               : "Reset nickname",
           };
@@ -167,7 +167,7 @@ export const manageMemberTool = createTool({
           }
           const member = await guild.members.fetch(ctx.memberId);
           const role = await guild.roles.fetch(ctx.roleId);
-          if (!role) {
+          if (role == null) {
             return { success: false, message: "Role not found" };
           }
           await member.roles.add(role, ctx.reason);
@@ -186,7 +186,7 @@ export const manageMemberTool = createTool({
           }
           const member = await guild.members.fetch(ctx.memberId);
           const role = await guild.roles.fetch(ctx.roleId);
-          if (!role) {
+          if (role == null) {
             return { success: false, message: "Role not found" };
           }
           await member.roles.remove(role, ctx.reason);

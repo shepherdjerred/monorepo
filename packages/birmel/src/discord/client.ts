@@ -17,7 +17,7 @@ export function getDiscordClient(): Client {
 }
 
 export function destroyDiscordClient(): Promise<void> {
-  if (client) {
+  if (client != null) {
     return client.destroy().then(() => {
       client = null;
     });

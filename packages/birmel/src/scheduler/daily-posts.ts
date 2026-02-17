@@ -34,7 +34,7 @@ function getCurrentTimeInTimezone(timezone: string): {
 
 function shouldPostNow(config: DailyPostConfig): boolean {
   // Check if already posted today
-  if (config.lastPostAt) {
+  if (config.lastPostAt != null) {
     const lastPost = config.lastPostAt;
     const now = new Date();
 
@@ -124,7 +124,7 @@ async function sendDailyPost(config: DailyPostConfig): Promise<void> {
         const client = getDiscordClient();
         const channel = await client.channels.fetch(config.channelId);
 
-        if (!channel?.isTextBased()) {
+        if (channel?.isTextBased() !== true) {
           logger.warn("Daily post channel not found or not text-based", {
             guildId: config.guildId,
             channelId: config.channelId,

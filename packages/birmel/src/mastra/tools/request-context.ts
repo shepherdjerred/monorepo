@@ -40,7 +40,7 @@ export function getRequestContext(): RequestContext | undefined {
  */
 export function markReplySent(): void {
   const context = requestContextStorage.getStore();
-  if (context) {
+  if (context != null) {
     context.replySent = true;
   }
 }

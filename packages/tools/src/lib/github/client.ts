@@ -10,7 +10,7 @@ export async function runGhCommand<T>(
   args: string[],
   repo?: string,
 ): Promise<GhCommandResult<T>> {
-  const repoArgs = repo ? ["--repo", repo] : [];
+  const repoArgs = repo != null && repo.length > 0 ? ["--repo", repo] : [];
   const fullArgs = [...args, ...repoArgs];
 
   try {
@@ -38,7 +38,7 @@ export async function runGhCommandRaw(
   args: string[],
   repo?: string,
 ): Promise<GhCommandResult<string>> {
-  const repoArgs = repo ? ["--repo", repo] : [];
+  const repoArgs = repo != null && repo.length > 0 ? ["--repo", repo] : [];
   const fullArgs = [...args, ...repoArgs];
 
   try {

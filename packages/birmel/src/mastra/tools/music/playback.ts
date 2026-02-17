@@ -79,11 +79,11 @@ export const musicPlaybackTool = createTool({
           const client = getDiscordClient();
           const channel = await client.channels.fetch(ctx.channelId);
           const voiceChannel = await client.channels.fetch(ctx.voiceChannelId);
-          if (!voiceChannel?.isVoiceBased()) {
+          if (voiceChannel?.isVoiceBased() !== true) {
             return { success: false, message: "Invalid voice channel" };
           }
           const searchResult = await player.search(ctx.query, {
-            ...(client.user && { requestedBy: client.user }),
+            ...(client.user != null && { requestedBy: client.user }),
             searchEngine: QueryType.AUTO,
           });
           if (!searchResult.hasTracks()) {
@@ -119,7 +119,7 @@ export const musicPlaybackTool = createTool({
         }
 
         case "pause": {
-          if (!queue?.isPlaying()) {
+          if (queue?.isPlaying() !== true) {
             return { success: false, message: "Nothing is playing" };
           }
           queue.node.pause();
@@ -127,7 +127,7 @@ export const musicPlaybackTool = createTool({
         }
 
         case "resume": {
-          if (!queue) {
+          if (queue == null) {
             return { success: false, message: "No active queue" };
           }
           queue.node.resume();
@@ -135,7 +135,7 @@ export const musicPlaybackTool = createTool({
         }
 
         case "skip": {
-          if (!queue?.isPlaying()) {
+          if (queue?.isPlaying() !== true) {
             return { success: false, message: "Nothing is playing" };
           }
           const track = queue.currentTrack;
@@ -147,7 +147,7 @@ export const musicPlaybackTool = createTool({
         }
 
         case "stop": {
-          if (!queue) {
+          if (queue == null) {
             return { success: false, message: "No active queue" };
           }
           queue.delete();
@@ -161,7 +161,7 @@ export const musicPlaybackTool = createTool({
           if (ctx.seconds === undefined) {
             return { success: false, message: "seconds is required for seek" };
           }
-          if (!queue?.isPlaying()) {
+          if (queue?.isPlaying() !== true) {
             return { success: false, message: "Nothing is playing" };
           }
           const success = await queue.node.seek(ctx.seconds * 1000);
@@ -183,7 +183,7 @@ export const musicPlaybackTool = createTool({
               message: "volume is required for set-volume",
             };
           }
-          if (!queue) {
+          if (queue == null) {
             return { success: false, message: "No active queue" };
           }
           queue.node.setVolume(ctx.volume);
@@ -194,13 +194,13 @@ export const musicPlaybackTool = createTool({
         }
 
         case "set-loop": {
-          if (!ctx.loopMode) {
+          if (ctx.loopMode == null || ctx.loopMode.length === 0) {
             return {
               success: false,
               message: "loopMode is required for set-loop",
             };
           }
-          if (!queue) {
+          if (queue == null) {
             return { success: false, message: "No active queue" };
           }
           const modeMap = {

@@ -9,7 +9,7 @@ export type DetectOptions = {
 export async function detectCommand(options: DetectOptions): Promise<void> {
   const currentBranch = await getCurrentBranch();
 
-  if (!currentBranch) {
+  if (currentBranch == null || currentBranch.length === 0) {
     console.error(
       "Error: Not in a git repository or unable to get current branch",
     );
@@ -18,12 +18,12 @@ export async function detectCommand(options: DetectOptions): Promise<void> {
 
   const pr = await getPullRequestForBranch(options.repo);
 
-  if (!pr) {
+  if (pr == null) {
     console.error(`No pull request found for branch: ${currentBranch}`);
     process.exit(1);
   }
 
-  if (options.json) {
+  if (options.json === true) {
     console.log(JSON.stringify(pr, null, 2));
   } else {
     console.log(`PR #${String(pr.number)}: ${pr.title}`);

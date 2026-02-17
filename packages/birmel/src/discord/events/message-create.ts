@@ -125,10 +125,10 @@ export function setupMessageCreateHandler(client: Client): void {
   client.on("messageCreate", (message: Message) => {
     void (async () => {
       // Only process guild messages for now
-      if (!message.guild) {
+      if (message.guild == null) {
         return;
       }
-      if (!client.user) {
+      if (client.user == null) {
         return;
       }
 
@@ -183,7 +183,7 @@ export function setupMessageCreateHandler(client: Client): void {
             content: message.content.slice(0, 100),
           });
 
-          if (!messageHandler) {
+          if (messageHandler == null) {
             logger.warn("No message handler registered");
             return;
           }

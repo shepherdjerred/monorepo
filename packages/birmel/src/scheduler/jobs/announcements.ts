@@ -100,7 +100,7 @@ async function sendAnnouncement(
     const client = getDiscordClient();
     const channel = await client.channels.fetch(announcement.channelId);
 
-    if (!channel?.isTextBased()) {
+    if (channel?.isTextBased() !== true) {
       logger.warn("Announcement channel not found or not text-based", {
         id: announcement.id,
         guildId: announcement.guildId,
@@ -118,7 +118,7 @@ async function sendAnnouncement(
     });
 
     // If repeating, schedule the next one
-    if (announcement.repeat) {
+    if (announcement.repeat != null && announcement.repeat.length > 0) {
       const nextDate = new Date(announcement.scheduledAt);
 
       switch (announcement.repeat) {
