@@ -49,7 +49,7 @@ export async function executeEdit(
 
   logger.info("Executing edit", {
     workingDirectory,
-    hasResume: !!resumeSessionId,
+    hasResume: !(resumeSessionId == null || resumeSessionId.length === 0),
   });
 
   return new Promise((resolve, reject) => {
@@ -184,7 +184,7 @@ function processMessage(msg: ClaudeMessage, handlers: MessageHandlers): void {
   if (
     msg.type === "tool_result" &&
     msg.tool_name === "Read" &&
-    msg.result?.text != null && msg.result?.text.length > 0
+    msg.result?.text != null && msg.result.text.length > 0
   ) {
     // The tool input should have the file path - this is a simplified version
     // In practice, we'd need to correlate with the tool_use message
@@ -193,7 +193,7 @@ function processMessage(msg: ClaudeMessage, handlers: MessageHandlers): void {
   // Capture file writes/edits
   if (msg.type === "tool_use") {
     const input = msg.tool_input;
-    if (input?.file_path == null || input?.file_path.length === 0) {
+    if (input?.file_path == null || input.file_path.length === 0) {
       return;
     }
 
@@ -229,7 +229,7 @@ function extractFinalSummary(output: string): string {
   const lines = output.split("\n");
   for (let i = lines.length - 1; i >= 0; i--) {
     const line = lines[i];
-    if (line?.trim() == null || line?.trim().length === 0) {
+    if (line?.trim() == null || line.trim().length === 0) {
       continue;
     }
     try {
@@ -271,7 +271,7 @@ export async function checkClaudePrerequisites(): Promise<{
   version?: string;
   hasApiKey: boolean;
 }> {
-  const hasApiKey = !!process.env["ANTHROPIC_API_KEY"];
+  const hasApiKey = process.env["ANTHROPIC_API_KEY"] != null && process.env["ANTHROPIC_API_KEY"].length > 0;
 
   return new Promise((resolve) => {
     const proc = spawn("claude", ["--version"], {

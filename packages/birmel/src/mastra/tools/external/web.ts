@@ -133,7 +133,7 @@ export const externalServiceTool = createTool({
             results.length < 5
           ) {
             const [, url, title, snippetHtml] = match;
-            if (url && title && snippetHtml != null && snippetHtml.length > 0) {
+            if ((url != null && url.length > 0) && (title != null && title.length > 0) && snippetHtml != null && snippetHtml.length > 0) {
               results.push({
                 title: title.trim(),
                 url: decodeURIComponent(

@@ -275,7 +275,7 @@ export async function processElectionResults(): Promise<void> {
           election.messageId,
         );
 
-        if (!pollResults.success || !pollResults.data?.isFinalized) {
+        if (!pollResults.success || pollResults.data?.isFinalized !== true) {
           continue;
         }
 

@@ -79,7 +79,7 @@ export const manageEmojiTool = createTool({
         }
 
         case "create": {
-          if (!ctx.name || !ctx.imageUrl) {
+          if ((ctx.name == null || ctx.name.length === 0) || (ctx.imageUrl == null || ctx.imageUrl.length === 0)) {
             return {
               success: false,
               message: "Name and imageUrl are required for creating an emoji",
@@ -232,7 +232,7 @@ export const manageStickerTool = createTool({
         }
 
         case "create": {
-          if (!ctx.name || !ctx.description || !ctx.tags || !ctx.imageUrl) {
+          if ((ctx.name == null || ctx.name.length === 0) || (ctx.description == null || ctx.description.length === 0) || (ctx.tags == null || ctx.tags.length === 0) || (ctx.imageUrl == null || ctx.imageUrl.length === 0)) {
             return {
               success: false,
               message:

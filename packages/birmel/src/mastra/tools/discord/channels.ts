@@ -183,7 +183,7 @@ export const manageChannelTool = createTool({
           }
 
           case "create": {
-            if (!ctx.guildId || !ctx.name || !ctx.type) {
+            if ((ctx.guildId == null || ctx.guildId.length === 0) || (ctx.name == null || ctx.name.length === 0) || !ctx.type) {
               return {
                 success: false,
                 message: "guildId, name, and type are required for create",
@@ -266,7 +266,7 @@ export const manageChannelTool = createTool({
           }
 
           case "reorder": {
-            if (!ctx.guildId || !ctx.positions?.length) {
+            if ((ctx.guildId == null || ctx.guildId.length === 0) || ctx.positions?.length == null) {
               return {
                 success: false,
                 message: "guildId and positions are required for reorder",
@@ -286,7 +286,7 @@ export const manageChannelTool = createTool({
           }
 
           case "set-permissions": {
-            if (!ctx.channelId || !ctx.targetId) {
+            if ((ctx.channelId == null || ctx.channelId.length === 0) || (ctx.targetId == null || ctx.targetId.length === 0)) {
               return {
                 success: false,
                 message:

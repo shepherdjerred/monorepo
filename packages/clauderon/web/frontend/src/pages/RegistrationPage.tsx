@@ -169,7 +169,7 @@ export function RegistrationPage() {
           <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-blue-900">
             <p className="font-medium">First-time setup</p>
             <p className="text-xs mt-1">
-              You're creating the first account on this Clauderon instance
+              You&apos;re creating the first account on this Clauderon instance
             </p>
           </div>
         </div>

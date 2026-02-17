@@ -107,7 +107,7 @@ export const manageScheduledEventTool = createTool({
         }
 
         case "create": {
-          if (!ctx.name || !ctx.scheduledStartTime) {
+          if ((ctx.name == null || ctx.name.length === 0) || (ctx.scheduledStartTime == null || ctx.scheduledStartTime.length === 0)) {
             return {
               success: false,
               message:
@@ -134,7 +134,7 @@ export const manageScheduledEventTool = createTool({
           if (ctx.channelId !== undefined) {
             createOptions.channel = ctx.channelId;
           }
-          if (ctx.location !== undefined && !ctx.channelId) {
+          if (ctx.location !== undefined && (ctx.channelId == null || ctx.channelId.length === 0)) {
             createOptions.entityMetadata = { location: ctx.location };
           }
           const event = await guild.scheduledEvents.create(createOptions);

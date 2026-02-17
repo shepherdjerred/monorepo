@@ -5,6 +5,8 @@ import { BackendType, AvailableAction } from "@clauderon/shared";
 // Test helper functions extracted from the component
 function getHealthLabel(state: ResourceState): string {
   switch (state.type) {
+    case "Healthy":
+      return "Healthy";
     case "Stopped":
       return "Stopped";
     case "Hibernated":
@@ -23,8 +25,6 @@ function getHealthLabel(state: ResourceState): string {
       return "Data Lost";
     case "WorktreeMissing":
       return "Worktree Missing";
-    default:
-      return "Unknown";
   }
 }
 
@@ -42,7 +42,7 @@ function getHealthColor(state: ResourceState): string {
     case "DataLost":
     case "WorktreeMissing":
       return "bg-red-500/20 text-red-700 border-red-500/50";
-    default:
+    case "Healthy":
       return "bg-gray-500/20 text-gray-700 border-gray-500/50";
   }
 }

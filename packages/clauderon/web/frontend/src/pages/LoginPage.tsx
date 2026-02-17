@@ -114,7 +114,7 @@ export function LoginPage() {
         </form>
 
         <div className="text-center text-sm text-muted-foreground">
-          <p>Use your device's biometric authentication</p>
+          <p>Use your device&apos;s biometric authentication</p>
           <p className="mt-1">(Face ID, Touch ID, Windows Hello, etc.)</p>
         </div>
       </div>

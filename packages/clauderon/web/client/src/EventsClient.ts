@@ -45,7 +45,7 @@ export type EventsClientConfig = {
  * In non-browser context, defaults to localhost:3030.
  */
 function getDefaultWebSocketUrl(): string {
-  if (globalThis.window !== undefined) {
+  if ("window" in globalThis) {
     const protocol = globalThis.location.protocol === "https:" ? "wss:" : "ws:";
     return `${protocol}//${globalThis.location.host}/ws/events`;
   }

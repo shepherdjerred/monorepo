@@ -95,13 +95,13 @@ export const managePollTool = createTool({
 
         const client = getDiscordClient();
         const channel = await client.channels.fetch(ctx.channelId);
-        if (!channel?.isTextBased() || !("send" in channel)) {
+        if (channel?.isTextBased() !== true || !("send" in channel)) {
           return { success: false, message: "Channel must be a text channel" };
         }
 
         switch (ctx.action) {
           case "create": {
-            if (!ctx.question || !ctx.answers) {
+            if ((ctx.question == null || ctx.question.length === 0) || !ctx.answers) {
               return {
                 success: false,
                 message: "question and answers are required for create",
@@ -172,7 +172,7 @@ export const managePollTool = createTool({
                 id: answer.id,
                 text: answer.text ?? "",
                 voteCount: answer.voteCount,
-                ...(answer.emoji?.name != null && answer.emoji?.name.length > 0 && { emoji: answer.emoji.name }),
+                ...(answer.emoji?.name != null && answer.emoji.name.length > 0 && { emoji: answer.emoji.name }),
               });
             }
             return {

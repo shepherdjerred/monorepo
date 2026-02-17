@@ -69,7 +69,7 @@ export const musicPlaybackTool = createTool({
 
       switch (ctx.action) {
         case "play": {
-          if (!ctx.channelId || !ctx.voiceChannelId || !ctx.query) {
+          if ((ctx.channelId == null || ctx.channelId.length === 0) || (ctx.voiceChannelId == null || ctx.voiceChannelId.length === 0) || (ctx.query == null || ctx.query.length === 0)) {
             return {
               success: false,
               message:
@@ -214,7 +214,7 @@ export const musicPlaybackTool = createTool({
         }
 
         case "now-playing": {
-          if (!queue?.isPlaying() || !queue.currentTrack) {
+          if (queue?.isPlaying() !== true || !queue.currentTrack) {
             return { success: false, message: "Nothing is playing" };
           }
           const track = queue.currentTrack;

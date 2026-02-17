@@ -67,14 +67,14 @@ export function ConfirmDialog({
       {/* Modal */}
       <div className="fixed inset-0 flex items-center justify-center p-8 z-50">
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={title}
           className="max-w-md w-full flex flex-col border-4 border-primary"
           style={{
             backgroundColor: "hsl(220, 15%, 95%)",
             boxShadow:
               "12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)",
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
           }}
         >
           {/* Header */}

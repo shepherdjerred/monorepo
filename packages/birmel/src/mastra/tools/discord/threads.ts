@@ -122,7 +122,7 @@ export const manageThreadTool = createTool({
 
         switch (ctx.action) {
           case "create-from-message": {
-            if (!ctx.channelId || !ctx.messageId || !ctx.name) {
+            if ((ctx.channelId == null || ctx.channelId.length === 0) || (ctx.messageId == null || ctx.messageId.length === 0) || (ctx.name == null || ctx.name.length === 0)) {
               return {
                 success: false,
                 message:
@@ -156,7 +156,7 @@ export const manageThreadTool = createTool({
           }
 
           case "create-standalone": {
-            if (!ctx.channelId || !ctx.name) {
+            if ((ctx.channelId == null || ctx.channelId.length === 0) || (ctx.name == null || ctx.name.length === 0)) {
               return {
                 success: false,
                 message:
@@ -164,7 +164,7 @@ export const manageThreadTool = createTool({
               };
             }
             const channel = await client.channels.fetch(ctx.channelId);
-            if (!channel?.isTextBased() || !("threads" in channel)) {
+            if (channel?.isTextBased() !== true || !("threads" in channel)) {
               return {
                 success: false,
                 message: "Channel must support threads",
@@ -245,7 +245,7 @@ export const manageThreadTool = createTool({
           }
 
           case "add-member": {
-            if (!ctx.threadId || !ctx.userId) {
+            if ((ctx.threadId == null || ctx.threadId.length === 0) || (ctx.userId == null || ctx.userId.length === 0)) {
               return {
                 success: false,
                 message: "threadId and userId are required for add-member",

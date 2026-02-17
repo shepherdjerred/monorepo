@@ -11,6 +11,36 @@ type RepositoryPathSelectorProps = {
   required?: boolean;
 };
 
+// Extract repository name from full path
+function extractRepoName(fullPath: string): string {
+  const parts = fullPath.split("/");
+  return parts[parts.length - 1] ?? fullPath;
+}
+
+// Format relative time (simple version)
+function formatRelativeTime(isoTimestamp: string): string {
+  const date = new Date(isoTimestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60_000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) {
+    return "just now";
+  }
+  if (diffMins < 60) {
+    return `${String(diffMins)}m ago`;
+  }
+  if (diffHours < 24) {
+    return `${String(diffHours)}h ago`;
+  }
+  if (diffDays < 7) {
+    return `${String(diffDays)}d ago`;
+  }
+  return date.toLocaleDateString();
+}
+
 export function RepositoryPathSelector({
   value,
   onChange,
@@ -38,12 +68,6 @@ export function RepositoryPathSelector({
 
     void fetchRecentRepos();
   }, [client]);
-
-  // Extract repository name from full path
-  const extractRepoName = (fullPath: string): string => {
-    const parts = fullPath.split("/");
-    return parts[parts.length - 1] ?? fullPath;
-  };
 
   // Format display with subdirectory
   const formatRepoDisplay = (repo: RecentRepoDto): string => {
@@ -74,30 +98,6 @@ export function RepositoryPathSelector({
 
   const handleSelectFromBrowser = (path: string) => {
     onChange(path);
-  };
-
-  // Format relative time (simple version)
-  const formatRelativeTime = (isoTimestamp: string): string => {
-    const date = new Date(isoTimestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60_000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 1) {
-      return "just now";
-    }
-    if (diffMins < 60) {
-      return `${String(diffMins)}m ago`;
-    }
-    if (diffHours < 24) {
-      return `${String(diffHours)}h ago`;
-    }
-    if (diffDays < 7) {
-      return `${String(diffDays)}d ago`;
-    }
-    return date.toLocaleDateString();
   };
 
   return (
@@ -204,7 +204,7 @@ export function RepositoryPathSelector({
       {showDropdown && (
         <div
           className="fixed inset-0 z-0"
-          onClick={() => {
+          onPointerDown={() => {
             setShowDropdown(false);
           }}
         />

@@ -135,8 +135,8 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
           flags: FeatureFlags;
         };
         setFeatureFlags(data.flags);
-      } catch (error) {
-        console.error("Failed to fetch feature flags:", error);
+      } catch (fetchError) {
+        console.error("Failed to fetch feature flags:", fetchError);
       }
     };
     void fetchFlags();
@@ -401,7 +401,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
 
     // Single mode: Only first repo needs path
     if (!multiRepoEnabled) {
-      if (repositories[0]?.repo_path.trim() == null || repositories[0]?.repo_path.trim().length === 0) {
+      if (repositories[0]?.repo_path.trim() == null || repositories[0].repo_path.trim().length === 0) {
         return "Repository path is required";
       }
       return null;
@@ -432,7 +432,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         return "All repositories must have a mount name";
       }
 
-      if (!/^[a-z0-9]([a-z0-9-_]{0,62}[a-z0-9])?$/.test(name)) {
+      if (!/^[a-z0-9](?:[a-z0-9-_]{0,62}[a-z0-9])?$/.test(name)) {
         return `Invalid mount name "${name}": must be alphanumeric with hyphens/underscores, 1-64 characters`;
       }
 
@@ -494,7 +494,8 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       if (firstRepo == null) {
         throw new Error("No repository specified");
       }
-      const needsRepositoriesArray = multiRepoEnabled || firstRepo.base_branch;
+      const needsRepositoriesArray =
+        multiRepoEnabled || firstRepo.base_branch.length > 0;
       const repoInputs: CreateRepositoryInput[] | undefined =
         needsRepositoriesArray
           ? repositories.map((repo) => ({
@@ -577,7 +578,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
           backgroundColor: "hsl(220, 90%, 8%)",
           opacity: 0.85,
         }}
-        onClick={onClose}
+        onPointerDown={onClose}
         aria-hidden="true"
       />
       {/* Modal */}
@@ -589,7 +590,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             boxShadow:
               "12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)",
           }}
-          onClick={(e) => {
+          onPointerDown={(e) => {
             e.stopPropagation();
           }}
         >
@@ -920,7 +921,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 </Select>
               </div>
 
-              {!featureFlags?.enable_experimental_models && (
+              {featureFlags?.enable_experimental_models !== true && (
                 <div
                   className="p-3 text-sm border-2 rounded"
                   style={{
@@ -947,7 +948,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 </Label>
                 <select
                   id="model"
-                  value={formData.model != null ? JSON.stringify(formData.model) : ""}
+                  value={formData.model == null ? "" : JSON.stringify(formData.model)}
                   onChange={(e) => {
                     const value: SessionModel | undefined = e.target.value
                       ? (JSON.parse(e.target.value) as SessionModel)

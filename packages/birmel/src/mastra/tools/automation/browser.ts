@@ -233,7 +233,7 @@ export const browserAutomationTool = createTool({
         }
 
         case "type": {
-          if (!ctx.selector || !ctx.text) {
+          if ((ctx.selector == null || ctx.selector.length === 0) || (ctx.text == null || ctx.text.length === 0)) {
             return {
               success: false,
               message: "selector and text are required for type",

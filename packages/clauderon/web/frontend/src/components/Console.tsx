@@ -86,6 +86,11 @@ function getUserFriendlyErrorMessage(error: Error): string {
   return "An unexpected error occurred. The session may still be running.";
 }
 
+// Get current theme from document
+function getCurrentTheme(): "light" | "dark" {
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
+
 export function Console({
   sessionId,
   sessionName,
@@ -129,13 +134,6 @@ export function Console({
   useEffect(() => {
     clientRef.current = { client, isConnected };
   }, [client, isConnected]);
-
-  // Get current theme from document
-  const getCurrentTheme = (): "light" | "dark" => {
-    return document.documentElement.classList.contains("dark")
-      ? "dark"
-      : "light";
-  };
 
   // Initialize terminal
   useEffect(() => {
@@ -408,7 +406,7 @@ export function Console({
             <div
               ref={terminalRef}
               className="absolute inset-2"
-              onClick={() => terminalInstanceRef.current?.focus()}
+              onPointerDown={() => terminalInstanceRef.current?.focus()}
             />
           </div>
 

@@ -191,7 +191,7 @@ export function DirectoryBrowserDialog({
                 )}
 
                 {/* Subdirectories */}
-                {entries.length === 0 && !error ? (
+                {entries.length === 0 && (error == null || error.length === 0) ? (
                   <div className="text-center py-8 text-muted-foreground font-mono">
                     No subdirectories found
                   </div>

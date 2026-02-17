@@ -47,7 +47,7 @@ export function RecreateBlockedModal({
           backgroundColor: "hsl(220, 90%, 8%)",
           opacity: 0.85,
         }}
-        onClick={() => {
+        onPointerDown={() => {
           onOpenChange(false);
         }}
         aria-hidden="true"
@@ -62,7 +62,7 @@ export function RecreateBlockedModal({
             boxShadow:
               "12px 12px 0 hsl(0, 70%, 35%), 24px 24px 0 hsl(0, 80%, 20%)",
           }}
-          onClick={(e) => {
+          onPointerDown={(e) => {
             e.stopPropagation();
           }}
         >

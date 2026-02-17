@@ -6,6 +6,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -73,7 +74,7 @@ export function MergePrDialog({
 
           {/* Merge method dropdown */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Merge method</label>
+            <Label className="text-sm font-medium">Merge method</Label>
             <Select
               value={selectedMethod ?? ""}
               onValueChange={(v) => {
@@ -121,7 +122,7 @@ export function MergePrDialog({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleConfirm} disabled={!selectedMethod}>
+          <Button onClick={handleConfirm} disabled={selectedMethod == null}>
             Merge Pull Request
           </Button>
         </DialogFooter>

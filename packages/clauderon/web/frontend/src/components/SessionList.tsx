@@ -58,7 +58,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get("tab");
     if (
-      tabParam &&
+      (tabParam != null && tabParam.length > 0) &&
       ["all", "running", "idle", "completed", "archived"].includes(tabParam)
     ) {
       return tabParam as FilterStatus;
@@ -100,8 +100,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
         return sessionArray.filter((s) => s.status === SessionStatus.Completed);
       case "archived":
         return sessionArray.filter((s) => s.status === SessionStatus.Archived);
-      default:
-        // "all" tab - exclude archived sessions
+      case "all":
         return sessionArray.filter((s) => s.status !== SessionStatus.Archived);
     }
   }, [sessions, filter]);
@@ -191,16 +190,16 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
 
   const handleRefresh = (session: Session) => {
     const healthReport = getSessionHealth(session.id);
-    if (healthReport != null) {
+    if (healthReport == null) {
+      // Fallback to legacy refresh dialog if no health report
+      setConfirmDialog({ type: "refresh", session });
+    } else {
       // Check if this session has no available actions (blocked)
       if (healthReport.available_actions.length === 0) {
         setBlockedModalSession({ session, healthReport });
       } else {
         setRecreateModalSession({ session, healthReport });
       }
-    } else {
-      // Fallback to legacy refresh dialog if no health report
-      setConfirmDialog({ type: "refresh", session });
     }
   };
 
@@ -269,7 +268,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
 
         break;
       }
-      default: {
+      case "delete": {
         void deleteSession(confirmDialog.session.id)
           .then(() => {
             toast.info(`Deleting session "${confirmDialog.session.name}"...`);

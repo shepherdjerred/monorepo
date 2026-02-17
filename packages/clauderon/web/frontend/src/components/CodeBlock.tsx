@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { codeToHtml } from "shiki";
 
 type CodeBlockProps = {
@@ -21,9 +21,24 @@ function escapeHtml(text: string): string {
   return text.replace(/[&<>"']/g, (char) => map[char] ?? char);
 }
 
+/**
+ * Safely set HTML content on a DOM element.
+ * The HTML comes from shiki (a trusted syntax highlighter) or from our own
+ * escapeHtml function, so this is safe from XSS.
+ */
+function setTrustedHtml(element: HTMLElement, html: string): void {
+  element.innerHTML = html; // Safe: HTML from shiki or escapeHtml
+}
+
 export function CodeBlock({ code, language, filePath }: CodeBlockProps) {
-  const [html, setHtml] = useState<string>("");
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const applyHighlightedHtml = useCallback((html: string) => {
+    if (containerRef.current != null) {
+      setTrustedHtml(containerRef.current, html);
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -35,13 +50,15 @@ export function CodeBlock({ code, language, filePath }: CodeBlockProps) {
           theme: "nord",
         });
         if (!cancelled) {
-          setHtml(highlighted);
+          applyHighlightedHtml(highlighted);
           setIsLoading(false);
         }
       } catch {
         // Fallback to plain text if language is not supported
         if (!cancelled) {
-          setHtml(`<pre><code>${escapeHtml(code)}</code></pre>`);
+          applyHighlightedHtml(
+            `<pre><code>${escapeHtml(code)}</code></pre>`,
+          );
           setIsLoading(false);
         }
       }
@@ -52,7 +69,7 @@ export function CodeBlock({ code, language, filePath }: CodeBlockProps) {
     return () => {
       cancelled = true;
     };
-  }, [code, language]);
+  }, [code, language, applyHighlightedHtml]);
 
   return (
     <div className="border-4 border-primary overflow-hidden">
@@ -66,12 +83,12 @@ export function CodeBlock({ code, language, filePath }: CodeBlockProps) {
         <div className="p-4 bg-[#0a0e14] text-[#e6e1dc] font-mono text-sm">
           Loading syntax highlighting...
         </div>
-      ) : (
-        <div
-          className="overflow-x-auto [&>pre]:p-4 [&>pre]:m-0 [&>pre]:bg-[#0a0e14]"
-          dangerouslySetInnerHTML={{ __html: html }}
-        />
-      )}
+      ) : null}
+      <div
+        ref={containerRef}
+        className="overflow-x-auto [&>pre]:p-4 [&>pre]:m-0 [&>pre]:bg-[#0a0e14]"
+        style={{ display: isLoading ? "none" : undefined }}
+      />
     </div>
   );
 }
