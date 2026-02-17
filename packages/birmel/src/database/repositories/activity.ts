@@ -43,12 +43,12 @@ export function recordMessageActivity(input: RecordMessageActivityInput): void {
         userId: input.userId,
         channelId: input.channelId,
         activityType: "message",
-        metadata: input.characterCount != null
-          ? JSON.stringify({
+        metadata: input.characterCount == null
+          ? JSON.stringify({ messageId: input.messageId })
+          : JSON.stringify({
               messageId: input.messageId,
               characterCount: input.characterCount,
-            })
-          : JSON.stringify({ messageId: input.messageId }),
+            }),
       },
     })
     .catch((error: unknown) => {
@@ -125,7 +125,7 @@ export async function getUserActivityStats(
       SELECT userId, COUNT(*) as activityCount
       FROM UserActivity
       WHERE guildId = ${guildId}
-        ${dateRange != null ? `AND createdAt >= ${dateRange.start.toISOString()} AND createdAt <= ${dateRange.end.toISOString()}` : ""}
+        ${dateRange == null ? "" : `AND createdAt >= ${dateRange.start.toISOString()} AND createdAt <= ${dateRange.end.toISOString()}`}
       GROUP BY userId
       HAVING activityCount > ${totalActivity}
     )

@@ -45,7 +45,7 @@ export async function createPoll(
     const client = getDiscordClient();
     const channel = await client.channels.fetch(params.channelId);
 
-    if (!channel?.isTextBased() || !("send" in channel)) {
+    if (channel?.isTextBased() !== true || !("send" in channel)) {
       return {
         success: false,
         message: "Channel must be a text channel to create a poll",
@@ -142,7 +142,7 @@ function extractPollResults(poll: Poll): GetPollResultsData {
     answers,
     totalVotes,
     isFinalized: poll.resultsFinalized,
-    ...(poll.expiresAt != null ? { expiresAt: poll.expiresAt.toISOString() } : {}),
+    ...(poll.expiresAt == null ? {} : { expiresAt: poll.expiresAt.toISOString() }),
   };
 }
 

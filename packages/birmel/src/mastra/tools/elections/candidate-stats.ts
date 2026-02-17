@@ -72,13 +72,13 @@ export const getCandidateStatsTool = createTool({
           if (candidatesLower.includes(candidateLower)) {
             totalElectionsParticipated++;
 
-            if (!lastElectionDate && election.actualEnd != null) {
+            if ((lastElectionDate == null || lastElectionDate.length === 0) && election.actualEnd != null) {
               lastElectionDate = election.actualEnd.toISOString();
             }
 
             if (election.winner?.toLowerCase() === candidateLower) {
               wins++;
-              if (!lastWinDate && election.actualEnd != null) {
+              if ((lastWinDate == null || lastWinDate.length === 0) && election.actualEnd != null) {
                 lastWinDate = election.actualEnd.toISOString();
               }
             }

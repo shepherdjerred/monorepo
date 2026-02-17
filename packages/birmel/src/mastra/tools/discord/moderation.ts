@@ -114,7 +114,7 @@ export const moderateMemberTool = createTool({
         }
 
         case "timeout": {
-          if (!ctx.memberId || !ctx.durationMinutes) {
+          if ((ctx.memberId == null || ctx.memberId.length === 0) || ctx.durationMinutes == null) {
             return {
               success: false,
               message: "memberId and durationMinutes are required for timeout",

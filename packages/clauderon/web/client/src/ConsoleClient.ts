@@ -29,7 +29,7 @@ export type ConsoleClientConfig = {
  * In non-browser context, defaults to localhost:3030.
  */
 function getDefaultWsBaseUrl(): string {
-  if (globalThis.window !== undefined) {
+  if ("window" in globalThis) {
     const protocol = globalThis.location.protocol === "https:" ? "wss:" : "ws:";
     return `${protocol}//${globalThis.location.host}/ws/console`;
   }
@@ -146,9 +146,6 @@ export class ConsoleClient {
 
             // Check for empty data
             if (message.data.length === 0) {
-              console.debug(
-                `[ConsoleClient] Received empty output data for session ${String(this.sessionId)}`,
-              );
               // Empty data is valid - just emit empty string
               this.emit("data", "");
               return;
@@ -196,13 +193,6 @@ export class ConsoleClient {
               return;
             }
 
-            // Log raw message for debugging
-            console.debug(
-              `[ConsoleClient] Processing output message for session ${String(this.sessionId)}. ` +
-                `Data length: ${String(message.data.length)}, ` +
-                `First 50 chars: ${message.data.slice(0, 50)}`,
-            );
-
             // Decode base64 data with staged error handling for better debugging
             // Stage 1: Decode base64 to binary (atob)
             let bytes: Uint8Array;
@@ -210,15 +200,6 @@ export class ConsoleClient {
               const binaryString = atob(message.data);
               bytes = Uint8Array.from(binaryString, (char) =>
                 char.charCodeAt(0),
-              );
-
-              // Log decoded bytes for debugging
-              console.debug(
-                `[ConsoleClient] Base64 decoded for session ${String(this.sessionId)}. ` +
-                  `Bytes length: ${String(bytes.length)}, ` +
-                  `First 32 bytes: ${[...bytes.slice(0, 32)]
-                    .map((b) => "0x" + b.toString(16).padStart(2, "0"))
-                    .join(" ")}`,
               );
             } catch (atobError) {
               if (this.shouldEmitError()) {
@@ -265,9 +246,10 @@ export class ConsoleClient {
                     ? utf8Error.message
                     : String(utf8Error);
                 // Include hex dump of first 32 bytes for debugging
-                const hexSample = [...bytes.slice(0, 32)]
-                  .map((b) => "0x" + b.toString(16).padStart(2, "0"))
-                  .join(" ");
+                const hexSample = Array.from(
+                  bytes.slice(0, 32),
+                  (b) => "0x" + b.toString(16).padStart(2, "0"),
+                ).join(" ");
                 console.error(
                   `[ConsoleClient] UTF-8 decode error (stage: utf8) for session ${String(this.sessionId)}: ${errorMsg}. ` +
                     `Bytes length: ${String(bytes.length)}, ` +

@@ -70,13 +70,13 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
 
   const toggleShowCredential = (serviceId: string) => {
     const newShow = new Map(showCredentials);
-    newShow.set(serviceId, !newShow.get(serviceId));
+    newShow.set(serviceId, newShow.get(serviceId) !== true);
     setShowCredentials(newShow);
   };
 
   const handleSaveCredential = async (serviceId: string) => {
     const value = credentialInputs.get(serviceId);
-    if (!value || value.trim() === "") {
+    if ((value == null || value.length === 0) || value.trim() === "") {
       const newErrors = new Map(saveErrors);
       newErrors.set(serviceId, "Credential value cannot be empty");
       setSaveErrors(newErrors);
@@ -99,12 +99,12 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
       // Refresh status to show updated credential
       await fetchStatus();
     } catch (err) {
-      const newErrors = new Map(saveErrors);
-      newErrors.set(
+      const errorMap = new Map(saveErrors);
+      errorMap.set(
         serviceId,
         err instanceof Error ? err.message : String(err),
       );
-      setSaveErrors(newErrors);
+      setSaveErrors(errorMap);
       // Refresh to show actual state even on error
       await fetchStatus();
     } finally {
@@ -201,7 +201,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                                   </div>
                                 )}
                                 {cred.available &&
-                                  cred.source &&
+                                  (cred.source != null && cred.source.length > 0) &&
                                   !cred.readonly && (
                                     <span className="text-xs text-muted-foreground bg-background px-2 py-0.5 rounded">
                                       {cred.source}
@@ -209,7 +209,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                                   )}
                               </div>
 
-                              {cred.available && cred.masked_value && (
+                              {cred.available && (cred.masked_value != null && cred.masked_value.length > 0) && (
                                 <div className="mt-1 font-mono text-sm text-muted-foreground">
                                   {cred.masked_value}
                                 </div>

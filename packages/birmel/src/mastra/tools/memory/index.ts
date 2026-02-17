@@ -166,7 +166,7 @@ export const manageMemoryTool = createTool({
         }
 
         case "append": {
-          if (!ctx.item || !ctx.section) {
+          if ((ctx.item == null || ctx.item.length === 0) || !ctx.section) {
             return {
               success: false,
               message: "item and section are required for append",

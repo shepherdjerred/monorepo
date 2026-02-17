@@ -6,7 +6,7 @@ let sentryInitialized = false;
 export function initializeSentry(): void {
   const config = getConfig();
 
-  if (!config.sentry.enabled || !config.sentry.dsn) {
+  if (!config.sentry.enabled || (config.sentry.dsn == null || config.sentry.dsn.length === 0)) {
     console.log(
       JSON.stringify({
         timestamp: new Date().toISOString(),
@@ -118,7 +118,7 @@ export function captureException(
   }
 
   Sentry.withScope((scope) => {
-    if (context?.operation != null && context?.operation.length > 0) {
+    if (context?.operation != null && context.operation.length > 0) {
       scope.setTag("operation", context.operation);
     }
     if (context?.discord != null) {

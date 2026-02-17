@@ -98,7 +98,7 @@ export const manageBirthdayTool = createTool({
       try {
         switch (ctx.action) {
           case "set": {
-            if (!ctx.userId || !ctx.birthMonth || !ctx.birthDay) {
+            if ((ctx.userId == null || ctx.userId.length === 0) || ctx.birthMonth == null || ctx.birthDay == null) {
               return {
                 success: false,
                 message:
@@ -119,7 +119,7 @@ export const manageBirthdayTool = createTool({
             });
             return {
               success: true,
-              message: `Birthday set to ${ctx.birthMonth.toString()}/${ctx.birthDay.toString()}${ctx.birthYear != null ? `/${ctx.birthYear.toString()}` : ""}`,
+              message: `Birthday set to ${ctx.birthMonth.toString()}/${ctx.birthDay.toString()}${ctx.birthYear == null ? "" : `/${ctx.birthYear.toString()}`}`,
               data: {
                 userId: birthday.userId,
                 birthMonth: birthday.birthMonth,
@@ -143,7 +143,7 @@ export const manageBirthdayTool = createTool({
             }
             return {
               success: true,
-              message: `Birthday is ${birthday.birthMonth.toString()}/${birthday.birthDay.toString()}${birthday.birthYear != null ? `/${birthday.birthYear.toString()}` : ""}`,
+              message: `Birthday is ${birthday.birthMonth.toString()}/${birthday.birthDay.toString()}${birthday.birthYear == null ? "" : `/${birthday.birthYear.toString()}`}`,
               data: {
                 userId: birthday.userId,
                 birthMonth: birthday.birthMonth,

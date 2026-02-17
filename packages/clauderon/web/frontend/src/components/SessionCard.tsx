@@ -139,7 +139,7 @@ function getWorkflowStage(session: Session): WorkflowStage {
   // Waiting for review
   if (
     session.pr_review_decision === ReviewDecision.ReviewRequired ||
-    !session.pr_review_decision
+    session.pr_review_decision == null
   ) {
     return WorkflowStage.Review;
   }
@@ -445,7 +445,7 @@ export function SessionCard({
             {session.description}
           </p>
         )}
-        {!session.description && (
+        {(session.description == null || session.description.length === 0) && (
           <p className="text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-2">
             {session.initial_prompt}
           </p>
@@ -838,7 +838,7 @@ function getClaudeStatusIcon(status: ClaudeWorkingStatus) {
       return <Clock className="w-3 h-3" />;
     case ClaudeWorkingStatus.Idle:
       return <Circle className="w-3 h-3" />;
-    default:
+    case ClaudeWorkingStatus.Unknown:
       return null;
   }
 }
@@ -853,7 +853,7 @@ function getClaudeStatusText(status: ClaudeWorkingStatus): string {
       return "Waiting for input";
     case ClaudeWorkingStatus.Idle:
       return "Idle";
-    default:
+    case ClaudeWorkingStatus.Unknown:
       return "Unknown";
   }
 }
@@ -868,7 +868,7 @@ function getClaudeStatusBorderColor(status: ClaudeWorkingStatus): string {
       return "border-yellow-500";
     case ClaudeWorkingStatus.Idle:
       return "border-gray-500";
-    default:
+    case ClaudeWorkingStatus.Unknown:
       return "border-muted";
   }
 }
@@ -883,7 +883,7 @@ function getClaudeStatusBgColor(status: ClaudeWorkingStatus): string {
       return "bg-yellow-500/10";
     case ClaudeWorkingStatus.Idle:
       return "bg-gray-500/10";
-    default:
+    case ClaudeWorkingStatus.Unknown:
       return "bg-muted/10";
   }
 }

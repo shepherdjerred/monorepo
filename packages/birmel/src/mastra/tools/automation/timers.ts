@@ -102,7 +102,7 @@ export const manageTaskTool = createTool({
     try {
       switch (ctx.action) {
         case "schedule": {
-          if (!ctx.userId || !ctx.when || !ctx.toolId) {
+          if ((ctx.userId == null || ctx.userId.length === 0) || (ctx.when == null || ctx.when.length === 0) || (ctx.toolId == null || ctx.toolId.length === 0)) {
             return {
               success: false,
               message: "userId, when, and toolId are required for schedule",
@@ -186,7 +186,7 @@ export const manageTaskTool = createTool({
           });
 
           const whenDesc =
-            isRecurring && cronPattern
+            isRecurring && (cronPattern != null && cronPattern.length > 0)
               ? `Recurring: ${describeCron(cronPattern)}`
               : formatScheduleTime(scheduledAt);
 
@@ -234,7 +234,7 @@ export const manageTaskTool = createTool({
         }
 
         case "cancel": {
-          if (!ctx.taskId || !ctx.userId) {
+          if (ctx.taskId == null || (ctx.userId == null || ctx.userId.length === 0)) {
             return {
               success: false,
               message: "taskId and userId are required for cancel",
@@ -275,10 +275,10 @@ export const manageTaskTool = createTool({
 
         case "remind": {
           if (
-            !ctx.userId ||
-            !ctx.when ||
-            !ctx.channelId ||
-            !ctx.reminderAction
+            (ctx.userId == null || ctx.userId.length === 0) ||
+            (ctx.when == null || ctx.when.length === 0) ||
+            (ctx.channelId == null || ctx.channelId.length === 0) ||
+            (ctx.reminderAction == null || ctx.reminderAction.length === 0)
           ) {
             return {
               success: false,

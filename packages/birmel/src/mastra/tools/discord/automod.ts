@@ -149,7 +149,7 @@ export const manageAutomodRuleTool = createTool({
         }
 
         case "create": {
-          if (!ctx.name || !ctx.triggerType) {
+          if ((ctx.name == null || ctx.name.length === 0) || !ctx.triggerType) {
             return {
               success: false,
               message: "name and triggerType are required for creating a rule",

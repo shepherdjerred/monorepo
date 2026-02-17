@@ -159,7 +159,7 @@ export const manageMemberTool = createTool({
         }
 
         case "add-role": {
-          if (!ctx.memberId || !ctx.roleId) {
+          if ((ctx.memberId == null || ctx.memberId.length === 0) || (ctx.roleId == null || ctx.roleId.length === 0)) {
             return {
               success: false,
               message: "memberId and roleId are required for add-role",
@@ -178,7 +178,7 @@ export const manageMemberTool = createTool({
         }
 
         case "remove-role": {
-          if (!ctx.memberId || !ctx.roleId) {
+          if ((ctx.memberId == null || ctx.memberId.length === 0) || (ctx.roleId == null || ctx.roleId.length === 0)) {
             return {
               success: false,
               message: "memberId and roleId are required for remove-role",

@@ -3,6 +3,17 @@ import { ConsoleClient } from "./ConsoleClient";
 import { WebSocketError } from "./errors";
 import type { DecodeError } from "./errors";
 
+// Reusable noop functions for mock callbacks
+function noop(): void {
+  // intentionally empty
+}
+function noopString(_data: string): void {
+  // intentionally empty
+}
+function noopError(_error: Error): void {
+  // intentionally empty
+}
+
 // Mock WebSocket implementation
 class MockWebSocket {
   static CONNECTING = 0;
@@ -84,7 +95,7 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onConnected = mock(() => {});
+      const onConnected = mock(noop);
 
       client.onConnected(onConnected);
       client.connect("session1");
@@ -99,7 +110,7 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onDisconnected = mock(() => {});
+      const onDisconnected = mock(noop);
 
       client.onDisconnected(onDisconnected);
       client.connect("session1");
@@ -129,7 +140,7 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onDisconnected = mock(() => {});
+      const onDisconnected = mock(noop);
 
       client.onDisconnected(onDisconnected);
       client.connect("session1");
@@ -221,7 +232,7 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onData = mock((_data: string) => {});
+      const onData = mock(noopString);
 
       client.onData(onData);
       client.connect("session1");
@@ -246,7 +257,7 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onError = mock((_error: Error) => {});
+      const onError = mock(noopError);
 
       client.onError(onError);
       client.connect("session1");
@@ -272,7 +283,7 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onError = mock((_error: Error) => {});
+      const onError = mock(noopError);
 
       client.onError(onError);
       client.connect("session1");
@@ -295,7 +306,7 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onData = mock((_data: string) => {});
+      const onData = mock(noopString);
 
       client.onData(onData);
       client.connect("session1");
@@ -343,7 +354,7 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onData = mock((_data: string) => {});
+      const onData = mock(noopString);
 
       client.onData(onData);
       client.connect("session1");
@@ -364,8 +375,8 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onData = mock((_data: string) => {});
-      const onError = mock((_error: Error) => {});
+      const onData = mock(noopString);
+      const onError = mock(noopError);
 
       client.onData(onData);
       client.onError(onError);
@@ -399,7 +410,7 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onData = mock((_data: string) => {});
+      const onData = mock(noopString);
 
       client.onData(onData);
       client.connect("session1");
@@ -446,7 +457,7 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onConnected = mock(() => {});
+      const onConnected = mock(noop);
 
       const unsubscribe = client.onConnected(onConnected);
       unsubscribe();
@@ -481,8 +492,8 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onData = mock((_data: string) => {});
-      const onError = mock((_error: Error) => {});
+      const onData = mock(noopString);
+      const onError = mock(noopError);
 
       client.onData(onData);
       client.onError(onError);
@@ -505,7 +516,7 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onError = mock((_error: Error) => {});
+      const onError = mock(noopError);
 
       client.onError(onError);
       client.connect("session1");
@@ -528,8 +539,8 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onData = mock((_data: string) => {});
-      const onError = mock((_error: Error) => {});
+      const onData = mock(noopString);
+      const onError = mock(noopError);
 
       client.onData(onData);
       client.onError(onError);
@@ -552,7 +563,7 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onError = mock((_error: Error) => {});
+      const onError = mock(noopError);
 
       client.onError(onError);
       client.connect("session1");
@@ -575,7 +586,7 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onError = mock((_error: Error) => {});
+      const onError = mock(noopError);
 
       client.onError(onError);
       client.connect("session1");
@@ -597,7 +608,7 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onError = mock((_error: Error) => {});
+      const onError = mock(noopError);
 
       client.onError(onError);
       client.connect("session1");
@@ -635,7 +646,7 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onError = mock((_error: Error) => {});
+      const onError = mock(noopError);
 
       client.onError(onError);
       client.connect("session1");
@@ -660,7 +671,7 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onError = mock((_error: Error) => {});
+      const onError = mock(noopError);
 
       client.onError(onError);
       client.connect("session1");
@@ -694,7 +705,7 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onError = mock((_error: Error) => {});
+      const onError = mock(noopError);
 
       client.onError(onError);
       client.connect("session1");
@@ -721,8 +732,8 @@ describe("ConsoleClient", () => {
       const client = new ConsoleClient({
         baseUrl: "ws://localhost:3030/ws/console",
       });
-      const onError = mock((_error: Error) => {});
-      const onData = mock((_data: string) => {});
+      const onError = mock(noopError);
+      const onData = mock(noopString);
 
       client.onError(onError);
       client.onData(onData);

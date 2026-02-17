@@ -209,7 +209,7 @@ export function RecreateConfirmModal({
           backgroundColor: "hsl(220, 90%, 8%)",
           opacity: 0.85,
         }}
-        onClick={() => {
+        onPointerDown={() => {
           onOpenChange(false);
         }}
         aria-hidden="true"
@@ -224,7 +224,7 @@ export function RecreateConfirmModal({
             boxShadow:
               "12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)",
           }}
-          onClick={(e) => {
+          onPointerDown={(e) => {
             e.stopPropagation();
           }}
         >

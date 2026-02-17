@@ -14,6 +14,8 @@ type StartupHealthModalProps = {
 
 function getHealthLabel(state: ResourceState): string {
   switch (state.type) {
+    case "Healthy":
+      return "Healthy";
     case "Stopped":
       return "Stopped";
     case "Hibernated":
@@ -32,8 +34,6 @@ function getHealthLabel(state: ResourceState): string {
       return "Data Lost";
     case "WorktreeMissing":
       return "Worktree Missing";
-    default:
-      return "Unknown";
   }
 }
 
@@ -51,7 +51,7 @@ function getHealthColor(state: ResourceState): string {
     case "DataLost":
     case "WorktreeMissing":
       return "bg-red-500/20 text-red-700 border-red-500/50";
-    default:
+    case "Healthy":
       return "bg-gray-500/20 text-gray-700 border-gray-500/50";
   }
 }
@@ -92,7 +92,7 @@ export function StartupHealthModal({
           backgroundColor: "hsl(220, 90%, 8%)",
           opacity: 0.85,
         }}
-        onClick={() => {
+        onPointerDown={() => {
           onOpenChange(false);
         }}
         aria-hidden="true"
@@ -107,7 +107,7 @@ export function StartupHealthModal({
             boxShadow:
               "12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)",
           }}
-          onClick={(e) => {
+          onPointerDown={(e) => {
             e.stopPropagation();
           }}
         >

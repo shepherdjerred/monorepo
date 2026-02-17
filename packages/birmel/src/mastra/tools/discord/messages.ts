@@ -126,7 +126,7 @@ export const manageMessageTool = createTool({
 
         switch (ctx.action) {
           case "send": {
-            if (!ctx.channelId || !ctx.content) {
+            if ((ctx.channelId == null || ctx.channelId.length === 0) || (ctx.content == null || ctx.content.length === 0)) {
               return {
                 success: false,
                 message: "channelId and content are required for send",
@@ -177,7 +177,7 @@ export const manageMessageTool = createTool({
             }
             const requestContext = getRequestContext();
             if (
-              !requestContext?.sourceMessageId ||
+              (requestContext?.sourceMessageId == null || requestContext.sourceMessageId.length === 0) ||
               !requestContext.sourceChannelId
             ) {
               return {
@@ -217,7 +217,7 @@ export const manageMessageTool = createTool({
           }
 
           case "send-dm": {
-            if (!ctx.userId || !ctx.content) {
+            if ((ctx.userId == null || ctx.userId.length === 0) || (ctx.content == null || ctx.content.length === 0)) {
               return {
                 success: false,
                 message: "userId and content are required for send-dm",
@@ -240,7 +240,7 @@ export const manageMessageTool = createTool({
           }
 
           case "edit": {
-            if (!ctx.channelId || !ctx.messageId || !ctx.content) {
+            if ((ctx.channelId == null || ctx.channelId.length === 0) || (ctx.messageId == null || ctx.messageId.length === 0) || (ctx.content == null || ctx.content.length === 0)) {
               return {
                 success: false,
                 message:
@@ -266,7 +266,7 @@ export const manageMessageTool = createTool({
           }
 
           case "delete": {
-            if (!ctx.channelId || !ctx.messageId) {
+            if ((ctx.channelId == null || ctx.channelId.length === 0) || (ctx.messageId == null || ctx.messageId.length === 0)) {
               return {
                 success: false,
                 message: "channelId and messageId are required for delete",
@@ -291,7 +291,7 @@ export const manageMessageTool = createTool({
           }
 
           case "bulk-delete": {
-            if (!ctx.channelId || !ctx.messageIds?.length) {
+            if ((ctx.channelId == null || ctx.channelId.length === 0) || ctx.messageIds?.length == null) {
               return {
                 success: false,
                 message:
@@ -325,7 +325,7 @@ export const manageMessageTool = createTool({
           }
 
           case "pin": {
-            if (!ctx.channelId || !ctx.messageId) {
+            if ((ctx.channelId == null || ctx.channelId.length === 0) || (ctx.messageId == null || ctx.messageId.length === 0)) {
               return {
                 success: false,
                 message: "channelId and messageId are required for pin",
@@ -350,7 +350,7 @@ export const manageMessageTool = createTool({
           }
 
           case "unpin": {
-            if (!ctx.channelId || !ctx.messageId) {
+            if ((ctx.channelId == null || ctx.channelId.length === 0) || (ctx.messageId == null || ctx.messageId.length === 0)) {
               return {
                 success: false,
                 message: "channelId and messageId are required for unpin",
@@ -375,7 +375,7 @@ export const manageMessageTool = createTool({
           }
 
           case "add-reaction": {
-            if (!ctx.channelId || !ctx.messageId || !ctx.emoji) {
+            if ((ctx.channelId == null || ctx.channelId.length === 0) || (ctx.messageId == null || ctx.messageId.length === 0) || (ctx.emoji == null || ctx.emoji.length === 0)) {
               return {
                 success: false,
                 message:
@@ -402,7 +402,7 @@ export const manageMessageTool = createTool({
           }
 
           case "remove-reaction": {
-            if (!ctx.channelId || !ctx.messageId || !ctx.emoji) {
+            if ((ctx.channelId == null || ctx.channelId.length === 0) || (ctx.messageId == null || ctx.messageId.length === 0) || (ctx.emoji == null || ctx.emoji.length === 0)) {
               return {
                 success: false,
                 message:

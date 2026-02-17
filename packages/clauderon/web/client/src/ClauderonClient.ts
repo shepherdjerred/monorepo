@@ -25,43 +25,11 @@ import type {
   MergePrRequest,
 } from "@clauderon/shared";
 import { ApiError, NetworkError, SessionNotFoundError } from "./errors.js";
-
-/**
- * Information about a Kubernetes storage class
- */
-export type StorageClassInfo = {
-  name: string;
-  provisioner: string;
-  is_default: boolean;
-};
-
-/**
- * Configuration options for ClauderonClient
- */
-export type ClauderonClientConfig = {
-  /**
-   * Base URL for the Clauderon HTTP API
-   * @default "http://localhost:3030"
-   */
-  baseUrl?: string;
-
-  /**
-   * Custom fetch implementation (useful for testing)
-   */
-  fetch?: typeof fetch;
-};
-
-/**
- * Get the default base URL based on the current environment.
- * In browser context, derives from window.location.
- * In non-browser context, defaults to localhost:3030.
- */
-function getDefaultBaseUrl(): string {
-  if (globalThis.window !== undefined) {
-    return `${globalThis.location.protocol}//${globalThis.location.host}`;
-  }
-  return "http://localhost:3030";
-}
+import {
+  type ClauderonClientConfig,
+  type StorageClassInfo,
+  getDefaultBaseUrl,
+} from "./client-types.js";
 
 /**
  * Type-safe HTTP client for the Clauderon API
@@ -110,24 +78,17 @@ export class ClauderonClient {
   async createSession(
     request: CreateSessionRequest,
   ): Promise<{ id: string; warnings?: string[] }> {
-    const response = await this.request<{ id: string; warnings?: string[] }>(
+    return this.request<{ id: string; warnings?: string[] }>(
       "POST",
       "/api/sessions",
       request,
     );
-    return response;
   }
 
-  /**
-   * Delete a session
-   */
   async deleteSession(id: string): Promise<void> {
     await this.request("DELETE", `/api/sessions/${encodeURIComponent(id)}`);
   }
 
-  /**
-   * Archive a session
-   */
   async archiveSession(id: string): Promise<void> {
     await this.request(
       "POST",
@@ -135,9 +96,6 @@ export class ClauderonClient {
     );
   }
 
-  /**
-   * Unarchive a session
-   */
   async unarchiveSession(id: string): Promise<void> {
     await this.request(
       "POST",
@@ -145,9 +103,6 @@ export class ClauderonClient {
     );
   }
 
-  /**
-   * Refresh a session (pull latest image and recreate container)
-   */
   async refreshSession(id: string): Promise<void> {
     await this.request(
       "POST",
@@ -391,69 +346,46 @@ export class ClauderonClient {
 
   // Authentication methods
 
-  /**
-   * Get authentication status
-   */
   async getAuthStatus(): Promise<AuthStatus> {
-    const response = await this.request<AuthStatus>("GET", "/api/auth/status");
-    return response;
+    return this.request<AuthStatus>("GET", "/api/auth/status");
   }
 
-  /**
-   * Start passkey registration
-   */
   async registerStart(
     request: RegistrationStartRequest,
   ): Promise<RegistrationStartResponse> {
-    const response = await this.request<RegistrationStartResponse>(
+    return this.request<RegistrationStartResponse>(
       "POST",
       "/api/auth/register/start",
       request,
     );
-    return response;
   }
 
-  /**
-   * Finish passkey registration
-   */
   async registerFinish(
     request: RegistrationFinishRequest,
   ): Promise<RegistrationFinishResponse> {
-    const response = await this.request<RegistrationFinishResponse>(
+    return this.request<RegistrationFinishResponse>(
       "POST",
       "/api/auth/register/finish",
       request,
     );
-    return response;
   }
 
-  /**
-   * Start passkey login
-   */
   async loginStart(request: LoginStartRequest): Promise<LoginStartResponse> {
-    const response = await this.request<LoginStartResponse>(
+    return this.request<LoginStartResponse>(
       "POST",
       "/api/auth/login/start",
       request,
     );
-    return response;
   }
 
-  /**
-   * Finish passkey login
-   */
   async loginFinish(request: LoginFinishRequest): Promise<LoginFinishResponse> {
-    const response = await this.request<LoginFinishResponse>(
+    return this.request<LoginFinishResponse>(
       "POST",
       "/api/auth/login/finish",
       request,
     );
-    return response;
   }
 
-  /**
-   * Logout (delete current session)
-   */
   async logout(): Promise<void> {
     await this.request("POST", "/api/auth/logout");
   }
@@ -557,3 +489,8 @@ export class ClauderonClient {
     }
   }
 }
+
+export {
+  type StorageClassInfo,
+  type ClauderonClientConfig,
+} from "./client-types.js";

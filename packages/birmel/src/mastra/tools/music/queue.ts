@@ -54,12 +54,12 @@ export const musicQueueTool = createTool({
           if (queue == null) {
             return { success: false, message: "No active queue" };
           }
-          const currentTrack = queue.currentTrack != null
-            ? {
+          const currentTrack = queue.currentTrack == null
+            ? null
+            : {
                 title: queue.currentTrack.title,
                 duration: queue.currentTrack.duration,
-              }
-            : null;
+              };
           const tracks = queue.tracks.toArray().map((t, i) => ({
             position: i + 1,
             title: t.title,

@@ -229,7 +229,7 @@ export const manageElectionTool = createTool({
           }
 
           case "get-candidate-stats": {
-            if (!ctx.guildId || !ctx.candidateName) {
+            if ((ctx.guildId == null || ctx.guildId.length === 0) || (ctx.candidateName == null || ctx.candidateName.length === 0)) {
               return {
                 success: false,
                 message: "guildId and candidateName are required",
@@ -251,12 +251,12 @@ export const manageElectionTool = createTool({
               );
               if (candidates.includes(candidateLower)) {
                 totalElectionsParticipated++;
-                if (!lastElectionDate && e.actualEnd != null) {
+                if ((lastElectionDate == null || lastElectionDate.length === 0) && e.actualEnd != null) {
                   lastElectionDate = e.actualEnd.toISOString();
                 }
                 if (e.winner?.toLowerCase() === candidateLower) {
                   wins++;
-                  if (!lastWinDate && e.actualEnd != null) {
+                  if ((lastWinDate == null || lastWinDate.length === 0) && e.actualEnd != null) {
                     lastWinDate = e.actualEnd.toISOString();
                   }
                 }

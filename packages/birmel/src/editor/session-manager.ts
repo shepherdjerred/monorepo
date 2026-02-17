@@ -235,7 +235,7 @@ export async function updatePrUrl(
   });
 
   // Cleanup cloned repo since PR is created
-  if (session?.clonedRepoPath != null && session?.clonedRepoPath.length > 0) {
+  if (session?.clonedRepoPath != null && session.clonedRepoPath.length > 0) {
     await cleanupClone(session.clonedRepoPath);
   }
 
@@ -258,7 +258,7 @@ export async function cleanupSessionClone(sessionId: string): Promise<void> {
     select: { clonedRepoPath: true },
   });
 
-  if (session?.clonedRepoPath != null && session?.clonedRepoPath.length > 0) {
+  if (session?.clonedRepoPath != null && session.clonedRepoPath.length > 0) {
     await cleanupClone(session.clonedRepoPath);
     await prisma.editorSession.update({
       where: { id: sessionId },

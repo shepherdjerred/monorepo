@@ -1,24 +1,24 @@
 import { beforeAll, afterAll, mock } from "bun:test";
 
 // Mock @mastra/libsql
-mock.module("@mastra/libsql", () => ({
-  // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+void mock.module("@mastra/libsql", () => ({
+  // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- empty mock class for testing
   LibSQLStore: class MockLibSQLStore {},
-  // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+  // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- empty mock class for testing
   LibSQLVector: class MockLibSQLVector {},
 }));
 
 // Mock @mastra/memory
-mock.module("@mastra/memory", () => ({
-  // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+void mock.module("@mastra/memory", () => ({
+  // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- empty mock class for testing
   Memory: class MockMemory {},
 }));
 
 // Mock @mastra/core/agent
-mock.module("@mastra/core/agent", () => ({
+void mock.module("@mastra/core/agent", () => ({
   Agent: class MockAgent {
     name: string;
-    private _instructions: string;
+    private readonly _instructions: string;
 
     constructor(config: {
       name: string;
@@ -36,7 +36,7 @@ mock.module("@mastra/core/agent", () => ({
 }));
 
 // Mock @mastra/core/tools
-mock.module("@mastra/core/tools", () => ({
+void mock.module("@mastra/core/tools", () => ({
   createTool: (config: {
     id: string;
     description: string;
@@ -56,7 +56,7 @@ const mockOpenai: OpenaiMock = Object.assign(
     responses: (model: string) => ({ provider: "openai.responses", model }),
   },
 );
-mock.module("@ai-sdk/openai", () => ({
+void mock.module("@ai-sdk/openai", () => ({
   openai: mockOpenai,
 }));
 
@@ -73,15 +73,15 @@ afterAll(() => {
 });
 
 // Mock Discord.js to prevent actual API calls
-mock.module("discord.js", () => ({
+void mock.module("discord.js", () => ({
   Client: class MockClient {
-    guilds = { cache: new Map(), fetch: async () => ({}) };
-    channels = { fetch: async () => ({}) };
-    users = { fetch: async () => ({}) };
-    login = async () => "logged-in";
-    destroy = () => {};
-    on = () => {};
-    once = () => {};
+    guilds = { cache: new Map(), fetch: () => Promise.resolve({}) };
+    channels = { fetch: () => Promise.resolve({}) };
+    users = { fetch: () => Promise.resolve({}) };
+    login = () => Promise.resolve("logged-in");
+    destroy() { /* noop */ }
+    on() { /* noop */ }
+    once() { /* noop */ }
   },
   GatewayIntentBits: {
     Guilds: 1,
@@ -165,23 +165,23 @@ mock.module("discord.js", () => ({
 }));
 
 // Mock discord-player
-mock.module("discord-player", () => ({
+void mock.module("discord-player", () => ({
   Player: class MockPlayer {
     extractors = {
-      register: async () => {},
+      register: () => Promise.resolve(),
     };
     events = {
-      on: () => {},
+      on() { /* noop */ },
     };
     nodes = {
       create: () => ({
-        play: async () => {},
+        play: () => Promise.resolve(),
         node: {
-          pause: () => {},
-          resume: () => {},
-          skip: () => {},
-          stop: () => {},
-          setVolume: () => {},
+          pause() { /* noop */ },
+          resume() { /* noop */ },
+          skip() { /* noop */ },
+          stop() { /* noop */ },
+          setVolume() { /* noop */ },
         },
         tracks: [],
         currentTrack: null,
@@ -190,7 +190,7 @@ mock.module("discord-player", () => ({
     queues = {
       get: () => null,
     };
-    search = async () => ({ hasTracks: () => false, tracks: [] });
+    search = () => Promise.resolve({ hasTracks: () => false, tracks: [] });
   },
   Track: class MockTrack {
     title = "Mock Track";
@@ -204,7 +204,7 @@ mock.module("discord-player", () => ({
   },
   Util: {
     buildTimeCode: (ms: number) =>
-      `${String(Math.floor(ms / 60000))}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, "0")}`,
+      `${String(Math.floor(ms / 60_000))}:${String(Math.floor((ms % 60_000) / 1000)).padStart(2, "0")}`,
     parseMS: (_str: string) => 0,
   },
   BaseExtractor: class MockBaseExtractor {
@@ -238,7 +238,7 @@ mock.module("discord-player", () => ({
 }));
 
 // Mock discord-player-youtubei
-mock.module("discord-player-youtubei", () => ({
+void mock.module("discord-player-youtubei", () => ({
   YoutubeiExtractor: class MockYoutubeiExtractor {
     static identifier = "youtubei-extractor";
     context = {};

@@ -70,7 +70,7 @@ async function handleEditorButton(
 ): Promise<void> {
   const [, action, sessionId] = interaction.customId.split(":");
 
-  if (!action || !sessionId) {
+  if ((action == null || action.length === 0) || (sessionId == null || sessionId.length === 0)) {
     await interaction.reply({
       content: "Invalid button interaction.",
       flags: 64,

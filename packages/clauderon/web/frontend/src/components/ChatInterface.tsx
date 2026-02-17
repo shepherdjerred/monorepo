@@ -65,8 +65,8 @@ export function ChatInterface({
 
           // Optional: small delay between multiple images
           await new Promise((resolve) => setTimeout(resolve, 100));
-        } catch (error) {
-          console.error("Failed to upload image:", error);
+        } catch (uploadError) {
+          console.error("Failed to upload image:", uploadError);
           // Continue even if upload fails
         }
       }

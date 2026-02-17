@@ -85,10 +85,10 @@ export const manageScheduledMessageTool = createTool({
         switch (ctx.action) {
           case "schedule": {
             if (
-              !ctx.channelId ||
-              !ctx.message ||
-              !ctx.scheduledAt ||
-              !ctx.createdBy
+              (ctx.channelId == null || ctx.channelId.length === 0) ||
+              (ctx.message == null || ctx.message.length === 0) ||
+              (ctx.scheduledAt == null || ctx.scheduledAt.length === 0) ||
+              (ctx.createdBy == null || ctx.createdBy.length === 0)
             ) {
               return {
                 success: false,

@@ -95,7 +95,7 @@ export const manageWebhookTool = createTool({
           let webhooks;
           if (ctx.channelId != null && ctx.channelId.length > 0) {
             const channel = await client.channels.fetch(ctx.channelId);
-            if (!channel?.isTextBased() || !("fetchWebhooks" in channel)) {
+            if (channel?.isTextBased() !== true || !("fetchWebhooks" in channel)) {
               return {
                 success: false,
                 message: "Channel does not support webhooks",
@@ -119,14 +119,14 @@ export const manageWebhookTool = createTool({
         }
 
         case "create": {
-          if (!ctx.channelId || !ctx.name) {
+          if ((ctx.channelId == null || ctx.channelId.length === 0) || (ctx.name == null || ctx.name.length === 0)) {
             return {
               success: false,
               message: "channelId and name are required for creating a webhook",
             };
           }
           const channel = await client.channels.fetch(ctx.channelId);
-          if (!channel?.isTextBased() || !("createWebhook" in channel)) {
+          if (channel?.isTextBased() !== true || !("createWebhook" in channel)) {
             return {
               success: false,
               message: "Channel does not support webhooks",
@@ -201,7 +201,7 @@ export const manageWebhookTool = createTool({
         }
 
         case "execute": {
-          if (!ctx.webhookId || !ctx.webhookToken) {
+          if ((ctx.webhookId == null || ctx.webhookId.length === 0) || (ctx.webhookToken == null || ctx.webhookToken.length === 0)) {
             return {
               success: false,
               message:

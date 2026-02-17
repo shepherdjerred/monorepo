@@ -8,14 +8,14 @@ import {
 describe("retry", () => {
   describe("retry", () => {
     test("returns result on success", async () => {
-      const result = await retry(async () => "success");
+      const result = await retry(() => "success");
       expect(result).toBe("success");
     });
 
     test("retries on failure", async () => {
       let attempts = 0;
       const result = await retry(
-        async () => {
+        () => {
           attempts++;
           if (attempts < 3) {
             throw new Error("fail");
@@ -34,7 +34,7 @@ describe("retry", () => {
 
       await expect(
         retry(
-          async () => {
+          () => {
             attempts++;
             throw new Error("always fails");
           },
@@ -50,7 +50,7 @@ describe("retry", () => {
 
       await expect(
         retry(
-          async () => {
+          () => {
             attempts++;
             throw new Error("non-retryable");
           },
@@ -72,7 +72,7 @@ describe("retry", () => {
 
       await expect(
         retry(
-          async () => {
+          () => {
             const now = Date.now();
             if (!isFirstCall) {
               delays.push(now - lastTime);
@@ -108,7 +108,7 @@ describe("retry", () => {
 
       await expect(
         retry(
-          async () => {
+          () => {
             const now = Date.now();
             if (lastTime !== now) {
               delays.push(now - lastTime);
@@ -162,7 +162,7 @@ describe("retry", () => {
     test("returns false for non-Error values", () => {
       expect(isRetryableError("string error")).toBe(false);
       expect(isRetryableError(null)).toBe(false);
-      expect(isRetryableError(undefined)).toBe(false);
+      expect(isRetryableError()).toBe(false);
     });
   });
 
@@ -171,7 +171,7 @@ describe("retry", () => {
       let attempts = 0;
 
       await expect(
-        retryWithBackoff(async () => {
+        retryWithBackoff(() => {
           attempts++;
           throw new Error("404 Not Found");
         }, 3),
@@ -185,7 +185,7 @@ describe("retry", () => {
       let attempts = 0;
 
       await expect(
-        retryWithBackoff(async () => {
+        retryWithBackoff(() => {
           attempts++;
           throw new Error("ECONNRESET");
         }, 2),

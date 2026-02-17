@@ -1,6 +1,17 @@
 import { describe, expect, test, mock, beforeEach, afterEach } from "bun:test";
 import { EventsClient } from "./EventsClient";
 import type { SessionEvent } from "./EventsClient";
+
+// Reusable noop functions for mock callbacks
+function noop(): void {
+  // intentionally empty
+}
+function noopEvent(_event: SessionEvent): void {
+  // intentionally empty
+}
+function noopError(_error: Error): void {
+  // intentionally empty
+}
 import {
   SessionStatus,
   AccessMode,
@@ -104,7 +115,7 @@ describe("EventsClient", () => {
   describe("connect", () => {
     test("emits connected event on successful connection", async () => {
       const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
-      const onConnected = mock(() => {});
+      const onConnected = mock(noop);
 
       client.onConnected(onConnected);
       client.connect();
@@ -116,7 +127,7 @@ describe("EventsClient", () => {
 
     test("does nothing if already connected", async () => {
       const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
-      const onConnected = mock(() => {});
+      const onConnected = mock(noop);
 
       client.onConnected(onConnected);
       client.connect();
@@ -136,7 +147,7 @@ describe("EventsClient", () => {
   describe("disconnect", () => {
     test("emits disconnected event", async () => {
       const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
-      const onDisconnected = mock(() => {});
+      const onDisconnected = mock(noop);
 
       client.onDisconnected(onDisconnected);
       client.connect();
@@ -161,7 +172,7 @@ describe("EventsClient", () => {
         autoReconnect: true,
         reconnectDelay: 10,
       });
-      const onConnected = mock(() => {});
+      const onConnected = mock(noop);
 
       client.onConnected(onConnected);
       client.connect();
@@ -181,7 +192,7 @@ describe("EventsClient", () => {
   describe("onEvent", () => {
     test("emits session_created event", async () => {
       const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
-      const onEvent = mock((_event: SessionEvent) => {});
+      const onEvent = mock(noopEvent);
 
       client.onEvent(onEvent);
       client.connect();
@@ -203,7 +214,7 @@ describe("EventsClient", () => {
 
     test("emits session_updated event", async () => {
       const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
-      const onEvent = mock((_event: SessionEvent) => {});
+      const onEvent = mock(noopEvent);
 
       client.onEvent(onEvent);
       client.connect();
@@ -228,7 +239,7 @@ describe("EventsClient", () => {
 
     test("emits session_deleted event", async () => {
       const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
-      const onEvent = mock((_event: SessionEvent) => {});
+      const onEvent = mock(noopEvent);
 
       client.onEvent(onEvent);
       client.connect();
@@ -250,7 +261,7 @@ describe("EventsClient", () => {
 
     test("ignores connected acknowledgment message", async () => {
       const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
-      const onEvent = mock((_event: SessionEvent) => {});
+      const onEvent = mock(noopEvent);
 
       client.onEvent(onEvent);
       client.connect();
@@ -271,7 +282,7 @@ describe("EventsClient", () => {
   describe("onError", () => {
     test("emits error for invalid JSON", async () => {
       const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
-      const onError = mock((_error: Error) => {});
+      const onError = mock(noopError);
 
       client.onError(onError);
       client.connect();
@@ -288,7 +299,7 @@ describe("EventsClient", () => {
 
     test("emits error on WebSocket error", async () => {
       const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
-      const onError = mock((_error: Error) => {});
+      const onError = mock(noopError);
 
       client.onError(onError);
       client.connect();
@@ -311,7 +322,7 @@ describe("EventsClient", () => {
         autoReconnect: true,
         reconnectDelay: 10,
       });
-      const onConnected = mock(() => {});
+      const onConnected = mock(noop);
 
       client.onConnected(onConnected);
       client.connect();
@@ -337,7 +348,7 @@ describe("EventsClient", () => {
         autoReconnect: false,
         reconnectDelay: 10,
       });
-      const onConnected = mock(() => {});
+      const onConnected = mock(noop);
 
       client.onConnected(onConnected);
       client.connect();
@@ -361,7 +372,7 @@ describe("EventsClient", () => {
   describe("listener management", () => {
     test("unsubscribe removes listener", async () => {
       const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
-      const onConnected = mock(() => {});
+      const onConnected = mock(noop);
 
       const unsubscribe = client.onConnected(onConnected);
       unsubscribe();

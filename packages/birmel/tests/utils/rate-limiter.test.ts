@@ -135,7 +135,7 @@ describe("rate-limiter", () => {
     });
 
     test("keeps active limits", () => {
-      checkRateLimit("test-key", 5, 10000);
+      checkRateLimit("test-key", 5, 10_000);
 
       const cleaned = cleanupExpiredLimits();
       expect(cleaned).toBe(0);
