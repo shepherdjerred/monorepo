@@ -1,13 +1,13 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const isCI = process.env["CI"] === "true";
+const isCI = process.env.CI === "true";
 
 export default defineConfig({
   testDir: "./test",
   fullyParallel: true,
   forbidOnly: isCI,
   retries: 1,
-  workers: "200%",
+  workers: 2,
   reporter: isCI ? "github" : "html",
   use: {
     baseURL: "http://localhost:4321",
@@ -81,9 +81,9 @@ export default defineConfig({
   webServer: {
     // Use bun for both local and CI (CI container now has Bun installed)
     // Add --host in CI to bind to all interfaces (not just localhost)
-    command: process.env["CI"] ? "bun run preview -- --host" : "bun run preview",
+    command: isCI ? "bun run preview -- --host" : "bun run preview",
     url: "http://localhost:4321",
     timeout: 120 * 1000,
-    reuseExistingServer: !process.env["CI"],
+    reuseExistingServer: !isCI,
   },
 });

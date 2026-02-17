@@ -4,16 +4,17 @@ export default [
   { ignores: ["**/*.astro"] },
   ...recommended({ tsconfigRootDir: import.meta.dirname }),
   {
-    files: ["astro.config.*"],
+    files: ["astro.config.*", "playwright.config.*"],
     rules: {
       "no-restricted-globals": [
         "error",
         {
           name: "Bun",
-          message: "Bun globals are not available in Astro config files (Vite SSR evaluator). Use Node.js APIs instead (e.g. readFileSync from 'node:fs').",
+          message: "Bun globals are not available in Astro/Playwright config files. Use Node.js APIs instead.",
         },
       ],
       "no-restricted-imports": "off",
+      "custom-rules/prefer-bun-apis": "off",
     },
   },
 ];
