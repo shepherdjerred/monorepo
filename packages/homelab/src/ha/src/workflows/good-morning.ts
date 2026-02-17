@@ -6,6 +6,7 @@ import {
   runSequentialWithDelay,
   repeat,
   runIf,
+  verifyAfterDelay,
   wait,
   withTimeout,
 } from "../util.ts";
@@ -194,7 +195,19 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                     ),
                 ]),
               () => hass.call.scene.turn_on({ entity_id: bedroomScene.entity_id, transition: 3 }),
-              () => hass.call.switch.turn_on({ entity_id: mainBathroomLight.entity_id }),
+              () =>
+                (async () => {
+                  await hass.call.switch.turn_on({ entity_id: mainBathroomLight.entity_id });
+                  verifyAfterDelay({
+                    entityId: mainBathroomLight.entity_id,
+                    workflowName: "switch_on",
+                    getActualState: () => mainBathroomLight.state,
+                    check: "on",
+                    delay: { amount: 10, unit: "s" },
+                    logger,
+                    hass,
+                  });
+                })(),
             ]),
           ),
       ]),
@@ -210,7 +223,7 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
         runParallel([
           () =>
             runIf(personShuxin.state === "not_home", () =>
-              openCoversWithDelay(hass, ["cover.bedroom_left", "cover.bedroom_right"]),
+              openCoversWithDelay(hass, logger, ["cover.bedroom_left", "cover.bedroom_right"]),
             ),
           () => hass.call.scene.turn_on({ entity_id: bedroomBrightScene.entity_id, transition: 60 }),
           () =>
@@ -251,7 +264,19 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                   },
                 ),
             ]),
-          () => hass.call.switch.turn_on({ entity_id: entrywayLight.entity_id }),
+          () =>
+            (async () => {
+              await hass.call.switch.turn_on({ entity_id: entrywayLight.entity_id });
+              verifyAfterDelay({
+                entityId: entrywayLight.entity_id,
+                workflowName: "switch_on",
+                getActualState: () => entrywayLight.state,
+                check: "on",
+                delay: { amount: 10, unit: "s" },
+                logger,
+                hass,
+              });
+            })(),
         ]),
       ),
       { amount: 5, unit: "m" },

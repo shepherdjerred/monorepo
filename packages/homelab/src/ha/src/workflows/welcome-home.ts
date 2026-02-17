@@ -1,6 +1,6 @@
 import type { TServiceParams } from "@digital-alchemy/core";
 import type { ENTITY_STATE } from "@digital-alchemy/hass";
-import { shouldStopCleaning, withTimeout } from "../util.ts";
+import { shouldStopCleaning, verifyAfterDelay, withTimeout } from "../util.ts";
 import { instrumentWorkflow } from "../metrics.ts";
 
 export function welcomeHome({ hass, logger }: TServiceParams) {
@@ -47,8 +47,31 @@ export function welcomeHome({ hass, logger }: TServiceParams) {
           //   logger.debug("Living room climate not available, skipping");
           // }
 
+          // Verify climate
+          verifyAfterDelay({
+            entityId: bedroomHeater.entity_id,
+            workflowName: "climate_welcome_home",
+            getActualState: () => z.coerce.string().catch("unknown").parse(bedroomHeater.attributes["temperature"]),
+            check: (actual) => actual === "22",
+            delay: { amount: 30, unit: "s" },
+            description: "target 22°C",
+            logger,
+            hass,
+          });
+
           logger.debug("Turning on entryway light");
           await hass.call.switch.turn_on({ entity_id: entrywayLight.entity_id });
+
+          // Verify entryway light
+          verifyAfterDelay({
+            entityId: entrywayLight.entity_id,
+            workflowName: "switch_on",
+            getActualState: () => entrywayLight.state,
+            check: "on",
+            delay: { amount: 10, unit: "s" },
+            logger,
+            hass,
+          });
 
           logger.debug("Setting living room scene to bright");
           await hass.call.scene.turn_on({ entity_id: livingRoomScene.entity_id });

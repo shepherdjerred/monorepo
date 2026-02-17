@@ -1,5 +1,5 @@
 import type { TServiceParams } from "@digital-alchemy/core";
-import { runIf, runParallel, withTimeout } from "../util.ts";
+import { runIf, runParallel, verifyAfterDelay, withTimeout } from "../util.ts";
 import { instrumentWorkflow } from "../metrics.ts";
 import { z } from "zod";
 
@@ -125,6 +125,30 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
     // }
 
     await runParallel(tasks);
+
+    verifyAfterDelay({
+      entityId: bedroomHeater.entity_id,
+      workflowName: "climate_bedroom",
+      getActualState: () => z.coerce.string().catch("unknown").parse(bedroomHeater.attributes["temperature"]),
+      check: (actual) => actual === bedroomTemp.toString(),
+      delay: { amount: 30, unit: "s" },
+      description: `target ${bedroomTemp.toString()}°C`,
+      logger,
+      hass,
+    });
+
+    if (!isPcGeneratingHeat()) {
+      verifyAfterDelay({
+        entityId: officeHeater.entity_id,
+        workflowName: "climate_office",
+        getActualState: () => z.coerce.string().catch("unknown").parse(officeHeater.attributes["temperature"]),
+        check: (actual) => actual === officeTemp.toString(),
+        delay: { amount: 30, unit: "s" },
+        description: `target ${officeTemp.toString()}°C`,
+        logger,
+        hass,
+      });
+    }
   }
 
   /**

@@ -15,7 +15,7 @@
     "build:shared": "cd shared && bun run build",
     "build:client": "cd client && bun run build",
     "build:frontend": "cd frontend && bun run build",
-    "typecheck": "bun run --filter='./web/*' typecheck",
+    "typecheck": "bun run --filter='*' typecheck",
     "lint": "concurrently -n shared,client,frontend -c blue,green,yellow \"bun run lint:shared\" \"bun run lint:client\" \"bun run lint:frontend\"",
     "lint:shared": "cd shared && bun run lint",
     "lint:client": "cd client && bun run lint",

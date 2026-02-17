@@ -1,6 +1,6 @@
 import type { TServiceParams } from "@digital-alchemy/core";
 import { z } from "zod";
-import { wait, openCoversWithDelay, closeCoversWithDelay, withTimeout } from "../util.ts";
+import { wait, openCoversWithDelay, closeCoversWithDelay, verifyAfterDelay, withTimeout } from "../util.ts";
 import { instrumentWorkflow } from "../metrics.ts";
 
 export function goodNight({ hass, logger, context }: TServiceParams) {
@@ -43,6 +43,17 @@ export function goodNight({ hass, logger, context }: TServiceParams) {
               entity_id: bedroomHeater.entity_id,
               hvac_mode: "heat",
               temperature: 22,
+            });
+
+            verifyAfterDelay({
+              entityId: bedroomHeater.entity_id,
+              workflowName: "climate_good_night",
+              getActualState: () => z.coerce.string().catch("unknown").parse(bedroomHeater.attributes["temperature"]),
+              check: (actual) => actual === "22",
+              delay: { amount: 30, unit: "s" },
+              description: "target 22°C",
+              logger,
+              hass,
             });
             // TODO: Re-enable when living room thermostat is back online
             // try {
@@ -87,10 +98,10 @@ export function goodNight({ hass, logger, context }: TServiceParams) {
             }
 
             logger.debug("Closing bedroom covers");
-            await closeCoversWithDelay(hass, ["cover.bedroom_left", "cover.bedroom_right"]);
+            await closeCoversWithDelay(hass, logger, ["cover.bedroom_left", "cover.bedroom_right"]);
 
             logger.debug("Opening living room covers");
-            await openCoversWithDelay(hass, [
+            await openCoversWithDelay(hass, logger, [
               "cover.living_room_left",
               "cover.living_room_right",
               "cover.tv_left",

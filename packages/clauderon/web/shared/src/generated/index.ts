@@ -634,6 +634,16 @@ export interface Session {
 	pr_check_status?: CheckStatus;
 	/** PR review decision (approval status) */
 	pr_review_decision?: ReviewDecision;
+	/** PR review status (approved, changes requested, etc.) */
+	pr_review_status?: PrReviewStatus;
+	/** Available merge methods for the repository */
+	pr_merge_methods?: MergeMethod[];
+	/** Default merge method based on repository settings */
+	pr_default_merge_method?: MergeMethod;
+	/** Whether to delete branch after merge (from repository settings) */
+	pr_delete_branch_on_merge?: boolean;
+	/** Whether this PR can be merged (all requirements met) */
+	can_merge_pr: boolean;
 	/** Current Claude agent working status (from hooks) */
 	claude_status: ClaudeWorkingStatus;
 	/** Timestamp of last Claude status update */
@@ -684,6 +694,36 @@ export interface UpdateCredentialRequest {
 	service_id: string;
 	/** The credential token/key value */
 	value: string;
+}
+
+/** PR review status */
+export enum PrReviewStatus {
+	/** Review status is unknown or not applicable */
+	Unknown = "Unknown",
+	/** Review is required but not yet provided */
+	ReviewRequired = "ReviewRequired",
+	/** Reviewers have requested changes */
+	ChangesRequested = "ChangesRequested",
+	/** PR has been approved */
+	Approved = "Approved",
+}
+
+/** Git merge method for pull requests */
+export enum MergeMethod {
+	/** Create a merge commit */
+	Merge = "Merge",
+	/** Squash commits and merge */
+	Squash = "Squash",
+	/** Rebase and merge */
+	Rebase = "Rebase",
+}
+
+/** Request to merge a pull request */
+export interface MergePrRequest {
+	/** Merge method to use */
+	method: MergeMethod;
+	/** Whether to delete the branch after merge */
+	delete_branch: boolean;
 }
 
 /** Response from uploading an image file */

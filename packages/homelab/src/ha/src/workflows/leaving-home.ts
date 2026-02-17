@@ -1,6 +1,7 @@
 import type { TServiceParams } from "@digital-alchemy/core";
 import type { ENTITY_STATE } from "@digital-alchemy/hass";
-import { shouldStartCleaning, startRoombaWithVerification, withTimeout } from "../util.ts";
+import { z } from "zod";
+import { shouldStartCleaning, startRoombaWithVerification, verifyAfterDelay, withTimeout } from "../util.ts";
 import { instrumentWorkflow } from "../metrics.ts";
 
 export function leavingHome({ hass, logger }: TServiceParams) {
@@ -39,6 +40,18 @@ export function leavingHome({ hass, logger }: TServiceParams) {
           //   logger.debug("Living room climate not available, skipping");
           // }
 
+          // Set climate DSC
+          verifyAfterDelay({
+            entityId: bedroomHeater.entity_id,
+            workflowName: "climate_leaving_home",
+            getActualState: () => z.coerce.string().catch("unknown").parse(bedroomHeater.attributes["temperature"]),
+            check: (actual) => actual === "20",
+            delay: { amount: 30, unit: "s" },
+            description: "target 20°C",
+            logger,
+            hass,
+          });
+
           // turn off all lights
           logger.debug("Turning off all lights");
           const lights = hass.refBy.domain("light");
@@ -46,6 +59,19 @@ export function leavingHome({ hass, logger }: TServiceParams) {
             await hass.call.light.turn_off({ entity_id: light.entity_id });
           }
           logger.debug("All lights turned off");
+
+          // Verify lights are off
+          for (const light of lights) {
+            verifyAfterDelay({
+              entityId: light.entity_id,
+              workflowName: "light_off",
+              getActualState: () => light.state,
+              check: "off",
+              delay: { amount: 10, unit: "s" },
+              logger,
+              hass,
+            });
+          }
 
           if (shouldStartCleaning(roomba.state)) {
             logger.debug("Commanding Roomba to start cleaning");

@@ -1,22 +1,16 @@
 import type { TServiceParams } from "@digital-alchemy/core";
 import type { ByIdProxy, PICK_ENTITY } from "@digital-alchemy/hass";
 import { match } from "ts-pattern";
+import { DscVerificationError, TimeoutError } from "./errors.ts";
 import { instrumentWorkflow } from "./metrics.ts";
+import { Sentry } from "./sentry.ts";
+
+export { TimeoutError } from "./errors.ts";
 
 export type Time = {
   amount: number;
   unit?: "ms" | "s" | "m";
 };
-
-/**
- * Custom error class for timeout failures
- */
-export class TimeoutError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "TimeoutError";
-  }
-}
 
 /**
  * Convert Time to milliseconds
@@ -36,12 +30,6 @@ export function wait({ amount, unit = "ms" }: Time) {
 /**
  * Wrap a promise with a timeout. If the promise doesn't resolve/reject within
  * the specified time, it will reject with a TimeoutError.
- *
- * @param promise - The promise to wrap
- * @param timeout - The timeout configuration
- * @param operationName - Optional name for the operation (used in error message)
- * @returns The result of the promise if it completes in time
- * @throws TimeoutError if the timeout is exceeded
  */
 export function withTimeout<T>(promise: Promise<T>, timeout: Time, operationName?: string): Promise<T> {
   const timeoutMs = timeToMs(timeout);
@@ -59,10 +47,6 @@ export function withTimeout<T>(promise: Promise<T>, timeout: Time, operationName
 
 /**
  * Wrap a promise factory with a timeout. Useful for lazy evaluation.
- *
- * @param promiseFactory - Function that returns a promise
- * @param timeout - The timeout configuration
- * @param operationName - Optional name for the operation
  */
 export function withTimeoutFactory<T>(
   promiseFactory: () => Promise<T>,
@@ -72,7 +56,50 @@ export function withTimeoutFactory<T>(
   return () => withTimeout(promiseFactory(), timeout, operationName);
 }
 
-export async function openCoversWithDelay(hass: TServiceParams["hass"], covers: PICK_ENTITY<"cover">[]) {
+type DscCheck = {
+  entityId: string;
+  workflowName: string;
+  getActualState: () => string;
+  check: string | ((actual: string) => boolean);
+  delay: Time;
+  logger: TServiceParams["logger"];
+  hass: TServiceParams["hass"];
+  description?: string;
+};
+
+export function verifyAfterDelay(opts: DscCheck): void {
+  setTimeout(() => {
+    void instrumentWorkflow(`dsc_${opts.workflowName}`, async () => {
+      const actual = opts.getActualState();
+      const passed = typeof opts.check === "string" ? actual === opts.check : opts.check(actual);
+
+      if (passed) {
+        opts.logger.info(`DSC passed: ${opts.entityId} state='${actual}'`);
+        return;
+      }
+
+      const expected = typeof opts.check === "string" ? opts.check : (opts.description ?? "predicate");
+      const error = new DscVerificationError(opts.entityId, expected, actual, opts.workflowName);
+      opts.logger.error(error.message);
+
+      Sentry.withScope((scope) => {
+        scope.setTag("entity_id", opts.entityId);
+        scope.setTag("workflow", opts.workflowName);
+        scope.setContext("dsc", { entityId: opts.entityId, expected, actual, workflowName: opts.workflowName });
+        Sentry.captureException(error);
+      });
+
+      await opts.hass.call.notify.notify({ title: "Device Verification Failed", message: error.message });
+      throw error;
+    });
+  }, timeToMs(opts.delay));
+}
+
+export async function openCoversWithDelay(
+  hass: TServiceParams["hass"],
+  logger: TServiceParams["logger"],
+  covers: PICK_ENTITY<"cover">[],
+) {
   for (const cover of covers) {
     await withTimeout(
       hass.call.cover.open_cover({ entity_id: cover }),
@@ -81,9 +108,25 @@ export async function openCoversWithDelay(hass: TServiceParams["hass"], covers: 
     );
     await wait({ amount: 1, unit: "s" });
   }
+
+  for (const cover of covers) {
+    verifyAfterDelay({
+      entityId: cover,
+      workflowName: "cover_open",
+      getActualState: () => hass.refBy.id(cover).state,
+      check: "open",
+      delay: { amount: 60, unit: "s" },
+      logger,
+      hass,
+    });
+  }
 }
 
-export async function closeCoversWithDelay(hass: TServiceParams["hass"], covers: PICK_ENTITY<"cover">[]) {
+export async function closeCoversWithDelay(
+  hass: TServiceParams["hass"],
+  logger: TServiceParams["logger"],
+  covers: PICK_ENTITY<"cover">[],
+) {
   for (const cover of covers) {
     await withTimeout(
       hass.call.cover.close_cover({ entity_id: cover }),
@@ -91,6 +134,18 @@ export async function closeCoversWithDelay(hass: TServiceParams["hass"], covers:
       `close cover ${cover}`,
     );
     await wait({ amount: 1, unit: "s" });
+  }
+
+  for (const cover of covers) {
+    verifyAfterDelay({
+      entityId: cover,
+      workflowName: "cover_close",
+      getActualState: () => hass.refBy.id(cover).state,
+      check: "closed",
+      delay: { amount: 60, unit: "s" },
+      logger,
+      hass,
+    });
   }
 }
 
@@ -141,25 +196,15 @@ export function startRoombaWithVerification(
 ) {
   const delay = options?.delayMinutes ?? 3;
 
-  setTimeout(() => {
-    void instrumentWorkflow("roomba_verification", async () => {
-      const state = roomba.state;
-      if (state === "cleaning") {
-        logger.info("Roomba verification passed: cleaning in progress");
-        return;
-      }
-
-      const message = `Roomba failed to start cleaning. Expected 'cleaning' but got '${state}'`;
-      logger.error(message);
-
-      await hass.call.notify.notify({
-        title: "Roomba Alert",
-        message,
-      });
-
-      throw new Error(message);
-    });
-  }, delay * 60 * 1000);
+  verifyAfterDelay({
+    entityId: "vacuum.roomba",
+    workflowName: "roomba_start",
+    getActualState: () => roomba.state,
+    check: "cleaning",
+    delay: { amount: delay, unit: "m" },
+    logger,
+    hass,
+  });
 }
 
 export function runIf(condition: boolean, promiseFactory: () => Promise<unknown>): Promise<unknown> {

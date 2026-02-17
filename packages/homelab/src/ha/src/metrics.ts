@@ -1,5 +1,7 @@
 import { Counter, Histogram, Gauge, Registry } from "prom-client";
 import { z } from "zod";
+import { DscVerificationError } from "./errors.ts";
+import { Sentry } from "./sentry.ts";
 
 /**
  * Prometheus metrics registry
@@ -87,6 +89,12 @@ export async function instrumentWorkflow<T>(workflowName: string, fn: () => Prom
     return undefined;
   }
 
+  Sentry.addBreadcrumb({
+    category: "workflow",
+    message: `Starting workflow: ${workflowName}`,
+    level: "info",
+  });
+
   const end = workflowDurationSeconds.startTimer({ workflow: workflowName });
   workflowsInProgress.inc({ workflow: workflowName });
 
@@ -94,6 +102,13 @@ export async function instrumentWorkflow<T>(workflowName: string, fn: () => Prom
     const result = await fn();
     workflowExecutionsTotal.inc({ workflow: workflowName, status: "success" });
     workflowLastExecutionTimestamp.set({ workflow: workflowName, status: "success" }, Date.now() / 1000);
+
+    Sentry.addBreadcrumb({
+      category: "workflow",
+      message: `Workflow succeeded: ${workflowName}`,
+      level: "info",
+    });
+
     return result;
   } catch (error: unknown) {
     workflowExecutionsTotal.inc({ workflow: workflowName, status: "failure" });
@@ -105,6 +120,23 @@ export async function instrumentWorkflow<T>(workflowName: string, fn: () => Prom
       .catch(() => "Unknown")
       .parse(error);
     workflowErrorsTotal.inc({ workflow: workflowName, error_type: errorType });
+
+    Sentry.withScope((scope) => {
+      scope.setTag("workflow", workflowName);
+      scope.setTag("error_type", errorType);
+
+      if (error instanceof DscVerificationError) {
+        scope.setTag("entity_id", error.entityId);
+        scope.setContext("dsc", {
+          entityId: error.entityId,
+          expectedState: error.expectedState,
+          actualState: error.actualState,
+          workflowName: error.workflowName,
+        });
+      }
+
+      Sentry.captureException(error);
+    });
 
     throw error;
   } finally {
