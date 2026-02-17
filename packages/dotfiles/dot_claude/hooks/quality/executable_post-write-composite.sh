@@ -68,7 +68,7 @@ if [[ "$TOTAL_COST" -gt 0 ]]; then
 
   # Build deduction entries and update budget
   DEDUCTION_ENTRIES=""
-  while IFS='|' read -r name cost severity; do
+  while IFS='|' read -r name cost _severity; do
     [[ -z "$name" ]] && continue
     DEDUCTION_ENTRIES="${DEDUCTION_ENTRIES}{\"pattern\":\"${name}\",\"cost\":${cost},\"file\":\"${FILE_PATH}\"},"
   done <<< "$(printf '%b' "$FINDINGS")"
@@ -100,7 +100,7 @@ json.dump(budget, sys.stdout)
 
   # --- [7] Hyperbolic: vivid consequences ---
   CONSEQUENCES=""
-  while IFS='|' read -r name cost severity; do
+  while IFS='|' read -r name _cost _severity; do
     [[ -z "$name" ]] && continue
     case "$name" in
       "as any") CONSEQUENCES="${CONSEQUENCES}\n- \`as any\` → A runtime crash in production when a user hits a code path you assumed was safe. The type system existed to prevent this." ;;

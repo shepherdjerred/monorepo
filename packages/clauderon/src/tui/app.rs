@@ -382,7 +382,10 @@ pub struct DirectoryPickerState {
 
 /// Create dialog state for managing session creation UI.
 #[derive(Debug, Clone)]
-#[expect(clippy::struct_excessive_bools, reason = "dialog has many independent boolean option fields")]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "dialog has many independent boolean option fields"
+)]
 pub struct CreateDialogState {
     /// Initial prompt text for the session.
     pub prompt: String,
@@ -1016,7 +1019,10 @@ impl Default for CreateDialogState {
 }
 
 /// Main application state
-#[expect(clippy::struct_excessive_bools, reason = "application state has many independent boolean flags")]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "application state has many independent boolean flags"
+)]
 pub struct App {
     /// Current mode/view
     pub mode: AppMode,
@@ -1265,8 +1271,7 @@ impl App {
                     self.mode = AppMode::RecreateConfirm;
                 }
             } else {
-                self.status_message =
-                    Some("Health info not available - try refreshing".to_owned());
+                self.status_message = Some("Health info not available - try refreshing".to_owned());
             }
         }
     }
@@ -1981,9 +1986,8 @@ impl App {
             }
 
             self.mode = AppMode::CopyMode;
-            self.status_message = Some(
-                "Copy mode | hjkl: move | v: select | y: yank | ?: help | q: exit".to_owned(),
-            );
+            self.status_message =
+                Some("Copy mode | hjkl: move | v: select | y: yank | ?: help | q: exit".to_owned());
         }
     }
 

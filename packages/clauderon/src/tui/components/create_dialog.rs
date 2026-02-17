@@ -43,7 +43,10 @@ pub fn is_k8s_proxy_configured() -> bool {
 /// Calculate layout for the create dialog.
 /// Returns (total_height, constraints) for consistent sizing between ui.rs and render().
 #[must_use]
-#[expect(clippy::cast_possible_truncation, reason = "UI layout values are small, truncation is safe")]
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "UI layout values are small, truncation is safe"
+)]
 pub fn calculate_layout(dialog: &CreateDialogState) -> (u16, Vec<Constraint>) {
     // Dynamic prompt height: min 5 lines, max 15
     let prompt_lines = dialog.prompt.lines().count().max(1);
@@ -566,7 +569,13 @@ fn render_text_field(frame: &mut Frame<'_>, label: &str, value: &str, focused: b
     frame.render_widget(paragraph, area);
 }
 
-fn render_repo_path_field(frame: &mut Frame<'_>, label: &str, value: &str, focused: bool, area: Rect) {
+fn render_repo_path_field(
+    frame: &mut Frame<'_>,
+    label: &str,
+    value: &str,
+    focused: bool,
+    area: Rect,
+) {
     let style = if focused {
         Style::default().fg(Color::Yellow)
     } else {
@@ -809,7 +818,13 @@ fn render_backend_field(
     frame.render_widget(paragraph, area);
 }
 
-fn render_checkbox_field(frame: &mut Frame<'_>, label: &str, checked: bool, focused: bool, area: Rect) {
+fn render_checkbox_field(
+    frame: &mut Frame<'_>,
+    label: &str,
+    checked: bool,
+    focused: bool,
+    area: Rect,
+) {
     let style = if focused {
         Style::default().fg(Color::Yellow)
     } else {

@@ -1,3 +1,4 @@
+/// <reference path="../types.d.ts" />
 /**
  * JSX Accessibility (a11y) linting configuration
  */

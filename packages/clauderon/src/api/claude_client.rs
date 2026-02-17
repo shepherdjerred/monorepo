@@ -57,7 +57,10 @@ impl ClaudeApiClient {
     ///
     /// Panics if the HTTP client cannot be built with the default configuration.
     #[must_use]
-    #[expect(clippy::expect_used, reason = "default reqwest Client::builder configuration is infallible")]
+    #[expect(
+        clippy::expect_used,
+        reason = "default reqwest Client::builder configuration is infallible"
+    )]
     pub fn new() -> Self {
         let http_client = Client::builder()
             .timeout(Duration::from_secs(10))

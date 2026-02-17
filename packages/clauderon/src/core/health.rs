@@ -319,7 +319,8 @@ impl HealthService {
                         recommended_action: Some(AvailableAction::Cleanup),
                         description: "The resource was deleted externally.".to_owned(),
                         details: "The backend resource was deleted outside clauderon. \
-                            Any uncommitted work and Claude conversation history has been lost.".to_owned(),
+                            Any uncommitted work and Claude conversation history has been lost."
+                            .to_owned(),
                         data_safe: false,
                     }
                 }
@@ -452,7 +453,10 @@ mod tests {
         // Register the worktree so health check doesn't return WorktreeMissing
         git.register_worktree("/test/worktree").await;
 
-        #[expect(clippy::clone_on_ref_ptr, reason = "clone needed for implicit coercion to Arc<dyn Trait>")]
+        #[expect(
+            clippy::clone_on_ref_ptr,
+            reason = "clone needed for implicit coercion to Arc<dyn Trait>"
+        )]
         let health_service = HealthService::new(
             git.clone(),
             mock_backend.clone(),
@@ -475,7 +479,10 @@ mod tests {
         let git = Arc::new(MockGitBackend::new());
         let mock_backend = Arc::new(MockExecutionBackend::new());
 
-        #[expect(clippy::clone_on_ref_ptr, reason = "clone needed for implicit coercion to Arc<dyn Trait>")]
+        #[expect(
+            clippy::clone_on_ref_ptr,
+            reason = "clone needed for implicit coercion to Arc<dyn Trait>"
+        )]
         let health_service = HealthService::new(
             git.clone(),
             mock_backend.clone(),
@@ -502,7 +509,10 @@ mod tests {
         // Register the worktree so health check proceeds to check backend state
         git.register_worktree("/test/worktree").await;
 
-        #[expect(clippy::clone_on_ref_ptr, reason = "clone needed for implicit coercion to Arc<dyn Trait>")]
+        #[expect(
+            clippy::clone_on_ref_ptr,
+            reason = "clone needed for implicit coercion to Arc<dyn Trait>"
+        )]
         let health_service = HealthService::new(
             git.clone(),
             mock_backend.clone(),

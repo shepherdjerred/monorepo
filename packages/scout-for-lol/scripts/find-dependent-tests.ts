@@ -5,7 +5,6 @@
  */
 
 import ts from "typescript";
-import { join, resolve } from "path";
 
 const args = Bun.argv.slice(2);
 if (args.length < 2) {
@@ -21,11 +20,11 @@ const packageDir = args[0]!;
 const changedFiles = args.slice(1);
 
 // Convert to absolute paths
-const repoRoot = resolve(join(import.meta.dir, ".."));
-const absolutePackageDir = resolve(join(repoRoot, packageDir));
+const repoRoot = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
+const absolutePackageDir = `${repoRoot}/${packageDir}`;
 
 // Find tsconfig.json
-const tsconfigPath = join(absolutePackageDir, "tsconfig.json");
+const tsconfigPath = `${absolutePackageDir}/tsconfig.json`;
 if (!(await Bun.file(tsconfigPath).exists())) {
   console.error(`No tsconfig.json found at ${tsconfigPath}`);
   process.exit(1);
@@ -60,7 +59,7 @@ const program = ts.createProgram({
 // Normalize changed files to absolute paths
 const absoluteChangedFiles = changedFiles
   .filter((f) => f.startsWith(packageDir))
-  .map((f) => resolve(join(repoRoot, f)));
+  .map((f) => `${repoRoot}/${f}`);
 
 if (absoluteChangedFiles.length === 0) {
   console.error("No relevant files changed in this package.");
@@ -98,30 +97,24 @@ for (const sourceFile of sourceFiles) {
   // Get all import declarations
   const imports = new Set<string>();
 
+  function addResolvedImport(moduleSpecifier: ts.Expression | undefined) {
+    if (moduleSpecifier && ts.isStringLiteral(moduleSpecifier)) {
+      const resolved = resolveImport(filePath, moduleSpecifier.text);
+      if (resolved !== null) {
+        imports.add(resolved);
+      }
+    }
+  }
+
   function visit(node: ts.Node) {
     // Handle import declarations
     if (ts.isImportDeclaration(node)) {
-      const moduleSpecifier = node.moduleSpecifier;
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- TypeScript API can return undefined in edge cases
-      if (moduleSpecifier && ts.isStringLiteral(moduleSpecifier)) {
-        const importPath = moduleSpecifier.text;
-        const resolved = resolveImport(filePath, importPath);
-        if (resolved !== null) {
-          imports.add(resolved);
-        }
-      }
+      addResolvedImport(node.moduleSpecifier);
     }
 
     // Handle export declarations
     if (ts.isExportDeclaration(node)) {
-      const moduleSpecifier = node.moduleSpecifier;
-      if (moduleSpecifier && ts.isStringLiteral(moduleSpecifier)) {
-        const importPath = moduleSpecifier.text;
-        const resolved = resolveImport(filePath, importPath);
-        if (resolved !== null) {
-          imports.add(resolved);
-        }
-      }
+      addResolvedImport(node.moduleSpecifier);
     }
 
     // Handle dynamic imports: import('...')

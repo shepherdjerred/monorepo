@@ -15,13 +15,13 @@ mkdir -p "$SCREENSHOTS_DIR"
 generate_svg() {
     local command=$1
     local output_file=$2
-    local temp_file=$(mktemp)
-    local temp_html=$(mktemp)
+    local temp_file
+    temp_file=$(mktemp)
 
     echo "Generating $output_file..."
 
     # Capture command output with ANSI codes
-    eval "$command" 2>&1 > "$temp_file"
+    eval "$command" > "$temp_file" 2>&1
 
     # Convert ANSI to SVG using Python
     python3 - "$temp_file" "$SCREENSHOTS_DIR/$output_file" <<'PYTHON'

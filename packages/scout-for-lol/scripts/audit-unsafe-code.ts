@@ -14,8 +14,7 @@
  * Run with: bun run scripts/audit-unsafe-code.ts
  */
 
-import { $ } from "bun";
-import { glob } from "glob";
+import { Glob } from "bun";
 
 type Finding = {
   file: string;
@@ -54,37 +53,43 @@ const PATTERNS = {
   jsonParse: /JSON\.parse\(/,
 };
 
-// Files/directories to exclude
-const EXCLUDES = [
-  "**/node_modules/**",
-  "**/dist/**",
-  "**/build/**",
-  "**/*.test.ts",
-  "**/*.integration.test.ts",
-  "**/generated/**",
-  "**/assets/**",
+// Directories to always exclude
+const EXCLUDED_DIRS = [
+  "/node_modules/",
+  "/dist/",
+  "/build/",
+  "/generated/",
+  "/assets/",
 ];
 
-// Files to exclude only for certain patterns (tests are ok for some patterns)
-const TEST_PATTERNS = ["**/*.test.ts", "**/*.integration.test.ts"];
+function isTestFile(filePath: string): boolean {
+  return (
+    filePath.endsWith(".test.ts") || filePath.endsWith(".integration.test.ts")
+  );
+}
+
+function isExcluded(filePath: string, includeTests: boolean): boolean {
+  if (EXCLUDED_DIRS.some((dir) => filePath.includes(dir))) {
+    return true;
+  }
+  if (!includeTests && isTestFile(filePath)) {
+    return true;
+  }
+  return false;
+}
 
 async function searchPattern(
   pattern: RegExp,
-  includeTests: boolean = false,
+  includeTests = false,
 ): Promise<CategoryResult> {
-  const excludePatterns = includeTests
-    ? EXCLUDES.filter(
-        (e) => !TEST_PATTERNS.some((t) => e.includes(t.replace("**/*", ""))),
-      )
-    : EXCLUDES;
-
-  const files = await glob(`${PACKAGES_DIR}/**/*.ts`, {
-    ignore: excludePatterns,
-  });
-
+  const glob = new Glob(`${PACKAGES_DIR}/**/*.ts`);
   const findings: Finding[] = [];
 
-  for (const file of files) {
+  for await (const file of glob.scan({ dot: false })) {
+    if (isExcluded(file, includeTests)) {
+      continue;
+    }
+
     const content = await Bun.file(file).text();
     const lines = content.split("\n");
 
@@ -149,10 +154,16 @@ function getRiskLevel(category: string, count: number): string {
   };
 
   const threshold = thresholds[category];
-  if (!threshold) return "⚪";
+  if (!threshold) {
+    return "⚪";
+  }
 
-  if (count <= threshold.low) return "🟢";
-  if (count <= threshold.medium) return "🟡";
+  if (count <= threshold.low) {
+    return "🟢";
+  }
+  if (count <= threshold.medium) {
+    return "🟡";
+  }
   return "🔴";
 }
 
@@ -226,7 +237,9 @@ function printResults(results: AuditResults, verbose: boolean): void {
   }
   console.log("└─────────────────────────────────────┴───────┴──────┘\n");
 
-  console.log(`📈 Zod Safety Ratio: ${zodParseRatio}% safeParse usage`);
+  console.log(
+    `📈 Zod Safety Ratio: ${zodParseRatio.toString()}% safeParse usage`,
+  );
   if (zodParseRatio >= 60) {
     console.log("   ✅ Good: Majority of parsing uses safeParse\n");
   } else if (zodParseRatio >= 40) {
@@ -258,16 +271,18 @@ function printResults(results: AuditResults, verbose: boolean): void {
 
     for (const [name, result] of categories) {
       if (result.findings.length > 0) {
-        console.log(`\n📁 ${name} (${result.count}):`);
+        console.log(`\n📁 ${name} (${result.count.toString()}):`);
         console.log("─".repeat(60));
         for (const finding of result.findings.slice(0, 20)) {
-          console.log(`  ${finding.file}:${finding.line}`);
+          console.log(`  ${finding.file}:${finding.line.toString()}`);
           console.log(
             `    ${finding.content.slice(0, 80)}${finding.content.length > 80 ? "..." : ""}`,
           );
         }
         if (result.findings.length > 20) {
-          console.log(`  ... and ${result.findings.length - 20} more`);
+          console.log(
+            `  ... and ${(result.findings.length - 20).toString()} more`,
+          );
         }
       }
     }

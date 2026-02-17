@@ -122,7 +122,6 @@ const user1Id = testAccountId("100000000010");
 const user2Id = testAccountId("200000000020");
 
 describe("Competition Leave - Integration Tests", () => {
-
   // ==========================================================================
   // Test 1: Leave joined competition
   // ==========================================================================
@@ -306,7 +305,6 @@ describe("Competition Leave - Integration Tests", () => {
       });
     }).toThrow("Cannot rejoin a competition after leaving");
   });
-
 });
 
 describe("Competition Leave - Edge Cases", () => {
@@ -453,7 +451,6 @@ describe("Competition Leave - Edge Cases", () => {
     expect(leftParticipant.joinedAt?.getTime()).toBe(joinedAt?.getTime());
     expect(leftParticipant.leftAt).not.toBeNull();
   });
-
 });
 
 describe("Competition Leave - Multi-User Scenarios", () => {

@@ -3,7 +3,6 @@ import type {
   CompetitionId,
   CompetitionWithCriteria,
   LeaguePuuid,
-  Rank,
   Ranks,
   RawMatch,
 } from "@scout-for-lol/data/index";

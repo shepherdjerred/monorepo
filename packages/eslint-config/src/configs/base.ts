@@ -1,3 +1,4 @@
+/// <reference path="../types.d.ts" />
 /**
  * Base ESLint configuration with core rules and TypeScript support
  */

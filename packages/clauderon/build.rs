@@ -1,4 +1,8 @@
-#![allow(clippy::expect_used, clippy::panic, reason = "build scripts use panic for error handling")]
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    reason = "build scripts use panic for error handling"
+)]
 
 use std::path::PathBuf;
 use std::process::Command;

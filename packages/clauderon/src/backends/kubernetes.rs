@@ -459,10 +459,7 @@ impl KubernetesBackend {
                     let mut labels = BTreeMap::new();
                     labels.insert("clauderon.io/managed".to_owned(), "true".to_owned());
                     labels.insert("clauderon.io/type".to_owned(), "workspace".to_owned());
-                    labels.insert(
-                        "clauderon.io/session-id".to_owned(),
-                        session_id.to_owned(),
-                    );
+                    labels.insert("clauderon.io/session-id".to_owned(), session_id.to_owned());
                     labels
                 }),
                 ..Default::default()
@@ -1569,10 +1566,7 @@ fi"#,
 
         let mut labels = BTreeMap::new();
         labels.insert("clauderon.io/managed".to_owned(), "true".to_owned());
-        labels.insert(
-            "clauderon.io/session-id".to_owned(),
-            session_id.to_owned(),
-        );
+        labels.insert("clauderon.io/session-id".to_owned(), session_id.to_owned());
         labels.insert(
             "clauderon.io/session-name".to_owned(),
             session_name.to_owned(),

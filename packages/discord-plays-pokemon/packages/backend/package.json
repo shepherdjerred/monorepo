@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "typecheck": "bunx tsc --noEmit",
     "build": "bunx tsc",
     "watch": "bunx tsc --watch",
     "dev": "bun --watch src/index.ts",

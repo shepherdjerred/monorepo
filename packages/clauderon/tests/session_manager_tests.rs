@@ -885,11 +885,7 @@ async fn test_update_metadata_by_uuid() {
 
     // Update by UUID instead of name
     manager
-        .update_metadata(
-            &session.id.to_string(),
-            Some("UUID Title".to_owned()),
-            None,
-        )
+        .update_metadata(&session.id.to_string(), Some("UUID Title".to_owned()), None)
         .await
         .unwrap();
 

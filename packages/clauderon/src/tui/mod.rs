@@ -1,5 +1,9 @@
 // Allow missing documentation for TUI implementation details
-#![allow(clippy::missing_errors_doc, clippy::missing_panics_doc, reason = "TUI implementation details do not need public API documentation")]
+#![allow(
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    reason = "TUI implementation details do not need public API documentation"
+)]
 
 /// Application state, modes, and dialog models.
 pub mod app;

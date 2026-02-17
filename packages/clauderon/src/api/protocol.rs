@@ -219,7 +219,10 @@ pub struct CreateRepositoryInput {
 /// Request to create a new session
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[expect(clippy::struct_excessive_bools, reason = "independent configuration flags")]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "independent configuration flags"
+)]
 pub struct CreateSessionRequest {
     /// Path to the repository (LEGACY: used when repositories is None)
     pub repo_path: String,
@@ -385,7 +388,10 @@ pub struct UploadResponse {
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", content = "payload")]
-#[expect(clippy::large_enum_variant, reason = "Response variants are not boxed for simplicity since they are not stored in collections")]
+#[expect(
+    clippy::large_enum_variant,
+    reason = "Response variants are not boxed for simplicity since they are not stored in collections"
+)]
 pub enum Response {
     /// List of sessions
     Sessions(Vec<Session>),

@@ -4,12 +4,8 @@ import {
   AttachmentBuilder,
 } from "discord.js";
 import { formatDistanceToNow } from "date-fns";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data/index";
 import configuration from "@scout-for-lol/backend/configuration.ts";
-import {
-  getAccountsWithState,
-  prisma,
-} from "@scout-for-lol/backend/database/index.ts";
+import { getAccountsWithState } from "@scout-for-lol/backend/database/index.ts";
 import {
   calculatePollingInterval,
   shouldCheckPlayer,
@@ -284,4 +280,3 @@ export async function executeDebugPolling(
     });
   }
 }
-

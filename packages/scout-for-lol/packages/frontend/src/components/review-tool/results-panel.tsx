@@ -2,7 +2,6 @@
  * Results panel showing generated review and metadata
  */
 import { useState, useSyncExternalStore } from "react";
-import { z } from "zod";
 import type {
   ReviewConfig,
   GenerationResult,
@@ -15,10 +14,7 @@ import type {
 } from "@scout-for-lol/data";
 import type { CostTracker } from "@scout-for-lol/frontend/lib/review-tool/costs";
 import { calculateCost } from "@scout-for-lol/frontend/lib/review-tool/costs";
-import {
-  generateMatchReview,
-  type GenerationProgress as GenerationProgressType,
-} from "@scout-for-lol/frontend/lib/review-tool/generator";
+import { generateMatchReview } from "@scout-for-lol/frontend/lib/review-tool/generator";
 import { CostDisplay } from "./cost-display.tsx";
 import { HistoryPanel } from "./history-panel.tsx";
 import {
@@ -34,42 +30,12 @@ import { ResultMetadata } from "./result-metadata.tsx";
 import { ResultRating } from "./result-rating.tsx";
 import { PipelineTracesPanel } from "./pipeline-traces-panel.tsx";
 import { MatchAndReviewerInfo } from "./match-reviewer-info.tsx";
-
-const ErrorSchema = z.object({ message: z.string() });
-
-// Global timer for tracking elapsed time - updates every second
-let timerTick = 0;
-const timerSubscribers = new Set<() => void>();
-let timerInterval: ReturnType<typeof setInterval> | null = null;
-
-function startGlobalTimer() {
-  timerInterval ??= setInterval(() => {
-    timerTick += 1;
-    timerSubscribers.forEach((callback) => {
-      callback();
-    });
-  }, 1000);
-}
-
-function stopGlobalTimer() {
-  if (timerInterval !== null && timerSubscribers.size === 0) {
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
-}
-
-function subscribeToTimer(callback: () => void) {
-  timerSubscribers.add(callback);
-  startGlobalTimer();
-  return () => {
-    timerSubscribers.delete(callback);
-    stopGlobalTimer();
-  };
-}
-
-function getTimerSnapshot() {
-  return timerTick;
-}
+import {
+  subscribeToTimer,
+  getTimerSnapshot,
+  ErrorSchema,
+  type ActiveGeneration,
+} from "./results-panel-timer.ts";
 
 type ResultsPanelProps = {
   config: ReviewConfig;
@@ -79,12 +45,6 @@ type ResultsPanelProps = {
   result?: GenerationResult | undefined;
   costTracker: CostTracker;
   onResultGenerated: (result: GenerationResult) => void;
-};
-
-type ActiveGeneration = {
-  id: string;
-  progress?: GenerationProgressType;
-  startTime: number;
 };
 
 export function ResultsPanel(props: ResultsPanelProps) {

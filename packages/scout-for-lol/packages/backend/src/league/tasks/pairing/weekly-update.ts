@@ -5,14 +5,12 @@ import { splitMessageIntoChunks } from "@scout-for-lol/backend/discord/utils/mes
 import {
   type ServerPairingStats,
   type PairingStatsEntry,
-  type IndividualPlayerStats,
   DiscordChannelIdSchema,
 } from "@scout-for-lol/data/index";
 import {
   getServerPlayers,
   createAliasToDiscordIdMap,
 } from "./get-server-players.ts";
-import type { ServerPlayer } from "./get-server-players.ts";
 import { getCurrentWeekInfo } from "./s3-cache.ts";
 import {
   findSurrenderLeaders,

@@ -290,11 +290,7 @@ impl ExecutionBackend for MockExecutionBackend {
     }
 
     fn attach_command(&self, id: &str) -> Vec<String> {
-        vec![
-            self.name_prefix.clone(),
-            "attach".to_owned(),
-            id.to_owned(),
-        ]
+        vec![self.name_prefix.clone(), "attach".to_owned(), id.to_owned()]
     }
 
     async fn get_output(&self, _id: &str, _lines: usize) -> anyhow::Result<String> {

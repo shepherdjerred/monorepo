@@ -113,8 +113,10 @@ log_info "Starting dotfiles install"
 # Write an initial status file; final status written on EXIT
 write_status_json() {
     local final_status="$1"  # "running", "success", or "error"
-    local end_time_epoch="$(date -u +%s)"
-    local end_time_iso="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    local end_time_epoch
+    end_time_epoch="$(date -u +%s)"
+    local end_time_iso
+    end_time_iso="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
     local last_error_line_json
     local last_error_cmd_json
     if [ -n "${LAST_ERROR_LINE}" ]; then
@@ -172,6 +174,7 @@ sudo touch /.dockerenv
 
 (
     echo
+    # shellcheck disable=SC2016 # Intentionally single-quoted: written literally to .bashrc
     echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
 ) >>~/.bashrc
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"

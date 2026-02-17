@@ -1,5 +1,4 @@
 import { z } from "zod";
-import * as Sentry from "@sentry/bun";
 import type {
   PlayerConfigEntry,
   MatchId,
@@ -15,9 +14,7 @@ import {
   parseQueueType,
   MatchIdSchema,
   queueTypeToDisplayString,
-  MIN_GAME_DURATION_SECONDS,
 } from "@scout-for-lol/data/index.ts";
-import { getFlag } from "@scout-for-lol/backend/configuration/flags.ts";
 import { getPlayer } from "@scout-for-lol/backend/league/model/player.ts";
 import type { MessageCreateOptions } from "discord.js";
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
@@ -26,17 +23,15 @@ import {
   saveMatchToS3,
   saveImageToS3,
   saveSvgToS3,
-  saveTimelineToS3,
 } from "@scout-for-lol/backend/storage/s3.ts";
 import {
   toMatch,
   toArenaMatch,
 } from "@scout-for-lol/backend/league/model/match.ts";
-import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.ts";
 import { match } from "ts-pattern";
 import { logErrorDetails } from "./match-report-debug.ts";
-import { fetchMatchTimeline } from "./match-data-fetcher.ts";
-import { isExceptionalGame } from "./exceptional-game.ts";
+import { fetchTimelineIfStandardMatch } from "./match-report-standard.ts";
+import { generateAiReviewIfEnabled } from "./match-report-ai-review.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import {
   saveMatchRankHistory,
@@ -45,17 +40,6 @@ import {
 import { reportsGeneratedTotal } from "@scout-for-lol/backend/metrics/index.ts";
 
 const logger = createLogger("postmatch-match-report-generator");
-
-function captureError(
-  error: unknown,
-  source: string,
-  matchId?: string,
-  extra?: Record<string, string>,
-): void {
-  Sentry.captureException(error, {
-    tags: { source, ...(matchId && { matchId }), ...extra },
-  });
-}
 
 /** Format a natural language message about who finished the game */
 function formatGameCompletionMessage(
@@ -134,25 +118,6 @@ async function createMatchImage(
 }
 
 /**
- * Check if queue type is ranked
- */
-function isRankedQueue(queueType: QueueType | undefined): boolean {
-  return (
-    queueType === "solo" ||
-    queueType === "flex" ||
-    queueType === "clash" ||
-    queueType === "aram clash"
-  );
-}
-
-/**
- * Check if Jerred is in the match
- */
-function hasJerred(playersInMatch: PlayerConfigEntry[]): boolean {
-  return playersInMatch.some((p) => p.alias.toLowerCase() === "jerred");
-}
-
-/**
  * Process arena match and generate Discord message
  */
 async function processArenaMatch(
@@ -190,118 +155,6 @@ type StandardMatchContext = {
   /** Guild IDs that will receive this match report - used for feature flag checks */
   targetGuildIds: DiscordGuildId[];
 };
-
-/**
- * Check if AI reviews are enabled for any of the target guilds
- */
-function isAiReviewEnabledForAnyGuild(guildIds: DiscordGuildId[]): boolean {
-  return guildIds.some((guildId) =>
-    getFlag("ai_reviews_enabled", { server: guildId }),
-  );
-}
-
-type AiReviewResult = {
-  text: string | undefined;
-  image: Uint8Array | undefined;
-};
-
-type AiReviewContext = {
-  completedMatch: CompletedMatch;
-  matchId: MatchId;
-  matchData: RawMatch;
-  timelineData: RawTimeline | undefined;
-  playersInMatch: PlayerConfigEntry[];
-  targetGuildIds: DiscordGuildId[];
-};
-
-/**
- * Generate AI review for a match if conditions are met
- */
-async function generateAiReviewIfEnabled(
-  ctx: AiReviewContext,
-): Promise<AiReviewResult> {
-  const {
-    completedMatch,
-    matchId,
-    matchData,
-    timelineData,
-    playersInMatch,
-    targetGuildIds,
-  } = ctx;
-  const aiReviewsEnabled = isAiReviewEnabledForAnyGuild(targetGuildIds);
-  if (!aiReviewsEnabled) {
-    logger.info(
-      `[generateMatchReport] Skipping AI review - feature not enabled for target guilds: ${targetGuildIds.join(", ")}`,
-    );
-    return { text: undefined, image: undefined };
-  }
-
-  // Jerred override for testing - always generate reviews for his games
-  const jerredOverride = hasJerred(playersInMatch);
-
-  // Check if game is exceptional (good or bad performance)
-  const exceptionalResult = isExceptionalGame(
-    matchData,
-    playersInMatch,
-    completedMatch.durationInSeconds,
-  );
-
-  // Only generate reviews for ranked games with exceptional performance, or Jerred override
-  const isRanked = isRankedQueue(completedMatch.queueType);
-  const shouldGenerateReview =
-    jerredOverride || (isRanked && exceptionalResult.isExceptional);
-
-  if (!shouldGenerateReview) {
-    const reason = !isRanked
-      ? `not a ranked queue (queueType: ${completedMatch.queueType ?? "unknown"})`
-      : "not an exceptional game";
-    logger.info(`[generateMatchReport] Skipping AI review - ${reason}`);
-    return { text: undefined, image: undefined };
-  }
-
-  // Log why we're generating the review
-  if (jerredOverride) {
-    logger.info(
-      `[generateMatchReport] Generating AI review - Jerred override enabled`,
-    );
-  }
-  if (exceptionalResult.isExceptional) {
-    logger.info(
-      `[generateMatchReport] Exceptional game detected: ${exceptionalResult.reason}`,
-    );
-  }
-
-  if (completedMatch.durationInSeconds < MIN_GAME_DURATION_SECONDS) {
-    const durationMinutes = (completedMatch.durationInSeconds / 60).toFixed(1);
-    logger.info(
-      `[generateMatchReport] Skipping AI review - game too short (${durationMinutes} min < 15 min)`,
-    );
-    return { text: undefined, image: undefined };
-  }
-
-  if (!timelineData) {
-    logger.warn(
-      `[generateMatchReport] Skipping AI review - timeline data required but not available for match ${matchId}`,
-    );
-    return { text: undefined, image: undefined };
-  }
-
-  try {
-    const review = await generateMatchReview(
-      completedMatch,
-      matchId,
-      matchData,
-      timelineData,
-    );
-    return { text: review?.text, image: review?.image };
-  } catch (error) {
-    logger.error(`[generateMatchReport] Error generating AI review:`, error);
-    captureError(error, "ai-review-generation", matchId, {
-      queueType: completedMatch.queueType ?? "unknown",
-    });
-    return { text: undefined, image: undefined };
-  }
-}
 
 /**
  * Process standard match and generate Discord message
@@ -415,60 +268,6 @@ async function processStandardMatch(
     embeds: [matchReportEmbed],
     content: messageContent,
   };
-}
-
-/**
- * Fetch timeline data for standard (non-arena) matches
- * Returns undefined for arena matches or if timeline fetch fails
- * Also saves the timeline to S3 for later use (e.g., frontend AI review generation)
- */
-async function fetchTimelineIfStandardMatch(
-  matchData: RawMatch,
-  matchId: MatchId,
-  playersInMatch: PlayerConfigEntry[],
-): Promise<RawTimeline | undefined> {
-  // Don't fetch timeline for arena matches
-  if (matchData.info.queueId === 1700) {
-    return undefined;
-  }
-
-  const firstPlayer = playersInMatch[0];
-  if (!firstPlayer) {
-    return undefined;
-  }
-
-  const playerRegion = firstPlayer.league.leagueAccount.region;
-  try {
-    logger.info(
-      `[generateMatchReport] 📊 Fetching timeline data for match ${matchId}`,
-    );
-    const timelineData = await fetchMatchTimeline(matchId, playerRegion);
-    if (timelineData) {
-      logger.info(
-        `[generateMatchReport] ✅ Timeline fetched with ${timelineData.info.frames.length.toString()} frames`,
-      );
-
-      // Save timeline to S3 for later use (e.g., frontend AI review generation)
-      try {
-        const trackedPlayerAliases = playersInMatch.map((p) => p.alias);
-        await saveTimelineToS3(timelineData, trackedPlayerAliases);
-      } catch (error) {
-        logger.error(
-          `[generateMatchReport] Error saving timeline ${matchId} to S3:`,
-          error,
-        );
-        // Continue processing even if S3 storage fails
-      }
-    }
-    return timelineData;
-  } catch (error) {
-    logger.error(
-      `[generateMatchReport] ⚠️  Failed to fetch timeline, continuing without it:`,
-      error,
-    );
-    captureError(error, "timeline-fetch-wrapper", matchId);
-    return undefined;
-  }
 }
 
 /**

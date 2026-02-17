@@ -25,9 +25,7 @@ const downloadingUrls = new Set<string>();
  * This bridges the type gap between Bun/web ReadableStream<Uint8Array> and
  * Node.js Readable.fromWeb which expects a web-spec ReadableStream.
  */
-function webStreamToReadable(
-  stream: ReadableStream<Uint8Array>,
-): Readable {
+function webStreamToReadable(stream: ReadableStream<Uint8Array>): Readable {
   const reader = stream.getReader();
   const readable = new Readable({
     // Node requires a read implementation but we push data from the web stream reader

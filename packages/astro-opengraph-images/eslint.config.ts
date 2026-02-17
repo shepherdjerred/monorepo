@@ -1,7 +1,7 @@
 import { recommended } from "../eslint-config/local.ts";
 
 export default [
-  { ignores: ["examples/**", "dist/**"] },
+  { ignores: ["examples/**", "dist/**", "eslint.config.ts", "vitest.config.mts"] },
   ...recommended({ tsconfigRootDir: import.meta.dirname }),
   {
     files: ["src/index.ts"],

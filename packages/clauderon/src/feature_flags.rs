@@ -8,7 +8,10 @@ use typeshare::typeshare;
 #[typeshare]
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default)]
-#[expect(clippy::struct_excessive_bools, reason = "independent feature flag toggles")]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "independent feature flag toggles"
+)]
 pub struct FeatureFlags {
     /// Enable experimental WebAuthn passwordless authentication
     pub enable_webauthn_auth: bool,

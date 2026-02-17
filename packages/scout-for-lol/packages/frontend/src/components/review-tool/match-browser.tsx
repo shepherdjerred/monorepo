@@ -1,9 +1,7 @@
 /**
  * S3 match browser for selecting real match data
  */
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { z } from "zod";
-import Fuse, { type FuseResult } from "fuse.js";
+import Fuse from "fuse.js";
 import type { ApiSettings } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import type {
   CompletedMatch,
@@ -11,41 +9,13 @@ import type {
   RawMatch,
   RawTimeline,
 } from "@scout-for-lol/data";
-import {
-  listMatchesFromS3,
-  fetchMatchFromS3,
-  fetchTimelineFromS3,
-  type S3Config,
-} from "@scout-for-lol/frontend/lib/review-tool/s3";
-import {
-  convertRawMatchToInternalFormat,
-  extractMatchMetadataFromRawMatch,
-  type MatchMetadata,
-} from "@scout-for-lol/frontend/lib/review-tool/match-converter";
-import {
-  getCachedDataAsync,
-  setCachedData,
-} from "@scout-for-lol/frontend/lib/review-tool/cache";
 import { MatchFilters } from "./match-filters.tsx";
 import { MatchList } from "./match-list.tsx";
 import { MatchPagination } from "./match-pagination.tsx";
 import { MatchLoadingState } from "./match-loading-state.tsx";
 import { Button } from "./ui/button.tsx";
 import { EmptyState, CloudIcon, SearchIcon } from "./ui/empty-state.tsx";
-
-const ErrorSchema = z.object({ message: z.string() });
-const MatchMetadataArraySchema = z.array(
-  z.object({
-    key: z.string(),
-    queueType: z.string(),
-    playerName: z.string(),
-    champion: z.string(),
-    lane: z.string(),
-    outcome: z.string(),
-    kda: z.string(),
-    timestamp: z.date(),
-  }),
-);
+import { useMatchBrowser } from "./use-match-browser.ts";
 
 type MatchBrowserProps = {
   onMatchSelected: (
@@ -60,292 +30,10 @@ export function MatchBrowser({
   onMatchSelected,
   apiSettings,
 }: MatchBrowserProps) {
-  const [loading, setLoading] = useState(false);
-  const [loadingProgress, setLoadingProgress] = useState<{
-    current: number;
-    total: number;
-  } | null>(null);
-  const [matches, setMatches] = useState<MatchMetadata[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [filterQueueType, setFilterQueueType] = useState<string>("all");
-  const [filterLane, setFilterLane] = useState<string>("all");
-  const [filterPlayer, setFilterPlayer] = useState<string>("");
-  const [filterChampion, setFilterChampion] = useState<string>("");
-  const [filterOutcome, setFilterOutcome] = useState<string>("all");
-  const [selectedMetadata, setSelectedMetadata] =
-    useState<MatchMetadata | null>(null);
-  const [abortController, setAbortController] =
-    useState<AbortController | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
-
-  const s3Config = useMemo<S3Config | null>(() => {
-    if (
-      apiSettings.s3BucketName &&
-      apiSettings.awsAccessKeyId &&
-      apiSettings.awsSecretAccessKey
-    ) {
-      return {
-        bucketName: apiSettings.s3BucketName,
-        accessKeyId: apiSettings.awsAccessKeyId,
-        secretAccessKey: apiSettings.awsSecretAccessKey,
-        region: apiSettings.awsRegion,
-        ...(apiSettings.s3Endpoint ? { endpoint: apiSettings.s3Endpoint } : {}),
-      };
-    }
-    return null;
-  }, [apiSettings]);
-
-  // Track if we've already attempted auto-fetch to avoid duplicate calls
-  const hasAttemptedAutoFetch = useRef(false);
-
-  const handleBrowse = useCallback(
-    async (forceRefresh = false) => {
-      if (!s3Config) {
-        setError("S3 credentials not configured");
-        return;
-      }
-
-      // Check cache FIRST before showing loading UI
-      const cacheKey = {
-        bucketName: s3Config.bucketName,
-        region: s3Config.region,
-        endpoint: s3Config.endpoint,
-        type: "metadata-array",
-      };
-
-      if (!forceRefresh) {
-        const cached: unknown = await getCachedDataAsync(
-          "match-metadata",
-          cacheKey,
-        );
-        const cachedResult = MatchMetadataArraySchema.safeParse(cached);
-
-        if (cachedResult.success && cachedResult.data.length > 0) {
-          // Instant load from cache - no loading UI!
-          console.log(
-            `[Cache HIT] Loaded ${cachedResult.data.length.toString()} matches from cache (IndexedDB)`,
-          );
-          setMatches(cachedResult.data);
-          setError(null);
-          return;
-        } else {
-          console.log(`[Cache MISS] Need to fetch matches`, {
-            forceRefresh,
-            hasCachedData: !!cached,
-          });
-        }
-      }
-
-      // No cache hit, proceed with fetching
-      // Cancel any ongoing fetch
-      if (abortController) {
-        abortController.abort();
-      }
-
-      const newAbortController = new AbortController();
-      setAbortController(newAbortController);
-      setLoading(true);
-      setError(null);
-      setMatches([]); // Clear old results while loading
-      setLoadingProgress(null);
-
-      try {
-        // Not cached, need to fetch and extract
-        const matchKeys = await listMatchesFromS3(s3Config);
-        const matchData: MatchMetadata[] = [];
-
-        // Fetch and convert all matches
-        const totalMatches = matchKeys.length;
-        setLoadingProgress({ current: 0, total: totalMatches });
-
-        // Batch fetching with concurrency limit to avoid DOSing the endpoint
-        const BATCH_SIZE = 10; // Fetch 10 matches at a time
-
-        for (let i = 0; i < totalMatches; i += BATCH_SIZE) {
-          // Check if aborted
-          if (newAbortController.signal.aborted) {
-            throw new Error("Loading cancelled");
-          }
-
-          const batch = matchKeys.slice(
-            i,
-            Math.min(i + BATCH_SIZE, totalMatches),
-          );
-
-          // Fetch batch in parallel
-          const batchResults = await Promise.allSettled(
-            batch.map(async (matchKey) => {
-              const rawMatch = await fetchMatchFromS3(s3Config, matchKey.key);
-              if (rawMatch) {
-                return extractMatchMetadataFromRawMatch(rawMatch, matchKey.key);
-              }
-              return null;
-            }),
-          );
-
-          // Process batch results
-          for (const result of batchResults) {
-            if (result.status === "fulfilled" && result.value) {
-              matchData.push(...result.value);
-            }
-          }
-
-          // Update progress
-          setLoadingProgress({
-            current: Math.min(i + BATCH_SIZE, totalMatches),
-            total: totalMatches,
-          });
-
-          // Small delay between batches to be nice to the API
-          if (i + BATCH_SIZE < totalMatches) {
-            await new Promise((resolve) => setTimeout(resolve, 100));
-          }
-        }
-
-        // Cache the metadata array for fast subsequent loads (24 hour TTL)
-        console.log(
-          `[Cache WRITE] Caching ${matchData.length.toString()} matches for 24 hours`,
-        );
-        await setCachedData(
-          "match-metadata",
-          cacheKey,
-          matchData,
-          24 * 60 * 60 * 1000,
-        );
-
-        setMatches(matchData);
-        setLoadingProgress(null);
-      } catch (err) {
-        const errorResult = ErrorSchema.safeParse(err);
-        if (
-          errorResult.success &&
-          errorResult.data.message === "Loading cancelled"
-        ) {
-          setError("Loading cancelled");
-        } else {
-          setError(
-            errorResult.success ? errorResult.data.message : String(err),
-          );
-        }
-      } finally {
-        setLoading(false);
-        setLoadingProgress(null);
-        setAbortController(null);
-      }
-    },
-    [s3Config, abortController],
-  );
-
-  // Auto-fetch matches on mount when s3Config is available
-  // eslint-disable-next-line custom-rules/no-use-effect -- ok for now
-  useEffect(() => {
-    if (s3Config && !hasAttemptedAutoFetch.current) {
-      hasAttemptedAutoFetch.current = true;
-      void handleBrowse(false); // Use cache if available
-    }
-  }, [s3Config, handleBrowse]);
-
-  const handleSelectMatch = async (metadata: MatchMetadata) => {
-    if (!s3Config) {
-      return;
-    }
-
-    setLoading(true);
-    setSelectedMetadata(metadata);
-    try {
-      // Fetch match and timeline in parallel
-      const [rawMatch, rawTimeline] = await Promise.all([
-        fetchMatchFromS3(s3Config, metadata.key),
-        fetchTimelineFromS3(s3Config, metadata.key),
-      ]);
-
-      if (rawMatch) {
-        const match = convertRawMatchToInternalFormat(
-          rawMatch,
-          metadata.playerName,
-        );
-        onMatchSelected(match, rawMatch, rawTimeline);
-      }
-    } catch (err) {
-      const errorResult = ErrorSchema.safeParse(err);
-      setError(errorResult.success ? errorResult.data.message : String(err));
-      setSelectedMetadata(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredMatches = useMemo(() => {
-    let result = matches;
-
-    // Queue type filter
-    if (filterQueueType !== "all") {
-      result = result.filter((m) => m.queueType === filterQueueType);
-    }
-
-    // Lane filter
-    if (filterLane !== "all") {
-      result = result.filter((m) => m.lane === filterLane);
-    }
-
-    // Outcome filter
-    if (filterOutcome !== "all") {
-      result = result.filter((m) => {
-        if (filterOutcome === "victory") {
-          return m.outcome.includes("Victory");
-        }
-        if (filterOutcome === "defeat") {
-          return m.outcome.includes("Defeat");
-        }
-        return true;
-      });
-    }
-
-    // Player name fuzzy filter
-    if (filterPlayer.trim()) {
-      const fuse = new Fuse(result, {
-        keys: ["playerName"],
-        threshold: 0.3, // Lower = more strict, higher = more fuzzy
-        ignoreLocation: true,
-        includeScore: true,
-      });
-      const fuzzyResults = fuse.search(filterPlayer.trim());
-      result = fuzzyResults.map((r: FuseResult<MatchMetadata>) => r.item);
-    }
-
-    // Champion fuzzy filter
-    if (filterChampion.trim()) {
-      const fuse = new Fuse(result, {
-        keys: ["champion"],
-        threshold: 0.3,
-        ignoreLocation: true,
-        includeScore: true,
-      });
-      const fuzzyResults = fuse.search(filterChampion.trim());
-      result = fuzzyResults.map((r: FuseResult<MatchMetadata>) => r.item);
-    }
-
-    return result;
-  }, [
-    matches,
-    filterQueueType,
-    filterLane,
-    filterPlayer,
-    filterChampion,
-    filterOutcome,
-  ]);
-
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredMatches.length / pageSize);
-  const paginatedMatches = useMemo(() => {
-    const startIdx = (currentPage - 1) * pageSize;
-    const endIdx = startIdx + pageSize;
-    return filteredMatches.slice(startIdx, endIdx);
-  }, [filteredMatches, currentPage, pageSize]);
+  const browser = useMatchBrowser(apiSettings, onMatchSelected, Fuse);
 
   // Not configured state
-  if (!s3Config) {
+  if (!browser.s3Config) {
     return (
       <div className="p-6">
         <EmptyState
@@ -371,10 +59,10 @@ export function MatchBrowser({
             variant="primary"
             size="sm"
             onClick={() => {
-              void handleBrowse(true);
+              void browser.handleBrowse(true);
             }}
-            disabled={loading}
-            isLoading={loading && !loadingProgress}
+            disabled={browser.loading}
+            isLoading={browser.loading && !browser.loadingProgress}
           >
             <svg
               className="w-4 h-4"
@@ -395,30 +83,30 @@ export function MatchBrowser({
         </div>
 
         <MatchFilters
-          filterQueueType={filterQueueType}
-          filterLane={filterLane}
-          filterPlayer={filterPlayer}
-          filterChampion={filterChampion}
-          filterOutcome={filterOutcome}
-          onQueueTypeChange={setFilterQueueType}
-          onLaneChange={setFilterLane}
-          onPlayerChange={setFilterPlayer}
-          onChampionChange={setFilterChampion}
-          onOutcomeChange={setFilterOutcome}
+          filterQueueType={browser.filters.filterQueueType}
+          filterLane={browser.filters.filterLane}
+          filterPlayer={browser.filters.filterPlayer}
+          filterChampion={browser.filters.filterChampion}
+          filterOutcome={browser.filters.filterOutcome}
+          onQueueTypeChange={browser.setFilterQueueType}
+          onLaneChange={browser.setFilterLane}
+          onPlayerChange={browser.setFilterPlayer}
+          onChampionChange={browser.setFilterChampion}
+          onOutcomeChange={browser.setFilterOutcome}
         />
       </div>
 
       {/* Loading state */}
       <MatchLoadingState
-        loading={loading}
-        loadingProgress={loadingProgress}
+        loading={browser.loading}
+        loadingProgress={browser.loadingProgress}
         onCancel={() => {
-          abortController?.abort();
+          browser.abortController?.abort();
         }}
       />
 
       {/* Error state */}
-      {error && (
+      {browser.error && (
         <div className="p-4 rounded-xl bg-defeat-50 border border-defeat-200 text-sm text-defeat-700 mb-4 animate-fade-in">
           <div className="flex items-start gap-3">
             <svg
@@ -434,38 +122,41 @@ export function MatchBrowser({
             </svg>
             <div>
               <p className="font-medium">Error loading matches</p>
-              <p className="text-defeat-600 mt-0.5">{error}</p>
+              <p className="text-defeat-600 mt-0.5">{browser.error}</p>
             </div>
           </div>
         </div>
       )}
 
       {/* Match list */}
-      {filteredMatches.length > 0 && !loading && (
+      {browser.filteredMatches.length > 0 && !browser.loading && (
         <div className="rounded-xl border border-surface-200 overflow-hidden animate-fade-in">
           {/* Results header */}
           <div className="px-4 py-3 bg-surface-50 border-b border-surface-200 flex justify-between items-center">
             <span className="text-sm text-surface-600">
               <span className="font-medium text-surface-900">
-                {(currentPage - 1) * pageSize + 1}-
-                {Math.min(currentPage * pageSize, filteredMatches.length)}
+                {(browser.currentPage - 1) * browser.pageSize + 1}-
+                {Math.min(
+                  browser.currentPage * browser.pageSize,
+                  browser.filteredMatches.length,
+                )}
               </span>
               {" of "}
               <span className="font-medium text-surface-900">
-                {filteredMatches.length}
+                {browser.filteredMatches.length}
               </span>
-              {matches.length !== filteredMatches.length && (
+              {browser.matches.length !== browser.filteredMatches.length && (
                 <span className="text-surface-400">
                   {" "}
-                  (filtered from {matches.length.toString()})
+                  (filtered from {browser.matches.length.toString()})
                 </span>
               )}
             </span>
             <select
-              value={pageSize}
+              value={browser.pageSize}
               onChange={(e) => {
-                setPageSize(Number(e.target.value));
-                setCurrentPage(1);
+                browser.setPageSize(Number(e.target.value));
+                browser.setCurrentPage(1);
               }}
               className="select text-xs py-1.5 px-2 w-auto"
             >
@@ -476,28 +167,28 @@ export function MatchBrowser({
           </div>
 
           <MatchList
-            matches={paginatedMatches}
-            selectedMetadata={selectedMetadata}
-            filterPlayer={filterPlayer}
-            filterChampion={filterChampion}
-            filterQueueType={filterQueueType}
-            filterLane={filterLane}
-            filterOutcome={filterOutcome}
+            matches={browser.paginatedMatches}
+            selectedMetadata={browser.selectedMetadata}
+            filterPlayer={browser.filters.filterPlayer}
+            filterChampion={browser.filters.filterChampion}
+            filterQueueType={browser.filters.filterQueueType}
+            filterLane={browser.filters.filterLane}
+            filterOutcome={browser.filters.filterOutcome}
             onSelectMatch={(metadata) => {
-              void handleSelectMatch(metadata);
+              void browser.handleSelectMatch(metadata);
             }}
           />
 
           <MatchPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
+            currentPage={browser.currentPage}
+            totalPages={browser.totalPages}
+            onPageChange={browser.setCurrentPage}
           />
         </div>
       )}
 
       {/* Empty state - no matches */}
-      {matches.length === 0 && !loading && !error && (
+      {browser.matches.length === 0 && !browser.loading && !browser.error && (
         <EmptyState
           icon={<SearchIcon className="w-12 h-12" />}
           title="No Matches Found"
@@ -507,7 +198,7 @@ export function MatchBrowser({
               variant="secondary"
               size="sm"
               onClick={() => {
-                void handleBrowse(true);
+                void browser.handleBrowse(true);
               }}
             >
               Refresh Matches
@@ -517,28 +208,30 @@ export function MatchBrowser({
       )}
 
       {/* Empty state - filters have no results */}
-      {matches.length > 0 && filteredMatches.length === 0 && !loading && (
-        <EmptyState
-          icon={<SearchIcon className="w-12 h-12" />}
-          title="No Matches Match Filters"
-          description="Try adjusting your filter criteria to see more results."
-          action={
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setFilterQueueType("all");
-                setFilterLane("all");
-                setFilterPlayer("");
-                setFilterChampion("");
-                setFilterOutcome("all");
-              }}
-            >
-              Clear Filters
-            </Button>
-          }
-        />
-      )}
+      {browser.matches.length > 0 &&
+        browser.filteredMatches.length === 0 &&
+        !browser.loading && (
+          <EmptyState
+            icon={<SearchIcon className="w-12 h-12" />}
+            title="No Matches Match Filters"
+            description="Try adjusting your filter criteria to see more results."
+            action={
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  browser.setFilterQueueType("all");
+                  browser.setFilterLane("all");
+                  browser.setFilterPlayer("");
+                  browser.setFilterChampion("");
+                  browser.setFilterOutcome("all");
+                }}
+              >
+                Clear Filters
+              </Button>
+            }
+          />
+        )}
     </div>
   );
 }

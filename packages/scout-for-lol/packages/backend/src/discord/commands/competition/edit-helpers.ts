@@ -1,16 +1,13 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import {
   CompetitionIdSchema,
-  DiscordAccountIdSchema,
   getCompetitionStatus,
   type CompetitionId,
   type CompetitionWithCriteria,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import {
-  getCompetitionById,
-} from "@scout-for-lol/backend/database/competition/queries.ts";
+import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";

@@ -43,7 +43,7 @@ fi
 # Check for critical findings
 if has_critical "$FINDINGS"; then
   CRITICAL_LIST=""
-  while IFS='|' read -r name cost severity; do
+  while IFS='|' read -r name _cost severity; do
     [[ -z "$name" ]] && continue
     [[ "$severity" == "critical" ]] && CRITICAL_LIST="${CRITICAL_LIST}  - ${name}\n"
   done <<< "$(printf '%b' "$FINDINGS")"

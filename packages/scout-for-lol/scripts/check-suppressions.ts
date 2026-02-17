@@ -48,8 +48,9 @@ async function main(): Promise<void> {
     if (line.startsWith("+++ ")) {
       // Extract filename (handles both "b/" and "i/" prefixes)
       const match = /^\+\+\+ [a-z]\/(.*)/.exec(line);
-      if (match) {
-        currentFile = match[1];
+      const matchedFile = match?.[1];
+      if (matchedFile) {
+        currentFile = matchedFile;
         // Skip checking the suppression checker script itself
         if (currentFile === "scripts/check-suppressions.ts") {
           currentFile = "";
@@ -65,9 +66,10 @@ async function main(): Promise<void> {
 
     // Track line numbers from diff hunks
     if (line.startsWith("@@")) {
-      const match = /\+(\d+)/.exec(line);
-      if (match) {
-        currentLineNumber = parseInt(match[1]);
+      const hunkMatch = /\+(\d+)/.exec(line);
+      const lineStr = hunkMatch?.[1];
+      if (lineStr) {
+        currentLineNumber = parseInt(lineStr);
       }
       continue;
     }
@@ -104,13 +106,17 @@ async function main(): Promise<void> {
   console.error("❌ Found new code quality suppressions:\n");
 
   // Group by file
-  const byFile = findings.reduce<Record<string, Finding[]>>((acc, finding) => {
-    acc[finding.file] ??= [];
-    acc[finding.file].push(finding);
-    return acc;
-  }, {});
+  const byFile = new Map<string, Finding[]>();
+  for (const finding of findings) {
+    const existing = byFile.get(finding.file);
+    if (existing) {
+      existing.push(finding);
+    } else {
+      byFile.set(finding.file, [finding]);
+    }
+  }
 
-  for (const [file, fileFindings] of Object.entries(byFile)) {
+  for (const [file, fileFindings] of byFile.entries()) {
     console.error(`📄 ${file}`);
     for (const finding of fileFindings) {
       console.error(`   Line ${String(finding.lineNumber)}: ${finding.line}`);

@@ -4,9 +4,7 @@ import type {
   RawMatch,
   RawTimeline,
 } from "@scout-for-lol/data/index.ts";
-import {
-  saveTimelineToS3,
-} from "@scout-for-lol/backend/storage/s3.ts";
+import { saveTimelineToS3 } from "@scout-for-lol/backend/storage/s3.ts";
 import { fetchMatchTimeline } from "./match-data-fetcher.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import * as Sentry from "@sentry/bun";
