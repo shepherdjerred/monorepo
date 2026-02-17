@@ -24,6 +24,7 @@
   "devDependencies": {
     "@dagger.io/dagger": "^0.19.0",
     "@prisma/client": "^6.0.0",
+    "jiti": "^2.6.1",
     "lefthook": "^2.1.1",
     "prisma": "^6.0.0",
     "typescript": "^5.9.3"

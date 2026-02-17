@@ -1,5 +1,6 @@
 import type { TServiceParams } from "@digital-alchemy/core";
 import type { ENTITY_STATE } from "@digital-alchemy/hass";
+import { z } from "zod";
 import { shouldStopCleaning, verifyAfterDelay, withTimeout } from "../util.ts";
 import { instrumentWorkflow } from "../metrics.ts";
 
@@ -51,7 +52,7 @@ export function welcomeHome({ hass, logger }: TServiceParams) {
           verifyAfterDelay({
             entityId: bedroomHeater.entity_id,
             workflowName: "climate_welcome_home",
-            getActualState: () => z.coerce.string().catch("unknown").parse(bedroomHeater.attributes["temperature"]),
+            getActualState: () => z.coerce.string().catch("unknown").parse(bedroomHeater.attributes.temperature),
             check: (actual) => actual === "22",
             delay: { amount: 30, unit: "s" },
             description: "target 22°C",

@@ -3,6 +3,6 @@
   "compilerOptions": {
     "types": ["@types/bun"]
   },
-  "include": ["src/**/*", "tests/**/*"],
+  "include": ["src/**/*", "tests/**/*", "eslint.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

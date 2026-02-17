@@ -56,29 +56,38 @@ export function withTimeoutFactory<T>(
   return () => withTimeout(promiseFactory(), timeout, operationName);
 }
 
-type DscCheck = {
+type DscCheckBase = {
   entityId: string;
   workflowName: string;
   getActualState: () => string;
-  check: string | ((actual: string) => boolean);
   delay: Time;
   logger: TServiceParams["logger"];
   hass: TServiceParams["hass"];
-  description?: string;
 };
+
+type DscCheckExact = DscCheckBase & { check: string };
+type DscCheckPredicate = DscCheckBase & { check: (actual: string) => boolean; description?: string };
+type DscCheck = DscCheckExact | DscCheckPredicate;
+
+function resolveDscCheck(check: DscCheck["check"], actual: string): boolean {
+  return typeof check === "function" ? check(actual) : actual === check;
+}
+
+function describeDscCheck(opts: DscCheck): string {
+  return typeof opts.check === "function" ? ("description" in opts ? (opts.description ?? "predicate") : "predicate") : opts.check;
+}
 
 export function verifyAfterDelay(opts: DscCheck): void {
   setTimeout(() => {
     void instrumentWorkflow(`dsc_${opts.workflowName}`, async () => {
       const actual = opts.getActualState();
-      const passed = typeof opts.check === "string" ? actual === opts.check : opts.check(actual);
 
-      if (passed) {
+      if (resolveDscCheck(opts.check, actual)) {
         opts.logger.info(`DSC passed: ${opts.entityId} state='${actual}'`);
         return;
       }
 
-      const expected = typeof opts.check === "string" ? opts.check : (opts.description ?? "predicate");
+      const expected = describeDscCheck(opts);
       const error = new DscVerificationError(opts.entityId, expected, actual, opts.workflowName);
       opts.logger.error(error.message);
 

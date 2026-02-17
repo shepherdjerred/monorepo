@@ -37,3 +37,5 @@ packages/dpp/
 
 # Lefthook local overrides
 lefthook-local.yml
+
+**/.eslintcache
