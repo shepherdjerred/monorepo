@@ -169,11 +169,12 @@ async function main() {
     const forcePathStyle = parseBool(Bun.env["S3_FORCE_PATH_STYLE"], true);
 
     console.log(`Uploading manifest to s3://${s3Bucket}/${key}`);
+    const sessionToken = Bun.env["AWS_SESSION_TOKEN"];
     await uploadToS3(
       {
         accessKeyId,
         secretAccessKey,
-        sessionToken: Bun.env["AWS_SESSION_TOKEN"],
+        ...(sessionToken !== undefined && { sessionToken }),
         endpoint,
         bucket: s3Bucket,
         key,

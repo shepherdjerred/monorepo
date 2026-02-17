@@ -83,11 +83,14 @@ export class PostalClient {
   }): Promise<PostalResponse> {
     const recipientsParsed = z.array(z.string()).safeParse(params.to);
     const singleRecipientParsed = z.string().safeParse(params.to);
-    const recipients = recipientsParsed.success
-      ? recipientsParsed.data
-      : singleRecipientParsed.success
-        ? [singleRecipientParsed.data]
-        : [];
+    let recipients: string[];
+    if (recipientsParsed.success) {
+      recipients = recipientsParsed.data;
+    } else if (singleRecipientParsed.success) {
+      recipients = [singleRecipientParsed.data];
+    } else {
+      recipients = [];
+    }
 
     const payload: PostalSendMessage = {
       to: recipients,

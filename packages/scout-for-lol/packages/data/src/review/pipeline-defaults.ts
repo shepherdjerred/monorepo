@@ -14,21 +14,21 @@ import type {
 import { selectRandomStyle } from "@scout-for-lol/data/review/art-styles.ts";
 
 // Import system prompts from TXT files (using ?raw for Vite to return content, not URL)
-import TIMELINE_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1b-timeline-summary.txt?raw";
-import TIMELINE_CHUNK_SYSTEM_PROMPT_RAW from "./prompts/system/1c-timeline-chunk.txt?raw";
-import TIMELINE_AGGREGATE_SYSTEM_PROMPT_RAW from "./prompts/system/1d-timeline-aggregate.txt?raw";
-import MATCH_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1a-match-summary.txt?raw";
-import REVIEW_TEXT_SYSTEM_PROMPT_RAW from "./prompts/system/2-review-text.txt?raw";
-import IMAGE_DESCRIPTION_SYSTEM_PROMPT_RAW from "./prompts/system/3-image-description.txt?raw";
+import TIMELINE_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1b-timeline-summary.txt";
+import TIMELINE_CHUNK_SYSTEM_PROMPT_RAW from "./prompts/system/1c-timeline-chunk.txt";
+import TIMELINE_AGGREGATE_SYSTEM_PROMPT_RAW from "./prompts/system/1d-timeline-aggregate.txt";
+import MATCH_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1a-match-summary.txt";
+import REVIEW_TEXT_SYSTEM_PROMPT_RAW from "./prompts/system/2-review-text.txt";
+import IMAGE_DESCRIPTION_SYSTEM_PROMPT_RAW from "./prompts/system/3-image-description.txt";
 
 // Import user prompts from TXT files (using ?raw for Vite to return content, not URL)
-import TIMELINE_SUMMARY_USER_PROMPT_RAW from "./prompts/user/1b-timeline-summary.txt?raw";
-import TIMELINE_CHUNK_USER_PROMPT_RAW from "./prompts/user/1c-timeline-chunk.txt?raw";
-import TIMELINE_AGGREGATE_USER_PROMPT_RAW from "./prompts/user/1d-timeline-aggregate.txt?raw";
-import MATCH_SUMMARY_USER_PROMPT_RAW from "./prompts/user/1a-match-summary.txt?raw";
-import REVIEW_TEXT_USER_PROMPT_RAW from "./prompts/user/2-review-text.txt?raw";
-import IMAGE_DESCRIPTION_USER_PROMPT_RAW from "./prompts/user/3-image-description.txt?raw";
-import IMAGE_GENERATION_USER_PROMPT_RAW from "./prompts/user/4-image-generation.txt?raw";
+import TIMELINE_SUMMARY_USER_PROMPT_RAW from "./prompts/user/1b-timeline-summary.txt";
+import TIMELINE_CHUNK_USER_PROMPT_RAW from "./prompts/user/1c-timeline-chunk.txt";
+import TIMELINE_AGGREGATE_USER_PROMPT_RAW from "./prompts/user/1d-timeline-aggregate.txt";
+import MATCH_SUMMARY_USER_PROMPT_RAW from "./prompts/user/1a-match-summary.txt";
+import REVIEW_TEXT_USER_PROMPT_RAW from "./prompts/user/2-review-text.txt";
+import IMAGE_DESCRIPTION_USER_PROMPT_RAW from "./prompts/user/3-image-description.txt";
+import IMAGE_GENERATION_USER_PROMPT_RAW from "./prompts/user/4-image-generation.txt";
 
 // ============================================================================
 // System Prompts
