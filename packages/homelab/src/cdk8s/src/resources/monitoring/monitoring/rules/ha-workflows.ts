@@ -63,7 +63,21 @@ export function getHaWorkflowRuleGroups(): PrometheusRuleSpecGroups[] {
             summary: "Roomba failed to start cleaning",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'sum without(pod, instance, container, endpoint) (increase(ha_workflow_executions_total{workflow="roomba_verification", status="failure"}[15m])) > 0',
+            'sum without(pod, instance, container, endpoint) (increase(ha_workflow_executions_total{workflow=~"dsc_roomba_.*", status="failure"}[15m])) > 0',
+          ),
+          for: "0m",
+          labels: { severity: "warning" },
+        },
+        {
+          alert: "HaDscVerificationFailed",
+          annotations: {
+            description: escapePrometheusTemplate(
+              'Device state check failed for workflow "{{ $labels.workflow }}". A device did not reach the expected state after being commanded.',
+            ),
+            summary: "Device verification failed",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'sum without(pod, instance, container, endpoint) (increase(ha_workflow_executions_total{workflow=~"dsc_.*", status="failure"}[15m])) > 0',
           ),
           for: "0m",
           labels: { severity: "warning" },
