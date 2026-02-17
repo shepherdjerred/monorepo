@@ -96,9 +96,9 @@ function createLogger(moduleName?: string): Logger {
                   stack: error.stack,
                 },
               }
-            : error === undefined
+            : (error === undefined
               ? {}
-              : { error };
+              : { error });
         console.error(
           formatLogEntry(
             "error",

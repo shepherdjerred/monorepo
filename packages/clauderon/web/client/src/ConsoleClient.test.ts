@@ -18,7 +18,7 @@ class MockWebSocket {
   onerror: ((event: unknown) => void) | null = null;
   onmessage: ((event: MessageEvent<string>) => void) | null = null;
 
-  private sentMessages: string[] = [];
+  private readonly sentMessages: string[] = [];
 
   constructor(url: string) {
     this.url = url;
@@ -353,7 +353,7 @@ describe("ConsoleClient", () => {
       const ws = client.ws as MockWebSocket;
 
       // ANSI color codes are valid 7-bit ASCII (subset of UTF-8)
-      const ansiText = "\x1b[31mRed Text\x1b[0m";
+      const ansiText = "\u001B[31mRed Text\u001B[0m";
       const message = JSON.stringify({ type: "output", data: btoa(ansiText) });
       ws.simulateMessage(message);
 
@@ -377,7 +377,7 @@ describe("ConsoleClient", () => {
 
       // Create invalid UTF-8: 0xFF is never valid in UTF-8
       const invalidBytes = new Uint8Array([
-        0x48, 0x65, 0x6c, 0x6c, 0x6f, 0xff, 0x21,
+        0x48, 0x65, 0x6C, 0x6C, 0x6F, 0xFF, 0x21,
       ]); // "Hello�!"
       const binaryString = Array.from(invalidBytes, (byte) =>
         String.fromCharCode(byte),
@@ -409,7 +409,7 @@ describe("ConsoleClient", () => {
       const ws = client.ws as MockWebSocket;
 
       // Realistic terminal output: ANSI codes + ASCII + emoji
-      const mixedText = "\x1b[32m✓\x1b[0m Test passed 🎉";
+      const mixedText = "\u001B[32m✓\u001B[0m Test passed 🎉";
       // Encode properly: string → UTF-8 bytes → binary string → base64
       const bytes = new TextEncoder().encode(mixedText);
       const binaryString = Array.from(bytes, (byte) =>
@@ -585,7 +585,7 @@ describe("ConsoleClient", () => {
       const ws = client.ws as MockWebSocket;
 
       // Create a valid base64 string that's too large (> 1MB)
-      const largeData = btoa("A".repeat(800000)); // Will be > 1MB in base64
+      const largeData = btoa("A".repeat(800_000)); // Will be > 1MB in base64
       const message = JSON.stringify({ type: "output", data: largeData });
       ws.simulateMessage(message);
 

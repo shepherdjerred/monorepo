@@ -1,6 +1,6 @@
 import type { Secret, Directory, Container, File } from "@dagger.io/dagger";
 import { dag, object, func } from "@dagger.io/dagger";
-import { updateHomelabVersion, syncToS3 } from "./lib/containers/index.js";
+import { commitVersionsBack, syncToS3 } from "./lib/containers/index.js";
 import {
   checkBirmel,
   buildBirmelImage,
@@ -907,6 +907,7 @@ export class Monorepo {
     hassBaseUrl?: Secret,
     hassToken?: Secret,
     tofuGithubToken?: Secret,
+    commitBackToken?: Secret,
   ): Promise<string> {
     const outputs: string[] = [];
     const isRelease = branch === "main";
@@ -1227,7 +1228,10 @@ export class Monorepo {
         }
       }
 
-      // Birmel publish + deploy (reuses pre-built image)
+      // Track app versions for same-pipeline homelab chart building
+      const appVersions: Record<string, string> = {};
+
+      // Birmel publish (reuses pre-built image)
       if (version && gitSha && registryUsername && registryPassword) {
         outputs.push("\n--- Birmel Release ---");
         const refs = await publishBirmelImageWithContainer({
@@ -1240,15 +1244,7 @@ export class Monorepo {
           },
         });
         outputs.push(`Published:\n${refs.join("\n")}`);
-
-        // Deploy to homelab
-        outputs.push(
-          await updateHomelabVersion({
-            ghToken: githubToken,
-            appName: "birmel",
-            version,
-          }),
-        );
+        appVersions["shepherdjerred/birmel"] = version;
       }
 
       // Deploy clauderon docs to S3
@@ -1331,6 +1327,7 @@ export class Monorepo {
               githubToken,
             ),
           );
+          appVersions["shepherdjerred/starlight-karma-bot/beta"] = version;
         } catch (error) {
           const msg = error instanceof Error ? error.message : String(error);
           outputs.push(`✗ starlight-karma-bot deploy: ${msg}`);
@@ -1351,6 +1348,7 @@ export class Monorepo {
                 githubToken,
               ),
             );
+            appVersions["shepherdjerred/better-skill-capped-fetcher"] = version;
           } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);
             outputs.push(`✗ better-skill-capped deploy: ${msg}`);
@@ -1372,6 +1370,7 @@ export class Monorepo {
                 s3SecretAccessKey,
               ),
             );
+            appVersions["shepherdjerred/discord-plays-pokemon"] = version;
           } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);
             outputs.push(`✗ discord-plays-pokemon deploy: ${msg}`);
@@ -1394,6 +1393,7 @@ export class Monorepo {
                 s3SecretAccessKey,
               ),
             );
+            appVersions["shepherdjerred/scout-for-lol/beta"] = version;
           } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);
             outputs.push(`✗ scout-for-lol deploy: ${msg}`);
@@ -1428,6 +1428,7 @@ export class Monorepo {
             ...(githubToken ? { githubToken } : {}),
             ...(npmToken ? { npmToken } : {}),
             ...(tofuGithubToken ? { tofuGithubToken } : {}),
+            appVersions,
           };
           outputs.push(
             await ciHomelab(source, HomelabStage.Prod, homelabSecrets),
@@ -1436,6 +1437,28 @@ export class Monorepo {
           const msg = error instanceof Error ? error.message : String(error);
           outputs.push(`✗ homelab release: ${msg}`);
           releaseErrors.push(`homelab release: ${msg}`);
+        }
+      }
+
+      // Commit updated versions back to git
+      if (commitBackToken && version) {
+        outputs.push("\n--- Version Commit-Back ---");
+        try {
+          const allVersions: Record<string, string> = {
+            "shepherdjerred/homelab": version,
+            "shepherdjerred/dependency-summary": version,
+            "shepherdjerred/dns-audit": version,
+            "shepherdjerred/caddy-s3proxy": version,
+            ...appVersions,
+          };
+          const result = await commitVersionsBack({
+            token: commitBackToken,
+            versions: allVersions,
+          });
+          outputs.push(`✓ Versions committed to git: ${result.trim()}`);
+        } catch (error) {
+          const msg = error instanceof Error ? error.message : String(error);
+          outputs.push(`⚠ Version commit-back failed (non-fatal): ${msg}`);
         }
       }
 
@@ -1572,7 +1595,6 @@ export class Monorepo {
     gitSha: string,
     registryUsername: string,
     registryPassword: Secret,
-    githubToken?: Secret,
   ): Promise<string> {
     const outputs: string[] = [];
 
@@ -1597,16 +1619,8 @@ export class Monorepo {
     });
     outputs.push(`Published:\n${refs.join("\n")}`);
 
-    // Deploy to homelab
-    if (githubToken) {
-      outputs.push(
-        await updateHomelabVersion({
-          ghToken: githubToken,
-          appName: "birmel",
-          version,
-        }),
-      );
-    }
+    // Deployment happens through the main ci() pipeline which passes
+    // the version to ciHomelab() for same-pipeline chart building.
 
     return outputs.join("\n\n");
   }

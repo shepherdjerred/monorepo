@@ -248,7 +248,7 @@ export const editRepoTool = createTool({
               { name: "Files", value: filesList || "None" },
               { name: "Diff Preview", value: diffPreview.slice(0, 1000) },
             )
-            .setColor(0x58_65_f2)
+            .setColor(0x58_65_F2)
             .setFooter({ text: `Session: ${session.id.slice(0, 8)}` });
 
           const buttons =

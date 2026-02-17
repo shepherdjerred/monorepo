@@ -1,6 +1,0 @@
-apiVersion: v2
-name: openclaw
-description: OpenClaw AI agent
-type: application
-version: "$version"
-appVersion: "$appVersion"

@@ -160,9 +160,9 @@ export async function parseSourceMap(
       if (
         compressed.length < 4 ||
         compressed[0] !== 0x28 ||
-        compressed[1] !== 0xb5 ||
-        compressed[2] !== 0x2f ||
-        compressed[3] !== 0xfd
+        compressed[1] !== 0xB5 ||
+        compressed[2] !== 0x2F ||
+        compressed[3] !== 0xFD
       ) {
         // Not ZSTD compressed, try as plain text
         sources.push({

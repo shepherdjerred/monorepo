@@ -67,13 +67,13 @@ export async function createMcpGatewayDeployment(chart: Chart) {
     },
   });
 
-  // GitHub credentials (shared with openclaw)
-  const openclawItem = new OnePasswordItem(chart, "openclaw-1p", {
+  // Shared credentials (GitHub token, Fastmail token, Gmail token)
+  const mcpGatewayCredentials = new OnePasswordItem(chart, "mcp-gateway-credentials-1p", {
     spec: {
       itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/openclaw",
     },
     metadata: {
-      name: "openclaw",
+      name: "mcp-gateway-credentials",
     },
   });
 
@@ -183,7 +183,7 @@ export async function createMcpGatewayDeployment(chart: Chart) {
           secret: Secret.fromSecretName(
             chart,
             "github-token-secret",
-            openclawItem.name,
+            mcpGatewayCredentials.name,
           ),
           key: "gh-token",
         }),
@@ -195,7 +195,7 @@ export async function createMcpGatewayDeployment(chart: Chart) {
           secret: Secret.fromSecretName(
             chart,
             "fastmail-jmap-token-secret",
-            openclawItem.name,
+            mcpGatewayCredentials.name,
           ),
           key: "fastmail-token",
         }),
@@ -205,7 +205,7 @@ export async function createMcpGatewayDeployment(chart: Chart) {
           secret: Secret.fromSecretName(
             chart,
             "gmail-pass-secret",
-            openclawItem.name,
+            mcpGatewayCredentials.name,
           ),
           key: "gmail-token",
         }),

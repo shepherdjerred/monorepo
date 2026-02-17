@@ -3,7 +3,6 @@ import { dag } from "@dagger.io/dagger";
 import {
   syncToS3,
   publishToGhcrMultiple,
-  updateHomelabVersion,
   getGitHubContainer,
 } from "./lib/containers/index.js";
 import { logWithTimestamp, withTiming } from "./lib/index.js";
@@ -913,16 +912,6 @@ export async function deployScoutForLol(
     });
   });
   outputs.push("Backend published to GHCR");
-
-  // Deploy backend to homelab (beta stage)
-  await withTiming("backend homelab deploy", async () => {
-    await updateHomelabVersion({
-      ghToken,
-      appName: "scout-for-lol/beta",
-      version,
-    });
-  });
-  outputs.push("Backend deployed to homelab (beta)");
 
   // Deploy frontend to S3
   await withTiming("frontend S3 deploy", async () => {

@@ -29,3 +29,14 @@ packages/clauderon/web/shared/src/generated/
 
 # Coverage
 coverage/
+
+# XML tileset files with .tsx extension (Tiled map editor)
+practice/bevy-experiment/assets/
+packages/castle-casters/assets/
+
+# Legacy files with syntax errors
+archive/herd/web/src/components/confirmationPage/ConfirmationPage.js
+
+# Vendored/scraped HTML data
+packages/dotfiles/dot_claude/skills/apple-hig-helper/data/
+packages/discord-plays-pokemon/packages/frontend/public/emulatorjs/

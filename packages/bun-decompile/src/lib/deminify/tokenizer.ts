@@ -208,8 +208,8 @@ export function getModelInfo(model: string): {
     targetBatchTokens: getTargetBatchTokens(model),
     provider: isClaudeModel(model)
       ? "anthropic"
-      : isOpenAIModel(model)
+      : (isOpenAIModel(model)
         ? "openai"
-        : "unknown",
+        : "unknown"),
   };
 }

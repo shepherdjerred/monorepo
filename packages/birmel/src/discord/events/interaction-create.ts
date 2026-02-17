@@ -215,7 +215,7 @@ async function handleApprove(
         { name: "Status", value: "PR Created", inline: true },
         { name: "PR URL", value: result.prUrl ?? "N/A" },
       )
-      .setColor(0x57_f2_87)
+      .setColor(0x57_F2_87)
       .setFooter({ text: `Approved by ${interaction.user.username}` });
 
     await message.edit({
@@ -249,7 +249,7 @@ async function handleReject(
     const embed = new EmbedBuilder()
       .setTitle("Changes Rejected")
       .setDescription(existingEmbed?.description ?? "Changes were rejected")
-      .setColor(0xed_42_45)
+      .setColor(0xED_42_45)
       .setFooter({ text: `Rejected by ${interaction.user.username}` });
 
     await message.edit({

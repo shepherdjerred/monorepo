@@ -31,8 +31,6 @@ export const HELM_CHARTS = [
   "grafana-db",
   // MCP gateway for aggregating MCP servers
   "mcp-gateway",
-  // OpenClaw AI agent
-  "openclaw",
   // S3 static sites (consolidates sjer-red, webring, dpp-docs, scout-frontend, better-skill-capped)
   "s3-static-sites",
   // Kyverno policies (separate to ensure CRDs exist before policies)

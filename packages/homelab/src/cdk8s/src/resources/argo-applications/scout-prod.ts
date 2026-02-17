@@ -5,14 +5,6 @@ export function createScoutProdApp(chart: Chart) {
   return new Application(chart, "scout-prod-app", {
     metadata: {
       name: "scout-prod",
-      annotations: {
-        "argocd-image-updater.argoproj.io/image-list":
-          "scout=ghcr.io/shepherdjerred/scout-for-lol",
-        "argocd-image-updater.argoproj.io/scout.update-strategy": "semver",
-        "argocd-image-updater.argoproj.io/write-back-method":
-          "git:secret:argocd/image-updater-git-creds",
-        "argocd-image-updater.argoproj.io/git-branch": "main",
-      },
     },
     spec: {
       revisionHistoryLimit: 5,

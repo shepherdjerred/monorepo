@@ -1,8 +1,4 @@
 const versions = {
-  // Git repositories (pinned to specific commits for supply chain security)
-  // renovate: datasource=github-releases packageName=openclaw/openclaw
-  openclawCommit: "476f367cf16081acd144048ee61198e58d15df21",
-
   // Dagger CI/CD Docker Images
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   alpine:

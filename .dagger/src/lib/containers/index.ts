@@ -68,8 +68,8 @@ export {
   type ManifestReleaseOptions,
 } from "./release-please";
 export {
-  updateHomelabVersion,
-  type UpdateHomelabVersionOptions,
+  commitVersionsBack,
+  type CommitVersionsBackOptions,
 } from "./homelab";
 export {
   getClaudeContainer,
