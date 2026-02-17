@@ -14,7 +14,9 @@ type FailedFetch = {
   reason: string;
 };
 
-function formatTransitiveDepsHtml(transitiveDepsDiffs: Map<string, FullDependencyDiff>): string {
+function formatTransitiveDepsHtml(
+  transitiveDepsDiffs: Map<string, FullDependencyDiff>,
+): string {
   if (transitiveDepsDiffs.size === 0) {
     return "";
   }
@@ -23,9 +25,13 @@ function formatTransitiveDepsHtml(transitiveDepsDiffs: Map<string, FullDependenc
 
   for (const [chartName, diff] of transitiveDepsDiffs) {
     const hasChanges =
-      diff.images.updated.length > 0 || diff.charts.updated.length > 0 || diff.appVersions.updated.length > 0;
+      diff.images.updated.length > 0 ||
+      diff.charts.updated.length > 0 ||
+      diff.appVersions.updated.length > 0;
 
-    if (!hasChanges) {continue;}
+    if (!hasChanges) {
+      continue;
+    }
 
     let sectionHtml = `<h3>${chartName} - Transitive Updates</h3><div class="transitive-section">`;
 
@@ -92,7 +98,10 @@ function formatTransitiveDepsHtml(transitiveDepsDiffs: Map<string, FullDependenc
       <h4>AppVersion Updates</h4>
       <ul>
         ${diff.appVersions.updated
-          .map((a) => `<li><strong>${a.chartName}</strong>: ${a.oldAppVersion} → ${a.newAppVersion}</li>`)
+          .map(
+            (a) =>
+              `<li><strong>${a.chartName}</strong>: ${a.oldAppVersion} → ${a.newAppVersion}</li>`,
+          )
           .join("\n")}
       </ul>`;
     }
@@ -229,27 +238,32 @@ export async function sendEmail(
       // Convert links
       .replaceAll(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, "[$2]($1)")
       // Convert table - build proper markdown table
-      .replaceAll(/<table[^>]*>([\s\S]*?)<\/table>/gi, (_match, tableContent: string) => {
-        const rows: string[] = [];
-        const rowMatches = tableContent.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi) ?? [];
-        rowMatches.forEach((row, index) => {
-          const cells: string[] = [];
-          const cellMatches = row.match(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/gi) ?? [];
-          cellMatches.forEach((cell) => {
-            const content = cell
-              .replace(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/i, "$1")
-              .replaceAll(/<[^>]+>/g, "")
-              .trim();
-            cells.push(content);
+      .replaceAll(
+        /<table[^>]*>([\s\S]*?)<\/table>/gi,
+        (_match, tableContent: string) => {
+          const rows: string[] = [];
+          const rowMatches =
+            tableContent.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi) ?? [];
+          rowMatches.forEach((row, index) => {
+            const cells: string[] = [];
+            const cellMatches =
+              row.match(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/gi) ?? [];
+            cellMatches.forEach((cell) => {
+              const content = cell
+                .replace(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/i, "$1")
+                .replaceAll(/<[^>]+>/g, "")
+                .trim();
+              cells.push(content);
+            });
+            rows.push("| " + cells.join(" | ") + " |");
+            // Add separator after header row
+            if (index === 0) {
+              rows.push("|" + cells.map(() => "---").join("|") + "|");
+            }
           });
-          rows.push("| " + cells.join(" | ") + " |");
-          // Add separator after header row
-          if (index === 0) {
-            rows.push("|" + cells.map(() => "---").join("|") + "|");
-          }
-        });
-        return "\n" + rows.join("\n") + "\n";
-      })
+          return "\n" + rows.join("\n") + "\n";
+        },
+      )
       // Convert list items
       .replaceAll(/<li[^>]*>/gi, "\n- ")
       .replaceAll(/<\/li>/gi, "")
@@ -262,12 +276,12 @@ export async function sendEmail(
       // Remove remaining tags
       .replaceAll(/<[^>]+>/g, "")
       // Decode HTML entities
-      .replaceAll('&amp;', "&")
-      .replaceAll('&lt;', "<")
-      .replaceAll('&gt;', ">")
-      .replaceAll('&quot;', '"')
-      .replaceAll('&#39;', "'")
-      .replaceAll('&nbsp;', " ")
+      .replaceAll("&amp;", "&")
+      .replaceAll("&lt;", "<")
+      .replaceAll("&gt;", ">")
+      .replaceAll("&quot;", '"')
+      .replaceAll("&#39;", "'")
+      .replaceAll("&nbsp;", " ")
       // Clean up whitespace
       .replaceAll(/\n\s*\n\s*\n/g, "\n\n")
       .trim();

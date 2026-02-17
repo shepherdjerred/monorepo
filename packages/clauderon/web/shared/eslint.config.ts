@@ -3,6 +3,9 @@ import { recommended } from "../../../eslint-config/local.ts";
 export default [
   ...recommended({
     tsconfigRootDir: import.meta.dirname,
+    projectService: {
+      allowDefaultProject: ["eslint.config.ts"],
+    },
     codeOrganization: false,
     customRules: {
       codeOrganization: false,
@@ -20,6 +23,7 @@ export default [
       "**/*.js",
       "**/*.cjs",
       "src/generated/",
+      "eslint.config.ts",
     ],
   }),
 ];

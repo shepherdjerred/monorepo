@@ -1,14 +1,24 @@
 import type { TServiceParams } from "@digital-alchemy/core";
-import { shouldStartCleaning, startRoombaWithVerification, withTimeout } from "../util.ts";
+import {
+  shouldStartCleaning,
+  startRoombaWithVerification,
+  withTimeout,
+} from "../util.ts";
 import { instrumentWorkflow } from "../metrics.ts";
 
-export function runVacuumIfNotHome({ hass, scheduler, logger }: TServiceParams) {
+export function runVacuumIfNotHome({
+  hass,
+  scheduler,
+  logger,
+}: TServiceParams) {
   const personJerred = hass.refBy.id("person.jerred");
   const personShuxin = hass.refBy.id("person.shuxin");
   const roomba = hass.refBy.id("vacuum.roomba");
 
   function isEveryoneAway() {
-    return personJerred.state === "not_home" && personShuxin.state === "not_home";
+    return (
+      personJerred.state === "not_home" && personShuxin.state === "not_home"
+    );
   }
 
   scheduler.cron({
@@ -21,16 +31,17 @@ export function runVacuumIfNotHome({ hass, scheduler, logger }: TServiceParams) 
 
             logger.debug("Checking conditions for vacuum execution");
             if (isEveryoneAway() && shouldStartCleaning(roomba.state)) {
-                logger.debug("Conditions met; starting Roomba");
+              logger.debug("Conditions met; starting Roomba");
 
-                await hass.call.notify.notify({
-                  title: "Vacuum Started",
-                  message: "The Roomba has started cleaning since no one is home.",
-                });
+              await hass.call.notify.notify({
+                title: "Vacuum Started",
+                message:
+                  "The Roomba has started cleaning since no one is home.",
+              });
 
-                await roomba.start();
-                startRoombaWithVerification(hass, logger, roomba);
-              }
+              await roomba.start();
+              startRoombaWithVerification(hass, logger, roomba);
+            }
           })(),
           { amount: 2, unit: "m" },
           "run_vacuum_if_not_home workflow",

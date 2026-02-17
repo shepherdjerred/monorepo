@@ -7,7 +7,16 @@ import { $ } from "bun";
  * converted from `string` to specific union types
  */
 const ENTITY_STATE_MAPPINGS = {
-  "vacuum.roomba": ["error", "docked", "charging", "paused", "returning", "cleaning", "idle", "unavailable"],
+  "vacuum.roomba": [
+    "error",
+    "docked",
+    "charging",
+    "paused",
+    "returning",
+    "cleaning",
+    "idle",
+    "unavailable",
+  ],
 } as const;
 
 const HASS_TOKEN_PLACEHOLDER = "YOUR LONG LIVED ACCESS TOKEN";
@@ -21,7 +30,9 @@ function parseEnvValue(envContent: string, key: string): string | undefined {
       continue;
     }
 
-    const normalized = line.startsWith("export ") ? line.slice("export ".length).trim() : line;
+    const normalized = line.startsWith("export ")
+      ? line.slice("export ".length).trim()
+      : line;
     const match = /^([A-Z_]\w*)\s*=\s*(.*)$/i.exec(normalized);
     if (!match) {
       continue;
@@ -33,7 +44,10 @@ function parseEnvValue(envContent: string, key: string): string | undefined {
     }
 
     let value = matchValue.trim();
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
       value = value.slice(1, -1);
     }
 
@@ -97,7 +111,11 @@ async function generateTypes() {
 async function addTsDisableComments() {
   console.log("🔄 Adding TypeScript disable comments to generated files...");
 
-  const generatedFiles = ["src/hass/registry.mts", "src/hass/services.mts", "src/hass/mappings.mts"];
+  const generatedFiles = [
+    "src/hass/registry.mts",
+    "src/hass/services.mts",
+    "src/hass/mappings.mts",
+  ];
 
   for (const filePath of generatedFiles) {
     try {
@@ -105,7 +123,9 @@ async function addTsDisableComments() {
 
       // Check if TypeScript disable comments are already present
       if (content.includes("@ts-nocheck")) {
-        console.log(`✅ TypeScript disable comments already present in ${filePath}`);
+        console.log(
+          `✅ TypeScript disable comments already present in ${filePath}`,
+        );
       } else {
         // Add TypeScript disable comments at the top after the existing header
         const lines = content.split("\n");
@@ -121,7 +141,11 @@ async function addTsDisableComments() {
         }
 
         // Insert TypeScript disable comments
-        const tsDisableComments = ["// @ts-nocheck", "/* eslint-disable */", ""];
+        const tsDisableComments = [
+          "// @ts-nocheck",
+          "/* eslint-disable */",
+          "",
+        ];
 
         lines.splice(insertIndex, 0, ...tsDisableComments);
         content = lines.join("\n");
@@ -151,7 +175,10 @@ async function postProcessRegistry() {
       const unionType = states.map((state) => `"${state}"`).join(" | ");
 
       // Create a regex to match the entity definition and replace state: string
-      const entityPattern = new RegExp(String.raw`("${entityId.replaceAll('.', String.raw`\.`)}":\s*{[^}]*?)state:\s*string;`, "s");
+      const entityPattern = new RegExp(
+        String.raw`("${entityId.replaceAll(".", String.raw`\.`)}":\s*{[^}]*?)state:\s*string;`,
+        "s",
+      );
 
       const replacement = `$1state: ${unionType};`;
 
@@ -188,7 +215,7 @@ async function validateProcessing() {
     for (const [entityId, states] of Object.entries(ENTITY_STATE_MAPPINGS)) {
       const unionType = states.map((state) => `"${state}"`).join(" | ");
       const expectedPattern = new RegExp(
-        String.raw`"${entityId.replaceAll('.', String.raw`\.`)}":\s*{[^}]*?state:\s*${unionType.replaceAll(/[|()]/g, String.raw`\$&`)};`,
+        String.raw`"${entityId.replaceAll(".", String.raw`\.`)}":\s*{[^}]*?state:\s*${unionType.replaceAll(/[|()]/g, String.raw`\$&`)};`,
         "s",
       );
 
@@ -216,12 +243,16 @@ async function validateProcessing() {
  * Main execution function
  */
 async function main() {
-  console.log("🚀 Starting Home Assistant type generation and post-processing...");
+  console.log(
+    "🚀 Starting Home Assistant type generation and post-processing...",
+  );
 
   const hassToken = await resolveHassToken();
   if (!hassToken || isPlaceholderToken(hassToken)) {
     console.log("⚠️  Skipping type generation: HASS_TOKEN is not set.");
-    console.log("   Set HASS_TOKEN in the environment or a local .env file to enable type generation.");
+    console.log(
+      "   Set HASS_TOKEN in the environment or a local .env file to enable type generation.",
+    );
     return;
   }
 

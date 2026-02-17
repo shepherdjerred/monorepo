@@ -2,7 +2,14 @@ import type { TServiceParams } from "@digital-alchemy/core";
 import { Gauge } from "prom-client";
 import { registry, setConnectionChecker } from "./metrics.ts";
 
-const CRITICAL_DOMAINS = ["climate", "notify", "switch", "media_player", "vacuum", "cover"] as const;
+const CRITICAL_DOMAINS = [
+  "climate",
+  "notify",
+  "switch",
+  "media_player",
+  "vacuum",
+  "cover",
+] as const;
 
 const websocketConnected = new Gauge({
   name: "ha_websocket_connected",
@@ -24,7 +31,9 @@ export function startMetricsServer({ logger, hass }: TServiceParams) {
       const url = new URL(request.url);
 
       if (url.pathname === "/metrics") {
-        websocketConnected.set(hass.socket.connectionState === "connected" ? 1 : 0);
+        websocketConnected.set(
+          hass.socket.connectionState === "connected" ? 1 : 0,
+        );
         const metrics = await registry.metrics();
         return new Response(metrics, {
           headers: {

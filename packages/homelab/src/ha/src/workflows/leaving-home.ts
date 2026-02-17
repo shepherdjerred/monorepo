@@ -1,7 +1,12 @@
 import type { TServiceParams } from "@digital-alchemy/core";
 import type { ENTITY_STATE } from "@digital-alchemy/hass";
 import { z } from "zod";
-import { shouldStartCleaning, startRoombaWithVerification, verifyAfterDelay, withTimeout } from "../util.ts";
+import {
+  shouldStartCleaning,
+  startRoombaWithVerification,
+  verifyAfterDelay,
+  withTimeout,
+} from "../util.ts";
 import { instrumentWorkflow } from "../metrics.ts";
 
 export function leavingHome({ hass, logger }: TServiceParams) {
@@ -44,7 +49,11 @@ export function leavingHome({ hass, logger }: TServiceParams) {
           verifyAfterDelay({
             entityId: bedroomHeater.entity_id,
             workflowName: "climate_leaving_home",
-            getActualState: () => z.coerce.string().catch("unknown").parse(bedroomHeater.attributes.temperature),
+            getActualState: () =>
+              z.coerce
+                .string()
+                .catch("unknown")
+                .parse(bedroomHeater.attributes.temperature),
             check: (actual) => actual === "20",
             delay: { amount: 30, unit: "s" },
             description: "target 20°C",
@@ -91,10 +100,15 @@ export function leavingHome({ hass, logger }: TServiceParams) {
       newState: ENTITY_STATE<"person.jerred"> | undefined,
       oldState: ENTITY_STATE<"person.jerred"> | undefined,
     ) => {
-      if (oldState && newState && newState.state === "not_home" && oldState.state === "home" && // Only trigger if Shuxin is also not home (house is now empty)
-        personShuxin.state === "not_home") {
-          await runLeavingHome();
-        }
+      if (
+        oldState &&
+        newState &&
+        newState.state === "not_home" &&
+        oldState.state === "home" && // Only trigger if Shuxin is also not home (house is now empty)
+        personShuxin.state === "not_home"
+      ) {
+        await runLeavingHome();
+      }
     },
   );
 
@@ -103,10 +117,15 @@ export function leavingHome({ hass, logger }: TServiceParams) {
       newState: ENTITY_STATE<"person.shuxin"> | undefined,
       oldState: ENTITY_STATE<"person.shuxin"> | undefined,
     ) => {
-      if (oldState && newState && newState.state === "not_home" && oldState.state === "home" && // Only trigger if Jerred is also not home (house is now empty)
-        personJerred.state === "not_home") {
-          await runLeavingHome();
-        }
+      if (
+        oldState &&
+        newState &&
+        newState.state === "not_home" &&
+        oldState.state === "home" && // Only trigger if Jerred is also not home (house is now empty)
+        personJerred.state === "not_home"
+      ) {
+        await runLeavingHome();
+      }
     },
   );
 }

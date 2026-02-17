@@ -43,7 +43,9 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
   // const livingRoomClimate = hass.refBy.id("climate.living_room");
   const personJerred = hass.refBy.id("person.jerred");
   const personShuxin = hass.refBy.id("person.shuxin");
-  const pcPowerSensor = hass.refBy.id("sensor.sonoff_desktop_pc002166152_power");
+  const pcPowerSensor = hass.refBy.id(
+    "sensor.sonoff_desktop_pc002166152_power",
+  );
 
   function isAnyoneHome() {
     return personJerred.state === "home" || personShuxin.state === "home";
@@ -59,7 +61,9 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
       const parseResult = z.number().safeParse(pcPowerSensor.state);
 
       if (!parseResult.success) {
-        logger.debug("PC power sensor returned invalid value, assuming no heat generation");
+        logger.debug(
+          "PC power sensor returned invalid value, assuming no heat generation",
+        );
         return false;
       }
 
@@ -129,7 +133,11 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
     verifyAfterDelay({
       entityId: bedroomHeater.entity_id,
       workflowName: "climate_bedroom",
-      getActualState: () => z.coerce.string().catch("unknown").parse(bedroomHeater.attributes.temperature),
+      getActualState: () =>
+        z.coerce
+          .string()
+          .catch("unknown")
+          .parse(bedroomHeater.attributes.temperature),
       check: (actual) => actual === bedroomTemp.toString(),
       delay: { amount: 30, unit: "s" },
       description: `target ${bedroomTemp.toString()}°C`,
@@ -141,7 +149,11 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
       verifyAfterDelay({
         entityId: officeHeater.entity_id,
         workflowName: "climate_office",
-        getActualState: () => z.coerce.string().catch("unknown").parse(officeHeater.attributes.temperature),
+        getActualState: () =>
+          z.coerce
+            .string()
+            .catch("unknown")
+            .parse(officeHeater.attributes.temperature),
         check: (actual) => actual === officeTemp.toString(),
         delay: { amount: 30, unit: "s" },
         description: `target ${officeTemp.toString()}°C`,
@@ -165,15 +177,21 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
 
             // Only adjust office heating based on PC state
             if (pcGeneratingHeat) {
-              logger.debug("PC generating heat - ensuring office heating is off");
+              logger.debug(
+                "PC generating heat - ensuring office heating is off",
+              );
               try {
-                await hass.call.climate.turn_off({ entity_id: officeHeater.entity_id });
+                await hass.call.climate.turn_off({
+                  entity_id: officeHeater.entity_id,
+                });
               } catch {
                 logger.debug("Failed to turn off office heater");
               }
             } else {
               // PC is idle/off, ensure office has appropriate heating for current mode
-              logger.debug("PC not generating heat - office heating may be needed");
+              logger.debug(
+                "PC not generating heat - office heating may be needed",
+              );
               // Note: This is a passive check. Active heating is set by time-based schedules.
             }
           }),
@@ -193,7 +211,9 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
       instrumentWorkflow("climate_bedtime_prep", async () => {
         await withTimeout(
           runIf(isAnyoneHome(), async () => {
-            logger.info("Setting bedtime climate - comfortable for falling asleep");
+            logger.info(
+              "Setting bedtime climate - comfortable for falling asleep",
+            );
             await setClimateZones(TEMP_BEDTIME, TEMP_BEDTIME);
           }),
           { amount: 2, unit: "m" },
@@ -231,7 +251,9 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
       instrumentWorkflow("climate_pre_wake_weekday", async () => {
         await withTimeout(
           runIf(isAnyoneHome(), async () => {
-            logger.info("Pre-wake heating for weekday - warming house before wake time");
+            logger.info(
+              "Pre-wake heating for weekday - warming house before wake time",
+            );
             await setClimateZones(TEMP_PRE_WAKE, TEMP_PRE_WAKE);
           }),
           { amount: 2, unit: "m" },
@@ -250,7 +272,9 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
       instrumentWorkflow("climate_pre_wake_weekend", async () => {
         await withTimeout(
           runIf(isAnyoneHome(), async () => {
-            logger.info("Pre-wake heating for weekend - warming house before wake time");
+            logger.info(
+              "Pre-wake heating for weekend - warming house before wake time",
+            );
             await setClimateZones(TEMP_PRE_WAKE, TEMP_PRE_WAKE);
           }),
           { amount: 2, unit: "m" },

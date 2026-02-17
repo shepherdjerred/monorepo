@@ -19,7 +19,11 @@ import {
   getGitHubRepoForImage,
   type FullDependencyDiff,
 } from "./index.js";
-import { HELM_CHART_GITHUB_REPOS, HELM_CHART_APP_REPOS, DOCKER_IMAGE_GITHUB_REPOS } from "./repo-mappings.js";
+import {
+  HELM_CHART_GITHUB_REPOS,
+  HELM_CHART_APP_REPOS,
+  DOCKER_IMAGE_GITHUB_REPOS,
+} from "./repo-mappings.js";
 import { formatEmailHtml, sendEmail } from "./email-formatter.js";
 
 // Schema for parsed dependency info from renovate comments
@@ -85,7 +89,9 @@ const daysArg = args.find((a) => !a.startsWith("--"));
 const DAYS_TO_LOOK_BACK = daysArg ? Number.parseInt(daysArg, 10) : 7;
 
 async function main() {
-  console.log(`Starting dependency summary generation (looking back ${String(DAYS_TO_LOOK_BACK)} days)...`);
+  console.log(
+    `Starting dependency summary generation (looking back ${String(DAYS_TO_LOOK_BACK)} days)...`,
+  );
 
   try {
     await generateAndSendSummary();
@@ -113,20 +119,30 @@ async function generateAndSendSummary() {
     const changes = await getVersionChanges(tempDir);
     if (changes.length === 0) {
       console.log("No dependency changes in the last week");
-      await sendEmail("No Dependency Updates This Week", "<p>No dependencies were updated in the last week.</p>", dryRun);
+      await sendEmail(
+        "No Dependency Updates This Week",
+        "<p>No dependencies were updated in the last week.</p>",
+        dryRun,
+      );
       return;
     }
 
     console.log(`Found ${String(changes.length)} dependency changes`);
 
     // Step 2: Fetch release notes for each change
-    const { notes: releaseNotes, failed: failedFetches } = await fetchAllReleaseNotes(changes);
+    const { notes: releaseNotes, failed: failedFetches } =
+      await fetchAllReleaseNotes(changes);
 
     // Step 3: Summarize with GPT-5.1
     const summary = await summarizeWithLLM(changes, releaseNotes);
 
     // Step 4: Format and send email
-    const htmlContent = formatEmailHtml(changes, summary, failedFetches, transitiveDepsDiffs);
+    const htmlContent = formatEmailHtml(
+      changes,
+      summary,
+      failedFetches,
+      transitiveDepsDiffs,
+    );
     await sendEmail("Weekly Dependency Update Summary", htmlContent, dryRun);
   } finally {
     // Cleanup temp directory
@@ -205,17 +221,27 @@ function findMatchingAddedLine(
 ): DependencyInfo | null {
   for (let j = startIndex; j < lines.length; j++) {
     const nextLine = lines[j];
-    if (!nextLine) {continue;}
-    if (!nextLine.startsWith("+") || nextLine.startsWith("+++")) {continue;}
+    if (!nextLine) {
+      continue;
+    }
+    if (!nextLine.startsWith("+") || nextLine.startsWith("+++")) {
+      continue;
+    }
 
     const newVersionMatch = versionRegex.exec(nextLine);
-    if (!newVersionMatch) {continue;}
+    if (!newVersionMatch) {
+      continue;
+    }
 
     const newName = newVersionMatch[1] ?? newVersionMatch[2];
-    if (newName !== name) {continue;}
+    if (newName !== name) {
+      continue;
+    }
 
     const newVersion = newVersionMatch[3];
-    if (!newVersion) {continue;}
+    if (!newVersion) {
+      continue;
+    }
 
     return parseRenovateComment(renovateComment, name, oldVersion, newVersion);
   }
@@ -231,7 +257,9 @@ function parseDiff(diff: string): DependencyInfo[] {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (!line) {continue;}
+    if (!line) {
+      continue;
+    }
 
     // Look for removed lines (old version)
     if (line.startsWith("-") && !line.startsWith("---")) {
@@ -240,7 +268,9 @@ function parseDiff(diff: string): DependencyInfo[] {
         // Name is either group 1 (quoted) or group 2 (unquoted)
         const name = versionMatch[1] ?? versionMatch[2];
         const oldVersion = versionMatch[3];
-        if (!name || !oldVersion) {continue;}
+        if (!name || !oldVersion) {
+          continue;
+        }
 
         // Look backwards for the renovate comment (should be directly above)
         // The comment must be on the immediately preceding line (in context)
@@ -251,7 +281,14 @@ function parseDiff(diff: string): DependencyInfo[] {
         }
 
         // Look for the corresponding added line
-        const matchedInfo = findMatchingAddedLine(lines, i + 1, versionRegex, name, renovateComment, oldVersion);
+        const matchedInfo = findMatchingAddedLine(
+          lines,
+          i + 1,
+          versionRegex,
+          name,
+          renovateComment,
+          oldVersion,
+        );
         if (matchedInfo) {
           changes.push(matchedInfo);
         }
@@ -283,7 +320,12 @@ function parseRenovateComment(
   }
 
   const datasource = datasourceMatch[1];
-  const validDatasources = ["helm", "docker", "github-releases", "custom.papermc"];
+  const validDatasources = [
+    "helm",
+    "docker",
+    "github-releases",
+    "custom.papermc",
+  ];
   if (!datasource || !validDatasources.includes(datasource)) {
     return null;
   }
@@ -312,17 +354,24 @@ async function fetchAllReleaseNotes(
 
   for (const change of changes) {
     try {
-      console.log(`Fetching release notes for ${change.name} (${change.datasource})...`);
+      console.log(
+        `Fetching release notes for ${change.name} (${change.datasource})...`,
+      );
       const releaseNotesList = await fetchReleaseNotes(change);
       if (releaseNotesList.length > 0) {
         for (const note of releaseNotesList) {
-          const preview = note.notes.slice(0, 100).replaceAll('\n', " ");
-          console.log(`  ✓ [${note.source}] Got ${String(note.notes.length)} chars: "${preview}..."`);
+          const preview = note.notes.slice(0, 100).replaceAll("\n", " ");
+          console.log(
+            `  ✓ [${note.source}] Got ${String(note.notes.length)} chars: "${preview}..."`,
+          );
           notes.push(note);
         }
       } else {
         console.log(`  ✗ No release notes found`);
-        failed.push({ dependency: change.name, reason: "No GitHub releases found" });
+        failed.push({
+          dependency: change.name,
+          reason: "No GitHub releases found",
+        });
       }
     } catch (error) {
       console.warn(`  ✗ Failed: ${String(error)}`);
@@ -339,12 +388,16 @@ async function fetchReleaseNotes(dep: DependencyInfo): Promise<ReleaseNotes[]> {
   switch (dep.datasource) {
     case "github-releases": {
       const note = await fetchGitHubReleaseNotes(dep);
-      if (note) {results.push(note);}
+      if (note) {
+        results.push(note);
+      }
       break;
     }
     case "docker": {
       const note = await fetchDockerReleaseNotes(dep);
-      if (note) {results.push(note);}
+      if (note) {
+        results.push(note);
+      }
       break;
     }
     case "helm": {
@@ -361,7 +414,9 @@ async function fetchReleaseNotes(dep: DependencyInfo): Promise<ReleaseNotes[]> {
   return results;
 }
 
-async function fetchGitHubReleaseNotes(dep: DependencyInfo): Promise<ReleaseNotes | null> {
+async function fetchGitHubReleaseNotes(
+  dep: DependencyInfo,
+): Promise<ReleaseNotes | null> {
   // dep.name is like "kubernetes/kubernetes" or "siderolabs/talos"
   const [owner, repo] = dep.name.split("/");
   if (!owner || !repo) {
@@ -381,7 +436,10 @@ async function fetchGitHubReleaseNotes(dep: DependencyInfo): Promise<ReleaseNote
   return null;
 }
 
-async function tryArtifactHubFallback(depName: string, newVersion: string): Promise<ReleaseNotes | null> {
+async function tryArtifactHubFallback(
+  depName: string,
+  newVersion: string,
+): Promise<ReleaseNotes | null> {
   try {
     const searchUrl = `https://artifacthub.io/api/v1/packages/helm/${depName}`;
     const response = await fetch(searchUrl, {
@@ -391,23 +449,35 @@ async function tryArtifactHubFallback(depName: string, newVersion: string): Prom
       },
     });
 
-    if (!response.ok) {return null;}
+    if (!response.ok) {
+      return null;
+    }
 
     const rawData: unknown = await response.json();
     const parsed = ArtifactHubSchema.safeParse(rawData);
-    if (!parsed.success) {return null;}
+    if (!parsed.success) {
+      return null;
+    }
 
     const repoUrl = parsed.data.repository?.url;
-    if (!repoUrl) {return null;}
+    if (!repoUrl) {
+      return null;
+    }
 
     const repoMatch = /github\.com\/([^/]+\/[^/]+)/i.exec(repoUrl);
-    if (!repoMatch?.[1]) {return null;}
+    if (!repoMatch?.[1]) {
+      return null;
+    }
 
     const [owner, repo] = repoMatch[1].split("/");
-    if (!owner || !repo) {return null;}
+    if (!owner || !repo) {
+      return null;
+    }
 
     const releases = await fetchGitHubReleases(owner, repo, newVersion);
-    if (!releases) {return null;}
+    if (!releases) {
+      return null;
+    }
 
     return {
       dependency: depName,
@@ -421,7 +491,9 @@ async function tryArtifactHubFallback(depName: string, newVersion: string): Prom
   }
 }
 
-async function fetchDockerReleaseNotes(dep: DependencyInfo): Promise<ReleaseNotes | null> {
+async function fetchDockerReleaseNotes(
+  dep: DependencyInfo,
+): Promise<ReleaseNotes | null> {
   // Look up the GitHub repo for this Docker image
   const githubRepo = DOCKER_IMAGE_GITHUB_REPOS[dep.name];
 
@@ -444,7 +516,11 @@ async function fetchDockerReleaseNotes(dep: DependencyInfo): Promise<ReleaseNote
 
   // Use the full fallback chain (GitHub Releases → CHANGELOG.md → Git Compare + LLM)
   for (const repoPath of reposToTry) {
-    const notes = await fetchReleaseNotesBetween(repoPath, dep.oldVersion, dep.newVersion);
+    const notes = await fetchReleaseNotesBetween(
+      repoPath,
+      dep.oldVersion,
+      dep.newVersion,
+    );
 
     if (notes.length > 0) {
       return {
@@ -460,7 +536,9 @@ async function fetchDockerReleaseNotes(dep: DependencyInfo): Promise<ReleaseNote
   return null;
 }
 
-async function fetchHelmReleaseNotes(dep: DependencyInfo): Promise<ReleaseNotes[]> {
+async function fetchHelmReleaseNotes(
+  dep: DependencyInfo,
+): Promise<ReleaseNotes[]> {
   const results: ReleaseNotes[] = [];
 
   // 1. Try to fetch Helm chart release notes
@@ -469,7 +547,11 @@ async function fetchHelmReleaseNotes(dep: DependencyInfo): Promise<ReleaseNotes[
     const [owner, repo] = chartRepo.split("/");
     if (owner && repo) {
       // Try chart-specific tag formats
-      const chartTags = [`${dep.name}-${dep.newVersion}`, dep.newVersion, `v${dep.newVersion}`];
+      const chartTags = [
+        `${dep.name}-${dep.newVersion}`,
+        dep.newVersion,
+        `v${dep.newVersion}`,
+      ];
 
       for (const tag of chartTags) {
         const releases = await fetchGitHubReleases(owner, repo, tag);
@@ -509,7 +591,10 @@ async function fetchHelmReleaseNotes(dep: DependencyInfo): Promise<ReleaseNotes[
 
   // 3. If still nothing, try ArtifactHub API as fallback
   if (results.length === 0) {
-    const artifactHubResult = await tryArtifactHubFallback(dep.name, dep.newVersion);
+    const artifactHubResult = await tryArtifactHubFallback(
+      dep.name,
+      dep.newVersion,
+    );
     if (artifactHubResult) {
       results.push(artifactHubResult);
     }
@@ -519,7 +604,12 @@ async function fetchHelmReleaseNotes(dep: DependencyInfo): Promise<ReleaseNotes[
   if (dep.registryUrl) {
     try {
       console.log(`  Fetching transitive dependencies for ${dep.name}...`);
-      const transitiveDiff = await getFullDependencyChanges(dep.name, dep.registryUrl, dep.oldVersion, dep.newVersion);
+      const transitiveDiff = await getFullDependencyChanges(
+        dep.name,
+        dep.registryUrl,
+        dep.oldVersion,
+        dep.newVersion,
+      );
 
       // Store the diff for later formatting
       transitiveDepsDiffs.set(dep.name, transitiveDiff);
@@ -531,7 +621,11 @@ async function fetchHelmReleaseNotes(dep: DependencyInfo): Promise<ReleaseNotes[
           console.log(
             `    Fetching release notes for ${imageUpdate.repository} (${imageUpdate.oldTag} -> ${imageUpdate.newTag})...`,
           );
-          const notes = await fetchReleaseNotesBetween(githubRepo, imageUpdate.oldTag, imageUpdate.newTag);
+          const notes = await fetchReleaseNotesBetween(
+            githubRepo,
+            imageUpdate.oldTag,
+            imageUpdate.newTag,
+          );
 
           for (const note of notes) {
             results.push({
@@ -547,12 +641,18 @@ async function fetchHelmReleaseNotes(dep: DependencyInfo): Promise<ReleaseNotes[
 
       // Fetch release notes for sub-chart updates
       for (const chartUpdate of transitiveDiff.charts.updated) {
-        const subChartRepo = HELM_CHART_GITHUB_REPOS[chartUpdate.name] ?? HELM_CHART_APP_REPOS[chartUpdate.name];
+        const subChartRepo =
+          HELM_CHART_GITHUB_REPOS[chartUpdate.name] ??
+          HELM_CHART_APP_REPOS[chartUpdate.name];
         if (subChartRepo) {
           console.log(
             `    Fetching release notes for sub-chart ${chartUpdate.name} (${chartUpdate.oldVersion} -> ${chartUpdate.newVersion})...`,
           );
-          const notes = await fetchReleaseNotesBetween(subChartRepo, chartUpdate.oldVersion, chartUpdate.newVersion);
+          const notes = await fetchReleaseNotesBetween(
+            subChartRepo,
+            chartUpdate.oldVersion,
+            chartUpdate.newVersion,
+          );
 
           for (const note of notes) {
             results.push({
@@ -570,7 +670,9 @@ async function fetchHelmReleaseNotes(dep: DependencyInfo): Promise<ReleaseNotes[
         `  Found ${String(transitiveDiff.images.updated.length)} image updates, ${String(transitiveDiff.charts.updated.length)} sub-chart updates`,
       );
     } catch (error) {
-      console.warn(`  Failed to fetch transitive deps for ${dep.name}: ${String(error)}`);
+      console.warn(
+        `  Failed to fetch transitive deps for ${dep.name}: ${String(error)}`,
+      );
     }
   }
 
@@ -617,10 +719,16 @@ async function fetchGitHubReleases(
       if (response.ok) {
         const rawData: unknown = await response.json();
         const parsed = GitHubReleaseSchema.safeParse(rawData);
-        if (parsed.success && parsed.data.body && parsed.data.body.length > 50) {
+        if (
+          parsed.success &&
+          parsed.data.body &&
+          parsed.data.body.length > 50
+        ) {
           return {
             body: parsed.data.body,
-            url: parsed.data.html_url ?? `https://github.com/${owner}/${repo}/releases/tag/${tag}`,
+            url:
+              parsed.data.html_url ??
+              `https://github.com/${owner}/${repo}/releases/tag/${tag}`,
           };
         }
       }
@@ -641,13 +749,17 @@ async function fetchGitHubReleases(
       if (parsed.success) {
         // Find release containing our version
         const matchingRelease = parsed.data.find(
-          (r) => r.tag_name?.includes(version) ?? r.tag_name?.includes(version.replace(/^v/, "")),
+          (r) =>
+            r.tag_name?.includes(version) ??
+            r.tag_name?.includes(version.replace(/^v/, "")),
         );
 
         if (matchingRelease?.body && matchingRelease.body.length > 50) {
           return {
             body: matchingRelease.body,
-            url: matchingRelease.html_url ?? `https://github.com/${owner}/${repo}/releases`,
+            url:
+              matchingRelease.html_url ??
+              `https://github.com/${owner}/${repo}/releases`,
           };
         }
       }
@@ -659,7 +771,10 @@ async function fetchGitHubReleases(
   return null;
 }
 
-async function summarizeWithLLM(changes: DependencyInfo[], releaseNotes: ReleaseNotes[]): Promise<string> {
+async function summarizeWithLLM(
+  changes: DependencyInfo[],
+  releaseNotes: ReleaseNotes[],
+): Promise<string> {
   const apiKey = Bun.env["OPENAI_API_KEY"];
   if (!apiKey) {
     console.warn("OPENAI_API_KEY not set, skipping LLM summarization");
@@ -669,15 +784,26 @@ async function summarizeWithLLM(changes: DependencyInfo[], releaseNotes: Release
   const openai = new OpenAI({ apiKey });
 
   // Build the prompt
-  const changesText = changes.map((c) => `- ${c.name}: ${c.oldVersion} → ${c.newVersion} (${c.datasource})`).join("\n");
+  const changesText = changes
+    .map(
+      (c) => `- ${c.name}: ${c.oldVersion} → ${c.newVersion} (${c.datasource})`,
+    )
+    .join("\n");
 
   const notesText = releaseNotes
-    .map((n) => `## ${n.dependency} [${n.source}] (${n.version})\n${n.notes}\n${n.url ? `URL: ${n.url}` : ""}`)
+    .map(
+      (n) =>
+        `## ${n.dependency} [${n.source}] (${n.version})\n${n.notes}\n${n.url ? `URL: ${n.url}` : ""}`,
+    )
     .join("\n\n");
 
   // Note which dependencies we couldn't fetch notes for
-  const fetchedDeps = new Set(releaseNotes.map((n) => n.dependency.replace(/ \((helm chart|app)\)$/, "")));
-  const missingNotes = changes.filter((c) => !fetchedDeps.has(c.name)).map((c) => c.name);
+  const fetchedDeps = new Set(
+    releaseNotes.map((n) => n.dependency.replace(/ \((helm chart|app)\)$/, "")),
+  );
+  const missingNotes = changes
+    .filter((c) => !fetchedDeps.has(c.name))
+    .map((c) => c.name);
   const missingNotesText =
     missingNotes.length > 0
       ? `\n\nNote: Release notes could NOT be fetched for: ${missingNotes.join(", ")}. Be conservative with recommendations for these.`
@@ -719,8 +845,6 @@ Format the response in HTML for email.`;
     return "Failed to generate LLM summary";
   }
 }
-
-
 
 // Run the script
 await main();

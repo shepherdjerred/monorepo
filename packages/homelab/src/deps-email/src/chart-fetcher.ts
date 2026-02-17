@@ -11,7 +11,11 @@ const lockCache = new Map<string, ChartLock | null>();
 /**
  * Fetch Chart.yaml for a Helm chart
  */
-export async function fetchChartYaml(chartName: string, registryUrl: string, version: string): Promise<ChartYaml> {
+export async function fetchChartYaml(
+  chartName: string,
+  registryUrl: string,
+  version: string,
+): Promise<ChartYaml> {
   const cacheKey = `${registryUrl}/${chartName}@${version}`;
 
   const cached = chartCache.get(cacheKey);
@@ -75,7 +79,11 @@ export async function fetchChartMetadata(
 /**
  * Pull a Helm chart to a temporary directory
  */
-async function pullChart(chartName: string, registryUrl: string, version: string): Promise<string> {
+async function pullChart(
+  chartName: string,
+  registryUrl: string,
+  version: string,
+): Promise<string> {
   const pwd = Bun.env["PWD"] ?? process.cwd();
   const tempDir = `${pwd}/temp/helm-deps-${chartName.replaceAll(/[^a-z0-9]/gi, "-")}-${version}`;
   const repoName = `temp-repo-${chartName.replaceAll(/[^a-z0-9]/gi, "-")}-${String(Date.now())}`;
@@ -94,7 +102,9 @@ async function pullChart(chartName: string, registryUrl: string, version: string
       return tempDir;
     } catch {
       // Chart not cached locally, need to pull from registry
-      console.debug(`[chart-fetcher] Chart ${chartName}@${version} not cached, pulling from ${registryUrl}`);
+      console.debug(
+        `[chart-fetcher] Chart ${chartName}@${version} not cached, pulling from ${registryUrl}`,
+      );
     }
 
     // Add the helm repo
@@ -121,7 +131,16 @@ async function pullChart(chartName: string, registryUrl: string, version: string
 
     // Pull the chart
     const pullProc = Bun.spawn(
-      ["helm", "pull", `${repoName}/${chartName}`, "--version", version, "--destination", tempDir, "--untar"],
+      [
+        "helm",
+        "pull",
+        `${repoName}/${chartName}`,
+        "--version",
+        version,
+        "--destination",
+        tempDir,
+        "--untar",
+      ],
       {
         stdout: "pipe",
         stderr: "pipe",
@@ -149,7 +168,10 @@ async function pullChart(chartName: string, registryUrl: string, version: string
 /**
  * Read and parse Chart.yaml
  */
-async function readChartYaml(chartPath: string, chartName: string): Promise<ChartYaml> {
+async function readChartYaml(
+  chartPath: string,
+  chartName: string,
+): Promise<ChartYaml> {
   const chartYamlPath = `${chartPath}/${chartName}/Chart.yaml`;
 
   try {
@@ -158,7 +180,9 @@ async function readChartYaml(chartPath: string, chartName: string): Promise<Char
 
     const result = ChartYamlSchema.safeParse(parsed);
     if (!result.success) {
-      console.warn(`Invalid Chart.yaml for ${chartName}: ${result.error.message}`);
+      console.warn(
+        `Invalid Chart.yaml for ${chartName}: ${result.error.message}`,
+      );
       // Return minimal valid structure
       return {
         apiVersion: "v2",
@@ -169,14 +193,19 @@ async function readChartYaml(chartPath: string, chartName: string): Promise<Char
 
     return result.data;
   } catch (error) {
-    throw new Error(`Failed to read Chart.yaml for ${chartName}: ${String(error)}`);
+    throw new Error(
+      `Failed to read Chart.yaml for ${chartName}: ${String(error)}`,
+    );
   }
 }
 
 /**
  * Read and parse Chart.lock (may not exist)
  */
-async function readChartLock(chartPath: string, chartName: string): Promise<ChartLock | null> {
+async function readChartLock(
+  chartPath: string,
+  chartName: string,
+): Promise<ChartLock | null> {
   const chartLockPath = `${chartPath}/${chartName}/Chart.lock`;
 
   try {
@@ -185,14 +214,18 @@ async function readChartLock(chartPath: string, chartName: string): Promise<Char
 
     const result = ChartLockSchema.safeParse(parsed);
     if (!result.success) {
-      console.warn(`Invalid Chart.lock for ${chartName}: ${result.error.message}`);
+      console.warn(
+        `Invalid Chart.lock for ${chartName}: ${result.error.message}`,
+      );
       return null;
     }
 
     return result.data;
   } catch (error) {
     // Chart.lock doesn't exist - that's fine, not all charts have lock files
-    console.debug(`[chart-fetcher] No Chart.lock for ${chartName}: ${String(error)}`);
+    console.debug(
+      `[chart-fetcher] No Chart.lock for ${chartName}: ${String(error)}`,
+    );
     return null;
   }
 }
@@ -208,7 +241,10 @@ export function clearChartCache(): void {
 /**
  * Get the pinned version for a dependency from Chart.lock
  */
-export function getPinnedVersion(chartLock: ChartLock | null, depName: string): string | null {
+export function getPinnedVersion(
+  chartLock: ChartLock | null,
+  depName: string,
+): string | null {
   if (!chartLock?.dependencies) {
     return null;
   }

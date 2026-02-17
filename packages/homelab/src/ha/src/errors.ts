@@ -12,7 +12,9 @@ export class DscVerificationError extends Error {
     public readonly actualState: string,
     public readonly workflowName: string,
   ) {
-    super(`DSC failed for ${entityId}: expected '${expectedState}' got '${actualState}'`);
+    super(
+      `DSC failed for ${entityId}: expected '${expectedState}' got '${actualState}'`,
+    );
     this.name = "DscVerificationError";
   }
 }

@@ -40,7 +40,11 @@ export {
 export { extractAllImages, diffImages } from "./image-extractor.js";
 
 // Version differ
-export { compareChartVersions, getFullDependencyChanges, formatDependencyDiff } from "./version-differ.js";
+export {
+  compareChartVersions,
+  getFullDependencyChanges,
+  formatDependencyDiff,
+} from "./version-differ.js";
 
 // Release notes fetcher
 export {
