@@ -68,20 +68,31 @@ describe("checkSendMessagePermission", () => {
     const invalidChannel = mockTextChannel({
       isDMBased: () => false,
       permissionsFor: undefined,
+      guild: {
+        members: {
+          me: null,
+          fetch: async () => { throw new Error("Fetch failed"); },
+        },
+      },
     });
     const result = await checkSendMessagePermission(
       invalidChannel,
       mockBotUser,
     );
     expect(result.hasPermission).toBe(false);
-    expect(result.reason).toContain("Cannot check permissions");
+    expect(result.reason).toContain("Error checking permissions");
   });
 
   test("returns false when permissionsFor returns null", async () => {
     const channel = mockTextChannel({
       isDMBased: () => false,
       permissionsFor: () => null,
-      guild: null,
+      guild: {
+        members: {
+          me: null,
+          fetch: async () => { throw new Error("Fetch failed"); },
+        },
+      },
     });
     const result = await checkSendMessagePermission(channel, mockBotUser);
     expect(result.hasPermission).toBe(false);
@@ -97,7 +108,12 @@ describe("checkSendMessagePermission", () => {
           return permission === PermissionFlagsBits.ViewChannel;
         },
       }),
-      guild: null,
+      guild: {
+        members: {
+          me: null,
+          fetch: async () => { throw new Error("Fetch failed"); },
+        },
+      },
     });
     const result = await checkSendMessagePermission(channel, mockBotUser);
     expect(result.hasPermission).toBe(false);
@@ -113,7 +129,12 @@ describe("checkSendMessagePermission", () => {
           return permission === PermissionFlagsBits.SendMessages;
         },
       }),
-      guild: null,
+      guild: {
+        members: {
+          me: null,
+          fetch: async () => { throw new Error("Fetch failed"); },
+        },
+      },
     });
     const result = await checkSendMessagePermission(channel, mockBotUser);
     expect(result.hasPermission).toBe(false);
@@ -132,7 +153,12 @@ describe("checkSendMessagePermission", () => {
           );
         },
       }),
-      guild: null,
+      guild: {
+        members: {
+          me: null,
+          fetch: async () => { throw new Error("Fetch failed"); },
+        },
+      },
     });
     const result = await checkSendMessagePermission(channel, mockBotUser);
     expect(result.hasPermission).toBe(true);
@@ -145,7 +171,12 @@ describe("checkSendMessagePermission", () => {
       permissionsFor: () => {
         throw new Error("Permission check failed");
       },
-      guild: null,
+      guild: {
+        members: {
+          me: null,
+          fetch: async () => { throw new Error("Fetch failed"); },
+        },
+      },
     });
     const result = await checkSendMessagePermission(channel, mockBotUser);
     expect(result.hasPermission).toBe(false);
