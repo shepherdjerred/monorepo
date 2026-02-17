@@ -91,7 +91,7 @@ export function LoginPage() {
             />
           </div>
 
-          {error && (
+          {error != null && error.length > 0 && (
             <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
               {error}
             </div>

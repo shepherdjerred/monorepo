@@ -52,7 +52,7 @@ function appendToSection(
   let insertIndex = lines.length;
   for (let i = headerIndex + 1; i < lines.length; i++) {
     const line = lines[i];
-    if (line?.startsWith("# ")) {
+    if (line?.startsWith("# ") === true) {
       insertIndex = i;
       break;
     }
@@ -107,7 +107,7 @@ export const manageMemoryTool = createTool({
         case "get": {
           let memoryContent: string | null;
           if (scope === "owner") {
-            if (!persona) {
+            if (persona == null || persona.length === 0) {
               return {
                 success: false,
                 message: "Could not determine persona for owner memory",
@@ -118,7 +118,7 @@ export const manageMemoryTool = createTool({
             memoryContent = await getServerWorkingMemory(ctx.guildId);
           }
 
-          if (!memoryContent) {
+          if (memoryContent == null || memoryContent.length === 0) {
             return {
               success: true,
               message: `No ${scopeLabel} memory set yet`,
@@ -133,7 +133,7 @@ export const manageMemoryTool = createTool({
         }
 
         case "update": {
-          if (!ctx.memory) {
+          if (ctx.memory == null || ctx.memory.length === 0) {
             return { success: false, message: "memory is required for update" };
           }
           // Limit memory size to avoid token bloat
@@ -145,7 +145,7 @@ export const manageMemoryTool = createTool({
           }
 
           if (scope === "owner") {
-            if (!persona) {
+            if (persona == null || persona.length === 0) {
               return {
                 success: false,
                 message: "Could not determine persona for owner memory",
@@ -175,7 +175,7 @@ export const manageMemoryTool = createTool({
 
           let current: string | null;
           if (scope === "owner") {
-            if (!persona) {
+            if (persona == null || persona.length === 0) {
               return {
                 success: false,
                 message: "Could not determine persona for owner memory",
@@ -200,7 +200,7 @@ export const manageMemoryTool = createTool({
           }
 
           if (scope === "owner") {
-            if (!persona) {
+            if (persona == null || persona.length === 0) {
               return {
                 success: false,
                 message: "Could not determine persona for owner memory",
@@ -223,7 +223,7 @@ export const manageMemoryTool = createTool({
 
         case "clear": {
           if (scope === "owner") {
-            if (!persona) {
+            if (persona == null || persona.length === 0) {
               return {
                 success: false,
                 message: "Could not determine persona for owner memory",

@@ -115,7 +115,7 @@ export function EditSessionDialog({
             className="p-6 space-y-6"
             style={{ backgroundColor: "hsl(220, 15%, 95%)" }}
           >
-            {error && (
+            {error != null && error.length > 0 && (
               <div
                 className="p-4 border-4 font-mono"
                 style={{

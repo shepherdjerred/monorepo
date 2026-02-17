@@ -119,7 +119,7 @@ export function ChatInterface({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {onSwitchToConsole && (
+              {onSwitchToConsole != null && (
                 <button
                   onClick={onSwitchToConsole}
                   className="cursor-pointer p-2 border-2 border-white bg-white/10 hover:bg-blue-600 hover:text-white transition-all duration-200 font-bold text-white"
@@ -141,7 +141,7 @@ export function ChatInterface({
           </div>
 
           {/* Error display */}
-          {error && (
+          {error != null && error.length > 0 && (
             <div
               className="p-4 border-b-4 font-mono"
               style={{
@@ -221,7 +221,7 @@ export function ChatInterface({
               className="hidden"
               onChange={(e) => {
                 const files = e.target.files;
-                if (files) {
+                if (files != null) {
                   setAttachedImages((prev) => [...prev, ...files]);
                 }
               }}

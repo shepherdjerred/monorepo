@@ -7,7 +7,7 @@ let player: Player | null = null;
 let initialized = false;
 
 export function getMusicPlayer(): Player {
-  if (!player) {
+  if (player == null) {
     const client = getDiscordClient();
     player = new Player(client);
   }
@@ -26,7 +26,7 @@ export async function initializeMusicPlayer(): Promise<void> {
 }
 
 export async function destroyMusicPlayer(): Promise<void> {
-  if (player) {
+  if (player != null) {
     await player.destroy();
     player = null;
     initialized = false;

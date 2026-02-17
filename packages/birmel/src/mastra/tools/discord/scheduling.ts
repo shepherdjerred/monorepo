@@ -78,7 +78,7 @@ export const manageScheduledMessageTool = createTool({
           { value: ctx.channelId, fieldName: "channelId" },
           { value: ctx.createdBy, fieldName: "createdBy" },
         ]);
-        if (idError) {
+        if (idError != null && idError.length > 0) {
           return { success: false, message: idError };
         }
 
@@ -118,7 +118,7 @@ export const manageScheduledMessageTool = createTool({
               ctx.createdBy,
               repeat,
             );
-            const repeatText = repeat ? ` (repeating ${repeat})` : "";
+            const repeatText = repeat != null && repeat.length > 0 ? ` (repeating ${repeat})` : "";
             logger.info("Message scheduled", {
               scheduleId,
               guildId: ctx.guildId,

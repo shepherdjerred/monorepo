@@ -145,14 +145,14 @@ export async function checkAndStartElections(): Promise<void> {
         let channelId = config.elections.channelId;
         channelId ??= fullGuild.systemChannelId ?? undefined;
 
-        if (!channelId) {
+        if (channelId == null || channelId.length === 0) {
           logger.warn("No channel available for election", { guildId });
           continue;
         }
 
         // Verify channel is accessible and text-based
         const channel = await client.channels.fetch(channelId);
-        if (!channel?.isTextBased()) {
+        if (channel?.isTextBased() !== true) {
           logger.warn("Election channel not text-based", {
             guildId,
             channelId,
@@ -196,7 +196,7 @@ export async function checkAndStartElections(): Promise<void> {
           orderBy: { createdAt: "desc" },
         });
 
-        if (electionRecord) {
+        if (electionRecord != null) {
           await updateElectionStatus(electionRecord.id, "active", {
             messageId: result.data.messageId,
             actualStart: now,
@@ -229,7 +229,7 @@ export async function checkAndEndElections(): Promise<void> {
     });
 
     for (const election of elections) {
-      if (!election.messageId) {
+      if (election.messageId == null || election.messageId.length === 0) {
         continue;
       }
 
@@ -264,7 +264,7 @@ export async function processElectionResults(): Promise<void> {
     });
 
     for (const election of elections) {
-      if (!election.messageId) {
+      if (election.messageId == null || election.messageId.length === 0) {
         continue;
       }
 
@@ -285,7 +285,7 @@ export async function processElectionResults(): Promise<void> {
         if (results.isTie) {
           const client = getDiscordClient();
           const channel = await client.channels.fetch(election.channelId);
-          if (channel?.isTextBased() && "send" in channel) {
+          if (channel?.isTextBased() === true && "send" in channel) {
             const tiedNames = results.tiedCandidates
               .map((name) => name.charAt(0).toUpperCase() + name.slice(1))
               .join(", ");

@@ -21,7 +21,7 @@ export function initializeSentry(): void {
   Sentry.init({
     dsn: config.sentry.dsn,
     environment: config.sentry.environment,
-    ...(config.sentry.release ? { release: config.sentry.release } : {}),
+    ...(config.sentry.release != null && config.sentry.release.length > 0 ? { release: config.sentry.release } : {}),
     sampleRate: config.sentry.sampleRate,
     tracesSampleRate: config.sentry.tracesSampleRate,
   });
@@ -61,10 +61,10 @@ export function setSentryContext(context: DiscordContext): void {
 
   Sentry.setContext("discord", context as Record<string, unknown>);
 
-  if (context.userId) {
+  if (context.userId != null && context.userId.length > 0) {
     Sentry.setUser({
       id: context.userId,
-      ...(context.username ? { username: context.username } : {}),
+      ...(context.username != null && context.username.length > 0 ? { username: context.username } : {}),
     });
   }
 }
@@ -118,13 +118,13 @@ export function captureException(
   }
 
   Sentry.withScope((scope) => {
-    if (context?.operation) {
+    if (context?.operation != null && context?.operation.length > 0) {
       scope.setTag("operation", context.operation);
     }
-    if (context?.discord) {
+    if (context?.discord != null) {
       scope.setContext("discord", context.discord as Record<string, unknown>);
     }
-    if (context?.extra) {
+    if (context?.extra != null) {
       scope.setExtras(context.extra);
     }
     Sentry.captureException(error);

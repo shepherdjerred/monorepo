@@ -69,7 +69,7 @@ export const moderateMemberTool = createTool({
         { value: ctx.guildId, fieldName: "guildId" },
         { value: ctx.memberId, fieldName: "memberId" },
       ]);
-      if (idError) {
+      if (idError != null && idError.length > 0) {
         return { success: false, message: idError };
       }
 
@@ -78,7 +78,7 @@ export const moderateMemberTool = createTool({
 
       switch (ctx.action) {
         case "kick": {
-          if (!ctx.memberId) {
+          if (ctx.memberId == null || ctx.memberId.length === 0) {
             return { success: false, message: "memberId is required for kick" };
           }
           const member = await guild.members.fetch(ctx.memberId);
@@ -87,7 +87,7 @@ export const moderateMemberTool = createTool({
         }
 
         case "ban": {
-          if (!ctx.memberId) {
+          if (ctx.memberId == null || ctx.memberId.length === 0) {
             return { success: false, message: "memberId is required for ban" };
           }
           const banOpts: { reason?: string; deleteMessageSeconds?: number } =
@@ -103,7 +103,7 @@ export const moderateMemberTool = createTool({
         }
 
         case "unban": {
-          if (!ctx.memberId) {
+          if (ctx.memberId == null || ctx.memberId.length === 0) {
             return {
               success: false,
               message: "memberId is required for unban",
@@ -129,7 +129,7 @@ export const moderateMemberTool = createTool({
         }
 
         case "remove-timeout": {
-          if (!ctx.memberId) {
+          if (ctx.memberId == null || ctx.memberId.length === 0) {
             return {
               success: false,
               message: "memberId is required for remove-timeout",
@@ -158,13 +158,13 @@ export const moderateMemberTool = createTool({
         }
 
         case "prune": {
-          if (!ctx.days) {
+          if (ctx.days == null) {
             return { success: false, message: "days is required for prune" };
           }
           const pruneOpts: { days: number; reason?: string } = {
             days: ctx.days,
           };
-          if (ctx.reason) {
+          if (ctx.reason != null && ctx.reason.length > 0) {
             pruneOpts.reason = ctx.reason;
           }
           const pruned = await guild.members.prune(pruneOpts);
@@ -176,7 +176,7 @@ export const moderateMemberTool = createTool({
         }
 
         case "prune-count": {
-          if (!ctx.days) {
+          if (ctx.days == null) {
             return {
               success: false,
               message: "days is required for prune-count",

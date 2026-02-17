@@ -25,7 +25,7 @@ const DOWNLOAD_TIMEOUT_MS = 10_000; // 10 seconds
  * Check if an attachment is a supported image type
  */
 export function isImageAttachment(attachment: Attachment): boolean {
-  if (!attachment.contentType) {
+  if (attachment.contentType == null || attachment.contentType.length === 0) {
     return false;
   }
   return SUPPORTED_IMAGE_TYPES.has(attachment.contentType.toLowerCase());
@@ -76,7 +76,7 @@ export async function downloadImage(url: string): Promise<Buffer> {
     }
 
     const contentLength = response.headers.get("content-length");
-    if (contentLength && Number.parseInt(contentLength) > MAX_IMAGE_SIZE) {
+    if (contentLength != null && contentLength.length > 0 && Number.parseInt(contentLength) > MAX_IMAGE_SIZE) {
       throw new Error(
         `Image too large: ${String(Number.parseInt(contentLength))} bytes (max ${String(MAX_IMAGE_SIZE)})`,
       );

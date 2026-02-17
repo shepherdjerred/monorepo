@@ -58,19 +58,19 @@ export function extractCodeBlocks(text: string): CodeBlock[] {
 export function extractFilePath(text: string): string | undefined {
   // Match patterns like: file_path: "/path/to/file"
   const filePathMatch = /file_path:\s*["']([^"']+)["']/.exec(text);
-  if (filePathMatch) {
+  if (filePathMatch != null) {
     return filePathMatch[1];
   }
 
   // Match patterns like: Reading /path/to/file
   const readingMatch = /Reading\s+(\S+)/i.exec(text);
-  if (readingMatch) {
+  if (readingMatch != null) {
     return readingMatch[1];
   }
 
   // Match patterns like: Writing to /path/to/file
   const writingMatch = /Writing\s+(?:to\s+)?(\S+)/i.exec(text);
-  if (writingMatch) {
+  if (writingMatch != null) {
     return writingMatch[1];
   }
 
@@ -128,12 +128,12 @@ export function parseMessages(terminalOutput: string): Message[] {
 
     // Detect user input (usually starts with > or $ or specific prompts)
     if (trimmed.startsWith(">") || trimmed.startsWith("User:")) {
-      if (currentMessage) {
+      if (currentMessage != null) {
         messages.push(buildMessage(currentMessage));
       }
       currentMessage = {
         role: "user",
-        content: [trimmed.replace(/^(>|User:)\s*/, "")],
+        content: [trimmed.replace(/^(?:>|User:)\s*/, "")],
         toolUses: [],
       };
       continue;
@@ -145,7 +145,7 @@ export function parseMessages(terminalOutput: string): Message[] {
       trimmed.includes("I'll") ||
       trimmed.includes("Let me")
     ) {
-      if (currentMessage) {
+      if (currentMessage != null) {
         messages.push(buildMessage(currentMessage));
       }
       currentMessage = {
@@ -168,13 +168,13 @@ export function parseMessages(terminalOutput: string): Message[] {
     }
 
     // Add line to current message
-    if (currentMessage && trimmed) {
+    if (currentMessage != null && trimmed) {
       currentMessage.content.push(trimmed);
     }
   }
 
   // Add final message
-  if (currentMessage) {
+  if (currentMessage != null) {
     messages.push(buildMessage(currentMessage));
   }
 

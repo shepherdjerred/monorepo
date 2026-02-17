@@ -29,7 +29,6 @@ import { buildAndPushCaddyS3ProxyImage } from "./caddy-s3proxy.js";
 import { buildAllCharts, HELM_CHARTS, publishAllCharts } from "./helm.js";
 import { Stage } from "./stage.js";
 import versions from "./versions.js";
-import { runReleasePleaseWorkflow } from "./release-please.js";
 import { planAll } from "./tofu.js";
 
 export type StepStatus = "passed" | "failed" | "skipped";
@@ -56,8 +55,6 @@ export type HomelabSecrets = {
   awsSecretAccessKey: Secret;
   hassBaseUrl?: Secret;
   hassToken?: Secret;
-  githubToken?: Secret;
-  npmToken?: Secret;
   tofuGithubToken?: Secret;
   appVersions?: Record<string, string>;
 };
@@ -136,8 +133,6 @@ export async function ciHomelab(
     awsSecretAccessKey,
     hassBaseUrl,
     hassToken,
-    githubToken,
-    npmToken,
     tofuGithubToken,
   } = secrets;
 
@@ -521,15 +516,6 @@ export async function ciHomelab(
     syncResult = await argocdSync(argocdToken);
   }
 
-  // Release-please
-  const releasePleaseResult: StepResult =
-    env === Stage.Prod && githubToken && npmToken
-      ? await runReleasePleaseWorkflow(githubToken, npmToken, updatedSource)
-      : {
-          status: "skipped",
-          message: "[SKIPPED] No github/npm tokens provided",
-        };
-
   // Build summary
   const summary = [
     renovateTestResult.message,
@@ -549,7 +535,6 @@ export async function ciHomelab(
     `Dns Audit Image Publish result:\n${dnsAuditPublishResult.message}`,
     `Caddy S3Proxy Image Publish result:\n${caddyS3ProxyPublishResult.message}`,
     `Helm Chart Publish result:\n${helmPublishResult.message}`,
-    `Release-please result:\n${releasePleaseResult.message}`,
     tofuPlanResult.message,
   ].join("\n\n");
 

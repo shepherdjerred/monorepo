@@ -20,12 +20,12 @@ export function createOAuthRoutes(): Hono {
     }
 
     const config = getGitHubConfig();
-    if (!config) {
+    if (config == null) {
       return c.json({ error: "GitHub OAuth not configured" }, 500);
     }
     const userId = c.req.query("user");
 
-    if (!userId) {
+    if (userId == null || userId.length === 0) {
       return c.json({ error: "Missing user parameter" }, 400);
     }
 
@@ -53,7 +53,7 @@ export function createOAuthRoutes(): Hono {
     const state = c.req.query("state"); // Discord user ID
     const error = c.req.query("error");
 
-    if (error) {
+    if (error != null && error.length > 0) {
       logger.error("GitHub OAuth error", undefined, {
         error,
         description: c.req.query("error_description"),
@@ -61,13 +61,13 @@ export function createOAuthRoutes(): Hono {
       return c.html(renderErrorPage(error, c.req.query("error_description")));
     }
 
-    if (!code) {
+    if (code == null || code.length === 0) {
       return c.html(
         renderErrorPage("missing_code", "No authorization code received"),
       );
     }
 
-    if (!state) {
+    if (state == null || state.length === 0) {
       return c.html(renderErrorPage("missing_state", "No user state received"));
     }
 
@@ -98,7 +98,7 @@ export function createOAuthRoutes(): Hono {
   app.get("/github/status", async (c) => {
     const userId = c.req.query("user");
 
-    if (!userId) {
+    if (userId == null || userId.length === 0) {
       return c.json({ error: "Missing user parameter" }, 400);
     }
 
@@ -190,7 +190,7 @@ function renderErrorPage(error: string, description?: string | null): string {
     <div class="error-icon">&#10007;</div>
     <h1>Authentication Failed</h1>
     <p><code>${error}</code></p>
-    ${description ? `<p>${description}</p>` : ""}
+    ${description != null && description.length > 0 ? `<p>${description}</p>` : ""}
     <p>Please try again from Discord.</p>
   </div>
 </body>

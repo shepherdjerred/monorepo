@@ -126,10 +126,10 @@ function ActionButton({
 
   return (
     <Button
-      variant={isPrimary ? details.variant : "outline"}
+      variant={isPrimary === true ? details.variant : "outline"}
       onClick={onClick}
       disabled={isLoading}
-      className={cn("cursor-pointer", isPrimary && "min-w-[120px]")}
+      className={cn("cursor-pointer", isPrimary === true && "min-w-[120px]")}
     >
       {details.icon}
       {details.label}

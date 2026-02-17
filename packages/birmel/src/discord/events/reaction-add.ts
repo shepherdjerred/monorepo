@@ -36,7 +36,7 @@ export function handleReactionAdd(client: Client) {
 
           // Get guild ID (only track guild reactions, not DMs)
           const guildId = reaction.message.guildId;
-          if (!guildId) {
+          if (guildId == null || guildId.length === 0) {
             return;
           }
 

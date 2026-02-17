@@ -739,7 +739,7 @@ export class BatchProcessor {
     let jsonStr = content.trim();
 
     // If wrapped in markdown code blocks, extract
-    const jsonMatch = /```(?:json)?\s*([\s\S]*?)```/.exec(jsonStr);
+    const jsonMatch = /```(?:json)?\n?([\s\S]*?)```/.exec(jsonStr);
     if (jsonMatch?.[1]) {
       jsonStr = jsonMatch[1].trim();
     }

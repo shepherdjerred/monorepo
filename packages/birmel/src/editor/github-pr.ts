@@ -32,7 +32,7 @@ export async function createPullRequest(
     opts;
 
   const auth = await getAuth(userId);
-  if (!auth) {
+  if (auth == null) {
     return { success: false, error: "GitHub authentication required" };
   }
 

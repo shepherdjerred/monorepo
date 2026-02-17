@@ -8,6 +8,8 @@ import {
   captureException,
   withToolSpan,
 } from "../../../observability/index.js";
+import { getCandidateStatsTool } from "./candidate-stats.js";
+export { getCandidateStatsTool };
 
 const logger = loggers.tools.child("elections");
 
@@ -50,11 +52,11 @@ export const manageElectionTool = createTool({
       try {
         switch (ctx.action) {
           case "get-owner": {
-            if (!ctx.guildId) {
+            if (ctx.guildId == null || ctx.guildId.length === 0) {
               return { success: false, message: "guildId is required" };
             }
             const owner = await getGuildOwner(ctx.guildId);
-            if (!owner) {
+            if (owner == null) {
               return {
                 success: false,
                 message: `No owner record found for guild ${ctx.guildId}`,
@@ -72,7 +74,7 @@ export const manageElectionTool = createTool({
           }
 
           case "get-history": {
-            if (!ctx.guildId) {
+            if (ctx.guildId == null || ctx.guildId.length === 0) {
               return { success: false, message: "guildId is required" };
             }
             const elections = await prisma.electionPoll.findMany({
@@ -86,7 +88,7 @@ export const manageElectionTool = createTool({
               status: e.status,
               winner: e.winner ?? undefined,
               candidates: JSON.parse(e.candidates) as string[],
-              voteCounts: e.voteCounts
+              voteCounts: e.voteCounts != null && e.voteCounts.length > 0
                 ? (JSON.parse(e.voteCounts) as Record<string, number>)
                 : undefined,
               scheduledStart: e.scheduledStart.toISOString(),
@@ -101,7 +103,7 @@ export const manageElectionTool = createTool({
           }
 
           case "get-current": {
-            if (!ctx.guildId) {
+            if (ctx.guildId == null || ctx.guildId.length === 0) {
               return { success: false, message: "guildId is required" };
             }
             const election = await prisma.electionPoll.findFirst({
@@ -111,7 +113,7 @@ export const manageElectionTool = createTool({
               },
               orderBy: { scheduledStart: "desc" },
             });
-            if (!election) {
+            if (election == null) {
               return {
                 success: false,
                 message: "No active or scheduled election",
@@ -134,7 +136,7 @@ export const manageElectionTool = createTool({
           }
 
           case "get-stats": {
-            if (!ctx.guildId) {
+            if (ctx.guildId == null || ctx.guildId.length === 0) {
               return { success: false, message: "guildId is required" };
             }
             const elections = await prisma.electionPoll.findMany({
@@ -150,11 +152,11 @@ export const manageElectionTool = createTool({
             const winsByCandidate: Record<string, number> = {};
             let totalVotesCast = 0;
             for (const e of elections) {
-              if (e.winner) {
+              if (e.winner != null && e.winner.length > 0) {
                 winsByCandidate[e.winner] =
                   (winsByCandidate[e.winner] ?? 0) + 1;
               }
-              if (e.voteCounts) {
+              if (e.voteCounts != null && e.voteCounts.length > 0) {
                 const votes = JSON.parse(e.voteCounts) as Record<
                   string,
                   number
@@ -191,13 +193,13 @@ export const manageElectionTool = createTool({
           }
 
           case "get-by-id": {
-            if (!ctx.electionId) {
+            if (ctx.electionId == null) {
               return { success: false, message: "electionId is required" };
             }
             const election = await prisma.electionPoll.findUnique({
               where: { id: ctx.electionId },
             });
-            if (!election) {
+            if (election == null) {
               return {
                 success: false,
                 message: `Election ${ctx.electionId.toString()} not found`,
@@ -215,7 +217,7 @@ export const manageElectionTool = createTool({
                 status: election.status,
                 candidates: JSON.parse(election.candidates) as string[],
                 winner: election.winner ?? undefined,
-                voteCounts: election.voteCounts
+                voteCounts: election.voteCounts != null && election.voteCounts.length > 0
                   ? (JSON.parse(election.voteCounts) as Record<string, number>)
                   : undefined,
                 scheduledStart: election.scheduledStart.toISOString(),
@@ -249,16 +251,16 @@ export const manageElectionTool = createTool({
               );
               if (candidates.includes(candidateLower)) {
                 totalElectionsParticipated++;
-                if (!lastElectionDate && e.actualEnd) {
+                if (!lastElectionDate && e.actualEnd != null) {
                   lastElectionDate = e.actualEnd.toISOString();
                 }
                 if (e.winner?.toLowerCase() === candidateLower) {
                   wins++;
-                  if (!lastWinDate && e.actualEnd) {
+                  if (!lastWinDate && e.actualEnd != null) {
                     lastWinDate = e.actualEnd.toISOString();
                   }
                 }
-                if (e.voteCounts) {
+                if (e.voteCounts != null && e.voteCounts.length > 0) {
                   const votes = JSON.parse(e.voteCounts) as Record<
                     string,
                     number
@@ -359,7 +361,7 @@ export const getElectionHistoryTool = createTool({
           status: e.status,
           winner: e.winner ?? undefined,
           candidates: JSON.parse(e.candidates) as string[],
-          voteCounts: e.voteCounts
+          voteCounts: e.voteCounts != null && e.voteCounts.length > 0
             ? (JSON.parse(e.voteCounts) as Record<string, number>)
             : undefined,
           scheduledStart: e.scheduledStart.toISOString(),
@@ -432,7 +434,7 @@ export const getCurrentElectionTool = createTool({
           orderBy: { scheduledStart: "desc" },
         });
 
-        if (!election) {
+        if (election == null) {
           return {
             success: false,
             message: `No active or scheduled election for guild ${input.guildId}`,
@@ -532,11 +534,11 @@ export const getElectionStatsTool = createTool({
         let totalVotesCast = 0;
 
         for (const election of elections) {
-          if (election.winner) {
+          if (election.winner != null && election.winner.length > 0) {
             winsByCandidate[election.winner] =
               (winsByCandidate[election.winner] ?? 0) + 1;
           }
-          if (election.voteCounts) {
+          if (election.voteCounts != null && election.voteCounts.length > 0) {
             const votes = JSON.parse(election.voteCounts) as Record<
               string,
               number
@@ -670,7 +672,7 @@ export const getElectionByIdTool = createTool({
           where: { id: input.electionId },
         });
 
-        if (!election) {
+        if (election == null) {
           return {
             success: false,
             message: `Election with ID ${input.electionId.toString()} not found`,
@@ -694,7 +696,7 @@ export const getElectionByIdTool = createTool({
             status: election.status,
             candidates: JSON.parse(election.candidates) as string[],
             winner: election.winner ?? undefined,
-            voteCounts: election.voteCounts
+            voteCounts: election.voteCounts != null && election.voteCounts.length > 0
               ? (JSON.parse(election.voteCounts) as Record<string, number>)
               : undefined,
             scheduledStart: election.scheduledStart.toISOString(),
@@ -714,142 +716,6 @@ export const getElectionByIdTool = createTool({
         return {
           success: false,
           message: `Failed to fetch election: ${(error as Error).message}`,
-        };
-      }
-    });
-  },
-});
-
-export const getCandidateStatsTool = createTool({
-  id: "get-candidate-stats",
-  description:
-    "Get statistics for a specific candidate, including win rate, elections participated in, and vote history.",
-  inputSchema: z.object({
-    guildId: z.string().describe("The Discord guild ID"),
-    candidateName: z.string().describe("The candidate name to get stats for"),
-  }),
-  outputSchema: z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z
-      .object({
-        candidateName: z.string(),
-        totalElectionsParticipated: z
-          .number()
-          .describe("Number of elections this candidate was in"),
-        wins: z.number().describe("Number of elections won"),
-        winRate: z.number().describe("Win rate as a percentage"),
-        totalVotesReceived: z
-          .number()
-          .describe("Total votes received across all elections"),
-        averageVotesPerElection: z
-          .number()
-          .describe("Average votes per election"),
-        lastElectionDate: z
-          .string()
-          .optional()
-          .describe("Date of last election participated"),
-        lastWinDate: z.string().optional().describe("Date of last win"),
-      })
-      .optional(),
-  }),
-  execute: async (input) => {
-    return withToolSpan("get-candidate-stats", undefined, async () => {
-      logger.debug("Fetching candidate stats", {
-        guildId: input.guildId,
-        candidateName: input.candidateName,
-      });
-
-      try {
-        const elections = await prisma.electionPoll.findMany({
-          where: {
-            guildId: input.guildId,
-            status: "completed",
-          },
-          orderBy: { actualEnd: "desc" },
-        });
-
-        const candidateLower = input.candidateName.toLowerCase();
-        let totalElectionsParticipated = 0;
-        let wins = 0;
-        let totalVotesReceived = 0;
-        let lastElectionDate: string | undefined;
-        let lastWinDate: string | undefined;
-
-        for (const election of elections) {
-          const candidates = JSON.parse(election.candidates) as string[];
-          const candidatesLower = candidates.map((c) => c.toLowerCase());
-
-          if (candidatesLower.includes(candidateLower)) {
-            totalElectionsParticipated++;
-
-            if (!lastElectionDate && election.actualEnd) {
-              lastElectionDate = election.actualEnd.toISOString();
-            }
-
-            if (election.winner?.toLowerCase() === candidateLower) {
-              wins++;
-              if (!lastWinDate && election.actualEnd) {
-                lastWinDate = election.actualEnd.toISOString();
-              }
-            }
-
-            if (election.voteCounts) {
-              const votes = JSON.parse(election.voteCounts) as Record<
-                string,
-                number
-              >;
-              for (const [name, count] of Object.entries(votes)) {
-                if (name.toLowerCase() === candidateLower) {
-                  totalVotesReceived += count;
-                }
-              }
-            }
-          }
-        }
-
-        const winRate =
-          totalElectionsParticipated > 0
-            ? Math.round((wins / totalElectionsParticipated) * 100)
-            : 0;
-        const averageVotesPerElection =
-          totalElectionsParticipated > 0
-            ? Math.round(totalVotesReceived / totalElectionsParticipated)
-            : 0;
-
-        logger.info("Candidate stats fetched", {
-          guildId: input.guildId,
-          candidateName: input.candidateName,
-          wins,
-          totalElectionsParticipated,
-        });
-
-        return {
-          success: true,
-          message: `Stats for ${input.candidateName}: ${wins.toString()} wins in ${totalElectionsParticipated.toString()} elections`,
-          data: {
-            candidateName: input.candidateName,
-            totalElectionsParticipated,
-            wins,
-            winRate,
-            totalVotesReceived,
-            averageVotesPerElection,
-            lastElectionDate,
-            lastWinDate,
-          },
-        };
-      } catch (error) {
-        logger.error("Failed to fetch candidate stats", error, {
-          guildId: input.guildId,
-          candidateName: input.candidateName,
-        });
-        captureException(error as Error, {
-          operation: "tool.get-candidate-stats",
-          extra: { guildId: input.guildId, candidateName: input.candidateName },
-        });
-        return {
-          success: false,
-          message: `Failed to fetch stats: ${(error as Error).message}`,
         };
       }
     });

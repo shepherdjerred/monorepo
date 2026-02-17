@@ -70,13 +70,13 @@ function formatEditDiff(
 
   const lines: string[] = [];
 
-  if (oldContent) {
+  if (oldContent != null && oldContent.length > 0) {
     for (const line of oldContent.split("\n")) {
       lines.push(`- ${line}`);
     }
   }
 
-  if (newContent) {
+  if (newContent != null && newContent.length > 0) {
     for (const line of newContent.split("\n")) {
       lines.push(`+ ${line}`);
     }
@@ -93,7 +93,7 @@ function formatCodeBlock(
   let formatted = content;
 
   // Add prefix to each line if specified
-  if (prefix) {
+  if (prefix != null && prefix.length > 0) {
     formatted = content
       .split("\n")
       .map((line) => `${prefix} ${line}`)

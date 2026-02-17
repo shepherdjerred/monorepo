@@ -49,7 +49,7 @@ function AppContent() {
       <div className="h-screen w-screen overflow-hidden bg-background text-foreground">
         <SessionList onAttach={handleAttach} onCreateNew={handleCreateNew} />
 
-        {view === "console" && attachedSession && (
+        {view === "console" && attachedSession != null && (
           <Console
             sessionId={attachedSession.id}
             sessionName={attachedSession.name}
@@ -58,7 +58,7 @@ function AppContent() {
           />
         )}
 
-        {view === "chat" && attachedSession && (
+        {view === "chat" && attachedSession != null && (
           <ChatInterface
             sessionId={attachedSession.id}
             sessionName={attachedSession.name}

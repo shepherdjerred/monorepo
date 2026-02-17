@@ -63,7 +63,7 @@ export function getTracer(): Tracer | null {
 }
 
 export async function shutdownTracing(): Promise<void> {
-  if (sdk) {
+  if (sdk != null) {
     await sdk.shutdown();
   }
 }
@@ -73,7 +73,7 @@ export async function shutdownTracing(): Promise<void> {
  */
 export function getTraceContext(): { traceId?: string; spanId?: string } {
   const span = trace.getActiveSpan();
-  if (!span) {
+  if (span == null) {
     return {};
   }
 
@@ -100,7 +100,7 @@ export async function withSpan<T>(
   attributes: DiscordSpanAttributes,
   fn: (span: Span) => Promise<T>,
 ): Promise<T> {
-  if (!tracer) {
+  if (tracer == null) {
     // Create a no-op span object when tracing is disabled
     const noopSpan = {
       setAttribute: () => noopSpan,
@@ -151,7 +151,7 @@ export function withToolSpan<T>(
   return withSpan(
     `tool.${toolId}`,
     {
-      ...(guildId ? { guildId } : {}),
+      ...(guildId != null && guildId.length > 0 ? { guildId } : {}),
       operation: `tool.${toolId}`,
     },
     fn,

@@ -113,12 +113,12 @@ export const manageMessageTool = createTool({
           { value: ctx.messageId, fieldName: "messageId" },
           { value: ctx.before, fieldName: "before" },
         ]);
-        if (idError) {
+        if (idError != null && idError.length > 0) {
           return { success: false, message: idError };
         }
 
         const arrayError = validateSnowflakeArray(ctx.messageIds, "messageIds");
-        if (arrayError) {
+        if (arrayError != null && arrayError.length > 0) {
           return { success: false, message: arrayError };
         }
 
@@ -133,7 +133,7 @@ export const manageMessageTool = createTool({
               };
             }
             const channel = await client.channels.fetch(ctx.channelId);
-            if (!channel?.isTextBased()) {
+            if (channel?.isTextBased() !== true) {
               return {
                 success: false,
                 message: "Channel is not a text channel",
@@ -157,7 +157,7 @@ export const manageMessageTool = createTool({
           }
 
           case "reply": {
-            if (!ctx.content) {
+            if (ctx.content == null || ctx.content.length === 0) {
               return {
                 success: false,
                 message: "content is required for reply",
@@ -189,7 +189,7 @@ export const manageMessageTool = createTool({
             const channel = await client.channels.fetch(
               requestContext.sourceChannelId,
             );
-            if (!channel?.isTextBased()) {
+            if (channel?.isTextBased() !== true) {
               return {
                 success: false,
                 message: "Channel is not a text channel",
@@ -248,7 +248,7 @@ export const manageMessageTool = createTool({
               };
             }
             const channel = await client.channels.fetch(ctx.channelId);
-            if (!channel?.isTextBased()) {
+            if (channel?.isTextBased() !== true) {
               return {
                 success: false,
                 message: "Channel is not a text channel",
@@ -273,7 +273,7 @@ export const manageMessageTool = createTool({
               };
             }
             const channel = await client.channels.fetch(ctx.channelId);
-            if (!channel?.isTextBased()) {
+            if (channel?.isTextBased() !== true) {
               return {
                 success: false,
                 message: "Channel is not a text channel",
@@ -307,7 +307,7 @@ export const manageMessageTool = createTool({
               };
             }
             const channel = await client.channels.fetch(ctx.channelId);
-            if (!channel?.isTextBased()) {
+            if (channel?.isTextBased() !== true) {
               return {
                 success: false,
                 message: "Channel is not a text channel",
@@ -332,7 +332,7 @@ export const manageMessageTool = createTool({
               };
             }
             const channel = await client.channels.fetch(ctx.channelId);
-            if (!channel?.isTextBased()) {
+            if (channel?.isTextBased() !== true) {
               return {
                 success: false,
                 message: "Channel is not a text channel",
@@ -357,7 +357,7 @@ export const manageMessageTool = createTool({
               };
             }
             const channel = await client.channels.fetch(ctx.channelId);
-            if (!channel?.isTextBased()) {
+            if (channel?.isTextBased() !== true) {
               return {
                 success: false,
                 message: "Channel is not a text channel",
@@ -383,7 +383,7 @@ export const manageMessageTool = createTool({
               };
             }
             const channel = await client.channels.fetch(ctx.channelId);
-            if (!channel?.isTextBased()) {
+            if (channel?.isTextBased() !== true) {
               return {
                 success: false,
                 message: "Channel is not a text channel",
@@ -410,7 +410,7 @@ export const manageMessageTool = createTool({
               };
             }
             const channel = await client.channels.fetch(ctx.channelId);
-            if (!channel?.isTextBased()) {
+            if (channel?.isTextBased() !== true) {
               return {
                 success: false,
                 message: "Channel is not a text channel",
@@ -420,10 +420,10 @@ export const manageMessageTool = createTool({
               ctx.messageId,
             );
             const reaction = message.reactions.cache.get(ctx.emoji);
-            if (!reaction) {
+            if (reaction == null) {
               return { success: false, message: "Reaction not found" };
             }
-            await (ctx.userId
+            await (ctx.userId != null && ctx.userId.length > 0
               ? reaction.users.remove(ctx.userId)
               : reaction.users.remove());
             logger.info("Reaction removed", {
@@ -435,14 +435,14 @@ export const manageMessageTool = createTool({
           }
 
           case "get": {
-            if (!ctx.channelId) {
+            if (ctx.channelId == null || ctx.channelId.length === 0) {
               return {
                 success: false,
                 message: "channelId is required for get",
               };
             }
             const channel = await client.channels.fetch(ctx.channelId);
-            if (!channel?.isTextBased()) {
+            if (channel?.isTextBased() !== true) {
               return {
                 success: false,
                 message: "Channel is not a text channel",
@@ -452,7 +452,7 @@ export const manageMessageTool = createTool({
             const limit = Math.min(100, Math.max(1, ctx.limit ?? 20));
             const messages = await (channel as TextChannel).messages.fetch({
               limit,
-              ...(ctx.before && { before: ctx.before }),
+              ...(ctx.before != null && ctx.before.length > 0 && { before: ctx.before }),
             });
             const formatted = messages
               .map((msg) => ({

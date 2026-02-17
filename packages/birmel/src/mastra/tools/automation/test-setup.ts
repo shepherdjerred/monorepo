@@ -18,7 +18,7 @@ process.env["BROWSER_ENABLED"] ??= "true";
 process.env["BROWSER_HEADLESS"] ??= "true";
 
 // If no database path is set (local dev), use a local file database
-if (!process.env["DATABASE_PATH"]) {
+if (process.env["DATABASE_PATH"] == null || process.env["DATABASE_PATH"].length === 0) {
   const dataDir = join(process.cwd(), "data");
   mkdirSync(dataDir, { recursive: true });
   const testDbPath = join(dataDir, "test-automation.db");

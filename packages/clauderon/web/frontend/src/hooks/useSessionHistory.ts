@@ -29,7 +29,7 @@ export function useSessionHistory(
   const clientRef = useRef(new ClauderonClient());
 
   useEffect(() => {
-    if (!sessionId) {
+    if (sessionId == null || sessionId.length === 0) {
       setMessages([]);
       setIsLoading(false);
       return;

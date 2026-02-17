@@ -49,11 +49,11 @@ function formatIncidentDetails(
   lines.push(`- **Service:** ${incident.service.summary}`);
   lines.push(`- **Urgency:** ${incident.urgency}`);
 
-  if (incident.priority) {
+  if (incident.priority != null) {
     lines.push(`- **Priority:** ${incident.priority.name}`);
   }
 
-  if (incident.description) {
+  if (incident.description != null && incident.description.length > 0) {
     lines.push(`- **Description:** ${incident.description}`);
   }
 
@@ -126,12 +126,12 @@ export async function incidentCommand(
   try {
     const incident = await getIncident(incidentId);
 
-    if (!incident) {
+    if (incident == null) {
       console.error(`Error: Incident ${incidentId} not found`);
       process.exit(1);
     }
 
-    if (options.json) {
+    if (options.json === true) {
       const notes = await getIncidentNotes(incidentId);
       const logEntries = await getIncidentLogEntries(incidentId);
       console.log(formatJson({ incident, notes, logEntries }));

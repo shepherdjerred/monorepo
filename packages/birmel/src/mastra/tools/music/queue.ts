@@ -51,10 +51,10 @@ export const musicQueueTool = createTool({
 
       switch (ctx.action) {
         case "get": {
-          if (!queue) {
+          if (queue == null) {
             return { success: false, message: "No active queue" };
           }
-          const currentTrack = queue.currentTrack
+          const currentTrack = queue.currentTrack != null
             ? {
                 title: queue.currentTrack.title,
                 duration: queue.currentTrack.duration,
@@ -77,10 +77,10 @@ export const musicQueueTool = createTool({
         }
 
         case "add": {
-          if (!ctx.query) {
+          if (ctx.query == null || ctx.query.length === 0) {
             return { success: false, message: "query is required for add" };
           }
-          if (!queue) {
+          if (queue == null) {
             return {
               success: false,
               message: "No active queue. Use play to start first.",
@@ -91,7 +91,7 @@ export const musicQueueTool = createTool({
             return { success: false, message: "No tracks found" };
           }
           const track = result.tracks[0];
-          if (!track) {
+          if (track == null) {
             return { success: false, message: "No tracks found" };
           }
           queue.addTrack(track);
@@ -113,7 +113,7 @@ export const musicQueueTool = createTool({
               message: "position is required for remove",
             };
           }
-          if (!queue) {
+          if (queue == null) {
             return { success: false, message: "No active queue" };
           }
           const index = ctx.position - 1;
@@ -137,7 +137,7 @@ export const musicQueueTool = createTool({
         }
 
         case "clear": {
-          if (!queue) {
+          if (queue == null) {
             return { success: false, message: "No active queue" };
           }
           queue.tracks.clear();

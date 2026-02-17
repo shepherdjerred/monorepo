@@ -19,7 +19,7 @@ async function executeScheduledTask(task: ScheduledTask): Promise<void> {
     });
 
     // If no toolId specified, this is just a reminder (no action)
-    if (!task.toolId) {
+    if (task.toolId == null || task.toolId.length === 0) {
       logger.info("Task has no toolId (reminder only)", { id: task.id });
       await markTaskExecuted(task);
       return;
@@ -27,7 +27,7 @@ async function executeScheduledTask(task: ScheduledTask): Promise<void> {
 
     // Get the tool
     const tool = allTools[task.toolId];
-    if (!tool) {
+    if (tool == null) {
       logger.error("Tool not found", {
         taskId: task.id,
         toolId: task.toolId,
@@ -38,10 +38,9 @@ async function executeScheduledTask(task: ScheduledTask): Promise<void> {
 
     // Parse tool input
     let toolInput: Record<string, unknown> = {};
-    if (task.toolInput) {
+    if (task.toolInput != null && task.toolInput.length > 0) {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        toolInput = JSON.parse(task.toolInput);
+        toolInput = JSON.parse(task.toolInput) as Record<string, unknown>;
       } catch (error) {
         logger.error("Failed to parse tool input", {
           taskId: task.id,
@@ -53,9 +52,9 @@ async function executeScheduledTask(task: ScheduledTask): Promise<void> {
       }
     }
 
-    // Execute the tool
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    const result = await (tool as any).execute(toolInput, {
+    // Execute the tool using its execute method
+    const executableTool = tool as { execute: (input: Record<string, unknown>, context: Record<string, string>) => Promise<Record<string, unknown>> };
+    const result = await executableTool.execute(toolInput, {
       runId: `scheduled-task-${String(task.id)}`,
       agentId: "birmel",
     });
@@ -63,15 +62,14 @@ async function executeScheduledTask(task: ScheduledTask): Promise<void> {
     logger.info("Scheduled task executed successfully", {
       id: task.id,
       toolId: task.toolId,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      success: result.success ?? true,
+      success: result.success === undefined ? true : Boolean(result.success),
     });
 
     // Mark as executed
     await markTaskExecuted(task);
 
     // If recurring, schedule the next run
-    if (task.cronPattern) {
+    if (task.cronPattern != null && task.cronPattern.length > 0) {
       await scheduleNextRun(task);
     }
   } catch (error) {
@@ -99,7 +97,7 @@ async function markTaskExecuted(task: ScheduledTask): Promise<void> {
  * Schedule the next run for a recurring task
  */
 async function scheduleNextRun(task: ScheduledTask): Promise<void> {
-  if (!task.cronPattern) {
+  if (task.cronPattern == null || task.cronPattern.length === 0) {
     return;
   }
 

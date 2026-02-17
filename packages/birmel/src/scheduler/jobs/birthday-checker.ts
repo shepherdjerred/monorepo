@@ -46,7 +46,7 @@ export async function checkAndPostBirthdays(): Promise<void> {
 
               // Determine age if birthYear is available
               let ageText = "";
-              if (birthday.birthYear) {
+              if (birthday.birthYear != null) {
                 const age = new Date().getFullYear() - birthday.birthYear;
                 ageText = ` (${age.toString()} years old)`;
               }
@@ -59,10 +59,10 @@ export async function checkAndPostBirthdays(): Promise<void> {
               // Use system channel or first available text channel if no configured channel
               channelId ??= fullGuild.systemChannelId ?? undefined;
 
-              if (channelId) {
+              if (channelId != null && channelId.length > 0) {
                 const channel = await client.channels.fetch(channelId);
 
-                if (channel?.isTextBased()) {
+                if (channel?.isTextBased() === true) {
                   await (channel as TextChannel).send(birthdayMessage);
 
                   logger.info("Sent birthday message", {
@@ -74,7 +74,7 @@ export async function checkAndPostBirthdays(): Promise<void> {
 
                   // Optionally assign birthday role if configured
                   const birthdayRoleId = config.birthdays.birthdayRoleId;
-                  if (birthdayRoleId) {
+                  if (birthdayRoleId != null && birthdayRoleId.length > 0) {
                     try {
                       await member.roles.add(birthdayRoleId);
                       logger.info("Added birthday role", {

@@ -67,11 +67,11 @@ export async function getRunLogs(
 ): Promise<string> {
   const args = ["run", "view", String(runId), "--log"];
 
-  if (options?.failedOnly) {
+  if (options?.failedOnly === true) {
     args.push("--log-failed");
   }
 
-  if (options?.jobName) {
+  if (options?.jobName != null && options.jobName.length > 0) {
     args.push("--job", options.jobName);
   }
 
@@ -97,7 +97,7 @@ export async function getFailedJobs(
     if (check.conclusion === "failure") {
       // Find the corresponding run
       const run = runs.find((r) => r.name === check.workflowName);
-      if (run) {
+      if (run != null) {
         failedJobs.push({ name: check.name, runId: run.databaseId });
       }
     }

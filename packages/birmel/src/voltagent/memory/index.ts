@@ -32,7 +32,7 @@ export const OWNER_MEMORY_TEMPLATE = `# Owner Rules
 `;
 
 export function createMemory(): Memory {
-  if (memoryInstance) {
+  if (memoryInstance != null) {
     return memoryInstance;
   }
 
@@ -56,7 +56,7 @@ export function createMemory(): Memory {
 }
 
 export function getMemory(): Memory {
-  if (!memoryInstance) {
+  if (memoryInstance == null) {
     return createMemory();
   }
   return memoryInstance;

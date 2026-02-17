@@ -60,7 +60,6 @@ export async function deployBetterSkillCapped(
   s3SecretAccessKey: Secret,
   ghcrUsername: string,
   ghcrPassword: Secret,
-  _ghToken: Secret,
 ): Promise<string> {
   const pkgSource = source.directory("packages/better-skill-capped");
   const mainSource = pkgSource.withoutDirectory("fetcher");

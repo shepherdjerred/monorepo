@@ -6,7 +6,7 @@ export type BugsinkClientResult<T> = {
 
 function getBaseUrl(): string {
   const baseUrl = Bun.env["BUGSINK_URL"];
-  if (!baseUrl) {
+  if (baseUrl == null || baseUrl.length === 0) {
     throw new Error("BUGSINK_URL environment variable is not set");
   }
   return baseUrl.replace(/\/$/, "");
@@ -14,7 +14,7 @@ function getBaseUrl(): string {
 
 function getAuthToken(): string {
   const authToken = Bun.env["BUGSINK_TOKEN"];
-  if (!authToken) {
+  if (authToken == null || authToken.length === 0) {
     throw new Error("BUGSINK_TOKEN environment variable is not set");
   }
   return authToken;
@@ -29,7 +29,7 @@ export async function bugsinkRequest<T>(
     const authToken = getAuthToken();
     const url = new URL(`${baseUrl}/api/canonical/0${endpoint}`);
 
-    if (params) {
+    if (params != null) {
       for (const [key, value] of Object.entries(params)) {
         url.searchParams.set(key, value);
       }

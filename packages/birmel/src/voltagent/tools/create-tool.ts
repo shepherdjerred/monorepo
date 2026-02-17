@@ -54,17 +54,17 @@ export function createTool<
   O extends ToolSchema | undefined = undefined,
 >(options: MastraCompatibleToolOptions<T, O>) {
   const name = options.name ?? options.id;
-  if (!name) {
+  if (name == null || name.length === 0) {
     throw new Error("Tool must have either `name` or `id`");
   }
 
   const parameters = options.parameters ?? options.inputSchema;
-  if (!parameters) {
+  if (parameters == null) {
     throw new Error("Tool must have either `parameters` or `inputSchema`");
   }
 
   // Create VoltAgent tool with adapted options
-  if (options.outputSchema) {
+  if (options.outputSchema != null) {
     return voltAgentCreateTool({
       name,
       description: options.description,

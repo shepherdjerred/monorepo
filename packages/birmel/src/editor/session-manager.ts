@@ -78,7 +78,7 @@ export async function getOrCreateSession(
     orderBy: { createdAt: "desc" },
   });
 
-  if (existing) {
+  if (existing != null) {
     logger.debug("Found existing session", { sessionId: existing.id });
     return existing;
   }
@@ -170,7 +170,7 @@ export async function storePendingChanges(
 export function getPendingChanges(
   session: EditorSession,
 ): PendingChanges | null {
-  if (!session.pendingChanges) {
+  if (session.pendingChanges == null || session.pendingChanges.length === 0) {
     return null;
   }
   try {
@@ -235,7 +235,7 @@ export async function updatePrUrl(
   });
 
   // Cleanup cloned repo since PR is created
-  if (session?.clonedRepoPath) {
+  if (session?.clonedRepoPath != null && session?.clonedRepoPath.length > 0) {
     await cleanupClone(session.clonedRepoPath);
   }
 
@@ -258,7 +258,7 @@ export async function cleanupSessionClone(sessionId: string): Promise<void> {
     select: { clonedRepoPath: true },
   });
 
-  if (session?.clonedRepoPath) {
+  if (session?.clonedRepoPath != null && session?.clonedRepoPath.length > 0) {
     await cleanupClone(session.clonedRepoPath);
     await prisma.editorSession.update({
       where: { id: sessionId },
@@ -282,7 +282,7 @@ export async function expireOldSessions(): Promise<number> {
 
   // Cleanup cloned repos
   for (const session of sessionsToExpire) {
-    if (session.clonedRepoPath) {
+    if (session.clonedRepoPath != null && session.clonedRepoPath.length > 0) {
       await cleanupClone(session.clonedRepoPath);
     }
   }

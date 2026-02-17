@@ -29,7 +29,7 @@ function getLevelEmoji(level: BugsinkIssueLevel): string {
 function formatStacktrace(event: BugsinkEvent): string[] {
   const lines: string[] = [];
 
-  if (!event.exception?.values) {
+  if (event.exception?.values == null) {
     return lines;
   }
 
@@ -37,14 +37,14 @@ function formatStacktrace(event: BugsinkEvent): string[] {
     lines.push(`**${exception.type}:** ${exception.value}`);
     lines.push("");
 
-    if (exception.stacktrace && exception.stacktrace.frames.length > 0) {
+    if (exception.stacktrace != null && exception.stacktrace.frames.length > 0) {
       lines.push("```");
       // Show frames in reverse order (most recent first)
       const frames = [...exception.stacktrace.frames].reverse().slice(0, 10);
       for (const frame of frames) {
-        const location = frame.lineno
-          ? `${frame.filename}:${String(frame.lineno)}`
-          : frame.filename;
+        const location = frame.lineno == null
+          ? frame.filename
+          : `${frame.filename}:${String(frame.lineno)}`;
         const inApp = frame.in_app ? "" : " (library)";
         lines.push(`  at ${frame.function} (${location})${inApp}`);
       }
@@ -60,6 +60,69 @@ function formatStacktrace(event: BugsinkEvent): string[] {
   return lines;
 }
 
+function formatMetadata(issue: BugsinkIssue): string[] {
+  const lines: string[] = [];
+  if ((issue.metadata.type != null && issue.metadata.type.length > 0) || (issue.metadata.value != null && issue.metadata.value.length > 0)) {
+    lines.push("### Error Info");
+    lines.push("");
+    if (issue.metadata.type != null && issue.metadata.type.length > 0) {
+      lines.push(`- **Type:** ${issue.metadata.type}`);
+    }
+    if (issue.metadata.value != null && issue.metadata.value.length > 0) {
+      lines.push(`- **Value:** ${issue.metadata.value}`);
+    }
+    if (issue.metadata.filename != null && issue.metadata.filename.length > 0) {
+      lines.push(`- **File:** ${issue.metadata.filename}`);
+    }
+    if (issue.metadata.function != null && issue.metadata.function.length > 0) {
+      lines.push(`- **Function:** ${issue.metadata.function}`);
+    }
+    lines.push("");
+  }
+  return lines;
+}
+
+function formatLatestEvent(latestEvent: BugsinkEvent): string[] {
+  const lines: string[] = [];
+  lines.push("### Latest Event");
+  lines.push("");
+  lines.push(`- **Event ID:** ${latestEvent.event_id}`);
+  lines.push(
+    `- **Occurred:** ${new Date(latestEvent.timestamp).toLocaleString()}`,
+  );
+
+  if (latestEvent.user != null) {
+    const user = latestEvent.user;
+    const userInfo =
+      user.email ??
+      user.username ??
+      user.id ??
+      user.ip_address ??
+      "anonymous";
+    lines.push(`- **User:** ${userInfo}`);
+  }
+  lines.push("");
+
+  if (latestEvent.tags.length > 0) {
+    lines.push("#### Tags");
+    lines.push("");
+    for (const tag of latestEvent.tags.slice(0, 10)) {
+      lines.push(`- **${tag.key}:** ${tag.value}`);
+    }
+    lines.push("");
+  }
+
+  if (latestEvent.exception?.values != null) {
+    lines.push("#### Stacktrace");
+    lines.push("");
+    const stackLines = formatStacktrace(latestEvent);
+    lines.push(...stackLines);
+    lines.push("");
+  }
+
+  return lines;
+}
+
 function formatIssueDetails(
   issue: BugsinkIssue,
   latestEvent: BugsinkEvent | null,
@@ -69,13 +132,11 @@ function formatIssueDetails(
   lines.push(`## Issue ${issue.short_id}: ${issue.title}`);
   lines.push("");
 
-  // Status section
   lines.push(
     `### Level: ${getLevelEmoji(issue.level)} ${issue.level.toUpperCase()}`,
   );
   lines.push("");
 
-  // Details
   lines.push("### Details");
   lines.push("");
   lines.push(`- **ID:** ${issue.id}`);
@@ -83,7 +144,7 @@ function formatIssueDetails(
   lines.push(`- **Project:** ${issue.project.name}`);
   lines.push(`- **Status:** ${issue.status}`);
 
-  if (issue.culprit) {
+  if (issue.culprit != null && issue.culprit.length > 0) {
     lines.push(`- **Culprit:** \`${issue.culprit}\``);
   }
 
@@ -95,64 +156,10 @@ function formatIssueDetails(
   lines.push(`- **Last seen:** ${new Date(issue.last_seen).toLocaleString()}`);
   lines.push("");
 
-  // Metadata
-  if (issue.metadata.type || issue.metadata.value) {
-    lines.push("### Error Info");
-    lines.push("");
-    if (issue.metadata.type) {
-      lines.push(`- **Type:** ${issue.metadata.type}`);
-    }
-    if (issue.metadata.value) {
-      lines.push(`- **Value:** ${issue.metadata.value}`);
-    }
-    if (issue.metadata.filename) {
-      lines.push(`- **File:** ${issue.metadata.filename}`);
-    }
-    if (issue.metadata.function) {
-      lines.push(`- **Function:** ${issue.metadata.function}`);
-    }
-    lines.push("");
-  }
+  lines.push(...formatMetadata(issue));
 
-  // Latest event details
-  if (latestEvent) {
-    lines.push("### Latest Event");
-    lines.push("");
-    lines.push(`- **Event ID:** ${latestEvent.event_id}`);
-    lines.push(
-      `- **Occurred:** ${new Date(latestEvent.timestamp).toLocaleString()}`,
-    );
-
-    if (latestEvent.user) {
-      const user = latestEvent.user;
-      const userInfo =
-        user.email ??
-        user.username ??
-        user.id ??
-        user.ip_address ??
-        "anonymous";
-      lines.push(`- **User:** ${userInfo}`);
-    }
-    lines.push("");
-
-    // Tags
-    if (latestEvent.tags.length > 0) {
-      lines.push("#### Tags");
-      lines.push("");
-      for (const tag of latestEvent.tags.slice(0, 10)) {
-        lines.push(`- **${tag.key}:** ${tag.value}`);
-      }
-      lines.push("");
-    }
-
-    // Exception/Stacktrace
-    if (latestEvent.exception?.values) {
-      lines.push("#### Stacktrace");
-      lines.push("");
-      const stackLines = formatStacktrace(latestEvent);
-      lines.push(...stackLines);
-      lines.push("");
-    }
+  if (latestEvent != null) {
+    lines.push(...formatLatestEvent(latestEvent));
   }
 
   return lines.join("\n");
@@ -165,12 +172,12 @@ export async function issueCommand(
   try {
     const issue = await getIssue(issueId);
 
-    if (!issue) {
+    if (issue == null) {
       console.error(`Error: Issue ${issueId} not found`);
       process.exit(1);
     }
 
-    if (options.json) {
+    if (options.json === true) {
       const latestEvent = await getLatestEvent(issueId);
       console.log(formatJson({ issue, latestEvent }));
     } else {

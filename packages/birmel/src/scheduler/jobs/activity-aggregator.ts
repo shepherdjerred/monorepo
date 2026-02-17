@@ -78,7 +78,7 @@ export async function aggregateActivityMetrics(): Promise<void> {
                 roleTiers.some((tier) => tier.roleId === role.id),
               );
 
-              if (qualifiedTier) {
+              if (qualifiedTier != null) {
                 // User qualifies for a tier
                 const shouldHaveRole = qualifiedTier.roleId;
 

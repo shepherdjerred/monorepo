@@ -43,7 +43,7 @@ export function recordMessageActivity(input: RecordMessageActivityInput): void {
         userId: input.userId,
         channelId: input.channelId,
         activityType: "message",
-        metadata: input.characterCount
+        metadata: input.characterCount != null
           ? JSON.stringify({
               messageId: input.messageId,
               characterCount: input.characterCount,
@@ -97,7 +97,7 @@ export async function getUserActivityStats(
   const where = {
     guildId,
     userId,
-    ...(dateRange && {
+    ...(dateRange != null && {
       createdAt: {
         gte: dateRange.start,
         lte: dateRange.end,
@@ -125,7 +125,7 @@ export async function getUserActivityStats(
       SELECT userId, COUNT(*) as activityCount
       FROM UserActivity
       WHERE guildId = ${guildId}
-        ${dateRange ? `AND createdAt >= ${dateRange.start.toISOString()} AND createdAt <= ${dateRange.end.toISOString()}` : ""}
+        ${dateRange != null ? `AND createdAt >= ${dateRange.start.toISOString()} AND createdAt <= ${dateRange.end.toISOString()}` : ""}
       GROUP BY userId
       HAVING activityCount > ${totalActivity}
     )
@@ -158,7 +158,7 @@ export async function getTopActiveUsers(
   const where = {
     guildId,
     ...(activityType !== "all" && { activityType }),
-    ...(options?.dateRange && {
+    ...(options?.dateRange != null && {
       createdAt: {
         gte: options.dateRange.start,
         lte: options.dateRange.end,

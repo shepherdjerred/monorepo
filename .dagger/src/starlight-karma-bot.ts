@@ -25,7 +25,6 @@ export async function deployStarlightKarmaBot(
   gitSha: string,
   ghcrUsername: string,
   ghcrPassword: Secret,
-  _ghToken: Secret,
 ): Promise<string> {
   const pkgSource = source.directory("packages/starlight-karma-bot");
   const outputs: string[] = [];

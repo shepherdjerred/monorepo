@@ -194,7 +194,9 @@ describe("checkSendMessagePermission", () => {
     expect(result.hasPermission).toBe(false);
     expect(result.reason).toContain("Error checking permissions");
   });
+});
 
+describe("checkSendMessagePermission - member resolution", () => {
   test("uses guild.members.me when available", async () => {
     const mockMe = { id: "bot-member-id" };
     const channel = mockTextChannel({

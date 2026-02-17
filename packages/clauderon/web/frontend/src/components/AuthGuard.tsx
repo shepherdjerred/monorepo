@@ -33,7 +33,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     return <RegistrationPage />;
   }
 
-  if (!authStatus.current_user) {
+  if (authStatus.current_user == null) {
     // User not logged in - show login
     return <LoginPage />;
   }

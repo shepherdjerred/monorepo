@@ -64,7 +64,7 @@ export const externalServiceTool = createTool({
     try {
       switch (ctx.action) {
         case "fetch-url": {
-          if (!ctx.url) {
+          if (ctx.url == null || ctx.url.length === 0) {
             return { success: false, message: "url is required for fetch-url" };
           }
           const response = await fetch(ctx.url, {
@@ -105,12 +105,12 @@ export const externalServiceTool = createTool({
           return {
             success: true,
             message: "Successfully fetched URL",
-            data: { ...(title && { title }), content, url: ctx.url },
+            data: { ...(title != null && title.length > 0 && { title }), content, url: ctx.url },
           };
         }
 
         case "search": {
-          if (!ctx.query) {
+          if (ctx.query == null || ctx.query.length === 0) {
             return { success: false, message: "query is required for search" };
           }
           const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(ctx.query)}`;
@@ -133,7 +133,7 @@ export const externalServiceTool = createTool({
             results.length < 5
           ) {
             const [, url, title, snippetHtml] = match;
-            if (url && title && snippetHtml) {
+            if (url && title && snippetHtml != null && snippetHtml.length > 0) {
               results.push({
                 title: title.trim(),
                 url: decodeURIComponent(
@@ -154,7 +154,7 @@ export const externalServiceTool = createTool({
 
         case "news": {
           const apiKey = config.externalApis.newsApiKey;
-          if (!apiKey) {
+          if (apiKey == null || apiKey.length === 0) {
             return { success: false, message: "News API key not configured" };
           }
           const params = new URLSearchParams({
@@ -163,12 +163,12 @@ export const externalServiceTool = createTool({
             language: "en",
           });
           let endpoint: string;
-          if (ctx.query) {
+          if (ctx.query != null && ctx.query.length > 0) {
             params.set("q", ctx.query);
             endpoint = "everything";
           } else {
             params.set("country", "us");
-            if (ctx.newsCategory) {
+            if (ctx.newsCategory != null && ctx.newsCategory.length > 0) {
               params.set("category", ctx.newsCategory);
             }
             endpoint = "top-headlines";
@@ -232,7 +232,7 @@ export const externalServiceTool = createTool({
           }
           // status
           const apiKey = config.externalApis.riotApiKey;
-          if (!apiKey) {
+          if (apiKey == null || apiKey.length === 0) {
             return { success: false, message: "Riot API key not configured" };
           }
           const response = await fetch(

@@ -60,7 +60,7 @@ export function CodeBlock({ code, language, filePath }: CodeBlockProps) {
         <span className="font-mono text-xs font-bold uppercase">
           {language}
         </span>
-        {filePath && <span className="font-mono text-xs">{filePath}</span>}
+        {filePath != null && filePath.length > 0 && <span className="font-mono text-xs">{filePath}</span>}
       </div>
       {isLoading ? (
         <div className="p-4 bg-[#0a0e14] text-[#e6e1dc] font-mono text-sm">

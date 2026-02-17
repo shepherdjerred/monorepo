@@ -51,7 +51,7 @@ export function parseHistoryEntry(line: string): Message | null {
       return null;
     }
 
-    if (!entry.message) {
+    if (entry.message == null) {
       return null;
     }
 
@@ -67,7 +67,7 @@ export function parseHistoryEntry(line: string): Message | null {
       textContent = entry.message.content;
     } else if (Array.isArray(entry.message.content)) {
       for (const block of entry.message.content) {
-        if (block.type === "text" && block.text) {
+        if (block.type === "text" && block.text != null && block.text.length > 0) {
           textContent += block.text;
         } else if (block.type === "tool_use") {
           toolUses.push({
@@ -127,15 +127,15 @@ export function parseHistoryLines(lines: string[]): Message[] {
 
       // Collect tool uses from assistant messages
       if (
-        message?.toolUses &&
-        entry.message &&
+        message?.toolUses != null &&
+        entry.message != null &&
         Array.isArray(entry.message.content)
       ) {
         for (const block of entry.message.content) {
-          if (block.type === "tool_use" && block.id) {
+          if (block.type === "tool_use" && block.id != null && block.id.length > 0) {
             // Find the matching ToolUse object
             const toolUse = message.toolUses.find((t) => t.name === block.name);
-            if (toolUse) {
+            if (toolUse != null) {
               toolUseMap.set(block.id, toolUse);
             }
           }
@@ -151,11 +151,11 @@ export function parseHistoryLines(lines: string[]): Message[] {
 
   // Second pass: Match tool results to tool uses
   for (const { entry } of parsedEntries) {
-    if (entry.message && Array.isArray(entry.message.content)) {
+    if (entry.message != null && Array.isArray(entry.message.content)) {
       for (const block of entry.message.content) {
-        if (block.type === "tool_result" && block.tool_use_id) {
+        if (block.type === "tool_result" && block.tool_use_id != null && block.tool_use_id.length > 0) {
           const toolUse = toolUseMap.get(block.tool_use_id);
-          if (toolUse) {
+          if (toolUse != null) {
             toolUse.result =
               typeof block.content === "string"
                 ? block.content
@@ -188,7 +188,7 @@ export function parseHistoryLinesAuto(lines: string[]): Message[] {
 
   // Find the first non-empty line
   const firstLine = lines.find((l) => l.trim());
-  if (!firstLine) {
+  if (firstLine == null || firstLine.length === 0) {
     return [];
   }
 

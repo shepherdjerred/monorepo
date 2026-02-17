@@ -119,7 +119,7 @@ export const manageBirthdayTool = createTool({
             });
             return {
               success: true,
-              message: `Birthday set to ${ctx.birthMonth.toString()}/${ctx.birthDay.toString()}${ctx.birthYear ? `/${ctx.birthYear.toString()}` : ""}`,
+              message: `Birthday set to ${ctx.birthMonth.toString()}/${ctx.birthDay.toString()}${ctx.birthYear != null ? `/${ctx.birthYear.toString()}` : ""}`,
               data: {
                 userId: birthday.userId,
                 birthMonth: birthday.birthMonth,
@@ -131,11 +131,11 @@ export const manageBirthdayTool = createTool({
           }
 
           case "get": {
-            if (!ctx.userId) {
+            if (ctx.userId == null || ctx.userId.length === 0) {
               return { success: false, message: "userId is required for get" };
             }
             const birthday = await getBirthday(ctx.userId, ctx.guildId);
-            if (!birthday) {
+            if (birthday == null) {
               return {
                 success: false,
                 message: "No birthday found for this user",
@@ -143,7 +143,7 @@ export const manageBirthdayTool = createTool({
             }
             return {
               success: true,
-              message: `Birthday is ${birthday.birthMonth.toString()}/${birthday.birthDay.toString()}${birthday.birthYear ? `/${birthday.birthYear.toString()}` : ""}`,
+              message: `Birthday is ${birthday.birthMonth.toString()}/${birthday.birthDay.toString()}${birthday.birthYear != null ? `/${birthday.birthYear.toString()}` : ""}`,
               data: {
                 userId: birthday.userId,
                 birthMonth: birthday.birthMonth,
@@ -155,7 +155,7 @@ export const manageBirthdayTool = createTool({
           }
 
           case "update": {
-            if (!ctx.userId) {
+            if (ctx.userId == null || ctx.userId.length === 0) {
               return {
                 success: false,
                 message: "userId is required for update",
@@ -187,7 +187,7 @@ export const manageBirthdayTool = createTool({
           }
 
           case "delete": {
-            if (!ctx.userId) {
+            if (ctx.userId == null || ctx.userId.length === 0) {
               return {
                 success: false,
                 message: "userId is required for delete",
@@ -239,7 +239,7 @@ export const manageBirthdayTool = createTool({
           }
 
           case "by-month": {
-            if (!ctx.month) {
+            if (ctx.month == null) {
               return {
                 success: false,
                 message: "month is required for by-month",

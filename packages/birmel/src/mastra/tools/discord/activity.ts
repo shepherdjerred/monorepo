@@ -68,7 +68,7 @@ export const recordActivityTool = createTool({
           }
 
           case "reaction": {
-            if (!ctx.emoji) {
+            if (ctx.emoji == null || ctx.emoji.length === 0) {
               return {
                 success: false,
                 message: "emoji is required for reaction activity",
@@ -164,7 +164,7 @@ export const getActivityStatsTool = createTool({
     return withToolSpan("get-activity-stats", ctx.guildId, async () => {
       try {
         const dateRange =
-          ctx.startDate && ctx.endDate
+          ctx.startDate != null && ctx.startDate.length > 0 && ctx.endDate != null && ctx.endDate.length > 0
             ? {
                 start: new Date(ctx.startDate),
                 end: new Date(ctx.endDate),
@@ -173,7 +173,7 @@ export const getActivityStatsTool = createTool({
 
         switch (ctx.action) {
           case "user": {
-            if (!ctx.userId) {
+            if (ctx.userId == null || ctx.userId.length === 0) {
               return {
                 success: false,
                 message: "userId is required for user stats",

@@ -48,7 +48,7 @@ export function startScheduler(): void {
 }
 
 export function stopScheduler(): void {
-  if (schedulerInterval) {
+  if (schedulerInterval != null) {
     clearInterval(schedulerInterval);
     schedulerInterval = null;
     logger.info("Scheduler stopped");

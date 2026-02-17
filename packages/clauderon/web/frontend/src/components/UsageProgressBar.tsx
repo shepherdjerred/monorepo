@@ -46,7 +46,7 @@ export function UsageProgressBar({
       <div className="flex items-baseline justify-between">
         <div>
           <h4 className="font-semibold text-sm">{title}</h4>
-          {subtitle && (
+          {subtitle != null && subtitle.length > 0 && (
             <p className="text-xs text-muted-foreground">{subtitle}</p>
           )}
         </div>
@@ -86,7 +86,7 @@ export function UsageProgressBar({
       </div>
 
       {/* Reset time */}
-      {window.resets_at && (
+      {window.resets_at != null && window.resets_at.length > 0 && (
         <div className="text-xs text-muted-foreground">
           {formatResetTime(window.resets_at)}
         </div>

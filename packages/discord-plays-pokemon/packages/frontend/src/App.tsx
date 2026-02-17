@@ -1,7 +1,7 @@
 import { Notifications } from "./stories/Notifications";
 import { Notification } from "./model/Notification";
 import lodash from "lodash";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Container } from "./stories/Container";
 import { P, match } from "ts-pattern";
 import { GamePage } from "./pages/GamePage";
@@ -30,6 +30,10 @@ export function App() {
   });
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
+  const addNotification = useCallback((notification: Notification) => {
+    setNotifications((prev) => [...prev, notification]);
+  }, []);
+
   useEffect(() => {
     socket.on("connect", () => {
       addNotification({
@@ -38,10 +42,10 @@ export function App() {
         title: "Connected",
         message: "Connection established",
       });
-      setConnection({
-        ...connection,
+      setConnection((prev) => ({
+        ...prev,
         status: "connected",
-      });
+      }));
     });
 
     socket.on("disconnect", () => {
@@ -51,10 +55,10 @@ export function App() {
         title: "Disconnected",
         message: "Connection lost",
       });
-      setConnection({
-        ...connection,
+      setConnection((prev) => ({
+        ...prev,
         status: "disconnected",
-      });
+      }));
     });
 
     socket.on("response", (payload) => {
@@ -73,17 +77,23 @@ export function App() {
           .exhaustive();
       }
     });
-  }, []);
+
+    return () => {
+      socket.off("connect");
+      socket.off("disconnect");
+      socket.off("response");
+    };
+  }, [addNotification]);
 
   useInterval(() => {
     const start = Date.now();
 
     socket.emit("ping", () => {
       const duration = Date.now() - start;
-      setConnection({
-        ...connection,
+      setConnection((prev) => ({
+        ...prev,
         latency: duration,
-      });
+      }));
     });
   }, 2000);
 
@@ -103,13 +113,9 @@ export function App() {
     socket.emit("request", request);
   }
 
-  function addNotification(notification: Notification) {
-    setNotifications([...notifications, notification]);
-  }
-
   function handleNotificationClose(id: string) {
-    setNotifications(
-      lodash.filter(notifications, (notification) => notification.id !== id),
+    setNotifications((prev) =>
+      lodash.filter(prev, (notification) => notification.id !== id),
     );
   }
 

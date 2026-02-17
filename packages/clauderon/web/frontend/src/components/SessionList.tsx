@@ -191,7 +191,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
 
   const handleRefresh = (session: Session) => {
     const healthReport = getSessionHealth(session.id);
-    if (healthReport) {
+    if (healthReport != null) {
       // Check if this session has no available actions (blocked)
       if (healthReport.available_actions.length === 0) {
         setBlockedModalSession({ session, healthReport });
@@ -221,7 +221,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   };
 
   const handleConfirm = () => {
-    if (!confirmDialog) {
+    if (confirmDialog == null) {
       return;
     }
 
@@ -370,7 +370,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
 
       {/* Content */}
       <main className="flex-1 overflow-auto p-4">
-        {error && (
+        {error != null && (
           <div className="p-4 bg-destructive/10 text-destructive border-2 border-destructive rounded-md mb-4">
             <strong className="font-mono">Error:</strong> {error.message}
           </div>
@@ -448,7 +448,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
       </main>
 
       {/* Confirmation Dialog */}
-      {confirmDialog && (
+      {confirmDialog != null && (
         <ConfirmDialog
           open={true}
           onOpenChange={(open) => {
@@ -489,7 +489,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
       )}
 
       {/* Edit Dialog */}
-      {editingSession && (
+      {editingSession != null && (
         <EditSessionDialog
           session={editingSession}
           onClose={() => {
@@ -519,7 +519,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
       />
 
       {/* Recreate Confirm Modal */}
-      {recreateModalSession && (
+      {recreateModalSession != null && (
         <RecreateConfirmModal
           open={true}
           onOpenChange={(open) => {
@@ -611,7 +611,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
       )}
 
       {/* Recreate Blocked Modal */}
-      {blockedModalSession && (
+      {blockedModalSession != null && (
         <RecreateBlockedModal
           open={true}
           onOpenChange={(open) => {

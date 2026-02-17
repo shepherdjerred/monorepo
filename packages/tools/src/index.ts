@@ -53,7 +53,7 @@ async function main(): Promise<void> {
   const command = args[0];
   const subcommand = args[1];
 
-  if (!command || command === "--help" || command === "-h") {
+  if (command == null || command.length === 0 || command === "--help" || command === "-h") {
     printUsage();
     process.exit(0);
   }
@@ -80,7 +80,7 @@ async function handlePrCommand(
   subcommand: string | undefined,
   args: string[],
 ): Promise<void> {
-  if (!subcommand || subcommand === "--help" || subcommand === "-h") {
+  if (subcommand == null || subcommand.length === 0 || subcommand === "--help" || subcommand === "-h") {
     console.log(`
 tools pr - Pull request utilities
 
@@ -118,7 +118,7 @@ async function handlePagerDutyCommand(
   subcommand: string | undefined,
   args: string[],
 ): Promise<void> {
-  if (!subcommand || subcommand === "--help" || subcommand === "-h") {
+  if (subcommand == null || subcommand.length === 0 || subcommand === "--help" || subcommand === "-h") {
     console.log(`
 tools pagerduty (pd) - PagerDuty incident management
 
@@ -159,7 +159,7 @@ async function handleBugsinkCommand(
   subcommand: string | undefined,
   args: string[],
 ): Promise<void> {
-  if (!subcommand || subcommand === "--help" || subcommand === "-h") {
+  if (subcommand == null || subcommand.length === 0 || subcommand === "--help" || subcommand === "-h") {
     console.log(`
 tools bugsink - Bugsink issue tracking
 
@@ -226,7 +226,7 @@ async function handleLogsCommand(args: string[]): Promise<void> {
   });
 
   const runId = positionals[0];
-  if (!runId) {
+  if (runId == null || runId.length === 0) {
     console.error("Error: Run ID is required");
     console.error(
       "Usage: tools pr logs <run-id> [--failed-only] [--job <name>]",
@@ -271,7 +271,7 @@ async function handlePagerDutyIncidentsCommand(args: string[]): Promise<void> {
   const statuses = values.status as
     | ("triggered" | "acknowledged" | "resolved")[]
     | undefined;
-  const limit = values.limit ? Number.parseInt(values.limit, 10) : undefined;
+  const limit = values.limit != null && values.limit.length > 0 ? Number.parseInt(values.limit, 10) : undefined;
 
   await incidentsCommand({
     json: values.json,
@@ -290,7 +290,7 @@ async function handlePagerDutyIncidentCommand(args: string[]): Promise<void> {
   });
 
   const incidentId = positionals[0];
-  if (!incidentId) {
+  if (incidentId == null || incidentId.length === 0) {
     console.error("Error: Incident ID is required");
     console.error("Usage: tools pd incident <incident-id> [--json]");
     process.exit(1);
@@ -312,7 +312,7 @@ async function handleBugsinkIssuesCommand(args: string[]): Promise<void> {
     allowPositionals: true,
   });
 
-  const limit = values.limit ? Number.parseInt(values.limit, 10) : undefined;
+  const limit = values.limit != null && values.limit.length > 0 ? Number.parseInt(values.limit, 10) : undefined;
 
   await issuesCommand({
     json: values.json,
@@ -331,7 +331,7 @@ async function handleBugsinkIssueCommand(args: string[]): Promise<void> {
   });
 
   const issueId = positionals[0];
-  if (!issueId) {
+  if (issueId == null || issueId.length === 0) {
     console.error("Error: Issue ID is required");
     console.error("Usage: tools bugsink issue <issue-id> [--json]");
     process.exit(1);

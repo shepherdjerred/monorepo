@@ -560,6 +560,9 @@ export async function publishBirmelImageWithContainer(
   const shaRef = await image.publish(
     `ghcr.io/shepherdjerred/birmel:${options.gitSha}`,
   );
+  const latestRef = await image.publish(
+    "ghcr.io/shepherdjerred/birmel:latest",
+  );
 
-  return [versionRef, shaRef];
+  return [versionRef, shaRef, latestRef];
 }
