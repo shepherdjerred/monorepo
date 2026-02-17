@@ -16,9 +16,11 @@ import * as t from "@babel/types";
 
 // Handle ESM/CJS interop for Babel packages
 const traverse =
-  (_traverse as unknown as { default: typeof _traverse }).default;
+  (_traverse as unknown as { default: typeof _traverse }).default ??
+  _traverse;
 const generate =
-  (_generate as unknown as { default: typeof _generate }).default;
+  (_generate as unknown as { default: typeof _generate }).default ??
+  _generate;
 
 /** Rename mapping for a single function */
 export type FunctionRenameMapping = {

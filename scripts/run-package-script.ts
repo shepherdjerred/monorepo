@@ -17,7 +17,7 @@ async function getPackageJsonPaths(): Promise<string[]> {
   async function walk(dir: string): Promise<void> {
     const entries = await readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
-      if (entry.name === "node_modules" || entry.name === "dist" || entry.name === "build" || entry.name === ".git") {
+      if (entry.name === "node_modules" || entry.name === "dist" || entry.name === "build" || entry.name === ".git" || entry.name === "examples" || entry.name === "example") {
         continue;
       }
       const fullPath = join(dir, entry.name);
