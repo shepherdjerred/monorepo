@@ -11,12 +11,24 @@ import { reviewPr, handleInteractive } from "./code-review.js";
 import { updateReadmes as updateReadmesFn } from "./update-readme.js";
 import { checkAstroOpengraphImages } from "./astro-opengraph-images.js";
 import { checkWebring, deployWebringDocs } from "./webring.js";
-import { checkStarlightKarmaBot, deployStarlightKarmaBot } from "./starlight-karma-bot.js";
-import { checkBetterSkillCapped, deployBetterSkillCapped } from "./better-skill-capped.js";
+import {
+  checkStarlightKarmaBot,
+  deployStarlightKarmaBot,
+} from "./starlight-karma-bot.js";
+import {
+  checkBetterSkillCapped,
+  deployBetterSkillCapped,
+} from "./better-skill-capped.js";
 import { checkSjerRed, deploySjerRed } from "./sjer-red.js";
 import { checkCastleCasters } from "./castle-casters.js";
-import { checkMacosCrossCompiler, deployMacosCrossCompiler } from "./macos-cross-compiler.js";
-import { checkDiscordPlaysPokemon, deployDiscordPlaysPokemon } from "./discord-plays-pokemon.js";
+import {
+  checkMacosCrossCompiler,
+  deployMacosCrossCompiler,
+} from "./macos-cross-compiler.js";
+import {
+  checkDiscordPlaysPokemon,
+  deployDiscordPlaysPokemon,
+} from "./discord-plays-pokemon.js";
 import { checkScoutForLol, deployScoutForLol } from "./scout-for-lol.js";
 import {
   checkHomelab,
@@ -28,7 +40,12 @@ import {
   Stage as HomelabStage,
 } from "./homelab/index.js";
 
-const PACKAGES = ["eslint-config", "bun-decompile", "astro-opengraph-images", "webring"] as const;
+const PACKAGES = [
+  "eslint-config",
+  "bun-decompile",
+  "astro-opengraph-images",
+  "webring",
+] as const;
 const REPO_URL = "shepherdjerred/monorepo";
 
 const BUN_VERSION = "1.3.6";
@@ -61,20 +78,38 @@ function getBaseContainer(): Container {
       .container()
       .from(`oven/bun:${BUN_VERSION}-debian`)
       // Cache APT packages (version in key for invalidation on upgrade)
-      .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-bun-${BUN_VERSION}-debian`))
-      .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`))
+      .withMountedCache(
+        "/var/cache/apt",
+        dag.cacheVolume(`apt-cache-bun-${BUN_VERSION}-debian`),
+      )
+      .withMountedCache(
+        "/var/lib/apt",
+        dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`),
+      )
       .withExec(["apt-get", "update"])
       .withExec(["apt-get", "install", "-y", "python3"])
       // Cache Bun packages
-      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
+      .withMountedCache(
+        "/root/.bun/install/cache",
+        dag.cacheVolume("bun-cache"),
+      )
       // Cache Playwright browsers (version in key for invalidation)
-      .withMountedCache("/root/.cache/ms-playwright", dag.cacheVolume(`playwright-browsers-${PLAYWRIGHT_VERSION}`))
+      .withMountedCache(
+        "/root/.cache/ms-playwright",
+        dag.cacheVolume(`playwright-browsers-${PLAYWRIGHT_VERSION}`),
+      )
       // Install Playwright Chromium and dependencies for browser automation
       .withExec(["bunx", "playwright", "install", "--with-deps", "chromium"])
       // Cache ESLint (incremental linting)
-      .withMountedCache("/workspace/.eslintcache", dag.cacheVolume("eslint-cache"))
+      .withMountedCache(
+        "/workspace/.eslintcache",
+        dag.cacheVolume("eslint-cache"),
+      )
       // Cache TypeScript incremental build
-      .withMountedCache("/workspace/.tsbuildinfo", dag.cacheVolume("tsbuildinfo-cache"))
+      .withMountedCache(
+        "/workspace/.tsbuildinfo",
+        dag.cacheVolume("tsbuildinfo-cache"),
+      )
   );
 }
 
@@ -95,64 +130,205 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/package.json", source.file("package.json"))
     .withMountedFile("/workspace/bun.lock", source.file("bun.lock"))
     // Each workspace's package.json (bun needs these for workspace resolution)
-    .withMountedFile("/workspace/packages/birmel/package.json", source.file("packages/birmel/package.json"))
-    .withMountedFile("/workspace/packages/bun-decompile/package.json", source.file("packages/bun-decompile/package.json"))
-    .withMountedFile("/workspace/packages/eslint-config/package.json", source.file("packages/eslint-config/package.json"))
-    .withMountedFile("/workspace/packages/resume/package.json", source.file("packages/resume/package.json"))
-    .withMountedFile("/workspace/packages/tools/package.json", source.file("packages/tools/package.json"))
+    .withMountedFile(
+      "/workspace/packages/birmel/package.json",
+      source.file("packages/birmel/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/bun-decompile/package.json",
+      source.file("packages/bun-decompile/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/eslint-config/package.json",
+      source.file("packages/eslint-config/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/resume/package.json",
+      source.file("packages/resume/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/tools/package.json",
+      source.file("packages/tools/package.json"),
+    )
     // Clauderon web packages (nested workspace with own lockfile)
-    .withMountedFile("/workspace/packages/clauderon/web/package.json", source.file("packages/clauderon/web/package.json"))
-    .withMountedFile("/workspace/packages/clauderon/web/bun.lock", source.file("packages/clauderon/web/bun.lock"))
-    .withMountedFile("/workspace/packages/clauderon/web/shared/package.json", source.file("packages/clauderon/web/shared/package.json"))
-    .withMountedFile("/workspace/packages/clauderon/web/client/package.json", source.file("packages/clauderon/web/client/package.json"))
-    .withMountedFile("/workspace/packages/clauderon/web/frontend/package.json", source.file("packages/clauderon/web/frontend/package.json"))
+    .withMountedFile(
+      "/workspace/packages/clauderon/web/package.json",
+      source.file("packages/clauderon/web/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/clauderon/web/bun.lock",
+      source.file("packages/clauderon/web/bun.lock"),
+    )
+    .withMountedFile(
+      "/workspace/packages/clauderon/web/shared/package.json",
+      source.file("packages/clauderon/web/shared/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/clauderon/web/client/package.json",
+      source.file("packages/clauderon/web/client/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/clauderon/web/frontend/package.json",
+      source.file("packages/clauderon/web/frontend/package.json"),
+    )
     // Clauderon docs (mount package.json only, will mount full dir in PHASE 3 after install)
     .withExec(["mkdir", "-p", "/workspace/packages/clauderon/docs"])
-    .withMountedFile("/workspace/packages/clauderon/docs/package.json", source.file("packages/clauderon/docs/package.json"))
+    .withMountedFile(
+      "/workspace/packages/clauderon/docs/package.json",
+      source.file("packages/clauderon/docs/package.json"),
+    )
     // New workspace members
-    .withMountedFile("/workspace/packages/astro-opengraph-images/package.json", source.file("packages/astro-opengraph-images/package.json"))
-    .withMountedFile("/workspace/packages/better-skill-capped/package.json", source.file("packages/better-skill-capped/package.json"))
-    .withMountedFile("/workspace/packages/sjer.red/package.json", source.file("packages/sjer.red/package.json"))
-    .withMountedFile("/workspace/packages/webring/package.json", source.file("packages/webring/package.json"))
-    .withMountedFile("/workspace/packages/starlight-karma-bot/package.json", source.file("packages/starlight-karma-bot/package.json"))
-    .withMountedFile("/workspace/packages/homelab/package.json", source.file("packages/homelab/package.json"))
-    .withMountedFile("/workspace/packages/discord-plays-pokemon/package.json", source.file("packages/discord-plays-pokemon/package.json"))
-    .withMountedFile("/workspace/packages/scout-for-lol/package.json", source.file("packages/scout-for-lol/package.json"))
-    .withMountedFile("/workspace/packages/discord-plays-pokemon/packages/backend/package.json", source.file("packages/discord-plays-pokemon/packages/backend/package.json"))
-    .withMountedFile("/workspace/packages/discord-plays-pokemon/packages/common/package.json", source.file("packages/discord-plays-pokemon/packages/common/package.json"))
-    .withMountedFile("/workspace/packages/discord-plays-pokemon/packages/frontend/package.json", source.file("packages/discord-plays-pokemon/packages/frontend/package.json"))
-    .withMountedFile("/workspace/packages/scout-for-lol/packages/backend/package.json", source.file("packages/scout-for-lol/packages/backend/package.json"))
-    .withMountedFile("/workspace/packages/scout-for-lol/packages/data/package.json", source.file("packages/scout-for-lol/packages/data/package.json"))
-    .withMountedFile("/workspace/packages/scout-for-lol/packages/desktop/package.json", source.file("packages/scout-for-lol/packages/desktop/package.json"))
-    .withMountedFile("/workspace/packages/scout-for-lol/packages/frontend/package.json", source.file("packages/scout-for-lol/packages/frontend/package.json"))
-    .withMountedFile("/workspace/packages/scout-for-lol/packages/report/package.json", source.file("packages/scout-for-lol/packages/report/package.json"))
-    .withMountedFile("/workspace/packages/scout-for-lol/packages/ui/package.json", source.file("packages/scout-for-lol/packages/ui/package.json"));
+    .withMountedFile(
+      "/workspace/packages/astro-opengraph-images/package.json",
+      source.file("packages/astro-opengraph-images/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/better-skill-capped/package.json",
+      source.file("packages/better-skill-capped/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/sjer.red/package.json",
+      source.file("packages/sjer.red/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/webring/package.json",
+      source.file("packages/webring/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/starlight-karma-bot/package.json",
+      source.file("packages/starlight-karma-bot/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/homelab/package.json",
+      source.file("packages/homelab/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/discord-plays-pokemon/package.json",
+      source.file("packages/discord-plays-pokemon/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/scout-for-lol/package.json",
+      source.file("packages/scout-for-lol/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/discord-plays-pokemon/packages/backend/package.json",
+      source.file(
+        "packages/discord-plays-pokemon/packages/backend/package.json",
+      ),
+    )
+    .withMountedFile(
+      "/workspace/packages/discord-plays-pokemon/packages/common/package.json",
+      source.file(
+        "packages/discord-plays-pokemon/packages/common/package.json",
+      ),
+    )
+    .withMountedFile(
+      "/workspace/packages/discord-plays-pokemon/packages/frontend/package.json",
+      source.file(
+        "packages/discord-plays-pokemon/packages/frontend/package.json",
+      ),
+    )
+    .withMountedFile(
+      "/workspace/packages/scout-for-lol/packages/backend/package.json",
+      source.file("packages/scout-for-lol/packages/backend/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/scout-for-lol/packages/data/package.json",
+      source.file("packages/scout-for-lol/packages/data/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/scout-for-lol/packages/desktop/package.json",
+      source.file("packages/scout-for-lol/packages/desktop/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/scout-for-lol/packages/frontend/package.json",
+      source.file("packages/scout-for-lol/packages/frontend/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/scout-for-lol/packages/report/package.json",
+      source.file("packages/scout-for-lol/packages/report/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/scout-for-lol/packages/ui/package.json",
+      source.file("packages/scout-for-lol/packages/ui/package.json"),
+    );
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
   container = container.withExec(["bun", "install", "--frozen-lockfile"]);
 
   // PHASE 3: Config files and source code (changes frequently, added AFTER install)
   container = container
-    .withMountedFile("/workspace/tsconfig.base.json", source.file("tsconfig.base.json"))
-    .withMountedDirectory("/workspace/packages/birmel", source.directory("packages/birmel"))
-    .withMountedDirectory("/workspace/packages/bun-decompile", source.directory("packages/bun-decompile"))
-    .withMountedDirectory("/workspace/packages/eslint-config", source.directory("packages/eslint-config"))
-    .withMountedDirectory("/workspace/packages/tools", source.directory("packages/tools"))
+    .withMountedFile(
+      "/workspace/tsconfig.base.json",
+      source.file("tsconfig.base.json"),
+    )
+    .withMountedDirectory(
+      "/workspace/packages/birmel",
+      source.directory("packages/birmel"),
+    )
+    .withMountedDirectory(
+      "/workspace/packages/bun-decompile",
+      source.directory("packages/bun-decompile"),
+    )
+    .withMountedDirectory(
+      "/workspace/packages/eslint-config",
+      source.directory("packages/eslint-config"),
+    )
+    .withMountedDirectory(
+      "/workspace/packages/tools",
+      source.directory("packages/tools"),
+    )
     // Clauderon web packages
-    .withMountedDirectory("/workspace/packages/clauderon/web/shared", source.directory("packages/clauderon/web/shared"))
-    .withMountedDirectory("/workspace/packages/clauderon/web/client", source.directory("packages/clauderon/web/client"))
-    .withMountedDirectory("/workspace/packages/clauderon/web/frontend", source.directory("packages/clauderon/web/frontend"))
+    .withMountedDirectory(
+      "/workspace/packages/clauderon/web/shared",
+      source.directory("packages/clauderon/web/shared"),
+    )
+    .withMountedDirectory(
+      "/workspace/packages/clauderon/web/client",
+      source.directory("packages/clauderon/web/client"),
+    )
+    .withMountedDirectory(
+      "/workspace/packages/clauderon/web/frontend",
+      source.directory("packages/clauderon/web/frontend"),
+    )
     // Clauderon docs (remount with full source including screenshots)
-    .withMountedDirectory("/workspace/packages/clauderon/docs", source.directory("packages/clauderon/docs"))
+    .withMountedDirectory(
+      "/workspace/packages/clauderon/docs",
+      source.directory("packages/clauderon/docs"),
+    )
     // New workspace members
-    .withMountedDirectory("/workspace/packages/astro-opengraph-images", source.directory("packages/astro-opengraph-images"))
-    .withMountedDirectory("/workspace/packages/better-skill-capped", source.directory("packages/better-skill-capped"))
-    .withMountedDirectory("/workspace/packages/sjer.red", source.directory("packages/sjer.red"))
-    .withMountedDirectory("/workspace/packages/webring", source.directory("packages/webring"))
-    .withMountedDirectory("/workspace/packages/starlight-karma-bot", source.directory("packages/starlight-karma-bot"))
-    .withMountedDirectory("/workspace/packages/homelab", source.directory("packages/homelab"))
-    .withMountedDirectory("/workspace/packages/discord-plays-pokemon", source.directory("packages/discord-plays-pokemon"))
-    .withMountedDirectory("/workspace/packages/scout-for-lol", source.directory("packages/scout-for-lol"));
+    .withMountedDirectory(
+      "/workspace/packages/astro-opengraph-images",
+      source.directory("packages/astro-opengraph-images"),
+    )
+    .withMountedDirectory(
+      "/workspace/packages/better-skill-capped",
+      source.directory("packages/better-skill-capped"),
+    )
+    .withMountedDirectory(
+      "/workspace/packages/sjer.red",
+      source.directory("packages/sjer.red"),
+    )
+    .withMountedDirectory(
+      "/workspace/packages/webring",
+      source.directory("packages/webring"),
+    )
+    .withMountedDirectory(
+      "/workspace/packages/starlight-karma-bot",
+      source.directory("packages/starlight-karma-bot"),
+    )
+    .withMountedDirectory(
+      "/workspace/packages/homelab",
+      source.directory("packages/homelab"),
+    )
+    .withMountedDirectory(
+      "/workspace/packages/discord-plays-pokemon",
+      source.directory("packages/discord-plays-pokemon"),
+    )
+    .withMountedDirectory(
+      "/workspace/packages/scout-for-lol",
+      source.directory("packages/scout-for-lol"),
+    );
 
   // PHASE 4: Re-run bun install to recreate workspace node_modules symlinks
   // (Source mounts in Phase 3 replace the symlinks that Phase 2 created)
@@ -172,18 +348,27 @@ function getRustContainer(
   source: Directory,
   frontendDist?: Directory,
   s3AccessKeyId?: Secret,
-  s3SecretAccessKey?: Secret
+  s3SecretAccessKey?: Secret,
 ): Container {
   let container = dag
     .container()
     .from(`rust:${RUST_VERSION}-bookworm`)
     .withWorkdir("/workspace")
     // Install mold linker for faster linking (~5-10x faster than ld)
-    .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-rust-${RUST_VERSION}`))
-    .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-rust-${RUST_VERSION}`))
+    .withMountedCache(
+      "/var/cache/apt",
+      dag.cacheVolume(`apt-cache-rust-${RUST_VERSION}`),
+    )
+    .withMountedCache(
+      "/var/lib/apt",
+      dag.cacheVolume(`apt-lib-rust-${RUST_VERSION}`),
+    )
     .withExec(["apt-get", "update"])
     .withExec(["apt-get", "install", "-y", "mold", "clang"])
-    .withMountedCache("/usr/local/cargo/registry", dag.cacheVolume("cargo-registry"))
+    .withMountedCache(
+      "/usr/local/cargo/registry",
+      dag.cacheVolume("cargo-registry"),
+    )
     .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
     .withMountedCache("/workspace/target", dag.cacheVolume("clauderon-target"))
     .withMountedDirectory("/workspace", source.directory("packages/clauderon"))
@@ -203,7 +388,10 @@ function getRustContainer(
 
   // Mount the pre-built frontend dist if provided
   if (frontendDist) {
-    container = container.withDirectory("/workspace/web/frontend/dist", frontendDist);
+    container = container.withDirectory(
+      "/workspace/web/frontend/dist",
+      frontendDist,
+    );
   }
 
   return container;
@@ -226,9 +414,18 @@ function withSccache(container: Container): Container {
   return container
     .withExec(["sh", "-c", `curl -fsSL "${url}" -o /tmp/${tarball}`])
     .withExec(["tar", "xzf", `/tmp/${tarball}`, "-C", "/tmp"])
-    .withExec(["mv", `/tmp/sccache-v${version}-${target}/sccache`, "/usr/local/bin/sccache"])
+    .withExec([
+      "mv",
+      `/tmp/sccache-v${version}-${target}/sccache`,
+      "/usr/local/bin/sccache",
+    ])
     .withExec(["chmod", "+x", "/usr/local/bin/sccache"])
-    .withExec(["rm", "-rf", `/tmp/${tarball}`, `/tmp/sccache-v${version}-${target}`])
+    .withExec([
+      "rm",
+      "-rf",
+      `/tmp/${tarball}`,
+      `/tmp/sccache-v${version}-${target}`,
+    ])
     .withExec(["sccache", "--version"]); // Verify installation
 }
 
@@ -241,25 +438,40 @@ function withSccache(container: Container): Container {
 function getCrossCompileContainer(
   source: Directory,
   s3AccessKeyId?: Secret,
-  s3SecretAccessKey?: Secret
+  s3SecretAccessKey?: Secret,
 ): Container {
   let container = dag
     .container()
     .from(`rust:${RUST_VERSION}-bookworm`)
     .withWorkdir("/workspace")
-    .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-rust-${RUST_VERSION}-cross`))
-    .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-rust-${RUST_VERSION}-cross`))
-    .withMountedCache("/usr/local/cargo/registry", dag.cacheVolume("cargo-registry"))
+    .withMountedCache(
+      "/var/cache/apt",
+      dag.cacheVolume(`apt-cache-rust-${RUST_VERSION}-cross`),
+    )
+    .withMountedCache(
+      "/var/lib/apt",
+      dag.cacheVolume(`apt-lib-rust-${RUST_VERSION}-cross`),
+    )
+    .withMountedCache(
+      "/usr/local/cargo/registry",
+      dag.cacheVolume("cargo-registry"),
+    )
     .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
     // Use separate target directories for cross-compilation to avoid conflicts
     .withEnvVariable("CARGO_TARGET_DIR", "/workspace/target-cross")
-    .withMountedCache("/workspace/target-cross", dag.cacheVolume("clauderon-cross-target"))
+    .withMountedCache(
+      "/workspace/target-cross",
+      dag.cacheVolume("clauderon-cross-target"),
+    )
     .withMountedDirectory("/workspace", source.directory("packages/clauderon"))
     // Enable multiarch for ARM64 packages
     .withExec(["dpkg", "--add-architecture", "arm64"])
     // Install cross-compilation dependencies, mold linker, and ARM64 OpenSSL
     .withExec(["apt-get", "update"])
-    .withExec(["apt-get", "install", "-y",
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
       "gcc-aarch64-linux-gnu",
       "libc6-dev-arm64-cross",
       "mold",
@@ -267,7 +479,7 @@ function getCrossCompileContainer(
       "libssl-dev:arm64",
       "pkg-config",
       // binutils-aarch64-linux-gnu provides the aarch64 cross-linker (ld, ar, etc.)
-      "binutils-aarch64-linux-gnu"
+      "binutils-aarch64-linux-gnu",
     ])
     // Add cross-compilation targets
     .withExec(["rustup", "target", "add", "x86_64-unknown-linux-gnu"])
@@ -295,18 +507,24 @@ async function _buildMuxBinary(
   container: Container,
   target: string,
   os: string,
-  arch: string
+  arch: string,
 ): Promise<{ file: string; content: string }> {
   // Configure linker for cross-compilation
   let buildContainer = container;
   if (target === "aarch64-unknown-linux-gnu") {
-    buildContainer = container
-      .withEnvVariable("CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER", "aarch64-linux-gnu-gcc");
+    buildContainer = container.withEnvVariable(
+      "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER",
+      "aarch64-linux-gnu-gcc",
+    );
   }
 
   // Build the release binary
   buildContainer = buildContainer.withExec([
-    "cargo", "build", "--release", "--target", target
+    "cargo",
+    "build",
+    "--release",
+    "--target",
+    target,
   ]);
 
   // Get the binary
@@ -328,7 +546,7 @@ async function uploadReleaseAssets(
   githubToken: Secret,
   version: string,
   binariesDir: Directory,
-  filenames: string[]
+  filenames: string[],
 ): Promise<{ outputs: string[]; errors: string[] }> {
   const outputs: string[] = [];
   const errors: string[] = [];
@@ -337,13 +555,27 @@ async function uploadReleaseAssets(
   const container = dag
     .container()
     .from(`oven/bun:${BUN_VERSION}-debian`)
-    .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-bun-${BUN_VERSION}-debian`))
-    .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`))
+    .withMountedCache(
+      "/var/cache/apt",
+      dag.cacheVolume(`apt-cache-bun-${BUN_VERSION}-debian`),
+    )
+    .withMountedCache(
+      "/var/lib/apt",
+      dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`),
+    )
     .withExec(["apt-get", "update"])
     .withExec(["apt-get", "install", "-y", "curl"])
     // Install GitHub CLI
-    .withExec(["sh", "-c", "curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg"])
-    .withExec(["sh", "-c", 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null'])
+    .withExec([
+      "sh",
+      "-c",
+      "curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg",
+    ])
+    .withExec([
+      "sh",
+      "-c",
+      'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null',
+    ])
     .withExec(["apt-get", "update"])
     .withExec(["apt-get", "install", "-y", "gh"])
     .withSecretVariable("GITHUB_TOKEN", githubToken)
@@ -356,16 +588,20 @@ async function uploadReleaseAssets(
     try {
       await container
         .withExec([
-          "gh", "release", "upload",
+          "gh",
+          "release",
+          "upload",
           `clauderon-v${version}`,
           `/workspace/binaries/${filename}`,
-          "--repo", REPO_URL,
-          "--clobber"
+          "--repo",
+          REPO_URL,
+          "--clobber",
         ])
         .sync();
       outputs.push(`✓ Uploaded ${filename}`);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       const failureMsg = `Failed to upload ${filename}: ${errorMessage}`;
       outputs.push(`✗ ${failureMsg}`);
       errors.push(failureMsg);
@@ -382,11 +618,22 @@ function getReleasePleaseContainer(): Container {
   return dag
     .container()
     .from(`oven/bun:${BUN_VERSION}-debian`)
-    .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-bun-${BUN_VERSION}-debian`))
-    .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`))
+    .withMountedCache(
+      "/var/cache/apt",
+      dag.cacheVolume(`apt-cache-bun-${BUN_VERSION}-debian`),
+    )
+    .withMountedCache(
+      "/var/lib/apt",
+      dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`),
+    )
     .withExec(["apt-get", "update"])
     .withExec(["apt-get", "install", "-y", "git"])
-    .withExec(["bun", "install", "-g", `release-please@${RELEASE_PLEASE_VERSION}`])
+    .withExec([
+      "bun",
+      "install",
+      "-g",
+      `release-please@${RELEASE_PLEASE_VERSION}`,
+    ])
     .withWorkdir("/workspace");
 }
 
@@ -395,7 +642,7 @@ function getReleasePleaseContainer(): Container {
  */
 async function runReleasePleaseCommand(
   container: Container,
-  command: string
+  command: string,
 ): Promise<{ output: string; success: boolean }> {
   const result = await container
     .withExec([
@@ -490,7 +737,11 @@ echo "All packages compliant"
 function qualityRatchet(source: Directory): Container {
   // Build search patterns as variables to avoid tripping taint audits on this file
   const eslintPat = "eslint" + "-" + "disable";
-  const tsPat = ["@ts" + "-expect-error", "@ts" + "-ignore", "@ts" + "-nocheck"];
+  const tsPat = [
+    "@ts" + "-expect-error",
+    "@ts" + "-ignore",
+    "@ts" + "-nocheck",
+  ];
   const tsGrepPat = tsPat.join("\\\\|");
   const rustPat = "#\\\\[allow(";
   const prettierPat = "prettier" + "-ignore";
@@ -566,8 +817,9 @@ function shellcheckStep(source: Directory): Container {
     .withMountedDirectory("/workspace", source)
     .withWorkdir("/workspace")
     .withExec([
-      "sh", "-c",
-      "find /workspace/packages/ /workspace/scripts/ -name '*.sh' -not -path '*/node_modules/*' -print0 | xargs -0 -r shellcheck --severity=warning"
+      "sh",
+      "-c",
+      "find /workspace/packages/ /workspace/scripts/ -name '*.sh' -not -path '*/node_modules/*' -print0 | xargs -0 -r shellcheck --severity=warning",
     ]);
 }
 
@@ -599,7 +851,15 @@ function trivyScan(source: Directory): Container {
     .from("aquasec/trivy:latest")
     .withMountedDirectory("/workspace", source)
     .withWorkdir("/workspace")
-    .withExec(["trivy", "fs", "--severity", "HIGH,CRITICAL", "--exit-code", "1", "."]);
+    .withExec([
+      "trivy",
+      "fs",
+      "--severity",
+      "HIGH,CRITICAL",
+      "--exit-code",
+      "1",
+      ".",
+    ]);
 }
 
 /**
@@ -664,7 +924,11 @@ export class Monorepo {
     outputs.push("✓ Install");
 
     // Remove generated Prisma Client files to ensure fresh generation with current schema
-    container = container.withExec(["rm", "-rf", "packages/birmel/node_modules/.prisma"]);
+    container = container.withExec([
+      "rm",
+      "-rf",
+      "packages/birmel/node_modules/.prisma",
+    ]);
 
     // Generate Prisma Client and set up test database
     // Use the workspace root prisma binary (installed via root package.json devDeps)
@@ -673,10 +937,21 @@ export class Monorepo {
     // with relative paths during test runs from different working directories
     container = container
       .withWorkdir("/workspace/packages/birmel")
-      .withEnvVariable("DATABASE_URL", "file:/workspace/packages/birmel/data/test-ops.db")
-      .withEnvVariable("OPS_DATABASE_URL", "file:/workspace/packages/birmel/data/test-ops.db")
+      .withEnvVariable(
+        "DATABASE_URL",
+        "file:/workspace/packages/birmel/data/test-ops.db",
+      )
+      .withEnvVariable(
+        "OPS_DATABASE_URL",
+        "file:/workspace/packages/birmel/data/test-ops.db",
+      )
       .withExec(["/workspace/node_modules/.bin/prisma", "generate"])
-      .withExec(["/workspace/node_modules/.bin/prisma", "db", "push", "--accept-data-loss"])
+      .withExec([
+        "/workspace/node_modules/.bin/prisma",
+        "db",
+        "push",
+        "--accept-data-loss",
+      ])
       .withWorkdir("/workspace");
     await container.sync();
     outputs.push("✓ Prisma setup");
@@ -686,18 +961,32 @@ export class Monorepo {
 
     // Step 1: Generate TypeScript types from Rust using typeshare
     // This must happen BEFORE building web packages since they import these types
-    let rustContainer = getRustContainer(source, undefined, s3AccessKeyId, s3SecretAccessKey);
+    let rustContainer = getRustContainer(
+      source,
+      undefined,
+      s3AccessKeyId,
+      s3SecretAccessKey,
+    );
     // Install typeshare-cli and run it to generate types
     rustContainer = rustContainer
       .withExec(["cargo", "install", "typeshare-cli", "--locked"])
-      .withExec(["typeshare", ".", "--lang=typescript", "--output-file=web/shared/src/generated/index.ts"]);
+      .withExec([
+        "typeshare",
+        ".",
+        "--lang=typescript",
+        "--output-file=web/shared/src/generated/index.ts",
+      ]);
     await rustContainer.sync();
     outputs.push("✓ TypeScript types generated");
 
     // Step 2: Copy generated types to main container
-    const generatedTypes = rustContainer.directory("/workspace/web/shared/src/generated");
-    container = container
-      .withDirectory("/workspace/packages/clauderon/web/shared/src/generated", generatedTypes);
+    const generatedTypes = rustContainer.directory(
+      "/workspace/web/shared/src/generated",
+    );
+    container = container.withDirectory(
+      "/workspace/packages/clauderon/web/shared/src/generated",
+      generatedTypes,
+    );
     await container.sync();
     outputs.push("✓ Types copied to workspace");
 
@@ -718,11 +1007,20 @@ export class Monorepo {
     outputs.push("✓ Web packages built");
 
     // Extract the built frontend dist directory to pass to Rust build
-    const frontendDist = container.directory("/workspace/packages/clauderon/web/frontend/dist");
+    const frontendDist = container.directory(
+      "/workspace/packages/clauderon/web/frontend/dist",
+    );
 
     // Clauderon Rust validation (fmt, clippy, test, build)
     outputs.push("\n--- Clauderon Rust Validation ---");
-    outputs.push(await this.clauderonCi(source, frontendDist, s3AccessKeyId, s3SecretAccessKey));
+    outputs.push(
+      await this.clauderonCi(
+        source,
+        frontendDist,
+        s3AccessKeyId,
+        s3SecretAccessKey,
+      ),
+    );
 
     // Now build remaining packages (web packages already built, will be skipped or fast)
     // Note: Skip tests here - bun-decompile tests fail in CI (requires `bun build --compile`)
@@ -739,7 +1037,11 @@ export class Monorepo {
     outputs.push(await checkBirmel(source));
 
     // Build birmel image ONCE and reuse for smoke test + publish
-    const birmelImage = buildBirmelImage(source, version ?? "dev", gitSha ?? "dev");
+    const birmelImage = buildBirmelImage(
+      source,
+      version ?? "dev",
+      gitSha ?? "dev",
+    );
 
     // Birmel smoke test (validates the built image starts correctly)
     outputs.push(await smokeTestBirmelImageWithContainer(birmelImage));
@@ -763,7 +1065,10 @@ export class Monorepo {
       if (result.status === "fulfilled") {
         outputs.push(result.value);
       } else {
-        const msg = result.reason instanceof Error ? result.reason.message : String(result.reason);
+        const msg =
+          result.reason instanceof Error
+            ? result.reason.message
+            : String(result.reason);
         outputs.push(`✗ ${msg}`);
         packageErrors.push(msg);
       }
@@ -778,7 +1083,9 @@ export class Monorepo {
     }
 
     if (packageErrors.length > 0) {
-      throw new Error(`Package validation failed with ${String(packageErrors.length)} error(s):\n${packageErrors.join("\n")}`);
+      throw new Error(
+        `Package validation failed with ${String(packageErrors.length)} error(s):\n${packageErrors.join("\n")}`,
+      );
     }
 
     // Quality & security checks
@@ -841,35 +1148,41 @@ export class Monorepo {
       const releaseErrors: string[] = [];
 
       // Create/update release PRs using non-deprecated release-pr command
-      const prContainer = getReleasePleaseContainer()
-        .withSecretVariable("GITHUB_TOKEN", githubToken);
+      const prContainer = getReleasePleaseContainer().withSecretVariable(
+        "GITHUB_TOKEN",
+        githubToken,
+      );
 
       const prResult = await runReleasePleaseCommand(
         prContainer,
-        `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${REPO_URL}.git . && release-please release-pr --token=$GITHUB_TOKEN --repo-url=${REPO_URL} --target-branch=main`
+        `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${REPO_URL}.git . && release-please release-pr --token=$GITHUB_TOKEN --repo-url=${REPO_URL} --target-branch=main`,
       );
 
       outputs.push(`Release PR (success=${String(prResult.success)}):`);
       outputs.push(prResult.output);
 
       // Create GitHub releases using non-deprecated github-release command
-      const releaseContainer = getReleasePleaseContainer()
-        .withSecretVariable("GITHUB_TOKEN", githubToken);
+      const releaseContainer = getReleasePleaseContainer().withSecretVariable(
+        "GITHUB_TOKEN",
+        githubToken,
+      );
 
       const releaseResult = await runReleasePleaseCommand(
         releaseContainer,
-        `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${REPO_URL}.git . && release-please github-release --token=$GITHUB_TOKEN --repo-url=${REPO_URL} --target-branch=main`
+        `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${REPO_URL}.git . && release-please github-release --token=$GITHUB_TOKEN --repo-url=${REPO_URL} --target-branch=main`,
       );
 
-      outputs.push(`GitHub Release (success=${String(releaseResult.success)}):`);
+      outputs.push(
+        `GitHub Release (success=${String(releaseResult.success)}):`,
+      );
       outputs.push(releaseResult.output);
 
       // Check if any releases were created and publish
-      const releaseCreated = releaseResult.success && (
-        releaseResult.output.includes("github.com") ||
-        releaseResult.output.includes("Created release") ||
-        releaseResult.output.includes("created release")
-      );
+      const releaseCreated =
+        releaseResult.success &&
+        (releaseResult.output.includes("github.com") ||
+          releaseResult.output.includes("Created release") ||
+          releaseResult.output.includes("created release"));
 
       if (releaseCreated) {
         outputs.push("\n--- NPM Publishing ---");
@@ -879,13 +1192,27 @@ export class Monorepo {
             await container
               .withWorkdir(`/workspace/packages/${pkg}`)
               .withSecretVariable("NPM_TOKEN", npmToken)
-              .withExec(["sh", "-c", 'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc'])
-              .withExec(["bun", "publish", "--access", "public", "--tag", "latest", "--registry", "https://registry.npmjs.org"])
+              .withExec([
+                "sh",
+                "-c",
+                'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc',
+              ])
+              .withExec([
+                "bun",
+                "publish",
+                "--access",
+                "public",
+                "--tag",
+                "latest",
+                "--registry",
+                "https://registry.npmjs.org",
+              ])
               .stdout();
 
             outputs.push(`✓ Published @shepherdjerred/${pkg}`);
           } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
             const failureMsg = `Failed to publish @shepherdjerred/${pkg}: ${errorMessage}`;
             outputs.push(`✗ ${failureMsg}`);
             releaseErrors.push(failureMsg);
@@ -894,7 +1221,9 @@ export class Monorepo {
       } else {
         outputs.push("No releases created - skipping NPM publish");
         if (!releaseResult.success) {
-          outputs.push("(release-please command failed - check output above for details)");
+          outputs.push(
+            "(release-please command failed - check output above for details)",
+          );
         }
       }
 
@@ -926,10 +1255,15 @@ export class Monorepo {
       if (s3AccessKeyId && s3SecretAccessKey) {
         outputs.push("\n--- Clauderon Docs Deployment ---");
         try {
-          const deployOutput = await this.muxSiteDeploy(source, s3AccessKeyId, s3SecretAccessKey);
+          const deployOutput = await this.muxSiteDeploy(
+            source,
+            s3AccessKeyId,
+            s3SecretAccessKey,
+          );
           outputs.push(deployOutput);
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           const failureMsg = `Failed to deploy clauderon docs: ${errorMessage}`;
           outputs.push(`✗ ${failureMsg}`);
           releaseErrors.push(failureMsg);
@@ -940,10 +1274,15 @@ export class Monorepo {
       if (s3AccessKeyId && s3SecretAccessKey) {
         outputs.push("\n--- Resume Deployment ---");
         try {
-          const deployOutput = await this.resumeDeploy(source, s3AccessKeyId, s3SecretAccessKey);
+          const deployOutput = await this.resumeDeploy(
+            source,
+            s3AccessKeyId,
+            s3SecretAccessKey,
+          );
           outputs.push(deployOutput);
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           const failureMsg = `Failed to deploy resume: ${errorMessage}`;
           outputs.push(`✗ ${failureMsg}`);
           releaseErrors.push(failureMsg);
@@ -957,7 +1296,9 @@ export class Monorepo {
       if (s3AccessKeyId && s3SecretAccessKey) {
         // sjer.red → S3
         try {
-          outputs.push(await deploySjerRed(source, s3AccessKeyId, s3SecretAccessKey));
+          outputs.push(
+            await deploySjerRed(source, s3AccessKeyId, s3SecretAccessKey),
+          );
         } catch (error) {
           const msg = error instanceof Error ? error.message : String(error);
           outputs.push(`✗ sjer.red deploy: ${msg}`);
@@ -966,7 +1307,9 @@ export class Monorepo {
 
         // webring docs → S3
         try {
-          outputs.push(await deployWebringDocs(source, s3AccessKeyId, s3SecretAccessKey));
+          outputs.push(
+            await deployWebringDocs(source, s3AccessKeyId, s3SecretAccessKey),
+          );
         } catch (error) {
           const msg = error instanceof Error ? error.message : String(error);
           outputs.push(`✗ webring docs deploy: ${msg}`);
@@ -978,7 +1321,16 @@ export class Monorepo {
       if (version && gitSha && registryUsername && registryPassword) {
         // starlight-karma-bot → GHCR + homelab
         try {
-          outputs.push(await deployStarlightKarmaBot(source, version, gitSha, registryUsername, registryPassword, githubToken));
+          outputs.push(
+            await deployStarlightKarmaBot(
+              source,
+              version,
+              gitSha,
+              registryUsername,
+              registryPassword,
+              githubToken,
+            ),
+          );
         } catch (error) {
           const msg = error instanceof Error ? error.message : String(error);
           outputs.push(`✗ starlight-karma-bot deploy: ${msg}`);
@@ -988,7 +1340,17 @@ export class Monorepo {
         // better-skill-capped → S3 + GHCR + homelab
         if (s3AccessKeyId && s3SecretAccessKey) {
           try {
-            outputs.push(await deployBetterSkillCapped(source, version, s3AccessKeyId, s3SecretAccessKey, registryUsername, registryPassword, githubToken));
+            outputs.push(
+              await deployBetterSkillCapped(
+                source,
+                version,
+                s3AccessKeyId,
+                s3SecretAccessKey,
+                registryUsername,
+                registryPassword,
+                githubToken,
+              ),
+            );
           } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);
             outputs.push(`✗ better-skill-capped deploy: ${msg}`);
@@ -999,7 +1361,17 @@ export class Monorepo {
         // discord-plays-pokemon → GHCR + S3
         if (s3AccessKeyId && s3SecretAccessKey) {
           try {
-            outputs.push(await deployDiscordPlaysPokemon(source, version, gitSha, registryUsername, registryPassword, s3AccessKeyId, s3SecretAccessKey));
+            outputs.push(
+              await deployDiscordPlaysPokemon(
+                source,
+                version,
+                gitSha,
+                registryUsername,
+                registryPassword,
+                s3AccessKeyId,
+                s3SecretAccessKey,
+              ),
+            );
           } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);
             outputs.push(`✗ discord-plays-pokemon deploy: ${msg}`);
@@ -1010,7 +1382,18 @@ export class Monorepo {
         // scout-for-lol → GHCR + homelab + S3 + GitHub Releases
         if (s3AccessKeyId && s3SecretAccessKey) {
           try {
-            outputs.push(await deployScoutForLol(source, version, gitSha, registryUsername, registryPassword, githubToken, s3AccessKeyId, s3SecretAccessKey));
+            outputs.push(
+              await deployScoutForLol(
+                source,
+                version,
+                gitSha,
+                registryUsername,
+                registryPassword,
+                githubToken,
+                s3AccessKeyId,
+                s3SecretAccessKey,
+              ),
+            );
           } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);
             outputs.push(`✗ scout-for-lol deploy: ${msg}`);
@@ -1020,7 +1403,13 @@ export class Monorepo {
       }
 
       // Homelab full CI/deploy
-      if (argocdToken && chartMuseumUsername && chartMuseumPassword && cloudflareApiToken && cloudflareAccountId) {
+      if (
+        argocdToken &&
+        chartMuseumUsername &&
+        chartMuseumPassword &&
+        cloudflareApiToken &&
+        cloudflareAccountId
+      ) {
         outputs.push("\n--- Homelab Release ---");
         try {
           const homelabSecrets = {
@@ -1040,7 +1429,9 @@ export class Monorepo {
             ...(npmToken ? { npmToken } : {}),
             ...(tofuGithubToken ? { tofuGithubToken } : {}),
           };
-          outputs.push(await ciHomelab(source, HomelabStage.Prod, homelabSecrets));
+          outputs.push(
+            await ciHomelab(source, HomelabStage.Prod, homelabSecrets),
+          );
         } catch (error) {
           const msg = error instanceof Error ? error.message : String(error);
           outputs.push(`✗ homelab release: ${msg}`);
@@ -1049,7 +1440,9 @@ export class Monorepo {
       }
 
       // Check if a clauderon release was created - only if we can extract a specific version
-      const clauderonVersionMatch = /clauderon-v([\d.]+)/.exec(releaseResult.output);
+      const clauderonVersionMatch = /clauderon-v([\d.]+)/.exec(
+        releaseResult.output,
+      );
       const clauderonVersion = clauderonVersionMatch?.[1];
 
       if (clauderonVersion) {
@@ -1057,36 +1450,58 @@ export class Monorepo {
         outputs.push(`Detected clauderon release: v${clauderonVersion}`);
 
         try {
-          const binaries = this.multiplexerBuild(source, s3AccessKeyId, s3SecretAccessKey);
+          const binaries = this.multiplexerBuild(
+            source,
+            s3AccessKeyId,
+            s3SecretAccessKey,
+          );
 
           // Get filenames for upload
-          const linuxTargets = CLAUDERON_TARGETS.filter(t => t.os === "linux");
-          const filenames = linuxTargets.map(({ os, arch }) => `clauderon-${os}-${arch}`);
+          const linuxTargets = CLAUDERON_TARGETS.filter(
+            (t) => t.os === "linux",
+          );
+          const filenames = linuxTargets.map(
+            ({ os, arch }) => `clauderon-${os}-${arch}`,
+          );
 
           for (const filename of filenames) {
             outputs.push(`✓ Built ${filename}`);
           }
 
           // Upload to GitHub release (pass directory directly for proper binary handling)
-          const uploadResults = await uploadReleaseAssets(githubToken, clauderonVersion, binaries, filenames);
+          const uploadResults = await uploadReleaseAssets(
+            githubToken,
+            clauderonVersion,
+            binaries,
+            filenames,
+          );
           outputs.push(...uploadResults.outputs);
           releaseErrors.push(...uploadResults.errors);
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           const failureMsg = `Failed to build/upload clauderon binaries: ${errorMessage}`;
           outputs.push(`✗ ${failureMsg}`);
           releaseErrors.push(failureMsg);
         }
       } else {
-        outputs.push("\nNo clauderon release detected - skipping binary upload");
+        outputs.push(
+          "\nNo clauderon release detected - skipping binary upload",
+        );
       }
 
       // Fail CI if any release phase errors occurred
       if (releaseErrors.length > 0) {
         outputs.push(`\n--- Release Phase Failed ---`);
-        outputs.push(`${String(releaseErrors.length)} error(s) occurred during release:`);
-        releaseErrors.forEach((err, i) => outputs.push(`  ${String(i + 1)}. ${err}`));
-        throw new Error(`Release phase failed with ${String(releaseErrors.length)} error(s):\n${releaseErrors.join("\n")}`);
+        outputs.push(
+          `${String(releaseErrors.length)} error(s) occurred during release:`,
+        );
+        releaseErrors.forEach((err, i) =>
+          outputs.push(`  ${String(i + 1)}. ${err}`),
+        );
+        throw new Error(
+          `Release phase failed with ${String(releaseErrors.length)} error(s):\n${releaseErrors.join("\n")}`,
+        );
       }
     }
 
@@ -1113,7 +1528,11 @@ export class Monorepo {
    * Smoke test Birmel Docker image
    */
   @func()
-  async birmelSmokeTest(source: Directory, version: string, gitSha: string): Promise<string> {
+  async birmelSmokeTest(
+    source: Directory,
+    version: string,
+    gitSha: string,
+  ): Promise<string> {
     const image = buildBirmelImage(source, version, gitSha);
     return smokeTestBirmelImageWithContainer(image);
   }
@@ -1203,13 +1622,19 @@ export class Monorepo {
     let container = dag
       .container()
       .from(`oven/bun:${BUN_VERSION}-debian`)
-      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
+      .withMountedCache(
+        "/root/.bun/install/cache",
+        dag.cacheVolume("bun-cache"),
+      )
       .withWorkdir("/workspace")
-      .withDirectory("/workspace", source.directory("packages/clauderon/mobile"))
+      .withDirectory(
+        "/workspace",
+        source.directory("packages/clauderon/mobile"),
+      )
       // Copy the shared generated types (mobile uses a symlink that doesn't work in isolation)
       .withDirectory(
         "/workspace/src/types/generated",
-        source.directory("packages/clauderon/web/shared/src/generated")
+        source.directory("packages/clauderon/web/shared/src/generated"),
       )
       // Copy the base tsconfig that mobile extends
       .withFile("/tsconfig.base.json", source.file("tsconfig.base.json"))
@@ -1250,15 +1675,23 @@ export class Monorepo {
     source: Directory,
     frontendDist?: Directory,
     s3AccessKeyId?: Secret,
-    s3SecretAccessKey?: Secret
+    s3SecretAccessKey?: Secret,
   ): Promise<string> {
     const outputs: string[] = [];
 
-    let container = getRustContainer(source, frontendDist, s3AccessKeyId, s3SecretAccessKey);
+    let container = getRustContainer(
+      source,
+      frontendDist,
+      s3AccessKeyId,
+      s3SecretAccessKey,
+    );
 
     // Mount the built frontend if provided (required for Rust build - it embeds static files)
     if (frontendDist) {
-      container = container.withMountedDirectory("/workspace/web/frontend/dist", frontendDist);
+      container = container.withMountedDirectory(
+        "/workspace/web/frontend/dist",
+        frontendDist,
+      );
     }
 
     // Format check
@@ -1268,7 +1701,13 @@ export class Monorepo {
 
     // Clippy with all warnings as errors
     container = container.withExec([
-      "cargo", "clippy", "--all-targets", "--all-features", "--", "-D", "warnings"
+      "cargo",
+      "clippy",
+      "--all-targets",
+      "--all-features",
+      "--",
+      "-D",
+      "warnings",
     ]);
     await container.sync();
     outputs.push("✓ Clippy passed");
@@ -1326,12 +1765,16 @@ export class Monorepo {
   multiplexerBuild(
     source: Directory,
     s3AccessKeyId?: Secret,
-    s3SecretAccessKey?: Secret
+    s3SecretAccessKey?: Secret,
   ): Directory {
-    const container = getCrossCompileContainer(source, s3AccessKeyId, s3SecretAccessKey);
+    const container = getCrossCompileContainer(
+      source,
+      s3AccessKeyId,
+      s3SecretAccessKey,
+    );
 
     // Build for Linux targets only (cross-compiling to macOS requires different tooling)
-    const linuxTargets = CLAUDERON_TARGETS.filter(t => t.os === "linux");
+    const linuxTargets = CLAUDERON_TARGETS.filter((t) => t.os === "linux");
 
     let outputContainer = dag.directory();
 
@@ -1368,18 +1811,28 @@ retry = 3
           .withEnvVariable("OPENSSL_INCLUDE_DIR", "/usr/include")
           // Tell pkg-config to allow cross-compilation
           .withEnvVariable("PKG_CONFIG_ALLOW_CROSS", "1")
-          .withEnvVariable("PKG_CONFIG_PATH", "/usr/lib/aarch64-linux-gnu/pkgconfig");
+          .withEnvVariable(
+            "PKG_CONFIG_PATH",
+            "/usr/lib/aarch64-linux-gnu/pkgconfig",
+          );
       }
 
       // Build the release binary
       buildContainer = buildContainer.withExec([
-        "cargo", "build", "--release", "--target", target
+        "cargo",
+        "build",
+        "--release",
+        "--target",
+        target,
       ]);
 
       // Get the binary and add to output directory
       const binaryPath = `/workspace/target-cross/${target}/release/clauderon`;
       const filename = `clauderon-${os}-${arch}`;
-      outputContainer = outputContainer.withFile(filename, buildContainer.file(binaryPath));
+      outputContainer = outputContainer.withFile(
+        filename,
+        buildContainer.file(binaryPath),
+      );
     }
 
     return outputContainer;
@@ -1405,15 +1858,28 @@ retry = 3
 
     // Run CI first
     outputs.push("--- Clauderon CI ---");
-    outputs.push(await this.clauderonCi(source, undefined, s3AccessKeyId, s3SecretAccessKey));
+    outputs.push(
+      await this.clauderonCi(
+        source,
+        undefined,
+        s3AccessKeyId,
+        s3SecretAccessKey,
+      ),
+    );
 
     // Build binaries for Linux
     outputs.push("\n--- Building Binaries ---");
-    const binaries = this.multiplexerBuild(source, s3AccessKeyId, s3SecretAccessKey);
+    const binaries = this.multiplexerBuild(
+      source,
+      s3AccessKeyId,
+      s3SecretAccessKey,
+    );
 
     // Get filenames for upload
-    const linuxTargets = CLAUDERON_TARGETS.filter(t => t.os === "linux");
-    const filenames = linuxTargets.map(({ os, arch }) => `clauderon-${os}-${arch}`);
+    const linuxTargets = CLAUDERON_TARGETS.filter((t) => t.os === "linux");
+    const filenames = linuxTargets.map(
+      ({ os, arch }) => `clauderon-${os}-${arch}`,
+    );
 
     for (const filename of filenames) {
       outputs.push(`✓ Built ${filename}`);
@@ -1421,11 +1887,18 @@ retry = 3
 
     // Upload to GitHub release (pass directory directly for proper binary handling)
     outputs.push("\n--- Uploading to GitHub Release ---");
-    const uploadResults = await uploadReleaseAssets(githubToken, version, binaries, filenames);
+    const uploadResults = await uploadReleaseAssets(
+      githubToken,
+      version,
+      binaries,
+      filenames,
+    );
     outputs.push(...uploadResults.outputs);
 
     if (uploadResults.errors.length > 0) {
-      throw new Error(`Failed to upload ${String(uploadResults.errors.length)} asset(s):\n${uploadResults.errors.join("\n")}`);
+      throw new Error(
+        `Failed to upload ${String(uploadResults.errors.length)} asset(s):\n${uploadResults.errors.join("\n")}`,
+      );
     }
 
     return outputs.join("\n");
@@ -1439,7 +1912,10 @@ retry = 3
     return dag
       .container()
       .from(`oven/bun:${BUN_VERSION}-debian`)
-      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
+      .withMountedCache(
+        "/root/.bun/install/cache",
+        dag.cacheVolume("bun-cache"),
+      )
       .withWorkdir("/workspace")
       .withDirectory("/workspace", source.directory("packages/clauderon/docs"))
       .withExec(["bun", "install"])
@@ -1661,7 +2137,11 @@ retry = 3
    * Run homelab validation checks (lint + typecheck for HA and CDK8s).
    */
   @func()
-  async homelabCheckAll(source: Directory, hassBaseUrl?: Secret, hassToken?: Secret): Promise<string> {
+  async homelabCheckAll(
+    source: Directory,
+    hassBaseUrl?: Secret,
+    hassToken?: Secret,
+  ): Promise<string> {
     return checkHomelab(source, hassBaseUrl, hassToken);
   }
 

@@ -10,21 +10,24 @@ type cases = [
   Expect<Equal<typeof promiseAllTest1, Promise<[1, 2, 3]>>>,
   Expect<Equal<typeof promiseAllTest2, Promise<[1, 2, number]>>>,
   Expect<Equal<typeof promiseAllTest3, Promise<[number, number, number]>>>,
-  Expect<Equal<typeof promiseAllTest4, Promise<number[]>>>
+  Expect<Equal<typeof promiseAllTest4, Promise<number[]>>>,
 ];
 
 // ============= Your Code Here =============
 
 // TODO: I haven't finished this one yet
 declare function PromiseAll<T extends (Promise<unknown> | number)[]>(
-  values: T
+  values: T,
 ): Promise<PromiseAllType<T>>;
 
 type PromiseAllType<T extends (Promise<unknown> | number)[]> = T extends [
   infer Head,
-  ...infer Tail
+  ...infer Tail,
 ]
   ? Tail extends (Promise<unknown> | number)[]
-    ? [Head extends Promise<unknown> ? Awaited<Head> : Head, ...PromiseAllType<Tail>]
+    ? [
+        Head extends Promise<unknown> ? Awaited<Head> : Head,
+        ...PromiseAllType<Tail>,
+      ]
     : []
   : [];

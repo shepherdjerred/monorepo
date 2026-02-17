@@ -23,7 +23,14 @@ const runCommand = async (command: string, args: string[]) => {
   throw new Error(`Command failed with code ${String(exitCode)}`);
 };
 
-console.log(await runCommand("cdk8s", ["import", "k8s", "--language=typescript", "--output=generated/imports"]));
+console.log(
+  await runCommand("cdk8s", [
+    "import",
+    "k8s",
+    "--language=typescript",
+    "--output=generated/imports",
+  ]),
+);
 
 // run "kubectl get crds -o json | cdk8s import /dev/stdin --language=typescript"
 console.log(
@@ -56,9 +63,14 @@ for (const file of files) {
 for (const file of files) {
   const filePath = `generated/imports/${file}`;
   let content = await Bun.file(filePath).text();
-  content = content.replaceAll("public toJson(): any {", "public override toJson(): any {");
+  content = content.replaceAll(
+    "public toJson(): any {",
+    "public override toJson(): any {",
+  );
   await Bun.write(filePath, content);
 }
 
 // run prettier
-console.log(await runCommand("bunx", ["prettier", "--write", "generated/imports"]));
+console.log(
+  await runCommand("bunx", ["prettier", "--write", "generated/imports"]),
+);

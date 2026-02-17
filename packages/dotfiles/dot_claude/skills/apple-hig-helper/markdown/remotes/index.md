@@ -44,12 +44,12 @@ The clickpad’s touch surface detects swipes and presses.
 
 Ensure that your app or game responds to specific presses in the following ways.
 
-| Button or area | Expected behavior in an app | Expected behavior in a game |
-| --- | --- | --- |
-| Touch surface (swipe) | Navigates. Changes focus. | Performs directional pad behavior. |
-| Touch surface (press) | Activates a control or an item. Navigates deeper. | Performs primary button behavior. |
-| Back | Returns to previous screen. Exits to Apple TV Home Screen. | Pauses/resumes gameplay. Returns to previous screen, exits to main game menu, or exits to Apple TV Home Screen. |
-| Play/Pause | Activates media playback. Pauses/resumes media playback. | Performs secondary button behavior. Skips intro video. |
+| Button or area        | Expected behavior in an app                                | Expected behavior in a game                                                                                     |
+| --------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Touch surface (swipe) | Navigates. Changes focus.                                  | Performs directional pad behavior.                                                                              |
+| Touch surface (press) | Activates a control or an item. Navigates deeper.          | Performs primary button behavior.                                                                               |
+| Back                  | Returns to previous screen. Exits to Apple TV Home Screen. | Pauses/resumes gameplay. Returns to previous screen, exits to main game menu, or exits to Apple TV Home Screen. |
+| Play/Pause            | Activates media playback. Pauses/resumes media playback.   | Performs secondary button behavior. Skips intro video.                                                          |
 
 ## [Compatible remotes](/design/human-interface-guidelines/remotes#Compatible-remotes)
 
@@ -61,7 +61,7 @@ Some remotes that are compatible with Apple TV include buttons for browsing live
 
 ## [Platform considerations](/design/human-interface-guidelines/remotes#Platform-considerations)
 
-*Not supported in iOS, iPadOS, macOS, visionOS, or watchOS.*
+_Not supported in iOS, iPadOS, macOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/remotes#Resources)
 

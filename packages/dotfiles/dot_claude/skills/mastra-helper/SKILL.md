@@ -29,6 +29,7 @@ npm install @mastra/core
 ## Core Concepts
 
 Mastra provides:
+
 1. **Agents**: Autonomous LLM-powered systems with tools
 2. **Tools**: Functions agents can call to interact with external systems
 3. **Workflows**: Graph-based orchestration for multi-step processes
@@ -409,11 +410,13 @@ export const agent = new Agent({
 ### Memory Types
 
 **Conversation History**: Recent messages in current conversation
+
 ```typescript
 // Automatically managed - no configuration needed
 ```
 
 **Working Memory**: Persistent user-specific data
+
 ```typescript
 const memory = new Memory({
   workingMemory: {
@@ -433,12 +436,13 @@ const memory = new Memory({
 ```
 
 **Semantic Recall**: Vector-based retrieval of past conversations
+
 ```typescript
 const memory = new Memory({
   semanticRecall: {
-    topK: 5,              // Number of similar messages to retrieve
-    messageRange: 2,      // Context around each match
-    scope: "resource",    // "thread" or "resource"
+    topK: 5, // Number of similar messages to retrieve
+    messageRange: 2, // Context around each match
+    scope: "resource", // "thread" or "resource"
   },
 });
 ```
@@ -529,12 +533,12 @@ export const mastra = new Mastra({
 
 ### Storage Adapters
 
-| Adapter | Use Case | Package |
-|---------|----------|---------|
-| LibSQL | Local development | `@mastra/libsql` |
-| PostgreSQL | Production | `@mastra/pg` |
-| MongoDB | Document storage | `@mastra/mongodb` |
-| Upstash | Serverless | `@mastra/upstash` |
+| Adapter    | Use Case          | Package           |
+| ---------- | ----------------- | ----------------- |
+| LibSQL     | Local development | `@mastra/libsql`  |
+| PostgreSQL | Production        | `@mastra/pg`      |
+| MongoDB    | Document storage  | `@mastra/mongodb` |
+| Upstash    | Serverless        | `@mastra/upstash` |
 
 ## Evaluations
 
@@ -557,11 +561,7 @@ const results = await evaluate({
     },
   ],
 
-  scorers: [
-    "accuracy",
-    "similarity",
-    "tone",
-  ],
+  scorers: ["accuracy", "similarity", "tone"],
 });
 
 console.log(results.scores);

@@ -101,7 +101,9 @@ export type RecommendedOptions = BaseConfigOptions &
  * });
  * ```
  */
-export function recommended(options: RecommendedOptions = {}): TSESLint.FlatConfig.ConfigArray {
+export function recommended(
+  options: RecommendedOptions = {},
+): TSESLint.FlatConfig.ConfigArray {
   const {
     react = false,
     accessibility = false,
@@ -231,8 +233,14 @@ export function recommended(options: RecommendedOptions = {}): TSESLint.FlatConf
       "custom-rules": customRulesPlugin,
     },
     rules: {
-      "max-lines": ["error", { max: 1500, skipBlankLines: false, skipComments: false }],
-      "max-lines-per-function": ["error", { max: 200, skipBlankLines: true, skipComments: true }],
+      "max-lines": [
+        "error",
+        { max: 1500, skipBlankLines: false, skipComments: false },
+      ],
+      "max-lines-per-function": [
+        "error",
+        { max: 200, skipBlankLines: true, skipComments: true },
+      ],
       // Allow test mocks and doubles to use any and type assertions
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",
@@ -247,7 +255,9 @@ export function recommended(options: RecommendedOptions = {}): TSESLint.FlatConf
       "@typescript-eslint/no-unnecessary-condition": "off",
       "@typescript-eslint/strict-boolean-expressions": "off",
       // Still catch chained assertions in tests (when typeSafety is enabled)
-      ...(customRules.typeSafety ? { "custom-rules/no-type-assertions": "error" } : {}),
+      ...(customRules.typeSafety
+        ? { "custom-rules/no-type-assertions": "error" }
+        : {}),
       // Too many false positives in tests
       "custom-rules/prefer-zod-validation": "off",
     },
@@ -266,7 +276,12 @@ export function recommended(options: RecommendedOptions = {}): TSESLint.FlatConf
 
   // Config files may import local workspace entrypoints for shared lint config.
   configs.push({
-    files: ["eslint.config.ts", "eslint.config.js", "eslint.config.mjs", "eslint.config.cjs"],
+    files: [
+      "eslint.config.ts",
+      "eslint.config.js",
+      "eslint.config.mjs",
+      "eslint.config.cjs",
+    ],
     rules: {
       "custom-rules/no-parent-imports": "off",
       "import/no-relative-packages": "off",

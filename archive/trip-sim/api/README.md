@@ -1,26 +1,32 @@
 # Roadtrip Cost Simulator
+
 A little program to help calculate the cost of a road trip. Intended for a road trip where a car is rented and with the passengers flying back. It can be used for a round trip by omitting flight costs and doubling the distance.
 
 ## Features
-* Simulates the price for a road trip for a range of passengers and duration so that cost can be compared.
-* Chooses the most cost-efficient rental vehicles from a given options
-* Calculates number of cars needed and number of lodging rooms needed based on passengers
-* Provides CLI output in an easy-to-understand format through pandas
-* Includes an AWS Lambda handler for a simple JSON API
-* Easy to deploy to [AWS Lambda](https://aws.amazon.com/lambda/) with [SAM](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html)
+
+- Simulates the price for a road trip for a range of passengers and duration so that cost can be compared.
+- Chooses the most cost-efficient rental vehicles from a given options
+- Calculates number of cars needed and number of lodging rooms needed based on passengers
+- Provides CLI output in an easy-to-understand format through pandas
+- Includes an AWS Lambda handler for a simple JSON API
+- Easy to deploy to [AWS Lambda](https://aws.amazon.com/lambda/) with [SAM](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html)
 
 ## View Live
+
 Interactive tool for REST requests: https://reqbin.com/f6dck49c
 
 ## Usage
-There is no user interface, so the source must be edited directly. The relevant file is ```__init__.py```. Everything else should (probably) be untouched.
+
+There is no user interface, so the source must be edited directly. The relevant file is `__init__.py`. Everything else should (probably) be untouched.
 
 Alternatively you can deploy this to AWS Lambda and make requests against it. The easiest way to deploy this is with [SAM](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html). After setting SAM up, run the following commands:
+
 ```bash
 sam validate; sam build; sam package; sam deploy
 ```
 
 ### Example Lambda Request
+
 ```bash
 {
   "vehicles": [
@@ -55,6 +61,7 @@ sam validate; sam build; sam package; sam deploy
 ```
 
 ### Example Lambda Response
+
 ```bash
 [
   {
@@ -113,6 +120,7 @@ sam validate; sam build; sam package; sam deploy
 ```
 
 ## Example CLI Output
+
 ```bash
    number of people  number of days  gas cost  rental cost  lodging cost  flight cost  food cost  total cost  cost per person  cost per day  cost per day per person
 6                 3               7     153.0          700           750          124        147      1874.0            625.0         268.0                     89.0

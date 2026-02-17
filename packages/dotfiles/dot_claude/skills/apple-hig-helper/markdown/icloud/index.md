@@ -38,7 +38,7 @@ A fundamental aspect of iCloud is transparency. People don’t need to know wher
 
 ## [Platform considerations](/design/human-interface-guidelines/icloud#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/icloud#Resources)
 
@@ -50,6 +50,6 @@ A fundamental aspect of iCloud is transparency. People don’t need to know wher
 
 ## [Change log](/design/human-interface-guidelines/icloud#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date         | Changes                                                    |
+| ------------ | ---------------------------------------------------------- |
 | June 9, 2025 | Added guidance for synchronizing game data through iCloud. |

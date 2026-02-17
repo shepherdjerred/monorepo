@@ -66,9 +66,7 @@ export function ComponentRenderer({
   }
 
   if ("Column" in componentDef) {
-    return (
-      <A2UIColumn component={componentDef.Column} surfaceId={surfaceId} />
-    );
+    return <A2UIColumn component={componentDef.Column} surfaceId={surfaceId} />;
   }
 
   if ("Row" in componentDef) {

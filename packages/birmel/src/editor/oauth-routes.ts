@@ -1,13 +1,7 @@
 import { Hono } from "hono";
 import { loggers } from "../utils/index.js";
-import {
-  getGitHubConfig,
-  isGitHubConfigured,
-} from "./config.js";
-import {
-  exchangeCodeForToken,
-  storeAuth,
-} from "./github-oauth.js";
+import { getGitHubConfig, isGitHubConfigured } from "./config.js";
+import { exchangeCodeForToken, storeAuth } from "./github-oauth.js";
 
 const logger = loggers.editor.child("oauth-routes");
 
@@ -68,7 +62,9 @@ export function createOAuthRoutes(): Hono {
     }
 
     if (!code) {
-      return c.html(renderErrorPage("missing_code", "No authorization code received"));
+      return c.html(
+        renderErrorPage("missing_code", "No authorization code received"),
+      );
     }
 
     if (!state) {

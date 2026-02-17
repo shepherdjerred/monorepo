@@ -38,9 +38,7 @@ export default defineConfig({
 
       // Babel plugins for features like decorators
       babel: {
-        plugins: [
-          ["@babel/plugin-proposal-decorators", { legacy: true }],
-        ],
+        plugins: [["@babel/plugin-proposal-decorators", { legacy: true }]],
       },
 
       // File patterns to include
@@ -257,8 +255,8 @@ export default defineConfig({
         manualChunks: {
           // Vendor chunks
           "react-vendor": ["react", "react-dom"],
-          "router": ["react-router-dom"],
-          "ui": ["@radix-ui/react-dialog", "@radix-ui/react-dropdown-menu"],
+          router: ["react-router-dom"],
+          ui: ["@radix-ui/react-dialog", "@radix-ui/react-dropdown-menu"],
         },
       },
     },

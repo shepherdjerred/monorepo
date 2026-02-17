@@ -10,7 +10,7 @@ export type Video = {
   uuid: string;
   imageUrl: string;
   skillCappedUrl: string;
-}
+};
 
 export function isVideo(item: unknown): item is Video {
   const possibleVideo = item as Video;

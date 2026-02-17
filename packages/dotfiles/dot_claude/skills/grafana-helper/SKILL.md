@@ -13,46 +13,46 @@ Complete Grafana operations via REST API. This skill replaces Grafana MCP server
 
 ## MCP Tool Equivalents Reference
 
-| MCP Tool | API Equivalent |
-|----------|---------------|
-| `search_dashboards` | `curl "$URL/api/search?query=..."` |
-| `get_dashboard_by_uid` | `curl "$URL/api/dashboards/uid/{uid}"` |
-| `get_dashboard_summary` | Parse dashboard JSON response |
-| `get_dashboard_property` | jq on dashboard JSON |
-| `get_dashboard_panel_queries` | Extract from dashboard JSON |
-| `update_dashboard` | `curl -X POST "$URL/api/dashboards/db"` |
-| `list_datasources` | `curl "$URL/api/datasources"` |
-| `get_datasource_by_uid` | `curl "$URL/api/datasources/uid/{uid}"` |
-| `get_datasource_by_name` | `curl "$URL/api/datasources/name/{name}"` |
-| `query_prometheus` | `curl "$URL/api/ds/query"` |
-| `list_prometheus_metric_names` | `curl "$URL/api/datasources/proxy/{id}/api/v1/label/__name__/values"` |
-| `list_prometheus_label_names` | `curl "$URL/api/datasources/proxy/{id}/api/v1/labels"` |
-| `list_prometheus_label_values` | `curl "$URL/api/datasources/proxy/{id}/api/v1/label/{name}/values"` |
-| `list_prometheus_metric_metadata` | `curl "$URL/api/datasources/proxy/{id}/api/v1/metadata"` |
-| `query_loki_logs` | `curl "$URL/api/ds/query"` |
-| `query_loki_stats` | `curl "$URL/api/datasources/proxy/{id}/loki/api/v1/index/stats"` |
-| `list_loki_label_names` | `curl "$URL/api/datasources/proxy/{id}/loki/api/v1/labels"` |
-| `list_loki_label_values` | `curl "$URL/api/datasources/proxy/{id}/loki/api/v1/label/{name}/values"` |
-| `list_alert_rules` | `curl "$URL/api/v1/provisioning/alert-rules"` |
-| `get_alert_rule_by_uid` | `curl "$URL/api/v1/provisioning/alert-rules/{uid}"` |
-| `create_alert_rule` | `curl -X POST "$URL/api/v1/provisioning/alert-rules"` |
-| `update_alert_rule` | `curl -X PUT "$URL/api/v1/provisioning/alert-rules/{uid}"` |
-| `delete_alert_rule` | `curl -X DELETE "$URL/api/v1/provisioning/alert-rules/{uid}"` |
-| `list_contact_points` | `curl "$URL/api/v1/provisioning/contact-points"` |
-| `get_annotations` | `curl "$URL/api/annotations"` |
-| `create_annotation` | `curl -X POST "$URL/api/annotations"` |
-| `update_annotation` | `curl -X PUT "$URL/api/annotations/{id}"` |
-| `patch_annotation` | `curl -X PATCH "$URL/api/annotations/{id}"` |
-| `create_graphite_annotation` | `curl -X POST "$URL/api/annotations/graphite"` |
-| `get_annotation_tags` | `curl "$URL/api/annotations/tags"` |
-| `create_folder` | `curl -X POST "$URL/api/folders"` |
-| `search_folders` | `curl "$URL/api/search?type=dash-folder"` |
-| `list_sift_investigations` | `curl "$URL/api/plugins/grafana-sift-app/resources/investigations"` |
-| `get_sift_investigation` | `curl "$URL/api/plugins/grafana-sift-app/resources/investigations/{id}"` |
-| `get_sift_analysis` | `curl "$URL/api/plugins/grafana-sift-app/resources/investigations/{id}/analyses/{id}"` |
-| `find_error_pattern_logs` | Via Sift plugin API |
-| `find_slow_requests` | Via Sift plugin API |
-| `get_assertions` | Via Asserts plugin API |
+| MCP Tool                          | API Equivalent                                                                         |
+| --------------------------------- | -------------------------------------------------------------------------------------- |
+| `search_dashboards`               | `curl "$URL/api/search?query=..."`                                                     |
+| `get_dashboard_by_uid`            | `curl "$URL/api/dashboards/uid/{uid}"`                                                 |
+| `get_dashboard_summary`           | Parse dashboard JSON response                                                          |
+| `get_dashboard_property`          | jq on dashboard JSON                                                                   |
+| `get_dashboard_panel_queries`     | Extract from dashboard JSON                                                            |
+| `update_dashboard`                | `curl -X POST "$URL/api/dashboards/db"`                                                |
+| `list_datasources`                | `curl "$URL/api/datasources"`                                                          |
+| `get_datasource_by_uid`           | `curl "$URL/api/datasources/uid/{uid}"`                                                |
+| `get_datasource_by_name`          | `curl "$URL/api/datasources/name/{name}"`                                              |
+| `query_prometheus`                | `curl "$URL/api/ds/query"`                                                             |
+| `list_prometheus_metric_names`    | `curl "$URL/api/datasources/proxy/{id}/api/v1/label/__name__/values"`                  |
+| `list_prometheus_label_names`     | `curl "$URL/api/datasources/proxy/{id}/api/v1/labels"`                                 |
+| `list_prometheus_label_values`    | `curl "$URL/api/datasources/proxy/{id}/api/v1/label/{name}/values"`                    |
+| `list_prometheus_metric_metadata` | `curl "$URL/api/datasources/proxy/{id}/api/v1/metadata"`                               |
+| `query_loki_logs`                 | `curl "$URL/api/ds/query"`                                                             |
+| `query_loki_stats`                | `curl "$URL/api/datasources/proxy/{id}/loki/api/v1/index/stats"`                       |
+| `list_loki_label_names`           | `curl "$URL/api/datasources/proxy/{id}/loki/api/v1/labels"`                            |
+| `list_loki_label_values`          | `curl "$URL/api/datasources/proxy/{id}/loki/api/v1/label/{name}/values"`               |
+| `list_alert_rules`                | `curl "$URL/api/v1/provisioning/alert-rules"`                                          |
+| `get_alert_rule_by_uid`           | `curl "$URL/api/v1/provisioning/alert-rules/{uid}"`                                    |
+| `create_alert_rule`               | `curl -X POST "$URL/api/v1/provisioning/alert-rules"`                                  |
+| `update_alert_rule`               | `curl -X PUT "$URL/api/v1/provisioning/alert-rules/{uid}"`                             |
+| `delete_alert_rule`               | `curl -X DELETE "$URL/api/v1/provisioning/alert-rules/{uid}"`                          |
+| `list_contact_points`             | `curl "$URL/api/v1/provisioning/contact-points"`                                       |
+| `get_annotations`                 | `curl "$URL/api/annotations"`                                                          |
+| `create_annotation`               | `curl -X POST "$URL/api/annotations"`                                                  |
+| `update_annotation`               | `curl -X PUT "$URL/api/annotations/{id}"`                                              |
+| `patch_annotation`                | `curl -X PATCH "$URL/api/annotations/{id}"`                                            |
+| `create_graphite_annotation`      | `curl -X POST "$URL/api/annotations/graphite"`                                         |
+| `get_annotation_tags`             | `curl "$URL/api/annotations/tags"`                                                     |
+| `create_folder`                   | `curl -X POST "$URL/api/folders"`                                                      |
+| `search_folders`                  | `curl "$URL/api/search?type=dash-folder"`                                              |
+| `list_sift_investigations`        | `curl "$URL/api/plugins/grafana-sift-app/resources/investigations"`                    |
+| `get_sift_investigation`          | `curl "$URL/api/plugins/grafana-sift-app/resources/investigations/{id}"`               |
+| `get_sift_analysis`               | `curl "$URL/api/plugins/grafana-sift-app/resources/investigations/{id}/analyses/{id}"` |
+| `find_error_pattern_logs`         | Via Sift plugin API                                                                    |
+| `find_slow_requests`              | Via Sift plugin API                                                                    |
+| `get_assertions`                  | Via Asserts plugin API                                                                 |
 
 ## Configuration
 
@@ -793,6 +793,7 @@ rate({job="app"} |= "error" [5m])
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - Grafana URL or API key is not specified
 - Datasource UID or ID is ambiguous
 - Dashboard UID or folder location is unclear

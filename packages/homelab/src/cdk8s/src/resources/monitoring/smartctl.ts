@@ -1,6 +1,12 @@
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Duration } from "cdk8s";
-import { ConfigMap, DaemonSet, Volume, ServiceAccount, Probe } from "cdk8s-plus-31";
+import {
+  ConfigMap,
+  DaemonSet,
+  Volume,
+  ServiceAccount,
+  Probe,
+} from "cdk8s-plus-31";
 import versions from "../../versions.ts";
 
 export async function createSmartctlMonitoring(chart: Chart) {
@@ -34,11 +40,16 @@ export async function createSmartctlMonitoring(chart: Chart) {
         app: "smartctl-collector",
       },
       annotations: {
-        "ignore-check.kube-linter.io/sensitive-host-mounts": "Required for SMART disk monitoring via /dev, /proc, /sys",
-        "ignore-check.kube-linter.io/privileged-container": "Required for raw disk device access",
-        "ignore-check.kube-linter.io/privilege-escalation-container": "Required when privileged is true",
-        "ignore-check.kube-linter.io/run-as-non-root": "Required for disk access as root",
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "Required to install smartmontools at runtime",
+        "ignore-check.kube-linter.io/sensitive-host-mounts":
+          "Required for SMART disk monitoring via /dev, /proc, /sys",
+        "ignore-check.kube-linter.io/privileged-container":
+          "Required for raw disk device access",
+        "ignore-check.kube-linter.io/privilege-escalation-container":
+          "Required when privileged is true",
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "Required for disk access as root",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "Required to install smartmontools at runtime",
       },
     },
     serviceAccount,
@@ -78,7 +89,11 @@ export async function createSmartctlMonitoring(chart: Chart) {
       `,
     ],
     liveness: Probe.fromCommand(
-      ["sh", "-c", "! grep -q 'collection failed' /host/var/lib/node_exporter/textfile_collector/smartmon.prom"],
+      [
+        "sh",
+        "-c",
+        "! grep -q 'collection failed' /host/var/lib/node_exporter/textfile_collector/smartmon.prom",
+      ],
       {
         initialDelaySeconds: Duration.seconds(60),
         periodSeconds: Duration.seconds(300),
@@ -96,26 +111,45 @@ export async function createSmartctlMonitoring(chart: Chart) {
   });
 
   // Mount the script from ConfigMap
-  const scriptVolume = Volume.fromConfigMap(chart, "script-volume", smartmonScript);
+  const scriptVolume = Volume.fromConfigMap(
+    chart,
+    "script-volume",
+    smartmonScript,
+  );
   smartctlDaemonSet.addVolume(scriptVolume);
   container.mount("/scripts", scriptVolume);
 
   // Mount host directories
-  const hostDevVolume = Volume.fromHostPath(chart, "smartctl-host-dev", "smartctl-host-dev", {
-    path: "/dev",
-  });
+  const hostDevVolume = Volume.fromHostPath(
+    chart,
+    "smartctl-host-dev",
+    "smartctl-host-dev",
+    {
+      path: "/dev",
+    },
+  );
   smartctlDaemonSet.addVolume(hostDevVolume);
   container.mount("/dev", hostDevVolume);
 
-  const hostProcVolume = Volume.fromHostPath(chart, "smartctl-host-proc", "smartctl-host-proc", {
-    path: "/proc",
-  });
+  const hostProcVolume = Volume.fromHostPath(
+    chart,
+    "smartctl-host-proc",
+    "smartctl-host-proc",
+    {
+      path: "/proc",
+    },
+  );
   smartctlDaemonSet.addVolume(hostProcVolume);
   container.mount("/host/proc", hostProcVolume, { readOnly: true });
 
-  const hostSysVolume = Volume.fromHostPath(chart, "smartctl-host-sys", "smartctl-host-sys", {
-    path: "/sys",
-  });
+  const hostSysVolume = Volume.fromHostPath(
+    chart,
+    "smartctl-host-sys",
+    "smartctl-host-sys",
+    {
+      path: "/sys",
+    },
+  );
   smartctlDaemonSet.addVolume(hostSysVolume);
   container.mount("/host/sys", hostSysVolume, { readOnly: true });
 
@@ -129,7 +163,10 @@ export async function createSmartctlMonitoring(chart: Chart) {
     },
   );
   smartctlDaemonSet.addVolume(textfileCollectorVolume);
-  container.mount("/host/var/lib/node_exporter/textfile_collector", textfileCollectorVolume);
+  container.mount(
+    "/host/var/lib/node_exporter/textfile_collector",
+    textfileCollectorVolume,
+  );
 
   return { serviceAccount, smartmonScript, smartctlDaemonSet };
 }

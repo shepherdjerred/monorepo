@@ -55,7 +55,8 @@ export function parseHistoryEntry(line: string): Message | null {
       return null;
     }
 
-    const role: MessageRole = entry.message.role === "user" ? "user" : "assistant";
+    const role: MessageRole =
+      entry.message.role === "user" ? "user" : "assistant";
 
     // Extract content and tool uses
     let textContent = "";
@@ -125,11 +126,15 @@ export function parseHistoryLines(lines: string[]): Message[] {
       const message = parseHistoryEntry(line);
 
       // Collect tool uses from assistant messages
-      if (message?.toolUses && entry.message && Array.isArray(entry.message.content)) {
+      if (
+        message?.toolUses &&
+        entry.message &&
+        Array.isArray(entry.message.content)
+      ) {
         for (const block of entry.message.content) {
           if (block.type === "tool_use" && block.id) {
             // Find the matching ToolUse object
-            const toolUse = message.toolUses.find(t => t.name === block.name);
+            const toolUse = message.toolUses.find((t) => t.name === block.name);
             if (toolUse) {
               toolUseMap.set(block.id, toolUse);
             }

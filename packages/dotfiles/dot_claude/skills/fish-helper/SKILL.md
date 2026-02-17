@@ -10,6 +10,7 @@ description: |
 ## What's New in Fish 4.x (2025-2026)
 
 ### Fish 4.0 (February 2025)
+
 - **Rust rewrite**: Entire codebase ported from C++ to Rust (2,731 commits, 200+ contributors)
 - **New keyboard protocol**: Human-readable bind notation (`bind ctrl-right` instead of escape sequences), xterm modifyOtherKeys and kitty keyboard protocol support
 - **OSC 133 prompt marking**: Prompts and command output marked for terminal integration
@@ -19,6 +20,7 @@ description: |
 - **`string match --max-matches`** and **`set --no-event`** flags
 
 ### Fish 4.1 (September 2025)
+
 - **Brace compound commands**: `{ echo 1; echo 2 }` syntax
 - **Transient prompts**: `fish_transient_prompt` function for simplified prompt after execution
 - **Mouse support**: OSC 133 prompt marking with kitty click events
@@ -26,16 +28,19 @@ description: |
 - **Vi mode**: ctrl+a (increment) and ctrl+x (decrement)
 
 ### Fish 4.2 (November 2025)
+
 - Multi-line autosuggestions from history
 - `fish_tab_title` function for separate tab titles
 - Fish assumes UTF-8 regardless of system locale
 
 ### Fish 4.3 (December 2025)
+
 - **Universal variables replaced with global defaults** for cleaner configuration
 - **Adaptive themes**: `[light]` and `[dark]` sections in theme files
 - Terminal working directory reported via OSC 7
 
 ### Fish 4.4 (February 2026)
+
 - Vi mode word motions aligned with Vim behavior (counts supported: `d3w`)
 - New `catppuccin-*` color themes
 - `set_color` strikethrough modifier
@@ -45,6 +50,7 @@ description: |
 Fish (Friendly Interactive SHell) is a modern interactive shell focused on user experience. It provides syntax highlighting, autosuggestions, and tab completions out of the box. Fish intentionally breaks POSIX compatibility in favor of cleaner, more discoverable syntax.
 
 Key design principles:
+
 - Discoverability over tradition (no hidden configuration)
 - User-friendliness over backward compatibility
 - Correctness (no word splitting on variables)
@@ -52,6 +58,7 @@ Key design principles:
 ## Syntax Differences from Bash
 
 ### Variable Assignment
+
 ```fish
 # Fish uses set, not VAR=value
 set name "world"
@@ -62,12 +69,14 @@ set -e var_name                        # erase variable
 ```
 
 ### Variable Scopes
+
 - **Universal** (`-U`): Shared across all sessions, persisted to disk
 - **Global** (`-g`): Current session only
 - **Function** (`-f`): Current function
 - **Local** (`-l`): Current block
 
 ### Command Substitution
+
 ```fish
 # Fish uses (command) or $(command), NOT backticks
 set files (ls)
@@ -79,6 +88,7 @@ set content "$(cat file.txt)"
 ```
 
 ### No Process Substitution
+
 ```fish
 # Bash: diff <(cmd1) <(cmd2)
 # Fish: use psub
@@ -86,6 +96,7 @@ diff (cmd1 | psub) (cmd2 | psub)
 ```
 
 ### Conditionals and Loops
+
 ```fish
 # if/else if/else/end (no then/fi)
 if test -f /etc/os-release
@@ -118,6 +129,7 @@ end < input.txt
 ```
 
 ### Lists (Arrays)
+
 ```fish
 # All variables are lists. 1-indexed, negative indexing supported
 set colors red green blue
@@ -131,6 +143,7 @@ set -gx PATH /usr/local/bin /usr/bin /bin
 ```
 
 ### String Manipulation
+
 ```fish
 # Use the string builtin (no ${var%pattern} parameter expansion)
 string length "hello"                    # 5
@@ -143,6 +156,7 @@ string sub -s 2 -l 3 "hello"            # ell
 ```
 
 ### Arithmetic
+
 ```fish
 # Use math builtin (no $(( )) or let)
 math 2 + 2                # 4
@@ -152,16 +166,18 @@ set result (math "$x * 2")
 ```
 
 ### Special Variables
-| Bash | Fish |
-|------|------|
-| `$?` | `$status` |
-| `$@`, `$*` | `$argv` |
-| `$$` | `$fish_pid` |
-| `$#` | `(count $argv)` |
-| `$!` | `$last_pid` |
-| `$0` | `(status filename)` |
+
+| Bash       | Fish                |
+| ---------- | ------------------- |
+| `$?`       | `$status`           |
+| `$@`, `$*` | `$argv`             |
+| `$$`       | `$fish_pid`         |
+| `$#`       | `(count $argv)`     |
+| `$!`       | `$last_pid`         |
+| `$0`       | `(status filename)` |
 
 ### Other Key Differences
+
 - No heredocs: use `printf '%s\n' "line1" "line2"` or multi-line strings
 - No `[[`: use `test` or `[` only
 - No subshells: use `begin; end` for grouping, `set -l` for scoping
@@ -271,11 +287,13 @@ complete -c hub -w git
 ```
 
 ### Startup Order
+
 1. Files in `conf.d/` directories (system, then user) in alphabetical order
 2. `config.fish`
 3. Functions autoloaded on first call
 
 ### Prompt Functions
+
 - `fish_prompt` -- left prompt
 - `fish_right_prompt` -- right prompt
 - `fish_mode_prompt` -- vi mode indicator
@@ -301,6 +319,7 @@ bind --mode insert ctrl-c 'commandline -r ""'
 ```
 
 ### Default Key Bindings (Emacs Mode)
+
 - Tab: complete, Shift+Tab: search completions
 - Ctrl+R: history pager
 - Ctrl+C: cancel/interrupt
@@ -472,6 +491,7 @@ bind --mode insert          # vi insert mode bindings
 ## Reference Files
 
 For detailed reference material, see:
+
 - `references/fish-syntax.md` -- Variables, control flow, strings, lists, pipes, math
 - `references/completions-functions.md` -- Writing completions, functions, abbreviations, event handlers
 - `references/plugins-config.md` -- Fisher, popular plugins, config patterns, prompt customization

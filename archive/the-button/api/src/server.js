@@ -1,7 +1,7 @@
-const database = require('./database/index');
-const loglevel = require('loglevel');
-const sockets = require('./sockets');
-require('./sentry');
+const database = require("./database/index");
+const loglevel = require("loglevel");
+const sockets = require("./sockets");
+require("./sentry");
 
 loglevel.setLevel(loglevel.levels.DEBUG);
 
@@ -11,10 +11,10 @@ let databaseConfig;
 if (process.env.CLEARDB_DATABASE_URL) {
   databaseConfig = process.env.CLEARDB_DATABASE_URL;
 } else {
-  databaseConfig = require('../config/database');
+  databaseConfig = require("../config/database");
 }
 
 // TODO remove nested promise, use async/await
-database(databaseConfig).then(pool => {
+database(databaseConfig).then((pool) => {
   sockets(pool, port);
 });

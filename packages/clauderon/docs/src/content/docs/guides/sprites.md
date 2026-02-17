@@ -147,6 +147,7 @@ clauderon attach <session-name>
 ## Networking
 
 Sprites containers:
+
 - Have internet access
 - Route through clauderon proxy for credential injection
 - Support custom network configurations via sprites.dev
@@ -154,6 +155,7 @@ Sprites containers:
 ## Pricing
 
 Sprites usage is billed based on:
+
 - Container runtime
 - Storage used
 - Network transfer
@@ -195,6 +197,7 @@ clauderon create --backend sprites \
 ```
 
 Timeout options:
+
 - `5m`, `15m`, `30m` - Short hibernation (for cost savings)
 - `1h`, `2h`, `6h` - Medium hibernation
 - `never` - Disable automatic hibernation
@@ -214,27 +217,32 @@ In Web UI or TUI, hibernated sessions display with a special status indicator.
 Unlike other backends, Sprites uses **remote clones** rather than local git worktrees:
 
 **How it works:**
+
 1. Repository is cloned directly on sprites.dev servers
 2. No local disk usage for the clone
 3. Changes committed in container are pushed to remote
 4. Local worktree syncing is optional
 
 **Advantages:**
+
 - No local disk space consumed
 - Faster session creation for large repositories
 - Better for environments with limited local storage
 
 **Trade-offs:**
+
 - Network latency for git operations
 - Initial clone time proportional to repository size
 - May use more network bandwidth
 
 **Best for:**
+
 - Large monorepos (>1GB)
 - Machines with limited disk space
 - Remote-first development workflows
 
 **Not ideal for:**
+
 - Latency-sensitive git operations
 - Offline development
 - Frequent git operations (rebasing, cherry-picking)
@@ -244,6 +252,7 @@ Unlike other backends, Sprites uses **remote clones** rather than local git work
 Sprites supports build caching to speed up iterations:
 
 **Supported cache types:**
+
 - **Cargo registry/git** - For Rust projects
 - **npm/yarn/bun cache** - For Node.js projects
 - **pip cache** - For Python projects
@@ -260,6 +269,7 @@ clauderon create --backend sprites \
 ```
 
 **Cache persistence:**
+
 - Caches persist across session recreates
 - Shared across sessions in same project (configurable)
 - Automatically cleaned after 30 days of inactivity
@@ -267,6 +277,7 @@ clauderon create --backend sprites \
 **Cache configuration in Web UI:**
 
 When creating a session via Web UI:
+
 1. Expand "Advanced Options"
 2. Check "Enable build caching"
 3. Select cache types: Cargo, NPM, Pip, Docker
@@ -274,11 +285,11 @@ When creating a session via Web UI:
 
 **Performance impact:**
 
-| Cache Type | First Build | Cached Build | Savings |
-|------------|-------------|--------------|---------|
-| Cargo | 5-10min | 30-60s | 80-90% |
-| NPM | 2-5min | 10-30s | 70-85% |
-| Docker layers | 3-8min | 30-90s | 60-80% |
+| Cache Type    | First Build | Cached Build | Savings |
+| ------------- | ----------- | ------------ | ------- |
+| Cargo         | 5-10min     | 30-60s       | 80-90%  |
+| NPM           | 2-5min      | 10-30s       | 70-85%  |
+| Docker layers | 3-8min      | 30-90s       | 60-80%  |
 
 ### Checkpoint Support
 
@@ -287,6 +298,7 @@ When creating a session via Web UI:
 When the checkpoint API becomes available, Sprites will support:
 
 **Session snapshots:**
+
 - Instant session state capture
 - Point-in-time restoration
 - Branch-point creation for experimentation
@@ -305,6 +317,7 @@ clauderon checkpoint restore <session-name> <checkpoint-id>
 ```
 
 **Future capabilities:**
+
 - Automatic checkpoints before risky operations
 - Checkpoint-based branching (create session from checkpoint)
 - Checkpoint sharing across team members
@@ -359,6 +372,7 @@ Sprites supports custom container images via sprites.dev dashboard:
 3. Session starts with your custom environment
 
 **Example use cases:**
+
 - Specific language versions (Python 3.11, Node 20)
 - Pre-installed tools (databases, build tools)
 - Custom development environments
@@ -386,6 +400,7 @@ Verify internet connectivity.
 ### Slow Performance
 
 Consider:
+
 - Using a closer region
 - Reducing sync frequency
 - Using Docker for latency-sensitive work

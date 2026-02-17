@@ -17,23 +17,48 @@ ruleTester.run("no-dto-naming", noDtoNaming, {
   invalid: [
     {
       code: "type MatchDto = { id: string };",
-      errors: [{ messageId: "useDtoSuffix", data: { name: "MatchDto", suggested: "RawMatch" } }],
+      errors: [
+        {
+          messageId: "useDtoSuffix",
+          data: { name: "MatchDto", suggested: "RawMatch" },
+        },
+      ],
     },
     {
       code: "type ParticipantDto = { name: string };",
-      errors: [{ messageId: "useDtoSuffix", data: { name: "ParticipantDto", suggested: "RawParticipant" } }],
+      errors: [
+        {
+          messageId: "useDtoSuffix",
+          data: { name: "ParticipantDto", suggested: "RawParticipant" },
+        },
+      ],
     },
     {
       code: "interface SummonerLeagueDto { tier: string; }",
-      errors: [{ messageId: "useDtoSuffix", data: { name: "SummonerLeagueDto", suggested: "RawSummonerLeague" } }],
+      errors: [
+        {
+          messageId: "useDtoSuffix",
+          data: { name: "SummonerLeagueDto", suggested: "RawSummonerLeague" },
+        },
+      ],
     },
     {
       code: "const MatchDtoSchema = z.object({ id: z.string() });",
-      errors: [{ messageId: "schemaDtoSuffix", data: { name: "MatchDtoSchema", suggested: "RawMatchSchema" } }],
+      errors: [
+        {
+          messageId: "schemaDtoSuffix",
+          data: { name: "MatchDtoSchema", suggested: "RawMatchSchema" },
+        },
+      ],
     },
     {
       code: "const TimelineDtoSchema = z.object({ frames: z.array(z.unknown()) });",
-      errors: [{ messageId: "schemaDtoSuffix", data: { name: "TimelineDtoSchema", suggested: "RawTimelineSchema" } }],
+      errors: [
+        {
+          messageId: "schemaDtoSuffix",
+          data: { name: "TimelineDtoSchema", suggested: "RawTimelineSchema" },
+        },
+      ],
     },
   ],
 });

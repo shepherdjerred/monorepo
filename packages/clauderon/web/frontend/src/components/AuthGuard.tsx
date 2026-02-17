@@ -5,7 +5,7 @@ import { RegistrationPage } from "../pages/RegistrationPage";
 
 type AuthGuardProps = {
   children: ReactNode;
-}
+};
 
 export function AuthGuard({ children }: AuthGuardProps) {
   const { authStatus, isLoading } = useAuth();

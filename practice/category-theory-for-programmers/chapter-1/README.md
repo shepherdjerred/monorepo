@@ -1,5 +1,7 @@
 # Category: The Essence of Composition
+
 ### 1. Implement, as best as you can, the identity function in your favorite language (or the second favorite, if you favorite language happens to be Haskell).
+
 ```java
 class Scratch {
     <T> T identity(T object) {
@@ -21,6 +23,7 @@ class Scratch {
 ```
 
 ### 3. Write a program that tries to test that your composition function respects identity.
+
 ```java
 import java.util.function.Function;
 

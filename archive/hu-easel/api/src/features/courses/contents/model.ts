@@ -4,14 +4,15 @@ import {
   Column,
   DataType,
   Default,
-  ForeignKey, HasMany,
+  ForeignKey,
+  HasMany,
   IsUUID,
   Model,
   PrimaryKey,
-  Table
-} from 'sequelize-typescript';
-import { Listing } from '../listings/model';
-import { Course } from '../model';
+  Table,
+} from "sequelize-typescript";
+import { Listing } from "../listings/model";
+import { Course } from "../model";
 
 @Table
 export class Content extends Model<Content> {

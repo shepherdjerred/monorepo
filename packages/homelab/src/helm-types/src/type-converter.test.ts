@@ -109,7 +109,9 @@ describe("Type Inference from Values", () => {
 
     const result = convertToTypeScriptInterface(values, "TestValues");
 
-    expect(result.properties["setting"]?.type).toBe("string | number | boolean");
+    expect(result.properties["setting"]?.type).toBe(
+      "string | number | boolean",
+    );
   });
 
   test("should infer plain string", () => {
@@ -161,7 +163,9 @@ describe("Description and Default Value Handling", () => {
 
     const result = convertToTypeScriptInterface(values, "TestValues", schema);
 
-    expect(result.properties["setting"]?.description).toBe("This is a test setting");
+    expect(result.properties["setting"]?.description).toBe(
+      "This is a test setting",
+    );
   });
 
   test("should include schema default", () => {
@@ -194,10 +198,17 @@ describe("Description and Default Value Handling", () => {
     const yamlComments = new Map([["setting", "YAML comment"]]);
     const values = { setting: "value" };
 
-    const result = convertToTypeScriptInterface(values, "TestValues", schema, yamlComments);
+    const result = convertToTypeScriptInterface(
+      values,
+      "TestValues",
+      schema,
+      yamlComments,
+    );
 
     expect(result.properties["setting"]?.description).toContain("YAML comment");
-    expect(result.properties["setting"]?.description).toContain("Schema description");
+    expect(result.properties["setting"]?.description).toContain(
+      "Schema description",
+    );
   });
 
   test("should use YAML comment when no schema description", () => {
@@ -210,7 +221,12 @@ describe("Description and Default Value Handling", () => {
     const yamlComments = new Map([["setting", "YAML comment only"]]);
     const values = { setting: "value" };
 
-    const result = convertToTypeScriptInterface(values, "TestValues", schema, yamlComments);
+    const result = convertToTypeScriptInterface(
+      values,
+      "TestValues",
+      schema,
+      yamlComments,
+    );
 
     expect(result.properties["setting"]?.description).toBe("YAML comment only");
   });
@@ -242,8 +258,12 @@ describe("Nested Objects", () => {
 
     expect(result.properties["parent"]?.type).toBe("TestValuesParent");
     expect(result.properties["parent"]?.nested).toBeDefined();
-    expect(result.properties["parent"]?.nested?.properties["child"]?.type).toBe("string");
-    expect(result.properties["parent"]?.nested?.properties["child"]?.description).toBe("Nested description");
+    expect(result.properties["parent"]?.nested?.properties["child"]?.type).toBe(
+      "string",
+    );
+    expect(
+      result.properties["parent"]?.nested?.properties["child"]?.description,
+    ).toBe("Nested description");
   });
 
   test("should handle deeply nested objects", () => {
@@ -260,7 +280,9 @@ describe("Nested Objects", () => {
     const result = convertToTypeScriptInterface(values, "TestValues");
 
     expect(result.properties["level1"]?.nested).toBeDefined();
-    expect(result.properties["level1"]?.nested?.properties["level2"]?.nested).toBeDefined();
+    expect(
+      result.properties["level1"]?.nested?.properties["level2"]?.nested,
+    ).toBeDefined();
   });
 });
 

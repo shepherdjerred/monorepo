@@ -14,10 +14,10 @@ Feedback helps people know what’s happening, discover what they can do next, u
 
 Providing clear, consistent feedback as people interact with your app or game can make it feel intuitive and encourage deeper exploration. Feedback can communicate several different things, such as:
 
-* The current status of something
-* The success or failure of an important task or action
-* A warning about an action that can have negative consequences
-* An opportunity to correct a mistake or problematic situation
+- The current status of something
+- The success or failure of an important task or action
+- A warning about an action that can have negative consequences
+- An opportunity to correct a mistake or problematic situation
 
 The most effective feedback tends to match the significance of the information to the way it’s delivered. For example, it often works well to display status information in a passive way so that people can view it when they need it. In contrast, a warning about possible data loss needs to interrupt people so they have a chance to avoid the problem.
 
@@ -37,7 +37,7 @@ The most effective feedback tends to match the significance of the information t
 
 ## [Platform considerations](/design/human-interface-guidelines/feedback#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, or visionOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, or visionOS._
 
 ### [watchOS](/design/human-interface-guidelines/feedback#watchOS)
 

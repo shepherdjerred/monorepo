@@ -32,7 +32,7 @@ People can always rate your app within the App Store.
 
 ## [Platform considerations](/design/human-interface-guidelines/ratings-and-reviews#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/ratings-and-reviews#Resources)
 
@@ -46,6 +46,6 @@ People can always rate your app within the App Store.
 
 ## [Change log](/design/human-interface-guidelines/ratings-and-reviews#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date               | Changes        |
+| ------------------ | -------------- |
 | September 12, 2023 | Added artwork. |

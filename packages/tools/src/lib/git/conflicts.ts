@@ -5,10 +5,10 @@ export type ConflictCheckResult = {
   hasConflicts: boolean;
   conflictingFiles: string[];
   baseBranch: string;
-}
+};
 
 export async function checkMergeConflicts(
-  baseBranch?: string
+  baseBranch?: string,
 ): Promise<ConflictCheckResult> {
   const targetBranch = baseBranch ?? (await getDefaultBranch());
 
@@ -27,9 +27,7 @@ export async function checkMergeConflicts(
       const output = result.stdout.toString();
 
       // Look for conflict markers in the output
-      const conflictMatches = output.match(
-        /^<<<<<<< /gm
-      );
+      const conflictMatches = output.match(/^<<<<<<< /gm);
       if (conflictMatches && conflictMatches.length > 0) {
         // Extract conflicting file names
         const fileMatches = output.match(/^(\+\+\+|---) [ab]\/(.+)$/gm);
@@ -74,21 +72,20 @@ export async function checkMergeConflicts(
   }
 }
 
-export async function getMergeBase(baseBranch?: string): Promise<string | null> {
+export async function getMergeBase(
+  baseBranch?: string,
+): Promise<string | null> {
   const targetBranch = baseBranch ?? (await getDefaultBranch());
 
   try {
-    const result =
-      await $`git merge-base HEAD origin/${targetBranch}`.quiet();
+    const result = await $`git merge-base HEAD origin/${targetBranch}`.quiet();
     return result.stdout.toString().trim();
   } catch {
     return null;
   }
 }
 
-export async function isBranchUpToDate(
-  baseBranch?: string
-): Promise<boolean> {
+export async function isBranchUpToDate(baseBranch?: string): Promise<boolean> {
   const targetBranch = baseBranch ?? (await getDefaultBranch());
 
   try {

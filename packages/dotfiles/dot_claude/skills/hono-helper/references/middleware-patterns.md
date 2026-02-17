@@ -69,12 +69,14 @@ import { csrf } from "hono/csrf";
 import { timing } from "hono/timing";
 
 // CORS
-app.use(cors({
-  origin: ["https://example.com"],
-  allowMethods: ["GET", "POST", "PUT", "DELETE"],
-  allowHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: ["https://example.com"],
+    allowMethods: ["GET", "POST", "PUT", "DELETE"],
+    allowHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  }),
+);
 
 // Logging
 app.use(logger());
@@ -89,15 +91,21 @@ app.use(compress());
 app.use(etag());
 
 // Basic auth
-app.use("/admin/*", basicAuth({
-  username: "admin",
-  password: "secret",
-}));
+app.use(
+  "/admin/*",
+  basicAuth({
+    username: "admin",
+    password: "secret",
+  }),
+);
 
 // Bearer token auth
-app.use("/api/*", bearerAuth({
-  token: "my-secret-token",
-}));
+app.use(
+  "/api/*",
+  bearerAuth({
+    token: "my-secret-token",
+  }),
+);
 
 // CSRF protection
 app.use(csrf());
@@ -118,10 +126,13 @@ app.onError((err, c) => {
     return err.getResponse();
   }
 
-  return c.json({
-    error: "Internal Server Error",
-    message: process.env.NODE_ENV === "development" ? err.message : undefined,
-  }, 500);
+  return c.json(
+    {
+      error: "Internal Server Error",
+      message: process.env.NODE_ENV === "development" ? err.message : undefined,
+    },
+    500,
+  );
 });
 ```
 
@@ -145,10 +156,13 @@ app.get("/protected", (c) => {
 
 ```typescript
 app.notFound((c) => {
-  return c.json({
-    error: "Not Found",
-    path: c.req.path,
-  }, 404);
+  return c.json(
+    {
+      error: "Not Found",
+      path: c.req.path,
+    },
+    404,
+  );
 });
 ```
 
@@ -195,15 +209,11 @@ app.get("/users", async (c) => {
   return c.json({ users });
 });
 
-app.post(
-  "/users",
-  zValidator("json", CreateUserSchema),
-  async (c) => {
-    const data = c.req.valid("json");
-    const user = await prisma.user.create({ data });
-    return c.json(user, 201);
-  }
-);
+app.post("/users", zValidator("json", CreateUserSchema), async (c) => {
+  const data = c.req.valid("json");
+  const user = await prisma.user.create({ data });
+  return c.json(user, 201);
+});
 ```
 
 ### Authentication Pattern
@@ -226,7 +236,7 @@ app.post("/login", async (c) => {
   // Validate credentials...
   const token = await sign(
     { sub: user.id, exp: Math.floor(Date.now() / 1000) + 60 * 60 },
-    process.env.JWT_SECRET!
+    process.env.JWT_SECRET!,
   );
 
   return c.json({ token });

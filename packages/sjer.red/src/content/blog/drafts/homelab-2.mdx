@@ -84,12 +84,14 @@ Why is this useful? Static typing! cdk8s can inform guide you as you write your 
 
 <Dialog>
   <Socratic perspective="student">
-    Surely Kubernetes has linters and IDE integrations for YAML to catch the same issues?
+    Surely Kubernetes has linters and IDE integrations for YAML to catch the
+    same issues?
   </Socratic>
   <Socratic perspective="teacher">
-    I'm sure that it does! In fact, I used one of these linters on my YAML output to catch additional misconfigurations.
-    I was already familiar with cdk and TypeScript. I also just really like both of those technologies, so I chose to
-    stick with them.
+    I'm sure that it does! In fact, I used one of these linters on my YAML
+    output to catch additional misconfigurations. I was already familiar with
+    cdk and TypeScript. I also just really like both of those technologies, so I
+    chose to stick with them.
   </Socratic>
 </Dialog>
 
@@ -98,7 +100,11 @@ cdk8s has support for all of Kubernete's resources. These definitions are genera
 ```typescript
 // @noErrors
 export class OnePasswordItem extends ApiObject {
-  public constructor(scope: Construct, id: string, props: OnePasswordItemProps = {}) {
+  public constructor(
+    scope: Construct,
+    id: string,
+    props: OnePasswordItemProps = {},
+  ) {
     super(scope, id, {
       ...OnePasswordItem.GVK,
       ...props,
@@ -123,7 +129,8 @@ Here's how I use it to store my Tailscale key:
 // @noErrors
 new OnePasswordItem(chart, "tailscale-operator-oauth-onepassword", {
   spec: {
-    itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/mboftvs4fyptyqvg3anrfjy6vu",
+    itemPath:
+      "vaults/v64ocnykdqju4ui6j6pua56xw4/items/mboftvs4fyptyqvg3anrfjy6vu",
   },
   metadata: {
     name: "operator-oauth",

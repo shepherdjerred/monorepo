@@ -30,7 +30,7 @@ You must request permission to access people’s data, and you must take all nec
 
 **Provide a coherent privacy policy.** During the app submission process, you must provide a URL to a clearly stated privacy policy, so that people can view the policy when they click the link in the App Store page for your app. For developer guidance, see [App Information > App Store Connect Help](https://help.apple.com/app-store-connect/#/dev219b53a88).
 
-**Request access to health data only when you need it.** It makes sense to request access to weight information when people log their weight, for example, but not immediately after your app launches. When your request is clearly related to the current context, you help people understand your app’s intentions. Also, people can change the permissions they grant, so your app needs to make a request every time it needs access. For developer guidance, see [`requestAuthorization(toShare:read:completion:)`](/documentation/HealthKit/HKHealthStore/requestAuthorization(toShare:read:completion:)).
+**Request access to health data only when you need it.** It makes sense to request access to weight information when people log their weight, for example, but not immediately after your app launches. When your request is clearly related to the current context, you help people understand your app’s intentions. Also, people can change the permissions they grant, so your app needs to make a request every time it needs access. For developer guidance, see [`requestAuthorization(toShare:read:completion:)`](</documentation/HealthKit/HKHealthStore/requestAuthorization(toShare:read:completion:)>).
 
 **Clarify your app’s intent by adding descriptive messages to the standard permission screen.** People expect to see the system-provided permission screen when asked to approve access to health data. Write a few succinct sentences that explain why you need the information and how people can benefit from sharing it with your app. Avoid adding custom screens that replicate the standard permission screen’s behavior or content.
 
@@ -70,7 +70,7 @@ The Apple Health icon shows that an app works with HealthKit and the Health app.
 
 **Use only the Apple-provided icon.** Don’t create your own Apple Health icon design or attempt to mimic any Apple-provided designs. Download the Apple Health app icon from [Apple Design Resources](https://developer.apple.com/design/resources/#technologies).
 
-**Display the name *Apple Health* close to the Apple Health icon.** Displaying both elements near each other reminds people that the icon represents the Health app.
+**Display the name _Apple Health_ close to the Apple Health icon.** Displaying both elements near each other reminds people that the icon represents the Health app.
 
 **Display the Apple Health icon consistently with other health-related app icons.** In a view that contains other app icons, make the Apple Health icon no smaller than other icons.
 
@@ -80,23 +80,23 @@ The Apple Health icon shows that an app works with HealthKit and the Health app.
 
 **Maintain a minimum clear space around the Apple Health icon of 1/10 of its height.** Don’t composite the icon onto another graphic element.
 
-**Don’t use the Apple Health icon within text or as a replacement for the terms *Health*, *Apple Health*, or *HealthKit*.** See [Editorial guidelines](/design/human-interface-guidelines/healthkit#Editorial-guidelines) to learn how to properly reference the Health app and HealthKit in text.
+**Don’t use the Apple Health icon within text or as a replacement for the terms _Health_, _Apple Health_, or _HealthKit_.** See [Editorial guidelines](/design/human-interface-guidelines/healthkit#Editorial-guidelines) to learn how to properly reference the Health app and HealthKit in text.
 
 **Don’t display Health app images or screenshots.** Like all Apple images, these designs are copyrighted and can’t appear in your app or marketing materials. You can include an Activity ring element in your app to display Move, Exercise, and Stand progress; for guidance, see [Activity rings](/design/human-interface-guidelines/healthkit#Activity-rings).
 
 ## [Editorial guidelines](/design/human-interface-guidelines/healthkit#Editorial-guidelines)
 
-**Refer to the Health app as *Apple Health* or *the Apple Health app*.** In your app and marketing text, using *Apple Health* adds clarity.
+**Refer to the Health app as _Apple Health_ or _the Apple Health app_.** In your app and marketing text, using _Apple Health_ adds clarity.
 
-**Don’t use the term *HealthKit*.** *HealthKit* is a developer-facing term that names the framework your app uses to access health data. If you need to explain to people how your app works with their data, use the term *the Apple Health app*. For example, you might say that your app “works with the Apple Health app” or “uses data from the Apple Health app.”
+**Don’t use the term _HealthKit_.** _HealthKit_ is a developer-facing term that names the framework your app uses to access health data. If you need to explain to people how your app works with their data, use the term _the Apple Health app_. For example, you might say that your app “works with the Apple Health app” or “uses data from the Apple Health app.”
 
-**Use correct capitalization when using the term *Apple Health*.** *Apple Health* is two words, with an uppercase A and uppercase H, followed by lowercase letters. You can display *Apple Health* entirely in uppercase only when you need to conform to an established typographic interface style, such as in an app that capitalizes all text.
+**Use correct capitalization when using the term _Apple Health_.** _Apple Health_ is two words, with an uppercase A and uppercase H, followed by lowercase letters. You can display _Apple Health_ entirely in uppercase only when you need to conform to an established typographic interface style, such as in an app that capitalizes all text.
 
-**Use the system-provided translation of *Health* to avoid confusing people.** It’s best to refer to the Apple Health app using the translation that people view on their device.
+**Use the system-provided translation of _Health_ to avoid confusing people.** It’s best to refer to the Apple Health app using the translation that people view on their device.
 
 ## [Platform considerations](/design/human-interface-guidelines/healthkit#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, or watchOS. Not supported in macOS, tvOS, or visionOS.*
+_No additional considerations for iOS, iPadOS, or watchOS. Not supported in macOS, tvOS, or visionOS._
 
 ## [Resources](/design/human-interface-guidelines/healthkit#Resources)
 

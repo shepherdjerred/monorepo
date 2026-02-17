@@ -1,23 +1,23 @@
 language: rust
 os:
 rust:
-- stable
-- beta
-- nightly
+  - stable
+  - beta
+  - nightly
 jobs:
   allow_failures:
-  - rust: stable
-  - rust: beta
+    - rust: stable
+    - rust: beta
 before_script:
-- rustup component add rust-src --toolchain nightly
-- rustup component add llvm-tools-preview
-# https://github.com/rust-osdev/bootimage/issues/64
-- (cd .. && cargo install bootimage)
-- sudo apt update; sudo apt install qemu
+  - rustup component add rust-src --toolchain nightly
+  - rustup component add llvm-tools-preview
+  # https://github.com/rust-osdev/bootimage/issues/64
+  - (cd .. && cargo install bootimage)
+  - sudo apt update; sudo apt install qemu
 script:
-- cargo build --verbose --all
-- cargo test
-- cargo bootimage
+  - cargo build --verbose --all
+  - cargo test
+  - cargo bootimage
 deploy:
   provider: releases
   api_key:
@@ -27,6 +27,6 @@ deploy:
     repo: shepherdjerred/rust_os
     branch: master
     rust: nightly
-  skip_cleanup: 'true'
+  skip_cleanup: "true"
   draft: true
   overwrite: true

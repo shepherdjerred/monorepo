@@ -6,13 +6,27 @@ import { validateSnowflakes } from "./validation.js";
 
 export const manageEmojiTool = createTool({
   id: "manage-emoji",
-  description: "Manage custom emojis in the server: list all, create new, modify, or delete",
+  description:
+    "Manage custom emojis in the server: list all, create new, modify, or delete",
   inputSchema: z.object({
     guildId: z.string().describe("The ID of the guild"),
-    action: z.enum(["list", "create", "modify", "delete"]).describe("The action to perform"),
-    emojiId: z.string().optional().describe("The ID of the emoji (required for modify/delete)"),
-    name: z.string().optional().describe("Name for the emoji (required for create, optional for modify)"),
-    imageUrl: z.string().optional().describe("URL of the image to use (required for create)"),
+    action: z
+      .enum(["list", "create", "modify", "delete"])
+      .describe("The action to perform"),
+    emojiId: z
+      .string()
+      .optional()
+      .describe("The ID of the emoji (required for modify/delete)"),
+    name: z
+      .string()
+      .optional()
+      .describe(
+        "Name for the emoji (required for create, optional for modify)",
+      ),
+    imageUrl: z
+      .string()
+      .optional()
+      .describe("URL of the image to use (required for create)"),
     reason: z.string().optional().describe("Reason for the action"),
   }),
   outputSchema: z.object({
@@ -41,7 +55,9 @@ export const manageEmojiTool = createTool({
         { value: ctx.guildId, fieldName: "guildId" },
         { value: ctx.emojiId, fieldName: "emojiId" },
       ]);
-      if (idError) {return { success: false, message: idError };}
+      if (idError) {
+        return { success: false, message: idError };
+      }
 
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
@@ -94,8 +110,12 @@ export const manageEmojiTool = createTool({
             };
           }
           const emoji = await guild.emojis.fetch(ctx.emojiId);
-          const editOptions: Parameters<typeof emoji.edit>[0] = { name: ctx.name };
-          if (ctx.reason !== undefined) {editOptions.reason = ctx.reason;}
+          const editOptions: Parameters<typeof emoji.edit>[0] = {
+            name: ctx.name,
+          };
+          if (ctx.reason !== undefined) {
+            editOptions.reason = ctx.reason;
+          }
           await emoji.edit(editOptions);
           return {
             success: true,
@@ -131,15 +151,33 @@ export const manageEmojiTool = createTool({
 
 export const manageStickerTool = createTool({
   id: "manage-sticker",
-  description: "Manage custom stickers in the server: list all, create new, or delete",
+  description:
+    "Manage custom stickers in the server: list all, create new, or delete",
   inputSchema: z.object({
     guildId: z.string().describe("The ID of the guild"),
-    action: z.enum(["list", "create", "delete"]).describe("The action to perform"),
-    stickerId: z.string().optional().describe("The ID of the sticker (required for delete)"),
-    name: z.string().optional().describe("Name for the sticker (required for create)"),
-    description: z.string().optional().describe("Description of the sticker (required for create)"),
-    tags: z.string().optional().describe("Emoji tag for the sticker (required for create)"),
-    imageUrl: z.string().optional().describe("URL of the image to use (required for create)"),
+    action: z
+      .enum(["list", "create", "delete"])
+      .describe("The action to perform"),
+    stickerId: z
+      .string()
+      .optional()
+      .describe("The ID of the sticker (required for delete)"),
+    name: z
+      .string()
+      .optional()
+      .describe("Name for the sticker (required for create)"),
+    description: z
+      .string()
+      .optional()
+      .describe("Description of the sticker (required for create)"),
+    tags: z
+      .string()
+      .optional()
+      .describe("Emoji tag for the sticker (required for create)"),
+    imageUrl: z
+      .string()
+      .optional()
+      .describe("URL of the image to use (required for create)"),
     reason: z.string().optional().describe("Reason for the action"),
   }),
   outputSchema: z.object({
@@ -169,7 +207,9 @@ export const manageStickerTool = createTool({
         { value: ctx.guildId, fieldName: "guildId" },
         { value: ctx.stickerId, fieldName: "stickerId" },
       ]);
-      if (idError) {return { success: false, message: idError };}
+      if (idError) {
+        return { success: false, message: idError };
+      }
 
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
@@ -195,7 +235,8 @@ export const manageStickerTool = createTool({
           if (!ctx.name || !ctx.description || !ctx.tags || !ctx.imageUrl) {
             return {
               success: false,
-              message: "name, description, tags, and imageUrl are required for creating a sticker",
+              message:
+                "name, description, tags, and imageUrl are required for creating a sticker",
             };
           }
           const createOptions: Parameters<typeof guild.stickers.create>[0] = {
@@ -204,7 +245,9 @@ export const manageStickerTool = createTool({
             tags: ctx.tags,
             description: ctx.description,
           };
-          if (ctx.reason !== undefined) {createOptions.reason = ctx.reason;}
+          if (ctx.reason !== undefined) {
+            createOptions.reason = ctx.reason;
+          }
           const sticker = await guild.stickers.create(createOptions);
           return {
             success: true,

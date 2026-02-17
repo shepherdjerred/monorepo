@@ -8,7 +8,7 @@ type Replacement = {
   originalText: string;
   newText: string;
   functionId: string;
-}
+};
 
 /** Reassemble de-minified functions back into complete source */
 export function reassemble(
@@ -21,11 +21,15 @@ export function reassemble(
 
   for (const [funcId, result] of results) {
     const func = graph.functions.get(funcId);
-    if (!func) {continue;}
+    if (!func) {
+      continue;
+    }
 
     // Only replace top-level functions (not nested)
     // Nested functions are already included in their parent's de-minified output
-    if (func.parentId) {continue;}
+    if (func.parentId) {
+      continue;
+    }
 
     replacements.push({
       start: func.start,
@@ -69,7 +73,9 @@ function buildNameMap(
 
   for (const [funcId, result] of results) {
     const func = graph.functions.get(funcId);
-    if (!func) {continue;}
+    if (!func) {
+      continue;
+    }
 
     // Map function name
     if (func.originalName && result.suggestedName !== func.originalName) {
@@ -100,7 +106,9 @@ function updateReferences(
   nameMap: Map<string, string>,
   replacements: Replacement[],
 ): string {
-  if (nameMap.size === 0) {return source;}
+  if (nameMap.size === 0) {
+    return source;
+  }
 
   // Get positions that were already replaced (don't double-process)
   const replacedRanges = replacements.map((r) => ({
@@ -116,7 +124,9 @@ function updateReferences(
   // For each name, find and replace occurrences outside replaced ranges
   for (const [original, suggested] of sortedNames) {
     // Skip single-character names to avoid too many false positives
-    if (original.length === 1) {continue;}
+    if (original.length === 1) {
+      continue;
+    }
 
     // Create regex that matches whole words only
     const regex = new RegExp(String.raw`\b${escapeRegex(original)}\b`, "g");
@@ -176,15 +186,16 @@ export function formatOutput(source: string): string {
   }
 
   // Simple formatting: ensure consistent line endings
-  let formatted = source
-    // Normalize line endings
-    .replaceAll('\r\n', "\n")
-    // Remove trailing whitespace
-    .split("\n")
-    .map((line) => line.trimEnd())
-    .join("\n")
-    // Ensure file ends with newline
-    .trimEnd() + "\n";
+  let formatted =
+    source
+      // Normalize line endings
+      .replaceAll("\r\n", "\n")
+      // Remove trailing whitespace
+      .split("\n")
+      .map((line) => line.trimEnd())
+      .join("\n")
+      // Ensure file ends with newline
+      .trimEnd() + "\n";
 
   // Add blank line between top-level functions/declarations
   formatted = formatted.replaceAll(
@@ -222,7 +233,9 @@ export function getReassemblyStats(
 } {
   let namesUpdated = 0;
   for (const result of results.values()) {
-    if (result.suggestedName) {namesUpdated++;}
+    if (result.suggestedName) {
+      namesUpdated++;
+    }
     namesUpdated += Object.keys(result.parameterNames).length;
     namesUpdated += Object.keys(result.localVariableNames).length;
   }
@@ -246,10 +259,16 @@ export function createChangeSummary(
   lines.push("# De-minification Summary\n");
 
   // Function name changes
-  const nameChanges: { original: string; suggested: string; confidence: number }[] = [];
+  const nameChanges: {
+    original: string;
+    suggested: string;
+    confidence: number;
+  }[] = [];
   for (const [funcId, result] of results) {
     const func = graph.functions.get(funcId);
-    if (!func) {continue;}
+    if (!func) {
+      continue;
+    }
 
     if (func.originalName && result.suggestedName !== func.originalName) {
       nameChanges.push({
@@ -264,7 +283,9 @@ export function createChangeSummary(
     lines.push("## Function Renames");
     lines.push("| Original | Suggested | Confidence |");
     lines.push("|----------|-----------|------------|");
-    for (const change of nameChanges.sort((a, b) => b.confidence - a.confidence)) {
+    for (const change of nameChanges.sort(
+      (a, b) => b.confidence - a.confidence,
+    )) {
       lines.push(
         `| \`${change.original}\` | \`${change.suggested}\` | ${(change.confidence * 100).toFixed(0)}% |`,
       );

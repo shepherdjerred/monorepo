@@ -9,9 +9,13 @@ type RepositoryPathSelectorProps = {
   value: string;
   onChange: (path: string) => void;
   required?: boolean;
-}
+};
 
-export function RepositoryPathSelector({ value, onChange, required }: RepositoryPathSelectorProps) {
+export function RepositoryPathSelector({
+  value,
+  onChange,
+  required,
+}: RepositoryPathSelectorProps) {
   const client = useClauderonClient();
   const [recentRepos, setRecentRepos] = useState<RecentRepoDto[]>([]);
   const [isLoadingRecentRepos, setIsLoadingRecentRepos] = useState(false);
@@ -37,7 +41,7 @@ export function RepositoryPathSelector({ value, onChange, required }: Repository
 
   // Extract repository name from full path
   const extractRepoName = (fullPath: string): string => {
-    const parts = fullPath.split('/');
+    const parts = fullPath.split("/");
     return parts[parts.length - 1] ?? fullPath;
   };
 
@@ -45,7 +49,7 @@ export function RepositoryPathSelector({ value, onChange, required }: Repository
   const formatRepoDisplay = (repo: RecentRepoDto): string => {
     const repoName = extractRepoName(repo.repo_path);
 
-    if (!repo.subdirectory || repo.subdirectory === '') {
+    if (!repo.subdirectory || repo.subdirectory === "") {
       return repoName;
     }
 
@@ -54,9 +58,10 @@ export function RepositoryPathSelector({ value, onChange, required }: Repository
 
   const handleSelectRecentRepo = (repo: RecentRepoDto) => {
     // Combine repo_path and subdirectory to get full path
-    const fullPath = repo.subdirectory && repo.subdirectory !== ''
-      ? `${repo.repo_path}/${repo.subdirectory}`
-      : repo.repo_path;
+    const fullPath =
+      repo.subdirectory && repo.subdirectory !== ""
+        ? `${repo.repo_path}/${repo.subdirectory}`
+        : repo.repo_path;
 
     onChange(fullPath);
     setShowDropdown(false);
@@ -80,10 +85,18 @@ export function RepositoryPathSelector({ value, onChange, required }: Repository
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMins < 1) {return "just now";}
-    if (diffMins < 60) {return `${String(diffMins)}m ago`;}
-    if (diffHours < 24) {return `${String(diffHours)}h ago`;}
-    if (diffDays < 7) {return `${String(diffDays)}d ago`;}
+    if (diffMins < 1) {
+      return "just now";
+    }
+    if (diffMins < 60) {
+      return `${String(diffMins)}m ago`;
+    }
+    if (diffHours < 24) {
+      return `${String(diffHours)}h ago`;
+    }
+    if (diffDays < 7) {
+      return `${String(diffDays)}d ago`;
+    }
     return date.toLocaleDateString();
   };
 
@@ -94,7 +107,9 @@ export function RepositoryPathSelector({ value, onChange, required }: Repository
         <Input
           type="text"
           value={value}
-          onChange={(e) => { onChange(e.target.value); }}
+          onChange={(e) => {
+            onChange(e.target.value);
+          }}
           className="border-2 flex-1"
           placeholder="/path/to/repo"
           required={required}
@@ -103,7 +118,9 @@ export function RepositoryPathSelector({ value, onChange, required }: Repository
         {/* Dropdown trigger button */}
         <button
           type="button"
-          onClick={() => { setShowDropdown(!showDropdown); }}
+          onClick={() => {
+            setShowDropdown(!showDropdown);
+          }}
           className="cursor-pointer px-4 border-2 border-input bg-background hover:bg-primary/10 hover:scale-105 transition-all duration-200 font-mono flex items-center gap-2"
           title="Show recent repositories and browse"
         >
@@ -117,8 +134,8 @@ export function RepositoryPathSelector({ value, onChange, required }: Repository
         <div
           className="absolute z-10 mt-2 w-full border-4 border-primary overflow-hidden"
           style={{
-            backgroundColor: 'hsl(220, 15%, 95%)',
-            boxShadow: '8px 8px 0 hsl(220, 85%, 25%)'
+            backgroundColor: "hsl(220, 15%, 95%)",
+            boxShadow: "8px 8px 0 hsl(220, 85%, 25%)",
           }}
         >
           {/* Recent Repos Section */}
@@ -136,7 +153,9 @@ export function RepositoryPathSelector({ value, onChange, required }: Repository
                     <button
                       key={key}
                       type="button"
-                      onClick={() => { handleSelectRecentRepo(repo); }}
+                      onClick={() => {
+                        handleSelectRecentRepo(repo);
+                      }}
                       className="cursor-pointer w-full text-left px-3 py-2 hover:bg-primary/10 hover:pl-4 border-b border-primary/10 font-mono text-sm flex items-center gap-2 transition-all duration-200"
                     >
                       <Clock className="w-4 h-4 flex-shrink-0 text-cyan-600" />
@@ -185,14 +204,18 @@ export function RepositoryPathSelector({ value, onChange, required }: Repository
       {showDropdown && (
         <div
           className="fixed inset-0 z-0"
-          onClick={() => { setShowDropdown(false); }}
+          onClick={() => {
+            setShowDropdown(false);
+          }}
         />
       )}
 
       {/* Directory Browser Dialog */}
       {showBrowser && (
         <DirectoryBrowserDialog
-          onClose={() => { setShowBrowser(false); }}
+          onClose={() => {
+            setShowBrowser(false);
+          }}
           onSelect={handleSelectFromBrowser}
           initialPath={value || "~"}
         />

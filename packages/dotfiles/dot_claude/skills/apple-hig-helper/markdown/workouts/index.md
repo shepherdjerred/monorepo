@@ -38,13 +38,13 @@ If supported, media playback controls appear on the rightmost screen.
 
 **Provide workout controls that are easy to find and tap.** In addition to making it easy for people to pause, resume, and stop a workout, be sure to provide clear feedback that indicates when a session starts or stops.
 
-**Help people understand the health information your app records if sensor data is unavailable during a workout.** For example, water may prevent a heart-rate measurement, but your app can still record data like the distance people swam and the number of calories they burned. If your app supports the *Swimming* or *Other* workout types, explain the situation using language that’s similar to the language used in the system-provided Workout app, as shown below:
+**Help people understand the health information your app records if sensor data is unavailable during a workout.** For example, water may prevent a heart-rate measurement, but your app can still record data like the distance people swam and the number of calories they burned. If your app supports the _Swimming_ or _Other_ workout types, explain the situation using language that’s similar to the language used in the system-provided Workout app, as shown below:
 
-|  | Example text from the Workout app | | |
-| --- | --- | --- | --- |
-| A checkmark in a circle to indicate correct usage. | GPS is not used during a Pool Swim, and water may prevent a heart-rate measurement, but Apple Watch will still track your calories, laps, and distance using the built-in accelerometer. | | |
-| A checkmark in a circle to indicate correct usage. | In this type of workout, you earn the calorie equivalent of a brisk walk anytime sensor readings are unavailable. | | |
-| A checkmark in a circle to indicate correct usage. | GPS will only provide distance when you do a freestyle stroke. Water might prevent a heart-rate measurement, but calories will still be tracked using the built-in accelerometer. | | |
+|                                                    | Example text from the Workout app                                                                                                                                                        |     |     |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- | --- |
+| A checkmark in a circle to indicate correct usage. | GPS is not used during a Pool Swim, and water may prevent a heart-rate measurement, but Apple Watch will still track your calories, laps, and distance using the built-in accelerometer. |     |     |
+| A checkmark in a circle to indicate correct usage. | In this type of workout, you earn the calorie equivalent of a brisk walk anytime sensor readings are unavailable.                                                                        |     |     |
+| A checkmark in a circle to indicate correct usage. | GPS will only provide distance when you do a freestyle stroke. Water might prevent a heart-rate measurement, but calories will still be tracked using the built-in accelerometer.        |     |     |
 
 **Provide a summary at the end of a session.** A summary screen confirms that a workout is finished and displays the recorded information. Consider enhancing the summary by including Activity rings, so that people can easily check their current progress.
 
@@ -56,7 +56,7 @@ If supported, media playback controls appear on the rightmost screen.
 
 ## [Platform considerations](/design/human-interface-guidelines/workouts#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, or watchOS. Not supported in macOS, tvOS, or visionOS.*
+_No additional considerations for iOS, iPadOS, or watchOS. Not supported in macOS, tvOS, or visionOS._
 
 ## [Resources](/design/human-interface-guidelines/workouts#Resources)
 

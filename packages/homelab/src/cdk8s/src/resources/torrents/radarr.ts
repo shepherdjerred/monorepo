@@ -1,7 +1,17 @@
-import { Cpu, Deployment, DeploymentStrategy, type PersistentVolumeClaim, Service, Volume } from "cdk8s-plus-31";
-import type { Chart} from "cdk8s";
+import {
+  Cpu,
+  Deployment,
+  DeploymentStrategy,
+  type PersistentVolumeClaim,
+  Service,
+  Volume,
+} from "cdk8s-plus-31";
+import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { LINUXSERVER_GID, withCommonLinuxServerProps } from "../../misc/linux-server.ts";
+import {
+  LINUXSERVER_GID,
+  withCommonLinuxServerProps,
+} from "../../misc/linux-server.ts";
 import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "../../misc/tailscale.ts";
 import versions from "../../versions.ts";
@@ -21,8 +31,10 @@ export function createRadarrDeployment(
     },
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/run-as-non-root": "LinuxServer.io images run as root internally",
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "LinuxServer.io images require writable filesystem",
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "LinuxServer.io images run as root internally",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "LinuxServer.io images require writable filesystem",
       },
     },
   });
@@ -38,14 +50,26 @@ export function createRadarrDeployment(
       volumeMounts: [
         {
           path: "/config",
-          volume: Volume.fromPersistentVolumeClaim(chart, "radarr-volume", localPathVolume.claim),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "radarr-volume",
+            localPathVolume.claim,
+          ),
         },
         {
-          volume: Volume.fromPersistentVolumeClaim(chart, "radarr-torrents-hdd-volume", claims.downloads),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "radarr-torrents-hdd-volume",
+            claims.downloads,
+          ),
           path: "/downloads",
         },
         {
-          volume: Volume.fromPersistentVolumeClaim(chart, "radarr-movies-hdd-volume", claims.movies),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "radarr-movies-hdd-volume",
+            claims.movies,
+          ),
           path: "/movies",
         },
       ],

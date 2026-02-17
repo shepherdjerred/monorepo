@@ -138,6 +138,7 @@ provider "aws" {
 ```
 
 Common AWS resources:
+
 - `aws_vpc`, `aws_subnet`, `aws_security_group`, `aws_internet_gateway`
 - `aws_instance`, `aws_launch_template`, `aws_autoscaling_group`
 - `aws_s3_bucket`, `aws_s3_object`, `aws_s3_bucket_policy`
@@ -165,6 +166,7 @@ provider "google" {
 ```
 
 Common GCP resources:
+
 - `google_compute_network`, `google_compute_subnetwork`, `google_compute_firewall`
 - `google_compute_instance`, `google_compute_instance_template`
 - `google_storage_bucket`, `google_storage_bucket_object`
@@ -185,6 +187,7 @@ provider "azurerm" {
 ```
 
 Common Azure resources:
+
 - `azurerm_resource_group`, `azurerm_virtual_network`, `azurerm_subnet`
 - `azurerm_linux_virtual_machine`, `azurerm_windows_virtual_machine`
 - `azurerm_storage_account`, `azurerm_storage_container`
@@ -436,7 +439,7 @@ name: Terraform
 
 on:
   pull_request:
-    paths: ['**.tf', '**.tfvars']
+    paths: ["**.tf", "**.tfvars"]
   push:
     branches: [main]
 
@@ -487,10 +490,10 @@ repos:
       - id: terraform_fmt
       - id: terraform_validate
       - id: terraform_tflint
-        args: ['--args=--recursive']
+        args: ["--args=--recursive"]
       - id: terraform_trivy
       - id: terraform_docs
-        args: ['--args=--config=.terraform-docs.yml']
+        args: ["--args=--config=.terraform-docs.yml"]
 ```
 
 ## OpenTofu-Specific Features

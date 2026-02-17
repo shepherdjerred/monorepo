@@ -28,7 +28,9 @@ export function createScoutDashboard() {
   // Create server variable for optional filtering
   const serverVariable = new dashboard.QueryVariableBuilder("server")
     .label("Server")
-    .query('label_values(discord_guilds{environment=~"$environment"}, instance)')
+    .query(
+      'label_values(discord_guilds{environment=~"$environment"}, instance)',
+    )
     .datasource(prometheusDatasource)
     .multi(true)
     .includeAll(true)
@@ -40,7 +42,9 @@ export function createScoutDashboard() {
   };
 
   // Build the main dashboard
-  const builder = new dashboard.DashboardBuilder("Scout for LoL - Usage & Performance")
+  const builder = new dashboard.DashboardBuilder(
+    "Scout for LoL - Usage & Performance",
+  )
     .uid("scout-for-lol-dashboard")
     .tags(["scout", "discord", "gaming"])
     .time({ from: "now-24h", to: "now" })
@@ -66,7 +70,9 @@ export function createScoutDashboard() {
     return new stat.PanelBuilder()
       .title(title)
       .datasource(prometheusDatasource)
-      .withTarget(new prometheus.DataqueryBuilder().expr(query).legendFormat(legend))
+      .withTarget(
+        new prometheus.DataqueryBuilder().expr(query).legendFormat(legend),
+      )
       .unit(unit)
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(graphMode)
@@ -78,22 +84,32 @@ export function createScoutDashboard() {
 
   // Guild Count
   builder.withPanel(
-    createStatPanel("Discord Guilds", `sum by (environment) (discord_guilds{${buildFilter()}})`, "{{environment}}", {
-      x: 0,
-      y: 1,
-      w: 4,
-      h: 4,
-    }),
+    createStatPanel(
+      "Discord Guilds",
+      `sum by (environment) (discord_guilds{${buildFilter()}})`,
+      "{{environment}}",
+      {
+        x: 0,
+        y: 1,
+        w: 4,
+        h: 4,
+      },
+    ),
   );
 
   // User Count
   builder.withPanel(
-    createStatPanel("Discord Users", `sum by (environment) (discord_users{${buildFilter()}})`, "{{environment}}", {
-      x: 4,
-      y: 1,
-      w: 4,
-      h: 4,
-    }),
+    createStatPanel(
+      "Discord Users",
+      `sum by (environment) (discord_users{${buildFilter()}})`,
+      "{{environment}}",
+      {
+        x: 4,
+        y: 1,
+        w: 4,
+        h: 4,
+      },
+    ),
   );
 
   // Players Tracked
@@ -134,17 +150,21 @@ export function createScoutDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`min by (environment) (discord_connection_status{${buildFilter()}})`)
+          .expr(
+            `min by (environment) (discord_connection_status{${buildFilter()}})`,
+          )
           .legendFormat("{{environment}}"),
       )
       .unit("short")
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.None)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "red" },
-          { value: 1, color: "green" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "red" },
+            { value: 1, color: "green" },
+          ]),
       )
       .gridPos({ x: 20, y: 1, w: 4, h: 4 }),
   );
@@ -176,7 +196,9 @@ export function createScoutDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`sum by (environment) (rate(discord_commands_total{${buildFilter()}}[5m]))`)
+          .expr(
+            `sum by (environment) (rate(discord_commands_total{${buildFilter()}}[5m]))`,
+          )
           .legendFormat("{{environment}}"),
       )
       .unit("reqps")
@@ -280,7 +302,9 @@ export function createScoutDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`sum by (environment) (rate(riot_api_requests_total{${buildFilter()}}[5m]))`)
+          .expr(
+            `sum by (environment) (rate(riot_api_requests_total{${buildFilter()}}[5m]))`,
+          )
           .legendFormat("{{environment}}"),
       )
       .unit("reqps")
@@ -297,7 +321,9 @@ export function createScoutDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`sum by (environment) (rate(database_queries_total{${buildFilter()}}[5m]))`)
+          .expr(
+            `sum by (environment) (rate(database_queries_total{${buildFilter()}}[5m]))`,
+          )
           .legendFormat("{{environment}}"),
       )
       .unit("reqps")
@@ -314,7 +340,9 @@ export function createScoutDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`sum by (environment) (rate(reports_generated_total{${buildFilter()}}[5m])) * 60`)
+          .expr(
+            `sum by (environment) (rate(reports_generated_total{${buildFilter()}}[5m])) * 60`,
+          )
           .legendFormat("{{environment}}"),
       )
       .unit("short")
@@ -331,18 +359,22 @@ export function createScoutDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`sum by (environment) (rate(riot_api_errors_total{${buildFilter()}, http_status="429"}[5m]))`)
+          .expr(
+            `sum by (environment) (rate(riot_api_errors_total{${buildFilter()}, http_status="429"}[5m]))`,
+          )
           .legendFormat("{{environment}}"),
       )
       .unit("reqps")
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 0.01, color: "yellow" },
-          { value: 0.1, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 0.01, color: "yellow" },
+            { value: 0.1, color: "red" },
+          ]),
       )
       .gridPos({ x: 12, y: 33, w: 12, h: 8 }),
   );

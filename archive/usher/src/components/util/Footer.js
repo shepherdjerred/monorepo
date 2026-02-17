@@ -1,17 +1,19 @@
-import React, {Component} from 'react';
+import React, { Component } from "react";
 
 export default class Footer extends Component {
-  render () {
+  render() {
     return (
-      <footer className='footer'>
-        <div className='container'>
-          <div className='content has-text-centered'>
+      <footer className="footer">
+        <div className="container">
+          <div className="content has-text-centered">
             <p>
-              <strong>Usher</strong> by <a href='https://shepherdjerred.com/'>Jerred Shepherd</a>.
+              <strong>Usher</strong> by{" "}
+              <a href="https://shepherdjerred.com/">Jerred Shepherd</a>.
               <br />
-              Source available on <a href='https://github.com/shepherdjerred/usher'>GitHub</a>
+              Source available on{" "}
+              <a href="https://github.com/shepherdjerred/usher">GitHub</a>
               <br />
-              <a href='mailto:shepherdjerred@gmail.com'>Contact Me</a>
+              <a href="mailto:shepherdjerred@gmail.com">Contact Me</a>
             </p>
           </div>
         </div>

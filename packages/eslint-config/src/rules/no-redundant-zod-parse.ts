@@ -1,7 +1,12 @@
-import { AST_NODE_TYPES, ESLintUtils, type TSESTree } from "@typescript-eslint/utils";
+import {
+  AST_NODE_TYPES,
+  ESLintUtils,
+  type TSESTree,
+} from "@typescript-eslint/utils";
 
 const createRule = ESLintUtils.RuleCreator(
-  (name) => `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
+  (name) =>
+    `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
 );
 
 export const noRedundantZodParse = createRule({
@@ -9,7 +14,8 @@ export const noRedundantZodParse = createRule({
   meta: {
     type: "problem",
     docs: {
-      description: "Disallow parsing values with Zod when the type is already known and matches the schema output",
+      description:
+        "Disallow parsing values with Zod when the type is already known and matches the schema output",
     },
     messages: {
       redundantParse:
@@ -94,10 +100,12 @@ export const noRedundantZodParse = createRule({
 
               // Compare schema and argument
               const isSameSchema =
-                context.sourceCode.getText(safeParseSchema) === context.sourceCode.getText(schemaNode);
+                context.sourceCode.getText(safeParseSchema) ===
+                context.sourceCode.getText(schemaNode);
               const isSameArg =
                 safeParseArg !== undefined &&
-                context.sourceCode.getText(safeParseArg) === context.sourceCode.getText(argument);
+                context.sourceCode.getText(safeParseArg) ===
+                  context.sourceCode.getText(argument);
 
               // Early return to reduce nesting depth
               return isSameSchema && isSameArg;
@@ -116,7 +124,8 @@ export const noRedundantZodParse = createRule({
         if (
           node.callee.type === AST_NODE_TYPES.MemberExpression &&
           node.callee.property.type === AST_NODE_TYPES.Identifier &&
-          (node.callee.property.name === "parse" || node.callee.property.name === "safeParse") &&
+          (node.callee.property.name === "parse" ||
+            node.callee.property.name === "safeParse") &&
           node.arguments.length > 0
         ) {
           const schemaNode = node.callee.object;

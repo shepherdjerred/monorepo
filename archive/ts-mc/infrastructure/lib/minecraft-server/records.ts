@@ -5,7 +5,7 @@ import { ARecord, IHostedZone, RecordTarget } from "aws-cdk-lib/aws-route53";
 export function createRecords(
   stack: Stack,
   hostedZone: IHostedZone,
-  elasticIp: CfnEIP
+  elasticIp: CfnEIP,
 ) {
   new ARecord(stack, "MinecraftServerARecord", {
     zone: hostedZone,

@@ -27,7 +27,9 @@ export type ParallelResults<T> = {
  * @param operations - Array of promises to execute
  * @returns Collected results with success/failure categorization
  */
-export async function runParallel<T>(operations: Promise<T>[]): Promise<ParallelResults<T>> {
+export async function runParallel<T>(
+  operations: Promise<T>[],
+): Promise<ParallelResults<T>> {
   const results = await Promise.allSettled(operations);
 
   const fulfilled: T[] = [];
@@ -73,7 +75,9 @@ export type NamedResult<T> = {
  * @param operations - Array of named operations
  * @returns Array of named results with success/failure details
  */
-export async function runNamedParallel<T>(operations: NamedOperation<T>[]): Promise<NamedResult<T>[]> {
+export async function runNamedParallel<T>(
+  operations: NamedOperation<T>[],
+): Promise<NamedResult<T>[]> {
   const promises = operations.map(async (op): Promise<NamedResult<T>> => {
     try {
       const value = await op.operation();
@@ -97,7 +101,10 @@ export function collectResults<T>(results: NamedResult<T>[]): StepResult[] {
     if (result.success) {
       return passedResult(`${result.name}: Success`);
     } else {
-      const errorMessage = result.error instanceof Error ? result.error.message : String(result.error);
+      const errorMessage =
+        result.error instanceof Error
+          ? result.error.message
+          : String(result.error);
       return failedResult(`${result.name}: ${errorMessage}`);
     }
   });

@@ -76,7 +76,10 @@ afterAll(async () => {
         const prisma2 = new PrismaClient();
       `,
       filename: "/test/integration.integration.test.ts",
-      errors: [{ messageId: "missingDisconnect" }, { messageId: "missingDisconnect" }],
+      errors: [
+        { messageId: "missingDisconnect" },
+        { messageId: "missingDisconnect" },
+      ],
     },
   ],
 });

@@ -57,7 +57,9 @@ export async function exchangeCodeForToken(
       status: response.status,
       body: text,
     });
-    throw new Error(`Failed to exchange code for token: ${String(response.status)}`);
+    throw new Error(
+      `Failed to exchange code for token: ${String(response.status)}`,
+    );
   }
 
   const data = (await response.json()) as {
@@ -132,7 +134,9 @@ export async function getAuth(userId: string): Promise<GitHubAuth | null> {
  */
 export async function hasValidAuth(userId: string): Promise<boolean> {
   const auth = await getAuth(userId);
-  if (!auth) {return false;}
+  if (!auth) {
+    return false;
+  }
 
   // Check if token is expired
   if (auth.expiresAt && auth.expiresAt < new Date()) {
@@ -146,11 +150,13 @@ export async function hasValidAuth(userId: string): Promise<boolean> {
  * Delete GitHub auth for a user
  */
 export async function deleteAuth(userId: string): Promise<void> {
-  await prisma.gitHubAuth.delete({
-    where: { userId },
-  }).catch(() => {
-    // Ignore if not found
-  });
+  await prisma.gitHubAuth
+    .delete({
+      where: { userId },
+    })
+    .catch(() => {
+      // Ignore if not found
+    });
 }
 
 /**

@@ -7,13 +7,13 @@ export type Manifest = {
   courses: ManifestCourse[];
   thisWeekData: ManifestThisWeekData;
   videosToCourses: ManifestCourseChapters;
-}
+};
 
 export type ManifestPatch = {
   patchVal: string;
   releaseDate: number;
   patchUrl: string;
-}
+};
 
 export type ManifestVideo = {
   role: string;
@@ -25,7 +25,7 @@ export type ManifestVideo = {
   tId: number;
   tSS: string;
   cSS: string;
-}
+};
 
 export type ManifestCommentary = {
   role: string;
@@ -46,14 +46,14 @@ export type ManifestCommentary = {
   gameTime: string;
   carry: string;
   type: string;
-}
+};
 
 export type ManifestStaff = {
   name: string;
   summonerName: string;
   profileImage: string;
   profileImageWithRank: string;
-}
+};
 
 export type ManifestCourse = {
   title: string;
@@ -63,7 +63,7 @@ export type ManifestCourse = {
   role: string;
   courseImage: string;
   courseImage2: string;
-}
+};
 
 export type ManifestThisWeekData = {
   year: number;
@@ -74,7 +74,7 @@ export type ManifestThisWeekData = {
   vidTitle: string;
   order: number;
   courseName: string;
-}
+};
 
 export type ManifestCourseChapters = Record<
   string,

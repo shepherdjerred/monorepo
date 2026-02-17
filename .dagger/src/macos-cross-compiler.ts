@@ -324,11 +324,7 @@ async function getSdk(
       `https://github.com/joseluisq/macosx-sdks/releases/download/${version}/MacOSX${version}.sdk.tar.xz`,
     ])
     .withExec(["tar", "-xf", `MacOSX${version}.sdk.tar.xz`])
-    .withExec([
-      "bash",
-      "-c",
-      `mv MacOSX*.sdk MacOSX${version}.sdk || true`,
-    ]);
+    .withExec(["bash", "-c", `mv MacOSX*.sdk MacOSX${version}.sdk || true`]);
 
   return sdkContainer.directory(`MacOSX${version}.sdk`);
 }
@@ -436,11 +432,7 @@ async function buildGcc(
     .withExec(["bash", "-c", "cp -r /tmp/libtapi/* /sdk/usr/ || true"])
     .withExec(["bash", "-c", "cp -r /tmp/libdispatch/* /sdk/usr/ || true"])
     // Copy libraries to /usr/local/lib for runtime linking
-    .withExec([
-      "bash",
-      "-c",
-      "cp -r /tmp/xar/lib/* /usr/local/lib/ || true",
-    ])
+    .withExec(["bash", "-c", "cp -r /tmp/xar/lib/* /usr/local/lib/ || true"])
     .withExec([
       "bash",
       "-c",
@@ -453,12 +445,7 @@ async function buildGcc(
     ])
     .withExec(["ldconfig"])
     .withExec(["mkdir", "-p", "/osxcross/SDK"])
-    .withExec([
-      "ln",
-      "-s",
-      "/sdk",
-      `/osxcross/SDK/MacOSX${sdkVersion}.sdk`,
-    ])
+    .withExec(["ln", "-s", "/sdk", `/osxcross/SDK/MacOSX${sdkVersion}.sdk`])
     .withEnvVariable("PATH", "$PATH:/osxcross/bin:/cctools/bin", {
       expand: true,
     })
@@ -536,10 +523,7 @@ async function buildImage(
 
   // Set up SDK in container
   container = container
-    .withDirectory(
-      "/osxcross/SDK/MacOSX" + sdkVersion + ".sdk",
-      sdk,
-    )
+    .withDirectory("/osxcross/SDK/MacOSX" + sdkVersion + ".sdk", sdk)
     .withExec([
       "ln",
       "-s",
@@ -649,11 +633,7 @@ async function buildImage(
     .withDirectory("/tmp/xar-lib", xar.directory("lib"))
     .withDirectory("/tmp/libtapi-lib", libtapi.directory("lib"))
     .withDirectory("/tmp/libdispatch-lib", libdispatch.directory("lib"))
-    .withExec([
-      "bash",
-      "-c",
-      "cp -r /tmp/xar-lib/* /usr/local/lib/ || true",
-    ])
+    .withExec(["bash", "-c", "cp -r /tmp/xar-lib/* /usr/local/lib/ || true"])
     .withExec([
       "bash",
       "-c",
@@ -710,18 +690,8 @@ async function testImage(
         "-o",
         "out/hello-clang++",
       ])
-      .withExec([
-        triple + "-gcc",
-        "samples/hello.c",
-        "-o",
-        "out/hello-gcc",
-      ])
-      .withExec([
-        triple + "-g++",
-        "samples/hello.cpp",
-        "-o",
-        "out/hello-g++",
-      ])
+      .withExec([triple + "-gcc", "samples/hello.c", "-o", "out/hello-gcc"])
+      .withExec([triple + "-g++", "samples/hello.cpp", "-o", "out/hello-g++"])
       .withExec([
         triple + "-gfortran",
         "samples/hello.f90",
@@ -745,12 +715,7 @@ async function testImage(
       ])
       .withEnvVariable("CC", `zig-cc-${architecture}-macos`)
       .withWorkdir("samples/rust")
-      .withExec([
-        "cargo",
-        "build",
-        "--target",
-        `${architecture}-apple-darwin`,
-      ])
+      .withExec(["cargo", "build", "--target", `${architecture}-apple-darwin`])
       .withExec([
         "mv",
         `target/${architecture}-apple-darwin/debug/hello`,
@@ -776,16 +741,8 @@ async function testImage(
         "-c",
         `file out/hello-clang++ | grep -q "${archPattern}"`,
       ])
-      .withExec([
-        "bash",
-        "-c",
-        `file out/hello-gcc | grep -q "${archPattern}"`,
-      ])
-      .withExec([
-        "bash",
-        "-c",
-        `file out/hello-g++ | grep -q "${archPattern}"`,
-      ])
+      .withExec(["bash", "-c", `file out/hello-gcc | grep -q "${archPattern}"`])
+      .withExec(["bash", "-c", `file out/hello-g++ | grep -q "${archPattern}"`])
       .withExec([
         "bash",
         "-c",
@@ -823,9 +780,7 @@ async function testImage(
 export async function checkMacosCrossCompiler(
   source: Directory,
 ): Promise<string> {
-  const crossCompilerSource = source.directory(
-    "packages/macos-cross-compiler",
-  );
+  const crossCompilerSource = source.directory("packages/macos-cross-compiler");
 
   const image = await buildImage(crossCompilerSource);
   await testImage(crossCompilerSource, image);
@@ -852,19 +807,14 @@ export async function deployMacosCrossCompiler(
   ghcrUsername: string,
   ghcrPassword: Secret,
 ): Promise<string> {
-  const crossCompilerSource = source.directory(
-    "packages/macos-cross-compiler",
-  );
+  const crossCompilerSource = source.directory("packages/macos-cross-compiler");
 
   const image = await buildImage(crossCompilerSource);
 
   // Push with both latest and version tags in parallel
   const refs = await publishToGhcrMultiple({
     container: image,
-    imageRefs: [
-      `${GHCR_REGISTRY}:latest`,
-      `${GHCR_REGISTRY}:${sdkVersion}`,
-    ],
+    imageRefs: [`${GHCR_REGISTRY}:latest`, `${GHCR_REGISTRY}:${sdkVersion}`],
     username: ghcrUsername,
     password: ghcrPassword,
   });

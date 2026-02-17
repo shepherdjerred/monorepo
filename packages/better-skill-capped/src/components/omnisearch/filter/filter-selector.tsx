@@ -10,9 +10,12 @@ import type Type from "#src/model/type";
 export type FilterSelectorProps = {
   filters: Filters;
   onFiltersUpdate: (newFilters: Filters) => void;
-}
+};
 
-export default function FilterSelector({ filters, onFiltersUpdate }: FilterSelectorProps): React.ReactElement {
+export default function FilterSelector({
+  filters,
+  onFiltersUpdate,
+}: FilterSelectorProps): React.ReactElement {
   const updateFilterRoles = (newRoles: Role[]) => {
     const newFilters = {
       ...filters,
@@ -21,7 +24,10 @@ export default function FilterSelector({ filters, onFiltersUpdate }: FilterSelec
     onFiltersUpdate(newFilters);
   };
 
-  const updateFilterBookmark = (onlyShowBookmarked: boolean, onlyShowUnbookmarked: boolean) => {
+  const updateFilterBookmark = (
+    onlyShowBookmarked: boolean,
+    onlyShowUnbookmarked: boolean,
+  ) => {
     const newFilters = {
       ...filters,
       onlyBookmarked: onlyShowBookmarked,
@@ -30,7 +36,10 @@ export default function FilterSelector({ filters, onFiltersUpdate }: FilterSelec
     onFiltersUpdate(newFilters);
   };
 
-  const updateFilterWatchStatus = (onlyShowUnwatched: boolean, onlyShowWatched: boolean) => {
+  const updateFilterWatchStatus = (
+    onlyShowUnwatched: boolean,
+    onlyShowWatched: boolean,
+  ) => {
     const newFilters = {
       ...filters,
       onlyUnwatched: onlyShowUnwatched,
@@ -49,8 +58,14 @@ export default function FilterSelector({ filters, onFiltersUpdate }: FilterSelec
 
   return (
     <>
-      <RoleSelector selectedRoles={filters.roles} onRolesUpdate={updateFilterRoles} />
-      <TypeSelector selectedTypes={filters.types} onTypesUpdate={updateFilterTypes} />
+      <RoleSelector
+        selectedRoles={filters.roles}
+        onRolesUpdate={updateFilterRoles}
+      />
+      <TypeSelector
+        selectedTypes={filters.types}
+        onTypesUpdate={updateFilterTypes}
+      />
       <WatchStatusSelector
         onlyShowUnwatched={filters.onlyUnwatched}
         onlyShowWatched={filters.onlyWatched}

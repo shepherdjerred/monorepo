@@ -32,7 +32,7 @@ If you design your own interface icon, use the Quick Action Icon Template thatâ€
 
 ## [Platform considerations](/design/human-interface-guidelines/home-screen-quick-actions#Platform-considerations)
 
-*No additional considerations for iOS or iPadOS. Not supported in macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS or iPadOS. Not supported in macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/home-screen-quick-actions#Resources)
 

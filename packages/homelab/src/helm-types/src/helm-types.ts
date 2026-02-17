@@ -2,7 +2,12 @@
 // This file re-exports all functionality from the modular components
 
 // Core types
-export type { ChartInfo, JSONSchemaProperty, TypeScriptInterface, TypeProperty } from "./types.js";
+export type {
+  ChartInfo,
+  JSONSchemaProperty,
+  TypeScriptInterface,
+  TypeProperty,
+} from "./types.js";
 
 // Schemas
 export type { HelmValue } from "./schemas.js";
@@ -20,7 +25,10 @@ export {
 } from "./schemas.js";
 
 // Configuration
-export { EXTENSIBLE_TYPE_PATTERNS, shouldAllowArbitraryProps } from "./config.js";
+export {
+  EXTENSIBLE_TYPE_PATTERNS,
+  shouldAllowArbitraryProps,
+} from "./config.js";
 
 // Chart info parsing
 export { parseChartInfoFromVersions } from "./chart-info-parser.js";
@@ -43,4 +51,8 @@ export {
 export { generateTypeScriptCode } from "./interface-generator.js";
 
 // Utilities
-export { sanitizePropertyName, sanitizeTypeName, capitalizeFirst } from "./utils.js";
+export {
+  sanitizePropertyName,
+  sanitizeTypeName,
+  capitalizeFirst,
+} from "./utils.js";

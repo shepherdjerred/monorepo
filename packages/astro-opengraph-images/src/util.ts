@@ -13,7 +13,13 @@ async function fileExists(filePath: string): Promise<boolean> {
 // some files, e.g. index or 404 pages, are served without a folder
 // other files, e.g. blog posts, are served from a folder
 // I don't fully understand how Astro decides this, so:
-export async function getFilePath({ dir, page }: { dir: string; page: string }) {
+export async function getFilePath({
+  dir,
+  page,
+}: {
+  dir: string;
+  page: string;
+}) {
   let target: string = path.join(dir, page, "index.html");
 
   if (!(await fileExists(target))) {
@@ -23,7 +29,13 @@ export async function getFilePath({ dir, page }: { dir: string; page: string }) 
   return target;
 }
 
-export function getImagePath({ url, site }: { url: URL; site: URL | undefined }): string {
+export function getImagePath({
+  url,
+  site,
+}: {
+  url: URL;
+  site: URL | undefined;
+}): string {
   if (site === undefined) {
     throw new Error(
       "`site` must be set in your Astro configuration: https://docs.astro.build/en/reference/configuration-reference/#site",

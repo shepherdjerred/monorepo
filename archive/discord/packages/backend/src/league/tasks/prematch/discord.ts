@@ -9,15 +9,15 @@ import { QueueType } from "@discord/data";
 export function createDiscordMessage(
   players: PlayerConfigEntry[],
   game: CurrentGameInfoDTO,
-  queueType: QueueType | undefined
+  queueType: QueueType | undefined,
 ): string {
   const participants = players.map((player) => {
     const participant = findParticipant(player, game.participants);
     if (participant === undefined) {
       throw new Error(
         `unable to find participants: ${JSON.stringify(
-          participants
-        )}, ${JSON.stringify(game)}`
+          participants,
+        )}, ${JSON.stringify(game)}`,
       );
     }
     return { player, participant };
@@ -29,7 +29,7 @@ export function createDiscordMessage(
     return `${
       participant.player.name
     } started a ${queueType} game as ${_.startCase(
-      championName.replaceAll("_", " ").toLowerCase()
+      championName.replaceAll("_", " ").toLowerCase(),
     )}`;
   });
 

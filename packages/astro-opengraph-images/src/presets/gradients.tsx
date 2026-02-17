@@ -1,7 +1,11 @@
 import type { RenderFunctionInput } from "#src/types.js";
 
-export function gradients({ title, description }: RenderFunctionInput): React.ReactNode {
-  return <div
+export function gradients({
+  title,
+  description,
+}: RenderFunctionInput): React.ReactNode {
+  return (
+    <div
       style={{
         display: "flex",
         height: "100%",
@@ -18,7 +22,8 @@ export function gradients({ title, description }: RenderFunctionInput): React.Re
     >
       <div
         style={{
-          backgroundImage: "linear-gradient(90deg, rgb(0, 124, 240), rgb(0, 223, 216))",
+          backgroundImage:
+            "linear-gradient(90deg, rgb(0, 124, 240), rgb(0, 223, 216))",
           backgroundClip: "text",
           color: "transparent",
         }}
@@ -27,12 +32,14 @@ export function gradients({ title, description }: RenderFunctionInput): React.Re
       </div>
       <div
         style={{
-          backgroundImage: "linear-gradient(90deg, rgb(121, 40, 202), rgb(255, 0, 128))",
+          backgroundImage:
+            "linear-gradient(90deg, rgb(121, 40, 202), rgb(255, 0, 128))",
           backgroundClip: "text",
           color: "transparent",
         }}
       >
         {description ?? ""}
       </div>
-    </div>;
+    </div>
+  );
 }

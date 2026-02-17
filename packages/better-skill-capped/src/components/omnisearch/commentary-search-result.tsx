@@ -17,9 +17,11 @@ export type CommentarySearchResultProps = {
   onToggleBookmark: (item: Bookmarkable) => void;
   onToggleWatchStatus: (item: Watchable) => void;
   isDownloadEnabled: boolean;
-}
+};
 
-export function CommentarySearchResult(props: CommentarySearchResultProps): React.ReactElement {
+export function CommentarySearchResult(
+  props: CommentarySearchResultProps,
+): React.ReactElement {
   const { commentary, isDownloadEnabled } = props;
   const {
     role,
@@ -54,22 +56,33 @@ export function CommentarySearchResult(props: CommentarySearchResultProps): Reac
             </h3>
             <div className="tags">
               <span className="tag is-primary">Content Type: Commentary</span>
-              <span className="tag is-primary is-light">Role: {roleToString(role)}</span>
-              <span className="tag is-primary is-light" title={releaseDate.toLocaleString()}>
+              <span className="tag is-primary is-light">
+                Role: {roleToString(role)}
+              </span>
+              <span
+                className="tag is-primary is-light"
+                title={releaseDate.toLocaleString()}
+              >
                 Released: {releaseDate.toLocaleDateString()}
               </span>
               <span className="tag">Player: {staff}</span>
               <span className="tag">
                 K/D/A: {kills}/{deaths}/{assists}
               </span>
-              <span className="tag">Game Length: {gameLengthInMinutes} minutes</span>
+              <span className="tag">
+                Game Length: {gameLengthInMinutes} minutes
+              </span>
               <span className="tag">Carry Amount: {carry}</span>
               <span className="tag">Account Type: {type}</span>
             </div>
           </div>
           <div className="column is-5">
             <figure className="image is-16by9">
-              <img src={commentary.imageUrl} alt="Video thumbnail" className="thumbnail" />
+              <img
+                src={commentary.imageUrl}
+                alt="Video thumbnail"
+                className="thumbnail"
+              />
             </figure>
           </div>
           <div className="column is-12">
@@ -77,7 +90,10 @@ export function CommentarySearchResult(props: CommentarySearchResultProps): Reac
               <ToggleBookmarkButton {...buttonProps} />
               <ToggleWatchStatusButton {...buttonProps} />
               {isDownloadEnabled && (
-                <a href={getStreamUrl(commentary)} className="button bookmark is-small">
+                <a
+                  href={getStreamUrl(commentary)}
+                  className="button bookmark is-small"
+                >
                   <span className="icon is-small">
                     <FontAwesomeIcon icon={faCloudDownloadAlt} />
                   </span>

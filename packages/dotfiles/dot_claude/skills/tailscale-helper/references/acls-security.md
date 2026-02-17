@@ -14,35 +14,37 @@ The tailnet policy file controls all access in a Tailscale network. Written in h
 {
   "acls": [
     {
-      "action": "accept",       // Only "accept" supported (deny is default)
+      "action": "accept", // Only "accept" supported (deny is default)
       "src": ["source1", "source2"],
       "dst": ["dest1:port", "dest2:port"],
-      "proto": ""               // Optional: protocol filter
-    }
-  ]
+      "proto": "", // Optional: protocol filter
+    },
+  ],
 }
 ```
 
 ### Source Identifiers
 
-| Type | Example | Description |
-|------|---------|-------------|
-| User | `"user@example.com"` | Specific user account |
-| Group | `"group:engineering"` | Named user group |
-| Tag | `"tag:server"` | Tagged devices |
-| Autogroup | `"autogroup:member"` | Dynamic built-in groups |
-| IP/CIDR | `"100.64.0.1"`, `"10.0.0.0/8"` | Specific addresses |
-| Host alias | `"myserver"` | Named host from hosts section |
-| IP set | `"ipset:servers"` | Named IP collection |
+| Type       | Example                        | Description                   |
+| ---------- | ------------------------------ | ----------------------------- |
+| User       | `"user@example.com"`           | Specific user account         |
+| Group      | `"group:engineering"`          | Named user group              |
+| Tag        | `"tag:server"`                 | Tagged devices                |
+| Autogroup  | `"autogroup:member"`           | Dynamic built-in groups       |
+| IP/CIDR    | `"100.64.0.1"`, `"10.0.0.0/8"` | Specific addresses            |
+| Host alias | `"myserver"`                   | Named host from hosts section |
+| IP set     | `"ipset:servers"`              | Named IP collection           |
 
 ### Destination Format
 
 Destinations combine a target with port specifications:
+
 ```
 "target:ports"
 ```
 
 Port formats:
+
 - `*` - All ports
 - `80` - Single port
 - `80,443` - Multiple ports
@@ -52,12 +54,13 @@ Port formats:
 ### Protocol Filter
 
 Restrict ACL rules to specific protocols:
+
 ```jsonc
 {
   "action": "accept",
   "src": ["group:monitoring"],
-  "proto": "icmp",              // ICMP only
-  "dst": ["tag:server:*"]
+  "proto": "icmp", // ICMP only
+  "dst": ["tag:server:*"],
 }
 ```
 
@@ -66,6 +69,7 @@ Supported protocols: `tcp`, `udp`, `icmp`, or numeric protocol numbers (6=TCP, 1
 ### Autogroups
 
 Built-in dynamic groups:
+
 - `autogroup:member` - All human users in the tailnet
 - `autogroup:admin` - Tailnet administrators
 - `autogroup:owner` - Tailnet owners
@@ -80,23 +84,44 @@ Built-in dynamic groups:
 {
   "acls": [
     // Allow engineering team full access to servers
-    {"action": "accept", "src": ["group:engineering"], "dst": ["tag:server:*"]},
+    {
+      "action": "accept",
+      "src": ["group:engineering"],
+      "dst": ["tag:server:*"],
+    },
 
     // Allow web traffic to web servers
-    {"action": "accept", "src": ["autogroup:member"], "dst": ["tag:web:80,443"]},
+    {
+      "action": "accept",
+      "src": ["autogroup:member"],
+      "dst": ["tag:web:80,443"],
+    },
 
     // Allow monitoring ICMP pings
-    {"action": "accept", "src": ["group:ops"], "proto": "icmp", "dst": ["tag:server:*"]},
+    {
+      "action": "accept",
+      "src": ["group:ops"],
+      "proto": "icmp",
+      "dst": ["tag:server:*"],
+    },
 
     // Allow database access on specific port
-    {"action": "accept", "src": ["tag:app"], "dst": ["tag:db:5432"]},
+    { "action": "accept", "src": ["tag:app"], "dst": ["tag:db:5432"] },
 
     // Allow exit node usage
-    {"action": "accept", "src": ["group:remote"], "dst": ["autogroup:internet:*"]},
+    {
+      "action": "accept",
+      "src": ["group:remote"],
+      "dst": ["autogroup:internet:*"],
+    },
 
     // Allow specific subnet access
-    {"action": "accept", "src": ["group:office"], "dst": ["192.168.1.0/24:*"]}
-  ]
+    {
+      "action": "accept",
+      "src": ["group:office"],
+      "dst": ["192.168.1.0/24:*"],
+    },
+  ],
 }
 ```
 
@@ -112,56 +137,68 @@ Grants are the modern replacement for ACLs, combining network-layer and applicat
     {
       "src": ["group:engineering"],
       "dst": ["tag:server"],
-      "ip": ["*"],              // Network access (port/protocol)
-      "app": {                  // Application-layer capabilities
-        "tailscale.com/cap/ssh": [{
-          "users": ["root", "deploy"]
-        }]
-      }
-    }
-  ]
+      "ip": ["*"], // Network access (port/protocol)
+      "app": {
+        // Application-layer capabilities
+        "tailscale.com/cap/ssh": [
+          {
+            "users": ["root", "deploy"],
+          },
+        ],
+      },
+    },
+  ],
 }
 ```
 
 ### Grant vs ACL Comparison
 
-| Feature | ACLs | Grants |
-|---------|------|--------|
-| Network access | Yes | Yes (`ip` field) |
-| SSH access | Separate `ssh` section | Inline (`app` field) |
-| App capabilities | No | Yes (`app` field) |
-| Identity headers | No | Yes |
-| Recommended | Legacy | Modern |
+| Feature          | ACLs                   | Grants               |
+| ---------------- | ---------------------- | -------------------- |
+| Network access   | Yes                    | Yes (`ip` field)     |
+| SSH access       | Separate `ssh` section | Inline (`app` field) |
+| App capabilities | No                     | Yes (`app` field)    |
+| Identity headers | No                     | Yes                  |
+| Recommended      | Legacy                 | Modern               |
 
 ### Grant IP Field
 
 ```jsonc
 {
-  "grants": [{
-    "src": ["group:team"],
-    "dst": ["tag:server"],
-    "ip": ["80/tcp", "443/tcp", "*/icmp"]  // port/protocol pairs
-  }]
+  "grants": [
+    {
+      "src": ["group:team"],
+      "dst": ["tag:server"],
+      "ip": ["80/tcp", "443/tcp", "*/icmp"], // port/protocol pairs
+    },
+  ],
 }
 ```
 
 ### App Capabilities
 
 Grants can attach identity and capability information to connections:
+
 ```jsonc
 {
-  "grants": [{
-    "src": ["autogroup:member"],
-    "dst": ["tag:internal-app"],
-    "app": {
-      "tailscale.com/cap/drive": [{
-        "shares": ["docs", "projects"]
-      }],
-      "tailscale.com/cap/ssh": [{
-        "users": ["ubuntu"]
-      }]
-    }
-  }]
+  "grants": [
+    {
+      "src": ["autogroup:member"],
+      "dst": ["tag:internal-app"],
+      "app": {
+        "tailscale.com/cap/drive": [
+          {
+            "shares": ["docs", "projects"],
+          },
+        ],
+        "tailscale.com/cap/ssh": [
+          {
+            "users": ["ubuntu"],
+          },
+        ],
+      },
+    },
+  ],
 }
 ```
 
@@ -172,18 +209,13 @@ Named collections of users for role-based access:
 ```jsonc
 {
   "groups": {
-    "group:engineering": [
-      "alice@example.com",
-      "bob@example.com"
-    ],
+    "group:engineering": ["alice@example.com", "bob@example.com"],
     "group:ops": [
       "charlie@example.com",
-      "group:engineering"    // Groups can nest
+      "group:engineering", // Groups can nest
     ],
-    "group:contractors": [
-      "dave@contractor.com"
-    ]
-  }
+    "group:contractors": ["dave@contractor.com"],
+  },
 }
 ```
 
@@ -196,14 +228,15 @@ Tags identify device roles independent of user identity. Tagged devices lose use
 ### Tag Owners
 
 Define who can assign tags:
+
 ```jsonc
 {
   "tagOwners": {
-    "tag:server":     ["group:ops"],
-    "tag:web":        ["group:engineering"],
+    "tag:server": ["group:ops"],
+    "tag:web": ["group:engineering"],
     "tag:monitoring": ["group:ops", "tag:server"],
-    "tag:k8s":        ["tag:k8s-operator"]
-  }
+    "tag:k8s": ["tag:k8s-operator"],
+  },
 }
 ```
 
@@ -234,16 +267,17 @@ Named aliases for IP addresses and CIDR ranges:
 ```jsonc
 {
   "hosts": {
-    "prod-db":     "100.64.0.10",
+    "prod-db": "100.64.0.10",
     "staging-net": "10.10.0.0/16",
-    "dns-server":  "100.64.0.53"
-  }
+    "dns-server": "100.64.0.53",
+  },
 }
 ```
 
 Use host names in ACL sources and destinations:
+
 ```jsonc
-{"action": "accept", "src": ["group:dba"], "dst": ["prod-db:5432"]}
+{ "action": "accept", "src": ["group:dba"], "dst": ["prod-db:5432"] }
 ```
 
 ## IP Sets
@@ -254,8 +288,8 @@ Group multiple IP addresses and CIDRs:
 {
   "ipSets": {
     "ipset:internal-dns": ["100.64.0.53", "100.64.0.54"],
-    "ipset:prod-servers": ["100.64.0.10/30", "100.64.0.20/30"]
-  }
+    "ipset:prod-servers": ["100.64.0.10/30", "100.64.0.20/30"],
+  },
 }
 ```
 
@@ -269,41 +303,44 @@ Control Tailscale SSH access via the `ssh` section or grants.
 {
   "ssh": [
     {
-      "action": "accept",           // Immediate access
+      "action": "accept", // Immediate access
       "src": ["group:engineering"],
       "dst": ["tag:server"],
-      "users": ["root", "deploy"]   // Allowed SSH usernames
+      "users": ["root", "deploy"], // Allowed SSH usernames
     },
     {
-      "action": "check",            // Require re-authentication
+      "action": "check", // Require re-authentication
       "src": ["group:contractors"],
       "dst": ["tag:staging"],
       "users": ["deploy"],
-      "checkPeriod": "12h"          // Re-auth interval (default: 12h)
-    }
-  ]
+      "checkPeriod": "12h", // Re-auth interval (default: 12h)
+    },
+  ],
 }
 ```
 
 ### SSH Action Types
 
-| Action | Behavior |
-|--------|----------|
+| Action   | Behavior                                     |
+| -------- | -------------------------------------------- |
 | `accept` | Immediate SSH access without additional auth |
-| `check` | Require identity provider re-authentication |
+| `check`  | Require identity provider re-authentication  |
 
 ### SSH Environment Variables
 
 Allow forwarding of specific environment variables:
+
 ```jsonc
 {
-  "ssh": [{
-    "action": "accept",
-    "src": ["group:dev"],
-    "dst": ["tag:server"],
-    "users": ["deploy"],
-    "acceptEnv": ["TERM", "LANG", "LC_*"]
-  }]
+  "ssh": [
+    {
+      "action": "accept",
+      "src": ["group:dev"],
+      "dst": ["tag:server"],
+      "users": ["deploy"],
+      "acceptEnv": ["TERM", "LANG", "LC_*"],
+    },
+  ],
 }
 ```
 
@@ -315,16 +352,20 @@ Enable SSH session recording for audit and compliance. Configure in the admin co
 
 ```jsonc
 {
-  "grants": [{
-    "src": ["group:engineering"],
-    "dst": ["tag:server"],
-    "app": {
-      "tailscale.com/cap/ssh": [{
-        "users": ["root", "deploy"],
-        "checkPeriod": "12h"
-      }]
-    }
-  }]
+  "grants": [
+    {
+      "src": ["group:engineering"],
+      "dst": ["tag:server"],
+      "app": {
+        "tailscale.com/cap/ssh": [
+          {
+            "users": ["root", "deploy"],
+            "checkPeriod": "12h",
+          },
+        ],
+      },
+    },
+  ],
 }
 ```
 
@@ -336,12 +377,12 @@ Automatically approve subnet routes and exit nodes without manual admin action:
 {
   "autoApprovers": {
     "routes": {
-      "10.0.0.0/8":      ["tag:subnet-router"],
-      "192.168.0.0/16":  ["tag:office-router"],
-      "0.0.0.0/0":       ["tag:exit-node"]      // Exit node route
+      "10.0.0.0/8": ["tag:subnet-router"],
+      "192.168.0.0/16": ["tag:office-router"],
+      "0.0.0.0/0": ["tag:exit-node"], // Exit node route
     },
-    "exitNode": ["tag:exit-node"]
-  }
+    "exitNode": ["tag:exit-node"],
+  },
 }
 ```
 
@@ -356,22 +397,24 @@ Apply extra attributes to devices matching specific conditions:
   "nodeAttrs": [
     {
       "target": ["tag:server"],
-      "attr": ["funnel"]           // Allow Funnel access
+      "attr": ["funnel"], // Allow Funnel access
     },
     {
       "target": ["autogroup:member"],
-      "attr": ["mullvad"]          // Allow Mullvad exit nodes
+      "attr": ["mullvad"], // Allow Mullvad exit nodes
     },
     {
       "target": ["*"],
       "app": {
-        "tailscale.com/app-connectors": [{
-          "connectors": ["tag:connector"],
-          "domains": ["*.internal.example.com"]
-        }]
-      }
-    }
-  ]
+        "tailscale.com/app-connectors": [
+          {
+            "connectors": ["tag:connector"],
+            "domains": ["*.internal.example.com"],
+          },
+        ],
+      },
+    },
+  ],
 }
 ```
 
@@ -384,21 +427,24 @@ Define device posture conditions for conditional access:
   "postures": {
     "posture:secure-device": [
       "node:os IN ['macos', 'windows']",
-      "node:tsVersion >= '1.90'"
-    ]
-  }
+      "node:tsVersion >= '1.90'",
+    ],
+  },
 }
 ```
 
 Use postures in grants:
+
 ```jsonc
 {
-  "grants": [{
-    "src": ["group:engineering"],
-    "dst": ["tag:prod"],
-    "ip": ["*"],
-    "srcPosture": ["posture:secure-device"]
-  }]
+  "grants": [
+    {
+      "src": ["group:engineering"],
+      "dst": ["tag:prod"],
+      "ip": ["*"],
+      "srcPosture": ["posture:secure-device"],
+    },
+  ],
 }
 ```
 
@@ -412,22 +458,22 @@ Validate ACL rules with assertions:
     {
       "src": "alice@example.com",
       "accept": ["tag:web:80", "tag:web:443"],
-      "deny": ["tag:db:5432"]
+      "deny": ["tag:db:5432"],
     },
     {
       "src": "tag:app",
       "accept": ["tag:db:5432"],
-      "deny": ["tag:web:22"]
-    }
+      "deny": ["tag:web:22"],
+    },
   ],
   "sshTests": [
     {
       "src": "alice@example.com",
       "dst": ["tag:server"],
       "accept": ["root"],
-      "deny": ["admin"]
-    }
-  ]
+      "deny": ["admin"],
+    },
+  ],
 }
 ```
 
@@ -439,14 +485,14 @@ Pre-authentication keys for non-interactive device registration.
 
 ### Key Types
 
-| Type | Description | Use Case |
-|------|-------------|----------|
-| **One-off** | Single use, auto-revoked | Cloud server provisioning |
-| **Reusable** | Multiple uses | Fleet deployment (guard carefully) |
-| **Ephemeral** | Device auto-removed when offline | Containers, Lambda, CI |
-| **Pre-approved** | Skip device approval | Automated provisioning |
-| **Tagged** | Apply tags automatically | Infrastructure deployment |
-| **Pre-signed** | For Tailnet Lock environments | Locked-down networks |
+| Type             | Description                      | Use Case                           |
+| ---------------- | -------------------------------- | ---------------------------------- |
+| **One-off**      | Single use, auto-revoked         | Cloud server provisioning          |
+| **Reusable**     | Multiple uses                    | Fleet deployment (guard carefully) |
+| **Ephemeral**    | Device auto-removed when offline | Containers, Lambda, CI             |
+| **Pre-approved** | Skip device approval             | Automated provisioning             |
+| **Tagged**       | Apply tags automatically         | Infrastructure deployment          |
+| **Pre-signed**   | For Tailnet Lock environments    | Locked-down networks               |
 
 ### Key Properties
 
@@ -472,6 +518,7 @@ tailscale lock sign tskey-auth-xxxxx
 ### OAuth Clients
 
 For automation and API access, use OAuth clients instead of auth keys:
+
 - Non-expiring credentials
 - Scope-based permissions
 - Support for client credentials flow
@@ -484,10 +531,12 @@ Create OAuth clients in the admin console under Settings > OAuth clients.
 ### Authentication
 
 Two methods:
+
 1. **API access tokens** - Created in admin console, expire after 90 days
 2. **OAuth clients** (recommended) - Non-expiring, scope-based
 
 ### Base URL
+
 ```
 https://api.tailscale.com/api/v2
 ```
@@ -495,6 +544,7 @@ https://api.tailscale.com/api/v2
 ### Key Endpoints
 
 **Devices:**
+
 ```bash
 # List devices
 curl -s -u "$TS_API_KEY:" https://api.tailscale.com/api/v2/tailnet/-/devices
@@ -523,6 +573,7 @@ curl -X POST -u "$TS_API_KEY:" \
 ```
 
 **Auth Keys:**
+
 ```bash
 # Create auth key
 curl -X POST -u "$TS_API_KEY:" \
@@ -541,6 +592,7 @@ curl -X DELETE -u "$TS_API_KEY:" \
 ```
 
 **DNS:**
+
 ```bash
 # Get DNS nameservers
 curl -s -u "$TS_API_KEY:" https://api.tailscale.com/api/v2/tailnet/-/dns/nameservers
@@ -558,6 +610,7 @@ curl -s -u "$TS_API_KEY:" https://api.tailscale.com/api/v2/tailnet/-/dns/prefere
 ```
 
 **ACL Policy:**
+
 ```bash
 # Get current policy
 curl -s -u "$TS_API_KEY:" https://api.tailscale.com/api/v2/tailnet/-/acl
@@ -575,6 +628,7 @@ curl -X POST -u "$TS_API_KEY:" \
 ```
 
 **OAuth Token:**
+
 ```bash
 # Get OAuth token
 curl -X POST \
@@ -584,15 +638,15 @@ curl -X POST \
 
 ### API Scopes (OAuth)
 
-| Scope | Description |
-|-------|-------------|
+| Scope          | Description                                |
+| -------------- | ------------------------------------------ |
 | `devices:core` | Read/write devices, authorize, manage tags |
-| `auth_keys` | Create and manage auth keys |
-| `routes` | Manage subnet routes |
-| `dns` | Manage DNS settings |
-| `acl` | Read/write ACL policy |
-| `services` | Manage Tailscale Services |
-| `logs:read` | Read network flow logs |
+| `auth_keys`    | Create and manage auth keys                |
+| `routes`       | Manage subnet routes                       |
+| `dns`          | Manage DNS settings                        |
+| `acl`          | Read/write ACL policy                      |
+| `services`     | Manage Tailscale Services                  |
+| `logs:read`    | Read network flow logs                     |
 
 ## Tailnet Lock
 
@@ -610,9 +664,11 @@ Cryptographic verification ensuring only signed nodes join the tailnet.
 1. Enable in admin console: Device Management > Enable Tailnet Lock
 2. Add signing nodes (minimum 2)
 3. Run on a signing node:
+
 ```bash
 tailscale lock init
 ```
+
 4. Store the 10 disablement secrets securely
 
 ### Operations
@@ -659,6 +715,7 @@ tailscale lock log
 ### Device Approval
 
 Require admin approval before new devices join:
+
 - Enable in admin console under Device Management
 - Mutually exclusive with Tailnet Lock
 - Use `pre-approved` auth keys to bypass approval for automated systems
@@ -666,6 +723,7 @@ Require admin approval before new devices join:
 ### Key Expiry
 
 Node keys expire after 180 days by default. Manage expiry:
+
 ```bash
 # Disable key expiry for a device (API)
 curl -X POST -u "$TS_API_KEY:" \
@@ -678,6 +736,7 @@ Tagged devices have key expiry disabled by default.
 ### Device Posture
 
 Check device security state before granting access:
+
 - OS version requirements
 - Tailscale version requirements
 - Custom posture attributes
@@ -685,6 +744,7 @@ Check device security state before granting access:
 ### Node Key Sealing (v1.90+)
 
 Hardware-backed protection for node keys using TPM (Trusted Platform Module):
+
 - **Linux:** Uses TPM 2.0 when available
 - **Windows:** Uses Windows TPM integration
 - **macOS:** Uses Secure Enclave
@@ -696,12 +756,14 @@ Prevents node key extraction even if device storage is compromised. GA as of v1.
 Tailscale automatically provisions Let's Encrypt certificates for `*.ts.net` domains.
 
 ### Automatic (via Serve/Funnel)
+
 ```bash
 tailscale serve 3000
 # Automatically provisions cert for device.tailnet.ts.net
 ```
 
 ### Manual
+
 ```bash
 tailscale cert myserver.tailnet-name.ts.net
 # Outputs myserver.tailnet-name.ts.net.crt and .key files
@@ -714,6 +776,7 @@ tailscale cert --cert-file=/etc/nginx/ssl/ts.crt \
 ### Rate Limits
 
 Let's Encrypt enforces rate limits. If exceeded, wait up to 34 hours. Use `--min-validity` to avoid unnecessary renewals:
+
 ```bash
 tailscale cert --min-validity=720h myserver.tailnet-name.ts.net
 ```
@@ -724,69 +787,102 @@ tailscale cert --min-validity=720h myserver.tailnet-name.ts.net
 {
   // User groups
   "groups": {
-    "group:engineering":  ["alice@example.com", "bob@example.com"],
-    "group:ops":          ["charlie@example.com"],
-    "group:contractors":  ["dave@contractor.com"]
+    "group:engineering": ["alice@example.com", "bob@example.com"],
+    "group:ops": ["charlie@example.com"],
+    "group:contractors": ["dave@contractor.com"],
   },
 
   // Tag ownership
   "tagOwners": {
-    "tag:server":     ["group:ops"],
-    "tag:web":        ["group:engineering"],
-    "tag:db":         ["group:ops"],
+    "tag:server": ["group:ops"],
+    "tag:web": ["group:engineering"],
+    "tag:db": ["group:ops"],
     "tag:monitoring": ["group:ops"],
-    "tag:exit-node":  ["group:ops"],
-    "tag:k8s":        ["tag:k8s-operator"],
-    "tag:k8s-operator": ["group:ops"]
+    "tag:exit-node": ["group:ops"],
+    "tag:k8s": ["tag:k8s-operator"],
+    "tag:k8s-operator": ["group:ops"],
   },
 
   // Host aliases
   "hosts": {
-    "prod-db": "100.64.0.10"
+    "prod-db": "100.64.0.10",
   },
 
   // Access rules
   "acls": [
     // Ops: full access everywhere
-    {"action": "accept", "src": ["group:ops"], "dst": ["*:*"]},
+    { "action": "accept", "src": ["group:ops"], "dst": ["*:*"] },
 
     // Engineering: access web and app servers
-    {"action": "accept", "src": ["group:engineering"], "dst": ["tag:web:*", "tag:server:22,80,443"]},
+    {
+      "action": "accept",
+      "src": ["group:engineering"],
+      "dst": ["tag:web:*", "tag:server:22,80,443"],
+    },
 
     // Web servers can reach databases
-    {"action": "accept", "src": ["tag:web"], "dst": ["tag:db:5432,3306"]},
+    { "action": "accept", "src": ["tag:web"], "dst": ["tag:db:5432,3306"] },
 
     // Monitoring can ping everything
-    {"action": "accept", "src": ["tag:monitoring"], "proto": "icmp", "dst": ["*:*"]},
-    {"action": "accept", "src": ["tag:monitoring"], "dst": ["*:9090,9100,3000"]},
+    {
+      "action": "accept",
+      "src": ["tag:monitoring"],
+      "proto": "icmp",
+      "dst": ["*:*"],
+    },
+    {
+      "action": "accept",
+      "src": ["tag:monitoring"],
+      "dst": ["*:9090,9100,3000"],
+    },
 
     // Allow exit node usage for remote workers
-    {"action": "accept", "src": ["group:contractors"], "dst": ["autogroup:internet:*"]},
+    {
+      "action": "accept",
+      "src": ["group:contractors"],
+      "dst": ["autogroup:internet:*"],
+    },
 
     // K8s operator management
-    {"action": "accept", "src": ["tag:k8s-operator"], "dst": ["tag:k8s:*"]}
+    { "action": "accept", "src": ["tag:k8s-operator"], "dst": ["tag:k8s:*"] },
   ],
 
   // SSH access
   "ssh": [
-    {"action": "accept", "src": ["group:ops"], "dst": ["tag:server"], "users": ["root", "deploy"]},
-    {"action": "check",  "src": ["group:engineering"], "dst": ["tag:server"], "users": ["deploy"], "checkPeriod": "12h"},
-    {"action": "accept", "src": ["group:ops"], "dst": ["tag:monitoring"], "users": ["root"]}
+    {
+      "action": "accept",
+      "src": ["group:ops"],
+      "dst": ["tag:server"],
+      "users": ["root", "deploy"],
+    },
+    {
+      "action": "check",
+      "src": ["group:engineering"],
+      "dst": ["tag:server"],
+      "users": ["deploy"],
+      "checkPeriod": "12h",
+    },
+    {
+      "action": "accept",
+      "src": ["group:ops"],
+      "dst": ["tag:monitoring"],
+      "users": ["root"],
+    },
   ],
 
   // Auto-approve routes
   "autoApprovers": {
     "routes": {
-      "10.0.0.0/8":     ["tag:server"],
-      "192.168.0.0/16": ["tag:server"]
+      "10.0.0.0/8": ["tag:server"],
+      "192.168.0.0/16": ["tag:server"],
     },
-    "exitNode": ["tag:exit-node"]
+    "exitNode": ["tag:exit-node"],
   },
 
   // Node attributes
   "nodeAttrs": [
-    {"target": ["autogroup:member"], "attr": ["funnel"]},
-    {"target": ["autogroup:member"], "attr": ["mullvad"]}
+    { "target": ["autogroup:member"], "attr": ["funnel"] },
+    { "target": ["autogroup:member"], "attr": ["mullvad"] },
   ],
 
   // Policy tests
@@ -794,19 +890,19 @@ tailscale cert --min-validity=720h myserver.tailnet-name.ts.net
     {
       "src": "alice@example.com",
       "accept": ["tag:web:80", "tag:web:443", "tag:server:22"],
-      "deny": ["tag:db:5432"]
+      "deny": ["tag:db:5432"],
     },
     {
       "src": "tag:web",
       "accept": ["tag:db:5432"],
-      "deny": ["tag:server:22"]
+      "deny": ["tag:server:22"],
     },
     {
       "src": "dave@contractor.com",
       "accept": ["autogroup:internet:443"],
-      "deny": ["tag:server:22", "tag:db:5432"]
-    }
-  ]
+      "deny": ["tag:server:22", "tag:db:5432"],
+    },
+  ],
 }
 ```
 
@@ -899,6 +995,7 @@ Endpoint: https://api.tailscale.com/api/v2/tailnet/{tailnet}/scim/v2
 ```
 
 Supported identity providers:
+
 - Okta
 - Azure AD / Entra ID
 - OneLogin
@@ -911,6 +1008,7 @@ SCIM handles automatic user provisioning, deprovisioning, and group synchronizat
 Authenticate Tailscale without long-lived secrets using provider-native identity tokens:
 
 ### Supported Providers
+
 - AWS (IAM roles, ECS task roles)
 - GCP (Service account identity)
 - Azure (Managed identity)
@@ -918,6 +1016,7 @@ Authenticate Tailscale without long-lived secrets using provider-native identity
 - GitHub Actions (OIDC tokens)
 
 ### Docker Usage
+
 ```yaml
 services:
   tailscale:
@@ -928,6 +1027,7 @@ services:
 ```
 
 ### Benefits
+
 - No secret rotation required
 - Short-lived, auto-refreshed tokens
 - Tied to workload identity, not static credentials
@@ -936,6 +1036,7 @@ services:
 ## Security Best Practices
 
 ### Policy Design
+
 - Start with deny-all (empty ACLs section) and add rules incrementally
 - Use tags for infrastructure, groups for people
 - Prefer grants over legacy ACLs for new policies
@@ -943,6 +1044,7 @@ services:
 - Review policies regularly; use the Visual Policy Editor for audits
 
 ### Authentication
+
 - Use OAuth clients over API keys for automation
 - Set short expiry on auth keys (24h for one-time provisioning)
 - Use ephemeral keys for containers and ephemeral workloads
@@ -950,6 +1052,7 @@ services:
 - Rotate API keys before expiry (90-day limit)
 
 ### Network Security
+
 - Enable shields-up mode on devices that should not accept incoming connections
 - Use check-mode SSH for contractor and temporary access
 - Enable SSH session recording for compliance
@@ -957,6 +1060,7 @@ services:
 - Apply device posture checks for production access
 
 ### Key Management
+
 - Store Tailnet Lock disablement secrets in a password manager or hardware vault
 - Rotate signing nodes annually
 - Use pre-signed auth keys with Tailnet Lock

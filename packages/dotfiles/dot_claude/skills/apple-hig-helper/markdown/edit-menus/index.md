@@ -12,14 +12,14 @@ An edit menu lets people make changes to selected content in the current view, i
 
 ![A stylized representation of an edit menu extending from selected text. The image is tinted red to subtly reflect the red in the original six-color Apple logo.](https://docs-assets.developer.apple.com/published/2ee5b60d3d9877b65df7633d0321550a/components-edit-menu-intro%402x.png)
 
-In addition to text, an edit menu’s commands can apply to many types of selectable content, such as images, files, and objects like contact cards, charts, or map locations. In iOS, iPadOS, and visionOS, the system automatically detects the data type of a selected item, which can result in the addition of a related action to the edit menu. For example, selecting an address can add an item like *Get directions* to the edit menu.
+In addition to text, an edit menu’s commands can apply to many types of selectable content, such as images, files, and objects like contact cards, charts, or map locations. In iOS, iPadOS, and visionOS, the system automatically detects the data type of a selected item, which can result in the addition of a related action to the edit menu. For example, selecting an address can add an item like _Get directions_ to the edit menu.
 
 Edit menus can look and behave slightly differently in different platforms.
 
-* In iOS, the edit menu displays commands in a compact, horizontal list that appears when people touch and hold or double-tap to select content in a view. People can tap a chevron on the trailing edge to expand it into a [context menu](/design/human-interface-guidelines/context-menus).
-* In iPadOS, the edit menu looks different depending on how people reveal it. When people use touch interactions to reveal the menu, it uses the compact, horizontal appearance. In contrast, when people use a keyboard or pointing device to reveal it, the edit menu opens directly in a context menu.
-* In macOS, people can access editing commands in a context menu they can reveal while in an editing task, as well as through the app’s [Edit menu](/design/human-interface-guidelines/the-menu-bar#Edit-menu) in the menu bar.
-* In visionOS, people use the standard [pinch and hold](/design/human-interface-guidelines/gestures#Standard-gestures) gesture to open the edit menu as a horizontal bar, or they can open it in a context menu.
+- In iOS, the edit menu displays commands in a compact, horizontal list that appears when people touch and hold or double-tap to select content in a view. People can tap a chevron on the trailing edge to expand it into a [context menu](/design/human-interface-guidelines/context-menus).
+- In iPadOS, the edit menu looks different depending on how people reveal it. When people use touch interactions to reveal the menu, it uses the compact, horizontal appearance. In contrast, when people use a keyboard or pointing device to reveal it, the edit menu opens directly in a context menu.
+- In macOS, people can access editing commands in a context menu they can reveal while in an editing task, as well as through the app’s [Edit menu](/design/human-interface-guidelines/the-menu-bar#Edit-menu) in the menu bar.
+- In visionOS, people use the standard [pinch and hold](/design/human-interface-guidelines/gestures#Standard-gestures) gesture to open the edit menu as a horizontal bar, or they can open it in a context menu.
 
 Editing content is rare in tvOS and watchOS experiences, so the system doesn’t provide an edit menu in these platforms.
 
@@ -47,7 +47,7 @@ Editing content is rare in tvOS and watchOS experiences, so the system doesn’t
 
 ## [Platform considerations](/design/human-interface-guidelines/edit-menus#Platform-considerations)
 
-*No additional considerations for visionOS. Not supported in tvOS or watchOS.*
+_No additional considerations for visionOS. Not supported in tvOS or watchOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/edit-menus#iOS-iPadOS)
 
@@ -79,7 +79,7 @@ To learn about the order of items in a macOS app’s Edit menu, see [Edit menu](
 
 ## [Change log](/design/human-interface-guidelines/edit-menus#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| June 21, 2023 | Updated to include guidance for visionOS. |
+| Date               | Changes                                                       |
+| ------------------ | ------------------------------------------------------------- |
+| June 21, 2023      | Updated to include guidance for visionOS.                     |
 | September 14, 2022 | Added guidance on supporting both edit-menu styles in iPadOS. |

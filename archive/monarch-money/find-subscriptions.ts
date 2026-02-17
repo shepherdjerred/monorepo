@@ -5,7 +5,9 @@ import { Database } from "bun:sqlite";
 const db = new Database("transactions.db");
 
 // Find subscriptions using statistical patterns (no hardcoded list)
-const subscriptions = db.query(`
+const subscriptions = db
+  .query(
+    `
   WITH merchant_data AS (
     SELECT
       merchant,
@@ -84,10 +86,14 @@ const subscriptions = db.query(`
   WHERE subscription_score > 0
     AND latest_date >= date('now', '-90 days')  -- Only active subs (charged in last 90 days)
   ORDER BY avg_amount DESC, latest_date DESC
-`).all() as any[];
+`,
+  )
+  .all() as any[];
 
 // Add special handling for cursor usage (sum all cursor charges and calculate true monthly average)
-const cursorTotal = db.query(`
+const cursorTotal = db
+  .query(
+    `
   SELECT
     SUM(ABS(amount)) as total,
     COUNT(*) as count,
@@ -95,23 +101,43 @@ const cursorTotal = db.query(`
     MIN(date) as earliest_date
   FROM transactions
   WHERE merchant LIKE '%Cursor%' AND amount < 0 AND date >= date('now', '-90 days')
-`).get() as { total: number; count: number; latest_date: string; earliest_date: string } | null;
+`,
+  )
+  .get() as {
+  total: number;
+  count: number;
+  latest_date: string;
+  earliest_date: string;
+} | null;
 
-const cursorSubscription = cursorTotal && cursorTotal.total > 0 ? {
-  merchant: "Cursor (All charges)",
-  category: "Software",
-  avg_amount: cursorTotal.total / 3, // Total for last 90 days / 3 months
-  latest_date: cursorTotal.latest_date,
-  estimated_next_charge: "~30 days",
-  transaction_count: cursorTotal.count,
-  avg_days_between: 30,
-} : null;
+const cursorSubscription =
+  cursorTotal && cursorTotal.total > 0
+    ? {
+        merchant: "Cursor (All charges)",
+        category: "Software",
+        avg_amount: cursorTotal.total / 3, // Total for last 90 days / 3 months
+        latest_date: cursorTotal.latest_date,
+        estimated_next_charge: "~30 days",
+        transaction_count: cursorTotal.count,
+        avg_days_between: 30,
+      }
+    : null;
 
 // Remove cursor and known monthly items from main subscriptions list
-const filteredSubscriptions = subscriptions.filter(s => !s.merchant.includes("Cursor") && !s.merchant.includes("Pagerduty") && !s.merchant.includes("Cloudflare") && !s.merchant.includes("Claude") && !s.merchant.includes("New York Times") && !s.merchant.includes("St Subscriptions"));
+const filteredSubscriptions = subscriptions.filter(
+  (s) =>
+    !s.merchant.includes("Cursor") &&
+    !s.merchant.includes("Pagerduty") &&
+    !s.merchant.includes("Cloudflare") &&
+    !s.merchant.includes("Claude") &&
+    !s.merchant.includes("New York Times") &&
+    !s.merchant.includes("St Subscriptions"),
+);
 
 // Add back the known monthly ones (consolidate Claude variants and add NYT, St Subscriptions)
-const monthlyToAdd = db.query(`
+const monthlyToAdd = db
+  .query(
+    `
   SELECT
     CASE
       WHEN merchant LIKE '%Claude%' THEN 'Claude AI Subscription'
@@ -135,13 +161,17 @@ const monthlyToAdd = db.query(`
     WHEN merchant LIKE '%St Subscriptions%' THEN 'Seattle Times (St Sub WA)'
     ELSE merchant
   END
-`).all() as any[];
+`,
+  )
+  .all() as any[];
 
 const allSubscriptions = [...filteredSubscriptions, ...monthlyToAdd];
 if (cursorSubscription) allSubscriptions.push(cursorSubscription as any);
 
 // Add Seattle Anxiety - sum all charges instead of individual entries
-const seattleTotal = db.query(`
+const seattleTotal = db
+  .query(
+    `
   SELECT
     'Seattle Anxiety' as merchant,
     'Medical' as category,
@@ -154,7 +184,9 @@ const seattleTotal = db.query(`
   WHERE merchant LIKE '%Seattle%Anxiety%'
     AND amount < 0
     AND date >= date('now', '-90 days')
-`).get() as any;
+`,
+  )
+  .get() as any;
 
 if (seattleTotal && seattleTotal.avg_amount > 0) {
   allSubscriptions.push(seattleTotal);
@@ -168,13 +200,19 @@ console.log("💳 Active Subscriptions (sorted by price):\n");
 if (finalSubscriptions.length === 0) {
   console.log("No subscriptions found.");
 } else {
-  console.log(`${"#".padEnd(3)} ${"Monthly".padEnd(10)} ${"Service".padEnd(30)} ${"Last Charged".padEnd(13)} ${"Est. Next Charge".padEnd(16)}\n`);
+  console.log(
+    `${"#".padEnd(3)} ${"Monthly".padEnd(10)} ${"Service".padEnd(30)} ${"Last Charged".padEnd(13)} ${"Est. Next Charge".padEnd(16)}\n`,
+  );
 
   let total = 0;
   finalSubscriptions.forEach((sub, i) => {
     const nextCharge = sub.estimated_next_charge;
-    console.log(`${(i + 1).toString().padEnd(3)} $${sub.avg_amount.toFixed(2).padStart(8)}  ${sub.merchant.substring(0, 28).padEnd(30)} ${sub.latest_date.padEnd(13)} ${nextCharge}`);
-    console.log(`   └─ ${sub.category} | ${sub.transaction_count}x | Every ~${sub.avg_days_between} days\n`);
+    console.log(
+      `${(i + 1).toString().padEnd(3)} $${sub.avg_amount.toFixed(2).padStart(8)}  ${sub.merchant.substring(0, 28).padEnd(30)} ${sub.latest_date.padEnd(13)} ${nextCharge}`,
+    );
+    console.log(
+      `   └─ ${sub.category} | ${sub.transaction_count}x | Every ~${sub.avg_days_between} days\n`,
+    );
     total += sub.avg_amount;
   });
 
@@ -186,11 +224,13 @@ if (finalSubscriptions.length === 0) {
 console.log("\n" + "=".repeat(70));
 console.log("💳 Recent Charges from Detected Subscriptions (last 30 days):\n");
 
-const detectedMerchants = subscriptions.map(s => s.merchant);
+const detectedMerchants = subscriptions.map((s) => s.merchant);
 
 if (detectedMerchants.length > 0) {
   const placeholders = detectedMerchants.map(() => "?").join(",");
-  const recentSubs = db.query(`
+  const recentSubs = db
+    .query(
+      `
     SELECT
       date,
       merchant,
@@ -201,14 +241,20 @@ if (detectedMerchants.length > 0) {
       AND date >= date('now', '-30 days')
       AND merchant IN (${placeholders})
     ORDER BY date DESC
-  `).all(...detectedMerchants) as any[];
+  `,
+    )
+    .all(...detectedMerchants) as any[];
 
   if (recentSubs.length > 0) {
-    recentSubs.forEach(txn => {
-      console.log(`${txn.date} | ${txn.merchant.padEnd(30)} | $${Math.abs(txn.amount).toFixed(2).padStart(8)} | ${txn.category}`);
+    recentSubs.forEach((txn) => {
+      console.log(
+        `${txn.date} | ${txn.merchant.padEnd(30)} | $${Math.abs(txn.amount).toFixed(2).padStart(8)} | ${txn.category}`,
+      );
     });
   } else {
-    console.log("No recent charges from detected subscriptions in the last 30 days.");
+    console.log(
+      "No recent charges from detected subscriptions in the last 30 days.",
+    );
   }
 } else {
   console.log("No subscriptions detected.");

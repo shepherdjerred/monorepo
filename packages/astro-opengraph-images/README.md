@@ -37,7 +37,6 @@ You've probably seen this in action when posting a link on Facebook, Twitter, Sl
 To better illustrate these steps, I've created a [video](https://www.loom.com/share/a66a65be8a4e48ec8612b78489db590d?sid=3e9f7cd6-68ec-49da-b942-75eb4608cb5e) following them to help others follow along.
 
 1. Add this integration to your Astro config:
-
    - Option 1: use the `astro` command:
 
      ```bash
@@ -129,7 +128,6 @@ To better illustrate these steps, I've created a [video](https://www.loom.com/sh
 1. Update your main Astro layout with the appropriate `meta` tags. The [Open Graph site](https://ogp.me/) has more information possible tags.
 
    The following `meta` tags must be defined:
-
    - `og:title`
      - This field may be used when generating images.
    - `og:type`
@@ -141,7 +139,6 @@ To better illustrate these steps, I've created a [video](https://www.loom.com/sh
      - Optional. This field may be used when generating images.
 
    Your site will fail to build if the tags above are not set.
-
    - Option 1: Use the [`astro-seo`](https://github.com/jonasmerlin/astro-seo) package:
 
      Install the `astro-seo` package:
@@ -203,7 +200,6 @@ To better illustrate these steps, I've created a [video](https://www.loom.com/sh
 1. Build your site. You should see a `.png` file next to each `.html` page in your `dist` folder. Double-check that the `og:image` proprety in your `.html` file matches the path to the `.png` file.
 
 1. Deploy your site. You can verify that your images are correct by:
-
    - Sending a link to your site in an application that supports Open Graph like iMessage, Slack, Discord, etc.
    - Visit [opengraph.xyz](http://opengraph.xyz/) and test your site.
 
@@ -314,7 +310,9 @@ export default defineConfig({
             name: "Roboto",
             weight: 400,
             style: "normal",
-            data: fs.readFileSync("node_modules/@fontsource/roboto/files/roboto-latin-400-normal.woff"),
+            data: fs.readFileSync(
+              "node_modules/@fontsource/roboto/files/roboto-latin-400-normal.woff",
+            ),
           },
         ],
         loadAdditionalAsset: async (languageCode, segment) => {

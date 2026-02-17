@@ -26,13 +26,17 @@ export function makeScreenshot(driver: WebDriver) {
       name: "screenshot.png",
       description: `Screenshot of the Pokémon game at ${date.toISOString()}`,
     });
-    const embed = new EmbedBuilder().setTitle("Pokémon Screenshot").setImage("attachment://screenshot.png");
+    const embed = new EmbedBuilder()
+      .setTitle("Pokémon Screenshot")
+      .setImage("attachment://screenshot.png");
     await interaction.reply({
       content: `Screenshot sent to ${channelMention(getConfig().bot.notifications.channel_id)}`,
       ephemeral: true,
     });
 
-    const channel = client.channels.cache.get(getConfig().bot.notifications.channel_id);
+    const channel = client.channels.cache.get(
+      getConfig().bot.notifications.channel_id,
+    );
     if (channel) {
       await (channel as TextChannel).send({
         content: `Screenshot taken by ${userMention(interaction.user.id)} at ${time(date)}`,
@@ -40,7 +44,10 @@ export function makeScreenshot(driver: WebDriver) {
         files: [attachment],
       });
     } else {
-      await interaction.reply({ ephemeral: true, content: "There was an error" });
+      await interaction.reply({
+        ephemeral: true,
+        content: "There was an error",
+      });
     }
   };
 }

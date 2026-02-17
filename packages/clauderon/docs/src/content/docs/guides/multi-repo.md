@@ -17,12 +17,14 @@ When creating a multi-repository session:
 ## Availability
 
 **Supported Interfaces:**
+
 - ✅ Web UI - Full support for creating and managing multi-repo sessions
 - ✅ API - Programmatic multi-repo session creation
 - ❌ CLI - Not yet supported (single repo only)
 - ❌ TUI - Not yet supported (single repo only)
 
 **Backend Support:**
+
 - ✅ Docker - Full support
 - ✅ Zellij - Full support
 - ✅ Apple Container - Full support
@@ -86,6 +88,7 @@ curl -X POST http://localhost:3030/api/sessions \
 ```
 
 **Response:**
+
 ```json
 {
   "session_id": "abc123",
@@ -133,12 +136,14 @@ The **primary repository** is also the working directory when the session starts
 ## Mount Name Conventions
 
 Mount names must:
+
 - Be unique within the session
 - Contain only alphanumeric characters, hyphens, and underscores
 - Start with a letter
 - Be 1-32 characters long
 
 **Good mount names:**
+
 ```
 frontend
 backend
@@ -148,6 +153,7 @@ user_service
 ```
 
 **Invalid mount names:**
+
 ```
 Frontend    # Uppercase not recommended
 api/v2      # Slashes not allowed
@@ -182,6 +188,7 @@ echo $CLAUDERON_REPO_API      # /workspace/api
 ```
 
 Environment variable naming:
+
 - Prefix: `CLAUDERON_REPO_`
 - Suffix: Mount name in uppercase with hyphens converted to underscores
 - Example: `shared-lib` → `CLAUDERON_REPO_SHARED_LIB`
@@ -280,6 +287,7 @@ Note: Each subdirectory is treated as separate repo
 ### Kubernetes Backend
 
 Multi-repository support for Kubernetes backend is **not fully implemented**. The TODO exists in the codebase for:
+
 - Multiple persistent volume claims
 - Volume mount orchestration
 - Pod template updates
@@ -289,6 +297,7 @@ Multi-repository support for Kubernetes backend is **not fully implemented**. Th
 ### CLI and TUI
 
 Multi-repository sessions can only be created via:
+
 - Web UI
 - API
 
@@ -307,6 +316,7 @@ clauderon attach my-multi-repo-session
 Hard limit of **5 repositories** per session.
 
 **Reason:** Performance and complexity management. For more repositories, consider:
+
 - Using a monorepo
 - Creating multiple sessions
 - Using git submodules or worktrees
@@ -326,6 +336,7 @@ The primary repository (first in list) is the initial working directory. Agents 
 ### Repository Order
 
 The order of repositories matters:
+
 1. **First repository** - Primary, default working directory
 2. **Additional repositories** - Mounted at specified paths
 
@@ -334,6 +345,7 @@ Reorder in Web UI by drag-and-drop (if supported) or recreate session with diffe
 ### Mount Point Customization
 
 Currently, mount points are automatically determined:
+
 - Format: `/workspace/<mount-name>`
 - Not user-customizable
 
@@ -342,19 +354,23 @@ Currently, mount points are automatically determined:
 ### Backend-Specific Configuration
 
 **Docker:**
+
 - Each repository creates a bind mount or volume
 - Docker volume mode applies to all repositories
 - Permissions inherited from host filesystem
 
 **Zellij:**
+
 - Each repository accessible in filesystem
 - No special mounting needed (local execution)
 
 **Apple Container:**
+
 - Each repository mounted into container
 - Apple security prompts may appear for each directory
 
 **Sprites:**
+
 - Each repository cloned remotely on sprites.dev
 - Clone time proportional to number of repos
 - Network bandwidth considerations for large repos
@@ -366,6 +382,7 @@ Currently, mount points are automatically determined:
 **Problem:** Two repositories have conflicting mount names
 
 **Solution:**
+
 - Ensure mount names are unique
 - Use descriptive names that won't collide
 - Check existing session configuration before adding repos
@@ -375,11 +392,13 @@ Currently, mount points are automatically determined:
 **Problem:** Agent cannot access files in additional repositories
 
 **Causes:**
+
 - Host filesystem permissions too restrictive
 - Docker volume permissions mismatch
 - SELinux or AppArmor policies
 
 **Solution:**
+
 ```bash
 # Check permissions on host
 ls -la /path/to/repo
@@ -396,11 +415,13 @@ docker inspect <container-id>
 **Problem:** Agent cannot find files in additional repositories
 
 **Causes:**
+
 - Incorrect mount point in prompt
 - Repository not fully mounted
 - Container not yet ready
 
 **Solution:**
+
 - Verify mount points via API or Web UI
 - Use absolute paths starting with `/workspace/`
 - Check session health status before issuing commands
@@ -410,11 +431,13 @@ docker inspect <container-id>
 **Problem:** Git operations affect wrong repository
 
 **Causes:**
+
 - Working directory not changed
 - Relative paths used instead of absolute
 - Hook configuration applies to wrong repo
 
 **Solution:**
+
 ```bash
 # Always use absolute paths
 cd /workspace/main
@@ -431,6 +454,7 @@ git -C /workspace/lib status
 **Status:** Known limitation - not yet implemented
 
 **Workaround:**
+
 - Use Docker backend instead
 - Or create separate sessions per repository
 - Or wait for Kubernetes multi-repo support
@@ -440,11 +464,13 @@ git -C /workspace/lib status
 **Problem:** Session creation or agent responses slow with multiple repos
 
 **Causes:**
+
 - Large repositories (multiple GB each)
 - Slow network (for Sprites backend)
 - Many repositories (approaching 5 repo limit)
 
 **Solutions:**
+
 - Use sparse clones for large repos (future feature)
 - Limit to 2-3 repos if possible
 - Use local backends (Docker, Zellij) for faster setup
@@ -459,6 +485,7 @@ POST /api/sessions
 ```
 
 **Request Body:**
+
 ```json
 {
   "name": "session-name",
@@ -478,6 +505,7 @@ POST /api/sessions
 ```
 
 **Validation:**
+
 - `repositories` array: 1-5 items
 - `path`: Must be absolute path to Git repository
 - `mount_name`: Must be unique, alphanumeric with hyphens/underscores
@@ -489,6 +517,7 @@ GET /api/sessions/{id}
 ```
 
 **Response includes:**
+
 ```json
 {
   "id": "session-id",

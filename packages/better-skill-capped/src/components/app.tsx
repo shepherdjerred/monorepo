@@ -20,7 +20,7 @@ export type AppState = {
   watchStatuses: WatchStatus[];
   isDownloadEnabled: boolean;
   isTipsModalVisible: boolean;
-}
+};
 
 export default class App extends React.Component<unknown, AppState> {
   constructor(props: unknown) {
@@ -30,7 +30,8 @@ export default class App extends React.Component<unknown, AppState> {
       content: undefined,
       bookmarks: [],
       watchStatuses: [],
-      isDownloadEnabled: globalThis.localStorage.getItem("download") === "true" || false,
+      isDownloadEnabled:
+        globalThis.localStorage.getItem("download") === "true" || false,
       isTipsModalVisible: false,
     };
   }
@@ -42,16 +43,25 @@ export default class App extends React.Component<unknown, AppState> {
     const parser = new Parser();
     const content = parser.parse(manifest);
 
-    const bookmarkDatastore: BookmarkDatastore = new LocalStorageBookmarkDatastore(content);
-    const watchStatusesDatastore: WatchStatusDatastore = new LocalStorageWatchStatusDatastore();
+    const bookmarkDatastore: BookmarkDatastore =
+      new LocalStorageBookmarkDatastore(content);
+    const watchStatusesDatastore: WatchStatusDatastore =
+      new LocalStorageWatchStatusDatastore();
 
     this.setState({
       content: {
         ...content,
-        courses: content.courses.sort((left, right) => right.releaseDate.getTime() - left.releaseDate.getTime()),
-        videos: content.videos.sort((left, right) => right.releaseDate.getTime() - left.releaseDate.getTime()),
+        courses: content.courses.sort(
+          (left, right) =>
+            right.releaseDate.getTime() - left.releaseDate.getTime(),
+        ),
+        videos: content.videos.sort(
+          (left, right) =>
+            right.releaseDate.getTime() - left.releaseDate.getTime(),
+        ),
         commentaries: content.commentaries.sort(
-          (left, right) => right.releaseDate.getTime() - left.releaseDate.getTime(),
+          (left, right) =>
+            right.releaseDate.getTime() - left.releaseDate.getTime(),
         ),
       },
       bookmarkDatastore,
@@ -73,7 +83,8 @@ export default class App extends React.Component<unknown, AppState> {
       watchStatusesDatastore?.remove(currentWatchStatus);
     }
 
-    const newStatus = currentWatchStatus === undefined ? true : !currentWatchStatus.isWatched;
+    const newStatus =
+      currentWatchStatus === undefined ? true : !currentWatchStatus.isWatched;
 
     watchStatusesDatastore?.add({
       item,
@@ -86,7 +97,10 @@ export default class App extends React.Component<unknown, AppState> {
     });
   }
 
-  getWatchStatus(item: Bookmarkable, watchStatuses: WatchStatus[]): WatchStatus | undefined {
+  getWatchStatus(
+    item: Bookmarkable,
+    watchStatuses: WatchStatus[],
+  ): WatchStatus | undefined {
     return watchStatuses.find((watchStatus) => {
       return watchStatus.item.uuid === item.uuid;
     });
@@ -143,7 +157,13 @@ export default class App extends React.Component<unknown, AppState> {
     return (
       <React.Fragment>
         <Sentry.ErrorBoundary
-          fallback={<Hero title="Something went wrong" color={Color.RED} size={Size.FULL} />}
+          fallback={
+            <Hero
+              title="Something went wrong"
+              color={Color.RED}
+              size={Size.FULL}
+            />
+          }
           showDialog={true}
         >
           <Router

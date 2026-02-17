@@ -32,7 +32,12 @@ export function App() {
 
   useEffect(() => {
     socket.on("connect", () => {
-      addNotification({ id: randomId(), level: "Info", title: "Connected", message: "Connection established" });
+      addNotification({
+        id: randomId(),
+        level: "Info",
+        title: "Connected",
+        message: "Connection established",
+      });
       setConnection({
         ...connection,
         status: "connected",
@@ -40,7 +45,12 @@ export function App() {
     });
 
     socket.on("disconnect", () => {
-      addNotification({ id: randomId(), level: "Error", title: "Disconnected", message: "Connection lost" });
+      addNotification({
+        id: randomId(),
+        level: "Error",
+        title: "Disconnected",
+        message: "Connection lost",
+      });
       setConnection({
         ...connection,
         status: "disconnected",
@@ -98,7 +108,9 @@ export function App() {
   }
 
   function handleNotificationClose(id: string) {
-    setNotifications(lodash.filter(notifications, (notification) => notification.id !== id));
+    setNotifications(
+      lodash.filter(notifications, (notification) => notification.id !== id),
+    );
   }
 
   function handleScreenshot() {
@@ -130,10 +142,15 @@ export function App() {
     <>
       <div className="bg-white dark:bg-slate-900 min-h-screen min-w-full">
         <Container>
-          <div className="flex flex-col justify-center h-full gap-y-5">{page}</div>
+          <div className="flex flex-col justify-center h-full gap-y-5">
+            {page}
+          </div>
         </Container>
       </div>
-      <Notifications notifications={notifications} onClose={handleNotificationClose} />
+      <Notifications
+        notifications={notifications}
+        onClose={handleNotificationClose}
+      />
     </>
   );
 }

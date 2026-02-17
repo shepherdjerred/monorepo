@@ -24,7 +24,7 @@ export async function checkPreMatch() {
 
   console.log("calling spectator API");
   const playerStatus = await Promise.all(
-    _.map(playersNotInGame, getCurrentGame)
+    _.map(playersNotInGame, getCurrentGame),
   );
 
   console.log("filtering players not in game");
@@ -38,7 +38,7 @@ export async function checkPreMatch() {
     _.chain(getState().gamesStarted)
       .map((game) => game.matchId)
       .some((candidate) => candidate === game.gameId)
-      .value()
+      .value(),
   );
 
   console.log("sending messages");
@@ -62,7 +62,7 @@ export async function checkPreMatch() {
             } else {
               return { player, rank: undefined };
             }
-          })
+          }),
         );
 
         console.log("creating new state entries");
@@ -83,6 +83,6 @@ export async function checkPreMatch() {
           gamesStarted: _.concat(getState().gamesStarted, entry),
         });
       })
-      .value()
+      .value(),
   );
 }

@@ -15,7 +15,9 @@ export function getR2StorageRuleGroups(): PrometheusRuleSpecGroups[] {
               "R2 bucket {{ $labels.bucket }} is at {{ $value | humanize1024 }}B (80% of 1TB limit)",
             ),
           },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString("cloudflare_r2_storage_bytes > 800 * 1024 * 1024 * 1024"),
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "cloudflare_r2_storage_bytes > 800 * 1024 * 1024 * 1024",
+          ),
           for: "15m",
           labels: {
             severity: "warning",
@@ -29,7 +31,9 @@ export function getR2StorageRuleGroups(): PrometheusRuleSpecGroups[] {
               "R2 bucket {{ $labels.bucket }} has exceeded 1TB: {{ $value | humanize1024 }}B",
             ),
           },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString("cloudflare_r2_storage_bytes > 1024 * 1024 * 1024 * 1024"),
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "cloudflare_r2_storage_bytes > 1024 * 1024 * 1024 * 1024",
+          ),
           for: "15m",
           labels: {
             severity: "critical",
@@ -43,7 +47,9 @@ export function getR2StorageRuleGroups(): PrometheusRuleSpecGroups[] {
               "R2 exporter has not successfully scraped bucket {{ $labels.bucket }} metrics",
             ),
           },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString("cloudflare_r2_exporter_scrape_success == 0"),
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "cloudflare_r2_exporter_scrape_success == 0",
+          ),
           for: "30m",
           labels: {
             severity: "warning",

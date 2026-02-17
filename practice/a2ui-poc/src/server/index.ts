@@ -14,11 +14,13 @@ export function createApp() {
       origin: ["http://localhost:5173", "http://localhost:3000"],
       allowMethods: ["GET", "POST", "OPTIONS"],
       allowHeaders: ["Content-Type", "Authorization"],
-    })
+    }),
   );
 
   // Health check
-  app.get("/health", (c) => c.json({ status: "ok", timestamp: new Date().toISOString() }));
+  app.get("/health", (c) =>
+    c.json({ status: "ok", timestamp: new Date().toISOString() }),
+  );
 
   // A2UI streaming endpoint for topic exploration
   app.post("/api/a2ui/explore", async (c) => {
@@ -56,7 +58,7 @@ export function createApp() {
         "Content-Type": "application/x-ndjson",
         "Transfer-Encoding": "chunked",
         "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
+        Connection: "keep-alive",
       },
     });
   });
@@ -121,7 +123,7 @@ export function createApp() {
         "Content-Type": "application/x-ndjson",
         "Transfer-Encoding": "chunked",
         "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
+        Connection: "keep-alive",
       },
     });
   });

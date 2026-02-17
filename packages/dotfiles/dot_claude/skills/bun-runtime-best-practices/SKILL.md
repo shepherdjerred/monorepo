@@ -33,6 +33,7 @@ This agent teaches Bun-specific APIs and patterns to replace Node.js equivalents
 ### Use Bun.file() and Bun.write()
 
 **❌ Avoid: Node.js fs module**
+
 ```typescript
 import fs from "fs";
 import { promises as fs } from "fs/promises";
@@ -44,6 +45,7 @@ await fs.writeFile("file.txt", "content");
 ```
 
 **✅ Prefer: Bun.file() and Bun.write()**
+
 ```typescript
 // Reading files
 const file = Bun.file("file.txt");
@@ -88,12 +90,14 @@ for await (const chunk of file.stream()) {
 ### Use Bun.env Instead of process.env
 
 **❌ Avoid: process.env**
+
 ```typescript
 const apiKey = process.env.API_KEY;
 const port = process.env.PORT || "3000";
 ```
 
 **✅ Prefer: Bun.env**
+
 ```typescript
 const apiKey = Bun.env.API_KEY;
 const port = Bun.env.PORT ?? "3000";
@@ -123,6 +127,7 @@ const env = EnvSchema.parse(Bun.env);
 ### Use Bun.spawn() Instead of child_process
 
 **❌ Avoid: child_process**
+
 ```typescript
 import { spawn } from "child_process";
 import { exec } from "node:child_process";
@@ -131,6 +136,7 @@ const child = spawn("ls", ["-la"]);
 ```
 
 **✅ Prefer: Bun.spawn()**
+
 ```typescript
 // Simple command
 const proc = Bun.spawn(["ls", "-la"]);
@@ -177,7 +183,8 @@ const result = await new Response(proc2.stdout).text();
 
 ### Use import.meta.dir and import.meta.path
 
-**❌ Avoid: path module and __dirname**
+**❌ Avoid: path module and \_\_dirname**
+
 ```typescript
 import path from "path";
 import { dirname } from "node:path";
@@ -188,6 +195,7 @@ const joined = path.join(__dirname, "config.json");
 ```
 
 **✅ Prefer: import.meta**
+
 ```typescript
 // Get current directory
 const currentDir = import.meta.dir;
@@ -219,6 +227,7 @@ const configPath = `${import.meta.dir}/../config.json`;
 ### Use Bun.password, Bun.hash(), or Web Crypto API
 
 **❌ Avoid: crypto module**
+
 ```typescript
 import crypto from "crypto";
 import { createHash } from "node:crypto";
@@ -227,6 +236,7 @@ const hash = crypto.createHash("sha256").update("data").digest("hex");
 ```
 
 **✅ Prefer: Bun APIs**
+
 ```typescript
 // Password hashing
 const hashedPassword = await Bun.password.hash("my-password");
@@ -252,7 +262,7 @@ const encoder = new TextEncoder();
 const data = encoder.encode("data");
 const hashBuffer = await crypto.subtle.digest("SHA-256", data);
 const hashArray = Array.from(new Uint8Array(hashBuffer));
-const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 ```
 
 ## Binary Data
@@ -260,12 +270,14 @@ const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 ### Prefer Uint8Array Over Buffer
 
 **❌ Avoid: Buffer**
+
 ```typescript
 const buffer = Buffer.from("hello");
 const buffer2 = Buffer.alloc(10);
 ```
 
 **✅ Prefer: Uint8Array and Bun APIs**
+
 ```typescript
 // Create binary data
 const encoder = new TextEncoder();
@@ -285,12 +297,14 @@ await Bun.write("output.bin", bytes);
 ### Use ESM Imports, Never require()
 
 **❌ Avoid: CommonJS require**
+
 ```typescript
 const fs = require("fs");
 const { parse } = require("./parser");
 ```
 
 **✅ Prefer: ESM imports**
+
 ```typescript
 import fs from "fs";
 import { parse } from "./parser.ts";
@@ -483,6 +497,7 @@ const data = await sqlite`SELECT * FROM table WHERE id = ${123}`;
 ```
 
 **Benefits:**
+
 - **Zero dependencies**: No pg, mysql2, or better-sqlite3 packages needed
 - **Tagged template literals**: Safe parameterized queries, SQL injection protection
 - **Promise-based**: Modern async/await API throughout
@@ -545,7 +560,7 @@ const products = await db`
 `;
 
 // Bulk insert
-const values = products.map(p => [p.name, p.price]);
+const values = products.map((p) => [p.name, p.price]);
 await db`INSERT INTO products (name, price) VALUES ${values}`;
 
 // Close
@@ -584,11 +599,13 @@ db.close();
 ```
 
 **Choose `Bun.SQL` for:**
+
 - Unified API across PostgreSQL/MySQL/SQLite
 - Async/promise-based workflows
 - Modern tagged template literal syntax
 
 **Choose `bun:sqlite` for:**
+
 - Synchronous SQLite operations
 - Lower-level control
 - Existing code using prepare/run/get patterns
@@ -637,6 +654,7 @@ await redis.disconnect();
 ## Performance Benefits
 
 Bun 1.3 delivers exceptional performance:
+
 - **8x faster startup** than Node.js
 - **145k requests/second** HTTP throughput (vs Node.js 65k req/s)
 - **Written in Zig**: Close to metal performance
@@ -648,6 +666,7 @@ Bun 1.3 delivers exceptional performance:
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - Legacy Node.js code needs migration strategy
 - Performance requirements are critical
 - Third-party libraries depend on Node.js APIs

@@ -26,7 +26,7 @@ Launching begins when someone opens your app or game, includes an initial downlo
 
 ## [Launch screens](/design/human-interface-guidelines/launching#Launch-screens)
 
-*Not applicable for macOS, visionOS, or watchOS.*
+_Not applicable for macOS, visionOS, or watchOS._
 
 **Downplay the launch experience.** A launch screen isn’t part of an onboarding experience or a splash screen, and it isn’t an opportunity for artistic expression. A launch screen’s sole function is to enhance the perception of your experience as quick to launch and immediately ready to use.
 
@@ -38,7 +38,7 @@ Launching begins when someone opens your app or game, includes an initial downlo
 
 ## [Platform considerations](/design/human-interface-guidelines/launching#Platform-considerations)
 
-*No additional considerations for macOS or watchOS.*
+_No additional considerations for macOS or watchOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/launching#iOS-iPadOS)
 
@@ -82,7 +82,7 @@ Love at First Launch](https://developer.apple.com/videos/play/wwdc2017/816)
 
 ## [Change log](/design/human-interface-guidelines/launching#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date          | Changes                                       |
+| ------------- | --------------------------------------------- |
 | June 10, 2024 | Added guidance on displaying a splash screen. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
+| June 21, 2023 | Updated to include guidance for visionOS.     |

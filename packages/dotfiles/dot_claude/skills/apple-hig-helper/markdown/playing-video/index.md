@@ -16,10 +16,10 @@ The system provides video players designed for you to use to embed playback expe
 
 The system-provided video players support different aspect-ratio playback modes and in most platforms, Picture in Picture (PiP) viewing mode. Although people can switch modes during playback, by default, the system selects one of the following playback modes based on a video’s aspect ratio:
 
-* In full-screen — or *aspect-fill* — mode, the video scales to fill the display, and some edge cropping may occur. This mode is the default for wide video (2:1 through 2.40:1). For developer guidance, see [`resizeAspectFill`](/documentation/AVFoundation/AVLayerVideoGravity/resizeAspectFill).
-* In fit-to-screen — or *aspect* — mode, the entire video is visible onscreen, and letterboxing or pillarboxing occurs as needed. This mode is the default for standard video (4:3, 16:9, and anything up to 2:1) and ultrawide video (anything above 2.40:1). For developer guidance, see [`resizeAspect`](/documentation/AVFoundation/AVLayerVideoGravity/resizeAspect).
+- In full-screen — or _aspect-fill_ — mode, the video scales to fill the display, and some edge cropping may occur. This mode is the default for wide video (2:1 through 2.40:1). For developer guidance, see [`resizeAspectFill`](/documentation/AVFoundation/AVLayerVideoGravity/resizeAspectFill).
+- In fit-to-screen — or _aspect_ — mode, the entire video is visible onscreen, and letterboxing or pillarboxing occurs as needed. This mode is the default for standard video (4:3, 16:9, and anything up to 2:1) and ultrawide video (anything above 2.40:1). For developer guidance, see [`resizeAspect`](/documentation/AVFoundation/AVLayerVideoGravity/resizeAspect).
 
-In visionOS and tvOS, the built-in video player also provides *transport controls,* which let people perform playback tasks, like turning on subtitles or changing the audio language, and actions, like adding a show to a library or favoriting a clip. Below the transport controls, the video player displays *content tabs*, like Info, Episodes, or Chapters, that can provide supporting information and help streamline navigation. In visionOS, the transport controls appear as an [ornament](/design/human-interface-guidelines/ornaments).
+In visionOS and tvOS, the built-in video player also provides _transport controls,_ which let people perform playback tasks, like turning on subtitles or changing the audio language, and actions, like adding a show to a library or favoriting a clip. Below the transport controls, the video player displays _content tabs_, like Info, Episodes, or Chapters, that can provide supporting information and help streamline navigation. In visionOS, the transport controls appear as an [ornament](/design/human-interface-guidelines/ornaments).
 
 ## [Best practices](/design/human-interface-guidelines/playing-video#Best-practices)
 
@@ -29,8 +29,8 @@ In visionOS and tvOS, the built-in video player also provides *transport control
 
 Here are some examples that show how padding can affect video display on iPhone Xs.
 
-* [Result of padding a 4:3 video](#)
-* [Result of padding a 21:9 video](#)
+- [Result of padding a 4:3 video](#)
+- [Result of padding a 21:9 video](#)
 
 ![An illustration of iPhone in landscape orientation. A blue rectangle shows the AVKit safe area within the screen. Overlaying the safe area and extending beyond it on all sides is a purple rectangle that represents the 4:3 video area, which doesn't include any embedded padding.](https://docs-assets.developer.apple.com/published/d0ed256c73ed2b5b8cba4baf20d437e1/video-fill-4-3-right%402x.png)
 
@@ -102,7 +102,7 @@ After exiting playback, people remain in your app rather than returning to the T
 
 ## [Platform considerations](/design/human-interface-guidelines/playing-video#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, or macOS.*
+_No additional considerations for iOS, iPadOS, or macOS._
 
 ### [tvOS](/design/human-interface-guidelines/playing-video#tvOS)
 
@@ -114,9 +114,9 @@ After exiting playback, people remain in your app rather than returning to the T
 
 **Help people stay comfortable when playing video in your app.** Often, an app doesn’t control the content in the videos it plays, but you can help people stay comfortable by:
 
-* Letting them choose when to start playing a video
-* Using a small window for playback, letting people resize it if they want
-* Making sure people can see their surroundings during playback
+- Letting them choose when to start playing a video
+- Using a small window for playback, letting people resize it if they want
+- Making sure people can see their surroundings during playback
 
 **In a fully immersive experience, avoid letting virtual content obscure playback or transport controls.** In a fully immersive context, the system automatically places the video player at a predictable location that provides an optimal viewing experience. Use this location to help make sure that no virtual content occludes the default playback or transport controls in the ornament near the bottom of the player.
 
@@ -136,13 +136,13 @@ In watchOS, the system manages video playback. Apps can play short video clips w
 
 **Use the recommended sizes and encoding values for media assets.** In particular, avoid scaling video clips, which affects performance and results in a suboptimal appearance. The following table lists the recommended encoding and resolution values for video assets. The audio encoding values apply to both movies and audio-only assets.
 
-| Attribute | Value |
-| --- | --- |
-| Video codec | H.264 High Profile |
-| Video bit rate | 160 kbps at up to 30 fps |
-| Resolution (full screen) | 208x260 px (portrait orientation) |
-| Resolution (16:9) | 320x180 px (landscape orientation) |
-| Audio | 64 kbps HE-AAC |
+| Attribute                | Value                              |
+| ------------------------ | ---------------------------------- |
+| Video codec              | H.264 High Profile                 |
+| Video bit rate           | 160 kbps at up to 30 fps           |
+| Resolution (full screen) | 208x260 px (portrait orientation)  |
+| Resolution (16:9)        | 320x180 px (landscape orientation) |
+| Audio                    | 64 kbps HE-AAC                     |
 
 **Avoid creating a poster image that looks like a system control.** You want people to understand that they can tap a movie element for playback; you don’t want to confuse people by making movie elements look like something else.
 
@@ -180,7 +180,7 @@ Deliver a great playback experience on tvOS](https://developer.apple.com/videos/
 
 ## [Change log](/design/human-interface-guidelines/playing-video#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date               | Changes                                                      |
+| ------------------ | ------------------------------------------------------------ |
 | September 12, 2023 | Corrected the recommended width for a thumbnail in visionOS. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
+| June 21, 2023      | Updated to include guidance for visionOS.                    |

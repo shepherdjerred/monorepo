@@ -14,8 +14,8 @@ On devices that include the Always On display, the system can continue to displa
 
 In the Always On state, a device can continue to give people useful, glanceable information in a low-power, privacy-preserving way by dimming the display and minimizing onscreen motion. The system can display different items depending on the device.
 
-* On iPhone 14 Pro and iPhone 14 Pro Max, the system displays Lock Screen items like [Widgets](/design/human-interface-guidelines/widgets) and [Live Activities](/design/human-interface-guidelines/live-activities) when people set aside their device face up and stop interacting with it.
-* When people drop their wrist while wearing Apple Watch, the system dims the watch face, continuing to display the interface of the app as long as it’s either frontmost or running a background session.
+- On iPhone 14 Pro and iPhone 14 Pro Max, the system displays Lock Screen items like [Widgets](/design/human-interface-guidelines/widgets) and [Live Activities](/design/human-interface-guidelines/live-activities) when people set aside their device face up and stop interacting with it.
+- When people drop their wrist while wearing Apple Watch, the system dims the watch face, continuing to display the interface of the app as long as it’s either frontmost or running a background session.
 
 On both devices, the system displays notifications while in Always On, and people can tap the display to exit Always On and resume interactions.
 
@@ -33,7 +33,7 @@ On both devices, the system displays notifications while in Always On, and peopl
 
 ## [Platform considerations](/design/human-interface-guidelines/always-on#Platform-considerations)
 
-*No additional considerations for iOS or watchOS. Not supported in iPadOS, macOS, tvOS, or visionOS.*
+_No additional considerations for iOS or watchOS. Not supported in iPadOS, macOS, tvOS, or visionOS._
 
 ## [Resources](/design/human-interface-guidelines/always-on#Resources)
 
@@ -61,7 +61,7 @@ What's new in SwiftUI](https://developer.apple.com/videos/play/wwdc2021/10018)
 
 ## [Change log](/design/human-interface-guidelines/always-on#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| September 12, 2023 | Updated intro image artwork. |
+| Date               | Changes                                                                                  |
+| ------------------ | ---------------------------------------------------------------------------------------- |
+| September 12, 2023 | Updated intro image artwork.                                                             |
 | September 23, 2022 | Expanded guidance to cover the Always On display on iPhone 14 Pro and iPhone 14 Pro Max. |

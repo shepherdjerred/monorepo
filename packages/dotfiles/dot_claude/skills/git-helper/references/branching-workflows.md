@@ -16,6 +16,7 @@ main ─────●───●───●───●───●───
 **When to use**: CI/CD pipelines, small-to-medium teams, rapid iteration, microservices.
 
 **Key practices**:
+
 - Feature flags to hide incomplete work
 - Short-lived branches (< 2 days)
 - Merge to main at least daily
@@ -45,6 +46,7 @@ main ─────●───────●─────────●─
 **When to use**: Web applications, SaaS, open-source projects, teams that deploy frequently.
 
 **Key practices**:
+
 - `main` is always deployable
 - Branch from `main` for any change
 - Open PR early for discussion
@@ -77,6 +79,7 @@ develop ──●──●──●──●──●──●──●──●
 **When to use**: Packaged software with formal releases, long release cycles, need for multiple supported versions, large teams.
 
 **Key practices**:
+
 - `main` contains production-ready code with version tags
 - `develop` is the integration branch for features
 - `release/*` branches for release stabilization
@@ -107,14 +110,14 @@ git switch develop && git merge hotfix/critical-fix
 
 ### Choosing a Strategy
 
-| Factor | Trunk-Based | GitHub Flow | GitFlow |
-|--------|------------|-------------|---------|
-| Team size | Any | Small-Medium | Medium-Large |
-| Release cadence | Continuous | Frequent | Scheduled |
-| Deploy frequency | Multiple/day | Daily-Weekly | Per release |
-| Complexity | Low | Low | High |
-| CI/CD maturity | Required | Recommended | Optional |
-| Multiple versions | No | No | Yes |
+| Factor            | Trunk-Based  | GitHub Flow  | GitFlow      |
+| ----------------- | ------------ | ------------ | ------------ |
+| Team size         | Any          | Small-Medium | Medium-Large |
+| Release cadence   | Continuous   | Frequent     | Scheduled    |
+| Deploy frequency  | Multiple/day | Daily-Weekly | Per release  |
+| Complexity        | Low          | Low          | High         |
+| CI/CD maturity    | Required     | Recommended  | Optional     |
+| Multiple versions | No           | No           | Yes          |
 
 ## Commit Conventions
 
@@ -132,21 +135,22 @@ The standard format adopted by Angular, Vue, and many open-source projects:
 
 **Types**:
 
-| Type | Purpose |
-|------|---------|
-| `feat` | New feature (correlates with MINOR in semver) |
-| `fix` | Bug fix (correlates with PATCH in semver) |
-| `docs` | Documentation only |
-| `style` | Formatting, semicolons, etc. (not CSS) |
-| `refactor` | Code change that neither fixes nor adds |
-| `perf` | Performance improvement |
-| `test` | Adding or correcting tests |
-| `chore` | Build process, auxiliary tools |
-| `ci` | CI configuration changes |
-| `build` | Build system or external dependency changes |
-| `revert` | Reverts a previous commit |
+| Type       | Purpose                                       |
+| ---------- | --------------------------------------------- |
+| `feat`     | New feature (correlates with MINOR in semver) |
+| `fix`      | Bug fix (correlates with PATCH in semver)     |
+| `docs`     | Documentation only                            |
+| `style`    | Formatting, semicolons, etc. (not CSS)        |
+| `refactor` | Code change that neither fixes nor adds       |
+| `perf`     | Performance improvement                       |
+| `test`     | Adding or correcting tests                    |
+| `chore`    | Build process, auxiliary tools                |
+| `ci`       | CI configuration changes                      |
+| `build`    | Build system or external dependency changes   |
+| `revert`   | Reverts a previous commit                     |
 
 **Breaking changes**: Add `!` after type or `BREAKING CHANGE:` in footer:
+
 ```
 feat(api)!: remove deprecated endpoints
 
@@ -217,14 +221,14 @@ git push --force-with-lease origin feature/auth
 
 ### When to Use Which
 
-| Scenario | Recommendation |
-|----------|---------------|
-| Integrating feature branch to main | Merge (--no-ff or squash) |
-| Keeping feature branch up to date | Rebase onto main |
-| Shared/public branch | Never rebase (use merge) |
-| Personal/unshared branch | Rebase for clean history |
+| Scenario                            | Recommendation                 |
+| ----------------------------------- | ------------------------------ |
+| Integrating feature branch to main  | Merge (--no-ff or squash)      |
+| Keeping feature branch up to date   | Rebase onto main               |
+| Shared/public branch                | Never rebase (use merge)       |
+| Personal/unshared branch            | Rebase for clean history       |
 | Long-lived branch with many commits | Interactive rebase, then merge |
-| Simple 1-2 commit feature | Squash merge |
+| Simple 1-2 commit feature           | Squash merge                   |
 
 ### Squash and Merge
 
@@ -373,6 +377,7 @@ git tag -a v2.0.0-rc.1 -m "2.0.0 Release Candidate 1"
 ```
 
 **Best practices**:
+
 - Use annotated tags for releases (they store metadata)
 - Use lightweight tags for personal/temporary markers
 - Use signed tags for published/distributed software

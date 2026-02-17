@@ -19,19 +19,12 @@
     "listFiles": false,
     "traceResolution": false,
     "pretty": true,
-    "lib": [
-      "es6",
-      "dom"
-    ],
+    "lib": ["es6", "dom"],
     "baseUrl": ".",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules/**"
-  ],
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules/**"],
   "compileOnSave": true
 }

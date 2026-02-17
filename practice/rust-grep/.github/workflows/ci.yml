@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
   CARGO_TERM_COLOR: always
@@ -13,13 +13,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Build
-      run: cargo build --verbose --release
-    - name: Run tests
-      run: cargo test --verbose
-    - name: Upload artifact
-      uses: actions/upload-artifact@v2.2.3
-      with:
-        name: rust-grep
-        path: target/release/rust-grep
+      - uses: actions/checkout@v2
+      - name: Build
+        run: cargo build --verbose --release
+      - name: Run tests
+        run: cargo test --verbose
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2.2.3
+        with:
+          name: rust-grep
+          path: target/release/rust-grep

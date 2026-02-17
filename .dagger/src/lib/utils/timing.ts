@@ -2,8 +2,6 @@
  * Timing and logging utilities for CI/CD pipelines
  */
 
- 
-
 /**
  * Log a message with timestamp prefix
  *
@@ -21,7 +19,10 @@ export function logWithTimestamp(message: string): void {
  * @param fn - Async function to execute
  * @returns The result of the function
  */
-export async function withTiming<T>(name: string, fn: () => Promise<T>): Promise<T> {
+export async function withTiming<T>(
+  name: string,
+  fn: () => Promise<T>,
+): Promise<T> {
   const start = performance.now();
   logWithTimestamp(`Starting: ${name}`);
 

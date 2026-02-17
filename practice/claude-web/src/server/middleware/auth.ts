@@ -13,7 +13,10 @@ declare module "hono" {
  * Middleware that requires authentication.
  * Returns 401 if no valid session token is present.
  */
-export async function requireAuth(c: Context, next: Next): Promise<Response | void> {
+export async function requireAuth(
+  c: Context,
+  next: Next,
+): Promise<Response | void> {
   const token = getCookie(c, "session");
 
   if (!token) {

@@ -50,14 +50,14 @@ Chain functions with the pipe operator:
 
 ### Comparison Operators
 
-| Operator | Meaning |
-|----------|---------|
-| `eq` | Equal |
-| `ne` | Not equal |
-| `lt` | Less than |
-| `le` | Less than or equal |
-| `gt` | Greater than |
-| `ge` | Greater than or equal |
+| Operator | Meaning               |
+| -------- | --------------------- |
+| `eq`     | Equal                 |
+| `ne`     | Not equal             |
+| `lt`     | Less than             |
+| `le`     | Less than or equal    |
+| `gt`     | Greater than          |
+| `ge`     | Greater than or equal |
 
 ### Boolean Logic
 
@@ -101,41 +101,41 @@ Chain functions with the pipe operator:
 
 ### System Variables
 
-| Variable | Description | Example Values |
-|----------|-------------|----------------|
-| `.chezmoi.os` | Operating system | `darwin`, `linux`, `windows`, `freebsd` |
-| `.chezmoi.arch` | CPU architecture | `amd64`, `arm64`, `arm`, `386` |
-| `.chezmoi.hostname` | Hostname (up to first dot) | `macbook`, `server01` |
-| `.chezmoi.fqdnHostname` | Full hostname | `macbook.local`, `server01.example.com` |
-| `.chezmoi.username` | Current user | `jerred` |
-| `.chezmoi.uid` | User ID | `501` |
-| `.chezmoi.gid` | Group ID | `20` |
-| `.chezmoi.group` | Group name | `staff` |
-| `.chezmoi.homeDir` | Home directory | `/Users/jerred`, `/home/jerred` |
+| Variable                | Description                | Example Values                          |
+| ----------------------- | -------------------------- | --------------------------------------- |
+| `.chezmoi.os`           | Operating system           | `darwin`, `linux`, `windows`, `freebsd` |
+| `.chezmoi.arch`         | CPU architecture           | `amd64`, `arm64`, `arm`, `386`          |
+| `.chezmoi.hostname`     | Hostname (up to first dot) | `macbook`, `server01`                   |
+| `.chezmoi.fqdnHostname` | Full hostname              | `macbook.local`, `server01.example.com` |
+| `.chezmoi.username`     | Current user               | `jerred`                                |
+| `.chezmoi.uid`          | User ID                    | `501`                                   |
+| `.chezmoi.gid`          | Group ID                   | `20`                                    |
+| `.chezmoi.group`        | Group name                 | `staff`                                 |
+| `.chezmoi.homeDir`      | Home directory             | `/Users/jerred`, `/home/jerred`         |
 
 ### Path Variables
 
-| Variable | Description |
-|----------|-------------|
-| `.chezmoi.sourceDir` | Source directory absolute path |
-| `.chezmoi.destDir` | Destination directory (usually `~`) |
-| `.chezmoi.cacheDir` | Cache directory path |
-| `.chezmoi.configFile` | Config file path |
-| `.chezmoi.sourceFile` | Current template's relative source path |
-| `.chezmoi.targetFile` | Current template's absolute target path |
-| `.chezmoi.workingTree` | Source directory working tree |
-| `.chezmoi.executable` | Path to chezmoi binary |
-| `.chezmoi.pathSeparator` | `/` or `\` |
-| `.chezmoi.pathListSeparator` | `:` or `;` |
+| Variable                     | Description                             |
+| ---------------------------- | --------------------------------------- |
+| `.chezmoi.sourceDir`         | Source directory absolute path          |
+| `.chezmoi.destDir`           | Destination directory (usually `~`)     |
+| `.chezmoi.cacheDir`          | Cache directory path                    |
+| `.chezmoi.configFile`        | Config file path                        |
+| `.chezmoi.sourceFile`        | Current template's relative source path |
+| `.chezmoi.targetFile`        | Current template's absolute target path |
+| `.chezmoi.workingTree`       | Source directory working tree           |
+| `.chezmoi.executable`        | Path to chezmoi binary                  |
+| `.chezmoi.pathSeparator`     | `/` or `\`                              |
+| `.chezmoi.pathListSeparator` | `:` or `;`                              |
 
 ### Version Variables
 
-| Variable | Description |
-|----------|-------------|
+| Variable                   | Description            |
+| -------------------------- | ---------------------- |
 | `.chezmoi.version.version` | Chezmoi version string |
-| `.chezmoi.version.commit` | Git commit hash |
-| `.chezmoi.version.date` | Build timestamp |
-| `.chezmoi.version.builtBy` | Builder identifier |
+| `.chezmoi.version.commit`  | Git commit hash        |
+| `.chezmoi.version.date`    | Build timestamp        |
+| `.chezmoi.version.builtBy` | Builder identifier     |
 
 ### Linux-Specific Variables
 
@@ -206,70 +206,70 @@ chezmoi data --format=yaml
 
 ### Data Conversion
 
-| Function | Description |
-|----------|-------------|
-| `fromJson` | Parse JSON string to object |
-| `fromJsonc` | Parse JSONC (with comments) |
-| `fromToml` | Parse TOML string |
-| `fromYaml` | Parse YAML string |
-| `fromIni` | Parse INI string |
-| `toJson` | Convert to JSON string |
-| `toToml` | Convert to TOML string |
-| `toYaml` | Convert to YAML string |
-| `toIni` | Convert to INI string |
-| `toPrettyJson` | Convert to indented JSON |
+| Function       | Description                 |
+| -------------- | --------------------------- |
+| `fromJson`     | Parse JSON string to object |
+| `fromJsonc`    | Parse JSONC (with comments) |
+| `fromToml`     | Parse TOML string           |
+| `fromYaml`     | Parse YAML string           |
+| `fromIni`      | Parse INI string            |
+| `toJson`       | Convert to JSON string      |
+| `toToml`       | Convert to TOML string      |
+| `toYaml`       | Convert to YAML string      |
+| `toIni`        | Convert to INI string       |
+| `toPrettyJson` | Convert to indented JSON    |
 
 ### File and Path Operations
 
-| Function | Description |
-|----------|-------------|
-| `include` | Include another file's contents |
-| `glob` | Match files by pattern |
-| `stat` | Get file info (size, mode, etc.) |
-| `lstat` | Get file info (don't follow symlinks) |
-| `joinPath` | Join path components |
+| Function   | Description                                     |
+| ---------- | ----------------------------------------------- |
+| `include`  | Include another file's contents                 |
+| `glob`     | Match files by pattern                          |
+| `stat`     | Get file info (size, mode, etc.)                |
+| `lstat`    | Get file info (don't follow symlinks)           |
+| `joinPath` | Join path components                            |
 | `lookPath` | Find executable in PATH (returns path or empty) |
-| `output` | Run command and return stdout |
-| `exec` | Run command with exit code checking |
+| `output`   | Run command and return stdout                   |
+| `exec`     | Run command with exit code checking             |
 
 ### Text Processing
 
-| Function | Description |
-|----------|-------------|
-| `comment` | Prefix each line with comment string |
-| `replaceAllRegex` | Replace regex matches |
-| `quoteList` | Quote each element of a list |
-| `ensureLinePrefix` | Ensure lines have prefix |
-| `trimSuffix` | Remove suffix from string |
-| `trimPrefix` | Remove prefix from string |
+| Function           | Description                          |
+| ------------------ | ------------------------------------ |
+| `comment`          | Prefix each line with comment string |
+| `replaceAllRegex`  | Replace regex matches                |
+| `quoteList`        | Quote each element of a list         |
+| `ensureLinePrefix` | Ensure lines have prefix             |
+| `trimSuffix`       | Remove suffix from string            |
+| `trimPrefix`       | Remove prefix from string            |
 
 ### Cryptographic
 
-| Function | Description |
-|----------|-------------|
-| `decrypt` | Decrypt data |
-| `encrypt` | Encrypt data |
-| `hexEncode` | Hex-encode bytes |
+| Function    | Description       |
+| ----------- | ----------------- |
+| `decrypt`   | Decrypt data      |
+| `encrypt`   | Encrypt data      |
+| `hexEncode` | Hex-encode bytes  |
 | `hexDecode` | Hex-decode string |
-| `sha256sum` | SHA-256 hash |
+| `sha256sum` | SHA-256 hash      |
 
 ### GitHub Functions
 
-| Function | Description |
-|----------|-------------|
+| Function              | Description                   |
+| --------------------- | ----------------------------- |
 | `gitHubLatestRelease` | Get latest release for a repo |
-| `gitHubLatestTag` | Get latest tag |
-| `gitHubKeys` | Get user's public SSH keys |
+| `gitHubLatestTag`     | Get latest tag                |
+| `gitHubKeys`          | Get user's public SSH keys    |
 
 ### Init Functions (for `.chezmoi.toml.tmpl`)
 
-| Function | Description |
-|----------|-------------|
+| Function       | Description                  |
+| -------------- | ---------------------------- |
 | `promptString` | Prompt user for string input |
-| `promptBool` | Prompt for boolean |
-| `promptChoice` | Prompt with choices |
-| `promptInt` | Prompt for integer |
-| `stdinIsATTY` | Check if stdin is terminal |
+| `promptBool`   | Prompt for boolean           |
+| `promptChoice` | Prompt with choices          |
+| `promptInt`    | Prompt for integer           |
+| `stdinIsATTY`  | Check if stdin is terminal   |
 
 ### JQ Integration
 
@@ -341,16 +341,19 @@ Host {{ .host }}
 ### Passing Data to Templates
 
 Pass the entire data context:
+
 ```
 {{ template "fragment.tmpl" . }}
 ```
 
 Pass a dictionary:
+
 ```
 {{ template "fragment.tmpl" dict "key1" "value1" "key2" "value2" }}
 ```
 
 Pass a single value:
+
 ```
 {{ template "font-size.tmpl" 14 }}
 ```
@@ -497,99 +500,99 @@ Chezmoi includes the full sprig function library. Key categories:
 
 ### String Functions
 
-| Function | Description | Example |
-|----------|-------------|---------|
-| `trim` | Remove whitespace | `{{ " hello " \| trim }}` |
-| `trimAll` | Remove specific chars | `{{ trimAll "$" "$hello$" }}` |
-| `upper` | Uppercase | `{{ "hello" \| upper }}` |
-| `lower` | Lowercase | `{{ "HELLO" \| lower }}` |
-| `title` | Title case | `{{ "hello world" \| title }}` |
-| `repeat` | Repeat string | `{{ repeat 3 "ha" }}` |
-| `substr` | Substring | `{{ substr 0 5 "hello world" }}` |
-| `nospace` | Remove whitespace | `{{ nospace "h e l l o" }}` |
-| `contains` | Check contains | `{{ if contains "ell" "hello" }}` |
-| `hasPrefix` | Check prefix | `{{ if hasPrefix "he" "hello" }}` |
-| `hasSuffix` | Check suffix | `{{ if hasSuffix "lo" "hello" }}` |
-| `quote` | Wrap in quotes | `{{ "hello" \| quote }}` |
-| `squote` | Single-quote | `{{ "hello" \| squote }}` |
-| `replace` | Replace string | `{{ replace "old" "new" .input }}` |
-| `regexMatch` | Regex match | `{{ if regexMatch "^[a-z]+$" .input }}` |
-| `regexReplaceAll` | Regex replace | `{{ regexReplaceAll "[0-9]+" .input "NUM" }}` |
-| `indent` | Indent lines | `{{ .content \| indent 4 }}` |
-| `nindent` | Newline + indent | `{{ .content \| nindent 4 }}` |
+| Function          | Description           | Example                                       |
+| ----------------- | --------------------- | --------------------------------------------- |
+| `trim`            | Remove whitespace     | `{{ " hello " \| trim }}`                     |
+| `trimAll`         | Remove specific chars | `{{ trimAll "$" "$hello$" }}`                 |
+| `upper`           | Uppercase             | `{{ "hello" \| upper }}`                      |
+| `lower`           | Lowercase             | `{{ "HELLO" \| lower }}`                      |
+| `title`           | Title case            | `{{ "hello world" \| title }}`                |
+| `repeat`          | Repeat string         | `{{ repeat 3 "ha" }}`                         |
+| `substr`          | Substring             | `{{ substr 0 5 "hello world" }}`              |
+| `nospace`         | Remove whitespace     | `{{ nospace "h e l l o" }}`                   |
+| `contains`        | Check contains        | `{{ if contains "ell" "hello" }}`             |
+| `hasPrefix`       | Check prefix          | `{{ if hasPrefix "he" "hello" }}`             |
+| `hasSuffix`       | Check suffix          | `{{ if hasSuffix "lo" "hello" }}`             |
+| `quote`           | Wrap in quotes        | `{{ "hello" \| quote }}`                      |
+| `squote`          | Single-quote          | `{{ "hello" \| squote }}`                     |
+| `replace`         | Replace string        | `{{ replace "old" "new" .input }}`            |
+| `regexMatch`      | Regex match           | `{{ if regexMatch "^[a-z]+$" .input }}`       |
+| `regexReplaceAll` | Regex replace         | `{{ regexReplaceAll "[0-9]+" .input "NUM" }}` |
+| `indent`          | Indent lines          | `{{ .content \| indent 4 }}`                  |
+| `nindent`         | Newline + indent      | `{{ .content \| nindent 4 }}`                 |
 
 ### List Functions
 
-| Function | Description | Example |
-|----------|-------------|---------|
-| `list` | Create list | `{{ list "a" "b" "c" }}` |
-| `first` | First element | `{{ first .myList }}` |
-| `last` | Last element | `{{ last .myList }}` |
-| `rest` | All but first | `{{ rest .myList }}` |
-| `initial` | All but last | `{{ initial .myList }}` |
-| `append` | Append element | `{{ append .myList "d" }}` |
-| `prepend` | Prepend element | `{{ prepend .myList "z" }}` |
-| `concat` | Concatenate lists | `{{ concat .list1 .list2 }}` |
-| `has` | Contains element | `{{ if has "item" .myList }}` |
-| `without` | Remove elements | `{{ without .myList "bad" }}` |
-| `uniq` | Unique elements | `{{ .myList \| uniq }}` |
-| `sortAlpha` | Sort strings | `{{ .myList \| sortAlpha }}` |
-| `join` | Join with separator | `{{ join "," .myList }}` |
+| Function    | Description         | Example                       |
+| ----------- | ------------------- | ----------------------------- |
+| `list`      | Create list         | `{{ list "a" "b" "c" }}`      |
+| `first`     | First element       | `{{ first .myList }}`         |
+| `last`      | Last element        | `{{ last .myList }}`          |
+| `rest`      | All but first       | `{{ rest .myList }}`          |
+| `initial`   | All but last        | `{{ initial .myList }}`       |
+| `append`    | Append element      | `{{ append .myList "d" }}`    |
+| `prepend`   | Prepend element     | `{{ prepend .myList "z" }}`   |
+| `concat`    | Concatenate lists   | `{{ concat .list1 .list2 }}`  |
+| `has`       | Contains element    | `{{ if has "item" .myList }}` |
+| `without`   | Remove elements     | `{{ without .myList "bad" }}` |
+| `uniq`      | Unique elements     | `{{ .myList \| uniq }}`       |
+| `sortAlpha` | Sort strings        | `{{ .myList \| sortAlpha }}`  |
+| `join`      | Join with separator | `{{ join "," .myList }}`      |
 
 ### Dictionary Functions
 
-| Function | Description | Example |
-|----------|-------------|---------|
-| `dict` | Create dictionary | `{{ dict "key" "value" }}` |
-| `get` | Get value | `{{ get .myDict "key" }}` |
-| `set` | Set value | `{{ set .myDict "key" "val" }}` |
-| `hasKey` | Check key exists | `{{ if hasKey .myDict "key" }}` |
-| `keys` | Get all keys | `{{ keys .myDict }}` |
-| `values` | Get all values | `{{ values .myDict }}` |
-| `merge` | Merge dicts | `{{ merge .dict1 .dict2 }}` |
-| `pick` | Select keys | `{{ pick .myDict "k1" "k2" }}` |
-| `omit` | Exclude keys | `{{ omit .myDict "k1" "k2" }}` |
+| Function | Description       | Example                         |
+| -------- | ----------------- | ------------------------------- |
+| `dict`   | Create dictionary | `{{ dict "key" "value" }}`      |
+| `get`    | Get value         | `{{ get .myDict "key" }}`       |
+| `set`    | Set value         | `{{ set .myDict "key" "val" }}` |
+| `hasKey` | Check key exists  | `{{ if hasKey .myDict "key" }}` |
+| `keys`   | Get all keys      | `{{ keys .myDict }}`            |
+| `values` | Get all values    | `{{ values .myDict }}`          |
+| `merge`  | Merge dicts       | `{{ merge .dict1 .dict2 }}`     |
+| `pick`   | Select keys       | `{{ pick .myDict "k1" "k2" }}`  |
+| `omit`   | Exclude keys      | `{{ omit .myDict "k1" "k2" }}`  |
 
 ### Type Conversion Functions
 
-| Function | Description |
-|----------|-------------|
-| `toString` | Convert to string |
-| `toInt` | Convert to integer |
-| `toFloat64` | Convert to float |
-| `toBool` | Convert to boolean |
-| `toJson` | Convert to JSON string |
+| Function       | Description               |
+| -------------- | ------------------------- |
+| `toString`     | Convert to string         |
+| `toInt`        | Convert to integer        |
+| `toFloat64`    | Convert to float          |
+| `toBool`       | Convert to boolean        |
+| `toJson`       | Convert to JSON string    |
 | `toPrettyJson` | Convert to formatted JSON |
-| `toYaml` | Convert to YAML |
-| `toToml` | Convert to TOML |
+| `toYaml`       | Convert to YAML           |
+| `toToml`       | Convert to TOML           |
 
 ### Math Functions
 
-| Function | Description |
-|----------|-------------|
-| `add` | Addition |
-| `sub` | Subtraction |
-| `mul` | Multiplication |
-| `div` | Division |
-| `mod` | Modulo |
-| `max` | Maximum |
-| `min` | Minimum |
-| `ceil` | Ceiling |
-| `floor` | Floor |
-| `round` | Round |
+| Function | Description    |
+| -------- | -------------- |
+| `add`    | Addition       |
+| `sub`    | Subtraction    |
+| `mul`    | Multiplication |
+| `div`    | Division       |
+| `mod`    | Modulo         |
+| `max`    | Maximum        |
+| `min`    | Minimum        |
+| `ceil`   | Ceiling        |
+| `floor`  | Floor          |
+| `round`  | Round          |
 
 ### Date Functions
 
-| Function | Description | Example |
-|----------|-------------|---------|
-| `now` | Current time | `{{ now \| date "2006-01-02" }}` |
-| `date` | Format date | `{{ .date \| date "Mon Jan 2" }}` |
-| `dateModify` | Modify date | `{{ now \| dateModify "24h" }}` |
+| Function     | Description  | Example                           |
+| ------------ | ------------ | --------------------------------- |
+| `now`        | Current time | `{{ now \| date "2006-01-02" }}`  |
+| `date`       | Format date  | `{{ .date \| date "Mon Jan 2" }}` |
+| `dateModify` | Modify date  | `{{ now \| dateModify "24h" }}`   |
 
 ### Encoding Functions
 
-| Function | Description |
-|----------|-------------|
+| Function | Description   |
+| -------- | ------------- |
 | `b64enc` | Base64 encode |
 | `b64dec` | Base64 decode |
 | `b32enc` | Base32 encode |
@@ -597,9 +600,9 @@ Chezmoi includes the full sprig function library. Key categories:
 
 ### OS Functions
 
-| Function | Description | Example |
-|----------|-------------|---------|
-| `env` | Read env variable | `{{ env "HOME" }}` |
+| Function    | Description             | Example                       |
+| ----------- | ----------------------- | ----------------------------- |
+| `env`       | Read env variable       | `{{ env "HOME" }}`            |
 | `expandenv` | Expand `$VAR` in string | `{{ expandenv "$HOME/bin" }}` |
 
 ## Complete Template Examples

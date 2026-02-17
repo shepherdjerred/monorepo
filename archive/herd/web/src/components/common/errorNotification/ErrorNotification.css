@@ -1,11 +1,11 @@
 .error {
-    word-break: break-all;
+  word-break: break-all;
 }
 
 .error--title {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 .error--message {
-    font-size: 14px;
+  font-size: 14px;
 }

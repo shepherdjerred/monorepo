@@ -34,22 +34,22 @@ export class FactorioServer extends Construct {
       securityGroup.addIngressRule(
         Peer.anyIpv4(),
         Port.udp(factorioGamePort),
-        "Factorio"
+        "Factorio",
       );
       securityGroup.addEgressRule(
         Peer.anyIpv4(),
         Port.udp(factorioGamePort),
-        "Factorio"
+        "Factorio",
       );
       securityGroup.addIngressRule(
         Peer.anyIpv6(),
         Port.udp(factorioGamePort),
-        "Factorio"
+        "Factorio",
       );
       securityGroup.addEgressRule(
         Peer.anyIpv6(),
         Port.udp(factorioGamePort),
-        "Factorio"
+        "Factorio",
       );
 
       return securityGroup;

@@ -9,14 +9,20 @@
  *
  * This adapter accepts Mastra-style tool definitions and adapts them to VoltAgent.
  */
-import { createTool as voltAgentCreateTool, type ToolSchema } from "@voltagent/core";
+import {
+  createTool as voltAgentCreateTool,
+  type ToolSchema,
+} from "@voltagent/core";
 import type { z } from "zod";
 
 /**
  * Mastra-compatible tool options.
  * Accepts either `id` or `name` and either `inputSchema` or `parameters`.
  */
-export type MastraCompatibleToolOptions<T extends ToolSchema, O extends ToolSchema | undefined = undefined> = {
+export type MastraCompatibleToolOptions<
+  T extends ToolSchema,
+  O extends ToolSchema | undefined = undefined,
+> = {
   /** Tool ID (Mastra) - will be used as `name` */
   id?: string;
   /** Tool name (VoltAgent) */
@@ -34,16 +40,19 @@ export type MastraCompatibleToolOptions<T extends ToolSchema, O extends ToolSche
    * Accepts both Mastra-style (single ctx argument) and VoltAgent-style (args, options).
    * The adapter detects which style is being used based on function arity.
    */
-  execute: (ctx: z.infer<T>) => Promise<O extends ToolSchema ? z.infer<O> : unknown>;
+  execute: (
+    ctx: z.infer<T>,
+  ) => Promise<O extends ToolSchema ? z.infer<O> : unknown>;
 };
 
 /**
  * Create a VoltAgent tool from a Mastra-compatible definition.
  * This adapter handles the API differences between Mastra and VoltAgent.
  */
-export function createTool<T extends ToolSchema, O extends ToolSchema | undefined = undefined>(
-  options: MastraCompatibleToolOptions<T, O>
-) {
+export function createTool<
+  T extends ToolSchema,
+  O extends ToolSchema | undefined = undefined,
+>(options: MastraCompatibleToolOptions<T, O>) {
   const name = options.name ?? options.id;
   if (!name) {
     throw new Error("Tool must have either `name` or `id`");

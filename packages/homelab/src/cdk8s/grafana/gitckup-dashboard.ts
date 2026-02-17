@@ -38,7 +38,9 @@ export function createGitckupDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr("(count(gickup_repo_success == 1) / gickup_repos_discovered) * 100")
+          .expr(
+            "(count(gickup_repo_success == 1) / gickup_repos_discovered) * 100",
+          )
           .legendFormat("Success Rate"),
       )
       .unit("percent")
@@ -46,11 +48,13 @@ export function createGitckupDashboard() {
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "red" },
-          { value: 95, color: "yellow" },
-          { value: 99, color: "green" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "red" },
+            { value: 95, color: "yellow" },
+            { value: 99, color: "green" },
+          ]),
       )
       .gridPos({ x: 0, y: 1, w: 6, h: 4 }),
   );
@@ -71,11 +75,13 @@ export function createGitckupDashboard() {
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "red" },
-          { value: 95, color: "yellow" },
-          { value: 99, color: "green" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "red" },
+            { value: 95, color: "yellow" },
+            { value: 99, color: "green" },
+          ]),
       )
       .gridPos({ x: 6, y: 1, w: 6, h: 4 }),
   );
@@ -96,11 +102,13 @@ export function createGitckupDashboard() {
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "red" },
-          { value: 95, color: "yellow" },
-          { value: 99, color: "green" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "red" },
+            { value: 95, color: "yellow" },
+            { value: 99, color: "green" },
+          ]),
       )
       .gridPos({ x: 12, y: 1, w: 6, h: 4 }),
   );
@@ -113,17 +121,21 @@ export function createGitckupDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr("increase(gickup_jobs_started[25h]) <= increase(gickup_jobs_complete[25h])")
+          .expr(
+            "increase(gickup_jobs_started[25h]) <= increase(gickup_jobs_complete[25h])",
+          )
           .legendFormat("Status"),
       )
       .unit("short")
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.None)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "red" },
-          { value: 1, color: "green" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "red" },
+            { value: 1, color: "green" },
+          ]),
       )
       .gridPos({ x: 18, y: 1, w: 6, h: 4 }),
   );
@@ -137,7 +149,11 @@ export function createGitckupDashboard() {
       .title("Repositories Discovered")
       .description("Total number of repositories discovered")
       .datasource(prometheusDatasource)
-      .withTarget(new prometheus.DataqueryBuilder().expr("gickup_repos_discovered").legendFormat("Repos"))
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr("gickup_repos_discovered")
+          .legendFormat("Repos"),
+      )
       .unit("short")
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
@@ -150,7 +166,11 @@ export function createGitckupDashboard() {
       .title("Repositories Backed Up")
       .description("Number of repositories successfully backed up")
       .datasource(prometheusDatasource)
-      .withTarget(new prometheus.DataqueryBuilder().expr("count(gickup_repo_success == 1)").legendFormat("Success"))
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr("count(gickup_repo_success == 1)")
+          .legendFormat("Success"),
+      )
       .unit("short")
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
@@ -163,7 +183,11 @@ export function createGitckupDashboard() {
       .title("Total Sources")
       .description("Total number of backup sources configured")
       .datasource(prometheusDatasource)
-      .withTarget(new prometheus.DataqueryBuilder().expr("gickup_sources").legendFormat("Sources"))
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr("gickup_sources")
+          .legendFormat("Sources"),
+      )
       .unit("short")
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
@@ -176,7 +200,11 @@ export function createGitckupDashboard() {
       .title("Total Destinations")
       .description("Total number of backup destinations configured")
       .datasource(prometheusDatasource)
-      .withTarget(new prometheus.DataqueryBuilder().expr("gickup_destinations").legendFormat("Destinations"))
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr("gickup_destinations")
+          .legendFormat("Destinations"),
+      )
       .unit("short")
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
@@ -192,7 +220,11 @@ export function createGitckupDashboard() {
       .title("Jobs Started (7d)")
       .description("Total backup jobs started in the last 7 days")
       .datasource(prometheusDatasource)
-      .withTarget(new prometheus.DataqueryBuilder().expr("increase(gickup_jobs_started[7d])").legendFormat("Started"))
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr("increase(gickup_jobs_started[7d])")
+          .legendFormat("Started"),
+      )
       .unit("short")
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
@@ -206,7 +238,9 @@ export function createGitckupDashboard() {
       .description("Total backup jobs completed in the last 7 days")
       .datasource(prometheusDatasource)
       .withTarget(
-        new prometheus.DataqueryBuilder().expr("increase(gickup_jobs_complete[7d])").legendFormat("Completed"),
+        new prometheus.DataqueryBuilder()
+          .expr("increase(gickup_jobs_complete[7d])")
+          .legendFormat("Completed"),
       )
       .unit("short")
       .colorMode(common.BigValueColorMode.Value)
@@ -246,11 +280,13 @@ export function createGitckupDashboard() {
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 1, color: "yellow" },
-          { value: 5, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 1, color: "yellow" },
+            { value: 5, color: "red" },
+          ]),
       )
       .gridPos({ x: 18, y: 9, w: 6, h: 4 }),
   );
@@ -266,7 +302,9 @@ export function createGitckupDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr("(count(gickup_repo_success == 1) / gickup_repos_discovered) * 100")
+          .expr(
+            "(count(gickup_repo_success == 1) / gickup_repos_discovered) * 100",
+          )
           .legendFormat("Success Rate"),
       )
       .unit("percent")
@@ -274,11 +312,13 @@ export function createGitckupDashboard() {
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "red" },
-          { value: 95, color: "yellow" },
-          { value: 99, color: "green" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "red" },
+            { value: 95, color: "yellow" },
+            { value: 99, color: "green" },
+          ]),
       )
       .gridPos({ x: 0, y: 13, w: 12, h: 8 }),
   );
@@ -304,11 +344,13 @@ export function createGitckupDashboard() {
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "red" },
-          { value: 95, color: "yellow" },
-          { value: 99, color: "green" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "red" },
+            { value: 95, color: "yellow" },
+            { value: 99, color: "green" },
+          ]),
       )
       .gridPos({ x: 12, y: 13, w: 12, h: 8 }),
   );
@@ -322,8 +364,16 @@ export function createGitckupDashboard() {
       .title("Repositories Over Time")
       .description("Repositories discovered vs successfully backed up")
       .datasource(prometheusDatasource)
-      .withTarget(new prometheus.DataqueryBuilder().expr("gickup_repos_discovered").legendFormat("Discovered"))
-      .withTarget(new prometheus.DataqueryBuilder().expr("count(gickup_repo_success == 1)").legendFormat("Backed Up"))
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr("gickup_repos_discovered")
+          .legendFormat("Discovered"),
+      )
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr("count(gickup_repo_success == 1)")
+          .legendFormat("Backed Up"),
+      )
       .unit("short")
       .lineWidth(2)
       .fillOpacity(10)
@@ -336,11 +386,25 @@ export function createGitckupDashboard() {
       .title("Sources & Destinations Over Time")
       .description("Total vs completed sources and destinations")
       .datasource(prometheusDatasource)
-      .withTarget(new prometheus.DataqueryBuilder().expr("gickup_sources").legendFormat("Sources Total"))
-      .withTarget(new prometheus.DataqueryBuilder().expr("gickup_sources_complete").legendFormat("Sources Complete"))
-      .withTarget(new prometheus.DataqueryBuilder().expr("gickup_destinations").legendFormat("Destinations Total"))
       .withTarget(
-        new prometheus.DataqueryBuilder().expr("gickup_destinations_complete").legendFormat("Destinations Complete"),
+        new prometheus.DataqueryBuilder()
+          .expr("gickup_sources")
+          .legendFormat("Sources Total"),
+      )
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr("gickup_sources_complete")
+          .legendFormat("Sources Complete"),
+      )
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr("gickup_destinations")
+          .legendFormat("Destinations Total"),
+      )
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr("gickup_destinations_complete")
+          .legendFormat("Destinations Complete"),
       )
       .unit("short")
       .lineWidth(2)
@@ -374,9 +438,15 @@ export function createGitckupDashboard() {
       .title("Jobs Started vs Completed")
       .description("Backup job execution rate")
       .datasource(prometheusDatasource)
-      .withTarget(new prometheus.DataqueryBuilder().expr("rate(gickup_jobs_started[5m])").legendFormat("Started Rate"))
       .withTarget(
-        new prometheus.DataqueryBuilder().expr("rate(gickup_jobs_complete[5m])").legendFormat("Completed Rate"),
+        new prometheus.DataqueryBuilder()
+          .expr("rate(gickup_jobs_started[5m])")
+          .legendFormat("Started Rate"),
+      )
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr("rate(gickup_jobs_complete[5m])")
+          .legendFormat("Completed Rate"),
       )
       .unit("ops")
       .lineWidth(2)

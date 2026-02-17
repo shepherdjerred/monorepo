@@ -71,11 +71,19 @@ export default defineConfig({
     },
     {
       name: "Microsoft Edge (Dark)",
-      use: { ...devices["Desktop Edge"], channel: "msedge", colorScheme: "dark" },
+      use: {
+        ...devices["Desktop Edge"],
+        channel: "msedge",
+        colorScheme: "dark",
+      },
     },
     {
       name: "Google Chrome (Dark)",
-      use: { ...devices["Desktop Chrome"], channel: "chrome", colorScheme: "dark" },
+      use: {
+        ...devices["Desktop Chrome"],
+        channel: "chrome",
+        colorScheme: "dark",
+      },
     },
   ],
   webServer: {

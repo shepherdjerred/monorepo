@@ -49,7 +49,9 @@ describe("exportDashboardWithHelmEscaping", () => {
 
     const result = exportDashboardWithHelmEscaping(dashboard);
 
-    expect(result).toContain('label_values({{ print "{{" }}metric{{ print "}}" }}, environment)');
+    expect(result).toContain(
+      'label_values({{ print "{{" }}metric{{ print "}}" }}, environment)',
+    );
   });
 
   test("should not modify non-template double braces in strings", () => {
@@ -114,7 +116,10 @@ describe("exportDashboardWithHelmEscaping", () => {
     const dashboard = {
       panels: [
         {
-          targets: [{ legendFormat: "{{instance}}" }, { legendFormat: "{{disk}} - {{device_model}}" }],
+          targets: [
+            { legendFormat: "{{instance}}" },
+            { legendFormat: "{{disk}} - {{device_model}}" },
+          ],
         },
       ],
     };
@@ -167,7 +172,9 @@ describe("exportDashboardWithHelmEscaping", () => {
     const result = exportDashboardWithHelmEscaping(dashboard);
 
     // Check that template variables are escaped
-    expect(result).toContain(String.raw`rate(requests_total{env=\"{{ print "{{" }}env{{ print "}}" }}\"}[5m])`);
+    expect(result).toContain(
+      String.raw`rate(requests_total{env=\"{{ print "{{" }}env{{ print "}}" }}\"}[5m])`,
+    );
     expect(result).toContain('{{ print "{{" }}env{{ print "}}" }}');
     expect(result).toContain('{{ print "{{" }}status{{ print "}}" }}');
 

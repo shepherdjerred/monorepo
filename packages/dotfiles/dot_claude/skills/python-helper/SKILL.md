@@ -121,6 +121,7 @@ ruff rule E501
 ```
 
 Configure in `pyproject.toml`:
+
 ```toml
 [tool.ruff]
 target-version = "py312"
@@ -308,6 +309,7 @@ select = ["E", "F", "I", "B", "UP"]
 ## Common Error Patterns and Solutions
 
 ### ModuleNotFoundError
+
 ```python
 # Usually: wrong venv or missing dependency
 # Check: which python, pip list
@@ -316,6 +318,7 @@ select = ["E", "F", "I", "B", "UP"]
 ```
 
 ### ImportError with Circular Imports
+
 ```python
 # Move import inside function, or use TYPE_CHECKING guard
 from __future__ import annotations  # Defers all annotation evaluation (pre-3.14)
@@ -329,6 +332,7 @@ def process(user: User) -> None:  # Works at runtime due to deferred eval
 ```
 
 ### TypeError: unhashable type
+
 ```python
 # Mutable types (list, dict, set) can't be dict keys or set members
 # Fix: use tuple instead of list, frozenset instead of set
@@ -336,6 +340,7 @@ def process(user: User) -> None:  # Works at runtime due to deferred eval
 ```
 
 ### asyncio.run() Cannot Be Called from Running Event Loop
+
 ```python
 # In Jupyter notebooks or nested async contexts:
 import asyncio
@@ -347,6 +352,7 @@ result = await fetch_data()
 ```
 
 ### Common Type Hint Mistakes
+
 ```python
 # Wrong: mutable default in function signature
 def bad(items: list[int] = []) -> None: ...
@@ -370,40 +376,47 @@ def process(config: Config) -> None: ...
 ## Popular Packages by Domain
 
 ### Web Frameworks
+
 - **FastAPI** - Async API framework with automatic OpenAPI docs, Pydantic validation
 - **Django** - Full-stack framework with ORM, admin, auth, migrations
 - **Flask** - Lightweight WSGI micro-framework
 - **Starlette** - Async ASGI framework (FastAPI is built on it)
 
 ### HTTP Clients
+
 - **httpx** - Modern async/sync HTTP client (recommended, replaces requests for new code)
 - **requests** - Simple sync HTTP client (most popular, sync-only)
 - **aiohttp** - Async HTTP client/server
 
 ### Data Validation
+
 - **Pydantic** (v2) - Data validation with Python type hints, used by FastAPI
 - **attrs** - Classes without boilerplate (alternative to dataclasses, more features)
 - **msgspec** - Fast serialization/validation
 
 ### Data Science / ML
+
 - **pandas** - DataFrames and data analysis
 - **polars** - Fast DataFrame library (Rust-based, often 10x faster than pandas)
 - **numpy** - Numerical computing
 - **scikit-learn** - Machine learning
 
 ### Database
+
 - **SQLAlchemy** (v2) - SQL toolkit and ORM
 - **SQLModel** - SQLAlchemy + Pydantic (by FastAPI creator)
 - **asyncpg** - Fast async PostgreSQL driver
 - **alembic** - Database migrations (SQLAlchemy)
 
 ### CLI
+
 - **click** - Composable CLI framework
 - **typer** - CLI framework built on click with type hints
 - **argparse** - Standard library CLI parsing
 - **rich** - Rich text, tables, progress bars in terminal
 
 ### Testing
+
 - **pytest** - Testing framework (de facto standard)
 - **hypothesis** - Property-based testing
 - **pytest-asyncio** - Async test support
@@ -413,6 +426,7 @@ def process(config: Config) -> None: ...
 ## Project Structure Patterns
 
 ### Application (Flat Layout)
+
 ```
 my-app/
   my_app/
@@ -433,6 +447,7 @@ my-app/
 ```
 
 ### Library (src Layout)
+
 ```
 my-lib/
   src/
@@ -449,6 +464,7 @@ my-lib/
 ```
 
 ### FastAPI Application
+
 ```
 my-api/
   src/
@@ -532,6 +548,7 @@ def fibonacci(n: int) -> int:
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - Choice between sync and async is unclear
 - Dependency management strategy (uv vs poetry vs pip) needs deciding
 - Type annotation complexity (Protocol vs ABC vs duck typing)
@@ -542,6 +559,7 @@ Ask the user for clarification when:
 ---
 
 See `references/` for detailed guides:
+
 - `modern-python.md` - Type hints, dataclasses, match statements, async/await, protocols, f-strings
 - `tooling-packaging.md` - uv, ruff, pip, poetry, venv, pyproject.toml, mypy vs pyright, build backends
 - `testing-patterns.md` - pytest fixtures, parametrize, markers, conftest, mocking, coverage, hypothesis

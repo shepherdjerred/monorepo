@@ -7,10 +7,10 @@ This project allows you to cross-compile code on Linux that will be executed on 
 
 It supports:
 
-* ✅ C
-* ✅ C++
-* ✅ Fortran
-* ✅ Rust (through Zig)
+- ✅ C
+- ✅ C++
+- ✅ Fortran
+- ✅ Rust (through Zig)
 
 Support for Objective C and Objective C++ may work out-of-the-box, but this is not tested.
 
@@ -29,7 +29,7 @@ Install the requirements below, then follow the instructions in the usage sectio
 
 ### Host Requirements
 
-* Docker
+- Docker
 
 ### Usage
 
@@ -117,8 +117,8 @@ The table below shows the name of the executable for each architecture/compiler 
 > [!NOTE]
 > The target kernel version is `darwin24`. You'll need to build a new Docker image if you want to support a different kernel version.
 
-|          | aarch64                         |
-|----------|---------------------------------|
+|              | aarch64                         |
+| ------------ | ------------------------------- |
 | **clang**    | aarch64-apple-darwin24-clang    |
 | **clang++**  | aarch64-apple-darwin24-clang++  |
 | **gcc**      | aarch64-apple-darwin24-gcc      |
@@ -135,38 +135,38 @@ You probably don't need to run these programs directly, but if you do they are l
 
 Complete tool list:
 
-* ObjectDump
-* ar
-* as
-* bitcode_strip
-* check_dylib
-* checksyms
-* cmpdylib
-* codesign_allocate
-* ctf_insert
-* dyldinfo
-* install_name_tool
-* ld
-* libtool
-* lipo
-* machocheck
-* makerelocs
-* mtoc
-* mtor
-* nm
-* nmedit
-* otool
-* pagestuff
-* ranlib
-* redo_prebinding
-* seg_addr_table
-* seg_hack
-* segedit
-* size
-* strings
-* strip
-* unwinddump
-* vtool
+- ObjectDump
+- ar
+- as
+- bitcode_strip
+- check_dylib
+- checksyms
+- cmpdylib
+- codesign_allocate
+- ctf_insert
+- dyldinfo
+- install_name_tool
+- ld
+- libtool
+- lipo
+- machocheck
+- makerelocs
+- mtoc
+- mtor
+- nm
+- nmedit
+- otool
+- pagestuff
+- ranlib
+- redo_prebinding
+- seg_addr_table
+- seg_hack
+- segedit
+- size
+- strings
+- strip
+- unwinddump
+- vtool
 
 ## Code Signing, Notarizing, and Universal Binaries
 
@@ -178,28 +178,28 @@ The [rcodesign](https://gregoryszorc.com/docs/apple-codesign/stable/) has been r
 
 This project can build for macOS on both x86_64 and aarch64 archtictures, regardless of the host architecture.
 
-|              | Linux x86_64 | Linux arm64 |
-|--------------|--------------|-------------|
-| **macOS x86_64** | ✅            | ✅           |
-| **macOS aarch64**  | ✅            | ✅           |
+|                   | Linux x86_64 | Linux arm64 |
+| ----------------- | ------------ | ----------- |
+| **macOS x86_64**  | ✅           | ✅          |
+| **macOS aarch64** | ✅           | ✅          |
 
 > [!NOTE]
 > aarch64 is Apple's internal name for arm64. They're used interchangably, but aarch64 is more correct when referring to macOS on arm64.
 
 This project supports the following languages:
 
-* C (up to C 23)
-* C++ (up to C++ 23)
-* Fortran (up to Fortran 2023)
-* Rust (any version)
+- C (up to C 23)
+- C++ (up to C++ 23)
+- Fortran (up to Fortran 2023)
+- Rust (any version)
 
 This project supports the following versions of macOS:
 
-* ✅ macOS 11 Big Sur
-* ✅ macOS 12 Monterey
-* ✅ macOS 13 Ventura
-* ✅ macOS 14 Sonoma
-* ✅ macOS 15 Seqouia
+- ✅ macOS 11 Big Sur
+- ✅ macOS 12 Monterey
+- ✅ macOS 13 Ventura
+- ✅ macOS 14 Sonoma
+- ✅ macOS 15 Seqouia
 
 Support for macOS 15 Seqouia has not been extensively tested. The Docker image uses the 15.0 SDK by default.
 
@@ -208,30 +208,30 @@ Support for macOS 15 Seqouia has not been extensively tested. The Docker image u
 
 ## Xcode SDK
 
-This Docker image bundles the Xcode SDK from [joseluisq/macosx-sdks](https://github.com/joseluisq/macosx-sdks/).  Please familiarize yourself with the [SDK's terms of service](https://www.apple.com/legal/sla/docs/xcode.pdf).
+This Docker image bundles the Xcode SDK from [joseluisq/macosx-sdks](https://github.com/joseluisq/macosx-sdks/). Please familiarize yourself with the [SDK's terms of service](https://www.apple.com/legal/sla/docs/xcode.pdf).
 
 ## Technical Details
 
 This repository is essentially a wrapper around the following projects:
 
-* <https://github.com/tpoechtrager/apple-libtapi>
-* <https://github.com/tpoechtrager/cctools-port>
-* <https://github.com/tpoechtrager/xar>
-* <https://github.com/tpoechtrager/apple-libdispatch>
-* <https://github.com/iains/gcc-darwin-arm64>
+- <https://github.com/tpoechtrager/apple-libtapi>
+- <https://github.com/tpoechtrager/cctools-port>
+- <https://github.com/tpoechtrager/xar>
+- <https://github.com/tpoechtrager/apple-libdispatch>
+- <https://github.com/iains/gcc-darwin-arm64>
 
 These resources were helpful when working on this project:
 
-* <https://www.lurklurk.org/linkers/linkers.html>
-* <http://www.yolinux.com/TUTORIALS/LibraryArchives-StaticAndDynamic.html>
-* <https://gist.github.com/loderunner/b6846dd82967ac048439>
-* <http://clarkkromenaker.com/post/library-dynamic-loading-mac/>
-* <https://github.com/qyang-nj/llios>
+- <https://www.lurklurk.org/linkers/linkers.html>
+- <http://www.yolinux.com/TUTORIALS/LibraryArchives-StaticAndDynamic.html>
+- <https://gist.github.com/loderunner/b6846dd82967ac048439>
+- <http://clarkkromenaker.com/post/library-dynamic-loading-mac/>
+- <https://github.com/qyang-nj/llios>
 
 The Zig and Rust portion were informed by these resources:
 
-* <https://andrewkelley.me/post/zig-cc-powerful-drop-in-replacement-gcc-clang.html>
-* <https://actually.fyi/posts/zig-makes-rust-cross-compilation-just-work/>
+- <https://andrewkelley.me/post/zig-cc-powerful-drop-in-replacement-gcc-clang.html>
+- <https://actually.fyi/posts/zig-makes-rust-cross-compilation-just-work/>
 
 ## Development
 

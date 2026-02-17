@@ -28,7 +28,7 @@ People expect undo and redo to let them reverse their recent actions, so they’
 
 ## [Platform considerations](/design/human-interface-guidelines/undo-and-redo#Platform-considerations)
 
-*No additional considerations for visionOS. Not supported in tvOS or watchOS.*
+_No additional considerations for visionOS. Not supported in tvOS or watchOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/undo-and-redo#iOS-iPadOS)
 

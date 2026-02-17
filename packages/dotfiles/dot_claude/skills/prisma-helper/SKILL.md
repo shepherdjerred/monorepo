@@ -19,28 +19,30 @@ description: |
 ## Core Concepts
 
 Prisma consists of three main components:
+
 1. **Prisma Schema**: Data model definition (models, relations, attributes)
 2. **Prisma Migrate**: Database migration workflow
 3. **Prisma Client**: Type-safe query builder
 
 ## CLI Commands
 
-| Command | Purpose |
-|---------|---------|
-| `prisma init` | Initialize Prisma in project |
-| `prisma generate` | Generate Prisma Client from schema |
-| `prisma migrate dev --name <name>` | Create and apply migration (development) |
-| `prisma migrate deploy` | Apply pending migrations (production) |
-| `prisma db push` | Push schema to database without migration |
-| `prisma db pull` | Introspect database and update schema |
-| `prisma studio` | Open visual database editor |
-| `prisma format` | Format schema file |
+| Command                            | Purpose                                   |
+| ---------------------------------- | ----------------------------------------- |
+| `prisma init`                      | Initialize Prisma in project              |
+| `prisma generate`                  | Generate Prisma Client from schema        |
+| `prisma migrate dev --name <name>` | Create and apply migration (development)  |
+| `prisma migrate deploy`            | Apply pending migrations (production)     |
+| `prisma db push`                   | Push schema to database without migration |
+| `prisma db pull`                   | Introspect database and update schema     |
+| `prisma studio`                    | Open visual database editor               |
+| `prisma format`                    | Format schema file                        |
 
 ## Schema Definition
 
 ### Generator Configuration
 
 **Prisma 5.x/6.x (current stable):**
+
 ```prisma
 generator client {
   provider = "prisma-client-js"
@@ -48,6 +50,7 @@ generator client {
 ```
 
 **Prisma 7+ (new format with runtime options):**
+
 ```prisma
 generator client {
   provider = "prisma-client"   // replaces "prisma-client-js"
@@ -92,31 +95,31 @@ model Post {
 
 ### Field Attributes
 
-| Attribute | Purpose | Example |
-|-----------|---------|---------|
-| `@id` | Primary key | `id Int @id` |
-| `@@id` | Composite primary key | `@@id([a, b])` |
-| `@unique` | Unique constraint | `email String @unique` |
-| `@@unique` | Compound unique | `@@unique([firstName, lastName])` |
-| `@default` | Default value | `@default(now())`, `@default(uuid())` |
-| `@updatedAt` | Auto-update timestamp | `updatedAt DateTime @updatedAt` |
-| `@relation` | Define relationship | See relations section |
-| `@map` | Map to database column | `@map("user_name")` |
-| `@@map` | Map to database table | `@@map("users")` |
-| `@@index` | Database index | `@@index([title, content])` |
-| `@ignore` | Exclude from Prisma Client | `legacyField String @ignore` |
+| Attribute    | Purpose                    | Example                               |
+| ------------ | -------------------------- | ------------------------------------- |
+| `@id`        | Primary key                | `id Int @id`                          |
+| `@@id`       | Composite primary key      | `@@id([a, b])`                        |
+| `@unique`    | Unique constraint          | `email String @unique`                |
+| `@@unique`   | Compound unique            | `@@unique([firstName, lastName])`     |
+| `@default`   | Default value              | `@default(now())`, `@default(uuid())` |
+| `@updatedAt` | Auto-update timestamp      | `updatedAt DateTime @updatedAt`       |
+| `@relation`  | Define relationship        | See relations section                 |
+| `@map`       | Map to database column     | `@map("user_name")`                   |
+| `@@map`      | Map to database table      | `@@map("users")`                      |
+| `@@index`    | Database index             | `@@index([title, content])`           |
+| `@ignore`    | Exclude from Prisma Client | `legacyField String @ignore`          |
 
 ### Default Value Functions
 
-| Function | Purpose |
-|----------|---------|
-| `autoincrement()` | Auto-incrementing integer |
-| `uuid()` / `uuid(7)` | UUID generation |
-| `cuid()` / `cuid(2)` | CUID generation |
-| `ulid()` | ULID generation |
-| `nanoid(length)` | Nano ID generation |
-| `now()` | Current timestamp |
-| `dbgenerated(expr)` | Database-level default |
+| Function             | Purpose                   |
+| -------------------- | ------------------------- |
+| `autoincrement()`    | Auto-incrementing integer |
+| `uuid()` / `uuid(7)` | UUID generation           |
+| `cuid()` / `cuid(2)` | CUID generation           |
+| `ulid()`             | ULID generation           |
+| `nanoid(length)`     | Nano ID generation        |
+| `now()`              | Current timestamp         |
+| `dbgenerated(expr)`  | Database-level default    |
 
 ## Relations
 
@@ -252,20 +255,20 @@ where: { profile: { isNot: null } }
 // Select specific fields
 const user = await prisma.user.findUnique({
   where: { id: 1 },
-  select: { id: true, email: true, posts: { select: { title: true } } }
-})
+  select: { id: true, email: true, posts: { select: { title: true } } },
+});
 
 // Include relations
 const user = await prisma.user.findUnique({
   where: { id: 1 },
-  include: { posts: true, profile: true }
-})
+  include: { posts: true, profile: true },
+});
 
 // Omit fields (exclude sensitive data)
 const user = await prisma.user.findUnique({
   where: { id: 1 },
-  omit: { password: true }
-})
+  omit: { password: true },
+});
 ```
 
 ### Pagination and Sorting
@@ -304,22 +307,22 @@ const result = await prisma.user.aggregate({
   _avg: { age: true },
   _sum: { age: true },
   _min: { age: true },
-  _max: { age: true }
-})
+  _max: { age: true },
+});
 
 // Group by
 const grouped = await prisma.user.groupBy({
-  by: ['country'],
+  by: ["country"],
   _count: { id: true },
   _avg: { age: true },
-  having: { age: { _avg: { gt: 25 } } }
-})
+  having: { age: { _avg: { gt: 25 } } },
+});
 
 // Count relations
 const user = await prisma.user.findUnique({
   where: { id: 1 },
-  include: { _count: { select: { posts: true } } }
-})
+  include: { _count: { select: { posts: true } } },
+});
 ```
 
 ## Transactions
@@ -328,27 +331,30 @@ const user = await prisma.user.findUnique({
 
 ```typescript
 const [user, post] = await prisma.$transaction([
-  prisma.user.create({ data: { email: 'user@example.com' } }),
-  prisma.post.create({ data: { title: 'Post', authorId: 1 } })
-])
+  prisma.user.create({ data: { email: "user@example.com" } }),
+  prisma.post.create({ data: { title: "Post", authorId: 1 } }),
+]);
 ```
 
 ### Interactive Transactions
 
 ```typescript
-const result = await prisma.$transaction(async (tx) => {
-  const user = await tx.user.findUnique({ where: { id: 1 } })
-  if (!user) throw new Error('User not found')
+const result = await prisma.$transaction(
+  async (tx) => {
+    const user = await tx.user.findUnique({ where: { id: 1 } });
+    if (!user) throw new Error("User not found");
 
-  return tx.user.update({
-    where: { id: 1 },
-    data: { balance: { decrement: 100 } }
-  })
-}, {
-  maxWait: 5000,
-  timeout: 10000,
-  isolationLevel: Prisma.TransactionIsolationLevel.Serializable
-})
+    return tx.user.update({
+      where: { id: 1 },
+      data: { balance: { decrement: 100 } },
+    });
+  },
+  {
+    maxWait: 5000,
+    timeout: 10000,
+    isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+  },
+);
 ```
 
 ### Atomic Operations
@@ -357,14 +363,14 @@ const result = await prisma.$transaction(async (tx) => {
 // Increment/decrement
 await prisma.user.update({
   where: { id: 1 },
-  data: { balance: { increment: 100 } }
-})
+  data: { balance: { increment: 100 } },
+});
 
 // Multiply/divide
 await prisma.product.update({
   where: { id: 1 },
-  data: { price: { multiply: 1.1 } }
-})
+  data: { price: { multiply: 1.1 } },
+});
 ```
 
 ## Raw SQL
@@ -381,8 +387,8 @@ SELECT id, email, name FROM users WHERE email LIKE $1
 Run `prisma generate --sql` then use:
 
 ```typescript
-import { findUsers } from '@prisma/client/sql'
-const users = await prisma.$queryRawTyped(findUsers('%@example.com'))
+import { findUsers } from "@prisma/client/sql";
+const users = await prisma.$queryRawTyped(findUsers("%@example.com"));
 ```
 
 ### Raw Queries
@@ -391,12 +397,12 @@ const users = await prisma.$queryRawTyped(findUsers('%@example.com'))
 // Parameterized query (safe)
 const users = await prisma.$queryRaw`
   SELECT * FROM users WHERE email = ${email}
-`
+`;
 
 // Execute without return
 await prisma.$executeRaw`
   UPDATE users SET name = ${name} WHERE id = ${id}
-`
+`;
 ```
 
 ## Connection Management
@@ -404,58 +410,61 @@ await prisma.$executeRaw`
 ### Best Practices
 
 **❌ Avoid: Creating new clients per request**
+
 ```typescript
-app.get('/users', async (req, res) => {
-  const prisma = new PrismaClient()  // Bad!
-  const users = await prisma.user.findMany()
-  await prisma.$disconnect()
-  res.json(users)
-})
+app.get("/users", async (req, res) => {
+  const prisma = new PrismaClient(); // Bad!
+  const users = await prisma.user.findMany();
+  await prisma.$disconnect();
+  res.json(users);
+});
 ```
 
 **✅ Prefer: Single shared instance**
+
 ```typescript
 // lib/prisma.ts
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from "@prisma/client";
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
-export const prisma = globalForPrisma.prisma || new PrismaClient()
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+export const prisma = globalForPrisma.prisma || new PrismaClient();
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 ```
 
 ### Explicit Connection/Disconnection
 
 ```typescript
 // For scripts and one-off operations
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 try {
-  await prisma.$connect()
+  await prisma.$connect();
   // ... operations
 } finally {
-  await prisma.$disconnect()
+  await prisma.$disconnect();
 }
 ```
 
 ## Error Handling
 
 ```typescript
-import { Prisma } from '@prisma/client'
+import { Prisma } from "@prisma/client";
 
 try {
-  await prisma.user.create({ data: { email: 'existing@email.com' } })
+  await prisma.user.create({ data: { email: "existing@email.com" } });
 } catch (e) {
   if (e instanceof Prisma.PrismaClientKnownRequestError) {
-    if (e.code === 'P2002') {
-      console.log('Unique constraint violation on:', e.meta?.target)
+    if (e.code === "P2002") {
+      console.log("Unique constraint violation on:", e.meta?.target);
     }
   }
-  throw e
+  throw e;
 }
 ```
 
 Common error codes:
+
 - `P2002`: Unique constraint violation
 - `P2003`: Foreign key constraint violation
 - `P2025`: Record not found
@@ -465,40 +474,40 @@ Common error codes:
 ### Unit Testing (Mocking)
 
 ```typescript
-import { mockDeep, DeepMockProxy } from 'jest-mock-extended'
-import { PrismaClient } from '@prisma/client'
+import { mockDeep, DeepMockProxy } from "jest-mock-extended";
+import { PrismaClient } from "@prisma/client";
 
-const prismaMock = mockDeep<PrismaClient>()
+const prismaMock = mockDeep<PrismaClient>();
 
 prismaMock.user.findUnique.mockResolvedValue({
   id: 1,
-  email: 'test@example.com',
-  name: 'Test User'
-})
+  email: "test@example.com",
+  name: "Test User",
+});
 ```
 
 ### Integration Testing
 
 ```typescript
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 beforeAll(async () => {
-  await prisma.$connect()
-})
+  await prisma.$connect();
+});
 
 afterAll(async () => {
-  await prisma.$disconnect()
-})
+  await prisma.$disconnect();
+});
 
 afterEach(async () => {
   // Clean up in correct order (respect foreign keys)
   await prisma.$transaction([
     prisma.post.deleteMany(),
-    prisma.user.deleteMany()
-  ])
-})
+    prisma.user.deleteMany(),
+  ]);
+});
 ```
 
 ## Logging
@@ -506,16 +515,16 @@ afterEach(async () => {
 ```typescript
 const prisma = new PrismaClient({
   log: [
-    { level: 'query', emit: 'event' },
-    { level: 'error', emit: 'stdout' },
-    { level: 'warn', emit: 'stdout' }
-  ]
-})
+    { level: "query", emit: "event" },
+    { level: "error", emit: "stdout" },
+    { level: "warn", emit: "stdout" },
+  ],
+});
 
-prisma.$on('query', (e) => {
-  console.log('Query:', e.query)
-  console.log('Duration:', e.duration, 'ms')
-})
+prisma.$on("query", (e) => {
+  console.log("Query:", e.query);
+  console.log("Duration:", e.duration, "ms");
+});
 ```
 
 ## Database Indexes

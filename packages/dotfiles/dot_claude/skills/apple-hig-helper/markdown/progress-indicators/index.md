@@ -16,10 +16,10 @@ Some progress indicators also give people a way to estimate how long they have t
 
 Because the duration of an operation is either known or unknown, there are two types of progress indicators:
 
-* *Determinate*, for a task with a well-defined duration, such as a file conversion
-* *Indeterminate*, for unquantifiable tasks, such as loading or synchronizing complex data
+- _Determinate_, for a task with a well-defined duration, such as a file conversion
+- _Indeterminate_, for unquantifiable tasks, such as loading or synchronizing complex data
 
-Both determinate and indeterminate progress indicators can have different appearances depending on the platform. A determinate progress indicator shows the progress of a task by filling a linear or circular track as the task completes. *Progress bars* include a track that fills from the leading side to the trailing side. *Circular progress indicators* have a track that fills in a clockwise direction.
+Both determinate and indeterminate progress indicators can have different appearances depending on the platform. A determinate progress indicator shows the progress of a task by filling a linear or circular track as the task completes. _Progress bars_ include a track that fills from the leading side to the trailing side. _Circular progress indicators_ have a track that fills in a clockwise direction.
 
 ![An image of a horizontal progress bar in macOS filled almost to the midpoint with solid color.](https://docs-assets.developer.apple.com/published/ec2a80ba694138d5ac65555f5e3b0734/progress-indicator-determinate-bar%402x.png)
 
@@ -29,7 +29,7 @@ Progress bar
 
 Circular progress indicator
 
-An indeterminate progress indicator — also called an *activity indicator* — uses an animated image to indicate progress. All platforms support a circular image that appears to spin; however, macOS also supports an indeterminate progress bar.
+An indeterminate progress indicator — also called an _activity indicator_ — uses an animated image to indicate progress. All platforms support a circular image that appears to spin; however, macOS also supports an indeterminate progress bar.
 
 ![An image of a spinning, circular activity indicator in macOS.](https://docs-assets.developer.apple.com/published/6c1e23fcc6e04603423dacd5df6c48a3/progress-indicator-intermediate-spinner%402x.png)
 
@@ -51,9 +51,9 @@ For developer guidance, see [`ProgressView`](/documentation/SwiftUI/ProgressView
 
 **When possible, switch a progress bar from indeterminate to determinate.** If an indeterminate process reaches a point where you can determine its duration, switch to a determinate progress bar. People generally prefer a determinate progress indicator, because it helps them gauge what’s happening and how long it will take.
 
-**Don’t switch from the circular style to the bar style.** Activity indicators (also called *spinners*) and progress bars are different shapes and sizes, so transitioning between them can disrupt your interface and confuse people.
+**Don’t switch from the circular style to the bar style.** Activity indicators (also called _spinners_) and progress bars are different shapes and sizes, so transitioning between them can disrupt your interface and confuse people.
 
-**If it’s helpful, display a description that provides additional context for the task.** Be accurate and succinct. Avoid vague terms like *loading* or *authenticating* because they seldom add value.
+**If it’s helpful, display a description that provides additional context for the task.** Be accurate and succinct. Avoid vague terms like _loading_ or _authenticating_ because they seldom add value.
 
 **Display a progress indicator in a consistent location.** Choosing a consistent location for a progress indicator helps people reliably find the status of an operation across platforms or within or between apps.
 
@@ -63,7 +63,7 @@ For developer guidance, see [`ProgressView`](/documentation/SwiftUI/ProgressView
 
 ## [Platform considerations](/design/human-interface-guidelines/progress-indicators#Platform-considerations)
 
-*No additional considerations for tvOS or visionOS.*
+_No additional considerations for tvOS or visionOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/progress-indicators#iOS-iPadOS)
 
@@ -127,7 +127,7 @@ Activity indicator
 
 ## [Change log](/design/human-interface-guidelines/progress-indicators#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| September 12, 2023 | Combined guidance common to all platforms. |
-| June 5, 2023 | Updated guidance to reflect changes in watchOS 10. |
+| Date               | Changes                                            |
+| ------------------ | -------------------------------------------------- |
+| September 12, 2023 | Combined guidance common to all platforms.         |
+| June 5, 2023       | Updated guidance to reflect changes in watchOS 10. |

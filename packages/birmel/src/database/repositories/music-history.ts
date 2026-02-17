@@ -29,7 +29,7 @@ export function recordTrackPlay(input: TrackPlayInput): void {
 
 export async function getRecentTracks(
   guildId: string,
-  limit = 10
+  limit = 10,
 ): Promise<
   {
     trackName: string;

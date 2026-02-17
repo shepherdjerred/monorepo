@@ -19,7 +19,10 @@ const eventCollection = defineCollection({
 });
 
 const leetcodeCollection = defineCollection({
-  loader: glob({ pattern: "**/[^_]*.{md,mdx}", base: "./src/content/leetcode" }),
+  loader: glob({
+    pattern: "**/[^_]*.{md,mdx}",
+    base: "./src/content/leetcode",
+  }),
   schema: LeetCodeSchema,
 });
 

@@ -80,6 +80,7 @@ time eza -T -L 3              # ~0.3 seconds
 ### Memory Usage
 
 Modern tools are generally more memory efficient:
+
 - `rg` uses less memory than `grep -r`
 - `fd` is more memory efficient than `find`
 - `bat` lazy-loads files for better memory usage
@@ -137,6 +138,7 @@ fd -e log | fzf -m --preview 'bat {}' | xargs rm -i
 ### bat Configuration
 
 `~/.config/bat/config`:
+
 ```bash
 --theme="Monokai Extended"
 --style="numbers,grid,changes"
@@ -147,6 +149,7 @@ fd -e log | fzf -m --preview 'bat {}' | xargs rm -i
 ### eza Configuration
 
 Create aliases in shell config:
+
 ```bash
 # ~/.zshrc or ~/.bashrc
 export EZA_COLORS="uu=36:gu=37:sn=32:sb=32:da=34:ur=34:uw=35:ux=36:ue=36:gr=34:gw=35:gx=36:tr=34:tw=35:tx=36"
@@ -155,6 +158,7 @@ export EZA_COLORS="uu=36:gu=37:sn=32:sb=32:da=34:ur=34:uw=35:ux=36:ue=36:gr=34:g
 ### fzf Configuration
 
 `~/.fzf.zsh` or `~/.fzf.bash`:
+
 ```bash
 export FZF_DEFAULT_OPTS='
   --height 40%

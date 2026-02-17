@@ -18,6 +18,7 @@ description: |
 ## Performance
 
 Bun workspaces are significantly faster than alternatives:
+
 - **28x faster** than npm install
 - **12x faster** than yarn install (v1)
 - **8x faster** than pnpm install
@@ -93,12 +94,12 @@ Reference workspace packages in dependencies:
 
 ### Protocol Variants
 
-| Syntax | Meaning | Published As |
-|--------|---------|--------------|
-| `workspace:*` | Any version | `"1.0.0"` (actual version) |
-| `workspace:^` | Caret range | `"^1.0.0"` |
-| `workspace:~` | Tilde range | `"~1.0.0"` |
-| `workspace:1.0.2` | Exact version | `"1.0.2"` |
+| Syntax            | Meaning       | Published As               |
+| ----------------- | ------------- | -------------------------- |
+| `workspace:*`     | Any version   | `"1.0.0"` (actual version) |
+| `workspace:^`     | Caret range   | `"^1.0.0"`                 |
+| `workspace:~`     | Tilde range   | `"~1.0.0"`                 |
+| `workspace:1.0.2` | Exact version | `"1.0.2"`                  |
 
 When publishing, `workspace:` references are replaced with actual versions.
 
@@ -246,6 +247,7 @@ bun pm ls --all
 ### TypeScript (tsconfig.json)
 
 **Root tsconfig.json:**
+
 ```json
 {
   "compilerOptions": {
@@ -265,6 +267,7 @@ bun pm ls --all
 ```
 
 **Workspace tsconfig.json:**
+
 ```json
 {
   "extends": "../../tsconfig.json",
@@ -273,9 +276,7 @@ bun pm ls --all
     "rootDir": "./src"
   },
   "include": ["src"],
-  "references": [
-    { "path": "../shared" }
-  ]
+  "references": [{ "path": "../shared" }]
 }
 ```
 
@@ -379,6 +380,7 @@ rm bun.lockb
 ### Automatic Migration
 
 Bun automatically migrates from:
+
 - `package-lock.json` (npm)
 - `yarn.lock` (Yarn v1)
 - `pnpm-lock.yaml` (pnpm)

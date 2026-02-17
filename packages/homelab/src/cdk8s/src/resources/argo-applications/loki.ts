@@ -1,4 +1,4 @@
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Application } from "../../../generated/imports/argoproj.io.ts";
 import versions from "../../versions.ts";
@@ -281,7 +281,8 @@ export function createLokiApp(chart: Chart) {
       // Ruler configuration for alerting (structuredConfig merges with templated config)
       structuredConfig: {
         ruler: {
-          alertmanager_url: "http://prometheus-kube-prometheus-alertmanager.prometheus:9093",
+          alertmanager_url:
+            "http://prometheus-kube-prometheus-alertmanager.prometheus:9093",
           enable_api: true,
           enable_alertmanager_v2: true,
           storage: {

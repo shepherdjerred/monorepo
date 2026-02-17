@@ -20,19 +20,19 @@ An app can support single- or multiple-object scanning when the app is active, a
 
 ![An illustration of a scanning sheet on iPhone, which includes the text Ready to Scan and Hold your device near the NFC tag, and a Cancel button.](https://docs-assets.developer.apple.com/published/588da10ebfa2ce6ed48d0ebdd9507735/nfc-ready-to-scan%402x.png)
 
-**Don’t encourage people to make contact with physical objects.** To scan a tag, an iOS device must simply be within close proximity of the tag. It doesn’t need to actually touch the tag. Use terms like *scan* and *hold near* instead of *tap* and *touch* when asking people to scan objects.
+**Don’t encourage people to make contact with physical objects.** To scan a tag, an iOS device must simply be within close proximity of the tag. It doesn’t need to actually touch the tag. Use terms like _scan_ and _hold near_ instead of _tap_ and _touch_ when asking people to scan objects.
 
-**Use approachable terminology.** Near-field communication may be unfamiliar to some people. To make it approachable, avoid referring to technical, developer-oriented terms like *NFC*, *Core NFC*, *Near-field communication*, and *tag*. Instead, use friendly, conversational terms that most people will understand.
+**Use approachable terminology.** Near-field communication may be unfamiliar to some people. To make it approachable, avoid referring to technical, developer-oriented terms like _NFC_, _Core NFC_, _Near-field communication_, and _tag_. Instead, use friendly, conversational terms that most people will understand.
 
-| Use | Don’t use |
-| --- | --- |
-| Scan the [*object name*]. | Scan the NFC tag. |
+| Use                                                               | Don’t use                                              |
+| ----------------------------------------------------------------- | ------------------------------------------------------ |
+| Scan the [*object name*].                                         | Scan the NFC tag.                                      |
 | Hold your iPhone near the [*object name*] to learn more about it. | To use NFC scanning, tap your phone to the [*object*]. |
 
 **Provide succinct instructional text for the scanning sheet.** Provide a complete sentence, in sentence case, with ending punctuation. Identify the object to scan, and revise the text appropriately for subsequent scans. Keep the text short to avoid truncation.
 
-| First scan | Subsequent scans |
-| --- | --- |
+| First scan                                                        | Subsequent scans                                   |
+| ----------------------------------------------------------------- | -------------------------------------------------- |
 | Hold your iPhone near the [*object name*] to learn more about it. | Now hold your iPhone near another [*object name*]. |
 
 ## [Background tag reading](/design/human-interface-guidelines/nfc#Background-tag-reading)
@@ -45,7 +45,7 @@ Background tag reading lets people scan tags quickly any time, without needing t
 
 ## [Platform considerations](/design/human-interface-guidelines/nfc#Platform-considerations)
 
-*No additional considerations for iOS or iPadOS. Not supported in macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS or iPadOS. Not supported in macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/nfc#Resources)
 

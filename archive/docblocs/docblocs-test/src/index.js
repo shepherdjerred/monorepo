@@ -1,18 +1,23 @@
-const express = require('express');
-const docblocks = require('../node_modules/docblocs/lib/render');
-const fs = require('fs');
-const util = require('util');
+const express = require("express");
+const docblocks = require("../node_modules/docblocs/lib/render");
+const fs = require("fs");
+const util = require("util");
 const asyncReadFile = util.promisify(fs.readFile);
 
 let app = express();
 
-async function renderBloc (filePath, options, callback) {
+async function renderBloc(filePath, options, callback) {
   // console.log(options);
 
   try {
     let fileContents = await asyncReadFile(filePath);
 
-    let renderedBloc = await docblocks.render(fileContents.toString(), options._locals, options, {});
+    let renderedBloc = await docblocks.render(
+      fileContents.toString(),
+      options._locals,
+      options,
+      {},
+    );
 
     return callback(null, renderedBloc);
   } catch (err) {
@@ -20,31 +25,26 @@ async function renderBloc (filePath, options, callback) {
   }
 }
 
-app.engine('bloc', renderBloc);
+app.engine("bloc", renderBloc);
 
-app.set('view engine', 'bloc');
+app.set("view engine", "bloc");
 
-app.get('/', async function (req, res, next) {
+app.get("/", async function (req, res, next) {
   req.locals = {
-    reqLocals: 'Req Locals'
+    reqLocals: "Req Locals",
   };
   res.locals = {
-    resLocals: 'Res Locals',
-    replaceVar: 'Hello world!',
+    resLocals: "Res Locals",
+    replaceVar: "Hello world!",
     property: {
-      someNumber: 4
+      someNumber: 4,
     },
-    array: [
-      0,
-      10,
-      20,
-      30
-    ],
+    array: [0, 10, 20, 30],
     double: function (num = 0) {
       return num * 2;
     },
     error: function () {
-      throw new Error('Oops!');
+      throw new Error("Oops!");
     },
     helper: function (context, bloc) {
       // console.log('context: ' + context);
@@ -53,15 +53,15 @@ app.get('/', async function (req, res, next) {
     },
     curry: function (x, y) {
       return function (context, bloc) {
-        return (x + y + context.property.someNumber);
+        return x + y + context.property.someNumber;
       };
     },
-    bool: true
+    bool: true,
   };
   app.locals = {
-    appLocals: 'App Locals'
+    appLocals: "App Locals",
   };
-  res.render('index');
+  res.render("index");
 });
 
 module.exports = app;

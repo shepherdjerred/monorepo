@@ -1,8 +1,5 @@
-import type {
-  PrometheusRuleSpecGroups} from "../../../../../generated/imports/monitoring.coreos.com";
-import {
-  PrometheusRuleSpecGroupsRulesExpr,
-} from "../../../../../generated/imports/monitoring.coreos.com";
+import type { PrometheusRuleSpecGroups } from "../../../../../generated/imports/monitoring.coreos.com";
+import { PrometheusRuleSpecGroupsRulesExpr } from "../../../../../generated/imports/monitoring.coreos.com";
 import { createSensorAlert, createBinarySensorAlert } from "./shared";
 
 export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
@@ -31,7 +28,8 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "LitterRobotNotCyclingRecently",
           annotations: {
-            description: 'Litter Robot has not cycled in the last 12 hours ({{ "{{" }} $value {{ "}}" }} cycles).',
+            description:
+              'Litter Robot has not cycled in the last 12 hours ({{ "{{" }} $value {{ "}}" }} cycles).',
             summary: "Litter Robot not cycling",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

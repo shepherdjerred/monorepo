@@ -37,19 +37,27 @@ export type UpdateHomelabVersionOptions = {
  * });
  * ```
  */
-export async function updateHomelabVersion(options: UpdateHomelabVersionOptions): Promise<string> {
+export async function updateHomelabVersion(
+  options: UpdateHomelabVersionOptions,
+): Promise<string> {
   const { ghToken, appName, version } = options;
-  const branchPrefix = options.branchPrefix ?? appName.replaceAll('/', "-");
+  const branchPrefix = options.branchPrefix ?? appName.replaceAll("/", "-");
   const branchName = `${branchPrefix}/${version}`;
 
   // Escape slashes in appName for sed
-  const escapedAppName = appName.replaceAll('/', "\\/");
+  const escapedAppName = appName.replaceAll("/", "\\/");
 
   const result = await getGitHubContainer()
     .withSecretVariable("GH_TOKEN", ghToken)
     .withEnvVariable("CACHE_BUST", Date.now().toString())
     .withExec(["gh", "auth", "setup-git"])
-    .withExec(["git", "clone", "--branch=main", "https://github.com/shepherdjerred/homelab", "."])
+    .withExec([
+      "git",
+      "clone",
+      "--branch=main",
+      "https://github.com/shepherdjerred/homelab",
+      ".",
+    ])
     .withExec(["git", "fetch", "--depth=2"])
     .withExec(["git", "checkout", "main"])
     .withExec(["git", "pull", "origin", "main"])
@@ -61,7 +69,12 @@ export async function updateHomelabVersion(options: UpdateHomelabVersionOptions)
     ])
     .withExec(["git", "add", "."])
     .withExec(["git", "checkout", "-b", branchName])
-    .withExec(["git", "commit", "-m", `chore: update ${appName} version to ${version}`])
+    .withExec([
+      "git",
+      "commit",
+      "-m",
+      `chore: update ${appName} version to ${version}`,
+    ])
     .withExec(["git", "push", "--set-upstream", "origin", branchName])
     .withExec([
       "gh",

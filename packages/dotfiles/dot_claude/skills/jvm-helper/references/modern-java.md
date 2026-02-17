@@ -106,6 +106,7 @@ double compute(Expr expr) {
 ### Sealed Class Modifiers
 
 Permitted subtypes must use one of:
+
 - `final` - no further extension
 - `sealed` - further restricted extension
 - `non-sealed` - opens up for unrestricted extension
@@ -302,11 +303,13 @@ try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 ### When to Use Virtual Threads
 
 Use virtual threads for:
+
 - I/O-bound tasks (HTTP calls, database queries, file I/O)
 - High-concurrency servers handling many simultaneous connections
 - Fan-out patterns (calling multiple services concurrently)
 
 Do NOT use virtual threads for:
+
 - CPU-intensive computation (use platform threads or ForkJoinPool)
 - Tasks requiring thread-local caching with large objects (each VT has its own)
 - Code using `synchronized` blocks that do I/O inside them (use ReentrantLock instead, as synchronized pins the carrier thread)

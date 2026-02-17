@@ -1,25 +1,25 @@
-import Vue from 'vue';
-import VueAnalytics from 'vue-analytics';
+import Vue from "vue";
+import VueAnalytics from "vue-analytics";
 
-import App from './App';
-import router from './router';
-import store from './store';
+import App from "./App";
+import router from "./router";
+import store from "./store";
 
-import Raven from 'raven-js';
-import RavenVue from 'raven-js/plugins/vue';
+import Raven from "raven-js";
+import RavenVue from "raven-js/plugins/vue";
 
-import 'datejs';
+import "datejs";
 
-import 'bulma/css/bulma.css';
-import 'font-awesome/css/font-awesome.min.css';
+import "bulma/css/bulma.css";
+import "font-awesome/css/font-awesome.min.css";
 
-if (process.env.NODE_ENV === 'production') {
-  Raven.config('https://6472606f44934cf89ddfd0ce0fd24f38@sentry.io/224474')
+if (process.env.NODE_ENV === "production") {
+  Raven.config("https://6472606f44934cf89ddfd0ce0fd24f38@sentry.io/224474")
     .addPlugin(RavenVue, Vue)
     .install();
   Vue.use(VueAnalytics, {
-    id: 'UA-107318814-1',
-    router
+    id: "UA-107318814-1",
+    router,
   });
 } else {
   Vue.config.productionTip = true;
@@ -27,8 +27,8 @@ if (process.env.NODE_ENV === 'production') {
 
 /* eslint-disable no-new */
 new Vue({
-  el: '#app',
+  el: "#app",
   router,
   store,
-  render: h => h(App)
+  render: (h) => h(App),
 });

@@ -20,8 +20,8 @@ Disclosure controls reveal and hide information and functionality related to spe
 
 A disclosure triangle shows and hides information and functionality associated with a view or a list of items. For example, Keynote uses a disclosure triangle to show advanced options when exporting a presentation, and the Finder uses disclosure triangles to progressively reveal hierarchy when navigating a folder structure in list view.
 
-* [Collapsed](#)
-* [Expanded](#)
+- [Collapsed](#)
+- [Expanded](#)
 
 ![An illustration of three folders in a Finder list view. The folders are collapsed, with disclosure triangles on their leading edges pointing inward to indicate that they can be expanded to reveal their contents.](https://docs-assets.developer.apple.com/published/f2f0f58d9777abfc3a92f782963fbba6/disclosure-triangle-before%402x.png)
 
@@ -39,8 +39,8 @@ A disclosure button shows and hides functionality associated with a specific con
 
 A disclosure button points down when its content is hidden and up when its content is visible. Clicking or tapping the disclosure button switches between these two states, and the view expands or collapses accordingly to accommodate the content.
 
-* [Collapsed](#)
-* [Expanded](#)
+- [Collapsed](#)
+- [Expanded](#)
 
 ![A screenshot of a collapsed save dialog in macOS. The dialog includes a closed disclosure button that expands the dialog to reveal additional options.](https://docs-assets.developer.apple.com/published/6d405bc1e4bd3743e610bf3dd4e17161/disclosure-button-before%402x.png)
 
@@ -54,7 +54,7 @@ For developer guidance, see [`NSButton.BezelStyle.pushDisclosure`](/documentatio
 
 ## [Platform considerations](/design/human-interface-guidelines/disclosure-controls#Platform-considerations)
 
-*No additional considerations for macOS. Not supported in tvOS or watchOS.*
+_No additional considerations for macOS. Not supported in tvOS or watchOS._
 
 ### [iOS, iPadOS, visionOS](/design/human-interface-guidelines/disclosure-controls#iOS-iPadOS-visionOS)
 

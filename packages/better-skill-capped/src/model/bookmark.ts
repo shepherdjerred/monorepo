@@ -5,6 +5,6 @@ import type { Commentary } from "./commentary";
 export type Bookmark = {
   item: Bookmarkable;
   date: Date;
-}
+};
 
 export type Bookmarkable = Video | Course | Commentary;

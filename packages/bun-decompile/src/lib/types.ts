@@ -2,7 +2,7 @@
 export type StringPointer = {
   offset: number;
   length: number;
-}
+};
 
 /** Encoding type for module contents */
 export type Encoding = "binary" | "latin1" | "utf8";
@@ -41,7 +41,7 @@ export type Offsets = {
   argsPtr: StringPointer;
   /** Configuration flags */
   flags: number;
-}
+};
 
 /** A single extracted module */
 export type ModuleEntry = {
@@ -63,7 +63,7 @@ export type ModuleEntry = {
   side: FileSide;
   /** Whether this is the entry point */
   isEntryPoint: boolean;
-}
+};
 
 /** Original source file extracted from sourcemap */
 export type OriginalSource = {
@@ -71,7 +71,7 @@ export type OriginalSource = {
   name: string;
   /** Original source content with types/comments */
   content: string;
-}
+};
 
 /** Result of decompiling a Bun binary */
 export type DecompileResult = {
@@ -85,7 +85,7 @@ export type DecompileResult = {
   args: string[];
   /** Raw flags value */
   flags: number;
-}
+};
 
 /** Metadata written to metadata.json */
 export type DecompileMetadata = {
@@ -97,4 +97,4 @@ export type DecompileMetadata = {
   originalSourceCount: number;
   hasOriginalSources: boolean;
   extractedAt: string;
-}
+};

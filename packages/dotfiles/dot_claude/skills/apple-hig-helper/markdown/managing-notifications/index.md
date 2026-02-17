@@ -18,34 +18,34 @@ You need to get permission before sending any notification. The system lets peop
 
 People appreciate receiving a notification for something they care about, but they don’t always appreciate being interrupted. To help people manage the experience, the system lets them specify delivery times and set up a Focus.
 
-* A Focus helps people filter notifications during a time period they reserve for an activity like sleeping, working, reading, or driving.
-* Delivery scheduling lets people choose whether to receive notification alerts immediately or in a summary that’s delivered at times they choose.
+- A Focus helps people filter notifications during a time period they reserve for an activity like sleeping, working, reading, or driving.
+- Delivery scheduling lets people choose whether to receive notification alerts immediately or in a summary that’s delivered at times they choose.
 
-People identify the contacts and apps that can break through a Focus to deliver notification alerts. In a Work Focus, for example, people might want to receive alerts from work colleagues, family members, and work-related apps as soon as notifications arrive. People might also want to receive all Time Sensitive notification alerts during a Focus. A *Time Sensitive* notification contains essential information people appreciate getting right away.
+People identify the contacts and apps that can break through a Focus to deliver notification alerts. In a Work Focus, for example, people might want to receive alerts from work colleagues, family members, and work-related apps as soon as notifications arrive. People might also want to receive all Time Sensitive notification alerts during a Focus. A _Time Sensitive_ notification contains essential information people appreciate getting right away.
 
 Important
 
 Even though a Focus might delay the delivery of a notification alert, the notification itself is available as soon as it arrives.
 
-To support these behavior customizations, you first identify the types of notifications your app or game can send. If you support direct communications — like phone calls and messages — you use *communication* notifications; for all other types of tasks, you use *noncommunication* notifications. To support communication notifications, you adopt SiriKit intents, which means people can use Siri to customize notification behaviors; for developer guidance, see [`INSendMessageIntent`](/documentation/Intents/INSendMessageIntent) and [`UNNotificationContentProviding`](/documentation/UserNotifications/UNNotificationContentProviding).
+To support these behavior customizations, you first identify the types of notifications your app or game can send. If you support direct communications — like phone calls and messages — you use _communication_ notifications; for all other types of tasks, you use _noncommunication_ notifications. To support communication notifications, you adopt SiriKit intents, which means people can use Siri to customize notification behaviors; for developer guidance, see [`INSendMessageIntent`](/documentation/Intents/INSendMessageIntent) and [`UNNotificationContentProviding`](/documentation/UserNotifications/UNNotificationContentProviding).
 
 You need to specify a system-defined interruption level for each noncommunication notification you send. The system uses the interruption level to help determine when to deliver the alert; when a communication notification arrives, the system uses the sender to determine when to deliver the alert.
 
 The system defines four interruption levels for noncommunication notifications:
 
-* *Passive*. Information people can view at their leisure, like a restaurant recommendation.
-* *Active* (the default). Information people might appreciate knowing about when it arrives, like a score update on their favorite sports team.
-* *Time Sensitive*. Information that directly impacts the person and requires their immediate attention, like an account security issue or a package delivery.
-* *Critical*. Urgent information about health and safety that directly impacts the person and demands their immediate attention. Critical notifications are extremely rare and typically come from governmental and public agencies or apps that help people manage their health or home.
+- _Passive_. Information people can view at their leisure, like a restaurant recommendation.
+- _Active_ (the default). Information people might appreciate knowing about when it arrives, like a score update on their favorite sports team.
+- _Time Sensitive_. Information that directly impacts the person and requires their immediate attention, like an account security issue or a package delivery.
+- _Critical_. Urgent information about health and safety that directly impacts the person and demands their immediate attention. Critical notifications are extremely rare and typically come from governmental and public agencies or apps that help people manage their health or home.
 
 Notification alerts in each system-defined interruption level can behave in the following ways:
 
 | Interruption level | Overrides scheduled delivery | Breaks through Focus | Overrides Ring/Silent switch on iPhone and iPad |
-| --- | --- | --- | --- |
-| Passive | No | No | No |
-| Active | No | No | No |
-| Time Sensitive | Yes | Yes | No |
-| Critical | Yes | Yes | Yes |
+| ------------------ | ---------------------------- | -------------------- | ----------------------------------------------- |
+| Passive            | No                           | No                   | No                                              |
+| Active             | No                           | No                   | No                                              |
+| Time Sensitive     | Yes                          | Yes                  | No                                              |
+| Critical           | Yes                          | Yes                  | Yes                                             |
 
 Note
 
@@ -69,7 +69,7 @@ Don’t use notifications to send marketing or promotional content unless people
 
 ## [Platform considerations](/design/human-interface-guidelines/managing-notifications#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, or visionOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, or visionOS._
 
 ### [watchOS](/design/human-interface-guidelines/managing-notifications#watchOS)
 

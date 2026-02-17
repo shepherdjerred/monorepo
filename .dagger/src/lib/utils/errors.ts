@@ -5,7 +5,7 @@
  * avoiding the vague "GraphQL request error" messages that Dagger throws by default.
  */
 
-import type { Container} from "@dagger.io/dagger";
+import type { Container } from "@dagger.io/dagger";
 import { ReturnType } from "@dagger.io/dagger";
 
 /**
@@ -15,7 +15,7 @@ export type ExecResult = {
   stdout: string;
   stderr: string;
   exitCode: number;
-}
+};
 
 /**
  * Executes a command in a container and captures stdout, stderr, and exit code.
@@ -34,10 +34,17 @@ export type ExecResult = {
  * }
  * ```
  */
-export async function execWithOutput(container: Container, args: string[]): Promise<ExecResult> {
+export async function execWithOutput(
+  container: Container,
+  args: string[],
+): Promise<ExecResult> {
   const ctr = await container.withExec(args, { expect: ReturnType.Any }).sync();
 
-  const [stdout, stderr, exitCode] = await Promise.all([ctr.stdout(), ctr.stderr(), ctr.exitCode()]);
+  const [stdout, stderr, exitCode] = await Promise.all([
+    ctr.stdout(),
+    ctr.stderr(),
+    ctr.exitCode(),
+  ]);
 
   return { stdout, stderr, exitCode };
 }
@@ -60,7 +67,10 @@ export async function execWithOutput(container: Container, args: string[]): Prom
  * const output = await execOrThrow(container, ["bun", "run", "lint"]);
  * ```
  */
-export async function execOrThrow(container: Container, args: string[]): Promise<string> {
+export async function execOrThrow(
+  container: Container,
+  args: string[],
+): Promise<string> {
   const result = await execWithOutput(container, args);
 
   if (result.exitCode !== 0) {
@@ -73,7 +83,9 @@ export async function execOrThrow(container: Container, args: string[]): Promise
       parts.push(result.stderr.trim());
     }
     const output = parts.join("\n") || "No output";
-    throw new Error(`Command failed (exit code ${result.exitCode}):\n${output}`);
+    throw new Error(
+      `Command failed (exit code ${result.exitCode}):\n${output}`,
+    );
   }
 
   return result.stdout;

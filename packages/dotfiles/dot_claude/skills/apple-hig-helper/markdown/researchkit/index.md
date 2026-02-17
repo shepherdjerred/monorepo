@@ -62,20 +62,20 @@ To get input from participants, your study might use surveys, active tasks, or a
 
 **Create surveys that keep participants engaged.** ResearchKit provides many customizable screens you can use in your surveys, and makes it easy to present questions that require different types of answers, such as true or false, multiple choice, dates and times, sliding scales, and open-ended text entry. As you use ResearchKit screens to design a survey, follow these guidelines to provide a great experience:
 
-* Tell participants how many questions there are and about how long the survey will take.
-* Use one screen per question.
-* Show participants their progress in the survey.
-* Keep the survey as short as possible. Several short surveys tend to work better than one long survey.
-* For questions that require some additional explanation, use the standard font for the question and a slightly smaller font for the explanatory text.
-* Tell participants when the survey is complete.
+- Tell participants how many questions there are and about how long the survey will take.
+- Use one screen per question.
+- Show participants their progress in the survey.
+- Keep the survey as short as possible. Several short surveys tend to work better than one long survey.
+- For questions that require some additional explanation, use the standard font for the question and a slightly smaller font for the explanatory text.
+- Tell participants when the survey is complete.
 
 ![A screenshot that shows a ResearchKit app's survey screen on iPhone. This particular screen asks someone to specify Parkinson's disease symptoms from a list and tap a 'Next' button to continue the survey. The top of the screen includes a 'Close' button.](https://docs-assets.developer.apple.com/published/ee125d1de4ec07f41856c9bab67ee0c3/survey-question-type1-screen%402x.png)
 
 **Make active tasks easy to understand.** An active task requires the participant to engage in an activity, such as speaking into the microphone, tapping fingers on the screen, walking, or performing a memory test. Follow these guidelines to encourage participants to perform an active task and give them the best chance of success:
 
-* Describe how to perform the task using clear, simple language.
-* Explain any requirements, such as if the task must be performed at a particular time or under specific circumstances.
-* Make sure participants can tell when the task is complete.
+- Describe how to perform the task using clear, simple language.
+- Explain any requirements, such as if the task must be performed at a particular time or under specific circumstances.
+- Make sure participants can tell when the task is complete.
 
 ![A screenshot that shows a ResearchKit app's active task screen on iPhone. This particular screen shows an illustration of a person walking, and instructions that explain how to perform a Walk and Balance active task. A list of requirements is shown, along with a 'Get started' button. The top of the screen includes a 'Close' button.](https://docs-assets.developer.apple.com/published/efdeed00e3196a8eaea5155ff78b0015/active-tasks-screen%402x.png)
 
@@ -93,7 +93,7 @@ ResearchKit offers a profile screen you can use to let participants manage perso
 
 ## [Platform considerations](/design/human-interface-guidelines/researchkit#Platform-considerations)
 
-*No additional considerations for iOS or iPadOS. Not supported in macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS or iPadOS. Not supported in macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/researchkit#Resources)
 
@@ -125,6 +125,6 @@ ResearchKit and CareKit Reimagined](https://developer.apple.com/videos/play/wwdc
 
 ## [Change log](/design/human-interface-guidelines/researchkit#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date               | Changes          |
+| ------------------ | ---------------- |
 | September 12, 2023 | Updated artwork. |

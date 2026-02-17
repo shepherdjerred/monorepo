@@ -13,7 +13,7 @@ export class ConsoleNotifier implements Notifier {
   }
 
   notify(
-    notification: VideoNotification | CommentaryNotification
+    notification: VideoNotification | CommentaryNotification,
   ): Promise<undefined> {
     console.log(notification);
     return Promise.resolve(undefined);

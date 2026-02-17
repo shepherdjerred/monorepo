@@ -19,7 +19,8 @@ export function createBuildkiteApp(chart: Chart) {
 
   new OnePasswordItem(chart, "buildkite-agent-token", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/z6teegxas67bzggqdjco4pssje",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/z6teegxas67bzggqdjco4pssje",
     },
     metadata: {
       name: "buildkite-agent-token",
@@ -29,7 +30,8 @@ export function createBuildkiteApp(chart: Chart) {
 
   new OnePasswordItem(chart, "buildkite-ci-secrets", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/rzk3lawpk4yspyyu5rxlz44ssi",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/rzk3lawpk4yspyyu5rxlz44ssi",
     },
     metadata: {
       name: "buildkite-ci-secrets",

@@ -176,7 +176,9 @@ image: repository`;
       const comments = parseYAMLComments(yaml);
 
       expect(comments.get("image")).toContain("ref: https://hub.docker.com");
-      expect(comments.get("image")).toContain("For more info see: https://example.com");
+      expect(comments.get("image")).toContain(
+        "For more info see: https://example.com",
+      );
     });
 
     test("should handle multi-line Ref comments", () => {
@@ -187,8 +189,12 @@ config:
 
       const comments = parseYAMLComments(yaml);
 
-      expect(comments.get("config")).toContain("https://prometheus.io/docs/alerting/configuration/");
-      expect(comments.get("config")).toContain("https://prometheus.io/webtools/alerting/routing-tree-editor/");
+      expect(comments.get("config")).toContain(
+        "https://prometheus.io/docs/alerting/configuration/",
+      );
+      expect(comments.get("config")).toContain(
+        "https://prometheus.io/webtools/alerting/routing-tree-editor/",
+      );
     });
 
     test("should preserve Ref: prefix in documentation", () => {
@@ -198,7 +204,9 @@ setting: value`;
 
       const comments = parseYAMLComments(yaml);
 
-      expect(comments.get("setting")).toContain("Ref: https://example.com/docs");
+      expect(comments.get("setting")).toContain(
+        "Ref: https://example.com/docs",
+      );
     });
 
     test("should handle ref: (lowercase) vs Ref: (uppercase)", () => {
@@ -211,8 +219,12 @@ key2: value`;
       const comments1 = parseYAMLComments(yaml1);
       const comments2 = parseYAMLComments(yaml2);
 
-      expect(comments1.get("key1")).toContain("ref: https://example.com/lowercase");
-      expect(comments2.get("key2")).toContain("Ref: https://example.com/uppercase");
+      expect(comments1.get("key1")).toContain(
+        "ref: https://example.com/lowercase",
+      );
+      expect(comments2.get("key2")).toContain(
+        "Ref: https://example.com/uppercase",
+      );
     });
   });
 
@@ -234,7 +246,9 @@ key: value`;
 
       // Should get the prose (before and after the block)
       expect(comments.get("key")).toContain("First line of prose");
-      expect(comments.get("key")).toContain("This is prose with `backticks` and (parentheses)");
+      expect(comments.get("key")).toContain(
+        "This is prose with `backticks` and (parentheses)",
+      );
       expect(comments.get("key")).toContain("Another line with special chars");
     });
 
@@ -292,7 +306,9 @@ auth:
 
       const comments = parseYAMLComments(yaml);
 
-      expect(comments.get("auth")).toBe("Authentication Configuration\nThis section controls authentication");
+      expect(comments.get("auth")).toBe(
+        "Authentication Configuration\nThis section controls authentication",
+      );
       expect(comments.get("auth")).not.toContain("@section");
     });
   });
@@ -308,7 +324,9 @@ service:
       const comments = parseYAMLComments(yaml);
 
       expect(comments.get("service")).toContain("Configure the service");
-      expect(comments.get("service")).toContain("^ Use LoadBalancer for external access");
+      expect(comments.get("service")).toContain(
+        "^ Use LoadBalancer for external access",
+      );
       expect(comments.get("service")).not.toContain("type: LoadBalancer");
     });
 
@@ -320,7 +338,9 @@ key: value`;
 
       const comments = parseYAMLComments(yaml);
 
-      expect(comments.get("key")).toContain("-> This points to the example above");
+      expect(comments.get("key")).toContain(
+        "-> This points to the example above",
+      );
     });
 
     test("should recognize → (unicode arrow) as prose marker", () => {
@@ -354,7 +374,9 @@ setting: value`;
       // Real keys always work correctly
       expect(comments.get("controller.name")).toBe("Controller name");
       // Section header "Controller configuration" gets filtered, Ref stays
-      expect(comments.get("controller.config")).toContain("Ref: https://example.com");
+      expect(comments.get("controller.config")).toContain(
+        "Ref: https://example.com",
+      );
 
       // Commented-out keys in complex scenarios are handled by the existing tests
       // The preprocessor is conservative by design to avoid false positives
@@ -372,8 +394,12 @@ primary:
       const comments = parseYAMLComments(yaml);
 
       expect(comments.get("primary")).toBe("PostgreSQL Primary configuration");
-      expect(comments.get("primary.persistence.enabled")).toBe("Enable persistence");
-      expect(comments.get("primary.persistence.size")).toBe("PVC Storage Request");
+      expect(comments.get("primary.persistence.enabled")).toBe(
+        "Enable persistence",
+      );
+      expect(comments.get("primary.persistence.size")).toBe(
+        "PVC Storage Request",
+      );
     });
 
     test("should handle Traefik-style Helm -- markers", () => {
@@ -421,8 +447,12 @@ policy.csv: ''`;
 
       const comments = parseYAMLComments(yaml);
 
-      expect(comments.get("policy.csv")).toContain("Policy rules are in the form:");
-      expect(comments.get("policy.csv")).toContain("Role definitions are in the form:");
+      expect(comments.get("policy.csv")).toContain(
+        "Policy rules are in the form:",
+      );
+      expect(comments.get("policy.csv")).toContain(
+        "Role definitions are in the form:",
+      );
       // Policy rule examples should be filtered
       expect(comments.get("policy.csv")).not.toContain("p, subject, resource");
     });
@@ -440,8 +470,12 @@ key: value`;
 
       const comments = parseYAMLComments(yaml);
 
-      expect(comments.get("key")).toContain("This is prose with `backticks` and (parentheses)");
-      expect(comments.get("key")).toContain("Another line with special chars: colons, dashes - and more");
+      expect(comments.get("key")).toContain(
+        "This is prose with `backticks` and (parentheses)",
+      );
+      expect(comments.get("key")).toContain(
+        "Another line with special chars: colons, dashes - and more",
+      );
     });
 
     test("should handle multiple blank lines between sections", () => {
@@ -488,11 +522,15 @@ database:
 
       // "To configure the database connection:" starts with prose
       // followed by what looks like YAML, so should be kept as example
-      expect(comments.get("database")).toContain("To configure the database connection:");
+      expect(comments.get("database")).toContain(
+        "To configure the database connection:",
+      );
       expect(comments.get("database")).toContain("This is just an example");
 
       // The YAML-like lines should be filtered as examples
-      expect(comments.get("database")).not.toContain("host: your-database-host");
+      expect(comments.get("database")).not.toContain(
+        "host: your-database-host",
+      );
     });
   });
 });

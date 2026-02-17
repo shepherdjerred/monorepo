@@ -39,9 +39,16 @@
  * // Result contains: {{ print "{{" }}environment{{ print "}}" }}
  * ```
  */
-export function exportDashboardWithHelmEscaping(dashboard: unknown, prettyPrint = true): string {
+export function exportDashboardWithHelmEscaping(
+  dashboard: unknown,
+  prettyPrint = true,
+): string {
   // First, stringify the dashboard to JSON
-  const jsonString = JSON.stringify(dashboard, null, prettyPrint ? 2 : undefined);
+  const jsonString = JSON.stringify(
+    dashboard,
+    null,
+    prettyPrint ? 2 : undefined,
+  );
 
   // Replace all occurrences of {{variable}} with Helm-escaped syntax
   // This regex matches:
@@ -51,10 +58,13 @@ export function exportDashboardWithHelmEscaping(dashboard: unknown, prettyPrint 
   // The \b ensures we match word boundaries
   const templateVarRegex = /\{\{(\w+)\}\}/g;
 
-  const escapedJson = jsonString.replaceAll(templateVarRegex, (_match, variableName: string) => {
-    // Create Helm-escaped syntax: {{ print "{{" }}variable{{ print "}}" }}
-    return `{{ print "{{" }}${variableName}{{ print "}}" }}`;
-  });
+  const escapedJson = jsonString.replaceAll(
+    templateVarRegex,
+    (_match, variableName: string) => {
+      // Create Helm-escaped syntax: {{ print "{{" }}variable{{ print "}}" }}
+      return `{{ print "{{" }}${variableName}{{ print "}}" }}`;
+    },
+  );
 
   return escapedJson;
 }

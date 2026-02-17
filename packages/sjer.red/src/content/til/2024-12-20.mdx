@@ -111,7 +111,11 @@ type Sort<K extends string> = {
 // determine which columns are sortable
 type Sortable<T> = Extract<T, { sortable: true }>;
 
-type Props<R extends object, C extends Column<Extract<keyof R, string>>, SortableKey extends Sortable<C>["key"]> = {
+type Props<
+  R extends object,
+  C extends Column<Extract<keyof R, string>>,
+  SortableKey extends Sortable<C>["key"],
+> = {
   rows: R[];
   cols: C[];
   sort: Sort<SortableKey>;
@@ -119,12 +123,11 @@ type Props<R extends object, C extends Column<Extract<keyof R, string>>, Sortabl
 };
 
 // enforce that the passed in sort's `key` allows all _sortable_ columns
-function Table<R extends object, C extends Column<Extract<keyof R, string>>, SortableKey extends Sortable<C>["key"]>({
-  rows,
-  cols,
-  sort,
-  onSort,
-}: Props<R, C, SortableKey>) {
+function Table<
+  R extends object,
+  C extends Column<Extract<keyof R, string>>,
+  SortableKey extends Sortable<C>["key"],
+>({ rows, cols, sort, onSort }: Props<R, C, SortableKey>) {
   // omitted for brevity
 }
 
@@ -168,7 +171,11 @@ type Sort<K extends string> = {
 // determine which columns are sortable
 type Sortable<T> = Extract<T, { sortable: true }>;
 
-type Props<R extends object, C extends Column<Extract<keyof R, string>>, SortableKey extends Sortable<C>["key"]> = {
+type Props<
+  R extends object,
+  C extends Column<Extract<keyof R, string>>,
+  SortableKey extends Sortable<C>["key"],
+> = {
   rows: R[];
   cols: C[];
   sort: Sort<SortableKey>;
@@ -176,12 +183,11 @@ type Props<R extends object, C extends Column<Extract<keyof R, string>>, Sortabl
 };
 
 // enforce that the passed in sort's `key` allows all _sortable_ columns
-function Table<R extends object, C extends Column<Extract<keyof R, string>>, SortableKey extends Sortable<C>["key"]>({
-  rows,
-  cols,
-  sort,
-  onSort,
-}: Props<R, C, SortableKey>) {
+function Table<
+  R extends object,
+  C extends Column<Extract<keyof R, string>>,
+  SortableKey extends Sortable<C>["key"],
+>({ rows, cols, sort, onSort }: Props<R, C, SortableKey>) {
   // omitted for brevity
 }
 

@@ -32,9 +32,9 @@ The following guidance applies to apps that run in iOS and iPadOS. To learn abou
 
 **Minimize text in the environment.** Display only the information that people need for your app experience.
 
-**If additional information or controls are necessary, consider displaying them in screen space.** Content in *screen space* appears fixed to a consistent location either in the virtual world or, less commonly, on the device screen. It’s typically easy for people to find and view content in screen space because it remains stationary while the underlying AR environment moves with the device.
+**If additional information or controls are necessary, consider displaying them in screen space.** Content in _screen space_ appears fixed to a consistent location either in the virtual world or, less commonly, on the device screen. It’s typically easy for people to find and view content in screen space because it remains stationary while the underlying AR environment moves with the device.
 
-**Consider using indirect controls when you need to provide persistent controls.** *Indirect controls* are not part of the virtual environment — instead, they are 2D controls displayed in screen space. If people need access to persistent controls in your app, consider placing the controls so that people don’t have to adjust how they’re holding the device to reach them. Also, consider using translucency in an indirect control to help avoid blocking the underlying scene. For example, the Measure app uses screen space to display a mix of translucent and opaque controls that people use to measure objects in the real world.
+**Consider using indirect controls when you need to provide persistent controls.** _Indirect controls_ are not part of the virtual environment — instead, they are 2D controls displayed in screen space. If people need access to persistent controls in your app, consider placing the controls so that people don’t have to adjust how they’re holding the device to reach them. Also, consider using translucency in an indirect control to help avoid blocking the underlying scene. For example, the Measure app uses screen space to display a mix of translucent and opaque controls that people use to measure objects in the real world.
 
 ![A screenshot of the Measure app on iPhone showing a bunch of carrots. A line segment extends from one end of a carrot to the other end. The measurement is four and a half inches.](https://docs-assets.developer.apple.com/published/8a3faa907452d5fdb2771a64ffdcdb62/augmented-reality-measure-carrots%402x.png)
 
@@ -48,7 +48,7 @@ The following guidance applies to apps that run in iOS and iPadOS. To learn abou
 
 ## [Providing coaching](/design/human-interface-guidelines/augmented-reality#Providing-coaching)
 
-Before people can enjoy an AR experience in your app, they need to move their device in ways that lets ARKit evaluate the surroundings and detect surfaces. Consider using the built-in coaching view to show people what to do and provide feedback during the initialization process. You can also use the coaching view to help people reinitialize AR — a process known as *relocalization* — after an AR experience is interrupted by, for example, people switching briefly to a different app. For guidance on relocalization, see [Handling interruptions](/design/human-interface-guidelines/augmented-reality#Handling-interruptions); for developer guidance, see [`ARCoachingOverlayView`](/documentation/ARKit/ARCoachingOverlayView).
+Before people can enjoy an AR experience in your app, they need to move their device in ways that lets ARKit evaluate the surroundings and detect surfaces. Consider using the built-in coaching view to show people what to do and provide feedback during the initialization process. You can also use the coaching view to help people reinitialize AR — a process known as _relocalization_ — after an AR experience is interrupted by, for example, people switching briefly to a different app. For guidance on relocalization, see [Handling interruptions](/design/human-interface-guidelines/augmented-reality#Handling-interruptions); for developer guidance, see [`ARCoachingOverlayView`](/documentation/ARKit/ARCoachingOverlayView).
 
 ![An illustration of an iPhone screen showing the corner of a room viewed through the camera. On the screen is a translucent overlay containing the surface-detection indicator. The indicator is a white square with rounded corners projected into the 3D space. A small iPhone is shown scanning back and forth along the base of the square. A circle of dots trailing the iPhone emphasizes the movement.](https://docs-assets.developer.apple.com/published/a8f541f789d28879cd0d2c9862cbdcba/augmented-reality-coaching-overlay%402x.png)
 
@@ -132,12 +132,12 @@ You can enhance an AR experience by using known images and objects in the real-w
 
 **If you must display instructional text, use approachable terminology.** AR is an advanced concept that may be intimidating to some people. To help make it approachable, avoid using technical terms like ARKit, world detection, and tracking. Instead, use friendly, conversational terms that most people will understand.
 
-| Do | Don’t |
-| --- | --- |
+| Do                                                                            | Don’t                                    |
+| ----------------------------------------------------------------------------- | ---------------------------------------- |
 | Unable to find a surface. Try moving to the side or repositioning your phone. | Unable to find a plane. Adjust tracking. |
-| Tap a location to place the *[name of object to be placed]*. | Tap a plane to anchor an object. |
-| Try turning on more lights and moving around. | Insufficient features. |
-| Try moving your phone more slowly. | Excessive motion detected. |
+| Tap a location to place the _[name of object to be placed]_.                  | Tap a plane to anchor an object.         |
+| Try turning on more lights and moving around.                                 | Insufficient features.                   |
+| Try moving your phone more slowly.                                            | Excessive motion detected.               |
 
 **In a three-dimensional context, prefer 3D hints.** For example, placing a 3D rotation indicator around an object is more intuitive than displaying text-based instructions in a 2D overlay. Avoid displaying textual overlay hints in a 3D context unless people aren’t responding to contextual hints.
 
@@ -191,10 +191,10 @@ Insufficient lighting
 
 **Suggest possible fixes if problems occur.** Analysis of the real-world environment and surface detection can fail or take too long for a variety of reasons — insufficient light, an overly reflective surface, a surface without enough detail, or too much camera motion. If your app is notified of these problems, use straightforward, friendly language to offer suggestions for resolving them.
 
-| Problem | Possible suggestion |
-| --- | --- |
-| Insufficient features detected. | Try turning on more lights and moving around. |
-| Excessive motion detected. | Try moving your phone slower. |
+| Problem                           | Possible suggestion                                                                                                  |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Insufficient features detected.   | Try turning on more lights and moving around.                                                                        |
+| Excessive motion detected.        | Try moving your phone slower.                                                                                        |
 | Surface detection takes too long. | Try moving around, turning on more lights, and making sure your phone is pointed at a sufficiently textured surface. |
 
 ## [Icons and badges](/design/human-interface-guidelines/augmented-reality#Icons-and-badges)
@@ -239,17 +239,17 @@ Glyph-only AR badge
 
 ## [Platform considerations](/design/human-interface-guidelines/augmented-reality#Platform-considerations)
 
-*No additional considerations for iOS or iPadOS. Not supported in macOS, tvOS, or watchOS.*
+_No additional considerations for iOS or iPadOS. Not supported in macOS, tvOS, or watchOS._
 
 ### [visionOS](/design/human-interface-guidelines/augmented-reality#visionOS)
 
 With the wearer’s [permission](/design/human-interface-guidelines/privacy#visionOS), you can use ARKit in your visionOS app to detect surfaces in a person’s surroundings, use a person’s hand and finger postions to inform your [custom gestures](/design/human-interface-guidelines/gestures#Designing-custom-gestures-in-visionOS), support interactions that incorporate nearby physical objects into your [immersive experience](/design/human-interface-guidelines/immersive-experiences), and more. For developer guidance, see [ARKit](/documentation/ARKit).
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/2246cf5b5a402567a0b62ea31ffd8936/visionos-augmented-reality-meteor%402x.png)](https://docs-assets.developer.apple.com/published/4290fa2d0fccf623521a0573f1d86af0/visionos-augmented-reality-meteor.mp4) Content description: A recording showing a 3D model of a meteor in visionOS rotating above a physical table.
 
- [Play](#)
+[Play](#)
 
 ## [Resources](/design/human-interface-guidelines/augmented-reality#Resources)
 

@@ -13,46 +13,46 @@ Complete PagerDuty operations via REST API. This skill replaces PagerDuty MCP se
 
 ## MCP Tool Equivalents Reference
 
-| MCP Tool | API Equivalent |
-|----------|---------------|
-| `list_incidents` | `curl "$API/incidents"` |
-| `get_incident` | `curl "$API/incidents/{id}"` |
-| `get_outlier_incident` | `curl "$API/incidents/{id}/outlier_incident"` |
-| `get_past_incidents` | `curl "$API/incidents/{id}/past_incidents"` |
-| `get_related_incidents` | `curl "$API/incidents/{id}/related_incidents"` |
-| `list_incident_notes` | `curl "$API/incidents/{id}/notes"` |
-| `list_incident_workflows` | `curl "$API/incident_workflows"` |
-| `get_incident_workflow` | `curl "$API/incident_workflows/{id}"` |
-| `list_services` | `curl "$API/services"` |
-| `get_service` | `curl "$API/services/{id}"` |
-| `list_teams` | `curl "$API/teams"` |
-| `get_team` | `curl "$API/teams/{id}"` |
-| `list_team_members` | `curl "$API/teams/{id}/members"` |
-| `list_users` | `curl "$API/users"` |
-| `get_user_data` | `curl "$API/users/me"` |
-| `list_schedules` | `curl "$API/schedules"` |
-| `get_schedule` | `curl "$API/schedules/{id}"` |
-| `list_schedule_users` | `curl "$API/schedules/{id}/users"` |
-| `list_oncalls` | `curl "$API/oncalls"` |
-| `list_escalation_policies` | `curl "$API/escalation_policies"` |
-| `get_escalation_policy` | `curl "$API/escalation_policies/{id}"` |
-| `list_event_orchestrations` | `curl "$API/event_orchestrations"` |
-| `get_event_orchestration` | `curl "$API/event_orchestrations/{id}"` |
-| `get_event_orchestration_router` | `curl "$API/event_orchestrations/{id}/router"` |
-| `get_event_orchestration_service` | `curl "$API/event_orchestrations/services/{service_id}"` |
-| `get_event_orchestration_global` | `curl "$API/event_orchestrations/{id}/global"` |
-| `list_alert_grouping_settings` | `curl "$API/alert_grouping_settings"` |
-| `get_alert_grouping_setting` | `curl "$API/alert_grouping_settings/{id}"` |
-| `list_change_events` | `curl "$API/change_events"` |
-| `get_change_event` | `curl "$API/change_events/{id}"` |
-| `list_service_change_events` | `curl "$API/services/{id}/change_events"` |
-| `list_incident_change_events` | `curl "$API/incidents/{id}/related_change_events"` |
-| `list_status_pages` | `curl "$API/status_pages"` |
-| `list_status_page_severities` | `curl "$API/status_pages/{id}/severities"` |
-| `list_status_page_impacts` | `curl "$API/status_pages/{id}/impacts"` |
-| `list_status_page_statuses` | `curl "$API/status_pages/{id}/statuses"` |
-| `get_status_page_post` | `curl "$API/status_pages/{id}/posts/{post_id}"` |
-| `list_status_page_post_updates` | `curl "$API/status_pages/{id}/posts/{post_id}/post_updates"` |
+| MCP Tool                          | API Equivalent                                               |
+| --------------------------------- | ------------------------------------------------------------ |
+| `list_incidents`                  | `curl "$API/incidents"`                                      |
+| `get_incident`                    | `curl "$API/incidents/{id}"`                                 |
+| `get_outlier_incident`            | `curl "$API/incidents/{id}/outlier_incident"`                |
+| `get_past_incidents`              | `curl "$API/incidents/{id}/past_incidents"`                  |
+| `get_related_incidents`           | `curl "$API/incidents/{id}/related_incidents"`               |
+| `list_incident_notes`             | `curl "$API/incidents/{id}/notes"`                           |
+| `list_incident_workflows`         | `curl "$API/incident_workflows"`                             |
+| `get_incident_workflow`           | `curl "$API/incident_workflows/{id}"`                        |
+| `list_services`                   | `curl "$API/services"`                                       |
+| `get_service`                     | `curl "$API/services/{id}"`                                  |
+| `list_teams`                      | `curl "$API/teams"`                                          |
+| `get_team`                        | `curl "$API/teams/{id}"`                                     |
+| `list_team_members`               | `curl "$API/teams/{id}/members"`                             |
+| `list_users`                      | `curl "$API/users"`                                          |
+| `get_user_data`                   | `curl "$API/users/me"`                                       |
+| `list_schedules`                  | `curl "$API/schedules"`                                      |
+| `get_schedule`                    | `curl "$API/schedules/{id}"`                                 |
+| `list_schedule_users`             | `curl "$API/schedules/{id}/users"`                           |
+| `list_oncalls`                    | `curl "$API/oncalls"`                                        |
+| `list_escalation_policies`        | `curl "$API/escalation_policies"`                            |
+| `get_escalation_policy`           | `curl "$API/escalation_policies/{id}"`                       |
+| `list_event_orchestrations`       | `curl "$API/event_orchestrations"`                           |
+| `get_event_orchestration`         | `curl "$API/event_orchestrations/{id}"`                      |
+| `get_event_orchestration_router`  | `curl "$API/event_orchestrations/{id}/router"`               |
+| `get_event_orchestration_service` | `curl "$API/event_orchestrations/services/{service_id}"`     |
+| `get_event_orchestration_global`  | `curl "$API/event_orchestrations/{id}/global"`               |
+| `list_alert_grouping_settings`    | `curl "$API/alert_grouping_settings"`                        |
+| `get_alert_grouping_setting`      | `curl "$API/alert_grouping_settings/{id}"`                   |
+| `list_change_events`              | `curl "$API/change_events"`                                  |
+| `get_change_event`                | `curl "$API/change_events/{id}"`                             |
+| `list_service_change_events`      | `curl "$API/services/{id}/change_events"`                    |
+| `list_incident_change_events`     | `curl "$API/incidents/{id}/related_change_events"`           |
+| `list_status_pages`               | `curl "$API/status_pages"`                                   |
+| `list_status_page_severities`     | `curl "$API/status_pages/{id}/severities"`                   |
+| `list_status_page_impacts`        | `curl "$API/status_pages/{id}/impacts"`                      |
+| `list_status_page_statuses`       | `curl "$API/status_pages/{id}/statuses"`                     |
+| `get_status_page_post`            | `curl "$API/status_pages/{id}/posts/{post_id}"`              |
+| `list_status_page_post_updates`   | `curl "$API/status_pages/{id}/posts/{post_id}/post_updates"` |
 
 ## Configuration
 
@@ -746,6 +746,7 @@ pd schedule:oncall --schedule-id SCHEDULE_ID
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - PagerDuty account or service ID is not specified
 - User email is needed for incident updates but not provided
 - Incident severity or urgency classification is ambiguous

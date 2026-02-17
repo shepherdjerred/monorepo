@@ -78,11 +78,11 @@ memory = "8g"
 
 clauderon creates shared Docker volumes for caching across sessions:
 
-| Volume | Purpose |
-|--------|---------|
-| `clauderon-cargo-registry` | Cargo package cache |
-| `clauderon-cargo-git` | Git dependencies |
-| `clauderon-sccache` | Rust compilation cache |
+| Volume                     | Purpose                |
+| -------------------------- | ---------------------- |
+| `clauderon-cargo-registry` | Cargo package cache    |
+| `clauderon-cargo-git`      | Git dependencies       |
+| `clauderon-sccache`        | Rust compilation cache |
 
 These volumes are automatically mounted, speeding up builds for Rust projects.
 
@@ -108,25 +108,25 @@ This is useful when a new version of Claude Code is released.
 
 ## Mounted Directories
 
-| Host Path | Container Path | Purpose |
-|-----------|----------------|---------|
-| `~/.clauderon/worktrees/<name>/` | `/workspace` | Git worktree |
-| `~/.clauderon/proxy-ca.pem` | `/etc/clauderon/proxy-ca.pem` | CA certificate |
-| `~/.clauderon/claude.json` | `/workspace/.claude.json` | Claude onboarding |
-| `~/.clauderon/uploads/<id>/` | `/workspace/.clauderon/uploads/<id>/` | Uploaded images |
-| `~/.clauderon/hooks/` | `/workspace/.clauderon/hooks/` | Claude Code hooks |
+| Host Path                        | Container Path                        | Purpose           |
+| -------------------------------- | ------------------------------------- | ----------------- |
+| `~/.clauderon/worktrees/<name>/` | `/workspace`                          | Git worktree      |
+| `~/.clauderon/proxy-ca.pem`      | `/etc/clauderon/proxy-ca.pem`         | CA certificate    |
+| `~/.clauderon/claude.json`       | `/workspace/.claude.json`             | Claude onboarding |
+| `~/.clauderon/uploads/<id>/`     | `/workspace/.clauderon/uploads/<id>/` | Uploaded images   |
+| `~/.clauderon/hooks/`            | `/workspace/.clauderon/hooks/`        | Claude Code hooks |
 
 ## Environment Variables
 
 The following environment variables are set in the container:
 
-| Variable | Value | Purpose |
-|----------|-------|---------|
-| `HTTP_PROXY` | `http://host.docker.internal:<port>` | Proxy for HTTP |
-| `HTTPS_PROXY` | `http://host.docker.internal:<port>` | Proxy for HTTPS |
-| `SSL_CERT_FILE` | `/etc/clauderon/proxy-ca.pem` | CA certificate |
-| `NODE_EXTRA_CA_CERTS` | `/etc/clauderon/proxy-ca.pem` | CA for Node.js |
-| `REQUESTS_CA_BUNDLE` | `/etc/clauderon/proxy-ca.pem` | CA for Python |
+| Variable              | Value                                | Purpose         |
+| --------------------- | ------------------------------------ | --------------- |
+| `HTTP_PROXY`          | `http://host.docker.internal:<port>` | Proxy for HTTP  |
+| `HTTPS_PROXY`         | `http://host.docker.internal:<port>` | Proxy for HTTPS |
+| `SSL_CERT_FILE`       | `/etc/clauderon/proxy-ca.pem`        | CA certificate  |
+| `NODE_EXTRA_CA_CERTS` | `/etc/clauderon/proxy-ca.pem`        | CA for Node.js  |
+| `REQUESTS_CA_BUNDLE`  | `/etc/clauderon/proxy-ca.pem`        | CA for Python   |
 
 ## Custom Images
 

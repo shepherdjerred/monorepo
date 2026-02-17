@@ -484,6 +484,7 @@ exit 1
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - CI failures are not automatically fixable (type errors, test logic issues)
 - Maximum retry attempts reached
 - PR creation fails (authentication, permissions)

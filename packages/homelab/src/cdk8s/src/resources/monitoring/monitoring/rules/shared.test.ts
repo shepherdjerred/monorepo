@@ -1,5 +1,9 @@
 import { describe, test, expect } from "bun:test";
-import { escapeGoTemplate, escapePrometheusTemplate, escapeAlertmanagerTemplate } from "./shared.ts";
+import {
+  escapeGoTemplate,
+  escapePrometheusTemplate,
+  escapeAlertmanagerTemplate,
+} from "./shared.ts";
 
 describe("Template escaping utilities", () => {
   describe("escapeGoTemplate", () => {
@@ -11,7 +15,8 @@ describe("Template escaping utilities", () => {
 
     test("should escape multiple templates in one string", () => {
       const input = "{{ .First }} and {{ .Second }}";
-      const expected = '{{ "{{" }} .First {{ "}}" }} and {{ "{{" }} .Second {{ "}}" }}';
+      const expected =
+        '{{ "{{" }} .First {{ "}}" }} and {{ "{{" }} .Second {{ "}}" }}';
       expect(escapeGoTemplate(input)).toBe(expected);
     });
 
@@ -29,7 +34,8 @@ describe("Template escaping utilities", () => {
     });
 
     test("should handle nested JSON with templates", () => {
-      const input = '{\n  "count": "{{ .Alerts | len }}",\n  "status": "{{ .Status }}"\n}';
+      const input =
+        '{\n  "count": "{{ .Alerts | len }}",\n  "status": "{{ .Status }}"\n}';
       const expected =
         '{\n  "count": "{{ "{{" }} .Alerts | len {{ "}}" }}",\n  "status": "{{ "{{" }} .Status {{ "}}" }}"\n}';
       expect(escapeGoTemplate(input)).toBe(expected);
@@ -54,7 +60,8 @@ describe("Template escaping utilities", () => {
 
     test("should escape $value with filter", () => {
       const input = "Memory usage: {{ $value | humanize }} bytes";
-      const expected = 'Memory usage: {{ "{{" }} $value | humanize {{ "}}" }} bytes';
+      const expected =
+        'Memory usage: {{ "{{" }} $value | humanize {{ "}}" }} bytes';
       expect(escapePrometheusTemplate(input)).toBe(expected);
     });
 
@@ -65,7 +72,8 @@ describe("Template escaping utilities", () => {
     });
 
     test("should handle multiple Prometheus patterns", () => {
-      const input = "{{ $labels.job }} has {{ $value | humanizePercentage }} usage on {{ $labels.instance }}";
+      const input =
+        "{{ $labels.job }} has {{ $value | humanizePercentage }} usage on {{ $labels.instance }}";
       const expected =
         '{{ "{{" }} $labels.job {{ "}}" }} has {{ "{{" }} $value | humanizePercentage {{ "}}" }} usage on {{ "{{" }} $labels.instance {{ "}}" }}';
       expect(escapePrometheusTemplate(input)).toBe(expected);
@@ -73,7 +81,8 @@ describe("Template escaping utilities", () => {
 
     test("should handle whitespace variations", () => {
       const input = "{{$value}} and {{ $value }} and {{  $value  }}";
-      const expected = '{{ "{{" }} $value {{ "}}" }} and {{ "{{" }} $value {{ "}}" }} and {{ "{{" }} $value {{ "}}" }}';
+      const expected =
+        '{{ "{{" }} $value {{ "}}" }} and {{ "{{" }} $value {{ "}}" }} and {{ "{{" }} $value {{ "}}" }}';
       expect(escapePrometheusTemplate(input)).toBe(expected);
     });
 
@@ -91,7 +100,8 @@ describe("Template escaping utilities", () => {
 
     test("should work with Alertmanager-specific templates", () => {
       const input = "{{ range .Alerts.Firing }}{{ . }}\n{{ end }}";
-      const expected = '{{ "{{" }} range .Alerts.Firing {{ "}}" }}{{ "{{" }} . {{ "}}" }}\n{{ "{{" }} end {{ "}}" }}';
+      const expected =
+        '{{ "{{" }} range .Alerts.Firing {{ "}}" }}{{ "{{" }} . {{ "}}" }}\n{{ "{{" }} end {{ "}}" }}';
       expect(escapeAlertmanagerTemplate(input)).toBe(expected);
     });
   });

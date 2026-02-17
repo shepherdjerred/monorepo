@@ -5,7 +5,12 @@ import React from "react";
 import { getCourseVideoUrl, getStreamUrl } from "#src/utils/url-utilities";
 import type { Bookmarkable } from "#src/model/bookmark";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBookmark, faCloudDownloadAlt, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBookmark,
+  faCloudDownloadAlt,
+  faEye,
+  faEyeSlash,
+} from "@fortawesome/free-solid-svg-icons";
 import type { Watchable } from "#src/model/watch-status";
 import classNames from "classnames";
 
@@ -18,10 +23,19 @@ export type SearchResultVideoProps = {
   isWatched: boolean;
   isBookmarked: boolean;
   isDownloadEnabled: boolean;
-}
+};
 
-export function CourseSearchResultVideo(props: SearchResultVideoProps): React.ReactElement {
-  const { course, video, matchedStrings, isWatched, isBookmarked, isDownloadEnabled } = props;
+export function CourseSearchResultVideo(
+  props: SearchResultVideoProps,
+): React.ReactElement {
+  const {
+    course,
+    video,
+    matchedStrings,
+    isWatched,
+    isBookmarked,
+    isDownloadEnabled,
+  } = props;
   // TODO: use alt title from course video
   const { title } = video;
 
@@ -35,15 +49,22 @@ export function CourseSearchResultVideo(props: SearchResultVideoProps): React.Re
   return (
     <li>
       <a href={link} className={textStyle}>
-        <Highlighter searchWords={matchedStrings} textToHighlight={title} autoEscape={true} />
+        <Highlighter
+          searchWords={matchedStrings}
+          textToHighlight={title}
+          autoEscape={true}
+        />
       </a>{" "}
       <button
         onClick={() => {
           props.onToggleBookmark(video);
         }}
-        className={classNames("video-watched-button tag is-small is-outlined is-inverted is-rounded", {
-          "is-warning": isBookmarked,
-        })}
+        className={classNames(
+          "video-watched-button tag is-small is-outlined is-inverted is-rounded",
+          {
+            "is-warning": isBookmarked,
+          },
+        )}
         title={bookmarkHint}
       >
         <FontAwesomeIcon icon={faBookmark} />

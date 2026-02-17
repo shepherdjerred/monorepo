@@ -1,5 +1,11 @@
-import { Deployment, DeploymentStrategy, EnvValue, Secret, Volume } from "cdk8s-plus-31";
-import type { Chart} from "cdk8s";
+import {
+  Deployment,
+  DeploymentStrategy,
+  EnvValue,
+  Secret,
+  Volume,
+} from "cdk8s-plus-31";
+import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { withCommonLinuxServerProps } from "../../misc/linux-server.ts";
 import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
@@ -12,8 +18,10 @@ export function createRecyclarrDeployment(chart: Chart) {
     strategy: DeploymentStrategy.recreate(),
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/run-as-non-root": "LinuxServer.io images run as root internally",
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "LinuxServer.io images require writable filesystem",
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "LinuxServer.io images run as root internally",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "LinuxServer.io images require writable filesystem",
       },
     },
   });
@@ -22,24 +30,38 @@ export function createRecyclarrDeployment(chart: Chart) {
     storage: Size.gibibytes(8),
   });
 
-  const configItem = new OnePasswordItem(chart, "recyclarr-config-onepassword-homelab", {
-    spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/fu5ufvg6bx3kkcp7lqi5pmwj2a",
-    },
-    metadata: {
-      name: "recyclarr-config-homelab",
-    },
-  });
-
-  const secret = Secret.fromSecretName(chart, "recyclarr-config-secret", configItem.name);
-
-  const secretVolume = Volume.fromSecret(chart, "recyclarr-config-volume", secret, {
-    items: {
-      "recyclarr.yaml": {
-        path: "recyclarr.yaml",
+  const configItem = new OnePasswordItem(
+    chart,
+    "recyclarr-config-onepassword-homelab",
+    {
+      spec: {
+        itemPath:
+          "vaults/v64ocnykdqju4ui6j6pua56xw4/items/fu5ufvg6bx3kkcp7lqi5pmwj2a",
+      },
+      metadata: {
+        name: "recyclarr-config-homelab",
       },
     },
-  });
+  );
+
+  const secret = Secret.fromSecretName(
+    chart,
+    "recyclarr-config-secret",
+    configItem.name,
+  );
+
+  const secretVolume = Volume.fromSecret(
+    chart,
+    "recyclarr-config-volume",
+    secret,
+    {
+      items: {
+        "recyclarr.yaml": {
+          path: "recyclarr.yaml",
+        },
+      },
+    },
+  );
 
   deployment.addContainer(
     withCommonLinuxServerProps({
@@ -50,7 +72,11 @@ export function createRecyclarrDeployment(chart: Chart) {
       volumeMounts: [
         {
           path: "/config",
-          volume: Volume.fromPersistentVolumeClaim(chart, "recyclarr-volume", localPathVolume.claim),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "recyclarr-volume",
+            localPathVolume.claim,
+          ),
         },
         {
           path: "/config/recyclarr.yaml",

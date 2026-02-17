@@ -17,7 +17,7 @@ export type OmniSearchProps = {
   isDownloadEnabled: boolean;
   onToggleTipsModal: () => void;
   isTipsModalVisible: boolean;
-}
+};
 
 export function OmniSearch({
   items,

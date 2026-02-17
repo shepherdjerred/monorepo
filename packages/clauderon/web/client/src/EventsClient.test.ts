@@ -1,7 +1,13 @@
 import { describe, expect, test, mock, beforeEach, afterEach } from "bun:test";
 import { EventsClient } from "./EventsClient";
 import type { SessionEvent } from "./EventsClient";
-import { SessionStatus, AccessMode, BackendType, AgentType, ClaudeWorkingStatus } from "@clauderon/shared";
+import {
+  SessionStatus,
+  AccessMode,
+  BackendType,
+  AgentType,
+  ClaudeWorkingStatus,
+} from "@clauderon/shared";
 import type { Session } from "@clauderon/shared";
 
 // Mock WebSocket implementation
@@ -144,7 +150,9 @@ describe("EventsClient", () => {
 
     test("handles disconnect when not connected", () => {
       const client = new EventsClient();
-      expect(() => { client.disconnect(); }).not.toThrow();
+      expect(() => {
+        client.disconnect();
+      }).not.toThrow();
     });
 
     test("prevents auto-reconnect after intentional disconnect", async () => {
@@ -207,7 +215,10 @@ describe("EventsClient", () => {
 
       const event: SessionEvent = {
         type: "session_updated",
-        session: createMockSession({ status: SessionStatus.Archived, access_mode: AccessMode.ReadOnly }),
+        session: createMockSession({
+          status: SessionStatus.Archived,
+          access_mode: AccessMode.ReadOnly,
+        }),
       };
 
       ws.simulateMessage(JSON.stringify({ type: "event", event }));
@@ -249,7 +260,9 @@ describe("EventsClient", () => {
       // @ts-expect-error - Accessing private ws for testing
       const ws = client.ws as MockWebSocket;
 
-      ws.simulateMessage(JSON.stringify({ type: "connected", message: "Connected" }));
+      ws.simulateMessage(
+        JSON.stringify({ type: "connected", message: "Connected" }),
+      );
 
       expect(onEvent).not.toHaveBeenCalled();
     });

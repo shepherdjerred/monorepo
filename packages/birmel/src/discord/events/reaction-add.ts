@@ -15,7 +15,7 @@ export function handleReactionAdd(client: Client) {
     "messageReactionAdd",
     (
       reaction: MessageReaction | PartialMessageReaction,
-      user: User | PartialUser
+      user: User | PartialUser,
     ) => {
       void (async () => {
         try {
@@ -60,6 +60,6 @@ export function handleReactionAdd(client: Client) {
           logger.error("Error in reaction add handler", error);
         }
       })();
-    }
+    },
   );
 }

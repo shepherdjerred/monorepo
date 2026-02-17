@@ -98,8 +98,8 @@ For app developer guidance, see [Apple Pay](/documentation/PassKit/apple-pay). F
 
 **Use line items to explain additional charges, discounts, pending costs, add-on donations, recurring, and future payments.** A line item includes a label and cost; a line item for a recurring payment can also include a frequency. Don’t use line items to show an itemized list of products that make up the purchase. For developer guidance, see [`paymentSummaryItems`](/documentation/PassKit/PKPaymentRequest/paymentSummaryItems); for guidance on donations, see [Supporting donations](/design/human-interface-guidelines/apple-pay#Supporting-donations).
 
-* [iOS](#)
-* [Web](#)
+- [iOS](#)
+- [Web](#)
 
 ![A screenshot of an in-app payment sheet that includes an additional charge for gift wrap and a credit applied for a coupon.](https://docs-assets.developer.apple.com/published/b3d9d7f7a3968b37723a73f7332a3ec8/payment-sheet-ios%402x.png)
 
@@ -107,7 +107,7 @@ For app developer guidance, see [Apple Pay](/documentation/PassKit/apple-pay). F
 
 **Keep line items short.** Make line items specific and easily understandable at a glance. Whenever possible, fit line items on a single line.
 
-**Provide a business name after the word *Pay* on the same line as the total.** Use the same business name people will see when they look for the charge on their bank or credit card statement. This provides reassurance that payment is going to the right place. For example, Pay [*Business\_Name*].
+**Provide a business name after the word _Pay_ on the same line as the total.** Use the same business name people will see when they look for the charge on their bank or credit card statement. This provides reassurance that payment is going to the right place. For example, Pay [*Business\_Name*].
 
 **If you’re not the end merchant, specify both your business name and the end merchant’s name in the payment sheet.** There are a few ways your app, App Clip, or website might help people make a purchase from an end merchant that’s unrelated to your company. For example, a marketplace app can help people make a purchase from an end merchant they might not recognize. Another example is an app that offers a self-checkout service people can use to pay for an item in an end merchant’s physical store without visiting the store’s checkout counter. In scenarios like these, people might not realize two businesses are involved in the transaction, so it’s essential to name both businesses and clarify their roles. When your app acts as an intermediary for an end merchant, clearly and succinctly describe the situation in the Pay line of the payment sheet, using something like Pay [*End\_Merchant\_Business\_Name* (via *Your\_Business\_Name*)].
 
@@ -121,8 +121,8 @@ Many websites provide an icon that can display with bookmarks, in URL fields, or
 
 If your website supports Apple Pay, provide an icon in the following sizes for use in the summary view and the payment sheet:
 
-| @2x | @3x |
-| --- | --- |
+| @2x                       | @3x                       |
+| ------------------------- | ------------------------- |
 | 60x60 pt (120x120 px @2x) | 60x60 pt (180x180 px @3x) |
 
 ![An illustration of an Apple Pay payment sheet on iPhone, which shows a website icon above the payment details.](https://docs-assets.developer.apple.com/published/69ae379313b720a151bf5eda6edc712f/web-icon-payment%402x.png)
@@ -135,8 +135,8 @@ Provide clear, actionable guidance when problems occur during checkout or paymen
 
 Your app or website can respond to user input when the payment sheet appears, when people change certain field values on the payment sheet, and after they authenticate the transaction. Use these opportunities to check for data entry problems and to provide clear and consistent messaging.
 
-* [iOS](#)
-* [Web](#)
+- [iOS](#)
+- [Web](#)
 
 ![A screenshot of an in-app Apple Pay payment sheet on iPhone that shows an error with the shipping address.](https://docs-assets.developer.apple.com/published/057eb557e82a7dc0d59ff9d65470088d/pay-sheet-error-ios%402x.png)
 
@@ -176,8 +176,8 @@ For privacy reasons, your app or website has limited access to data until people
 
 Your app or website can use Apple Pay to request authorization for recurring fees. A recurring fee can be a fixed amount, such as a monthly movie ticket subscription, or — when local regulations allow — a variable amount like a weekly grocery order. The initial authorization can also include discounts and additional fees.
 
-* [iOS](#)
-* [Web](#)
+- [iOS](#)
+- [Web](#)
 
 ![A screenshot of an in-app Apple Pay payment sheet for a fixed subscription, which includes a monthly amount.](https://docs-assets.developer.apple.com/published/598121af8dc2f5d00ce80d355d6d2729/fixed-subscription-ios%402x.png)
 
@@ -199,8 +199,8 @@ Variable subscription (where local regulations allow)
 
 **Include line items that reiterate billing frequency, discounts, and additional upfront fees.** Use these line items to remind people what they’re authorizing. If no payment is required at authorization time, clearly disclose when billing will occur.
 
-* [iOS](#)
-* [Web](#)
+- [iOS](#)
+- [Web](#)
 
 ![A screenshot of an in-app Apple Pay payment sheet for a fixed subscription that doesn’t require payment until after the first month. The total shows a zero dollar amount.](https://docs-assets.developer.apple.com/published/8ed56d3b421d47c4a69fbcfc1bdfade1/no-payment-required-ios%402x.png)
 
@@ -236,30 +236,30 @@ Apple provides several types of buttons so you can choose the button type that f
 
 Use the Apple-provided APIs to create Apple Pay buttons. When you use the system-provided APIs, you get:
 
-* A button that is guaranteed to use an Apple-approved caption, font, color, and style
-* Assurance that the button’s contents maintain ideal proportions as you change its size
-* Automatic translation of the button’s caption into the language that’s set for the device
-* Support for configuring the button’s corner radius to match the style of your UI
-* A system-provided alternative text label that lets VoiceOver describe the button
+- A button that is guaranteed to use an Apple-approved caption, font, color, and style
+- Assurance that the button’s contents maintain ideal proportions as you change its size
+- Automatic translation of the button’s caption into the language that’s set for the device
+- Support for configuring the button’s corner radius to match the style of your UI
+- A system-provided alternative text label that lets VoiceOver describe the button
 
-| Payment button type | Example usage |
-| --- | --- |
-| Buy with Apple Pay button | An area in an app or website where people can make a purchase, such as a product detail page or shopping cart page. |
-| Pay with Apple Pay button | An app or website that lets people pay bills or invoices, such as those for a utility — like cable or electricity — or a service like plumbing or car repair. |
-| Check out with Apple Pay button | An app or website offering a shopping cart or purchase experience that includes other payment buttons that start with the text *Check out*. |
-| Continue with Apple Pay button | An app or website offering a shopping cart or purchase experience that includes other payment buttons that start with the text *Continue with*. |
-| Book with Apple Pay button | An app or website that helps people book flights, trips, or other experiences. |
-| Donate with Apple Pay button | An app or website for an [approved nonprofit](https://developer.apple.com/support/apple-pay-nonprofits/) that lets people make donations. |
-| Subscribe with Apple Pay button | An app or website that lets people purchase a subscription, such as a gym membership or a meal-kit delivery service. |
-| Reload with Apple Pay button | An app or website that uses the term *reload* to help people add money to a card, account, or payment system associated with a service, such as transit or a prepaid phone plan. |
-| Add Money with Apple Pay button | An app or website that uses the term *add money* to help people add money to a card, account, or payment system associated with a service, such as transit or a prepaid phone plan. |
-| Top Up with Apple Pay button | An app or website that uses the term *top up* to help people add money to a card, account, or payment system associated with a service, such as transit or a prepaid phone plan. |
-| Order with Apple Pay button | An app or website that lets people place orders for items like meals or flowers. |
-| Rent with Apple Pay button | An app or website that lets people rent items like cars or scooters. |
-| Support with Apple Pay button | An app or website that uses the term *support* to help people give money to projects, causes, organizations, and other entities. |
-| Contribute with Apple Pay button | An app or website that uses the term *contribute* to help people give money to projects, causes, organizations, and other entities. |
-| Tip with Apple Pay button | An app or website that lets people tip for goods or services. |
-| Apple Pay button | An app or website that has stylistic reasons to use a button that can have a smaller minimum width or that doesn’t specify a call to action. If you choose a payment button type that isn’t supported on the version of the operating system your app or website is running in, the system may replace it with this button. |
+| Payment button type              | Example usage                                                                                                                                                                                                                                                                                                               |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Buy with Apple Pay button        | An area in an app or website where people can make a purchase, such as a product detail page or shopping cart page.                                                                                                                                                                                                         |
+| Pay with Apple Pay button        | An app or website that lets people pay bills or invoices, such as those for a utility — like cable or electricity — or a service like plumbing or car repair.                                                                                                                                                               |
+| Check out with Apple Pay button  | An app or website offering a shopping cart or purchase experience that includes other payment buttons that start with the text _Check out_.                                                                                                                                                                                 |
+| Continue with Apple Pay button   | An app or website offering a shopping cart or purchase experience that includes other payment buttons that start with the text _Continue with_.                                                                                                                                                                             |
+| Book with Apple Pay button       | An app or website that helps people book flights, trips, or other experiences.                                                                                                                                                                                                                                              |
+| Donate with Apple Pay button     | An app or website for an [approved nonprofit](https://developer.apple.com/support/apple-pay-nonprofits/) that lets people make donations.                                                                                                                                                                                   |
+| Subscribe with Apple Pay button  | An app or website that lets people purchase a subscription, such as a gym membership or a meal-kit delivery service.                                                                                                                                                                                                        |
+| Reload with Apple Pay button     | An app or website that uses the term _reload_ to help people add money to a card, account, or payment system associated with a service, such as transit or a prepaid phone plan.                                                                                                                                            |
+| Add Money with Apple Pay button  | An app or website that uses the term _add money_ to help people add money to a card, account, or payment system associated with a service, such as transit or a prepaid phone plan.                                                                                                                                         |
+| Top Up with Apple Pay button     | An app or website that uses the term _top up_ to help people add money to a card, account, or payment system associated with a service, such as transit or a prepaid phone plan.                                                                                                                                            |
+| Order with Apple Pay button      | An app or website that lets people place orders for items like meals or flowers.                                                                                                                                                                                                                                            |
+| Rent with Apple Pay button       | An app or website that lets people rent items like cars or scooters.                                                                                                                                                                                                                                                        |
+| Support with Apple Pay button    | An app or website that uses the term _support_ to help people give money to projects, causes, organizations, and other entities.                                                                                                                                                                                            |
+| Contribute with Apple Pay button | An app or website that uses the term _contribute_ to help people give money to projects, causes, organizations, and other entities.                                                                                                                                                                                         |
+| Tip with Apple Pay button        | An app or website that lets people tip for goods or services.                                                                                                                                                                                                                                                               |
+| Apple Pay button                 | An app or website that has stylistic reasons to use a button that can have a smaller minimum width or that doesn’t specify a call to action. If you choose a payment button type that isn’t supported on the version of the operating system your app or website is running in, the system may replace it with this button. |
 
 When a device supports Apple Pay, but it hasn’t been set up yet, you can use the Set up Apple Pay button to show that Apple Pay is accepted and to give people an explicit opportunity to set it up.
 
@@ -269,7 +269,7 @@ You can display the Set up Apple Pay button on pages such as a Settings page, a 
 
 ### [Button styles](/design/human-interface-guidelines/apple-pay#Button-styles)
 
-You can use the *automatic* style to let the current system appearance determine the appearance of the Apple Pay buttons in your app (for developer guidance, see [`PKPaymentButtonStyle.automatic`](/documentation/PassKit/PKPaymentButtonStyle/automatic)). If you want to control the button appearance yourself, you can use one of the following options. For web developer guidance, see [`ApplePayButtonStyle`](/documentation/ApplePayontheWeb/ApplePayButtonStyle).
+You can use the _automatic_ style to let the current system appearance determine the appearance of the Apple Pay buttons in your app (for developer guidance, see [`PKPaymentButtonStyle.automatic`](/documentation/PassKit/PKPaymentButtonStyle/automatic)). If you want to control the button appearance yourself, you can use one of the following options. For web developer guidance, see [`ApplePayButtonStyle`](/documentation/ApplePayontheWeb/ApplePayButtonStyle).
 
 #### [Black](/design/human-interface-guidelines/apple-pay#Black)
 
@@ -365,14 +365,14 @@ If the size you specify doesn’t accommodate the translated title for the type 
 
 Use the following values for guidance.
 
-| Button | Minimum width | Minimum height | Minimum margins |
-| --- | --- | --- | --- |
-| Apple Pay | 100pt (100px @1x, 200px @2x) | 30pt (30px @1x, 60px @2x) | 1/10 of the button’s height |
-| Book with Apple Pay | 140pt (140px @1x, 280px @2x) | 30pt (30px @1x, 60px @2x) | 1/10 of the button’s height |
-| Buy with Apple Pay |
+| Button                   | Minimum width                | Minimum height            | Minimum margins             |
+| ------------------------ | ---------------------------- | ------------------------- | --------------------------- |
+| Apple Pay                | 100pt (100px @1x, 200px @2x) | 30pt (30px @1x, 60px @2x) | 1/10 of the button’s height |
+| Book with Apple Pay      | 140pt (140px @1x, 280px @2x) | 30pt (30px @1x, 60px @2x) | 1/10 of the button’s height |
+| Buy with Apple Pay       |
 | Check out with Apple Pay |
-| Donate with Apple Pay |
-| Set up Apple Pay |
+| Donate with Apple Pay    |
+| Set up Apple Pay         |
 | Subscribe with Apple Pay |
 
 ### [Apple Pay mark](/design/human-interface-guidelines/apple-pay#Apple-Pay-mark)
@@ -393,21 +393,21 @@ As with all Apple product names, use Apple Pay exactly as shown in [Apple Tradem
 
 You can use plain text to promote Apple Pay and indicate that Apple Pay is a payment option.
 
-**Capitalize Apple Pay in text as it appears in the Apple Trademark list.** Use two words with an uppercase *A*, an uppercase *P*, and lowercase for all other letters. Display Apple Pay entirely in uppercase only when doing so is necessary for conforming to an established, typographic interface style, such as in an app that capitalizes all text.
+**Capitalize Apple Pay in text as it appears in the Apple Trademark list.** Use two words with an uppercase _A_, an uppercase _P_, and lowercase for all other letters. Display Apple Pay entirely in uppercase only when doing so is necessary for conforming to an established, typographic interface style, such as in an app that capitalizes all text.
 
-**Never use the Apple logo to represent the name *Apple* in text.** In the United States, use the registered trademark symbol (®) the first time Apple Pay appears in body text. Don’t include a registered trademark symbol when Apple Pay appears as a selection option during checkout.
+**Never use the Apple logo to represent the name _Apple_ in text.** In the United States, use the registered trademark symbol (®) the first time Apple Pay appears in body text. Don’t include a registered trademark symbol when Apple Pay appears as a selection option during checkout.
 
-|  | Example text |
-| --- | --- |
-| Correct usage | Purchase with Apple Pay |
-| Correct usage | Purchase with Apple Pay® |
-| Incorrect usage | Purchase with ApplePay |
-| Incorrect usage | Purchase with  Pay |
-| Incorrect usage | Purchase with APPLE PAY |
+|                 | Example text             |
+| --------------- | ------------------------ |
+| Correct usage   | Purchase with Apple Pay  |
+| Correct usage   | Purchase with Apple Pay® |
+| Incorrect usage | Purchase with ApplePay   |
+| Incorrect usage | Purchase with  Pay      |
+| Incorrect usage | Purchase with APPLE PAY  |
 
 **Coordinate the font face and size with your app.** Don’t mimic Apple typography. Instead, use text attributes that are consistent with the rest of your app or website.
 
-**Don’t translate *Apple Pay* or any other Apple trademark.** Always use Apple trademarks in English, even when they appear within non-English text.
+**Don’t translate _Apple Pay_ or any other Apple trademark.** Always use Apple trademarks in English, even when they appear within non-English text.
 
 **In a payment selection context, you can display a text-only description of Apple Pay only when all payment options have text-only descriptions.** If any other payment option description includes an icon or logo, you must use the Apple Pay mark as described in [Offering Apple Pay](/design/human-interface-guidelines/apple-pay#Offering-Apple-Pay).
 
@@ -415,7 +415,7 @@ You can use plain text to promote Apple Pay and indicate that Apple Pay is a pay
 
 ## [Platform considerations](/design/human-interface-guidelines/apple-pay#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, visionOS, or watchOS. Not supported in tvOS.*
+_No additional considerations for iOS, iPadOS, macOS, visionOS, or watchOS. Not supported in tvOS._
 
 ## [Resources](/design/human-interface-guidelines/apple-pay#Resources)
 
@@ -439,8 +439,8 @@ What’s new in Apple Pay](https://developer.apple.com/videos/play/wwdc2025/201)
 
 ## [Change log](/design/human-interface-guidelines/apple-pay#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| June 10, 2024 | Updated links to developer guidance for offering Apple Pay on the web. |
-| September 12, 2023 | Updated artwork. |
-| May 2, 2023 | Consolidated guidance into one page. |
+| Date               | Changes                                                                |
+| ------------------ | ---------------------------------------------------------------------- |
+| June 10, 2024      | Updated links to developer guidance for offering Apple Pay on the web. |
+| September 12, 2023 | Updated artwork.                                                       |
+| May 2, 2023        | Consolidated guidance into one page.                                   |

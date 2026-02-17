@@ -17,7 +17,9 @@ export const K8S_RESOURCE_SPEC_PATTERN = {
  * Check if a property name indicates a Kubernetes resource spec.
  */
 export function isK8sResourceSpec(propertyName: string): boolean {
-  return K8S_RESOURCE_SPEC_PATTERN.resourceSpecNames.includes(propertyName.toLowerCase());
+  return K8S_RESOURCE_SPEC_PATTERN.resourceSpecNames.includes(
+    propertyName.toLowerCase(),
+  );
 }
 
 /**
@@ -86,7 +88,10 @@ export function shouldAllowArbitraryProps(
   const patterns = EXTENSIBLE_TYPE_PATTERNS[chartName];
   if (patterns) {
     for (const pattern of patterns) {
-      if (pattern === keyPath || (pattern === "" && keyPath.split(".").length === 1)) {
+      if (
+        pattern === keyPath ||
+        (pattern === "" && keyPath.split(".").length === 1)
+      ) {
         return true;
       }
       // Also match if keyPath starts with pattern
@@ -129,7 +134,9 @@ export function shouldAllowArbitraryProps(
   if (yamlComment) {
     const commentLower = yamlComment.toLowerCase();
     if (
-      /\b(arbitrary|custom|additional|extra|any)\s+(keys?|properties?|fields?|values?)\b/i.test(commentLower) ||
+      /\b(arbitrary|custom|additional|extra|any)\s+(keys?|properties?|fields?|values?)\b/i.test(
+        commentLower,
+      ) ||
       /\bkey[\s-]?value\s+pairs?\b/i.test(commentLower)
     ) {
       return true;

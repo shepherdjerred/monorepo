@@ -130,34 +130,41 @@ command:
     example: "&cExample: $command Player 7d [reason]"
     silent_prefix: "&f[&7Silent&f] "
     broadcast_ban: "&a$executor &fbanned &a$bannedPlayer &ffor '&a$reason&f'"
-    broadcast_tempban: "&a$executor &ftempbanned &a$bannedPlayer &ffor $tempDuration
+    broadcast_tempban:
+      "&a$executor &ftempbanned &a$bannedPlayer &ffor $tempDuration
       for '&a$reason&f'"
     broadcast_ip_ban: "&a$executor &fIP-banned &a$bannedPlayer &ffor '&a$reason&f'"
-    broadcast_temp_ip_ban: "&a$executor &ftemp IP-banned &a$bannedIP &ffor $tempDuration
+    broadcast_temp_ip_ban:
+      "&a$executor &ftemp IP-banned &a$bannedIP &ffor $tempDuration
       for '&a$reason&f'"
     previous_ban_removed: "&aPrevious ban for $bannedPlayer removed."
-    previous_ban_existing: "&c$bannedPlayer is already banned, and you do not have
+    previous_ban_existing:
+      "&c$bannedPlayer is already banned, and you do not have
       permission to replace existing bans."
     unban_fail: "&cTarget is not banned!"
     no_override: "&cPlayer is already banned!"
     exempt: "&cYou can't ban $player!"
-    cooldown: "&cYou need to wait $seconds second(s) before you can use this command
+    cooldown:
+      "&cYou need to wait $seconds second(s) before you can use this command
       again."
     response: ""
     ip_hidden: "[IP Address]"
     unban_usage: "&cUsage: $command <player>"
     broadcast_unban: "&a$executor &funbanned &a$playerName &ffor '&a$removalReason&f'"
     unban_queue: "&6If they try to reconnect, they will be unbanned."
-    unban_queued: "&cTarget is not banned!&6 If they try to reconnect, they will be
+    unban_queued:
+      "&cTarget is not banned!&6 If they try to reconnect, they will be
       unbanned."
   mute:
     usage: "&cUsage: $command [-s] <player> [time spec] [reason]"
     example: "&cExample: $command Player 7d [reason]"
     broadcast: "&a$executor &fmuted &a$mutedPlayer &ffor '&a$reason&f'"
-    broadcast_tempmute: "&a$executor &ftempmuted &a$playerName &ffor $tempDuration
+    broadcast_tempmute:
+      "&a$executor &ftempmuted &a$playerName &ffor $tempDuration
       for '&a$reason&f'"
     broadcast_ip_mute: "&a$executor &fIP-muted &a$playerName &ffor '&a$reason&f'"
-    broadcast_temp_ip_mute: "&a$executor &ftemp IP-muted &a$mutedIP &ffor $tempDuration
+    broadcast_temp_ip_mute:
+      "&a$executor &ftemp IP-muted &a$mutedIP &ffor $tempDuration
       for '&a$reason&f'"
     message: |-
       &4You have been muted by $executor&4 for &c'&4$reason&c'&4.
@@ -168,7 +175,8 @@ command:
     unmute_fail: "&cTarget is not muted!"
     no_override: "&cPlayer is already muted!"
     previous_mute_removed: "&aPrevious mute for $mutedPlayer removed."
-    previous_mute_existing: "&c$mutedPlayer is already muted, and you do not have
+    previous_mute_existing:
+      "&c$mutedPlayer is already muted, and you do not have
       permission to replace existing mutes."
     exempt: "&cYou can't mute $player!"
     notification: "&c$mutedPlayer tried to speak, but is muted."
@@ -193,7 +201,8 @@ command:
   kick:
     usage: "&c$command <player> [reason]"
     no_match: "&cError: &4Player not found."
-    kick_requested: "&6Player $player is not online on this server. Cross-server kick
+    kick_requested:
+      "&6Player $player is not online on this server. Cross-server kick
       has been requested."
     message: "Kicked by $executor: $reason"
     message_no_reason: Kicked by $executor.
@@ -296,7 +305,8 @@ command:
     usage: "&c$command <player|IP>"
     message: "&a$target&f is from: &a$result"
     error_disabled: "&cGeoIP support is not enabled in the configuration!"
-    error_unavailable: "&cGeoIP support is currently unavailable, has it been downloaded
+    error_unavailable:
+      "&cGeoIP support is currently unavailable, has it been downloaded
       yet?"
     error_not_found: "&cGeoIP information for $target not found."
   lockdown:
@@ -331,12 +341,14 @@ command:
       &cPlease check the server console for more information.
     fix_history: "&aFixing history for table $table..."
     fix_history_result: "&aAdded $amount entries."
-    fix_history_offline_uuids: "&c$amount UUIDs were not fetched from Mojang since
+    fix_history_offline_uuids:
+      "&c$amount UUIDs were not fetched from Mojang since
       they are offline-mode UUIDs."
     import_usage: "&c$command import start"
     import_start: "&aImporting from $db, this might take a while..."
     import_finish: "&aImport finished successfully. $bans bans imported, $ipbans IP-bans."
-    import_finish_litebans: "&aImport finished successfully. Added $amount entries
+    import_finish_litebans:
+      "&aImport finished successfully. Added $amount entries
       to the database."
     import_fail: "&cImport failed. Check console."
     import_unsupported: "&cImporting from '$name' is not supported yet!"

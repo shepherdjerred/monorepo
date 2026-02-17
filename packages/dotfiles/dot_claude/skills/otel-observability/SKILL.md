@@ -20,12 +20,12 @@ description: |
 
 OpenTelemetry (OTel) provides three observability signals:
 
-| Signal | Purpose | Use Case |
-|--------|---------|----------|
-| **Traces** | Request flow across services | Debugging distributed systems |
-| **Metrics** | Numerical measurements | Performance monitoring, alerting |
-| **Logs** | Structured event records | Error tracking, audit trails |
-| **Baggage** | Context propagation | Passing data across services |
+| Signal      | Purpose                      | Use Case                         |
+| ----------- | ---------------------------- | -------------------------------- |
+| **Traces**  | Request flow across services | Debugging distributed systems    |
+| **Metrics** | Numerical measurements       | Performance monitoring, alerting |
+| **Logs**    | Structured event records     | Error tracking, audit trails     |
+| **Baggage** | Context propagation          | Passing data across services     |
 
 ## Installation
 
@@ -64,15 +64,15 @@ node app.js
 
 ### Common Environment Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `OTEL_SERVICE_NAME` | Service identifier | `"user-service"` |
+| Variable                      | Description        | Example                   |
+| ----------------------------- | ------------------ | ------------------------- |
+| `OTEL_SERVICE_NAME`           | Service identifier | `"user-service"`          |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | Collector endpoint | `"http://localhost:4318"` |
-| `OTEL_TRACES_EXPORTER` | Trace exporter | `"otlp"`, `"console"` |
-| `OTEL_METRICS_EXPORTER` | Metrics exporter | `"otlp"`, `"prometheus"` |
-| `OTEL_LOGS_EXPORTER` | Logs exporter | `"otlp"`, `"console"` |
-| `OTEL_TRACES_SAMPLER` | Sampling strategy | `"parentbased_always_on"` |
-| `OTEL_TRACES_SAMPLER_ARG` | Sampler argument | `"0.1"` (10% sampling) |
+| `OTEL_TRACES_EXPORTER`        | Trace exporter     | `"otlp"`, `"console"`     |
+| `OTEL_METRICS_EXPORTER`       | Metrics exporter   | `"otlp"`, `"prometheus"`  |
+| `OTEL_LOGS_EXPORTER`          | Logs exporter      | `"otlp"`, `"console"`     |
+| `OTEL_TRACES_SAMPLER`         | Sampling strategy  | `"parentbased_always_on"` |
+| `OTEL_TRACES_SAMPLER_ARG`     | Sampler argument   | `"0.1"` (10% sampling)    |
 
 ## Programmatic Setup
 
@@ -169,10 +169,14 @@ async function processOrder(orderId: string) {
 import { SpanKind } from "@opentelemetry/api";
 
 // CLIENT - outgoing request (HTTP client, DB call)
-tracer.startActiveSpan("fetch-user", { kind: SpanKind.CLIENT }, async (span) => {
-  const user = await fetch("/api/users/1");
-  span.end();
-});
+tracer.startActiveSpan(
+  "fetch-user",
+  { kind: SpanKind.CLIENT },
+  async (span) => {
+    const user = await fetch("/api/users/1");
+    span.end();
+  },
+);
 
 // SERVER - incoming request (HTTP handler)
 tracer.startActiveSpan("handle-request", { kind: SpanKind.SERVER }, (span) => {
@@ -187,10 +191,14 @@ tracer.startActiveSpan("send-message", { kind: SpanKind.PRODUCER }, (span) => {
 });
 
 // CONSUMER - message consumption
-tracer.startActiveSpan("process-message", { kind: SpanKind.CONSUMER }, (span) => {
-  processMessage(message);
-  span.end();
-});
+tracer.startActiveSpan(
+  "process-message",
+  { kind: SpanKind.CONSUMER },
+  (span) => {
+    processMessage(message);
+    span.end();
+  },
+);
 
 // INTERNAL - internal operation (default)
 tracer.startActiveSpan("calculate", { kind: SpanKind.INTERNAL }, (span) => {
@@ -524,7 +532,12 @@ const promExporter = new PrometheusExporter({
 
 ```typescript
 // Express middleware
-import { trace, context, propagation, SpanStatusCode } from "@opentelemetry/api";
+import {
+  trace,
+  context,
+  propagation,
+  SpanStatusCode,
+} from "@opentelemetry/api";
 
 const tracer = trace.getTracer("express-app");
 
@@ -551,7 +564,7 @@ app.use((req, res, next) => {
         });
 
         next();
-      }
+      },
     );
   });
 });
@@ -560,26 +573,31 @@ app.use((req, res, next) => {
 ### Database Query Wrapper
 
 ```typescript
-async function tracedQuery<T>(name: string, query: () => Promise<T>): Promise<T> {
-  return tracer.startActiveSpan(name, { kind: SpanKind.CLIENT }, async (span) => {
-    try {
-      span.setAttribute("db.system", "postgresql");
-      const result = await query();
-      return result;
-    } catch (error) {
-      span.recordException(error as Error);
-      span.setStatus({ code: SpanStatusCode.ERROR });
-      throw error;
-    } finally {
-      span.end();
-    }
-  });
+async function tracedQuery<T>(
+  name: string,
+  query: () => Promise<T>,
+): Promise<T> {
+  return tracer.startActiveSpan(
+    name,
+    { kind: SpanKind.CLIENT },
+    async (span) => {
+      try {
+        span.setAttribute("db.system", "postgresql");
+        const result = await query();
+        return result;
+      } catch (error) {
+        span.recordException(error as Error);
+        span.setStatus({ code: SpanStatusCode.ERROR });
+        throw error;
+      } finally {
+        span.end();
+      }
+    },
+  );
 }
 
 // Usage
-const users = await tracedQuery("SELECT users", () =>
-  prisma.user.findMany()
-);
+const users = await tracedQuery("SELECT users", () => prisma.user.findMany());
 ```
 
 ### Background Job Tracing
@@ -610,7 +628,7 @@ async function processJob(job: Job) {
         } finally {
           span.end();
         }
-      }
+      },
     );
   });
 }

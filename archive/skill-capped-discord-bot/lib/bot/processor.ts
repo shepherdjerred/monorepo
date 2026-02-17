@@ -17,7 +17,7 @@ export class Processor {
   constructor(
     previousManifestStorage: Storage<JSON>,
     currentManifestStorage: Storage<JSON>,
-    notifier: Notifier
+    notifier: Notifier,
   ) {
     this.previousManifestStorage = previousManifestStorage;
     this.currentManifestStorage = currentManifestStorage;
@@ -30,19 +30,19 @@ export class Processor {
     const currentManifestRaw = await this.currentManifestStorage.get(key);
     const previousManifest = parse(
       site,
-      previousManifestRaw as unknown as RawSchemas
+      previousManifestRaw as unknown as RawSchemas,
     );
     const currentManifest = parse(
       site,
-      currentManifestRaw as unknown as RawSchemas
+      currentManifestRaw as unknown as RawSchemas,
     );
     const newVideos = filterNewVideos(
       currentManifest.videos,
-      previousManifest.videos
+      previousManifest.videos,
     );
     const newCommentaries = filterNewVideos(
       currentManifest.commentaries,
-      previousManifest.commentaries
+      previousManifest.commentaries,
     );
     const videoNotification: VideoNotification = {
       groups: [

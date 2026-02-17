@@ -24,23 +24,23 @@ As you begin designing your app for Apple Watch, start by understanding the foll
 
 **System features.** watchOS provides several features that help people interact with the system and their apps in familiar, consistent ways.
 
-* [Complications](/design/human-interface-guidelines/complications)
-* [Notifications](/design/human-interface-guidelines/notifications)
-* [Always On](/design/human-interface-guidelines/always-on)
-* [Watch faces](/design/human-interface-guidelines/watch-faces)
+- [Complications](/design/human-interface-guidelines/complications)
+- [Notifications](/design/human-interface-guidelines/notifications)
+- [Always On](/design/human-interface-guidelines/always-on)
+- [Watch faces](/design/human-interface-guidelines/watch-faces)
 
 ## [Best practices](/design/human-interface-guidelines/designing-for-watchos#Best-practices)
 
 Great Apple Watch experiences are streamlined and specialized, and integrate the platform and device capabilities that people value most. To help your experience feel at home in watchOS, prioritize the following ways to incorporate these features and capabilities.
 
-* Support quick, glanceable, single-screen interactions that deliver critical information succinctly and help people perform targeted actions with a simple gesture or two.
-* Minimize the depth of hierarchy in your app’s navigation, and use the [Digital Crown](/design/human-interface-guidelines/digital-crown) to provide vertical navigation for scrolling or switching between screens.
-* Personalize the experience by proactively anticipating people’s needs and using on-device data to provide actionable content that’s relevant in the moment or very soon.
-* Use [complications](/design/human-interface-guidelines/complications) to provide relevant, potentially dynamic data and graphics right on the watch face where people can view them on every wrist raise and tap them to dive straight into your app.
-* Use [notifications](/design/human-interface-guidelines/notifications) to deliver timely, high-value information and let people perform important actions without opening your app.
-* Use background content such as [color](/design/human-interface-guidelines/color) to convey useful supporting information, and use [materials](/design/human-interface-guidelines/materials) to illustrate hierarchy and a sense of place.
-* Support Siri to help people access shortcuts on the Siri watch face.
-* Design your app to function independently, complementing your notifications and complications by providing additional details and functionality.
+- Support quick, glanceable, single-screen interactions that deliver critical information succinctly and help people perform targeted actions with a simple gesture or two.
+- Minimize the depth of hierarchy in your app’s navigation, and use the [Digital Crown](/design/human-interface-guidelines/digital-crown) to provide vertical navigation for scrolling or switching between screens.
+- Personalize the experience by proactively anticipating people’s needs and using on-device data to provide actionable content that’s relevant in the moment or very soon.
+- Use [complications](/design/human-interface-guidelines/complications) to provide relevant, potentially dynamic data and graphics right on the watch face where people can view them on every wrist raise and tap them to dive straight into your app.
+- Use [notifications](/design/human-interface-guidelines/notifications) to deliver timely, high-value information and let people perform important actions without opening your app.
+- Use background content such as [color](/design/human-interface-guidelines/color) to convey useful supporting information, and use [materials](/design/human-interface-guidelines/materials) to illustrate hierarchy and a sense of place.
+- Support Siri to help people access shortcuts on the Siri watch face.
+- Design your app to function independently, complementing your notifications and complications by providing additional details and functionality.
 
 ## [Resources](/design/human-interface-guidelines/designing-for-watchos#Resources)
 
@@ -60,6 +60,6 @@ What’s new in watchOS 26](https://developer.apple.com/videos/play/wwdc2025/334
 
 ## [Change log](/design/human-interface-guidelines/designing-for-watchos#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date         | Changes                                                                                                                                 |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
 | June 5, 2023 | Enhanced guidance for providing a glanceable, focused app experience, and emphasized the importance of the Digital Crown in navigation. |

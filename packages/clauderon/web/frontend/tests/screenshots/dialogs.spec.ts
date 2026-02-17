@@ -1,6 +1,6 @@
-import { test } from '@playwright/test';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { test } from "@playwright/test";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -14,14 +14,16 @@ const __dirname = dirname(__filename);
  * Run with: bun run screenshots
  */
 
-test.describe('Dialog UI', () => {
-  test('capture create session dialog', async ({ page }) => {
+test.describe("Dialog UI", () => {
+  test("capture create session dialog", async ({ page }) => {
     // Navigate to REAL app
-    await page.goto('http://localhost:5173');
-    await page.waitForLoadState('networkidle');
+    await page.goto("http://localhost:5173");
+    await page.waitForLoadState("networkidle");
 
     // Click the real "New Session" button
-    const createButton = page.getByRole('button', { name: /new session|create/i }).first();
+    const createButton = page
+      .getByRole("button", { name: /new session|create/i })
+      .first();
 
     if (await createButton.isVisible()) {
       await createButton.click();
@@ -30,16 +32,25 @@ test.describe('Dialog UI', () => {
       await page.waitForTimeout(500);
 
       // Take screenshot of REAL create dialog - 1080p
-      const screenshotPath = join(__dirname, '..', '..', '..', '..', 'screenshots', 'web', 'create-dialog.png');
+      const screenshotPath = join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "..",
+        "screenshots",
+        "web",
+        "create-dialog.png",
+      );
       await page.screenshot({
         path: screenshotPath,
         fullPage: false,
-        type: 'png',
+        type: "png",
       });
 
       console.log(`✓ Created create-dialog.png from REAL application`);
     } else {
-      console.log('⚠ Could not find create button - is the app loaded?');
+      console.log("⚠ Could not find create button - is the app loaded?");
     }
   });
 });

@@ -9,7 +9,14 @@ function getWebringContainer(pkgSource: Directory): Container {
     .withWorkdir("/workspace")
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
     .withDirectory("/workspace", pkgSource, {
-      exclude: ["node_modules", "dist", "build", ".cache", ".dagger", "generated"],
+      exclude: [
+        "node_modules",
+        "dist",
+        "build",
+        ".cache",
+        ".dagger",
+        "generated",
+      ],
     })
     .withExec(["bun", "install", "--frozen-lockfile"]);
 }
@@ -28,7 +35,9 @@ export async function checkWebring(source: Directory): Promise<string> {
   ]);
 
   // Test after build (needs built dist)
-  const buildDir = container.withExec(["bun", "run", "build"]).directory("dist");
+  const buildDir = container
+    .withExec(["bun", "run", "build"])
+    .directory("dist");
 
   // Run unit tests
   await container.withExec(["bun", "run", "test", "--", "--run"]).sync();
@@ -38,7 +47,8 @@ export async function checkWebring(source: Directory): Promise<string> {
     .withDirectory("dist", buildDir)
     .withWorkdir("/workspace/example")
     .withExec([
-      "bun", "-e",
+      "bun",
+      "-e",
       "const pkg = JSON.parse(await Bun.file('package.json').text()); delete pkg.dependencies.webring; await Bun.write('package.json', JSON.stringify(pkg, null, 2));",
     ])
     .withExec(["bun", "install"])
@@ -62,7 +72,9 @@ export async function deployWebringDocs(
   const pkgSource = source.directory("packages/webring");
   const container = getWebringContainer(pkgSource);
 
-  const docsDir = container.withExec(["bun", "run", "typedoc"]).directory("docs");
+  const docsDir = container
+    .withExec(["bun", "run", "typedoc"])
+    .directory("docs");
 
   const syncOutput = await syncToS3({
     sourceDir: docsDir,

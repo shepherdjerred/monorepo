@@ -1,7 +1,12 @@
-import { AST_NODE_TYPES, ESLintUtils, type TSESTree } from "@typescript-eslint/utils";
+import {
+  AST_NODE_TYPES,
+  ESLintUtils,
+  type TSESTree,
+} from "@typescript-eslint/utils";
 
 const createRule = ESLintUtils.RuleCreator(
-  (name) => `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
+  (name) =>
+    `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
 );
 
 type Options = [{ satoriPaths?: string[] }?];
@@ -20,7 +25,8 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
   meta: {
     type: "problem",
     docs: {
-      description: "Enforce Satori best practices: inline styles, static JSX only, and proper font handling",
+      description:
+        "Enforce Satori best practices: inline styles, static JSX only, and proper font handling",
     },
     messages: {
       noClassNames:
@@ -47,7 +53,8 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
           satoriPaths: {
             type: "array",
             items: { type: "string" },
-            description: "File paths that should be treated as Satori components",
+            description:
+              "File paths that should be treated as Satori components",
           },
         },
         additionalProperties: false,
@@ -88,7 +95,11 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
           attr.name.name === "style",
       );
 
-      if (!styleAttr || styleAttr.type !== AST_NODE_TYPES.JSXAttribute || !styleAttr.value) {
+      if (
+        !styleAttr ||
+        styleAttr.type !== AST_NODE_TYPES.JSXAttribute ||
+        !styleAttr.value
+      ) {
         return null;
       }
 
@@ -100,8 +111,10 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
         const displayProp = styleAttr.value.expression.properties.find(
           (prop) =>
             prop.type === AST_NODE_TYPES.Property &&
-            ((prop.key.type === AST_NODE_TYPES.Identifier && prop.key.name === "display") ||
-              (prop.key.type === AST_NODE_TYPES.Literal && prop.key.value === "display")),
+            ((prop.key.type === AST_NODE_TYPES.Identifier &&
+              prop.key.name === "display") ||
+              (prop.key.type === AST_NODE_TYPES.Literal &&
+                prop.key.value === "display")),
         );
 
         if (
@@ -124,7 +137,10 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
       let hasTextOrExpression = false;
 
       for (const child of node.children) {
-        if (child.type === AST_NODE_TYPES.JSXElement || child.type === AST_NODE_TYPES.JSXFragment) {
+        if (
+          child.type === AST_NODE_TYPES.JSXElement ||
+          child.type === AST_NODE_TYPES.JSXFragment
+        ) {
           elementCount++;
         } else if (child.type === AST_NODE_TYPES.JSXText) {
           if (child.value.trim().length > 0) {
@@ -193,7 +209,9 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
           attr.type === AST_NODE_TYPES.JSXAttribute &&
           attr.name.type === AST_NODE_TYPES.JSXIdentifier &&
           (attr.name.name.startsWith("on") ||
-            ["onClick", "onChange", "onSubmit", "onFocus", "onBlur"].includes(attr.name.name))
+            ["onClick", "onChange", "onSubmit", "onFocus", "onBlur"].includes(
+              attr.name.name,
+            ))
         ) {
           context.report({
             node: attr,
@@ -208,12 +226,22 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
           attr.name.name === "src"
         ) {
           const parentTag =
-            node.openingElement.name.type === AST_NODE_TYPES.JSXIdentifier ? node.openingElement.name.name : null;
+            node.openingElement.name.type === AST_NODE_TYPES.JSXIdentifier
+              ? node.openingElement.name.name
+              : null;
 
-          if (parentTag === "img" && attr.value && attr.value.type === AST_NODE_TYPES.Literal) {
+          if (
+            parentTag === "img" &&
+            attr.value &&
+            attr.value.type === AST_NODE_TYPES.Literal
+          ) {
             const srcValue = String(attr.value.value);
             // Warn about external URLs (http://, https://, //) but allow data URLs and variables
-            if (srcValue.startsWith("http://") || srcValue.startsWith("https://") || srcValue.startsWith("//")) {
+            if (
+              srcValue.startsWith("http://") ||
+              srcValue.startsWith("https://") ||
+              srcValue.startsWith("//")
+            ) {
               context.report({
                 node: attr,
                 messageId: "noExternalImages",
@@ -229,14 +257,20 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
       if (node.callee.type === AST_NODE_TYPES.Identifier) {
         const name = node.callee.name;
         // React hooks follow the pattern of 'use' prefix
-        return name.startsWith("use") && (name.charAt(3).toUpperCase() === name.charAt(3) || name === "use");
+        return (
+          name.startsWith("use") &&
+          (name.charAt(3).toUpperCase() === name.charAt(3) || name === "use")
+        );
       }
 
       // Also check for useXxx patterns from the callee
       if (node.callee.type === AST_NODE_TYPES.MemberExpression) {
         if (node.callee.property.type === AST_NODE_TYPES.Identifier) {
           const name = node.callee.property.name;
-          return name.startsWith("use") && name.charAt(3).toUpperCase() === name.charAt(3);
+          return (
+            name.startsWith("use") &&
+            name.charAt(3).toUpperCase() === name.charAt(3)
+          );
         }
       }
 
@@ -300,7 +334,10 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
           const sourceCode = context.sourceCode;
           const text = sourceCode.getText();
 
-          if (text.includes('import satori from "satori"') || text.includes("from 'satori'")) {
+          if (
+            text.includes('import satori from "satori"') ||
+            text.includes("from 'satori'")
+          ) {
             context.report({
               node,
               messageId: "noImportedStyles",

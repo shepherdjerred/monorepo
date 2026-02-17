@@ -38,7 +38,9 @@ export type GhcrPublishMultipleOptions = {
  * });
  * ```
  */
-export async function publishToGhcr(options: GhcrPublishOptions): Promise<string> {
+export async function publishToGhcr(
+  options: GhcrPublishOptions,
+): Promise<string> {
   return await options.container
     .withRegistryAuth("ghcr.io", options.username, options.password)
     .publish(options.imageRef);
@@ -64,14 +66,18 @@ export async function publishToGhcr(options: GhcrPublishOptions): Promise<string
  * });
  * ```
  */
-export async function publishToGhcrMultiple(options: GhcrPublishMultipleOptions): Promise<string[]> {
+export async function publishToGhcrMultiple(
+  options: GhcrPublishMultipleOptions,
+): Promise<string[]> {
   const authenticatedContainer = options.container.withRegistryAuth(
     "ghcr.io",
     options.username,
     options.password,
   );
 
-  const publishPromises = options.imageRefs.map((ref) => authenticatedContainer.publish(ref));
+  const publishPromises = options.imageRefs.map((ref) =>
+    authenticatedContainer.publish(ref),
+  );
 
   return await Promise.all(publishPromises);
 }
@@ -85,6 +91,10 @@ export async function publishToGhcrMultiple(options: GhcrPublishMultipleOptions)
  * @param password - GHCR password/token as a secret
  * @returns The authenticated container
  */
-export function withGhcrAuth(container: Container, username: string, password: Secret): Container {
+export function withGhcrAuth(
+  container: Container,
+  username: string,
+  password: Secret,
+): Container {
   return container.withRegistryAuth("ghcr.io", username, password);
 }

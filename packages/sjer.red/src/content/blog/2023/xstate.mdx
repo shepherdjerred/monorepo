@@ -31,7 +31,9 @@ Switching between tabs was an easy problem to fix. I created two instances of Fi
 
 <figure>
   <Image src={game} alt="A screenshot of Discord streaming Pokémon" />
-  <figcaption>Video is streamed in real-time with instant feedback for the applied inputs.</figcaption>
+  <figcaption>
+    Video is streamed in real-time with instant feedback for the applied inputs.
+  </figcaption>
 </figure>
 
 Tracking the state, however, was not something I wanted to do. There are a lot of subtle edge cases that I didn't want to deal with. I felt state machines would be applicable, but I had never used them in TypeScript.
@@ -52,7 +54,9 @@ I was surprised at how helpful the XState VS Code plugin was. It allows me to se
   <video controls>
     <source src={simulation} type="video/mp4" />
   </video>
-  <figcaption>The XState VS Code extension lets you step through your state transitions.</figcaption>
+  <figcaption>
+    The XState VS Code extension lets you step through your state transitions.
+  </figcaption>
 </figure>
 
 Aside from the coolness of the extension, the library itself is quite polished and well-documented. Porting over my old code was simple because of how well XState integrates with promises.

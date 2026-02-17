@@ -42,26 +42,26 @@ When you use App Intents to make your app’s actions available to the system, i
 
 As a person engages with an App Shortcut, your app can respond in a variety of ways, including with dialogue that Siri speaks aloud and custom visuals like snippets and Live Activities.
 
-* Snippets are great for custom views that display static information or dialog options, like showing the weather at a person’s location or confirming an order. For developer guidance, see [`ShowsSnippetView`](/documentation/AppIntents/ShowsSnippetView).
-* [Live Activities](/design/human-interface-guidelines/live-activities) offer continuous access to information that’s likely to remain relevant and change over a period of time, and are great for timers and countdowns that appear until an event is complete. For developer guidance, see [`LiveActivityIntent`](/documentation/AppIntents/LiveActivityIntent).
+- Snippets are great for custom views that display static information or dialog options, like showing the weather at a person’s location or confirming an order. For developer guidance, see [`ShowsSnippetView`](/documentation/AppIntents/ShowsSnippetView).
+- [Live Activities](/design/human-interface-guidelines/live-activities) offer continuous access to information that’s likely to remain relevant and change over a period of time, and are great for timers and countdowns that appear until an event is complete. For developer guidance, see [`LiveActivityIntent`](/documentation/AppIntents/LiveActivityIntent).
 
 ![A screenshot of the iPhone Home Screen with a custom snippet occupying the top half of the screen. The snippet includes buttons to confirm or cancel a delivery order from a coffee shop, along with the items in the order and the total price.](https://docs-assets.developer.apple.com/published/05c70d4c5b6a1d65a1ea0a1662b5aa83/app-shortcuts-siri-dialogue%402x.png)
 
 ![A screenshot of the iPhone Home Screen with a Live Activity occupying the top quarter of the screen. The Live Activity shows the estimated time for the arrival of a delivery of an order from a coffee shop, along with the number of items in the order and a button to contact the delivery driver.](https://docs-assets.developer.apple.com/published/62d4ff80b64dba56a083468c467fdb64/app-shortcuts-live-activity%402x.png)
 
-**Provide enough detail for interaction on audio-only devices.** People can receive responses on audio-only devices such as AirPods and HomePod too, and may not always be able to see content onscreen. Include all critical information in the full dialogue text of your App Shortcuts. For developer guidance, see [`init(full:supporting:systemImageName:)`](/documentation/AppIntents/IntentDialog/init(full:supporting:systemImageName:)).
+**Provide enough detail for interaction on audio-only devices.** People can receive responses on audio-only devices such as AirPods and HomePod too, and may not always be able to see content onscreen. Include all critical information in the full dialogue text of your App Shortcuts. For developer guidance, see [`init(full:supporting:systemImageName:)`](</documentation/AppIntents/IntentDialog/init(full:supporting:systemImageName:)>).
 
 ## [Editorial guidelines](/design/human-interface-guidelines/app-shortcuts#Editorial-guidelines)
 
 **Provide brief, memorable activation phrases and natural variants.** Because an App Shortcut phrase (or a variant you define) is what people say to run an App Shortcut with Siri, it’s important to keep it brief to make it easier to remember. You have to include your app name, but you can be creative with it. For example, Keynote accepts both “Create a Keynote” and “Add a new presentation in Keynote” as App Shortcut phrases for creating a new document. For developer guidance, see [`AppShortcutPhrase`](/documentation/AppIntents/AppShortcutPhrase).
 
-**When referring to App Shortcuts or the Shortcuts app, always use title case and make sure that *Shortcuts* is plural.** For example, *MyApp integrates with Shortcuts to provide a quick way to get things done with just a tap or by asking Siri, and offers App Shortcuts you can place on the Action button.*
+**When referring to App Shortcuts or the Shortcuts app, always use title case and make sure that _Shortcuts_ is plural.** For example, _MyApp integrates with Shortcuts to provide a quick way to get things done with just a tap or by asking Siri, and offers App Shortcuts you can place on the Action button._
 
-**When referring to individual shortcuts (not App Shortcuts or the Shortcuts app), use lowercase.** For example, *Run a shortcut by asking Siri or tapping a suggestion on the Lock Screen.*
+**When referring to individual shortcuts (not App Shortcuts or the Shortcuts app), use lowercase.** For example, _Run a shortcut by asking Siri or tapping a suggestion on the Lock Screen._
 
 ## [Platform considerations](/design/human-interface-guidelines/app-shortcuts#Platform-considerations)
 
-*No additional considerations for visionOS or watchOS. Not supported in tvOS.*
+_No additional considerations for visionOS or watchOS. Not supported in tvOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/app-shortcuts#iOS-iPadOS)
 
@@ -113,7 +113,7 @@ Bring your app’s core features to users with App Intents](https://developer.ap
 
 ## [Change log](/design/human-interface-guidelines/app-shortcuts#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date             | Changes                           |
+| ---------------- | --------------------------------- |
 | January 17, 2025 | Updated and streamlined guidance. |
-| June 5, 2023 | New page. |
+| June 5, 2023     | New page.                         |

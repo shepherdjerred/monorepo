@@ -38,7 +38,7 @@ function getKey(header: JwtHeader, callback: SigningKeyCallback) {
     function (err: Error | null, key: SigningKey) {
       const signingKey = key.getPublicKey();
       callback(null, signingKey);
-    }
+    },
   );
 }
 
@@ -59,7 +59,7 @@ const createServerMutation: IFieldResolver<
 > = async (
   source: unknown,
   args: MutationCreateServerArgs,
-  context: Context<ApolloContext>
+  context: Context<ApolloContext>,
 ): Promise<Server> => {
   const user = await context.user;
 
@@ -103,7 +103,7 @@ const context: ContextFunction<ExpressContext, Context<ApolloContext>> = ({
         throw err;
       }
       console.log(decoded);
-    }
+    },
   );
 
   return {

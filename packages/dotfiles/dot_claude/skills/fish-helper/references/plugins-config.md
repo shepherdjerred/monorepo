@@ -98,6 +98,7 @@ end
 ### Directory Navigation
 
 **z** (`jethrokuan/z`) -- Frecency-based directory jumping:
+
 ```fish
 fisher install jethrokuan/z
 
@@ -108,6 +109,7 @@ z --clean        # remove non-existent directories from database
 ```
 
 **zoxide** -- Smarter cd alternative (standalone binary with Fish integration):
+
 ```fish
 # Install zoxide binary first, then initialize
 zoxide init fish | source
@@ -119,6 +121,7 @@ zi project       # interactive selection with fzf
 ### Fuzzy Finding
 
 **fzf.fish** (`PatrickF1/fzf.fish`) -- fzf integration with keybindings:
+
 ```fish
 fisher install PatrickF1/fzf.fish
 
@@ -131,6 +134,7 @@ fisher install PatrickF1/fzf.fish
 ```
 
 **jethrokuan/fzf** -- Alternative fzf integration:
+
 ```fish
 fisher install jethrokuan/fzf
 
@@ -144,6 +148,7 @@ fisher install jethrokuan/fzf
 ### Notifications
 
 **done** (`franciscolourenco/done`) -- Notify when long commands finish:
+
 ```fish
 fisher install franciscolourenco/done
 
@@ -158,6 +163,7 @@ set -U __done_notify_sound 1            # enable sound
 ### Auto-pairing
 
 **autopair** (`jorgebucaran/autopair.fish`) -- Auto-close brackets, quotes, etc:
+
 ```fish
 fisher install jorgebucaran/autopair.fish
 
@@ -167,6 +173,7 @@ fisher install jorgebucaran/autopair.fish
 ```
 
 **pisces** (`laughedelic/pisces`) -- Alternative auto-pairing:
+
 ```fish
 fisher install laughedelic/pisces
 ```
@@ -174,6 +181,7 @@ fisher install laughedelic/pisces
 ### Bash Compatibility
 
 **bax** (`jorgebucaran/bax.fish`) -- Run bash commands/scripts from Fish:
+
 ```fish
 fisher install jorgebucaran/bax.fish
 
@@ -182,6 +190,7 @@ bax source script.sh
 ```
 
 **bass** -- Alternative bash-to-fish bridge (older, less maintained):
+
 ```fish
 fisher install edc/bass
 bass source script.sh
@@ -190,6 +199,7 @@ bass source script.sh
 ### Node.js Version Management
 
 **nvm.fish** (`jorgebucaran/nvm.fish`) -- Pure-Fish Node.js version manager:
+
 ```fish
 fisher install jorgebucaran/nvm.fish
 
@@ -203,6 +213,7 @@ set -U nvm_default_version 20  # set default
 ### Testing
 
 **fishtape** (`jorgebucaran/fishtape`) -- TAP-based test runner:
+
 ```fish
 fisher install jorgebucaran/fishtape
 
@@ -334,11 +345,13 @@ end
 ### Universal Variables vs Config Files
 
 Universal variables (`set -U`) persist across sessions without config files. Use them for:
+
 - User preferences that rarely change
 - Plugin configuration
 - Theme settings
 
 Prefer `config.fish` or `conf.d/` for:
+
 - PATH modifications (use `fish_add_path` instead of raw `set -U`)
 - Abbreviations (the old universal storage is deprecated)
 - Configuration that should be version-controlled

@@ -21,11 +21,15 @@ export function createApp() {
   app.use(
     "/*",
     cors({
-      origin: [config.FRONTEND_URL, "http://localhost:5173", "http://localhost:3000"],
+      origin: [
+        config.FRONTEND_URL,
+        "http://localhost:5173",
+        "http://localhost:3000",
+      ],
       allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowHeaders: ["Content-Type", "Authorization"],
       credentials: true,
-    })
+    }),
   );
 
   // Health check
@@ -34,7 +38,7 @@ export function createApp() {
       status: "ok",
       timestamp: new Date().toISOString(),
       version: "0.0.1",
-    })
+    }),
   );
 
   // Mount routes
@@ -91,7 +95,9 @@ export async function startServer(port: number) {
         });
 
         if (!session || !session.containerId) {
-          return new Response("Session not found or not running", { status: 404 });
+          return new Response("Session not found or not running", {
+            status: 404,
+          });
         }
 
         // Upgrade to WebSocket
@@ -127,7 +133,9 @@ export async function startServer(port: number) {
         const stream = streamRegistry.take(sessionId);
         if (!stream) {
           logger.error("No stream found for session", { sessionId });
-          ws.send(JSON.stringify({ type: "error", message: "Session not ready" }));
+          ws.send(
+            JSON.stringify({ type: "error", message: "Session not ready" }),
+          );
           ws.close(1011, "No stream available");
           return;
         }
@@ -148,7 +156,9 @@ export async function startServer(port: number) {
           proxy.handleClientMessage(message.toString());
         } else {
           logger.warn("No proxy for session", { sessionId });
-          ws.send(JSON.stringify({ type: "error", message: "Session not connected" }));
+          ws.send(
+            JSON.stringify({ type: "error", message: "Session not connected" }),
+          );
         }
       },
 

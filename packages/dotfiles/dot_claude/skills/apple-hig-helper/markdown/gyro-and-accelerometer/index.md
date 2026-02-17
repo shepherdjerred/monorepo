@@ -26,7 +26,7 @@ If your experience needs to access motion data from a device, you must provide c
 
 ## [Platform considerations](/design/human-interface-guidelines/gyro-and-accelerometer#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/gyro-and-accelerometer#Resources)
 

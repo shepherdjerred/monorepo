@@ -1,5 +1,5 @@
 import { Dictionary } from "../util";
-import { Location   } from "./location";
+import { Location } from "./location";
 
 export interface Undefined extends Location {
   type: "Undefined";
@@ -9,7 +9,7 @@ export function Undefined(location: Location): Undefined {
   return {
     type: "Undefined",
     line: location.line,
-    char: location.char
+    char: location.char,
   };
 }
 
@@ -21,7 +21,7 @@ export function Null(location: Location): Null {
   return {
     type: "Null",
     line: location.line,
-    char: location.char
+    char: location.char,
   };
 }
 
@@ -35,7 +35,7 @@ export function Boolean(location: Location, value: boolean): Boolean {
     type: "Boolean",
     line: location.line,
     char: location.char,
-    value
+    value,
   };
 }
 
@@ -49,7 +49,7 @@ export function Number(location: Location, value: number): Number {
     type: "Number",
     line: location.line,
     char: location.char,
-    value
+    value,
   };
 }
 
@@ -63,7 +63,7 @@ export function String(location: Location, value: string): String {
     type: "String",
     line: location.line,
     char: location.char,
-    value
+    value,
   };
 }
 
@@ -77,7 +77,7 @@ export function Identifier(location: Location, text: string): Identifier {
     type: "Identifier",
     line: location.line,
     char: location.char,
-    text
+    text,
   };
 }
 
@@ -88,16 +88,16 @@ export interface Property extends Location {
 }
 
 export function Property(
-    location: Location,
-    object: Expression,
-    property: Identifier
+  location: Location,
+  object: Expression,
+  property: Identifier,
 ): Property {
   return {
     type: "Property",
     line: location.line,
     char: location.char,
     object,
-    property
+    property,
   };
 }
 
@@ -108,16 +108,16 @@ export interface Index extends Location {
 }
 
 export function Index(
-    location: Location,
-    object: Expression,
-    index: Expression
+  location: Location,
+  object: Expression,
+  index: Expression,
 ): Index {
   return {
     type: "Index",
     line: location.line,
     char: location.char,
     object,
-    index
+    index,
   };
 }
 
@@ -128,16 +128,16 @@ export interface Application extends Location {
 }
 
 export function Application(
-    location: Location,
-    fn: Expression,
-    args: Expression[]
+  location: Location,
+  fn: Expression,
+  args: Expression[],
 ): Application {
   return {
     type: "Application",
     line: location.line,
     char: location.char,
     fn,
-    args
+    args,
   };
 }
 
@@ -150,14 +150,14 @@ export interface UnaryOperation extends Location {
 export function UnaryOperation(
   location: Location,
   op: string,
-  right: Expression
+  right: Expression,
 ): UnaryOperation {
   return {
     type: "UnaryOperation",
     line: location.line,
     char: location.char,
     op,
-    right
+    right,
   };
 }
 
@@ -169,10 +169,10 @@ export interface BinaryOperation extends Location {
 }
 
 export function BinaryOperation(
-    location: Location,
-    left: Expression,
-    op: string,
-    right: Expression
+  location: Location,
+  left: Expression,
+  op: string,
+  right: Expression,
 ): BinaryOperation {
   return {
     type: "BinaryOperation",
@@ -180,7 +180,7 @@ export function BinaryOperation(
     char: location.char,
     left,
     op,
-    right
+    right,
   };
 }
 
@@ -190,14 +190,14 @@ export interface ArrayConstruction extends Location {
 }
 
 export function ArrayConstruction(
-    location: Location,
-    value: Expression[]
+  location: Location,
+  value: Expression[],
 ): ArrayConstruction {
   return {
     type: "ArrayConstruction",
     line: location.line,
     char: location.char,
-    value
+    value,
   };
 }
 
@@ -207,19 +207,28 @@ export interface ObjectConstruction extends Location {
 }
 
 export function ObjectConstruction(
-    location: Location,
-    value: Dictionary<Expression>
+  location: Location,
+  value: Dictionary<Expression>,
 ): ObjectConstruction {
   return {
     type: "ObjectConstruction",
     line: location.line,
     char: location.char,
-    value
+    value,
   };
 }
 
 export type Expression =
-  Undefined | Null | Boolean | Number | String |
-  Identifier | Property | Index | Application |
-  UnaryOperation | BinaryOperation |
-  ArrayConstruction | ObjectConstruction;
+  | Undefined
+  | Null
+  | Boolean
+  | Number
+  | String
+  | Identifier
+  | Property
+  | Index
+  | Application
+  | UnaryOperation
+  | BinaryOperation
+  | ArrayConstruction
+  | ObjectConstruction;

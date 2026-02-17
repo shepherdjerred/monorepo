@@ -13,33 +13,37 @@
       <div class="columns">
         <div class="column is-one-quarter">
           <aside class="menu aboutMenu">
-            <p class="menu-label">
-              Account
-            </p>
+            <p class="menu-label">Account</p>
             <ul class="menu-list">
               <li>
-                <router-link :to="{ name: 'User Edit' }" activeClass="is-active">
+                <router-link
+                  :to="{ name: 'User Edit' }"
+                  activeClass="is-active"
+                >
                   Change Password
                 </router-link>
               </li>
               <li>
-                <a href="" v-on:click="onClick()">
-                  Logout
-                </a>
+                <a href="" v-on:click="onClick()"> Logout </a>
               </li>
             </ul>
-            <p class="menu-label">
-              EASEL
-            </p>
+            <p class="menu-label">EASEL</p>
             <ul class="menu-list">
               <li>
-                <router-link :to="{ name: 'User EASEL' }" activeClass="is-active">
+                <router-link
+                  :to="{ name: 'User EASEL' }"
+                  activeClass="is-active"
+                >
                   Update credentials
                 </router-link>
               </li>
               <li>
-                <a href="https://cs.harding.edu/easel/cgi-bin/password" target="_blank">
-                  <i class="fa fa-fw fa-external-link"></i> Change EASEL password
+                <a
+                  href="https://cs.harding.edu/easel/cgi-bin/password"
+                  target="_blank"
+                >
+                  <i class="fa fa-fw fa-external-link"></i> Change EASEL
+                  password
                 </a>
               </li>
             </ul>
@@ -54,25 +58,25 @@
 </template>
 
 <script>
-  export default {
-    name: 'User-Account',
-    computed: {
-      email: function () {
-        return this.$store.state.User.email;
-      }
+export default {
+  name: "User-Account",
+  computed: {
+    email: function () {
+      return this.$store.state.User.email;
     },
-    methods: {
-      onClick: function () {
-        localStorage.removeItem('jwt');
-        this.$store.dispatch('updateUser');
-        this.$router.push({name: 'Home'});
-      }
-    }
-  };
+  },
+  methods: {
+    onClick: function () {
+      localStorage.removeItem("jwt");
+      this.$store.dispatch("updateUser");
+      this.$router.push({ name: "Home" });
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>
-  .aboutMenu {
-    margin-top: 20px;
-  }
+.aboutMenu {
+  margin-top: 20px;
+}
 </style>

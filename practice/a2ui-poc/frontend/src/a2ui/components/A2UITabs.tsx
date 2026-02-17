@@ -12,7 +12,9 @@ interface A2UITabsProps {
 }
 
 export function A2UITabs({ component, surfaceId, dataModel }: A2UITabsProps) {
-  const [activeTab, setActiveTab] = useState(component.tabItems[0]?.child || "");
+  const [activeTab, setActiveTab] = useState(
+    component.tabItems[0]?.child || "",
+  );
 
   if (!component.tabItems || component.tabItems.length === 0) {
     return null;

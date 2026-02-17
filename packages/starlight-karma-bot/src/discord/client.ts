@@ -8,7 +8,9 @@ const client = new Client({
 
 client.once(Events.ClientReady, (readyClient) => {
   console.warn(`[Discord] Bot logged in as ${readyClient.user.tag}`);
-  console.warn(`[Discord] Connected to ${readyClient.guilds.cache.size.toString()} guild(s)`);
+  console.warn(
+    `[Discord] Connected to ${readyClient.guilds.cache.size.toString()} guild(s)`,
+  );
 
   // Auto-migrate legacy karma records if needed
   void autoMigrateLegacyKarma();

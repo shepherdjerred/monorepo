@@ -10,19 +10,22 @@ export type FuseSearchProps<T> = {
   itemsPerPage: number;
   page: number;
   onResultsUpdate: (newResults: T[]) => void;
-}
+};
 
 export type FuseSearchState<T> = {
   fuse: Fuse.default<T>;
   matchedItems: FuseSearchResult<T>[];
-}
+};
 
 export type FuseSearchResult<T> = {
   item: T;
   matchedStrings: string[];
-}
+};
 
-export class FuseSearch<T> extends React.PureComponent<FuseSearchProps<T>, FuseSearchState<T>> {
+export class FuseSearch<T> extends React.PureComponent<
+  FuseSearchProps<T>,
+  FuseSearchState<T>
+> {
   constructor(props: Readonly<FuseSearchProps<T>>) {
     super(props);
 
@@ -53,7 +56,9 @@ export class FuseSearch<T> extends React.PureComponent<FuseSearchProps<T>, FuseS
   }
 
   searchIfNeeded(prevProps: Readonly<FuseSearchProps<T>>): void {
-    const needsSearch = prevProps.query !== this.props.query || prevProps.items !== this.props.items;
+    const needsSearch =
+      prevProps.query !== this.props.query ||
+      prevProps.items !== this.props.items;
 
     if (needsSearch) {
       const results = this.getResults();
@@ -72,7 +77,9 @@ export class FuseSearch<T> extends React.PureComponent<FuseSearchProps<T>, FuseS
       return;
     }
     const areItemsTheSameSize = currentItems.length === previousItems.length;
-    const areItemsTheSame = currentItems.every((item) => previousItems.includes(item));
+    const areItemsTheSame = currentItems.every((item) =>
+      previousItems.includes(item),
+    );
 
     const shouldRebuildFuse = !(areItemsTheSameSize && areItemsTheSame);
 
@@ -96,7 +103,9 @@ export class FuseSearch<T> extends React.PureComponent<FuseSearchProps<T>, FuseS
           .flatMap((match) => {
             const { indices, value } = match;
             return indices.map((index) => {
-              return value === undefined ? "" : value.slice(index[0], index[1] + 1);
+              return value === undefined
+                ? ""
+                : value.slice(index[0], index[1] + 1);
             });
           })
           // Filter out short matches (less than 4 chars) to avoid highlighting scattered letters
@@ -125,11 +134,16 @@ export class FuseSearch<T> extends React.PureComponent<FuseSearchProps<T>, FuseS
     const start = this.props.itemsPerPage * (this.props.page - 1);
     const end = start + this.props.itemsPerPage;
 
-    return this.state.matchedItems.slice(start, end).map((item) => render(item));
+    return this.state.matchedItems
+      .slice(start, end)
+      .map((item) => render(item));
   }
 }
 
-function createIndexedFuseInstance<T>(items: T[], options: Fuse.IFuseOptions<T>): Fuse.default<T> {
+function createIndexedFuseInstance<T>(
+  items: T[],
+  options: Fuse.IFuseOptions<T>,
+): Fuse.default<T> {
   const index = Fuse.default.createIndex(options.keys ?? [], items);
   return new Fuse.default<T>(items, options, index);
 }

@@ -14,10 +14,27 @@ function getBaseVoiceContainer(): Container {
       .container()
       .from(`oven/bun:${BUN_VERSION}-debian`)
       // Cache APT packages (version in key for invalidation on upgrade)
-      .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-bun-${BUN_VERSION}-debian`))
-      .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`))
+      .withMountedCache(
+        "/var/cache/apt",
+        dag.cacheVolume(`apt-cache-bun-${BUN_VERSION}-debian`),
+      )
+      .withMountedCache(
+        "/var/lib/apt",
+        dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`),
+      )
       .withExec(["apt-get", "update"])
-      .withExec(["apt-get", "install", "-y", "ffmpeg", "python3", "make", "g++", "libtool-bin", "curl", "git"])
+      .withExec([
+        "apt-get",
+        "install",
+        "-y",
+        "ffmpeg",
+        "python3",
+        "make",
+        "g++",
+        "libtool-bin",
+        "curl",
+        "git",
+      ])
       // Install GitHub CLI for PR creation
       .withExec([
         "sh",
@@ -26,17 +43,33 @@ function getBaseVoiceContainer(): Container {
       ])
       // Install Claude Code CLI for editor feature
       // The install script puts claude in ~/.local/bin, so we symlink to /usr/local/bin for PATH access
-      .withExec(["sh", "-c", "curl -fsSL https://claude.ai/install.sh | bash && ln -sf /root/.local/bin/claude /usr/local/bin/claude"])
+      .withExec([
+        "sh",
+        "-c",
+        "curl -fsSL https://claude.ai/install.sh | bash && ln -sf /root/.local/bin/claude /usr/local/bin/claude",
+      ])
       // Cache Bun packages
-      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
+      .withMountedCache(
+        "/root/.bun/install/cache",
+        dag.cacheVolume("bun-cache"),
+      )
       // Cache Playwright browsers (version in key for invalidation)
-      .withMountedCache("/root/.cache/ms-playwright", dag.cacheVolume(`playwright-browsers-${PLAYWRIGHT_VERSION}`))
+      .withMountedCache(
+        "/root/.cache/ms-playwright",
+        dag.cacheVolume(`playwright-browsers-${PLAYWRIGHT_VERSION}`),
+      )
       // Install Playwright Chromium and dependencies for browser automation
       .withExec(["bunx", "playwright", "install", "--with-deps", "chromium"])
       // Cache ESLint (incremental linting)
-      .withMountedCache("/workspace/.eslintcache", dag.cacheVolume("eslint-cache"))
+      .withMountedCache(
+        "/workspace/.eslintcache",
+        dag.cacheVolume("eslint-cache"),
+      )
       // Cache TypeScript incremental build
-      .withMountedCache("/workspace/.tsbuildinfo", dag.cacheVolume("tsbuildinfo-cache"))
+      .withMountedCache(
+        "/workspace/.tsbuildinfo",
+        dag.cacheVolume("tsbuildinfo-cache"),
+      )
   );
 }
 
@@ -50,16 +83,25 @@ function getBaseVoiceContainer(): Container {
  * @param useMounts If true, use mounted directories (for CI checks). If false, copy files (for image publishing).
  * @returns Container with deps installed
  */
-function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): Container {
+function installWorkspaceDeps(
+  workspaceSource: Directory,
+  useMounts: boolean,
+): Container {
   let container = getBaseVoiceContainer().withWorkdir("/workspace");
 
   // PHASE 1: Dependency files only (cached if lockfile unchanged)
   if (useMounts) {
     container = container
-      .withMountedFile("/workspace/package.json", workspaceSource.file("package.json"))
+      .withMountedFile(
+        "/workspace/package.json",
+        workspaceSource.file("package.json"),
+      )
       .withMountedFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
       // Each workspace's package.json (bun needs these for workspace resolution)
-      .withMountedFile("/workspace/packages/birmel/package.json", workspaceSource.file("packages/birmel/package.json"))
+      .withMountedFile(
+        "/workspace/packages/birmel/package.json",
+        workspaceSource.file("packages/birmel/package.json"),
+      )
       .withMountedFile(
         "/workspace/packages/bun-decompile/package.json",
         workspaceSource.file("packages/bun-decompile/package.json"),
@@ -68,8 +110,14 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
         "/workspace/packages/eslint-config/package.json",
         workspaceSource.file("packages/eslint-config/package.json"),
       )
-      .withMountedFile("/workspace/packages/resume/package.json", workspaceSource.file("packages/resume/package.json"))
-      .withMountedFile("/workspace/packages/tools/package.json", workspaceSource.file("packages/tools/package.json"))
+      .withMountedFile(
+        "/workspace/packages/resume/package.json",
+        workspaceSource.file("packages/resume/package.json"),
+      )
+      .withMountedFile(
+        "/workspace/packages/tools/package.json",
+        workspaceSource.file("packages/tools/package.json"),
+      )
       // Clauderon web packages (nested workspace with own lockfile)
       .withMountedFile(
         "/workspace/packages/clauderon/web/package.json",
@@ -93,18 +141,39 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
       )
       // Clauderon docs package (mount full directory in PHASE 1 for workspace validation)
       .withExec(["mkdir", "-p", "/workspace/packages/clauderon/docs"])
-      .withMountedDirectory("/workspace/packages/clauderon/docs", workspaceSource.directory("packages/clauderon/docs"))
+      .withMountedDirectory(
+        "/workspace/packages/clauderon/docs",
+        workspaceSource.directory("packages/clauderon/docs"),
+      )
       // New workspace members
-      .withMountedFile("/workspace/packages/astro-opengraph-images/package.json", workspaceSource.file("packages/astro-opengraph-images/package.json"))
-      .withMountedFile("/workspace/packages/better-skill-capped/package.json", workspaceSource.file("packages/better-skill-capped/package.json"))
-      .withMountedFile("/workspace/packages/sjer.red/package.json", workspaceSource.file("packages/sjer.red/package.json"))
-      .withMountedFile("/workspace/packages/webring/package.json", workspaceSource.file("packages/webring/package.json"))
-      .withMountedFile("/workspace/packages/starlight-karma-bot/package.json", workspaceSource.file("packages/starlight-karma-bot/package.json"));
+      .withMountedFile(
+        "/workspace/packages/astro-opengraph-images/package.json",
+        workspaceSource.file("packages/astro-opengraph-images/package.json"),
+      )
+      .withMountedFile(
+        "/workspace/packages/better-skill-capped/package.json",
+        workspaceSource.file("packages/better-skill-capped/package.json"),
+      )
+      .withMountedFile(
+        "/workspace/packages/sjer.red/package.json",
+        workspaceSource.file("packages/sjer.red/package.json"),
+      )
+      .withMountedFile(
+        "/workspace/packages/webring/package.json",
+        workspaceSource.file("packages/webring/package.json"),
+      )
+      .withMountedFile(
+        "/workspace/packages/starlight-karma-bot/package.json",
+        workspaceSource.file("packages/starlight-karma-bot/package.json"),
+      );
   } else {
     container = container
       .withFile("/workspace/package.json", workspaceSource.file("package.json"))
       .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
-      .withFile("/workspace/packages/birmel/package.json", workspaceSource.file("packages/birmel/package.json"))
+      .withFile(
+        "/workspace/packages/birmel/package.json",
+        workspaceSource.file("packages/birmel/package.json"),
+      )
       .withFile(
         "/workspace/packages/bun-decompile/package.json",
         workspaceSource.file("packages/bun-decompile/package.json"),
@@ -113,8 +182,14 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
         "/workspace/packages/eslint-config/package.json",
         workspaceSource.file("packages/eslint-config/package.json"),
       )
-      .withFile("/workspace/packages/resume/package.json", workspaceSource.file("packages/resume/package.json"))
-      .withFile("/workspace/packages/tools/package.json", workspaceSource.file("packages/tools/package.json"))
+      .withFile(
+        "/workspace/packages/resume/package.json",
+        workspaceSource.file("packages/resume/package.json"),
+      )
+      .withFile(
+        "/workspace/packages/tools/package.json",
+        workspaceSource.file("packages/tools/package.json"),
+      )
       // Clauderon web packages (nested workspace with own lockfile)
       .withFile(
         "/workspace/packages/clauderon/web/package.json",
@@ -137,13 +212,31 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
         workspaceSource.file("packages/clauderon/web/frontend/package.json"),
       )
       // Clauderon docs package (copy full directory in PHASE 1 for workspace validation)
-      .withDirectory("/workspace/packages/clauderon/docs", workspaceSource.directory("packages/clauderon/docs"))
+      .withDirectory(
+        "/workspace/packages/clauderon/docs",
+        workspaceSource.directory("packages/clauderon/docs"),
+      )
       // New workspace members
-      .withFile("/workspace/packages/astro-opengraph-images/package.json", workspaceSource.file("packages/astro-opengraph-images/package.json"))
-      .withFile("/workspace/packages/better-skill-capped/package.json", workspaceSource.file("packages/better-skill-capped/package.json"))
-      .withFile("/workspace/packages/sjer.red/package.json", workspaceSource.file("packages/sjer.red/package.json"))
-      .withFile("/workspace/packages/webring/package.json", workspaceSource.file("packages/webring/package.json"))
-      .withFile("/workspace/packages/starlight-karma-bot/package.json", workspaceSource.file("packages/starlight-karma-bot/package.json"));
+      .withFile(
+        "/workspace/packages/astro-opengraph-images/package.json",
+        workspaceSource.file("packages/astro-opengraph-images/package.json"),
+      )
+      .withFile(
+        "/workspace/packages/better-skill-capped/package.json",
+        workspaceSource.file("packages/better-skill-capped/package.json"),
+      )
+      .withFile(
+        "/workspace/packages/sjer.red/package.json",
+        workspaceSource.file("packages/sjer.red/package.json"),
+      )
+      .withFile(
+        "/workspace/packages/webring/package.json",
+        workspaceSource.file("packages/webring/package.json"),
+      )
+      .withFile(
+        "/workspace/packages/starlight-karma-bot/package.json",
+        workspaceSource.file("packages/starlight-karma-bot/package.json"),
+      );
   }
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
@@ -152,30 +245,90 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
   // PHASE 3: Config files and source code (changes frequently, added AFTER install)
   if (useMounts) {
     container = container
-      .withMountedFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
-      .withMountedDirectory("/workspace/packages/birmel", workspaceSource.directory("packages/birmel"))
-      .withMountedDirectory("/workspace/packages/bun-decompile", workspaceSource.directory("packages/bun-decompile"))
-      .withMountedDirectory("/workspace/packages/eslint-config", workspaceSource.directory("packages/eslint-config"))
-      .withMountedDirectory("/workspace/packages/tools", workspaceSource.directory("packages/tools"))
+      .withMountedFile(
+        "/workspace/tsconfig.base.json",
+        workspaceSource.file("tsconfig.base.json"),
+      )
+      .withMountedDirectory(
+        "/workspace/packages/birmel",
+        workspaceSource.directory("packages/birmel"),
+      )
+      .withMountedDirectory(
+        "/workspace/packages/bun-decompile",
+        workspaceSource.directory("packages/bun-decompile"),
+      )
+      .withMountedDirectory(
+        "/workspace/packages/eslint-config",
+        workspaceSource.directory("packages/eslint-config"),
+      )
+      .withMountedDirectory(
+        "/workspace/packages/tools",
+        workspaceSource.directory("packages/tools"),
+      )
       // New workspace members
-      .withMountedDirectory("/workspace/packages/astro-opengraph-images", workspaceSource.directory("packages/astro-opengraph-images"))
-      .withMountedDirectory("/workspace/packages/better-skill-capped", workspaceSource.directory("packages/better-skill-capped"))
-      .withMountedDirectory("/workspace/packages/sjer.red", workspaceSource.directory("packages/sjer.red"))
-      .withMountedDirectory("/workspace/packages/webring", workspaceSource.directory("packages/webring"))
-      .withMountedDirectory("/workspace/packages/starlight-karma-bot", workspaceSource.directory("packages/starlight-karma-bot"));
+      .withMountedDirectory(
+        "/workspace/packages/astro-opengraph-images",
+        workspaceSource.directory("packages/astro-opengraph-images"),
+      )
+      .withMountedDirectory(
+        "/workspace/packages/better-skill-capped",
+        workspaceSource.directory("packages/better-skill-capped"),
+      )
+      .withMountedDirectory(
+        "/workspace/packages/sjer.red",
+        workspaceSource.directory("packages/sjer.red"),
+      )
+      .withMountedDirectory(
+        "/workspace/packages/webring",
+        workspaceSource.directory("packages/webring"),
+      )
+      .withMountedDirectory(
+        "/workspace/packages/starlight-karma-bot",
+        workspaceSource.directory("packages/starlight-karma-bot"),
+      );
   } else {
     container = container
-      .withFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
-      .withDirectory("/workspace/packages/birmel", workspaceSource.directory("packages/birmel"))
-      .withDirectory("/workspace/packages/bun-decompile", workspaceSource.directory("packages/bun-decompile"))
-      .withDirectory("/workspace/packages/eslint-config", workspaceSource.directory("packages/eslint-config"))
-      .withDirectory("/workspace/packages/tools", workspaceSource.directory("packages/tools"))
+      .withFile(
+        "/workspace/tsconfig.base.json",
+        workspaceSource.file("tsconfig.base.json"),
+      )
+      .withDirectory(
+        "/workspace/packages/birmel",
+        workspaceSource.directory("packages/birmel"),
+      )
+      .withDirectory(
+        "/workspace/packages/bun-decompile",
+        workspaceSource.directory("packages/bun-decompile"),
+      )
+      .withDirectory(
+        "/workspace/packages/eslint-config",
+        workspaceSource.directory("packages/eslint-config"),
+      )
+      .withDirectory(
+        "/workspace/packages/tools",
+        workspaceSource.directory("packages/tools"),
+      )
       // New workspace members
-      .withDirectory("/workspace/packages/astro-opengraph-images", workspaceSource.directory("packages/astro-opengraph-images"))
-      .withDirectory("/workspace/packages/better-skill-capped", workspaceSource.directory("packages/better-skill-capped"))
-      .withDirectory("/workspace/packages/sjer.red", workspaceSource.directory("packages/sjer.red"))
-      .withDirectory("/workspace/packages/webring", workspaceSource.directory("packages/webring"))
-      .withDirectory("/workspace/packages/starlight-karma-bot", workspaceSource.directory("packages/starlight-karma-bot"));
+      .withDirectory(
+        "/workspace/packages/astro-opengraph-images",
+        workspaceSource.directory("packages/astro-opengraph-images"),
+      )
+      .withDirectory(
+        "/workspace/packages/better-skill-capped",
+        workspaceSource.directory("packages/better-skill-capped"),
+      )
+      .withDirectory(
+        "/workspace/packages/sjer.red",
+        workspaceSource.directory("packages/sjer.red"),
+      )
+      .withDirectory(
+        "/workspace/packages/webring",
+        workspaceSource.directory("packages/webring"),
+      )
+      .withDirectory(
+        "/workspace/packages/starlight-karma-bot",
+        workspaceSource.directory("packages/starlight-karma-bot"),
+      );
   }
 
   // PHASE 4: Re-run bun install to recreate workspace node_modules symlinks
@@ -191,7 +344,9 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
  * @returns Container ready for birmel operations
  */
 export function getBirmelPrepared(workspaceSource: Directory): Container {
-  return installWorkspaceDeps(workspaceSource, true).withWorkdir("/workspace/packages/birmel");
+  return installWorkspaceDeps(workspaceSource, true).withWorkdir(
+    "/workspace/packages/birmel",
+  );
 }
 
 /**
@@ -237,16 +392,27 @@ export async function checkBirmel(workspaceSource: Directory): Promise<string> {
  * @param gitSha The git SHA
  * @returns The built container with files copied (not mounted)
  */
-export function buildBirmelImage(workspaceSource: Directory, version: string, gitSha: string): Container {
+export function buildBirmelImage(
+  workspaceSource: Directory,
+  version: string,
+  gitSha: string,
+): Container {
   return installWorkspaceDeps(workspaceSource, false)
     .withWorkdir("/workspace/packages/birmel")
     .withExec(["bunx", "prisma", "generate"])
     .withEnvVariable("VERSION", version)
     .withEnvVariable("GIT_SHA", gitSha)
     .withEnvVariable("NODE_ENV", "production")
-    .withEntrypoint(["sh", "-c", "bunx prisma db push --skip-generate && bun run src/index.ts"])
+    .withEntrypoint([
+      "sh",
+      "-c",
+      "bunx prisma db push --skip-generate && bun run src/index.ts",
+    ])
     .withLabel("org.opencontainers.image.title", "birmel")
-    .withLabel("org.opencontainers.image.description", "AI-powered Discord server management bot");
+    .withLabel(
+      "org.opencontainers.image.description",
+      "AI-powered Discord server management bot",
+    );
 }
 
 /**
@@ -254,7 +420,9 @@ export function buildBirmelImage(workspaceSource: Directory, version: string, gi
  * @param image The pre-built container image
  * @returns Test result with logs
  */
-export async function smokeTestBirmelImageWithContainer(image: Container): Promise<string> {
+export async function smokeTestBirmelImageWithContainer(
+  image: Container,
+): Promise<string> {
   // Run with env vars that will cause expected startup failure (missing tokens)
   const containerWithEnv = image
     .withEnvVariable("DISCORD_TOKEN", "test-token")
@@ -263,10 +431,17 @@ export async function smokeTestBirmelImageWithContainer(image: Container): Promi
     .withEnvVariable("OPENAI_API_KEY", "test-openai-key")
     .withEnvVariable("DATABASE_URL", "file:/tmp/test.db")
     .withEnvVariable("MASTRA_MEMORY_DB_PATH", "file:/tmp/mastra-memory.db")
-    .withEnvVariable("MASTRA_TELEMETRY_DB_PATH", "file:/tmp/mastra-telemetry.db")
+    .withEnvVariable(
+      "MASTRA_TELEMETRY_DB_PATH",
+      "file:/tmp/mastra-telemetry.db",
+    )
     .withEntrypoint([]);
 
-  const container = containerWithEnv.withExec(["sh", "-c", "timeout 30s bun run start 2>&1 || true"]);
+  const container = containerWithEnv.withExec([
+    "sh",
+    "-c",
+    "timeout 30s bun run start 2>&1 || true",
+  ]);
 
   let output = "";
 
@@ -281,9 +456,18 @@ export async function smokeTestBirmelImageWithContainer(image: Container): Promi
   }
 
   // Check for expected patterns indicating the bot tried to start
-  const expectedPatterns = ["Logging in", "Discord", "TokenInvalid", "Invalid token", "401", "Unauthorized"];
+  const expectedPatterns = [
+    "Logging in",
+    "Discord",
+    "TokenInvalid",
+    "Invalid token",
+    "401",
+    "Unauthorized",
+  ];
 
-  const hasExpectedPattern = expectedPatterns.some((pattern) => output.toLowerCase().includes(pattern.toLowerCase()));
+  const hasExpectedPattern = expectedPatterns.some((pattern) =>
+    output.toLowerCase().includes(pattern.toLowerCase()),
+  );
 
   if (hasExpectedPattern) {
     return `✅ Smoke test passed: Container started and failed as expected due to invalid credentials.\n\nOutput snippet: ${output.slice(0, 500)}`;
@@ -335,8 +519,14 @@ type PublishBirmelImageWithContainerOptions = {
  * @param options Publishing options including workspace source, version, git SHA, and optional registry auth
  * @returns The published image references
  */
-export async function publishBirmelImage(options: PublishBirmelImageOptions): Promise<string[]> {
-  const image = buildBirmelImage(options.workspaceSource, options.version, options.gitSha);
+export async function publishBirmelImage(
+  options: PublishBirmelImageOptions,
+): Promise<string[]> {
+  const image = buildBirmelImage(
+    options.workspaceSource,
+    options.version,
+    options.gitSha,
+  );
   return publishBirmelImageWithContainer({
     image,
     version: options.version,
@@ -357,11 +547,19 @@ export async function publishBirmelImageWithContainer(
 
   // Set up registry authentication if credentials provided
   if (options.registryAuth) {
-    image = image.withRegistryAuth("ghcr.io", options.registryAuth.username, options.registryAuth.password);
+    image = image.withRegistryAuth(
+      "ghcr.io",
+      options.registryAuth.username,
+      options.registryAuth.password,
+    );
   }
 
-  const versionRef = await image.publish(`ghcr.io/shepherdjerred/birmel:${options.version}`);
-  const shaRef = await image.publish(`ghcr.io/shepherdjerred/birmel:${options.gitSha}`);
+  const versionRef = await image.publish(
+    `ghcr.io/shepherdjerred/birmel:${options.version}`,
+  );
+  const shaRef = await image.publish(
+    `ghcr.io/shepherdjerred/birmel:${options.gitSha}`,
+  );
 
   return [versionRef, shaRef];
 }

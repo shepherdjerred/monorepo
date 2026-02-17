@@ -15,7 +15,7 @@ export function convertVideo(video: Video): DiscordNotification {
 }
 
 export function convertCommentaries(
-  _notification: CommentaryNotification
+  _notification: CommentaryNotification,
 ): DiscordNotification[] {
   return [];
 }

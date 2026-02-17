@@ -6,13 +6,13 @@ import {
 
 export class FunctionNotifier implements Notifier {
   readonly fn: (
-    notifications: CommentaryNotification | VideoNotification
+    notifications: CommentaryNotification | VideoNotification,
   ) => Promise<undefined>;
 
   constructor(
     fn: (
-      notifications: CommentaryNotification | VideoNotification
-    ) => Promise<undefined>
+      notifications: CommentaryNotification | VideoNotification,
+    ) => Promise<undefined>,
   ) {
     this.fn = fn;
   }
@@ -22,7 +22,7 @@ export class FunctionNotifier implements Notifier {
   }
 
   notifyCommentaries(
-    notifications: CommentaryNotification
+    notifications: CommentaryNotification,
   ): Promise<undefined> {
     return this.fn(notifications);
   }

@@ -38,7 +38,7 @@ Quick Look helps you create previews of the files your app handles so that peopl
 
 ## [Platform considerations](/design/human-interface-guidelines/file-management#Platform-considerations)
 
-*No additional considerations for tvOS, visionOS, or watchOS.*
+_No additional considerations for tvOS, visionOS, or watchOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/file-management#iOS-iPadOS)
 
@@ -48,9 +48,9 @@ Starting in iOS 18 and iPadOS 18, document-based apps can use the system’s doc
 
 The document launcher consists of three main parts:
 
-* A *title card* that displays the app title and two app-specific buttons
-* A background image that appears behind the title card and additional images — called *accessories* — that can appear around it
-* A sheet that contains a file browser and optional app-specific controls
+- A _title card_ that displays the app title and two app-specific buttons
+- A background image that appears behind the title card and additional images — called _accessories_ — that can appear around it
+- A sheet that contains a file browser and optional app-specific controls
 
 You can customize all three parts of the document launcher. Although the system automatically displays your app name in the title card, you specify the text and functions of the card’s primary and secondary buttons. You can also create a custom background image, one or more accessory images to surround the title card, and provide some custom controls that can appear in the file browser’s toolbar.
 
@@ -66,7 +66,7 @@ You can customize all three parts of the document launcher. Although the system 
 
 #### [File provider app extension](/design/human-interface-guidelines/file-management#File-provider-app-extension)
 
-If your app can share its files with other apps, you can create a file provider app extension that displays a custom interface for importing, exporting, opening, and moving your app’s documents. For developer guidance, see [File Provider](/documentation/FileProvider). An *app extension* is code you provide that people can install and use to extend the functionality of a specific area of the system; to learn more, see [App extensions](https://developer.apple.com/app-extensions/).
+If your app can share its files with other apps, you can create a file provider app extension that displays a custom interface for importing, exporting, opening, and moving your app’s documents. For developer guidance, see [File Provider](/documentation/FileProvider). An _app extension_ is code you provide that people can install and use to extend the functionality of a specific area of the system; to learn more, see [App extensions](https://developer.apple.com/app-extensions/).
 
 **When someone uses your file provider extension to open or import documents, display only documents that are appropriate in the current context.** For example, if a PDF-editing app loads your extension, only list PDF files for opening or import. You might also want to display additional information, such as modification dates, sizes, and whether documents are local or remote.
 
@@ -94,9 +94,9 @@ If your app syncs local and remote files, you can create a Finder Sync app exten
 
 For example, you can use a Finder Sync extension to:
 
-* Display badges in the Finder to indicate the sync status of items
-* Provide custom contextual menu items that perform file and folder management tasks, like favoriting and adding password-protection
-* Provide custom toolbar buttons that perform global actions, like initiating a sync operation
+- Display badges in the Finder to indicate the sync status of items
+- Provide custom contextual menu items that perform file and folder management tasks, like favoriting and adding password-protection
+- Provide custom toolbar buttons that perform global actions, like initiating a sync operation
 
 **Help people avoid losing work if they turn off autosaving.** People can turn off autosaving by selecting the “Ask to keep changes when closing documents” toggle in Desktop & Dock settings. In this scenario, show that a document has unsaved changes and present a save dialog when people choose to close the document, quit your app, log out, or restart.
 
@@ -124,7 +124,7 @@ Build document-based apps in SwiftUI](https://developer.apple.com/videos/play/ww
 
 ## [Change log](/design/human-interface-guidelines/file-management#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date          | Changes                                                             |
+| ------------- | ------------------------------------------------------------------- |
 | June 10, 2024 | Added guidelines for using the document launcher in iOS and iPadOS. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
+| June 21, 2023 | Updated to include guidance for visionOS.                           |

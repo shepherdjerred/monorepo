@@ -1,5 +1,11 @@
 import type { Content } from "#src/model/content";
-import type { ManifestCommentary, ManifestCourse, ManifestCourseChapters, Manifest, ManifestVideo } from "./manifest";
+import type {
+  ManifestCommentary,
+  ManifestCourse,
+  ManifestCourseChapters,
+  Manifest,
+  ManifestVideo,
+} from "./manifest";
 import type { Video } from "#src/model/video";
 import type { Course } from "#src/model/course";
 import type { Commentary } from "#src/model/commentary";
@@ -11,10 +17,22 @@ import type { CourseVideo } from "#src/model/course-video";
 export class Parser {
   parse(manifest: Manifest): Content {
     return {
-      videos: this.parseVideos(manifest.videos, manifest.courses, manifest.videosToCourses),
-      courses: this.parseCourses(manifest.videos, manifest.courses, manifest.videosToCourses),
+      videos: this.parseVideos(
+        manifest.videos,
+        manifest.courses,
+        manifest.videosToCourses,
+      ),
+      courses: this.parseCourses(
+        manifest.videos,
+        manifest.courses,
+        manifest.videosToCourses,
+      ),
       commentaries: this.parseCommentaries(manifest.commentaries),
-      unmappedVideos: this.getUnmatchedVideos(manifest.videos, manifest.courses, manifest.videosToCourses),
+      unmappedVideos: this.getUnmatchedVideos(
+        manifest.videos,
+        manifest.courses,
+        manifest.videosToCourses,
+      ),
     };
   }
 
@@ -24,13 +42,19 @@ export class Parser {
     return releaseDate;
   }
 
-  getUnmatchedVideos(input: ManifestVideo[], courses: ManifestCourse[], chapters: ManifestCourseChapters): Video[] {
+  getUnmatchedVideos(
+    input: ManifestVideo[],
+    courses: ManifestCourse[],
+    chapters: ManifestCourseChapters,
+  ): Video[] {
     return input.flatMap((video) => {
       const match = this.matchVideoToCourse(video, courses, chapters);
 
-      return match === undefined ? {
-          ...video,
-        } as unknown as Video : [];
+      return match === undefined
+        ? ({
+            ...video,
+          } as unknown as Video)
+        : [];
     });
   }
 
@@ -44,10 +68,9 @@ export class Parser {
       if (value === undefined) {
         continue;
       }
-      const match =
-        value.chapters[0].vids.some((courseVideo) => {
-          return courseVideo.uuid === video.uuid;
-        });
+      const match = value.chapters[0].vids.some((courseVideo) => {
+        return courseVideo.uuid === video.uuid;
+      });
       if (match) {
         courseTitle = key;
         break;
@@ -72,7 +95,11 @@ export class Parser {
     };
   }
 
-  parseVideos(input: ManifestVideo[], courses: ManifestCourse[], chapters: ManifestCourseChapters): Video[] {
+  parseVideos(
+    input: ManifestVideo[],
+    courses: ManifestCourse[],
+    chapters: ManifestCourseChapters,
+  ): Video[] {
     return input.flatMap((video: ManifestVideo): Video | Video[] => {
       const releaseDate = this.parseDate(video.rDate);
       const role = roleFromString(video.role);
@@ -106,10 +133,12 @@ export class Parser {
   }
 
   getImageUrl(input: ManifestVideo | ManifestCommentary): string {
-    return input.tSS === "" ? `https://ik.imagekit.io/skillcapped/thumbnails/${input.uuid}/thumbnails/thumbnail_${String(input.tId)}.jpg` : input.tSS.replace(
-        "https://d20k8dfo6rtj2t.cloudfront.net/jpg-images/",
-        "https://ik.imagekit.io/skillcapped/customss/jpg-images/",
-      );
+    return input.tSS === ""
+      ? `https://ik.imagekit.io/skillcapped/thumbnails/${input.uuid}/thumbnails/thumbnail_${String(input.tId)}.jpg`
+      : input.tSS.replace(
+          "https://d20k8dfo6rtj2t.cloudfront.net/jpg-images/",
+          "https://ik.imagekit.io/skillcapped/customss/jpg-images/",
+        );
   }
 
   parseCourses(
@@ -117,10 +146,17 @@ export class Parser {
     manifestCourses: ManifestCourse[],
     manifestCourseChapters: ManifestCourseChapters,
   ): Course[] {
-    const videos = this.parseVideos(manifestVideos, manifestCourses, manifestCourseChapters);
+    const videos = this.parseVideos(
+      manifestVideos,
+      manifestCourses,
+      manifestCourseChapters,
+    );
 
     return manifestCourses
-      .filter((course) => manifestCourseChapters[course.title]?.chapters !== undefined)
+      .filter(
+        (course) =>
+          manifestCourseChapters[course.title]?.chapters !== undefined,
+      )
       .map((course: ManifestCourse): Course => {
         const releaseDate = this.parseDate(course.rDate);
         const role = roleFromString(course.role);
@@ -130,19 +166,26 @@ export class Parser {
         if (courseChapters === undefined) {
           throw new Error(`Course chapters not found for ${course.title}`);
         }
-        const courseVideos: CourseVideo[] = courseChapters.chapters[0].vids.map((video) => {
-          const videoInfo = videos.find((candidate) => candidate.uuid === video.uuid);
-          const altTitle = video.altTitle === undefined ? undefined : rawTitleToDisplayTitle(video.altTitle);
+        const courseVideos: CourseVideo[] = courseChapters.chapters[0].vids.map(
+          (video) => {
+            const videoInfo = videos.find(
+              (candidate) => candidate.uuid === video.uuid,
+            );
+            const altTitle =
+              video.altTitle === undefined
+                ? undefined
+                : rawTitleToDisplayTitle(video.altTitle);
 
-          if (videoInfo === undefined) {
-            throw new Error(`Couldn't find video ${JSON.stringify(video)}`);
-          }
+            if (videoInfo === undefined) {
+              throw new Error(`Couldn't find video ${JSON.stringify(video)}`);
+            }
 
-          return {
-            video: videoInfo,
-            altTitle,
-          };
-        });
+            return {
+              video: videoInfo,
+              altTitle,
+            };
+          },
+        );
 
         return {
           title,
@@ -158,7 +201,10 @@ export class Parser {
 
   parseCommentaries(dumpCommentary: ManifestCommentary[]): Commentary[] {
     return dumpCommentary
-      .filter((commentary): commentary is ManifestCommentary & { title: string } => commentary.title !== undefined)
+      .filter(
+        (commentary): commentary is ManifestCommentary & { title: string } =>
+          commentary.title !== undefined,
+      )
       .map((commentary): Commentary => {
         const releaseDate = this.parseDate(commentary.rDate);
         const role = roleFromString(commentary.role);

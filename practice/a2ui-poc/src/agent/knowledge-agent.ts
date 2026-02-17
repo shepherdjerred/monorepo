@@ -44,7 +44,10 @@ export class KnowledgeAgent {
           const message = JSON.parse(line) as A2UIMessage;
           yield message;
         } catch (parseError) {
-          logger.warn("Failed to parse A2UI message", { line, error: parseError });
+          logger.warn("Failed to parse A2UI message", {
+            line,
+            error: parseError,
+          });
         }
       }
     } catch (error) {
@@ -86,9 +89,8 @@ export class KnowledgeAgent {
     }
   }
 
-
   async *handleUserAction(
-    action: UserAction["userAction"]
+    action: UserAction["userAction"],
   ): AsyncGenerator<A2UIMessage> {
     logger.info("Handling user action with AI-generated UI", {
       name: action.name,
@@ -113,7 +115,9 @@ export class KnowledgeAgent {
         maxTokens: 8000,
       });
 
-      logger.debug("AI action response received", { length: result.text.length });
+      logger.debug("AI action response received", {
+        length: result.text.length,
+      });
 
       // Strip markdown code blocks if present (safety measure)
       let cleanText = result.text;
@@ -128,7 +132,10 @@ export class KnowledgeAgent {
           const message = JSON.parse(line) as A2UIMessage;
           yield message;
         } catch (parseError) {
-          logger.warn("Failed to parse A2UI message", { line, error: parseError });
+          logger.warn("Failed to parse A2UI message", {
+            line,
+            error: parseError,
+          });
         }
       }
     } catch (error) {
@@ -152,7 +159,8 @@ export class KnowledgeAgent {
               component: {
                 Text: {
                   text: {
-                    literalString: "Failed to process action. Please try again.",
+                    literalString:
+                      "Failed to process action. Please try again.",
                   },
                   usageHint: "body",
                 },

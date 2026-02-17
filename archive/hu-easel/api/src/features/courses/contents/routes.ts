@@ -1,42 +1,57 @@
-import { UserRole } from '../../users/model';
-import { Router } from 'express';
-import { getContentFromParameter } from './middleware';
-import { authenticate } from '../../users/authentication/middleware';
-import { checkUserIsAuthorized } from '../../users/authorization/middleware';
-import { validateCreateContentRequest } from './validator';
-import { createContent, deleteContent, readContent, readContents, updateContent } from './controller';
+import { UserRole } from "../../users/model";
+import { Router } from "express";
+import { getContentFromParameter } from "./middleware";
+import { authenticate } from "../../users/authentication/middleware";
+import { checkUserIsAuthorized } from "../../users/authorization/middleware";
+import { validateCreateContentRequest } from "./validator";
+import {
+  createContent,
+  deleteContent,
+  readContent,
+  readContents,
+  updateContent,
+} from "./controller";
 
 let router = Router();
 
 const { PROFESSOR, STUDENT } = UserRole;
 
-router.param('content_uuid',
-  getContentFromParameter);
+router.param("content_uuid", getContentFromParameter);
 
-router.post('/',
+router.post(
+  "/",
   authenticate(true),
-  checkUserIsAuthorized(PROFESSOR, 'CREATE', 'CONTENT/*'),
+  checkUserIsAuthorized(PROFESSOR, "CREATE", "CONTENT/*"),
   validateCreateContentRequest,
-  createContent);
+  createContent,
+);
 
-router.get('/:content_uuid',
+router.get(
+  "/:content_uuid",
   authenticate(true),
-  checkUserIsAuthorized(STUDENT, 'READ', 'CONTENT/*'),
-  readContent);
+  checkUserIsAuthorized(STUDENT, "READ", "CONTENT/*"),
+  readContent,
+);
 
-router.get('/',
+router.get(
+  "/",
   authenticate(true),
-  checkUserIsAuthorized(STUDENT, 'READ', 'CONTENT/*'),
-  readContents);
+  checkUserIsAuthorized(STUDENT, "READ", "CONTENT/*"),
+  readContents,
+);
 
-router.put('/:content_uuid',
+router.put(
+  "/:content_uuid",
   authenticate(true),
-  checkUserIsAuthorized(PROFESSOR, 'UPDATE', 'CONTENT/*'),
-  updateContent);
+  checkUserIsAuthorized(PROFESSOR, "UPDATE", "CONTENT/*"),
+  updateContent,
+);
 
-router.delete('/:content_uuid',
+router.delete(
+  "/:content_uuid",
   authenticate(true),
-  checkUserIsAuthorized(PROFESSOR, 'DELETE', 'CONTENT/*'),
-  deleteContent);
+  checkUserIsAuthorized(PROFESSOR, "DELETE", "CONTENT/*"),
+  deleteContent,
+);
 
 export default router;

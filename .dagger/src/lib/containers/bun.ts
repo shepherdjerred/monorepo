@@ -1,4 +1,9 @@
-import { dag, type Container, type Directory, type Platform } from "@dagger.io/dagger";
+import {
+  dag,
+  type Container,
+  type Directory,
+  type Platform,
+} from "@dagger.io/dagger";
 import versions from "../versions";
 
 /**
@@ -36,5 +41,8 @@ export function getBunNodeContainer(
   platform?: Platform,
   customVersion?: string,
 ): Container {
-  return getBunContainer(source, platform, customVersion).withEnvVariable("BUN_FEATURE_FLAG_FORCE_NODE_ENVIRONMENT", "1");
+  return getBunContainer(source, platform, customVersion).withEnvVariable(
+    "BUN_FEATURE_FLAG_FORCE_NODE_ENVIRONMENT",
+    "1",
+  );
 }

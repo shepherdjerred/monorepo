@@ -36,7 +36,11 @@ function findTrailerPosition(buffer: Uint8Array): number {
   // Search backwards from the end to find it (up to 4MB for large binaries)
   const searchLimit = Math.min(buffer.length, 4 * 1024 * 1024); // Search last 4MB max
 
-  for (let pos = buffer.length - BUN_TRAILER_LENGTH; pos >= buffer.length - searchLimit; pos--) {
+  for (
+    let pos = buffer.length - BUN_TRAILER_LENGTH;
+    pos >= buffer.length - searchLimit;
+    pos--
+  ) {
     let matches = true;
     for (let i = 0; i < BUN_TRAILER_LENGTH; i++) {
       if (buffer[pos + i] !== BUN_TRAILER_BYTES[i]) {
@@ -53,7 +57,11 @@ function findTrailerPosition(buffer: Uint8Array): number {
 
 /** Read a 32-bit unsigned integer (little-endian) */
 function readU32(buffer: Uint8Array, offset: number): number {
-  const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+  const view = new DataView(
+    buffer.buffer,
+    buffer.byteOffset,
+    buffer.byteLength,
+  );
   return view.getUint32(offset, true);
 }
 
@@ -193,14 +201,19 @@ function parseModules(
     const name = normalizePath(rawName);
     const contents = extractBytes(buffer, dataStart, contentsPtr);
     const sourcemap =
-      sourcemapPtr.length > 0 ? extractBytes(buffer, dataStart, sourcemapPtr) : null;
+      sourcemapPtr.length > 0
+        ? extractBytes(buffer, dataStart, sourcemapPtr)
+        : null;
     const bytecode =
-      bytecodePtr.length > 0 ? extractBytes(buffer, dataStart, bytecodePtr) : null;
+      bytecodePtr.length > 0
+        ? extractBytes(buffer, dataStart, bytecodePtr)
+        : null;
 
     // Map enum values
     const encoding = (ENCODING_MAP[encodingByte] ?? "binary") as Encoding;
     const loader = (LOADER_MAP[loaderByte] ?? "unknown") as Loader;
-    const moduleFormat = (MODULE_FORMAT_MAP[moduleFormatByte] ?? "none") as ModuleFormat;
+    const moduleFormat = (MODULE_FORMAT_MAP[moduleFormatByte] ??
+      "none") as ModuleFormat;
     const side = (FILE_SIDE_MAP[sideByte] ?? "server") as FileSide;
 
     modules.push({
@@ -305,7 +318,9 @@ export async function decompile(buffer: Uint8Array): Promise<DecompileResult> {
 }
 
 /** Decompile from a file path */
-export async function decompileFile(filePath: string): Promise<DecompileResult> {
+export async function decompileFile(
+  filePath: string,
+): Promise<DecompileResult> {
   const file = Bun.file(filePath);
   const buffer = new Uint8Array(await file.arrayBuffer());
   return decompile(buffer);

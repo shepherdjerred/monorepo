@@ -54,20 +54,20 @@ Clone or pull git repositories:
 
 ### External Configuration Options
 
-| Option | Description |
-|--------|-------------|
-| `type` | `archive`, `archive-file`, `file`, `git-repo` |
-| `url` | URL (supports templates) |
-| `refreshPeriod` | How often to re-download (e.g., `"168h"` = weekly, `"720h"` = monthly) |
-| `stripComponents` | Strip leading path components from archive |
-| `exact` | Set exact_ attribute on extracted directory |
-| `include` | Glob patterns for files to include |
-| `exclude` | Glob patterns for files to exclude |
-| `executable` | Set executable bit on extracted file |
-| `encrypted` | File is encrypted |
-| `filter.command` | Command to filter/decompress before extraction |
-| `filter.args` | Arguments for filter command |
-| `checksum.sha256` | Expected SHA-256 hash for verification |
+| Option            | Description                                                            |
+| ----------------- | ---------------------------------------------------------------------- |
+| `type`            | `archive`, `archive-file`, `file`, `git-repo`                          |
+| `url`             | URL (supports templates)                                               |
+| `refreshPeriod`   | How often to re-download (e.g., `"168h"` = weekly, `"720h"` = monthly) |
+| `stripComponents` | Strip leading path components from archive                             |
+| `exact`           | Set exact\_ attribute on extracted directory                           |
+| `include`         | Glob patterns for files to include                                     |
+| `exclude`         | Glob patterns for files to exclude                                     |
+| `executable`      | Set executable bit on extracted file                                   |
+| `encrypted`       | File is encrypted                                                      |
+| `filter.command`  | Command to filter/decompress before extraction                         |
+| `filter.args`     | Arguments for filter command                                           |
+| `checksum.sha256` | Expected SHA-256 hash for verification                                 |
 
 ### Performance Note
 
@@ -84,7 +84,7 @@ Place `.chezmoiexternal.toml` in subdirectories. Paths are relative to that subd
     url = "https://example.com/config.tar.gz"
 ```
 
-### external_ Directory Attribute
+### external\_ Directory Attribute
 
 Apply `external_` prefix to directories containing non-chezmoi-formatted filenames (like cloned repos) to prevent chezmoi from misinterpreting them:
 
@@ -100,6 +100,7 @@ external_dot_oh-my-zsh/
 Age is the recommended encryption method. Chezmoi includes a builtin age implementation.
 
 **Generate key:**
+
 ```bash
 chezmoi age-keygen --output=$HOME/key.txt
 # Post-quantum key (v2.69+):
@@ -107,6 +108,7 @@ chezmoi age-keygen --output=$HOME/key.txt --pq
 ```
 
 **Configure:**
+
 ```toml
 # ~/.config/chezmoi/chezmoi.toml
 encryption = "age"
@@ -116,6 +118,7 @@ encryption = "age"
 ```
 
 **Multiple keys:**
+
 ```toml
 encryption = "age"
 [age]
@@ -124,6 +127,7 @@ encryption = "age"
 ```
 
 **Symmetric encryption (passphrase):**
+
 ```toml
 encryption = "age"
 [age]
@@ -131,6 +135,7 @@ encryption = "age"
 ```
 
 **SSH key as identity:**
+
 ```toml
 encryption = "age"
 [age]
@@ -147,6 +152,7 @@ encryption = "gpg"
 ```
 
 **Symmetric GPG:**
+
 ```toml
 encryption = "gpg"
 [gpg]
@@ -182,19 +188,19 @@ Encrypted files are stored in the source directory with the `encrypted_` prefix 
 
 ### Script Types
 
-| Type | Behavior | Use Case |
-|------|----------|----------|
-| `run_` | Runs every `chezmoi apply` | Theme sync, environment setup |
-| `run_once_` | Runs once per unique content hash | Package installation, initial setup |
-| `run_onchange_` | Runs when content changes | Config reload, service restart |
+| Type            | Behavior                          | Use Case                            |
+| --------------- | --------------------------------- | ----------------------------------- |
+| `run_`          | Runs every `chezmoi apply`        | Theme sync, environment setup       |
+| `run_once_`     | Runs once per unique content hash | Package installation, initial setup |
+| `run_onchange_` | Runs when content changes         | Config reload, service restart      |
 
 ### Execution Timing
 
-| Attribute | Timing |
-|-----------|--------|
-| `before_` | Before file operations |
-| `after_` | After file operations |
-| _(none)_ | During file operations (alphabetical order) |
+| Attribute | Timing                                      |
+| --------- | ------------------------------------------- |
+| `before_` | Before file operations                      |
+| `after_`  | After file operations                       |
+| _(none)_  | During file operations (alphabetical order) |
 
 ### Script Naming Pattern
 
@@ -203,6 +209,7 @@ run_[once_|onchange_][before_|after_]<name>[.tmpl]
 ```
 
 Examples:
+
 ```
 run_once_before_install-packages.sh          # Run once before apply
 run_onchange_after_reload-config.sh.tmpl     # Run after apply when changed
@@ -213,21 +220,22 @@ run_after_sync-theme.sh.tmpl                 # Run every apply, after files
 
 Chezmoi automatically sets these in script environments:
 
-| Variable | Value |
-|----------|-------|
-| `CHEZMOI` | `1` |
-| `CHEZMOI_OS` | Operating system |
-| `CHEZMOI_ARCH` | Architecture |
-| `CHEZMOI_ARGS` | chezmoi command arguments |
-| `CHEZMOI_COMMAND` | Current chezmoi command |
-| `CHEZMOI_CACHE_DIR` | Cache directory |
-| `CHEZMOI_CONFIG_FILE` | Config file path |
-| `CHEZMOI_HOME_DIR` | Home directory |
-| `CHEZMOI_SOURCE_DIR` | Source directory |
-| `CHEZMOI_SOURCE_PATH` | Script source path |
-| `CHEZMOI_WORKING_TREE` | Working tree path |
+| Variable               | Value                     |
+| ---------------------- | ------------------------- |
+| `CHEZMOI`              | `1`                       |
+| `CHEZMOI_OS`           | Operating system          |
+| `CHEZMOI_ARCH`         | Architecture              |
+| `CHEZMOI_ARGS`         | chezmoi command arguments |
+| `CHEZMOI_COMMAND`      | Current chezmoi command   |
+| `CHEZMOI_CACHE_DIR`    | Cache directory           |
+| `CHEZMOI_CONFIG_FILE`  | Config file path          |
+| `CHEZMOI_HOME_DIR`     | Home directory            |
+| `CHEZMOI_SOURCE_DIR`   | Source directory          |
+| `CHEZMOI_SOURCE_PATH`  | Script source path        |
+| `CHEZMOI_WORKING_TREE` | Working tree path         |
 
 Custom variables via config:
+
 ```toml
 [scriptEnv]
     MY_VAR = "value"
@@ -366,7 +374,7 @@ ARCH=aarch64
 Define machine types in `.chezmoidata.yaml`:
 
 ```yaml
-machineType: "personal"  # or "work", "server"
+machineType: "personal" # or "work", "server"
 ```
 
 Or prompt during `chezmoi init` via `.chezmoi.toml.tmpl`:
@@ -377,6 +385,7 @@ Or prompt during `chezmoi init` via `.chezmoi.toml.tmpl`:
 ```
 
 Use in templates:
+
 ```
 {{ if eq .machineType "work" -}}
 export HTTP_PROXY="http://proxy.corp.com:8080"
@@ -476,15 +485,15 @@ Create `.chezmoi.toml.tmpl` in the source root to prompt users during `chezmoi i
 
 ### Prompt Functions
 
-| Function | Description |
-|----------|-------------|
-| `promptString "prompt"` | Prompt for string, return default if non-interactive |
-| `promptString "prompt" "default"` | Prompt with default value |
-| `promptBool "prompt"` | Prompt for yes/no |
-| `promptBool "prompt" true` | Prompt with default |
-| `promptChoice "prompt" choices` | Prompt with choices |
-| `promptInt "prompt"` | Prompt for integer |
-| `stdinIsATTY` | Check if running interactively |
+| Function                          | Description                                          |
+| --------------------------------- | ---------------------------------------------------- |
+| `promptString "prompt"`           | Prompt for string, return default if non-interactive |
+| `promptString "prompt" "default"` | Prompt with default value                            |
+| `promptBool "prompt"`             | Prompt for yes/no                                    |
+| `promptBool "prompt" true`        | Prompt with default                                  |
+| `promptChoice "prompt" choices`   | Prompt with choices                                  |
+| `promptInt "prompt"`              | Prompt for integer                                   |
+| `stdinIsATTY`                     | Check if running interactively                       |
 
 ### One-Shot Setup
 
@@ -551,6 +560,7 @@ Place `.chezmoiroot` in a subdirectory to mark it as the actual source root. Use
 ```
 
 Content of `.chezmoiroot`:
+
 ```
 home
 ```
@@ -560,24 +570,28 @@ home
 ### Common Issues
 
 **Template syntax error:**
+
 ```bash
 chezmoi execute-template < problematic-file.tmpl
 # Shows error with line number
 ```
 
 **File not being managed:**
+
 ```bash
 chezmoi managed | grep filename
 chezmoi doctor  # Check for issues
 ```
 
 **Script not running:**
+
 ```bash
 chezmoi state dump | grep script-name
 chezmoi state delete-bucket --bucket=scriptState  # Reset run_once_
 ```
 
 **Encryption issues:**
+
 ```bash
 chezmoi doctor  # Checks age/gpg availability
 chezmoi decrypt < encrypted-file  # Test decryption
@@ -663,6 +677,7 @@ This allows cross-platform scripts: `.ps1` scripts use PowerShell, `.py` scripts
 ```
 
 Template usage:
+
 ```
 {{ (bitwarden "item" "item-id").login.password }}
 {{ (bitwardenFields "item" "item-id").custom_field.value }}

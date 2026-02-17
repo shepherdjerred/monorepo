@@ -7,4 +7,4 @@ export type Content = {
   courses: Course[];
   commentaries: Commentary[];
   unmappedVideos: Video[];
-}
+};

@@ -1,4 +1,4 @@
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Application } from "../../../generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
@@ -35,7 +35,8 @@ export function createMinecraftSjerredApp(chart: Chart) {
   // - discord-invite-link: (optional) Discord invite link
   new OnePasswordItem(chart, "minecraft-sjerred-discord-1p", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/q37vet77dfggoqbvu4bqle3gje",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/q37vet77dfggoqbvu4bqle3gje",
     },
     metadata: {
       name: SECRET_NAME,
@@ -87,7 +88,9 @@ export function createMinecraftSjerredApp(chart: Chart) {
       type: "PAPER",
       motd: "Jerred's Really Cool Minecraft Server",
       // ops: "RiotShielder",
-      whitelist: ["RiotShielder", "lolopToaster", "gexboy8", "Virmel"].join(","),
+      whitelist: ["RiotShielder", "lolopToaster", "gexboy8", "Virmel"].join(
+        ",",
+      ),
       spawnProtection: 0,
       viewDistance: 15,
       memory: "3G",
@@ -145,7 +148,10 @@ export function createMinecraftSjerredApp(chart: Chart) {
 
     // Mount configs to /config (itzg syncs to /data on startup)
     // Use split ConfigMaps (true) to match extraDeploy
-    extraVolumes: [...getMinecraftExtraVolumes("sjerred", NAMESPACE, true), ...getDiscordSrvExtraVolumes(NAMESPACE)],
+    extraVolumes: [
+      ...getMinecraftExtraVolumes("sjerred", NAMESPACE, true),
+      ...getDiscordSrvExtraVolumes(NAMESPACE),
+    ],
 
     // Config sync settings + DiscordSRV secrets
     extraEnv: {
@@ -207,7 +213,11 @@ export function createMinecraftSjerredApp(chart: Chart) {
       ],
       syncPolicy: {
         automated: {},
-        syncOptions: ["CreateNamespace=true", "ServerSideApply=true", "RespectIgnoreDifferences=true"],
+        syncOptions: [
+          "CreateNamespace=true",
+          "ServerSideApply=true",
+          "RespectIgnoreDifferences=true",
+        ],
       },
     },
   });

@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  type ReactNode,
+} from "react";
 import type { AuthStatus, AuthUser } from "@clauderon/shared";
 import { useClauderonClient } from "../hooks/useClauderonClient";
 
@@ -7,7 +14,7 @@ type AuthContextValue = {
   currentUser: AuthUser | null;
   isLoading: boolean;
   refreshAuthStatus: () => Promise<void>;
-}
+};
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -22,7 +29,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAuthStatus(status);
     } catch (error) {
       // 404 means auth is not enabled (localhost mode) - this is expected
-      if (error instanceof Error && error.message.includes("Authentication not enabled")) {
+      if (
+        error instanceof Error &&
+        error.message.includes("Authentication not enabled")
+      ) {
         setAuthStatus({
           requires_auth: false,
           has_users: false,
@@ -43,7 +53,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const currentUser = authStatus?.current_user ?? null;
 
   return (
-    <AuthContext.Provider value={{ authStatus, currentUser, isLoading, refreshAuthStatus }}>
+    <AuthContext.Provider
+      value={{ authStatus, currentUser, isLoading, refreshAuthStatus }}
+    >
       {children}
     </AuthContext.Provider>
   );

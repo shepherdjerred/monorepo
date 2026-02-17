@@ -8,7 +8,7 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { ApiObject, JsonPatch, Size } from "cdk8s";
 import { withCommonProps } from "../misc/common.ts";
 import { ZfsNvmeVolume } from "../misc/zfs-nvme-volume.ts";
@@ -28,8 +28,10 @@ export function createPokemonDeployment(chart: Chart) {
     },
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/run-as-non-root": "Discord Plays Pokemon requires flexible user permissions",
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "Application requires writable filesystem for runtime data",
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "Discord Plays Pokemon requires flexible user permissions",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "Application requires writable filesystem for runtime data",
       },
     },
   });
@@ -43,11 +45,16 @@ export function createPokemonDeployment(chart: Chart) {
 
   const item = new OnePasswordItem(chart, "pokemon-config", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/hwyhh64dyu3s7w37q7oj7r4qn4",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/hwyhh64dyu3s7w37q7oj7r4qn4",
     },
   });
 
-  const secret = Secret.fromSecretName(chart, "pokemon-config-secret", item.name);
+  const secret = Secret.fromSecretName(
+    chart,
+    "pokemon-config-secret",
+    item.name,
+  );
 
   deployment.addContainer(
     withCommonProps({
@@ -92,7 +99,11 @@ export function createPokemonDeployment(chart: Chart) {
       volumeMounts: [
         {
           path: "/home/ubuntu/Downloads",
-          volume: Volume.fromPersistentVolumeClaim(chart, "pokemon-pvc", localPathVolume.claim),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "pokemon-pvc",
+            localPathVolume.claim,
+          ),
         },
         {
           path: "/home/ubuntu/config.toml",
@@ -107,7 +118,11 @@ export function createPokemonDeployment(chart: Chart) {
         },
         {
           path: `/home/ubuntu/packages/frontend/dist/roms`,
-          volume: Volume.fromPersistentVolumeClaim(chart, "pokemon-rom-pvc", romVolume.claim),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "pokemon-rom-pvc",
+            romVolume.claim,
+          ),
         },
         {
           path: "/dev/shm",

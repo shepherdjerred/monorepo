@@ -8,4 +8,4 @@ export type Filters = {
   onlyUnwatched: boolean;
   onlyUnbookmarked: boolean;
   onlyWatched: boolean;
-}
+};

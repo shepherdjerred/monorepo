@@ -121,10 +121,15 @@ export function formatChangeSummary(changes: FileChange[]): string {
   const deleted = changes.filter((c) => c.changeType === "delete").length;
 
   const parts: string[] = [];
-  if (created > 0) {parts.push(`${String(created)} file${created > 1 ? "s" : ""} created`);}
-  if (modified > 0)
-    {parts.push(`${String(modified)} file${modified > 1 ? "s" : ""} modified`);}
-  if (deleted > 0) {parts.push(`${String(deleted)} file${deleted > 1 ? "s" : ""} deleted`);}
+  if (created > 0) {
+    parts.push(`${String(created)} file${created > 1 ? "s" : ""} created`);
+  }
+  if (modified > 0) {
+    parts.push(`${String(modified)} file${modified > 1 ? "s" : ""} modified`);
+  }
+  if (deleted > 0) {
+    parts.push(`${String(deleted)} file${deleted > 1 ? "s" : ""} deleted`);
+  }
 
   return parts.join(", ");
 }

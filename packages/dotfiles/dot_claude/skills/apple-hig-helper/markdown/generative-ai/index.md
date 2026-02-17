@@ -62,7 +62,7 @@ Generative artificial intelligence uses [machine learning](https://developer.app
 
 **Strive to avoid replicating copyrighted content.** Large AI models are trained using vast datasets from the internet and other sources. This means most generative models are familiar with and can unintentionally produce content similar to published work, including copyrighted content. You can reduce the likelihood of copyright infringement by building upon existing models that already protect against this, and by carefully curating inputs. For example, you might let people choose from a set of pre-approved prompts. You could also explicitly tell the model to avoid mimicking certain content or styles.
 
-**Factor processing time into your design.** *Latency* is how much time it takes for a model to produce an output. Non-generative models, such as [people tracking in ARKit](https://developer.apple.com/documentation/arkit/capturing-body-motion-in-3d) and the [Vision](/documentation/Vision) machine learning framework, typically have low latency and are suitable to run in real-time on camera feeds. Generative models typically take longer to produce a result, so design a loading experience or generate in the background while a person uses another part of the app. For guidance, see [Loading](/design/human-interface-guidelines/loading).
+**Factor processing time into your design.** _Latency_ is how much time it takes for a model to produce an output. Non-generative models, such as [people tracking in ARKit](https://developer.apple.com/documentation/arkit/capturing-body-motion-in-3d) and the [Vision](/documentation/Vision) machine learning framework, typically have low latency and are suitable to run in real-time on camera feeds. Generative models typically take longer to produce a result, so design a loading experience or generate in the background while a person uses another part of the app. For guidance, see [Loading](/design/human-interface-guidelines/loading).
 
 **Consider offering alternate versions of results.** Depending on the design of your feature, it might work best to present a single result or multiple meaningfully different results from which people can choose. Offering people a choice can give them a greater sense of control and help bridge the gap between the model’s interpretation and what someone actually wants. For example, Image Playground can generate multiple images that represent a person, allowing someone to pick the one they prefer. For guidance, see [Multiple options](https://developer.apple.com/design/human-interface-guidelines/machine-learning#Multiple-options).
 
@@ -76,7 +76,7 @@ Generative artificial intelligence uses [machine learning](https://developer.app
 
 ## [Platform considerations](/design/human-interface-guidelines/generative-ai#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/generative-ai#Resources)
 
@@ -112,6 +112,6 @@ Discover machine learning & AI frameworks on Apple platforms](https://developer.
 
 ## [Change log](/design/human-interface-guidelines/generative-ai#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date         | Changes   |
+| ------------ | --------- |
 | June 9, 2025 | New page. |

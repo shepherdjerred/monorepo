@@ -30,6 +30,7 @@ dagger call ci
 ### Test Organization
 
 **44 test files** across the codebase:
+
 - `tests/` directory: Integration and E2E tests (24 files)
 - `src/` directory: Unit tests with `#[cfg(test)]` (colocated with implementation)
 
@@ -145,6 +146,7 @@ pub struct SpriteCleanupGuard
 ### Test Organization
 
 **9 test files** across web packages:
+
 - `web/frontend/src/`: React component and utility tests
 - `web/client/src/`: Client library tests
 
@@ -159,6 +161,7 @@ cd web/client && bun test              # Client only
 ### Framework
 
 Uses **Bun's native `bun:test`** runner:
+
 - Fast execution
 - Built-in TypeScript support
 - Native mocking capabilities
@@ -224,6 +227,7 @@ Creating test data with factory functions for consistency.
 ### Test Organization
 
 **1 test file** currently:
+
 - `mobile/src/lib/historyParser.test.ts`
 
 Infrastructure ready for component tests (`react-test-renderer` installed).
@@ -238,6 +242,7 @@ cd mobile && bun test:windows          # Windows-specific
 ### Framework
 
 **Jest** with `@rnx-kit/jest-preset`:
+
 - React Native preset configuration
 - TypeScript transformation
 - Module name mapping
@@ -251,6 +256,7 @@ cd mobile && bun test:windows          # Windows-specific
 Located in `/.dagger/src/index.ts` (see `clauderonCi` function).
 
 **Pipeline Steps:**
+
 1. Build docs package (`cd docs && bun run build`)
 2. Build web package (`cd web && bun run build`)
 3. Build Rust binary (`cargo build`)
@@ -261,6 +267,7 @@ Located in `/.dagger/src/index.ts` (see `clauderonCi` function).
 ### Caching
 
 Optimized caching for faster builds:
+
 - Cargo registry
 - Git dependencies
 - Target directory
@@ -330,7 +337,7 @@ const mockLocalStorage = {
   setItem: vi.fn(),
 };
 
-Object.defineProperty(window, 'localStorage', {
+Object.defineProperty(window, "localStorage", {
   value: mockLocalStorage,
 });
 ```
@@ -351,7 +358,7 @@ class MockWebSocket {
   }
 
   simulateError() {
-    this.onerror?.(new Event('error'));
+    this.onerror?.(new Event("error"));
   }
 }
 ```
@@ -400,6 +407,7 @@ E2E tests are designed to skip gracefully when dependencies are unavailable.
 ### E2E tests always skip
 
 This is expected behavior when:
+
 - Docker is not running
 - Kubernetes cluster is not configured
 - Required credentials are not available
@@ -416,7 +424,7 @@ Use controlled async timing:
 
 ```typescript
 // Wait for async updates
-await new Promise(resolve => setTimeout(resolve, 0));
+await new Promise((resolve) => setTimeout(resolve, 0));
 ```
 
 **Reference:** `web/client/src/ConsoleClient.test.ts`

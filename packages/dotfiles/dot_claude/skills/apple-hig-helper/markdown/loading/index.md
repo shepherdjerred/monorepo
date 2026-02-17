@@ -26,13 +26,13 @@ If your app or game loads assets, levels, or other content, design the behavior 
 
 ## [Showing progress](/design/human-interface-guidelines/loading#Showing-progress)
 
-**Clearly communicate that content is loading and how long it might take to complete.** Ideally, content displays instantly, but for situations where loading takes more than a moment or two, you can use system-provided components — called *progress indicators* — to show that loading is ongoing. In general, you use a *determinate* progress indicator when you know how long loading will take, and you use an *indeterminate* progress indicator when you don’t. For guidance, see [Progress indicators](/design/human-interface-guidelines/progress-indicators).
+**Clearly communicate that content is loading and how long it might take to complete.** Ideally, content displays instantly, but for situations where loading takes more than a moment or two, you can use system-provided components — called _progress indicators_ — to show that loading is ongoing. In general, you use a _determinate_ progress indicator when you know how long loading will take, and you use an _indeterminate_ progress indicator when you don’t. For guidance, see [Progress indicators](/design/human-interface-guidelines/progress-indicators).
 
 **For games, consider creating a custom loading view.** Standard progress indicators work well in most apps, but can sometimes feel out of place in a game. Consider designing a more engaging experience by using custom animations and elements that match the style of your game.
 
 ## [Platform considerations](/design/human-interface-guidelines/loading#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, or visionOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, or visionOS._
 
 ### [watchOS](/design/human-interface-guidelines/loading#watchOS)
 
@@ -58,7 +58,7 @@ Discover Apple-Hosted Background Assets](https://developer.apple.com/videos/play
 
 ## [Change log](/design/human-interface-guidelines/loading#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| June 9, 2025 | Revised guidance for storing downloads to reflect downloading large assets in the background. |
+| Date          | Changes                                                                                       |
+| ------------- | --------------------------------------------------------------------------------------------- |
+| June 9, 2025  | Revised guidance for storing downloads to reflect downloading large assets in the background. |
 | June 10, 2024 | Added guidelines for showing progress and storing downloads, and enhanced guidance for games. |

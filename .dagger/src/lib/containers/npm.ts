@@ -1,4 +1,9 @@
-import { dag, type Container, type Directory, type Secret } from "@dagger.io/dagger";
+import {
+  dag,
+  type Container,
+  type Directory,
+  type Secret,
+} from "@dagger.io/dagger";
 import versions from "../versions";
 
 export type NpmPublishOptions = {
@@ -25,7 +30,10 @@ export type NpmPublishOptions = {
  * @param customVersion - Optional custom Bun version
  * @returns A configured container with Bun and caches mounted
  */
-export function getBunContainerWithCache(source: Directory, customVersion?: string): Container {
+export function getBunContainerWithCache(
+  source: Directory,
+  customVersion?: string,
+): Container {
   const version = customVersion ?? versions["oven/bun"];
   return dag
     .container()
@@ -60,13 +68,24 @@ export function withBunInstall(container: Container): Container {
  * });
  * ```
  */
-export async function publishToNpm(options: NpmPublishOptions): Promise<string> {
+export async function publishToNpm(
+  options: NpmPublishOptions,
+): Promise<string> {
   const registry = options.registry ?? "https://registry.npmjs.org";
   const access = options.access ?? "public";
   const tag = options.tag ?? "latest";
   const packageDir = options.packageDir ?? ".";
 
-  const publishArgs = ["bun", "publish", "--access", access, "--tag", tag, "--registry", registry];
+  const publishArgs = [
+    "bun",
+    "publish",
+    "--access",
+    access,
+    "--tag",
+    tag,
+    "--registry",
+    registry,
+  ];
 
   if (options.dryRun) {
     publishArgs.push("--dry-run");
@@ -79,7 +98,11 @@ export async function publishToNpm(options: NpmPublishOptions): Promise<string> 
   const result = await options.container
     .withWorkdir(packageDir)
     .withSecretVariable("NPM_TOKEN", options.token)
-    .withExec(["sh", "-c", `echo "//${registryHost}/:_authToken=\${NPM_TOKEN}" > ~/.npmrc`])
+    .withExec([
+      "sh",
+      "-c",
+      `echo "//${registryHost}/:_authToken=\${NPM_TOKEN}" > ~/.npmrc`,
+    ])
     .withExec(publishArgs)
     .stdout();
 
@@ -133,8 +156,17 @@ export type BunWorkspaceCIResult = {
  * }
  * ```
  */
-export async function runBunWorkspaceCI(options: BunWorkspaceCIOptions): Promise<BunWorkspaceCIResult> {
-  const { source, typecheck = true, lint = true, test = true, build = true, bunVersion } = options;
+export async function runBunWorkspaceCI(
+  options: BunWorkspaceCIOptions,
+): Promise<BunWorkspaceCIResult> {
+  const {
+    source,
+    typecheck = true,
+    lint = true,
+    test = true,
+    build = true,
+    bunVersion,
+  } = options;
 
   const steps: BunWorkspaceCIResult["steps"] = {
     install: false,

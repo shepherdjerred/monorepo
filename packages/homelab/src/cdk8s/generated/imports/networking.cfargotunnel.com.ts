@@ -37,7 +37,11 @@ export class AccessTunnel extends ApiObject {
    * @param id a scope-local name for the object
    * @param props initialization props
    */
-  public constructor(scope: Construct, id: string, props: AccessTunnelProps = {}) {
+  public constructor(
+    scope: Construct,
+    id: string,
+    props: AccessTunnelProps = {},
+  ) {
     super(scope, id, {
       ...AccessTunnel.GVK,
       ...props,
@@ -87,7 +91,9 @@ export interface AccessTunnelProps {
  * Converts an object of type 'AccessTunnelProps' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_AccessTunnelProps(obj: AccessTunnelProps | undefined): Record<string, any> | undefined {
+export function toJson_AccessTunnelProps(
+  obj: AccessTunnelProps | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -97,7 +103,10 @@ export function toJson_AccessTunnelProps(obj: AccessTunnelProps | undefined): Re
     target: toJson_AccessTunnelTarget(obj.target),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -141,11 +150,15 @@ export function toJson_AccessTunnelServiceToken(
   }
   const result = {
     CLOUDFLARE_ACCESS_SERVICE_TOKEN_ID: obj.cloudflareAccessServiceTokenId,
-    CLOUDFLARE_ACCESS_SERVICE_TOKEN_TOKEN: obj.cloudflareAccessServiceTokenToken,
+    CLOUDFLARE_ACCESS_SERVICE_TOKEN_TOKEN:
+      obj.cloudflareAccessServiceTokenToken,
     secretRef: obj.secretRef,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -189,7 +202,9 @@ export interface AccessTunnelTarget {
  * Converts an object of type 'AccessTunnelTarget' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_AccessTunnelTarget(obj: AccessTunnelTarget | undefined): Record<string, any> | undefined {
+export function toJson_AccessTunnelTarget(
+  obj: AccessTunnelTarget | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -200,7 +215,10 @@ export function toJson_AccessTunnelTarget(obj: AccessTunnelTarget | undefined): 
     svc: toJson_AccessTunnelTargetSvc(obj.svc),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -249,7 +267,9 @@ export interface AccessTunnelTargetSvc {
  * Converts an object of type 'AccessTunnelTargetSvc' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_AccessTunnelTargetSvc(obj: AccessTunnelTargetSvc | undefined): Record<string, any> | undefined {
+export function toJson_AccessTunnelTargetSvc(
+  obj: AccessTunnelTargetSvc | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -258,7 +278,10 @@ export function toJson_AccessTunnelTargetSvc(obj: AccessTunnelTargetSvc | undefi
     port: obj.port,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -296,7 +319,11 @@ export class ClusterTunnel extends ApiObject {
    * @param id a scope-local name for the object
    * @param props initialization props
    */
-  public constructor(scope: Construct, id: string, props: ClusterTunnelProps = {}) {
+  public constructor(
+    scope: Construct,
+    id: string,
+    props: ClusterTunnelProps = {},
+  ) {
     super(scope, id, {
       ...ClusterTunnel.GVK,
       ...props,
@@ -339,7 +366,9 @@ export interface ClusterTunnelProps {
  * Converts an object of type 'ClusterTunnelProps' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_ClusterTunnelProps(obj: ClusterTunnelProps | undefined): Record<string, any> | undefined {
+export function toJson_ClusterTunnelProps(
+  obj: ClusterTunnelProps | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -348,7 +377,10 @@ export function toJson_ClusterTunnelProps(obj: ClusterTunnelProps | undefined): 
     spec: toJson_ClusterTunnelSpec(obj.spec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -445,7 +477,9 @@ export interface ClusterTunnelSpec {
  * Converts an object of type 'ClusterTunnelSpec' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_ClusterTunnelSpec(obj: ClusterTunnelSpec | undefined): Record<string, any> | undefined {
+export function toJson_ClusterTunnelSpec(
+  obj: ClusterTunnelSpec | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -459,14 +493,22 @@ export function toJson_ClusterTunnelSpec(obj: ClusterTunnelSpec | undefined): Re
     nodeSelectors:
       obj.nodeSelectors === undefined
         ? undefined
-        : Object.entries(obj.nodeSelectors).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.nodeSelectors).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
     originCaPool: obj.originCaPool,
     protocol: obj.protocol,
     size: obj.size,
-    tolerations: obj.tolerations?.map((y) => toJson_ClusterTunnelSpecTolerations(y)),
+    tolerations: obj.tolerations?.map((y) =>
+      toJson_ClusterTunnelSpecTolerations(y),
+    ),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -563,7 +605,10 @@ export function toJson_ClusterTunnelSpecCloudflare(
     secret: obj.secret,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -604,7 +649,10 @@ export function toJson_ClusterTunnelSpecExistingTunnel(
     name: obj.name,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -637,7 +685,10 @@ export function toJson_ClusterTunnelSpecNewTunnel(
     name: obj.name,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -727,7 +778,10 @@ export function toJson_ClusterTunnelSpecTolerations(
     value: obj.value,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -765,7 +819,11 @@ export class ClusterTunnelV1Alpha2 extends ApiObject {
    * @param id a scope-local name for the object
    * @param props initialization props
    */
-  public constructor(scope: Construct, id: string, props: ClusterTunnelV1Alpha2Props = {}) {
+  public constructor(
+    scope: Construct,
+    id: string,
+    props: ClusterTunnelV1Alpha2Props = {},
+  ) {
     super(scope, id, {
       ...ClusterTunnelV1Alpha2.GVK,
       ...props,
@@ -819,7 +877,10 @@ export function toJson_ClusterTunnelV1Alpha2Props(
     spec: toJson_ClusterTunnelV1Alpha2Spec(obj.spec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -904,7 +965,9 @@ export function toJson_ClusterTunnelV1Alpha2Spec(
   const result = {
     cloudflare: toJson_ClusterTunnelV1Alpha2SpecCloudflare(obj.cloudflare),
     deployPatch: obj.deployPatch,
-    existingTunnel: toJson_ClusterTunnelV1Alpha2SpecExistingTunnel(obj.existingTunnel),
+    existingTunnel: toJson_ClusterTunnelV1Alpha2SpecExistingTunnel(
+      obj.existingTunnel,
+    ),
     fallbackTarget: obj.fallbackTarget,
     newTunnel: toJson_ClusterTunnelV1Alpha2SpecNewTunnel(obj.newTunnel),
     noTlsVerify: obj.noTlsVerify,
@@ -912,7 +975,10 @@ export function toJson_ClusterTunnelV1Alpha2Spec(
     protocol: obj.protocol,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1009,7 +1075,10 @@ export function toJson_ClusterTunnelV1Alpha2SpecCloudflare(
     secret: obj.secret,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1050,7 +1119,10 @@ export function toJson_ClusterTunnelV1Alpha2SpecExistingTunnel(
     name: obj.name,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1083,7 +1155,10 @@ export function toJson_ClusterTunnelV1Alpha2SpecNewTunnel(
     name: obj.name,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1179,7 +1254,9 @@ export interface TunnelProps {
  * Converts an object of type 'TunnelProps' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_TunnelProps(obj: TunnelProps | undefined): Record<string, any> | undefined {
+export function toJson_TunnelProps(
+  obj: TunnelProps | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -1188,7 +1265,10 @@ export function toJson_TunnelProps(obj: TunnelProps | undefined): Record<string,
     spec: toJson_TunnelSpec(obj.spec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1285,7 +1365,9 @@ export interface TunnelSpec {
  * Converts an object of type 'TunnelSpec' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_TunnelSpec(obj: TunnelSpec | undefined): Record<string, any> | undefined {
+export function toJson_TunnelSpec(
+  obj: TunnelSpec | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -1299,14 +1381,20 @@ export function toJson_TunnelSpec(obj: TunnelSpec | undefined): Record<string, a
     nodeSelectors:
       obj.nodeSelectors === undefined
         ? undefined
-        : Object.entries(obj.nodeSelectors).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.nodeSelectors).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
     originCaPool: obj.originCaPool,
     protocol: obj.protocol,
     size: obj.size,
     tolerations: obj.tolerations?.map((y) => toJson_TunnelSpecTolerations(y)),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1385,7 +1473,9 @@ export interface TunnelSpecCloudflare {
  * Converts an object of type 'TunnelSpecCloudflare' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_TunnelSpecCloudflare(obj: TunnelSpecCloudflare | undefined): Record<string, any> | undefined {
+export function toJson_TunnelSpecCloudflare(
+  obj: TunnelSpecCloudflare | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -1401,7 +1491,10 @@ export function toJson_TunnelSpecCloudflare(obj: TunnelSpecCloudflare | undefine
     secret: obj.secret,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1442,7 +1535,10 @@ export function toJson_TunnelSpecExistingTunnel(
     name: obj.name,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1465,7 +1561,9 @@ export interface TunnelSpecNewTunnel {
  * Converts an object of type 'TunnelSpecNewTunnel' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_TunnelSpecNewTunnel(obj: TunnelSpecNewTunnel | undefined): Record<string, any> | undefined {
+export function toJson_TunnelSpecNewTunnel(
+  obj: TunnelSpecNewTunnel | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -1473,7 +1571,10 @@ export function toJson_TunnelSpecNewTunnel(obj: TunnelSpecNewTunnel | undefined)
     name: obj.name,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1549,7 +1650,9 @@ export interface TunnelSpecTolerations {
  * Converts an object of type 'TunnelSpecTolerations' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_TunnelSpecTolerations(obj: TunnelSpecTolerations | undefined): Record<string, any> | undefined {
+export function toJson_TunnelSpecTolerations(
+  obj: TunnelSpecTolerations | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -1561,7 +1664,10 @@ export function toJson_TunnelSpecTolerations(obj: TunnelSpecTolerations | undefi
     value: obj.value,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1599,7 +1705,11 @@ export class TunnelV1Alpha2 extends ApiObject {
    * @param id a scope-local name for the object
    * @param props initialization props
    */
-  public constructor(scope: Construct, id: string, props: TunnelV1Alpha2Props = {}) {
+  public constructor(
+    scope: Construct,
+    id: string,
+    props: TunnelV1Alpha2Props = {},
+  ) {
     super(scope, id, {
       ...TunnelV1Alpha2.GVK,
       ...props,
@@ -1642,7 +1752,9 @@ export interface TunnelV1Alpha2Props {
  * Converts an object of type 'TunnelV1Alpha2Props' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_TunnelV1Alpha2Props(obj: TunnelV1Alpha2Props | undefined): Record<string, any> | undefined {
+export function toJson_TunnelV1Alpha2Props(
+  obj: TunnelV1Alpha2Props | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -1651,7 +1763,10 @@ export function toJson_TunnelV1Alpha2Props(obj: TunnelV1Alpha2Props | undefined)
     spec: toJson_TunnelV1Alpha2Spec(obj.spec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1727,7 +1842,9 @@ export interface TunnelV1Alpha2Spec {
  * Converts an object of type 'TunnelV1Alpha2Spec' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_TunnelV1Alpha2Spec(obj: TunnelV1Alpha2Spec | undefined): Record<string, any> | undefined {
+export function toJson_TunnelV1Alpha2Spec(
+  obj: TunnelV1Alpha2Spec | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -1742,7 +1859,10 @@ export function toJson_TunnelV1Alpha2Spec(obj: TunnelV1Alpha2Spec | undefined): 
     protocol: obj.protocol,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1839,7 +1959,10 @@ export function toJson_TunnelV1Alpha2SpecCloudflare(
     secret: obj.secret,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1880,7 +2003,10 @@ export function toJson_TunnelV1Alpha2SpecExistingTunnel(
     name: obj.name,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1913,7 +2039,10 @@ export function toJson_TunnelV1Alpha2SpecNewTunnel(
     name: obj.name,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -2014,7 +2143,9 @@ export interface TunnelBindingProps {
  * Converts an object of type 'TunnelBindingProps' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_TunnelBindingProps(obj: TunnelBindingProps | undefined): Record<string, any> | undefined {
+export function toJson_TunnelBindingProps(
+  obj: TunnelBindingProps | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -2024,7 +2155,10 @@ export function toJson_TunnelBindingProps(obj: TunnelBindingProps | undefined): 
     tunnelRef: toJson_TunnelBindingTunnelRef(obj.tunnelRef),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -2056,7 +2190,9 @@ export interface TunnelBindingSubjects {
  * Converts an object of type 'TunnelBindingSubjects' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_TunnelBindingSubjects(obj: TunnelBindingSubjects | undefined): Record<string, any> | undefined {
+export function toJson_TunnelBindingSubjects(
+  obj: TunnelBindingSubjects | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -2066,7 +2202,10 @@ export function toJson_TunnelBindingSubjects(obj: TunnelBindingSubjects | undefi
     spec: toJson_TunnelBindingSubjectsSpec(obj.spec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -2114,7 +2253,10 @@ export function toJson_TunnelBindingTunnelRef(
     name: obj.name,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -2229,7 +2371,10 @@ export function toJson_TunnelBindingSubjectsSpec(
     target: obj.target,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 

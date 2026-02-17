@@ -1,4 +1,4 @@
-import type { App} from "cdk8s";
+import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { IntOrString, KubeNetworkPolicy } from "../../generated/imports/k8s.ts";
 import { PostalMariaDB } from "../resources/postgres/postal-mariadb.ts";
@@ -32,9 +32,21 @@ export function createPostalChart(app: App) {
         {
           // Allow SMTP from bugsink, plausible, and other namespaces
           from: [
-            { namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": "bugsink" } } },
-            { namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": "plausible" } } },
-            { namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": "birmel" } } },
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "bugsink" },
+              },
+            },
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "plausible" },
+              },
+            },
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "birmel" },
+              },
+            },
           ],
           ports: [{ port: IntOrString.fromNumber(25), protocol: "TCP" }],
         },
@@ -75,7 +87,13 @@ export function createPostalChart(app: App) {
       policyTypes: ["Ingress", "Egress"],
       ingress: [
         {
-          from: [{ namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": "tailscale" } } }],
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
+              },
+            },
+          ],
           ports: [{ port: IntOrString.fromNumber(5000), protocol: "TCP" }],
         },
       ],

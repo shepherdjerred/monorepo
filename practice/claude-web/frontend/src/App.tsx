@@ -75,7 +75,12 @@ export default function App() {
       {/* Top bar */}
       <header style={styles.header}>
         <h1 style={styles.logo}>Claude Web</h1>
-        <Auth user={user} loading={authLoading} onLogin={login} onLogout={logout} />
+        <Auth
+          user={user}
+          loading={authLoading}
+          onLogin={login}
+          onLogout={logout}
+        />
       </header>
 
       {/* Main content */}
@@ -109,7 +114,9 @@ export default function App() {
           ) : (
             <div style={styles.noSession}>
               <h2>Welcome to Claude Web</h2>
-              <p>Create a new session or select an existing one to get started.</p>
+              <p>
+                Create a new session or select an existing one to get started.
+              </p>
             </div>
           )}
         </main>

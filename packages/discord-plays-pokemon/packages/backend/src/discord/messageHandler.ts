@@ -9,7 +9,9 @@ import { getConfig } from "../config/index.js";
 
 export let lastCommand = new Date();
 
-export function handleMessages(fn: (commandInput: CommandInput) => Promise<void>) {
+export function handleMessages(
+  fn: (commandInput: CommandInput) => Promise<void>,
+) {
   logger.info("ready to handle commands");
   client.on(Events.MessageCreate, (event) => {
     void (async () => {
@@ -22,7 +24,10 @@ export function handleMessages(fn: (commandInput: CommandInput) => Promise<void>
   });
 }
 
-async function handleMessage(event: Message, fn: (commandInput: CommandInput) => Promise<void>) {
+async function handleMessage(
+  event: Message,
+  fn: (commandInput: CommandInput) => Promise<void>,
+) {
   if (event.author.bot) {
     return;
   }
@@ -37,8 +42,13 @@ async function handleMessage(event: Message, fn: (commandInput: CommandInput) =>
     return;
   }
 
-  if (!event.member || event.member.voice.channelId !== getConfig().stream.channel_id) {
-    await event.reply(`You have to be in ${channelMention(getConfig().stream.channel_id)} to play`);
+  if (
+    !event.member ||
+    event.member.voice.channelId !== getConfig().stream.channel_id
+  ) {
+    await event.reply(
+      `You have to be in ${channelMention(getConfig().stream.channel_id)} to play`,
+    );
     return;
   }
 

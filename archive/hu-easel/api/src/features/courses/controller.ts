@@ -1,7 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
-import { Course } from './model';
-import { ExpressError } from '../../middleware';
-import { CourseResponseLocals } from './types';
+import { Request, Response, NextFunction } from "express";
+import { Course } from "./model";
+import { ExpressError } from "../../middleware";
+import { CourseResponseLocals } from "./types";
 
 interface CreateCourseRequest {
   contentUuid: string;
@@ -9,13 +9,17 @@ interface CreateCourseRequest {
   section: number;
 }
 
-export async function createCourse (req: Request, res: Response, next: NextFunction) {
+export async function createCourse(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   let { contentUuid, termUuid, section } = req.body as CreateCourseRequest;
   try {
     let course = await Course.create({
       contentUuid,
       termUuid,
-      section
+      section,
     });
     res.json(course);
   } catch (err) {
@@ -23,12 +27,20 @@ export async function createCourse (req: Request, res: Response, next: NextFunct
   }
 }
 
-export async function readCourse (req: Request, res: Response, next: NextFunction) {
+export async function readCourse(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   let { courseParam } = res.locals as CourseResponseLocals;
   res.json(courseParam);
 }
 
-export async function readCourses (req: Request, res: Response, next: NextFunction) {
+export async function readCourses(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
     let courses = await Course.findAll();
     res.json(courses);
@@ -43,7 +55,11 @@ interface UpdateCourseRequest {
   section: number;
 }
 
-export async function updateCourse (req: Request, res: Response, next: NextFunction) {
+export async function updateCourse(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   // TODO can this line be cleaned up?
   let course = (res.locals as CourseResponseLocals).courseParam as Course;
   let { contentUuid, termUuid, section } = req.body as UpdateCourseRequest;
@@ -57,7 +73,11 @@ export async function updateCourse (req: Request, res: Response, next: NextFunct
   }
 }
 
-export async function deleteCourse (req: Request, res: Response, next: NextFunction) {
+export async function deleteCourse(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   let course = (res.locals as CourseResponseLocals).courseParam as Course;
   try {
     await course.destroy();

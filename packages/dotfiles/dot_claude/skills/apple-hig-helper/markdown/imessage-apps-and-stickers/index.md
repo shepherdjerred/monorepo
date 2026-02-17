@@ -38,15 +38,15 @@ You supply a square-cornered icon for each extension you offer, and the system a
 
 To ensure that your icon looks great in any context and on various devices, create a square-cornered icon in the following sizes:
 
-| Usage | @2x (pixels) | @3x (pixels) |
-| --- | --- | --- |
-| Messages, notifications | 148x110 | - |
-|  | 143x100 | - |
-|  | 120x90 | 180x135 |
-|  | 64x48 | 96x72 |
-|  | 54x40 | 81x60 |
-| Settings | 58x58 | 87x87 |
-| App Store | 1024x1024 | 1024x1024 |
+| Usage                   | @2x (pixels) | @3x (pixels) |
+| ----------------------- | ------------ | ------------ |
+| Messages, notifications | 148x110      | -            |
+|                         | 143x100      | -            |
+|                         | 120x90       | 180x135      |
+|                         | 64x48        | 96x72        |
+|                         | 54x40        | 81x60        |
+| Settings                | 58x58        | 87x87        |
+| App Store               | 1024x1024    | 1024x1024    |
 
 ### [Sticker sizes](/design/human-interface-guidelines/imessage-apps-and-stickers#Sticker-sizes)
 
@@ -67,23 +67,23 @@ Large
 Create your sticker images using the following @3x dimensions for the sticker size you chose. If necessary, the system generates @2x and @1x versions by downscaling the images at runtime. For developer guidance, see [`MSStickerSize`](/documentation/Messages/MSStickerSize).
 
 | Sticker size | @3x dimensions (pixels) |
-| --- | --- |
-| Small | 300x300 |
-| Regular | 408x408 |
-| Large | 618x618 |
+| ------------ | ----------------------- |
+| Small        | 300x300                 |
+| Regular      | 408x408                 |
+| Large        | 618x618                 |
 
 A sticker file must be 500 KB or smaller in size. For each supported format, the table below provides guidance for using transparency and animation.
 
 | Format | Transparency | Animation |
-| --- | --- | --- |
-| PNG | 8-bit | No |
-| APNG | 8-bit | Yes |
-| GIF | Single-color | Yes |
-| JPEG | No | No |
+| ------ | ------------ | --------- |
+| PNG    | 8-bit        | No        |
+| APNG   | 8-bit        | Yes       |
+| GIF    | Single-color | Yes       |
+| JPEG   | No           | No        |
 
 ## [Platform considerations](/design/human-interface-guidelines/imessage-apps-and-stickers#Platform-considerations)
 
-*No additional considerations for iOS or iPadOS. Not supported in macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS or iPadOS. Not supported in macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/imessage-apps-and-stickers#Resources)
 
@@ -105,6 +105,6 @@ Express Yourself!](https://developer.apple.com/videos/play/wwdc2017/820)
 
 ## [Change log](/design/human-interface-guidelines/imessage-apps-and-stickers#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date        | Changes                              |
+| ----------- | ------------------------------------ |
 | May 2, 2023 | Consolidated guidance into one page. |

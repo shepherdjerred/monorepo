@@ -10,11 +10,13 @@ description: |
 ## What's New (2025)
 
 ### Lua Language
+
 - **Lua 5.5.0** (Dec 2025): Declarations for global variables, named vararg tables, compact arrays (60% memory reduction), incremental major GC, read-only for-loop variables
 - **Lua 5.4.8** (Jun 2025): Latest bug-fix release for 5.4 series
 - **LuaJIT**: Still based on Lua 5.1 syntax; Neovim permanently targets LuaJIT/5.1
 
 ### Neovim 0.11
+
 - **Native LSP config**: `vim.lsp.config()` and `vim.lsp.enable()` replace nvim-lspconfig for basic setups
 - **LSP completion**: `vim.lsp.completion.enable()` provides built-in auto-completion
 - **Default LSP mappings**: `grn` (rename), `grr` (references), `gri` (implementation), `gO` (symbols), `gra` (code actions)
@@ -25,6 +27,7 @@ description: |
 - **Grapheme cluster support**: Proper emoji and Unicode display
 
 ### Neovim 0.10
+
 - **`vim.iter()`**: Generic iterator interface for tables and iterator functions
 - **`vim.snippet`**: Built-in snippet expansion and navigation
 - **`vim.ringbuf()`**: Generic ring buffer data structure
@@ -445,13 +448,15 @@ config.default_gui_startup_args = { 'connect', 'unix' }
 ## Reference Files
 
 Detailed references in `references/` directory:
-- **neovim-lua-api.md**: Complete Neovim Lua API patterns - vim.api.*, vim.fn.*, vim.opt, keymaps, autocommands, user commands, highlights, plugin development, LSP, treesitter, diagnostics
+
+- **neovim-lua-api.md**: Complete Neovim Lua API patterns - vim.api._, vim.fn._, vim.opt, keymaps, autocommands, user commands, highlights, plugin development, LSP, treesitter, diagnostics
 - **wezterm-config.md**: WezTerm Lua configuration - keybindings, appearance, multiplexing, events, custom actions, domains, status bar
 - **lua-language.md**: Core Lua language patterns - tables, metatables, closures, coroutines, modules, string patterns, error handling, OOP, iterators
 
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - Target environment is ambiguous (Neovim LuaJIT vs WezTerm Lua 5.4)
 - Plugin manager choice affects configuration structure
 - LSP server configuration needs specific project settings

@@ -1,37 +1,40 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 let statementSchema = mongoose.Schema({
   name: {
     type: String,
-    required: true
+    required: true,
   },
   namespace: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Namespace',
-    required: true
+    ref: "Namespace",
+    required: true,
   },
   resource: {
     type: String,
-    required: true
+    required: true,
   },
   effect: {
     type: String,
-    enum: ['ALLOW', 'DENY'],
-    required: true
+    enum: ["ALLOW", "DENY"],
+    required: true,
   },
   action: {
     type: String,
-    required: true
-  }
+    required: true,
+  },
 });
 
-statementSchema.index({
-  'name': 1,
-  'namespace': 1
-}, {
-  unique: true
-});
+statementSchema.index(
+  {
+    name: 1,
+    namespace: 1,
+  },
+  {
+    unique: true,
+  },
+);
 
-let statementModel = mongoose.model('Statement', statementSchema);
+let statementModel = mongoose.model("Statement", statementSchema);
 
 module.exports = statementModel;

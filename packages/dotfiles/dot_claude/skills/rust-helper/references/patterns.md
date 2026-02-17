@@ -179,6 +179,7 @@ let handlers: Vec<Box<dyn Handler>> = vec![
 ```
 
 Trade-offs:
+
 - Generics (`impl Trait`): monomorphized, zero-cost, larger binary, known at compile time
 - Trait objects (`dyn Trait`): vtable dispatch, smaller binary, runtime polymorphism
 
@@ -202,21 +203,21 @@ fn use_base(obj: &dyn Extended) {
 
 ### Common Standard Library Traits
 
-| Trait | Purpose | Derive? |
-|-------|---------|---------|
-| `Debug` | Debug formatting `{:?}` | Yes |
-| `Clone` | Explicit duplication | Yes |
-| `Copy` | Implicit copy on assign | Yes (if all fields Copy) |
-| `PartialEq` / `Eq` | Equality comparison | Yes |
-| `PartialOrd` / `Ord` | Ordering comparison | Yes |
-| `Hash` | Hashing for HashMap/HashSet | Yes |
-| `Default` | Default value | Yes |
-| `Display` | User-facing formatting | No (implement manually) |
-| `From` / `Into` | Type conversion | No |
-| `Iterator` | Iteration protocol | No |
-| `Drop` | Custom destructor logic | No |
-| `Send` | Safe to transfer across threads | Auto |
-| `Sync` | Safe to share references across threads | Auto |
+| Trait                | Purpose                                 | Derive?                  |
+| -------------------- | --------------------------------------- | ------------------------ |
+| `Debug`              | Debug formatting `{:?}`                 | Yes                      |
+| `Clone`              | Explicit duplication                    | Yes                      |
+| `Copy`               | Implicit copy on assign                 | Yes (if all fields Copy) |
+| `PartialEq` / `Eq`   | Equality comparison                     | Yes                      |
+| `PartialOrd` / `Ord` | Ordering comparison                     | Yes                      |
+| `Hash`               | Hashing for HashMap/HashSet             | Yes                      |
+| `Default`            | Default value                           | Yes                      |
+| `Display`            | User-facing formatting                  | No (implement manually)  |
+| `From` / `Into`      | Type conversion                         | No                       |
+| `Iterator`           | Iteration protocol                      | No                       |
+| `Drop`               | Custom destructor logic                 | No                       |
+| `Send`               | Safe to transfer across threads         | Auto                     |
+| `Sync`               | Safe to share references across threads | Auto                     |
 
 ## Generics
 
@@ -301,6 +302,7 @@ let m: Matrix<3, 4> = Matrix::new();
 ### Lifetime Elision Rules
 
 The compiler infers lifetimes following these rules:
+
 1. Each input reference gets a distinct lifetime
 2. If there is exactly one input lifetime, it applies to all output references
 3. If one input is `&self` or `&mut self`, its lifetime applies to all output references

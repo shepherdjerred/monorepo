@@ -75,7 +75,10 @@ export function runKnip(projectRoot: string): KnipResults {
       });
 
       if (result.error) {
-        console.error("[knip-unused] Failed to run knip:", result.error.message);
+        console.error(
+          "[knip-unused] Failed to run knip:",
+          result.error.message,
+        );
         return results;
       }
 
@@ -116,7 +119,10 @@ export function runKnip(projectRoot: string): KnipResults {
       }
     }
   } catch (error) {
-    console.error("[knip-unused] Error parsing knip output:", error instanceof Error ? error.message : String(error));
+    console.error(
+      "[knip-unused] Error parsing knip output:",
+      error instanceof Error ? error.message : String(error),
+    );
   }
 
   return results;
@@ -181,15 +187,22 @@ export function runJscpd(projectRoot: string): JscpdResults {
     } else {
       tempDir = mkdtempSync(resolve(tmpdir(), "jscpd-"));
 
-      const result = spawnSync("bunx", ["jscpd", "--reporters", "json", "--output", tempDir, "."], {
-        cwd: projectRoot,
-        encoding: "utf-8",
-        timeout: 180_000,
-        shell: false,
-      });
+      const result = spawnSync(
+        "bunx",
+        ["jscpd", "--reporters", "json", "--output", tempDir, "."],
+        {
+          cwd: projectRoot,
+          encoding: "utf-8",
+          timeout: 180_000,
+          shell: false,
+        },
+      );
 
       if (result.error) {
-        console.error("[no-code-duplication] Failed to run jscpd:", result.error.message);
+        console.error(
+          "[no-code-duplication] Failed to run jscpd:",
+          result.error.message,
+        );
         return results;
       }
 

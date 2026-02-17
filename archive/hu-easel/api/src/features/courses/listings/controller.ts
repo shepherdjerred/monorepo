@@ -1,19 +1,23 @@
-import { NextFunction, Request, Response } from 'express';
-import { ExpressError } from '../../../middleware';
-import { Listing } from './model';
-import { ListingResponseLocals } from './types';
+import { NextFunction, Request, Response } from "express";
+import { ExpressError } from "../../../middleware";
+import { Listing } from "./model";
+import { ListingResponseLocals } from "./types";
 
 interface CreateListingRequest {
   department: string;
   identifier: number;
 }
 
-export async function createListing (req: Request, res: Response, next: NextFunction) {
+export async function createListing(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   let { department, identifier } = req.body as CreateListingRequest;
   try {
     let listing = await Listing.create({
       department,
-      identifier
+      identifier,
     });
     res.json(listing);
   } catch (err) {
@@ -21,12 +25,20 @@ export async function createListing (req: Request, res: Response, next: NextFunc
   }
 }
 
-export async function readListing (req: Request, res: Response, next: NextFunction) {
+export async function readListing(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   let { listingParam } = res.locals as ListingResponseLocals;
   res.json(listingParam);
 }
 
-export async function readListings (req: Request, res: Response, next: NextFunction) {
+export async function readListings(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
     let listings = await Listing.findAll();
     res.json(listings);
@@ -40,7 +52,11 @@ interface UpdateListingRequest {
   identifier?: number;
 }
 
-export async function updateListing (req: Request, res: Response, next: NextFunction) {
+export async function updateListing(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   // TODO can this line be cleaned up?
   let listing = (res.locals as ListingResponseLocals).listingParam as Listing;
   let { department, identifier } = req.body as UpdateListingRequest;
@@ -53,7 +69,11 @@ export async function updateListing (req: Request, res: Response, next: NextFunc
   }
 }
 
-export async function deleteListing (req: Request, res: Response, next: NextFunction) {
+export async function deleteListing(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   let listing = (res.locals as ListingResponseLocals).listingParam as Listing;
   try {
     await listing.destroy();

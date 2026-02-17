@@ -32,7 +32,7 @@ Ornaments can appear on any edge of a window and can contain UI components like 
 
 ## [Platform considerations](/design/human-interface-guidelines/ornaments#Platform-considerations)
 
-*Not supported in iOS, iPadOS, macOS, tvOS, or watchOS.*
+_Not supported in iOS, iPadOS, macOS, tvOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/ornaments#Resources)
 
@@ -44,7 +44,7 @@ Ornaments can appear on any edge of a window and can contain UI components like 
 
 #### [Developer documentation](/design/human-interface-guidelines/ornaments#Developer-documentation)
 
-[`ornament(visibility:attachmentAnchor:contentAlignment:ornament:)`](/documentation/SwiftUI/View/ornament(visibility:attachmentAnchor:contentAlignment:ornament:)) — SwiftUI
+[`ornament(visibility:attachmentAnchor:contentAlignment:ornament:)`](</documentation/SwiftUI/View/ornament(visibility:attachmentAnchor:contentAlignment:ornament:)>) — SwiftUI
 
 #### [Videos](/design/human-interface-guidelines/ornaments#Videos)
 
@@ -54,8 +54,8 @@ Design for spatial user interfaces](https://developer.apple.com/videos/play/wwdc
 
 ## [Change log](/design/human-interface-guidelines/ornaments#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| February 2, 2024 | Added guidance on using multiple ornaments. |
+| Date             | Changes                                                                   |
+| ---------------- | ------------------------------------------------------------------------- |
+| February 2, 2024 | Added guidance on using multiple ornaments.                               |
 | December 5, 2023 | Removed a statement about using ornaments to present supplementary items. |
-| June 21, 2023 | New page. |
+| June 21, 2023    | New page.                                                                 |

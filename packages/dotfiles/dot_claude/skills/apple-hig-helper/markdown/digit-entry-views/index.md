@@ -22,7 +22,7 @@ You can add an optional title and prompt above the line of digits.
 
 ## [Platform considerations](/design/human-interface-guidelines/digit-entry-views#Platform-considerations)
 
-*Not supported in iOS, iPadOS, macOS, visionOS, or watchOS.*
+_Not supported in iOS, iPadOS, macOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/digit-entry-views#Resources)
 

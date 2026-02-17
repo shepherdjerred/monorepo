@@ -170,7 +170,9 @@ export async function storePendingChanges(
 export function getPendingChanges(
   session: EditorSession,
 ): PendingChanges | null {
-  if (!session.pendingChanges) {return null;}
+  if (!session.pendingChanges) {
+    return null;
+  }
   try {
     return JSON.parse(session.pendingChanges) as PendingChanges;
   } catch {

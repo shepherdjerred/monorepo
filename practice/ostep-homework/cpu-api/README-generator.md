@@ -1,4 +1,3 @@
-
 # Overview: `generator.py`
 
 This tool, `generator.py`, allows the user to create little C programs
@@ -6,6 +5,7 @@ that exercise `fork` in different ways so as to gain better
 understanding of how `fork` works.
 
 A sample usage is just as follows:
+
 ```sh
 prompt> ./generator.py -n 1 -s 0
 ```
@@ -80,7 +80,7 @@ prompt> ./generator.py -n 1 -s 0 -c
   6      b+
   6      b-
   6 a<-b
-prompt> 
+prompt>
 ```
 
 The way to read the output is as follows. The first column shows the
@@ -101,16 +101,18 @@ to indicate this has happened.
 
 A number of flags control the randomly generated code that gets
 created. They are:
-* `-s SEED` - different random seeds yield different programs
-* `-n NUM_ACTIONS` - how many actions (`fork`, `wait`) a program should include
-* `-f FORK_CHANCE` - the chances, from 1-99 percent, that a `fork()` will be added
-* `-w WAIT_CHANCE` - same, but a `wait()` (of course, there must be an outstanding `fork` for this to be called)
-* `-e EXIT_CHANCE` - same, but the chances the process will `exit`
-* `-S MAX_SLEEP_TIME` - the max sleep time that is chosen when adding sleeps into the code
+
+- `-s SEED` - different random seeds yield different programs
+- `-n NUM_ACTIONS` - how many actions (`fork`, `wait`) a program should include
+- `-f FORK_CHANCE` - the chances, from 1-99 percent, that a `fork()` will be added
+- `-w WAIT_CHANCE` - same, but a `wait()` (of course, there must be an outstanding `fork` for this to be called)
+- `-e EXIT_CHANCE` - same, but the chances the process will `exit`
+- `-S MAX_SLEEP_TIME` - the max sleep time that is chosen when adding sleeps into the code
 
 There are also a few flags that control which C files get created for the code:
-* `-r READABLE` - this is the file shown to you (and optimized for readability)
-* `-R RUNNABLE` - this is the file that will be compiled and run; it is identical to the above but adds print statements and such
+
+- `-r READABLE` - this is the file shown to you (and optimized for readability)
+- `-R RUNNABLE` - this is the file that will be compiled and run; it is identical to the above but adds print statements and such
 
 Finally, there is one other flag, `-A`, that lets you specify a
 program exactly. For example:
@@ -120,6 +122,7 @@ prompt> ./generator.py -A "fork b,1 {} wait"
 ```
 
 The resulting C code:
+
 ```c
 int main(int argc, char *argv[]) {
     // process a
@@ -138,14 +141,12 @@ which sleeps for 1 but doesn't do anything else; in the meanwhile, "a"
 then waits for "b" to complete.
 
 More complex examples can be created. For example:
-* `-A "fork b,1 {} fork c,2 {} wait wait"` - process "a" creates two
-processes, "b" and "c", and then waits for both
-* `-A "fork b,1 {fork c,2 {} fork d,3 {} wait wait} wait"` - process
-"a" creates "b" and then waits for it to complete; "b" creates "c" and
-"d" and waits for them to complete.
+
+- `-A "fork b,1 {} fork c,2 {} wait wait"` - process "a" creates two
+  processes, "b" and "c", and then waits for both
+- `-A "fork b,1 {fork c,2 {} fork d,3 {} wait wait} wait"` - process
+  "a" creates "b" and then waits for it to complete; "b" creates "c" and
+  "d" and waits for them to complete.
 
 Read through and do the homework questions to gain a fuller
 understanding of `fork`.
-
-
-

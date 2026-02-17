@@ -1,13 +1,12 @@
-import { NextFunction, Request, RequestHandler, Response } from 'express';
-import * as jwt from 'jsonwebtoken';
-import { config } from '../../../dependencies';
-import { User } from '../model';
-import { ExpressError } from '../../../middleware';
-import { AuthenticationResponseLocals } from './types';
+import { NextFunction, Request, RequestHandler, Response } from "express";
+import * as jwt from "jsonwebtoken";
+import { config } from "../../../dependencies";
+import { User } from "../model";
+import { ExpressError } from "../../../middleware";
+import { AuthenticationResponseLocals } from "./types";
 
-export function initLocals (req: Request, res: Response, next: NextFunction) {
-  res.locals.authentication = {
-  };
+export function initLocals(req: Request, res: Response, next: NextFunction) {
+  res.locals.authentication = {};
   next();
 }
 
@@ -16,17 +15,25 @@ interface LoginRequest {
   password: string;
 }
 
-export function validateLoginRequest (req: Request, res: Response, next: NextFunction) {
+export function validateLoginRequest(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   let { username, password } = req.body;
   if (!username || !password) {
-    next(new ExpressError('Username or password not sent in request', 400));
+    next(new ExpressError("Username or password not sent in request", 400));
     return;
   } else {
     next();
   }
 }
 
-export async function loadCandidateUser (req: Request, res: Response, next: NextFunction) {
+export async function loadCandidateUser(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   let locals: AuthenticationResponseLocals = res.locals.authentication;
   let loginRequest: LoginRequest = req.body;
   let user: User | null;
@@ -34,8 +41,8 @@ export async function loadCandidateUser (req: Request, res: Response, next: Next
   try {
     user = await User.findOne({
       where: {
-        username: loginRequest.username
-      }
+        username: loginRequest.username,
+      },
     });
   } catch (err) {
     next(new ExpressError(err, 500));
@@ -46,51 +53,55 @@ export async function loadCandidateUser (req: Request, res: Response, next: Next
     locals.candidateUser = user;
     next();
   } else {
-    next(new ExpressError('User not found', 404));
+    next(new ExpressError("User not found", 404));
   }
 }
 
-export async function validateCandidatePassword (req: Request, res: Response, next: NextFunction) {
+export async function validateCandidatePassword(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   let loginRequest: LoginRequest = req.body;
-  let authenticationLocals: AuthenticationResponseLocals = res.locals.authentication;
+  let authenticationLocals: AuthenticationResponseLocals =
+    res.locals.authentication;
   let user = authenticationLocals.candidateUser as User;
 
   if (await user.validatePassword(loginRequest.password)) {
     res.locals.user = user;
     next();
   } else {
-    next(new ExpressError('Invalid password', 401));
+    next(new ExpressError("Invalid password", 401));
   }
 }
 
-export function authenticate (required: boolean): RequestHandler {
+export function authenticate(required: boolean): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
     if (!config.isAuthenticationEnabled) {
       next();
       return;
     }
-    let token: any = req.header('Authorization') as string;
+    let token: any = req.header("Authorization") as string;
     if (!token) {
       if (required) {
-        next(new ExpressError('No jwt sent with request', 401));
+        next(new ExpressError("No jwt sent with request", 401));
       } else {
         next();
       }
       return;
     }
-    token = token.replace('Bearer ', '');
+    token = token.replace("Bearer ", "");
     try {
-      token = await
-        jwt.verify(token, config.jwtSecret, {
-          issuer: config.jwtIssuer
-        });
+      token = await jwt.verify(token, config.jwtSecret, {
+        issuer: config.jwtIssuer,
+      });
       try {
         let user = await User.findById(token.uuid);
         res.locals.auth = {
-          user: user
+          user: user,
         };
         if (user === null) {
-          next(new ExpressError('Invalid jwt; user does not exist', 401));
+          next(new ExpressError("Invalid jwt; user does not exist", 401));
         }
         next();
       } catch (err) {

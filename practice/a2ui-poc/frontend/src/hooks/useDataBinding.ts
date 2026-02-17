@@ -1,9 +1,17 @@
-import type { BoundValue, BoundString, BoundNumber, BoundBoolean } from "../a2ui/types";
+import type {
+  BoundValue,
+  BoundString,
+  BoundNumber,
+  BoundBoolean,
+} from "../a2ui/types";
 
 /**
  * Resolve a JSON pointer path against a data model
  */
-function getValueAtPath(dataModel: Record<string, unknown>, path: string): unknown {
+function getValueAtPath(
+  dataModel: Record<string, unknown>,
+  path: string,
+): unknown {
   if (!path || path === "/") {
     return dataModel;
   }
@@ -32,7 +40,7 @@ function getValueAtPath(dataModel: Record<string, unknown>, path: string): unkno
  */
 export function resolveBinding(
   bound: BoundValue | undefined,
-  dataModel: Record<string, unknown>
+  dataModel: Record<string, unknown>,
 ): string | number | boolean | undefined {
   if (!bound) {
     return undefined;
@@ -73,7 +81,11 @@ export function resolveBinding(
   // Only path, no literal default
   if ("path" in bound && bound.path) {
     const value = getValueAtPath(dataModel, bound.path);
-    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    if (
+      typeof value === "string" ||
+      typeof value === "number" ||
+      typeof value === "boolean"
+    ) {
       return value;
     }
   }
@@ -86,7 +98,7 @@ export function resolveBinding(
  */
 export function resolveString(
   bound: BoundString | undefined,
-  dataModel: Record<string, unknown>
+  dataModel: Record<string, unknown>,
 ): string {
   const result = resolveBinding(bound, dataModel);
   return result !== undefined ? String(result) : "";
@@ -97,7 +109,7 @@ export function resolveString(
  */
 export function resolveNumber(
   bound: BoundNumber | undefined,
-  dataModel: Record<string, unknown>
+  dataModel: Record<string, unknown>,
 ): number {
   const result = resolveBinding(bound, dataModel);
   return typeof result === "number" ? result : 0;
@@ -108,7 +120,7 @@ export function resolveNumber(
  */
 export function resolveBoolean(
   bound: BoundBoolean | undefined,
-  dataModel: Record<string, unknown>
+  dataModel: Record<string, unknown>,
 ): boolean {
   const result = resolveBinding(bound, dataModel);
   return result === true;
@@ -119,7 +131,7 @@ export function resolveBoolean(
  */
 export function resolveActionContext(
   context: Array<{ key: string; value: BoundValue }> | undefined,
-  dataModel: Record<string, unknown>
+  dataModel: Record<string, unknown>,
 ): Record<string, unknown> {
   if (!context) {
     return {};

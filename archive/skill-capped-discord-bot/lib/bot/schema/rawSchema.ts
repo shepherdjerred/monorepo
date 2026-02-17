@@ -41,9 +41,9 @@ export interface RawChapters {
           {
             uuid: string;
             altTitle?: string;
-          }
+          },
         ];
-      }
+      },
     ];
   };
 }

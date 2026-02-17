@@ -25,7 +25,7 @@ export function rawTitleToUrlTitle(rawTitle: string): string {
 export function getCourseUrl(
   site: Site,
   courseName: string,
-  courseUuid: string
+  courseUuid: string,
 ): string {
   const base = getBaseUrl(site);
   if (site === Site.LEAGUE_OF_LEGENDS) {
@@ -39,7 +39,7 @@ export function getVideoUrl(
   site: Site,
   videoName: string,
   videoUuid: string,
-  baseUrl: string
+  baseUrl: string,
 ): string {
   if (site === Site.LEAGUE_OF_LEGENDS) {
     return baseUrl + "/" + videoUuid;
@@ -61,7 +61,7 @@ export function getImageUrl(input: RawVideo | RawCommentary): string {
   if (input.tSS !== "") {
     return input.tSS.replace(
       "https://d20k8dfo6rtj2t.cloudfront.net/jpg-images/",
-      "https://ik.imagekit.io/skillcapped/customss/jpg-images/"
+      "https://ik.imagekit.io/skillcapped/customss/jpg-images/",
     );
   } else {
     return `https://ik.imagekit.io/skillcapped/thumbnails/${input.uuid}/thumbnails/thumbnail_${input.tId}.jpg`;

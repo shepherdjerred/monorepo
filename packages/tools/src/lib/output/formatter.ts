@@ -33,10 +33,10 @@ export function formatHealthReport(report: HealthReport): string {
 
   // Overall status
   const unhealthyCount = report.checks.filter(
-    (c) => c.status === "UNHEALTHY"
+    (c) => c.status === "UNHEALTHY",
   ).length;
   const pendingCount = report.checks.filter(
-    (c) => c.status === "PENDING"
+    (c) => c.status === "PENDING",
   ).length;
 
   let statusSummary = `### Status: ${getStatusEmoji(report.overallStatus)} ${getStatusText(report.overallStatus)}`;
@@ -51,7 +51,7 @@ export function formatHealthReport(report: HealthReport): string {
   // Individual checks
   for (const check of report.checks) {
     lines.push(
-      `### ${check.name}: ${getStatusEmoji(check.status)} ${getStatusText(check.status)}`
+      `### ${check.name}: ${getStatusEmoji(check.status)} ${getStatusText(check.status)}`,
     );
 
     if (check.details.length > 0) {

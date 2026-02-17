@@ -12,7 +12,7 @@ In a macOS app, a panel typically floats above other open windows providing supp
 
 ![A stylized representation of a panel floating above a window. The image is tinted red to subtly reflect the red in the original six-color Apple logo.](https://docs-assets.developer.apple.com/published/37f7c9e6dd4c635ccbae68b50200a74c/components-panel-intro%402x.png)
 
-In general, a panel has a less prominent appearance than an app’s [main window](/design/human-interface-guidelines/windows#macOS-window-states). When the situation calls for it, a panel can also use a dark, translucent style to support a heads-up display (or *HUD*) experience.
+In general, a panel has a less prominent appearance than an app’s [main window](/design/human-interface-guidelines/windows#macOS-window-states). When the situation calls for it, a panel can also use a dark, translucent style to support a heads-up display (or _HUD_) experience.
 
 When your app runs in other platforms, consider using a modal view to present supplementary content that’s relevant to the current task or selection. For guidance, see [Modality](/design/human-interface-guidelines/modality).
 
@@ -20,7 +20,7 @@ When your app runs in other platforms, consider using a modal view to present su
 
 **Use a panel to give people quick access to important controls or information related to the content they’re working with.** For example, you might use a panel to provide controls or settings that affect the selected item in the active document or window.
 
-**Consider using a panel to present inspector functionality.** An *inspector* displays the details of the currently selected item, automatically updating its contents when the item changes or when people select a new item. In contrast, if you need to present an *Info* window — which always maintains the same contents, even when the selected item changes — use a regular window, not a panel. Depending on the layout of your app, you might also consider using a [split view](/design/human-interface-guidelines/split-views) pane to present an inspector.
+**Consider using a panel to present inspector functionality.** An _inspector_ displays the details of the currently selected item, automatically updating its contents when the item changes or when people select a new item. In contrast, if you need to present an _Info_ window — which always maintains the same contents, even when the selected item changes — use a regular window, not a panel. Depending on the layout of your app, you might also consider using a [split view](/design/human-interface-guidelines/split-views) pane to present an inspector.
 
 **Prefer simple adjustment controls in a panel.** As much as possible, avoid including controls that require typing text or selecting items to act upon because these actions can require multiple steps. Instead, consider using controls like sliders and steppers because these components can give people more direct control.
 
@@ -32,7 +32,7 @@ When your app runs in other platforms, consider using a modal view to present su
 
 **In general, avoid making a panel’s minimize button available.** People don’t usually need to minimize a panel, because it displays only when needed and disappears when the app is inactive.
 
-**Refer to panels by title in your interface and in help documentation.** In menus, use the panel’s title without including the term *panel*: for example, “Show Fonts,” “Show Colors,” and “Show Inspector.” In help documentation, it can be confusing to introduce “panel” as a different type of window, so it’s generally best to refer to a panel by its title or — when it adds clarity — by appending *window* to the title. For example, the title “Inspector” often supplies enough context to stand on its own, whereas it can be clearer to use “Fonts window” and “Colors window” instead of just “Fonts” and “Colors.”
+**Refer to panels by title in your interface and in help documentation.** In menus, use the panel’s title without including the term _panel_: for example, “Show Fonts,” “Show Colors,” and “Show Inspector.” In help documentation, it can be confusing to introduce “panel” as a different type of window, so it’s generally best to refer to a panel by its title or — when it adds clarity — by appending _window_ to the title. For example, the title “Inspector” often supplies enough context to stand on its own, whereas it can be clearer to use “Fonts window” and “Colors window” instead of just “Fonts” and “Colors.”
 
 ## [HUD-style panels](/design/human-interface-guidelines/panels#HUD-style-panels)
 
@@ -42,9 +42,9 @@ A HUD-style panel serves the same function as a standard panel, but its appearan
 
 **Prefer standard panels.** People can be distracted or confused by a HUD when there’s no logical reason for its presence. Also, a HUD might not match the current appearance setting. In general, use a HUD only:
 
-* In a media-oriented app that presents movies, photos, or slides
-* When a standard panel would obscure essential content
-* When you don’t need to include controls — with the exception of the disclosure triangle, most system-provided controls don’t match a HUD’s appearance.
+- In a media-oriented app that presents movies, photos, or slides
+- When a standard panel would obscure essential content
+- When you don’t need to include controls — with the exception of the disclosure triangle, most system-provided controls don’t match a HUD’s appearance.
 
 **Maintain one panel style when your app switches modes.** For example, if you use a HUD when your app is in full-screen mode, prefer maintaining the HUD style when people take your app out of full-screen mode.
 
@@ -56,7 +56,7 @@ For developer guidance, see [`hudWindow`](/documentation/AppKit/NSWindow/StyleMa
 
 ## [Platform considerations](/design/human-interface-guidelines/panels#Platform-considerations)
 
-*Not supported in iOS, iPadOS, tvOS, visionOS, or watchOS.*
+_Not supported in iOS, iPadOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/panels#Resources)
 

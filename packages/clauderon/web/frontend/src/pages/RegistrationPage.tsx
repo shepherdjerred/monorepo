@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { create, type CredentialCreationOptionsJSON, type PublicKeyCredentialWithAttestationJSON } from "@github/webauthn-json";
+import {
+  create,
+  type CredentialCreationOptionsJSON,
+  type PublicKeyCredentialWithAttestationJSON,
+} from "@github/webauthn-json";
 import { useClauderonClient } from "../hooks/useClauderonClient";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -20,13 +24,18 @@ export function RegistrationPage() {
     try {
       // Start registration flow
       const trimmedDisplayName = displayName.trim();
-      const response: { challenge_id: string; options: CredentialCreationOptionsJSON } = await client.registerStart({
+      const response: {
+        challenge_id: string;
+        options: CredentialCreationOptionsJSON;
+      } = (await client.registerStart({
         username,
         ...(trimmedDisplayName && { display_name: trimmedDisplayName }),
-      }) as { challenge_id: string; options: CredentialCreationOptionsJSON };
+      })) as { challenge_id: string; options: CredentialCreationOptionsJSON };
 
       // Trigger passkey creation
-      const credential: PublicKeyCredentialWithAttestationJSON = await create(response.options);
+      const credential: PublicKeyCredentialWithAttestationJSON = await create(
+        response.options,
+      );
 
       // Finish registration flow
       const trimmedDeviceName = deviceName.trim();
@@ -41,7 +50,11 @@ export function RegistrationPage() {
       await refreshAuthStatus();
     } catch (err) {
       console.error("Registration error:", err);
-      setError(err instanceof Error ? err.message : "Failed to create account. Please try again.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to create account. Please try again.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -52,19 +65,31 @@ export function RegistrationPage() {
       <div className="w-full max-w-md p-8 space-y-6 bg-card rounded-lg shadow-lg border">
         <div className="text-center">
           <h1 className="text-3xl font-bold">Welcome to Clauderon</h1>
-          <p className="text-muted-foreground mt-2">Create your account with a passkey</p>
+          <p className="text-muted-foreground mt-2">
+            Create your account with a passkey
+          </p>
         </div>
 
-        <form onSubmit={(e) => { void handleRegister(e); }} className="space-y-4">
+        <form
+          onSubmit={(e) => {
+            void handleRegister(e);
+          }}
+          className="space-y-4"
+        >
           <div>
-            <label htmlFor="username" className="block text-sm font-medium mb-2">
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium mb-2"
+            >
               Username *
             </label>
             <input
               id="username"
               type="text"
               value={username}
-              onChange={(e) => { setUsername(e.target.value); }}
+              onChange={(e) => {
+                setUsername(e.target.value);
+              }}
               required
               autoComplete="username webauthn"
               className="w-full px-3 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
@@ -74,14 +99,19 @@ export function RegistrationPage() {
           </div>
 
           <div>
-            <label htmlFor="displayName" className="block text-sm font-medium mb-2">
+            <label
+              htmlFor="displayName"
+              className="block text-sm font-medium mb-2"
+            >
               Display Name (optional)
             </label>
             <input
               id="displayName"
               type="text"
               value={displayName}
-              onChange={(e) => { setDisplayName(e.target.value); }}
+              onChange={(e) => {
+                setDisplayName(e.target.value);
+              }}
               className="w-full px-3 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder="Your display name"
               disabled={isLoading}
@@ -89,14 +119,19 @@ export function RegistrationPage() {
           </div>
 
           <div>
-            <label htmlFor="deviceName" className="block text-sm font-medium mb-2">
+            <label
+              htmlFor="deviceName"
+              className="block text-sm font-medium mb-2"
+            >
               Device Name (optional)
             </label>
             <input
               id="deviceName"
               type="text"
               value={deviceName}
-              onChange={(e) => { setDeviceName(e.target.value); }}
+              onChange={(e) => {
+                setDeviceName(e.target.value);
+              }}
               className="w-full px-3 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder="e.g., MacBook Pro, iPhone"
               disabled={isLoading}

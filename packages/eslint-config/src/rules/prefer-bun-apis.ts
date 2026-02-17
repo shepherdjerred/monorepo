@@ -1,7 +1,8 @@
 import { AST_NODE_TYPES, ESLintUtils } from "@typescript-eslint/utils";
 
 const createRule = ESLintUtils.RuleCreator(
-  (name) => `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
+  (name) =>
+    `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
 );
 
 export const preferBunApis = createRule({
@@ -9,7 +10,8 @@ export const preferBunApis = createRule({
   meta: {
     type: "suggestion",
     docs: {
-      description: "Prefer Bun APIs over Node.js equivalents for better performance and modern ESM support.",
+      description:
+        "Prefer Bun APIs over Node.js equivalents for better performance and modern ESM support.",
     },
     messages: {
       preferBunEnv:
@@ -44,7 +46,10 @@ export const preferBunApis = createRule({
       // Check for __dirname and __filename
       Identifier(node) {
         // Skip if this identifier is being declared (e.g., in a variable declaration)
-        if (node.parent.type === AST_NODE_TYPES.VariableDeclarator && node.parent.id === node) {
+        if (
+          node.parent.type === AST_NODE_TYPES.VariableDeclarator &&
+          node.parent.id === node
+        ) {
           return;
         }
 
@@ -63,7 +68,10 @@ export const preferBunApis = createRule({
 
       // Check for require()
       CallExpression(node) {
-        if (node.callee.type === AST_NODE_TYPES.Identifier && node.callee.name === "require") {
+        if (
+          node.callee.type === AST_NODE_TYPES.Identifier &&
+          node.callee.name === "require"
+        ) {
           context.report({
             node,
             messageId: "preferEsmImport",

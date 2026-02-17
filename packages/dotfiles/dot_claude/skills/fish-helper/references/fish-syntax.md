@@ -27,11 +27,11 @@ echo "The "$name"s"        # quote separation
 
 Fish provides four scoping levels, specified as flags to `set`:
 
-| Flag | Scope | Lifetime |
-|------|-------|----------|
-| `-l` | Local | Current block only |
-| `-f` | Function | Current function |
-| `-g` | Global | Current shell session |
+| Flag | Scope     | Lifetime                        |
+| ---- | --------- | ------------------------------- |
+| `-l` | Local     | Current block only              |
+| `-f` | Function  | Current function                |
+| `-g` | Global    | Current shell session           |
 | `-U` | Universal | All sessions, persisted to disk |
 
 ```fish
@@ -75,21 +75,21 @@ end
 
 ### Special Variables
 
-| Variable | Description |
-|----------|-------------|
-| `$status` | Exit status of last command (like bash `$?`) |
-| `$pipestatus` | List of exit statuses from last pipeline |
-| `$argv` | Arguments to current function/script |
-| `$fish_pid` | PID of the fish process (like bash `$$`) |
-| `$last_pid` | PID of last backgrounded process (like bash `$!`) |
-| `$PATH` | Command search path |
-| `$PWD` | Current working directory |
-| `$HOME` | User home directory |
-| `$USER` | Current username |
-| `$HOSTNAME` | System hostname |
-| `$fish_version` | Fish version string |
-| `$fish_trace` | Set to 1 to enable execution tracing |
-| `$SHLVL` | Shell nesting level |
+| Variable        | Description                                       |
+| --------------- | ------------------------------------------------- |
+| `$status`       | Exit status of last command (like bash `$?`)      |
+| `$pipestatus`   | List of exit statuses from last pipeline          |
+| `$argv`         | Arguments to current function/script              |
+| `$fish_pid`     | PID of the fish process (like bash `$$`)          |
+| `$last_pid`     | PID of last backgrounded process (like bash `$!`) |
+| `$PATH`         | Command search path                               |
+| `$PWD`          | Current working directory                         |
+| `$HOME`         | User home directory                               |
+| `$USER`         | Current username                                  |
+| `$HOSTNAME`     | System hostname                                   |
+| `$fish_version` | Fish version string                               |
+| `$fish_trace`   | Set to 1 to enable execution tracing              |
+| `$SHLVL`        | Shell nesting level                               |
 
 ### PATH Variables
 
@@ -441,12 +441,14 @@ end > output.txt
 The `string` command handles all string manipulation:
 
 ### string length
+
 ```fish
 string length "hello"                   # 5
 string length -V "emoji: 🐟"           # visible width: 9
 ```
 
 ### string sub
+
 ```fish
 string sub -s 2 -l 3 "hello"           # ell
 string sub -s -3 "hello"               # llo
@@ -454,6 +456,7 @@ string sub -e 3 "hello"                # hel
 ```
 
 ### string split / split0
+
 ```fish
 string split "," "a,b,c"               # a\nb\nc (list)
 string split -m 1 "," "a,b,c"          # a\nb,c (max 1 split)
@@ -462,6 +465,7 @@ string split0 < null-delimited-input
 ```
 
 ### string join / join0
+
 ```fish
 string join "," a b c                   # a,b,c
 string join \n "line1" "line2"          # line1\nline2
@@ -469,6 +473,7 @@ string join0 a b c                      # null-byte separated
 ```
 
 ### string match
+
 ```fish
 # Glob matching
 string match "*.txt" "readme.txt"       # readme.txt
@@ -489,6 +494,7 @@ string match -ra '\d+' "a1b2c3"        # 1\n2\n3
 ```
 
 ### string replace
+
 ```fish
 string replace "old" "new" "the old text"         # the new text
 string replace -a "o" "0" "foo boo"               # f00 b00
@@ -498,6 +504,7 @@ string replace -f "pattern" "new" $strings         # filter: only output changed
 ```
 
 ### string trim
+
 ```fish
 string trim "  hello  "                 # hello
 string trim -l "  hello  "             # "hello  "
@@ -506,12 +513,14 @@ string trim -c "x" "xxxhelloxxx"       # hello
 ```
 
 ### string upper / lower
+
 ```fish
 string upper "hello"                    # HELLO
 string lower "HELLO"                    # hello
 ```
 
 ### string pad
+
 ```fish
 string pad -w 10 "hello"               # "     hello"
 string pad -w 10 -r "hello"            # "hello     "
@@ -520,12 +529,14 @@ string pad -c 0 -w 5 42                # 00042
 ```
 
 ### string repeat
+
 ```fish
 string repeat -n 3 "ab"                # ababab
 string repeat -n 3 -m 5 "abc"          # abcab (max 5 chars)
 ```
 
 ### string escape / unescape
+
 ```fish
 string escape "hello world"            # hello\ world
 string escape --style=url "hello world" # hello%20world
@@ -534,12 +545,14 @@ string unescape "hello\\ world"        # hello world
 ```
 
 ### string shorten
+
 ```fish
 string shorten -m 10 "a long string"   # a long st…
 string shorten -m 10 -c "..." "long"   # long st...
 ```
 
 ### string collect
+
 ```fish
 # Collapse multi-line output into single argument
 echo -e "a\nb\nc" | string collect     # "a\nb\nc" as one argument
@@ -574,12 +587,12 @@ set hex (math --base=hex 255)   # 0xff
 
 ### Operators
 
-| Operator | Description |
-|----------|-------------|
-| `+` `-` `*` `/` | Basic arithmetic |
-| `%` | Modulo |
-| `^` | Exponentiation |
-| `( )` | Grouping |
+| Operator                    | Description                |
+| --------------------------- | -------------------------- |
+| `+` `-` `*` `/`             | Basic arithmetic           |
+| `%`                         | Modulo                     |
+| `^`                         | Exponentiation             |
+| `( )`                       | Grouping                   |
 | `>` `<` `>=` `<=` `==` `!=` | Comparison (return 0 or 1) |
 
 ### Functions Available in math
@@ -619,6 +632,7 @@ end
 ## Quoting Rules
 
 ### Single Quotes
+
 Prevent all expansions. Only `\'` and `\\` are special inside single quotes:
 
 ```fish
@@ -628,6 +642,7 @@ echo 'Use \'single quotes\' inside'
 ```
 
 ### Double Quotes
+
 Allow variable expansion and command substitution. Prevent globbing and splitting:
 
 ```fish
@@ -638,6 +653,7 @@ echo "List as one arg: $mylist"   # elements joined by space
 ```
 
 ### No Quotes
+
 All expansions apply. Glob patterns match files. Variables expand to multiple arguments:
 
 ```fish
@@ -649,17 +665,17 @@ echo \$literal       # escape special chars with backslash
 
 ### Escape Sequences (Outside Quotes)
 
-| Sequence | Result |
-|----------|--------|
-| `\\` | Literal backslash |
-| `\n` | Newline |
-| `\t` | Tab |
-| `\r` | Carriage return |
-| `\xHH` | Hex byte |
-| `\uXXXX` | Unicode codepoint |
-| `\UXXXXXXXX` | Extended Unicode |
-| `\a` | Alert (bell) |
-| `\e` | Escape character |
+| Sequence     | Result            |
+| ------------ | ----------------- |
+| `\\`         | Literal backslash |
+| `\n`         | Newline           |
+| `\t`         | Tab               |
+| `\r`         | Carriage return   |
+| `\xHH`       | Hex byte          |
+| `\uXXXX`     | Unicode codepoint |
+| `\UXXXXXXXX` | Extended Unicode  |
+| `\a`         | Alert (bell)      |
+| `\e`         | Escape character  |
 
 ## Wildcards and Globbing
 

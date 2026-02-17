@@ -14,6 +14,7 @@ clauderon daemon
 ```
 
 The daemon starts:
+
 - HTTP server at http://localhost:3030
 - Credential proxy for secure token injection
 - Session lifecycle management
@@ -29,10 +30,12 @@ clauderon create --repo ~/my-project --prompt "Fix the login bug"
 ```
 
 Required flags:
+
 - `--repo` - Path to your git repository
 - `--prompt` - Initial task for the AI agent
 
 Optional flags:
+
 - `--backend` - zellij (default), docker, kubernetes, sprites, apple
 - `--agent` - claude (default), codex, gemini
 - `--access-mode` - read-write (default), read-only
@@ -55,6 +58,7 @@ Press `n` to create a new session interactively.
 ![TUI Create Dialog](../../../assets/screenshots/tui/create-dialog.png)
 
 **Keyboard shortcuts:**
+
 - `n` - Create new session
 - `Enter` - Attach to session
 - `a` - Archive session
@@ -80,15 +84,15 @@ Or use 1Password for automatic credential injection (see [1Password Guide](/guid
 
 ### Supported Credentials
 
-| Credential | File Name |
-|------------|-----------|
-| GitHub | `github_token` |
+| Credential      | File Name               |
+| --------------- | ----------------------- |
+| GitHub          | `github_token`          |
 | Anthropic OAuth | `anthropic_oauth_token` |
-| OpenAI/Codex | `openai_api_key` |
-| PagerDuty | `pagerduty_token` |
-| Sentry | `sentry_auth_token` |
-| Grafana | `grafana_api_key` |
-| npm | `npm_token` |
+| OpenAI/Codex    | `openai_api_key`        |
+| PagerDuty       | `pagerduty_token`       |
+| Sentry          | `sentry_auth_token`     |
+| Grafana         | `grafana_api_key`       |
+| npm             | `npm_token`             |
 
 ## 4. Session Lifecycle
 

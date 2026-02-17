@@ -1,6 +1,12 @@
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { Cpu, Deployment, DeploymentStrategy, Service, Volume } from "cdk8s-plus-31";
+import {
+  Cpu,
+  Deployment,
+  DeploymentStrategy,
+  Service,
+  Volume,
+} from "cdk8s-plus-31";
 import { withCommonLinuxServerProps } from "../../misc/linux-server.ts";
 import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "../../misc/tailscale.ts";
@@ -13,8 +19,10 @@ export function createOverseerrDeployment(chart: Chart) {
     strategy: DeploymentStrategy.recreate(),
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/run-as-non-root": "LinuxServer.io images run as root internally",
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "LinuxServer.io images require writable filesystem",
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "LinuxServer.io images run as root internally",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "LinuxServer.io images require writable filesystem",
       },
     },
   });
@@ -30,7 +38,11 @@ export function createOverseerrDeployment(chart: Chart) {
       volumeMounts: [
         {
           path: "/config",
-          volume: Volume.fromPersistentVolumeClaim(chart, "overseerr-volume", localPathVolume.claim),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "overseerr-volume",
+            localPathVolume.claim,
+          ),
         },
       ],
       resources: {

@@ -1,4 +1,9 @@
-import { dag, type Container, type Directory, type Platform } from "@dagger.io/dagger";
+import {
+  dag,
+  type Container,
+  type Directory,
+  type Platform,
+} from "@dagger.io/dagger";
 import { getSystemContainer } from "./system";
 import versions from "../versions";
 
@@ -39,13 +44,20 @@ export function withMiseTools(
           "apt-get update && apt-get install -y mise",
       ])
       // Cache mise tools with version-specific key
-      .withMountedCache("/root/.local/share/mise", dag.cacheVolume(toolVersionKey))
+      .withMountedCache(
+        "/root/.local/share/mise",
+        dag.cacheVolume(toolVersionKey),
+      )
       // Cache pip packages
       .withMountedCache("/root/.cache/pip", dag.cacheVolume("pip-cache"))
       // Set PATH so mise shims are available
-      .withEnvVariable("PATH", "/root/.local/share/mise/shims:/root/.local/bin:${PATH}", {
-        expand: true,
-      })
+      .withEnvVariable(
+        "PATH",
+        "/root/.local/share/mise/shims:/root/.local/bin:${PATH}",
+        {
+          expand: true,
+        },
+      )
       // Install tools and create shims in a single cached operation
       // The version-specific cache key ensures this only runs when versions change
       .withExec([
@@ -107,10 +119,20 @@ export type MiseContainerOptions = {
  * });
  * ```
  */
-export function getMiseContainer(options: MiseContainerOptions = {}): Container {
-  const { source, workdir = "/workspace", platform, toolVersions, mount = "mounted" } = options;
+export function getMiseContainer(
+  options: MiseContainerOptions = {},
+): Container {
+  const {
+    source,
+    workdir = "/workspace",
+    platform,
+    toolVersions,
+    mount = "mounted",
+  } = options;
 
-  let container = getMiseRuntimeContainer(platform, toolVersions).withWorkdir(workdir);
+  let container = getMiseRuntimeContainer(platform, toolVersions).withWorkdir(
+    workdir,
+  );
 
   if (source) {
     container =
@@ -137,6 +159,8 @@ export function getMiseContainer(options: MiseContainerOptions = {}): Container 
  * await container.withExec(["bun", "install"]).sync();
  * ```
  */
-export function getMiseBunNodeContainer(options: MiseContainerOptions = {}): Container {
+export function getMiseBunNodeContainer(
+  options: MiseContainerOptions = {},
+): Container {
   return getMiseContainer(options);
 }

@@ -1,4 +1,4 @@
-import type { App} from "cdk8s";
+import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
 import { KubeNetworkPolicy } from "../../generated/imports/k8s.ts";
@@ -31,7 +31,17 @@ export function createOpenclawChart(app: App) {
     spec: {
       podSelector: {},
       policyTypes: ["Ingress"],
-      ingress: [{ from: [{ namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": "tailscale" } } }] }],
+      ingress: [
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
+              },
+            },
+          ],
+        },
+      ],
     },
   });
 }

@@ -97,7 +97,9 @@ describe("Code Generation", () => {
 
   test("should summarize large objects/arrays", () => {
     const largeArray = Array.from({ length: 100 }, (_, i) => i);
-    const largeObject = Object.fromEntries(Array.from({ length: 100 }, (_, i) => [`key${String(i)}`, i]));
+    const largeObject = Object.fromEntries(
+      Array.from({ length: 100 }, (_, i) => [`key${String(i)}`, i]),
+    );
 
     const iface: TypeScriptInterface = {
       name: "TestInterface",
@@ -202,7 +204,9 @@ describe("Code Generation", () => {
 
     const code = generateTypeScriptCode(iface, "test-chart");
 
-    expect(code).toContain("/* eslint-disable @typescript-eslint/no-explicit-any */");
+    expect(code).toContain(
+      "/* eslint-disable @typescript-eslint/no-explicit-any */",
+    );
   });
 
   test("should normalize chart names with hyphens", () => {

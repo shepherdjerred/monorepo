@@ -42,14 +42,14 @@ export type OpenAIBatchStatus = {
   total: number;
   completed: number;
   failed: number;
-}
+};
 
 /** Batch processing callbacks */
 export type OpenAIBatchCallbacks = {
   onStatusUpdate?: (status: OpenAIBatchStatus) => void;
   onComplete?: (results: Map<string, DeminifyResult>) => void;
   onError?: (error: Error) => void;
-}
+};
 
 /** JSONL request format for OpenAI Batch API */
 type BatchRequest = {
@@ -61,7 +61,7 @@ type BatchRequest = {
     messages: { role: "system" | "user"; content: string }[];
     max_completion_tokens?: number;
   };
-}
+};
 
 /** JSONL response format from OpenAI Batch API */
 type BatchResponse = {
@@ -94,7 +94,7 @@ type BatchResponse = {
     code: string;
     message: string;
   } | null;
-}
+};
 
 /** Client for batch de-minification using OpenAI's Batch API */
 export class OpenAIBatchClient {
@@ -177,7 +177,7 @@ export class OpenAIBatchClient {
   async waitForCompletion(
     batchId: string,
     callbacks?: OpenAIBatchCallbacks,
-    pollIntervalMs = 30_000
+    pollIntervalMs = 30_000,
   ): Promise<void> {
     let batch = await this.client.batches.retrieve(batchId);
 
@@ -213,7 +213,7 @@ export class OpenAIBatchClient {
 
     if (batch.status === "failed" || batch.status === "expired") {
       throw new Error(
-        `Batch ${batchId} ${batch.status}: ${JSON.stringify(batch.errors)}`
+        `Batch ${batchId} ${batch.status}: ${JSON.stringify(batch.errors)}`,
       );
     }
   }
@@ -223,7 +223,7 @@ export class OpenAIBatchClient {
    */
   async getResults(
     batchId: string,
-    contexts: Map<string, DeminifyContext>
+    contexts: Map<string, DeminifyContext>,
   ): Promise<Map<string, DeminifyResult>> {
     const results = new Map<string, DeminifyResult>();
 
@@ -242,7 +242,9 @@ export class OpenAIBatchClient {
     const lines = fileContent.trim().split("\n");
 
     for (const line of lines) {
-      if (!line.trim()) {continue;}
+      if (!line.trim()) {
+        continue;
+      }
 
       try {
         const entry = JSON.parse(line) as BatchResponse;
@@ -269,19 +271,19 @@ export class OpenAIBatchClient {
               console.error(
                 `Failed to parse result for ${funcId}: ${
                   (error as Error).message
-                }`
+                }`,
               );
             }
           }
         } else if (entry.error && this.config.verbose) {
-            console.error(
-              `Batch error for ${funcId}: ${entry.error.code} - ${entry.error.message}`
-            );
-          }
+          console.error(
+            `Batch error for ${funcId}: ${entry.error.code} - ${entry.error.message}`,
+          );
+        }
       } catch (error) {
         if (this.config.verbose) {
           console.error(
-            `Failed to parse batch response line: ${(error as Error).message}`
+            `Failed to parse batch response line: ${(error as Error).message}`,
           );
         }
       }
@@ -317,10 +319,12 @@ export class OpenAIBatchClient {
    */
   private parseResponse(
     responseText: string,
-    context: DeminifyContext
+    context: DeminifyContext,
   ): DeminifyResult {
     // Extract code from markdown code blocks
-    const codeMatch = /```(?:javascript|js)?\n?([\s\S]*?)```/.exec(responseText);
+    const codeMatch = /```(?:javascript|js)?\n?([\s\S]*?)```/.exec(
+      responseText,
+    );
     if (!codeMatch?.[1]) {
       throw new Error("No code block found in response");
     }
@@ -349,12 +353,18 @@ export class OpenAIBatchClient {
           parameterNames?: Record<string, string>;
           localVariableNames?: Record<string, string>;
         };
-        if (metadata.suggestedName) {suggestedName = metadata.suggestedName;}
-        if (typeof metadata.confidence === "number")
-          {confidence = metadata.confidence;}
-        if (metadata.parameterNames) {parameterNames = metadata.parameterNames;}
-        if (metadata.localVariableNames)
-          {localVariableNames = metadata.localVariableNames;}
+        if (metadata.suggestedName) {
+          suggestedName = metadata.suggestedName;
+        }
+        if (typeof metadata.confidence === "number") {
+          confidence = metadata.confidence;
+        }
+        if (metadata.parameterNames) {
+          parameterNames = metadata.parameterNames;
+        }
+        if (metadata.localVariableNames) {
+          localVariableNames = metadata.localVariableNames;
+        }
       } catch {
         // JSON parsing failed, use defaults
       }
@@ -362,7 +372,10 @@ export class OpenAIBatchClient {
 
     // Try to infer name from the de-minified code if not provided
     if (suggestedName === "anonymousFunction") {
-      const funcNameMatch = /(?:function|const|let|var)\s+([a-zA-Z_$][\w$]*)/.exec(deminifiedSource);
+      const funcNameMatch =
+        /(?:function|const|let|var)\s+([a-zA-Z_$][\w$]*)/.exec(
+          deminifiedSource,
+        );
       if (funcNameMatch?.[1]) {
         suggestedName = funcNameMatch[1];
       }
@@ -390,7 +403,7 @@ export class OpenAIBatchClient {
 export function estimateOpenAIBatchCost(
   inputTokens: number,
   outputTokens: number,
-  model: string
+  model: string,
 ): number {
   const lower = model.toLowerCase();
 

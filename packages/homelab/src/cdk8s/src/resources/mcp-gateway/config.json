@@ -35,7 +35,11 @@
     },
     "sonos": {
       "command": "uvx",
-      "args": ["--from", "git+https://github.com/WinstonFassett/sonos-mcp-server.git", "sonos-mcp-server"]
+      "args": [
+        "--from",
+        "git+https://github.com/WinstonFassett/sonos-mcp-server.git",
+        "sonos-mcp-server"
+      ]
     },
     "fastmail": {
       "command": "npx",

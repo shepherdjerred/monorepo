@@ -12,6 +12,7 @@ Type-safe development patterns using strict TypeScript and Zod for runtime valid
 ## Prefer Zod Over Type Guards
 
 **Avoid: typeof operator**
+
 ```typescript
 // Don't do this
 function processValue(value: unknown) {
@@ -22,6 +23,7 @@ function processValue(value: unknown) {
 ```
 
 **Prefer: Zod validation**
+
 ```typescript
 import { z } from "zod";
 
@@ -37,20 +39,22 @@ function processValue(value: unknown) {
 ## Replace Common Type Checks with Zod
 
 **Array.isArray() -> Zod**
+
 ```typescript
 // Avoid
 if (Array.isArray(value)) {
-  value.forEach(item => console.log(item));
+  value.forEach((item) => console.log(item));
 }
 
 // Prefer
 const result = z.array(z.string()).safeParse(value);
 if (result.success) {
-  result.data.forEach(item => console.log(item));
+  result.data.forEach((item) => console.log(item));
 }
 ```
 
 **instanceof -> Zod**
+
 ```typescript
 // Avoid
 if (err instanceof Error) {
@@ -65,6 +69,7 @@ if (result.success) {
 ```
 
 **Number validation -> Zod**
+
 ```typescript
 // Avoid
 if (Number.isInteger(value)) {
@@ -79,6 +84,7 @@ if (result.success) {
 ```
 
 **Type predicates -> Zod**
+
 ```typescript
 // Avoid type guard functions
 function isUser(value: unknown): value is User {
@@ -121,6 +127,7 @@ type Status = (typeof STATUSES)[number];
 ### Why No Type Assertions?
 
 Type assertions are dangerous because:
+
 1. They bypass TypeScript's type checking
 2. They don't perform runtime validation
 3. They can cause runtime crashes with wrong types

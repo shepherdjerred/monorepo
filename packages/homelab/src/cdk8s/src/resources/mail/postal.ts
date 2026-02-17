@@ -9,7 +9,7 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { withCommonProps } from "../../misc/common.ts";
 import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
@@ -281,7 +281,10 @@ export type PostalDeploymentProps = {
   mariadb: PostalMariaDB;
 };
 
-export function createPostalDeployment(chart: Chart, props: PostalDeploymentProps) {
+export function createPostalDeployment(
+  chart: Chart,
+  props: PostalDeploymentProps,
+) {
   const UID = 1000;
   const GID = 1000;
 
@@ -293,22 +296,36 @@ export function createPostalDeployment(chart: Chart, props: PostalDeploymentProp
   // Fastmail SMTP credentials for the relay sidecar
   const fastmailItem = new OnePasswordItem(chart, "fastmail-smtp-credentials", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/y2xpkfyirxjlcq7oluqxoyxxce",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/y2xpkfyirxjlcq7oluqxoyxxce",
     },
   });
-  const fastmailSecret = Secret.fromSecretName(chart, "fastmail-secret", fastmailItem.name);
+  const fastmailSecret = Secret.fromSecretName(
+    chart,
+    "fastmail-secret",
+    fastmailItem.name,
+  );
 
   // Postal secrets (Rails secret key, DKIM signing key, etc.)
   // Expected fields: rails_secret_key, signing_key
   const postalSecretsItem = new OnePasswordItem(chart, "postal-secrets", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/n3tfwq24v3rstfedrloupgzaqe",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/n3tfwq24v3rstfedrloupgzaqe",
     },
   });
-  const postalSecrets = Secret.fromSecretName(chart, "postal-secrets-ref", postalSecretsItem.name);
+  const postalSecrets = Secret.fromSecretName(
+    chart,
+    "postal-secrets-ref",
+    postalSecretsItem.name,
+  );
 
   // Reference the MariaDB credentials secret
-  const mariadbSecret = Secret.fromSecretName(chart, "mariadb-secret", props.mariadb.secretItem.name);
+  const mariadbSecret = Secret.fromSecretName(
+    chart,
+    "mariadb-secret",
+    props.mariadb.secretItem.name,
+  );
 
   // ConfigMap with patched Ruby files to fix SMTP relay bugs
   const smtpSenderPatch = new ConfigMap(chart, "postal-smtp-sender-patch", {
@@ -387,7 +404,8 @@ export function createPostalDeployment(chart: Chart, props: PostalDeploymentProp
     },
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "Postal requires writable filesystem for Rails runtime",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "Postal requires writable filesystem for Rails runtime",
       },
     },
     podMetadata: {
@@ -422,7 +440,11 @@ export function createPostalDeployment(chart: Chart, props: PostalDeploymentProp
       volumeMounts: [
         {
           path: "/opt/postal/data",
-          volume: Volume.fromPersistentVolumeClaim(chart, "postal-data-volume", postalVolume.claim),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "postal-data-volume",
+            postalVolume.claim,
+          ),
         },
       ],
       resources: {
@@ -447,7 +469,8 @@ export function createPostalDeployment(chart: Chart, props: PostalDeploymentProp
     },
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "Postal requires writable filesystem for Rails runtime",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "Postal requires writable filesystem for Rails runtime",
       },
     },
     podMetadata: {
@@ -478,7 +501,11 @@ export function createPostalDeployment(chart: Chart, props: PostalDeploymentProp
       volumeMounts: [
         {
           path: "/opt/postal/data",
-          volume: Volume.fromPersistentVolumeClaim(chart, "postal-data-volume-smtp", postalVolume.claim),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "postal-data-volume-smtp",
+            postalVolume.claim,
+          ),
         },
       ],
       resources: {
@@ -503,8 +530,10 @@ export function createPostalDeployment(chart: Chart, props: PostalDeploymentProp
     },
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/run-as-non-root": "Postfix sidecar requires root to start",
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "Postal and Postfix require writable filesystem",
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "Postfix sidecar requires root to start",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "Postal and Postfix require writable filesystem",
       },
     },
     podMetadata: {
@@ -538,11 +567,19 @@ export function createPostalDeployment(chart: Chart, props: PostalDeploymentProp
         readOnlyRootFilesystem: false,
       },
       volumeMounts: (() => {
-        const patchVolume = Volume.fromConfigMap(chart, "postal-patches-volume", smtpSenderPatch);
+        const patchVolume = Volume.fromConfigMap(
+          chart,
+          "postal-patches-volume",
+          smtpSenderPatch,
+        );
         return [
           {
             path: "/opt/postal/data",
-            volume: Volume.fromPersistentVolumeClaim(chart, "postal-data-volume-worker", postalVolume.claim),
+            volume: Volume.fromPersistentVolumeClaim(
+              chart,
+              "postal-data-volume-worker",
+              postalVolume.claim,
+            ),
           },
           {
             // Mount patched smtp_sender.rb to fix SMTP relay bug in Postal 3.1.1
@@ -601,7 +638,9 @@ export function createPostalDeployment(chart: Chart, props: PostalDeploymentProp
         POSTFIX_smtp_tls_security_level: EnvValue.fromValue("encrypt"),
         POSTFIX_myhostname: EnvValue.fromValue("postal.tailnet-1a49.ts.net"),
         // Allow relaying to any recipient from trusted networks (localhost)
-        POSTFIX_smtpd_recipient_restrictions: EnvValue.fromValue("permit_mynetworks,reject"),
+        POSTFIX_smtpd_recipient_restrictions: EnvValue.fromValue(
+          "permit_mynetworks,reject",
+        ),
       },
       securityContext: {
         ensureNonRoot: false, // Postfix needs root to start
@@ -654,7 +693,15 @@ export function createPostalDeployment(chart: Chart, props: PostalDeploymentProp
   });
 
   // Create Tailscale Ingress for Web UI
-  createIngress(chart, "postal-ingress", "postal", webService.name, 5000, ["postal"], false);
+  createIngress(
+    chart,
+    "postal-ingress",
+    "postal",
+    webService.name,
+    5000,
+    ["postal"],
+    false,
+  );
 
   // Create ServiceMonitor for Prometheus metrics (targets worker which exposes /metrics)
   createServiceMonitor(chart, {

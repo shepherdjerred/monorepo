@@ -10,4 +10,4 @@ My solutions to Advent of Code 2022 written in Haskell.
 
 |                     Day                      | Part 1 | Part 2 |
 | :------------------------------------------: | :----: | :----: |
-| [Day 1](https://adventofcode.com/2022/day/1) |       |       |
+| [Day 1](https://adventofcode.com/2022/day/1) |        |        |

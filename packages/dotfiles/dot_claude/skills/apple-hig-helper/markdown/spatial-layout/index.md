@@ -14,7 +14,7 @@ Spatial layout techniques help you take advantage of the infinite canvas of Appl
 
 ## [Field of view](/design/human-interface-guidelines/spatial-layout#Field-of-view)
 
-A person’s *field of view* is the space they can see without moving their head. The dimensions of an individual’s field of view while wearing Apple Vision Pro vary based on factors like the way people configure the Light Seal and the extent of their peripheral acuity.
+A person’s _field of view_ is the space they can see without moving their head. The dimensions of an individual’s field of view while wearing Apple Vision Pro vary based on factors like the way people configure the Light Seal and the extent of their peripheral acuity.
 
 ![A screenshot of a blank app window in visionOS. A series of concentric circles overlay the image, conveying 30-, 60-, and 90-degree fields of view.](https://docs-assets.developer.apple.com/published/88086621da558b375ed5ef8ea0002283/visionos-field-of-view-layout%402x.png)
 
@@ -24,20 +24,20 @@ The system doesn’t provide information about a person’s field of view.
 
 **Center important content within the field of view.** By default, visionOS launches an app directly in front of people, placing it within their field of view. In an immersive experience, you can help people keep their attention on important content by keeping it centered and not displaying distracting motion or bright, high-contrast objects in the periphery.
 
-* [Upright viewing](#)
-* [Angled viewing](#)
+- [Upright viewing](#)
+- [Angled viewing](#)
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/f39d541c232e56f0bb2ad578e6d384c0/visionos-window-placement-standard%402x.png)](https://docs-assets.developer.apple.com/published/198fe34e74fc6f8ce423a74cf5133510/visionos-window-placement-standard.mp4) Content description: An animation of a person wearing Apple Vision Pro and sitting upright in a chair. The person is directly facing a square that represents an app window in visionOS that's centered in the person's field of view. A dotted line animates from the person's eyes to the center of the window.
 
- [Play](#)
+[Play](#)
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/615c7fc7f15e5ad98d13daf99b65206b/visionos-window-placement-tilted%402x.png)](https://docs-assets.developer.apple.com/published/3f9f6ef921b23d4433a9f802bf9dfdad/visionos-window-placement-tilted.mp4) Content description: An animation of a person wearing Apple Vision Pro and reclining in a chair. The person is looking at a square that represents an app window in visionOS. The app window is positioned a short distance from the person, is raised in the air, and is tilted toward the person so it's centered within the person's field of view. A dotted line animates from the person's eyes to the center of the window.
 
- [Play](#)
+[Play](#)
 
 **Avoid anchoring content to the wearer’s head.** Although you generally want your app to stay within the field of view, anchoring content so that it remains statically in front of someone can make them feel stuck, confined, and uncomfortable, especially if the content obscures a lot of passthrough and decreases the apparent stability of their surroundings. Instead, anchor content in people’s space, giving them the freedom to look around naturally and view different objects in different locations.
 
@@ -49,13 +49,13 @@ Because people can view your content from any angle, incorporating small amounts
 
 ![A screenshot of a 2D Notes window in visionOS. A note titled Nature Walks is open on the trailing side of the view, with sketches of leaves accompanied by handwritten text descriptions.](https://docs-assets.developer.apple.com/published/2b07a7f22124deaea6c2ce31a93d8833/visionos-spatial-layout-2d-window%402x.png)
 
-If you need to present content with additional depth, you use RealityKit to create a 3D object (for developer guidance, see [RealityKit](/documentation/RealityKit)). You can display the 3D object anywhere, or you can use a *volume*, which is a component that displays 3D content. A volume is similar to a window, but without a visible frame. For guidance, see [visionOS volumes](/design/human-interface-guidelines/windows#visionOS-volumes).
+If you need to present content with additional depth, you use RealityKit to create a 3D object (for developer guidance, see [RealityKit](/documentation/RealityKit)). You can display the 3D object anywhere, or you can use a _volume_, which is a component that displays 3D content. A volume is similar to a window, but without a visible frame. For guidance, see [visionOS volumes](/design/human-interface-guidelines/windows#visionOS-volumes).
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/a0a251e074a53a1b400bd264c9e1d841/visionos-spatial-layout-3d-volume%402x.png)](https://docs-assets.developer.apple.com/published/c6c6e3dd307570a028b58381939e5a17/visionos-spatial-layout-3d-volume.mp4) Content description: A recording showing a 3D model of a satellite within a visionOS volume. As the viewer approaches the satellite and manipulates its orientation, light reflections adjust based on the position of the viewer and angle of the satellite.
 
- [Play](#)
+[Play](#)
 
 **Provide visual cues that accurately communicate the depth of your content.** If visual cues are missing or they conflict with a person’s real-world experience, people can experience visual discomfort.
 
@@ -69,21 +69,21 @@ Video with custom controls.
 
 visionOS defines two types of scale to preserve the appearance of depth while optimizing usability.
 
-*Dynamic scale* helps content remain comfortably legible and interactive regardless of its proximity to people. Specifically, visionOS automatically increases a window’s scale as it moves away from the wearer and decreases it as the window moves closer, making the window appear to maintain the same size at all distances.
+_Dynamic scale_ helps content remain comfortably legible and interactive regardless of its proximity to people. Specifically, visionOS automatically increases a window’s scale as it moves away from the wearer and decreases it as the window moves closer, making the window appear to maintain the same size at all distances.
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/320d208d37ca29c1dbf42b4c33f74895/visionos-dynamic-window-scaling%402x.png)](https://docs-assets.developer.apple.com/published/1b9bb85142513d40bf85b7cfa82e2598/visionos-dynamic-window-scaling.mp4) Content description: An animation that shows a square representing an app window in a 3D space. The square animates to move back along its plane from its initial position. As it moves, it dynamically grows in size. A frame representing the original position remains visible for comparison. After the movement is complete, the entire environment rotates to convey that, from the viewer's angle, the window always remains the same size.
 
- [Play](#)
+[Play](#)
 
-*Fixed scale* means that an object maintains the same scale regardless of its proximity to people. A fixed-scale object appears smaller when it moves farther from the viewer along the z-axis, similar to the way an object in a person’s physical surroundings looks smaller when it’s far away than it does when it’s close up.
+_Fixed scale_ means that an object maintains the same scale regardless of its proximity to people. A fixed-scale object appears smaller when it moves farther from the viewer along the z-axis, similar to the way an object in a person’s physical surroundings looks smaller when it’s far away than it does when it’s close up.
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/728b30fe3826938622cbf7b0853872e4/visionos-fixed-window-scaling%402x.png)](https://docs-assets.developer.apple.com/published/68f26be4668b8b7648959836607fa611/visionos-fixed-window-scaling.mp4) Content description: An animation that shows a square representing an app window in a 3D space. The square animates to move back along its plane from its initial position. As it moves, it becomes smaller. A frame representing the original position remains visible for comparison. After the movement is complete, the entire environment rotates to convey that, from the viewer's angle, the window appears to have receded into the distance.
 
- [Play](#)
+[Play](#)
 
 To support dynamic scaling and the appearance of depth, visionOS defines a point as an angle, in contrast to other platforms, which define a point as a number of pixels that can vary with the [resolution](/design/human-interface-guidelines/images#Resolution) of a 2D display.
 
@@ -93,7 +93,7 @@ To support dynamic scaling and the appearance of depth, visionOS defines a point
 
 **Avoid displaying too many windows.** Too many windows can obscure people’s surroundings, making them feel overwhelmed, constricted, and even uncomfortable. It can also make it cumbersome for people to relocate an app because it means moving a lot of windows.
 
-**Prioritize standard, indirect gestures.** People can make an *indirect* gesture without moving their hand into their field of view. In contrast, making a *direct* gesture requires people to touch the virtual object with their finger, which can be tiring, especially when the object is positioned at or above their line of sight. In visionOS, people use indirect gestures to perform the standard gestures they already know. When you prioritize indirect gestures, people can use them to interact with any object they look at, whatever its distance. If you support direct gestures, consider reserving them for nearby objects that invite close inspection or manipulation for short periods of time. For guidance, see [Gestures > visionOS](/design/human-interface-guidelines/gestures#visionOS).
+**Prioritize standard, indirect gestures.** People can make an _indirect_ gesture without moving their hand into their field of view. In contrast, making a _direct_ gesture requires people to touch the virtual object with their finger, which can be tiring, especially when the object is positioned at or above their line of sight. In visionOS, people use indirect gestures to perform the standard gestures they already know. When you prioritize indirect gestures, people can use them to interact with any object they look at, whatever its distance. If you support direct gestures, consider reserving them for nearby objects that invite close inspection or manipulation for short periods of time. For guidance, see [Gestures > visionOS](/design/human-interface-guidelines/gestures#visionOS).
 
 **Rely on the Digital Crown to help people recenter windows in their field of view.** When people move or turn their head, content might no longer appear where they want it to. If this happens, people can press the [Digital Crown](/design/human-interface-guidelines/digital-crown) when they want to recenter content in front of them. Your app doesn’t need to do anything to support this action.
 
@@ -107,7 +107,7 @@ To learn more about windows and volumes in visionOS, see [Windows > visionOS](/d
 
 ## [Platform considerations](/design/human-interface-guidelines/spatial-layout#Platform-considerations)
 
-*Not supported in iOS, iPadOS, macOS, tvOS, or watchOS.*
+_Not supported in iOS, iPadOS, macOS, tvOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/spatial-layout#Resources)
 
@@ -143,7 +143,7 @@ Design for spatial user interfaces](https://developer.apple.com/videos/play/wwdc
 
 ## [Change log](/design/human-interface-guidelines/spatial-layout#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date           | Changes                                                                                |
+| -------------- | -------------------------------------------------------------------------------------- |
 | March 29, 2024 | Emphasized the importance of keeping interactive elements from overlapping each other. |
-| June 21, 2023 | New page. |
+| June 21, 2023  | New page.                                                                              |

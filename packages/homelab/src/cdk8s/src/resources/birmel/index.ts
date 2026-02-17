@@ -1,5 +1,12 @@
-import { Deployment, DeploymentStrategy, EnvValue, Secret, Service, Volume } from "cdk8s-plus-31";
-import type { Chart} from "cdk8s";
+import {
+  Deployment,
+  DeploymentStrategy,
+  EnvValue,
+  Secret,
+  Service,
+  Volume,
+} from "cdk8s-plus-31";
+import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { withCommonProps } from "../../misc/common.ts";
 import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
@@ -19,14 +26,16 @@ export function createBirmelDeployment(chart: Chart) {
       annotations: {
         "ignore-check.kube-linter.io/run-as-non-root":
           "Birmel requires flexible user permissions for container operations",
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "Birmel requires writable filesystem for SQLite databases",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "Birmel requires writable filesystem for SQLite databases",
       },
     },
   });
 
   const onePasswordItem = new OnePasswordItem(chart, "birmel-1p", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/w5c27dzybxor3j6dzl7lub2soe",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/w5c27dzybxor3j6dzl7lub2soe",
     },
   });
 
@@ -48,23 +57,39 @@ export function createBirmelDeployment(chart: Chart) {
       volumeMounts: [
         {
           path: "/app/data",
-          volume: Volume.fromPersistentVolumeClaim(chart, "birmel-volume", localPathVolume.claim),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "birmel-volume",
+            localPathVolume.claim,
+          ),
         },
       ],
       envVariables: {
         // Discord credentials
         DISCORD_TOKEN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "birmel-discord-token-secret", onePasswordItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "birmel-discord-token-secret",
+            onePasswordItem.name,
+          ),
           key: "discord-api-token",
         }),
         DISCORD_CLIENT_ID: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "birmel-discord-client-id-secret", onePasswordItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "birmel-discord-client-id-secret",
+            onePasswordItem.name,
+          ),
           key: "discord-client-id",
         }),
 
         // OpenAI configuration
         OPENAI_API_KEY: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "birmel-openai-api-key-secret", onePasswordItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "birmel-openai-api-key-secret",
+            onePasswordItem.name,
+          ),
           key: "openai-api-key",
         }),
         OPENAI_MODEL: EnvValue.fromValue("gpt-5-mini"),
@@ -72,14 +97,20 @@ export function createBirmelDeployment(chart: Chart) {
 
         // Anthropic configuration
         ANTHROPIC_API_KEY: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "birmel-anthropic-api-key-secret", onePasswordItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "birmel-anthropic-api-key-secret",
+            onePasswordItem.name,
+          ),
           key: "anthropic-api-key",
         }),
 
         // Database paths
         DATABASE_URL: EnvValue.fromValue("file:/app/data/birmel.db"),
         OPS_DATABASE_URL: EnvValue.fromValue("file:/app/data/birmel-ops.db"),
-        MASTRA_MEMORY_DB_PATH: EnvValue.fromValue("file:/app/data/mastra-memory.db"),
+        MASTRA_MEMORY_DB_PATH: EnvValue.fromValue(
+          "file:/app/data/mastra-memory.db",
+        ),
 
         // Mastra Studio configuration
         MASTRA_STUDIO_ENABLED: EnvValue.fromValue("true"),
@@ -89,12 +120,18 @@ export function createBirmelDeployment(chart: Chart) {
         // Telemetry configuration (OpenTelemetry)
         TELEMETRY_ENABLED: EnvValue.fromValue("true"),
         TELEMETRY_SERVICE_NAME: EnvValue.fromValue("birmel"),
-        OTLP_ENDPOINT: EnvValue.fromValue("http://tempo.tempo.svc.cluster.local:4318"),
+        OTLP_ENDPOINT: EnvValue.fromValue(
+          "http://tempo.tempo.svc.cluster.local:4318",
+        ),
 
         // Sentry configuration
         SENTRY_ENABLED: EnvValue.fromValue("true"),
         SENTRY_DSN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "birmel-sentry-dsn-secret", onePasswordItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "birmel-sentry-dsn-secret",
+            onePasswordItem.name,
+          ),
           key: "sentry-dsn",
         }),
         SENTRY_ENVIRONMENT: EnvValue.fromValue("production"),
@@ -110,16 +147,30 @@ export function createBirmelDeployment(chart: Chart) {
         EDITOR_OAUTH_PORT: EnvValue.fromValue("4112"),
         EDITOR_ALLOWED_REPOS: EnvValue.fromValue(
           JSON.stringify([
-            { name: "scout-for-lol", repo: "shepherdjerred/scout-for-lol", branch: "main" },
-            { name: "monorepo", repo: "shepherdjerred/monorepo", branch: "main" },
+            {
+              name: "scout-for-lol",
+              repo: "shepherdjerred/scout-for-lol",
+              branch: "main",
+            },
+            {
+              name: "monorepo",
+              repo: "shepherdjerred/monorepo",
+              branch: "main",
+            },
           ]),
         ),
         EDITOR_GITHUB_CLIENT_ID: EnvValue.fromValue("Ov23liCMrfCR1Ggvx99o"),
         EDITOR_GITHUB_CLIENT_SECRET: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "birmel-editor-github-secret", onePasswordItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "birmel-editor-github-secret",
+            onePasswordItem.name,
+          ),
           key: "editor-github-client-secret",
         }),
-        EDITOR_GITHUB_CALLBACK_URL: EnvValue.fromValue("https://birmel-oauth.tailnet-1a49.ts.net/auth/github/callback"),
+        EDITOR_GITHUB_CALLBACK_URL: EnvValue.fromValue(
+          "https://birmel-oauth.tailnet-1a49.ts.net/auth/github/callback",
+        ),
       },
     }),
   );

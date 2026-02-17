@@ -1,5 +1,8 @@
 import type { Chart } from "cdk8s";
-import { TunnelBinding, TunnelBindingTunnelRefKind } from "../../generated/imports/networking.cfargotunnel.com.ts";
+import {
+  TunnelBinding,
+  TunnelBindingTunnelRefKind,
+} from "../../generated/imports/networking.cfargotunnel.com.ts";
 
 // Secret name that the cloudflare-operator expects
 // Note: For ClusterTunnel, the secret must be in cloudflare-operator-system namespace

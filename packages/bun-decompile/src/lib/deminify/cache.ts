@@ -28,7 +28,9 @@ export class DeminifyCache {
 
   /** Initialize the cache directory */
   private async ensureInitialized(): Promise<void> {
-    if (this.initialized) {return;}
+    if (this.initialized) {
+      return;
+    }
 
     try {
       await mkdir(this.cacheDir, { recursive: true });
@@ -183,7 +185,9 @@ export class DeminifyCache {
         const filePath = join(this.cacheDir, file);
         try {
           const stat = Bun.file(filePath).size;
-          if (stat > 0) {fileCacheSize++;}
+          if (stat > 0) {
+            fileCacheSize++;
+          }
         } catch {
           // Skip invalid files
         }

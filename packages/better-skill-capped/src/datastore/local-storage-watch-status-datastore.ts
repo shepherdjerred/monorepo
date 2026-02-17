@@ -11,13 +11,20 @@ export class LocalStorageWatchStatusDatastore implements WatchStatusDatastore {
   }
 
   get(): WatchStatus[] {
-    return JSON.parse(globalThis.localStorage.getItem(IDENTIFIER) ?? "[]") as WatchStatus[];
+    return JSON.parse(
+      globalThis.localStorage.getItem(IDENTIFIER) ?? "[]",
+    ) as WatchStatus[];
   }
 
   remove(watchStatus: WatchStatus): void {
-    const filteredWatchStatuses = this.get().filter((candidate: WatchStatus) => {
-      return candidate !== watchStatus && candidate.item.uuid !== watchStatus.item.uuid;
-    });
+    const filteredWatchStatuses = this.get().filter(
+      (candidate: WatchStatus) => {
+        return (
+          candidate !== watchStatus &&
+          candidate.item.uuid !== watchStatus.item.uuid
+        );
+      },
+    );
     this.set(filteredWatchStatuses);
   }
 

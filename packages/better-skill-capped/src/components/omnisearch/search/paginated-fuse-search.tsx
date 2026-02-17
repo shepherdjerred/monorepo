@@ -10,12 +10,12 @@ export type PaginatedFuseSearchProps<T> = {
   fuseOptions: IFuseOptions<T>;
   render: (items: FuseSearchResult<T>) => React.ReactNode;
   itemsPerPage: number;
-}
+};
 
 type PaginatedFuseSearchState<T> = {
   matches: T[];
   currentPage: number;
-}
+};
 
 export default class PaginatedFuseSearch<T> extends React.PureComponent<
   PaginatedFuseSearchProps<T>,

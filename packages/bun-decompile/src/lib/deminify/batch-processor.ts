@@ -20,7 +20,11 @@ import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { appendFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { applyRenames, extractIdentifiers, type RenameMappings } from "./babel-renamer.ts";
+import {
+  applyRenames,
+  extractIdentifiers,
+  type RenameMappings,
+} from "./babel-renamer.ts";
 import type { FunctionCache } from "./function-cache.ts";
 import {
   getBatchSystemPrompt,
@@ -44,7 +48,7 @@ type LLMCallResult = {
   outputTokens: number;
   requestBody: unknown;
   responseBody: unknown;
-}
+};
 
 /** Result from processing a batch */
 export type BatchResult = {
@@ -60,7 +64,7 @@ export type BatchResult = {
   inputTokens: number;
   /** Output tokens used */
   outputTokens: number;
-}
+};
 
 /** Options for batch processing */
 export type BatchProcessorOptions = {
@@ -73,7 +77,7 @@ export type BatchProcessorOptions = {
   onProgress?: (progress: ExtendedProgress) => void;
   /** Verbose logging */
   verbose?: boolean;
-}
+};
 
 /**
  * Batch processor for bottom-up de-minification.
@@ -132,7 +136,9 @@ export class BatchProcessor {
     outputTokens?: number;
     error?: string;
   }): Promise<void> {
-    if (!this.logFile) {return;}
+    if (!this.logFile) {
+      return;
+    }
 
     try {
       const logDir = join(this.logFile, "..");
@@ -168,11 +174,12 @@ export class BatchProcessor {
     // Compute token budget from model's context limit if not explicitly specified.
     // Uses tiktoken/anthropic tokenizer for accurate counting, so no safety margin needed.
     const modelInfo = getModelInfo(this.config.model);
-    const maxBatchTokens = options.maxBatchTokens ?? getTargetBatchTokens(this.config.model);
+    const maxBatchTokens =
+      options.maxBatchTokens ?? getTargetBatchTokens(this.config.model);
 
     if (verbose) {
       console.log(
-        `Model: ${this.config.model} | Context: ${modelInfo.contextLimit.toLocaleString()} | Batch budget: ${maxBatchTokens.toLocaleString()} tokens`
+        `Model: ${this.config.model} | Context: ${modelInfo.contextLimit.toLocaleString()} | Batch budget: ${maxBatchTokens.toLocaleString()} tokens`,
       );
     }
 
@@ -183,7 +190,9 @@ export class BatchProcessor {
     const totalFunctions = functions.length;
 
     if (verbose) {
-      console.log(`Processing ${String(totalFunctions)} functions bottom-up...`);
+      console.log(
+        `Processing ${String(totalFunctions)} functions bottom-up...`,
+      );
     }
 
     // Track which functions have been processed
@@ -212,7 +221,9 @@ export class BatchProcessor {
       }
 
       if (verbose) {
-        console.log(`Round ${String(round)}: ${String(ready.length)} functions ready`);
+        console.log(
+          `Round ${String(round)}: ${String(ready.length)} functions ready`,
+        );
       }
 
       // Create batches using ORIGINAL source (positions don't change)
@@ -278,7 +289,9 @@ export class BatchProcessor {
 
     // Apply ALL renames at once to the original source
     if (verbose) {
-      console.log(`Applying ${String(Object.keys(allMappings).length)} rename mappings...`);
+      console.log(
+        `Applying ${String(Object.keys(allMappings).length)} rename mappings...`,
+      );
     }
 
     try {
@@ -301,8 +314,12 @@ export class BatchProcessor {
 
     // Calculate depth for each function (max depth of callees + 1)
     const getDepth = (id: string, visited: Set<string>): number => {
-      if (depths.has(id)) {return depths.get(id) ?? 0;}
-      if (visited.has(id)) {return 0;} // Circular dependency
+      if (depths.has(id)) {
+        return depths.get(id) ?? 0;
+      }
+      if (visited.has(id)) {
+        return 0;
+      } // Circular dependency
 
       visited.add(id);
 
@@ -316,7 +333,10 @@ export class BatchProcessor {
       for (const calleeName of fn.callees) {
         const calleeId = graph.nameToId.get(calleeName);
         if (calleeId && calleeId !== id) {
-          maxCalleeDepth = Math.max(maxCalleeDepth, getDepth(calleeId, visited) + 1);
+          maxCalleeDepth = Math.max(
+            maxCalleeDepth,
+            getDepth(calleeId, visited) + 1,
+          );
         }
       }
 
@@ -346,7 +366,9 @@ export class BatchProcessor {
     processed: Set<string>,
   ): ExtractedFunction[] {
     return functions.filter((fn) => {
-      if (processed.has(fn.id)) {return false;}
+      if (processed.has(fn.id)) {
+        return false;
+      }
 
       // Check if all callees are processed
       for (const calleeName of fn.callees) {
@@ -435,8 +457,12 @@ export class BatchProcessor {
     for (const [original, renamed] of knownNames) {
       // Validate that original and renamed are safe identifiers (alphanumeric + underscore)
       // This prevents injection if source contains crafted strings
-      if (!/^[a-z_$][\w$]*$/i.test(original)) {continue;}
-      if (!/^[a-z_$][\w$]*$/i.test(renamed)) {continue;}
+      if (!/^[a-z_$][\w$]*$/i.test(original)) {
+        continue;
+      }
+      if (!/^[a-z_$][\w$]*$/i.test(renamed)) {
+        continue;
+      }
 
       // Check if this identifier is called in the source (as a function call)
       // Match patterns like: original(, original), original.
@@ -542,11 +568,13 @@ export class BatchProcessor {
     if (verbose) {
       console.log("\n--- LLM Request ---");
       console.log(`Functions in batch: ${String(functions.length)}`);
-      console.log(`Function IDs: ${functions.map(f => f.id).join(", ")}`);
+      console.log(`Function IDs: ${functions.map((f) => f.id).join(", ")}`);
       console.log(`System prompt length: ${String(systemPrompt.length)} chars`);
       console.log(`User prompt length: ${String(userPrompt.length)} chars`);
       console.log("User prompt preview:");
-      console.log(userPrompt.slice(0, 500) + (userPrompt.length > 500 ? "..." : ""));
+      console.log(
+        userPrompt.slice(0, 500) + (userPrompt.length > 500 ? "..." : ""),
+      );
     }
 
     // Log request
@@ -606,7 +634,9 @@ export class BatchProcessor {
       console.log(`Mappings received: ${String(Object.keys(result).length)}`);
       for (const [id, mapping] of Object.entries(result)) {
         const renameCount = Object.keys(mapping.renames).length;
-        console.log(`  ${id}: ${mapping.functionName ?? "(no name)"} - ${String(renameCount)} renames`);
+        console.log(
+          `  ${id}: ${mapping.functionName ?? "(no name)"} - ${String(renameCount)} renames`,
+        );
         if (mapping.description) {
           console.log(`    "${mapping.description}"`);
         }
@@ -615,7 +645,6 @@ export class BatchProcessor {
 
     return result;
   }
-
 
   /**
    * Call OpenAI API with raw response capture.
@@ -728,9 +757,10 @@ export class BatchProcessor {
         const m = mapping as Record<string, unknown>;
 
         // Ensure renames is an object
-        const renames = (typeof m["renames"] === "object" && m["renames"] !== null)
-          ? m["renames"] as Record<string, string>
-          : {};
+        const renames =
+          typeof m["renames"] === "object" && m["renames"] !== null
+            ? (m["renames"] as Record<string, string>)
+            : {};
 
         const entry: RenameMappings[string] = { renames };
         if (typeof m["functionName"] === "string") {
@@ -744,7 +774,10 @@ export class BatchProcessor {
 
       return parsed;
     } catch {
-      console.error("Failed to parse LLM response as JSON:", content.slice(0, 200));
+      console.error(
+        "Failed to parse LLM response as JSON:",
+        content.slice(0, 200),
+      );
       return {};
     }
   }

@@ -1,1 +1,6 @@
-{ "core": "fbalpha2012_cps1", "buildStart": "2025-01-07T14:39:37+00:00", "buildEnd": "2025-01-07T14:40:51+00:00", "options": {} }
+{
+  "core": "fbalpha2012_cps1",
+  "buildStart": "2025-01-07T14:39:37+00:00",
+  "buildEnd": "2025-01-07T14:40:51+00:00",
+  "options": {}
+}

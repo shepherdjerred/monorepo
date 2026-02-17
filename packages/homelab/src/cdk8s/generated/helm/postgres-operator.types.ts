@@ -358,16 +358,17 @@ export type PostgresoperatorHelmValuesConfigKubernetesClusterlabels = {
   application?: string;
 };
 
-export type PostgresoperatorHelmValuesConfigKubernetesPersistentvolumeclaimretentionpolicy = {
-  /**
-   * @default "retain"
-   */
-  when_deleted?: string;
-  /**
-   * @default "retain"
-   */
-  when_scaled?: string;
-};
+export type PostgresoperatorHelmValuesConfigKubernetesPersistentvolumeclaimretentionpolicy =
+  {
+    /**
+     * @default "retain"
+     */
+    when_deleted?: string;
+    /**
+     * @default "retain"
+     */
+    when_scaled?: string;
+  };
 
 export type PostgresoperatorHelmValuesConfigPostgresPodResources = {
   /**

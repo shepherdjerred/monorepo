@@ -7,18 +7,44 @@ import { validateSnowflakes } from "./validation.js";
 
 export const manageWebhookTool = createTool({
   id: "manage-webhook",
-  description: "Manage webhooks: list all, create new, modify, delete, or execute (send message)",
+  description:
+    "Manage webhooks: list all, create new, modify, delete, or execute (send message)",
   inputSchema: z.object({
-    action: z.enum(["list", "create", "modify", "delete", "execute"]).describe("The action to perform"),
-    guildId: z.string().optional().describe("The ID of the guild (required for list)"),
-    channelId: z.string().optional().describe("The ID of the channel (for list filtering or create)"),
-    webhookId: z.string().optional().describe("The ID of the webhook (required for modify/delete/execute)"),
-    webhookToken: z.string().optional().describe("The webhook token (required for execute)"),
-    name: z.string().optional().describe("Name for the webhook (required for create, optional for modify)"),
-    avatarUrl: z.string().optional().describe("Avatar URL for the webhook (for modify)"),
+    action: z
+      .enum(["list", "create", "modify", "delete", "execute"])
+      .describe("The action to perform"),
+    guildId: z
+      .string()
+      .optional()
+      .describe("The ID of the guild (required for list)"),
+    channelId: z
+      .string()
+      .optional()
+      .describe("The ID of the channel (for list filtering or create)"),
+    webhookId: z
+      .string()
+      .optional()
+      .describe("The ID of the webhook (required for modify/delete/execute)"),
+    webhookToken: z
+      .string()
+      .optional()
+      .describe("The webhook token (required for execute)"),
+    name: z
+      .string()
+      .optional()
+      .describe(
+        "Name for the webhook (required for create, optional for modify)",
+      ),
+    avatarUrl: z
+      .string()
+      .optional()
+      .describe("Avatar URL for the webhook (for modify)"),
     content: z.string().optional().describe("Message content (for execute)"),
     username: z.string().optional().describe("Override username (for execute)"),
-    reason: z.string().optional().describe("Reason for creating/modifying/deleting"),
+    reason: z
+      .string()
+      .optional()
+      .describe("Reason for creating/modifying/deleting"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
@@ -51,7 +77,9 @@ export const manageWebhookTool = createTool({
         { value: ctx.channelId, fieldName: "channelId" },
         { value: ctx.webhookId, fieldName: "webhookId" },
       ]);
-      if (idError) {return { success: false, message: idError };}
+      if (idError) {
+        return { success: false, message: idError };
+      }
 
       const client = getDiscordClient();
 
@@ -127,7 +155,9 @@ export const manageWebhookTool = createTool({
           }
           const webhook = await client.fetchWebhook(ctx.webhookId);
           const hasChanges =
-            ctx.name !== undefined || ctx.avatarUrl !== undefined || ctx.channelId !== undefined;
+            ctx.name !== undefined ||
+            ctx.avatarUrl !== undefined ||
+            ctx.channelId !== undefined;
           if (!hasChanges) {
             return {
               success: false,
@@ -135,10 +165,18 @@ export const manageWebhookTool = createTool({
             };
           }
           const editOptions: Parameters<typeof webhook.edit>[0] = {};
-          if (ctx.name !== undefined) {editOptions.name = ctx.name;}
-          if (ctx.avatarUrl !== undefined) {editOptions.avatar = ctx.avatarUrl;}
-          if (ctx.channelId !== undefined) {editOptions.channel = ctx.channelId;}
-          if (ctx.reason !== undefined) {editOptions.reason = ctx.reason;}
+          if (ctx.name !== undefined) {
+            editOptions.name = ctx.name;
+          }
+          if (ctx.avatarUrl !== undefined) {
+            editOptions.avatar = ctx.avatarUrl;
+          }
+          if (ctx.channelId !== undefined) {
+            editOptions.channel = ctx.channelId;
+          }
+          if (ctx.reason !== undefined) {
+            editOptions.reason = ctx.reason;
+          }
           await webhook.edit(editOptions);
           return {
             success: true,
@@ -166,7 +204,8 @@ export const manageWebhookTool = createTool({
           if (!ctx.webhookId || !ctx.webhookToken) {
             return {
               success: false,
-              message: "webhookId and webhookToken are required for executing a webhook",
+              message:
+                "webhookId and webhookToken are required for executing a webhook",
             };
           }
           if (!ctx.content) {
@@ -175,7 +214,10 @@ export const manageWebhookTool = createTool({
               message: "content is required for executing a webhook",
             };
           }
-          const webhook = await client.fetchWebhook(ctx.webhookId, ctx.webhookToken);
+          const webhook = await client.fetchWebhook(
+            ctx.webhookId,
+            ctx.webhookToken,
+          );
           const sentMessage = await webhook.send({
             content: ctx.content,
             ...(ctx.username !== undefined && { username: ctx.username }),

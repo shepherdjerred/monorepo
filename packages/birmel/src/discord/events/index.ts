@@ -15,4 +15,8 @@ export function registerEventHandlers(client: Client): void {
   setupInteractionHandler(client);
 }
 
-export { setMessageHandler, type MessageContext, type MessageHandler } from "./message-create.js";
+export {
+  setMessageHandler,
+  type MessageContext,
+  type MessageHandler,
+} from "./message-create.js";

@@ -1,4 +1,9 @@
-import { dag, type Container, type Directory, type Secret } from "@dagger.io/dagger";
+import {
+  dag,
+  type Container,
+  type Directory,
+  type Secret,
+} from "@dagger.io/dagger";
 import versions from "../versions";
 
 export type S3SyncOptions = {
@@ -70,10 +75,14 @@ export function getS3SyncContainer(options: S3SyncOptions): Container {
   const region = options.region ?? "us-east-1";
   const deleteFlag = options.deleteRemoved ?? true;
   const prefix = options.prefix ?? "";
-  const s3Path = prefix ? `s3://${options.bucketName}/${prefix}` : `s3://${options.bucketName}/`;
+  const s3Path = prefix
+    ? `s3://${options.bucketName}/${prefix}`
+    : `s3://${options.bucketName}/`;
 
   const args = [
-    "aws", "s3", "sync",
+    "aws",
+    "s3",
+    "sync",
     "/workspace/source",
     s3Path,
     `--endpoint-url=${options.endpointUrl}`,

@@ -22,7 +22,10 @@ export type CreateServiceMonitorOptions = {
  * Creates a ServiceMonitor for Prometheus Operator.
  * Simplifies the common pattern of scraping /metrics endpoints.
  */
-export function createServiceMonitor(chart: Chart, opts: CreateServiceMonitorOptions): ServiceMonitor {
+export function createServiceMonitor(
+  chart: Chart,
+  opts: CreateServiceMonitorOptions,
+): ServiceMonitor {
   const {
     name,
     metadataName,

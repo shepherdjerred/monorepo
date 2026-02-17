@@ -12,9 +12,9 @@ An effective icon is a graphic asset that expresses a single concept in ways peo
 
 ![A sketch of the Command key icon. The image is overlaid with rectangular and circular grid lines and is tinted yellow to subtly reflect the yellow in the original six-color Apple logo.](https://docs-assets.developer.apple.com/published/e71f139e5e50d9d10d91830b0af405c1/foundations-icons-intro%402x.png)
 
-Apps and games use a variety of simple icons to help people understand the items, actions, and modes they can choose. Unlike [app icons](/design/human-interface-guidelines/app-icons), which can use rich visual details like shading, texturing, and highlighting to evoke the app’s personality, an *interface icon* typically uses streamlined shapes and touches of color to communicate a straightforward idea.
+Apps and games use a variety of simple icons to help people understand the items, actions, and modes they can choose. Unlike [app icons](/design/human-interface-guidelines/app-icons), which can use rich visual details like shading, texturing, and highlighting to evoke the app’s personality, an _interface icon_ typically uses streamlined shapes and touches of color to communicate a straightforward idea.
 
-You can design interface icons — also called *glyphs* — or you can choose symbols from the SF Symbols app, using them as-is or customizing them to suit your needs. Both interface icons and symbols use black and clear colors to define their shapes; the system can apply other colors to the black areas in each image. For guidance, see [SF Symbols](/design/human-interface-guidelines/sf-symbols).
+You can design interface icons — also called _glyphs_ — or you can choose symbols from the SF Symbols app, using them as-is or customizing them to suit your needs. Both interface icons and symbols use black and clear colors to define their shapes; the system can apply other colors to the black areas in each image. For guidance, see [SF Symbols](/design/human-interface-guidelines/sf-symbols).
 
 ## [Best practices](/design/human-interface-guidelines/icons#Best-practices)
 
@@ -80,105 +80,105 @@ For icons to represent common actions in [menus](/design/human-interface-guideli
 
 ### [Editing](/design/human-interface-guidelines/icons#Editing)
 
-| Action | Icon | Symbol name |
-| --- | --- | --- |
-| Cut | An icon showing a pair of scissors. | `scissors` |
-| Copy | An icon showing two copies of a document. | `document.on.document` |
-| Paste | An icon showing a document in front of a clipboard. | `document.on.clipboard` |
-| Done | An icon showing a checkmark. | `checkmark` |
-| Save |
-| Cancel | An icon showing an X. | `xmark` |
-| Close |
-| Delete | An icon showing a trash can. | `trash` |
-| Undo | An icon showing an arrow curving toward the top left. | `arrow.uturn.backward` |
-| Redo | An icon showing an arrow curving toward the top right. | `arrow.uturn.forward` |
-| Compose | An icon showing a pencil positioned over a square. | `square.and.pencil` |
+| Action    | Icon                                                                | Symbol name             |
+| --------- | ------------------------------------------------------------------- | ----------------------- |
+| Cut       | An icon showing a pair of scissors.                                 | `scissors`              |
+| Copy      | An icon showing two copies of a document.                           | `document.on.document`  |
+| Paste     | An icon showing a document in front of a clipboard.                 | `document.on.clipboard` |
+| Done      | An icon showing a checkmark.                                        | `checkmark`             |
+| Save      |
+| Cancel    | An icon showing an X.                                               | `xmark`                 |
+| Close     |
+| Delete    | An icon showing a trash can.                                        | `trash`                 |
+| Undo      | An icon showing an arrow curving toward the top left.               | `arrow.uturn.backward`  |
+| Redo      | An icon showing an arrow curving toward the top right.              | `arrow.uturn.forward`   |
+| Compose   | An icon showing a pencil positioned over a square.                  | `square.and.pencil`     |
 | Duplicate | An icon showing a square with a plus sign on top of another square. | `plus.square.on.square` |
-| Rename | An icon showing a pencil. | `pencil` |
-| Move to | An icon showing a folder. | `folder` |
-| Folder |
-| Attach | An icon showing a paperclip. | `paperclip` |
-| Add | An icon showing a plus sign. | `plus` |
-| More | An icon showing an ellipsis. | `ellipsis` |
+| Rename    | An icon showing a pencil.                                           | `pencil`                |
+| Move to   | An icon showing a folder.                                           | `folder`                |
+| Folder    |
+| Attach    | An icon showing a paperclip.                                        | `paperclip`             |
+| Add       | An icon showing a plus sign.                                        | `plus`                  |
+| More      | An icon showing an ellipsis.                                        | `ellipsis`              |
 
 ### [Selection](/design/human-interface-guidelines/icons#Selection)
 
-| Action | Icon | Symbol name |
-| --- | --- | --- |
-| Select | An icon showing a checkmark in a circle. | `checkmark.circle` |
-| Deselect | An icon showing an X. | `xmark` |
-| Close |
-| Delete | An icon showing a trash can. | `trash` |
+| Action   | Icon                                     | Symbol name        |
+| -------- | ---------------------------------------- | ------------------ |
+| Select   | An icon showing a checkmark in a circle. | `checkmark.circle` |
+| Deselect | An icon showing an X.                    | `xmark`            |
+| Close    |
+| Delete   | An icon showing a trash can.             | `trash`            |
 
 ### [Text formatting](/design/human-interface-guidelines/icons#Text-formatting)
 
-| Action | Icon | Symbol name |
-| --- | --- | --- |
-| Superscript | An icon showing the capital letter A with the number 1 in the upper right corner. | `textformat.superscript` |
-| Subscript | An icon showing the capital letter A with the number 1 in the lower right corner. | `textformat.subscript` |
-| Bold | An icon showing the capital letter B in bold. | `bold` |
-| Italic | An icon showing the capital letter I in italics. | `italic` |
-| Underline | An icon showing the capital letter U with an underline. | `underline` |
-| ​​Align Left | An icon showing a stack of four horizontal lines of varying widths that align at the left edge. | `text.alignleft` |
-| Center | An icon showing a stack of four horizontal lines of varying widths that align in the center. | `text.aligncenter` |
-| Justified | An icon showing a stack of four horizontal lines of identical widths. | `text.justify` |
-| Align Right | An icon showing a stack of four horizontal lines of varying widths that align at the right edge. | `text.alignright` |
+| Action       | Icon                                                                                             | Symbol name              |
+| ------------ | ------------------------------------------------------------------------------------------------ | ------------------------ |
+| Superscript  | An icon showing the capital letter A with the number 1 in the upper right corner.                | `textformat.superscript` |
+| Subscript    | An icon showing the capital letter A with the number 1 in the lower right corner.                | `textformat.subscript`   |
+| Bold         | An icon showing the capital letter B in bold.                                                    | `bold`                   |
+| Italic       | An icon showing the capital letter I in italics.                                                 | `italic`                 |
+| Underline    | An icon showing the capital letter U with an underline.                                          | `underline`              |
+| ​​Align Left | An icon showing a stack of four horizontal lines of varying widths that align at the left edge.  | `text.alignleft`         |
+| Center       | An icon showing a stack of four horizontal lines of varying widths that align in the center.     | `text.aligncenter`       |
+| Justified    | An icon showing a stack of four horizontal lines of identical widths.                            | `text.justify`           |
+| Align Right  | An icon showing a stack of four horizontal lines of varying widths that align at the right edge. | `text.alignright`        |
 
 ### [Search](/design/human-interface-guidelines/icons#Search)
 
-| Action | Icon | Symbol name |
-| --- | --- | --- |
-| Search | An icon showing a magnifying glass. | `magnifyingglass` |
-| Find | An icon showing a magnifying glass above a document. | `text.page.badge.magnifyingglass` |
-| Find and Replace |
-| Find Next |
-| Find Previous |
+| Action                 | Icon                                                                                      | Symbol name                       |
+| ---------------------- | ----------------------------------------------------------------------------------------- | --------------------------------- |
+| Search                 | An icon showing a magnifying glass.                                                       | `magnifyingglass`                 |
+| Find                   | An icon showing a magnifying glass above a document.                                      | `text.page.badge.magnifyingglass` |
+| Find and Replace       |
+| Find Next              |
+| Find Previous          |
 | Use Selection for Find |
-| Filter | An icon showing a stack of three horizontal lines decreasing in width from top to bottom. | `line.3.horizontal.decrease` |
+| Filter                 | An icon showing a stack of three horizontal lines decreasing in width from top to bottom. | `line.3.horizontal.decrease`      |
 
 ### [Sharing and exporting](/design/human-interface-guidelines/icons#Sharing-and-exporting)
 
-| Action | Icon | Symbol name |
-| --- | --- | --- |
-| Share | An icon showing an arrow pointing up from the middle of square. | `square.and.arrow.up` |
+| Action | Icon                                                            | Symbol name           |
+| ------ | --------------------------------------------------------------- | --------------------- |
+| Share  | An icon showing an arrow pointing up from the middle of square. | `square.and.arrow.up` |
 | Export |
-| Print | An icon showing a printer. | `printer` |
+| Print  | An icon showing a printer.                                      | `printer`             |
 
 ### [Users and accounts](/design/human-interface-guidelines/icons#Users-and-accounts)
 
-| Action | Icon | Symbol name |
-| --- | --- | --- |
+| Action  | Icon                                                                                               | Symbol name          |
+| ------- | -------------------------------------------------------------------------------------------------- | -------------------- |
 | Account | An icon showing an abstract representation of a person’s head and shoulders in a circular outline. | `person.crop.circle` |
-| User |
+| User    |
 | Profile |
 
 ### [Ratings](/design/human-interface-guidelines/icons#Ratings)
 
-| Action | Icon | Symbol name |
-| --- | --- | --- |
+| Action  | Icon                                                 | Symbol name       |
+| ------- | ---------------------------------------------------- | ----------------- |
 | Dislike | An icon showing a hand giving a thumbs down gesture. | `hand.thumbsdown` |
-| Like | An icon showing a hand giving a thumbs up gesture. | `hand.thumbsup` |
+| Like    | An icon showing a hand giving a thumbs up gesture.   | `hand.thumbsup`   |
 
 ### [Layer ordering](/design/human-interface-guidelines/icons#Layer-ordering)
 
-| Action | Icon | Symbol name |
-| --- | --- | --- |
-| Bring to Front | An icon showing a stack of three squares overlapping each other, with the top square using a solid fill style while the other squares are outlines. | `square.3.layers.3d.top.filled` |
-| Send to Back | An icon showing a stack of three squares overlapping each other, with the bottom square using a solid fill style while the other squares are outlines. | `square.3.layers.3d.bottom.filled` |
-| Bring Forward | An icon showing a stack of two squares overlapping each other, with the top square using a solid fill style while the other square is an outline. | `square.2.layers.3d.top.filled` |
-| Send Backward | An icon showing a stack of two squares overlapping each other, with the bottom square using a solid fill style while the other square is an outline. | `square.2.layers.3d.bottom.filled` |
+| Action         | Icon                                                                                                                                                   | Symbol name                        |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- |
+| Bring to Front | An icon showing a stack of three squares overlapping each other, with the top square using a solid fill style while the other squares are outlines.    | `square.3.layers.3d.top.filled`    |
+| Send to Back   | An icon showing a stack of three squares overlapping each other, with the bottom square using a solid fill style while the other squares are outlines. | `square.3.layers.3d.bottom.filled` |
+| Bring Forward  | An icon showing a stack of two squares overlapping each other, with the top square using a solid fill style while the other square is an outline.      | `square.2.layers.3d.top.filled`    |
+| Send Backward  | An icon showing a stack of two squares overlapping each other, with the bottom square using a solid fill style while the other square is an outline.   | `square.2.layers.3d.bottom.filled` |
 
 ### [Other](/design/human-interface-guidelines/icons#Other)
 
-| Action | Icon | Symbol name |
-| --- | --- | --- |
-| Alarm | An icon showing an alarm clock. | `alarm` |
-| Archive | An icon showing a file box. | `archivebox` |
-| Calendar | An icon showing a calendar. | `calendar` |
+| Action   | Icon                            | Symbol name  |
+| -------- | ------------------------------- | ------------ |
+| Alarm    | An icon showing an alarm clock. | `alarm`      |
+| Archive  | An icon showing a file box.     | `archivebox` |
+| Calendar | An icon showing a calendar.     | `calendar`   |
 
 ## [Platform considerations](/design/human-interface-guidelines/icons#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, tvOS, visionOS, or watchOS._
 
 ### [macOS](/design/human-interface-guidelines/icons#macOS)
 
@@ -242,24 +242,24 @@ The 16x16 px @1x icon has no EKG line and no grid lines.
 
 **Avoid placing important content in the top-right corner of your background fill.** The system automatically masks your image to fit the document icon shape and draws the white folded corner on top of the fill. Create a set of background images in the sizes listed below.
 
-* 512x512 px @1x, 1024x1024 px @2x
-* 256x256 px @1x, 512x512 px @2x
-* 128x128 px @1x, 256x256 px @2x
-* 32x32 px @1x, 64x64 px @2x
-* 16x16 px @1x, 32x32 px @2x
+- 512x512 px @1x, 1024x1024 px @2x
+- 256x256 px @1x, 512x512 px @2x
+- 128x128 px @1x, 256x256 px @2x
+- 32x32 px @1x, 64x64 px @2x
+- 16x16 px @1x, 32x32 px @2x
 
 **If a familiar object can convey a document’s type or its connection with your app, consider creating a center image that depicts it.** Design a simple, unambiguous image that’s clear and recognizable at every size. The center image measures half the size of the overall document icon canvas. For example, to create a center image for a 32x32 px document icon, use an image canvas that measures 16x16 px. You can provide center images in the following sizes:
 
-* 256x256 px @1x, 512x512 px @2x
-* 128x128 px @1x, 256x256 px @2x
-* 32x32 px @1x, 64x64 px @2x
-* 16x16 px @1x, 32x32 px @2x
+- 256x256 px @1x, 512x512 px @2x
+- 128x128 px @1x, 256x256 px @2x
+- 32x32 px @1x, 64x64 px @2x
+- 16x16 px @1x, 32x32 px @2x
 
 **Define a margin that measures about 10% of the image canvas and keep most of the image within it.** Although parts of the image can extend into this margin for optical alignment, it’s best when the image occupies about 80% of the image canvas. For example, most of the center image in a 256x256 px canvas would fit in an area that measures 205x205 px.
 
 ![Diagram of the solid pink heart shape within blue margins that measure 10 percent of the canvas width.](https://docs-assets.developer.apple.com/published/7cc19b2ae1e99d26ba69e1351683ede1/doc-icon-parts-margins%402x.png)
 
-**Specify a succinct term if it helps people understand your document type.** By default, the system displays a document’s extension at the bottom edge of the document icon, but if the extension is unfamiliar you can supply a more descriptive term. For example, the document icon for a SceneKit scene file uses the term *scene* instead of the file extension *scn*. The system automatically scales the extension text to fit in the document icon, so be sure to use a term that’s short enough to be legible at small sizes. By default, the system capitalizes every letter in the text.
+**Specify a succinct term if it helps people understand your document type.** By default, the system displays a document’s extension at the bottom edge of the document icon, but if the extension is unfamiliar you can supply a more descriptive term. For example, the document icon for a SceneKit scene file uses the term _scene_ instead of the file extension _scn_. The system automatically scales the extension text to fit in the document icon, so be sure to use a term that’s short enough to be legible at small sizes. By default, the system capitalizes every letter in the text.
 
 ![Image of a SceneKit scene document icon.](https://docs-assets.developer.apple.com/published/3b4bb7de9edb5870d3a162aae8153163/doc-icon-custom-extension%402x.png)
 
@@ -279,7 +279,7 @@ Designing Glyphs](https://developer.apple.com/videos/play/wwdc2017/823)
 
 ## [Change log](/design/human-interface-guidelines/icons#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| June 9, 2025 | Added a table of SF Symbols that represent common actions. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
+| Date          | Changes                                                    |
+| ------------- | ---------------------------------------------------------- |
+| June 9, 2025  | Added a table of SF Symbols that represent common actions. |
+| June 21, 2023 | Updated to include guidance for visionOS.                  |

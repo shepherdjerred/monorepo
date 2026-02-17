@@ -4,7 +4,7 @@ export type RepoInfo = {
   owner: string;
   name: string;
   fullName: string;
-}
+};
 
 export async function getCurrentBranch(): Promise<string | null> {
   try {
@@ -31,7 +31,9 @@ export async function getRepoFromRemote(): Promise<RepoInfo | null> {
     }
 
     // Handle HTTPS URLs: https://github.com/owner/repo.git
-    const httpsMatch = /https:\/\/github\.com\/([^/]+)\/(.+?)(?:\.git)?$/.exec(url);
+    const httpsMatch = /https:\/\/github\.com\/([^/]+)\/(.+?)(?:\.git)?$/.exec(
+      url,
+    );
     if (httpsMatch?.[1] && httpsMatch[2]) {
       return {
         owner: httpsMatch[1],

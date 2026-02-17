@@ -19,24 +19,26 @@ Deno.test("postmatch", async (t) => {
         uuid: "uuid",
         added: new Date(),
         matchId: 1,
-        players: [{
-          player: {
-            name: "name",
-            league: {
-              leagueAccount: {
-                puuid:
-                  "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw",
-                accountId: "accountId",
-                id: "id",
-                region: "AMERICA_NORTH",
+        players: [
+          {
+            player: {
+              name: "name",
+              league: {
+                leagueAccount: {
+                  puuid:
+                    "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw",
+                  accountId: "accountId",
+                  id: "id",
+                  region: "AMERICA_NORTH",
+                },
+              },
+              discordAccount: {
+                id: "discord id",
               },
             },
-            discordAccount: {
-              id: "discord id",
-            },
+            rank: { division: 3, tier: "gold", lp: 11, wins: 10, losses: 20 },
           },
-          rank: { division: 3, tier: "gold", lp: 11, wins: 10, losses: 20 },
-        }],
+        ],
       },
     ],
   };
@@ -48,16 +50,14 @@ Deno.test("postmatch", async (t) => {
   ): Promise<Message<true> | Message<false>> => {
     await assertSnapshot(t, message);
     return Promise.resolve({} as Message<true> | Message<false>);
-  }) as (typeof send);
+  }) as typeof send;
   const checkMatchFn = async () => {
     const exampleMatch = JSON.parse(
       (await Deno.readTextFile(testdataPath)).toString(),
     ) as MatchV5DTOs.MatchDto;
     return exampleMatch;
   };
-  const getPlayerFn = (
-    _: PlayerConfigEntry,
-  ): Promise<Player> => {
+  const getPlayerFn = (_: PlayerConfigEntry): Promise<Player> => {
     return Promise.resolve({
       config: {
         name: "name",

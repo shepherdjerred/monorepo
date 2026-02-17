@@ -10,7 +10,9 @@ export function sanitizeHtml(html: string): string {
 }
 
 function getMetaContent(document: Document, property: string): string | null {
-  const content = document.querySelector(`meta[property='${property}']`)?.getAttribute("content");
+  const content = document
+    .querySelector(`meta[property='${property}']`)
+    ?.getAttribute("content");
   if (content === undefined || content === null || content === "") {
     return null;
   }
@@ -30,7 +32,9 @@ export function extract(document: Document): PageDetails {
     .map(([key]) => `og:${key}`);
 
   if (missing.length > 0) {
-    const html = missing.map((tag) => `<meta property="${tag}" content="some value"/>`);
+    const html = missing.map(
+      (tag) => `<meta property="${tag}" content="some value"/>`,
+    );
     throw new Error(
       `Missing required meta tags: ${missing.join(", ")}. Add the following to your page:\n${html.join("\n")}`,
     );
@@ -41,7 +45,12 @@ export function extract(document: Document): PageDetails {
   const safeUrl = url ?? "";
   const safeType = type ?? "";
   const safeImage = image ?? "";
-  const returnVal: PageDetails = { title: safeTitle, url: safeUrl, type: safeType, image: safeImage };
+  const returnVal: PageDetails = {
+    title: safeTitle,
+    url: safeUrl,
+    type: safeType,
+    image: safeImage,
+  };
   if (description !== null && description !== title) {
     returnVal.description = description;
   }

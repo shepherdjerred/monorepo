@@ -15,10 +15,16 @@ const GUILD_ID = Bun.env["GUILD_ID"];
 async function migrateLegacyKarma() {
   if (GUILD_ID === undefined || GUILD_ID === "") {
     console.error("Error: GUILD_ID environment variable is required");
-    console.error("Usage: GUILD_ID=your_server_id bun run src/migrate-legacy-karma.ts");
+    console.error(
+      "Usage: GUILD_ID=your_server_id bun run src/migrate-legacy-karma.ts",
+    );
     console.error("\nTo find your server ID:");
-    console.error("1. Enable Developer Mode in Discord (User Settings > Advanced > Developer Mode)");
-    console.error("2. Right-click your server icon and select 'Copy Server ID'");
+    console.error(
+      "1. Enable Developer Mode in Discord (User Settings > Advanced > Developer Mode)",
+    );
+    console.error(
+      "2. Right-click your server icon and select 'Copy Server ID'",
+    );
     process.exit(1);
   }
 
@@ -36,7 +42,9 @@ async function migrateLegacyKarma() {
     process.exit(0);
   }
 
-  console.warn(`Found ${countResult.toString()} legacy karma record(s) to migrate`);
+  console.warn(
+    `Found ${countResult.toString()} legacy karma record(s) to migrate`,
+  );
   console.warn(`Will assign them to guild: ${GUILD_ID}`);
   console.warn("");
 
@@ -68,7 +76,9 @@ async function migrateLegacyKarma() {
     .where("guildId IS NULL")
     .execute();
 
-  console.warn(`Migration complete! Updated ${String(result.affected)} record(s)`);
+  console.warn(
+    `Migration complete! Updated ${String(result.affected)} record(s)`,
+  );
   console.warn("All legacy karma has been assigned to the specified server");
 
   process.exit(0);

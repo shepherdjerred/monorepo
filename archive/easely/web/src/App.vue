@@ -9,30 +9,30 @@
 </template>
 
 <script>
-  import AppNavbar from './components/app-navbar.vue';
-  import AppFooter from './components/app-footer.vue';
+import AppNavbar from "./components/app-navbar.vue";
+import AppFooter from "./components/app-footer.vue";
 
-  export default {
-    name: 'App',
-    components: {
-      AppNavbar,
-      AppFooter
+export default {
+  name: "App",
+  components: {
+    AppNavbar,
+    AppFooter,
+  },
+  method: {
+    updateData: function () {
+      // TODO call this function in created
+      this.$store.dispatch("getAssignments");
+      this.$store.dispatch("getCourses");
     },
-    method: {
-      updateData: function () {
-        // TODO call this function in created
-        this.$store.dispatch('getAssignments');
-        this.$store.dispatch('getCourses');
-      }
-    },
-    created: function () {
-      this.$store.dispatch('updateUser');
-    }
-  };
+  },
+  created: function () {
+    this.$store.dispatch("updateUser");
+  },
+};
 </script>
 
 <style lang="scss" scoped>
-  .appContent {
-    min-height: calc(100vh - 30px);
-  }
+.appContent {
+  min-height: calc(100vh - 30px);
+}
 </style>

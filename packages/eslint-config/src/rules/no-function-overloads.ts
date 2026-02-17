@@ -2,7 +2,8 @@ import { AST_NODE_TYPES, ESLintUtils } from "@typescript-eslint/utils";
 import type { TSESTree } from "@typescript-eslint/utils";
 
 const createRule = ESLintUtils.RuleCreator(
-  (name) => `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
+  (name) =>
+    `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
 );
 
 export const noFunctionOverloads = createRule({
@@ -33,7 +34,9 @@ export const noFunctionOverloads = createRule({
       return scopeStack[scopeStack.length - 1] ?? "module";
     }
 
-    function trackFunction(funcDecl: TSESTree.FunctionDeclaration | TSESTree.TSDeclareFunction): void {
+    function trackFunction(
+      funcDecl: TSESTree.FunctionDeclaration | TSESTree.TSDeclareFunction,
+    ): void {
       if (!funcDecl.id) {
         return;
       }
@@ -81,7 +84,9 @@ export const noFunctionOverloads = createRule({
       ExportNamedDeclaration(node: TSESTree.ExportNamedDeclaration) {
         if (node.declaration?.type === AST_NODE_TYPES.FunctionDeclaration) {
           trackFunction(node.declaration);
-        } else if (node.declaration?.type === AST_NODE_TYPES.TSDeclareFunction) {
+        } else if (
+          node.declaration?.type === AST_NODE_TYPES.TSDeclareFunction
+        ) {
           trackFunction(node.declaration);
         }
       },
@@ -96,7 +101,9 @@ export const noFunctionOverloads = createRule({
           const allFunctionGroups = Array.from(scopeFunctions.values());
           for (const declarations of allFunctionGroups) {
             // Deduplicate by node reference
-            const seen = new WeakSet<TSESTree.FunctionDeclaration | TSESTree.TSDeclareFunction>();
+            const seen = new WeakSet<
+              TSESTree.FunctionDeclaration | TSESTree.TSDeclareFunction
+            >();
             const uniqueDeclarations = declarations.filter((decl) => {
               if (seen.has(decl)) {
                 return false;

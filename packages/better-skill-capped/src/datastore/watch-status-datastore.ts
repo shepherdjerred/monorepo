@@ -4,4 +4,4 @@ export type WatchStatusDatastore = {
   add: (watchStatus: WatchStatus) => void;
   get: () => WatchStatus[];
   remove: (watchStatus: WatchStatus) => void;
-}
+};

@@ -79,6 +79,7 @@ node --experimental-strip-types --enable-source-maps app.ts
 ### Modern TypeScript 5.7+ Features
 
 **Path rewriting for imports**:
+
 ```typescript
 // tsconfig.json
 {
@@ -97,19 +98,20 @@ import { foo } from "./utils.js";
 ```
 
 **ES2024 features now available**:
+
 ```typescript
 // Object.groupBy()
 const people = [
   { name: "Alice", age: 30 },
   { name: "Bob", age: 25 },
-  { name: "Charlie", age: 30 }
+  { name: "Charlie", age: 30 },
 ];
 
-const byAge = Object.groupBy(people, person => person.age);
+const byAge = Object.groupBy(people, (person) => person.age);
 // { 25: [{name: "Bob", ...}], 30: [{name: "Alice", ...}, {name: "Charlie", ...}] }
 
 // Map.groupBy()
-const grouped = Map.groupBy(people, person => person.age);
+const grouped = Map.groupBy(people, (person) => person.age);
 // Map { 25 => [{...}], 30 => [{...}, {...}] }
 
 // Promise.withResolvers()
@@ -119,6 +121,7 @@ await promise; // 42
 ```
 
 **V8 compile caching (Node 22+)**:
+
 ```typescript
 // Enable at app entry point for ~2.5x faster startup
 import { enableCompileCache } from "node:module";
@@ -144,14 +147,14 @@ let tuple: [string, number] = ["hello", 42];
 interface User {
   id: number;
   name: string;
-  email?: string;  // Optional property
-  readonly createdAt: Date;  // Readonly
+  email?: string; // Optional property
+  readonly createdAt: Date; // Readonly
 }
 
 const user: User = {
   id: 1,
   name: "Alice",
-  createdAt: new Date()
+  createdAt: new Date(),
 };
 
 // Functions
@@ -247,10 +250,10 @@ type ApprovedStatus = Extract<Status, "approved">;
 type NotPending = Exclude<Status, "pending">;
 
 // ReturnType
-type AddResult = ReturnType<typeof add>;  // number
+type AddResult = ReturnType<typeof add>; // number
 
 // Parameters
-type AddParams = Parameters<typeof add>;  // [number, number]
+type AddParams = Parameters<typeof add>; // [number, number]
 ```
 
 ### Advanced Patterns
@@ -322,7 +325,7 @@ function assertString(value: unknown): asserts value is string {
 ```json
 {
   "compilerOptions": {
-    "strict": true,  // Enables all below
+    "strict": true, // Enables all below
     "noImplicitAny": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
@@ -355,7 +358,7 @@ function assertString(value: unknown): asserts value is string {
 
 ```typescript
 // Problem
-let num: number = "5";  // Error
+let num: number = "5"; // Error
 
 // Fix: Correct the type
 let num: number = 5;
@@ -369,7 +372,7 @@ let num: number = parseInt("5");
 ```typescript
 // Problem
 function greet(name: string | null) {
-  return name.toUpperCase();  // Error
+  return name.toUpperCase(); // Error
 }
 
 // Fix 1: Type guard
@@ -393,7 +396,7 @@ function greet(name: string | null) {
 
 ```typescript
 // Problem
-const obj: { name: string } = { name: "Alice", age: 30 };  // Error
+const obj: { name: string } = { name: "Alice", age: 30 }; // Error
 
 // Fix: Add property to type
 interface Person {
@@ -411,7 +414,7 @@ const obj: Person = { name: "Alice", age: 30 };
 function greet(name: string) {
   console.log(name);
 }
-greet(123);  // Error
+greet(123); // Error
 
 // Fix: Pass correct type
 greet("Alice");
@@ -426,17 +429,17 @@ greet(String(123));
 
 ```typescript
 // vite.config.ts
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': '/src'
-    }
-  }
-})
+      "@": "/src",
+    },
+  },
+});
 ```
 
 ### Webpack
@@ -444,22 +447,22 @@ export default defineConfig({
 ```javascript
 // webpack.config.js
 module.exports = {
-  entry: './src/index.ts',
+  entry: "./src/index.ts",
   module: {
     rules: [
       {
         test: /\.tsx?$/,
-        use: 'ts-loader',
+        use: "ts-loader",
         exclude: /node_modules/,
       },
     ],
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.js'],
+    extensions: [".tsx", ".ts", ".js"],
   },
   output: {
-    filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist'),
+    filename: "bundle.js",
+    path: path.resolve(__dirname, "dist"),
   },
 };
 ```
@@ -469,14 +472,11 @@ module.exports = {
 ```javascript
 // .eslintrc.js
 module.exports = {
-  parser: '@typescript-eslint/parser',
-  plugins: ['@typescript-eslint'],
-  extends: [
-    'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
-  ],
+  parser: "@typescript-eslint/parser",
+  plugins: ["@typescript-eslint"],
+  extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
   parserOptions: {
-    project: './tsconfig.json',
+    project: "./tsconfig.json",
   },
 };
 ```
@@ -488,17 +488,17 @@ module.exports = {
 ```typescript
 // jest.config.js
 module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'node',
+  preset: "ts-jest",
+  testEnvironment: "node",
 };
 
 // __tests__/user.test.ts
-import { createUser } from '../src/user';
+import { createUser } from "../src/user";
 
-describe('User', () => {
-  it('creates user with valid data', () => {
-    const user = createUser({ name: 'Alice', age: 30 });
-    expect(user.name).toBe('Alice');
+describe("User", () => {
+  it("creates user with valid data", () => {
+    const user = createUser({ name: "Alice", age: 30 });
+    expect(user.name).toBe("Alice");
   });
 });
 ```
@@ -507,23 +507,23 @@ describe('User', () => {
 
 ```typescript
 // vitest.config.ts
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'node',
+    environment: "node",
   },
-})
+});
 
 // src/user.test.ts
-import { describe, it, expect } from 'vitest';
-import { createUser } from './user';
+import { describe, it, expect } from "vitest";
+import { createUser } from "./user";
 
-describe('createUser', () => {
-  it('creates user', () => {
-    const user = createUser({ name: 'Alice' });
-    expect(user.name).toBe('Alice');
+describe("createUser", () => {
+  it("creates user", () => {
+    const user = createUser({ name: "Alice" });
+    expect(user.name).toBe("Alice");
   });
 });
 ```
@@ -663,6 +663,7 @@ function reducer(state: State, action: Action): State {
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - The desired type structure is ambiguous
 - Multiple valid typing approaches exist
 - Migration from JavaScript needs strategy decisions

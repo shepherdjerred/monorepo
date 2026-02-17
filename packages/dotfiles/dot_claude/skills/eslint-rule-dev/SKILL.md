@@ -22,19 +22,19 @@ Every ESLint rule exports an object with `meta` and `create`:
 ```javascript
 export default {
   meta: {
-    type: "problem",  // "problem" | "suggestion" | "layout"
+    type: "problem", // "problem" | "suggestion" | "layout"
     docs: {
       description: "Disallow foo assigned to anything other than bar",
       recommended: true,
-      url: "https://example.com/rules/no-foo"
+      url: "https://example.com/rules/no-foo",
     },
-    fixable: "code",  // "code" | "whitespace" | null
+    fixable: "code", // "code" | "whitespace" | null
     hasSuggestions: true,
-    schema: [],  // JSON Schema for rule options
+    schema: [], // JSON Schema for rule options
     messages: {
       avoidFoo: "Avoid using 'foo' - use 'bar' instead.",
-      suggestBar: "Replace with 'bar'."
-    }
+      suggestBar: "Replace with 'bar'.",
+    },
   },
 
   create(context) {
@@ -47,26 +47,26 @@ export default {
             messageId: "avoidFoo",
           });
         }
-      }
+      },
     };
-  }
+  },
 };
 ```
 
 ## Meta Properties
 
-| Property | Purpose |
-|----------|---------|
-| `type` | Rule category: "problem", "suggestion", "layout" |
-| `docs.description` | Short description for documentation |
-| `docs.recommended` | Include in recommended config |
-| `docs.url` | Link to full documentation |
-| `fixable` | Enable auto-fix ("code" or "whitespace") |
-| `hasSuggestions` | Rule provides suggestions |
-| `schema` | JSON Schema for options validation |
-| `messages` | Message templates with IDs |
-| `defaultOptions` | Default values for options |
-| `deprecated` | Mark rule as deprecated |
+| Property           | Purpose                                          |
+| ------------------ | ------------------------------------------------ |
+| `type`             | Rule category: "problem", "suggestion", "layout" |
+| `docs.description` | Short description for documentation              |
+| `docs.recommended` | Include in recommended config                    |
+| `docs.url`         | Link to full documentation                       |
+| `fixable`          | Enable auto-fix ("code" or "whitespace")         |
+| `hasSuggestions`   | Rule provides suggestions                        |
+| `schema`           | JSON Schema for options validation               |
+| `messages`         | Message templates with IDs                       |
+| `defaultOptions`   | Default values for options                       |
+| `deprecated`       | Mark rule as deprecated                          |
 
 ## The Context Object
 
@@ -132,17 +132,17 @@ create(context) {
 
 ### Common Node Types
 
-| Node Type | Matches |
-|-----------|---------|
-| `Identifier` | Variable names, function names |
-| `Literal` | Strings, numbers, booleans |
-| `CallExpression` | Function calls |
-| `MemberExpression` | Property access (a.b, a['b']) |
-| `FunctionDeclaration` | Named function declarations |
-| `ArrowFunctionExpression` | Arrow functions |
-| `VariableDeclaration` | let, const, var declarations |
-| `ImportDeclaration` | import statements |
-| `ExportDefaultDeclaration` | export default |
+| Node Type                  | Matches                        |
+| -------------------------- | ------------------------------ |
+| `Identifier`               | Variable names, function names |
+| `Literal`                  | Strings, numbers, booleans     |
+| `CallExpression`           | Function calls                 |
+| `MemberExpression`         | Property access (a.b, a['b'])  |
+| `FunctionDeclaration`      | Named function declarations    |
+| `ArrowFunctionExpression`  | Arrow functions                |
+| `VariableDeclaration`      | let, const, var declarations   |
+| `ImportDeclaration`        | import statements              |
+| `ExportDefaultDeclaration` | export default                 |
 
 ## AST Selectors
 
@@ -150,31 +150,31 @@ ESLint supports CSS-like selectors for targeting nodes:
 
 ```javascript
 // Basic selectors
-"Identifier"                          // Any identifier
-"CallExpression"                      // Any function call
+"Identifier"; // Any identifier
+"CallExpression"; // Any function call
 
 // Attribute selectors
-"Identifier[name='foo']"              // Identifier named "foo"
-"Literal[value=123]"                  // Literal with value 123
-"CallExpression[callee.name='require']"  // require() calls
+"Identifier[name='foo']"; // Identifier named "foo"
+"Literal[value=123]"; // Literal with value 123
+"CallExpression[callee.name='require']"; // require() calls
 
 // Descendant selectors
-"FunctionDeclaration Identifier"      // Identifiers inside functions
+"FunctionDeclaration Identifier"; // Identifiers inside functions
 
 // Child selectors
-"CallExpression > MemberExpression"   // Direct child
+"CallExpression > MemberExpression"; // Direct child
 
 // Sibling selectors
-"VariableDeclaration ~ VariableDeclaration"  // Following sibling
+"VariableDeclaration ~ VariableDeclaration"; // Following sibling
 
 // Pseudo-classes
-":first-child"                        // First child node
-":last-child"                         // Last child node
-":nth-child(2)"                       // Second child
-":not(Literal)"                       // Not a Literal
+":first-child"; // First child node
+":last-child"; // Last child node
+":nth-child(2)"; // Second child
+":not(Literal)"; // Not a Literal
 
 // Combinations
-"CallExpression[callee.object.name='console'][callee.property.name='log']"
+"CallExpression[callee.object.name='console'][callee.property.name='log']";
 ```
 
 ## Reporting Problems
@@ -195,9 +195,9 @@ context.report({
 context.report({
   loc: {
     start: { line: 1, column: 0 },
-    end: { line: 1, column: 5 }
+    end: { line: 1, column: 5 },
   },
-  messageId: "unexpectedFoo"
+  messageId: "unexpectedFoo",
 });
 ```
 
@@ -209,7 +209,7 @@ context.report({
   messageId: "useBar",
   fix(fixer) {
     return fixer.replaceText(node, "bar");
-  }
+  },
 });
 ```
 
@@ -224,15 +224,15 @@ context.report({
       messageId: "renameToBar",
       fix(fixer) {
         return fixer.replaceText(node, "bar");
-      }
+      },
     },
     {
       messageId: "renameToQux",
       fix(fixer) {
         return fixer.replaceText(node, "qux");
-      }
-    }
-  ]
+      },
+    },
+  ],
 });
 ```
 
@@ -242,18 +242,18 @@ The `fixer` object provides these methods:
 
 ```javascript
 // Insert text
-fixer.insertTextBefore(node, "text")
-fixer.insertTextAfter(node, "text")
-fixer.insertTextBeforeRange([start, end], "text")
-fixer.insertTextAfterRange([start, end], "text")
+fixer.insertTextBefore(node, "text");
+fixer.insertTextAfter(node, "text");
+fixer.insertTextBeforeRange([start, end], "text");
+fixer.insertTextAfterRange([start, end], "text");
 
 // Remove
-fixer.remove(node)
-fixer.removeRange([start, end])
+fixer.remove(node);
+fixer.removeRange([start, end]);
 
 // Replace
-fixer.replaceText(node, "newText")
-fixer.replaceTextRange([start, end], "newText")
+fixer.replaceText(node, "newText");
+fixer.replaceTextRange([start, end], "newText");
 ```
 
 ### Multiple Fixes
@@ -341,12 +341,12 @@ export default {
         type: "object",
         properties: {
           allowFoo: { type: "boolean", default: false },
-          maxLength: { type: "integer", minimum: 1 }
+          maxLength: { type: "integer", minimum: 1 },
         },
-        additionalProperties: false
-      }
+        additionalProperties: false,
+      },
     ],
-    defaultOptions: [{ allowFoo: false, maxLength: 10 }]
+    defaultOptions: [{ allowFoo: false, maxLength: 10 }],
   },
 
   create(context) {
@@ -354,8 +354,10 @@ export default {
     const allowFoo = options.allowFoo ?? false;
     const maxLength = options.maxLength ?? 10;
 
-    return { /* visitors */ };
-  }
+    return {
+      /* visitors */
+    };
+  },
 };
 ```
 
@@ -370,8 +372,8 @@ import rule from "./my-rule.js";
 const ruleTester = new RuleTester({
   languageOptions: {
     ecmaVersion: 2022,
-    sourceType: "module"
-  }
+    sourceType: "module",
+  },
 });
 
 ruleTester.run("my-rule", rule, {
@@ -388,7 +390,7 @@ ruleTester.run("my-rule", rule, {
     },
     {
       code: "const foo = 'hello';",
-      output: "const foo = 'bar';",  // Expected after fix
+      output: "const foo = 'bar';", // Expected after fix
       errors: [{ messageId: "unexpectedFoo" }],
     },
   ],
@@ -534,7 +536,7 @@ export default [
 import { ESLintUtils } from "@typescript-eslint/utils";
 
 const createRule = ESLintUtils.RuleCreator(
-  (name) => `https://example.com/rules/${name}`
+  (name) => `https://example.com/rules/${name}`,
 );
 
 export default createRule({

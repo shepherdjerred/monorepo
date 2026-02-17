@@ -1,5 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import type { ClientMessage, ServerMessage, Message, ContentBlock } from "../types";
+import type {
+  ClientMessage,
+  ServerMessage,
+  Message,
+  ContentBlock,
+} from "../types";
 
 interface WebSocketState {
   connected: boolean;
@@ -23,7 +28,9 @@ export function useWebSocket(sessionId: string | null) {
     if (!sessionId || wsRef.current?.readyState === WebSocket.OPEN) return;
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const ws = new WebSocket(`${protocol}//${window.location.host}/ws/sessions/${sessionId}`);
+    const ws = new WebSocket(
+      `${protocol}//${window.location.host}/ws/sessions/${sessionId}`,
+    );
 
     ws.onopen = () => {
       setState((s) => ({ ...s, connected: true, error: null }));
@@ -67,59 +74,77 @@ export function useWebSocket(sessionId: string | null) {
     wsRef.current = ws;
   }, [sessionId]);
 
-  const handleServerMessage = useCallback((message: Record<string, unknown>) => {
-    console.log("Server message:", message);
+  const handleServerMessage = useCallback(
+    (message: Record<string, unknown>) => {
+      console.log("Server message:", message);
 
-    switch (message.type) {
-      case "assistant": {
-        // SDK format: { type: "assistant", message: { role, content, ... } }
-        const sdkMessage = message.message as { content?: ContentBlock[] } | undefined;
-        const content = sdkMessage?.content || (message.content as ContentBlock[] | undefined);
+      switch (message.type) {
+        case "assistant": {
+          // SDK format: { type: "assistant", message: { role, content, ... } }
+          const sdkMessage = message.message as
+            | { content?: ContentBlock[] }
+            | undefined;
+          const content =
+            sdkMessage?.content ||
+            (message.content as ContentBlock[] | undefined);
 
-        if (content && Array.isArray(content)) {
-          setState((s) => {
-            const newMessage: Message = {
-              id: crypto.randomUUID(),
-              role: "assistant",
-              content,
-              timestamp: Date.now(),
-            };
-            return { ...s, messages: [...s.messages, newMessage], isProcessing: true };
-          });
+          if (content && Array.isArray(content)) {
+            setState((s) => {
+              const newMessage: Message = {
+                id: crypto.randomUUID(),
+                role: "assistant",
+                content,
+                timestamp: Date.now(),
+              };
+              return {
+                ...s,
+                messages: [...s.messages, newMessage],
+                isProcessing: true,
+              };
+            });
+          }
+          break;
         }
-        break;
+
+        case "result":
+          setState((s) => ({
+            ...s,
+            isProcessing: false,
+            error:
+              message.subtype === "error"
+                ? (message.error as string) || "Unknown error"
+                : null,
+          }));
+          break;
+
+        case "error":
+          setState((s) => ({
+            ...s,
+            error: message.message as string,
+            isProcessing: false,
+          }));
+          break;
+
+        case "ready":
+          // Container ready signal
+          console.log("Container ready:", message.sessionId);
+          break;
+
+        case "system":
+          // SDK system messages (init, etc.)
+          console.log("System message:", message);
+          break;
+
+        case "pong":
+          // Heartbeat response, no action needed
+          break;
+
+        default:
+          console.log("Unknown message type:", message.type);
       }
-
-      case "result":
-        setState((s) => ({
-          ...s,
-          isProcessing: false,
-          error: (message.subtype === "error" ? (message.error as string) || "Unknown error" : null),
-        }));
-        break;
-
-      case "error":
-        setState((s) => ({ ...s, error: message.message as string, isProcessing: false }));
-        break;
-
-      case "ready":
-        // Container ready signal
-        console.log("Container ready:", message.sessionId);
-        break;
-
-      case "system":
-        // SDK system messages (init, etc.)
-        console.log("System message:", message);
-        break;
-
-      case "pong":
-        // Heartbeat response, no action needed
-        break;
-
-      default:
-        console.log("Unknown message type:", message.type);
-    }
-  }, []);
+    },
+    [],
+  );
 
   useEffect(() => {
     connect();

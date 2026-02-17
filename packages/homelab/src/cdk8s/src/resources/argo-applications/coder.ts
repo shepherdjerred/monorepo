@@ -3,7 +3,10 @@ import { Application } from "../../../generated/imports/argoproj.io.ts";
 import { Namespace } from "cdk8s-plus-31";
 import { PodMonitor } from "../../../generated/imports/monitoring.coreos.com.ts";
 import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
-import { KubeClusterRole, KubeClusterRoleBinding } from "../../../generated/imports/k8s.ts";
+import {
+  KubeClusterRole,
+  KubeClusterRoleBinding,
+} from "../../../generated/imports/k8s.ts";
 import versions from "../../versions.ts";
 import { createIngress } from "../../misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "../../misc/cloudflare-tunnel.ts";
@@ -50,7 +53,8 @@ export function createCoderApp(chart: Chart) {
       namespace: "coder",
     },
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/op63camrorymbnz734lx3pw5pe",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/op63camrorymbnz734lx3pw5pe",
     },
   });
   // Create ClusterRole for CRD read permissions
@@ -134,7 +138,8 @@ export function createCoderApp(chart: Chart) {
         {
           name: "pg-secret",
           secret: {
-            secretName: "coder.coder-postgresql.credentials.postgresql.acid.zalan.do",
+            secretName:
+              "coder.coder-postgresql.credentials.postgresql.acid.zalan.do",
           },
         },
         {
@@ -152,7 +157,9 @@ export function createCoderApp(chart: Chart) {
       ],
       // Override the command to read DB URL from file before starting Coder
       command: ["/bin/sh", "-c"],
-      commandArgs: ["export CODER_PG_CONNECTION_URL=$(cat /db-url/url) && exec /opt/coder server"],
+      commandArgs: [
+        "export CODER_PG_CONNECTION_URL=$(cat /db-url/url) && exec /opt/coder server",
+      ],
       env: [
         {
           name: "CODER_ACCESS_URL",
@@ -205,7 +212,8 @@ export function createCoderApp(chart: Chart) {
         },
         {
           name: "CODER_EXTERNAL_AUTH_0_DISPLAY_ICON",
-          value: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
+          value:
+            "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
         },
       ],
       service: {

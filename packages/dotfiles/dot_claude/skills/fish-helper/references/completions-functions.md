@@ -12,23 +12,23 @@ complete -c COMMAND [options]
 
 ### Core Options
 
-| Flag | Long Form | Description |
-|------|-----------|-------------|
-| `-c` | `--command` | Command to complete for |
-| `-s` | `--short-option` | Single-character option (e.g., `-v`) |
-| `-l` | `--long-option` | GNU long option (e.g., `--verbose`) |
-| `-o` | `--old-option` | Old-style long option (single dash, e.g., `-Wall`) |
-| `-a` | `--arguments` | Space-separated list of completions |
-| `-f` | `--no-files` | Disable file completions |
-| `-F` | `--force-files` | Force file completions (override `-f`) |
-| `-r` | `--require-parameter` | Option requires an argument |
-| `-x` | `--exclusive` | Shorthand for `-r` + `-f` |
-| `-n` | `--condition` | Shell command; offer completion only if returns 0 |
-| `-d` | `--description` | Description shown in completion menu |
-| `-w` | `--wraps` | Inherit completions from another command |
-| `-k` | `--keep-order` | Preserve argument order (don't sort) |
-| `-e` | `--erase` | Remove completions |
-| `-p` | `--path` | Match command by absolute path (supports wildcards) |
+| Flag | Long Form             | Description                                         |
+| ---- | --------------------- | --------------------------------------------------- |
+| `-c` | `--command`           | Command to complete for                             |
+| `-s` | `--short-option`      | Single-character option (e.g., `-v`)                |
+| `-l` | `--long-option`       | GNU long option (e.g., `--verbose`)                 |
+| `-o` | `--old-option`        | Old-style long option (single dash, e.g., `-Wall`)  |
+| `-a` | `--arguments`         | Space-separated list of completions                 |
+| `-f` | `--no-files`          | Disable file completions                            |
+| `-F` | `--force-files`       | Force file completions (override `-f`)              |
+| `-r` | `--require-parameter` | Option requires an argument                         |
+| `-x` | `--exclusive`         | Shorthand for `-r` + `-f`                           |
+| `-n` | `--condition`         | Shell command; offer completion only if returns 0   |
+| `-d` | `--description`       | Description shown in completion menu                |
+| `-w` | `--wraps`             | Inherit completions from another command            |
+| `-k` | `--keep-order`        | Preserve argument order (don't sort)                |
+| `-e` | `--erase`             | Remove completions                                  |
+| `-p` | `--path`              | Match command by absolute path (supports wildcards) |
 
 ### Basic Examples
 
@@ -91,19 +91,19 @@ complete -c git -n "__fish_seen_subcommand_from add" -F
 
 Fish provides built-in helpers:
 
-| Function | Purpose |
-|----------|---------|
-| `__fish_use_subcommand` | True if no subcommand given yet |
-| `__fish_seen_subcommand_from CMD...` | True if one of the listed subcommands appears |
-| `__fish_contains_opt -s X long` | True if the given option has been typed |
-| `__fish_complete_directories` | Complete directory names with descriptions |
-| `__fish_complete_path` | Complete file/directory paths with descriptions |
-| `__fish_complete_suffix .EXT` | Complete files with given extension |
-| `__fish_complete_users` | Complete system usernames |
-| `__fish_complete_groups` | Complete system groups |
-| `__fish_complete_pids` | Complete process IDs |
-| `__fish_print_hostnames` | Print known hostnames |
-| `__fish_print_interfaces` | Print network interfaces |
+| Function                             | Purpose                                         |
+| ------------------------------------ | ----------------------------------------------- |
+| `__fish_use_subcommand`              | True if no subcommand given yet                 |
+| `__fish_seen_subcommand_from CMD...` | True if one of the listed subcommands appears   |
+| `__fish_contains_opt -s X long`      | True if the given option has been typed         |
+| `__fish_complete_directories`        | Complete directory names with descriptions      |
+| `__fish_complete_path`               | Complete file/directory paths with descriptions |
+| `__fish_complete_suffix .EXT`        | Complete files with given extension             |
+| `__fish_complete_users`              | Complete system usernames                       |
+| `__fish_complete_groups`             | Complete system groups                          |
+| `__fish_complete_pids`               | Complete process IDs                            |
+| `__fish_print_hostnames`             | Print known hostnames                           |
+| `__fish_print_interfaces`            | Print network interfaces                        |
 
 ### Complete Example: Custom Command
 
@@ -157,6 +157,7 @@ end
 Place completion files in `~/.config/fish/completions/COMMAND.fish`. Fish loads them automatically when Tab is pressed for that command.
 
 Search order for completion files:
+
 1. `~/.config/fish/completions/` (user)
 2. `/etc/fish/completions/` (system admin)
 3. `~/.local/share/fish/vendor_completions.d/` (third-party)
@@ -193,18 +194,18 @@ end
 
 ### Function Options
 
-| Flag | Long Form | Description |
-|------|-----------|-------------|
-| `-d` | `--description` | Short description (shown in completions) |
-| `-a` | `--argument-names` | Name positional arguments |
-| `-w` | `--wraps` | Inherit completions from another command |
-| `-S` | `--no-scope-shadowing` | Access caller's local variables |
-| `-V` | `--inherit-variable` | Snapshot a variable at definition time |
-| `-e` | `--on-event` | Register as event handler |
-| `-v` | `--on-variable` | Trigger on variable change |
-| `-j` | `--on-job-exit` | Trigger when job exits |
-| `-p` | `--on-process-exit` | Trigger when process exits |
-| `-s` | `--on-signal` | Trigger on signal |
+| Flag | Long Form              | Description                              |
+| ---- | ---------------------- | ---------------------------------------- |
+| `-d` | `--description`        | Short description (shown in completions) |
+| `-a` | `--argument-names`     | Name positional arguments                |
+| `-w` | `--wraps`              | Inherit completions from another command |
+| `-S` | `--no-scope-shadowing` | Access caller's local variables          |
+| `-V` | `--inherit-variable`   | Snapshot a variable at definition time   |
+| `-e` | `--on-event`           | Register as event handler                |
+| `-v` | `--on-variable`        | Trigger on variable change               |
+| `-j` | `--on-job-exit`        | Trigger when job exits                   |
+| `-p` | `--on-process-exit`    | Trigger when process exits               |
+| `-s` | `--on-signal`          | Trigger on signal                        |
 
 ### Argument Handling
 
@@ -298,6 +299,7 @@ end
 ```
 
 Autoloaded functions:
+
 - Load lazily (only when called)
 - Override built-in functions of the same name
 - Are the recommended way to define persistent functions
@@ -457,6 +459,7 @@ end
 ```
 
 Built-in events:
+
 - `fish_prompt` -- before displaying prompt
 - `fish_preexec` -- before executing a command
 - `fish_postexec` -- after executing a command

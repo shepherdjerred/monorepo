@@ -4,7 +4,8 @@
       <div class="container">
         <div class="content has-text-centered">
           <p>
-            Easely by <a href="https://shepherdjerred.com">Jerred Shepherd</a><br>
+            Easely by <a href="https://shepherdjerred.com">Jerred Shepherd</a
+            ><br />
             Source available on <a href="https://github.com/Easely">GitHub</a>
           </p>
         </div>
@@ -14,14 +15,14 @@
 </template>
 
 <script>
-  export default {
-    name: 'App-Footer'
-  }
+export default {
+  name: "App-Footer",
+};
 </script>
 
 <style lang="scss" scoped>
-  .appFooter {
-    margin-top: 30px;
-    padding: 1.5rem;
-  }
+.appFooter {
+  margin-top: 30px;
+  padding: 1.5rem;
+}
 </style>

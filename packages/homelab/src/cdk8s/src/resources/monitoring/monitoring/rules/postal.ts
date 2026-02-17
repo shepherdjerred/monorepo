@@ -106,7 +106,9 @@ export function getPostalRuleGroups(): PrometheusRuleSpecGroups[] {
               "Postal worker has {{ $value }} errors in the last 15 minutes. Check worker logs for details.",
             ),
           },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString("increase(postal_worker_errors[15m]) > 10"),
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "increase(postal_worker_errors[15m]) > 10",
+          ),
           for: "5m",
           labels: {
             severity: "warning",
@@ -120,7 +122,9 @@ export function getPostalRuleGroups(): PrometheusRuleSpecGroups[] {
               "Postal worker has {{ $value }} errors in the last 15 minutes. Email processing may be failing.",
             ),
           },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString("increase(postal_worker_errors[15m]) > 50"),
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "increase(postal_worker_errors[15m]) > 50",
+          ),
           for: "5m",
           labels: {
             severity: "critical",
@@ -135,9 +139,13 @@ export function getPostalRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "PostalSMTPExceptionsHigh",
           annotations: {
             summary: "High rate of SMTP server exceptions",
-            message: escapePrometheusTemplate("Postal SMTP server has {{ $value }} exceptions in the last 15 minutes."),
+            message: escapePrometheusTemplate(
+              "Postal SMTP server has {{ $value }} exceptions in the last 15 minutes.",
+            ),
           },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString("increase(postal_smtp_server_exceptions_total[15m]) > 10"),
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "increase(postal_smtp_server_exceptions_total[15m]) > 10",
+          ),
           for: "5m",
           labels: {
             severity: "warning",

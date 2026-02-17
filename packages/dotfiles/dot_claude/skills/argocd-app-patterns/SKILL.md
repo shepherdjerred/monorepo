@@ -26,7 +26,15 @@ import { createIngress } from "../../misc/tailscale.ts";
 
 export function createMyAppApp(chart: Chart) {
   // Optional: Create Tailscale ingress
-  createIngress(chart, "myapp-ingress", "myapp", "myapp-service", 8080, ["myapp"], false);
+  createIngress(
+    chart,
+    "myapp-ingress",
+    "myapp",
+    "myapp-service",
+    8080,
+    ["myapp"],
+    false,
+  );
 
   // Define typed Helm values
   const myAppValues: HelmValuesForChart<"myapp"> = {

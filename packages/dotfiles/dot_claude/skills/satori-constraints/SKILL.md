@@ -28,13 +28,13 @@ Satori uses **Yoga** (the same layout engine as React Native), not browser CSS:
 
 ### Key Differences from Browser CSS
 
-| Feature | Satori | Browser CSS |
-| --------- | -------- | ------------- |
-| Default display | `flex` | `block` |
-| Default flex-direction | `row` | `row` |
-| `position: absolute` | Relative to flex parent | Relative to positioned ancestor |
-| `z-index` | Not supported | Supported |
-| 3D transforms | Not supported | Supported |
+| Feature                | Satori                  | Browser CSS                     |
+| ---------------------- | ----------------------- | ------------------------------- |
+| Default display        | `flex`                  | `block`                         |
+| Default flex-direction | `row`                   | `row`                           |
+| `position: absolute`   | Relative to flex parent | Relative to positioned ancestor |
+| `z-index`              | Not supported           | Supported                       |
+| 3D transforms          | Not supported           | Supported                       |
 
 ---
 
@@ -95,12 +95,12 @@ Satori uses **Yoga** (the same layout engine as React Native), not browser CSS:
 
 ### Supported Formats
 
-| Format | Supported | Notes |
-| -------- | ----------- | ------- |
-| TTF | Yes | Recommended for server-side |
-| OTF | Yes | Recommended for server-side |
-| WOFF | Yes | Good balance of size/speed |
-| WOFF2 | **No** | Not supported (opentype.js limitation) |
+| Format | Supported | Notes                                  |
+| ------ | --------- | -------------------------------------- |
+| TTF    | Yes       | Recommended for server-side            |
+| OTF    | Yes       | Recommended for server-side            |
+| WOFF   | Yes       | Good balance of size/speed             |
+| WOFF2  | **No**    | Not supported (opentype.js limitation) |
 
 ### Loading Fonts
 
@@ -167,8 +167,8 @@ const svg = await satori(
 async function imageToBase64(url: string): Promise<string> {
   const response = await fetch(url);
   const buffer = await response.arrayBuffer();
-  const base64 = Buffer.from(buffer).toString('base64');
-  const mimeType = response.headers.get('content-type') || 'image/png';
+  const base64 = Buffer.from(buffer).toString("base64");
+  const mimeType = response.headers.get("content-type") || "image/png";
   return `data:${mimeType};base64,${base64}`;
 }
 ```
@@ -178,9 +178,9 @@ async function imageToBase64(url: string): Promise<string> {
 ```tsx
 <div
   style={{
-    backgroundImage: 'url(data:image/png;base64,...)',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
+    backgroundImage: "url(data:image/png;base64,...)",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
   }}
 />
 ```
@@ -240,7 +240,7 @@ const svg = await satori(element, {
 **Workaround:** Use `rgba(255, 255, 255, 0)` instead of `transparent`:
 
 ```tsx
-backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0), white)'
+backgroundImage: "linear-gradient(rgba(255, 255, 255, 0), white)";
 ```
 
 ### No z-index Support
@@ -256,12 +256,14 @@ backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0), white)'
 **Workaround:** Always set `overflow: hidden` and use `text-overflow: ellipsis`:
 
 ```tsx
-<div style={{
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-  maxWidth: 400,
-}}>
+<div
+  style={{
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    maxWidth: 400,
+  }}
+>
   Long text that might overflow...
 </div>
 ```
@@ -279,8 +281,8 @@ backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0), white)'
 ### Using @resvg/resvg-js
 
 ```typescript
-import satori from 'satori';
-import { Resvg } from '@resvg/resvg-js';
+import satori from "satori";
+import { Resvg } from "@resvg/resvg-js";
 
 // Generate SVG with Satori
 const svg = await satori(element, options);
@@ -288,7 +290,7 @@ const svg = await satori(element, options);
 // Convert to PNG
 const resvg = new Resvg(svg, {
   fitTo: {
-    mode: 'width',
+    mode: "width",
     value: 1200,
   },
 });
@@ -313,29 +315,33 @@ const pngBuffer = pngData.asPng();
 const OGImage = ({ title, description }: Props) => (
   <div
     style={{
-      display: 'flex',
-      flexDirection: 'column',
-      width: '100%',
-      height: '100%',
+      display: "flex",
+      flexDirection: "column",
+      width: "100%",
+      height: "100%",
       padding: 60,
-      backgroundColor: '#1a1a2e',
-      color: 'white',
-      fontFamily: 'Inter',
+      backgroundColor: "#1a1a2e",
+      color: "white",
+      fontFamily: "Inter",
     }}
   >
-    <div style={{
-      display: 'flex',
-      fontSize: 64,
-      fontWeight: 700,
-      marginBottom: 20,
-    }}>
+    <div
+      style={{
+        display: "flex",
+        fontSize: 64,
+        fontWeight: 700,
+        marginBottom: 20,
+      }}
+    >
       {title}
     </div>
-    <div style={{
-      display: 'flex',
-      fontSize: 32,
-      color: '#a0a0a0',
-    }}>
+    <div
+      style={{
+        display: "flex",
+        fontSize: 32,
+        color: "#a0a0a0",
+      }}
+    >
       {description}
     </div>
   </div>
@@ -344,7 +350,7 @@ const OGImage = ({ title, description }: Props) => (
 const svg = await satori(<OGImage title="Hello" description="World" />, {
   width: 1200,
   height: 630,
-  fonts: [{ name: 'Inter', data: fontData, weight: 400, style: 'normal' }],
+  fonts: [{ name: "Inter", data: fontData, weight: 400, style: "normal" }],
 });
 ```
 

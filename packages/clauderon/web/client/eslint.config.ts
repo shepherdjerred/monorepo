@@ -38,7 +38,10 @@ export default [
       "@typescript-eslint/no-unnecessary-condition": "warn",
       "@typescript-eslint/no-unsafe-assignment": "warn",
       "@typescript-eslint/prefer-readonly": "warn",
-      "max-lines-per-function": ["error", { max: 500, skipBlankLines: true, skipComments: true }],
+      "max-lines-per-function": [
+        "error",
+        { max: 500, skipBlankLines: true, skipComments: true },
+      ],
     },
   },
 ];

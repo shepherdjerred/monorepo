@@ -71,12 +71,18 @@ function getHelmContainerForChart(
       .withDirectory("/workspace", chartDir)
       .withWorkdir("/workspace")
       // Update Chart.yaml version and appVersion using shared script
-      .withFile("/usr/local/bin/helm-set-version.sh", repoRoot.file("scripts/helm-set-version.sh"))
+      .withFile(
+        "/usr/local/bin/helm-set-version.sh",
+        repoRoot.file("scripts/helm-set-version.sh"),
+      )
       .withExec(["chmod", "+x", "/usr/local/bin/helm-set-version.sh"])
       .withExec(["helm-set-version.sh", "Chart.yaml", version])
       // Create templates directory and copy only this chart's manifest
       .withExec(["mkdir", "-p", "templates"])
-      .withFile(`templates/${chartName}.k8s.yaml`, cdk8sManifests.file(`${chartName}.k8s.yaml`))
+      .withFile(
+        `templates/${chartName}.k8s.yaml`,
+        cdk8sManifests.file(`${chartName}.k8s.yaml`),
+      )
       // Package the chart
       .withExec(["helm", "package", "."])
   );
@@ -98,7 +104,13 @@ export function buildChart(
   repoRoot: Directory,
   version: string,
 ): Directory {
-  const container = getHelmContainerForChart(chartDir, chartName, cdk8sManifests, repoRoot, version);
+  const container = getHelmContainerForChart(
+    chartDir,
+    chartName,
+    cdk8sManifests,
+    repoRoot,
+    version,
+  );
 
   return container
     .withExec(["mkdir", "-p", "dist"])
@@ -112,14 +124,23 @@ export function buildChart(
  * @param version The full semver version (e.g. "1.0.0-123").
  * @returns A directory containing all packaged charts.
  */
-export function buildAllCharts(repoRoot: Directory, version: string): Directory {
+export function buildAllCharts(
+  repoRoot: Directory,
+  version: string,
+): Directory {
   const cdk8sManifests = buildK8sManifests(repoRoot);
   let outputDir = dag.directory();
 
   for (const chartName of HELM_CHARTS) {
     // Use full path from repo root to avoid nested .directory() issues
     const chartDir = repoRoot.directory(`src/cdk8s/helm/${chartName}`);
-    const chartDist = buildChart(chartDir, chartName, cdk8sManifests, repoRoot, version);
+    const chartDist = buildChart(
+      chartDir,
+      chartName,
+      cdk8sManifests,
+      repoRoot,
+      version,
+    );
     outputDir = outputDir.withDirectory(chartName, chartDist);
   }
 
@@ -175,7 +196,9 @@ export async function publishChart(
     return "409 Conflict: Chart already exists, treating as success.";
   }
 
-  throw new Error(`Chart publish failed (exit code ${String(exitCode)}): ${result.trim()}`);
+  throw new Error(
+    `Chart publish failed (exit code ${String(exitCode)}): ${result.trim()}`,
+  );
 }
 
 /**

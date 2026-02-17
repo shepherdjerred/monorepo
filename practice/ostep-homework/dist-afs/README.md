@@ -1,4 +1,3 @@
-
 # Overview
 
 This program, `afs.py`, allows you to experiment with the cache consistency
@@ -20,7 +19,7 @@ file:a contains:0
                                                           read:0 -> value?
                                                           close:0
 file:a contains:?
-prompt> 
+prompt>
 ```
 
 The trace is fairly simple to read. On the left is the server, and each column
@@ -33,18 +32,18 @@ To generate different traces, use `-s` (for a random seed), as always. Here we
 set it to 12 to get this specific trace.
 
 In the trace, the server shows the initial contents of all the files in the
-system: 
+system:
 
 ```sh
 file:a contains:0
 ```
 
 As you can see in this trace, there is just one file (a) and it contains the
-value 0. 
+value 0.
 
 Time increases downwards, and what is next is client 0 (c0) opening the file
 'a' (which returns a file descriptor, 0 in this case), writing to that
-descriptor, and then closing the file. 
+descriptor, and then closing the file.
 
 Immediately you see the first question posed to you:
 
@@ -56,7 +55,7 @@ When writing to descriptor 0, you are overwriting an existing value with the
 new value of 1. What was that old value? (pretty easy in this case: 0).
 
 Then client 1 begins doing some work (c1). It opens the file, reads it, and
-closes it. Again, we have a question to answer: 
+closes it. Again, we have a question to answer:
 
 ```sh
                                                           read:0 -> value?
@@ -66,7 +65,7 @@ When reading from this file, what value should client 1 see? Again, given AFS
 consistency, the answer is straightforward: 1 (the value placed in the file
 when c0 closed the file and updated the server).
 
-The final question in the trace is the final value of the file on the server: 
+The final question in the trace is the final value of the file on the server:
 
 ```sh
 file:a contains:?
@@ -89,7 +88,7 @@ file:a contains:0
                                                           read:0 -> 1
                                                           close:0
 file:a contains:1
-prompt> 
+prompt>
 ```
 
 From this trace, you can see that all the question marks have been filled in
@@ -275,4 +274,3 @@ Options:
 
 Read the AFS chapter, and answer the questions at the back, or just explore
 this simulator more on your own to increase your understanding of AFS.
-

@@ -1,7 +1,11 @@
 import * as acorn from "acorn";
 import * as walk from "acorn-walk";
 import type { Node } from "acorn";
-import type { ExtractedFunction, FunctionType, ParameterInfo } from "./types.ts";
+import type {
+  ExtractedFunction,
+  FunctionType,
+  ParameterInfo,
+} from "./types.ts";
 
 /** Extended node types for Acorn AST */
 type FunctionNode = {
@@ -10,35 +14,35 @@ type FunctionNode = {
   body: Node;
   async?: boolean;
   generator?: boolean;
-} & Node
+} & Node;
 
 type CallExpressionNode = {
   callee: Node;
   arguments: Node[];
-} & Node
+} & Node;
 
 type IdentifierNode = {
   name: string;
-} & Node
+} & Node;
 
 type MemberExpressionNode = {
   object: Node;
   property: Node;
   computed: boolean;
-} & Node
+} & Node;
 
 type MethodDefinitionNode = {
   key: Node;
   value: Node;
   kind: "constructor" | "method" | "get" | "set";
   static: boolean;
-} & Node
+} & Node;
 
 type PatternNode = {
   left?: Node;
   argument?: Node;
   name?: string;
-} & Node
+} & Node;
 
 /** Parse JavaScript source and extract all functions */
 export function parseAndExtractFunctions(
@@ -123,7 +127,9 @@ export function parseAndExtractFunctions(
   // Establish parent-child relationships
   for (const func of functions) {
     for (const otherFunc of functions) {
-      if (func === otherFunc) {continue;}
+      if (func === otherFunc) {
+        continue;
+      }
       if (otherFunc.start > func.start && otherFunc.end < func.end) {
         // otherFunc is nested inside func
         const existingParent = otherFunc.parentId
@@ -135,9 +141,13 @@ export function parseAndExtractFunctions(
         ) {
           // func is a closer parent (more deeply nested)
           if (otherFunc.parentId) {
-            const oldParent = functions.find((f) => f.id === otherFunc.parentId);
+            const oldParent = functions.find(
+              (f) => f.id === otherFunc.parentId,
+            );
             if (oldParent) {
-              oldParent.children = oldParent.children.filter((c) => c !== otherFunc.id);
+              oldParent.children = oldParent.children.filter(
+                (c) => c !== otherFunc.id,
+              );
             }
           }
           otherFunc.parentId = func.id;
@@ -167,7 +177,9 @@ function extractFunction(
   let parentId: string | null = null;
   for (let i = ancestors.length - 2; i >= 0; i--) {
     const ancestor = ancestors[i];
-    if (!ancestor) {continue;}
+    if (!ancestor) {
+      continue;
+    }
     const parentFunc = nodeToFunction.get(ancestor);
     if (parentFunc) {
       parentId = parentFunc.id;
@@ -211,7 +223,9 @@ function getFunctionName(node: FunctionNode, ancestors: Node[]): string {
 
   // Check if property assignment: obj.foo = function() {}
   if (parent?.type === "AssignmentExpression") {
-    const assign = parent as Node & { left?: MemberExpressionNode | IdentifierNode };
+    const assign = parent as Node & {
+      left?: MemberExpressionNode | IdentifierNode;
+    };
     if (assign.left?.type === "MemberExpression") {
       const prop = (assign.left as MemberExpressionNode).property;
       if (prop.type === "Identifier") {

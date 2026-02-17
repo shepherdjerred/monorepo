@@ -36,11 +36,15 @@ auth:
       expect(comments.get("auth.postgresPassword")).toBe(
         'Password for the "postgres" admin user. Ignored if `auth.existingSecret` is provided',
       );
-      expect(comments.get("auth.username")).toBe("Name for a custom user to create");
+      expect(comments.get("auth.username")).toBe(
+        "Name for a custom user to create",
+      );
       expect(comments.get("auth.password")).toBe(
         "Password for the custom user to create. Ignored if `auth.existingSecret` is provided",
       );
-      expect(comments.get("auth.database")).toBe("Name for a custom database to create");
+      expect(comments.get("auth.database")).toBe(
+        "Name for a custom database to create",
+      );
     });
 
     test("should handle volume configuration with examples", () => {
@@ -58,7 +62,9 @@ primary:
 
       const comments = parseYAMLComments(yaml);
 
-      expect(comments.get("primary.persistence.enabled")).toBe("Enable PostgreSQL Primary data persistence using PVC");
+      expect(comments.get("primary.persistence.enabled")).toBe(
+        "Enable PostgreSQL Primary data persistence using PVC",
+      );
       expect(comments.get("primary.persistence.storageClass")).toBe(
         "PVC Storage Class for PostgreSQL Primary data volume",
       );
@@ -104,11 +110,19 @@ ports:
       const comments = parseYAMLComments(yaml);
 
       // Comment is on parent ingressClass, not nested enabled
-      expect(comments.get("ingressClass")).toBe("Create a default IngressClass for Traefik");
+      expect(comments.get("ingressClass")).toBe(
+        "Create a default IngressClass for Traefik",
+      );
       expect(comments.get("ports.web")).toBe("Configure the web port (HTTP)");
-      expect(comments.get("ports.web.expose")).not.toContain("Use host port 80");
-      expect(comments.get("ports.websecure")).toBe("Configure the websecure port (HTTPS)");
-      expect(comments.get("ports.websecure.tls.enabled")).toBe("Enable TLS on websecure port");
+      expect(comments.get("ports.web.expose")).not.toContain(
+        "Use host port 80",
+      );
+      expect(comments.get("ports.websecure")).toBe(
+        "Configure the websecure port (HTTPS)",
+      );
+      expect(comments.get("ports.websecure.tls.enabled")).toBe(
+        "Enable TLS on websecure port",
+      );
     });
 
     test("should handle deployment configuration with resource examples", () => {
@@ -146,8 +160,12 @@ resources: {}
       expect(comments.get("replicas")).toBe("The number of replicas");
       expect(comments.get("deployment.enabled")).toBe("Enable deployment");
       expect(comments.get("deployment.kind")).toBe("Deployment or DaemonSet");
-      expect(comments.get("deployment.revisionHistoryLimit")).toBe("Number of old ReplicaSets to retain");
-      expect(comments.get("resources")).toContain("We usually recommend not to specify default resources");
+      expect(comments.get("deployment.revisionHistoryLimit")).toBe(
+        "Number of old ReplicaSets to retain",
+      );
+      expect(comments.get("resources")).toContain(
+        "We usually recommend not to specify default resources",
+      );
       expect(comments.get("resources")).toContain("Minikube");
       // Should not contain the commented-out YAML examples
       expect(comments.get("resources")).not.toContain("cpu: 100m");
@@ -179,13 +197,19 @@ webhook:
       const comments = parseYAMLComments(yaml);
 
       expect(comments.get("webhook")).toBe("Configure the webhook service");
-      expect(comments.get("webhook.replicaCount")).toBe("Number of replicas for the webhook");
+      expect(comments.get("webhook.replicaCount")).toBe(
+        "Number of replicas for the webhook",
+      );
       expect(comments.get("webhook.timeoutSeconds")).toContain(
         "The webhook is used to validate and mutate cert-manager resources",
       );
-      expect(comments.get("webhook.timeoutSeconds")).toContain("https://cert-manager.io/docs/concepts/webhook/");
+      expect(comments.get("webhook.timeoutSeconds")).toContain(
+        "https://cert-manager.io/docs/concepts/webhook/",
+      );
       // nodeSelector accumulates all preceding comments (hostNetwork + nodeSelector)
-      expect(comments.get("webhook.nodeSelector")).toContain("Configure nodeSelector for the webhook");
+      expect(comments.get("webhook.nodeSelector")).toContain(
+        "Configure nodeSelector for the webhook",
+      );
     });
 
     test("should handle ClusterIssuer examples in comments", () => {
@@ -258,12 +282,18 @@ alertmanager:
       expect(comments.get("alertmanager")).toBe("Alertmanager configuration");
       expect(comments.get("alertmanager.enabled")).toBe("Deploy alertmanager");
       // Section header "Alertmanager configuration directives" is filtered, Ref lines are kept
-      expect(comments.get("alertmanager.config")).toContain("https://prometheus.io/docs/alerting/configuration/");
+      expect(comments.get("alertmanager.config")).toContain(
+        "https://prometheus.io/docs/alerting/configuration/",
+      );
       expect(comments.get("alertmanager.config")).toContain(
         "https://prometheus.io/webtools/alerting/routing-tree-editor/",
       );
-      expect(comments.get("alertmanager.ingress")).toBe("Configure Ingress for Alertmanager");
-      expect(comments.get("alertmanager.ingress.enabled")).toBe("Enable Ingress");
+      expect(comments.get("alertmanager.ingress")).toBe(
+        "Configure Ingress for Alertmanager",
+      );
+      expect(comments.get("alertmanager.ingress.enabled")).toBe(
+        "Enable Ingress",
+      );
     });
 
     test("should handle scrape configuration with intervals and examples", () => {
@@ -298,12 +328,18 @@ prometheus:
       expect(comments.get("prometheus.prometheusSpec.scrapeInterval")).toBe(
         "How frequently to scrape targets by default",
       );
-      expect(comments.get("prometheus.prometheusSpec.scrapeTimeout")).toBe("How long until a scrape request times out");
-      expect(comments.get("prometheus.prometheusSpec.evaluationInterval")).toBe("How frequently to evaluate rules");
-      expect(comments.get("prometheus.prometheusSpec.additionalScrapeConfigs")).toContain(
-        "Additional scrape configurations",
+      expect(comments.get("prometheus.prometheusSpec.scrapeTimeout")).toBe(
+        "How long until a scrape request times out",
       );
-      expect(comments.get("prometheus.prometheusSpec.additionalScrapeConfigs")).toContain("Example:");
+      expect(comments.get("prometheus.prometheusSpec.evaluationInterval")).toBe(
+        "How frequently to evaluate rules",
+      );
+      expect(
+        comments.get("prometheus.prometheusSpec.additionalScrapeConfigs"),
+      ).toContain("Additional scrape configurations");
+      expect(
+        comments.get("prometheus.prometheusSpec.additionalScrapeConfigs"),
+      ).toContain("Example:");
     });
   });
 
@@ -350,14 +386,22 @@ controller:
 
       const comments = parseYAMLComments(yaml);
 
-      expect(comments.get("controller")).toBe("Ingress controller configuration");
+      expect(comments.get("controller")).toBe(
+        "Ingress controller configuration",
+      );
       expect(comments.get("controller.name")).toBe("Controller container name");
-      expect(comments.get("controller.image")).toBe("Controller container image");
-      expect(comments.get("controller.config")).toContain("Controller configuration");
+      expect(comments.get("controller.image")).toBe(
+        "Controller container image",
+      );
+      expect(comments.get("controller.config")).toContain(
+        "Controller configuration",
+      );
       expect(comments.get("controller.config")).toContain(
         "https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/",
       );
-      expect(comments.get("controller.config.use-forwarded-headers")).not.toContain("enable-ssl-passthrough");
+      expect(
+        comments.get("controller.config.use-forwarded-headers"),
+      ).not.toContain("enable-ssl-passthrough");
       expect(comments.get("controller.config.hsts")).toBe("Configure HSTS");
     });
 
@@ -396,19 +440,27 @@ controller:
 
       const comments = parseYAMLComments(yaml);
 
-      expect(comments.get("controller.admissionWebhooks")).toContain("This validates Ingress objects");
+      expect(comments.get("controller.admissionWebhooks")).toContain(
+        "This validates Ingress objects",
+      );
       expect(comments.get("controller.admissionWebhooks")).toContain(
         "https://kubernetes.github.io/ingress-nginx/deploy/validating-webhook/",
       );
-      expect(comments.get("controller.admissionWebhooks.enabled")).toBe("Enable admission webhooks");
-      expect(comments.get("controller.admissionWebhooks.failurePolicy")).toContain("Admission webhook failure policy");
-      expect(comments.get("controller.admissionWebhooks.failurePolicy")).toContain(
-        "Fail will prevent the creation of Ingress objects",
+      expect(comments.get("controller.admissionWebhooks.enabled")).toBe(
+        "Enable admission webhooks",
       );
-      expect(comments.get("controller.admissionWebhooks.port")).toBe("Admission webhook port");
-      expect(comments.get("controller.admissionWebhooks.certificate")).toContain(
-        "This certificate is used to secure the webhook endpoint",
+      expect(
+        comments.get("controller.admissionWebhooks.failurePolicy"),
+      ).toContain("Admission webhook failure policy");
+      expect(
+        comments.get("controller.admissionWebhooks.failurePolicy"),
+      ).toContain("Fail will prevent the creation of Ingress objects");
+      expect(comments.get("controller.admissionWebhooks.port")).toBe(
+        "Admission webhook port",
       );
+      expect(
+        comments.get("controller.admissionWebhooks.certificate"),
+      ).toContain("This certificate is used to secure the webhook endpoint");
     });
   });
 
@@ -472,21 +524,33 @@ master:
 
       const comments = parseYAMLComments(yaml);
 
-      expect(comments.get("architecture")).toBe("Redis architecture. Allowed values: `standalone` or `replication`");
+      expect(comments.get("architecture")).toBe(
+        "Redis architecture. Allowed values: `standalone` or `replication`",
+      );
       expect(comments.get("auth")).toContain("Redis Authentication parameters");
       expect(comments.get("auth")).toContain(
         "https://github.com/bitnami/containers/tree/main/bitnami/redis#setting-a-password",
       );
-      expect(comments.get("auth.enabled")).toBe("Enable password authentication");
+      expect(comments.get("auth.enabled")).toBe(
+        "Enable password authentication",
+      );
       expect(comments.get("auth.password")).toContain("Redis password");
-      expect(comments.get("auth.password")).toContain("Defaults to a random 10-character alphanumeric string");
+      expect(comments.get("auth.password")).toContain(
+        "Defaults to a random 10-character alphanumeric string",
+      );
       expect(comments.get("master")).toBe("Redis Master configuration");
       expect(comments.get("master.count")).toContain(
         "Number of Redis master instances to deploy (experimental, requires additional configuration)",
       );
-      expect(comments.get("master.persistence")).toBe("Redis master persistence configuration");
-      expect(comments.get("master.persistence.enabled")).toBe("Enable persistence using Persistent Volume Claims");
-      expect(comments.get("master.persistence.size")).toBe("Persistent Volume size");
+      expect(comments.get("master.persistence")).toBe(
+        "Redis master persistence configuration",
+      );
+      expect(comments.get("master.persistence.enabled")).toBe(
+        "Enable persistence using Persistent Volume Claims",
+      );
+      expect(comments.get("master.persistence.size")).toBe(
+        "Persistent Volume size",
+      );
     });
   });
 
@@ -504,7 +568,9 @@ podAnnotations: {}`;
 
       const comments = parseYAMLComments(yaml);
 
-      expect(comments.get("podAnnotations")).toContain("Add annotations to pods");
+      expect(comments.get("podAnnotations")).toContain(
+        "Add annotations to pods",
+      );
       expect(comments.get("podAnnotations")).toContain(
         "https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
       );
@@ -532,11 +598,15 @@ securityContext:
 
       const comments = parseYAMLComments(yaml);
 
-      expect(comments.get("securityContext")).toContain("Configure security context");
+      expect(comments.get("securityContext")).toContain(
+        "Configure security context",
+      );
       expect(comments.get("securityContext")).toContain(
         "https://kubernetes.io/docs/tasks/configure-pod-container/security-context/",
       );
-      expect(comments.get("securityContext.runAsNonRoot")).not.toContain("runAsUser: 1001");
+      expect(comments.get("securityContext.runAsNonRoot")).not.toContain(
+        "runAsUser: 1001",
+      );
     });
 
     test("should handle environment variables with complex examples", () => {

@@ -1,7 +1,11 @@
 import type { RenderFunctionInput } from "#src/types.js";
 
-export function blackAndWhite({ title, description }: RenderFunctionInput): React.ReactNode {
-  return <div
+export function blackAndWhite({
+  title,
+  description,
+}: RenderFunctionInput): React.ReactNode {
+  return (
+    <div
       style={{
         height: "100%",
         width: "100%",
@@ -28,5 +32,6 @@ export function blackAndWhite({ title, description }: RenderFunctionInput): Reac
       >
         {description ?? ""}
       </div>
-    </div>;
+    </div>
+  );
 }

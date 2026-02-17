@@ -408,11 +408,13 @@ module "vpc" {
 ### count vs for_each
 
 Prefer `for_each` over `count` when:
+
 - Resources have meaningful identifiers (not just numeric index)
 - Removing an item from the middle should not affect others
 - Resources are heterogeneous (different configurations)
 
 Use `count` for:
+
 - Simple conditional creation (`count = var.enabled ? 1 : 0`)
 - Creating N identical resources
 

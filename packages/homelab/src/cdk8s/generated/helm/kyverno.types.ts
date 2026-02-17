@@ -447,17 +447,18 @@ export type KyvernoHelmValuesConfigWebhooksNamespaceSelector = {
   matchExpressions?: KyvernoHelmValuesConfigWebhooksNamespaceSelectorMatchExpressionsElement[];
 };
 
-export type KyvernoHelmValuesConfigWebhooksNamespaceSelectorMatchExpressionsElement = {
-  /**
-   * @default "kubernetes.io/metadata.name"
-   */
-  key?: string;
-  /**
-   * @default "NotIn"
-   */
-  operator?: string;
-  values?: string[];
-};
+export type KyvernoHelmValuesConfigWebhooksNamespaceSelectorMatchExpressionsElement =
+  {
+    /**
+     * @default "kubernetes.io/metadata.name"
+     */
+    key?: string;
+    /**
+     * @default "NotIn"
+     */
+    operator?: string;
+    values?: string[];
+  };
 
 export type KyvernoHelmValuesConfigWebhookAnnotations = {
   /**
@@ -538,29 +539,35 @@ export type KyvernoHelmValuesMetricsConfigMetricsExposure = {
   kyverno_cleanup_controller_deletedobjects_total?: KyvernoHelmValuesMetricsConfigMetricsExposureKyvernocleanupcontrollerdeletedobjectstotal;
 };
 
-export type KyvernoHelmValuesMetricsConfigMetricsExposureKyvernopolicyexecutiondurationseconds = {
-  disabledLabelDimensions?: string[];
-};
+export type KyvernoHelmValuesMetricsConfigMetricsExposureKyvernopolicyexecutiondurationseconds =
+  {
+    disabledLabelDimensions?: string[];
+  };
 
-export type KyvernoHelmValuesMetricsConfigMetricsExposureKyvernoadmissionreviewdurationseconds = {
-  disabledLabelDimensions?: string[];
-};
+export type KyvernoHelmValuesMetricsConfigMetricsExposureKyvernoadmissionreviewdurationseconds =
+  {
+    disabledLabelDimensions?: string[];
+  };
 
-export type KyvernoHelmValuesMetricsConfigMetricsExposureKyvernopolicyruleinfototal = {
-  disabledLabelDimensions?: string[];
-};
+export type KyvernoHelmValuesMetricsConfigMetricsExposureKyvernopolicyruleinfototal =
+  {
+    disabledLabelDimensions?: string[];
+  };
 
-export type KyvernoHelmValuesMetricsConfigMetricsExposureKyvernopolicyresultstotal = {
-  disabledLabelDimensions?: string[];
-};
+export type KyvernoHelmValuesMetricsConfigMetricsExposureKyvernopolicyresultstotal =
+  {
+    disabledLabelDimensions?: string[];
+  };
 
-export type KyvernoHelmValuesMetricsConfigMetricsExposureKyvernoadmissionrequeststotal = {
-  disabledLabelDimensions?: string[];
-};
+export type KyvernoHelmValuesMetricsConfigMetricsExposureKyvernoadmissionrequeststotal =
+  {
+    disabledLabelDimensions?: string[];
+  };
 
-export type KyvernoHelmValuesMetricsConfigMetricsExposureKyvernocleanupcontrollerdeletedobjectstotal = {
-  disabledLabelDimensions?: string[];
-};
+export type KyvernoHelmValuesMetricsConfigMetricsExposureKyvernocleanupcontrollerdeletedobjectstotal =
+  {
+    disabledLabelDimensions?: string[];
+  };
 
 export type KyvernoHelmValuesImagePullSecrets = object;
 
@@ -991,12 +998,13 @@ export type KyvernoHelmValuesPolicyReportsCleanupSecurityContextCapabilities = {
   drop?: string[];
 };
 
-export type KyvernoHelmValuesPolicyReportsCleanupSecurityContextSeccompProfile = {
-  /**
-   * @default "RuntimeDefault"
-   */
-  type?: string;
-};
+export type KyvernoHelmValuesPolicyReportsCleanupSecurityContextSeccompProfile =
+  {
+    /**
+     * @default "RuntimeDefault"
+     */
+    type?: string;
+  };
 
 export type KyvernoHelmValuesGrafana = {
   /**
@@ -1637,14 +1645,15 @@ export type KyvernoHelmValuesAdmissionControllerFeaturesOverride = {
   admissionReports?: KyvernoHelmValuesAdmissionControllerFeaturesOverrideAdmissionReports;
 };
 
-export type KyvernoHelmValuesAdmissionControllerFeaturesOverrideAdmissionReports = {
-  /**
-   * Max number of admission reports allowed in flight until the admission controller stops creating new ones
-   *
-   * @default 1000
-   */
-  backPressureThreshold?: number;
-};
+export type KyvernoHelmValuesAdmissionControllerFeaturesOverrideAdmissionReports =
+  {
+    /**
+     * Max number of admission reports allowed in flight until the admission controller stops creating new ones
+     *
+     * @default 1000
+     */
+    backPressureThreshold?: number;
+  };
 
 export type KyvernoHelmValuesAdmissionControllerRbac = {
   /**
@@ -1693,13 +1702,14 @@ export type KyvernoHelmValuesAdmissionControllerRbacServiceAccount = {
   annotations?: KyvernoHelmValuesAdmissionControllerRbacServiceAccountAnnotations;
 };
 
-export type KyvernoHelmValuesAdmissionControllerRbacServiceAccountAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KyvernoHelmValuesAdmissionControllerRbacServiceAccountAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
 export type KyvernoHelmValuesAdmissionControllerRbacCoreClusterRole = {
   extraResources?: unknown[];
@@ -1743,45 +1753,49 @@ export type KyvernoHelmValuesAdmissionControllerUpdateStrategyRollingUpdate = {
   maxUnavailable?: string;
 };
 
-export type KyvernoHelmValuesAdmissionControllerPriorityLevelConfigurationSpec = {
-  /**
-   * @default "Limited"
-   */
-  type?: string;
-  /**
-   * @default {"nominalConcurrencyShares":10,"limitResponse":{"queuing":{"queueLengthLimit":50},"type":"Queue"}}
-   */
-  limited?: KyvernoHelmValuesAdmissionControllerPriorityLevelConfigurationSpecLimited;
-};
+export type KyvernoHelmValuesAdmissionControllerPriorityLevelConfigurationSpec =
+  {
+    /**
+     * @default "Limited"
+     */
+    type?: string;
+    /**
+     * @default {"nominalConcurrencyShares":10,"limitResponse":{"queuing":{"queueLengthLimit":50},"type":"Queue"}}
+     */
+    limited?: KyvernoHelmValuesAdmissionControllerPriorityLevelConfigurationSpecLimited;
+  };
 
-export type KyvernoHelmValuesAdmissionControllerPriorityLevelConfigurationSpecLimited = {
-  /**
-   * @default 10
-   */
-  nominalConcurrencyShares?: number;
-  /**
-   * @default {"queuing":{"queueLengthLimit":50},"type":"Queue"}
-   */
-  limitResponse?: KyvernoHelmValuesAdmissionControllerPriorityLevelConfigurationSpecLimitedLimitResponse;
-};
+export type KyvernoHelmValuesAdmissionControllerPriorityLevelConfigurationSpecLimited =
+  {
+    /**
+     * @default 10
+     */
+    nominalConcurrencyShares?: number;
+    /**
+     * @default {"queuing":{"queueLengthLimit":50},"type":"Queue"}
+     */
+    limitResponse?: KyvernoHelmValuesAdmissionControllerPriorityLevelConfigurationSpecLimitedLimitResponse;
+  };
 
-export type KyvernoHelmValuesAdmissionControllerPriorityLevelConfigurationSpecLimitedLimitResponse = {
-  /**
-   * @default {"queueLengthLimit":50}
-   */
-  queuing?: KyvernoHelmValuesAdmissionControllerPriorityLevelConfigurationSpecLimitedLimitResponseQueuing;
-  /**
-   * @default "Queue"
-   */
-  type?: string;
-};
+export type KyvernoHelmValuesAdmissionControllerPriorityLevelConfigurationSpecLimitedLimitResponse =
+  {
+    /**
+     * @default {"queueLengthLimit":50}
+     */
+    queuing?: KyvernoHelmValuesAdmissionControllerPriorityLevelConfigurationSpecLimitedLimitResponseQueuing;
+    /**
+     * @default "Queue"
+     */
+    type?: string;
+  };
 
-export type KyvernoHelmValuesAdmissionControllerPriorityLevelConfigurationSpecLimitedLimitResponseQueuing = {
-  /**
-   * @default 50
-   */
-  queueLengthLimit?: number;
-};
+export type KyvernoHelmValuesAdmissionControllerPriorityLevelConfigurationSpecLimitedLimitResponseQueuing =
+  {
+    /**
+     * @default 50
+     */
+    queueLengthLimit?: number;
+  };
 
 export type KyvernoHelmValuesAdmissionControllerWebhookServer = {
   /**
@@ -2084,16 +2098,17 @@ export type KyvernoHelmValuesAdmissionControllerInitContainerResourcesLimits = {
   memory?: string;
 };
 
-export type KyvernoHelmValuesAdmissionControllerInitContainerResourcesRequests = {
-  /**
-   * @default "10m"
-   */
-  cpu?: string;
-  /**
-   * @default "64Mi"
-   */
-  memory?: string;
-};
+export type KyvernoHelmValuesAdmissionControllerInitContainerResourcesRequests =
+  {
+    /**
+     * @default "10m"
+     */
+    cpu?: string;
+    /**
+     * @default "64Mi"
+     */
+    memory?: string;
+  };
 
 export type KyvernoHelmValuesAdmissionControllerInitContainerSecurityContext = {
   /**
@@ -2122,16 +2137,18 @@ export type KyvernoHelmValuesAdmissionControllerInitContainerSecurityContext = {
   seccompProfile?: KyvernoHelmValuesAdmissionControllerInitContainerSecurityContextSeccompProfile;
 };
 
-export type KyvernoHelmValuesAdmissionControllerInitContainerSecurityContextCapabilities = {
-  drop?: string[];
-};
+export type KyvernoHelmValuesAdmissionControllerInitContainerSecurityContextCapabilities =
+  {
+    drop?: string[];
+  };
 
-export type KyvernoHelmValuesAdmissionControllerInitContainerSecurityContextSeccompProfile = {
-  /**
-   * @default "RuntimeDefault"
-   */
-  type?: string;
-};
+export type KyvernoHelmValuesAdmissionControllerInitContainerSecurityContextSeccompProfile =
+  {
+    /**
+     * @default "RuntimeDefault"
+     */
+    type?: string;
+  };
 
 export type KyvernoHelmValuesAdmissionControllerInitContainerExtraArgs = object;
 
@@ -2240,16 +2257,18 @@ export type KyvernoHelmValuesAdmissionControllerContainerSecurityContext = {
   seccompProfile?: KyvernoHelmValuesAdmissionControllerContainerSecurityContextSeccompProfile;
 };
 
-export type KyvernoHelmValuesAdmissionControllerContainerSecurityContextCapabilities = {
-  drop?: string[];
-};
+export type KyvernoHelmValuesAdmissionControllerContainerSecurityContextCapabilities =
+  {
+    drop?: string[];
+  };
 
-export type KyvernoHelmValuesAdmissionControllerContainerSecurityContextSeccompProfile = {
-  /**
-   * @default "RuntimeDefault"
-   */
-  type?: string;
-};
+export type KyvernoHelmValuesAdmissionControllerContainerSecurityContextSeccompProfile =
+  {
+    /**
+     * @default "RuntimeDefault"
+     */
+    type?: string;
+  };
 
 export type KyvernoHelmValuesAdmissionControllerContainerExtraArgs = object;
 
@@ -2369,9 +2388,11 @@ export type KyvernoHelmValuesAdmissionControllerServiceMonitor = {
   metricRelabelings?: unknown[];
 };
 
-export type KyvernoHelmValuesAdmissionControllerServiceMonitorAdditionalLabels = object;
+export type KyvernoHelmValuesAdmissionControllerServiceMonitorAdditionalLabels =
+  object;
 
-export type KyvernoHelmValuesAdmissionControllerServiceMonitorTlsConfig = object;
+export type KyvernoHelmValuesAdmissionControllerServiceMonitorTlsConfig =
+  object;
 
 export type KyvernoHelmValuesAdmissionControllerTracing = {
   /**
@@ -2667,23 +2688,25 @@ export type KyvernoHelmValuesBackgroundControllerRbacServiceAccount = {
   annotations?: KyvernoHelmValuesBackgroundControllerRbacServiceAccountAnnotations;
 };
 
-export type KyvernoHelmValuesBackgroundControllerRbacServiceAccountAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KyvernoHelmValuesBackgroundControllerRbacServiceAccountAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
 export type KyvernoHelmValuesBackgroundControllerRbacCoreClusterRole = {
   extraResources?: KyvernoHelmValuesBackgroundControllerRbacCoreClusterRoleExtraResourcesElement[];
 };
 
-export type KyvernoHelmValuesBackgroundControllerRbacCoreClusterRoleExtraResourcesElement = {
-  apiGroups?: string[];
-  resources?: string[];
-  verbs?: string[];
-};
+export type KyvernoHelmValuesBackgroundControllerRbacCoreClusterRoleExtraResourcesElement =
+  {
+    apiGroups?: string[];
+    resources?: string[];
+    verbs?: string[];
+  };
 
 export type KyvernoHelmValuesBackgroundControllerRbacClusterRole = {
   extraResources?: unknown[];
@@ -2880,12 +2903,13 @@ export type KyvernoHelmValuesBackgroundControllerSecurityContextCapabilities = {
   drop?: string[];
 };
 
-export type KyvernoHelmValuesBackgroundControllerSecurityContextSeccompProfile = {
-  /**
-   * @default "RuntimeDefault"
-   */
-  type?: string;
-};
+export type KyvernoHelmValuesBackgroundControllerSecurityContextSeccompProfile =
+  {
+    /**
+     * @default "RuntimeDefault"
+     */
+    type?: string;
+  };
 
 export type KyvernoHelmValuesBackgroundControllerPodDisruptionBudget = {
   /**
@@ -3006,9 +3030,11 @@ export type KyvernoHelmValuesBackgroundControllerServiceMonitor = {
   metricRelabelings?: unknown[];
 };
 
-export type KyvernoHelmValuesBackgroundControllerServiceMonitorAdditionalLabels = object;
+export type KyvernoHelmValuesBackgroundControllerServiceMonitorAdditionalLabels =
+  object;
 
-export type KyvernoHelmValuesBackgroundControllerServiceMonitorTlsConfig = object;
+export type KyvernoHelmValuesBackgroundControllerServiceMonitorTlsConfig =
+  object;
 
 export type KyvernoHelmValuesBackgroundControllerTracing = {
   /**
@@ -3583,16 +3609,17 @@ export type KyvernoHelmValuesCleanupControllerPodAntiAffinity = {
   preferredDuringSchedulingIgnoredDuringExecution?: KyvernoHelmValuesCleanupControllerPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionElement[];
 };
 
-export type KyvernoHelmValuesCleanupControllerPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionElement = {
-  /**
-   * @default 1
-   */
-  weight?: number;
-  /**
-   * @default {"labelSelector":{"matchExpressions":[{"key":"app.kubernetes.io/component","operator":"In","values":["cleanup-controller"]}]},"topologyKey":"kubernetes.io/hostname"}
-   */
-  podAffinityTerm?: KyvernoHelmValuesCleanupControllerPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm;
-};
+export type KyvernoHelmValuesCleanupControllerPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionElement =
+  {
+    /**
+     * @default 1
+     */
+    weight?: number;
+    /**
+     * @default {"labelSelector":{"matchExpressions":[{"key":"app.kubernetes.io/component","operator":"In","values":["cleanup-controller"]}]},"topologyKey":"kubernetes.io/hostname"}
+     */
+    podAffinityTerm?: KyvernoHelmValuesCleanupControllerPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm;
+  };
 
 export type KyvernoHelmValuesCleanupControllerPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm =
   {
@@ -3808,7 +3835,8 @@ export type KyvernoHelmValuesCleanupControllerServiceMonitor = {
   metricRelabelings?: unknown[];
 };
 
-export type KyvernoHelmValuesCleanupControllerServiceMonitorAdditionalLabels = object;
+export type KyvernoHelmValuesCleanupControllerServiceMonitorAdditionalLabels =
+  object;
 
 export type KyvernoHelmValuesCleanupControllerServiceMonitorTlsConfig = object;
 
@@ -4218,34 +4246,37 @@ export type KyvernoHelmValuesReportsControllerPriorityLevelConfigurationSpec = {
   limited?: KyvernoHelmValuesReportsControllerPriorityLevelConfigurationSpecLimited;
 };
 
-export type KyvernoHelmValuesReportsControllerPriorityLevelConfigurationSpecLimited = {
-  /**
-   * @default 10
-   */
-  nominalConcurrencyShares?: number;
-  /**
-   * @default {"queuing":{"queueLengthLimit":50},"type":"Queue"}
-   */
-  limitResponse?: KyvernoHelmValuesReportsControllerPriorityLevelConfigurationSpecLimitedLimitResponse;
-};
+export type KyvernoHelmValuesReportsControllerPriorityLevelConfigurationSpecLimited =
+  {
+    /**
+     * @default 10
+     */
+    nominalConcurrencyShares?: number;
+    /**
+     * @default {"queuing":{"queueLengthLimit":50},"type":"Queue"}
+     */
+    limitResponse?: KyvernoHelmValuesReportsControllerPriorityLevelConfigurationSpecLimitedLimitResponse;
+  };
 
-export type KyvernoHelmValuesReportsControllerPriorityLevelConfigurationSpecLimitedLimitResponse = {
-  /**
-   * @default {"queueLengthLimit":50}
-   */
-  queuing?: KyvernoHelmValuesReportsControllerPriorityLevelConfigurationSpecLimitedLimitResponseQueuing;
-  /**
-   * @default "Queue"
-   */
-  type?: string;
-};
+export type KyvernoHelmValuesReportsControllerPriorityLevelConfigurationSpecLimitedLimitResponse =
+  {
+    /**
+     * @default {"queueLengthLimit":50}
+     */
+    queuing?: KyvernoHelmValuesReportsControllerPriorityLevelConfigurationSpecLimitedLimitResponseQueuing;
+    /**
+     * @default "Queue"
+     */
+    type?: string;
+  };
 
-export type KyvernoHelmValuesReportsControllerPriorityLevelConfigurationSpecLimitedLimitResponseQueuing = {
-  /**
-   * @default 50
-   */
-  queueLengthLimit?: number;
-};
+export type KyvernoHelmValuesReportsControllerPriorityLevelConfigurationSpecLimitedLimitResponseQueuing =
+  {
+    /**
+     * @default 50
+     */
+    queueLengthLimit?: number;
+  };
 
 export type KyvernoHelmValuesReportsControllerExtraArgs = object;
 
@@ -4298,16 +4329,17 @@ export type KyvernoHelmValuesReportsControllerPodAntiAffinity = {
   preferredDuringSchedulingIgnoredDuringExecution?: KyvernoHelmValuesReportsControllerPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionElement[];
 };
 
-export type KyvernoHelmValuesReportsControllerPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionElement = {
-  /**
-   * @default 1
-   */
-  weight?: number;
-  /**
-   * @default {"labelSelector":{"matchExpressions":[{"key":"app.kubernetes.io/component","operator":"In","values":["reports-controller"]}]},"topologyKey":"kubernetes.io/hostname"}
-   */
-  podAffinityTerm?: KyvernoHelmValuesReportsControllerPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm;
-};
+export type KyvernoHelmValuesReportsControllerPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionElement =
+  {
+    /**
+     * @default 1
+     */
+    weight?: number;
+    /**
+     * @default {"labelSelector":{"matchExpressions":[{"key":"app.kubernetes.io/component","operator":"In","values":["reports-controller"]}]},"topologyKey":"kubernetes.io/hostname"}
+     */
+    podAffinityTerm?: KyvernoHelmValuesReportsControllerPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm;
+  };
 
 export type KyvernoHelmValuesReportsControllerPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm =
   {
@@ -4519,7 +4551,8 @@ export type KyvernoHelmValuesReportsControllerServiceMonitor = {
   metricRelabelings?: unknown[];
 };
 
-export type KyvernoHelmValuesReportsControllerServiceMonitorAdditionalLabels = object;
+export type KyvernoHelmValuesReportsControllerServiceMonitorAdditionalLabels =
+  object;
 
 export type KyvernoHelmValuesReportsControllerServiceMonitorTlsConfig = object;
 

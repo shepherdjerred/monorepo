@@ -45,7 +45,8 @@ export function createPostgresOperatorApp(chart: Chart) {
       project: "default",
       source: {
         // https://github.com/zalando/postgres-operator
-        repoUrl: "https://opensource.zalando.com/postgres-operator/charts/postgres-operator",
+        repoUrl:
+          "https://opensource.zalando.com/postgres-operator/charts/postgres-operator",
         chart: "postgres-operator",
         targetRevision: versions["postgres-operator"],
         helm: {

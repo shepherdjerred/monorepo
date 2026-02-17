@@ -17,7 +17,7 @@ export type OmniSearchResultProps = {
   onToggleBookmark: (item: Bookmarkable) => void;
   onToggleWatchStatus: (item: Watchable) => void;
   isDownloadEnabled: boolean;
-}
+};
 
 export function OmniSearchResult({
   item,
@@ -41,7 +41,9 @@ export function OmniSearchResult({
         onToggleBookmark={() => {
           onToggleBookmark(item);
         }}
-        isBookmarked={(bookmarkable: Bookmarkable) => isBookmarked(bookmarkable)}
+        isBookmarked={(bookmarkable: Bookmarkable) =>
+          isBookmarked(bookmarkable)
+        }
         onToggleWatchStatus={onToggleWatchStatus}
         isWatched={(watchable: Watchable) => isWatched(watchable)}
         isDownloadEnabled={isDownloadEnabled}

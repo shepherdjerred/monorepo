@@ -6,16 +6,16 @@ Cross-platform, tested on macOS and Windows.
 
 ## Technologies Used
 
-* Java 21
-* lwjgl
-  * OpenGL 4.1
-  * OpenAL
-  * GLFW
-  * stb
-* Netty 4
-* Jenetics
-* GSON
-* Lombok
+- Java 21
+- lwjgl
+  - OpenGL 4.1
+  - OpenAL
+  - GLFW
+  - stb
+- Netty 4
+- Jenetics
+- GSON
+- Lombok
 
 ## Building
 

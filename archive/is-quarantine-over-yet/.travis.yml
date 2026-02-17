@@ -2,9 +2,9 @@ language: generic
 notifications:
   email: false
 script:
-- ":"
+  - ":"
 before_deploy:
-- cd src
+  - cd src
 deploy:
   skip_cleanup: true
   provider: s3

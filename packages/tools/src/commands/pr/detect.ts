@@ -4,13 +4,15 @@ import { getCurrentBranch } from "../../lib/git/repo.ts";
 export type DetectOptions = {
   repo?: string | undefined;
   json?: boolean | undefined;
-}
+};
 
 export async function detectCommand(options: DetectOptions): Promise<void> {
   const currentBranch = await getCurrentBranch();
 
   if (!currentBranch) {
-    console.error("Error: Not in a git repository or unable to get current branch");
+    console.error(
+      "Error: Not in a git repository or unable to get current branch",
+    );
     process.exit(1);
   }
 

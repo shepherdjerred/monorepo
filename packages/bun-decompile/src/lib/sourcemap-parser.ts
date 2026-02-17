@@ -8,7 +8,7 @@ export type SourceFile = {
   name: string;
   /** Original source content (decompressed) */
   content: string;
-}
+};
 
 /** Parsed Bun SerializedSourceMap */
 export type ParsedSourceMap = {
@@ -18,11 +18,15 @@ export type ParsedSourceMap = {
   mappings: string;
   /** Original source files with decompressed content */
   sources: SourceFile[];
-}
+};
 
 /** Read a u32 from buffer (little-endian) */
 function readU32(buffer: Uint8Array, offset: number): number {
-  const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+  const view = new DataView(
+    buffer.buffer,
+    buffer.byteOffset,
+    buffer.byteLength,
+  );
   return view.getUint32(offset, true);
 }
 
@@ -61,8 +65,12 @@ async function decompressZstd(compressed: Uint8Array): Promise<string> {
   } finally {
     // Cleanup temp files
     try {
-      if (await Bun.file(tempIn).exists()) {await Bun.write(tempIn, "");}
-      if (await Bun.file(tempOut).exists()) {await Bun.write(tempOut, "");}
+      if (await Bun.file(tempIn).exists()) {
+        await Bun.write(tempIn, "");
+      }
+      if (await Bun.file(tempOut).exists()) {
+        await Bun.write(tempOut, "");
+      }
     } catch {
       // Ignore cleanup errors
     }
@@ -152,9 +160,9 @@ export async function parseSourceMap(
       if (
         compressed.length < 4 ||
         compressed[0] !== 0x28 ||
-        compressed[1] !== 0xB5 ||
-        compressed[2] !== 0x2F ||
-        compressed[3] !== 0xFD
+        compressed[1] !== 0xb5 ||
+        compressed[2] !== 0x2f ||
+        compressed[3] !== 0xfd
       ) {
         // Not ZSTD compressed, try as plain text
         sources.push({

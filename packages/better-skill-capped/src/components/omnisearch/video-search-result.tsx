@@ -18,9 +18,11 @@ export type VideoSearchResultProps = {
   onToggleWatchStatus: (item: Watchable) => void;
   matchedStrings: string[];
   isDownloadEnabled: boolean;
-}
+};
 
-export function VideoSearchResult(props: VideoSearchResultProps): React.ReactElement {
+export function VideoSearchResult(
+  props: VideoSearchResultProps,
+): React.ReactElement {
   const { video, matchedStrings, isDownloadEnabled } = props;
   const buttonProps = {
     ...props,
@@ -34,16 +36,29 @@ export function VideoSearchResult(props: VideoSearchResultProps): React.ReactEle
           <div className="column is-7">
             <h3 className="title is-5">
               <a href={video.skillCappedUrl}>
-                <Highlighter searchWords={matchedStrings} textToHighlight={video.title} autoEscape={true} />
+                <Highlighter
+                  searchWords={matchedStrings}
+                  textToHighlight={video.title}
+                  autoEscape={true}
+                />
               </a>
             </h3>
             <p>
-              <Highlighter searchWords={matchedStrings} textToHighlight={video.description} autoEscape={true} />
+              <Highlighter
+                searchWords={matchedStrings}
+                textToHighlight={video.description}
+                autoEscape={true}
+              />
             </p>
             <div className="tags">
               <span className="tag is-primary">Content Type: Video</span>
-              <span className="tag is-primary is-light">Role: {roleToString(video.role)}</span>
-              <span className="tag is-primary is-light" title={video.releaseDate.toLocaleString()}>
+              <span className="tag is-primary is-light">
+                Role: {roleToString(video.role)}
+              </span>
+              <span
+                className="tag is-primary is-light"
+                title={video.releaseDate.toLocaleString()}
+              >
                 Released: {video.releaseDate.toLocaleDateString()}
               </span>
             </div>
@@ -51,7 +66,10 @@ export function VideoSearchResult(props: VideoSearchResultProps): React.ReactEle
               <ToggleBookmarkButton {...buttonProps} />
               <ToggleWatchStatusButton {...buttonProps} />
               {isDownloadEnabled && (
-                <a href={getStreamUrl(video)} className="button is-small bookmark">
+                <a
+                  href={getStreamUrl(video)}
+                  className="button is-small bookmark"
+                >
                   <span className="icon is-small">
                     <FontAwesomeIcon icon={faCloudDownloadAlt} />
                   </span>
@@ -62,7 +80,11 @@ export function VideoSearchResult(props: VideoSearchResultProps): React.ReactEle
           </div>
           <div className="column is-5">
             <figure className="image is-16by9">
-              <img src={video.imageUrl} alt="Video thumbnail" className="thumbnail" />
+              <img
+                src={video.imageUrl}
+                alt="Video thumbnail"
+                className="thumbnail"
+              />
             </figure>
           </div>
         </div>

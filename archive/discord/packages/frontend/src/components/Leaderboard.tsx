@@ -203,9 +203,7 @@ export function LeaderboardComponent() {
       const currentLeaderboard = LeaderboardSchema.parse(await result.json());
       setCurrentLeaderboard(currentLeaderboard);
 
-      result = await fetch(
-        "https://prod.bucket.discord.com/previous.json",
-      );
+      result = await fetch("https://prod.bucket.discord.com/previous.json");
       const previousJson = await result.json();
       const parseStatus = LeaderboardSchema.safeParse(previousJson);
       // TODO: handle the case where the previous leaderboard is missing
@@ -241,11 +239,9 @@ export function LeaderboardComponent() {
           )
         ) {
           return [
-            `${entry.current.player.config.name} was promoted: ${
-              rankToSimpleString(
-                entry.previous.player.ranks.solo,
-              )
-            } -> ${rankToSimpleString(entry.current.player.ranks.solo)}`,
+            `${entry.current.player.config.name} was promoted: ${rankToSimpleString(
+              entry.previous.player.ranks.solo,
+            )} -> ${rankToSimpleString(entry.current.player.ranks.solo)}`,
           ];
         } else {
           return [];
@@ -262,11 +258,9 @@ export function LeaderboardComponent() {
           )
         ) {
           return [
-            `${entry.current.player.config.name} was demoted: ${
-              rankToSimpleString(
-                entry.previous.player.ranks.solo,
-              )
-            } -> ${rankToSimpleString(entry.current.player.ranks.solo)}`,
+            `${entry.current.player.config.name} was demoted: ${rankToSimpleString(
+              entry.previous.player.ranks.solo,
+            )} -> ${rankToSimpleString(entry.current.player.ranks.solo)}`,
           ];
         } else {
           return [];
@@ -307,11 +301,12 @@ export function LeaderboardComponent() {
           <hgroup className="">
             <h1 className="text-3xl">Tournament Leaderboard</h1>
             <p>
-              Updated {currentLeaderboard?.date !== undefined
+              Updated{" "}
+              {currentLeaderboard?.date !== undefined
                 ? formatDistance(currentLeaderboard.date, now)
-                : ""} ago. Next update in{" "}
-              {formatDistance(now, next)}. Competition lasts until the end of
-              Season 14 Split 1.
+                : ""}{" "}
+              ago. Next update in {formatDistance(now, next)}. Competition lasts
+              until the end of Season 14 Split 1.
               <br />
               Prize: $200
             </p>

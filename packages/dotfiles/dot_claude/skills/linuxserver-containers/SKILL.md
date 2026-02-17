@@ -131,8 +131,18 @@ volumeMounts: [
 
 ```typescript
 import { Chart, Size } from "cdk8s";
-import { Cpu, Deployment, DeploymentStrategy, type PersistentVolumeClaim, Service, Volume } from "cdk8s-plus-31";
-import { LINUXSERVER_GID, withCommonLinuxServerProps } from "../../misc/linux-server.ts";
+import {
+  Cpu,
+  Deployment,
+  DeploymentStrategy,
+  type PersistentVolumeClaim,
+  Service,
+  Volume,
+} from "cdk8s-plus-31";
+import {
+  LINUXSERVER_GID,
+  withCommonLinuxServerProps,
+} from "../../misc/linux-server.ts";
 import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "../../misc/tailscale.ts";
 import versions from "../../versions.ts";
@@ -163,15 +173,27 @@ export function createSonarrDeployment(
       volumeMounts: [
         {
           path: "/config",
-          volume: Volume.fromPersistentVolumeClaim(chart, "sonarr-volume", localPathVolume.claim),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "sonarr-volume",
+            localPathVolume.claim,
+          ),
         },
         {
           path: "/downloads",
-          volume: Volume.fromPersistentVolumeClaim(chart, "sonarr-downloads-volume", claims.downloads),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "sonarr-downloads-volume",
+            claims.downloads,
+          ),
         },
         {
           path: "/tv",
-          volume: Volume.fromPersistentVolumeClaim(chart, "sonarr-tv-volume", claims.tv),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "sonarr-tv-volume",
+            claims.tv,
+          ),
         },
       ],
       resources: {

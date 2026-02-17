@@ -5,7 +5,11 @@
  * Generate TypeScript types from Helm charts
  */
 import { z } from "zod";
-import { fetchHelmChart, convertToTypeScriptInterface, generateTypeScriptCode } from "./helm-types.ts";
+import {
+  fetchHelmChart,
+  convertToTypeScriptInterface,
+  generateTypeScriptCode,
+} from "./helm-types.ts";
 import type { ChartInfo } from "./helm-types.ts";
 
 const ErrorSchema = z.object({
@@ -69,78 +73,81 @@ function parseCliArgs(args: string[]): CliArgs {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (!arg) {continue;}
+    if (!arg) {
+      continue;
+    }
 
     switch (arg) {
-    case "--help": 
-    case "-h": {
-      result.help = true;
-    
-    break;
-    }
-    case "--name": 
-    case "-n": {
-      const value = args[i + 1];
-      if (value) {
-        result.name = value;
-        i += 1;
+      case "--help":
+      case "-h": {
+        result.help = true;
+
+        break;
       }
-    
-    break;
-    }
-    case "--chart": 
-    case "-c": {
-      const value = args[i + 1];
-      if (value) {
-        result.chart = value;
-        i += 1;
+      case "--name":
+      case "-n": {
+        const value = args[i + 1];
+        if (value) {
+          result.name = value;
+          i += 1;
+        }
+
+        break;
       }
-    
-    break;
-    }
-    case "--repo": 
-    case "-r": {
-      const value = args[i + 1];
-      if (value) {
-        result.repo = value;
-        i += 1;
+      case "--chart":
+      case "-c": {
+        const value = args[i + 1];
+        if (value) {
+          result.chart = value;
+          i += 1;
+        }
+
+        break;
       }
-    
-    break;
-    }
-    case "--version": 
-    case "-v": {
-      const value = args[i + 1];
-      if (value) {
-        result.version = value;
-        i += 1;
+      case "--repo":
+      case "-r": {
+        const value = args[i + 1];
+        if (value) {
+          result.repo = value;
+          i += 1;
+        }
+
+        break;
       }
-    
-    break;
-    }
-    case "--output": 
-    case "-o": {
-      const value = args[i + 1];
-      if (value) {
-        result.output = value;
-        i += 1;
+      case "--version":
+      case "-v": {
+        const value = args[i + 1];
+        if (value) {
+          result.version = value;
+          i += 1;
+        }
+
+        break;
       }
-    
-    break;
-    }
-    case "--interface": 
-    case "-i": {
-      const value = args[i + 1];
-      if (value) {
-        result.interface = value;
-        i += 1;
+      case "--output":
+      case "-o": {
+        const value = args[i + 1];
+        if (value) {
+          result.output = value;
+          i += 1;
+        }
+
+        break;
       }
-    
-    break;
-    }
-    default: if (arg.startsWith("-")) {
-      throw new Error(`Unknown argument: ${arg}`);
-    }
+      case "--interface":
+      case "-i": {
+        const value = args[i + 1];
+        if (value) {
+          result.interface = value;
+          i += 1;
+        }
+
+        break;
+      }
+      default:
+        if (arg.startsWith("-")) {
+          throw new Error(`Unknown argument: ${arg}`);
+        }
     }
   }
 
@@ -174,9 +181,12 @@ async function main() {
     };
 
     // Generate interface name from chart name if not provided
-    const interfaceName = args.interface ?? `${toPascalCase(args.name)}HelmValues`;
+    const interfaceName =
+      args.interface ?? `${toPascalCase(args.name)}HelmValues`;
 
-    console.error(`Fetching chart: ${chartInfo.chartName}@${chartInfo.version}`);
+    console.error(
+      `Fetching chart: ${chartInfo.chartName}@${chartInfo.version}`,
+    );
     console.error(`Repository: ${chartInfo.repoUrl}`);
     console.error("");
 
@@ -187,7 +197,14 @@ async function main() {
     console.error(`Converting to TypeScript interface: ${interfaceName}`);
 
     // Convert to TypeScript interface
-    const tsInterface = convertToTypeScriptInterface(values, interfaceName, schema, yamlComments, "", args.name);
+    const tsInterface = convertToTypeScriptInterface(
+      values,
+      interfaceName,
+      schema,
+      yamlComments,
+      "",
+      args.name,
+    );
 
     // Generate TypeScript code
     const code = generateTypeScriptCode(tsInterface, args.name);

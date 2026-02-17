@@ -14,8 +14,8 @@ When you need information from people, design ways that make it easy for them to
 
 Entering information can be a tedious process regardless of the interaction methods people use. Improve the experience by:
 
-* Pre-gathering as much information as possible to minimize the amount of data that people need to supply
-* Supporting all available input methods so people can choose the method that works for them
+- Pre-gathering as much information as possible to minimize the amount of data that people need to supply
+- Supporting all available input methods so people can choose the method that works for them
 
 ## [Best practices](/design/human-interface-guidelines/entering-data#Best-practices)
 
@@ -37,11 +37,11 @@ Entering information can be a tedious process regardless of the interaction meth
 
 ## [Platform considerations](/design/human-interface-guidelines/entering-data#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, tvOS, visionOS, or watchOS._
 
 ### [macOS](/design/human-interface-guidelines/entering-data#macOS)
 
-**Consider using an expansion tooltip to show the full version of clipped or truncated text in a field.** An *expansion tooltip* behaves like a regular tooltip, appearing when the pointer rests on top of a field. Apps running in macOS — including iOS and iPadOS apps running on a Mac — can use an expansion tooltip to help people view the complete data they entered when a text field is too small to display it. For guidance, see [Offering help > macOS, visionOS](https://developer.apple.com/design/human-interface-guidelines/offering-help#macOS-visionOS).
+**Consider using an expansion tooltip to show the full version of clipped or truncated text in a field.** An _expansion tooltip_ behaves like a regular tooltip, appearing when the pointer rests on top of a field. Apps running in macOS — including iOS and iPadOS apps running on a Mac — can use an expansion tooltip to help people view the complete data they entered when a text field is too small to display it. For guidance, see [Offering help > macOS, visionOS](https://developer.apple.com/design/human-interface-guidelines/offering-help#macOS-visionOS).
 
 ## [Resources](/design/human-interface-guidelines/entering-data#Resources)
 
@@ -65,6 +65,6 @@ What's new in UIKit](https://developer.apple.com/videos/play/wwdc2021/10059)
 
 ## [Change log](/design/human-interface-guidelines/entering-data#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date          | Changes                                   |
+| ------------- | ----------------------------------------- |
 | June 21, 2023 | Updated to include guidance for visionOS. |

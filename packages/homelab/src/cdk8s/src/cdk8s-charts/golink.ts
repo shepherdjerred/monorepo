@@ -1,4 +1,4 @@
-import type { App} from "cdk8s";
+import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { createGolinkDeployment } from "../resources/golink.ts";
 import { createGolinkSyncJob } from "../resources/golink-sync.ts";

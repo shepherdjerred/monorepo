@@ -66,10 +66,12 @@ When you build a terminal application, you're working within a layered system:
 **TTY** (Teletypewriter): Originally physical devices, now refers to the terminal driver in the operating system.
 
 **PTY** (Pseudo-Terminal): A pair of virtual devices that emulate a TTY:
+
 - **Master side**: Terminal emulator reads/writes here
 - **Slave side**: Your program sees this as stdin/stdout/stderr
 
 **Why This Matters for Developers**:
+
 - Your program receives input filtered through the TTY driver
 - Some control characters are intercepted by the OS (Ctrl-C, Ctrl-Z)
 - Buffering behavior differs between TTY and pipes
@@ -78,18 +80,21 @@ When you build a terminal application, you're working within a layered system:
 ### Terminal Modes: Cooked vs Raw
 
 **Cooked Mode** (Canonical Mode):
+
 - Default mode for most programs
 - OS provides line editing (backspace, Ctrl-U, Ctrl-W)
 - Input delivered to your program line-by-line after Enter
 - Control characters handled by OS (Ctrl-C sends SIGINT)
 
 **Raw Mode**:
+
 - Character-by-character input (no line buffering)
 - Your program receives every keypress including Ctrl-C
 - Required for TUIs (vim, less, htop)
 - Your program must implement all input handling
 
 **When to Use Each**:
+
 - **Cooked mode**: Normal CLI tools (git, cargo, npm)
 - **Raw mode**: Interactive TUIs, line editors
 
@@ -97,15 +102,16 @@ When you build a terminal application, you're working within a layered system:
 
 Every process has three standard streams:
 
-| Stream | FD | Purpose | Examples |
-|--------|----|---------| ---------|
-| stdin  | 0  | Input from user or pipe | Reading commands, file content |
-| stdout | 1  | Primary output | Results, listings, JSON |
-| stderr | 2  | Errors, logs, diagnostics | Error messages, warnings, debug |
+| Stream | FD  | Purpose                   | Examples                        |
+| ------ | --- | ------------------------- | ------------------------------- |
+| stdin  | 0   | Input from user or pipe   | Reading commands, file content  |
+| stdout | 1   | Primary output            | Results, listings, JSON         |
+| stderr | 2   | Errors, logs, diagnostics | Error messages, warnings, debug |
 
 **Critical Design Principle**: Separate stdout and stderr properly.
 
 **Why This Matters**:
+
 ```bash
 # User wants to pipe your output
 your-tool | jq .         # Only works if output goes to stdout
@@ -115,6 +121,7 @@ your-tool 2> errors.log  # Only works if errors go to stderr
 ```
 
 **Examples from Proven Programs**:
+
 - **git**: Errors to stderr, porcelain output to stdout
 - **ripgrep**: Matches to stdout, warnings to stderr
 - **cargo**: Build status to stderr, `--message-format=json` to stdout
@@ -124,6 +131,7 @@ your-tool 2> errors.log  # Only works if errors go to stderr
 Your program must detect its output destination to format appropriately:
 
 **Concept** (language-agnostic):
+
 ```
 if isatty(stdout):
     # Human is watching - use colors, progress bars
@@ -136,11 +144,13 @@ else:
 ```
 
 **Real-world examples**:
+
 - `ls --color=auto`: Colors only for TTY
 - `git status`: Full output for TTY, shorter for pipes
 - `ripgrep`: Colors and summaries for TTY, plain matches for pipes
 
 **C Implementation**:
+
 ```c
 #include <unistd.h>
 
@@ -150,6 +160,7 @@ if (isatty(STDOUT_FILENO)) {
 ```
 
 **Rust Implementation**:
+
 ```rust
 use std::io::IsTerminal;
 
@@ -159,6 +170,7 @@ if std::io::stdout().is_terminal() {
 ```
 
 **Python Implementation**:
+
 ```python
 import sys
 
@@ -167,6 +179,7 @@ if sys.stdout.isatty():
 ```
 
 **Go Implementation**:
+
 ```go
 import "golang.org/x/term"
 
@@ -182,51 +195,54 @@ if term.IsTerminal(int(os.Stdout.Fd())) {
 ### The 33 Control Characters
 
 Control characters are created by holding Ctrl and pressing a key. There are 33 total:
+
 - Ctrl-A through Ctrl-Z (26 characters)
-- Plus 7 more: Ctrl-@, Ctrl-[, Ctrl-\, Ctrl-], Ctrl-^, Ctrl-_, Ctrl-?
+- Plus 7 more: Ctrl-@, Ctrl-[, Ctrl-\, Ctrl-], Ctrl-^, Ctrl-\_, Ctrl-?
 
 ### Three Categories
 
 **1. OS-Handled (Terminal Driver Intercepts)**:
 
-| Key | ASCII | Name | Function |
-|-----|-------|------|----------|
-| Ctrl-C | 3 | ETX | Sends SIGINT (interrupt) |
-| Ctrl-D | 4 | EOT | EOF when line is empty |
-| Ctrl-Z | 26 | SUB | Sends SIGTSTP (suspend) |
-| Ctrl-S | 19 | XOFF | Freezes output (flow control) |
-| Ctrl-Q | 17 | XON | Resumes output |
-| Ctrl-\ | 28 | FS | Sends SIGQUIT |
+| Key     | ASCII | Name | Function                      |
+| ------- | ----- | ---- | ----------------------------- |
+| Ctrl-C  | 3     | ETX  | Sends SIGINT (interrupt)      |
+| Ctrl-D  | 4     | EOT  | EOF when line is empty        |
+| Ctrl-Z  | 26    | SUB  | Sends SIGTSTP (suspend)       |
+| Ctrl-S  | 19    | XOFF | Freezes output (flow control) |
+| Ctrl-Q  | 17    | XON  | Resumes output                |
+| Ctrl-\  | 28    | FS   | Sends SIGQUIT                 |
 
 **2. Keyboard Literals**:
 
-| Key | ASCII | Name | Usage |
-|-----|-------|------|-------|
-| Enter | 13 | CR | Line terminator |
-| Tab | 9 | HT | Tab character |
-| Backspace | 127 | DEL | Delete previous character |
-| Ctrl-H | 8 | BS | Often same as backspace |
+| Key       | ASCII | Name | Usage                     |
+| --------- | ----- | ---- | ------------------------- |
+| Enter     | 13    | CR   | Line terminator           |
+| Tab       | 9     | HT   | Tab character             |
+| Backspace | 127   | DEL  | Delete previous character |
+| Ctrl-H    | 8     | BS   | Often same as backspace   |
 
 **3. Application-Specific** (Your Program Can Define):
 
-| Key | Common Usage |
-|-----|--------------|
-| Ctrl-A | Move to line start (readline, emacs) |
-| Ctrl-E | Move to line end |
-| Ctrl-W | Delete word backwards |
-| Ctrl-U | Delete line |
-| Ctrl-K | Kill to end of line |
-| Ctrl-R | Reverse search (shells) |
-| Ctrl-L | Clear screen |
-| Ctrl-P/N | Previous/Next (history navigation) |
+| Key      | Common Usage                         |
+| -------- | ------------------------------------ |
+| Ctrl-A   | Move to line start (readline, emacs) |
+| Ctrl-E   | Move to line end                     |
+| Ctrl-W   | Delete word backwards                |
+| Ctrl-U   | Delete line                          |
+| Ctrl-K   | Kill to end of line                  |
+| Ctrl-R   | Reverse search (shells)              |
+| Ctrl-L   | Clear screen                         |
+| Ctrl-P/N | Previous/Next (history navigation)   |
 
 ### What Developers Can and Cannot Intercept
 
 **In Cooked Mode**:
+
 - OS handles: Ctrl-C, Ctrl-D, Ctrl-Z, Ctrl-S, Ctrl-Q
 - You see: Ctrl-A, Ctrl-E, Ctrl-W (already processed by line editing)
 
 **In Raw Mode** (TUIs):
+
 - You can intercept almost everything including Ctrl-C
 - **Exception**: Ctrl-Z often still suspends (OS-level)
 - You must handle all line editing yourself
@@ -236,6 +252,7 @@ Control characters are created by holding Ctrl and pressing a key. There are 33 
 ### Limited Modifier Combinations
 
 Unlike GUI applications, terminals have severe limitations:
+
 - **Only 33 Ctrl combinations** total
 - Ctrl-Shift-X **doesn't exist** as a distinct character
 - Ctrl-[number] combinations limited
@@ -252,6 +269,7 @@ Unlike GUI applications, terminals have severe limitations:
 Escape codes are invisible character sequences that control terminals. They start with ESC (ASCII 27, written as `\x1b`, `\033`, or `\e`).
 
 **Two types**:
+
 1. **Input codes**: Generated by keypresses (arrow keys, function keys)
 2. **Output codes**: Your program uses to control display (colors, cursor movement)
 
@@ -262,6 +280,7 @@ Escape codes are invisible character sequences that control terminals. They star
 The base standard defining escape code formats:
 
 **CSI (Control Sequence Introducer)**: `ESC [` followed by parameters
+
 ```
 ESC[2J        # Clear screen
 ESC[H         # Move cursor to home
@@ -269,6 +288,7 @@ ESC[1;31m     # Red foreground color
 ```
 
 **OSC (Operating System Command)**: `ESC ]` followed by parameters
+
 ```
 ESC]0;Title\x07    # Set window title
 ESC]52;c;base64\x07   # Clipboard access (OSC 52)
@@ -277,6 +297,7 @@ ESC]52;c;base64\x07   # Clipboard access (OSC 52)
 #### XTerm Extensions
 
 XTerm added features beyond ECMA-48:
+
 - Mouse reporting (click, drag, scroll)
 - Clipboard access via OSC 52
 - Extended color modes (256 colors, RGB)
@@ -294,11 +315,13 @@ tput bold               # Output "bold" escape sequence for $TERM
 ```
 
 **Terminfo Approach**:
+
 1. Query terminfo for escape sequences
 2. Adapts to different terminals automatically
 3. Complex to use, slower
 
 **Hardcoded Approach**:
+
 1. Use common escape sequences directly
 2. Test across major terminals
 3. Simpler, faster, good enough for most
@@ -308,17 +331,20 @@ tput bold               # Output "bold" escape sequence for $TERM
 ### Practical Compatibility Strategies
 
 **Strategy 1**: Stick to well-supported sequences
+
 - 16 ANSI colors (ESC[30-37m, ESC[40-47m)
 - Basic cursor movement (ESC[H, ESC[A/B/C/D)
 - Clear screen/line (ESC[2J, ESC[K)
 
 **Strategy 2**: Test on major terminal emulators
+
 - iTerm2, Alacritty (macOS)
 - GNOME Terminal, Konsole (Linux)
 - Windows Terminal (Windows)
 - tmux and screen (multiplexers)
 
 **Strategy 3**: Provide fallbacks
+
 ```
 if supports_256_colors():
     use_256_color_palette()
@@ -329,6 +355,7 @@ else:
 ```
 
 **Examples from Proven Programs**:
+
 - **less**: Queries terminfo, falls back to hardcoded
 - **vim**: Extensive terminfo support with fallbacks
 - **ripgrep**: Hardcoded ANSI, works everywhere
@@ -336,12 +363,14 @@ else:
 ### When to Use Libraries vs Raw Escape Codes
 
 **Use Libraries When**:
+
 - Building complex TUIs (ncurses, crossterm, etc.)
 - Need mouse support
 - Want automatic capability detection
 - Cross-platform support (Windows Console API)
 
 **Use Raw Escape Codes When**:
+
 - Simple color output
 - Progress bars
 - Cursor positioning for simple UIs
@@ -354,14 +383,17 @@ else:
 ### Three Buffering Modes
 
 **Unbuffered**: Every write goes directly to the destination
+
 - Slowest (syscall overhead)
 - Used for stderr by default
 
 **Line Buffered**: Flush on newlines
+
 - Used for stdout when writing to TTY
 - Balance of performance and responsiveness
 
 **Block Buffered**: Flush when buffer full (~8KB)
+
 - Used for stdout when writing to pipe/file
 - Most efficient for throughput
 
@@ -386,6 +418,7 @@ tail -f log.txt | grep ERROR
 ```
 
 **Why**:
+
 1. `grep` sees stdout is a pipe (not TTY)
 2. Uses block buffering (8KB threshold)
 3. Waits to accumulate data
@@ -397,6 +430,7 @@ tail -f log.txt | grep ERROR
 **Solution 1**: Add `--line-buffered` flag
 
 **C Implementation**:
+
 ```c
 #include <stdio.h>
 
@@ -410,6 +444,7 @@ fflush(stdout);
 ```
 
 **Rust Implementation**:
+
 ```rust
 use std::io::{self, Write};
 
@@ -423,6 +458,7 @@ fn main() {
 ```
 
 **Python Implementation**:
+
 ```python
 import sys
 
@@ -437,6 +473,7 @@ print("output", flush=True)
 ```
 
 **Go Implementation**:
+
 ```go
 import (
     "bufio"
@@ -451,12 +488,14 @@ writer.Flush()  // Manual flush
 **Solution 2**: Always flush after important output
 
 **Best Practices**:
+
 - Flush after progress updates
 - Flush after each line of JSON in streaming mode
 - Flush before long computations
 - Provide `--line-buffered` for tools that filter streams
 
 **Examples from Proven Programs**:
+
 - `grep --line-buffered`: Solves pipe buffering
 - `sed -u`: Unbuffered mode
 - `awk`: Has no built-in flag (common complaint)
@@ -464,6 +503,7 @@ writer.Flush()  // Manual flush
 ### Testing Buffered Output
 
 **In CI/CD**:
+
 ```bash
 # Force line buffering
 stdbuf -oL your-tool | other-tool
@@ -473,6 +513,7 @@ unbuffer your-tool | other-tool
 ```
 
 **In Tests**:
+
 - Mock the TTY with PTY libraries
 - Test both TTY and non-TTY paths
 - Verify flushing behavior
@@ -485,26 +526,28 @@ unbuffer your-tool | other-tool
 
 When users press special keys, terminals send multi-character escape sequences:
 
-| Key | Sequence | Notes |
-|-----|----------|-------|
-| Up | `ESC[A` | CSI sequence |
-| Down | `ESC[B` | |
-| Right | `ESC[C` | |
-| Left | `ESC[D` | |
-| Home | `ESC[H` or `ESC[1~` | Varies by terminal |
-| End | `ESC[F` or `ESC[4~` | |
-| Page Up | `ESC[5~` | |
-| Page Down | `ESC[6~` | |
-| F1 | `ESC OP` or `ESC[[A` | Highly variable |
-| F12 | `ESC[24~` | |
+| Key       | Sequence             | Notes              |
+| --------- | -------------------- | ------------------ |
+| Up        | `ESC[A`              | CSI sequence       |
+| Down      | `ESC[B`              |                    |
+| Right     | `ESC[C`              |                    |
+| Left      | `ESC[D`              |                    |
+| Home      | `ESC[H` or `ESC[1~`  | Varies by terminal |
+| End       | `ESC[F` or `ESC[4~`  |                    |
+| Page Up   | `ESC[5~`             |                    |
+| Page Down | `ESC[6~`             |                    |
+| F1        | `ESC OP` or `ESC[[A` | Highly variable    |
+| F12       | `ESC[24~`            |                    |
 
 ### Distinguishing ESC Key from Escape Sequences
 
 **The Problem**: ESC character can mean:
+
 1. User pressed ESC key (standalone)
 2. Start of escape sequence (ESC[A for up arrow)
 
 **Solution**: Timeout-based parsing
+
 ```
 Read character:
     If ESC:
@@ -514,6 +557,7 @@ Read character:
 ```
 
 **Proven Programs**:
+
 - **vim**: Uses 1 second timeout (customizable with `ttimeoutlen`)
 - **less**: Uses short timeout
 - **readline**: Configurable timeout
@@ -527,6 +571,7 @@ ESC[<0;10;5M    # Mouse button press at column 10, row 5
 ```
 
 **Enable mouse reporting**:
+
 ```
 ESC[?1000h      # Send button press/release
 ESC[?1002h      # Send button press/release/drag
@@ -534,6 +579,7 @@ ESC[?1006h      # SGR mouse mode (better format)
 ```
 
 **Disable when exiting**:
+
 ```
 ESC[?1000l
 ```
@@ -544,7 +590,7 @@ ESC[?1000l
 
 # Part 2: CLI Design Guidelines for Developers
 
-*Based on clig.dev with implementation focus*
+_Based on clig.dev with implementation focus_
 
 ## Philosophy: The 9 Core Principles
 
@@ -553,6 +599,7 @@ ESC[?1000l
 **Principle**: CLIs are primarily for humans, not just machines.
 
 **Practical Implications**:
+
 - Show what's happening (don't hang silently)
 - Confirm dangerous operations
 - Provide helpful errors
@@ -561,11 +608,13 @@ ESC[?1000l
 **Counter to UNIX Tradition**: "Silence is golden" doesn't work for modern tools. Users expect feedback.
 
 **Example from cargo**:
+
 ```
 $ cargo build
    Compiling myapp v0.1.0
     Finished dev [unoptimized + debuginfo] target(s) in 2.34s
 ```
+
 Clear indication of progress and completion.
 
 ### 2. Simple, Composable Parts
@@ -573,15 +622,18 @@ Clear indication of progress and completion.
 **Principle**: Standard streams, pipes, and exit codes enable composition.
 
 **Practical Implications**:
+
 - Output primary results to stdout
 - Output logs/errors to stderr
 - Exit 0 for success, non-zero for failure
 - Accept stdin, write to stdout for filters
 
 **Example from ripgrep**:
+
 ```bash
 rg "pattern" | rg "filter" | wc -l
 ```
+
 Composes naturally because stdout contains only matches.
 
 ### 3. Consistency Across Programs
@@ -589,6 +641,7 @@ Composes naturally because stdout contains only matches.
 **Principle**: Follow established conventions.
 
 **Practical Implications**:
+
 - Use standard flag names (-h, --help, -v, --version)
 - Follow argument conventions (POSIX or GNU style)
 - Ctrl-C should interrupt
@@ -596,6 +649,7 @@ Composes naturally because stdout contains only matches.
 
 **Example from git**:
 Every subcommand uses consistent flags:
+
 ```bash
 git commit --verbose
 git log --verbose
@@ -607,12 +661,14 @@ git diff --verbose
 **Principle**: Balance information density. Too little confuses, too much overwhelms.
 
 **Guidelines**:
+
 - Default: Show what changed
 - Quiet mode (-q): Silence non-errors
 - Verbose mode (-v): Show details
 - Debug mode (--debug): Everything
 
 **Example from docker**:
+
 ```
 $ docker pull nginx
 Using default tag: latest
@@ -620,6 +676,7 @@ latest: Pulling from library/nginx
 a2abf6c4d29d: Pull complete
 Status: Downloaded newer image for nginx:latest
 ```
+
 Just enough to understand progress.
 
 ### 5. Ease of Discovery
@@ -627,12 +684,14 @@ Just enough to understand progress.
 **Principle**: Users shouldn't need to memorize everything.
 
 **Practical Implications**:
+
 - Comprehensive help text
 - Examples in help
 - Suggest corrections for typos
 - Show next steps
 
 **Example from git**:
+
 ```
 $ git pul
 git: 'pul' is not a git command. See 'git --help'.
@@ -646,12 +705,14 @@ The most similar command is
 **Principle**: Design for iterative use and trial-and-error.
 
 **Practical Implications**:
+
 - Clear error messages that suggest fixes
 - Allow undoing or --dry-run
 - Preserve state when safe
 - Show current state easily
 
 **Example from git**:
+
 ```
 $ git status
 On branch main
@@ -660,6 +721,7 @@ Changes not staged for commit:
 
 no changes added to commit
 ```
+
 Always shows current state.
 
 ### 7. Robustness
@@ -667,16 +729,19 @@ Always shows current state.
 **Principle**: Feel solid, not fragile. Handle errors gracefully.
 
 **Practical Implications**:
+
 - Validate input early
 - Meaningful error messages (not stack traces)
 - Handle SIGINT gracefully
 - Restore terminal state on crash (TUIs)
 
 **Example from cargo**:
+
 ```
 $ cargo build
 error: Could not compile `myapp` due to 2 previous errors
 ```
+
 Clear, actionable error.
 
 ### 8. Empathy
@@ -684,17 +749,20 @@ Clear, actionable error.
 **Principle**: Show you're on the user's side.
 
 **Practical Implications**:
+
 - Assume mistakes are honest
 - Explain what went wrong
 - Suggest how to fix it
 - Be encouraging, not condescending
 
 **Bad**:
+
 ```
 Error: Invalid argument
 ```
 
 **Good (from rustc)**:
+
 ```
 error: unexpected end of file
   --> src/main.rs:5:1
@@ -708,6 +776,7 @@ error: unexpected end of file
 **Principle**: Terminal inconsistency enables innovation. Break rules intentionally with purpose.
 
 **When to Break Conventions**:
+
 - Clear usability improvement
 - Document the deviation
 - Provide escape hatches
@@ -721,11 +790,13 @@ error: unexpected end of file
 ### Terminology
 
 **Arguments** (Positional Parameters):
+
 - Order matters
 - No dashes
 - Example: `cp source dest`
 
 **Flags** (Named Parameters):
+
 - Order independent
 - Start with `-` or `--`
 - May have values
@@ -736,11 +807,13 @@ error: unexpected end of file
 ### Design Decision: Args vs Flags
 
 **Use Positional Args When**:
+
 - One or two required parameters
 - Order is obvious
 - Examples: `cat file.txt`, `cd /path`, `rm file1 file2`
 
 **Use Flags When**:
+
 - Optional parameters
 - Many parameters
 - Order shouldn't matter
@@ -750,6 +823,7 @@ error: unexpected end of file
 **Prefer flags over args** for anything complex. They're more discoverable and extensible.
 
 **Example from git**: Heavily flag-based for flexibility
+
 ```bash
 git log --oneline --graph --all --decorate
 # Order doesn't matter
@@ -760,27 +834,28 @@ git log --all --oneline --decorate --graph
 
 Follow these conventions for consistency:
 
-| Flag | Meaning | Example Usage |
-|------|---------|---------------|
-| `-h`, `--help` | Show help (only) | `tool --help` |
-| `--version` | Show version (only) | `tool --version` |
-| `-v`, `--verbose` | More output | `tool -v` |
-| `-q`, `--quiet` | Less output | `tool -q` |
-| `-f`, `--force` | Skip confirmations | `rm -f file` |
-| `-r`, `--recursive` | Recurse directories | `rm -r dir` |
-| `-n`, `--dry-run` | Preview without executing | `git clean -n` |
-| `-a`, `--all` | Include all items | `git add -a` |
-| `-o`, `--output FILE` | Output file | `gcc -o program` |
-| `-i`, `--interactive` | Prompt for decisions | `rm -i file` |
-| `--no-input` | No interactive prompts | `tool --no-input` |
-| `-d`, `--debug` | Debug output | `tool -d` |
-| `--json` | JSON output | `tool --json` |
+| Flag                  | Meaning                   | Example Usage     |
+| --------------------- | ------------------------- | ----------------- |
+| `-h`, `--help`        | Show help (only)          | `tool --help`     |
+| `--version`           | Show version (only)       | `tool --version`  |
+| `-v`, `--verbose`     | More output               | `tool -v`         |
+| `-q`, `--quiet`       | Less output               | `tool -q`         |
+| `-f`, `--force`       | Skip confirmations        | `rm -f file`      |
+| `-r`, `--recursive`   | Recurse directories       | `rm -r dir`       |
+| `-n`, `--dry-run`     | Preview without executing | `git clean -n`    |
+| `-a`, `--all`         | Include all items         | `git add -a`      |
+| `-o`, `--output FILE` | Output file               | `gcc -o program`  |
+| `-i`, `--interactive` | Prompt for decisions      | `rm -i file`      |
+| `--no-input`          | No interactive prompts    | `tool --no-input` |
+| `-d`, `--debug`       | Debug output              | `tool -d`         |
+| `--json`              | JSON output               | `tool --json`     |
 
 **Don't Repurpose These**: Users have muscle memory for these flags.
 
 ### POSIX vs GNU Style
 
 **POSIX Style**:
+
 ```bash
 tool -a -b -c         # Short flags
 tool -abc             # Bundled: same as above
@@ -788,6 +863,7 @@ tool -o file          # Flag with value (space separated)
 ```
 
 **GNU Style**:
+
 ```bash
 tool --long-flag      # Long flags
 tool --output=file    # Equals-separated value
@@ -796,12 +872,14 @@ tool -a --long -b     # Mixed short and long
 ```
 
 **Modern Best Practice**: Support both
+
 - Short flags for common options
 - Long flags for all options
 - Allow bundling short flags (`-la` for `-l -a`)
 - Support both `=` and space for values
 
 **Example from git**:
+
 ```bash
 git commit -m "msg"           # POSIX short
 git commit --message="msg"    # GNU long with =
@@ -813,17 +891,20 @@ git commit --message "msg"    # GNU long with space
 **Three Levels of Danger**:
 
 **1. Low (Reversible)**:
+
 - Delete a single file
 - No confirmation needed (or -i flag)
 - Example: `rm file.txt` (can restore from trash)
 
 **2. Medium (Significant Impact)**:
+
 - Delete directory, remote changes
 - Interactive mode: Prompt for y/n
 - Non-interactive: Require --force
 - Example: `rm -r dir` (should prompt or need -f)
 
 **3. High (Destructive/Widespread)**:
+
 - Delete entire application, mass operations
 - Require typing something non-trivial
 - Example: Heroku's pattern:
@@ -839,6 +920,7 @@ Destroying myapp... done
 ```
 
 **For Scripts**: Always provide `--force` or `--confirm=VALUE` to bypass prompts
+
 ```bash
 tool --force                    # Bypass all confirmations
 tool --confirm="dangerous"      # Confirm with specific value
@@ -849,6 +931,7 @@ tool --confirm="dangerous"      # Confirm with specific value
 **Principle**: Users shouldn't need to remember flag order.
 
 **Support All These**:
+
 ```bash
 tool subcommand --flag value arg
 tool --flag value subcommand arg
@@ -856,12 +939,14 @@ tool --flag value arg subcommand
 ```
 
 **Example from git** (all equivalent):
+
 ```bash
 git --no-pager log --oneline
 git log --oneline --no-pager
 ```
 
 **Example from docker** (noun-verb pattern):
+
 ```bash
 docker container rm --force nginx
 docker container rm nginx --force
@@ -870,11 +955,13 @@ docker container rm nginx --force
 ### No Secrets in Flags
 
 **Never**:
+
 ```bash
 tool --password secret123    # Visible in ps, shell history
 ```
 
 **Instead**:
+
 ```bash
 # Option 1: Prompt interactively
 tool --prompt-password
@@ -898,6 +985,7 @@ PASSWORD=secret123 tool
 ### Help Display Requirements
 
 **Minimal Help** (`-h` or no arguments):
+
 ```
 USAGE:
     tool [OPTIONS] <FILE>
@@ -917,6 +1005,7 @@ For more information, run: tool --help
 ```
 
 **Full Help** (`--help`):
+
 ```
 tool 1.2.3
 
@@ -968,6 +1057,7 @@ https://github.com/user/tool/issues
 **Why**: Users learn faster from examples than from parameter descriptions.
 
 **Learning from git**:
+
 ```
 $ git help commit
 NAME
@@ -986,6 +1076,7 @@ EXAMPLES
     Commit with a detailed message
         $ git commit -m "Initial commit" -m "More details"
 ```
+
 Examples section shows common patterns.
 
 ### Dynamic Help Generation
@@ -993,11 +1084,13 @@ Examples section shows common patterns.
 Generate help from the same source as argument parsing:
 
 **Benefits**:
+
 - Always stays in sync
 - No duplicate maintenance
 - Consistent formatting
 
 **Concept** (language-agnostic):
+
 ```
 define_cli():
     add_flag("output", short="o", help="Output file")
@@ -1010,11 +1103,13 @@ Most argument parsing libraries do this automatically.
 ### Man Pages
 
 **When to Provide**:
+
 - Professional tools
 - System-wide installation
 - Complex functionality
 
 **Man Page Structure**:
+
 ```
 NAME
     tool - one-line description
@@ -1039,12 +1134,14 @@ BUGS
 ```
 
 **Generation Tools**:
+
 - `help2man`: Auto-generate from --help output
 - `ronn`: Markdown to man page
 - `scdoc`: Simple man page format
 - `asciidoc`: Comprehensive documentation system
 
 **Example from git**: Extensive man pages for every subcommand
+
 ```bash
 man git-commit
 man git-rebase
@@ -1057,6 +1154,7 @@ man git-rebase
 ### TTY Detection Pattern
 
 **Core Pattern**:
+
 ```
 if is_tty(stdout):
     format = HumanReadable(colors=True, progress=True)
@@ -1065,11 +1163,13 @@ else:
 ```
 
 **Implementation** (shown earlier, repeated for context):
+
 - Use `isatty()` system call
 - Check file descriptor 1 (stdout)
 - Make decision at startup
 
 **Override Flags**:
+
 ```bash
 tool --color=always    # Force colors even in pipe
 tool --color=never     # No colors even in TTY
@@ -1077,6 +1177,7 @@ tool --color=auto      # Default (detect TTY)
 ```
 
 **Example from ls**:
+
 ```bash
 ls --color=auto    # Default on many systems
 ```
@@ -1084,6 +1185,7 @@ ls --color=auto    # Default on many systems
 ### Color Implementation
 
 **Respect NO_COLOR Environment Variable**:
+
 ```
 if getenv("NO_COLOR"):
     disable_all_colors()
@@ -1097,19 +1199,20 @@ else:
 
 **16 ANSI Colors (Safest)**:
 
-| Code | Color | Code | Color |
-|------|-------|------|-------|
-| 30 | Black | 40 | Black background |
-| 31 | Red | 41 | Red background |
-| 32 | Green | 42 | Green background |
-| 33 | Yellow | 43 | Yellow background |
-| 34 | Blue | 44 | Blue background |
-| 35 | Magenta | 45 | Magenta background |
-| 36 | Cyan | 46 | Cyan background |
-| 37 | White | 47 | White background |
+| Code  | Color         | Code    | Color              |
+| ----- | ------------- | ------- | ------------------ |
+| 30    | Black         | 40      | Black background   |
+| 31    | Red           | 41      | Red background     |
+| 32    | Green         | 42      | Green background   |
+| 33    | Yellow        | 43      | Yellow background  |
+| 34    | Blue          | 44      | Blue background    |
+| 35    | Magenta       | 45      | Magenta background |
+| 36    | Cyan          | 46      | Cyan background    |
+| 37    | White         | 47      | White background   |
 | 90-97 | Bright colors | 100-107 | Bright backgrounds |
 
 **Usage**:
+
 ```
 ESC[31m red text ESC[0m     # Red foreground
 ESC[1;31m bold red ESC[0m   # Bold red
@@ -1117,6 +1220,7 @@ ESC[0m                      # Reset all attributes
 ```
 
 **Example Code (Rust)**:
+
 ```rust
 fn print_colored(text: &str, color: u8) {
     if atty::is(atty::Stream::Stdout) && std::env::var("NO_COLOR").is_err() {
@@ -1128,6 +1232,7 @@ fn print_colored(text: &str, color: u8) {
 ```
 
 **Learning from ripgrep**:
+
 - Automatic color detection
 - Respects NO_COLOR
 - Highlights matches in red by default
@@ -1138,6 +1243,7 @@ fn print_colored(text: &str, color: u8) {
 **Pattern**: Provide `--json` flag for structured output
 
 **Design**:
+
 ```bash
 # Human-readable (default for TTY)
 $ tool list
@@ -1152,11 +1258,13 @@ $ tool list --json
 ```
 
 **Guidelines**:
+
 - One JSON object per line for streaming (JSONL/ndjson)
 - Valid JSON even on errors
 - Include error information in JSON
 
 **Example (streaming)**:
+
 ```bash
 $ tool process --json
 {"type":"start","count":100}
@@ -1165,19 +1273,23 @@ $ tool process --json
 ```
 
 **Learning from cargo**:
+
 ```bash
 cargo build --message-format=json
 ```
+
 Outputs JSON for tooling integration.
 
 ### Progress Indicators
 
 **When to Show**:
+
 - TTY output only
 - Long-running operations (>1 second)
 - User needs feedback
 
 **When to Hide**:
+
 - Piped output
 - `--quiet` flag
 - CI/CD environments (use `CI` env var)
@@ -1185,6 +1297,7 @@ Outputs JSON for tooling integration.
 **Types**:
 
 **Spinner** (indeterminate):
+
 ```
 ⠋ Processing...
 ⠙ Processing...
@@ -1192,11 +1305,13 @@ Outputs JSON for tooling integration.
 ```
 
 **Progress Bar** (determinate):
+
 ```
 [=========>          ] 45% (450/1000)
 ```
 
 **Example Code (Concept)**:
+
 ```
 if is_tty(stderr) and not quiet_mode:
     progress = ProgressBar(total=100)
@@ -1206,6 +1321,7 @@ if is_tty(stderr) and not quiet_mode:
 ```
 
 **Learning from cargo**:
+
 ```
     Updating crates.io index
   Downloaded 2 crates (50.3 KB) in 0.38s
@@ -1213,27 +1329,32 @@ if is_tty(stderr) and not quiet_mode:
    Compiling toml v0.5.11
     Finished dev [unoptimized + debuginfo] target(s) in 3.42s
 ```
+
 Clear progress with meaningful stages.
 
 ### Pager Integration
 
 **When to Use Pager**:
+
 - Output longer than terminal height
 - User might want to scroll/search
 - Examples: git log, man, --help output
 
 **How to Detect**:
+
 ```
 if is_tty(stdout) and output_lines > terminal_height:
     pipe_to_pager()
 ```
 
 **Respect PAGER Environment Variable**:
+
 ```
 pager = getenv("PAGER") or "less"
 ```
 
 **Common Pager Options for less**:
+
 ```
 LESS="-FIRX"
   F: Quit if output fits on screen
@@ -1243,11 +1364,13 @@ LESS="-FIRX"
 ```
 
 **Example from git**:
+
 ```bash
 git log    # Automatically pages long output
 ```
 
 **Disable When Needed**:
+
 ```bash
 git --no-pager log    # Don't page
 ```
@@ -1259,6 +1382,7 @@ git --no-pager log    # Don't page
 ### User-Focused Error Messages
 
 **Bad**:
+
 ```
 Error: FileNotFoundError: [Errno 2] No such file or directory: 'config.toml'
   at read_config (tool.py:42)
@@ -1266,6 +1390,7 @@ Error: FileNotFoundError: [Errno 2] No such file or directory: 'config.toml'
 ```
 
 **Good**:
+
 ```
 Error: Could not find configuration file 'config.toml'
 
@@ -1274,11 +1399,13 @@ Or specify a different location: tool --config path/to/config.toml
 ```
 
 **Principles**:
+
 - Say what went wrong (not code-level details)
 - Suggest how to fix it
 - No stack traces unless --debug
 
 **Implementation Pattern**:
+
 ```
 catch FileNotFoundError as e:
     if debug_mode:
@@ -1293,6 +1420,7 @@ catch FileNotFoundError as e:
 **Write to stderr**: All errors and warnings
 
 **Structure**:
+
 ```
 ERROR: Critical failure, operation cannot complete
 WARNING: Something's wrong, but continuing
@@ -1301,6 +1429,7 @@ DEBUG: Detailed diagnostics (when --debug)
 ```
 
 **Color Coding** (if TTY):
+
 ```
 ERROR: red
 WARNING: yellow
@@ -1311,16 +1440,19 @@ DEBUG: gray/dim
 **End with Critical Info**: Terminal scrolls, last line is most visible
 
 **Example from rustc**:
+
 ```
 error: aborting due to 2 previous errors
 
 For more information about this error, try `rustc --explain E0425`.
 ```
+
 Summary and next steps at the end.
 
 ### Exit Codes
 
 **POSIX Conventions**:
+
 - `0`: Success
 - `1`: General error
 - `2`: Misuse (invalid arguments)
@@ -1329,6 +1461,7 @@ Summary and next steps at the end.
 - `128+N`: Killed by signal N (e.g., 130 for Ctrl-C)
 
 **Design Your Own** for specific errors:
+
 ```
 0: Success
 1: General error
@@ -1339,6 +1472,7 @@ Summary and next steps at the end.
 ```
 
 **Document them**:
+
 ```
 EXIT CODES:
     0   Success
@@ -1348,6 +1482,7 @@ EXIT CODES:
 ```
 
 **Why They Matter**: Scripts check exit codes
+
 ```bash
 if tool process file.txt; then
     echo "Success"
@@ -1363,12 +1498,14 @@ fi
 ### Confirmation Prompts
 
 **Simple Yes/No**:
+
 ```
 $ tool delete-all
 Really delete all data? [y/N]: _
 ```
 
 **Implementation Concept**:
+
 ```
 if is_tty(stdin) and not no_input_flag:
     response = prompt("Really delete all data? [y/N]: ")
@@ -1382,6 +1519,7 @@ else:
 ```
 
 **Type-to-Confirm Pattern** (for dangerous operations):
+
 ```
 $ heroku apps:destroy myapp
 Type the app name to confirm: _
@@ -1392,6 +1530,7 @@ Type the app name to confirm: _
 **Requirement**: Don't display password as user types
 
 **C Implementation**:
+
 ```c
 #include <termios.h>
 #include <unistd.h>
@@ -1412,12 +1551,14 @@ void enable_echo() {
 ```
 
 **Python**:
+
 ```python
 import getpass
 password = getpass.getpass("Password: ")
 ```
 
 **Rust**:
+
 ```rust
 use rpassword::read_password;
 println!("Password: ");
@@ -1429,6 +1570,7 @@ let password = read_password().unwrap();
 **Critical for CI/CD**: Never hang waiting for input
 
 **Implementation**:
+
 ```
 if no_input_flag:
     # Never prompt
@@ -1439,6 +1581,7 @@ if no_input_flag:
 ```
 
 **Example**:
+
 ```bash
 # Interactive (prompts for confirmation)
 tool deploy
@@ -1454,6 +1597,7 @@ tool deploy --no-input --force
 ### Configuration Sources and Precedence
 
 **Load Order (highest to lowest priority)**:
+
 1. Command-line flags
 2. Environment variables
 3. Local config file (./.toolrc)
@@ -1462,6 +1606,7 @@ tool deploy --no-input --force
 6. Built-in defaults
 
 **Implementation Pattern**:
+
 ```
 config = load_defaults()
 config.update(load_system_config())
@@ -1474,6 +1619,7 @@ config.update(load_flags())
 ### XDG Base Directory Specification
 
 **Standard Paths**:
+
 ```
 $XDG_CONFIG_HOME/tool/config    # User config (default: ~/.config/)
 $XDG_DATA_HOME/tool/data        # User data (default: ~/.local/share/)
@@ -1481,6 +1627,7 @@ $XDG_CACHE_HOME/tool/cache      # Cache (default: ~/.cache/)
 ```
 
 **Fallbacks**:
+
 ```
 config_dir = getenv("XDG_CONFIG_HOME") or join(getenv("HOME"), ".config")
 config_file = join(config_dir, "tool", "config.toml")
@@ -1489,6 +1636,7 @@ config_file = join(config_dir, "tool", "config.toml")
 **Why**: Reduces dotfile clutter in home directory
 
 **Example from git**:
+
 ```
 ~/.gitconfig               # Traditional
 ~/.config/git/config       # XDG (takes precedence)
@@ -1498,21 +1646,22 @@ config_file = join(config_dir, "tool", "config.toml")
 
 **Standard Variables**:
 
-| Variable | Purpose | Example Usage |
-|----------|---------|---------------|
-| NO_COLOR | Disable all colors | Check before colorizing |
-| EDITOR | User's preferred editor | `tool edit` opens this |
-| VISUAL | Visual editor (prefer over EDITOR) | Same as EDITOR |
-| PAGER | Paging program | Use for long output |
-| HOME | User's home directory | For config paths |
-| TMPDIR | Temporary directory | For temp files |
-| TERM | Terminal type | For escape sequences |
-| COLUMNS | Terminal width | For formatting |
-| LINES | Terminal height | For paging decisions |
-| CI | Running in CI environment | Disable progress bars |
-| DEBUG | Enable debug mode | Show verbose output |
+| Variable | Purpose                            | Example Usage           |
+| -------- | ---------------------------------- | ----------------------- |
+| NO_COLOR | Disable all colors                 | Check before colorizing |
+| EDITOR   | User's preferred editor            | `tool edit` opens this  |
+| VISUAL   | Visual editor (prefer over EDITOR) | Same as EDITOR          |
+| PAGER    | Paging program                     | Use for long output     |
+| HOME     | User's home directory              | For config paths        |
+| TMPDIR   | Temporary directory                | For temp files          |
+| TERM     | Terminal type                      | For escape sequences    |
+| COLUMNS  | Terminal width                     | For formatting          |
+| LINES    | Terminal height                    | For paging decisions    |
+| CI       | Running in CI environment          | Disable progress bars   |
+| DEBUG    | Enable debug mode                  | Show verbose output     |
 
 **Your Own Variables**:
+
 ```
 TOOL_CONFIG=/path/to/config
 TOOL_API_KEY=secret123
@@ -1530,23 +1679,28 @@ TOOL_LOG_LEVEL=debug
 ### Terminal Rules for TUIs
 
 **Rule 1**: 'q' quits the program
+
 - **Examples**: less, htop, man
 - **Exception**: Text editors where 'q' has other meaning
 
 **Rule 2**: Ctrl-D quits REPLs
+
 - **Examples**: python, irb, node, psql
 - **Mimics**: OS-level EOF behavior
 
 **Rule 3**: Ctrl-C should exit or interrupt
+
 - In raw mode, you receive Ctrl-C as character 3
 - Either exit immediately or cancel current operation
 - **Don't**: Ignore it completely
 
 **Rule 4**: ESC cancels or goes back
+
 - Close dialog, return to previous screen
 - **Not**: As primary input (conflicts with escape sequences)
 
 **Rule 5**: Ctrl-L redraws screen
+
 - Useful when terminal gets corrupted
 - **Implementation**: Resend entire screen
 
@@ -1554,19 +1708,19 @@ TOOL_LOG_LEVEL=debug
 
 Users expect these to work in line editors:
 
-| Key | Function | Origin |
-|-----|----------|--------|
-| Ctrl-A | Start of line | Emacs |
-| Ctrl-E | End of line | Emacs |
-| Ctrl-B | Back one character | Emacs |
-| Ctrl-F | Forward one character | Emacs |
-| Ctrl-P | Previous line/history | Emacs |
-| Ctrl-N | Next line/history | Emacs |
-| Ctrl-K | Kill to end of line | Emacs |
-| Ctrl-U | Kill entire line | UNIX |
-| Ctrl-W | Delete word backward | UNIX |
-| Ctrl-D | Delete character forward (or EOF) | UNIX |
-| Ctrl-H | Delete character backward | UNIX |
+| Key    | Function                          | Origin |
+| ------ | --------------------------------- | ------ |
+| Ctrl-A | Start of line                     | Emacs  |
+| Ctrl-E | End of line                       | Emacs  |
+| Ctrl-B | Back one character                | Emacs  |
+| Ctrl-F | Forward one character             | Emacs  |
+| Ctrl-P | Previous line/history             | Emacs  |
+| Ctrl-N | Next line/history                 | Emacs  |
+| Ctrl-K | Kill to end of line               | Emacs  |
+| Ctrl-U | Kill entire line                  | UNIX   |
+| Ctrl-W | Delete word backward              | UNIX   |
+| Ctrl-D | Delete character forward (or EOF) | UNIX   |
+| Ctrl-H | Delete character backward         | UNIX   |
 
 **When to Implement**: Any time you have line editing (command input, search box)
 
@@ -1577,17 +1731,20 @@ Users expect these to work in line editors:
 **Recommendation**: Stick to 16 ANSI base colors
 
 **Why**:
+
 - Works on all terminals
 - Respects user's color scheme
 - Avoids unreadable combinations
 
 **Bad**:
+
 ```
 # Hardcoded RGB colors
 \x1b[38;2;255;100;50m  # May be unreadable on some backgrounds
 ```
 
 **Good**:
+
 ```
 # Base 16 ANSI colors
 \x1b[31m    # Red (user's terminal defines exact shade)
@@ -1605,6 +1762,7 @@ Users expect these to work in line editors:
 **Key Concepts**:
 
 **Modes as State Machine**:
+
 ```
 Normal Mode → (i) → Insert Mode
            ↓ (v)           ↑ (ESC)
@@ -1614,17 +1772,20 @@ Normal Mode → (i) → Insert Mode
 ```
 
 **Separation of Concerns**:
+
 - **Normal mode**: Navigation and commands
 - **Insert mode**: Text input
 - **Visual mode**: Selection
 - **Command mode**: Ex commands
 
 **Why It Works**:
+
 - Clear mental model
 - Composable commands (d3w = delete 3 words)
 - Efficient keyboard-only navigation
 
 **Lessons for TUI Developers**:
+
 - State machines clarify complex interactions
 - Modal interfaces reduce key combination needs
 - Visual feedback for mode (status line)
@@ -1634,6 +1795,7 @@ Normal Mode → (i) → Insert Mode
 **Key Concepts**:
 
 **Server Persistence**:
+
 ```
 Terminal 1 → tmux client →
                           → tmux server → sessions → windows → panes
@@ -1641,16 +1803,19 @@ Terminal 2 → tmux client →
 ```
 
 **Benefits**:
+
 - Sessions survive terminal disconnect
 - Multiple clients can attach
 - Server manages all state
 
 **Command Prefix (Ctrl-B)**:
+
 - Escapes command mode
 - Avoid conflicting with application keys
 - User customizable
 
 **Lessons for TUI Developers**:
+
 - Client-server separation enables persistence
 - Prefix keys solve key binding conflicts
 - Named sessions provide organization
@@ -1660,21 +1825,25 @@ Terminal 2 → tmux client →
 **Key Concepts**:
 
 **Lazy Loading**:
+
 - Don't load entire file into memory
 - Seek to positions on demand
 - Efficient for huge files
 
 **Search and Navigation**:
+
 - `/` to search forward
 - `?` to search backward
 - `n` / `N` for next/previous match
 - `g` / `G` for start/end
 
 **Stateless Display**:
+
 - Each redraw is independent
 - No complex state tracking
 
 **Lessons for TUI Developers**:
+
 - Lazy loading enables handling large data
 - Consistent search pattern across tools
 - Simple state is more robust
@@ -1684,6 +1853,7 @@ Terminal 2 → tmux client →
 **Key Concepts**:
 
 **Event Loop with Timeout**:
+
 ```
 loop:
     timeout_event = poll_input(timeout=1000ms)
@@ -1694,16 +1864,19 @@ loop:
 ```
 
 **Efficient Redrawing**:
+
 - Only update changed regions
 - Diff previous state
 - Minimize escape sequences
 
 **Interactive Filtering**:
+
 - Type to filter live
 - Immediate visual feedback
 - No enter key needed
 
 **Lessons for TUI Developers**:
+
 - Periodic refreshes for real-time data
 - Incremental search is discoverable
 - Visual feedback for all actions
@@ -1713,16 +1886,19 @@ loop:
 **Key Concepts**:
 
 **Layout Definitions**:
+
 - Declarative layout files
 - Nested panes and tabs
 - Serializable state
 
 **Plugin Architecture (WASM)**:
+
 - Sandboxed extensions
 - Language-agnostic
 - Safe execution
 
 **Lessons for TUI Developers**:
+
 - Declarative layouts easier than imperative
 - Serialization enables session saving
 - Plugin systems enable extensibility
@@ -1734,11 +1910,13 @@ loop:
 ### Switching to Raw Mode
 
 **What Raw Mode Does**:
+
 - Disable line buffering (character-by-character input)
 - Disable echo (characters not printed automatically)
 - Disable special character processing (Ctrl-C doesn't send SIGINT)
 
 **C Implementation**:
+
 ```c
 #include <termios.h>
 #include <unistd.h>
@@ -1763,6 +1941,7 @@ void disable_raw_mode() {
 ```
 
 **Rust Implementation**:
+
 ```rust
 use termios::{Termios, TCSAFLUSH, ECHO, ICANON, tcsetattr};
 
@@ -1779,6 +1958,7 @@ fn enable_raw_mode() -> std::io::Result<Termios> {
 ```
 
 **Python Implementation**:
+
 ```python
 import tty
 import sys
@@ -1792,6 +1972,7 @@ def enable_raw_mode():
 ### Event Loop Patterns
 
 **Blocking Event Loop** (simple):
+
 ```
 loop:
     key = read_key()      # Blocks until keypress
@@ -1800,6 +1981,7 @@ loop:
 ```
 
 **Non-Blocking with Timeout** (for real-time updates):
+
 ```
 loop:
     key = read_key_with_timeout(100ms)
@@ -1811,6 +1993,7 @@ loop:
 ```
 
 **Select-Based** (Unix):
+
 ```c
 #include <sys/select.h>
 
@@ -1836,6 +2019,7 @@ while (running) {
 ### Parsing Arrow Keys and Function Keys
 
 **Reading Escape Sequences**:
+
 ```
 read char:
     if char == ESC:
@@ -1849,6 +2033,7 @@ read char:
 ```
 
 **Common Sequences**:
+
 ```
 ESC[A  → Up
 ESC[B  → Down
@@ -1861,6 +2046,7 @@ ESC[6~ → Page Down
 ```
 
 **Example Implementation** (Concept):
+
 ```
 function read_key():
     c = read_char()
@@ -1884,6 +2070,7 @@ function read_key():
 ### Mouse Support
 
 **Enable Mouse Reporting**:
+
 ```
 # Button press and release
 printf "\x1b[?1000h"
@@ -1896,11 +2083,13 @@ printf "\x1b[?1006h"
 ```
 
 **Disable Mouse Reporting**:
+
 ```
 printf "\x1b[?1000l\x1b[?1002l\x1b[?1006l"
 ```
 
 **Parse Mouse Events**:
+
 ```
 SGR format: ESC[<button;col;row[M|m]
     M = press
@@ -1917,6 +2106,7 @@ button values:
 ### Handling Resize Events (SIGWINCH)
 
 **Signal Handler**:
+
 ```c
 #include <signal.h>
 #include <sys/ioctl.h>
@@ -1951,11 +2141,13 @@ int main() {
 ### Alternate Screen Buffer
 
 **What It Does**:
+
 - Saves current terminal content
 - Provides blank screen for your TUI
 - Restores previous content on exit
 
 **Enable**:
+
 ```
 printf "\x1b[?1049h"   # Switch to alternate screen
 printf "\x1b[2J"       # Clear screen
@@ -1963,19 +2155,23 @@ printf "\x1b[H"        # Move cursor to home
 ```
 
 **Disable**:
+
 ```
 printf "\x1b[?1049l"   # Switch back to main screen
 ```
 
 **When to Use**:
+
 - Full-screen TUIs (vim, less, htop)
 - User expects to return to previous terminal state
 
 **When Not to Use**:
+
 - Persistent output desired (build progress, test results)
 - User might want to scroll back
 
 **Learning from less**:
+
 - Uses alternate screen by default
 - `-X` flag disables it (leaves output on screen after quit)
 
@@ -1986,6 +2182,7 @@ printf "\x1b[?1049l"   # Switch back to main screen
 **Solution**: Build output in memory, write all at once
 
 **Implementation Concept**:
+
 ```
 # Bad (flickers)
 for row in screen:
@@ -2000,6 +2197,7 @@ print(output)
 ```
 
 **Advanced**: Diff-based rendering
+
 ```
 previous_screen = current_screen
 current_screen = build_new_screen()
@@ -2013,18 +2211,21 @@ apply_diff(diff)  # Only update changed cells
 **Minimize Escape Sequences**:
 
 **Bad** (many small writes):
+
 ```
 for each_change:
     printf "\x1b[%d;%dH%c"  # Move and write one char
 ```
 
 **Good** (batch adjacent changes):
+
 ```
 collect changes into runs:
     printf "\x1b[%d;%dH%s"  # Move once, write string
 ```
 
 **Relative vs Absolute Movement**:
+
 ```
 # Absolute (always works)
 ESC[5;10H   # Move to row 5, col 10
@@ -2037,6 +2238,7 @@ ESC[5C      # Move right 5 columns
 ### Layout Management
 
 **Fixed Layout**:
+
 ```
 ┌────────────────┬──────────┐
 │                │          │
@@ -2048,6 +2250,7 @@ ESC[5C      # Move right 5 columns
 ```
 
 **Responsive Layout** (adapt to terminal size):
+
 ```
 if width < 80:
     single_column_layout()
@@ -2059,6 +2262,7 @@ if height < 24:
 ```
 
 **Widget Tree**:
+
 ```
 Container(vertical)
 ├─ Header(height=1)
@@ -2069,6 +2273,7 @@ Container(vertical)
 ```
 
 **Calculate Sizes**:
+
 ```
 available_height = terminal_height - header - footer
 main_width = (available_width * 3) // 4
@@ -2084,6 +2289,7 @@ sidebar_width = available_width - main_width
 **Concept**: Only one widget receives keyboard input
 
 **Implementation**:
+
 ```
 class FocusManager:
     widgets = [widget1, widget2, widget3]
@@ -2097,6 +2303,7 @@ class FocusManager:
 ```
 
 **Visual Indication**:
+
 - Highlighted border
 - Different color
 - Cursor position
@@ -2108,6 +2315,7 @@ class FocusManager:
 **Pattern**: Overlay on top of main screen
 
 **Implementation**:
+
 ```
 render_main_screen()
 if dialog_open:
@@ -2118,6 +2326,7 @@ else:
 ```
 
 **Drawing Overlay**:
+
 ```
 # Save screen state
 saved_screen = current_screen
@@ -2134,6 +2343,7 @@ restore(saved_screen)
 ### Tables and Lists with Scrolling
 
 **Virtual Scrolling**:
+
 ```
 visible_rows = terminal_height - header - footer
 viewport_start = scroll_offset
@@ -2144,6 +2354,7 @@ for i in range(viewport_start, viewport_end):
 ```
 
 **Scrolling Logic**:
+
 ```
 if cursor > viewport_end:
     scroll_offset += (cursor - viewport_end)
@@ -2152,6 +2363,7 @@ elif cursor < viewport_start:
 ```
 
 **Learning from less**:
+
 - Smooth scrolling
 - Search highlights
 - Line numbers
@@ -2162,13 +2374,14 @@ elif cursor < viewport_start:
 
 ## Buffering Issues (Deep Dive)
 
-*(Expanded from earlier)*
+_(Expanded from earlier)_
 
 ### The 8KB Threshold
 
 **Why 8KB?**: Historical constant from libc (`BUFSIZ` typically 8192)
 
 **Problem Scenario**:
+
 ```bash
 tail -f /var/log/app.log | grep ERROR | your-tool
 # your-tool sees nothing until grep accumulates 8KB
@@ -2177,6 +2390,7 @@ tail -f /var/log/app.log | grep ERROR | your-tool
 ### Testing for Buffering Issues
 
 **Test Script**:
+
 ```bash
 #!/bin/bash
 # test-buffering.sh
@@ -2194,11 +2408,13 @@ done | your-tool
 ### Line-Buffered Flag Implementation
 
 **Add flag to your tool**:
+
 ```
 --line-buffered    Flush output after each line
 ```
 
 **C Implementation**:
+
 ```c
 if (line_buffered) {
     setvbuf(stdout, NULL, _IOLBF, 0);
@@ -2218,6 +2434,7 @@ if (line_buffered || isatty(STDOUT_FILENO)) {
 ### Detecting Color Support
 
 **Check Multiple Factors**:
+
 ```
 function should_use_color():
     # Check NO_COLOR (user preference)
@@ -2246,6 +2463,7 @@ function should_use_color():
 ### 16 Color vs 256 Color vs RGB
 
 **16 Colors** (safest):
+
 ```
 ESC[31m    # Red
 ESC[32m    # Green
@@ -2254,6 +2472,7 @@ ESC[34m    # Blue
 ```
 
 **256 Colors**:
+
 ```
 ESC[38;5;COLOR_NUMBERm    # Foreground
 ESC[48;5;COLOR_NUMBERm    # Background
@@ -2261,12 +2480,14 @@ ESC[48;5;COLOR_NUMBERm    # Background
 ```
 
 **RGB (TrueColor)**:
+
 ```
 ESC[38;2;R;G;Bm    # Foreground
 ESC[48;2;R;G;Bm    # Background
 ```
 
 **Detection**:
+
 ```
 # Check for 256-color support
 if "256color" in getenv("TERM"):
@@ -2282,6 +2503,7 @@ if getenv("COLORTERM") in ["truecolor", "24bit"]:
 **Problem**: Hardcoded colors invisible on some backgrounds
 
 **Solution**: Use semantic colors
+
 ```
 # Bad
 \x1b[38;2;30;30;30m    # Dark gray (invisible on dark terminal)
@@ -2299,11 +2521,13 @@ if getenv("COLORTERM") in ["truecolor", "24bit"]:
 ### SIGINT (Ctrl-C) Implementation
 
 **Requirements**:
+
 - Exit gracefully
 - Clean up resources
 - Don't leave terminal in broken state
 
 **C Implementation**:
+
 ```c
 #include <signal.h>
 
@@ -2327,6 +2551,7 @@ int main() {
 ```
 
 **Rust Implementation**:
+
 ```rust
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -2348,6 +2573,7 @@ while !interrupted.load(Ordering::SeqCst) {
 **Pattern**: First Ctrl-C = graceful, second Ctrl-C = immediate
 
 **Implementation**:
+
 ```
 sigint_count = 0
 
@@ -2363,6 +2589,7 @@ on_sigint:
 ```
 
 **Learning from Docker Compose**:
+
 ```
 $ docker-compose down
 Stopping container1 ...
@@ -2375,6 +2602,7 @@ Stopping container1 ...
 **Requirement**: Redraw when terminal size changes
 
 **Implementation**:
+
 ```c
 #include <signal.h>
 #include <sys/ioctl.h>
@@ -2417,6 +2645,7 @@ int main() {
 **Solution**: Save state on entry, restore on exit
 
 **Implementation**:
+
 ```c
 #include <termios.h>
 
@@ -2458,6 +2687,7 @@ void cleanup_and_exit(int code) {
 ```
 
 **Register Cleanup**:
+
 ```c
 #include <stdlib.h>
 
@@ -2478,12 +2708,14 @@ int main() {
 **Principle**: Minimize cleanup requirements
 
 **Implementation**:
+
 - Don't require cleanup on exit
 - Use atomic operations
 - Write state to disk continuously
 - Can restart from any point
 
 **Example**: Transaction logs
+
 ```
 Instead of:
     load_state()
@@ -2506,11 +2738,13 @@ Use:
 **Example**: `日本語` is 9 bytes but 3 characters
 
 **Solutions**:
+
 - Use UTF-8 aware string length functions
 - Be careful with substring operations
 - Terminal width != byte count != character count
 
 **Width Calculation**:
+
 ```
 # ASCII 'A': 1 byte, 1 character, 1 cell width
 # 日: 3 bytes, 1 character, 2 cell width (CJK)
@@ -2518,13 +2752,14 @@ Use:
 ```
 
 **Libraries**:
+
 - C: libunistring, ICU
 - Rust: unicode-width crate
 - Python: wcwidth library
 
 ### Distinguishing ESC from Escape Sequences
 
-*(Covered earlier, reiterated for pitfalls)*
+_(Covered earlier, reiterated for pitfalls)_
 
 **Problem**: `ESC` key vs `ESC[A` (up arrow)
 
@@ -2541,6 +2776,7 @@ Use:
 ### Interleaved Output from Threads
 
 **Problem**:
+
 ```
 Thread 1: print("Processing item 1")
 Thread 2: print("Processing item 2")
@@ -2549,6 +2785,7 @@ Output:   ProceProcessing item 2
 ```
 
 **Solution 1**: Mutex around output
+
 ```rust
 use std::sync::Mutex;
 use std::io::{self, Write};
@@ -2564,6 +2801,7 @@ fn print_safe(msg: &str) {
 ```
 
 **Solution 2**: Channel to single writer thread
+
 ```
 Worker threads → Channel → Writer thread → stdout
 ```
@@ -2573,6 +2811,7 @@ Worker threads → Channel → Writer thread → stdout
 **Problem**: Log messages corrupt progress bar
 
 **Solution**: Clear line, print message, redraw progress
+
 ```
 function log_message(msg):
     clear_current_line()
@@ -2589,12 +2828,14 @@ function log_message(msg):
 ### Windows Console vs Unix Terminal
 
 **Differences**:
+
 - Windows traditionally didn't support ANSI escape codes
 - Different line endings (CRLF vs LF)
 - Different path separators (\ vs /)
 - Different PTY implementation
 
 **Windows 10+ Improvements**:
+
 - ANSI escape codes now supported
 - Must enable with virtual terminal mode:
 
@@ -2611,6 +2852,7 @@ void enable_ansi_on_windows() {
 ```
 
 **Cross-Platform Abstraction**:
+
 ```rust
 #[cfg(windows)]
 fn setup_terminal() {
@@ -2632,6 +2874,7 @@ fn setup_terminal() {
 **Problem**: Writing to terminal is slow (syscall overhead)
 
 **Bad**:
+
 ```rust
 for i in 0..1000 {
     println!("{}", i);  // 1000 write syscalls
@@ -2639,6 +2882,7 @@ for i in 0..1000 {
 ```
 
 **Good**:
+
 ```rust
 let mut buf = String::new();
 for i in 0..1000 {
@@ -2650,12 +2894,14 @@ print!("{}", buf);  // 1 write syscall
 ### Inefficient Escape Sequences
 
 **Bad**: Redundant sequences
+
 ```
 ESC[31m R ESC[0m ESC[31m E ESC[0m ESC[31m D ESC[0m
 # 15 bytes * 3 = 45 bytes
 ```
 
 **Good**: Batch coloring
+
 ```
 ESC[31m RED ESC[0m
 # 15 bytes total
@@ -2666,6 +2912,7 @@ ESC[31m RED ESC[0m
 **Problem**: Redrawing 60 FPS when user only types 1 char/sec
 
 **Solution**: Event-driven updates
+
 ```
 on_input:
     update_state()
@@ -2678,6 +2925,7 @@ on_timer:
 ```
 
 **Rate Limiting**:
+
 ```
 last_draw = now()
 
@@ -2702,6 +2950,7 @@ on_need_redraw:
 **1. PTY (Pseudo-Terminal)**:
 
 **Python with pexpect**:
+
 ```python
 import pexpect
 
@@ -2714,6 +2963,7 @@ def test_interactive_prompt():
 ```
 
 **Rust with pty crate**:
+
 ```rust
 #[test]
 fn test_tty_detection() {
@@ -2728,6 +2978,7 @@ fn test_tty_detection() {
 ```
 
 **2. Mock isatty Function**:
+
 ```c
 // In tests
 #define isatty(fd) mock_isatty(fd)
@@ -2743,6 +2994,7 @@ int mock_isatty(int fd) {
 **Tool**: insta (Rust), jest (JavaScript), pytest (Python)
 
 **Example (Rust with insta)**:
+
 ```rust
 #[test]
 fn test_help_output() {
@@ -2758,6 +3010,7 @@ fn test_help_output() {
 ### Testing Interactive Prompts
 
 **Using expect (traditional Unix tool)**:
+
 ```tcl
 spawn your-tool
 expect "Enter password:"
@@ -2766,6 +3019,7 @@ expect "Login successful"
 ```
 
 **CI/CD Testing**:
+
 ```bash
 # Ensure --no-input works
 your-tool --no-input --config test.conf
@@ -2784,6 +3038,7 @@ fi
 ### Terminal Recording
 
 **asciinema**: Record and share terminal sessions
+
 ```bash
 # Record
 asciinema rec demo.cast
@@ -2796,6 +3051,7 @@ asciinema upload demo.cast
 ```
 
 **VHS** (by Charm): Script terminal recordings
+
 ```bash
 # demo.tape
 Type "your-tool --help"
@@ -2807,6 +3063,7 @@ Screenshot demo.png
 ### Escape Sequence Debugging
 
 **Technique**: Pipe output to `cat -v`
+
 ```bash
 your-tool | cat -v
 # Shows: Hello ^[[31mworld^[[0m
@@ -2814,11 +3071,13 @@ your-tool | cat -v
 ```
 
 **Technique**: Use `hexdump`
+
 ```bash
 your-tool | hexdump -C
 ```
 
 **Technique**: Enable terminal debugging
+
 ```bash
 # iTerm2: Session > Log > Start Logging
 # Captures all raw input/output
@@ -2827,6 +3086,7 @@ your-tool | hexdump -C
 ### expect for Testing
 
 **Install**:
+
 ```bash
 # macOS
 brew install expect
@@ -2836,6 +3096,7 @@ apt-get install expect
 ```
 
 **Example Test**:
+
 ```tcl
 #!/usr/bin/expect
 
@@ -2861,17 +3122,20 @@ expect {
 ### Single Binary Philosophy
 
 **Benefits**:
+
 - Easy installation (just download)
 - No dependency hell
 - No version conflicts
 - Works in containers
 
 **Implementation**:
+
 - Statically link dependencies (Rust, Go do this by default)
 - Embed assets at compile time
 - Cross-compile for multiple platforms
 
 **Rust Example**:
+
 ```toml
 # Cargo.toml
 [profile.release]
@@ -2884,6 +3148,7 @@ panic = 'abort'
 ### Cross-Compilation
 
 **Rust**:
+
 ```bash
 # Install target
 rustup target add x86_64-unknown-linux-musl
@@ -2893,6 +3158,7 @@ cargo build --release --target x86_64-unknown-linux-musl
 ```
 
 **Go**:
+
 ```bash
 GOOS=linux GOARCH=amd64 go build
 GOOS=darwin GOARCH=arm64 go build
@@ -2902,12 +3168,14 @@ GOOS=windows GOARCH=amd64 go build
 ### Size Optimization
 
 **Techniques**:
+
 - Strip debug symbols
 - Enable LTO (Link-Time Optimization)
 - Use release mode
 - Compress with UPX (controversial)
 
 **Rust**:
+
 ```toml
 [profile.release]
 strip = true
@@ -2922,6 +3190,7 @@ opt-level = "z"  # Optimize for size
 ### Man Page Structure
 
 **Sections**:
+
 ```
 NAME
     tool - one-line description
@@ -2969,6 +3238,7 @@ AUTHOR
 ### Learning from git's Help System
 
 **Hierarchical Help**:
+
 ```bash
 git                  # Lists common commands
 git help             # Same as above
@@ -2978,6 +3248,7 @@ git commit -h        # Quick reference
 ```
 
 **Porcelain vs Plumbing**:
+
 - **Porcelain**: User-facing commands (commit, push, pull)
 - **Plumbing**: Low-level tools (hash-object, update-index)
 
@@ -2992,6 +3263,7 @@ git commit -h        # Quick reference
 ### Project Layout
 
 **Rust**:
+
 ```
 my-tool/
 ├── Cargo.toml
@@ -3010,6 +3282,7 @@ my-tool/
 ```
 
 **Python**:
+
 ```
 my-tool/
 ├── pyproject.toml
@@ -3030,6 +3303,7 @@ my-tool/
 ### Entry Point Design
 
 **Concept**:
+
 ```
 main():
     parse_arguments()
@@ -3041,6 +3315,7 @@ main():
 ```
 
 **Implementation Pattern**:
+
 ```rust
 fn main() {
     let result = run();
@@ -3078,11 +3353,13 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 **End of Options**: `--` stops parsing, rest are arguments
 
 **POSIX Conventions**:
+
 - Short options: single dash, single letter
 - Option arguments: separated by space or directly attached
 - No permutation (options must come before arguments)
 
 **GNU Conventions** (extensions):
+
 - Long options: double dash, full word
 - Option arguments: `=` or space
 - Permutation (options can be anywhere)
@@ -3091,6 +3368,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 ### Subcommand Dispatch Pattern
 
 **Learning from git**:
+
 ```
 git <global-options> <command> <command-options>
 
@@ -3100,6 +3378,7 @@ git -C /path/to/repo status
 ```
 
 **Implementation Pattern**:
+
 ```
 parse phase 1: global options
 identify subcommand
@@ -3128,6 +3407,7 @@ docker image pull
 ```
 
 **Benefits**:
+
 - Clear grouping
 - Consistent interface
 - Discoverability
@@ -3139,12 +3419,14 @@ docker image pull
 ### Spinner Implementation (Core Algorithm)
 
 **Frames**:
+
 ```
 frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
 # Or: ["-", "\\", "|", "/"]
 ```
 
 **Implementation**:
+
 ```
 frame_index = 0
 
@@ -3159,6 +3441,7 @@ print("✓ Done!")
 ```
 
 **ANSI Codes**:
+
 ```
 \r         # Carriage return (go to start of line)
 ESC[K      # Clear from cursor to end of line
@@ -3169,11 +3452,13 @@ ESC[?25h   # Show cursor
 ### Progress Bar Implementation (Core Algorithm)
 
 **Concept**:
+
 ```
 [=========>          ] 45% (450/1000) 2.5MB/s ETA 5s
 ```
 
 **Implementation**:
+
 ```
 width = 20
 filled = int(width * (done / total))
@@ -3186,6 +3471,7 @@ print(f"\r{text}", end="", flush=True)
 ```
 
 **With Rate and ETA**:
+
 ```
 elapsed = time_now - start_time
 rate = done / elapsed
@@ -3198,6 +3484,7 @@ text += f" {format_bytes(rate)}/s ETA {format_duration(eta)}"
 ### Learning from cargo's Progress Patterns
 
 **Stages**:
+
 ```
     Updating crates.io index
    Compiling serde v1.0.152 (1/10)
@@ -3206,6 +3493,7 @@ text += f" {format_bytes(rate)}/s ETA {format_duration(eta)}"
 ```
 
 **Patterns**:
+
 - Right-aligned verbs (uniform column)
 - Package names and versions
 - Progress count (2/10)
@@ -3218,6 +3506,7 @@ text += f" {format_bytes(rate)}/s ETA {format_duration(eta)}"
 ### Loading Order Implementation
 
 **Pattern** (highest to lowest priority):
+
 ```
 1. Command-line flags (--config, --output)
 2. Environment variables (TOOL_OUTPUT, TOOL_CONFIG)
@@ -3228,6 +3517,7 @@ text += f" {format_bytes(rate)}/s ETA {format_duration(eta)}"
 ```
 
 **Implementation**:
+
 ```rust
 fn load_config() -> Config {
     let mut config = Config::defaults();
@@ -3295,11 +3585,13 @@ fn get_cache_dir() -> PathBuf {
 ### Confirmation Prompt Pattern
 
 **Yes/No**:
+
 ```
 Really delete all files? [y/N]:
 ```
 
 **Implementation**:
+
 ```
 if is_tty(stdin):
     print("Really delete all files? [y/N]: ", flush=True)
@@ -3317,6 +3609,7 @@ else:
 ### Menu Selection (Arrow Key Navigation)
 
 **Pattern**:
+
 ```
 Select an option:
 > Option 1
@@ -3327,6 +3620,7 @@ Select an option:
 ```
 
 **Implementation Concept**:
+
 ```
 selected = 0
 options = ["Option 1", "Option 2", "Option 3"]
@@ -3354,6 +3648,7 @@ disable_raw_mode()
 ### Learning from git's Interactive Rebase
 
 **Pattern**: Full-screen editor for multi-item selection
+
 ```
 pick a1b2c3d First commit
 pick d4e5f6g Second commit
@@ -3368,6 +3663,7 @@ pick h7i8j9k Third commit
 ```
 
 **Design Lessons**:
+
 - Use $EDITOR for complex interactions
 - Provide help comments inline
 - Clear, mnemonic commands
@@ -3381,6 +3677,7 @@ pick h7i8j9k Third commit
 **Pattern**: Operations that are fully complete or fully not done
 
 **Example**: File writes
+
 ```
 # Bad (non-atomic)
 open(file, 'w')
@@ -3398,6 +3695,7 @@ rename(file + ".tmp", file)  # Atomic operation
 **Pattern**: Save progress, allow restart
 
 **Example**: Download with resume
+
 ```
 State file: .download_state.json
 {
@@ -3425,6 +3723,7 @@ On completion:
 **Pattern**: Write-ahead log (WAL)
 
 **Example**:
+
 ```
 Before operation:
     append to log: "DELETE file.txt"
@@ -3448,6 +3747,7 @@ On crash recovery:
 ### POSIX getopt
 
 **Format**:
+
 ```c
 int getopt(int argc, char *argv[], const char *optstring);
 
@@ -3460,6 +3760,7 @@ Example optstring: "ab:c::"
 ### GNU getopt_long
 
 **Format**:
+
 ```c
 struct option {
     const char *name;    // Long name
@@ -3475,6 +3776,7 @@ int getopt_long(int argc, char *argv[],
 ```
 
 **Example**:
+
 ```c
 struct option long_options[] = {
     {"help",    no_argument,       0, 'h'},
@@ -3499,6 +3801,7 @@ while ((c = getopt_long(argc, argv, "hvo:", long_options, NULL)) != -1) {
 **Implementation**: Most libraries handle automatically
 
 **Limitation**: Can't bundle options with arguments
+
 ```bash
 # OK
 ls -la
@@ -3512,6 +3815,7 @@ tool -abc file    # Is 'c' a flag or does 'b' take 'c' as argument?
 **Rule**: `--` stops option parsing
 
 **Usage**:
+
 ```bash
 # Pass filename that starts with dash
 tool -- -weird-filename.txt
@@ -3521,6 +3825,7 @@ tool --verbose -- subcommand --its-own-flag
 ```
 
 **Implementation**:
+
 ```
 for arg in args:
     if arg == "--":
@@ -3542,6 +3847,7 @@ for arg in args:
 **Purpose**: Database of terminal capabilities
 
 **Structure**:
+
 ```
 Terminal Type (from $TERM)
   ├─ Boolean Capabilities (am, xenl, etc.)
@@ -3550,6 +3856,7 @@ Terminal Type (from $TERM)
 ```
 
 **Querying Terminfo**:
+
 ```bash
 # Show all capabilities for current terminal
 infocmp
@@ -3561,6 +3868,7 @@ tput cols        # Output terminal width
 ```
 
 **Using in Code** (C):
+
 ```c
 #include <term.h>
 #include <curses.h>
@@ -3577,6 +3885,7 @@ printf("%sHello%s", bold, tparm(tigetstr("sgr0")));  // Bold text
 ### Capability Detection Patterns
 
 **Pattern 1**: Try and fallback
+
 ```
 try:
     output(complex_escape_sequence)
@@ -3588,6 +3897,7 @@ timeout:
 ```
 
 **Pattern 2**: Check $TERM
+
 ```
 if "256color" in $TERM:
     use_256_colors = true
@@ -3597,6 +3907,7 @@ if $TERM in ["dumb", "unknown"]:
 ```
 
 **Pattern 3**: Check $COLORTERM
+
 ```
 if $COLORTERM in ["truecolor", "24bit"]:
     use_rgb_colors = true
@@ -3608,35 +3919,36 @@ if $COLORTERM in ["truecolor", "24bit"]:
 
 ### Standard Variables
 
-| Variable | Purpose | How to Use |
-|----------|---------|------------|
-| NO_COLOR | Disable colors (user preference) | If set (any value), disable colors |
-| FORCE_COLOR | Force colors (override detection) | If set, enable colors even in pipes |
-| CLICOLOR | Enable colors (0=no, 1=yes) | BSD convention |
-| CLICOLOR_FORCE | Force colors (0=no, 1=yes) | BSD convention |
-| TERM | Terminal type identifier | "xterm-256color", "screen", "dumb" |
-| COLORTERM | Color capability | "truecolor", "24bit" for RGB |
-| COLUMNS | Terminal width | Number of columns |
-| LINES | Terminal height | Number of rows |
-| EDITOR | User's text editor | "vim", "nano", "code" |
-| VISUAL | Visual editor (preferred) | Same as EDITOR but for visual editors |
-| PAGER | Paging program | "less", "more" |
-| SHELL | User's shell | "/bin/bash", "/bin/zsh" |
-| HOME | User's home directory | "/home/username" |
-| USER | Current username | "alice" |
-| TMPDIR | Temporary directory | "/tmp" or "/var/tmp" |
-| PATH | Executable search paths | ":/usr/bin:/usr/local/bin:..." |
-| LANG | Locale | "en_US.UTF-8" |
-| LC_ALL | Locale override | Overrides all LC_* variables |
-| TZ | Timezone | "America/New_York" |
-| CI | Running in CI environment | "true" (GitHub Actions, GitLab CI) |
-| DEBUG | Enable debug output | "1" or "true" |
+| Variable       | Purpose                           | How to Use                            |
+| -------------- | --------------------------------- | ------------------------------------- |
+| NO_COLOR       | Disable colors (user preference)  | If set (any value), disable colors    |
+| FORCE_COLOR    | Force colors (override detection) | If set, enable colors even in pipes   |
+| CLICOLOR       | Enable colors (0=no, 1=yes)       | BSD convention                        |
+| CLICOLOR_FORCE | Force colors (0=no, 1=yes)        | BSD convention                        |
+| TERM           | Terminal type identifier          | "xterm-256color", "screen", "dumb"    |
+| COLORTERM      | Color capability                  | "truecolor", "24bit" for RGB          |
+| COLUMNS        | Terminal width                    | Number of columns                     |
+| LINES          | Terminal height                   | Number of rows                        |
+| EDITOR         | User's text editor                | "vim", "nano", "code"                 |
+| VISUAL         | Visual editor (preferred)         | Same as EDITOR but for visual editors |
+| PAGER          | Paging program                    | "less", "more"                        |
+| SHELL          | User's shell                      | "/bin/bash", "/bin/zsh"               |
+| HOME           | User's home directory             | "/home/username"                      |
+| USER           | Current username                  | "alice"                               |
+| TMPDIR         | Temporary directory               | "/tmp" or "/var/tmp"                  |
+| PATH           | Executable search paths           | ":/usr/bin:/usr/local/bin:..."        |
+| LANG           | Locale                            | "en_US.UTF-8"                         |
+| LC_ALL         | Locale override                   | Overrides all LC\_\* variables        |
+| TZ             | Timezone                          | "America/New_York"                    |
+| CI             | Running in CI environment         | "true" (GitHub Actions, GitLab CI)    |
+| DEBUG          | Enable debug output               | "1" or "true"                         |
 
 ### Naming Your Own Variables
 
 **Convention**: ALL_CAPS with tool name prefix
 
 **Examples**:
+
 ```
 MYTOOL_CONFIG=/path/to/config
 MYTOOL_LOG_LEVEL=debug
@@ -3645,6 +3957,7 @@ MYTOOL_CACHE_DIR=/tmp/cache
 ```
 
 **Security**: Never put secrets in environment variables!
+
 - Visible in `ps e` to all users
 - Passed to all subprocesses
 - Often logged
@@ -3655,24 +3968,25 @@ MYTOOL_CACHE_DIR=/tmp/cache
 
 ### POSIX and Common Codes
 
-| Code | Meaning | Usage |
-|------|---------|-------|
-| 0 | Success | Everything worked |
-| 1 | General error | Unspecified failure |
-| 2 | Misuse | Invalid arguments or usage |
-| 64-78 | Various | /usr/include/sysexits.h |
-| 126 | Cannot execute | Permission or exec format error |
-| 127 | Command not found | Shell couldn't find the command |
-| 128 | Invalid exit code | Exit code out of range |
-| 128+N | Killed by signal N | 130 = killed by SIGINT (Ctrl-C) |
-| 130 | Terminated by Ctrl-C | Specifically SIGINT |
-| 255 | Exit code out of range | Return values capped at 255 |
+| Code  | Meaning                | Usage                           |
+| ----- | ---------------------- | ------------------------------- |
+| 0     | Success                | Everything worked               |
+| 1     | General error          | Unspecified failure             |
+| 2     | Misuse                 | Invalid arguments or usage      |
+| 64-78 | Various                | /usr/include/sysexits.h         |
+| 126   | Cannot execute         | Permission or exec format error |
+| 127   | Command not found      | Shell couldn't find the command |
+| 128   | Invalid exit code      | Exit code out of range          |
+| 128+N | Killed by signal N     | 130 = killed by SIGINT (Ctrl-C) |
+| 130   | Terminated by Ctrl-C   | Specifically SIGINT             |
+| 255   | Exit code out of range | Return values capped at 255     |
 
 ### Designing Exit Codes
 
 **Strategy**: Define meaningful codes for your application
 
 **Example**:
+
 ```
 0   - Success
 1   - General error
@@ -3687,6 +4001,7 @@ MYTOOL_CACHE_DIR=/tmp/cache
 ```
 
 **Document Them**:
+
 ```
 EXIT STATUS:
     0   Success
@@ -3705,6 +4020,7 @@ EXIT STATUS:
 **Format**: `ESC [ <parameters> <command>`
 
 **Cursor Movement**:
+
 ```
 ESC[H        # Move to home (1,1)
 ESC[<r>;<c>H # Move to row r, column c
@@ -3719,6 +4035,7 @@ ESC[6n       # Query cursor position (response: ESC[<r>;<c>R)
 ```
 
 **Erasing**:
+
 ```
 ESC[J        # Clear from cursor to end of screen
 ESC[1J       # Clear from cursor to beginning of screen
@@ -3729,12 +4046,14 @@ ESC[2K       # Clear entire line
 ```
 
 **Scrolling**:
+
 ```
 ESC[<n>S     # Scroll up n lines
 ESC[<n>T     # Scroll down n lines
 ```
 
 **SGR (Select Graphic Rendition)** - Colors and Styles:
+
 ```
 ESC[0m       # Reset all attributes
 ESC[1m       # Bold
@@ -3776,6 +4095,7 @@ ESC[48;2;<r>;<g>;<b>m   # Background
 **Format**: `ESC ] <command> ; <parameters> BEL` or `ESC ] <command> ; <parameters> ESC \`
 
 **Common Uses**:
+
 ```
 ESC]0;Title\x07          # Set window title
 ESC]1;Icon Name\x07      # Set icon name
@@ -3791,6 +4111,7 @@ ESC]52;c;?\x07           # Query clipboard
 **Format**: `ESC [ ? <n> h` (set) or `ESC [ ? <n> l` (reset)
 
 **Common Uses**:
+
 ```
 ESC[?25h     # Show cursor
 ESC[?25l     # Hide cursor
@@ -3807,21 +4128,22 @@ ESC[?1006h   # Enable SGR mouse mode
 
 ### Common Signals
 
-| Signal | Number | Default Action | Purpose |
-|--------|--------|----------------|---------|
-| SIGHUP | 1 | Terminate | Hangup (terminal disconnected) |
-| SIGINT | 2 | Terminate | Interrupt (Ctrl-C) |
-| SIGQUIT | 3 | Core dump | Quit (Ctrl-\) |
-| SIGKILL | 9 | Terminate | Kill (cannot be caught) |
-| SIGTERM | 15 | Terminate | Termination (polite kill) |
-| SIGSTOP | 19 | Stop | Stop (cannot be caught) |
-| SIGTSTP | 20 | Stop | Stop (Ctrl-Z) |
-| SIGCONT | 18 | Continue | Continue after stop |
-| SIGWINCH | 28 | Ignore | Window size change |
+| Signal   | Number | Default Action | Purpose                        |
+| -------- | ------ | -------------- | ------------------------------ |
+| SIGHUP   | 1      | Terminate      | Hangup (terminal disconnected) |
+| SIGINT   | 2      | Terminate      | Interrupt (Ctrl-C)             |
+| SIGQUIT  | 3      | Core dump      | Quit (Ctrl-\)                  |
+| SIGKILL  | 9      | Terminate      | Kill (cannot be caught)        |
+| SIGTERM  | 15     | Terminate      | Termination (polite kill)      |
+| SIGSTOP  | 19     | Stop           | Stop (cannot be caught)        |
+| SIGTSTP  | 20     | Stop           | Stop (Ctrl-Z)                  |
+| SIGCONT  | 18     | Continue       | Continue after stop            |
+| SIGWINCH | 28     | Ignore         | Window size change             |
 
 ### Handling Signals
 
 **C Implementation**:
+
 ```c
 #include <signal.h>
 
@@ -3842,10 +4164,12 @@ int main() {
 ### Platform Differences
 
 **Signal Numbers Vary**:
+
 - SIGWINCH is 28 on Linux, 23 on BSD/macOS
 - Use constants (SIGWINCH) not numbers
 
 **Windows**:
+
 - Very limited signal support
 - Ctrl-C sends SIGINT
 - No SIGWINCH, SIGHUP, etc.
@@ -3951,17 +4275,20 @@ int main() {
 ## When to Break the Rules
 
 **Valid reasons**:
+
 - Clear usability improvement
 - Domain-specific requirements
 - Technical limitations
 - Explicitly documented
 
 **Examples**:
+
 - **ripgrep**: Ignores .gitignore by default (breaks UNIX tradition, but better for developers)
 - **bat**: Uses full RGB colors (breaks compatibility guideline, but beautiful output is core feature)
 - **fzf**: Uses entire screen even for one item (breaks minimalism, but interactive selection is core feature)
 
 **How to break rules**:
+
 1. Document the deviation
 2. Provide escape hatch (flag to disable)
 3. Have clear rationale
@@ -3974,54 +4301,63 @@ int main() {
 Ask the user for clarification or direction when:
 
 ## Complex TUI State Management
+
 - Designing widget trees with deep nesting
 - Managing focus across multiple panels
 - Implementing undo/redo for TUI applications
 - Handling modal dialogs with complex interactions
 
 ## Platform-Specific Terminal Behavior
+
 - Windows Console API integration
 - Handling terminal quirks on specific platforms
 - Supporting legacy terminal types
 - Cross-platform PTY allocation
 
 ## Performance Optimization
+
 - Rendering bottlenecks in large TUIs
 - Optimizing large file processing
 - Reducing memory usage for streaming data
 - Profiling terminal write performance
 
 ## Custom Escape Sequence Needs
+
 - Implementing features beyond standard sequences
 - Detecting terminal capabilities at runtime
 - Falling back when features unsupported
 - Working with non-standard terminals
 
 ## Testing Strategies
+
 - Mocking complex terminal interactions
 - Testing TUI applications in CI
 - Snapshot testing for terminal output
 - Integration testing with PTYs
 
 ## Architecture Decisions
+
 - Choosing between CLI and TUI interfaces
 - Client-server architecture for terminal apps
 - Plugin systems for CLI tools
 - Configuration format selection
 
 ## Security Considerations
+
 - Handling sensitive input (passwords, API keys)
 - Preventing command injection
 - Secure clipboard access
 - Sandboxing subprocesses
 
 ## Accessibility
+
 - Screen reader compatibility
 - High contrast modes
 - Keyboard-only navigation
 - Alternative text for visual elements
 
 ## Advanced Topics
+
 - Building language servers (LSP)
 - REPL implementation
 - Terminal multiplexer design

@@ -15,15 +15,22 @@
   </head>
   <body>
     <script>
-      document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";
+      document.documentElement.dataset.theme =
+        localStorage.getItem("tsd-theme") || "os";
       document.body.style.display = "none";
-      setTimeout(() => (app ? app.showPage() : document.body.style.removeProperty("display")), 500);
+      setTimeout(
+        () =>
+          app ? app.showPage() : document.body.style.removeProperty("display"),
+        500,
+      );
     </script>
     <header class="tsd-page-toolbar">
       <div class="tsd-toolbar-contents container">
         <div class="table-cell" id="tsd-search" data-base=".">
           <div class="field">
-            <label for="tsd-search-field" class="tsd-widget tsd-toolbar-icon search no-caption"
+            <label
+              for="tsd-search-field"
+              class="tsd-widget tsd-toolbar-icon search no-caption"
               ><svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <use href="assets/icons.svg#icon-search"></use></svg></label
             ><input type="text" id="tsd-search-field" aria-label="Search" />
@@ -36,7 +43,11 @@
           <a href="index.html" class="title">webring</a>
         </div>
         <div class="table-cell" id="tsd-widgets">
-          <a href="#" class="tsd-widget tsd-toolbar-icon menu no-caption" data-toggle="menu" aria-label="Menu"
+          <a
+            href="#"
+            class="tsd-widget tsd-toolbar-icon menu no-caption"
+            data-toggle="menu"
+            aria-label="Menu"
             ><svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <use href="assets/icons.svg#icon-menu"></use></svg
           ></a>
@@ -53,35 +64,43 @@
               <h3 class="tsd-index-heading">Type Aliases</h3>
               <div class="tsd-index-list">
                 <a href="types/Cache.html" class="tsd-index-link"
-                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-2097152"></use></svg
+                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                    <use href="assets/icons.svg#icon-2097152"></use></svg
                   ><span>Cache</span></a
                 >
                 <a href="types/CacheConfiguration.html" class="tsd-index-link"
-                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-2097152"></use></svg
+                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                    <use href="assets/icons.svg#icon-2097152"></use></svg
                   ><span>Cache<wbr />Configuration</span></a
                 >
                 <a href="types/CacheEntry.html" class="tsd-index-link"
-                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-2097152"></use></svg
+                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                    <use href="assets/icons.svg#icon-2097152"></use></svg
                   ><span>Cache<wbr />Entry</span></a
                 >
                 <a href="types/CachedConfiguration.html" class="tsd-index-link"
-                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-2097152"></use></svg
+                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                    <use href="assets/icons.svg#icon-2097152"></use></svg
                   ><span>Cached<wbr />Configuration</span></a
                 >
                 <a href="types/Configuration.html" class="tsd-index-link"
-                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-2097152"></use></svg
+                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                    <use href="assets/icons.svg#icon-2097152"></use></svg
                   ><span>Configuration</span></a
                 >
                 <a href="types/Result.html" class="tsd-index-link"
-                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-2097152"></use></svg
+                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                    <use href="assets/icons.svg#icon-2097152"></use></svg
                   ><span>Result</span></a
                 >
                 <a href="types/ResultEntry.html" class="tsd-index-link"
-                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-2097152"></use></svg
+                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                    <use href="assets/icons.svg#icon-2097152"></use></svg
                   ><span>Result<wbr />Entry</span></a
                 >
                 <a href="types/Source-2.html" class="tsd-index-link"
-                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-2097152"></use></svg
+                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                    <use href="assets/icons.svg#icon-2097152"></use></svg
                   ><span>Source</span></a
                 >
               </div>
@@ -90,19 +109,25 @@
               <h3 class="tsd-index-heading">Variables</h3>
               <div class="tsd-index-list">
                 <a href="variables/CacheEntrySchema.html" class="tsd-index-link"
-                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-32"></use></svg
+                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                    <use href="assets/icons.svg#icon-32"></use></svg
                   ><span>Cache<wbr />Entry<wbr />Schema</span></a
                 >
                 <a href="variables/CacheSchema.html" class="tsd-index-link"
-                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-32"></use></svg
+                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                    <use href="assets/icons.svg#icon-32"></use></svg
                   ><span>Cache<wbr />Schema</span></a
                 >
-                <a href="variables/CachedConfigurationSchema.html" class="tsd-index-link"
-                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-32"></use></svg
+                <a
+                  href="variables/CachedConfigurationSchema.html"
+                  class="tsd-index-link"
+                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                    <use href="assets/icons.svg#icon-32"></use></svg
                   ><span>Cached<wbr />Configuration<wbr />Schema</span></a
                 >
                 <a href="variables/FeedEntrySchema.html" class="tsd-index-link"
-                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-32"></use></svg
+                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                    <use href="assets/icons.svg#icon-32"></use></svg
                   ><span>Feed<wbr />Entry<wbr />Schema</span></a
                 >
               </div>
@@ -111,7 +136,8 @@
               <h3 class="tsd-index-heading">Functions</h3>
               <div class="tsd-index-list">
                 <a href="functions/run.html" class="tsd-index-link"
-                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-64"></use></svg
+                  ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                    <use href="assets/icons.svg#icon-64"></use></svg
                   ><span>run</span></a
                 >
               </div>
@@ -136,7 +162,11 @@
                   <ul id="tsd-filter-options">
                     <li class="tsd-filter-item">
                       <label class="tsd-filter-input"
-                        ><input type="checkbox" id="tsd-filter-protected" name="protected" /><svg
+                        ><input
+                          type="checkbox"
+                          id="tsd-filter-protected"
+                          name="protected"
+                        /><svg
                           width="32"
                           height="32"
                           viewBox="0 0 32 32"
@@ -164,7 +194,12 @@
                     </li>
                     <li class="tsd-filter-item">
                       <label class="tsd-filter-input"
-                        ><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked /><svg
+                        ><input
+                          type="checkbox"
+                          id="tsd-filter-inherited"
+                          name="inherited"
+                          checked
+                        /><svg
                           width="32"
                           height="32"
                           viewBox="0 0 32 32"
@@ -192,7 +227,11 @@
                     </li>
                     <li class="tsd-filter-item">
                       <label class="tsd-filter-input"
-                        ><input type="checkbox" id="tsd-filter-external" name="external" /><svg
+                        ><input
+                          type="checkbox"
+                          id="tsd-filter-external"
+                          name="external"
+                        /><svg
                           width="32"
                           height="32"
                           viewBox="0 0 32 32"
@@ -235,10 +274,15 @@
         <div class="site-menu">
           <nav class="tsd-navigation">
             <a href="modules.html" class="current"
-              ><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-1"></use></svg
+              ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                <use href="assets/icons.svg#icon-1"></use></svg
               ><span>webring</span></a
             >
-            <ul class="tsd-small-nested-navigation" id="tsd-nav-container" data-base=".">
+            <ul
+              class="tsd-small-nested-navigation"
+              id="tsd-nav-container"
+              data-base="."
+            >
               <li>Loading...</li>
             </ul>
           </nav>
@@ -246,7 +290,10 @@
       </div>
     </div>
     <footer>
-      <p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+      <p class="tsd-generator">
+        Generated using
+        <a href="https://typedoc.org/" target="_blank">TypeDoc</a>
+      </p>
     </footer>
     <div class="overlay"></div>
   </body>

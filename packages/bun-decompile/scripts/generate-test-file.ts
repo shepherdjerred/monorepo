@@ -167,7 +167,7 @@ function generateProgram(numFunctions: number, minify: boolean): string {
   lines.push(
     minify
       ? `var ${constName}={PI:3.14159,E:2.71828,MAX:1e6};`
-      : `var ${constName} = { PI: 3.14159, E: 2.71828, MAX: 1e6 };`
+      : `var ${constName} = { PI: 3.14159, E: 2.71828, MAX: 1e6 };`,
   );
 
   // Generate functions
@@ -187,14 +187,14 @@ function generateProgram(numFunctions: number, minify: boolean): string {
   lines.push(
     minify
       ? `function ${mainName}(){return[${calls.join(",")}]}`
-      : `function ${mainName}() { return [${calls.join(", ")}]; }`
+      : `function ${mainName}() { return [${calls.join(", ")}]; }`,
   );
 
   // Export for module usage
   lines.push(
     minify
       ? `if(typeof module!=="undefined")module.exports={main:${mainName}};`
-      : `if (typeof module !== "undefined") module.exports = { main: ${mainName} };`
+      : `if (typeof module !== "undefined") module.exports = { main: ${mainName} };`,
   );
 
   return lines.join(minify ? "" : "\n\n");

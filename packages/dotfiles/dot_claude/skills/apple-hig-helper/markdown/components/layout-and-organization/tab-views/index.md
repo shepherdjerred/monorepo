@@ -38,7 +38,7 @@ When you hide the tabbed control, the content area can be borderless, bezeled, o
 
 ## [Platform considerations](/design/human-interface-guidelines/tab-views#Platform-considerations)
 
-*Not supported in iOS, iPadOS, tvOS, or visionOS.*
+_Not supported in iOS, iPadOS, tvOS, or visionOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/tab-views#iOS-iPadOS)
 
@@ -66,6 +66,6 @@ watchOS displays tab views using [page controls](https://developer.apple.com/des
 
 ## [Change log](/design/human-interface-guidelines/tab-views#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date         | Changes                                        |
+| ------------ | ---------------------------------------------- |
 | June 5, 2023 | Added guidance for using tab views in watchOS. |

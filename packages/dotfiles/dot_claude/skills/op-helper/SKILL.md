@@ -24,6 +24,7 @@ This agent helps you work with the 1Password CLI (`op`) for secure secret retrie
 ### Auto-Approved Commands
 
 The following `op` commands are auto-approved and can be used safely:
+
 - `op item list` - List items in vaults
 - `op item get` - Retrieve item details
 - `op vault list` - List available vaults
@@ -32,21 +33,25 @@ The following `op` commands are auto-approved and can be used safely:
 ### Common Operations
 
 **Retrieve a secret**:
+
 ```bash
 op item get "Database Password" --fields password
 ```
 
 **List items in a vault**:
+
 ```bash
 op item list --vault "Production"
 ```
 
 **Get a field from an item**:
+
 ```bash
 op item get "API Keys" --fields "stripe_key"
 ```
 
 **Reveal sensitive fields (v4+)**:
+
 ```bash
 # Sensitive values concealed by default in v4
 op item get "API Keys" --fields password
@@ -58,6 +63,7 @@ op item get "API Keys" --fields password --reveal
 ```
 
 **Use item IDs for performance**:
+
 ```bash
 # Slower (searches by name)
 op item get "Production Database"
@@ -108,6 +114,7 @@ op://vault/item/field
 ```
 
 Examples:
+
 ```bash
 # Database URL
 export DATABASE_URL="op://Production/PostgreSQL/connection_url"
@@ -122,6 +129,7 @@ ssh-add <(op item get "GitHub SSH" --fields private_key)
 ### Running Commands with Secrets
 
 Inject secrets into command execution:
+
 ```bash
 # Secrets automatically injected, masked in output
 op run -- npm start
@@ -135,6 +143,7 @@ SECRET=$(op run --no-masking -- sh -c 'echo $DATABASE_PASSWORD')
 ```
 
 **Key behaviors:**
+
 - `op run` automatically loads all `op://` references from environment
 - Secrets are masked in stdout by default (v4+)
 - Use `--no-masking` only when necessary (logs may expose secrets)
@@ -155,6 +164,7 @@ op whoami
 **Service Account Best Practices:**
 
 1. **Principle of Least Privilege**: Grant only the vaults and permissions needed
+
    ```bash
    # Create service account with read-only access to specific vaults
    # (Done via 1Password web interface)
@@ -180,6 +190,7 @@ op whoami
 ## Best Practices
 
 1. **Use Item IDs Over Names**: ID-based lookups are faster and more stable
+
    ```bash
    # Good: Direct ID reference
    op item get xyz789abc --fields password
@@ -189,6 +200,7 @@ op whoami
    ```
 
 2. **Never Log Secrets**: Use `--reveal` carefully, avoid in scripts that log output
+
    ```bash
    # Safe: Concealed by default
    op item get "API Key" --fields key
@@ -198,6 +210,7 @@ op whoami
    ```
 
 3. **Use Secret References**: Prefer `op://` references over storing secrets in files
+
    ```bash
    # .env file
    DATABASE_URL=op://Production/PostgreSQL/connection_url
@@ -209,6 +222,7 @@ op whoami
 4. **Scope Service Accounts**: Use minimal required permissions (read-only when possible)
 
 5. **Cache Awareness**: Leverage default caching, disable only when freshness is critical
+
    ```bash
    # Cached (faster, use for most workflows)
    op item get "Config" --fields api_key
@@ -265,6 +279,7 @@ steps:
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - The vault name or item name is ambiguous
 - Multiple fields exist and it's unclear which one to use
 - Service account permissions might be insufficient

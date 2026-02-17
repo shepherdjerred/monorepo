@@ -11,7 +11,7 @@ export class LocalStorageManifestDatastore {
 
   get(): Manifest | undefined {
     const stored = globalThis.localStorage.getItem(IDENTIFIER);
-    return stored ? JSON.parse(stored) as Manifest : undefined;
+    return stored ? (JSON.parse(stored) as Manifest) : undefined;
   }
 
   isStale(): boolean {

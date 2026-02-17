@@ -1,6 +1,6 @@
 # CLI Design Guidelines for Developers
 
-*Based on clig.dev with implementation focus*
+_Based on clig.dev with implementation focus_
 
 ## Philosophy: The 9 Core Principles
 
@@ -9,6 +9,7 @@
 **Principle**: CLIs are primarily for humans, not just machines.
 
 **Practical Implications**:
+
 - Show what's happening (don't hang silently)
 - Confirm dangerous operations
 - Provide helpful errors
@@ -17,11 +18,13 @@
 **Counter to UNIX Tradition**: "Silence is golden" doesn't work for modern tools. Users expect feedback.
 
 **Example from cargo**:
+
 ```
 $ cargo build
    Compiling myapp v0.1.0
     Finished dev [unoptimized + debuginfo] target(s) in 2.34s
 ```
+
 Clear indication of progress and completion.
 
 ### 2. Simple, Composable Parts
@@ -29,15 +32,18 @@ Clear indication of progress and completion.
 **Principle**: Standard streams, pipes, and exit codes enable composition.
 
 **Practical Implications**:
+
 - Output primary results to stdout
 - Output logs/errors to stderr
 - Exit 0 for success, non-zero for failure
 - Accept stdin, write to stdout for filters
 
 **Example from ripgrep**:
+
 ```bash
 rg "pattern" | rg "filter" | wc -l
 ```
+
 Composes naturally because stdout contains only matches.
 
 ### 3. Consistency Across Programs
@@ -45,6 +51,7 @@ Composes naturally because stdout contains only matches.
 **Principle**: Follow established conventions.
 
 **Practical Implications**:
+
 - Use standard flag names (-h, --help, -v, --version)
 - Follow argument conventions (POSIX or GNU style)
 - Ctrl-C should interrupt
@@ -52,6 +59,7 @@ Composes naturally because stdout contains only matches.
 
 **Example from git**:
 Every subcommand uses consistent flags:
+
 ```bash
 git commit --verbose
 git log --verbose
@@ -63,12 +71,14 @@ git diff --verbose
 **Principle**: Balance information density. Too little confuses, too much overwhelms.
 
 **Guidelines**:
+
 - Default: Show what changed
 - Quiet mode (-q): Silence non-errors
 - Verbose mode (-v): Show details
 - Debug mode (--debug): Everything
 
 **Example from docker**:
+
 ```
 $ docker pull nginx
 Using default tag: latest
@@ -76,6 +86,7 @@ latest: Pulling from library/nginx
 a2abf6c4d29d: Pull complete
 Status: Downloaded newer image for nginx:latest
 ```
+
 Just enough to understand progress.
 
 ### 5. Ease of Discovery
@@ -83,12 +94,14 @@ Just enough to understand progress.
 **Principle**: Users shouldn't need to memorize everything.
 
 **Practical Implications**:
+
 - Comprehensive help text
 - Examples in help
 - Suggest corrections for typos
 - Show next steps
 
 **Example from git**:
+
 ```
 $ git pul
 git: 'pul' is not a git command. See 'git --help'.
@@ -102,12 +115,14 @@ The most similar command is
 **Principle**: Design for iterative use and trial-and-error.
 
 **Practical Implications**:
+
 - Clear error messages that suggest fixes
 - Allow undoing or --dry-run
 - Preserve state when safe
 - Show current state easily
 
 **Example from git**:
+
 ```
 $ git status
 On branch main
@@ -116,6 +131,7 @@ Changes not staged for commit:
 
 no changes added to commit
 ```
+
 Always shows current state.
 
 ### 7. Robustness
@@ -123,16 +139,19 @@ Always shows current state.
 **Principle**: Feel solid, not fragile. Handle errors gracefully.
 
 **Practical Implications**:
+
 - Validate input early
 - Meaningful error messages (not stack traces)
 - Handle SIGINT gracefully
 - Restore terminal state on crash (TUIs)
 
 **Example from cargo**:
+
 ```
 $ cargo build
 error: Could not compile `myapp` due to 2 previous errors
 ```
+
 Clear, actionable error.
 
 ### 8. Empathy
@@ -140,17 +159,20 @@ Clear, actionable error.
 **Principle**: Show you're on the user's side.
 
 **Practical Implications**:
+
 - Assume mistakes are honest
 - Explain what went wrong
 - Suggest how to fix it
 - Be encouraging, not condescending
 
 **Bad**:
+
 ```
 Error: Invalid argument
 ```
 
 **Good (from rustc)**:
+
 ```
 error: unexpected end of file
   --> src/main.rs:5:1
@@ -164,6 +186,7 @@ error: unexpected end of file
 **Principle**: Terminal inconsistency enables innovation. Break rules intentionally with purpose.
 
 **When to Break Conventions**:
+
 - Clear usability improvement
 - Document the deviation
 - Provide escape hatches
@@ -177,11 +200,13 @@ error: unexpected end of file
 ### Terminology
 
 **Arguments** (Positional Parameters):
+
 - Order matters
 - No dashes
 - Example: `cp source dest`
 
 **Flags** (Named Parameters):
+
 - Order independent
 - Start with `-` or `--`
 - May have values
@@ -192,11 +217,13 @@ error: unexpected end of file
 ### Design Decision: Args vs Flags
 
 **Use Positional Args When**:
+
 - One or two required parameters
 - Order is obvious
 - Examples: `cat file.txt`, `cd /path`, `rm file1 file2`
 
 **Use Flags When**:
+
 - Optional parameters
 - Many parameters
 - Order shouldn't matter
@@ -206,6 +233,7 @@ error: unexpected end of file
 **Prefer flags over args** for anything complex. They're more discoverable and extensible.
 
 **Example from git**: Heavily flag-based for flexibility
+
 ```bash
 git log --oneline --graph --all --decorate
 # Order doesn't matter
@@ -216,27 +244,28 @@ git log --all --oneline --decorate --graph
 
 Follow these conventions for consistency:
 
-| Flag | Meaning | Example Usage |
-|------|---------|---------------|
-| `-h`, `--help` | Show help (only) | `tool --help` |
-| `--version` | Show version (only) | `tool --version` |
-| `-v`, `--verbose` | More output | `tool -v` |
-| `-q`, `--quiet` | Less output | `tool -q` |
-| `-f`, `--force` | Skip confirmations | `rm -f file` |
-| `-r`, `--recursive` | Recurse directories | `rm -r dir` |
-| `-n`, `--dry-run` | Preview without executing | `git clean -n` |
-| `-a`, `--all` | Include all items | `git add -a` |
-| `-o`, `--output FILE` | Output file | `gcc -o program` |
-| `-i`, `--interactive` | Prompt for decisions | `rm -i file` |
-| `--no-input` | No interactive prompts | `tool --no-input` |
-| `-d`, `--debug` | Debug output | `tool -d` |
-| `--json` | JSON output | `tool --json` |
+| Flag                  | Meaning                   | Example Usage     |
+| --------------------- | ------------------------- | ----------------- |
+| `-h`, `--help`        | Show help (only)          | `tool --help`     |
+| `--version`           | Show version (only)       | `tool --version`  |
+| `-v`, `--verbose`     | More output               | `tool -v`         |
+| `-q`, `--quiet`       | Less output               | `tool -q`         |
+| `-f`, `--force`       | Skip confirmations        | `rm -f file`      |
+| `-r`, `--recursive`   | Recurse directories       | `rm -r dir`       |
+| `-n`, `--dry-run`     | Preview without executing | `git clean -n`    |
+| `-a`, `--all`         | Include all items         | `git add -a`      |
+| `-o`, `--output FILE` | Output file               | `gcc -o program`  |
+| `-i`, `--interactive` | Prompt for decisions      | `rm -i file`      |
+| `--no-input`          | No interactive prompts    | `tool --no-input` |
+| `-d`, `--debug`       | Debug output              | `tool -d`         |
+| `--json`              | JSON output               | `tool --json`     |
 
 **Don't Repurpose These**: Users have muscle memory for these flags.
 
 ### POSIX vs GNU Style
 
 **POSIX Style**:
+
 ```bash
 tool -a -b -c         # Short flags
 tool -abc             # Bundled: same as above
@@ -244,6 +273,7 @@ tool -o file          # Flag with value (space separated)
 ```
 
 **GNU Style**:
+
 ```bash
 tool --long-flag      # Long flags
 tool --output=file    # Equals-separated value
@@ -252,12 +282,14 @@ tool -a --long -b     # Mixed short and long
 ```
 
 **Modern Best Practice**: Support both
+
 - Short flags for common options
 - Long flags for all options
 - Allow bundling short flags (`-la` for `-l -a`)
 - Support both `=` and space for values
 
 **Example from git**:
+
 ```bash
 git commit -m "msg"           # POSIX short
 git commit --message="msg"    # GNU long with =
@@ -269,17 +301,20 @@ git commit --message "msg"    # GNU long with space
 **Three Levels of Danger**:
 
 **1. Low (Reversible)**:
+
 - Delete a single file
 - No confirmation needed (or -i flag)
 - Example: `rm file.txt` (can restore from trash)
 
 **2. Medium (Significant Impact)**:
+
 - Delete directory, remote changes
 - Interactive mode: Prompt for y/n
 - Non-interactive: Require --force
 - Example: `rm -r dir` (should prompt or need -f)
 
 **3. High (Destructive/Widespread)**:
+
 - Delete entire application, mass operations
 - Require typing something non-trivial
 - Example: Heroku's pattern:
@@ -295,6 +330,7 @@ Destroying myapp... done
 ```
 
 **For Scripts**: Always provide `--force` or `--confirm=VALUE` to bypass prompts
+
 ```bash
 tool --force                    # Bypass all confirmations
 tool --confirm="dangerous"      # Confirm with specific value
@@ -305,6 +341,7 @@ tool --confirm="dangerous"      # Confirm with specific value
 **Principle**: Users shouldn't need to remember flag order.
 
 **Support All These**:
+
 ```bash
 tool subcommand --flag value arg
 tool --flag value subcommand arg
@@ -312,12 +349,14 @@ tool --flag value arg subcommand
 ```
 
 **Example from git** (all equivalent):
+
 ```bash
 git --no-pager log --oneline
 git log --oneline --no-pager
 ```
 
 **Example from docker** (noun-verb pattern):
+
 ```bash
 docker container rm --force nginx
 docker container rm nginx --force
@@ -326,11 +365,13 @@ docker container rm nginx --force
 ### No Secrets in Flags
 
 **Never**:
+
 ```bash
 tool --password secret123    # Visible in ps, shell history
 ```
 
 **Instead**:
+
 ```bash
 # Option 1: Prompt interactively
 tool --prompt-password
@@ -354,6 +395,7 @@ PASSWORD=secret123 tool
 ### Help Display Requirements
 
 **Minimal Help** (`-h` or no arguments):
+
 ```
 USAGE:
     tool [OPTIONS] <FILE>
@@ -373,6 +415,7 @@ For more information, run: tool --help
 ```
 
 **Full Help** (`--help`):
+
 ```
 tool 1.2.3
 
@@ -424,6 +467,7 @@ https://github.com/user/tool/issues
 **Why**: Users learn faster from examples than from parameter descriptions.
 
 **Learning from git**:
+
 ```
 $ git help commit
 NAME
@@ -442,6 +486,7 @@ EXAMPLES
     Commit with a detailed message
         $ git commit -m "Initial commit" -m "More details"
 ```
+
 Examples section shows common patterns.
 
 ### Dynamic Help Generation
@@ -449,11 +494,13 @@ Examples section shows common patterns.
 Generate help from the same source as argument parsing:
 
 **Benefits**:
+
 - Always stays in sync
 - No duplicate maintenance
 - Consistent formatting
 
 **Concept** (language-agnostic):
+
 ```
 define_cli():
     add_flag("output", short="o", help="Output file")
@@ -466,11 +513,13 @@ Most argument parsing libraries do this automatically.
 ### Man Pages
 
 **When to Provide**:
+
 - Professional tools
 - System-wide installation
 - Complex functionality
 
 **Man Page Structure**:
+
 ```
 NAME
     tool - one-line description
@@ -495,12 +544,14 @@ BUGS
 ```
 
 **Generation Tools**:
+
 - `help2man`: Auto-generate from --help output
 - `ronn`: Markdown to man page
 - `scdoc`: Simple man page format
 - `asciidoc`: Comprehensive documentation system
 
 **Example from git**: Extensive man pages for every subcommand
+
 ```bash
 man git-commit
 man git-rebase
@@ -513,12 +564,14 @@ man git-rebase
 ### Confirmation Prompts
 
 **Simple Yes/No**:
+
 ```
 $ tool delete-all
 Really delete all data? [y/N]: _
 ```
 
 **Implementation Concept**:
+
 ```
 if is_tty(stdin) and not no_input_flag:
     response = prompt("Really delete all data? [y/N]: ")
@@ -532,6 +585,7 @@ else:
 ```
 
 **Type-to-Confirm Pattern** (for dangerous operations):
+
 ```
 $ heroku apps:destroy myapp
 Type the app name to confirm: _
@@ -542,6 +596,7 @@ Type the app name to confirm: _
 **Requirement**: Don't display password as user types
 
 **C Implementation**:
+
 ```c
 #include <termios.h>
 #include <unistd.h>
@@ -562,12 +617,14 @@ void enable_echo() {
 ```
 
 **Python**:
+
 ```python
 import getpass
 password = getpass.getpass("Password: ")
 ```
 
 **Rust**:
+
 ```rust
 use rpassword::read_password;
 println!("Password: ");
@@ -579,6 +636,7 @@ let password = read_password().unwrap();
 **Critical for CI/CD**: Never hang waiting for input
 
 **Implementation**:
+
 ```
 if no_input_flag:
     # Never prompt
@@ -589,6 +647,7 @@ if no_input_flag:
 ```
 
 **Example**:
+
 ```bash
 # Interactive (prompts for confirmation)
 tool deploy
@@ -604,6 +663,7 @@ tool deploy --no-input --force
 ### Configuration Sources and Precedence
 
 **Load Order (highest to lowest priority)**:
+
 1. Command-line flags
 2. Environment variables
 3. Local config file (./.toolrc)
@@ -612,6 +672,7 @@ tool deploy --no-input --force
 6. Built-in defaults
 
 **Implementation Pattern**:
+
 ```
 config = load_defaults()
 config.update(load_system_config())
@@ -624,6 +685,7 @@ config.update(load_flags())
 ### XDG Base Directory Specification
 
 **Standard Paths**:
+
 ```
 $XDG_CONFIG_HOME/tool/config    # User config (default: ~/.config/)
 $XDG_DATA_HOME/tool/data        # User data (default: ~/.local/share/)
@@ -631,6 +693,7 @@ $XDG_CACHE_HOME/tool/cache      # Cache (default: ~/.cache/)
 ```
 
 **Fallbacks**:
+
 ```
 config_dir = getenv("XDG_CONFIG_HOME") or join(getenv("HOME"), ".config")
 config_file = join(config_dir, "tool", "config.toml")
@@ -639,6 +702,7 @@ config_file = join(config_dir, "tool", "config.toml")
 **Why**: Reduces dotfile clutter in home directory
 
 **Example from git**:
+
 ```
 ~/.gitconfig               # Traditional
 ~/.config/git/config       # XDG (takes precedence)
@@ -648,21 +712,22 @@ config_file = join(config_dir, "tool", "config.toml")
 
 **Standard Variables**:
 
-| Variable | Purpose | Example Usage |
-|----------|---------|---------------|
-| NO_COLOR | Disable all colors | Check before colorizing |
-| EDITOR | User's preferred editor | `tool edit` opens this |
-| VISUAL | Visual editor (prefer over EDITOR) | Same as EDITOR |
-| PAGER | Paging program | Use for long output |
-| HOME | User's home directory | For config paths |
-| TMPDIR | Temporary directory | For temp files |
-| TERM | Terminal type | For escape sequences |
-| COLUMNS | Terminal width | For formatting |
-| LINES | Terminal height | For paging decisions |
-| CI | Running in CI environment | Disable progress bars |
-| DEBUG | Enable debug mode | Show verbose output |
+| Variable | Purpose                            | Example Usage           |
+| -------- | ---------------------------------- | ----------------------- |
+| NO_COLOR | Disable all colors                 | Check before colorizing |
+| EDITOR   | User's preferred editor            | `tool edit` opens this  |
+| VISUAL   | Visual editor (prefer over EDITOR) | Same as EDITOR          |
+| PAGER    | Paging program                     | Use for long output     |
+| HOME     | User's home directory              | For config paths        |
+| TMPDIR   | Temporary directory                | For temp files          |
+| TERM     | Terminal type                      | For escape sequences    |
+| COLUMNS  | Terminal width                     | For formatting          |
+| LINES    | Terminal height                    | For paging decisions    |
+| CI       | Running in CI environment          | Disable progress bars   |
+| DEBUG    | Enable debug mode                  | Show verbose output     |
 
 **Your Own Variables**:
+
 ```
 TOOL_CONFIG=/path/to/config
 TOOL_API_KEY=secret123
@@ -684,11 +749,13 @@ TOOL_LOG_LEVEL=debug
 **End of Options**: `--` stops parsing, rest are arguments
 
 **POSIX Conventions**:
+
 - Short options: single dash, single letter
 - Option arguments: separated by space or directly attached
 - No permutation (options must come before arguments)
 
 **GNU Conventions** (extensions):
+
 - Long options: double dash, full word
 - Option arguments: `=` or space
 - Permutation (options can be anywhere)
@@ -697,6 +764,7 @@ TOOL_LOG_LEVEL=debug
 ### Subcommand Dispatch Pattern
 
 **Learning from git**:
+
 ```
 git <global-options> <command> <command-options>
 
@@ -706,6 +774,7 @@ git -C /path/to/repo status
 ```
 
 **Implementation Pattern**:
+
 ```
 parse phase 1: global options
 identify subcommand
@@ -734,6 +803,7 @@ docker image pull
 ```
 
 **Benefits**:
+
 - Clear grouping
 - Consistent interface
 - Discoverability
@@ -741,6 +811,7 @@ docker image pull
 ### POSIX getopt
 
 **Format**:
+
 ```c
 int getopt(int argc, char *argv[], const char *optstring);
 
@@ -753,6 +824,7 @@ Example optstring: "ab:c::"
 ### GNU getopt_long
 
 **Format**:
+
 ```c
 struct option {
     const char *name;    // Long name
@@ -768,6 +840,7 @@ int getopt_long(int argc, char *argv[],
 ```
 
 **Example**:
+
 ```c
 struct option long_options[] = {
     {"help",    no_argument,       0, 'h'},
@@ -792,6 +865,7 @@ while ((c = getopt_long(argc, argv, "hvo:", long_options, NULL)) != -1) {
 **Implementation**: Most libraries handle automatically
 
 **Limitation**: Can't bundle options with arguments
+
 ```bash
 # OK
 ls -la
@@ -805,6 +879,7 @@ tool -abc file    # Is 'c' a flag or does 'b' take 'c' as argument?
 **Rule**: `--` stops option parsing
 
 **Usage**:
+
 ```bash
 # Pass filename that starts with dash
 tool -- -weird-filename.txt
@@ -814,6 +889,7 @@ tool --verbose -- subcommand --its-own-flag
 ```
 
 **Implementation**:
+
 ```
 for arg in args:
     if arg == "--":
@@ -833,6 +909,7 @@ for arg in args:
 ### Project Layout
 
 **Rust**:
+
 ```
 my-tool/
 ├── Cargo.toml
@@ -851,6 +928,7 @@ my-tool/
 ```
 
 **Python**:
+
 ```
 my-tool/
 ├── pyproject.toml
@@ -871,6 +949,7 @@ my-tool/
 ### Entry Point Design
 
 **Concept**:
+
 ```
 main():
     parse_arguments()
@@ -882,6 +961,7 @@ main():
 ```
 
 **Implementation Pattern**:
+
 ```rust
 fn main() {
     let result = run();
@@ -913,12 +993,14 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 ### Spinner Implementation (Core Algorithm)
 
 **Frames**:
+
 ```
 frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
 # Or: ["-", "\\", "|", "/"]
 ```
 
 **Implementation**:
+
 ```
 frame_index = 0
 
@@ -933,6 +1015,7 @@ print("Done!")
 ```
 
 **ANSI Codes**:
+
 ```
 \r         # Carriage return (go to start of line)
 ESC[K      # Clear from cursor to end of line
@@ -943,11 +1026,13 @@ ESC[?25h   # Show cursor
 ### Progress Bar Implementation (Core Algorithm)
 
 **Concept**:
+
 ```
 [=========>          ] 45% (450/1000) 2.5MB/s ETA 5s
 ```
 
 **Implementation**:
+
 ```
 width = 20
 filled = int(width * (done / total))
@@ -960,6 +1045,7 @@ print(f"\r{text}", end="", flush=True)
 ```
 
 **With Rate and ETA**:
+
 ```
 elapsed = time_now - start_time
 rate = done / elapsed
@@ -972,6 +1058,7 @@ text += f" {format_bytes(rate)}/s ETA {format_duration(eta)}"
 ### Learning from cargo's Progress Patterns
 
 **Stages**:
+
 ```
     Updating crates.io index
    Compiling serde v1.0.152 (1/10)
@@ -980,6 +1067,7 @@ text += f" {format_bytes(rate)}/s ETA {format_duration(eta)}"
 ```
 
 **Patterns**:
+
 - Right-aligned verbs (uniform column)
 - Package names and versions
 - Progress count (2/10)
@@ -992,6 +1080,7 @@ text += f" {format_bytes(rate)}/s ETA {format_duration(eta)}"
 ### Loading Order Implementation
 
 **Pattern** (highest to lowest priority):
+
 ```
 1. Command-line flags (--config, --output)
 2. Environment variables (TOOL_OUTPUT, TOOL_CONFIG)
@@ -1002,6 +1091,7 @@ text += f" {format_bytes(rate)}/s ETA {format_duration(eta)}"
 ```
 
 **Implementation**:
+
 ```rust
 fn load_config() -> Config {
     let mut config = Config::defaults();
@@ -1069,11 +1159,13 @@ fn get_cache_dir() -> PathBuf {
 ### Confirmation Prompt Pattern
 
 **Yes/No**:
+
 ```
 Really delete all files? [y/N]:
 ```
 
 **Implementation**:
+
 ```
 if is_tty(stdin):
     print("Really delete all files? [y/N]: ", flush=True)
@@ -1091,6 +1183,7 @@ else:
 ### Menu Selection (Arrow Key Navigation)
 
 **Pattern**:
+
 ```
 Select an option:
 > Option 1
@@ -1101,6 +1194,7 @@ Select an option:
 ```
 
 **Implementation Concept**:
+
 ```
 selected = 0
 options = ["Option 1", "Option 2", "Option 3"]
@@ -1128,6 +1222,7 @@ disable_raw_mode()
 ### Learning from git's Interactive Rebase
 
 **Pattern**: Full-screen editor for multi-item selection
+
 ```
 pick a1b2c3d First commit
 pick d4e5f6g Second commit
@@ -1142,6 +1237,7 @@ pick h7i8j9k Third commit
 ```
 
 **Design Lessons**:
+
 - Use $EDITOR for complex interactions
 - Provide help comments inline
 - Clear, mnemonic commands
@@ -1155,6 +1251,7 @@ pick h7i8j9k Third commit
 **Pattern**: Operations that are fully complete or fully not done
 
 **Example**: File writes
+
 ```
 # Bad (non-atomic)
 open(file, 'w')
@@ -1172,6 +1269,7 @@ rename(file + ".tmp", file)  # Atomic operation
 **Pattern**: Save progress, allow restart
 
 **Example**: Download with resume
+
 ```
 State file: .download_state.json
 {
@@ -1199,6 +1297,7 @@ On completion:
 **Pattern**: Write-ahead log (WAL)
 
 **Example**:
+
 ```
 Before operation:
     append to log: "DELETE file.txt"

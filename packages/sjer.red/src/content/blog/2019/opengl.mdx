@@ -27,8 +27,11 @@ This paper intends to introduce the reader to the broad concepts of graphics pro
 Computer graphics is predisposed towards parallel processing due to the repetitive and independent nature of the calculations that it requires (p.~4, sellers2016). Graphics processing units (GPUs) were created in order to meet the unique hardware requirements of computer graphics and are fundamentally different from more traditional central processing units (CPUs). While CPUs generally have a few very fast cores, GPUs take another approach by having a large number of slow cores. Figure 1 illustrates this difference in architecture. It shows the massive difference in arithmetic logic units (ALUs) between CPUs and GPUs. These ALUs give GPUs an edge over CPUs when performing mathematical operations and are a core part of the parallel processing capability that GPUs possess.
 
 <figure>
-  ![CPU architecture](./opengl/img/cpu.png) ![GPU architecture](./opengl/img/gpu.png)
-  <figcaption>Figure 1, a comparison of typical CPU and GPU architectures (larkin2016).</figcaption>
+  ![CPU architecture](./opengl/img/cpu.png) ![GPU
+  architecture](./opengl/img/gpu.png)
+  <figcaption>
+    Figure 1, a comparison of typical CPU and GPU architectures (larkin2016).
+  </figcaption>
 </figure>
 
 A difference also exists between the two in their approach to threading. An application running on a CPU may generally have only few threads running due to the high cost of creation and context switches. GPUs have lower cost thread creation and can more quickly context switch, and they often require tens of thousands of threads in order to fully reach their processing potential (larkin2016). Despite the slower performance of an individual GPU core, GPUs easily outperform CPUs in tasks related to graphics processing due to their parallel processing capabilities. Figure 2 shows the historical theoretical performance gap between CPUs and GPUs in giga floating-point operations per second (GFLOP/s), which is a common measure of graphical computation speed. The graph shows that GPUs have a clear performance advantage, with the gap becoming exponentially larger as time goes on.
@@ -36,7 +39,8 @@ A difference also exists between the two in their approach to threading. An appl
 <figure>
   ![CPU vs GPU](./opengl/img/cpu-vs-gpu.png)
   <figcaption>
-    Figure 2, a performance comparison of CPUs and GPUs in theoretical peak GLFOP/s over 14 years (galloy2013).
+    Figure 2, a performance comparison of CPUs and GPUs in theoretical peak
+    GLFOP/s over 14 years (galloy2013).
   </figcaption>
 </figure>
 
@@ -53,8 +57,13 @@ Graphics rendering is done by positioning primitives such as points, lines, and 
 Although these three primitives may seem simple and insignificant, they are actually the backbone of graphics rendering. Complex 3D models such as those shown in video games are really just meshes of many small, connected triangles. Squares and other quadrilaterals can be created by connecting two triangles together at their hypotenuses.
 
 <figure>
-  <div class="bg-white">![Triangle rendering](./opengl/img/triangle-rendering.png)</div>
-  <figcaption>Figure 3, a visualization of how a single 2D triangle is rasterized (mckesson2018).</figcaption>
+  <div class="bg-white">
+    ![Triangle rendering](./opengl/img/triangle-rendering.png)
+  </div>
+  <figcaption>
+    Figure 3, a visualization of how a single 2D triangle is rasterized
+    (mckesson2018).
+  </figcaption>
 </figure>
 
 ### Matrices
@@ -66,15 +75,16 @@ Before the matrix can be created, the aspect ratio, field of view (FOV), z-near,
 <figure>
   ![Projection matrix concepts](./opengl/img/projection-matrix.png)
   <figcaption>
-    Figure 4, projection matrix concepts (hernandez2019). The camera represents the position of the viewer.
+    Figure 4, projection matrix concepts (hernandez2019). The camera represents
+    the position of the viewer.
   </figcaption>
 </figure>
 
 <figure>
   ![Projection matrix](./opengl/img/matrix.png)
   <figcaption>
-    Figure 5, a projection matrix where a is the aspect ratio, `fov` is the field of view, `z_f` is z-far, and `z_n` is
-    z-near (hernandez2019).
+    Figure 5, a projection matrix where a is the aspect ratio, `fov` is the
+    field of view, `z_f` is z-far, and `z_n` is z-near (hernandez2019).
   </figcaption>
 </figure>
 
@@ -253,13 +263,19 @@ While there are several configurable stages in the pipeline, only two must be de
 <figure>
   ![The OpenGL pipeline](./opengl/img/pipeline.png)
   <figcaption>
-    Figure 13, a simplified OpenGL pipeline (sellers2016). Boxes with square corners are programmable by the user.
+    Figure 13, a simplified OpenGL pipeline (sellers2016). Boxes with square
+    corners are programmable by the user.
   </figcaption>
 </figure>
 
 <figure>
-  <div class="bg-white">![Visualization of the pipeline](./opengl/img/pipeline-visualized.png)</div>
-  <figcaption>Figure 14, visualization of data flowing through the OpenGL pipeline (overvoorde2019).</figcaption>
+  <div class="bg-white">
+    ![Visualization of the pipeline](./opengl/img/pipeline-visualized.png)
+  </div>
+  <figcaption>
+    Figure 14, visualization of data flowing through the OpenGL pipeline
+    (overvoorde2019).
+  </figcaption>
 </figure>
 
 In order to customize the OpenGL pipeline a shader program must first be created. Once it is created, shaders can be compiled, attached to the program, and then linked. This final executable is run on the graphics hardware and executed by OpenGL when rendering. Figure 15 shows the code needed to create an OpenGL shader program.

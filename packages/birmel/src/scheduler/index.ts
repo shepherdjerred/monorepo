@@ -1,21 +1,16 @@
 import { getConfig } from "../config/index.js";
 import { loggers } from "../utils/index.js";
-import { checkAndSendDailyPosts,   } from "./daily-posts.js";
+import { checkAndSendDailyPosts } from "./daily-posts.js";
 
 const logger = loggers.scheduler;
 
-import {
-  runAnnouncementsJob,
-  
-  
-  
-} from "./jobs/announcements.js";
+import { runAnnouncementsJob } from "./jobs/announcements.js";
 import { checkAndPostBirthdays } from "./jobs/birthday-checker.js";
 import { aggregateActivityMetrics } from "./jobs/activity-aggregator.js";
 import {
-	checkAndStartElections,
-	checkAndEndElections,
-	processElectionResults,
+  checkAndStartElections,
+  checkAndEndElections,
+  processElectionResults,
 } from "./jobs/elections.js";
 import { runScheduledTasksJob } from "./jobs/scheduled-tasks.js";
 
@@ -61,24 +56,23 @@ export function stopScheduler(): void {
 }
 
 export {
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
   checkAndStartElections,
   checkAndEndElections,
   processElectionResults,
   runScheduledTasksJob,
 };
 
-export {configureDailyPost, disableDailyPost, checkAndSendDailyPosts} from "./daily-posts.js";
-export {runServerSummaryJob} from "./jobs/server-summary.js";
-export {scheduleAnnouncement, cancelAnnouncement, listPendingAnnouncements, runAnnouncementsJob} from "./jobs/announcements.js";
-export {checkAndPostBirthdays} from "./jobs/birthday-checker.js";
-export {aggregateActivityMetrics} from "./jobs/activity-aggregator.js";
+export {
+  configureDailyPost,
+  disableDailyPost,
+  checkAndSendDailyPosts,
+} from "./daily-posts.js";
+export { runServerSummaryJob } from "./jobs/server-summary.js";
+export {
+  scheduleAnnouncement,
+  cancelAnnouncement,
+  listPendingAnnouncements,
+  runAnnouncementsJob,
+} from "./jobs/announcements.js";
+export { checkAndPostBirthdays } from "./jobs/birthday-checker.js";
+export { aggregateActivityMetrics } from "./jobs/activity-aggregator.js";

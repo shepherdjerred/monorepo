@@ -25,7 +25,7 @@ export function createMinecraftInstance(
   stack: Stack,
   vpc: Vpc,
   keyPair: KeyPair,
-  availabilityZone: string
+  availabilityZone: string,
 ): Instance {
   const securityGroup = createSecurityGroup(stack, vpc);
 

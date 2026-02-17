@@ -42,7 +42,7 @@ If you design custom motion, follow the guidelines below.
 
 ## [Platform considerations](/design/human-interface-guidelines/motion#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, or tvOS.*
+_No additional considerations for iOS, iPadOS, macOS, or tvOS._
 
 ### [visionOS](/design/human-interface-guidelines/motion#visionOS)
 
@@ -104,9 +104,9 @@ Design considerations for vision and motion](https://developer.apple.com/videos/
 
 ## [Change log](/design/human-interface-guidelines/motion#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| September 9, 2025 | Added guidance for Liquid Glass. |
-| June 10, 2024 | Added game-specific examples and enhanced guidance for using motion in games. |
-| February 2, 2024 | Enhanced guidance for minimizing peripheral motion in visionOS apps. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
+| Date              | Changes                                                                       |
+| ----------------- | ----------------------------------------------------------------------------- |
+| September 9, 2025 | Added guidance for Liquid Glass.                                              |
+| June 10, 2024     | Added game-specific examples and enhanced guidance for using motion in games. |
+| February 2, 2024  | Enhanced guidance for minimizing peripheral motion in visionOS apps.          |
+| June 21, 2023     | Updated to include guidance for visionOS.                                     |

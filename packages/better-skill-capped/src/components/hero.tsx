@@ -6,7 +6,7 @@ export type HeroProps = {
   subtitle?: string;
   color?: Color;
   size?: Size;
-}
+};
 
 export enum Color {
   NONE,

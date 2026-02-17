@@ -5,7 +5,9 @@ import { Database } from "bun:sqlite";
 const db = new Database("transactions.db");
 
 // Find yearly subscriptions using statistical patterns
-const yearlySubscriptions = db.query(`
+const yearlySubscriptions = db
+  .query(
+    `
   WITH merchant_data AS (
     SELECT
       merchant,
@@ -88,20 +90,28 @@ const yearlySubscriptions = db.query(`
     AND merchant NOT LIKE '%Contexts%'  -- Contexts is one-time purchase
     AND latest_date >= date('now', '-500 days')  -- Active in last 500 days
   ORDER BY avg_amount DESC, latest_date DESC
-`).all() as any[];
+`,
+  )
+  .all() as any[];
 
 console.log("📅 Yearly Subscriptions (sorted by price):\n");
 
 if (yearlySubscriptions.length === 0) {
   console.log("No yearly subscriptions found.");
 } else {
-  console.log(`${"#".padEnd(3)} ${"Yearly".padEnd(10)} ${"Service".padEnd(30)} ${"Last Charged".padEnd(13)} ${"Est. Next Charge".padEnd(16)}\n`);
+  console.log(
+    `${"#".padEnd(3)} ${"Yearly".padEnd(10)} ${"Service".padEnd(30)} ${"Last Charged".padEnd(13)} ${"Est. Next Charge".padEnd(16)}\n`,
+  );
 
   let total = 0;
   yearlySubscriptions.forEach((sub, i) => {
     const nextCharge = sub.estimated_next_charge;
-    console.log(`${(i + 1).toString().padEnd(3)} $${sub.avg_amount.toFixed(2).padStart(8)}  ${sub.merchant.substring(0, 28).padEnd(30)} ${sub.latest_date.padEnd(13)} ${nextCharge}`);
-    console.log(`   └─ ${sub.category} | ${sub.transaction_count}x | Every ~${sub.avg_days_between} days | Confidence: ${sub.subscription_score}%\n`);
+    console.log(
+      `${(i + 1).toString().padEnd(3)} $${sub.avg_amount.toFixed(2).padStart(8)}  ${sub.merchant.substring(0, 28).padEnd(30)} ${sub.latest_date.padEnd(13)} ${nextCharge}`,
+    );
+    console.log(
+      `   └─ ${sub.category} | ${sub.transaction_count}x | Every ~${sub.avg_days_between} days | Confidence: ${sub.subscription_score}%\n`,
+    );
     total += sub.avg_amount;
   });
 
@@ -112,7 +122,9 @@ if (yearlySubscriptions.length === 0) {
 console.log("\n" + "=".repeat(70));
 console.log("📅 Recent Yearly Subscription Charges (last 200 days):\n");
 
-const recentYearly = db.query(`
+const recentYearly = db
+  .query(
+    `
   SELECT
     date,
     merchant,
@@ -123,11 +135,15 @@ const recentYearly = db.query(`
     AND date >= date('now', '-200 days')
     AND merchant IN (${yearlySubscriptions.map(() => "?").join(",")})
   ORDER BY date DESC
-`).all(...yearlySubscriptions.map(s => s.merchant)) as any[];
+`,
+  )
+  .all(...yearlySubscriptions.map((s) => s.merchant)) as any[];
 
 if (recentYearly.length > 0) {
-  recentYearly.forEach(txn => {
-    console.log(`${txn.date} | ${txn.merchant.padEnd(30)} | $${Math.abs(txn.amount).toFixed(2).padStart(8)} | ${txn.category}`);
+  recentYearly.forEach((txn) => {
+    console.log(
+      `${txn.date} | ${txn.merchant.padEnd(30)} | $${Math.abs(txn.amount).toFixed(2).padStart(8)} | ${txn.category}`,
+    );
   });
 } else {
   console.log("No recent charges from detected yearly subscriptions.");

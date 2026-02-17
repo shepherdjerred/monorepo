@@ -24,9 +24,9 @@ Controls contain a symbol image, a title, and, optionally, a value. The symbol v
 
 Controls display their information differently depending on where they appear:
 
-* In Control Center, a control displays its symbol and, at larger sizes, its title and value.
-* On the Lock Screen, a control displays its symbol.
-* On iPhone devices with a control assigned to the Action button, pressing and holding it displays the control’s symbol in the Dynamic Island, as well as its value (if present).
+- In Control Center, a control displays its symbol and, at larger sizes, its title and value.
+- On the Lock Screen, a control displays its symbol.
+- On iPhone devices with a control assigned to the Action button, pressing and holding it displays the control’s symbol in the Dynamic Island, as well as its value (if present).
 
 ![A partial screenshot of Control Center on iPhone, highlighting that the Silent mode control is active, with a symbol of a bell with a line drawn through it and red tint.](https://docs-assets.developer.apple.com/published/01a84972ab485b0b33d4342bd1b1a42a/control-control-center%402x.png)
 
@@ -61,11 +61,11 @@ Nontinted control toggle in the off state
 
 Tinted control toggle in the on state
 
-**Help people provide additional information the system needs to perform an action.** A person may need to configure a control to perform a desired action — for example, select a specific light in a house to turn on and off. If a control requires configuration, prompt people to complete this step when they first add it. People can reconfigure the control at any time. For developer guidance, see [`promptsForUserConfiguration()`](/documentation/SwiftUI/ControlWidgetConfiguration/promptsForUserConfiguration()).
+**Help people provide additional information the system needs to perform an action.** A person may need to configure a control to perform a desired action — for example, select a specific light in a house to turn on and off. If a control requires configuration, prompt people to complete this step when they first add it. People can reconfigure the control at any time. For developer guidance, see [`promptsForUserConfiguration()`](</documentation/SwiftUI/ControlWidgetConfiguration/promptsForUserConfiguration()>).
 
 ![A representation of a control with the ability to set an option to a value a person chooses.](https://docs-assets.developer.apple.com/published/2862099d2344c5c6576a3c4503b0c0b4/control-configuration-options%402x.png)
 
-**Provide hint text for the Action button.** When a person presses the Action button, the system displays hint text to help them understand what happens when they press and hold. When someone presses and holds the Action button, the system performs the action configured to it. Use verbs to construct the hint text. For developer guidance, see [`controlWidgetActionHint(_:)`](/documentation/SwiftUI/View/controlWidgetActionHint(_:)-5yoyh).
+**Provide hint text for the Action button.** When a person presses the Action button, the system displays hint text to help them understand what happens when they press and hold. When someone presses and holds the Action button, the system performs the action configured to it. Use verbs to construct the hint text. For developer guidance, see [`controlWidgetActionHint(_:)`](</documentation/SwiftUI/View/controlWidgetActionHint(_:)-5yoyh>).
 
 ![A partial screenshot of the Home Screen on iPhone that displays hint text for the Action button. The hint text is Hold for Silent.](https://docs-assets.developer.apple.com/published/530aa049e2d419ed4af0e3e4a0fb812e/controls-action-button-coaching-text-on%402x.png)
 
@@ -95,7 +95,7 @@ If your app supports camera capture, starting with iOS 18 you can create a contr
 
 ## [Platform considerations](/design/human-interface-guidelines/controls#Platform-considerations)
 
-*No additional considerations for iOS or iPadOS. Not supported in macOS, watchOS, tvOS, or visionOS.*
+_No additional considerations for iOS or iPadOS. Not supported in macOS, watchOS, tvOS, or visionOS._
 
 ## [Resources](/design/human-interface-guidelines/controls#Resources)
 
@@ -113,6 +113,6 @@ If your app supports camera capture, starting with iOS 18 you can create a contr
 
 ## [Change log](/design/human-interface-guidelines/controls#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date          | Changes   |
+| ------------- | --------- |
 | June 10, 2024 | New page. |

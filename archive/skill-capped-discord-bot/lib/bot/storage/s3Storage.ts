@@ -42,7 +42,7 @@ export class S3Storage<V> implements Storage<V> {
     try {
       const result = await this.client.send(command);
       const deserializedValue = this.serializer.deserialize(
-        result.Body as string
+        result.Body as string,
       );
       return Promise.resolve(deserializedValue);
     } catch (exception: unknown) {

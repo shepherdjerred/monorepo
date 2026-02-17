@@ -5,7 +5,15 @@ import { createIngress } from "../misc/tailscale.ts";
 import type { HelmValuesForChart } from "../misc/typed-helm-parameters.ts";
 
 export function createArgoCdApp(chart: Chart) {
-  createIngress(chart, "argocd-ingress", "argocd", "argocd-server", 443, ["argocd"], true);
+  createIngress(
+    chart,
+    "argocd-ingress",
+    "argocd",
+    "argocd-server",
+    443,
+    ["argocd"],
+    true,
+  );
 
   const argoCdValues: HelmValuesForChart<"argo-cd"> = {
     global: {

@@ -83,7 +83,9 @@ const VELERO_SCHEDULE_CONFIGS: VeleroScheduleConfig[] = [
 /**
  * Enrich schedules with auto-calculated monitoring parameters
  */
-function enrichSchedulesWithMonitoring(schedules: VeleroScheduleConfig[]): VeleroScheduleConfigWithMonitoring[] {
+function enrichSchedulesWithMonitoring(
+  schedules: VeleroScheduleConfig[],
+): VeleroScheduleConfigWithMonitoring[] {
   return schedules.map((schedule) => {
     const monitoring = calculateMonitoringFromCron(schedule.cronSchedule);
     return {
@@ -99,4 +101,6 @@ function enrichSchedulesWithMonitoring(schedules: VeleroScheduleConfig[]): Veler
 /**
  * Export schedules with monitoring parameters calculated from cron expressions
  */
-export const VELERO_SCHEDULES = enrichSchedulesWithMonitoring(VELERO_SCHEDULE_CONFIGS);
+export const VELERO_SCHEDULES = enrichSchedulesWithMonitoring(
+  VELERO_SCHEDULE_CONFIGS,
+);

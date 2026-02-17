@@ -24,20 +24,20 @@ As you begin designing your app or game for iOS, start by understanding the foll
 
 **System features.** iOS provides several features that help people interact with the system and their apps in familiar, consistent ways.
 
-* [Widgets](/design/human-interface-guidelines/widgets)
-* [Home Screen quick actions](/design/human-interface-guidelines/home-screen-quick-actions)
-* [Spotlight](https://developer.apple.com/design/human-interface-guidelines/searching)
-* [Shortcuts](https://developer.apple.com/design/human-interface-guidelines/siri#Shortcuts-and-suggestions)
-* [Activity views](/design/human-interface-guidelines/activity-views)
+- [Widgets](/design/human-interface-guidelines/widgets)
+- [Home Screen quick actions](/design/human-interface-guidelines/home-screen-quick-actions)
+- [Spotlight](https://developer.apple.com/design/human-interface-guidelines/searching)
+- [Shortcuts](https://developer.apple.com/design/human-interface-guidelines/siri#Shortcuts-and-suggestions)
+- [Activity views](/design/human-interface-guidelines/activity-views)
 
 ## [Best practices](/design/human-interface-guidelines/designing-for-ios#Best-practices)
 
 Great iPhone experiences integrate the platform and device capabilities that people value most. To help your design feel at home in iOS, prioritize the following ways to incorporate these features and capabilities.
 
-* Help people concentrate on primary tasks and content by limiting the number of onscreen controls while making secondary details and actions discoverable with minimal interaction.
-* Adapt seamlessly to appearance changes — like device orientation, Dark Mode, and Dynamic Type — letting people choose the configurations that work best for them.
-* Support interactions that accommodate the way people usually hold their device. For example, it tends to be easier and more comfortable for people to reach a control when it’s located in the middle or bottom area of the display, so it’s especially important let people swipe to navigate back or initiate actions in a list row.
-* With people’s permission, integrate information available through platform capabilities in ways that enhance the experience without asking people to enter data. For example, you might accept payments, provide security through biometric authentication, or offer features that use the device’s location.
+- Help people concentrate on primary tasks and content by limiting the number of onscreen controls while making secondary details and actions discoverable with minimal interaction.
+- Adapt seamlessly to appearance changes — like device orientation, Dark Mode, and Dynamic Type — letting people choose the configurations that work best for them.
+- Support interactions that accommodate the way people usually hold their device. For example, it tends to be easier and more comfortable for people to reach a control when it’s located in the middle or bottom area of the display, so it’s especially important let people swipe to navigate back or initiate actions in a list row.
+- With people’s permission, integrate information available through platform capabilities in ways that enhance the experience without asking people to enter data. For example, you might accept payments, provide security through biometric authentication, or offer features that use the device’s location.
 
 ## [Resources](/design/human-interface-guidelines/designing-for-ios#Resources)
 

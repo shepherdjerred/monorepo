@@ -2,7 +2,8 @@ import { AST_NODE_TYPES, ESLintUtils } from "@typescript-eslint/utils";
 import type { TSESTree } from "@typescript-eslint/utils";
 
 const createRule = ESLintUtils.RuleCreator(
-  (name) => `https://github.com/shepherdjerred/monorepo/blob/main/packages/eslint-config/src/rules/${name}.ts`,
+  (name) =>
+    `https://github.com/shepherdjerred/monorepo/blob/main/packages/eslint-config/src/rules/${name}.ts`,
 );
 
 type MessageIds = "preferAsyncAwait" | "preferTryCatch" | "preferAwait";
@@ -29,7 +30,10 @@ export const preferAsyncAwait = createRule<[], MessageIds>({
   create(context) {
     function isPromiseMethodCall(
       node: TSESTree.CallExpression,
-    ): { method: "then" | "catch" | "finally"; callee: TSESTree.MemberExpression } | null {
+    ): {
+      method: "then" | "catch" | "finally";
+      callee: TSESTree.MemberExpression;
+    } | null {
       if (
         node.callee.type !== AST_NODE_TYPES.MemberExpression ||
         node.callee.property.type !== AST_NODE_TYPES.Identifier
@@ -38,7 +42,11 @@ export const preferAsyncAwait = createRule<[], MessageIds>({
       }
 
       const methodName = node.callee.property.name;
-      if (methodName === "then" || methodName === "catch" || methodName === "finally") {
+      if (
+        methodName === "then" ||
+        methodName === "catch" ||
+        methodName === "finally"
+      ) {
         return { method: methodName, callee: node.callee };
       }
 
@@ -59,7 +67,8 @@ export const preferAsyncAwait = createRule<[], MessageIds>({
         object.callee.object.type === AST_NODE_TYPES.Identifier &&
         object.callee.object.name === "Promise" &&
         object.callee.property.type === AST_NODE_TYPES.Identifier &&
-        (object.callee.property.name === "resolve" || object.callee.property.name === "reject")
+        (object.callee.property.name === "resolve" ||
+          object.callee.property.name === "reject")
       ) {
         return true;
       }

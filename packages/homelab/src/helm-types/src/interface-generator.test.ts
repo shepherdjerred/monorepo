@@ -78,7 +78,9 @@ describe("Code Generation", () => {
   });
 
   test("should summarize large objects/arrays", () => {
-    const largeObj = Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`key${String(i)}`, i]));
+    const largeObj = Object.fromEntries(
+      Array.from({ length: 10 }, (_, i) => [`key${String(i)}`, i]),
+    );
     const largeArr = Array.from({ length: 100 }, (_, i) => i);
 
     const tsInterface: TypeScriptInterface = {
@@ -104,7 +106,8 @@ describe("Code Generation", () => {
         policy: {
           type: "string",
           optional: true,
-          description: "Policy rules: p, role:org-admin, applications, *, */*, allow",
+          description:
+            "Policy rules: p, role:org-admin, applications, *, */*, allow",
           default: "",
         },
       },
@@ -127,7 +130,8 @@ describe("Code Generation", () => {
         rules: {
           type: "string",
           optional: true,
-          description: "Multiple patterns: */*, */*/*.js, and */test/* should all be escaped",
+          description:
+            "Multiple patterns: */*, */*/*.js, and */test/* should all be escaped",
         },
       },
     };
@@ -149,7 +153,8 @@ describe("Code Generation", () => {
         config: {
           type: "string",
           optional: true,
-          description: "Line 1 with */\nLine 2 also with */*, test\nLine 3 normal",
+          description:
+            "Line 1 with */\nLine 2 also with */*, test\nLine 3 normal",
         },
       },
     };

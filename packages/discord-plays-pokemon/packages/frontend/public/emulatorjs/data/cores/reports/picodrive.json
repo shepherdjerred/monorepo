@@ -1,1 +1,6 @@
-{ "core": "picodrive", "buildStart": "2025-01-07T17:45:43+00:00", "buildEnd": "2025-01-07T17:48:25+00:00", "options": {} }
+{
+  "core": "picodrive",
+  "buildStart": "2025-01-07T17:45:43+00:00",
+  "buildEnd": "2025-01-07T17:48:25+00:00",
+  "options": {}
+}

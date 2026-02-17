@@ -1,4 +1,9 @@
-import { dag, type Container, type Secret, ReturnType } from "@dagger.io/dagger";
+import {
+  dag,
+  type Container,
+  type Secret,
+  ReturnType,
+} from "@dagger.io/dagger";
 import versions from "../versions";
 import type { ExecResult } from "../utils/errors";
 import { getGitHubContainer } from "./github";
@@ -176,7 +181,8 @@ export const REVIEW_VERDICT_SCHEMA = JSON.stringify({
           side: {
             type: "string",
             enum: ["LEFT", "RIGHT"],
-            description: "Side of the diff: LEFT for deletions, RIGHT for additions",
+            description:
+              "Side of the diff: LEFT for deletions, RIGHT for additions",
           },
           body: {
             type: "string",
@@ -187,7 +193,13 @@ export const REVIEW_VERDICT_SCHEMA = JSON.stringify({
       },
     },
   },
-  required: ["should_approve", "confidence", "issue_count", "reasoning", "inline_comments"],
+  required: [
+    "should_approve",
+    "confidence",
+    "issue_count",
+    "reasoning",
+    "inline_comments",
+  ],
 });
 
 /**
@@ -198,7 +210,10 @@ export const REVIEW_VERDICT_SCHEMA = JSON.stringify({
  * @param ghVersion - GitHub CLI version (defaults to 2.63.2)
  * @returns Container with gh CLI installed
  */
-export function withGhCli(container: Container, ghVersion = GH_CLI_VERSION): Container {
+export function withGhCli(
+  container: Container,
+  ghVersion = GH_CLI_VERSION,
+): Container {
   return container
     .withExec([
       "sh",
@@ -223,7 +238,9 @@ export function withGhCli(container: Container, ghVersion = GH_CLI_VERSION): Con
  *   .withExec(["claude", "--print", "Hello, Claude!"]);
  * ```
  */
-export function getClaudeContainer(options: ClaudeContainerOptions = {}): Container {
+export function getClaudeContainer(
+  options: ClaudeContainerOptions = {},
+): Container {
   const nodeVersion = options.nodeVersion ?? versions.node;
   const claudeVersion = options.claudeVersion ?? CLAUDE_CODE_VERSION;
   const ghVersion = options.ghVersion ?? GH_CLI_VERSION;
@@ -236,7 +253,12 @@ export function getClaudeContainer(options: ClaudeContainerOptions = {}): Contai
     // Cache npm packages
     .withMountedCache("/root/.npm", dag.cacheVolume("claude-code-npm-cache"))
     // Install Claude Code CLI
-    .withExec(["npm", "install", "-g", `@anthropic-ai/claude-code@${claudeVersion}`])
+    .withExec([
+      "npm",
+      "install",
+      "-g",
+      `@anthropic-ai/claude-code@${claudeVersion}`,
+    ])
     // Configure git user
     .withExec(["git", "config", "--global", "user.name", "dagger-bot"])
     .withExec(["git", "config", "--global", "user.email", "dagger@localhost"])
@@ -257,15 +279,24 @@ export function getClaudeContainer(options: ClaudeContainerOptions = {}): Contai
  * @param auth - Authentication options
  * @returns Container with authentication configured
  */
-export function withClaudeAuth(container: Container, auth: ClaudeAuthOptions): Container {
+export function withClaudeAuth(
+  container: Container,
+  auth: ClaudeAuthOptions,
+): Container {
   let result = container;
 
   if (auth.anthropicApiKey) {
-    result = result.withSecretVariable("ANTHROPIC_API_KEY", auth.anthropicApiKey);
+    result = result.withSecretVariable(
+      "ANTHROPIC_API_KEY",
+      auth.anthropicApiKey,
+    );
   }
 
   if (auth.claudeOauthToken) {
-    result = result.withSecretVariable("CLAUDE_CODE_OAUTH_TOKEN", auth.claudeOauthToken);
+    result = result.withSecretVariable(
+      "CLAUDE_CODE_OAUTH_TOKEN",
+      auth.claudeOauthToken,
+    );
   }
 
   return result;
@@ -279,7 +310,10 @@ export function withClaudeAuth(container: Container, auth: ClaudeAuthOptions): C
  * @param options - Run options
  * @returns Container with Claude execution added
  */
-export function withClaudeRun(container: Container, options: ClaudeRunOptions): Container {
+export function withClaudeRun(
+  container: Container,
+  options: ClaudeRunOptions,
+): Container {
   const args = ["claude", "--print", "--dangerously-skip-permissions"];
 
   if (options.model) {
@@ -311,10 +345,16 @@ export function withClaudeRun(container: Container, options: ClaudeRunOptions): 
  * @param container - Container with Claude run already configured (via withClaudeRun)
  * @returns ExecResult with stdout, stderr, and exitCode
  */
-export async function executeClaudeRun(container: Container): Promise<ExecResult> {
+export async function executeClaudeRun(
+  container: Container,
+): Promise<ExecResult> {
   const synced = await container.sync();
 
-  const [stdout, stderr, exitCode] = await Promise.all([synced.stdout(), synced.stderr(), synced.exitCode()]);
+  const [stdout, stderr, exitCode] = await Promise.all([
+    synced.stdout(),
+    synced.stderr(),
+    synced.exitCode(),
+  ]);
 
   return { stdout, stderr, exitCode };
 }
@@ -349,7 +389,9 @@ export async function postReview(options: PostReviewOptions): Promise<string> {
  * @param options - Batched review options
  * @returns The API response
  */
-export async function postBatchedReview(options: BatchedReviewOptions): Promise<string> {
+export async function postBatchedReview(
+  options: BatchedReviewOptions,
+): Promise<string> {
   // Build the API request body
   const requestBody = {
     commit_id: options.commitId,
@@ -386,7 +428,9 @@ export async function postBatchedReview(options: BatchedReviewOptions): Promise<
  * @param options - Comment options
  * @returns The gh CLI output
  */
-export async function postComment(options: PostCommentOptions): Promise<string> {
+export async function postComment(
+  options: PostCommentOptions,
+): Promise<string> {
   const container = getGitHubContainer()
     .withSecretVariable("GH_TOKEN", options.githubToken)
     .withExec([

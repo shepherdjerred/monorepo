@@ -83,8 +83,6 @@ holograms-eye-level-positioning: false
 #       Cause: Connect|Read timed out
 player-skin-connection-timeout: 5
 
-
-
 # # # # # # # # # # # # # # # # #
 #
 # Damage Display
@@ -106,13 +104,11 @@ damage-display:
   duration: 40
   # Damage placeholder: {damage}
   # Animations and Placeholders DO work here
-  appearance: '&c{damage}'
+  appearance: "&c{damage}"
   # Appearance of the damage, if the damage is critical
-  critical-appearance: '&4&lCrit!&4 {damage}'
+  critical-appearance: "&4&lCrit!&4 {damage}"
   # Height offset
   height: 0
-
-
 
 # # # # # # # # # # # # # # # # #
 #
@@ -133,10 +129,9 @@ healing-display:
   duration: 40
   # Heal placeholder: {heal}
   # Animations and Placeholders DO work here
-  appearance: '&a+ {heal}'
+  appearance: "&a+ {heal}"
   # Height offset
   height: 0
-
 
 # # # # # # # # # # # # # # # # #
 #
@@ -147,12 +142,12 @@ healing-display:
 # # # # # # # # # #
 
 custom-replacements:
-  '[x]': '█'
-  '[X]': '█'
-  '[/]': '▌'
-  '[,]': '░'
-  '[,,]': '▒'
-  '[,,,]': '▓'
-  '[p]': '•'
-  '[P]': '•'
-  '[|]': '⎹'
+  "[x]": "█"
+  "[X]": "█"
+  "[/]": "▌"
+  "[,]": "░"
+  "[,,]": "▒"
+  "[,,,]": "▓"
+  "[p]": "•"
+  "[P]": "•"
+  "[|]": "⎹"

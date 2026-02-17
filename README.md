@@ -230,6 +230,7 @@ for dirname, commit_date in subdirs_with_dates:
             cog.outl("*No description available.*")
     cog.outl()
 ]]]-->
+
 **7 active packages**
 
 ### [mux-site](https://github.com/shepherdjerred/monorepo/tree/main/packages/mux-site) (2026-01-04)
@@ -264,10 +265,10 @@ packages/eslint-config provides a comprehensive and modular ESLint configuration
 
 ## Other Directories
 
-| Directory | Description |
-|-----------|-------------|
+| Directory              | Description                                           |
+| ---------------------- | ----------------------------------------------------- |
 | [practice/](practice/) | Learning projects - books, courses, coding challenges |
-| [archive/](archive/) | Archived projects - completed or superseded |
+| [archive/](archive/)   | Archived projects - completed or superseded           |
 
 ## Development
 

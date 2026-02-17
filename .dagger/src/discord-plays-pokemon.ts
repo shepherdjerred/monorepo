@@ -35,9 +35,18 @@ function installCommonDeps(workspaceSource: Directory): Container {
   return getBaseBunContainer()
     .withFile("/workspace/package.json", workspaceSource.file("package.json"))
     .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
-    .withDirectory("/workspace/packages/common", workspaceSource.directory("packages/common"))
-    .withDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
-    .withDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
+    .withDirectory(
+      "/workspace/packages/common",
+      workspaceSource.directory("packages/common"),
+    )
+    .withDirectory(
+      "/workspace/packages/backend",
+      workspaceSource.directory("packages/backend"),
+    )
+    .withDirectory(
+      "/workspace/packages/frontend",
+      workspaceSource.directory("packages/frontend"),
+    )
     .withWorkdir("/workspace")
     .withExec(["bun", "install", "--frozen-lockfile"])
     .withWorkdir("/workspace/packages/common")
@@ -45,7 +54,11 @@ function installCommonDeps(workspaceSource: Directory): Container {
 }
 
 function lintCommon(workspaceSource: Directory): Container {
-  return installCommonDeps(workspaceSource).withExec(["bun", "run", "lint:check"]);
+  return installCommonDeps(workspaceSource).withExec([
+    "bun",
+    "run",
+    "lint:check",
+  ]);
 }
 
 function buildCommon(workspaceSource: Directory): Container {
@@ -60,7 +73,9 @@ function packCommon(workspaceSource: Directory): Container {
   return buildCommon(workspaceSource).withExec(["bun", "pm", "pack"]);
 }
 
-async function getCommonPackage(workspaceSource: Directory): Promise<Directory> {
+async function getCommonPackage(
+  workspaceSource: Directory,
+): Promise<Directory> {
   return packCommon(workspaceSource).directory("/workspace/packages/common");
 }
 
@@ -70,14 +85,22 @@ async function getCommonPackage(workspaceSource: Directory): Promise<Directory> 
  * Install dependencies for the backend package.
  * Builds and packs common first, then mounts all workspace packages.
  */
-async function installBackendDeps(workspaceSource: Directory): Promise<Container> {
+async function installBackendDeps(
+  workspaceSource: Directory,
+): Promise<Container> {
   const commonDir = await getCommonPackage(workspaceSource);
 
   return getBaseBunContainer()
     .withFile("/workspace/package.json", workspaceSource.file("package.json"))
     .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
-    .withDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
-    .withDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
+    .withDirectory(
+      "/workspace/packages/backend",
+      workspaceSource.directory("packages/backend"),
+    )
+    .withDirectory(
+      "/workspace/packages/frontend",
+      workspaceSource.directory("packages/frontend"),
+    )
     .withDirectory("/workspace/packages/common", commonDir)
     .withWorkdir("/workspace")
     .withExec(["bun", "install", "--frozen-lockfile"]);
@@ -101,8 +124,12 @@ async function testBackend(workspaceSource: Directory): Promise<Container> {
     .withExec(["bun", "run", "test"]);
 }
 
-async function getBackendWithDeps(workspaceSource: Directory): Promise<Directory> {
-  return (await installBackendDeps(workspaceSource)).directory("/workspace/packages/backend");
+async function getBackendWithDeps(
+  workspaceSource: Directory,
+): Promise<Directory> {
+  return (await installBackendDeps(workspaceSource)).directory(
+    "/workspace/packages/backend",
+  );
 }
 
 // --- Frontend package helpers ---
@@ -111,14 +138,22 @@ async function getBackendWithDeps(workspaceSource: Directory): Promise<Directory
  * Install dependencies for the frontend package.
  * Builds and packs common first, then mounts all workspace packages.
  */
-async function installFrontendDeps(workspaceSource: Directory): Promise<Container> {
+async function installFrontendDeps(
+  workspaceSource: Directory,
+): Promise<Container> {
   const commonDir = await getCommonPackage(workspaceSource);
 
   return getBaseBunContainer()
     .withFile("/workspace/package.json", workspaceSource.file("package.json"))
     .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
-    .withDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
-    .withDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
+    .withDirectory(
+      "/workspace/packages/frontend",
+      workspaceSource.directory("packages/frontend"),
+    )
+    .withDirectory(
+      "/workspace/packages/backend",
+      workspaceSource.directory("packages/backend"),
+    )
     .withDirectory("/workspace/packages/common", commonDir)
     .withWorkdir("/workspace")
     .withExec(["bun", "install", "--frozen-lockfile"]);
@@ -142,8 +177,12 @@ async function testFrontend(workspaceSource: Directory): Promise<Container> {
     .withExec(["bun", "run", "test"]);
 }
 
-async function getFrontendBuild(workspaceSource: Directory): Promise<Directory> {
-  return (await buildFrontend(workspaceSource)).directory("/workspace/packages/frontend/dist");
+async function getFrontendBuild(
+  workspaceSource: Directory,
+): Promise<Directory> {
+  return (await buildFrontend(workspaceSource)).directory(
+    "/workspace/packages/frontend/dist",
+  );
 }
 
 // --- Docker image helpers ---
@@ -160,7 +199,8 @@ async function buildDockerImage(
   const backendDir = await getBackendWithDeps(workspaceSource);
   const frontendDist = await getFrontendBuild(workspaceSource);
 
-  const standardPath = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
+  const standardPath =
+    "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
 
   return dag
     .container()
@@ -170,13 +210,30 @@ async function buildDockerImage(
     .withEnvVariable("DEBIAN_FRONTEND", "noninteractive")
     .withUser("root")
     .withExec(["apt", "update"])
-    .withExec(["apt", "install", "-y", "curl", "kde-config-screenlocker", "unzip"])
+    .withExec([
+      "apt",
+      "install",
+      "-y",
+      "curl",
+      "kde-config-screenlocker",
+      "unzip",
+    ])
     .withExec(["sh", "-c", "curl -fsSL https://bun.sh/install | bash"])
-    .withEnvVariable("PATH", `/root/.bun/bin:/home/ubuntu/.bun/bin:${standardPath}`)
+    .withEnvVariable(
+      "PATH",
+      `/root/.bun/bin:/home/ubuntu/.bun/bin:${standardPath}`,
+    )
     .withWorkdir("/home/ubuntu")
     .withExec(["mkdir", "-p", "data"])
-    .withFile("/tmp/supervisord.conf", workspaceSource.file("misc/supervisord.conf"))
-    .withExec(["sh", "-c", "cat /tmp/supervisord.conf >> /etc/supervisord.conf && rm /tmp/supervisord.conf"])
+    .withFile(
+      "/tmp/supervisord.conf",
+      workspaceSource.file("misc/supervisord.conf"),
+    )
+    .withExec([
+      "sh",
+      "-c",
+      "cat /tmp/supervisord.conf >> /etc/supervisord.conf && rm /tmp/supervisord.conf",
+    ])
     .withFile("package.json", backendDir.file("package.json"))
     .withFile("bun.lock", workspaceSource.file("bun.lock"))
     .withDirectory("packages/backend", backendDir)
@@ -185,7 +242,16 @@ async function buildDockerImage(
     .withExec(["mkdir", "-p", "Downloads"])
     .withExec(["chown", "-R", "ubuntu:ubuntu", "/home/ubuntu"])
     .withUser("ubuntu")
-    .withExec(["kwriteconfig5", "--file", "kscreenlockerrc", "--group", "Daemon", "--key", "Autolock", "false"])
+    .withExec([
+      "kwriteconfig5",
+      "--file",
+      "kscreenlockerrc",
+      "--group",
+      "Daemon",
+      "--key",
+      "Autolock",
+      "false",
+    ])
     .withExec([
       "kwriteconfig5",
       "--file",
@@ -230,7 +296,9 @@ function buildDocs(workspaceSource: Directory): Directory {
  * @param source The monorepo root source directory
  * @returns A message indicating completion
  */
-export async function checkDiscordPlaysPokemon(source: Directory): Promise<string> {
+export async function checkDiscordPlaysPokemon(
+  source: Directory,
+): Promise<string> {
   const pkgSource = source.directory("packages/discord-plays-pokemon");
 
   await Promise.all([
@@ -316,7 +384,9 @@ export async function deployDiscordPlaysPokemon(
   const pkgSource = source.directory("packages/discord-plays-pokemon");
   const outputs: string[] = [];
 
-  logWithTimestamp(`Starting deploy for discord-plays-pokemon version ${version} (${gitSha})`);
+  logWithTimestamp(
+    `Starting deploy for discord-plays-pokemon version ${version} (${gitSha})`,
+  );
 
   // Build and publish Docker image to GHCR
   const image = await withTiming("Docker image build", async () => {

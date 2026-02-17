@@ -24,7 +24,7 @@ Text views can be any height and allow scrolling when the content extends outsid
 
 ## [Platform considerations](/design/human-interface-guidelines/text-views#Platform-considerations)
 
-*No additional considerations for macOS, visionOS, or watchOS.*
+_No additional considerations for macOS, visionOS, or watchOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/text-views#iOS-iPadOS)
 
@@ -54,6 +54,6 @@ You can display text in tvOS using a text view. Because text input in tvOS is mi
 
 ## [Change log](/design/human-interface-guidelines/text-views#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date         | Changes                                            |
+| ------------ | -------------------------------------------------- |
 | June 5, 2023 | Updated guidance to reflect changes in watchOS 10. |

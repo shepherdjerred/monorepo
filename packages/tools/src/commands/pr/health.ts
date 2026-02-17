@@ -14,11 +14,11 @@ import { formatHealthReport, formatJson } from "../../lib/output/index.ts";
 export type HealthOptions = {
   repo?: string | undefined;
   json?: boolean | undefined;
-}
+};
 
 export async function healthCommand(
   prNumber?: string,
-  options: HealthOptions = {}
+  options: HealthOptions = {},
 ): Promise<void> {
   // Get PR - either by number or from current branch
   const pr = prNumber
@@ -29,7 +29,7 @@ export async function healthCommand(
     console.error(
       prNumber
         ? `Error: PR #${prNumber} not found`
-        : "Error: No PR found for current branch"
+        : "Error: No PR found for current branch",
     );
     process.exit(1);
   }
@@ -54,7 +54,11 @@ export async function healthCommand(
   }
 
   // Check 3: Approval status
-  const approvalCheck = await checkApprovalHealth(pr.number, pr.reviewDecision, options.repo);
+  const approvalCheck = await checkApprovalHealth(
+    pr.number,
+    pr.reviewDecision,
+    options.repo,
+  );
   checks.push(approvalCheck);
   if (approvalCheck.status === "UNHEALTHY") {
     nextSteps.push("Address review feedback");
@@ -91,7 +95,7 @@ export async function healthCommand(
 }
 
 async function checkMergeConflictsHealth(
-  baseBranch: string
+  baseBranch: string,
 ): Promise<HealthCheck> {
   const result = await checkMergeConflicts(baseBranch);
   const upToDate = await isBranchUpToDate(baseBranch);
@@ -106,7 +110,9 @@ async function checkMergeConflictsHealth(
         details.push(`Conflicting file: ${file}`);
       }
     }
-    commands.push(`git fetch origin ${baseBranch} && git merge origin/${baseBranch}`);
+    commands.push(
+      `git fetch origin ${baseBranch} && git merge origin/${baseBranch}`,
+    );
 
     return {
       name: "Merge Conflicts",
@@ -118,7 +124,9 @@ async function checkMergeConflictsHealth(
 
   if (!upToDate) {
     details.push(`Branch is behind origin/${baseBranch}`);
-    commands.push(`git fetch origin ${baseBranch} && git merge origin/${baseBranch}`);
+    commands.push(
+      `git fetch origin ${baseBranch} && git merge origin/${baseBranch}`,
+    );
 
     return {
       name: "Merge Conflicts",
@@ -140,7 +148,7 @@ async function checkMergeConflictsHealth(
 
 async function checkCIHealth(
   prNumber: number,
-  repo?: string
+  repo?: string,
 ): Promise<HealthCheck> {
   const checkRuns = await getCheckRuns(prNumber, repo);
 
@@ -154,7 +162,7 @@ async function checkCIHealth(
 
   const failed = checkRuns.filter((c) => c.conclusion === "failure");
   const pending = checkRuns.filter(
-    (c) => c.status === "in_progress" || c.status === "queued"
+    (c) => c.status === "in_progress" || c.status === "queued",
   );
   const passed = checkRuns.filter((c) => c.conclusion === "success");
 
@@ -172,7 +180,9 @@ async function checkCIHealth(
       const firstFailed = failedJobs[0];
       if (firstFailed) {
         details.push(`Run ID: ${String(firstFailed.runId)}`);
-        commands.push(`tools pr logs ${String(firstFailed.runId)} --failed-only`);
+        commands.push(
+          `tools pr logs ${String(firstFailed.runId)} --failed-only`,
+        );
       }
     }
 
@@ -196,7 +206,9 @@ async function checkCIHealth(
     };
   }
 
-  details.push(`${String(passed.length)} check${passed.length === 1 ? "" : "s"} passed`);
+  details.push(
+    `${String(passed.length)} check${passed.length === 1 ? "" : "s"} passed`,
+  );
 
   return {
     name: "CI Status",
@@ -208,7 +220,7 @@ async function checkCIHealth(
 async function checkApprovalHealth(
   prNumber: number,
   reviewDecision: string | null,
-  repo?: string
+  repo?: string,
 ): Promise<HealthCheck> {
   const reviews = await getLatestReviewsByAuthor(prNumber, repo);
 

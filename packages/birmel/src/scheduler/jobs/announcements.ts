@@ -13,7 +13,7 @@ export async function scheduleAnnouncement(
   message: string,
   scheduledAt: Date,
   createdBy: string,
-  repeat?: "daily" | "weekly" | "monthly"
+  repeat?: "daily" | "weekly" | "monthly",
 ): Promise<number> {
   const result = await prisma.scheduledAnnouncement.create({
     data: {
@@ -41,7 +41,7 @@ export async function scheduleAnnouncement(
  */
 export async function cancelAnnouncement(
   id: number,
-  guildId: string
+  guildId: string,
 ): Promise<boolean> {
   const result = await prisma.scheduledAnnouncement.deleteMany({
     where: {
@@ -63,7 +63,7 @@ export async function cancelAnnouncement(
  * List pending announcements for a guild
  */
 export async function listPendingAnnouncements(
-  guildId: string
+  guildId: string,
 ): Promise<
   { id: number; message: string; scheduledAt: Date; channelId: string }[]
 > {
@@ -75,19 +75,26 @@ export async function listPendingAnnouncements(
     orderBy: { scheduledAt: "asc" },
   });
 
-  return announcements.map((a: { id: number; message: string; scheduledAt: Date; channelId: string }) => ({
-    id: a.id,
-    message: a.message.slice(0, 100) + (a.message.length > 100 ? "..." : ""),
-    scheduledAt: a.scheduledAt,
-    channelId: a.channelId,
-  }));
+  return announcements.map(
+    (a: {
+      id: number;
+      message: string;
+      scheduledAt: Date;
+      channelId: string;
+    }) => ({
+      id: a.id,
+      message: a.message.slice(0, 100) + (a.message.length > 100 ? "..." : ""),
+      scheduledAt: a.scheduledAt,
+      channelId: a.channelId,
+    }),
+  );
 }
 
 /**
  * Send a single announcement
  */
 async function sendAnnouncement(
-  announcement: ScheduledAnnouncement
+  announcement: ScheduledAnnouncement,
 ): Promise<void> {
   try {
     const client = getDiscordClient();
@@ -132,7 +139,7 @@ async function sendAnnouncement(
         announcement.message,
         nextDate,
         announcement.createdBy,
-        announcement.repeat as "daily" | "weekly" | "monthly"
+        announcement.repeat as "daily" | "weekly" | "monthly",
       );
     }
 

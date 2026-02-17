@@ -4,9 +4,13 @@
 
 /** User account */
 export interface AuthUser {
+	/** Unique user identifier. */
 	id: string;
+	/** Login username. */
 	username: string;
+	/** Optional display name. */
 	display_name?: string;
+	/** Account creation timestamp (ISO 8601). */
 	created_at: string;
 }
 
@@ -332,6 +336,7 @@ export type ResourceState =
 	| { type: "Missing", content?: undefined }
 	/** Backend is in an error state */
 	| { type: "Error", content: {
+	/** Error description. */
 	message: string;
 }}
 	/** Kubernetes: pod is in CrashLoopBackOff */
@@ -343,6 +348,7 @@ export type ResourceState =
 	 * (e.g., PVC deleted, sprite with auto_destroy deleted)
 	 */
 	| { type: "DataLost", content: {
+	/** Why data was lost. */
 	reason: string;
 }}
 	/** Git worktree was deleted */
@@ -400,25 +406,50 @@ export interface HealthCheckResult {
 
 /** Request to finish passkey authentication */
 export interface LoginFinishRequest {
+	/** Username being authenticated. */
 	username: string;
+	/** Challenge ID from the start response. */
 	challenge_id: string;
+	/** WebAuthn credential from the browser. */
 	credential: any;
 }
 
 /** Response from login finish */
 export interface LoginFinishResponse {
+	/** The authenticated user. */
 	user: AuthUser;
 }
 
 /** Request to start passkey authentication */
 export interface LoginStartRequest {
+	/** Username to authenticate. */
 	username: string;
 }
 
 /** Response from login start */
 export interface LoginStartResponse {
+	/** Server-generated challenge identifier. */
 	challenge_id: string;
+	/** WebAuthn credential request options. */
 	options: any;
+}
+
+/** Git merge method for pull requests */
+export enum MergeMethod {
+	/** Create a merge commit */
+	Merge = "Merge",
+	/** Squash commits and merge */
+	Squash = "Squash",
+	/** Rebase and merge */
+	Rebase = "Rebase",
+}
+
+/** Request to merge a pull request */
+export interface MergePrRequest {
+	/** Merge method to use */
+	method: MergeMethod;
+	/** Whether to delete the branch after merge */
+	delete_branch: boolean;
 }
 
 /** Progress step during session creation */
@@ -483,26 +514,35 @@ export interface RecreateResult {
 
 /** Request to finish passkey registration */
 export interface RegistrationFinishRequest {
+	/** Username being registered. */
 	username: string;
+	/** Challenge ID from the start response. */
 	challenge_id: string;
+	/** WebAuthn credential from the browser. */
 	credential: any;
+	/** Optional name for the authenticator device. */
 	device_name?: string;
 }
 
 /** Response from registration finish */
 export interface RegistrationFinishResponse {
+	/** The newly created user. */
 	user: AuthUser;
 }
 
 /** Request to start passkey registration */
 export interface RegistrationStartRequest {
+	/** Desired username. */
 	username: string;
+	/** Optional display name. */
 	display_name?: string;
 }
 
 /** Response from registration start */
 export interface RegistrationStartResponse {
+	/** Server-generated challenge identifier. */
 	challenge_id: string;
+	/** WebAuthn credential creation options. */
 	options: any;
 }
 
@@ -564,6 +604,18 @@ export enum ReviewDecision {
 	/** Review is required but not yet provided */
 	ReviewRequired = "ReviewRequired",
 	/** Changes have been requested */
+	ChangesRequested = "ChangesRequested",
+	/** PR has been approved */
+	Approved = "Approved",
+}
+
+/** PR review status */
+export enum PrReviewStatus {
+	/** Review status is unknown or not applicable */
+	Unknown = "Unknown",
+	/** Review is required but not yet provided */
+	ReviewRequired = "ReviewRequired",
+	/** Reviewers have requested changes */
 	ChangesRequested = "ChangesRequested",
 	/** PR has been approved */
 	Approved = "Approved",
@@ -642,7 +694,7 @@ export interface Session {
 	pr_default_merge_method?: MergeMethod;
 	/** Whether to delete branch after merge (from repository settings) */
 	pr_delete_branch_on_merge?: boolean;
-	/** Whether this PR can be merged (all requirements met) */
+	/** Whether this PR can be merged (all requirements met: PR exists, checks passing, approved, no conflicts) */
 	can_merge_pr: boolean;
 	/** Current Claude agent working status (from hooks) */
 	claude_status: ClaudeWorkingStatus;
@@ -696,36 +748,6 @@ export interface UpdateCredentialRequest {
 	value: string;
 }
 
-/** PR review status */
-export enum PrReviewStatus {
-	/** Review status is unknown or not applicable */
-	Unknown = "Unknown",
-	/** Review is required but not yet provided */
-	ReviewRequired = "ReviewRequired",
-	/** Reviewers have requested changes */
-	ChangesRequested = "ChangesRequested",
-	/** PR has been approved */
-	Approved = "Approved",
-}
-
-/** Git merge method for pull requests */
-export enum MergeMethod {
-	/** Create a merge commit */
-	Merge = "Merge",
-	/** Squash commits and merge */
-	Squash = "Squash",
-	/** Rebase and merge */
-	Rebase = "Rebase",
-}
-
-/** Request to merge a pull request */
-export interface MergePrRequest {
-	/** Merge method to use */
-	method: MergeMethod;
-	/** Whether to delete the branch after merge */
-	delete_branch: boolean;
-}
-
 /** Response from uploading an image file */
 export interface UploadResponse {
 	/** Absolute path to the uploaded file */
@@ -736,9 +758,13 @@ export interface UploadResponse {
 
 /** User's passkey credential */
 export interface UserPasskey {
+	/** Unique passkey identifier. */
 	id: string;
+	/** Owner user ID. */
 	user_id: string;
+	/** Optional device name for the passkey. */
 	device_name?: string;
+	/** Passkey registration timestamp (ISO 8601). */
 	created_at: string;
 }
 
@@ -800,22 +826,30 @@ export type Event =
 	| { type: "SessionUpdated", payload: Session }
 	/** A session was deleted */
 	| { type: "SessionDeleted", payload: {
+	/** ID of the deleted session. */
 	id: string;
 }}
 	/** Session status changed */
 	| { type: "StatusChanged", payload: {
+	/** Session ID. */
 	id: string;
+	/** Previous status. */
 	old: SessionStatus;
+	/** New status. */
 	new: SessionStatus;
 }}
 	/** Progress update during async operation */
 	| { type: "SessionProgress", payload: {
+	/** Session ID. */
 	id: string;
+	/** Progress step details. */
 	progress: ProgressStep;
 }}
 	/** Session operation failed */
 	| { type: "SessionFailed", payload: {
+	/** Session ID. */
 	id: string;
+	/** Error description. */
 	error: string;
 }};
 
@@ -823,47 +857,63 @@ export type Event =
 export type EventType = 
 	/** A new session was created */
 	| { type: "SessionCreated", payload: {
+	/** Session name. */
 	name: string;
+	/** Repository path. */
 	repo_path: string;
+	/** Execution backend. */
 	backend: BackendType;
+	/** Initial prompt text. */
 	initial_prompt: string;
 }}
 	/** Session status changed */
 	| { type: "StatusChanged", payload: {
+	/** Previous status. */
 	old_status: SessionStatus;
+	/** New status. */
 	new_status: SessionStatus;
 }}
 	/** Backend ID was set */
 	| { type: "BackendIdSet", payload: {
+	/** Backend resource identifier. */
 	backend_id: string;
 }}
 	/** PR was linked to session */
 	| { type: "PrLinked", payload: {
+	/** Pull request URL. */
 	pr_url: string;
 }}
 	/** PR check status changed */
 	| { type: "CheckStatusChanged", payload: {
+	/** Previous check status. */
 	old_status?: CheckStatus;
+	/** New check status. */
 	new_status: CheckStatus;
 }}
 	/** Claude working status changed */
 	| { type: "ClaudeStatusChanged", payload: {
+	/** Previous working status. */
 	old_status: ClaudeWorkingStatus;
+	/** New working status. */
 	new_status: ClaudeWorkingStatus;
 }}
 	/** Merge conflict status changed */
 	| { type: "ConflictStatusChanged", payload: {
+	/** Whether the worktree now has a merge conflict. */
 	has_conflict: boolean;
 }}
 	/** Working tree status changed (dirty/clean) */
 	| { type: "WorktreeStatusChanged", payload: {
+	/** Whether the worktree has uncommitted changes. */
 	is_dirty: boolean;
+	/** List of changed files, if available. */
 	changed_files?: ChangedFile[];
 }}
 	/** Session was archived */
 	| { type: "SessionArchived", payload?: undefined }
 	/** Session was deleted */
 	| { type: "SessionDeleted", payload: {
+	/** Optional reason for deletion. */
 	reason?: string;
 }}
 	/** Session was restored from archive */
@@ -887,29 +937,36 @@ export type Request =
 	| { type: "ListSessions", payload?: undefined }
 	/** Get a specific session by ID or name */
 	| { type: "GetSession", payload: {
+	/** Session ID or name. */
 	id: string;
 }}
 	/** Create a new session */
 	| { type: "CreateSession", payload: CreateSessionRequest }
 	/** Delete a session */
 	| { type: "DeleteSession", payload: {
+	/** Session ID to delete. */
 	id: string;
 }}
 	/** Archive a session */
 	| { type: "ArchiveSession", payload: {
+	/** Session ID to archive. */
 	id: string;
 }}
 	/** Unarchive a session */
 	| { type: "UnarchiveSession", payload: {
+	/** Session ID to unarchive. */
 	id: string;
 }}
 	/** Get the attach command for a session */
 	| { type: "AttachSession", payload: {
+	/** Session ID to attach to. */
 	id: string;
 }}
 	/** Update session access mode */
 	| { type: "UpdateAccessMode", payload: {
+	/** Session ID to update. */
 	id: string;
+	/** New access mode for proxy filtering. */
 	access_mode: AccessMode;
 }}
 	/** Reconcile state with reality */
@@ -920,15 +977,19 @@ export type Request =
 	| { type: "GetRecentRepos", payload?: undefined }
 	/** Send a prompt to a session (for hotkey triggers) */
 	| { type: "SendPrompt", payload: {
+	/** Session ID or name. */
 	session: string;
+	/** Prompt text to send. */
 	prompt: string;
 }}
 	/** Get session ID by name (for hook scripts) */
 	| { type: "GetSessionIdByName", payload: {
+	/** Session name to look up. */
 	name: string;
 }}
 	/** Refresh a session (pull latest image and recreate container) */
 	| { type: "RefreshSession", payload: {
+	/** Session ID to refresh. */
 	id: string;
 }}
 	/** Get current feature flags */
@@ -937,27 +998,42 @@ export type Request =
 	| { type: "GetHealth", payload?: undefined }
 	/** Get health status of a single session */
 	| { type: "GetSessionHealth", payload: {
+	/** Session ID to check. */
 	id: string;
 }}
 	/** Start a stopped session (container/pod) */
 	| { type: "StartSession", payload: {
+	/** Session ID to start. */
 	id: string;
 }}
 	/** Wake a hibernated session (sprites) */
 	| { type: "WakeSession", payload: {
+	/** Session ID to wake. */
 	id: string;
 }}
 	/** Recreate a session (delete and recreate backend) */
 	| { type: "RecreateSession", payload: {
+	/** Session ID to recreate. */
 	id: string;
 }}
 	/** Cleanup a session (remove from database, worktree already missing) */
 	| { type: "CleanupSession", payload: {
+	/** Session ID to clean up. */
 	id: string;
 }}
 	/** Recreate a session fresh (delete worktree and re-clone, data lost) */
 	| { type: "RecreateSessionFresh", payload: {
+	/** Session ID to recreate fresh. */
 	id: string;
+}}
+	/** Merge a pull request for a session */
+	| { type: "MergePr", payload: {
+	/** Session ID whose PR to merge. */
+	id: string;
+	/** Merge strategy to use. */
+	method: MergeMethod;
+	/** Whether to delete the branch after merging. */
+	delete_branch: boolean;
 }};
 
 /** Response types for the API */
@@ -970,7 +1046,9 @@ export type Response =
 	| { type: "Progress", payload: ProgressStep }
 	/** Session created successfully */
 	| { type: "Created", payload: {
+	/** ID of the newly created session. */
 	id: string;
+	/** Optional warnings from session creation. */
 	warnings?: string[];
 }}
 	/** Session deleted successfully */
@@ -983,6 +1061,7 @@ export type Response =
 	| { type: "Refreshed", payload?: undefined }
 	/** Command to attach to a session */
 	| { type: "AttachReady", payload: {
+	/** Shell command arguments to execute for attachment. */
 	command: string[];
 }}
 	/** Reconciliation report */
@@ -995,10 +1074,12 @@ export type Response =
 	| { type: "AccessModeUpdated", payload?: undefined }
 	/** Session ID returned */
 	| { type: "SessionId", payload: {
+	/** The resolved session ID. */
 	session_id: string;
 }}
 	/** Current feature flags */
 	| { type: "FeatureFlags", payload: {
+	/** Current feature flag values. */
 	flags: FeatureFlags;
 }}
 	/** Generic success response */
@@ -1013,17 +1094,21 @@ export type Response =
 	| { type: "Woken", payload?: undefined }
 	/** Session recreated successfully */
 	| { type: "Recreated", payload: {
+	/** New backend resource ID (if changed). */
 	new_backend_id?: string;
 }}
 	/** Session cleaned up successfully */
 	| { type: "CleanedUp", payload?: undefined }
 	/** Action blocked error (e.g., recreate blocked for sprites with auto_destroy) */
 	| { type: "ActionBlocked", payload: {
+	/** Explanation of why the action was blocked. */
 	reason: string;
 }}
 	/** Error response */
 	| { type: "Error", payload: {
+	/** Machine-readable error code. */
 	code: string;
+	/** Human-readable error description. */
 	message: string;
 }};
 

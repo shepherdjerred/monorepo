@@ -28,26 +28,27 @@ curl -s -H "$AUTH" "$API/teams/" | jq .
 
 ## API Endpoints Reference
 
-| Resource | Method | Path | Required Params |
-|----------|--------|------|-----------------|
-| Teams | GET | `/api/canonical/0/teams/` | — |
-| Teams | POST | `/api/canonical/0/teams/` | name (body) |
-| Team | GET | `/api/canonical/0/teams/{uuid}/` | — |
-| Team | PATCH | `/api/canonical/0/teams/{uuid}/` | — |
-| Projects | GET | `/api/canonical/0/projects/` | — (optional `?team=<uuid>`) |
-| Projects | POST | `/api/canonical/0/projects/` | team, name (body) |
-| Project | GET | `/api/canonical/0/projects/{id}/` | — |
-| Project | PATCH | `/api/canonical/0/projects/{id}/` | — |
-| Issues | GET | `/api/canonical/0/issues/` | `?project=<id>` |
-| Issue | GET | `/api/canonical/0/issues/{uuid}/` | — |
-| Events | GET | `/api/canonical/0/events/` | `?issue=<uuid>` |
-| Event | GET | `/api/canonical/0/events/{uuid}/` | — |
-| Stacktrace | GET | `/api/canonical/0/events/{uuid}/stacktrace/` | — |
-| Releases | GET | `/api/canonical/0/releases/` | `?project=<id>` |
-| Releases | POST | `/api/canonical/0/releases/` | project, version (body) |
-| Release | GET | `/api/canonical/0/releases/{uuid}/` | — |
+| Resource   | Method | Path                                         | Required Params             |
+| ---------- | ------ | -------------------------------------------- | --------------------------- |
+| Teams      | GET    | `/api/canonical/0/teams/`                    | —                           |
+| Teams      | POST   | `/api/canonical/0/teams/`                    | name (body)                 |
+| Team       | GET    | `/api/canonical/0/teams/{uuid}/`             | —                           |
+| Team       | PATCH  | `/api/canonical/0/teams/{uuid}/`             | —                           |
+| Projects   | GET    | `/api/canonical/0/projects/`                 | — (optional `?team=<uuid>`) |
+| Projects   | POST   | `/api/canonical/0/projects/`                 | team, name (body)           |
+| Project    | GET    | `/api/canonical/0/projects/{id}/`            | —                           |
+| Project    | PATCH  | `/api/canonical/0/projects/{id}/`            | —                           |
+| Issues     | GET    | `/api/canonical/0/issues/`                   | `?project=<id>`             |
+| Issue      | GET    | `/api/canonical/0/issues/{uuid}/`            | —                           |
+| Events     | GET    | `/api/canonical/0/events/`                   | `?issue=<uuid>`             |
+| Event      | GET    | `/api/canonical/0/events/{uuid}/`            | —                           |
+| Stacktrace | GET    | `/api/canonical/0/events/{uuid}/stacktrace/` | —                           |
+| Releases   | GET    | `/api/canonical/0/releases/`                 | `?project=<id>`             |
+| Releases   | POST   | `/api/canonical/0/releases/`                 | project, version (body)     |
+| Release    | GET    | `/api/canonical/0/releases/{uuid}/`          | —                           |
 
 **Notes:**
+
 - Team IDs and issue IDs are UUIDs. Project IDs are integers.
 - DELETE is not supported (returns 405) on teams and projects.
 - All list endpoints use cursor-based pagination.
@@ -172,6 +173,7 @@ curl -s -H "$AUTH" "$API/issues/?project=$PROJECT_ID" | \
 
 **Required query param:** `project` (integer project ID)
 **Optional query params:**
+
 - `sort`: `digest_order` (default) or `last_seen`
 - `order`: `asc` (default) or `desc`
 - `cursor`: pagination cursor
@@ -612,6 +614,7 @@ Authorization: Bearer <token>
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - The Bugsink server URL is not known
 - The API token is not available or authentication fails
 - The project ID (integer) or team UUID is needed but not specified

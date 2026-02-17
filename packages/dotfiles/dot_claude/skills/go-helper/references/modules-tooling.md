@@ -135,6 +135,7 @@ v1.2.3
 ```
 
 Major version 2+ requires path suffix:
+
 ```go
 import "github.com/user/repo/v2"
 import "github.com/user/repo/v3/pkg"
@@ -160,6 +161,7 @@ go env -w GOPRIVATE=github.com/mycompany/*
 ### When to Use Workspaces
 
 Use `go.work` when developing multiple modules that depend on each other locally. Common scenarios:
+
 - Monorepo with multiple services sharing internal packages
 - Developing a library and testing it in a consumer app
 - Working on a dependency fork alongside your project
@@ -253,15 +255,15 @@ version: "2"
 linters:
   default: standard
   enable:
-    - errcheck       # Check for unchecked errors
-    - gocritic       # Opinionated Go linter
-    - gosec          # Security checks
-    - revive         # Fast, configurable Go linter
-    - unconvert      # Unnecessary type conversions
-    - unparam        # Unused function parameters
-    - goconst        # Repeated strings that could be constants
-    - prealloc       # Slice pre-allocation suggestions
-    - misspell       # Spelling corrections
+    - errcheck # Check for unchecked errors
+    - gocritic # Opinionated Go linter
+    - gosec # Security checks
+    - revive # Fast, configurable Go linter
+    - unconvert # Unnecessary type conversions
+    - unparam # Unused function parameters
+    - goconst # Repeated strings that could be constants
+    - prealloc # Slice pre-allocation suggestions
+    - misspell # Spelling corrections
 
 formatters:
   enable:
@@ -281,7 +283,7 @@ linters-settings:
           - "checkPrivateReceivers"
   gosec:
     excludes:
-      - G104  # Unhandled errors (covered by errcheck)
+      - G104 # Unhandled errors (covered by errcheck)
 
 issues:
   exclude-dirs:
@@ -293,19 +295,19 @@ issues:
 
 ### Key Linters Explained
 
-| Linter | Purpose |
-|--------|---------|
-| `staticcheck` | Comprehensive static analysis (included in standard) |
-| `errcheck` | Detect unchecked error return values |
-| `gosimple` | Simplify code (included in standard) |
-| `govet` | Report suspicious constructs (included in standard) |
-| `gosec` | Security-focused analysis |
-| `gocritic` | Opinionated lints for style, performance, diagnostics |
-| `revive` | Fast, configurable alternative to golint |
-| `ineffassign` | Detect ineffectual assignments |
-| `misspell` | Fix common misspellings |
-| `unconvert` | Remove unnecessary type conversions |
-| `prealloc` | Suggest slice pre-allocation |
+| Linter        | Purpose                                               |
+| ------------- | ----------------------------------------------------- |
+| `staticcheck` | Comprehensive static analysis (included in standard)  |
+| `errcheck`    | Detect unchecked error return values                  |
+| `gosimple`    | Simplify code (included in standard)                  |
+| `govet`       | Report suspicious constructs (included in standard)   |
+| `gosec`       | Security-focused analysis                             |
+| `gocritic`    | Opinionated lints for style, performance, diagnostics |
+| `revive`      | Fast, configurable alternative to golint              |
+| `ineffassign` | Detect ineffectual assignments                        |
+| `misspell`    | Fix common misspellings                               |
+| `unconvert`   | Remove unnecessary type conversions                   |
+| `prealloc`    | Suggest slice pre-allocation                          |
 
 ## go vet
 
@@ -496,98 +498,98 @@ done
 
 ### Web Frameworks and Routers
 
-| Package | Description |
-|---------|-------------|
-| `net/http` (stdlib) | Standard HTTP server, enhanced routing in Go 1.22+ |
-| `github.com/go-chi/chi/v5` | Lightweight, idiomatic router, fully net/http compatible |
-| `github.com/gin-gonic/gin` | High-performance web framework (48% usage in 2025) |
-| `github.com/labstack/echo/v4` | Minimalist, extensible web framework |
-| `github.com/gofiber/fiber/v2` | Express-inspired, built on fasthttp |
-| `connectrpc.com/connect` | gRPC-compatible HTTP APIs |
+| Package                       | Description                                              |
+| ----------------------------- | -------------------------------------------------------- |
+| `net/http` (stdlib)           | Standard HTTP server, enhanced routing in Go 1.22+       |
+| `github.com/go-chi/chi/v5`    | Lightweight, idiomatic router, fully net/http compatible |
+| `github.com/gin-gonic/gin`    | High-performance web framework (48% usage in 2025)       |
+| `github.com/labstack/echo/v4` | Minimalist, extensible web framework                     |
+| `github.com/gofiber/fiber/v2` | Express-inspired, built on fasthttp                      |
+| `connectrpc.com/connect`      | gRPC-compatible HTTP APIs                                |
 
 ### Database
 
-| Package | Description |
-|---------|-------------|
-| `database/sql` (stdlib) | Standard database interface |
-| `github.com/jackc/pgx/v5` | PostgreSQL driver and toolkit (preferred over lib/pq) |
-| `github.com/jmoiron/sqlx` | Extensions to database/sql (StructScan, NamedExec) |
-| `github.com/sqlc-dev/sqlc` | Generate type-safe Go from SQL |
-| `gorm.io/gorm` | ORM with auto-migration, associations |
-| `entgo.io/ent` | Entity framework with code generation |
-| `github.com/mattn/go-sqlite3` | SQLite3 driver (CGO) |
-| `modernc.org/sqlite` | SQLite3 driver (pure Go, no CGO) |
+| Package                       | Description                                           |
+| ----------------------------- | ----------------------------------------------------- |
+| `database/sql` (stdlib)       | Standard database interface                           |
+| `github.com/jackc/pgx/v5`     | PostgreSQL driver and toolkit (preferred over lib/pq) |
+| `github.com/jmoiron/sqlx`     | Extensions to database/sql (StructScan, NamedExec)    |
+| `github.com/sqlc-dev/sqlc`    | Generate type-safe Go from SQL                        |
+| `gorm.io/gorm`                | ORM with auto-migration, associations                 |
+| `entgo.io/ent`                | Entity framework with code generation                 |
+| `github.com/mattn/go-sqlite3` | SQLite3 driver (CGO)                                  |
+| `modernc.org/sqlite`          | SQLite3 driver (pure Go, no CGO)                      |
 
 ### Configuration and CLI
 
-| Package | Description |
-|---------|-------------|
-| `github.com/spf13/cobra` | CLI application framework |
-| `github.com/spf13/viper` | Configuration management (JSON, YAML, TOML, env) |
-| `github.com/urfave/cli/v2` | Simple CLI framework |
-| `github.com/caarlos0/env/v11` | Parse environment variables into structs |
-| `github.com/joho/godotenv` | Load .env files |
-| `github.com/knadh/koanf/v2` | Lighter alternative to viper |
+| Package                       | Description                                      |
+| ----------------------------- | ------------------------------------------------ |
+| `github.com/spf13/cobra`      | CLI application framework                        |
+| `github.com/spf13/viper`      | Configuration management (JSON, YAML, TOML, env) |
+| `github.com/urfave/cli/v2`    | Simple CLI framework                             |
+| `github.com/caarlos0/env/v11` | Parse environment variables into structs         |
+| `github.com/joho/godotenv`    | Load .env files                                  |
+| `github.com/knadh/koanf/v2`   | Lighter alternative to viper                     |
 
 ### Logging and Observability
 
-| Package | Description |
-|---------|-------------|
-| `log/slog` (stdlib, Go 1.21+) | Structured logging |
-| `go.uber.org/zap` | High-performance structured logging |
-| `github.com/rs/zerolog` | Zero-allocation JSON logger |
-| `go.opentelemetry.io/otel` | OpenTelemetry tracing and metrics |
-| `github.com/prometheus/client_golang` | Prometheus metrics |
+| Package                               | Description                         |
+| ------------------------------------- | ----------------------------------- |
+| `log/slog` (stdlib, Go 1.21+)         | Structured logging                  |
+| `go.uber.org/zap`                     | High-performance structured logging |
+| `github.com/rs/zerolog`               | Zero-allocation JSON logger         |
+| `go.opentelemetry.io/otel`            | OpenTelemetry tracing and metrics   |
+| `github.com/prometheus/client_golang` | Prometheus metrics                  |
 
 ### HTTP and Networking
 
-| Package | Description |
-|---------|-------------|
-| `net/http` (stdlib) | HTTP client and server |
-| `github.com/go-resty/resty/v2` | HTTP client with retry, middleware |
-| `github.com/hashicorp/go-retryablehttp` | Retryable HTTP client |
-| `google.golang.org/grpc` | gRPC framework |
-| `nhooyr.io/websocket` | WebSocket library |
+| Package                                 | Description                        |
+| --------------------------------------- | ---------------------------------- |
+| `net/http` (stdlib)                     | HTTP client and server             |
+| `github.com/go-resty/resty/v2`          | HTTP client with retry, middleware |
+| `github.com/hashicorp/go-retryablehttp` | Retryable HTTP client              |
+| `google.golang.org/grpc`                | gRPC framework                     |
+| `nhooyr.io/websocket`                   | WebSocket library                  |
 
 ### Testing
 
-| Package | Description |
-|---------|-------------|
-| `testing` (stdlib) | Standard testing framework |
-| `github.com/stretchr/testify` | Assertions, mocks, suites |
-| `github.com/google/go-cmp` | Deep comparison for tests |
-| `go.uber.org/mock` | Interface mocking (mockgen) |
+| Package                          | Description                 |
+| -------------------------------- | --------------------------- |
+| `testing` (stdlib)               | Standard testing framework  |
+| `github.com/stretchr/testify`    | Assertions, mocks, suites   |
+| `github.com/google/go-cmp`       | Deep comparison for tests   |
+| `go.uber.org/mock`               | Interface mocking (mockgen) |
 | `github.com/DATA-DOG/go-sqlmock` | SQL mock for database tests |
-| `github.com/jarcoal/httpmock` | HTTP request mocking |
+| `github.com/jarcoal/httpmock`    | HTTP request mocking        |
 
 ### Serialization
 
-| Package | Description |
-|---------|-------------|
-| `encoding/json` (stdlib) | JSON (v2 in Go 1.25+) |
-| `github.com/goccy/go-json` | Fast JSON (drop-in replacement) |
-| `google.golang.org/protobuf` | Protocol Buffers |
-| `gopkg.in/yaml.v3` | YAML parsing |
-| `github.com/pelletier/go-toml/v2` | TOML parsing |
+| Package                           | Description                     |
+| --------------------------------- | ------------------------------- |
+| `encoding/json` (stdlib)          | JSON (v2 in Go 1.25+)           |
+| `github.com/goccy/go-json`        | Fast JSON (drop-in replacement) |
+| `google.golang.org/protobuf`      | Protocol Buffers                |
+| `gopkg.in/yaml.v3`                | YAML parsing                    |
+| `github.com/pelletier/go-toml/v2` | TOML parsing                    |
 
 ### Concurrency and Sync
 
-| Package | Description |
-|---------|-------------|
-| `sync` (stdlib) | Mutex, WaitGroup, Once, Map |
-| `golang.org/x/sync/errgroup` | Goroutine groups with error handling |
-| `golang.org/x/sync/semaphore` | Weighted semaphore |
-| `golang.org/x/sync/singleflight` | Deduplicate concurrent calls |
+| Package                          | Description                          |
+| -------------------------------- | ------------------------------------ |
+| `sync` (stdlib)                  | Mutex, WaitGroup, Once, Map          |
+| `golang.org/x/sync/errgroup`     | Goroutine groups with error handling |
+| `golang.org/x/sync/semaphore`    | Weighted semaphore                   |
+| `golang.org/x/sync/singleflight` | Deduplicate concurrent calls         |
 
 ### Utilities
 
-| Package | Description |
-|---------|-------------|
-| `github.com/google/uuid` | UUID generation |
-| `github.com/samber/lo` | Lodash-style generic utilities |
-| `golang.org/x/exp` | Experimental stdlib extensions |
-| `github.com/cenkalti/backoff/v4` | Exponential backoff |
-| `github.com/robfig/cron/v3` | Cron job scheduler |
+| Package                          | Description                    |
+| -------------------------------- | ------------------------------ |
+| `github.com/google/uuid`         | UUID generation                |
+| `github.com/samber/lo`           | Lodash-style generic utilities |
+| `golang.org/x/exp`               | Experimental stdlib extensions |
+| `github.com/cenkalti/backoff/v4` | Exponential backoff            |
+| `github.com/robfig/cron/v3`      | Cron job scheduler             |
 
 ## Project Layout
 
@@ -613,6 +615,7 @@ project/
 ```
 
 For libraries:
+
 ```
 library/
   library.go            # Package root
@@ -625,19 +628,19 @@ library/
 
 ## Environment Variables
 
-| Variable | Purpose | Default |
-|----------|---------|---------|
-| `GOPATH` | Workspace directory | `~/go` |
-| `GOBIN` | Binary install directory | `$GOPATH/bin` |
-| `GOPROXY` | Module proxy URL | `https://proxy.golang.org,direct` |
-| `GOPRIVATE` | Private module patterns | (none) |
-| `GONOSUMCHECK` | Skip checksum verification | (none) |
-| `CGO_ENABLED` | Enable/disable CGO | `1` on native, `0` cross-compile |
-| `GOOS` | Target operating system | Host OS |
-| `GOARCH` | Target architecture | Host architecture |
-| `GOFLAGS` | Default go command flags | (none) |
-| `GOEXPERIMENT` | Experimental features | (none) |
-| `GOMAXPROCS` | Max OS threads for goroutines | Number of CPUs |
+| Variable       | Purpose                       | Default                           |
+| -------------- | ----------------------------- | --------------------------------- |
+| `GOPATH`       | Workspace directory           | `~/go`                            |
+| `GOBIN`        | Binary install directory      | `$GOPATH/bin`                     |
+| `GOPROXY`      | Module proxy URL              | `https://proxy.golang.org,direct` |
+| `GOPRIVATE`    | Private module patterns       | (none)                            |
+| `GONOSUMCHECK` | Skip checksum verification    | (none)                            |
+| `CGO_ENABLED`  | Enable/disable CGO            | `1` on native, `0` cross-compile  |
+| `GOOS`         | Target operating system       | Host OS                           |
+| `GOARCH`       | Target architecture           | Host architecture                 |
+| `GOFLAGS`      | Default go command flags      | (none)                            |
+| `GOEXPERIMENT` | Experimental features         | (none)                            |
+| `GOMAXPROCS`   | Max OS threads for goroutines | Number of CPUs                    |
 
 ```bash
 # View all settings

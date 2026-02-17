@@ -1,42 +1,42 @@
-import { AgentType } from '@clauderon/shared';
+import { AgentType } from "@clauderon/shared";
 
 export type AgentFeature = {
   name: string;
   supported: boolean;
   note?: string;
-}
+};
 
 export type AgentCapabilities = {
   displayName: string;
   features: AgentFeature[];
-}
+};
 
 export const AGENT_CAPABILITIES: Record<AgentType, AgentCapabilities> = {
   [AgentType.ClaudeCode]: {
-    displayName: 'Claude Code',
+    displayName: "Claude Code",
     features: [
-      { name: 'Real-time state detection', supported: true },
-      { name: 'Session ID support', supported: true },
-      { name: 'Image/screenshot support', supported: true },
-      { name: 'Permissions bypass mode', supported: true },
+      { name: "Real-time state detection", supported: true },
+      { name: "Session ID support", supported: true },
+      { name: "Image/screenshot support", supported: true },
+      { name: "Permissions bypass mode", supported: true },
     ],
   },
   [AgentType.Codex]: {
-    displayName: 'Codex',
+    displayName: "Codex",
     features: [
-      { name: 'Real-time state detection', supported: true },
-      { name: 'Session ID support', supported: true },
-      { name: 'Image/screenshot support', supported: true },
-      { name: 'Permissions bypass mode', supported: true },
+      { name: "Real-time state detection", supported: true },
+      { name: "Session ID support", supported: true },
+      { name: "Image/screenshot support", supported: true },
+      { name: "Permissions bypass mode", supported: true },
     ],
   },
   [AgentType.Gemini]: {
-    displayName: 'Gemini Code',
+    displayName: "Gemini Code",
     features: [
-      { name: 'Real-time state detection', supported: true },
-      { name: 'Session ID support', supported: true },
-      { name: 'Image/screenshot support', supported: true },
-      { name: 'Permissions bypass mode', supported: true },
+      { name: "Real-time state detection", supported: true },
+      { name: "Session ID support", supported: true },
+      { name: "Image/screenshot support", supported: true },
+      { name: "Permissions bypass mode", supported: true },
     ],
   },
 };
@@ -53,10 +53,10 @@ export function getAgentCapabilities(agentType: AgentType): AgentCapabilities {
  */
 export function agentSupportsFeature(
   agentType: AgentType,
-  featureName: string
+  featureName: string,
 ): boolean {
   const capabilities = AGENT_CAPABILITIES[agentType];
-  const feature = capabilities.features.find(f => f.name === featureName);
+  const feature = capabilities.features.find((f) => f.name === featureName);
   return feature?.supported ?? false;
 }
 

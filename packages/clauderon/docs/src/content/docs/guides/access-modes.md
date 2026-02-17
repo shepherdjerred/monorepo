@@ -10,6 +10,7 @@ Access modes control which HTTP methods the credential proxy allows, providing a
 ### Read-Write (Default)
 
 Allows all HTTP methods:
+
 - GET, HEAD, OPTIONS (read operations)
 - POST, PUT, DELETE, PATCH (write operations)
 
@@ -18,9 +19,11 @@ The agent can read and modify resources.
 ### Read-Only
 
 Allows only safe HTTP methods:
+
 - GET, HEAD, OPTIONS
 
 Blocks:
+
 - POST, PUT, DELETE, PATCH
 
 The agent can read resources but cannot modify them.
@@ -166,20 +169,20 @@ For sessions that interact with production systems:
 
 ### Allowed in Read-Only
 
-| Method | Description |
-|--------|-------------|
-| GET | Retrieve resources |
-| HEAD | Retrieve headers only |
-| OPTIONS | Get allowed methods |
+| Method  | Description           |
+| ------- | --------------------- |
+| GET     | Retrieve resources    |
+| HEAD    | Retrieve headers only |
+| OPTIONS | Get allowed methods   |
 
 ### Blocked in Read-Only
 
-| Method | Description |
-|--------|-------------|
-| POST | Create resources |
-| PUT | Replace resources |
-| PATCH | Modify resources |
-| DELETE | Remove resources |
+| Method | Description       |
+| ------ | ----------------- |
+| POST   | Create resources  |
+| PUT    | Replace resources |
+| PATCH  | Modify resources  |
+| DELETE | Remove resources  |
 
 ## Limitations
 
@@ -207,6 +210,7 @@ Some APIs use POST for read operations:
 - Some search APIs use POST
 
 These legitimate read operations will be blocked. Consider:
+
 - Using read-write mode with careful prompting
 - Asking the agent to use alternative read methods
 

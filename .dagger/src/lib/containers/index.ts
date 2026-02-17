@@ -67,7 +67,10 @@ export {
   type ManifestPrOptions,
   type ManifestReleaseOptions,
 } from "./release-please";
-export { updateHomelabVersion, type UpdateHomelabVersionOptions } from "./homelab";
+export {
+  updateHomelabVersion,
+  type UpdateHomelabVersionOptions,
+} from "./homelab";
 export {
   getClaudeContainer,
   withGhCli,

@@ -13,13 +13,13 @@ export type CreatePROptions = {
   title: string;
   body: string;
   changes: FileChange[];
-}
+};
 
 export type PRResult = {
   success: boolean;
   prUrl?: string;
   error?: string;
-}
+};
 
 /**
  * Create a PR with the given changes
@@ -142,7 +142,9 @@ async function applyChange(cwd: string, change: FileChange): Promise<void> {
     case "create":
     case "modify":
       if (change.newContent !== null) {
-        await fsPromises.mkdir(pathModule.dirname(fullPath), { recursive: true });
+        await fsPromises.mkdir(pathModule.dirname(fullPath), {
+          recursive: true,
+        });
         await fsPromises.writeFile(fullPath, change.newContent, "utf-8");
       }
       break;
@@ -162,7 +164,7 @@ type CreatePRWithGhOptions = {
   baseBranch: string;
   headBranch: string;
   token: string;
-}
+};
 
 async function createPRWithGh(opts: CreatePRWithGhOptions): Promise<string> {
   const { workingDir, title, body, baseBranch, headBranch, token } = opts;
@@ -231,7 +233,7 @@ export function generateBranchName(summary: string): string {
  * Generate PR title from summary
  */
 export function generatePRTitle(summary: string): string {
-  const cleaned = summary.replaceAll('\n', " ").trim();
+  const cleaned = summary.replaceAll("\n", " ").trim();
   if (cleaned.length <= 72) {
     return cleaned;
   }
@@ -248,7 +250,8 @@ export function generatePRBody(
 ): string {
   const fileList = changes
     .map((c) => {
-      const icon = c.changeType === "create" ? "+" : (c.changeType === "delete" ? "-" : "~");
+      const icon =
+        c.changeType === "create" ? "+" : c.changeType === "delete" ? "-" : "~";
       return `- ${icon} \`${c.filePath}\``;
     })
     .join("\n");

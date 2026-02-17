@@ -1,6 +1,11 @@
 import { Resvg } from "@resvg/resvg-js";
 import satori from "satori";
-import type { AstroBuildDoneHookInput, IntegrationOptions, Page, RenderFunction } from "./types.js";
+import type {
+  AstroBuildDoneHookInput,
+  IntegrationOptions,
+  Page,
+  RenderFunction,
+} from "./types.js";
 import * as fs from "node:fs/promises";
 import type { AstroIntegrationLogger } from "astro";
 import { extract, sanitizeHtml } from "./extract.js";
@@ -20,7 +25,9 @@ export async function buildDoneHook({
   render: RenderFunction;
 }) {
   logger.info("Generating Open Graph images");
-  const promises = pages.map((page) => handlePage({ page, options, render, dir, logger }));
+  const promises = pages.map((page) =>
+    handlePage({ page, options, render, dir, logger }),
+  );
   await Promise.all(promises);
 }
 
@@ -30,13 +37,22 @@ type HandlePageInput = {
   render: RenderFunction;
   dir: URL;
   logger: AstroIntegrationLogger;
-}
+};
 
-async function handlePage({ page, options, render, dir, logger }: HandlePageInput) {
+async function handlePage({
+  page,
+  options,
+  render,
+  dir,
+  logger,
+}: HandlePageInput) {
   // gets the absolute path to the HTML file. E.g. /home/user/project/dist/blog/index.html
   // fileURLToPath() converts the URL to a file path. Without it, the path would start with a leading slash on Windows
   // systems, resulting in an invalid path.
-  const htmlFile = await getFilePath({ dir: fileURLToPath(dir), page: page.pathname });
+  const htmlFile = await getFilePath({
+    dir: fileURLToPath(dir),
+    page: page.pathname,
+  });
 
   // read the HTML file and parse it with jsdom
   const htmlBuffer = await fs.readFile(htmlFile);
@@ -65,10 +81,14 @@ async function handlePage({ page, options, render, dir, logger }: HandlePageInpu
 
   // get the relative filesystem path to the PNG file from the output directory. E.g. blog/index.png
   // path.relative() returns the relative path from the first argument to the second argument.
-  const relativePngFile = path.relative(fileURLToPath(dir), pngFile).replaceAll('\\', "/");
+  const relativePngFile = path
+    .relative(fileURLToPath(dir), pngFile)
+    .replaceAll("\\", "/");
 
   // convert the image path to a URL, decode URL-encoded characters, and remove the leading slash
-  const imageUrl = decodeURIComponent(new URL(pageDetails.image).pathname.slice(1));
+  const imageUrl = decodeURIComponent(
+    new URL(pageDetails.image).pathname.slice(1),
+  );
 
   // check that the og:image property matches the sitePath
   if (imageUrl !== relativePngFile) {

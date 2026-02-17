@@ -34,11 +34,5 @@ export function A2UIImage({ component, dataModel }: A2UIImageProps) {
     usageHint ? sizeMap[usageHint] : "max-w-full h-auto",
   ];
 
-  return (
-    <img
-      src={url}
-      alt=""
-      className={classes.join(" ")}
-    />
-  );
+  return <img src={url} alt="" className={classes.join(" ")} />;
 }

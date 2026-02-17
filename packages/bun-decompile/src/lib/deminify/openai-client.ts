@@ -21,7 +21,7 @@ type TokenBucket = {
   lastRefill: number;
   maxTokens: number;
   refillRate: number; // tokens per second
-}
+};
 
 /** OpenAI API client with rate limiting and retry */
 export class OpenAIClient {
@@ -128,7 +128,9 @@ export class OpenAIClient {
     context: DeminifyContext,
   ): DeminifyResult {
     // Extract code from markdown code blocks
-    const codeMatch = /```(?:javascript|js)?\n?([\s\S]*?)```/.exec(responseText);
+    const codeMatch = /```(?:javascript|js)?\n?([\s\S]*?)```/.exec(
+      responseText,
+    );
     if (!codeMatch?.[1]) {
       throw new Error("No code block found in response");
     }
@@ -141,7 +143,8 @@ export class OpenAIClient {
     }
 
     // Try to extract metadata JSON
-    let suggestedName = context.targetFunction.originalName || "anonymousFunction";
+    let suggestedName =
+      context.targetFunction.originalName || "anonymousFunction";
     let confidence = 0.5;
     let parameterNames: Record<string, string> = {};
     let localVariableNames: Record<string, string> = {};
@@ -156,10 +159,18 @@ export class OpenAIClient {
           parameterNames?: Record<string, string>;
           localVariableNames?: Record<string, string>;
         };
-        if (metadata.suggestedName) {suggestedName = metadata.suggestedName;}
-        if (typeof metadata.confidence === "number") {confidence = metadata.confidence;}
-        if (metadata.parameterNames) {parameterNames = metadata.parameterNames;}
-        if (metadata.localVariableNames) {localVariableNames = metadata.localVariableNames;}
+        if (metadata.suggestedName) {
+          suggestedName = metadata.suggestedName;
+        }
+        if (typeof metadata.confidence === "number") {
+          confidence = metadata.confidence;
+        }
+        if (metadata.parameterNames) {
+          parameterNames = metadata.parameterNames;
+        }
+        if (metadata.localVariableNames) {
+          localVariableNames = metadata.localVariableNames;
+        }
       } catch {
         // JSON parsing failed, use defaults
       }
@@ -167,7 +178,10 @@ export class OpenAIClient {
 
     // Try to infer name from the de-minified code if not provided
     if (suggestedName === "anonymousFunction") {
-      const funcNameMatch = /(?:function|const|let|var)\s+([a-zA-Z_$][\w$]*)/.exec(deminifiedSource);
+      const funcNameMatch =
+        /(?:function|const|let|var)\s+([a-zA-Z_$][\w$]*)/.exec(
+          deminifiedSource,
+        );
       if (funcNameMatch?.[1]) {
         suggestedName = funcNameMatch[1];
       }
@@ -239,7 +253,8 @@ export class OpenAIClient {
     }
 
     // Pricing based on model
-    const { inputCostPerMillion, outputCostPerMillion } = this.getModelPricing();
+    const { inputCostPerMillion, outputCostPerMillion } =
+      this.getModelPricing();
     const inputCost = (totalInputTokens / 1_000_000) * inputCostPerMillion;
     const outputCost = (totalOutputTokens / 1_000_000) * outputCostPerMillion;
 
@@ -261,7 +276,10 @@ export class OpenAIClient {
   }
 
   /** Get pricing for the current model */
-  private getModelPricing(): { inputCostPerMillion: number; outputCostPerMillion: number } {
+  private getModelPricing(): {
+    inputCostPerMillion: number;
+    outputCostPerMillion: number;
+  } {
     const model = this.config.model.toLowerCase();
 
     // GPT-5 pricing (per million tokens)
@@ -288,7 +306,11 @@ export class OpenAIClient {
   }
 
   /** Get usage statistics */
-  getStats(): { requestCount: number; inputTokensUsed: number; outputTokensUsed: number } {
+  getStats(): {
+    requestCount: number;
+    inputTokensUsed: number;
+    outputTokensUsed: number;
+  } {
     return {
       requestCount: this.requestCount,
       inputTokensUsed: this.inputTokensUsed,

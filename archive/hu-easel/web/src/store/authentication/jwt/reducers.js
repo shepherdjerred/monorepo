@@ -1,28 +1,28 @@
-import {REMOVE_JWT, SET_JWT} from './actions';
+import { REMOVE_JWT, SET_JWT } from "./actions";
 
 const initialState = {
-  token: '',
+  token: "",
   decoded: {
-    username: ''
+    username: "",
   },
-  isLoggedIn: false
+  isLoggedIn: false,
 };
 
-export default function jwtReducer (state = initialState, action) {
+export default function jwtReducer(state = initialState, action) {
   switch (action.type) {
     case SET_JWT:
       return {
         ...state,
         token: action.token,
         decoded: action.decoded,
-        isLoggedIn: true
+        isLoggedIn: true,
       };
     case REMOVE_JWT:
       return {
         ...state,
         token: action.token,
         decoded: action.decoded,
-        isLoggedIn: false
+        isLoggedIn: false,
       };
     default:
       return state;

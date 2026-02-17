@@ -1,6 +1,14 @@
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Duration } from "cdk8s";
-import { ConfigMap, Deployment, EnvValue, Probe, Secret, Service, Volume } from "cdk8s-plus-31";
+import {
+  ConfigMap,
+  Deployment,
+  EnvValue,
+  Probe,
+  Secret,
+  Service,
+  Volume,
+} from "cdk8s-plus-31";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import versions from "../../versions.ts";
@@ -19,21 +27,26 @@ export async function createR2ExporterMonitoring(chart: Chart) {
   // Python f-strings use {{ and }} for literal braces, but Helm interprets these as template delimiters
   // Use placeholders to avoid double-replacement issues
   scriptContent = scriptContent
-    .replaceAll('{{', "__HELM_OPEN__")
-    .replaceAll('}}', "__HELM_CLOSE__")
-    .replaceAll('__HELM_OPEN__', '{{ "{{" }}')
-    .replaceAll('__HELM_CLOSE__', '{{ "}}" }}');
+    .replaceAll("{{", "__HELM_OPEN__")
+    .replaceAll("}}", "__HELM_CLOSE__")
+    .replaceAll("__HELM_OPEN__", '{{ "{{" }}')
+    .replaceAll("__HELM_CLOSE__", '{{ "}}" }}');
 
   // Create 1Password secret for Cloudflare API credentials
-  const cloudflareSecret = new OnePasswordItem(chart, "r2-exporter-cloudflare-secret", {
-    spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/faryqlpsnrqupkirkwrejct3iy",
+  const cloudflareSecret = new OnePasswordItem(
+    chart,
+    "r2-exporter-cloudflare-secret",
+    {
+      spec: {
+        itemPath:
+          "vaults/v64ocnykdqju4ui6j6pua56xw4/items/faryqlpsnrqupkirkwrejct3iy",
+      },
+      metadata: {
+        name: "r2-exporter-cloudflare",
+        namespace: "prometheus",
+      },
     },
-    metadata: {
-      name: "r2-exporter-cloudflare",
-      namespace: "prometheus",
-    },
-  });
+  );
 
   // Create ConfigMap with the exporter script
   const r2ExporterScript = new ConfigMap(chart, "r2-exporter-script", {
@@ -67,11 +80,19 @@ export async function createR2ExporterMonitoring(chart: Chart) {
     ports: [{ number: 9199, name: "metrics" }],
     envVariables: {
       CLOUDFLARE_API_TOKEN: EnvValue.fromSecretValue({
-        secret: Secret.fromSecretName(chart, "r2-exporter-secret-ref", cloudflareSecret.name),
+        secret: Secret.fromSecretName(
+          chart,
+          "r2-exporter-secret-ref",
+          cloudflareSecret.name,
+        ),
         key: "api_token",
       }),
       CLOUDFLARE_ACCOUNT_ID: EnvValue.fromSecretValue({
-        secret: Secret.fromSecretName(chart, "r2-exporter-account-ref", cloudflareSecret.name),
+        secret: Secret.fromSecretName(
+          chart,
+          "r2-exporter-account-ref",
+          cloudflareSecret.name,
+        ),
         key: "account_id",
       }),
       R2_BUCKET_NAME: EnvValue.fromValue("homelab"),
@@ -98,7 +119,11 @@ export async function createR2ExporterMonitoring(chart: Chart) {
   });
 
   // Mount the script from ConfigMap
-  const scriptVolume = Volume.fromConfigMap(chart, "r2-exporter-script-volume", r2ExporterScript);
+  const scriptVolume = Volume.fromConfigMap(
+    chart,
+    "r2-exporter-script-volume",
+    r2ExporterScript,
+  );
   deployment.addVolume(scriptVolume);
   container.mount("/scripts", scriptVolume, { readOnly: true });
 

@@ -66,6 +66,7 @@ The clauderon React Native app supports multiple platforms:
 **Mobile and desktop apps are currently in active development.** While the codebase exists in the `mobile/` directory, the apps are not yet published to app stores or available for download.
 
 **For immediate access**, use the Web UI which is fully functional and mobile-responsive:
+
 - Works in any modern browser (Safari, Chrome, Firefox, Edge)
 - Responsive design optimized for mobile screens
 - All features available (session management, chat, configuration)
@@ -123,16 +124,16 @@ Mobile apps connect to your clauderon daemon via:
 
 ## Comparison with Web UI
 
-| Feature | Mobile/Desktop App | Web UI |
-|---------|-------------------|--------|
-| Platform | iOS/iPadOS/Android/macOS/Windows | Any browser |
-| Push notifications | Yes (iOS/Android) | No |
-| Offline access | Session list cached | No |
-| Biometric auth | Yes (Face ID, Touch ID, Windows Hello) | WebAuthn |
-| Performance | Native | Web |
-| Installation | App store/Download | None |
-| Terminal attach | Limited (view only) | Full xterm.js |
-| Multi-repo sessions | Planned | Yes |
+| Feature             | Mobile/Desktop App                     | Web UI        |
+| ------------------- | -------------------------------------- | ------------- |
+| Platform            | iOS/iPadOS/Android/macOS/Windows       | Any browser   |
+| Push notifications  | Yes (iOS/Android)                      | No            |
+| Offline access      | Session list cached                    | No            |
+| Biometric auth      | Yes (Face ID, Touch ID, Windows Hello) | WebAuthn      |
+| Performance         | Native                                 | Web           |
+| Installation        | App store/Download                     | None          |
+| Terminal attach     | Limited (view only)                    | Full xterm.js |
+| Multi-repo sessions | Planned                                | Yes           |
 
 ## Use Cases
 

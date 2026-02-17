@@ -3,15 +3,18 @@ import type { SessionHealthReport } from "@clauderon/client";
 import { BackendType, AvailableAction } from "@clauderon/shared";
 
 // Helper to create mock health reports
-function createMockHealthReport(overrides: Partial<SessionHealthReport> = {}): SessionHealthReport {
+function createMockHealthReport(
+  overrides: Partial<SessionHealthReport> = {},
+): SessionHealthReport {
   return {
     session_id: "session-123",
     session_name: "Test Session",
     backend_type: BackendType.Sprites,
     state: { type: "Stopped" },
-    available_actions: [],  // Empty = blocked
+    available_actions: [], // Empty = blocked
     description: "Cannot recreate: data would be lost",
-    details: "This sprite has auto_destroy enabled. Uncommitted work and conversation history would be lost.",
+    details:
+      "This sprite has auto_destroy enabled. Uncommitted work and conversation history would be lost.",
     data_safe: false,
     ...overrides,
   };
@@ -41,7 +44,8 @@ describe("RecreateBlockedModal scenarios", () => {
         state: { type: "Stopped" },
         available_actions: [],
         data_safe: false,
-        description: "Sprite is stopped with auto_destroy enabled. Cannot recreate without data loss.",
+        description:
+          "Sprite is stopped with auto_destroy enabled. Cannot recreate without data loss.",
       });
 
       expect(report.available_actions).toHaveLength(0);
@@ -85,7 +89,8 @@ describe("RecreateBlockedModal scenarios", () => {
 
     test("details provide technical context", () => {
       const report = createMockHealthReport({
-        details: "Sprite has auto_destroy=true. The VM will be deleted when stopped.",
+        details:
+          "Sprite has auto_destroy=true. The VM will be deleted when stopped.",
       });
       expect(report.details).toContain("auto_destroy");
     });

@@ -41,22 +41,23 @@ Never use bare `lightpanda` — it will hit the npm wrapper which just prints "P
 
 ### Commands
 
-| Command | Purpose |
-|---------|---------|
-| `fetch` | Fetch a URL, execute JS, dump rendered HTML |
-| `serve` | Start a CDP server (for Playwright/Puppeteer) |
-| `help` | Show usage |
-| `version` | Show version |
+| Command   | Purpose                                       |
+| --------- | --------------------------------------------- |
+| `fetch`   | Fetch a URL, execute JS, dump rendered HTML   |
+| `serve`   | Start a CDP server (for Playwright/Puppeteer) |
+| `help`    | Show usage                                    |
+| `version` | Show version                                  |
 
 ### Fetch Options
 
-| Flag | Description |
-|------|-------------|
-| `--dump` | Output rendered HTML to stdout |
+| Flag                   | Description                                |
+| ---------------------- | ------------------------------------------ |
+| `--dump`               | Output rendered HTML to stdout             |
 | `--strip_mode <modes>` | Comma-separated: `js`, `css`, `ui`, `full` |
-| `--with_base` | Add `<base>` tag to output |
+| `--with_base`          | Add `<base>` tag to output                 |
 
 Strip modes:
+
 - `js` -- remove script tags and preload links
 - `css` -- remove style tags and stylesheet links
 - `ui` -- remove img, picture, video, css, svg
@@ -64,23 +65,23 @@ Strip modes:
 
 ### Common Options (fetch and serve)
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--obey_robots` | false | Respect robots.txt |
-| `--http_proxy <url>` | none | HTTP proxy (supports user:pass@host:port) |
-| `--proxy_bearer_token <token>` | none | Bearer auth for proxy |
-| `--http_timeout <ms>` | 5000 | Transfer timeout (0 = no timeout) |
-| `--http_connect_timeout <ms>` | 0 | Connection timeout (0 = no timeout) |
-| `--http_max_concurrent <n>` | 10 | Max concurrent HTTP requests |
-| `--http_max_response_size <bytes>` | unlimited | Limit response size |
-| `--log_level <level>` | warn | debug/info/warn/error/fatal |
-| `--log_format <fmt>` | logfmt | pretty/logfmt |
-| `--user_agent_suffix <str>` | none | Appended to "Lightpanda/1.0" |
+| Flag                               | Default   | Description                               |
+| ---------------------------------- | --------- | ----------------------------------------- |
+| `--obey_robots`                    | false     | Respect robots.txt                        |
+| `--http_proxy <url>`               | none      | HTTP proxy (supports user:pass@host:port) |
+| `--proxy_bearer_token <token>`     | none      | Bearer auth for proxy                     |
+| `--http_timeout <ms>`              | 5000      | Transfer timeout (0 = no timeout)         |
+| `--http_connect_timeout <ms>`      | 0         | Connection timeout (0 = no timeout)       |
+| `--http_max_concurrent <n>`        | 10        | Max concurrent HTTP requests              |
+| `--http_max_response_size <bytes>` | unlimited | Limit response size                       |
+| `--log_level <level>`              | warn      | debug/info/warn/error/fatal               |
+| `--log_format <fmt>`               | logfmt    | pretty/logfmt                             |
+| `--user_agent_suffix <str>`        | none      | Appended to "Lightpanda/1.0"              |
 
 ### Environment Variables
 
-| Variable | Description |
-|----------|-------------|
+| Variable                            | Description             |
+| ----------------------------------- | ----------------------- |
 | `LIGHTPANDA_DISABLE_TELEMETRY=true` | Disable usage telemetry |
 
 ## Common Patterns
@@ -127,6 +128,7 @@ Use the `/html/` endpoint for simpler, lighter HTML output from DuckDuckGo.
 ## When to Fall Back to Playwright
 
 Use Playwright instead of lightpanda when you need:
+
 - Interactive page manipulation (clicking buttons, filling forms)
 - Multi-step navigation with session/cookie state
 - Screenshots or visual testing
@@ -136,21 +138,25 @@ Use Playwright instead of lightpanda when you need:
 ## Installation
 
 macOS (Apple Silicon):
+
 ```bash
 curl -L -o /usr/local/bin/lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-aarch64-macos && chmod a+x /usr/local/bin/lightpanda
 ```
 
 macOS (Intel):
+
 ```bash
 curl -L -o /usr/local/bin/lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-macos && chmod a+x /usr/local/bin/lightpanda
 ```
 
 Linux (x86_64):
+
 ```bash
 curl -L -o /usr/local/bin/lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux && chmod a+x /usr/local/bin/lightpanda
 ```
 
 Linux (aarch64):
+
 ```bash
 curl -L -o /usr/local/bin/lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-aarch64-linux && chmod a+x /usr/local/bin/lightpanda
 ```

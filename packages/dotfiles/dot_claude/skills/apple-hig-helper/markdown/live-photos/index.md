@@ -38,7 +38,7 @@ In cases where movement isn’t possible, show a system-provided badge above the
 
 ## [Platform considerations](/design/human-interface-guidelines/live-photos#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, or tvOS. Not supported in watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, or tvOS. Not supported in watchOS._
 
 ### [visionOS](/design/human-interface-guidelines/live-photos#visionOS)
 

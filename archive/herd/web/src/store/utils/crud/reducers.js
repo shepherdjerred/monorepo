@@ -1,24 +1,24 @@
-import {createRsaaReducer} from '../rsaa';
+import { createRsaaReducer } from "../rsaa";
 
 /**
  * Creates reducers for each CRUD action
  * @param actions {{fetchList: {success: string, error: string, begin: string}, fetchDetails: {success: string, error: string, begin: string}, create: {success: string, error: string, begin: string}, update: {success: string, error: string, begin: string}, delete: {success: string, error: string, begin: string}}}
  * @returns {{read: *, create: *, update: *, delete: *}}
  */
-export function createCrudReducers (actions) {
+export function createCrudReducers(actions) {
   return {
     create: createRsaaReducer(actions.create),
     read: createReadReducer(actions.fetchList, actions.fetchDetails),
     update: createRsaaReducer(actions.update),
-    delete: createRsaaReducer(actions.delete)
+    delete: createRsaaReducer(actions.delete),
   };
 }
 
-function createReadReducer (fetchListActions, fetchDetailsActions) {
+function createReadReducer(fetchListActions, fetchDetailsActions) {
   const initialState = {
     isFetching: false,
     error: false,
-    items: {}
+    items: {},
   };
   return (state = initialState, action) => {
     switch (action.type) {
@@ -26,13 +26,13 @@ function createReadReducer (fetchListActions, fetchDetailsActions) {
         return {
           ...state,
           isFetching: true,
-          error: null
+          error: null,
         };
       case fetchListActions.success:
         const response = action.payload;
         const items = response.reduce((list, entry) => {
           list[entry._id] = {
-            data: entry
+            data: entry,
           };
           return list;
         }, {});
@@ -40,13 +40,13 @@ function createReadReducer (fetchListActions, fetchDetailsActions) {
           ...state,
           items,
           isFetching: false,
-          error: null
+          error: null,
         };
       case fetchListActions.error:
         return {
           ...state,
           isFetching: false,
-          error: action.payload
+          error: action.payload,
         };
       case fetchDetailsActions.begin:
         return {
@@ -56,9 +56,9 @@ function createReadReducer (fetchListActions, fetchDetailsActions) {
             [action.id]: {
               ...state.items[action.id],
               isFetching: true,
-              error: null
-            }
-          }
+              error: null,
+            },
+          },
         };
       case fetchDetailsActions.success:
         return {
@@ -69,9 +69,9 @@ function createReadReducer (fetchListActions, fetchDetailsActions) {
               ...state.items[action._id],
               data: action.payload,
               isFetching: false,
-              error: null
-            }
-          }
+              error: null,
+            },
+          },
         };
       // TODO this will not work. The ID is not sent in the action
       case fetchDetailsActions.error:
@@ -82,9 +82,9 @@ function createReadReducer (fetchListActions, fetchDetailsActions) {
             [action.id]: {
               ...state.items[action.id],
               isFetching: false,
-              error: action.payload
-            }
-          }
+              error: action.payload,
+            },
+          },
         };
       default:
         return state;

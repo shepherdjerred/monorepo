@@ -1,4 +1,4 @@
-import type { App} from "cdk8s";
+import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { createHomeAssistantDeployment } from "../resources/home/homeassistant.ts";
 import { createHaDeployment } from "../resources/home/ha.ts";
@@ -24,11 +24,25 @@ export async function createHomeChart(app: App) {
       ingress: [
         // Allow from Tailscale (private access)
         {
-          from: [{ namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": "tailscale" } } }],
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
+              },
+            },
+          ],
         },
         // Allow from Cloudflare tunnel (public access)
         {
-          from: [{ namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": "cloudflare-tunnel" } } }],
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "cloudflare-tunnel",
+                },
+              },
+            },
+          ],
         },
         // Allow all intra-namespace communication (ha -> homeassistant)
         {
@@ -36,7 +50,13 @@ export async function createHomeChart(app: App) {
         },
         // Allow Prometheus scraping from monitoring namespace
         {
-          from: [{ namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": "prometheus" } } }],
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+          ],
         },
         // Allow HomeKit from LAN (mDNS discovery + bridge ports)
         {

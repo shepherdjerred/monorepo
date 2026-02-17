@@ -1,4 +1,4 @@
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Application } from "../../../generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
@@ -6,7 +6,10 @@ import { Schedule } from "../../../generated/imports/velero.io.ts";
 import versions from "../../versions.ts";
 import { Namespace } from "cdk8s-plus-31";
 import type { HelmValuesForChart } from "../../misc/typed-helm-parameters.ts";
-import { KubeClusterRole, KubeClusterRoleBinding } from "../../../generated/imports/k8s.ts";
+import {
+  KubeClusterRole,
+  KubeClusterRoleBinding,
+} from "../../../generated/imports/k8s.ts";
 import { VELERO_SCHEDULES } from "../velero-schedules.ts";
 export function createVeleroApp(chart: Chart) {
   new Namespace(chart, `velero-namespace`, {
@@ -70,15 +73,20 @@ export function createVeleroApp(chart: Chart) {
   });
 
   // 1Password secret for cloud credentials (AWS/GCP/Azure)
-  const cloudCredentials = new OnePasswordItem(chart, "velero-cloud-credentials-onepassword", {
-    spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/7thelujgeruxxp2qdsrqe2wd7q",
+  const cloudCredentials = new OnePasswordItem(
+    chart,
+    "velero-cloud-credentials-onepassword",
+    {
+      spec: {
+        itemPath:
+          "vaults/v64ocnykdqju4ui6j6pua56xw4/items/7thelujgeruxxp2qdsrqe2wd7q",
+      },
+      metadata: {
+        name: "cloud-credentials",
+        namespace: "velero",
+      },
     },
-    metadata: {
-      name: "cloud-credentials",
-      namespace: "velero",
-    },
-  });
+  );
 
   // Create all backup schedules from configuration
   for (const scheduleConfig of VELERO_SCHEDULES) {
@@ -128,7 +136,8 @@ export function createVeleroApp(chart: Chart) {
           prefix: "torvalds/backups/",
           config: {
             region: "auto", // Cloudflare R2 uses "auto" region
-            s3Url: "https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com",
+            s3Url:
+              "https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com",
           },
         },
       ],
@@ -144,7 +153,8 @@ export function createVeleroApp(chart: Chart) {
             namespace: "openebs",
             provider: "aws",
             region: "auto",
-            s3Url: "https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com",
+            s3Url:
+              "https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com",
             prefix: "torvalds/zfs/",
             multiPartChunkSize: Size.mebibytes(20).asString(),
           },

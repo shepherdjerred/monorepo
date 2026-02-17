@@ -12,8 +12,14 @@ export default [
       "no-console": "off",
       // Relaxed limits for infrastructure scripts with complex logic
       "max-depth": ["error", { max: 6 }],
-      "max-lines": ["error", { max: 800, skipBlankLines: false, skipComments: false }],
-      "max-lines-per-function": ["error", { max: 500, skipBlankLines: true, skipComments: true }],
+      "max-lines": [
+        "error",
+        { max: 800, skipBlankLines: false, skipComments: false },
+      ],
+      "max-lines-per-function": [
+        "error",
+        { max: 500, skipBlankLines: true, skipComments: true },
+      ],
       "max-params": ["error", { max: 8 }],
       complexity: ["error", { max: 50 }],
       // Strict boolean expressions is too noisy for infrastructure code
@@ -46,6 +52,11 @@ export default [
     },
   },
   {
-    ignores: ["src/talos/", "src/*/eslint.config.ts", "scripts/", "eslint.config.ts"],
+    ignores: [
+      "src/talos/",
+      "src/*/eslint.config.ts",
+      "scripts/",
+      "eslint.config.ts",
+    ],
   },
 ];

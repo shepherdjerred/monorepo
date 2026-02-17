@@ -10,7 +10,7 @@ type cases = [
   Expect<Equal<ReplaceAll<"barfoo", "bar", "foo">, "foofoo">>,
   Expect<Equal<ReplaceAll<"foobarfoobar", "ob", "b">, "fobarfobar">>,
   Expect<Equal<ReplaceAll<"foboorfoboar", "bo", "b">, "foborfobar">>,
-  Expect<Equal<ReplaceAll<"", "", "">, "">>
+  Expect<Equal<ReplaceAll<"", "", "">, "">>,
 ];
 
 type a = ReplaceAll<"foobarfoobar", "ob", "b">;
@@ -30,9 +30,9 @@ type a = ReplaceAll<"foobarfoobar", "ob", "b">;
 type ReplaceAll<
   S extends string,
   From extends string,
-  To extends string
+  To extends string,
 > = From extends ""
   ? S
   : S extends `${infer First}${From}${infer Last}`
-  ? `${First}${To}${ReplaceAll<`${Last}`, From, To>}`
-  : S;
+    ? `${First}${To}${ReplaceAll<`${Last}`, From, To>}`
+    : S;

@@ -1,4 +1,9 @@
-import { dag, type Container, type Directory, type Secret } from "@dagger.io/dagger";
+import {
+  dag,
+  type Container,
+  type Directory,
+  type Secret,
+} from "@dagger.io/dagger";
 import versions from "../versions";
 
 export type CloudflarePagesDeployOptions = {
@@ -37,10 +42,7 @@ export type CloudflareWorkerDeployOptions = {
  */
 export function getCloudflareContainer(customVersion?: string): Container {
   const version = customVersion ?? versions.node;
-  return dag
-    .container()
-    .from(`node:${version}-slim`)
-    .withWorkdir("/workspace");
+  return dag.container().from(`node:${version}-slim`).withWorkdir("/workspace");
 }
 
 /**
@@ -61,7 +63,9 @@ export function getCloudflareContainer(customVersion?: string): Container {
  * });
  * ```
  */
-export async function deployToCloudflarePages(options: CloudflarePagesDeployOptions): Promise<string> {
+export async function deployToCloudflarePages(
+  options: CloudflarePagesDeployOptions,
+): Promise<string> {
   const container = getCloudflareContainer()
     .withDirectory("/workspace/dist", options.distDir)
     .withSecretVariable("CLOUDFLARE_ACCOUNT_ID", options.accountId)
@@ -87,7 +91,9 @@ export async function deployToCloudflarePages(options: CloudflarePagesDeployOpti
  * @param options - Deployment configuration options
  * @returns A configured container ready for deployment
  */
-export function getCloudflarePagesDeployContainer(options: CloudflarePagesDeployOptions): Container {
+export function getCloudflarePagesDeployContainer(
+  options: CloudflarePagesDeployOptions,
+): Container {
   return getCloudflareContainer()
     .withDirectory("/workspace/dist", options.distDir)
     .withSecretVariable("CLOUDFLARE_ACCOUNT_ID", options.accountId)
@@ -119,7 +125,9 @@ export function getCloudflarePagesDeployContainer(options: CloudflarePagesDeploy
  * });
  * ```
  */
-export async function deployToCloudflareWorker(options: CloudflareWorkerDeployOptions): Promise<string> {
+export async function deployToCloudflareWorker(
+  options: CloudflareWorkerDeployOptions,
+): Promise<string> {
   const container = getCloudflareWorkerDeployContainer(options);
   return await container.stdout();
 }
@@ -131,7 +139,9 @@ export async function deployToCloudflareWorker(options: CloudflareWorkerDeployOp
  * @param options - Deployment configuration options
  * @returns A configured container ready for deployment
  */
-export function getCloudflareWorkerDeployContainer(options: CloudflareWorkerDeployOptions): Container {
+export function getCloudflareWorkerDeployContainer(
+  options: CloudflareWorkerDeployOptions,
+): Container {
   const args = ["npx", "wrangler@latest", "deploy"];
 
   if (options.entryPoint !== undefined) {

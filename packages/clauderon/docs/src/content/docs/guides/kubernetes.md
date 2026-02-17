@@ -93,9 +93,9 @@ metadata:
   namespace: clauderon
   name: clauderon-session
 rules:
-- apiGroups: [""]
-  resources: ["pods", "services", "configmaps"]
-  verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods", "services", "configmaps"]
+    verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -103,9 +103,9 @@ metadata:
   namespace: clauderon
   name: clauderon-session-binding
 subjects:
-- kind: ServiceAccount
-  name: default
-  namespace: clauderon
+  - kind: ServiceAccount
+    name: default
+    namespace: clauderon
 roleRef:
   kind: Role
   name: clauderon-session
@@ -155,16 +155,16 @@ metadata:
   namespace: clauderon
 spec:
   rules:
-  - host: clauderon.example.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: clauderon-proxy
-            port:
-              number: 3030
+    - host: clauderon.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: clauderon-proxy
+                port:
+                  number: 3030
 ```
 
 ## Resource Limits
@@ -236,6 +236,7 @@ clauderon delete <session-name>
 ```
 
 This removes:
+
 - The Pod
 - The PVC
 - Any ConfigMaps created for the session
@@ -263,6 +264,7 @@ kubectl describe pod -n clauderon <pod-name>
 ```
 
 Common causes:
+
 - No available nodes with requested resources
 - Storage class not available
 - Image pull issues
@@ -276,6 +278,7 @@ kubectl logs -n clauderon <pod-name> --previous
 ```
 
 Common causes:
+
 - Proxy not reachable
 - Missing credentials
 - Image issues
@@ -327,6 +330,7 @@ kind: HorizontalPodAutoscaler
 ### Pod Security
 
 Sessions run with:
+
 - Non-root user
 - Read-only root filesystem
 - Dropped capabilities
@@ -347,14 +351,14 @@ spec:
     matchLabels:
       app: clauderon
   policyTypes:
-  - Egress
+    - Egress
   egress:
-  - to:
-    - podSelector:
-        matchLabels:
-          app: clauderon-proxy
-    ports:
-    - port: 3030
+    - to:
+        - podSelector:
+            matchLabels:
+              app: clauderon-proxy
+      ports:
+        - port: 3030
 ```
 
 ## See Also

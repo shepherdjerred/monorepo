@@ -8,15 +8,20 @@ export type PullRequest = {
   isDraft: boolean;
   mergeable: "MERGEABLE" | "CONFLICTING" | "UNKNOWN";
   reviewDecision: "APPROVED" | "CHANGES_REQUESTED" | "REVIEW_REQUIRED" | null;
-}
+};
 
 export type Review = {
   author: {
     login: string;
   };
-  state: "APPROVED" | "CHANGES_REQUESTED" | "COMMENTED" | "PENDING" | "DISMISSED";
+  state:
+    | "APPROVED"
+    | "CHANGES_REQUESTED"
+    | "COMMENTED"
+    | "PENDING"
+    | "DISMISSED";
   submittedAt: string;
-}
+};
 
 export type CheckRun = {
   name: string;
@@ -24,7 +29,7 @@ export type CheckRun = {
   conclusion: string | null;
   detailsUrl: string;
   workflowName: string;
-}
+};
 
 export type WorkflowRun = {
   databaseId: number;
@@ -33,7 +38,7 @@ export type WorkflowRun = {
   conclusion: string | null;
   url: string;
   createdAt: string;
-}
+};
 
 export type HealthStatus = "HEALTHY" | "UNHEALTHY" | "PENDING";
 
@@ -42,7 +47,7 @@ export type HealthCheck = {
   status: HealthStatus;
   details: string[];
   commands?: string[];
-}
+};
 
 export type HealthReport = {
   prNumber: number;
@@ -50,4 +55,4 @@ export type HealthReport = {
   overallStatus: HealthStatus;
   checks: HealthCheck[];
   nextSteps: string[];
-}
+};

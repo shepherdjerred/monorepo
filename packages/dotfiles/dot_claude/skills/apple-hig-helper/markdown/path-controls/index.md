@@ -30,7 +30,7 @@ There are two styles of path control.
 
 ## [Platform considerations](/design/human-interface-guidelines/path-controls#Platform-considerations)
 
-*Not supported in iOS, iPadOS, tvOS, visionOS, or watchOS.*
+_Not supported in iOS, iPadOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/path-controls#Resources)
 

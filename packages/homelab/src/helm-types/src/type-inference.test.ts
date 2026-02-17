@@ -44,7 +44,9 @@ describe("JSON Schema to TypeScript Type Conversion", () => {
     const schema: JSONSchemaProperty = {
       enum: ["option1", "option2", "option3"],
     };
-    expect(jsonSchemaToTypeScript(schema)).toBe('"option1" | "option2" | "option3"');
+    expect(jsonSchemaToTypeScript(schema)).toBe(
+      '"option1" | "option2" | "option3"',
+    );
   });
 
   test("should handle multiple types", () => {
@@ -161,7 +163,9 @@ describe("Convert to TypeScript Interface", () => {
     const result = convertToTypeScriptInterface(values, "TestInterface");
 
     expect(result.properties["config"]?.nested).toBeDefined();
-    expect(result.properties["config"]?.nested?.name).toBe("TestInterfaceConfig");
+    expect(result.properties["config"]?.nested?.name).toBe(
+      "TestInterfaceConfig",
+    );
   });
 
   test("should handle arrays", () => {
@@ -197,7 +201,11 @@ describe("Convert to TypeScript Interface", () => {
       },
     };
 
-    const result = convertToTypeScriptInterface(values, "TestInterface", schema);
+    const result = convertToTypeScriptInterface(
+      values,
+      "TestInterface",
+      schema,
+    );
 
     expect(result.properties["port"]?.type).toBe("number");
   });
@@ -209,7 +217,12 @@ describe("Convert to TypeScript Interface", () => {
 
     const comments = new Map([["key", "This is a comment"]]);
 
-    const result = convertToTypeScriptInterface(values, "TestInterface", undefined, comments);
+    const result = convertToTypeScriptInterface(
+      values,
+      "TestInterface",
+      undefined,
+      comments,
+    );
 
     expect(result.properties["key"]?.description).toBe("This is a comment");
   });

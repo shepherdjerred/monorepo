@@ -14,8 +14,8 @@ Precise, intuitive game controls enhance gameplay and can increase a player’s 
 
 On Apple platforms, a game can support input from physical game controllers or default system interactions, like touch, a remote, or a mouse and keyboard. Players might prefer to use physical game controllers, but there are two important reasons to also support a platform’s default interaction methods:
 
-* Even though all platforms except watchOS support physical game controllers, not every player might have access to one.
-* Players appreciate games that let them use the platform interaction method they’re most familiar with.
+- Even though all platforms except watchOS support physical game controllers, not every player might have access to one.
+- Players appreciate games that let them use the platform interaction method they’re most familiar with.
 
 To reach the widest audience and provide the best experience for each platform, keep these factors in mind when choosing the input methods to support.
 
@@ -43,8 +43,8 @@ Placing virtual controls within reach of people’s thumbs can make your game mo
 
 **Show and hide virtual controls to reflect gameplay.** Take advantage of the dynamic nature of touch controls and adapt what controls players see onscreen depending on their context. You can hide controls when an action isn’t available or relevant, letting you reduce clutter and help players concentrate on what’s important. For example, consider hiding movement controls until a player touches the screen to reduce the amount of UI overlapping your game content.
 
-* [Visible control](#)
-* [Hidden control](#)
+- [Visible control](#)
+- [Hidden control](#)
 
 ![A graphic that shows gameplay with a virtual control to move the character that's more visible while the character is moving.](https://docs-assets.developer.apple.com/published/2c9a0444ff10b37e8e5b54a9036d482e/game-controls-thumbstick-in-motion%402x.png)
 
@@ -76,20 +76,20 @@ When the thumbstick is at rest, the virtual control fades to show it’s not in 
 
 **Map controller buttons to expected UI behavior.** Outside of gameplay, players expect to navigate your game’s UI in a way that matches the familiar behavior of the platform they’re playing on. When not controlling gameplay, follow these conventions across all Apple platforms:
 
-| Button | Expected behavior for UI |
-| --- | --- |
-| A | Activates a control |
-| B | Cancels an action or returns to previous screen |
-| X | — |
-| Y | — |
-| Left shoulder | Navigates left to a different screen or section |
-| Right shoulder | Navigates right to a different screen or section |
-| Left trigger | — |
-| Right trigger | — |
-| Left/right thumbstick | Moves selection |
-| Directional pad | Moves selection |
-| Home/logo | Reserved for system controls |
-| Menu | Opens game settings or pauses gameplay |
+| Button                | Expected behavior for UI                         |
+| --------------------- | ------------------------------------------------ |
+| A                     | Activates a control                              |
+| B                     | Cancels an action or returns to previous screen  |
+| X                     | —                                                |
+| Y                     | —                                                |
+| Left shoulder         | Navigates left to a different screen or section  |
+| Right shoulder        | Navigates right to a different screen or section |
+| Left trigger          | —                                                |
+| Right trigger         | —                                                |
+| Left/right thumbstick | Moves selection                                  |
+| Directional pad       | Moves selection                                  |
+| Home/logo             | Reserved for system controls                     |
+| Menu                  | Opens game settings or pauses gameplay           |
 
 **Support multiple connected controllers.** If there are multiple controllers connected, use labels and glyphs that match the one that the player is actively using. If your game supports multiplayer, use the appropriate labels and symbols when referring to a specific player’s controller. If you need to refer to buttons on multiple controllers, consider listing them together.
 
@@ -111,7 +111,7 @@ Keyboard players appreciate using keyboard bindings to speed up their interactio
 
 ## [Platform considerations](/design/human-interface-guidelines/game-controls#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, or tvOS. Not supported in watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, or tvOS. Not supported in watchOS._
 
 ### [visionOS](/design/human-interface-guidelines/game-controls#visionOS)
 
@@ -153,7 +153,7 @@ Explore game input in visionOS](https://developer.apple.com/videos/play/wwdc2024
 
 ## [Change log](/design/human-interface-guidelines/game-controls#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| June 9, 2025 | Updated touch control best practices, updated game controller mapping for UI, and added guidance for spatial game controller support in visionOS. |
-| June 10, 2024 | Added guidance for supporting touch controls and changed title from Game controllers. |
+| Date          | Changes                                                                                                                                           |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| June 9, 2025  | Updated touch control best practices, updated game controller mapping for UI, and added guidance for spatial game controller support in visionOS. |
+| June 10, 2024 | Added guidance for supporting touch controls and changed title from Game controllers.                                                             |

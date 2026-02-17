@@ -31,7 +31,7 @@ async function run({ executable, args }: Command) {
 async function pipeThrough(
   prefix: string,
   readable: ReadableStream<Uint8Array>,
-  writable: typeof Bun.stdout
+  writable: typeof Bun.stdout,
 ) {
   const decoder = new TextDecoder();
   for await (const chunk of readable) {

@@ -18,7 +18,7 @@ export type CachedRenameResult = {
   timestamp: number;
   /** Model that generated this result */
   model: string;
-}
+};
 
 /** Function cache for rename mappings */
 export class FunctionCache {
@@ -34,7 +34,9 @@ export class FunctionCache {
 
   /** Initialize the cache directory */
   async init(): Promise<void> {
-    if (this.initialized) {return;}
+    if (this.initialized) {
+      return;
+    }
 
     try {
       await mkdir(this.cacheDir, { recursive: true });
@@ -132,13 +134,9 @@ export class FunctionCache {
   }
 
   /** Store multiple results at once */
-  async setMany(
-    mappings: Map<string, FunctionRenameMapping>,
-  ): Promise<void> {
+  async setMany(mappings: Map<string, FunctionRenameMapping>): Promise<void> {
     await Promise.all(
-      [...mappings.entries()].map(([hash, mapping]) =>
-        this.set(hash, mapping),
-      ),
+      [...mappings.entries()].map(([hash, mapping]) => this.set(hash, mapping)),
     );
   }
 

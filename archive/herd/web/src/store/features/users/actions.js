@@ -1,12 +1,22 @@
-import {createCrudActionCreators, createCrudActionTypes} from '../../utils/crud/actions';
+import {
+  createCrudActionCreators,
+  createCrudActionTypes,
+} from "../../utils/crud/actions";
 
-export const actionTypes = createCrudActionTypes('USER');
-const actions = createCrudActionCreators('USER', '/api/users/', actionTypes);
+export const actionTypes = createCrudActionTypes("USER");
+const actions = createCrudActionCreators("USER", "/api/users/", actionTypes);
 
-export function registerUser (firstName, lastName, email, hNumber, password) {
-  return actions.create({firstName, lastName, email, hNumber, password, register: true});
+export function registerUser(firstName, lastName, email, hNumber, password) {
+  return actions.create({
+    firstName,
+    lastName,
+    email,
+    hNumber,
+    password,
+    register: true,
+  });
 }
 
-export function createUser () {
+export function createUser() {
   // TODO
 }

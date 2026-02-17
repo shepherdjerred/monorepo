@@ -3,7 +3,7 @@ import React from "react";
 export type BannerProps = {
   children: React.ReactNode;
   type: BannerType;
-}
+};
 
 export enum BannerType {
   Info,
@@ -11,7 +11,10 @@ export enum BannerType {
   Warning,
 }
 
-export default function Banner({ children, type }: BannerProps): React.ReactElement {
+export default function Banner({
+  children,
+  type,
+}: BannerProps): React.ReactElement {
   if (type === BannerType.Info) {
     return <div className="notification is-info">{children}</div>;
   } else if (type === BannerType.Warning) {

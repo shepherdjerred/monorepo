@@ -1,6 +1,6 @@
-import { NextFunction, Request, Response } from 'express';
-import { Term, TermType } from './model';
-import { ExpressError } from '../../middleware';
+import { NextFunction, Request, Response } from "express";
+import { Term, TermType } from "./model";
+import { ExpressError } from "../../middleware";
 
 interface CreateTermRequest {
   type: TermType;
@@ -8,13 +8,17 @@ interface CreateTermRequest {
   endDate: Date;
 }
 
-export async function createTerm (req: Request, res: Response, next: NextFunction) {
+export async function createTerm(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   let { type, startDate, endDate } = req.body as CreateTermRequest;
   try {
     let term = await Term.create({
       type,
       startDate,
-      endDate
+      endDate,
     });
     res.json(term);
   } catch (err) {
@@ -22,12 +26,16 @@ export async function createTerm (req: Request, res: Response, next: NextFunctio
   }
 }
 
-export function readTerm (req: Request, res: Response, next: NextFunction) {
+export function readTerm(req: Request, res: Response, next: NextFunction) {
   let { term } = res.locals;
   res.json(term);
 }
 
-export async function readTerms (req: Request, res: Response, next: NextFunction) {
+export async function readTerms(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
     let terms = await Term.findAll();
     res.json(terms);
@@ -42,7 +50,11 @@ interface UpdateTermRequest {
   endDate: Date;
 }
 
-export async function updateTerm (req: Request, res: Response, next: NextFunction) {
+export async function updateTerm(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   let term: Term = res.locals.term;
   let { type, startDate, endDate } = req.body as UpdateTermRequest;
   try {
@@ -57,7 +69,11 @@ export async function updateTerm (req: Request, res: Response, next: NextFunctio
   }
 }
 
-export async function deleteTerm (req: Request, res: Response, next: NextFunction) {
+export async function deleteTerm(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   let term = res.locals.term as Term;
   try {
     await term.destroy();

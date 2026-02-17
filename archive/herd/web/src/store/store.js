@@ -1,12 +1,12 @@
-import {applyMiddleware, createStore} from 'redux';
-import logger from 'redux-logger';
-import thunk from 'redux-thunk';
-import {persistedReducer} from './persistance/persistedReducer';
-import {apiMiddleware} from 'redux-api-middleware';
-import {jwtMiddleware} from './middleware/rsaaJwtMiddleware';
-import {contentTypeMiddleware} from './middleware/rsaaContentTypeMiddleware';
-import {endpointMiddleware} from './middleware/rsaaEndpointMiddleware';
-import {bodyStringifyMiddleware} from './middleware/rsaaBodyStringifyMiddleware';
+import { applyMiddleware, createStore } from "redux";
+import logger from "redux-logger";
+import thunk from "redux-thunk";
+import { persistedReducer } from "./persistance/persistedReducer";
+import { apiMiddleware } from "redux-api-middleware";
+import { jwtMiddleware } from "./middleware/rsaaJwtMiddleware";
+import { contentTypeMiddleware } from "./middleware/rsaaContentTypeMiddleware";
+import { endpointMiddleware } from "./middleware/rsaaEndpointMiddleware";
+import { bodyStringifyMiddleware } from "./middleware/rsaaBodyStringifyMiddleware";
 
 // TODO combine RSAA middlewares into one
 const enhancer = applyMiddleware(
@@ -16,10 +16,7 @@ const enhancer = applyMiddleware(
   contentTypeMiddleware,
   endpointMiddleware,
   apiMiddleware,
-  logger
+  logger,
 );
 
-export const store = createStore(
-  persistedReducer,
-  enhancer
-);
+export const store = createStore(persistedReducer, enhancer);

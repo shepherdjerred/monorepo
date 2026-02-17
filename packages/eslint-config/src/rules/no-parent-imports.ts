@@ -22,7 +22,8 @@ export const noParentImports: TSESLint.RuleModule<MessageIds, Options> = {
     type: "problem",
     fixable: "code",
     docs: {
-      description: "Disallow relative imports that navigate to parent directories",
+      description:
+        "Disallow relative imports that navigate to parent directories",
     },
     messages: {
       noParentImports:

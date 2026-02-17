@@ -12,7 +12,7 @@ export function createApplicationLoadBalancer(
   stack: Stack,
   vpc: Vpc,
   autoScalingGroup: AutoScalingGroup,
-  certificate: Certificate
+  certificate: Certificate,
 ): ApplicationLoadBalancer {
   const applicationLoadBalancer = new ApplicationLoadBalancer(
     stack,
@@ -23,7 +23,7 @@ export function createApplicationLoadBalancer(
         subnetType: SubnetType.PUBLIC,
       },
       internetFacing: true,
-    }
+    },
   );
 
   const httpsListener = applicationLoadBalancer.addListener(
@@ -33,7 +33,7 @@ export function createApplicationLoadBalancer(
       open: true,
       protocol: ApplicationProtocol.HTTPS,
       certificates: [ListenerCertificate.fromCertificateManager(certificate)],
-    }
+    },
   );
 
   httpsListener.addTargets("ApplicationLoadBalancerHttpsFleet", {

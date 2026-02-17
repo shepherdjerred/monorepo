@@ -1,6 +1,12 @@
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Duration } from "cdk8s";
-import { ConfigMap, DaemonSet, Volume, ServiceAccount, Probe } from "cdk8s-plus-31";
+import {
+  ConfigMap,
+  DaemonSet,
+  Volume,
+  ServiceAccount,
+  Probe,
+} from "cdk8s-plus-31";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import versions from "../../versions.ts";
@@ -14,12 +20,16 @@ export async function createNvmeMetricsMonitoring(chart: Chart) {
   const scriptContent = await Bun.file(scriptPath).text();
 
   // Create ServiceAccount for the DaemonSet
-  const serviceAccount = new ServiceAccount(chart, "nvme-metrics-service-account", {
-    metadata: {
-      name: "nvme-metrics-service-account",
-      namespace: "prometheus",
+  const serviceAccount = new ServiceAccount(
+    chart,
+    "nvme-metrics-service-account",
+    {
+      metadata: {
+        name: "nvme-metrics-service-account",
+        namespace: "prometheus",
+      },
     },
-  });
+  );
 
   // Create ConfigMap with the nvme_metrics.py script
   const nvmeMetricsScript = new ConfigMap(chart, "nvme-metrics-script", {
@@ -41,11 +51,16 @@ export async function createNvmeMetricsMonitoring(chart: Chart) {
         app: "nvme-metrics-collector",
       },
       annotations: {
-        "ignore-check.kube-linter.io/sensitive-host-mounts": "Required for NVMe device monitoring via /dev",
-        "ignore-check.kube-linter.io/privileged-container": "Required for NVMe device access",
-        "ignore-check.kube-linter.io/privilege-escalation-container": "Required when privileged is true",
-        "ignore-check.kube-linter.io/run-as-non-root": "Required for NVMe device access as root",
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "Required to install nvme-cli at runtime",
+        "ignore-check.kube-linter.io/sensitive-host-mounts":
+          "Required for NVMe device monitoring via /dev",
+        "ignore-check.kube-linter.io/privileged-container":
+          "Required for NVMe device access",
+        "ignore-check.kube-linter.io/privilege-escalation-container":
+          "Required when privileged is true",
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "Required for NVMe device access as root",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "Required to install nvme-cli at runtime",
       },
     },
     serviceAccount,
@@ -85,7 +100,11 @@ export async function createNvmeMetricsMonitoring(chart: Chart) {
       `,
     ],
     liveness: Probe.fromCommand(
-      ["sh", "-c", "! grep -q 'collection failed' /host/var/lib/node_exporter/textfile_collector/nvme_metrics.prom"],
+      [
+        "sh",
+        "-c",
+        "! grep -q 'collection failed' /host/var/lib/node_exporter/textfile_collector/nvme_metrics.prom",
+      ],
       {
         initialDelaySeconds: Duration.seconds(120),
         periodSeconds: Duration.seconds(600),
@@ -103,14 +122,23 @@ export async function createNvmeMetricsMonitoring(chart: Chart) {
   });
 
   // Mount the script from ConfigMap
-  const scriptVolume = Volume.fromConfigMap(chart, "nvme-metrics-script-volume", nvmeMetricsScript);
+  const scriptVolume = Volume.fromConfigMap(
+    chart,
+    "nvme-metrics-script-volume",
+    nvmeMetricsScript,
+  );
   nvmeMetricsDaemonSet.addVolume(scriptVolume);
   container.mount("/scripts", scriptVolume);
 
   // Mount host /dev directory for NVMe device access
-  const hostDevVolume = Volume.fromHostPath(chart, "nvme-host-dev", "nvme-host-dev", {
-    path: "/dev",
-  });
+  const hostDevVolume = Volume.fromHostPath(
+    chart,
+    "nvme-host-dev",
+    "nvme-host-dev",
+    {
+      path: "/dev",
+    },
+  );
   nvmeMetricsDaemonSet.addVolume(hostDevVolume);
   container.mount("/dev", hostDevVolume);
 
@@ -124,7 +152,10 @@ export async function createNvmeMetricsMonitoring(chart: Chart) {
     },
   );
   nvmeMetricsDaemonSet.addVolume(textfileCollectorVolume);
-  container.mount("/host/var/lib/node_exporter/textfile_collector", textfileCollectorVolume);
+  container.mount(
+    "/host/var/lib/node_exporter/textfile_collector",
+    textfileCollectorVolume,
+  );
 
   return { serviceAccount, nvmeMetricsScript, nvmeMetricsDaemonSet };
 }

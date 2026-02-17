@@ -55,7 +55,10 @@ for (const replacement of gpuReplacements) {
     try {
       await runCommand(sedCommand, ["-i", replacement.sedPattern, file]);
     } catch (error) {
-      console.error(`✗ Failed to process pattern ${replacement.pattern} in ${file}:`, error);
+      console.error(
+        `✗ Failed to process pattern ${replacement.pattern} in ${file}:`,
+        error,
+      );
     }
   }
   console.log(`✓ Processed pattern: ${replacement.pattern}`);

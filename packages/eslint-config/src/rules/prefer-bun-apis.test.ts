@@ -23,9 +23,21 @@ ruleTester.run("prefer-bun-apis", preferBunApis, {
     { code: `const data = new Uint8Array([1, 2, 3]);` },
   ],
   invalid: [
-    { code: `const token = process.env.TOKEN;`, errors: [{ messageId: "preferBunEnv" }] },
-    { code: `const dir = __dirname;`, errors: [{ messageId: "preferImportMetaDir" }] },
-    { code: `const file = __filename;`, errors: [{ messageId: "preferImportMetaPath" }] },
-    { code: `const module = require("module");`, errors: [{ messageId: "preferEsmImport" }] },
+    {
+      code: `const token = process.env.TOKEN;`,
+      errors: [{ messageId: "preferBunEnv" }],
+    },
+    {
+      code: `const dir = __dirname;`,
+      errors: [{ messageId: "preferImportMetaDir" }],
+    },
+    {
+      code: `const file = __filename;`,
+      errors: [{ messageId: "preferImportMetaPath" }],
+    },
+    {
+      code: `const module = require("module");`,
+      errors: [{ messageId: "preferEsmImport" }],
+    },
   ],
 });

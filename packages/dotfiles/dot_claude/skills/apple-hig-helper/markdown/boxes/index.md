@@ -28,7 +28,7 @@ By default, a box uses a visible border or background color to separate its cont
 
 ## [Platform considerations](/design/human-interface-guidelines/boxes#Platform-considerations)
 
-*No additional considerations for visionOS. Not supported in tvOS or watchOS.*
+_No additional considerations for visionOS. Not supported in tvOS or watchOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/boxes#iOS-iPadOS)
 

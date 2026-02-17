@@ -26,7 +26,7 @@ You inform VoiceOver about your app’s content by providing alternative text th
 
 **Make charts and other infographics fully accessible.** Provide a concise description of each infographic that explains what it conveys. If people can interact with the infographic to get more or different information, make these interactions available to people using VoiceOver, too. The accessibility APIs offer ways to represent custom interactive elements so that assistive technologies can help people use them. For guidance, see [Charts](/design/Human-Interface-Guidelines/charts#Enhancing-the-accessibility-of-a-chart).
 
-**Exclude purely decorative images from VoiceOver.** It’s unnecessary to describe images that are decorative and don’t convey useful or actionable information. Excluding these images shows respect for people’s time and reduces cognitive load when they use VoiceOver. For developer guidance, see [`accessibilityHidden(_:)`](/documentation/SwiftUI/View/accessibilityHidden(_:)), [`accessibilityElement`](/documentation/AppKit/NSAccessibility-c.protocol/accessibilityElement), and [`isAccessibilityElement`](/documentation/UIKit/UIAccessibilityElement/isAccessibilityElement).
+**Exclude purely decorative images from VoiceOver.** It’s unnecessary to describe images that are decorative and don’t convey useful or actionable information. Excluding these images shows respect for people’s time and reduces cognitive load when they use VoiceOver. For developer guidance, see [`accessibilityHidden(_:)`](</documentation/SwiftUI/View/accessibilityHidden(_:)>), [`accessibilityElement`](/documentation/AppKit/NSAccessibility-c.protocol/accessibilityElement), and [`isAccessibilityElement`](/documentation/UIKit/UIAccessibilityElement/isAccessibilityElement).
 
 ## [Navigation](/design/human-interface-guidelines/voiceover#Navigation)
 
@@ -56,7 +56,7 @@ For developer guidance, see [`shouldGroupAccessibilityChildren`](/documentation/
 
 ## [Platform considerations](/design/human-interface-guidelines/voiceover#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, or watchOS._
 
 ### [visionOS](/design/human-interface-guidelines/voiceover#visionOS)
 
@@ -94,6 +94,6 @@ VoiceOver efficiency with custom rotors](https://developer.apple.com/videos/play
 
 ## [Change log](/design/human-interface-guidelines/voiceover#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date          | Changes   |
+| ------------- | --------- |
 | March 7, 2025 | New page. |

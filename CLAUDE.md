@@ -41,6 +41,7 @@ mise trust && mise dev   # Installs bun + dagger
 ## Verification
 
 Always verify changes:
+
 1. `bun run typecheck` - Type errors
 2. `bun run test` - Test failures
 3. `bunx eslint . --fix` - Lint issues (in relevant package)
@@ -48,6 +49,7 @@ Always verify changes:
 ## Package Notes
 
 Each package has its own CLAUDE.md with specific instructions:
+
 - `packages/clauderon/CLAUDE.md` - Rust build order, backends, architecture
 - `packages/birmel/CLAUDE.md` - Prisma setup, Mastra studio
 - `packages/a2ui-poc/CLAUDE.md` - Dev server commands

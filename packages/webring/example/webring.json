@@ -1,1 +1,38 @@
-{"https://drewdevault.com/blog/index.xml":{"timestamp":"2026-02-17T01:11:04.886Z","data":{"title":"The cults of TDD and GenAI","url":"https://drewdevault.com/2026/01/29/2026-01-29-Cult-of-TDD-and-LLMs.html","date":"2026-01-29T00:00:00.000Z","source":{"url":"https://drewdevault.com/blog/index.xml","title":"Drew DeVault"},"preview":"I’ve gotten a lot of flack throughout my career ov..."}},"https://danluu.com/atom.xml":{"timestamp":"2026-02-17T01:11:04.886Z","data":{"title":"Steve Ballmer was an underrated CEO","url":"https://danluu.com/ballmer/","date":"2024-10-28T00:00:00.000Z","source":{"url":"https://danluu.com/atom.xml","title":"Dan Luu"},"preview":"There's a common narrative that Microsoft was mori..."}},"https://jakelazaroff.com/rss.xml":{"timestamp":"2026-02-17T01:11:04.886Z","data":{"title":"DHH Is Way Worse Than I Thought","url":"https://jakelazaroff.com/words/dhh-is-way-worse-than-i-thought/","date":"2025-10-02T00:00:00.000Z","source":{"url":"https://jakelazaroff.com/rss.xml","title":"Jake Lazaroff"},"preview":"DHH's politics are not normal. Maybe they used to ..."}}}
+{
+  "https://drewdevault.com/blog/index.xml": {
+    "timestamp": "2026-02-17T01:11:04.886Z",
+    "data": {
+      "title": "The cults of TDD and GenAI",
+      "url": "https://drewdevault.com/2026/01/29/2026-01-29-Cult-of-TDD-and-LLMs.html",
+      "date": "2026-01-29T00:00:00.000Z",
+      "source": {
+        "url": "https://drewdevault.com/blog/index.xml",
+        "title": "Drew DeVault"
+      },
+      "preview": "I’ve gotten a lot of flack throughout my career ov..."
+    }
+  },
+  "https://danluu.com/atom.xml": {
+    "timestamp": "2026-02-17T01:11:04.886Z",
+    "data": {
+      "title": "Steve Ballmer was an underrated CEO",
+      "url": "https://danluu.com/ballmer/",
+      "date": "2024-10-28T00:00:00.000Z",
+      "source": { "url": "https://danluu.com/atom.xml", "title": "Dan Luu" },
+      "preview": "There's a common narrative that Microsoft was mori..."
+    }
+  },
+  "https://jakelazaroff.com/rss.xml": {
+    "timestamp": "2026-02-17T01:11:04.886Z",
+    "data": {
+      "title": "DHH Is Way Worse Than I Thought",
+      "url": "https://jakelazaroff.com/words/dhh-is-way-worse-than-i-thought/",
+      "date": "2025-10-02T00:00:00.000Z",
+      "source": {
+        "url": "https://jakelazaroff.com/rss.xml",
+        "title": "Jake Lazaroff"
+      },
+      "preview": "DHH's politics are not normal. Maybe they used to ..."
+    }
+  }
+}

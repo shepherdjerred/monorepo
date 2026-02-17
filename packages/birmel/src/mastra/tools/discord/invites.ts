@@ -7,15 +7,36 @@ import { validateSnowflakes } from "./validation.js";
 
 export const manageInviteTool = createTool({
   id: "manage-invite",
-  description: "Manage server invites: list all, create new, delete existing, or get vanity URL",
+  description:
+    "Manage server invites: list all, create new, delete existing, or get vanity URL",
   inputSchema: z.object({
-    action: z.enum(["list", "create", "delete", "get-vanity"]).describe("The action to perform"),
-    guildId: z.string().optional().describe("The ID of the guild (required for list/get-vanity)"),
-    channelId: z.string().optional().describe("The ID of the channel (required for create)"),
-    inviteCode: z.string().optional().describe("The invite code (required for delete)"),
-    maxAge: z.number().optional().describe("Invite expiry in seconds, 0 for never (for create)"),
-    maxUses: z.number().optional().describe("Maximum uses, 0 for unlimited (for create)"),
-    temporary: z.boolean().optional().describe("Whether membership is temporary (for create)"),
+    action: z
+      .enum(["list", "create", "delete", "get-vanity"])
+      .describe("The action to perform"),
+    guildId: z
+      .string()
+      .optional()
+      .describe("The ID of the guild (required for list/get-vanity)"),
+    channelId: z
+      .string()
+      .optional()
+      .describe("The ID of the channel (required for create)"),
+    inviteCode: z
+      .string()
+      .optional()
+      .describe("The invite code (required for delete)"),
+    maxAge: z
+      .number()
+      .optional()
+      .describe("Invite expiry in seconds, 0 for never (for create)"),
+    maxUses: z
+      .number()
+      .optional()
+      .describe("Maximum uses, 0 for unlimited (for create)"),
+    temporary: z
+      .boolean()
+      .optional()
+      .describe("Whether membership is temporary (for create)"),
     reason: z.string().optional().describe("Reason for creating/deleting"),
   }),
   outputSchema: z.object({
@@ -52,7 +73,9 @@ export const manageInviteTool = createTool({
         { value: ctx.guildId, fieldName: "guildId" },
         { value: ctx.channelId, fieldName: "channelId" },
       ]);
-      if (idError) {return { success: false, message: idError };}
+      if (idError) {
+        return { success: false, message: idError };
+      }
 
       const client = getDiscordClient();
 

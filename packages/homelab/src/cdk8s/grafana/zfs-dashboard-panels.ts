@@ -31,10 +31,12 @@ export function addL2arcPanels(
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "yellow" },
-          { value: 20, color: "green" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "yellow" },
+            { value: 20, color: "green" },
+          ]),
       )
       .gridPos({ x: 0, y: 21, w: 6, h: 4 }),
   );
@@ -45,7 +47,9 @@ export function addL2arcPanels(
       .description("Current L2ARC size")
       .datasource(prometheusDatasource)
       .withTarget(
-        new prometheus.DataqueryBuilder().expr(`node_zfs_arc_l2_size{${buildFilter()}}`).legendFormat("{{instance}}"),
+        new prometheus.DataqueryBuilder()
+          .expr(`node_zfs_arc_l2_size{${buildFilter()}}`)
+          .legendFormat("{{instance}}"),
       )
       .unit("bytes")
       .colorMode(common.BigValueColorMode.Value)
@@ -77,10 +81,12 @@ export function addL2arcPanels(
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 1, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 1, color: "red" },
+          ]),
       )
       .gridPos({ x: 12, y: 21, w: 6, h: 4 }),
   );
@@ -101,10 +107,12 @@ export function addL2arcPanels(
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.None)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 1, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 1, color: "red" },
+          ]),
       )
       .gridPos({ x: 18, y: 21, w: 6, h: 4 }),
   );
@@ -133,7 +141,11 @@ export function addL2arcPanels(
       .title("L2ARC Size Over Time")
       .description("L2ARC size and read/write activity")
       .datasource(prometheusDatasource)
-      .withTarget(new prometheus.DataqueryBuilder().expr(`node_zfs_arc_l2_size{${buildFilter()}}`).legendFormat("Size"))
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(`node_zfs_arc_l2_size{${buildFilter()}}`)
+          .legendFormat("Size"),
+      )
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(`rate(node_zfs_arc_l2_read_bytes{${buildFilter()}}[5m])`)
@@ -172,11 +184,13 @@ export function addMemoryPanels(
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 268_435_456, color: "red" },
-          { value: 536_870_912, color: "yellow" },
-          { value: 1_073_741_824, color: "green" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 268_435_456, color: "red" },
+            { value: 536_870_912, color: "yellow" },
+            { value: 1_073_741_824, color: "green" },
+          ]),
       )
       .gridPos({ x: 0, y: 33, w: 6, h: 4 }),
   );
@@ -188,18 +202,22 @@ export function addMemoryPanels(
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`rate(node_zfs_arc_memory_throttle_count{${buildFilter()}}[5m])`)
+          .expr(
+            `rate(node_zfs_arc_memory_throttle_count{${buildFilter()}}[5m])`,
+          )
           .legendFormat("{{instance}}"),
       )
       .unit("ops")
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 10, color: "yellow" },
-          { value: 50, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 10, color: "yellow" },
+            { value: 50, color: "red" },
+          ]),
       )
       .gridPos({ x: 6, y: 33, w: 6, h: 4 }),
   );
@@ -218,10 +236,12 @@ export function addMemoryPanels(
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 1, color: "yellow" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 1, color: "yellow" },
+          ]),
       )
       .gridPos({ x: 12, y: 33, w: 6, h: 4 }),
   );
@@ -233,18 +253,22 @@ export function addMemoryPanels(
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`rate(node_zfs_abd_scatter_page_alloc_retry{${buildFilter()}}[5m])`)
+          .expr(
+            `rate(node_zfs_abd_scatter_page_alloc_retry{${buildFilter()}}[5m])`,
+          )
           .legendFormat("{{instance}}"),
       )
       .unit("ops")
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 50, color: "yellow" },
-          { value: 100, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 50, color: "yellow" },
+            { value: 100, color: "red" },
+          ]),
       )
       .gridPos({ x: 18, y: 33, w: 6, h: 4 }),
   );
@@ -266,7 +290,9 @@ export function addMemoryPanels(
       )
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`rate(node_zfs_arc_memory_throttle_count{${buildFilter()}}[5m])`)
+          .expr(
+            `rate(node_zfs_arc_memory_throttle_count{${buildFilter()}}[5m])`,
+          )
           .legendFormat("Throttle Rate"),
       )
       .unit("bytes")
@@ -282,12 +308,16 @@ export function addMemoryPanels(
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`rate(node_zfs_abd_scatter_page_alloc_retry{${buildFilter()}}[5m])`)
+          .expr(
+            `rate(node_zfs_abd_scatter_page_alloc_retry{${buildFilter()}}[5m])`,
+          )
           .legendFormat("Page Alloc Retries"),
       )
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`rate(node_zfs_abd_scatter_sg_table_retry{${buildFilter()}}[5m])`)
+          .expr(
+            `rate(node_zfs_abd_scatter_sg_table_retry{${buildFilter()}}[5m])`,
+          )
           .legendFormat("SG Table Retries"),
       )
       .unit("ops")
@@ -318,11 +348,13 @@ export function addPerformancePanels(
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 1000, color: "yellow" },
-          { value: 5000, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 1000, color: "yellow" },
+            { value: 5000, color: "red" },
+          ]),
       )
       .gridPos({ x: 0, y: 45, w: 12, h: 8 }),
   );
@@ -341,11 +373,13 @@ export function addPerformancePanels(
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 20, color: "yellow" },
-          { value: 50, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 20, color: "yellow" },
+            { value: 50, color: "red" },
+          ]),
       )
       .gridPos({ x: 12, y: 45, w: 12, h: 8 }),
   );
@@ -364,11 +398,13 @@ export function addPerformancePanels(
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 100, color: "yellow" },
-          { value: 500, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 100, color: "yellow" },
+            { value: 500, color: "red" },
+          ]),
       )
       .gridPos({ x: 0, y: 53, w: 12, h: 8 }),
   );
@@ -387,11 +423,13 @@ export function addPerformancePanels(
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 100, color: "yellow" },
-          { value: 500, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 100, color: "yellow" },
+            { value: 500, color: "red" },
+          ]),
       )
       .gridPos({ x: 12, y: 53, w: 12, h: 8 }),
   );
@@ -418,11 +456,13 @@ export function addBufferAndAdvancedPanels(
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 1_073_741_824, color: "yellow" },
-          { value: 2_147_483_648, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 1_073_741_824, color: "yellow" },
+            { value: 2_147_483_648, color: "red" },
+          ]),
       )
       .gridPos({ x: 0, y: 61, w: 6, h: 4 }),
   );
@@ -433,17 +473,21 @@ export function addBufferAndAdvancedPanels(
       .description("ZFS data buffer size")
       .datasource(prometheusDatasource)
       .withTarget(
-        new prometheus.DataqueryBuilder().expr(`node_zfs_arc_dbuf_size{${buildFilter()}}`).legendFormat("{{instance}}"),
+        new prometheus.DataqueryBuilder()
+          .expr(`node_zfs_arc_dbuf_size{${buildFilter()}}`)
+          .legendFormat("{{instance}}"),
       )
       .unit("bytes")
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 2_147_483_648, color: "yellow" },
-          { value: 4_294_967_296, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 2_147_483_648, color: "yellow" },
+            { value: 4_294_967_296, color: "red" },
+          ]),
       )
       .gridPos({ x: 6, y: 61, w: 6, h: 4 }),
   );
@@ -470,10 +514,14 @@ export function addBufferAndAdvancedPanels(
       .description("ABD allocation type distribution")
       .datasource(prometheusDatasource)
       .withTarget(
-        new prometheus.DataqueryBuilder().expr(`node_zfs_abd_linear_cnt{${buildFilter()}}`).legendFormat("Linear"),
+        new prometheus.DataqueryBuilder()
+          .expr(`node_zfs_abd_linear_cnt{${buildFilter()}}`)
+          .legendFormat("Linear"),
       )
       .withTarget(
-        new prometheus.DataqueryBuilder().expr(`node_zfs_abd_scatter_cnt{${buildFilter()}}`).legendFormat("Scatter"),
+        new prometheus.DataqueryBuilder()
+          .expr(`node_zfs_abd_scatter_cnt{${buildFilter()}}`)
+          .legendFormat("Scatter"),
       )
       .unit("short")
       .colorMode(common.BigValueColorMode.Value)
@@ -487,13 +535,19 @@ export function addBufferAndAdvancedPanels(
       .description("DNode, DBuf, and Bonus buffer sizes")
       .datasource(prometheusDatasource)
       .withTarget(
-        new prometheus.DataqueryBuilder().expr(`node_zfs_arc_dnode_size{${buildFilter()}}`).legendFormat("DNode"),
+        new prometheus.DataqueryBuilder()
+          .expr(`node_zfs_arc_dnode_size{${buildFilter()}}`)
+          .legendFormat("DNode"),
       )
       .withTarget(
-        new prometheus.DataqueryBuilder().expr(`node_zfs_arc_dbuf_size{${buildFilter()}}`).legendFormat("DBuf"),
+        new prometheus.DataqueryBuilder()
+          .expr(`node_zfs_arc_dbuf_size{${buildFilter()}}`)
+          .legendFormat("DBuf"),
       )
       .withTarget(
-        new prometheus.DataqueryBuilder().expr(`node_zfs_arc_bonus_size{${buildFilter()}}`).legendFormat("Bonus"),
+        new prometheus.DataqueryBuilder()
+          .expr(`node_zfs_arc_bonus_size{${buildFilter()}}`)
+          .legendFormat("Bonus"),
       )
       .unit("bytes")
       .lineWidth(2)
@@ -530,10 +584,14 @@ export function addBufferAndAdvancedPanels(
       .description("Most Recently Used vs Most Frequently Used sizes")
       .datasource(prometheusDatasource)
       .withTarget(
-        new prometheus.DataqueryBuilder().expr(`node_zfs_arc_mru_size{${buildFilter()}}`).legendFormat("MRU Size"),
+        new prometheus.DataqueryBuilder()
+          .expr(`node_zfs_arc_mru_size{${buildFilter()}}`)
+          .legendFormat("MRU Size"),
       )
       .withTarget(
-        new prometheus.DataqueryBuilder().expr(`node_zfs_arc_mfu_size{${buildFilter()}}`).legendFormat("MFU Size"),
+        new prometheus.DataqueryBuilder()
+          .expr(`node_zfs_arc_mfu_size{${buildFilter()}}`)
+          .legendFormat("MFU Size"),
       )
       .unit("bytes")
       .lineWidth(2)
@@ -581,11 +639,13 @@ export function addBufferAndAdvancedPanels(
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 10, color: "yellow" },
-          { value: 50, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 10, color: "yellow" },
+            { value: 50, color: "red" },
+          ]),
       )
       .gridPos({ x: 0, y: 81, w: 12, h: 8 }),
   );

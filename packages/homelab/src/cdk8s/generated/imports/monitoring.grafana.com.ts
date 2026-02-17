@@ -80,7 +80,9 @@ export interface PodLogsProps {
  * Converts an object of type 'PodLogsProps' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_PodLogsProps(obj: PodLogsProps | undefined): Record<string, any> | undefined {
+export function toJson_PodLogsProps(
+  obj: PodLogsProps | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -89,7 +91,10 @@ export function toJson_PodLogsProps(obj: PodLogsProps | undefined): Record<strin
     spec: toJson_PodLogsSpec(obj.spec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -125,17 +130,24 @@ export interface PodLogsSpec {
  * Converts an object of type 'PodLogsSpec' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_PodLogsSpec(obj: PodLogsSpec | undefined): Record<string, any> | undefined {
+export function toJson_PodLogsSpec(
+  obj: PodLogsSpec | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
   const result = {
-    namespaceSelector: toJson_PodLogsSpecNamespaceSelector(obj.namespaceSelector),
+    namespaceSelector: toJson_PodLogsSpecNamespaceSelector(
+      obj.namespaceSelector,
+    ),
     relabelings: obj.relabelings?.map((y) => toJson_PodLogsSpecRelabelings(y)),
     selector: toJson_PodLogsSpecSelector(obj.selector),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -171,14 +183,22 @@ export function toJson_PodLogsSpecNamespaceSelector(
     return undefined;
   }
   const result = {
-    matchExpressions: obj.matchExpressions?.map((y) => toJson_PodLogsSpecNamespaceSelectorMatchExpressions(y)),
+    matchExpressions: obj.matchExpressions?.map((y) =>
+      toJson_PodLogsSpecNamespaceSelectorMatchExpressions(y),
+    ),
     matchLabels:
       obj.matchLabels === undefined
         ? undefined
-        : Object.entries(obj.matchLabels).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.matchLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -261,7 +281,10 @@ export function toJson_PodLogsSpecRelabelings(
     targetLabel: obj.targetLabel,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -290,19 +313,29 @@ export interface PodLogsSpecSelector {
  * Converts an object of type 'PodLogsSpecSelector' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_PodLogsSpecSelector(obj: PodLogsSpecSelector | undefined): Record<string, any> | undefined {
+export function toJson_PodLogsSpecSelector(
+  obj: PodLogsSpecSelector | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
   const result = {
-    matchExpressions: obj.matchExpressions?.map((y) => toJson_PodLogsSpecSelectorMatchExpressions(y)),
+    matchExpressions: obj.matchExpressions?.map((y) =>
+      toJson_PodLogsSpecSelectorMatchExpressions(y),
+    ),
     matchLabels:
       obj.matchLabels === undefined
         ? undefined
-        : Object.entries(obj.matchLabels).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.matchLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -350,7 +383,10 @@ export function toJson_PodLogsSpecNamespaceSelectorMatchExpressions(
     values: obj.values?.map((y) => y),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -425,6 +461,9 @@ export function toJson_PodLogsSpecSelectorMatchExpressions(
     values: obj.values?.map((y) => y),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */

@@ -77,7 +77,10 @@ export async function sync(
         health: typedParsed.status?.health?.status ?? "Unknown",
         revision: typedParsed.status?.sync?.revision?.slice(0, 8) ?? "Unknown",
         resourcesCount: typedParsed.status?.resources?.length ?? 0,
-        message: typedParsed.status?.conditions?.[0]?.message ?? typedParsed.message ?? "Sync operation completed",
+        message:
+          typedParsed.status?.conditions?.[0]?.message ??
+          typedParsed.message ??
+          "Sync operation completed",
       };
       message = `Phase: ${syncInfo.phase}, Health: ${syncInfo.health}, Revision: ${syncInfo.revision}, Resources: ${String(syncInfo.resourcesCount)}\n${syncInfo.message}`;
     } else {
@@ -92,7 +95,10 @@ export async function sync(
     return { status: "passed", message };
   } else if (message.includes("another operation is already in progress")) {
     // Another sync is already running - this is fine, not a failure
-    return { status: "passed", message: `Sync already in progress (skipped): ${message}` };
+    return {
+      status: "passed",
+      message: `Sync already in progress (skipped): ${message}`,
+    };
   } else {
     return { status: "failed", message };
   }

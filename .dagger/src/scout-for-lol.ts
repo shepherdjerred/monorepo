@@ -1,6 +1,11 @@
 import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
-import { syncToS3, publishToGhcrMultiple, updateHomelabVersion, getGitHubContainer } from "./lib/containers/index.js";
+import {
+  syncToS3,
+  publishToGhcrMultiple,
+  updateHomelabVersion,
+  getGitHubContainer,
+} from "./lib/containers/index.js";
 import { logWithTimestamp, withTiming } from "./lib/index.js";
 
 const BUN_VERSION = "1.3.9";
@@ -10,7 +15,10 @@ const BUN_VERSION = "1.3.9";
 // ============================================================
 
 function getBunContainer(): Container {
-  return dag.container().from(`oven/bun:${BUN_VERSION}`).withWorkdir("/workspace");
+  return dag
+    .container()
+    .from(`oven/bun:${BUN_VERSION}`)
+    .withWorkdir("/workspace");
 }
 
 /**
@@ -21,7 +29,10 @@ function getBunContainer(): Container {
  * 3. bun install - cached if lockfile unchanged
  * 4. Config files + source code - change frequently
  */
-function installWorkspaceDeps(workspaceSource: Directory, installOpenssl = false): Container {
+function installWorkspaceDeps(
+  workspaceSource: Directory,
+  installOpenssl = false,
+): Container {
   let container = getBunContainer();
 
   if (installOpenssl) {
@@ -32,9 +43,18 @@ function installWorkspaceDeps(workspaceSource: Directory, installOpenssl = false
       .withExec(["apt", "install", "-y", "openssl"]);
   }
 
-  container = container.withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-install-cache"));
-  container = container.withMountedCache("/workspace/.eslintcache", dag.cacheVolume("eslint-cache"));
-  container = container.withMountedCache("/workspace/.tsbuildinfo", dag.cacheVolume("tsbuildinfo-cache"));
+  container = container.withMountedCache(
+    "/root/.bun/install/cache",
+    dag.cacheVolume("bun-install-cache"),
+  );
+  container = container.withMountedCache(
+    "/workspace/.eslintcache",
+    dag.cacheVolume("eslint-cache"),
+  );
+  container = container.withMountedCache(
+    "/workspace/.tsbuildinfo",
+    dag.cacheVolume("tsbuildinfo-cache"),
+  );
 
   // PHASE 1: Dependency files only (for bun install caching)
   container = container
@@ -42,29 +62,74 @@ function installWorkspaceDeps(workspaceSource: Directory, installOpenssl = false
     .withFile("/workspace/package.json", workspaceSource.file("package.json"))
     .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
     .withDirectory("/workspace/patches", workspaceSource.directory("patches"))
-    .withFile("/workspace/packages/backend/package.json", workspaceSource.file("packages/backend/package.json"))
-    .withFile("/workspace/packages/data/package.json", workspaceSource.file("packages/data/package.json"))
-    .withFile("/workspace/packages/report/package.json", workspaceSource.file("packages/report/package.json"))
-    .withFile("/workspace/packages/frontend/package.json", workspaceSource.file("packages/frontend/package.json"))
-    .withFile("/workspace/packages/desktop/package.json", workspaceSource.file("packages/desktop/package.json"))
-    .withFile("/workspace/packages/ui/package.json", workspaceSource.file("packages/ui/package.json"))
+    .withFile(
+      "/workspace/packages/backend/package.json",
+      workspaceSource.file("packages/backend/package.json"),
+    )
+    .withFile(
+      "/workspace/packages/data/package.json",
+      workspaceSource.file("packages/data/package.json"),
+    )
+    .withFile(
+      "/workspace/packages/report/package.json",
+      workspaceSource.file("packages/report/package.json"),
+    )
+    .withFile(
+      "/workspace/packages/frontend/package.json",
+      workspaceSource.file("packages/frontend/package.json"),
+    )
+    .withFile(
+      "/workspace/packages/desktop/package.json",
+      workspaceSource.file("packages/desktop/package.json"),
+    )
+    .withFile(
+      "/workspace/packages/ui/package.json",
+      workspaceSource.file("packages/ui/package.json"),
+    )
     .withExec(["bun", "install", "--frozen-lockfile"]);
 
   // PHASE 2: Config files and source code
   return container
     .withFile("/workspace/tsconfig.json", workspaceSource.file("tsconfig.json"))
-    .withFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
-    .withFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
+    .withFile(
+      "/workspace/tsconfig.base.json",
+      workspaceSource.file("tsconfig.base.json"),
+    )
+    .withFile(
+      "/workspace/eslint.config.ts",
+      workspaceSource.file("eslint.config.ts"),
+    )
     .withFile("/workspace/.jscpd.json", workspaceSource.file(".jscpd.json"))
-    .withDirectory("/workspace/eslint-rules", workspaceSource.directory("eslint-rules"))
+    .withDirectory(
+      "/workspace/eslint-rules",
+      workspaceSource.directory("eslint-rules"),
+    )
     .withDirectory("/workspace/types", workspaceSource.directory("types"))
     .withDirectory("/workspace/scripts", workspaceSource.directory("scripts"))
-    .withDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
-    .withDirectory("/workspace/packages/data", workspaceSource.directory("packages/data"))
-    .withDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
-    .withDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
-    .withDirectory("/workspace/packages/desktop", workspaceSource.directory("packages/desktop"))
-    .withDirectory("/workspace/packages/ui", workspaceSource.directory("packages/ui"));
+    .withDirectory(
+      "/workspace/packages/backend",
+      workspaceSource.directory("packages/backend"),
+    )
+    .withDirectory(
+      "/workspace/packages/data",
+      workspaceSource.directory("packages/data"),
+    )
+    .withDirectory(
+      "/workspace/packages/report",
+      workspaceSource.directory("packages/report"),
+    )
+    .withDirectory(
+      "/workspace/packages/frontend",
+      workspaceSource.directory("packages/frontend"),
+    )
+    .withDirectory(
+      "/workspace/packages/desktop",
+      workspaceSource.directory("packages/desktop"),
+    )
+    .withDirectory(
+      "/workspace/packages/ui",
+      workspaceSource.directory("packages/ui"),
+    );
 }
 
 /**
@@ -82,10 +147,16 @@ function generatePrismaClient(workspaceSource: Directory): Directory {
  * Get a fully prepared workspace container with deps installed and Prisma generated.
  * Uses withDirectory (embedded files) -- works with Dagger parallelism.
  */
-function getPreparedWorkspace(workspaceSource: Directory, prismaGenerated?: Directory): Container {
+function getPreparedWorkspace(
+  workspaceSource: Directory,
+  prismaGenerated?: Directory,
+): Container {
   const base = installWorkspaceDeps(workspaceSource, true);
   if (prismaGenerated) {
-    return base.withDirectory("/workspace/packages/backend/generated", prismaGenerated);
+    return base.withDirectory(
+      "/workspace/packages/backend/generated",
+      prismaGenerated,
+    );
   }
   return base
     .withWorkdir("/workspace/packages/backend")
@@ -96,7 +167,10 @@ function getPreparedWorkspace(workspaceSource: Directory, prismaGenerated?: Dire
 /**
  * Get a mounted workspace -- faster for read-only CI checks.
  */
-function getMountedWorkspace(workspaceSource: Directory, installOpenssl = false): Container {
+function getMountedWorkspace(
+  workspaceSource: Directory,
+  installOpenssl = false,
+): Container {
   let container = getBunContainer();
 
   if (installOpenssl) {
@@ -107,18 +181,42 @@ function getMountedWorkspace(workspaceSource: Directory, installOpenssl = false)
       .withExec(["apt", "install", "-y", "openssl"]);
   }
 
-  container = container.withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-install-cache"));
-  container = container.withMountedCache("/workspace/.eslintcache", dag.cacheVolume("eslint-cache"));
-  container = container.withMountedCache("/workspace/.tsbuildinfo", dag.cacheVolume("tsbuildinfo-cache"));
+  container = container.withMountedCache(
+    "/root/.bun/install/cache",
+    dag.cacheVolume("bun-install-cache"),
+  );
+  container = container.withMountedCache(
+    "/workspace/.eslintcache",
+    dag.cacheVolume("eslint-cache"),
+  );
+  container = container.withMountedCache(
+    "/workspace/.tsbuildinfo",
+    dag.cacheVolume("tsbuildinfo-cache"),
+  );
 
   container = container
     .withWorkdir("/workspace")
-    .withMountedFile("/workspace/package.json", workspaceSource.file("package.json"))
+    .withMountedFile(
+      "/workspace/package.json",
+      workspaceSource.file("package.json"),
+    )
     .withMountedFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
-    .withMountedDirectory("/workspace/patches", workspaceSource.directory("patches"))
-    .withMountedFile("/workspace/packages/backend/package.json", workspaceSource.file("packages/backend/package.json"))
-    .withMountedFile("/workspace/packages/data/package.json", workspaceSource.file("packages/data/package.json"))
-    .withMountedFile("/workspace/packages/report/package.json", workspaceSource.file("packages/report/package.json"))
+    .withMountedDirectory(
+      "/workspace/patches",
+      workspaceSource.directory("patches"),
+    )
+    .withMountedFile(
+      "/workspace/packages/backend/package.json",
+      workspaceSource.file("packages/backend/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/data/package.json",
+      workspaceSource.file("packages/data/package.json"),
+    )
+    .withMountedFile(
+      "/workspace/packages/report/package.json",
+      workspaceSource.file("packages/report/package.json"),
+    )
     .withMountedFile(
       "/workspace/packages/frontend/package.json",
       workspaceSource.file("packages/frontend/package.json"),
@@ -127,32 +225,80 @@ function getMountedWorkspace(workspaceSource: Directory, installOpenssl = false)
       "/workspace/packages/desktop/package.json",
       workspaceSource.file("packages/desktop/package.json"),
     )
-    .withMountedFile("/workspace/packages/ui/package.json", workspaceSource.file("packages/ui/package.json"))
+    .withMountedFile(
+      "/workspace/packages/ui/package.json",
+      workspaceSource.file("packages/ui/package.json"),
+    )
     .withExec(["bun", "install", "--frozen-lockfile"]);
 
   return container
-    .withMountedFile("/workspace/tsconfig.json", workspaceSource.file("tsconfig.json"))
-    .withMountedFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
-    .withMountedFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
-    .withMountedFile("/workspace/.jscpd.json", workspaceSource.file(".jscpd.json"))
-    .withMountedDirectory("/workspace/eslint-rules", workspaceSource.directory("eslint-rules"))
-    .withMountedDirectory("/workspace/types", workspaceSource.directory("types"))
-    .withMountedDirectory("/workspace/scripts", workspaceSource.directory("scripts"))
-    .withMountedDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
-    .withMountedDirectory("/workspace/packages/data", workspaceSource.directory("packages/data"))
-    .withMountedDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
-    .withMountedDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
-    .withMountedDirectory("/workspace/packages/desktop", workspaceSource.directory("packages/desktop"))
-    .withMountedDirectory("/workspace/packages/ui", workspaceSource.directory("packages/ui"));
+    .withMountedFile(
+      "/workspace/tsconfig.json",
+      workspaceSource.file("tsconfig.json"),
+    )
+    .withMountedFile(
+      "/workspace/tsconfig.base.json",
+      workspaceSource.file("tsconfig.base.json"),
+    )
+    .withMountedFile(
+      "/workspace/eslint.config.ts",
+      workspaceSource.file("eslint.config.ts"),
+    )
+    .withMountedFile(
+      "/workspace/.jscpd.json",
+      workspaceSource.file(".jscpd.json"),
+    )
+    .withMountedDirectory(
+      "/workspace/eslint-rules",
+      workspaceSource.directory("eslint-rules"),
+    )
+    .withMountedDirectory(
+      "/workspace/types",
+      workspaceSource.directory("types"),
+    )
+    .withMountedDirectory(
+      "/workspace/scripts",
+      workspaceSource.directory("scripts"),
+    )
+    .withMountedDirectory(
+      "/workspace/packages/backend",
+      workspaceSource.directory("packages/backend"),
+    )
+    .withMountedDirectory(
+      "/workspace/packages/data",
+      workspaceSource.directory("packages/data"),
+    )
+    .withMountedDirectory(
+      "/workspace/packages/report",
+      workspaceSource.directory("packages/report"),
+    )
+    .withMountedDirectory(
+      "/workspace/packages/frontend",
+      workspaceSource.directory("packages/frontend"),
+    )
+    .withMountedDirectory(
+      "/workspace/packages/desktop",
+      workspaceSource.directory("packages/desktop"),
+    )
+    .withMountedDirectory(
+      "/workspace/packages/ui",
+      workspaceSource.directory("packages/ui"),
+    );
 }
 
 /**
  * Get a prepared mounted workspace with Prisma generated.
  */
-function getPreparedMountedWorkspace(workspaceSource: Directory, prismaGenerated?: Directory): Container {
+function getPreparedMountedWorkspace(
+  workspaceSource: Directory,
+  prismaGenerated?: Directory,
+): Container {
   const base = getMountedWorkspace(workspaceSource, true);
   if (prismaGenerated) {
-    return base.withMountedDirectory("/workspace/packages/backend/generated", prismaGenerated);
+    return base.withMountedDirectory(
+      "/workspace/packages/backend/generated",
+      prismaGenerated,
+    );
   }
   return base
     .withWorkdir("/workspace/packages/backend")
@@ -164,7 +310,10 @@ function getPreparedMountedWorkspace(workspaceSource: Directory, prismaGenerated
 // Backend helpers (from backend.ts)
 // ============================================================
 
-function getBackendPrepared(workspaceSource: Directory, preparedWorkspace?: Container): Container {
+function getBackendPrepared(
+  workspaceSource: Directory,
+  preparedWorkspace?: Container,
+): Container {
   const base = preparedWorkspace ?? getPreparedWorkspace(workspaceSource);
   return base.withWorkdir("/workspace/packages/backend");
 }
@@ -178,9 +327,16 @@ function buildBackendImage(
   return getBackendPrepared(workspaceSource, preparedWorkspace)
     .withEnvVariable("VERSION", version)
     .withEnvVariable("GIT_SHA", gitSha)
-    .withEntrypoint(["sh", "-c", "bun run src/database/migrate.ts && bun run src/index.ts"])
+    .withEntrypoint([
+      "sh",
+      "-c",
+      "bun run src/database/migrate.ts && bun run src/index.ts",
+    ])
     .withLabel("org.opencontainers.image.title", "scout-for-lol-backend")
-    .withLabel("org.opencontainers.image.description", "Scout for LoL Discord bot backend")
+    .withLabel(
+      "org.opencontainers.image.description",
+      "Scout for LoL Discord bot backend",
+    )
     .withLabel("healthcheck.command", "bun run src/health.ts")
     .withLabel("healthcheck.interval", "30s")
     .withLabel("healthcheck.timeout", "10s")
@@ -194,7 +350,10 @@ async function smokeTestBackendImageWithContainer(
   const testDbName = `test-${Date.now().toString()}.sqlite`;
 
   const containerWithEnv = image
-    .withFile(".env", workspaceSource.directory("packages/backend").file("example.env"))
+    .withFile(
+      ".env",
+      workspaceSource.directory("packages/backend").file("example.env"),
+    )
     .withEnvVariable("DATABASE_URL", `file:./${testDbName}`)
     .withEntrypoint([]);
 
@@ -220,10 +379,18 @@ async function smokeTestBackendImageWithContainer(
     "Starting registration of",
     "Logging into Discord",
   ];
-  const expectedFailurePatterns = ["401: Unauthorized", "An invalid token was provided", "TokenInvalid"];
+  const expectedFailurePatterns = [
+    "401: Unauthorized",
+    "An invalid token was provided",
+    "TokenInvalid",
+  ];
 
-  const hasExpectedSuccess = expectedSuccessPatterns.some((pattern) => output.includes(pattern));
-  const hasExpectedFailure = expectedFailurePatterns.some((pattern) => output.includes(pattern));
+  const hasExpectedSuccess = expectedSuccessPatterns.some((pattern) =>
+    output.includes(pattern),
+  );
+  const hasExpectedFailure = expectedFailurePatterns.some((pattern) =>
+    output.includes(pattern),
+  );
 
   if (hasExpectedSuccess && hasExpectedFailure) {
     return "Smoke test passed: Container started successfully and failed as expected due to auth issues.";
@@ -238,9 +405,14 @@ async function smokeTestBackendImageWithContainer(
 // Frontend helpers (from frontend.ts)
 // ============================================================
 
-function buildFrontend(workspaceSource: Directory, preparedWorkspace?: Container): Directory {
+function buildFrontend(
+  workspaceSource: Directory,
+  preparedWorkspace?: Container,
+): Directory {
   const base = preparedWorkspace ?? getPreparedWorkspace(workspaceSource);
-  const container = base.withWorkdir("/workspace/packages/frontend").withExec(["bun", "run", "build"]);
+  const container = base
+    .withWorkdir("/workspace/packages/frontend")
+    .withExec(["bun", "run", "build"]);
   return container.directory("/workspace/packages/frontend/dist");
 }
 
@@ -285,7 +457,10 @@ function getRustTauriContainer(): Container {
     .withMountedCache("/root/.cache/sccache", dag.cacheVolume("sccache"))
     .withEnvVariable("RUSTC_WRAPPER", "sccache")
     .withEnvVariable("SCCACHE_DIR", "/root/.cache/sccache")
-    .withMountedCache("/usr/local/cargo/registry", dag.cacheVolume("cargo-registry"))
+    .withMountedCache(
+      "/usr/local/cargo/registry",
+      dag.cacheVolume("cargo-registry"),
+    )
     .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
     .withEnvVariable("CARGO_INCREMENTAL", "0")
     .withEnvVariable("CARGO_BUILD_JOBS", "4")
@@ -302,16 +477,29 @@ function installBunInRustContainer(container: Container): Container {
     .withEnvVariable("PATH", "/root/.bun/bin:$PATH", { expand: true });
 }
 
-function installDesktopDeps(workspaceSource: Directory, target: DesktopTarget = "linux"): Container {
+function installDesktopDeps(
+  workspaceSource: Directory,
+  target: DesktopTarget = "linux",
+): Container {
   let container = getRustTauriContainer();
   container = installBunInRustContainer(container);
-  container = container.withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-install-cache"));
+  container = container.withMountedCache(
+    "/root/.bun/install/cache",
+    dag.cacheVolume("bun-install-cache"),
+  );
 
   if (target === "windows-gnu") {
     container = container
       .withExec(["apt", "install", "-y", "mingw-w64", "nsis", "zip"])
       .withExec(["rustup", "target", "add", "x86_64-pc-windows-gnu"])
-      .withExec(["rustup", "target", "add", "x86_64-pc-windows-gnu", "--toolchain", "stable"]);
+      .withExec([
+        "rustup",
+        "target",
+        "add",
+        "x86_64-pc-windows-gnu",
+        "--toolchain",
+        "stable",
+      ]);
   }
 
   // PHASE 1: Dependency files only
@@ -320,28 +508,73 @@ function installDesktopDeps(workspaceSource: Directory, target: DesktopTarget = 
     .withFile("/workspace/package.json", workspaceSource.file("package.json"))
     .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
     .withDirectory("/workspace/patches", workspaceSource.directory("patches"))
-    .withFile("/workspace/packages/backend/package.json", workspaceSource.file("packages/backend/package.json"))
-    .withFile("/workspace/packages/data/package.json", workspaceSource.file("packages/data/package.json"))
-    .withFile("/workspace/packages/report/package.json", workspaceSource.file("packages/report/package.json"))
-    .withFile("/workspace/packages/frontend/package.json", workspaceSource.file("packages/frontend/package.json"))
-    .withFile("/workspace/packages/desktop/package.json", workspaceSource.file("packages/desktop/package.json"))
-    .withFile("/workspace/packages/ui/package.json", workspaceSource.file("packages/ui/package.json"))
+    .withFile(
+      "/workspace/packages/backend/package.json",
+      workspaceSource.file("packages/backend/package.json"),
+    )
+    .withFile(
+      "/workspace/packages/data/package.json",
+      workspaceSource.file("packages/data/package.json"),
+    )
+    .withFile(
+      "/workspace/packages/report/package.json",
+      workspaceSource.file("packages/report/package.json"),
+    )
+    .withFile(
+      "/workspace/packages/frontend/package.json",
+      workspaceSource.file("packages/frontend/package.json"),
+    )
+    .withFile(
+      "/workspace/packages/desktop/package.json",
+      workspaceSource.file("packages/desktop/package.json"),
+    )
+    .withFile(
+      "/workspace/packages/ui/package.json",
+      workspaceSource.file("packages/ui/package.json"),
+    )
     .withExec(["bun", "install", "--frozen-lockfile"]);
 
   // PHASE 2: Config files and source code
   return container
     .withFile("/workspace/tsconfig.json", workspaceSource.file("tsconfig.json"))
-    .withFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
-    .withFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
+    .withFile(
+      "/workspace/tsconfig.base.json",
+      workspaceSource.file("tsconfig.base.json"),
+    )
+    .withFile(
+      "/workspace/eslint.config.ts",
+      workspaceSource.file("eslint.config.ts"),
+    )
     .withFile("/workspace/.jscpd.json", workspaceSource.file(".jscpd.json"))
-    .withDirectory("/workspace/eslint-rules", workspaceSource.directory("eslint-rules"))
+    .withDirectory(
+      "/workspace/eslint-rules",
+      workspaceSource.directory("eslint-rules"),
+    )
     .withDirectory("/workspace/scripts", workspaceSource.directory("scripts"))
-    .withDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
-    .withDirectory("/workspace/packages/data", workspaceSource.directory("packages/data"))
-    .withDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
-    .withDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
-    .withDirectory("/workspace/packages/desktop", workspaceSource.directory("packages/desktop"))
-    .withDirectory("/workspace/packages/ui", workspaceSource.directory("packages/ui"));
+    .withDirectory(
+      "/workspace/packages/backend",
+      workspaceSource.directory("packages/backend"),
+    )
+    .withDirectory(
+      "/workspace/packages/data",
+      workspaceSource.directory("packages/data"),
+    )
+    .withDirectory(
+      "/workspace/packages/report",
+      workspaceSource.directory("packages/report"),
+    )
+    .withDirectory(
+      "/workspace/packages/frontend",
+      workspaceSource.directory("packages/frontend"),
+    )
+    .withDirectory(
+      "/workspace/packages/desktop",
+      workspaceSource.directory("packages/desktop"),
+    )
+    .withDirectory(
+      "/workspace/packages/ui",
+      workspaceSource.directory("packages/ui"),
+    );
 }
 
 function buildDesktopFrontend(workspaceSource: Directory): Directory {
@@ -351,13 +584,19 @@ function buildDesktopFrontend(workspaceSource: Directory): Directory {
     .directory("/workspace/packages/desktop/dist");
 }
 
-function checkDesktopParallel(workspaceSource: Directory, frontendDist?: Directory): Promise<void> {
+function checkDesktopParallel(
+  workspaceSource: Directory,
+  frontendDist?: Directory,
+): Promise<void> {
   const baseContainer = installDesktopDeps(workspaceSource);
   const frontend = frontendDist ?? buildDesktopFrontend(workspaceSource);
 
   const containerWithFrontend = baseContainer
     .withDirectory("/workspace/packages/desktop/dist", frontend)
-    .withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume("rust-target-linux"));
+    .withMountedCache(
+      "/workspace/packages/desktop/src-tauri/target",
+      dag.cacheVolume("rust-target-linux"),
+    );
 
   return Promise.all([
     // TypeScript checks (don't need Rust)
@@ -370,7 +609,15 @@ function checkDesktopParallel(workspaceSource: Directory, frontendDist?: Directo
     containerWithFrontend
       .withWorkdir("/workspace/packages/desktop/src-tauri")
       .withExec(["cargo", "fmt", "--", "--check"])
-      .withExec(["cargo", "clippy", "--all-targets", "--all-features", "--", "-D", "warnings"])
+      .withExec([
+        "cargo",
+        "clippy",
+        "--all-targets",
+        "--all-features",
+        "--",
+        "-D",
+        "warnings",
+      ])
       .withExec(["cargo", "test", "--verbose"])
       .sync(),
   ]).then(() => {});
@@ -383,25 +630,47 @@ function buildDesktopWindowsGnu(
 ): Container {
   let container = installDesktopDeps(workspaceSource, "windows-gnu")
     .withEnvVariable("VERSION", version)
-    .withEnvVariable("CARGO_TARGET_DIR", "/workspace/packages/desktop/src-tauri/target")
+    .withEnvVariable(
+      "CARGO_TARGET_DIR",
+      "/workspace/packages/desktop/src-tauri/target",
+    )
     .withEnvVariable("RUSTUP_HOME", "/usr/local/rustup")
     .withEnvVariable("CARGO_HOME", "/usr/local/cargo")
-    .withEnvVariable("PATH", "/usr/local/cargo/bin:/usr/local/rustup/bin:$PATH", { expand: true })
-    .withMountedCache("/root/.cache/sccache", dag.cacheVolume("sccache-windows"))
+    .withEnvVariable(
+      "PATH",
+      "/usr/local/cargo/bin:/usr/local/rustup/bin:$PATH",
+      { expand: true },
+    )
+    .withMountedCache(
+      "/root/.cache/sccache",
+      dag.cacheVolume("sccache-windows"),
+    )
     .withEnvVariable("RUSTC_WRAPPER", "sccache")
     .withEnvVariable("SCCACHE_DIR", "/root/.cache/sccache")
-    .withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume("cargo-target-windows-gnu"))
+    .withMountedCache(
+      "/workspace/packages/desktop/src-tauri/target",
+      dag.cacheVolume("cargo-target-windows-gnu"),
+    )
     .withWorkdir("/workspace/packages/desktop");
 
   if (frontendDist) {
-    container = container.withDirectory("/workspace/packages/desktop/dist", frontendDist);
+    container = container.withDirectory(
+      "/workspace/packages/desktop/dist",
+      frontendDist,
+    );
   } else {
     container = container.withExec(["bunx", "vite", "build"]);
   }
 
   return container
     .withWorkdir("/workspace/packages/desktop/src-tauri")
-    .withExec(["cargo", "build", "--release", "--target", "x86_64-pc-windows-gnu"])
+    .withExec([
+      "cargo",
+      "build",
+      "--release",
+      "--target",
+      "x86_64-pc-windows-gnu",
+    ])
     .withExec([
       "sh",
       "-c",
@@ -420,7 +689,9 @@ async function publishDesktopArtifactsWindowsOnly(
   ghToken: Secret,
   repo = "shepherdjerred/scout-for-lol",
 ): Promise<string> {
-  logWithTimestamp(`Publishing Windows desktop artifacts to GitHub Releases for version ${version}`);
+  logWithTimestamp(
+    `Publishing Windows desktop artifacts to GitHub Releases for version ${version}`,
+  );
 
   const windowsArtifactsDir = windowsContainer.directory("/artifacts");
 
@@ -428,10 +699,18 @@ async function publishDesktopArtifactsWindowsOnly(
     .withSecretVariable("GH_TOKEN", ghToken)
     .withWorkdir("/artifacts")
     .withDirectory("/artifacts/windows", windowsArtifactsDir)
-    .withExec(["sh", "-c", "echo 'Windows artifacts:' && find windows -type f"]);
+    .withExec([
+      "sh",
+      "-c",
+      "echo 'Windows artifacts:' && find windows -type f",
+    ]);
 
   // Verify GitHub authentication
-  const authCheckContainer = container.withExec(["sh", "-c", 'gh auth status 2>&1; echo "AUTH_EXIT_CODE=$?"']);
+  const authCheckContainer = container.withExec([
+    "sh",
+    "-c",
+    'gh auth status 2>&1; echo "AUTH_EXIT_CODE=$?"',
+  ]);
   const authOutput = await authCheckContainer.stdout();
   if (!authOutput.includes("AUTH_EXIT_CODE=0")) {
     throw new Error(`GitHub authentication failed: ${authOutput}`);
@@ -491,7 +770,10 @@ export async function checkScoutForLol(source: Directory): Promise<string> {
   const prismaGenerated = generatePrismaClient(pkgSource);
 
   // Use mounted workspace for CI checks (faster than copying files)
-  const preparedWorkspace = getPreparedMountedWorkspace(pkgSource, prismaGenerated);
+  const preparedWorkspace = getPreparedMountedWorkspace(
+    pkgSource,
+    prismaGenerated,
+  );
 
   // Build desktop frontend once and share
   const desktopFrontend = buildDesktopFrontend(pkgSource);
@@ -500,7 +782,10 @@ export async function checkScoutForLol(source: Directory): Promise<string> {
   await withTiming("all checks", async () => {
     await Promise.all([
       withTiming("typecheck all", async () => {
-        await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "typecheck"]).sync();
+        await preparedWorkspace
+          .withWorkdir("/workspace")
+          .withExec(["bun", "run", "typecheck"])
+          .sync();
       }),
       withTiming("lint all", async () => {
         await preparedWorkspace
@@ -518,10 +803,16 @@ export async function checkScoutForLol(source: Directory): Promise<string> {
           .sync();
       }),
       withTiming("test all", async () => {
-        await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "test"]).sync();
+        await preparedWorkspace
+          .withWorkdir("/workspace")
+          .withExec(["bun", "run", "test"])
+          .sync();
       }),
       withTiming("duplication check", async () => {
-        await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "duplication-check"]).sync();
+        await preparedWorkspace
+          .withWorkdir("/workspace")
+          .withExec(["bun", "run", "duplication-check"])
+          .sync();
       }),
       withTiming("desktop check (parallel TS + Rust)", async () => {
         await checkDesktopParallel(pkgSource, desktopFrontend);
@@ -551,7 +842,9 @@ export async function deployScoutForLol(
   const pkgSource = source.directory("packages/scout-for-lol");
   const outputs: string[] = [];
 
-  logWithTimestamp(`Starting deploy for scout-for-lol version ${version} (${gitSha})`);
+  logWithTimestamp(
+    `Starting deploy for scout-for-lol version ${version} (${gitSha})`,
+  );
 
   // Generate Prisma client once
   const prismaGenerated = generatePrismaClient(pkgSource);
@@ -561,17 +854,32 @@ export async function deployScoutForLol(
   const desktopFrontend = buildDesktopFrontend(pkgSource);
 
   // Build backend image and desktop Windows build in parallel
-  const backendImagePromise = withTiming("backend Docker image build", async () => {
-    const image = buildBackendImage(pkgSource, version, gitSha, preparedWorkspace);
-    await image.id();
-    return image;
-  });
+  const backendImagePromise = withTiming(
+    "backend Docker image build",
+    async () => {
+      const image = buildBackendImage(
+        pkgSource,
+        version,
+        gitSha,
+        preparedWorkspace,
+      );
+      await image.id();
+      return image;
+    },
+  );
 
-  const desktopBuildWindowsPromise = withTiming("desktop application build (Windows)", async () => {
-    const container = buildDesktopWindowsGnu(pkgSource, version, desktopFrontend);
-    await container.sync();
-    return container;
-  });
+  const desktopBuildWindowsPromise = withTiming(
+    "desktop application build (Windows)",
+    async () => {
+      const container = buildDesktopWindowsGnu(
+        pkgSource,
+        version,
+        desktopFrontend,
+      );
+      await container.sync();
+      return container;
+    },
+  );
 
   const [backendImage, desktopWindowsContainer] = await Promise.all([
     backendImagePromise,
@@ -580,7 +888,10 @@ export async function deployScoutForLol(
 
   // Smoke test the backend image
   await withTiming("backend image smoke test", async () => {
-    const smokeTestResult = await smokeTestBackendImageWithContainer(backendImage, pkgSource);
+    const smokeTestResult = await smokeTestBackendImageWithContainer(
+      backendImage,
+      pkgSource,
+    );
     logWithTimestamp(`Smoke test result: ${smokeTestResult}`);
     if (smokeTestResult.includes("Smoke test failed")) {
       throw new Error(`Backend image smoke test failed: ${smokeTestResult}`);
@@ -593,7 +904,10 @@ export async function deployScoutForLol(
     const backendImageName = "ghcr.io/shepherdjerred/scout-for-lol";
     await publishToGhcrMultiple({
       container: backendImage,
-      imageRefs: [`${backendImageName}:${version}`, `${backendImageName}:${gitSha}`],
+      imageRefs: [
+        `${backendImageName}:${version}`,
+        `${backendImageName}:${gitSha}`,
+      ],
       username: ghcrUsername,
       password: ghcrPassword,
     });
@@ -628,7 +942,12 @@ export async function deployScoutForLol(
 
   // Publish desktop artifacts to GitHub Releases (Windows only)
   await withTiming("desktop GitHub Releases publish", async () => {
-    await publishDesktopArtifactsWindowsOnly(desktopWindowsContainer, version, gitSha, ghToken);
+    await publishDesktopArtifactsWindowsOnly(
+      desktopWindowsContainer,
+      version,
+      gitSha,
+      ghToken,
+    );
   });
   outputs.push("Desktop artifacts published to GitHub Releases");
 

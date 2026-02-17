@@ -28,7 +28,7 @@ In addition to the data that people enter into your CareKit app, you may be able
 
 HealthKit is the central repository for health and fitness data in iOS and watchOS. When you support HealthKit in your CareKit app, you can ask people for permission to access and share their health and fitness data with designated caregivers.
 
-**Request access to health data only when you need it.** It makes sense to request access to weight information when people log their weight, for example, but not immediately after your app launches. When your request is clearly related to the current context, you help people understand your app’s intentions. Also, people can change the permissions they grant, so it’s a good idea to make a request every time your app needs access. For developer guidance, see [`requestAuthorization(toShare:read:completion:)`](/documentation/HealthKit/HKHealthStore/requestAuthorization(toShare:read:completion:)).
+**Request access to health data only when you need it.** It makes sense to request access to weight information when people log their weight, for example, but not immediately after your app launches. When your request is clearly related to the current context, you help people understand your app’s intentions. Also, people can change the permissions they grant, so it’s a good idea to make a request every time your app needs access. For developer guidance, see [`requestAuthorization(toShare:read:completion:)`](</documentation/HealthKit/HKHealthStore/requestAuthorization(toShare:read:completion:)>).
 
 **Clarify your app’s intent by adding descriptive messages to the standard permission screen.** People expect to see the system-provided permission screen when asked to approve access to health data. Write a few succinct sentences that explain why you need the information and how people can benefit from sharing it with your app. Avoid adding custom screens that replicate the standard permission screen’s behavior or content.
 
@@ -62,10 +62,10 @@ CareKit UI provides customizable views organized into three categories — tasks
 
 Each view category is designed to support specific types of content and interaction. To ensure a consistent experience, use each view type for its intended purpose.
 
-| Category | Purpose |
-| --- | --- |
-| [Tasks](/design/human-interface-guidelines/carekit#Tasks) | Present tasks, like taking medication or doing physical therapy. Support logging of patient symptoms and other data. |
-| [Charts](/design/human-interface-guidelines/carekit#Charts) | Display graphical data that can help people understand how their treatment is progressing. |
+| Category                                                                  | Purpose                                                                                                                            |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| [Tasks](/design/human-interface-guidelines/carekit#Tasks)                 | Present tasks, like taking medication or doing physical therapy. Support logging of patient symptoms and other data.               |
+| [Charts](/design/human-interface-guidelines/carekit#Charts)               | Display graphical data that can help people understand how their treatment is progressing.                                         |
 | [Contact views](/design/human-interface-guidelines/carekit#Contact-views) | Display contact information. Support communication through phone, message, and email, and link to a map of the contact’s location. |
 
 ![A screenshot of a CareKit app screen on iPhone that shows completed and uncompleted days, a medication task, a chart that compares the patient's nausea with their medication intake, and a logging task the patient can use to log each occurrence of nausea.](https://docs-assets.developer.apple.com/published/977d2f1a52a79ab993cf5bc0aa8389ac/carekit-tasks-and-charts%402x.png)
@@ -88,12 +88,12 @@ A care plan generally presents a set of prescribed actions for people to perform
 
 A task can contain the following types of information.
 
-| Information | Required | Description | Example value |
-| --- | --- | --- | --- |
-| Title | Yes | A word or short phrase that introduces the task. | *Ibuprofen* |
-| Schedule | Yes | The schedule on which a task must be completed. | *Four times a day* |
-| Instructions | No | Detailed instructions, recommendations, and warnings. | *Take 1 tablet every 4–6 hours (not to exceed 4 tablets daily).* |
-| Group ID | No | An identifier you can use to group similar tasks in ways that make sense in your app. | A category identifier like *medication* or *exercise*. |
+| Information  | Required | Description                                                                           | Example value                                                    |
+| ------------ | -------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Title        | Yes      | A word or short phrase that introduces the task.                                      | _Ibuprofen_                                                      |
+| Schedule     | Yes      | The schedule on which a task must be completed.                                       | _Four times a day_                                               |
+| Instructions | No       | Detailed instructions, recommendations, and warnings.                                 | _Take 1 tablet every 4–6 hours (not to exceed 4 tablets daily)._ |
+| Group ID     | No       | An identifier you can use to group similar tasks in ways that make sense in your app. | A category identifier like _medication_ or _exercise_.           |
 
 In CareKit 2.0, CareKit UI defines five styles of task views: simple, instructions, log, checklist, and grid. Each style is designed to support a particular use case.
 
@@ -119,7 +119,7 @@ In CareKit 2.0, CareKit UI defines five styles of task views: simple, instructio
 
 **Consider using color to reinforce the meaning of task items.** Color can be a good way to help people understand information at a glance. For example, you could use one color for medications and a different color for physical activities. Always avoid using color as the only way to convey information. For guidance, see [Color](/design/human-interface-guidelines/color).
 
-**Combine accuracy with simplicity when describing a task and its steps.** For example, use a medication’s marketing name instead of its chemical description. Also, when the context of a task helps to clarify meaning, minimize the number of words you use. For example, a daily medication task generally tells people when to take specific medications, so it may be unnecessary to repeat words like *take*.
+**Combine accuracy with simplicity when describing a task and its steps.** For example, use a medication’s marketing name instead of its chemical description. Also, when the context of a task helps to clarify meaning, minimize the number of words you use. For example, a daily medication task generally tells people when to take specific medications, so it may be unnecessary to repeat words like _take_.
 
 **Consider supplementing multistep or complex tasks with videos or images.** Visually demonstrating how to perform a task can help people avoid mistakes.
 
@@ -143,7 +143,7 @@ Line chart
 
 **Consider highlighting narratives and trends to illustrate progress.** For example, your app could display a bar chart that shows a correlation between the number of times people took medication and their level of pain. Displaying such data can encourage better adherence to a care plan.
 
-**Label chart elements clearly and succinctly.** Long, detailed labels can make a chart difficult to read and understand. Keep labels short and avoid repeating the same information. For example, a heart rate chart might use the term *BPM* in an axis label instead of using it in the label of every data point.
+**Label chart elements clearly and succinctly.** Long, detailed labels can make a chart difficult to read and understand. Keep labels short and avoid repeating the same information. For example, a heart rate chart might use the term _BPM_ in an axis label instead of using it in the label of every data point.
 
 **Use distinct colors.** In general, avoid using different shades of the same color to mean different things. Also ensure that you use colors with sufficient contrast. For related guidance, see [Accessibility](/design/human-interface-guidelines/accessibility).
 
@@ -191,8 +191,8 @@ In a grid view, you might want to display custom symbols that are relevant to th
 
 Using SF Symbols in your app gives you:
 
-* Designs that coordinate with CareKit’s visual design language
-* Support for creating custom symbols to represent the unique content in your app
+- Designs that coordinate with CareKit’s visual design language
+- Support for creating custom symbols to represent the unique content in your app
 
 **Design a relevant care symbol.** If you need to customize a symbol, be sure the design is closely related to your app or the general concept of health and wellness. Avoid creating a purely decorative symbol or using a corporate logo as a custom symbol.
 
@@ -200,7 +200,7 @@ Using SF Symbols in your app gives you:
 
 ## [Platform considerations](/design/human-interface-guidelines/carekit#Platform-considerations)
 
-*No additional considerations for iOS or iPadOS. Not supported in macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS or iPadOS. Not supported in macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/carekit#Resources)
 
@@ -232,6 +232,6 @@ Build a research and care app, part 1: Setup onboarding](https://developer.apple
 
 ## [Change log](/design/human-interface-guidelines/carekit#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date        | Changes                              |
+| ----------- | ------------------------------------ |
 | May 2, 2023 | Consolidated guidance into one page. |

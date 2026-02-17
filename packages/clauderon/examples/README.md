@@ -9,6 +9,7 @@ This directory contains example Dockerfiles for building Clauderon-compatible im
 **Purpose**: Demonstrates the absolute bare minimum requirements.
 
 **Includes**:
+
 - `bash` shell
 - `curl` for hooks
 - Claude Code CLI
@@ -17,6 +18,7 @@ This directory contains example Dockerfiles for building Clauderon-compatible im
 **Use when**: You want the smallest possible image and will add development tools yourself.
 
 **Build**:
+
 ```bash
 docker build -f minimal.Dockerfile -t clauderon-minimal .
 ```
@@ -28,6 +30,7 @@ docker build -f minimal.Dockerfile -t clauderon-minimal .
 **Purpose**: Recommended baseline with git and common development tools.
 
 **Includes**:
+
 - Everything from minimal
 - `git` CLI
 - `build-essential` (gcc, g++, make)
@@ -36,6 +39,7 @@ docker build -f minimal.Dockerfile -t clauderon-minimal .
 **Use when**: You want a good starting point with essential development tools.
 
 **Build**:
+
 ```bash
 docker build -f recommended.Dockerfile -t clauderon-recommended .
 ```
@@ -109,10 +113,12 @@ CMD ["/bin/bash"]
 ## Full Reference
 
 For a full-featured production image, see the default Clauderon image:
+
 - Repository: [shepherdjerred/dotfiles](https://github.com/shepherdjerred/dotfiles)
 - Image: `ghcr.io/shepherdjerred/dotfiles`
 
 It includes:
+
 - All required dependencies
 - Rust toolchain with sccache
 - Multiple language runtimes (Node.js, Python, Go)
@@ -125,6 +131,7 @@ It includes:
 See [`../docs/IMAGE_COMPATIBILITY.md`](../docs/IMAGE_COMPATIBILITY.md) for complete requirements documentation.
 
 **TL;DR** - Your image must have:
+
 1. `claude` or `codex` CLI
 2. `bash` shell
 3. Writable `/workspace` directory

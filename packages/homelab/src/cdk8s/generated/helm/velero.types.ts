@@ -558,43 +558,46 @@ export type VeleroHelmValuesConfigurationRepositoryMaintenanceJob = {
   repositoryConfigData?: VeleroHelmValuesConfigurationRepositoryMaintenanceJobRepositoryConfigData;
 };
 
-export type VeleroHelmValuesConfigurationRepositoryMaintenanceJobRepositoryConfigData = {
-  /**
-   * Name of the ConfigMap to create. If not provided, will use "velero-repo-maintenance"
-   *
-   * Name of the ConfigMap to create for per-repository maintenance configuration
-   *
-   * @default "velero-repo-maintenance"
-   */
-  name?: string;
-  /**
-   * Global configuration applied to all repositories when no specific repository configuration is found
-   *
-   * @default {"keepLatestMaintenanceJobs":3}
-   */
-  global?: VeleroHelmValuesConfigurationRepositoryMaintenanceJobRepositoryConfigDataGlobal;
-  /**
-   * Repository-specific configurations
-   * Repository keys are formed as: "{namespace}-{storageLocation}-{repositoryType}"
-   * For example: "default-default-kopia" or "prod-s3-backup-kopia"
-   * Note: priorityClassName is NOT supported in repository-specific configurations
-   * "kibishii-default-kopia":
-   *
-   * Repository-specific configurations keyed by repository identifier (namespace-storageLocation-repositoryType)
-   *
-   * @default {}
-   */
-  repositories?: VeleroHelmValuesConfigurationRepositoryMaintenanceJobRepositoryConfigDataRepositories;
-};
+export type VeleroHelmValuesConfigurationRepositoryMaintenanceJobRepositoryConfigData =
+  {
+    /**
+     * Name of the ConfigMap to create. If not provided, will use "velero-repo-maintenance"
+     *
+     * Name of the ConfigMap to create for per-repository maintenance configuration
+     *
+     * @default "velero-repo-maintenance"
+     */
+    name?: string;
+    /**
+     * Global configuration applied to all repositories when no specific repository configuration is found
+     *
+     * @default {"keepLatestMaintenanceJobs":3}
+     */
+    global?: VeleroHelmValuesConfigurationRepositoryMaintenanceJobRepositoryConfigDataGlobal;
+    /**
+     * Repository-specific configurations
+     * Repository keys are formed as: "{namespace}-{storageLocation}-{repositoryType}"
+     * For example: "default-default-kopia" or "prod-s3-backup-kopia"
+     * Note: priorityClassName is NOT supported in repository-specific configurations
+     * "kibishii-default-kopia":
+     *
+     * Repository-specific configurations keyed by repository identifier (namespace-storageLocation-repositoryType)
+     *
+     * @default {}
+     */
+    repositories?: VeleroHelmValuesConfigurationRepositoryMaintenanceJobRepositoryConfigDataRepositories;
+  };
 
-export type VeleroHelmValuesConfigurationRepositoryMaintenanceJobRepositoryConfigDataGlobal = {
-  /**
-   * @default 3
-   */
-  keepLatestMaintenanceJobs?: number;
-};
+export type VeleroHelmValuesConfigurationRepositoryMaintenanceJobRepositoryConfigDataGlobal =
+  {
+    /**
+     * @default 3
+     */
+    keepLatestMaintenanceJobs?: number;
+  };
 
-export type VeleroHelmValuesConfigurationRepositoryMaintenanceJobRepositoryConfigDataRepositories = object;
+export type VeleroHelmValuesConfigurationRepositoryMaintenanceJobRepositoryConfigDataRepositories =
+  object;
 
 export type VeleroHelmValuesRbac = {
   /**

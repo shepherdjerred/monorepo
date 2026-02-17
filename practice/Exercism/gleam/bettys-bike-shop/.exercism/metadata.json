@@ -1,1 +1,9 @@
-{"track":"gleam","exercise":"bettys-bike-shop","id":"aefaff724be446208ebac7e2093bc04c","url":"https://exercism.org/tracks/gleam/exercises/bettys-bike-shop","handle":"shepherdjerred","is_requester":true,"auto_approve":false}
+{
+  "track": "gleam",
+  "exercise": "bettys-bike-shop",
+  "id": "aefaff724be446208ebac7e2093bc04c",
+  "url": "https://exercism.org/tracks/gleam/exercises/bettys-bike-shop",
+  "handle": "shepherdjerred",
+  "is_requester": true,
+  "auto_approve": false
+}

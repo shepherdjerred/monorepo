@@ -3,16 +3,23 @@ const { twj } = await import("tw-to-css");
 
 // from https://fullstackheroes.com/resources/vercel-og-templates/branded-logo/
 export function brandedLogo({ title }: RenderFunctionInput): React.ReactNode {
-  return <div
+  return (
+    <div
       style={{
         ...twj("h-full w-full flex items-start justify-start"),
-         backgroundImage: "linear-gradient(to right, #24243e, #302b63, #0f0c29)" ,
+        backgroundImage: "linear-gradient(to right, #24243e, #302b63, #0f0c29)",
       }}
     >
       <div style={twj("flex items-start justify-start h-full")}>
         <div style={twj("flex flex-col justify-between w-full h-full p-20")}>
           {/* Replace with your own logo */}
-          <svg width="192" height="50" viewBox="0 0 96 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg
+            width="192"
+            height="50"
+            viewBox="0 0 96 25"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
             <path
               fill-rule="evenodd"
               clip-rule="evenodd"
@@ -69,8 +76,11 @@ export function brandedLogo({ title }: RenderFunctionInput): React.ReactNode {
             />
           </svg>
 
-          <h1 style={twj("text-[60px] text-white font-bold text-left")}>{title}</h1>
+          <h1 style={twj("text-[60px] text-white font-bold text-left")}>
+            {title}
+          </h1>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 }

@@ -28,8 +28,14 @@ export type GitHubContainerOptions = {
  *   .withExec(["gh", "pr", "create", "--title", "My PR"]);
  * ```
  */
-export function getGitHubContainer(options: GitHubContainerOptions = {}): Container {
-  const { userName = "dagger-bot", userEmail = "dagger@localhost", ghVersion = "2.63.2" } = options;
+export function getGitHubContainer(
+  options: GitHubContainerOptions = {},
+): Container {
+  const {
+    userName = "dagger-bot",
+    userEmail = "dagger@localhost",
+    ghVersion = "2.63.2",
+  } = options;
 
   return (
     getSystemContainer()
@@ -92,14 +98,22 @@ export type CreatePullRequestOptions = {
  * });
  * ```
  */
-export async function createPullRequest(options: CreatePullRequestOptions): Promise<string> {
+export async function createPullRequest(
+  options: CreatePullRequestOptions,
+): Promise<string> {
   const { baseBranch = "main", autoMerge = false } = options;
 
   let container = getGitHubContainer(options.git)
     .withSecretVariable("GH_TOKEN", options.ghToken)
     .withEnvVariable("CACHE_BUST", Date.now().toString())
     .withExec(["gh", "auth", "setup-git"])
-    .withExec(["git", "clone", `--branch=${baseBranch}`, `https://github.com/${options.repository}`, "."])
+    .withExec([
+      "git",
+      "clone",
+      `--branch=${baseBranch}`,
+      `https://github.com/${options.repository}`,
+      ".",
+    ])
     .withExec(["git", "checkout", "-b", options.newBranch]);
 
   // Apply file changes

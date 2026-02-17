@@ -77,7 +77,7 @@ export const ActivityTrackingConfigSchema = z.object({
       z.object({
         minimumActivity: z.number().min(0),
         roleId: z.string(),
-      })
+      }),
     )
     .default([]),
 });
@@ -169,7 +169,9 @@ export type ShellConfig = z.infer<typeof ShellConfigSchema>;
 export type SchedulerConfig = z.infer<typeof SchedulerConfigSchema>;
 export type BrowserConfig = z.infer<typeof BrowserConfigSchema>;
 export type BirthdayConfig = z.infer<typeof BirthdayConfigSchema>;
-export type ActivityTrackingConfig = z.infer<typeof ActivityTrackingConfigSchema>;
+export type ActivityTrackingConfig = z.infer<
+  typeof ActivityTrackingConfigSchema
+>;
 export type ElectionsConfig = z.infer<typeof ElectionsConfigSchema>;
 export type EditorRepoConfig = z.infer<typeof EditorRepoConfigSchema>;
 export type EditorConfig = z.infer<typeof EditorConfigSchema>;

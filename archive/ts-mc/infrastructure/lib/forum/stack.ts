@@ -33,14 +33,14 @@ export class ForumStack extends Stack {
       props.vpc,
       securityGroup,
       props.keyPair,
-      props.availabilityZone
+      props.availabilityZone,
     );
 
     createDatabaseInstance(
       this,
       props.vpc,
       securityGroup,
-      props.availabilityZone
+      props.availabilityZone,
     );
 
     const certificate = new Certificate(this, "ForumCertificate", {
@@ -53,7 +53,7 @@ export class ForumStack extends Stack {
       this,
       props.vpc,
       autoScalingGroup,
-      certificate
+      certificate,
     );
 
     // const distribution = createCloudFrontResources(

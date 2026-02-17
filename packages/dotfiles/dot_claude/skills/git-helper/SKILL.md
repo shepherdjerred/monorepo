@@ -10,6 +10,7 @@ description: |
 ## What's New in Git (2024-2026)
 
 ### Git 2.52 (2025)
+
 - **`git last-modified`**: New command to determine which commit most recently modified each file in a directory (5.5x faster than ls-tree + log)
 - **`git refs list` / `git refs exists`**: Consolidated reference operations
 - **`git repo`**: Experimental command for retrieving repository information
@@ -20,6 +21,7 @@ description: |
 - **`git describe` 30% faster**, `git log -L` faster for merge commits
 
 ### Git 2.51 (2025)
+
 - **Stash interchange format**: `git stash export` and `git stash import` subcommands for cross-machine stash migration
 - **`--path-walk` repacking**: Significantly smaller pack files by emitting all objects from a given path simultaneously
 - **Cruft-free multi-pack indexes**: 38% smaller MIDXs, 35% faster writes, 5% better read performance at GitHub
@@ -27,6 +29,7 @@ description: |
 - **`git whatchanged`**: Marked for removal in Git 3.0
 
 ### Git 2.50 (2025)
+
 - **ORT merge engine**: Completely replaced the older recursive merge engine
 - **`git merge-tree --quiet`**: Check mergeability without writing objects
 - **`git maintenance` new tasks**: `worktree-prune`, `rerere-gc`, `reflog-expire`
@@ -35,6 +38,7 @@ description: |
 - **Bundle URI**: Faster fill-in fetches by advertising all known references from bundles
 
 ### Git 2.49 (2025)
+
 - **Name-hash v2**: Dramatically improved packing (fluentui: 96s to 34s, 439 MiB to 160 MiB)
 - **`git backfill`**: Batch-fault missing blobs in `--filter=blob:none` partial clones
 - **zlib-ng support**: ~25% speed improvement for compression
@@ -43,6 +47,7 @@ description: |
 - **First Rust code integration** via libgit-sys and libgit crates
 
 ### Git 2.48 (2025)
+
 - **Faster checksums**: 10-13% performance improvement in serving fetches/clones using non-collision-detecting SHA-1 for trailing checksums
 - **`range-diff --remerge-diff`**: Review merge conflict resolutions during rebase
 - **Remote HEAD tracking**: Fetch auto-updates `refs/remotes/origin/HEAD` if missing; configure `remote.origin.followRemoteHead`
@@ -51,19 +56,23 @@ description: |
 - **`BreakingChanges.txt`**: Documents anticipated deprecations for future versions
 
 ### Git 2.47 (2024)
+
 - **Incremental multi-pack indexes**: Layered MIDX chains for faster object addition
 - **Separate hash function for checksums**: 10-13% serving performance improvement
 
 ### Git 2.46 (2024)
+
 - **Pseudo-merge bitmaps**: Faster reachability queries
 - **`git config list` / `git config get`**: New sub-command interface
 - **Reftable migration**: `git refs migrate --ref-format=reftable` for faster reference operations
 - **Enhanced credential helpers**: authtype/credential fields, multi-round auth (NTLM, Kerberos)
 
 ### Git 2.45 (2024)
+
 - **Reftable backend**: New reference storage with faster lookups, reads, and writes
 
 ### Git 2.44 (2024)
+
 - **Multi-pack reuse optimization**: Faster fetches and clones
 - **`builtin_objectmode` pathspec**: Filter paths by mode
 
@@ -76,6 +85,7 @@ Git is the distributed version control system used by virtually all modern softw
 ### Auto-Approved (Safe, Read-Only)
 
 These commands are safe to run without user confirmation:
+
 - `git status` - Working tree status
 - `git log` - Commit history (with `--oneline`, `--graph`, `--all`, `--since`, `--author`)
 - `git diff` - Show changes (staged: `--cached`, between branches, specific files)
@@ -154,6 +164,7 @@ git diff --word-diff                # Word-level diff
 
 1. **Atomic commits**: Each commit should represent one logical change
 2. **Write clear messages**: Follow conventional commit format
+
    ```
    type(scope): short description
 
@@ -161,7 +172,9 @@ git diff --word-diff                # Word-level diff
 
    Refs: #123
    ```
+
    Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `ci`, `build`, `revert`
+
 3. **Stage intentionally**: Use `git add -p` to review each hunk
 4. **Verify before committing**: Run `git diff --cached` to review staged changes
 
@@ -215,6 +228,7 @@ git branch <branch-name> <sha>      # Recreate from found SHA
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - Choosing between rebase vs merge strategy for their team
 - Whether to force push after rebase (check if others use the branch)
 - How to handle complex merge conflicts
@@ -232,6 +246,7 @@ Ask the user for clarification when:
 ### Skill References
 
 For detailed coverage of specific topics, see:
+
 - `references/advanced-operations.md` - Interactive rebase, bisect, reflog, cherry-pick, filter-repo, stash, rerere, blame, notes, bundle, sparse-checkout
 - `references/branching-workflows.md` - Branching strategies, commit conventions, merge vs rebase, signed commits, tags, release workflows
 - `references/config-hooks.md` - Git configuration, conditional includes, aliases, hooks, maintenance, scalar, performance, .gitattributes, .gitignore

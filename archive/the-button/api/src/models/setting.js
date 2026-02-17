@@ -1,5 +1,5 @@
 class Setting {
-  constructor (settingKey, settingValue) {
+  constructor(settingKey, settingValue) {
     this.settingKey = settingKey;
     this.settingValue = settingValue;
   }

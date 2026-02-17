@@ -232,7 +232,9 @@ ApiObject.of(deployment).addJsonPatch(
 );
 
 // Enable host networking
-ApiObject.of(deployment).addJsonPatch(JsonPatch.add("/spec/template/spec/hostNetwork", true));
+ApiObject.of(deployment).addJsonPatch(
+  JsonPatch.add("/spec/template/spec/hostNetwork", true),
+);
 ```
 
 ### OnePasswordItem for Secrets

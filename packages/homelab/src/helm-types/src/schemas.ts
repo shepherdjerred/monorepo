@@ -14,7 +14,9 @@ export const ErrorSchema = z.instanceof(Error);
 // Custom boolean string parser - only matches actual boolean-like strings
 export const StringBooleanSchema = z.string().refine((val) => {
   const lower = val.toLowerCase();
-  return lower === "true" || lower === "false" || lower === "yes" || lower === "no";
+  return (
+    lower === "true" || lower === "false" || lower === "yes" || lower === "no"
+  );
 }, "Not a boolean string");
 
 // Zod schema for validating YAML values - recursive definition with more flexibility

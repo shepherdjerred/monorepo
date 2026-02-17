@@ -3,7 +3,9 @@ import { z } from "zod";
 export const configSchema = z.object({
   // Server
   PORT: z.coerce.number().default(8000),
-  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  NODE_ENV: z
+    .enum(["development", "production", "test"])
+    .default("development"),
 
   // Required secrets
   ANTHROPIC_API_KEY: z.string().min(1, "ANTHROPIC_API_KEY is required"),

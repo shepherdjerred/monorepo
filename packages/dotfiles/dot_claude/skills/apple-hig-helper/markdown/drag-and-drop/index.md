@@ -12,16 +12,16 @@ Using drag and drop, people can move or duplicate selected photos, text, and oth
 
 ![A sketch of two overlapping squares containing an arrow pointing to the upper-left, suggesting a transition to a new destination. The image is overlaid with rectangular and circular grid lines and is tinted orange to subtly reflect the orange in the original six-color Apple logo.](https://docs-assets.developer.apple.com/published/e5f75d051f0c1030012fab8220990cc6/patterns-drag-and-drop-intro%402x.png)
 
-To perform drag and drop, people select content in one location, called the *source*, and drop it in another, called the *destination*. These locations can be in the same container — like a text view — or in different containers, like text views on opposite sides of a split view, or even in different apps.
+To perform drag and drop, people select content in one location, called the _source_, and drop it in another, called the _destination_. These locations can be in the same container — like a text view — or in different containers, like text views on opposite sides of a split view, or even in different apps.
 
-Depending on various factors, the drag and drop action might *move* the selected content to the destination or *copy* it. After a successful drop, moved content exists only in the destination; copied content exists in both locations. As a general rule, dropping selected content within the same container moves it, whereas dropping content in a different container copies it. Dragging and dropping content between apps always results in a copy.
+Depending on various factors, the drag and drop action might _move_ the selected content to the destination or _copy_ it. After a successful drop, moved content exists only in the destination; copied content exists in both locations. As a general rule, dropping selected content within the same container moves it, whereas dropping content in a different container copies it. Dragging and dropping content between apps always results in a copy.
 
 People use different interactions to perform drag and drop depending on platform. For example:
 
-* In visionOS, people pinch and hold a virtual object while dragging it to a new location in any direction, including along the z-axis.
-* iOS and iPadOS support drag and drop through gestures on the touchscreen, interactions with a pointing device, and through full keyboard-access mode.
-* Universal Control lets people drag content between their Mac and iPad.
-* On a Mac, people can interact with a pointing device, use full keyboard access mode, or use VoiceOver to perform drag and drop.
+- In visionOS, people pinch and hold a virtual object while dragging it to a new location in any direction, including along the z-axis.
+- iOS and iPadOS support drag and drop through gestures on the touchscreen, interactions with a pointing device, and through full keyboard-access mode.
+- Universal Control lets people drag content between their Mac and iPad.
+- On a Mac, people can interact with a pointing device, use full keyboard access mode, or use VoiceOver to perform drag and drop.
 
 ## [Best practices](/design/human-interface-guidelines/drag-and-drop#Best-practices)
 
@@ -45,7 +45,7 @@ Drag and drop is a dynamic process that can result in multiple outcomes. To help
 
 **Display a drag image as soon as people drag a selection about three points.** It works well to create a translucent representation of the content people are dragging. Translucency helps distinguish the representation from the original content and lets people see destinations as they pass over them. Display the drag image until people drop the content.
 
-**If it adds clarity, modify the drag image to help people predict the result of a drag-and-drop operation.** For example, when dragging a photo into a document, the drag image could expand to show the default size of the photo in the document. You can also use drag *flocking* to visually group multiple drag items — letting people confirm that they haven’t missed an item they want to drag — and then ungroup the items when people drop them. Although changing the drag image can provide valuable feedback, avoid creating a distracting experience in which the drag image is constantly and radically changing.
+**If it adds clarity, modify the drag image to help people predict the result of a drag-and-drop operation.** For example, when dragging a photo into a document, the drag image could expand to show the default size of the photo in the document. You can also use drag _flocking_ to visually group multiple drag items — letting people confirm that they haven’t missed an item they want to drag — and then ungroup the items when people drop them. Although changing the drag image can provide valuable feedback, avoid creating a distracting experience in which the drag image is constantly and radically changing.
 
 **Show people whether a destination can accept dragged content.** For example, you might display an insertion point or highlight a containing view only when the destination can accept a dragged item, and show no visual feedback — or an explicit “not allowed” image, like the `circle.slash` from SF Symbols — when it can’t. Display highlighting or other visual cues only while the content is positioned above the destination, removing the visual feedback when people drag the content away. When there are multiple possible destinations, provide visual cues that help people identify one at a time.
 
@@ -71,7 +71,7 @@ Drag and drop is a dynamic process that can result in multiple outcomes. To help
 
 ## [Platform considerations](/design/human-interface-guidelines/drag-and-drop#Platform-considerations)
 
-*Not supported in tvOS or watchOS.*
+_Not supported in tvOS or watchOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/drag-and-drop#iOS-iPadOS)
 
@@ -79,15 +79,15 @@ Drag and drop is a dynamic process that can result in multiple outcomes. To help
 
 ### [macOS](/design/human-interface-guidelines/drag-and-drop#macOS)
 
-**Consider letting people drag content from your app into the Finder.** When you support this, be sure to present the content in a format your app can open later. For example, Calendar lets people drag an event to the Finder as a `.ics` file. People can share this file with others or drag it back to Calendar to open it. When necessary, you can output dragged content in a *clipping*, which is a temporary container for storing dragged content. For example, most system apps let people drag text to the Finder, where it appears as a clipping. Later, people can drag the clipping into a text field or other location that accepts text. Note that a drag-and-drop clipping isn’t related to the Clipboard.
+**Consider letting people drag content from your app into the Finder.** When you support this, be sure to present the content in a format your app can open later. For example, Calendar lets people drag an event to the Finder as a `.ics` file. People can share this file with others or drag it back to Calendar to open it. When necessary, you can output dragged content in a _clipping_, which is a temporary container for storing dragged content. For example, most system apps let people drag text to the Finder, where it appears as a clipping. Later, people can drag the clipping into a text field or other location that accepts text. Note that a drag-and-drop clipping isn’t related to the Clipboard.
 
-**Let people drag selected content from an inactive window without first making the window active.** Selected content in an inactive window is known as a *background selection* and has a different appearance from selected content in the active window. In general, people expect to drag a background selection to the active window without bringing the inactive window forward.
+**Let people drag selected content from an inactive window without first making the window active.** Selected content in an inactive window is known as a _background selection_ and has a different appearance from selected content in the active window. In general, people expect to drag a background selection to the active window without bringing the inactive window forward.
 
 **When possible, let people drag individual items from an inactive window without affecting an existing background selection.** For example, people can drag an unselected file from an inactive Finder window without deselecting any of the window’s selected files.
 
 **Consider displaying a badge during multi-item drag operations.** A badge is a small filled oval containing a number you can use to indicate the number of items people are dragging. If a destination can accept only a subset of dragged items, update the badge to show the new number.
 
-**Consider changing the pointer appearance to indicate what will happen when people drop content.** In addition to using the *copy* pointer, you might want to use the *drag link*, *disappearing item*, and *operation not allowed* pointers, depending on the situation. For guidance, see [Pointers](/design/human-interface-guidelines/pointing-devices#Pointers).
+**Consider changing the pointer appearance to indicate what will happen when people drop content.** In addition to using the _copy_ pointer, you might want to use the _drag link_, _disappearing item_, and _operation not allowed_ pointers, depending on the situation. For guidance, see [Pointers](/design/human-interface-guidelines/pointing-devices#Pointers).
 
 **As much as possible, let people select and drag content with a single motion.** Unless people are selecting multiple items, they appreciate it when they don’t have to pause between making a selection and starting the drag operation.
 
@@ -95,11 +95,11 @@ Drag and drop is a dynamic process that can result in multiple outcomes. To help
 
 **When possible, launch your app to handle content that people drop into empty space.** When you associate a user activity with draggable app content, your app can open a window or scene that handles the content when people drop it. For example, when people drop a URL into empty space, it launches Safari; when people drop Quick Look–supported content, Quick Look launches to display it. For developer guidance, see [`NSUserActivity`](/documentation/Foundation/NSUserActivity).
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/a98ad7a83598a97817b9bb1eec160788/drag-and-drop-volume-file%402x.png)](https://docs-assets.developer.apple.com/published/9d71bf63ac1a598553c00099113d9dca/drag-and-drop-volume-file.mp4) Content description: A recording that shows a wearer dragging a 3D file named meteor out of a Finder window. The wearer drags the file into empty space, dropping it in an area that's visually near a table in their physical surroundings. The dropped file opens, showing a 3D meteor that appears to float above the table.
 
- [Play](#)
+[Play](#)
 
 ## [Resources](/design/human-interface-guidelines/drag-and-drop#Resources)
 
@@ -131,7 +131,7 @@ Designed for iPad](https://developer.apple.com/videos/play/wwdc2020/10206)
 
 ## [Change log](/design/human-interface-guidelines/drag-and-drop#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| October 24, 2023 | Added artwork. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
+| Date             | Changes                                   |
+| ---------------- | ----------------------------------------- |
+| October 24, 2023 | Added artwork.                            |
+| June 21, 2023    | Updated to include guidance for visionOS. |

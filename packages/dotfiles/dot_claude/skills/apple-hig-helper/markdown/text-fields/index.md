@@ -56,7 +56,7 @@ Truncated text
 
 ## [Platform considerations](/design/human-interface-guidelines/text-fields#Platform-considerations)
 
-*No additional considerations for tvOS or visionOS.*
+_No additional considerations for tvOS or visionOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/text-fields#iOS-iPadOS)
 
@@ -94,6 +94,6 @@ Truncated text
 
 ## [Change log](/design/human-interface-guidelines/text-fields#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date         | Changes                                            |
+| ------------ | -------------------------------------------------- |
 | June 5, 2023 | Updated guidance to reflect changes in watchOS 10. |

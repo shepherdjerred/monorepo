@@ -12,8 +12,11 @@ export type ImportsConfigOptions = {
 /**
  * Configuration for import/export linting with TypeScript resolver
  */
-export function importsConfig(options: ImportsConfigOptions = {}): TSESLint.FlatConfig.ConfigArray {
-  const { tsconfigPaths = ["./tsconfig.json"], useBunResolver = true } = options;
+export function importsConfig(
+  options: ImportsConfigOptions = {},
+): TSESLint.FlatConfig.ConfigArray {
+  const { tsconfigPaths = ["./tsconfig.json"], useBunResolver = true } =
+    options;
 
   const resolverConfig = useBunResolver
     ? {

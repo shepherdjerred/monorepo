@@ -21,7 +21,7 @@ function createApolloClient(): ApolloClient<ApplicationState> {
 }
 
 export function initializeApollo(
-  initialState: ApplicationState = {}
+  initialState: ApplicationState = {},
 ): ApolloClient<ApplicationState> {
   const _apolloClient = apolloClient ?? createApolloClient();
 
@@ -43,10 +43,10 @@ export function initializeApollo(
 }
 
 export function useApollo(
-  initialState: ApplicationState = {}
+  initialState: ApplicationState = {},
 ): ApolloClient<ApplicationState> {
   return useMemo<ApolloClient<ApplicationState>>(
     () => initializeApollo(initialState),
-    [initialState]
+    [initialState],
   );
 }

@@ -1,8 +1,7 @@
-
 # Overview
 
 Included in this directory are a number of skeletal code fragments, which you
-can fill out to solve various synchronization problems. 
+can fill out to solve various synchronization problems.
 
 And see Allen Downey's book, "A Little Book of Semaphores", for even more
 fun. It's also free!
@@ -20,5 +19,3 @@ prompt> ./foo
 ```
 
 (maybe with some optional arguments)
-
-

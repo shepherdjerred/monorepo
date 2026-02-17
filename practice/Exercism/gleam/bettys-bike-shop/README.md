@@ -121,7 +121,6 @@ pub fn run(x: Int) -> String {
 
 Qualified imports are preferred as they make it clearer to the reader where a function comes from, and to avoid name clashes.
 
-
 ### Standard library
 
 Gleam has a rich and well-documented standard library. The documentation is available online at [hexdocs.pm/gleam_stdlib][docs]. Save this link somewhere - you will use it a lot!
@@ -144,8 +143,8 @@ Export the `pence_to_pounds` function.
 
 ## 2. Convert pence to pounds
 
-Currently, the price is stored as an integer number of *pence* (the bike shop is based in the UK).
-On the website, we want to show the price in *pounds*, where 1.00 pound amounts to 100 pence.
+Currently, the price is stored as an integer number of _pence_ (the bike shop is based in the UK).
+On the website, we want to show the price in _pounds_, where 1.00 pound amounts to 100 pence.
 Your first task is to implement the `pence_to_pounds` function, taking an `Int` amount of pence, and converting it into its equivalent pounds as a `Float`.
 You should also add type annotations for that function.
 

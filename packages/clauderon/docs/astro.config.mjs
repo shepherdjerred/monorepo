@@ -8,7 +8,8 @@ export default defineConfig({
       title: "clauderon",
       description: "Session management for AI coding agents",
       social: {
-        github: "https://github.com/shepherdjerred/monorepo/tree/main/packages/clauderon",
+        github:
+          "https://github.com/shepherdjerred/monorepo/tree/main/packages/clauderon",
       },
       logo: {
         light: "./src/assets/logo-light.svg",
@@ -67,7 +68,10 @@ export default defineConfig({
             { label: "1Password Integration", slug: "guides/onepassword" },
             { label: "Multi-Repository Sessions", slug: "guides/multi-repo" },
             { label: "Model Selection", slug: "guides/model-selection" },
-            { label: "Resource Health & Reconciliation", slug: "guides/health-reconciliation" },
+            {
+              label: "Resource Health & Reconciliation",
+              slug: "guides/health-reconciliation",
+            },
             { label: "Performance Tuning", slug: "guides/performance" },
             { label: "Troubleshooting", slug: "guides/troubleshooting" },
           ],
@@ -78,8 +82,14 @@ export default defineConfig({
             { label: "CLI Commands", slug: "reference/cli" },
             { label: "API", slug: "reference/api" },
             { label: "Configuration", slug: "reference/configuration" },
-            { label: "Configuration Audit", slug: "reference/configuration-audit" },
-            { label: "Environment Variables", slug: "reference/environment-variables" },
+            {
+              label: "Configuration Audit",
+              slug: "reference/configuration-audit",
+            },
+            {
+              label: "Environment Variables",
+              slug: "reference/environment-variables",
+            },
             { label: "File Locations", slug: "reference/file-locations" },
             { label: "Feature Flags", slug: "reference/feature-flags" },
             { label: "Feature Parity", slug: "reference/feature-parity" },

@@ -3,7 +3,7 @@ import type { PullRequest, Review } from "./types.ts";
 
 export async function getPullRequest(
   prNumber: number | string,
-  repo?: string
+  repo?: string,
 ): Promise<PullRequest | null> {
   const result = await runGhCommand<PullRequest>(
     [
@@ -13,7 +13,7 @@ export async function getPullRequest(
       "--json",
       "number,title,url,headRefName,baseRefName,state,isDraft,mergeable,reviewDecision",
     ],
-    repo
+    repo,
   );
 
   if (!result.success || !result.data) {
@@ -24,7 +24,7 @@ export async function getPullRequest(
 }
 
 export async function getPullRequestForBranch(
-  repo?: string
+  repo?: string,
 ): Promise<PullRequest | null> {
   const result = await runGhCommand<PullRequest>(
     [
@@ -33,7 +33,7 @@ export async function getPullRequestForBranch(
       "--json",
       "number,title,url,headRefName,baseRefName,state,isDraft,mergeable,reviewDecision",
     ],
-    repo
+    repo,
   );
 
   if (!result.success || !result.data) {
@@ -45,11 +45,11 @@ export async function getPullRequestForBranch(
 
 export async function getReviews(
   prNumber: number | string,
-  repo?: string
+  repo?: string,
 ): Promise<Review[]> {
   const result = await runGhCommand<{ reviews: Review[] }>(
     ["pr", "view", String(prNumber), "--json", "reviews"],
-    repo
+    repo,
   );
 
   if (!result.success || !result.data) {
@@ -61,7 +61,7 @@ export async function getReviews(
 
 export async function getLatestReviewsByAuthor(
   prNumber: number | string,
-  repo?: string
+  repo?: string,
 ): Promise<Map<string, Review>> {
   const reviews = await getReviews(prNumber, repo);
   const latestByAuthor = new Map<string, Review>();
@@ -69,7 +69,7 @@ export async function getLatestReviewsByAuthor(
   // Sort by date and keep latest per author
   const sortedReviews = reviews.sort(
     (a, b) =>
-      new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+      new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime(),
   );
 
   for (const review of sortedReviews) {

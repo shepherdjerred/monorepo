@@ -30,7 +30,7 @@ import {
 
 export function getCourseName<T extends RawVideo | Video>(
   video: T,
-  chapters: RawChapters
+  chapters: RawChapters,
 ): string | undefined {
   for (const [key, value] of Object.entries(chapters)) {
     const match = value.chapters.find((chapter) => {
@@ -51,7 +51,7 @@ export function getRawVideoUrl(
   site: Site,
   video: RawVideo,
   courses: RawCourse[],
-  chapters: RawChapters
+  chapters: RawChapters,
 ) {
   const courseName = getCourseName(video, chapters);
   const course = courses.find((course) => course.title === courseName);
@@ -66,7 +66,7 @@ export function getRawVideoUrl(
 
 export function addMatchingVideosToCourse(
   associations: [Video, string][],
-  course: Course
+  course: Course,
 ): Course {
   const courseVideos = associations
     .filter(([_, courseName]) => {
@@ -81,7 +81,7 @@ export function addMatchingVideosToCourse(
 
 export function parseCourse(
   raw: RawCourse,
-  associations: [Video, string][]
+  associations: [Video, string][],
 ): Course {
   const courseWithoutVideos = {
     uuid: raw.uuid,
@@ -93,7 +93,7 @@ export function parseCourse(
 
 export function mapVideoToCourseName<T extends RawVideo | Video>(
   video: T,
-  chapters: RawChapters
+  chapters: RawChapters,
 ): [T, string | undefined] {
   const courseName = getCourseName(video, chapters);
   return [video, courseName];
@@ -101,7 +101,7 @@ export function mapVideoToCourseName<T extends RawVideo | Video>(
 
 export function mapVideosToCourseName<T extends RawVideo | Video>(
   videos: T[],
-  chapters: RawChapters
+  chapters: RawChapters,
 ) {
   return videos
     .map((video) => {
@@ -116,7 +116,7 @@ export function parseVideo(
   raw: RawVideo,
   site: Site,
   courses: RawCourse[],
-  chapters: RawChapters
+  chapters: RawChapters,
 ): Video | undefined {
   const partialVideo = {
     uuid: raw.uuid,
@@ -157,7 +157,7 @@ export function parseCommentary(raw: RawVideo, site: Site) {
 }
 
 export function parseWorldOfWarcraft(
-  raw: RawWorldOfWarcraftSchema
+  raw: RawWorldOfWarcraftSchema,
 ): WorldOfWarcraftSchema {
   const videos = raw.videos
     .filter((video) => {
@@ -172,8 +172,8 @@ export function parseWorldOfWarcraft(
         video,
         Site.WORLD_OF_WARCRAFT,
         raw.courses,
-        raw.videosToCourses
-      )
+        raw.videosToCourses,
+      ),
     )
     .filter((video) => video !== undefined) as Video[];
   const associations = mapVideosToCourseName(videos, raw.videosToCourses);
@@ -188,7 +188,7 @@ export function parseWorldOfWarcraft(
     .flat();
   const nonCommentaryVideos = videos.filter((video) => {
     return !commentaryVideos.some((commentary) =>
-      doVideosMatch(video, commentary)
+      doVideosMatch(video, commentary),
     );
   });
   return {
@@ -208,7 +208,7 @@ export function parseValorant(raw: RawValorantSchema): ValorantSchema {
       }
     })
     .map((video) =>
-      parseVideo(video, Site.VALORANT, raw.courses, raw.videosToCourses)
+      parseVideo(video, Site.VALORANT, raw.courses, raw.videosToCourses),
     )
     .filter((video) => video !== undefined) as Video[];
   const associations = mapVideosToCourseName(videos, raw.videosToCourses);
@@ -223,7 +223,7 @@ export function parseValorant(raw: RawValorantSchema): ValorantSchema {
     .flat();
   const nonCommentaryVideos = videos.filter((video) => {
     return !commentaryVideos.some((commentary) =>
-      doVideosMatch(video, commentary)
+      doVideosMatch(video, commentary),
     );
   });
   return {
@@ -234,7 +234,7 @@ export function parseValorant(raw: RawValorantSchema): ValorantSchema {
 }
 
 export function parseLeagueOfLegends(
-  raw: RawLeagueOfLegendsSchema
+  raw: RawLeagueOfLegendsSchema,
 ): LeagueOfLegendsSchema {
   const videos = raw.videos
     .filter((video) => {
@@ -249,15 +249,15 @@ export function parseLeagueOfLegends(
         video,
         Site.LEAGUE_OF_LEGENDS,
         raw.courses,
-        raw.videosToCourses
-      )
+        raw.videosToCourses,
+      ),
     )
     .filter((video) => video !== undefined) as Video[];
   const associations = mapVideosToCourseName(videos, raw.videosToCourses);
   return {
     videos,
     commentaries: raw.commentaries.map((commentary) =>
-      parseCommentary(commentary, Site.LEAGUE_OF_LEGENDS)
+      parseCommentary(commentary, Site.LEAGUE_OF_LEGENDS),
     ),
     courses: raw.courses.map((course) => {
       return parseCourse(course, associations);

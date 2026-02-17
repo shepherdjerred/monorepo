@@ -1,9 +1,14 @@
-import { NextFunction, Request, Response } from 'express';
-import { Content } from './model';
-import { ExpressError } from '../../../middleware';
-import { ContentResponseLocals } from './types';
+import { NextFunction, Request, Response } from "express";
+import { Content } from "./model";
+import { ExpressError } from "../../../middleware";
+import { ContentResponseLocals } from "./types";
 
-export async function getContentFromParameter (req: Request, res: Response, next: NextFunction, contentUuid: string) {
+export async function getContentFromParameter(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+  contentUuid: string,
+) {
   let locals = res.locals as ContentResponseLocals;
   try {
     let content: Content | null = await Content.findById(contentUuid);
@@ -11,7 +16,7 @@ export async function getContentFromParameter (req: Request, res: Response, next
       locals.contentParam = content;
       next();
     } else {
-      next(new ExpressError('Content not found', 404));
+      next(new ExpressError("Content not found", 404));
     }
   } catch (err) {
     next(new ExpressError(err, 500));

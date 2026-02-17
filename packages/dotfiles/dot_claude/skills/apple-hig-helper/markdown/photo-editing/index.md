@@ -28,7 +28,7 @@ To access a photo editing extension, a photo must be in edit mode. While in edit
 
 ## [Platform considerations](/design/human-interface-guidelines/photo-editing#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, or macOS. Not supported in tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, or macOS. Not supported in tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/photo-editing#Resources)
 

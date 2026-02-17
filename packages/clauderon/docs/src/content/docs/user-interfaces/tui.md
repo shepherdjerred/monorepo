@@ -48,34 +48,34 @@ Press the number keys to filter sessions by status:
 
 ### Session List Navigation
 
-| Key | Action |
-|-----|--------|
-| `n` | Create new session |
-| `Enter` | Attach to selected session |
-| `a` | Archive selected session |
-| `d` | Delete selected session |
-| `j` or `↓` | Move selection down |
-| `k` or `↑` | Move selection up |
-| `g` | Jump to top of list |
-| `G` | Jump to bottom of list |
-| `/` | Search sessions (filter by name) |
-| `r` | Toggle auto-refresh |
-| `h` | Show health status modal |
-| `1-5` | Filter by status |
-| `?` | Show help |
-| `q` | Quit TUI |
+| Key        | Action                           |
+| ---------- | -------------------------------- |
+| `n`        | Create new session               |
+| `Enter`    | Attach to selected session       |
+| `a`        | Archive selected session         |
+| `d`        | Delete selected session          |
+| `j` or `↓` | Move selection down              |
+| `k` or `↑` | Move selection up                |
+| `g`        | Jump to top of list              |
+| `G`        | Jump to bottom of list           |
+| `/`        | Search sessions (filter by name) |
+| `r`        | Toggle auto-refresh              |
+| `h`        | Show health status modal         |
+| `1-5`      | Filter by status                 |
+| `?`        | Show help                        |
+| `q`        | Quit TUI                         |
 
 ### Attached Mode
 
 When attached to a session, you can:
 
-| Key | Action |
-|-----|--------|
+| Key      | Action                                            |
+| -------- | ------------------------------------------------- |
 | `Ctrl+L` | Exit locked mode (unlock to access TUI shortcuts) |
-| `Ctrl+M` | Show signal menu (send signals to container) |
-| `Ctrl+P` | Switch to previous session |
-| `Ctrl+N` | Switch to next session |
-| `Ctrl+Q` | Detach from session (return to list view) |
+| `Ctrl+M` | Show signal menu (send signals to container)      |
+| `Ctrl+P` | Switch to previous session                        |
+| `Ctrl+N` | Switch to next session                            |
+| `Ctrl+Q` | Detach from session (return to list view)         |
 
 By default, attached mode is "locked" - all keystrokes are forwarded to the container. Press `Ctrl+L` to unlock and access TUI shortcuts.
 
@@ -83,14 +83,14 @@ By default, attached mode is "locked" - all keystrokes are forwarded to the cont
 
 Copy mode allows you to select and copy terminal output:
 
-| Key | Action |
-|-----|--------|
-| `[` | Enter copy mode (from unlocked attached mode) |
-| `h/j/k/l` | Navigate (Vim-style, if enabled) |
-| `Arrow keys` | Navigate |
-| `v` | Start visual selection |
-| `y` | Copy selected text to clipboard |
-| `ESC` | Exit copy mode |
+| Key          | Action                                        |
+| ------------ | --------------------------------------------- |
+| `[`          | Enter copy mode (from unlocked attached mode) |
+| `h/j/k/l`    | Navigate (Vim-style, if enabled)              |
+| `Arrow keys` | Navigate                                      |
+| `v`          | Start visual selection                        |
+| `y`          | Copy selected text to clipboard               |
+| `ESC`        | Exit copy mode                                |
 
 **Note:** Vim-style navigation in copy mode is disabled by default. Enable via configuration.
 
@@ -98,13 +98,13 @@ Copy mode allows you to select and copy terminal output:
 
 Scroll through session output:
 
-| Key | Action |
-|-----|--------|
-| `↑/↓` | Scroll line by line |
-| `Page Up` | Scroll up one page |
-| `Page Down` | Scroll down one page |
-| `Home` | Jump to top of buffer |
-| `End` | Jump to bottom (live output) |
+| Key         | Action                       |
+| ----------- | ---------------------------- |
+| `↑/↓`       | Scroll line by line          |
+| `Page Up`   | Scroll up one page           |
+| `Page Down` | Scroll down one page         |
+| `Home`      | Jump to top of buffer        |
+| `End`       | Jump to bottom (live output) |
 
 The scrollback buffer retains up to 10,000 lines of output.
 
@@ -165,22 +165,26 @@ Supported formats: PNG, JPG, JPEG, GIF, WebP
 Depending on the selected backend, additional options may appear:
 
 **Docker:**
+
 - Image selection
 - Volume mode (bind mount vs Docker volume)
 - Resource limits (CPU, memory)
 - Network mode
 
 **Kubernetes:**
+
 - Namespace selection
 - Storage class selection
 - Resource requests/limits
 - Node selector labels
 
 **Sprites:**
+
 - Hibernation timeout
 - Build caching options
 
 **Apple Container:**
+
 - Rosetta emulation (for x86_64 compatibility on Apple Silicon)
 
 ## Advanced Features
@@ -245,16 +249,17 @@ Press `h` on any session to view detailed health information:
 
 Available actions vary by health state:
 
-| State | Actions |
-|-------|---------|
-| Healthy | Recreate, Cleanup |
-| Stopped | Start, Recreate, Cleanup |
-| Hibernated | Wake, Recreate, Cleanup |
-| Error | Recreate, Recreate Fresh, Cleanup |
-| Missing | Recreate, Recreate Fresh, Cleanup |
-| CrashLoop | Recreate Fresh, Cleanup |
+| State      | Actions                           |
+| ---------- | --------------------------------- |
+| Healthy    | Recreate, Cleanup                 |
+| Stopped    | Start, Recreate, Cleanup          |
+| Hibernated | Wake, Recreate, Cleanup           |
+| Error      | Recreate, Recreate Fresh, Cleanup |
+| Missing    | Recreate, Recreate Fresh, Cleanup |
+| CrashLoop  | Recreate Fresh, Cleanup           |
 
 **Data preservation:**
+
 - ✅ **Preserves data** - Session history, metadata, git state retained
 - ⚠️ **Fresh start** - Container state reset, files restored from git
 - ❌ **Destructive** - All data deleted
@@ -313,6 +318,7 @@ clauderon status
 **Problem:** UI doesn't respond to terminal resize
 
 **Solution:**
+
 ```bash
 # Force TUI restart
 pkill -SIGWINCH clauderon
@@ -324,11 +330,13 @@ pkill -SIGWINCH clauderon
 **Problem:** "Connection lost" in status bar
 
 **Causes:**
+
 - Clauderon daemon not running
 - Database lock held by another process
 - Filesystem permissions issue
 
 **Solution:**
+
 ```bash
 # Check daemon status
 clauderon status
@@ -345,11 +353,13 @@ ls -la ~/.clauderon/db.sqlite
 **Problem:** Keyboard shortcuts not working
 
 **Causes:**
+
 - Terminal emulator intercepts shortcuts
 - tmux/screen key bindings conflict
 - Locked mode still active
 
 **Solutions:**
+
 ```bash
 # Check if locked mode is active
 # Press Ctrl+L to unlock
@@ -366,11 +376,13 @@ ls -la ~/.clauderon/db.sqlite
 **Problem:** TUI feels sluggish
 
 **Causes:**
+
 - Auto-refresh with many sessions
 - Large scrollback buffer
 - Slow backend health checks
 
 **Solutions:**
+
 ```bash
 # Disable auto-refresh (press 'r')
 # Archive old sessions (press 'a')
@@ -382,11 +394,13 @@ ls -la ~/.clauderon/db.sqlite
 **Problem:** UI rendering corrupted
 
 **Causes:**
+
 - Terminal not compatible with TUI
 - Color scheme issues
 - Unicode rendering problems
 
 **Solutions:**
+
 ```bash
 # Try different terminal emulator
 # Disable colors in terminal settings
@@ -402,11 +416,13 @@ clauderon attach <session-name>
 **Problem:** Cannot copy text from terminal
 
 **Causes:**
+
 - Copy mode disabled in configuration
 - Vim key bindings conflict
 - Clipboard integration not available
 
 **Solutions:**
+
 ```bash
 # Use terminal's native copy (Cmd+C on macOS, Ctrl+Shift+C on Linux)
 # Check clipboard integration: xclip (Linux) or pbcopy (macOS)
@@ -418,11 +434,13 @@ clauderon attach <session-name>
 **Problem:** Pressing Enter on session doesn't attach
 
 **Causes:**
+
 - Backend container not running
 - Proxy connection failed
 - Session in error state
 
 **Solutions:**
+
 ```bash
 # Check session health (press 'h')
 # Try recreating session

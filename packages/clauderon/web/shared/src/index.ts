@@ -7,4 +7,4 @@
 
 // Export all types from the generated directory
 // TypeShare will create index.ts in the generated folder
-export * from './generated/index.js';
+export * from "./generated/index.js";

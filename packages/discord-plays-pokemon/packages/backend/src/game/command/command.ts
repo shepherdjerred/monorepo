@@ -46,7 +46,16 @@ export function isStart(input: string): input is Start {
   return start.includes(input);
 }
 
-export const command = [...left, ...right, ...up, ...down, ...a, ...b, ...select, ...start];
+export const command = [
+  ...left,
+  ...right,
+  ...up,
+  ...down,
+  ...a,
+  ...b,
+  ...select,
+  ...start,
+];
 export type Command = (typeof command)[number];
 export function isCommand(input: string): input is Command {
   return command.includes(input.toLowerCase());

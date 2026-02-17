@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+.build/
+target/
+.next/
+.astro/
+.expo/
+
+# iOS/Android
+Pods/
+android/
+ios/
+macos/
+windows/
+
+# Lock files
+*.lock
+
+# Vendored
+packages/scout-for-lol/packages/frontend/public/emulatorjs/
+
+# Generated
+packages/clauderon/mobile/src/types/generated/
+packages/clauderon/web/shared/src/generated/
+
+# Coverage
+coverage/

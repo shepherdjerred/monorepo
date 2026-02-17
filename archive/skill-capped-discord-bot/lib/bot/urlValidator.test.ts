@@ -9,7 +9,7 @@ describe("urlValidtor", () => {
 
     it("should return false for an unreachable url", async () => {
       const actual = await isUrlValid(
-        "https://google.com/this/url/should/not/exist"
+        "https://google.com/this/url/should/not/exist",
       );
       expect(actual).toBe(false);
     });

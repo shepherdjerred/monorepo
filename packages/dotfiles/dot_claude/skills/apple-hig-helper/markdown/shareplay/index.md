@@ -24,11 +24,11 @@ When someone shares content during a FaceTime call, the system asks each partici
 
 **Support Picture in Picture (PiP) when possible.** On iPhone and iPad, people can open a shared video in a PiP window. On a Mac, a shared video opens in a background window that people can move into the foreground when they want to watch.
 
-**Use the term *SharePlay* correctly.** You can use *SharePlay* as a noun — as in “Join SharePlay” — and also as a verb when describing a direct action in your interface. For example, in a button or sheet that lets people share a movie-viewing activity, you can use a phrase like “SharePlay Movie.” Avoid using an adjective with SharePlay; for example, in your visionOS app, don’t add terms like *virtual* or *spatial*. Avoid changing the term *SharePlay* in any way; for example, don’t use variations like *SharePlayed*, *SharePlays*, or *SharePlaying*.
+**Use the term _SharePlay_ correctly.** You can use _SharePlay_ as a noun — as in “Join SharePlay” — and also as a verb when describing a direct action in your interface. For example, in a button or sheet that lets people share a movie-viewing activity, you can use a phrase like “SharePlay Movie.” Avoid using an adjective with SharePlay; for example, in your visionOS app, don’t add terms like _virtual_ or _spatial_. Avoid changing the term _SharePlay_ in any way; for example, don’t use variations like _SharePlayed_, _SharePlays_, or _SharePlaying_.
 
 ## [Sharing activities](/design/human-interface-guidelines/shareplay#Sharing-activities)
 
-An *activity* is an app-defined type of shareable experience. For example, an app that lets people view videos might define a separate activity for viewing each type of content — like movies, TV shows, and uploaded videos — and display a different description for each activity. You can define as many different activities as make sense in your app. For developer guidance, see [Defining your app’s SharePlay activities](/documentation/GroupActivities/defining-your-apps-shareplay-activities).
+An _activity_ is an app-defined type of shareable experience. For example, an app that lets people view videos might define a separate activity for viewing each type of content — like movies, TV shows, and uploaded videos — and display a different description for each activity. You can define as many different activities as make sense in your app. For developer guidance, see [Defining your app’s SharePlay activities](/documentation/GroupActivities/defining-your-apps-shareplay-activities).
 
 **Briefly describe each activity.** When people receive an invitation to participate in an activity, your description helps them understand the experience they’re about to share. For example, a video-viewing app might associate its descriptive movie view with a movie-viewing activity. In this case, the descriptive view might display a movie’s title, a plot summary, and a poster image. Write a simple, meaningful description that’s short enough to avoid truncation.
 
@@ -44,7 +44,7 @@ An *activity* is an app-defined type of shareable experience. For example, an ap
 
 ## [Platform considerations](/design/human-interface-guidelines/shareplay#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, or tvOS. Not supported in watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, or tvOS. Not supported in watchOS._
 
 ### [visionOS](/design/human-interface-guidelines/shareplay#visionOS)
 
@@ -52,7 +52,7 @@ People expect most visionOS apps to support SharePlay. While wearing Apple Visi
 
 In a shared activity, FaceTime can show representations of other participants — called spatial Personas — within each wearer’s space, making everyone feel like they’re sharing the same experience in the same place. During a shared experience in FaceTime, people can interact with each other in natural ways through their spatial Personas. For example, people can speak or gesture directly to others, tell when someone is paying attention to them, and know which person is using a shared tool or resource.
 
-visionOS uses the concept of *shared context* to describe the characteristics of a shared activity that help people feel physically present with others while connecting over the same content. A shared context helps give people confidence that they’re experiencing the same thing as everyone else.
+visionOS uses the concept of _shared context_ to describe the characteristics of a shared activity that help people feel physically present with others while connecting over the same content. A shared context helps give people confidence that they’re experiencing the same thing as everyone else.
 
 When people feel that they’re truly sharing an experience, social dynamics can encourage authentic, intuitive interactions. For example, people can communicate verbally and nonverbally to make plans, take turns, and share resources.
 
@@ -94,9 +94,9 @@ When your shared activity runs in a Full Space, the system helps your app mainta
 
 **Help people keep their private and shared content separate.** By default, the system clearly differentiates a shared window from windows that aren’t shared. For example, when people use Music to listen together, the shared Music window appears as a new window for everyone, while any individual’s open library window remains separate and unshared. If your app can open multiple windows, help people share the one they want and make it easy for them to distinguish shared from unshared windows. If possible, also let people drag content they want to share from a private window to a shared one.
 
-* [Private](#)
-* [Selected](#)
-* [Shared](#)
+- [Private](#)
+- [Selected](#)
+- [Shared](#)
 
 ![An image of a private TV window in visionOS, with a translucent button above the window labeled Not Shared.](https://docs-assets.developer.apple.com/published/4d6d10f5b53dbe935c61cadf9a4c400c/visionos-shareplay-status-idle%402x.png)
 
@@ -150,8 +150,8 @@ Add SharePlay to your app](https://developer.apple.com/videos/play/wwdc2023/1023
 
 ## [Change log](/design/human-interface-guidelines/shareplay#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| December 5, 2023 | Added artwork for visionOS. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
+| Date              | Changes                                                              |
+| ----------------- | -------------------------------------------------------------------- |
+| December 5, 2023  | Added artwork for visionOS.                                          |
+| June 21, 2023     | Updated to include guidance for visionOS.                            |
 | December 19, 2022 | Clarified guidance for helping nonsubscribers join a group activity. |

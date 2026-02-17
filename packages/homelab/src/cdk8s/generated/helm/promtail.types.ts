@@ -460,7 +460,8 @@ export type PromtailHelmValuesServiceMonitorPrometheusRule = {
   rules?: unknown[];
 };
 
-export type PromtailHelmValuesServiceMonitorPrometheusRuleAdditionalLabels = object;
+export type PromtailHelmValuesServiceMonitorPrometheusRuleAdditionalLabels =
+  object;
 
 export type PromtailHelmValuesExtraContainers = object;
 
@@ -824,9 +825,10 @@ export type PromtailHelmValuesSidecarConfigReloaderContainerSecurityContext = {
   allowPrivilegeEscalation?: boolean;
 };
 
-export type PromtailHelmValuesSidecarConfigReloaderContainerSecurityContextCapabilities = {
-  drop?: string[];
-};
+export type PromtailHelmValuesSidecarConfigReloaderContainerSecurityContextCapabilities =
+  {
+    drop?: string[];
+  };
 
 export type PromtailHelmValuesSidecarConfigReloaderReadinessProbe = object;
 

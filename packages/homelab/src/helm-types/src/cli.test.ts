@@ -55,10 +55,20 @@ describe("CLI", () => {
   });
 
   test("should show error for missing --name", async () => {
-    const proc = Bun.spawn(["bun", CLI_PATH, "--repo", "https://example.com/charts", "--version", "1.0.0"], {
-      stdout: "pipe",
-      stderr: "pipe",
-    });
+    const proc = Bun.spawn(
+      [
+        "bun",
+        CLI_PATH,
+        "--repo",
+        "https://example.com/charts",
+        "--version",
+        "1.0.0",
+      ],
+      {
+        stdout: "pipe",
+        stderr: "pipe",
+      },
+    );
 
     const stderr = await new Response(proc.stderr).text();
     const exitCode = await proc.exited;
@@ -68,10 +78,13 @@ describe("CLI", () => {
   });
 
   test("should show error for missing --repo", async () => {
-    const proc = Bun.spawn(["bun", CLI_PATH, "--name", "test-chart", "--version", "1.0.0"], {
-      stdout: "pipe",
-      stderr: "pipe",
-    });
+    const proc = Bun.spawn(
+      ["bun", CLI_PATH, "--name", "test-chart", "--version", "1.0.0"],
+      {
+        stdout: "pipe",
+        stderr: "pipe",
+      },
+    );
 
     const stderr = await new Response(proc.stderr).text();
     const exitCode = await proc.exited;
@@ -81,10 +94,20 @@ describe("CLI", () => {
   });
 
   test("should show error for missing --version", async () => {
-    const proc = Bun.spawn(["bun", CLI_PATH, "--name", "test-chart", "--repo", "https://example.com/charts"], {
-      stdout: "pipe",
-      stderr: "pipe",
-    });
+    const proc = Bun.spawn(
+      [
+        "bun",
+        CLI_PATH,
+        "--name",
+        "test-chart",
+        "--repo",
+        "https://example.com/charts",
+      ],
+      {
+        stdout: "pipe",
+        stderr: "pipe",
+      },
+    );
 
     const stderr = await new Response(proc.stderr).text();
     const exitCode = await proc.exited;
@@ -108,7 +131,18 @@ describe("CLI", () => {
 
   test("should reject invalid arguments", async () => {
     const proc = Bun.spawn(
-      ["bun", CLI_PATH, "--invalid-arg", "value", "--name", "test", "--repo", "url", "--version", "1.0.0"],
+      [
+        "bun",
+        CLI_PATH,
+        "--invalid-arg",
+        "value",
+        "--name",
+        "test",
+        "--repo",
+        "url",
+        "--version",
+        "1.0.0",
+      ],
       {
         stdout: "pipe",
         stderr: "pipe",

@@ -24,21 +24,21 @@ As you begin designing your app or game for macOS, start by understanding the fu
 
 **System features.** macOS provides several features that help people interact with the system and their apps in familiar, consistent ways.
 
-* [The menu bar](/design/human-interface-guidelines/the-menu-bar)
-* [File management](/design/human-interface-guidelines/file-management)
-* [Going full screen](/design/human-interface-guidelines/going-full-screen)
-* [Dock menus](/design/human-interface-guidelines/dock-menus)
+- [The menu bar](/design/human-interface-guidelines/the-menu-bar)
+- [File management](/design/human-interface-guidelines/file-management)
+- [Going full screen](/design/human-interface-guidelines/going-full-screen)
+- [Dock menus](/design/human-interface-guidelines/dock-menus)
 
 ## [Best practices](/design/human-interface-guidelines/designing-for-macos#Best-practices)
 
 Great Mac experiences integrate the platform and device capabilities that people value most. To help your design feel at home in macOS, prioritize the following ways to incorporate these features and capabilities.
 
-* Leverage large displays to present more content in fewer nested levels and with less need for modality, while maintaining a comfortable information density that doesn’t make people strain to view the content they want.
-* Let people resize, hide, show, and move your windows to fit their work style and device configuration, and support full-screen mode to offer a distraction-free context.
-* Use the menu bar to give people easy access to all the commands they need to do things in your app.
-* Help people take advantage of high-precision input modes to perform pixel-perfect selections and edits.
-* Handle keyboard shortcuts to help people accelerate actions and use keyboard-only work styles.
-* Support personalization, letting people customize toolbars, configure windows to display the views they use most, and choose the colors and fonts they want to see in the interface.
+- Leverage large displays to present more content in fewer nested levels and with less need for modality, while maintaining a comfortable information density that doesn’t make people strain to view the content they want.
+- Let people resize, hide, show, and move your windows to fit their work style and device configuration, and support full-screen mode to offer a distraction-free context.
+- Use the menu bar to give people easy access to all the commands they need to do things in your app.
+- Help people take advantage of high-precision input modes to perform pixel-perfect selections and edits.
+- Handle keyboard shortcuts to help people accelerate actions and use keyboard-only work styles.
+- Support personalization, letting people customize toolbars, configure windows to display the views they use most, and choose the colors and fonts they want to see in the interface.
 
 ## [Resources](/design/human-interface-guidelines/designing-for-macos#Resources)
 

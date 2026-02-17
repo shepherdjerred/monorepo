@@ -5,6 +5,7 @@ Session manager for AI coding agents with isolated execution environments and ze
 ## Multi-Platform Consideration
 
 **When implementing features, consider all interfaces:**
+
 - CLI (`src/main.rs`) - Clap commands
 - TUI (`src/tui/`) - Ratatui terminal UI
 - Web UI (`web/frontend/`) - React + Vite
@@ -52,11 +53,13 @@ dagger call ci
 ```
 
 **Test Organization:**
+
 - **Rust**: 44 test files (24 in `tests/`, unit tests in `src/`)
 - **Web**: 9 test files (colocated with `.test.ts(x)`)
 - **Mobile**: Jest setup with `@rnx-kit/jest-preset`
 
 **Key Patterns:**
+
 - **Conditional E2E**: Tests marked `#[ignore]` skip when Docker/K8s unavailable
 - **Test Helpers**: See `tests/common/mod.rs` for availability checks, skip macros, cleanup guards
 - **Mocks**: Mock backends (`MockGitBackend`, `MockApiClient`) for testing without external deps
@@ -81,10 +84,12 @@ cd web/frontend && bun run screenshots          # PNG screenshots via Playwright
 ```
 
 **Output locations:**
+
 - Source: `screenshots/{cli,tui,web}/`
 - Docs: `docs/src/assets/screenshots/{cli,tui,web}/`
 
 **Technologies:**
+
 - CLI: Custom SVG generator (bash + heredoc templates)
 - TUI: ratatui TestBackend → PNG (image, ab_glyph crates)
 - Web: Playwright headless browser → PNG
@@ -100,6 +105,7 @@ mise run setup-tools                   # Install nextest, bacon, cargo-watch
 ## CI
 
 CI runs via Dagger (see `/.dagger/`). The pipeline:
+
 1. Builds docs and web packages
 2. Builds Rust binary
 3. Runs clippy and tests

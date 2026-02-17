@@ -3,14 +3,17 @@
 ## Three Buffering Modes
 
 **Unbuffered**: Every write goes directly to the destination
+
 - Slowest (syscall overhead)
 - Used for stderr by default
 
 **Line Buffered**: Flush on newlines
+
 - Used for stdout when writing to TTY
 - Balance of performance and responsiveness
 
 **Block Buffered**: Flush when buffer full (~8KB)
+
 - Used for stdout when writing to pipe/file
 - Most efficient for throughput
 
@@ -35,6 +38,7 @@ tail -f log.txt | grep ERROR
 ```
 
 **Why**:
+
 1. `grep` sees stdout is a pipe (not TTY)
 2. Uses block buffering (8KB threshold)
 3. Waits to accumulate data
@@ -46,6 +50,7 @@ tail -f log.txt | grep ERROR
 **Why 8KB?**: Historical constant from libc (`BUFSIZ` typically 8192)
 
 **Problem Scenario**:
+
 ```bash
 tail -f /var/log/app.log | grep ERROR | your-tool
 # your-tool sees nothing until grep accumulates 8KB
@@ -56,6 +61,7 @@ tail -f /var/log/app.log | grep ERROR | your-tool
 **Solution 1**: Add `--line-buffered` flag
 
 **C Implementation**:
+
 ```c
 #include <stdio.h>
 
@@ -69,6 +75,7 @@ fflush(stdout);
 ```
 
 **Rust Implementation**:
+
 ```rust
 use std::io::{self, Write};
 
@@ -82,6 +89,7 @@ fn main() {
 ```
 
 **Python Implementation**:
+
 ```python
 import sys
 
@@ -96,6 +104,7 @@ print("output", flush=True)
 ```
 
 **Go Implementation**:
+
 ```go
 import (
     "bufio"
@@ -110,12 +119,14 @@ writer.Flush()  // Manual flush
 **Solution 2**: Always flush after important output
 
 **Best Practices**:
+
 - Flush after progress updates
 - Flush after each line of JSON in streaming mode
 - Flush before long computations
 - Provide `--line-buffered` for tools that filter streams
 
 **Examples from Proven Programs**:
+
 - `grep --line-buffered`: Solves pipe buffering
 - `sed -u`: Unbuffered mode
 - `awk`: Has no built-in flag (common complaint)
@@ -123,11 +134,13 @@ writer.Flush()  // Manual flush
 ### Line-Buffered Flag Implementation
 
 **Add flag to your tool**:
+
 ```
 --line-buffered    Flush output after each line
 ```
 
 **C Implementation**:
+
 ```c
 if (line_buffered) {
     setvbuf(stdout, NULL, _IOLBF, 0);
@@ -143,6 +156,7 @@ if (line_buffered || isatty(STDOUT_FILENO)) {
 ## Testing Buffered Output
 
 **In CI/CD**:
+
 ```bash
 # Force line buffering
 stdbuf -oL your-tool | other-tool
@@ -152,6 +166,7 @@ unbuffer your-tool | other-tool
 ```
 
 **In Tests**:
+
 - Mock the TTY with PTY libraries
 - Test both TTY and non-TTY paths
 - Verify flushing behavior
@@ -159,6 +174,7 @@ unbuffer your-tool | other-tool
 ### Testing for Buffering Issues
 
 **Test Script**:
+
 ```bash
 #!/bin/bash
 # test-buffering.sh

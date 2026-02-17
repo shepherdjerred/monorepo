@@ -23,19 +23,29 @@ export type SearchProps<T> = {
   searchBarPlaceholder: string;
   isWatched: (item: Watchable) => boolean;
   isBookmarked: (item: Bookmarkable) => boolean;
-}
+};
 
 type SearchState = {
   query: string;
   filters: Filters;
-}
+};
 
-export default class Search<T> extends React.PureComponent<SearchProps<T>, SearchState> {
+export default class Search<T> extends React.PureComponent<
+  SearchProps<T>,
+  SearchState
+> {
   constructor(props: SearchProps<T>) {
     super(props);
 
     const defaultFilters: Filters = {
-      roles: [Role.ALL, Role.ADC, Role.TOP, Role.SUPPORT, Role.JUNGLE, Role.MID],
+      roles: [
+        Role.ALL,
+        Role.ADC,
+        Role.TOP,
+        Role.SUPPORT,
+        Role.JUNGLE,
+        Role.MID,
+      ],
       types: [Type.COURSE, Type.VIDEO, Type.COMMENTARY],
       onlyBookmarked: false,
       onlyUnwatched: true,
@@ -68,38 +78,56 @@ export default class Search<T> extends React.PureComponent<SearchProps<T>, Searc
   }
 
   render(): React.ReactElement {
-    const { items, fuseOptions, render, itemsPerPage, searchBarPlaceholder, isBookmarked, isWatched } = this.props;
+    const {
+      items,
+      fuseOptions,
+      render,
+      itemsPerPage,
+      searchBarPlaceholder,
+      isBookmarked,
+      isWatched,
+    } = this.props;
     const { query, filters } = this.state;
 
     // TODO this is very hacky. fix it.
     const filteredItems = items
       .filter((item) => {
-        return isVideo(item) || isCourse(item) || isCommentary(item) ? filters.roles.includes(item.role) : false;
+        return isVideo(item) || isCourse(item) || isCommentary(item)
+          ? filters.roles.includes(item.role)
+          : false;
       })
       .filter((item) => {
         if (filters.onlyBookmarked) {
-          return isVideo(item) || isCourse(item) || isCommentary(item) ? isBookmarked(item) : false;
+          return isVideo(item) || isCourse(item) || isCommentary(item)
+            ? isBookmarked(item)
+            : false;
         } else {
           return true;
         }
       })
       .filter((item) => {
         if (filters.onlyUnbookmarked) {
-          return isVideo(item) || isCourse(item) || isCommentary(item) ? !isBookmarked(item) : false;
+          return isVideo(item) || isCourse(item) || isCommentary(item)
+            ? !isBookmarked(item)
+            : false;
         } else {
           return true;
         }
       })
       .filter((item) => {
         if (filters.onlyUnwatched) {
-          return isVideo(item) || isCourse(item) || isCommentary(item) ? !isWatched(item) : false;
+          return isVideo(item) || isCourse(item) || isCommentary(item)
+            ? !isWatched(item)
+            : false;
         } else {
           return true;
         }
       })
       .filter((item) => {
         if (filters.onlyWatched) {
-          return isVideo(item) || isCourse(item) || isCommentary(item) ? isWatched(item) : false;
+          return isVideo(item) || isCourse(item) || isCommentary(item)
+            ? isWatched(item)
+            : false;
         } else {
           return true;
         }
@@ -115,11 +143,22 @@ export default class Search<T> extends React.PureComponent<SearchProps<T>, Searc
 
     return (
       <>
-        <Searchbar onValueUpdate={this.onQueryUpdate.bind(this)} placeholder={searchBarPlaceholder} />
-        <Container sidebar={<FilterSelector filters={filters} onFiltersUpdate={this.onFiltersUpdate.bind(this)} />}>
+        <Searchbar
+          onValueUpdate={this.onQueryUpdate.bind(this)}
+          placeholder={searchBarPlaceholder}
+        />
+        <Container
+          sidebar={
+            <FilterSelector
+              filters={filters}
+              onFiltersUpdate={this.onFiltersUpdate.bind(this)}
+            />
+          }
+        >
           <Banner type={BannerType.Warning}>
-            Check out <a href="https://scout-for-lol.com/">Scout</a> - a Discord bot that notifies you when friends
-            finish League matches with detailed post-match reports!
+            Check out <a href="https://scout-for-lol.com/">Scout</a> - a Discord
+            bot that notifies you when friends finish League matches with
+            detailed post-match reports!
           </Banner>
           <PaginatedFuseSearch
             query={query}

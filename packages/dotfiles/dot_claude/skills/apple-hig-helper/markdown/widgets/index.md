@@ -8,7 +8,7 @@
 
 December 16, 2025
 
-Updated guidance for all platforms, and added guidance for visionOS and CarPlay. 
+Updated guidance for all platforms, and added guidance for visionOS and CarPlay.
 
 # Widgets
 
@@ -18,18 +18,18 @@ A widget provides quick access to essential information and focused interactions
 
 Widgets help people organize and personalize their devices by displaying timely, glanceable content and offering specific functionality. They appear in various contexts for a consistent experience across platforms. For example, a person might place a Weather widget:
 
-* On the Home Screen and Lock Screen of their iPhone and iPad
-* On the desktop and Notification Center of their Mac
-* On a horizontal or vertical surface when they wear Apple Vision Pro
-* At a fixed position in the Smart Stack of Apple Watch
+- On the Home Screen and Lock Screen of their iPhone and iPad
+- On the desktop and Notification Center of their Mac
+- On a horizontal or vertical surface when they wear Apple Vision Pro
+- At a fixed position in the Smart Stack of Apple Watch
 
 ## [Anatomy](/design/human-interface-guidelines/widgets#Anatomy)
 
 Widgets come in different sizes, ranging from small accessory widgets on iPhone, iPad, and Apple Watch to system family widgets that include an extra large size on iPad, Mac, and Apple Vision Pro. Additionally, widgets adapt their appearance to the context in which they appear and respond to a person’s device customization. Consider the following aspects when you design widgets:
 
-* The widget size to support
-* The context — devices and system experiences — in which the widget may appear
-* The rendering modes and color treatment that the widget receives based on the size and context
+- The widget size to support
+- The context — devices and system experiences — in which the widget may appear
+- The rendering modes and color treatment that the widget receives based on the size and context
 
 The WidgetKit framework provides default appearances and treatments for each widget size to fit the system experience or device where it appears. However, it’s important to consider creating a custom widget design that can provide the best experience for your content in each specific context.
 
@@ -37,11 +37,11 @@ The WidgetKit framework provides default appearances and treatments for each wid
 
 System family widgets offer a broad range of sizes and may include one or more interactive elements.
 
-* [Small](#)
-* [Medium](#)
-* [Large](#)
-* [Extra large](#)
-* [Extra large portrait](#)
+- [Small](#)
+- [Medium](#)
+- [Large](#)
+- [Extra large](#)
+- [Extra large portrait](#)
 
 ![An image of the small Calendar widget, showing only the current date and one event.](https://docs-assets.developer.apple.com/published/0089454df2b0b32f6ca892f3131bdb01/widgets-calendar-small%402x.png)
 
@@ -55,22 +55,22 @@ System family widgets offer a broad range of sizes and may include one or more i
 
 The following table shows supported contexts for each system family widget size:
 
-| Widget size | iPhone | iPad | Mac | Apple Vision Pro |
-| --- | --- | --- | --- | --- |
-| System small | Home Screen, Today View, StandBy, and CarPlay | Home Screen, Today View, and Lock Screen | Desktop and Notification Center | Horizontal and vertical surfaces |
-| System medium | Home Screen and Today View | Home Screen and Today View | Desktop and Notification Center | Horizontal and vertical surfaces |
-| System large | Home Screen and Today View | Home Screen and Today View | Desktop and Notification Center | Horizontal and vertical surfaces |
-| System extra large | Not supported | Home Screen and Today View | Desktop and Notification Center | Horizontal and vertical surfaces |
-| System extra large portrait | Not supported | Not supported | Not supported | Horizontal and vertical surfaces |
+| Widget size                 | iPhone                                        | iPad                                     | Mac                             | Apple Vision Pro                 |
+| --------------------------- | --------------------------------------------- | ---------------------------------------- | ------------------------------- | -------------------------------- |
+| System small                | Home Screen, Today View, StandBy, and CarPlay | Home Screen, Today View, and Lock Screen | Desktop and Notification Center | Horizontal and vertical surfaces |
+| System medium               | Home Screen and Today View                    | Home Screen and Today View               | Desktop and Notification Center | Horizontal and vertical surfaces |
+| System large                | Home Screen and Today View                    | Home Screen and Today View               | Desktop and Notification Center | Horizontal and vertical surfaces |
+| System extra large          | Not supported                                 | Home Screen and Today View               | Desktop and Notification Center | Horizontal and vertical surfaces |
+| System extra large portrait | Not supported                                 | Not supported                            | Not supported                   | Horizontal and vertical surfaces |
 
 ### [Accessory widgets](/design/human-interface-guidelines/widgets#Accessory-widgets)
 
 Accessory widgets display a very limited amount of information because of their size.
 
-* [Accessory circular](#)
-* [Accessory corner](#)
-* [Accessory inline](#)
-* [Accessory rectangular](#)
+- [Accessory circular](#)
+- [Accessory corner](#)
+- [Accessory inline](#)
+- [Accessory rectangular](#)
 
 ![An image of the circular accessory Calendar widget, showing only the time for the next event.](https://docs-assets.developer.apple.com/published/8f496e2dce59da3b8607cb07e4c4215c/widgets-accessory-calendar-circular%402x.png)
 
@@ -82,12 +82,12 @@ Accessory widgets display a very limited amount of information because of their 
 
 They appear on the following devices:
 
-| Widget size | iPhone | iPad | Apple Watch |
-| --- | --- | --- | --- |
-| Accessory circular | Lock Screen | Lock Screen | Watch complications and in the Smart Stack |
-| Accessory corner | Not supported | Not supported | Watch complications |
-| Accessory inline | Lock Screen | Lock Screen | Watch complications |
-| Accessory rectangular | Lock Screen | Lock Screen | Watch complications and in the Smart Stack |
+| Widget size           | iPhone        | iPad          | Apple Watch                                |
+| --------------------- | ------------- | ------------- | ------------------------------------------ |
+| Accessory circular    | Lock Screen   | Lock Screen   | Watch complications and in the Smart Stack |
+| Accessory corner      | Not supported | Not supported | Watch complications                        |
+| Accessory inline      | Lock Screen   | Lock Screen   | Watch complications                        |
+| Accessory rectangular | Lock Screen   | Lock Screen   | Watch complications and in the Smart Stack |
 
 ### [Appearances](/design/human-interface-guidelines/widgets#Appearances)
 
@@ -95,7 +95,7 @@ A widget can appear in full-color, in monochrome with a tint color, or in a clea
 
 For example, a small system widget appears differently depending on the device and location:
 
-* On the Home Screen of iPhone and iPad, people choose from different appearances for widgets: light, dark, clear, and tinted. In light and dark appearances, widgets have a full-color design. In a clear appearance, the system desaturates the widget and adds translucency, highlights, and the Liquid Glass material. In a tinted appearance, the system desaturates the widget and its content, then applies a person’s selected tint color.
+- On the Home Screen of iPhone and iPad, people choose from different appearances for widgets: light, dark, clear, and tinted. In light and dark appearances, widgets have a full-color design. In a clear appearance, the system desaturates the widget and adds translucency, highlights, and the Liquid Glass material. In a tinted appearance, the system desaturates the widget and its content, then applies a person’s selected tint color.
 
 ![An image of the small Stocks widget on the Home Screen in the full-color appearance.](https://docs-assets.developer.apple.com/published/c001f107005e17afb9e12d48d162dcb2/widgets-stocks-default%402x.png)
 
@@ -109,15 +109,15 @@ Clear
 
 Tinted
 
-* On Apple Vision Pro, the widget appears as a 3D object, surrounded by a frame. It takes on a full-color appearance with a glass- or paper-like coating layer that responds to lighting conditions. Additionally, people can choose a tinted appearance that applies a color from a set of system-provided color palettes.
+- On Apple Vision Pro, the widget appears as a 3D object, surrounded by a frame. It takes on a full-color appearance with a glass- or paper-like coating layer that responds to lighting conditions. Additionally, people can choose a tinted appearance that applies a color from a set of system-provided color palettes.
 
 ![An image of the small Stocks widget on Apple Vision Pro.](https://docs-assets.developer.apple.com/published/4b4e42b658c77b47c0f40d4d433d7b3b/widgets-stocks-visionos-frame%402x.png)
 
-* On the Lock Screen of iPad, the widget takes on a monochromatic appearance without a tint color.
+- On the Lock Screen of iPad, the widget takes on a monochromatic appearance without a tint color.
 
 ![An image of the small Stocks widget on the Lock Screen, showing the price of Apple stock.](https://docs-assets.developer.apple.com/published/58aef111a6a92a03981f5998720bca48/widgets-stocks-ipad-lock-screen%402x.png)
 
-* On the Lock Screen of iPhone in StandBy, the widget appears scaled up in size with the background removed. When the ambient light falls below a threshold, the system renders the widget with a monochromatic red tint.
+- On the Lock Screen of iPhone in StandBy, the widget appears scaled up in size with the background removed. When the ambient light falls below a threshold, the system renders the widget with a monochromatic red tint.
 
 ![An image of the Stocks widget on the Lock Screen in StandBy, showing the price of Apple stock.](https://docs-assets.developer.apple.com/published/cc1129210235e90f1ee9045eaf85dfb9/widgets-stocks-standby%402x.png)
 
@@ -129,12 +129,12 @@ iPhone in StandBy during low-light conditions
 
 Similarly, a rectangular accessory widget appears as follows:
 
-* On the Lock Screen of iPhone and iPad, it takes on a monochromatic appearance without a tint color.
-* On Apple Watch, the widget can appear as a watch complication in both full-color and tinted appearances, and it can also appear in the Smart Stack.
+- On the Lock Screen of iPhone and iPad, it takes on a monochromatic appearance without a tint color.
+- On Apple Watch, the widget can appear as a watch complication in both full-color and tinted appearances, and it can also appear in the Smart Stack.
 
-* [iPhone Lock Screen](#)
-* [Watch complication](#)
-* [Smart Stack on Apple Watch](#)
+- [iPhone Lock Screen](#)
+- [Watch complication](#)
+- [Smart Stack on Apple Watch](#)
 
 ![A rectangular accessory Calendar widget on the Lock Screen of iPhone, displaying a team meeting at 4 P.M. in a conference room.](https://docs-assets.developer.apple.com/published/1bf7a8ed9890752d8aac424f5406e978/widgets-calendar-rectangular-ios%402x.png)
 
@@ -144,19 +144,19 @@ Similarly, a rectangular accessory widget appears as follows:
 
 Each appearance described above includes a [rendering mode](/design/human-interface-guidelines/widgets#Rendering-modes) that depends on the platform and a person’s appearance settings:
 
-* The system uses the [full color](/documentation/WidgetKit/WidgetRenderingMode/fullColor) rendering mode for system family widgets across all platforms to display your widget in full color. It doesn’t change the color of your views.
-* The system uses the [accented](/documentation/WidgetKit/WidgetRenderingMode/accented) rendering mode for system family widgets across all platforms and for accessory widgets on Apple Watch. In the accented rendering mode, the system removes the background and replaces it with a tinted color effect for a tinted appearance and a Liquid Glass background for a clear appearance. Additionally, it divides the widget’s views into an accent group and a primary group, and then applies a solid color to each group.
-* The system uses the [vibrant](/documentation/WidgetKit/WidgetRenderingMode/vibrant) rendering mode for widgets on the Lock Screen of iPhone and iPad, and on iPhone in StandBy in low-light conditions. It desaturates text, images, and gauges, and creates a vibrant effect by coloring your content appropriately for the Lock Screen background or a macOS desktop. Note that people can customize the Lock Screen with a tint color, and the system applies a red tint for widgets that appear on iPhone in StandBy in low-light conditions.
+- The system uses the [full color](/documentation/WidgetKit/WidgetRenderingMode/fullColor) rendering mode for system family widgets across all platforms to display your widget in full color. It doesn’t change the color of your views.
+- The system uses the [accented](/documentation/WidgetKit/WidgetRenderingMode/accented) rendering mode for system family widgets across all platforms and for accessory widgets on Apple Watch. In the accented rendering mode, the system removes the background and replaces it with a tinted color effect for a tinted appearance and a Liquid Glass background for a clear appearance. Additionally, it divides the widget’s views into an accent group and a primary group, and then applies a solid color to each group.
+- The system uses the [vibrant](/documentation/WidgetKit/WidgetRenderingMode/vibrant) rendering mode for widgets on the Lock Screen of iPhone and iPad, and on iPhone in StandBy in low-light conditions. It desaturates text, images, and gauges, and creates a vibrant effect by coloring your content appropriately for the Lock Screen background or a macOS desktop. Note that people can customize the Lock Screen with a tint color, and the system applies a red tint for widgets that appear on iPhone in StandBy in low-light conditions.
 
 The following table lists the occurrences for each rendering mode per platform:
 
-| Platform | Full-color | Accented | Vibrant |
-| --- | --- | --- | --- |
-| iPhone | Home Screen, Today view, StandBy and CarPlay (with the background removed) | Home Screen and Today view | Lock Screen, StandBy in low-light conditions |
-| iPad | Home Screen and Today view | Home Screen and Today view | Lock Screen |
-| Apple Watch | Smart Stack, complications | Smart Stack, complications | Not supported |
-| Mac | Desktop and Notification Center | Not supported | Desktop |
-| Apple Vision Pro | Horizontal and vertical surfaces | Horizontal and vertical surfaces | Not supported |
+| Platform         | Full-color                                                                 | Accented                         | Vibrant                                      |
+| ---------------- | -------------------------------------------------------------------------- | -------------------------------- | -------------------------------------------- |
+| iPhone           | Home Screen, Today view, StandBy and CarPlay (with the background removed) | Home Screen and Today view       | Lock Screen, StandBy in low-light conditions |
+| iPad             | Home Screen and Today view                                                 | Home Screen and Today view       | Lock Screen                                  |
+| Apple Watch      | Smart Stack, complications                                                 | Smart Stack, complications       | Not supported                                |
+| Mac              | Desktop and Notification Center                                            | Not supported                    | Desktop                                      |
+| Apple Vision Pro | Horizontal and vertical surfaces                                           | Horizontal and vertical surfaces | Not supported                                |
 
 For additional design guidance, see [Rendering modes](/design/human-interface-guidelines/widgets#Rendering-modes). For developer guidance, see [Preparing widgets for additional platforms, contexts, and appearances](/documentation/WidgetKit/Preparing-widgets-for-additional-contexts-and-appearances) and [`WidgetRenderingMode`](/documentation/WidgetKit/WidgetRenderingMode).
 
@@ -222,7 +222,7 @@ Widgets scale to adapt to the screen sizes of different devices and onscreen are
 
 As you design for various devices and scale factors, use the values listed in [Specifications](/design/human-interface-guidelines/widgets#Specifications) and the [Apple Design Resources](https://developer.apple.com/design/resources/) for guidance; for your production widget, use [SwiftUI](/documentation/SwiftUI) to ensure flexibility.
 
-**In general, use standard margins to ensure legibility.** Use the standard margin width for widgets — 16 points for most widgets — to avoid crowding their edges and creating a cluttered appearance. If you need to use tighter margins — for example, to create content groupings for graphics, buttons, or background shapes — setting margins of 11 points can work well. Additionally, note that widgets use smaller margins on the desktop on Mac and on the Lock Screen, including in StandBy. For developer guidance, see [`padding(_:_:)`](/documentation/SwiftUI/View/padding(_:_:)).
+**In general, use standard margins to ensure legibility.** Use the standard margin width for widgets — 16 points for most widgets — to avoid crowding their edges and creating a cluttered appearance. If you need to use tighter margins — for example, to create content groupings for graphics, buttons, or background shapes — setting margins of 11 points can work well. Additionally, note that widgets use smaller margins on the desktop on Mac and on the Lock Screen, including in StandBy. For developer guidance, see [`padding(_:_:)`](</documentation/SwiftUI/View/padding(_:_:)>).
 
 **Coordinate the corner radius of your content with the corner radius of the widget.** To ensure that your content looks good within a widget’s rounded corners, use a SwiftUI container to apply the correct corner radius. For developer guidance, see [`ContainerRelativeShape`](/documentation/SwiftUI/ContainerRelativeShape).
 
@@ -236,7 +236,7 @@ As you design for various devices and scale factors, use the values listed in [S
 
 Note
 
-In iOS, iPadOS, and visionOS, widgets support Dynamic Type sizes from Large to AX5 when you use [`Font`](/documentation/SwiftUI/Font) to choose a system font or [`custom(_:size:)`](/documentation/SwiftUI/Font/custom(_:size:)) to choose a custom font. For more information about Dynamic Type sizes, see [Supporting Dynamic Type](/design/human-interface-guidelines/typography#Supporting-Dynamic-Type).
+In iOS, iPadOS, and visionOS, widgets support Dynamic Type sizes from Large to AX5 when you use [`Font`](/documentation/SwiftUI/Font) to choose a system font or [`custom(_:size:)`](</documentation/SwiftUI/Font/custom(_:size:)>) to choose a custom font. For more information about Dynamic Type sizes, see [Supporting Dynamic Type](/design/human-interface-guidelines/typography#Supporting-Dynamic-Type).
 
 ### [Using color](/design/human-interface-guidelines/widgets#Using-color)
 
@@ -260,7 +260,7 @@ In iOS, iPadOS, and visionOS, widgets support Dynamic Type sizes from Large to A
 
 **Group widget components into an accented and a primary group.** The accented rendering mode divides the widget’s view hierarchy into an accent group and a primary group. On iPhone, iPad, and Mac, the system tints primary and accented content white. On Apple Watch, the system tints primary content white and accented content in the color of the watch face.
 
-For developer guidance, see [`widgetAccentable(_:)`](/documentation/SwiftUI/View/widgetAccentable(_:)) and [Optimizing your widget for accented rendering mode and Liquid Glass](/documentation/WidgetKit/optimizing-your-widget-for-accented-rendering-mode-and-liquid-glass).
+For developer guidance, see [`widgetAccentable(_:)`](</documentation/SwiftUI/View/widgetAccentable(_:)>) and [Optimizing your widget for accented rendering mode and Liquid Glass](/documentation/WidgetKit/optimizing-your-widget-for-accented-rendering-mode-and-liquid-glass).
 
 ### [Vibrant](/design/human-interface-guidelines/widgets#Vibrant)
 
@@ -290,7 +290,7 @@ For developer guidance, see [`widgetAccentable(_:)`](/documentation/SwiftUI/View
 
 ## [Platform considerations](/design/human-interface-guidelines/widgets#Platform-considerations)
 
-*No additional considerations for macOS. Not supported in tvOS.*
+_No additional considerations for macOS. Not supported in tvOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/widgets#iOS-iPadOS)
 
@@ -312,8 +312,8 @@ On iPhone in StandBy, the system displays two small system family widgets side-b
 
 **Limit usage of rich images or color to convey meaning in StandBy.** Instead, make use of the additional space by scaling up and rearranging text so people can glance at the widget content from a greater distance. To seamlessly blend with the black background, don’t use background colors for your widget when it appears in StandBy.
 
-* [Correct usage](#)
-* [Incorrect usage](#)
+- [Correct usage](#)
+- [Incorrect usage](#)
 
 ![An image of iPhone in StandBy. It shows a Clock widget on the left that displays the time as 9:41 a.m. and a Weather widget set to Cupertino with the temperature at 70 degrees Fahrenheit on the right.](https://docs-assets.developer.apple.com/published/50672d631597de47734d331e2acfc4d7/widgets-standby-removed-background-correct%402x.png)
 
@@ -333,7 +333,7 @@ iPhone in low-light conditions
 
 ### [visionOS](/design/human-interface-guidelines/widgets#visionOS)
 
-Widgets in visionOS are 3D objects that people place on a horizontal or vertical surface. When a person places a widget on a surface, the widget persists in that location even when the person turns Apple Vision Pro off and back on. Widgets have a consistent, real-world scale. Their size, *mounting style*, and *treatment style* impact how a person perceives them.
+Widgets in visionOS are 3D objects that people place on a horizontal or vertical surface. When a person places a widget on a surface, the widget persists in that location even when the person turns Apple Vision Pro off and back on. Widgets have a consistent, real-world scale. Their size, _mounting style_, and _treatment style_ impact how a person perceives them.
 
 visionOS widgets appear in full-color by default, but they appear in the accented rendering mode when people personalize them with tint colors using a range of system-provided color palettes. Additionally, people can customize the frame width of widgets that use the elevated mounting style, and custom options that are unique to the widget. For example, visionOS doesn’t provide systemwide light or dark appearances. However, the Music poster widget offers its own customization option that lets people choose between a light and a dark theme that the app generates from the displayed album art.
 
@@ -367,8 +367,8 @@ Because widgets can appear throughout a person’s environment, it’s also impo
 
 The way a widget appears on a surface plays a big role in how a person perceives it. To make it feel intentional and integrated into their surroundings, people place a widget on surfaces in distinct mounting styles.
 
-* **[Elevated](/documentation/WidgetKit/WidgetMountingStyle/elevated) style**. On horizontal surfaces — for example, on a desk — the widget always appears elevated and gently tilts backward, providing a subtle angle that improves readability, and casts a soft shadow that helps it feel grounded on the surface. On vertical surfaces — for example, on a wall — the widget either appears elevated, sitting flush on the surface and similar to how you mount a picture frame.
-* **[Recessed](/documentation/WidgetKit/WidgetMountingStyle/recessed) style**. On vertical surfaces — for example, on a wall — the widget can appear recessed, with content set back into the surface, creating a depth effect that gives the illusion of a cutout in the surface. Horizontal surfaces don’t use the recessed mounting style.
+- **[Elevated](/documentation/WidgetKit/WidgetMountingStyle/elevated) style**. On horizontal surfaces — for example, on a desk — the widget always appears elevated and gently tilts backward, providing a subtle angle that improves readability, and casts a soft shadow that helps it feel grounded on the surface. On vertical surfaces — for example, on a wall — the widget either appears elevated, sitting flush on the surface and similar to how you mount a picture frame.
+- **[Recessed](/documentation/WidgetKit/WidgetMountingStyle/recessed) style**. On vertical surfaces — for example, on a wall — the widget can appear recessed, with content set back into the surface, creating a depth effect that gives the illusion of a cutout in the surface. Horizontal surfaces don’t use the recessed mounting style.
 
 By default, widgets use the elevated mounting style, because it works for horizontal and vertical surfaces.
 
@@ -376,7 +376,7 @@ By default, widgets use the elevated mounting style, because it works for horizo
 
 Developer note
 
-Use the [`supportedMountingStyles(_:)`](/documentation/SwiftUI/WidgetConfiguration/supportedMountingStyles(_:)) property of your [`WidgetConfiguration`](/documentation/SwiftUI/WidgetConfiguration) to declare supported mounting styles — elevated, recessed, or both — for all widgets included in the configuration. To offer a widget that only supports one mounting style and other widgets that support both mounting styles, create separate widget configurations. For example, create one widget configuration for the widget that only supports the recessed mounting style, and a second configuration for the widgets that support both mounting styles.
+Use the [`supportedMountingStyles(_:)`](</documentation/SwiftUI/WidgetConfiguration/supportedMountingStyles(_:)>) property of your [`WidgetConfiguration`](/documentation/SwiftUI/WidgetConfiguration) to declare supported mounting styles — elevated, recessed, or both — for all widgets included in the configuration. To offer a widget that only supports one mounting style and other widgets that support both mounting styles, create separate widget configurations. For example, create one widget configuration for the widget that only supports the recessed mounting style, and a second configuration for the widgets that support both mounting styles.
 
 **Test your elevated widget designs with each system-provided frame width.** People can choose from different system-defined frame widths for widgets that use the elevated mounting style. You can’t change your layout based on the frame width a person chooses, so make sure your widget layout stays visually balanced for each frame width.
 
@@ -384,8 +384,8 @@ Use the [`supportedMountingStyles(_:)`](/documentation/SwiftUI/WidgetConfigurati
 
 In addition to size and mounting style, the system applies one of two treatment styles to visionOS widgets. Choosing the right treatment for your widget helps reinforce the experience you want to create.
 
-* The [`paper`](/documentation/WidgetKit/WidgetTexture/paper) style creates a more grounded, print-like style that feels solid and makes the widget feel like part of its surroundings. When lighting conditions change, widgets in the paper style become darker or lighter in response.
-* The [`glass`](/documentation/WidgetKit/WidgetTexture/glass) style creates a lighter, layered look that adds depth and visual separation between foreground and background elements to emphasize clarity and contrast. The foreground elements always stay bright and legible, and don’t dim or brighten, even as ambient light changes.
+- The [`paper`](/documentation/WidgetKit/WidgetTexture/paper) style creates a more grounded, print-like style that feels solid and makes the widget feel like part of its surroundings. When lighting conditions change, widgets in the paper style become darker or lighter in response.
+- The [`glass`](/documentation/WidgetKit/WidgetTexture/glass) style creates a lighter, layered look that adds depth and visual separation between foreground and background elements to emphasize clarity and contrast. The foreground elements always stay bright and legible, and don’t dim or brighten, even as ambient light changes.
 
 **Choose the paper style for a print-like look that feels more like a real object in the room.** The entire widget responds to the ambient lighting and blends naturally into its surroundings. For example, the Music poster widget uses the paper style to display albums and playlists like framed artwork on a wall.
 
@@ -404,64 +404,64 @@ As you design your widgets, use the following values for guidance.
 ### [iOS dimensions](/design/human-interface-guidelines/widgets#iOS-dimensions)
 
 | Screen size (portrait, pt) | Small (pt) | Medium (pt) | Large (pt) | Circular (pt) | Rectangular (pt) | Inline (pt) |
-| --- | --- | --- | --- | --- | --- | --- |
-| 430×932 | 170x170 | 364x170 | 364x382 | 76x76 | 172x76 | 257x26 |
-| 428x926 | 170x170 | 364x170 | 364x382 | 76x76 | 172x76 | 257x26 |
-| 414x896 | 169x169 | 360x169 | 360x379 | 76x76 | 160x72 | 248x26 |
-| 414x736 | 159x159 | 348x157 | 348x357 | 76x76 | 170x76 | 248x26 |
-| 393x852 | 158x158 | 338x158 | 338x354 | 72x72 | 160x72 | 234x26 |
-| 390x844 | 158x158 | 338x158 | 338x354 | 72x72 | 160x72 | 234x26 |
-| 375x812 | 155x155 | 329x155 | 329x345 | 72x72 | 157x72 | 225x26 |
-| 375x667 | 148x148 | 321x148 | 321x324 | 68x68 | 153x68 | 225x26 |
-| 360x780 | 155x155 | 329x155 | 329x345 | 72x72 | 157x72 | 225x26 |
-| 320x568 | 141x141 | 292x141 | 292x311 | N/A | N/A | N/A |
+| -------------------------- | ---------- | ----------- | ---------- | ------------- | ---------------- | ----------- |
+| 430×932                    | 170x170    | 364x170     | 364x382    | 76x76         | 172x76           | 257x26      |
+| 428x926                    | 170x170    | 364x170     | 364x382    | 76x76         | 172x76           | 257x26      |
+| 414x896                    | 169x169    | 360x169     | 360x379    | 76x76         | 160x72           | 248x26      |
+| 414x736                    | 159x159    | 348x157     | 348x357    | 76x76         | 170x76           | 248x26      |
+| 393x852                    | 158x158    | 338x158     | 338x354    | 72x72         | 160x72           | 234x26      |
+| 390x844                    | 158x158    | 338x158     | 338x354    | 72x72         | 160x72           | 234x26      |
+| 375x812                    | 155x155    | 329x155     | 329x345    | 72x72         | 157x72           | 225x26      |
+| 375x667                    | 148x148    | 321x148     | 321x324    | 68x68         | 153x68           | 225x26      |
+| 360x780                    | 155x155    | 329x155     | 329x345    | 72x72         | 157x72           | 225x26      |
+| 320x568                    | 141x141    | 292x141     | 292x311    | N/A           | N/A              | N/A         |
 
 ### [iPadOS dimensions](/design/human-interface-guidelines/widgets#iPadOS-dimensions)
 
-| Screen size (portrait, pt) | Target | Small (pt) | Medium (pt) | Large (pt) | Extra large (pt) |
-| --- | --- | --- | --- | --- | --- |
-| 768x1024 | Canvas | 141x141 | 305.5x141 | 305.5x305.5 | 634.5x305.5 |
-| Device | 120x120 | 260x120 | 260x260 | 540x260 |
-| 744x1133 | Canvas | 141x141 | 305.5x141 | 305.5x305.5 | 634.5x305.5 |
-| Device | 120x120 | 260x120 | 260x260 | 540x260 |
-| 810x1080 | Canvas | 146x146 | 320.5x146 | 320.5x320.5 | 669x320.5 |
-| Device | 124x124 | 272x124 | 272x272 | 568x272 |
-| 820x1180 | Canvas | 155x155 | 342x155 | 342x342 | 715.5x342 |
-| Device | 136x136 | 300x136 | 300x300 | 628x300 |
-| 834x1112 | Canvas | 150x150 | 327.5x150 | 327.5x327.5 | 682x327.5 |
-| Device | 132x132 | 288x132 | 288x288 | 600x288 |
-| 834x1194 | Canvas | 155x155 | 342x155 | 342x342 | 715.5x342 |
-| Device | 136x136 | 300x136 | 300x300 | 628x300 |
-| 954x1373 \* | Canvas | 162x162 | 350x162 | 350x350 | 726x350 |
-| Device | 162x162 | 350x162 | 350x350 | 726x350 |
-| 970x1389 \* | Canvas | 162x162 | 350x162 | 350x350 | 726x350 |
-| Device | 162x162 | 350x162 | 350x350 | 726x350 |
-| 1024x1366 | Canvas | 170x170 | 378.5x170 | 378.5x378.5 | 795x378.5 |
-| Device | 160x160 | 356x160 | 356x356 | 748x356 |
-| 1192x1590 \* | Canvas | 188x188 | 412x188 | 412x412 | 860x412 |
-| Device | 188x188 | 412x188 | 412x412 | 860x412 |
+| Screen size (portrait, pt) | Target  | Small (pt) | Medium (pt) | Large (pt)  | Extra large (pt) |
+| -------------------------- | ------- | ---------- | ----------- | ----------- | ---------------- |
+| 768x1024                   | Canvas  | 141x141    | 305.5x141   | 305.5x305.5 | 634.5x305.5      |
+| Device                     | 120x120 | 260x120    | 260x260     | 540x260     |
+| 744x1133                   | Canvas  | 141x141    | 305.5x141   | 305.5x305.5 | 634.5x305.5      |
+| Device                     | 120x120 | 260x120    | 260x260     | 540x260     |
+| 810x1080                   | Canvas  | 146x146    | 320.5x146   | 320.5x320.5 | 669x320.5        |
+| Device                     | 124x124 | 272x124    | 272x272     | 568x272     |
+| 820x1180                   | Canvas  | 155x155    | 342x155     | 342x342     | 715.5x342        |
+| Device                     | 136x136 | 300x136    | 300x300     | 628x300     |
+| 834x1112                   | Canvas  | 150x150    | 327.5x150   | 327.5x327.5 | 682x327.5        |
+| Device                     | 132x132 | 288x132    | 288x288     | 600x288     |
+| 834x1194                   | Canvas  | 155x155    | 342x155     | 342x342     | 715.5x342        |
+| Device                     | 136x136 | 300x136    | 300x300     | 628x300     |
+| 954x1373 \*                | Canvas  | 162x162    | 350x162     | 350x350     | 726x350          |
+| Device                     | 162x162 | 350x162    | 350x350     | 726x350     |
+| 970x1389 \*                | Canvas  | 162x162    | 350x162     | 350x350     | 726x350          |
+| Device                     | 162x162 | 350x162    | 350x350     | 726x350     |
+| 1024x1366                  | Canvas  | 170x170    | 378.5x170   | 378.5x378.5 | 795x378.5        |
+| Device                     | 160x160 | 356x160    | 356x356     | 748x356     |
+| 1192x1590 \*               | Canvas  | 188x188    | 412x188     | 412x412     | 860x412          |
+| Device                     | 188x188 | 412x188    | 412x412     | 860x412     |
 
 \* When Display Zoom is set to More Space.
 
 ### [visionOS dimensions](/design/human-interface-guidelines/widgets#visionOS-dimensions)
 
-| Widget | Size in pt | Size in mm (scaled to 100%) |
-| --- | --- | --- |
-| Small | 158x158 | 268x268 |
-| Medium | 338x158 | 574x268 |
-| Large | 338x354 | 574x600 |
-| Extra large | 450x338 | 763x574 |
-| Extra large portrait | 338x450 | 574x763 |
+| Widget               | Size in pt | Size in mm (scaled to 100%) |
+| -------------------- | ---------- | --------------------------- |
+| Small                | 158x158    | 268x268                     |
+| Medium               | 338x158    | 574x268                     |
+| Large                | 338x354    | 574x600                     |
+| Extra large          | 450x338    | 763x574                     |
+| Extra large portrait | 338x450    | 574x763                     |
 
 ### [watchOS dimensions](/design/human-interface-guidelines/widgets#watchOS-dimensions)
 
 | Apple Watch size | Size of a widget in the Smart Stack (pt) |
-| --- | --- |
-| 40mm | 152x69.5 |
-| 41mm | 165x72.5 |
-| 44mm | 173x76.5 |
-| 45mm | 184x80.5 |
-| 49mm | 191x81.5 |
+| ---------------- | ---------------------------------------- |
+| 40mm             | 152x69.5                                 |
+| 41mm             | 165x72.5                                 |
+| 44mm             | 173x76.5                                 |
+| 45mm             | 184x80.5                                 |
+| 49mm             | 191x81.5                                 |
 
 ## [Resources](/design/human-interface-guidelines/widgets#Resources)
 
@@ -491,10 +491,10 @@ Bring widgets to life](https://developer.apple.com/videos/play/wwdc2023/10028)
 
 ## [Change log](/design/human-interface-guidelines/widgets#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| December 16, 2025 | Updated guidance for all platforms, and added guidance for visionOS and CarPlay. |
-| January 17, 2025 | Corrected watchOS widget dimensions. |
-| June 10, 2024 | Updated to include guidance for accented widgets in iOS 18 and iPadOS 18. |
-| June 5, 2023 | Updated guidance to include widgets in watchOS, widgets on the iPad Lock Screen, and updates for iOS 17, iPadOS 17, and macOS 14. |
-| November 3, 2022 | Added guidance for widgets on the iPhone Lock Screen and updated design comprehensives for iPhone 14, iPhone 14 Pro, and iPhone 14 Pro Max. |
+| Date              | Changes                                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| December 16, 2025 | Updated guidance for all platforms, and added guidance for visionOS and CarPlay.                                                            |
+| January 17, 2025  | Corrected watchOS widget dimensions.                                                                                                        |
+| June 10, 2024     | Updated to include guidance for accented widgets in iOS 18 and iPadOS 18.                                                                   |
+| June 5, 2023      | Updated guidance to include widgets in watchOS, widgets on the iPad Lock Screen, and updates for iOS 17, iPadOS 17, and macOS 14.           |
+| November 3, 2022  | Added guidance for widgets on the iPhone Lock Screen and updated design comprehensives for iPhone 14, iPhone 14 Pro, and iPhone 14 Pro Max. |

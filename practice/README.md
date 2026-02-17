@@ -228,6 +228,7 @@ for dirname, commit_date in subdirs_with_dates:
             cog.outl("*No description available.*")
     cog.outl()
 ]]]-->
+
 ## 27 learning projects
 
 ### [a2ui-poc](https://github.com/shepherdjerred/monorepo/tree/main/practice/a2ui-poc) (2025-12-25)

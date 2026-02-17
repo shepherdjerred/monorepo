@@ -5,7 +5,12 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import type { A2UIMessage, A2UIComponent, DataModelEntry, UserAction } from "./types";
+import type {
+  A2UIMessage,
+  A2UIComponent,
+  DataModelEntry,
+  UserAction,
+} from "./types";
 
 export interface Surface {
   id: string;
@@ -23,7 +28,7 @@ interface SurfaceContextValue {
     surfaceId: string,
     componentId: string,
     actionName: string,
-    context: Record<string, unknown>
+    context: Record<string, unknown>,
   ) => Promise<void>;
   clearSurfaces: () => void;
 }
@@ -48,7 +53,7 @@ interface SurfaceProviderProps {
  */
 function applyDataModelUpdate(
   current: Record<string, unknown>,
-  contents: DataModelEntry[]
+  contents: DataModelEntry[],
 ): Record<string, unknown> {
   const result = { ...current };
 
@@ -62,7 +67,7 @@ function applyDataModelUpdate(
     } else if (entry.valueMap !== undefined) {
       result[entry.key] = applyDataModelUpdate(
         (result[entry.key] as Record<string, unknown>) || {},
-        entry.valueMap
+        entry.valueMap,
       );
     }
   }
@@ -148,7 +153,7 @@ export function SurfaceProvider({ children, onAction }: SurfaceProviderProps) {
       surfaceId: string,
       componentId: string,
       actionName: string,
-      context: Record<string, unknown>
+      context: Record<string, unknown>,
     ) => {
       if (!onAction) return;
 
@@ -189,7 +194,7 @@ export function SurfaceProvider({ children, onAction }: SurfaceProviderProps) {
         });
       }
     },
-    [onAction, processMessage]
+    [onAction, processMessage],
   );
 
   const clearSurfaces = useCallback(() => {

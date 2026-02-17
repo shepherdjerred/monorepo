@@ -24,6 +24,7 @@ This agent teaches using Git worktrees to isolate changes in separate working di
 ## Core Concept
 
 Git worktrees let you have multiple working directories from the same repository:
+
 - **Main worktree**: Your primary working directory (usually `main` or `master`)
 - **Linked worktrees**: Additional directories for features/fixes, each on different branches
 - **No branch switching**: Each worktree has its own branch checked out
@@ -330,6 +331,7 @@ echo "✅ Cleanup complete"
 **Real-world example**: incident.io runs **4-5 Claude Code agents in parallel** using worktrees, enabling multiple AI agents to work on different features simultaneously without conflicts.
 
 **Key benefits**:
+
 - **Complete isolation**: Each agent operates in its own worktree with its own branch and file state
 - **No cross-contamination**: Agents can't accidentally modify files from other agents' work
 - **Parallel execution**: 4-5 features developed concurrently by autonomous agents
@@ -399,6 +401,7 @@ echo "  4. Agent creates PR: gh pr create --fill"
 ### AI Agent Isolation Benefits
 
 **Complete isolation prevents**:
+
 - ✅ Agent A modifying Agent B's files
 - ✅ Merge conflicts between parallel agent work
 - ✅ Branch checkout race conditions
@@ -406,6 +409,7 @@ echo "  4. Agent creates PR: gh pr create --fill"
 - ✅ Accidental deletion of other agents' work
 
 **Example scenario** (4 parallel agents):
+
 ```bash
 # Agent 1: Authentication feature
 cd worktrees/feature/agent-1-auth/
@@ -545,6 +549,7 @@ fi
 ### Best Practices for AI Agent Workflows
 
 1. **Meaningful Directory Names**: Use descriptive names like `agent-1-auth` instead of `agent-1` or `temp-worktree`
+
    ```bash
    # ✅ Good - clear what agent is working on
    worktrees/feature/agent-1-authentication/
@@ -556,6 +561,7 @@ fi
    ```
 
 2. **Structured Categories**: Organize by task type (feature/bugfix/review)
+
    ```bash
    worktrees/
    ├── feature/    # New capabilities
@@ -566,6 +572,7 @@ fi
    ```
 
 3. **Agent Coordination**: Use clear branch naming for visibility
+
    ```bash
    # Agent creates branch with clear prefix
    feature/add-authentication      # Agent 1
@@ -574,6 +581,7 @@ fi
    ```
 
 4. **Automatic Cleanup**: Run cleanup scripts after PR merge
+
    ```bash
    # In CI/CD after merge
    cleanup-ai-agent-worktree.sh agent-1 feature authentication
@@ -831,6 +839,7 @@ git worktree list
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - Worktree layout preferences (flat vs nested, naming conventions)
 - How to handle merge conflicts during rebase
 - Whether to keep or remove worktree after PR merge

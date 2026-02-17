@@ -37,7 +37,7 @@ export type EventsClientConfig = {
    * @default 1000
    */
   reconnectDelay?: number;
-}
+};
 
 /**
  * Get the default WebSocket URL based on the current environment.
@@ -108,7 +108,10 @@ export class EventsClient {
       };
 
       this.ws.onerror = (event) => {
-        this.emit("error", new WebSocketError("WebSocket error occurred", event));
+        this.emit(
+          "error",
+          new WebSocketError("WebSocket error occurred", event),
+        );
       };
 
       this.ws.onmessage = (event: MessageEvent<string>) => {
@@ -127,14 +130,19 @@ export class EventsClient {
         } catch (error) {
           this.emit(
             "error",
-            new WebSocketError(`Failed to parse message: ${error instanceof Error ? error.message : String(error)}`)
+            new WebSocketError(
+              `Failed to parse message: ${error instanceof Error ? error.message : String(error)}`,
+            ),
           );
         }
       };
     } catch (error) {
       this.emit(
         "error",
-        new WebSocketError(`Failed to connect: ${error instanceof Error ? error.message : String(error)}`, error)
+        new WebSocketError(
+          `Failed to connect: ${error instanceof Error ? error.message : String(error)}`,
+          error,
+        ),
       );
     }
   }
@@ -162,7 +170,9 @@ export class EventsClient {
   onConnected(callback: () => void): () => void {
     this.listeners.connected.push(callback);
     return () => {
-      this.listeners.connected = this.listeners.connected.filter((cb) => cb !== callback);
+      this.listeners.connected = this.listeners.connected.filter(
+        (cb) => cb !== callback,
+      );
     };
   }
 
@@ -172,7 +182,9 @@ export class EventsClient {
   onDisconnected(callback: () => void): () => void {
     this.listeners.disconnected.push(callback);
     return () => {
-      this.listeners.disconnected = this.listeners.disconnected.filter((cb) => cb !== callback);
+      this.listeners.disconnected = this.listeners.disconnected.filter(
+        (cb) => cb !== callback,
+      );
     };
   }
 
@@ -182,7 +194,9 @@ export class EventsClient {
   onEvent(callback: (event: SessionEvent) => void): () => void {
     this.listeners.event.push(callback);
     return () => {
-      this.listeners.event = this.listeners.event.filter((cb) => cb !== callback);
+      this.listeners.event = this.listeners.event.filter(
+        (cb) => cb !== callback,
+      );
     };
   }
 
@@ -192,7 +206,9 @@ export class EventsClient {
   onError(callback: (error: Error) => void): () => void {
     this.listeners.error.push(callback);
     return () => {
-      this.listeners.error = this.listeners.error.filter((cb) => cb !== callback);
+      this.listeners.error = this.listeners.error.filter(
+        (cb) => cb !== callback,
+      );
     };
   }
 
@@ -219,13 +235,18 @@ export class EventsClient {
   private emit(event: "error", error: Error): void;
   private emit(
     event: keyof typeof this.listeners,
-    arg?: SessionEvent | Error
+    arg?: SessionEvent | Error,
   ): void {
     if (event === "connected" || event === "disconnected") {
       for (const listener of this.listeners[event]) {
         listener();
       }
-    } else if (event === "event" && arg && "type" in arg && !(arg instanceof Error)) {
+    } else if (
+      event === "event" &&
+      arg &&
+      "type" in arg &&
+      !(arg instanceof Error)
+    ) {
       for (const listener of this.listeners.event) {
         listener(arg);
       }

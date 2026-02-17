@@ -30,8 +30,8 @@ Follow these guidelines to offer Sign in with Apple when it’s most convenient 
 
 **Consider letting people link an existing account to Sign in with Apple.** When you support this type of linking, people can get the convenience of using Sign in with Apple while maintaining access to the information in an account they’ve already set up. You can offer account linking before or after people sign in to their existing account. For example:
 
-* If people share an email address through Sign in with Apple and it matches the address in an existing account, you can suggest that they link Sign in with Apple to that account.
-* If people used an existing user name and password to sign in, you can display an account-linking suggestion in their account’s settings view or another logical place.
+- If people share an email address through Sign in with Apple and it matches the address in an existing account, you can suggest that they link Sign in with Apple to that account.
+- If people used an existing user name and password to sign in, you can display an account-linking suggestion in their account’s settings view or another logical place.
 
 **In a commerce app, wait until after people make a purchase before asking them to create an account.** If you support a guest checkout system, give people a quick way to create an account after the transaction completes. For example, if you support Apple Pay, let people create an account on the order confirmation page. In cases where people have already provided their name and email address during the Apple Pay transaction, you don’t need to ask for this information.
 
@@ -51,9 +51,9 @@ People appreciate Sign in with Apple for its privacy and convenience. Although s
 
 **Avoid asking for a personal email address when people supply a private relay address.** Using Sign in with Apple, people can choose to share a private relay address that automatically forwards messages to their verified personal email account. It’s essential to respect this choice and avoid overriding it by asking for a personal email address. If you present customer service, retail, or other experiences that request identification via email address, you can:
 
-* Make sure that people can view their private relay address in your app or website
-* Direct people to Settings > Apple Account > Password & Security > Apps using Apple Account to retrieve their private relay address
-* Use other identifying values, like an order number or phone number collected as part of a purchase
+- Make sure that people can view their private relay address in your app or website
+- Direct people to Settings > Apple Account > Password & Security > Apps using Apple Account to retrieve their private relay address
+- Use other identifying values, like an order number or phone number collected as part of a purchase
 
 **Give people a chance to engage with your app before asking for optional data.** As people use your app, you can help them discover places where they can benefit from sharing more information with you. For example, you might suggest that they provide a contact phone number if they want real-time text updates, or social network information if they want to play games with friends. If people choose not to provide optional information, don’t prevent them from accessing their account or using all the features of your app.
 
@@ -69,11 +69,11 @@ Apple provides several Sign in with Apple buttons you can use to let people set 
 
 When you use the system-provided APIs to create a Sign in with Apple button, you get the following advantages.
 
-* A button that’s guaranteed to use an Apple-approved appearance
-* Assurance that the button’s contents maintain ideal proportions as you change its style
-* Automatic translation of the button’s title into the language specified by the device
-* Support for configuring the button’s corner radius to match the style of your UI (iOS, macOS, and web)
-* A system-provided alternative text label that lets VoiceOver describe the button
+- A button that’s guaranteed to use an Apple-approved appearance
+- Assurance that the button’s contents maintain ideal proportions as you change its style
+- Automatic translation of the button’s title into the language specified by the device
+- Support for configuring the button’s corner radius to match the style of your UI (iOS, macOS, and web)
+- A system-provided alternative text label that lets VoiceOver describe the button
 
 For developer guidance, see [`ASAuthorizationAppleIDButton`](/documentation/AuthenticationServices/ASAuthorizationAppleIDButton) (iOS, macOS, and tvOS), [`WKInterfaceAuthorizationAppleIDButton`](/documentation/WatchKit/WKInterfaceAuthorizationAppleIDButton) (watchOS), and [Displaying Sign in with Apple buttons on the web](/documentation/signinwithapple/displaying-sign-in-with-apple-buttons-on-the-web). You can also visit [Sign in with Apple button](https://appleid.apple.com/signinwithapple/button) to view and adjust live previews of web-based buttons and get the code.
 
@@ -151,8 +151,8 @@ Maximum corner radius
 
 **Maintain the minimum button size and margin around the button in iOS, macOS, and the web.** Be mindful that the button title may vary in length depending on the locale. Use the following values for guidance.
 
-| Minimum width | Minimum height | Minimum margin |
-| --- | --- | --- |
+| Minimum width                | Minimum height            | Minimum margin              |
+| ---------------------------- | ------------------------- | --------------------------- |
 | 140pt (140px @1x, 280px @2x) | 30pt (30px @1x, 60px @2x) | 1/10 of the button’s height |
 
 ### [Creating a custom Sign in with Apple button](/design/human-interface-guidelines/sign-in-with-apple#Creating-a-custom-Sign-in-with-Apple-button)
@@ -173,24 +173,24 @@ All downloadable logo files include padding that simplifies positioning the logo
 
 Use only the logo artwork downloaded from [Apple Design Resources](https://developer.apple.com/design/resources/); never create a custom Apple logo. As you create a custom Sign in with Apple button, follow these guidelines for using the downloadable logo file:
 
-* Use the logo file to position the Apple logo in a button; never use the Apple logo as a button.
-* Match the height of the logo file to the height of the button.
-* Don’t crop the logo file.
-* Don’t add vertical padding.
+- Use the logo file to position the Apple logo in a button; never use the Apple logo as a button.
+- Match the height of the logo file to the height of the button.
+- Don’t crop the logo file.
+- Don’t add vertical padding.
 
 To make sure that your custom button is visually consistent with the system-provided Sign in with Apple button, don’t change the following attributes.
 
-* Titles. Use only *Sign in with Apple*, *Sign up with Apple*, or *Continue with Apple*.
-* General shape. Buttons that combine the logo with text are always rectangular; logo-only buttons can be circular or rectangular.
-* Logo and title colors. Within a button, both items must be either black or white; don’t use custom colors.
+- Titles. Use only _Sign in with Apple_, _Sign up with Apple_, or _Continue with Apple_.
+- General shape. Buttons that combine the logo with text are always rectangular; logo-only buttons can be circular or rectangular.
+- Logo and title colors. Within a button, both items must be either black or white; don’t use custom colors.
 
 To coordinate with your app design, you can change:
 
-* Title font. You can also adjust the font’s weight and size.
-* Title case. You can capitalize every letter in the title.
-* Background appearance. The overall color needs to remain black or white. If necessary, you can include a subtle texture or gradient to help the button harmonize with your interface.
-* Button corner radius. You can use a corner radius value that matches the other buttons in your UI.
-* Button bezel and shadow. For example, you can use a stroke to emphasize the button bezel or add a drop shadow.
+- Title font. You can also adjust the font’s weight and size.
+- Title case. You can capitalize every letter in the title.
+- Background appearance. The overall color needs to remain black or white. If necessary, you can include a subtle texture or gradient to help the button harmonize with your interface.
+- Button corner radius. You can use a corner radius value that matches the other buttons in your UI.
+- Button bezel and shadow. For example, you can use a stroke to emphasize the button bezel or add a drop shadow.
 
 #### [Custom buttons with a logo and text](/design/human-interface-guidelines/sign-in-with-apple#Custom-buttons-with-a-logo-and-text)
 
@@ -202,7 +202,7 @@ To coordinate with your app design, you can change:
 
 ![An illustration of a Sign in with Apple button, with callouts that indicate a button height of 56 points and a font size of 24 points.](https://docs-assets.developer.apple.com/published/b63e73cbcaf41594057e62ad49483d87/left-aligned-correct-proportions-1%402x.png)
 
-**In general, preserve the capitalization style of the title.** By default, all variants of the button title capitalize the first word — that is, *Sign* or *Continue* — and *Apple*; all other letters are lowercase. Avoid changing this style unless your interface uses only uppercase.
+**In general, preserve the capitalization style of the title.** By default, all variants of the button title capitalize the first word — that is, _Sign_ or _Continue_ — and _Apple_; all other letters are lowercase. Avoid changing this style unless your interface uses only uppercase.
 
 **Keep the title and logo vertically aligned within the button.** To do this, vertically align the title to the middle of the button, then add the logo image, making sure its height matches the height of the button. Because the logo image includes top and bottom padding, vertically aligning the title in the button ensures that the title, the logo, and the button stay properly aligned.
 
@@ -212,8 +212,8 @@ To coordinate with your app design, you can change:
 
 **Maintain the minimum button size and margin around the button.** Be mindful that the button title may vary in length depending on the locale. Use the following values for guidance.
 
-| Minimum width | Minimum height | Minimum margin |
-| --- | --- | --- |
+| Minimum width                   | Minimum height               | Minimum margin              |
+| ------------------------------- | ---------------------------- | --------------------------- |
 | 140 pt (140 px @1x, 280 px @2x) | 30 pt (30 px @1x, 60 px @2x) | 1/10 of the button’s height |
 
 #### [Custom logo-only buttons](/design/human-interface-guidelines/sign-in-with-apple#Custom-logo-only-buttons)
@@ -240,7 +240,7 @@ Circular mask
 
 ## [Platform considerations](/design/human-interface-guidelines/sign-in-with-apple#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/sign-in-with-apple#Resources)
 
@@ -270,6 +270,6 @@ Introducing Sign In with Apple](https://developer.apple.com/videos/play/wwdc2019
 
 ## [Change log](/design/human-interface-guidelines/sign-in-with-apple#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date               | Changes                                                                                                                                                                |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | September 14, 2022 | Refined guidance on supporting existing accounts, helping people set up a new account, and indicating the current sign-in status. Consolidated guidance into one page. |

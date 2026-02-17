@@ -44,7 +44,9 @@ export function createSmartctlDashboard() {
   };
 
   // Build the main dashboard
-  const builder = new dashboard.DashboardBuilder("SMART Monitoring - Device Health")
+  const builder = new dashboard.DashboardBuilder(
+    "SMART Monitoring - Device Health",
+  )
     .uid("smartctl-dashboard")
     .tags(["smartctl", "hardware", "storage", "monitoring"])
     .time({ from: "now-24h", to: "now" })
@@ -89,10 +91,12 @@ export function createSmartctlDashboard() {
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.None)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "red" },
-          { value: 1, color: "green" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "red" },
+            { value: 1, color: "green" },
+          ]),
       )
       .gridPos({ x: 4, y: 1, w: 4, h: 4 }),
   );
@@ -101,21 +105,27 @@ export function createSmartctlDashboard() {
   builder.withPanel(
     new stat.PanelBuilder()
       .title("Unhealthy Devices")
-      .description("Devices failing SMART health check. 0 means no failing devices detected.")
+      .description(
+        "Devices failing SMART health check. 0 means no failing devices detected.",
+      )
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`count(smartmon_device_smart_healthy{${buildFilter()}} == 0) or vector(0)`)
+          .expr(
+            `count(smartmon_device_smart_healthy{${buildFilter()}} == 0) or vector(0)`,
+          )
           .legendFormat("Unhealthy"),
       )
       .unit("short")
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.None)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 1, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 1, color: "red" },
+          ]),
       )
       .gridPos({ x: 8, y: 1, w: 4, h: 4 }),
   );
@@ -138,11 +148,13 @@ export function createSmartctlDashboard() {
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "red" },
-          { value: 50, color: "yellow" },
-          { value: 100, color: "green" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "red" },
+            { value: 50, color: "yellow" },
+            { value: 100, color: "green" },
+          ]),
       )
       .gridPos({ x: 12, y: 1, w: 4, h: 4 }),
   );
@@ -151,22 +163,28 @@ export function createSmartctlDashboard() {
   builder.withPanel(
     new stat.PanelBuilder()
       .title("Devices with Reallocated Sectors")
-      .description("Count of devices with sector reallocation. 0 means no issues detected.")
+      .description(
+        "Count of devices with sector reallocation. 0 means no issues detected.",
+      )
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`count(smartmon_reallocated_sector_ct_raw_value{${buildFilter()}} > 0) or vector(0)`)
+          .expr(
+            `count(smartmon_reallocated_sector_ct_raw_value{${buildFilter()}} > 0) or vector(0)`,
+          )
           .legendFormat("With Reallocated"),
       )
       .unit("short")
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.None)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 1, color: "yellow" },
-          { value: 2, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 1, color: "yellow" },
+            { value: 2, color: "red" },
+          ]),
       )
       .gridPos({ x: 16, y: 1, w: 4, h: 4 }),
   );
@@ -175,22 +193,28 @@ export function createSmartctlDashboard() {
   builder.withPanel(
     new stat.PanelBuilder()
       .title("Devices with Pending Sectors")
-      .description("Count of devices with pending sector reallocation. 0 means no issues detected.")
+      .description(
+        "Count of devices with pending sector reallocation. 0 means no issues detected.",
+      )
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`count(smartmon_current_pending_sector_raw_value{${buildFilter()}} > 0) or vector(0)`)
+          .expr(
+            `count(smartmon_current_pending_sector_raw_value{${buildFilter()}} > 0) or vector(0)`,
+          )
           .legendFormat("With Pending"),
       )
       .unit("short")
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.None)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 1, color: "yellow" },
-          { value: 2, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 1, color: "yellow" },
+            { value: 2, color: "red" },
+          ]),
       )
       .gridPos({ x: 20, y: 1, w: 4, h: 4 }),
   );
@@ -216,12 +240,14 @@ export function createSmartctlDashboard() {
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "blue" },
-          { value: 40, color: "green" },
-          { value: 60, color: "yellow" },
-          { value: 70, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "blue" },
+            { value: 40, color: "green" },
+            { value: 60, color: "yellow" },
+            { value: 70, color: "red" },
+          ]),
       )
       .gridPos({ x: 0, y: 5, w: 12, h: 8 }),
   );
@@ -242,12 +268,14 @@ export function createSmartctlDashboard() {
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "blue" },
-          { value: 40, color: "green" },
-          { value: 60, color: "yellow" },
-          { value: 70, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "blue" },
+            { value: 40, color: "green" },
+            { value: 60, color: "yellow" },
+            { value: 70, color: "red" },
+          ]),
       )
       .gridPos({ x: 12, y: 5, w: 6, h: 4 }),
   );
@@ -268,12 +296,14 @@ export function createSmartctlDashboard() {
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "blue" },
-          { value: 40, color: "green" },
-          { value: 60, color: "yellow" },
-          { value: 70, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "blue" },
+            { value: 40, color: "green" },
+            { value: 60, color: "yellow" },
+            { value: 70, color: "red" },
+          ]),
       )
       .gridPos({ x: 18, y: 5, w: 6, h: 4 }),
   );
@@ -326,11 +356,13 @@ export function createSmartctlDashboard() {
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 1, color: "yellow" },
-          { value: 10, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 1, color: "yellow" },
+            { value: 10, color: "red" },
+          ]),
       )
       .gridPos({ x: 0, y: 13, w: 8, h: 8 }),
   );
@@ -352,11 +384,13 @@ export function createSmartctlDashboard() {
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 1, color: "yellow" },
-          { value: 5, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 1, color: "yellow" },
+            { value: 5, color: "red" },
+          ]),
       )
       .gridPos({ x: 8, y: 13, w: 8, h: 8 }),
   );
@@ -378,10 +412,12 @@ export function createSmartctlDashboard() {
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 1, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 1, color: "red" },
+          ]),
       )
       .gridPos({ x: 16, y: 13, w: 8, h: 8 }),
   );
@@ -406,10 +442,12 @@ export function createSmartctlDashboard() {
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 1, color: "yellow" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 1, color: "yellow" },
+          ]),
       )
       .gridPos({ x: 0, y: 21, w: 12, h: 8 }),
   );
@@ -472,10 +510,12 @@ export function createSmartctlDashboard() {
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 10_000, color: "yellow" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 10_000, color: "yellow" },
+          ]),
       )
       .gridPos({ x: 12, y: 29, w: 12, h: 8 }),
   );

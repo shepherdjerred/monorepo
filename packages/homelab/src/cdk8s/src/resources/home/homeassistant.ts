@@ -1,5 +1,13 @@
-import { ConfigMap, Cpu, Deployment, DeploymentStrategy, Protocol, Service, Volume } from "cdk8s-plus-31";
-import type { Chart} from "cdk8s";
+import {
+  ConfigMap,
+  Cpu,
+  Deployment,
+  DeploymentStrategy,
+  Protocol,
+  Service,
+  Volume,
+} from "cdk8s-plus-31";
+import type { Chart } from "cdk8s";
 import { ApiObject, JsonPatch, Size } from "cdk8s";
 import { ROOT_GID, ROOT_UID, withCommonProps } from "../../misc/common.ts";
 import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
@@ -14,10 +22,14 @@ export async function createHomeAssistantDeployment(chart: Chart) {
     strategy: DeploymentStrategy.recreate(),
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/privileged-container": "Required for USB device and hardware access",
-        "ignore-check.kube-linter.io/privilege-escalation-container": "Required when privileged is true",
-        "ignore-check.kube-linter.io/host-network": "Required for mDNS and local network device discovery",
-        "ignore-check.kube-linter.io/run-as-non-root": "Home Assistant requires root for hardware access",
+        "ignore-check.kube-linter.io/privileged-container":
+          "Required for USB device and hardware access",
+        "ignore-check.kube-linter.io/privilege-escalation-container":
+          "Required when privileged is true",
+        "ignore-check.kube-linter.io/host-network":
+          "Required for mDNS and local network device discovery",
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "Home Assistant requires root for hardware access",
         "ignore-check.kube-linter.io/no-read-only-root-fs":
           "Home Assistant requires writable filesystem for runtime data",
       },
@@ -28,7 +40,11 @@ export async function createHomeAssistantDeployment(chart: Chart) {
     storage: Size.gibibytes(64),
   });
 
-  const volume = Volume.fromPersistentVolumeClaim(chart, "homeassistant-volume", claim.claim);
+  const volume = Volume.fromPersistentVolumeClaim(
+    chart,
+    "homeassistant-volume",
+    claim.claim,
+  );
 
   const glob = new Glob("../../config/homeassistant/*");
   const files: string[] = [];
@@ -90,7 +106,9 @@ export async function createHomeAssistantDeployment(chart: Chart) {
 
   // this simplifies mDNS
   // TODO: remove host networking -- might not be possible with Talos
-  ApiObject.of(deployment).addJsonPatch(JsonPatch.add("/spec/template/spec/hostNetwork", true));
+  ApiObject.of(deployment).addJsonPatch(
+    JsonPatch.add("/spec/template/spec/hostNetwork", true),
+  );
 
   const service = new Service(chart, "homeassistant-service", {
     selector: deployment,

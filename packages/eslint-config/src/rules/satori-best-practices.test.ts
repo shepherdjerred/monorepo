@@ -67,7 +67,10 @@ ruleTester.run("satori-best-practices", satoriBestPractices, {
     {
       code: `<form><input type="text" /></form>`,
       filename: "/workspaces/scout-for-lol/packages/report/src/component.tsx",
-      errors: [{ messageId: "noHtmlElements" }, { messageId: "noHtmlElements" }],
+      errors: [
+        { messageId: "noHtmlElements" },
+        { messageId: "noHtmlElements" },
+      ],
     },
     {
       code: `<div><span>A</span><span>B</span></div>`,

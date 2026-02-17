@@ -20,7 +20,7 @@ A color well displays a color picker when people tap or click it. This color pic
 
 ## [Platform considerations](/design/human-interface-guidelines/color-wells#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, or visionOS. Not supported in tvOS or watchOS.*
+_No additional considerations for iOS, iPadOS, or visionOS. Not supported in tvOS or watchOS._
 
 ### [macOS](/design/human-interface-guidelines/color-wells#macOS)
 

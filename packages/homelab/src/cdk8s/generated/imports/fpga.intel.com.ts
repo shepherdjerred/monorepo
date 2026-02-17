@@ -38,7 +38,11 @@ export class AcceleratorFunction extends ApiObject {
    * @param id a scope-local name for the object
    * @param props initialization props
    */
-  public constructor(scope: Construct, id: string, props: AcceleratorFunctionProps) {
+  public constructor(
+    scope: Construct,
+    id: string,
+    props: AcceleratorFunctionProps,
+  ) {
     super(scope, id, {
       ...AcceleratorFunction.GVK,
       ...props,
@@ -93,7 +97,10 @@ export function toJson_AcceleratorFunctionProps(
     spec: toJson_AcceleratorFunctionSpec(obj.spec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -135,7 +142,10 @@ export function toJson_AcceleratorFunctionSpec(
     mode: obj.mode,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -218,7 +228,9 @@ export interface FpgaRegionProps {
  * Converts an object of type 'FpgaRegionProps' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_FpgaRegionProps(obj: FpgaRegionProps | undefined): Record<string, any> | undefined {
+export function toJson_FpgaRegionProps(
+  obj: FpgaRegionProps | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -227,7 +239,10 @@ export function toJson_FpgaRegionProps(obj: FpgaRegionProps | undefined): Record
     spec: toJson_FpgaRegionSpec(obj.spec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -247,7 +262,9 @@ export interface FpgaRegionSpec {
  * Converts an object of type 'FpgaRegionSpec' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_FpgaRegionSpec(obj: FpgaRegionSpec | undefined): Record<string, any> | undefined {
+export function toJson_FpgaRegionSpec(
+  obj: FpgaRegionSpec | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -255,6 +272,9 @@ export function toJson_FpgaRegionSpec(obj: FpgaRegionSpec | undefined): Record<s
     interfaceId: obj.interfaceId,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */

@@ -1,5 +1,12 @@
-import { Deployment, DeploymentStrategy, EnvValue, Probe, Secret, Service } from "cdk8s-plus-31";
-import type { Chart} from "cdk8s";
+import {
+  Deployment,
+  DeploymentStrategy,
+  EnvValue,
+  Probe,
+  Secret,
+  Service,
+} from "cdk8s-plus-31";
+import type { Chart } from "cdk8s";
 import { Duration } from "cdk8s";
 import { withCommonProps } from "../../misc/common.ts";
 import { createServiceMonitor } from "../../misc/service-monitor.ts";
@@ -12,8 +19,10 @@ export function createHaDeployment(chart: Chart) {
     strategy: DeploymentStrategy.recreate(),
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/run-as-non-root": "HA automation container runs as root",
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "HA requires writable filesystem for runtime data",
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "HA automation container runs as root",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "HA requires writable filesystem for runtime data",
       },
     },
     podMetadata: {
@@ -23,19 +32,29 @@ export function createHaDeployment(chart: Chart) {
 
   const haTokenItem = new OnePasswordItem(chart, "ha-token", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/a5fjhnycunqy2iag34ls2owzzy",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/a5fjhnycunqy2iag34ls2owzzy",
     },
   });
 
-  const haTokenSecret = Secret.fromSecretName(chart, "ha-token-secret", haTokenItem.name);
+  const haTokenSecret = Secret.fromSecretName(
+    chart,
+    "ha-token-secret",
+    haTokenItem.name,
+  );
 
   const sentryItem = new OnePasswordItem(chart, "ha-sentry", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/lmjtyjwdnxjsnba7jlsn3vnfhq",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/lmjtyjwdnxjsnba7jlsn3vnfhq",
     },
   });
 
-  const sentrySecret = Secret.fromSecretName(chart, "ha-sentry-secret", sentryItem.name);
+  const sentrySecret = Secret.fromSecretName(
+    chart,
+    "ha-sentry-secret",
+    sentryItem.name,
+  );
 
   deployment.addContainer(
     withCommonProps({
@@ -45,7 +64,9 @@ export function createHaDeployment(chart: Chart) {
           secret: haTokenSecret,
           key: "password",
         }),
-        HASS_BASE_URL: EnvValue.fromValue("http://home-homeassistant-service:8123"),
+        HASS_BASE_URL: EnvValue.fromValue(
+          "http://home-homeassistant-service:8123",
+        ),
         METRICS_PORT: EnvValue.fromValue("9090"),
 
         // Sentry configuration

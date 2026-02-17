@@ -16,13 +16,13 @@ As you begin designing your app or game for visionOS, start by understanding the
 
 **Space.** Apple Vision Pro offers a limitless canvas where people can view virtual content like [windows](/design/human-interface-guidelines/windows), [volumes](/design/human-interface-guidelines/windows#visionOS-volumes), and 3D objects, and choose to enter deeply immersive experiences that can transport them to different places.
 
-**Immersion.** In a visionOS app, people can fluidly transition between different levels of [immersion](/design/human-interface-guidelines/immersive-experiences). By default, an app launches in the *Shared Space* where multiple apps can run side-by-side and people can open, close, and relocate windows. People can also choose to transition an app to a *Full Space*, where it’s the only app running. While in a Full Space app, people can view 3D content blended with their surroundings, open a portal to view another place, or enter a different world.
+**Immersion.** In a visionOS app, people can fluidly transition between different levels of [immersion](/design/human-interface-guidelines/immersive-experiences). By default, an app launches in the _Shared Space_ where multiple apps can run side-by-side and people can open, close, and relocate windows. People can also choose to transition an app to a _Full Space_, where it’s the only app running. While in a Full Space app, people can view 3D content blended with their surroundings, open a portal to view another place, or enter a different world.
 
 **Passthrough.** [Passthrough](/design/human-interface-guidelines/immersive-experiences#Immersion-and-passthrough) provides live video from the device’s external cameras, and helps people interact with virtual content while also seeing their actual surroundings. When people want to see more or less of their surroundings, they use the [Digital Crown](/design/human-interface-guidelines/digital-crown) to control the amount of passthrough.
 
 **Spatial Audio.** Apple Vision Pro combines acoustic and visual-sensing technologies to model the sonic characteristics of a person’s surroundings, automatically making audio sound natural in their space. When an app receives a person’s permission to access information about their surroundings, it can fine-tune [Spatial Audio](/design/human-interface-guidelines/playing-audio#visionOS) to bring custom experiences to life.
 
-**Eyes and hands.** In general, people perform most actions by using their [eyes](/design/human-interface-guidelines/eyes) to look at a virtual object and making an *indirect* [gesture](/design/human-interface-guidelines/gestures#visionOS), like a tap, to activate it. People can also interact with a virtual object by using a *direct* gesture, like touching it with a finger.
+**Eyes and hands.** In general, people perform most actions by using their [eyes](/design/human-interface-guidelines/eyes) to look at a virtual object and making an _indirect_ [gesture](/design/human-interface-guidelines/gestures#visionOS), like a tap, to activate it. People can also interact with a virtual object by using a _direct_ gesture, like touching it with a finger.
 
 **Ergonomics.** While wearing Apple Vision Pro, people rely entirely on the device’s cameras for everything they see, both real and virtual, so maintaining visual comfort is paramount. The system helps maintain comfort by automatically placing content so it’s relative to the wearer’s head, regardless of the person’s height or whether they’re sitting, standing, or lying down. Because visionOS brings content to people — instead of making people move to reach the content — people can remain at rest while engaging with apps and games.
 
@@ -44,13 +44,13 @@ Great visionOS apps and games are approachable and familiar, while offering extr
 
 **Prioritize comfort.** To help people stay comfortable and physically relaxed as they interact with your app or game, keep the following fundamentals in mind.
 
-* Display content within a person’s [field of view](/design/human-interface-guidelines/spatial-layout#Field-of-view), positioning it relative to their head. Avoid placing content in places where people have to turn their head or change their position to interact with it.
-* Avoid displaying [motion](/design/human-interface-guidelines/motion#visionOS) that’s overwhelming, jarring, too fast, or missing a stationary frame of reference.
-* Support [indirect gestures](/design/human-interface-guidelines/gestures#visionOS) that let people interact with apps while their hands rest in their lap or at their sides.
-* If you support direct gestures, make sure the interactive content isn’t too far away and that people don’t need to interact with it for extended periods.
-* Avoid encouraging people to move too much while they’re in a fully [immersive experience](/design/human-interface-guidelines/immersive-experiences).
+- Display content within a person’s [field of view](/design/human-interface-guidelines/spatial-layout#Field-of-view), positioning it relative to their head. Avoid placing content in places where people have to turn their head or change their position to interact with it.
+- Avoid displaying [motion](/design/human-interface-guidelines/motion#visionOS) that’s overwhelming, jarring, too fast, or missing a stationary frame of reference.
+- Support [indirect gestures](/design/human-interface-guidelines/gestures#visionOS) that let people interact with apps while their hands rest in their lap or at their sides.
+- If you support direct gestures, make sure the interactive content isn’t too far away and that people don’t need to interact with it for extended periods.
+- Avoid encouraging people to move too much while they’re in a fully [immersive experience](/design/human-interface-guidelines/immersive-experiences).
 
-**Help people share activities with others.** When you use [SharePlay](/design/human-interface-guidelines/shareplay#visionOS) to support shared activities, people can view the *spatial Personas* of other participants, making it feel like everyone is together in the same space.
+**Help people share activities with others.** When you use [SharePlay](/design/human-interface-guidelines/shareplay#visionOS) to support shared activities, people can view the _spatial Personas_ of other participants, making it feel like everyone is together in the same space.
 
 ## [Resources](/design/human-interface-guidelines/designing-for-visionos#Resources)
 
@@ -80,8 +80,8 @@ Principles of spatial design](https://developer.apple.com/videos/play/wwdc2023/1
 
 ## [Change log](/design/human-interface-guidelines/designing-for-visionos#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| February 2, 2024 | Included a link to Apple Vision Pro User Guide. |
-| September 12, 2023 | Updated intro artwork. |
-| June 21, 2023 | New page. |
+| Date               | Changes                                         |
+| ------------------ | ----------------------------------------------- |
+| February 2, 2024   | Included a link to Apple Vision Pro User Guide. |
+| September 12, 2023 | Updated intro artwork.                          |
+| June 21, 2023      | New page.                                       |

@@ -9,7 +9,8 @@ command:
 hologram:
   does_not_exist: "{prefix}&cHologram with that name doesn't exist."
   already_exists: "{prefix}&cHologram with that name already exists."
-  invalid_name: "{prefix}&cInvalid name '%1$s', only use alphanumerical characters,
+  invalid_name:
+    "{prefix}&cInvalid name '%1$s', only use alphanumerical characters,
     underscore and dash."
   created: "{prefix}Hologram has been created!"
   cloned: "{prefix}Hologram has been cloned!"
@@ -24,7 +25,8 @@ hologram:
   down_origin_set: "{prefix}Origin has been set to &b'%1$s'&7!"
   down_origin_does_not_exist: "{prefix}Down origin value must be either true or false!"
   always_face_player_set: "{prefix}Always Face Player has been set to &b'%1$s'&7!"
-  always_face_player_does_not_exist: "{prefix}Always Face Player value must be either
+  always_face_player_does_not_exist:
+    "{prefix}Always Face Player value must be either
     true or false!"
   facing_set: "{prefix}Facing has been set!"
   flag_add: '{prefix}Flag &b"%1$s"&7 has been added!'

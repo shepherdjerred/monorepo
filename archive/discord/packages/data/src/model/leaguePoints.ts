@@ -23,8 +23,8 @@ export function rankToLeaguePoints(rank: Rank | undefined): LeaguePoints {
     return LeaguePointsSchema.parse(0);
   }
 
-  const divisionLp = (numberOfDivisions - rank.division) *
-    leaguePointsPerDivision;
+  const divisionLp =
+    (numberOfDivisions - rank.division) * leaguePointsPerDivision;
   const tierLp = tierToLeaguePoints(rank.tier);
   return LeaguePointsSchema.parse(divisionLp + tierLp + rank.lp);
 }

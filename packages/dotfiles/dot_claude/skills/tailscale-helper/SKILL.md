@@ -117,30 +117,39 @@ tailscale update --dry-run            # Check for updates
 ## Key Features
 
 ### MagicDNS
+
 Automatically registers DNS names for tailnet devices. Access machines by hostname (`ssh user@myserver`) instead of IP. Full domain: `<machine>.<tailnet-name>.ts.net`. Enabled by default for new tailnets.
 
 ### Tailscale SSH
+
 Replace SSH key management with identity-based access. Run `tailscale set --ssh` on destination, configure SSH ACLs in policy file. Supports check mode requiring periodic re-authentication.
 
 ### Funnel
+
 Expose local services to the public internet through encrypted relay. Limited to ports 443, 8443, and 10000. Traffic is end-to-end encrypted through Funnel relay servers.
 
 ### Serve
+
 Share local services within the tailnet. Supports reverse proxy, file serving, static text, and TCP forwarding. Auto-provisions HTTPS certificates. Use `-bg` flag for persistence across reboots.
 
 ### Taildrop
+
 Peer-to-peer encrypted file transfer between tailnet devices. Send with `tailscale file cp`, receive with `tailscale file get`.
 
 ### Exit Nodes
+
 Route all internet traffic through a designated tailnet device. Use for travel security, geo-access, or compliance. Supports Mullvad exit nodes for commercial VPN integration.
 
 ### Subnet Routers
+
 Extend tailnet to devices without Tailscale installed. Advertise routes with `tailscale set --advertise-routes=<cidr>`, approve in admin console or via autoApprovers.
 
 ### Peer Relays
+
 Client-to-client relay fallback when direct connections fail. Higher throughput than DERP relays. Configure with `tailscale set --advertise-peer-relay`.
 
 ### Tailscale Services
+
 Define stable virtual services with TailVIPs and MagicDNS names, independent of hosting devices. Supports high availability and granular access controls.
 
 ## Docker & Containers
@@ -168,25 +177,34 @@ Use sidecar pattern with `network_mode: service:tailscale` for other containers.
 {
   // Groups for role-based access
   "groups": {
-    "group:engineering": ["user@example.com"]
+    "group:engineering": ["user@example.com"],
   },
   // Tag ownership
   "tagOwners": {
-    "tag:server": ["group:engineering"]
+    "tag:server": ["group:engineering"],
   },
   // Access rules (deny-by-default)
   "acls": [
-    {"action": "accept", "src": ["group:engineering"], "dst": ["tag:server:*"]}
+    {
+      "action": "accept",
+      "src": ["group:engineering"],
+      "dst": ["tag:server:*"],
+    },
   ],
   // SSH access
   "ssh": [
-    {"action": "accept", "src": ["group:engineering"], "dst": ["tag:server"], "users": ["root"]}
+    {
+      "action": "accept",
+      "src": ["group:engineering"],
+      "dst": ["tag:server"],
+      "users": ["root"],
+    },
   ],
   // Auto-approve routes
   "autoApprovers": {
-    "routes": {"10.0.0.0/8": ["tag:server"]},
-    "exitNode": ["tag:server"]
-  }
+    "routes": { "10.0.0.0/8": ["tag:server"] },
+    "exitNode": ["tag:server"],
+  },
 }
 ```
 
@@ -200,14 +218,14 @@ Use huJSON format (comments and trailing commas allowed). Grants are the recomme
 
 ## Common Troubleshooting
 
-| Issue | Command |
-|-------|---------|
-| Check connection status | `tailscale status` |
-| Network diagnostics | `tailscale netcheck` |
-| Test peer connectivity | `tailscale ping <host>` |
-| DNS resolution issues | `tailscale dns status` |
-| Generate bug report | `tailscale bugreport --diagnose` |
-| Check daemon logs (Linux) | `journalctl -u tailscaled` |
+| Issue                     | Command                                        |
+| ------------------------- | ---------------------------------------------- |
+| Check connection status   | `tailscale status`                             |
+| Network diagnostics       | `tailscale netcheck`                           |
+| Test peer connectivity    | `tailscale ping <host>`                        |
+| DNS resolution issues     | `tailscale dns status`                         |
+| Generate bug report       | `tailscale bugreport --diagnose`               |
+| Check daemon logs (Linux) | `journalctl -u tailscaled`                     |
 | Check daemon logs (macOS) | `log show --predicate 'process=="tailscaled"'` |
-| Force reconnect | `tailscale down && tailscale up` |
-| Verify routes | `tailscale status --json \| jq '.Peer'` |
+| Force reconnect           | `tailscale down && tailscale up`               |
+| Verify routes             | `tailscale status --json \| jq '.Peer'`        |

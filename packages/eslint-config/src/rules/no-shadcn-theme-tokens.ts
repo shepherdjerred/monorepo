@@ -1,7 +1,12 @@
-import { AST_NODE_TYPES, ESLintUtils, type TSESTree } from "@typescript-eslint/utils";
+import {
+  AST_NODE_TYPES,
+  ESLintUtils,
+  type TSESTree,
+} from "@typescript-eslint/utils";
 
 const createRule = ESLintUtils.RuleCreator(
-  (name) => `https://github.com/shepherdjerred/share/blob/main/packages/eslint-config/src/rules/${name}.ts`,
+  (name) =>
+    `https://github.com/shepherdjerred/share/blob/main/packages/eslint-config/src/rules/${name}.ts`,
 );
 
 const SHADCN_TOKENS = [
@@ -86,7 +91,10 @@ export const noShadcnThemeTokens = createRule({
     }
 
     function checkNode(node: TSESTree.Node) {
-      if (node.type === AST_NODE_TYPES.Literal && typeof node.value === "string") {
+      if (
+        node.type === AST_NODE_TYPES.Literal &&
+        typeof node.value === "string"
+      ) {
         checkStringForTokens(node.value, node);
       }
 
@@ -98,13 +106,22 @@ export const noShadcnThemeTokens = createRule({
     }
 
     function isClassAttribute(name: string): boolean {
-      return name === "class" || name === "className" || name.startsWith("class:");
+      return (
+        name === "class" || name === "className" || name.startsWith("class:")
+      );
     }
 
     return {
       JSXAttribute(node) {
-        if (node.name.type === AST_NODE_TYPES.JSXIdentifier && isClassAttribute(node.name.name) && node.value) {
-          if (node.value.type === AST_NODE_TYPES.Literal && typeof node.value.value === "string") {
+        if (
+          node.name.type === AST_NODE_TYPES.JSXIdentifier &&
+          isClassAttribute(node.name.name) &&
+          node.value
+        ) {
+          if (
+            node.value.type === AST_NODE_TYPES.Literal &&
+            typeof node.value.value === "string"
+          ) {
             checkStringForTokens(node.value.value, node.value);
           }
 
@@ -117,7 +134,10 @@ export const noShadcnThemeTokens = createRule({
               node.value.expression.type === AST_NODE_TYPES.Literal &&
               typeof node.value.expression.value === "string"
             ) {
-              checkStringForTokens(node.value.expression.value, node.value.expression);
+              checkStringForTokens(
+                node.value.expression.value,
+                node.value.expression,
+              );
             }
           }
         }
@@ -126,7 +146,11 @@ export const noShadcnThemeTokens = createRule({
       CallExpression(node) {
         if (node.callee.type === AST_NODE_TYPES.Identifier) {
           const fnName = node.callee.name;
-          if (["cn", "clsx", "classnames", "twMerge", "classNames"].includes(fnName)) {
+          if (
+            ["cn", "clsx", "classnames", "twMerge", "classNames"].includes(
+              fnName,
+            )
+          ) {
             for (const arg of node.arguments) {
               checkNode(arg);
             }
@@ -136,7 +160,11 @@ export const noShadcnThemeTokens = createRule({
 
       ArrayExpression(node) {
         for (const element of node.elements) {
-          if (element && element.type === AST_NODE_TYPES.Literal && typeof element.value === "string") {
+          if (
+            element &&
+            element.type === AST_NODE_TYPES.Literal &&
+            typeof element.value === "string"
+          ) {
             checkStringForTokens(element.value, element);
           }
         }

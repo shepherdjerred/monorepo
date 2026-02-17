@@ -20,7 +20,9 @@ if (updateCommands) {
     await rest.put(Routes.applicationCommands(Configuration.applicationId), {
       body: commands,
     });
-    console.warn("[Discord Commands] Successfully updated application commands");
+    console.warn(
+      "[Discord Commands] Successfully updated application commands",
+    );
   } catch (error) {
     console.error("[Discord Commands] Failed to update commands:", error);
   }

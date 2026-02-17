@@ -1,15 +1,15 @@
 language: node_js
 cache:
   directories:
-  - node_modules
+    - node_modules
 node_js:
-- 12.16.1
+  - 12.16.1
 notifications:
   email: false
 script:
-- npm run build
+  - npm run build
 before_deploy:
-- cd build
+  - cd build
 deploy:
   skip_cleanup: true
   provider: s3

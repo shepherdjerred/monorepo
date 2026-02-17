@@ -20,13 +20,18 @@ import versions from "../versions.ts";
 // Cache loaded configs per server to avoid re-reading
 const configCache = new Map<string, Record<string, string>>();
 
-async function loadServerConfigs(serverName: string): Promise<Record<string, string>> {
+async function loadServerConfigs(
+  serverName: string,
+): Promise<Record<string, string>> {
   const cached = configCache.get(serverName);
   if (cached) {
     return cached;
   }
 
-  const configDir = new URL(`../../config/minecraft-${serverName}`, import.meta.url).pathname;
+  const configDir = new URL(
+    `../../config/minecraft-${serverName}`,
+    import.meta.url,
+  ).pathname;
   const configs: Record<string, string> = {};
 
   try {
@@ -34,7 +39,9 @@ async function loadServerConfigs(serverName: string): Promise<Record<string, str
     for await (const entry of glob.scan(configDir)) {
       // Validate no __ in filenames (would conflict with path encoding)
       if (entry.includes("__")) {
-        throw new Error(`Config file '${entry}' contains '__' which conflicts with path encoding. Rename the file.`);
+        throw new Error(
+          `Config file '${entry}' contains '__' which conflicts with path encoding. Rename the file.`,
+        );
       }
 
       try {
@@ -44,11 +51,15 @@ async function loadServerConfigs(serverName: string): Promise<Record<string, str
         const key = entry.replaceAll("/", "__");
         configs[key] = content;
       } catch (fileError: unknown) {
-        throw new Error(`Failed to read config file '${entry}': ${String(fileError)}`);
+        throw new Error(
+          `Failed to read config file '${entry}': ${String(fileError)}`,
+        );
       }
     }
   } catch (error: unknown) {
-    throw new Error(`Failed to load ${serverName} configs from '${configDir}': ${String(error)}`);
+    throw new Error(
+      `Failed to load ${serverName} configs from '${configDir}': ${String(error)}`,
+    );
   }
 
   // Validate we found at least some configs
@@ -59,7 +70,10 @@ async function loadServerConfigs(serverName: string): Promise<Record<string, str
   }
 
   // Validate size (ConfigMaps have 1MB limit)
-  const totalSize = Object.values(configs).reduce((sum, c) => sum + c.length, 0);
+  const totalSize = Object.values(configs).reduce(
+    (sum, c) => sum + c.length,
+    0,
+  );
   if (totalSize > 900_000) {
     throw new Error(
       `${serverName} configs too large: ${String(totalSize)} bytes (limit ~1MB). Remove translation/language files.`,
@@ -88,14 +102,18 @@ for (const name of serverNames) {
   } catch (error) {
     // Config directory may not exist yet - that's OK during development
     // The error will surface when the server-specific functions are called
-    console.debug(`[minecraft-config] Skipping ${name} config load: ${String(error)}`);
+    console.debug(
+      `[minecraft-config] Skipping ${name} config load: ${String(error)}`,
+    );
   }
 }
 
 function getConfigs(serverName: ServerName): Record<string, string> {
   const configs = loadedConfigs[serverName];
   if (Object.keys(configs).length === 0) {
-    throw new Error(`No configs loaded for server '${serverName}'. Ensure config/minecraft-${serverName}/ exists.`);
+    throw new Error(
+      `No configs loaded for server '${serverName}'. Ensure config/minecraft-${serverName}/ exists.`,
+    );
   }
   return configs;
 }
@@ -104,7 +122,10 @@ function getConfigs(serverName: ServerName): Record<string, string> {
  * Returns ConfigMap manifest with all server configs in a single ConfigMap.
  * @deprecated Use getMinecraftConfigMapManifests for large configs to avoid Application size limits
  */
-export function getMinecraftConfigMapManifest(serverName: ServerName, namespace: string): object {
+export function getMinecraftConfigMapManifest(
+  serverName: ServerName,
+  namespace: string,
+): object {
   return {
     apiVersion: "v1",
     kind: "ConfigMap",
@@ -122,7 +143,10 @@ export function getMinecraftConfigMapManifest(serverName: ServerName, namespace:
  * - One ConfigMap for non-plugin configs (server.properties, bukkit.yml, etc)
  * - One ConfigMap per plugin directory
  */
-export function getMinecraftConfigMapManifests(serverName: ServerName, namespace: string): object[] {
+export function getMinecraftConfigMapManifests(
+  serverName: ServerName,
+  namespace: string,
+): object[] {
   const configs = getConfigs(serverName);
   const configMaps: object[] = [];
 
@@ -182,7 +206,11 @@ export function getMinecraftConfigMapManifests(serverName: ServerName, namespace
  * Use this for large configs that exceed ArgoCD Application size limits.
  * The ConfigMaps will be managed by ArgoCD but not embedded in the Helm chart.
  */
-export function createMinecraftConfigMaps(scope: Construct, serverName: ServerName, namespace: string): void {
+export function createMinecraftConfigMaps(
+  scope: Construct,
+  serverName: ServerName,
+  namespace: string,
+): void {
   const configs = getConfigs(serverName);
 
   // Separate plugin configs from non-plugin configs
@@ -217,17 +245,21 @@ export function createMinecraftConfigMaps(scope: Construct, serverName: ServerNa
 
   // One ConfigMap per plugin
   for (const [pluginName, pluginData] of pluginConfigs) {
-    new KubeConfigMap(scope, `${namespace}-plugin-${pluginName.toLowerCase()}`, {
-      metadata: {
-        name: `${namespace}-plugin-${pluginName.toLowerCase()}`,
-        namespace,
-        labels: {
-          "app.kubernetes.io/component": "minecraft-config",
-          "app.kubernetes.io/plugin": pluginName,
+    new KubeConfigMap(
+      scope,
+      `${namespace}-plugin-${pluginName.toLowerCase()}`,
+      {
+        metadata: {
+          name: `${namespace}-plugin-${pluginName.toLowerCase()}`,
+          namespace,
+          labels: {
+            "app.kubernetes.io/component": "minecraft-config",
+            "app.kubernetes.io/plugin": pluginName,
+          },
         },
+        data: pluginData,
       },
-      data: pluginData,
-    });
+    );
   }
 }
 
@@ -248,7 +280,9 @@ export function getMinecraftExtraVolumes(
 
   // Separate plugin configs from other configs
   const pluginKeys = configKeys.filter((key) => key.startsWith("plugins__"));
-  const nonPluginKeys = configKeys.filter((key) => !key.startsWith("plugins__"));
+  const nonPluginKeys = configKeys.filter(
+    (key) => !key.startsWith("plugins__"),
+  );
 
   const volumes: object[] = [];
 
@@ -259,7 +293,9 @@ export function getMinecraftExtraVolumes(
       path: key.replaceAll("__", "/"),
     }));
 
-    const configMapName = useSplitConfigMaps ? `${namespace}-server-configs` : `${namespace}-configs`;
+    const configMapName = useSplitConfigMaps
+      ? `${namespace}-server-configs`
+      : `${namespace}-configs`;
 
     volumes.push({
       volumes: [
@@ -366,9 +402,14 @@ export function getMinecraftExtraVolumes(
  *
  * @param useSplitConfigMaps - If true, expects split volume mounts (one per plugin). Default false.
  */
-export function getMinecraftPluginConfigInitContainer(serverName: ServerName, useSplitConfigMaps = false): object {
+export function getMinecraftPluginConfigInitContainer(
+  serverName: ServerName,
+  useSplitConfigMaps = false,
+): object {
   const configs = getConfigs(serverName);
-  const pluginKeys = Object.keys(configs).filter((key) => key.startsWith("plugins__"));
+  const pluginKeys = Object.keys(configs).filter((key) =>
+    key.startsWith("plugins__"),
+  );
 
   // Build volume mounts based on split or unified ConfigMaps
   const volumeMounts: object[] = [

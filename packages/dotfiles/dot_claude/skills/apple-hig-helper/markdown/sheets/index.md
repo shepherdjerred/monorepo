@@ -12,7 +12,7 @@ A sheet helps people perform a scoped task that’s closely related to their cur
 
 ![A stylized representation of a sheet extending down from the top of a window. The image is tinted red to subtly reflect the red in the original six-color Apple logo.](https://docs-assets.developer.apple.com/published/357ff0b017e9241da82888bd3aec4372/components-sheet-intro%402x.png)
 
-By default, a sheet is *modal*, presenting a targeted experience that prevents people from interacting with the parent view until they dismiss the sheet (for more on modal presentation, see [Modality](/design/human-interface-guidelines/modality)). A modal sheet is useful for requesting specific information from people or presenting a simple task that they can complete before returning to the parent view. For example, a sheet might let people supply information needed to complete an action, such as attaching a file, choosing the location for a move or save, or specifying the format for a selection.
+By default, a sheet is _modal_, presenting a targeted experience that prevents people from interacting with the parent view until they dismiss the sheet (for more on modal presentation, see [Modality](/design/human-interface-guidelines/modality)). A modal sheet is useful for requesting specific information from people or presenting a simple task that they can complete before returning to the parent view. For example, a sheet might let people supply information needed to complete an action, such as attaching a file, choosing the location for a move or save, or specifying the format for a selection.
 
 In macOS, visionOS, and watchOS, a sheet is always modal, but in iOS and iPadOS, a sheet can also be nonmodal. When a nonmodal sheet is onscreen, people use its functionality to directly affect the current task in the parent view without dismissing the sheet. For example, Notes on iPhone and iPad uses a nonmodal sheet to help people apply different formatting to various text selections as they edit a note.
 
@@ -36,11 +36,11 @@ Because the sheet is nonmodal, people can make additional text selections withou
 
 ## [Platform considerations](/design/human-interface-guidelines/sheets#Platform-considerations)
 
-*No additional considerations for tvOS.*
+_No additional considerations for tvOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/sheets#iOS-iPadOS)
 
-A resizable sheet expands when people scroll its contents or drag the *grabber*, which is a small horizontal indicator that can appear at the top edge of a sheet. Sheets resize according to their *detents*, which are particular heights at which a sheet naturally rests. Designed for iPhone, detents specify particular heights at which a sheet naturally rests. The system defines two detents: *large* is the height of a fully expanded sheet and *medium* is about half of the fully expanded height.
+A resizable sheet expands when people scroll its contents or drag the _grabber_, which is a small horizontal indicator that can appear at the top edge of a sheet. Sheets resize according to their _detents_, which are particular heights at which a sheet naturally rests. Designed for iPhone, detents specify particular heights at which a sheet naturally rests. The system defines two detents: _large_ is the height of a fully expanded sheet and _medium_ is about half of the fully expanded height.
 
 ![An illustration showing an iPhone screen in portrait orientation containing a solid rounded rectangle that occupies almost all of the screen, representing a full-screen sheet. A rounded close button appears in the upper-left corner of the sheet.](https://docs-assets.developer.apple.com/published/c2a600adb5237892585d71d2ae61c9a6/sheets-large-detent%402x.png)
 
@@ -90,11 +90,11 @@ In macOS, a sheet is a cardlike view with rounded corners that floats on top of 
 
 While a sheet is visible in a visionOS app, it floats in front of its parent window, dimming it, and becoming the target of people’s interactions with the app.
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/3da85f78639b5b0c17fa89d568e2261d/visionos-modal-sheet%402x.png)](https://docs-assets.developer.apple.com/published/e691ccf19838ffbc34a5ca862de1bb52/visionos-modal-sheet.mp4) Content description: A recording showing a sheet opening above a blank window in visionOS.
 
- [Play](#)
+[Play](#)
 
 **Avoid displaying a sheet that emerges from the bottom edge of a window.** To help people view the sheet, prefer centering it in their [field of view](/design/human-interface-guidelines/spatial-layout#Field-of-view).
 
@@ -144,17 +144,17 @@ The standard Done button
 
 #### [Developer documentation](/design/human-interface-guidelines/sheets#Developer-documentation)
 
-[`sheet(item:onDismiss:content:)`](/documentation/SwiftUI/View/sheet(item:onDismiss:content:)) — SwiftUI
+[`sheet(item:onDismiss:content:)`](</documentation/SwiftUI/View/sheet(item:onDismiss:content:)>) — SwiftUI
 
 [`UISheetPresentationController`](/documentation/UIKit/UISheetPresentationController) — UIKit
 
-[`presentAsSheet(_:)`](/documentation/AppKit/NSViewController/presentAsSheet(_:)) — AppKit
+[`presentAsSheet(_:)`](</documentation/AppKit/NSViewController/presentAsSheet(_:)>) — AppKit
 
 ## [Change log](/design/human-interface-guidelines/sheets#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| March 29, 2024 | Added guidance to use form or page sheet styles in iPadOS apps. |
+| Date             | Changes                                                                        |
+| ---------------- | ------------------------------------------------------------------------------ |
+| March 29, 2024   | Added guidance to use form or page sheet styles in iPadOS apps.                |
 | December 5, 2023 | Recommended using a split view to offer supplementary items in a visionOS app. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
-| June 5, 2023 | Updated guidance for using sheets in watchOS. |
+| June 21, 2023    | Updated to include guidance for visionOS.                                      |
+| June 5, 2023     | Updated guidance for using sheets in watchOS.                                  |

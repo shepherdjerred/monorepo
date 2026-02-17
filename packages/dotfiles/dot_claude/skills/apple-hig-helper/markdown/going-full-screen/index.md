@@ -32,7 +32,7 @@ Apple TV and Apple Watch don’t offer full-screen modes because apps and games 
 
 ## [Platform considerations](/design/human-interface-guidelines/going-full-screen#Platform-considerations)
 
-*Not supported in tvOS, visionOS, or watchOS.*
+_Not supported in tvOS, visionOS, or watchOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/going-full-screen#iOS-iPadOS)
 
@@ -40,7 +40,7 @@ Apple TV and Apple Watch don’t offer full-screen modes because apps and games 
 
 ### [macOS](/design/human-interface-guidelines/going-full-screen#macOS)
 
-**Use the system-provided full-screen experience.** Using the system’s full-screen support ensures that your full-screen window works well in all contexts. For example, some Mac models include a camera housing that occupies an area at the top-center of the screen. Using the system’s full-screen support automatically accommodates this area. For developer guidance, see [`toggleFullScreen(_:)`](/documentation/AppKit/NSWindow/toggleFullScreen(_:)).
+**Use the system-provided full-screen experience.** Using the system’s full-screen support ensures that your full-screen window works well in all contexts. For example, some Mac models include a camera housing that occupies an area at the top-center of the screen. Using the system’s full-screen support automatically accommodates this area. For developer guidance, see [`toggleFullScreen(_:)`](</documentation/AppKit/NSWindow/toggleFullScreen(_:)>).
 
 **In a game, don’t change the display mode when players go full screen.** People expect to be in control of their display mode, and changing it automatically doesn’t improve performance.
 
@@ -62,7 +62,7 @@ For additional developer guidance, see [Managing your game window for Metal in m
 
 #### [Developer documentation](/design/human-interface-guidelines/going-full-screen#Developer-documentation)
 
-[`fullScreenCover(item:onDismiss:content:)`](/documentation/SwiftUI/View/fullScreenCover(item:onDismiss:content:)) — SwiftUI
+[`fullScreenCover(item:onDismiss:content:)`](</documentation/SwiftUI/View/fullScreenCover(item:onDismiss:content:)>) — SwiftUI
 
 [`NSScreen`](/documentation/AppKit/NSScreen) — AppKit
 
@@ -78,7 +78,7 @@ Elevate the design of your iPad app](https://developer.apple.com/videos/play/wwd
 
 ## [Change log](/design/human-interface-guidelines/going-full-screen#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| June 9, 2025 | Updated guidance for hiding toolbars and navigation controls, and deferring Home Screen indicator gestures in full-screen iOS and iPadOS apps and games. |
-| June 10, 2024 | Enhanced guidance for playing a game in full-screen mode. |
+| Date          | Changes                                                                                                                                                  |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| June 9, 2025  | Updated guidance for hiding toolbars and navigation controls, and deferring Home Screen indicator gestures in full-screen iOS and iPadOS apps and games. |
+| June 10, 2024 | Enhanced guidance for playing a game in full-screen mode.                                                                                                |

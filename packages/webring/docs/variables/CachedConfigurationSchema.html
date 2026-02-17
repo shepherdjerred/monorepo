@@ -15,15 +15,22 @@
   </head>
   <body>
     <script>
-      document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";
+      document.documentElement.dataset.theme =
+        localStorage.getItem("tsd-theme") || "os";
       document.body.style.display = "none";
-      setTimeout(() => (app ? app.showPage() : document.body.style.removeProperty("display")), 500);
+      setTimeout(
+        () =>
+          app ? app.showPage() : document.body.style.removeProperty("display"),
+        500,
+      );
     </script>
     <header class="tsd-page-toolbar">
       <div class="tsd-toolbar-contents container">
         <div class="table-cell" id="tsd-search" data-base="..">
           <div class="field">
-            <label for="tsd-search-field" class="tsd-widget tsd-toolbar-icon search no-caption"
+            <label
+              for="tsd-search-field"
+              class="tsd-widget tsd-toolbar-icon search no-caption"
               ><svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <use href="../assets/icons.svg#icon-search"></use></svg></label
             ><input type="text" id="tsd-search-field" aria-label="Search" />
@@ -36,7 +43,11 @@
           <a href="../index.html" class="title">webring</a>
         </div>
         <div class="table-cell" id="tsd-widgets">
-          <a href="#" class="tsd-widget tsd-toolbar-icon menu no-caption" data-toggle="menu" aria-label="Menu"
+          <a
+            href="#"
+            class="tsd-widget tsd-toolbar-icon menu no-caption"
+            data-toggle="menu"
+            aria-label="Menu"
             ><svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <use href="../assets/icons.svg#icon-menu"></use></svg
           ></a>
@@ -48,19 +59,32 @@
         <div class="tsd-page-title">
           <ul class="tsd-breadcrumb">
             <li><a href="../modules.html">webring</a></li>
-            <li><a href="CachedConfigurationSchema.html">CachedConfigurationSchema</a></li>
+            <li>
+              <a href="CachedConfigurationSchema.html"
+                >CachedConfigurationSchema</a
+              >
+            </li>
           </ul>
-          <h1>Variable CachedConfigurationSchema<code class="tsd-tag">Const</code></h1>
+          <h1>
+            Variable CachedConfigurationSchema<code class="tsd-tag">Const</code>
+          </h1>
         </div>
         <div class="tsd-signature">
-          <span class="tsd-kind-variable">Cached<wbr />Configuration<wbr />Schema</span
-          ><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ZodObject</span
+          <span class="tsd-kind-variable"
+            >Cached<wbr />Configuration<wbr />Schema</span
+          ><span class="tsd-signature-symbol">:</span>
+          <span class="tsd-signature-type">ZodObject</span
           ><span class="tsd-signature-symbol">&lt;</span
-          ><a href="../types/CachedConfiguration.html" class="tsd-signature-type tsd-kind-type-alias"
+          ><a
+            href="../types/CachedConfiguration.html"
+            class="tsd-signature-type tsd-kind-type-alias"
             >CachedConfiguration</a
-          ><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = ...</span>
+          ><span class="tsd-signature-symbol">&gt;</span
+          ><span class="tsd-signature-symbol"> = ...</span>
         </div>
-        <div class="tsd-comment tsd-typography"><p>A configuration object with caching definitely configured</p></div>
+        <div class="tsd-comment tsd-typography">
+          <p>A configuration object with caching definitely configured</p>
+        </div>
         <div class="tsd-comment tsd-typography"></div>
         <aside class="tsd-sources">
           <ul>
@@ -91,7 +115,11 @@
                   <ul id="tsd-filter-options">
                     <li class="tsd-filter-item">
                       <label class="tsd-filter-input"
-                        ><input type="checkbox" id="tsd-filter-protected" name="protected" /><svg
+                        ><input
+                          type="checkbox"
+                          id="tsd-filter-protected"
+                          name="protected"
+                        /><svg
                           width="32"
                           height="32"
                           viewBox="0 0 32 32"
@@ -119,7 +147,12 @@
                     </li>
                     <li class="tsd-filter-item">
                       <label class="tsd-filter-input"
-                        ><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked /><svg
+                        ><input
+                          type="checkbox"
+                          id="tsd-filter-inherited"
+                          name="inherited"
+                          checked
+                        /><svg
                           width="32"
                           height="32"
                           viewBox="0 0 32 32"
@@ -147,7 +180,11 @@
                     </li>
                     <li class="tsd-filter-item">
                       <label class="tsd-filter-input"
-                        ><input type="checkbox" id="tsd-filter-external" name="external" /><svg
+                        ><input
+                          type="checkbox"
+                          id="tsd-filter-external"
+                          name="external"
+                        /><svg
                           width="32"
                           height="32"
                           viewBox="0 0 32 32"
@@ -190,10 +227,15 @@
         <div class="site-menu">
           <nav class="tsd-navigation">
             <a href="../modules.html"
-              ><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="../assets/icons.svg#icon-1"></use></svg
+              ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                <use href="../assets/icons.svg#icon-1"></use></svg
               ><span>webring</span></a
             >
-            <ul class="tsd-small-nested-navigation" id="tsd-nav-container" data-base="..">
+            <ul
+              class="tsd-small-nested-navigation"
+              id="tsd-nav-container"
+              data-base=".."
+            >
               <li>Loading...</li>
             </ul>
           </nav>
@@ -201,7 +243,10 @@
       </div>
     </div>
     <footer>
-      <p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+      <p class="tsd-generator">
+        Generated using
+        <a href="https://typedoc.org/" target="_blank">TypeDoc</a>
+      </p>
     </footer>
     <div class="overlay"></div>
   </body>

@@ -10,7 +10,7 @@ type ConsoleProps = {
   sessionName: string;
   onClose: () => void;
   onSwitchToChat?: () => void;
-}
+};
 
 // Terminal color themes
 const terminalThemes = {
@@ -68,25 +68,30 @@ const terminalThemes = {
 function getUserFriendlyErrorMessage(error: Error): string {
   if (error instanceof DecodeError) {
     switch (error.stage) {
-      case 'validation':
-        return 'Received invalid data format from session. The session may be experiencing issues.';
-      case 'base64':
-        return 'Terminal output decode error. The session is still running, but some output may be lost.';
-      case 'utf8':
-        return 'Terminal encoding error. Some characters may not display correctly.';
+      case "validation":
+        return "Received invalid data format from session. The session may be experiencing issues.";
+      case "base64":
+        return "Terminal output decode error. The session is still running, but some output may be lost.";
+      case "utf8":
+        return "Terminal encoding error. Some characters may not display correctly.";
     }
   }
 
   // Network/WebSocket errors
-  if (error.message.includes('WebSocket')) {
-    return 'Connection lost. Attempting to reconnect...';
+  if (error.message.includes("WebSocket")) {
+    return "Connection lost. Attempting to reconnect...";
   }
 
   // Default fallback
-  return 'An unexpected error occurred. The session may still be running.';
+  return "An unexpected error occurred. The session may still be running.";
 }
 
-export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: ConsoleProps) {
+export function Console({
+  sessionId,
+  sessionName,
+  onClose,
+  onSwitchToChat,
+}: ConsoleProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const terminalInstanceRef = useRef<Terminal | null>(null);
   const initializingRef = useRef<boolean>(false);
@@ -97,7 +102,7 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
 
   // Set Sentry context for this session
   useEffect(() => {
-    Sentry.setContext('console_session', {
+    Sentry.setContext("console_session", {
       session_id: sessionId,
       session_name: sessionName,
       connected_at: new Date().toISOString(),
@@ -105,7 +110,7 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
 
     return () => {
       // Clear context on unmount
-      Sentry.setContext('console_session', null);
+      Sentry.setContext("console_session", null);
     };
   }, [sessionId, sessionName]);
 
@@ -126,8 +131,10 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
   }, [client, isConnected]);
 
   // Get current theme from document
-  const getCurrentTheme = (): 'light' | 'dark' => {
-    return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+  const getCurrentTheme = (): "light" | "dark" => {
+    return document.documentElement.classList.contains("dark")
+      ? "dark"
+      : "light";
   };
 
   // Initialize terminal
@@ -147,7 +154,9 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
 
     void (async () => {
       const container = terminalRef.current;
-      if (!container) {return;}
+      if (!container) {
+        return;
+      }
 
       // Clear any existing canvases in the container
       while (container.firstChild) {
@@ -164,63 +173,61 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
         fontFamily: '"Berkeley Mono", Menlo, Monaco, "Courier New", monospace',
         theme: terminalThemes[currentTheme],
         scrollback: 10_000,
-        smoothScrollDuration: 0,  // Disable smooth scrolling
-        rows: 24,  // Set explicit initial size
+        smoothScrollDuration: 0, // Disable smooth scrolling
+        rows: 24, // Set explicit initial size
         cols: 80,
       });
 
-    terminal.open(container);
+      terminal.open(container);
 
-    terminalInstanceRef.current = terminal;
+      terminalInstanceRef.current = terminal;
 
-    // Use FitAddon to automatically size terminal to container
-    const fitAddon = new FitAddon();
-    terminal.loadAddon(fitAddon);
+      // Use FitAddon to automatically size terminal to container
+      const fitAddon = new FitAddon();
+      terminal.loadAddon(fitAddon);
 
-    // Fit terminal after a brief delay to ensure container has dimensions
-    setTimeout(() => {
-      fitAddon.fit();
+      // Fit terminal after a brief delay to ensure container has dimensions
+      setTimeout(() => {
+        fitAddon.fit();
 
-      // Send size to backend
-      if (clientRef.current.client && clientRef.current.isConnected) {
-        clientRef.current.client.resize(
-          terminal.rows,
-          terminal.cols
-        );
-      }
+        // Send size to backend
+        if (clientRef.current.client && clientRef.current.isConnected) {
+          clientRef.current.client.resize(terminal.rows, terminal.cols);
+        }
 
-      // Observe container size changes
-      fitAddon.observeResize();
+        // Observe container size changes
+        fitAddon.observeResize();
 
-      // Focus the terminal
-      terminal.focus();
-    }, 250);
+        // Focus the terminal
+        terminal.focus();
+      }, 250);
 
-    // Handle terminal input
-    terminal.onData((data) => {
-      const { client: currentClient, isConnected: currentConnected } = clientRef.current;
-      if (currentClient && currentConnected) {
-        currentClient.write(data);
-      }
-    });
+      // Handle terminal input
+      terminal.onData((data) => {
+        const { client: currentClient, isConnected: currentConnected } =
+          clientRef.current;
+        if (currentClient && currentConnected) {
+          currentClient.write(data);
+        }
+      });
 
-    // Handle terminal resize events
-    terminal.onResize(({ rows, cols }) => {
-      if (clientRef.current.client && clientRef.current.isConnected) {
-        clientRef.current.client.resize(rows, cols);
-      }
-    });
+      // Handle terminal resize events
+      terminal.onResize(({ rows, cols }) => {
+        if (clientRef.current.client && clientRef.current.isConnected) {
+          clientRef.current.client.resize(rows, cols);
+        }
+      });
 
-    // Watch for theme changes and update terminal
-    const observer = new MutationObserver(() => {
-      const newTheme = getCurrentTheme();
-      terminal.options.theme = terminalThemes[newTheme];
-    });
+      // Watch for theme changes and update terminal
+      const observer = new MutationObserver(() => {
+        const newTheme = getCurrentTheme();
+        terminal.options.theme = terminalThemes[newTheme];
+      });
 
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["class"],
+      });
 
       cleanup = () => {
         observer.disconnect();
@@ -253,11 +260,11 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
       // Capture error in Sentry with rich context
       if (err instanceof DecodeError) {
         Sentry.captureException(err, {
-          level: 'error',
+          level: "error",
           tags: {
-            error_type: 'terminal_decode',
+            error_type: "terminal_decode",
             decode_stage: err.stage,
-            session_id: err.context.sessionId ?? 'unknown',
+            session_id: err.context.sessionId ?? "unknown",
           },
           contexts: {
             decode: {
@@ -266,30 +273,30 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
               data_sample: err.context.dataSample,
               session_id: err.context.sessionId,
               session_name: sessionName,
-            }
-          }
+            },
+          },
         });
       } else {
         // Capture other errors with session context
         Sentry.captureException(err, {
-          level: 'error',
+          level: "error",
           tags: {
-            error_type: 'terminal_error',
+            error_type: "terminal_error",
             session_id: sessionId,
           },
           contexts: {
             session: {
               session_id: sessionId,
               session_name: sessionName,
-            }
-          }
+            },
+          },
         });
       }
 
       // Show user-friendly error message
       const userMessage = getUserFriendlyErrorMessage(err);
       setError(userMessage);
-      setErrorKey(prev => prev + 1);
+      setErrorKey((prev) => prev + 1);
 
       // Clear any existing timeout
       if (errorTimeoutRef.current) {
@@ -319,7 +326,7 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
       // Notify backend of terminal size
       client.resize(
         terminalInstanceRef.current.rows,
-        terminalInstanceRef.current.cols
+        terminalInstanceRef.current.cols,
       );
     }
   }, [isConnected, client]);
@@ -329,86 +336,95 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
       <div className="fixed inset-0 z-40 bg-background/85 backdrop-blur-sm" />
       <div className="fixed inset-0 flex items-center justify-center p-8 z-50">
         <div className="max-w-5xl w-full h-[85vh] flex flex-col border-4 border-primary bg-card console-brutalist-shadow">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b-4 border-primary bg-primary">
-          <div className="flex items-center gap-4">
-            <h2 className="text-2xl font-bold font-mono uppercase tracking-wider text-white">
-              {sessionName}
-            </h2>
-            <div className="flex items-center gap-2 px-3 py-1 border-2 border-white bg-white/10">
-              <div
-                className={`w-3 h-3 border-2 border-white ${
-                  isConnected ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"
-                }`}
-              />
-              <span className="text-sm font-mono font-bold uppercase text-white">
-                {isConnected ? "Online" : "Offline"}
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {onSwitchToChat && (
-              <button
-                onClick={onSwitchToChat}
-                className="cursor-pointer p-2 border-2 border-white bg-white/10 hover:bg-blue-600 hover:text-white transition-all duration-200 font-bold text-white"
-                title="Switch to chat view"
-                aria-label="Switch to chat view"
-              >
-                <MessageSquare className="w-5 h-5" />
-              </button>
-            )}
-            <button
-              onClick={onClose}
-              className="cursor-pointer p-2 border-2 border-white bg-white/10 hover:bg-red-600 hover:text-white transition-all duration-200 font-bold text-white"
-              title="Close console"
-              aria-label="Close console"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Error display */}
-        {error && (
-          <div
-            key={errorKey}
-            className="p-4 border-b-4 font-mono flex items-start justify-between gap-4 bg-destructive/10 text-destructive border-destructive"
-          >
-            <div className="flex-1">
-              <strong className="font-bold">ERROR:</strong> {error}
-              <div className="text-xs mt-1 opacity-70">
-                Auto-dismisses in 10s or click × to dismiss
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b-4 border-primary bg-primary">
+            <div className="flex items-center gap-4">
+              <h2 className="text-2xl font-bold font-mono uppercase tracking-wider text-white">
+                {sessionName}
+              </h2>
+              <div className="flex items-center gap-2 px-3 py-1 border-2 border-white bg-white/10">
+                <div
+                  className={`w-3 h-3 border-2 border-white ${
+                    isConnected
+                      ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"
+                      : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"
+                  }`}
+                />
+                <span className="text-sm font-mono font-bold uppercase text-white">
+                  {isConnected ? "Online" : "Offline"}
+                </span>
               </div>
             </div>
-            <button
-              onClick={dismissError}
-              className="cursor-pointer p-1 hover:bg-red-600 hover:text-white transition-all duration-200 font-bold"
-              title="Dismiss error"
-              aria-label="Dismiss error"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              {onSwitchToChat && (
+                <button
+                  onClick={onSwitchToChat}
+                  className="cursor-pointer p-2 border-2 border-white bg-white/10 hover:bg-blue-600 hover:text-white transition-all duration-200 font-bold text-white"
+                  title="Switch to chat view"
+                  aria-label="Switch to chat view"
+                >
+                  <MessageSquare className="w-5 h-5" />
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                className="cursor-pointer p-2 border-2 border-white bg-white/10 hover:bg-red-600 hover:text-white transition-all duration-200 font-bold text-white"
+                title="Close console"
+                aria-label="Close console"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-        )}
 
-        {/* Terminal */}
-        <div className="flex-1 relative terminal-retro" style={{ minHeight: 0 }}>
+          {/* Error display */}
+          {error && (
+            <div
+              key={errorKey}
+              className="p-4 border-b-4 font-mono flex items-start justify-between gap-4 bg-destructive/10 text-destructive border-destructive"
+            >
+              <div className="flex-1">
+                <strong className="font-bold">ERROR:</strong> {error}
+                <div className="text-xs mt-1 opacity-70">
+                  Auto-dismisses in 10s or click × to dismiss
+                </div>
+              </div>
+              <button
+                onClick={dismissError}
+                className="cursor-pointer p-1 hover:bg-red-600 hover:text-white transition-all duration-200 font-bold"
+                title="Dismiss error"
+                aria-label="Dismiss error"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {/* Terminal */}
           <div
-            ref={terminalRef}
-            className="absolute inset-2"
-            onClick={() => terminalInstanceRef.current?.focus()}
-          />
-        </div>
+            className="flex-1 relative terminal-retro"
+            style={{ minHeight: 0 }}
+          >
+            <div
+              ref={terminalRef}
+              className="absolute inset-2"
+              onClick={() => terminalInstanceRef.current?.focus()}
+            />
+          </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t-4 border-primary text-sm bg-muted">
-          <p className="font-mono text-muted-foreground">
-            <kbd className="px-2 py-1 border-2 font-bold mr-2 bg-primary text-primary-foreground border-primary">CTRL+C</kbd>
-            <span className="text-foreground">interrupt signal</span>
-            <span className="mx-3">│</span>
-            <span className="text-foreground">Close to detach (session persists)</span>
-          </p>
-        </div>
+          {/* Footer */}
+          <div className="p-4 border-t-4 border-primary text-sm bg-muted">
+            <p className="font-mono text-muted-foreground">
+              <kbd className="px-2 py-1 border-2 font-bold mr-2 bg-primary text-primary-foreground border-primary">
+                CTRL+C
+              </kbd>
+              <span className="text-foreground">interrupt signal</span>
+              <span className="mx-3">│</span>
+              <span className="text-foreground">
+                Close to detach (session persists)
+              </span>
+            </p>
+          </div>
         </div>
       </div>
     </>

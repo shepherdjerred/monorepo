@@ -5,23 +5,28 @@
 ### Terminal Rules for TUIs
 
 **Rule 1**: 'q' quits the program
+
 - **Examples**: less, htop, man
 - **Exception**: Text editors where 'q' has other meaning
 
 **Rule 2**: Ctrl-D quits REPLs
+
 - **Examples**: python, irb, node, psql
 - **Mimics**: OS-level EOF behavior
 
 **Rule 3**: Ctrl-C should exit or interrupt
+
 - In raw mode, you receive Ctrl-C as character 3
 - Either exit immediately or cancel current operation
 - **Don't**: Ignore it completely
 
 **Rule 4**: ESC cancels or goes back
+
 - Close dialog, return to previous screen
 - **Not**: As primary input (conflicts with escape sequences)
 
 **Rule 5**: Ctrl-L redraws screen
+
 - Useful when terminal gets corrupted
 - **Implementation**: Resend entire screen
 
@@ -29,19 +34,19 @@
 
 Users expect these to work in line editors:
 
-| Key | Function | Origin |
-|-----|----------|--------|
-| Ctrl-A | Start of line | Emacs |
-| Ctrl-E | End of line | Emacs |
-| Ctrl-B | Back one character | Emacs |
-| Ctrl-F | Forward one character | Emacs |
-| Ctrl-P | Previous line/history | Emacs |
-| Ctrl-N | Next line/history | Emacs |
-| Ctrl-K | Kill to end of line | Emacs |
-| Ctrl-U | Kill entire line | UNIX |
-| Ctrl-W | Delete word backward | UNIX |
-| Ctrl-D | Delete character forward (or EOF) | UNIX |
-| Ctrl-H | Delete character backward | UNIX |
+| Key    | Function                          | Origin |
+| ------ | --------------------------------- | ------ |
+| Ctrl-A | Start of line                     | Emacs  |
+| Ctrl-E | End of line                       | Emacs  |
+| Ctrl-B | Back one character                | Emacs  |
+| Ctrl-F | Forward one character             | Emacs  |
+| Ctrl-P | Previous line/history             | Emacs  |
+| Ctrl-N | Next line/history                 | Emacs  |
+| Ctrl-K | Kill to end of line               | Emacs  |
+| Ctrl-U | Kill entire line                  | UNIX   |
+| Ctrl-W | Delete word backward              | UNIX   |
+| Ctrl-D | Delete character forward (or EOF) | UNIX   |
+| Ctrl-H | Delete character backward         | UNIX   |
 
 **When to Implement**: Any time you have line editing (command input, search box)
 
@@ -52,17 +57,20 @@ Users expect these to work in line editors:
 **Recommendation**: Stick to 16 ANSI base colors
 
 **Why**:
+
 - Works on all terminals
 - Respects user's color scheme
 - Avoids unreadable combinations
 
 **Bad**:
+
 ```
 # Hardcoded RGB colors
 \x1b[38;2;255;100;50m  # May be unreadable on some backgrounds
 ```
 
 **Good**:
+
 ```
 # Base 16 ANSI colors
 \x1b[31m    # Red (user's terminal defines exact shade)
@@ -80,6 +88,7 @@ Users expect these to work in line editors:
 **Key Concepts**:
 
 **Modes as State Machine**:
+
 ```
 Normal Mode -> (i) -> Insert Mode
            | (v)           ^ (ESC)
@@ -89,17 +98,20 @@ Normal Mode -> (i) -> Insert Mode
 ```
 
 **Separation of Concerns**:
+
 - **Normal mode**: Navigation and commands
 - **Insert mode**: Text input
 - **Visual mode**: Selection
 - **Command mode**: Ex commands
 
 **Why It Works**:
+
 - Clear mental model
 - Composable commands (d3w = delete 3 words)
 - Efficient keyboard-only navigation
 
 **Lessons for TUI Developers**:
+
 - State machines clarify complex interactions
 - Modal interfaces reduce key combination needs
 - Visual feedback for mode (status line)
@@ -109,6 +121,7 @@ Normal Mode -> (i) -> Insert Mode
 **Key Concepts**:
 
 **Server Persistence**:
+
 ```
 Terminal 1 -> tmux client ->
                           -> tmux server -> sessions -> windows -> panes
@@ -116,16 +129,19 @@ Terminal 2 -> tmux client ->
 ```
 
 **Benefits**:
+
 - Sessions survive terminal disconnect
 - Multiple clients can attach
 - Server manages all state
 
 **Command Prefix (Ctrl-B)**:
+
 - Escapes command mode
 - Avoid conflicting with application keys
 - User customizable
 
 **Lessons for TUI Developers**:
+
 - Client-server separation enables persistence
 - Prefix keys solve key binding conflicts
 - Named sessions provide organization
@@ -135,21 +151,25 @@ Terminal 2 -> tmux client ->
 **Key Concepts**:
 
 **Lazy Loading**:
+
 - Don't load entire file into memory
 - Seek to positions on demand
 - Efficient for huge files
 
 **Search and Navigation**:
+
 - `/` to search forward
 - `?` to search backward
 - `n` / `N` for next/previous match
 - `g` / `G` for start/end
 
 **Stateless Display**:
+
 - Each redraw is independent
 - No complex state tracking
 
 **Lessons for TUI Developers**:
+
 - Lazy loading enables handling large data
 - Consistent search pattern across tools
 - Simple state is more robust
@@ -159,6 +179,7 @@ Terminal 2 -> tmux client ->
 **Key Concepts**:
 
 **Event Loop with Timeout**:
+
 ```
 loop:
     timeout_event = poll_input(timeout=1000ms)
@@ -169,16 +190,19 @@ loop:
 ```
 
 **Efficient Redrawing**:
+
 - Only update changed regions
 - Diff previous state
 - Minimize escape sequences
 
 **Interactive Filtering**:
+
 - Type to filter live
 - Immediate visual feedback
 - No enter key needed
 
 **Lessons for TUI Developers**:
+
 - Periodic refreshes for real-time data
 - Incremental search is discoverable
 - Visual feedback for all actions
@@ -188,16 +212,19 @@ loop:
 **Key Concepts**:
 
 **Layout Definitions**:
+
 - Declarative layout files
 - Nested panes and tabs
 - Serializable state
 
 **Plugin Architecture (WASM)**:
+
 - Sandboxed extensions
 - Language-agnostic
 - Safe execution
 
 **Lessons for TUI Developers**:
+
 - Declarative layouts easier than imperative
 - Serialization enables session saving
 - Plugin systems enable extensibility
@@ -209,11 +236,13 @@ loop:
 ### Switching to Raw Mode
 
 **What Raw Mode Does**:
+
 - Disable line buffering (character-by-character input)
 - Disable echo (characters not printed automatically)
 - Disable special character processing (Ctrl-C doesn't send SIGINT)
 
 **C Implementation**:
+
 ```c
 #include <termios.h>
 #include <unistd.h>
@@ -238,6 +267,7 @@ void disable_raw_mode() {
 ```
 
 **Rust Implementation**:
+
 ```rust
 use termios::{Termios, TCSAFLUSH, ECHO, ICANON, tcsetattr};
 
@@ -254,6 +284,7 @@ fn enable_raw_mode() -> std::io::Result<Termios> {
 ```
 
 **Python Implementation**:
+
 ```python
 import tty
 import sys
@@ -267,6 +298,7 @@ def enable_raw_mode():
 ### Event Loop Patterns
 
 **Blocking Event Loop** (simple):
+
 ```
 loop:
     key = read_key()      # Blocks until keypress
@@ -275,6 +307,7 @@ loop:
 ```
 
 **Non-Blocking with Timeout** (for real-time updates):
+
 ```
 loop:
     key = read_key_with_timeout(100ms)
@@ -286,6 +319,7 @@ loop:
 ```
 
 **Select-Based** (Unix):
+
 ```c
 #include <sys/select.h>
 
@@ -311,6 +345,7 @@ while (running) {
 ### Parsing Arrow Keys and Function Keys
 
 **Reading Escape Sequences**:
+
 ```
 read char:
     if char == ESC:
@@ -324,6 +359,7 @@ read char:
 ```
 
 **Common Sequences**:
+
 ```
 ESC[A  -> Up
 ESC[B  -> Down
@@ -336,6 +372,7 @@ ESC[6~ -> Page Down
 ```
 
 **Example Implementation** (Concept):
+
 ```
 function read_key():
     c = read_char()
@@ -359,6 +396,7 @@ function read_key():
 ### Mouse Support
 
 **Enable Mouse Reporting**:
+
 ```
 # Button press and release
 printf "\x1b[?1000h"
@@ -371,11 +409,13 @@ printf "\x1b[?1006h"
 ```
 
 **Disable Mouse Reporting**:
+
 ```
 printf "\x1b[?1000l\x1b[?1002l\x1b[?1006l"
 ```
 
 **Parse Mouse Events**:
+
 ```
 SGR format: ESC[<button;col;row[M|m]
     M = press
@@ -392,6 +432,7 @@ button values:
 ### Handling Resize Events (SIGWINCH)
 
 **Signal Handler**:
+
 ```c
 #include <signal.h>
 #include <sys/ioctl.h>
@@ -426,11 +467,13 @@ int main() {
 ### Alternate Screen Buffer
 
 **What It Does**:
+
 - Saves current terminal content
 - Provides blank screen for your TUI
 - Restores previous content on exit
 
 **Enable**:
+
 ```
 printf "\x1b[?1049h"   # Switch to alternate screen
 printf "\x1b[2J"       # Clear screen
@@ -438,19 +481,23 @@ printf "\x1b[H"        # Move cursor to home
 ```
 
 **Disable**:
+
 ```
 printf "\x1b[?1049l"   # Switch back to main screen
 ```
 
 **When to Use**:
+
 - Full-screen TUIs (vim, less, htop)
 - User expects to return to previous terminal state
 
 **When Not to Use**:
+
 - Persistent output desired (build progress, test results)
 - User might want to scroll back
 
 **Learning from less**:
+
 - Uses alternate screen by default
 - `-X` flag disables it (leaves output on screen after quit)
 
@@ -461,6 +508,7 @@ printf "\x1b[?1049l"   # Switch back to main screen
 **Solution**: Build output in memory, write all at once
 
 **Implementation Concept**:
+
 ```
 # Bad (flickers)
 for row in screen:
@@ -475,6 +523,7 @@ print(output)
 ```
 
 **Advanced**: Diff-based rendering
+
 ```
 previous_screen = current_screen
 current_screen = build_new_screen()
@@ -488,18 +537,21 @@ apply_diff(diff)  # Only update changed cells
 **Minimize Escape Sequences**:
 
 **Bad** (many small writes):
+
 ```
 for each_change:
     printf "\x1b[%d;%dH%c"  # Move and write one char
 ```
 
 **Good** (batch adjacent changes):
+
 ```
 collect changes into runs:
     printf "\x1b[%d;%dH%s"  # Move once, write string
 ```
 
 **Relative vs Absolute Movement**:
+
 ```
 # Absolute (always works)
 ESC[5;10H   # Move to row 5, col 10
@@ -512,6 +564,7 @@ ESC[5C      # Move right 5 columns
 ### Layout Management
 
 **Fixed Layout**:
+
 ```
 +----------------+----------+
 |                |          |
@@ -523,6 +576,7 @@ ESC[5C      # Move right 5 columns
 ```
 
 **Responsive Layout** (adapt to terminal size):
+
 ```
 if width < 80:
     single_column_layout()
@@ -534,6 +588,7 @@ if height < 24:
 ```
 
 **Widget Tree**:
+
 ```
 Container(vertical)
 +- Header(height=1)
@@ -544,6 +599,7 @@ Container(vertical)
 ```
 
 **Calculate Sizes**:
+
 ```
 available_height = terminal_height - header - footer
 main_width = (available_width * 3) // 4
@@ -559,6 +615,7 @@ sidebar_width = available_width - main_width
 **Concept**: Only one widget receives keyboard input
 
 **Implementation**:
+
 ```
 class FocusManager:
     widgets = [widget1, widget2, widget3]
@@ -572,6 +629,7 @@ class FocusManager:
 ```
 
 **Visual Indication**:
+
 - Highlighted border
 - Different color
 - Cursor position
@@ -583,6 +641,7 @@ class FocusManager:
 **Pattern**: Overlay on top of main screen
 
 **Implementation**:
+
 ```
 render_main_screen()
 if dialog_open:
@@ -593,6 +652,7 @@ else:
 ```
 
 **Drawing Overlay**:
+
 ```
 # Save screen state
 saved_screen = current_screen
@@ -609,6 +669,7 @@ restore(saved_screen)
 ### Tables and Lists with Scrolling
 
 **Virtual Scrolling**:
+
 ```
 visible_rows = terminal_height - header - footer
 viewport_start = scroll_offset
@@ -619,6 +680,7 @@ for i in range(viewport_start, viewport_end):
 ```
 
 **Scrolling Logic**:
+
 ```
 if cursor > viewport_end:
     scroll_offset += (cursor - viewport_end)
@@ -627,6 +689,7 @@ elif cursor < viewport_start:
 ```
 
 **Learning from less**:
+
 - Smooth scrolling
 - Search highlights
 - Line numbers
@@ -638,12 +701,14 @@ elif cursor < viewport_start:
 ### Windows Console vs Unix Terminal
 
 **Differences**:
+
 - Windows traditionally didn't support ANSI escape codes
 - Different line endings (CRLF vs LF)
 - Different path separators (\ vs /)
 - Different PTY implementation
 
 **Windows 10+ Improvements**:
+
 - ANSI escape codes now supported
 - Must enable with virtual terminal mode:
 
@@ -660,6 +725,7 @@ void enable_ansi_on_windows() {
 ```
 
 **Cross-Platform Abstraction**:
+
 ```rust
 #[cfg(windows)]
 fn setup_terminal() {
@@ -681,6 +747,7 @@ fn setup_terminal() {
 **Problem**: Writing to terminal is slow (syscall overhead)
 
 **Bad**:
+
 ```rust
 for i in 0..1000 {
     println!("{}", i);  // 1000 write syscalls
@@ -688,6 +755,7 @@ for i in 0..1000 {
 ```
 
 **Good**:
+
 ```rust
 let mut buf = String::new();
 for i in 0..1000 {
@@ -699,12 +767,14 @@ print!("{}", buf);  // 1 write syscall
 ### Inefficient Escape Sequences
 
 **Bad**: Redundant sequences
+
 ```
 ESC[31m R ESC[0m ESC[31m E ESC[0m ESC[31m D ESC[0m
 # 15 bytes * 3 = 45 bytes
 ```
 
 **Good**: Batch coloring
+
 ```
 ESC[31m RED ESC[0m
 # 15 bytes total
@@ -715,6 +785,7 @@ ESC[31m RED ESC[0m
 **Problem**: Redrawing 60 FPS when user only types 1 char/sec
 
 **Solution**: Event-driven updates
+
 ```
 on_input:
     update_state()
@@ -727,6 +798,7 @@ on_timer:
 ```
 
 **Rate Limiting**:
+
 ```
 last_draw = now()
 
@@ -747,11 +819,13 @@ on_need_redraw:
 **Example**: `日本語` is 9 bytes but 3 characters
 
 **Solutions**:
+
 - Use UTF-8 aware string length functions
 - Be careful with substring operations
 - Terminal width != byte count != character count
 
 **Width Calculation**:
+
 ```
 # ASCII 'A': 1 byte, 1 character, 1 cell width
 # 日: 3 bytes, 1 character, 2 cell width (CJK)
@@ -759,6 +833,7 @@ on_need_redraw:
 ```
 
 **Libraries**:
+
 - C: libunistring, ICU
 - Rust: unicode-width crate
 - Python: wcwidth library
@@ -780,6 +855,7 @@ on_need_redraw:
 ### Interleaved Output from Threads
 
 **Problem**:
+
 ```
 Thread 1: print("Processing item 1")
 Thread 2: print("Processing item 2")
@@ -788,6 +864,7 @@ Output:   ProceProcessing item 2
 ```
 
 **Solution 1**: Mutex around output
+
 ```rust
 use std::sync::Mutex;
 use std::io::{self, Write};
@@ -803,6 +880,7 @@ fn print_safe(msg: &str) {
 ```
 
 **Solution 2**: Channel to single writer thread
+
 ```
 Worker threads -> Channel -> Writer thread -> stdout
 ```
@@ -812,6 +890,7 @@ Worker threads -> Channel -> Writer thread -> stdout
 **Problem**: Log messages corrupt progress bar
 
 **Solution**: Clear line, print message, redraw progress
+
 ```
 function log_message(msg):
     clear_current_line()
@@ -834,6 +913,7 @@ function log_message(msg):
 **1. PTY (Pseudo-Terminal)**:
 
 **Python with pexpect**:
+
 ```python
 import pexpect
 
@@ -846,6 +926,7 @@ def test_interactive_prompt():
 ```
 
 **Rust with pty crate**:
+
 ```rust
 #[test]
 fn test_tty_detection() {
@@ -860,6 +941,7 @@ fn test_tty_detection() {
 ```
 
 **2. Mock isatty Function**:
+
 ```c
 // In tests
 #define isatty(fd) mock_isatty(fd)
@@ -875,6 +957,7 @@ int mock_isatty(int fd) {
 **Tool**: insta (Rust), jest (JavaScript), pytest (Python)
 
 **Example (Rust with insta)**:
+
 ```rust
 #[test]
 fn test_help_output() {
@@ -890,6 +973,7 @@ fn test_help_output() {
 ### Testing Interactive Prompts
 
 **Using expect (traditional Unix tool)**:
+
 ```tcl
 spawn your-tool
 expect "Enter password:"
@@ -898,6 +982,7 @@ expect "Login successful"
 ```
 
 **CI/CD Testing**:
+
 ```bash
 # Ensure --no-input works
 your-tool --no-input --config test.conf
@@ -916,17 +1001,20 @@ fi
 ### Single Binary Philosophy
 
 **Benefits**:
+
 - Easy installation (just download)
 - No dependency hell
 - No version conflicts
 - Works in containers
 
 **Implementation**:
+
 - Statically link dependencies (Rust, Go do this by default)
 - Embed assets at compile time
 - Cross-compile for multiple platforms
 
 **Rust Example**:
+
 ```toml
 # Cargo.toml
 [profile.release]
@@ -939,6 +1027,7 @@ panic = 'abort'
 ### Cross-Compilation
 
 **Rust**:
+
 ```bash
 # Install target
 rustup target add x86_64-unknown-linux-musl
@@ -948,6 +1037,7 @@ cargo build --release --target x86_64-unknown-linux-musl
 ```
 
 **Go**:
+
 ```bash
 GOOS=linux GOARCH=amd64 go build
 GOOS=darwin GOARCH=arm64 go build
@@ -957,12 +1047,14 @@ GOOS=windows GOARCH=amd64 go build
 ### Size Optimization
 
 **Techniques**:
+
 - Strip debug symbols
 - Enable LTO (Link-Time Optimization)
 - Use release mode
 - Compress with UPX (controversial)
 
 **Rust**:
+
 ```toml
 [profile.release]
 strip = true
@@ -977,6 +1069,7 @@ opt-level = "z"  # Optimize for size
 ### Terminal Recording
 
 **asciinema**: Record and share terminal sessions
+
 ```bash
 # Record
 asciinema rec demo.cast
@@ -989,6 +1082,7 @@ asciinema upload demo.cast
 ```
 
 **VHS** (by Charm): Script terminal recordings
+
 ```bash
 # demo.tape
 Type "your-tool --help"
@@ -1000,6 +1094,7 @@ Screenshot demo.png
 ### Escape Sequence Debugging
 
 **Technique**: Pipe output to `cat -v`
+
 ```bash
 your-tool | cat -v
 # Shows: Hello ^[[31mworld^[[0m
@@ -1007,11 +1102,13 @@ your-tool | cat -v
 ```
 
 **Technique**: Use `hexdump`
+
 ```bash
 your-tool | hexdump -C
 ```
 
 **Technique**: Enable terminal debugging
+
 ```bash
 # iTerm2: Session > Log > Start Logging
 # Captures all raw input/output
@@ -1020,6 +1117,7 @@ your-tool | hexdump -C
 ### expect for Testing
 
 **Install**:
+
 ```bash
 # macOS
 brew install expect
@@ -1029,6 +1127,7 @@ apt-get install expect
 ```
 
 **Example Test**:
+
 ```tcl
 #!/usr/bin/expect
 
@@ -1054,6 +1153,7 @@ expect {
 ### Man Page Structure
 
 **Sections**:
+
 ```
 NAME
     tool - one-line description
@@ -1101,6 +1201,7 @@ AUTHOR
 ### Learning from git's Help System
 
 **Hierarchical Help**:
+
 ```bash
 git                  # Lists common commands
 git help             # Same as above
@@ -1110,6 +1211,7 @@ git commit -h        # Quick reference
 ```
 
 **Porcelain vs Plumbing**:
+
 - **Porcelain**: User-facing commands (commit, push, pull)
 - **Plumbing**: Low-level tools (hash-object, update-index)
 

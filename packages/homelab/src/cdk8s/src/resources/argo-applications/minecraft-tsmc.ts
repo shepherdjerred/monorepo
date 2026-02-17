@@ -1,4 +1,4 @@
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Application } from "../../../generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
@@ -35,7 +35,8 @@ export function createMinecraftTsmcApp(chart: Chart) {
   // - discord-invite-link: (optional) Discord invite link
   new OnePasswordItem(chart, "minecraft-tsmc-discord-1p", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/yqp25gif2grm5gkg6l44e6vmxy",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/yqp25gif2grm5gkg6l44e6vmxy",
     },
     metadata: {
       name: SECRET_NAME,
@@ -170,7 +171,10 @@ export function createMinecraftTsmcApp(chart: Chart) {
 
     // Mount configs to /config (itzg syncs to /data on startup)
     // Use split ConfigMaps (true) to avoid Application size limits
-    extraVolumes: [...getMinecraftExtraVolumes("tsmc", NAMESPACE, true), ...getDiscordSrvExtraVolumes(NAMESPACE)],
+    extraVolumes: [
+      ...getMinecraftExtraVolumes("tsmc", NAMESPACE, true),
+      ...getDiscordSrvExtraVolumes(NAMESPACE),
+    ],
 
     // Config sync settings + DiscordSRV secrets
     extraEnv: {
@@ -233,7 +237,11 @@ export function createMinecraftTsmcApp(chart: Chart) {
       syncPolicy: {
         automated: {},
         // ServerSideApply needed to avoid "annotation exceeds 262KB limit" error
-        syncOptions: ["CreateNamespace=true", "ServerSideApply=true", "RespectIgnoreDifferences=true"],
+        syncOptions: [
+          "CreateNamespace=true",
+          "ServerSideApply=true",
+          "RespectIgnoreDifferences=true",
+        ],
       },
     },
   });

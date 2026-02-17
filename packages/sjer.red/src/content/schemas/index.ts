@@ -11,12 +11,20 @@ export const BasePostSchema = z.object({
 export const BlogSchema = BasePostSchema.extend({
   image: z.string().optional(),
   hackerNews: z.string().url().optional(),
-}).transform((val) => ({ ...val, description: val.description ?? val.title, type: "blog" }));
+}).transform((val) => ({
+  ...val,
+  description: val.description ?? val.title,
+  type: "blog",
+}));
 
 export const TilSchema = BasePostSchema.extend({
   title: z.string().transform((val) => `TIL: ${val}`),
   hackerNews: z.string().url().optional(),
-}).transform((val) => ({ ...val, description: val.description ?? val.title, type: "til" }));
+}).transform((val) => ({
+  ...val,
+  description: val.description ?? val.title,
+  type: "til",
+}));
 
 export const LeetCodeSchema = BasePostSchema.transform((val) => ({
   ...val,

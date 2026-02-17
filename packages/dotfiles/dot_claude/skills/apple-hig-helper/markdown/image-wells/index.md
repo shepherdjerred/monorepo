@@ -24,7 +24,7 @@ For related guidance, see [Image views](/design/human-interface-guidelines/image
 
 ## [Platform considerations](/design/human-interface-guidelines/image-wells#Platform-considerations)
 
-*Not supported in iOS, iPadOS, tvOS, visionOS, or watchOS.*
+_Not supported in iOS, iPadOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/image-wells#Resources)
 

@@ -58,7 +58,9 @@ export function extractImageAttachments(message: Message): ImageAttachment[] {
  */
 export async function downloadImage(url: string): Promise<Buffer> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => { controller.abort(); }, DOWNLOAD_TIMEOUT_MS);
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, DOWNLOAD_TIMEOUT_MS);
 
   try {
     const response = await fetch(url, {
@@ -68,7 +70,9 @@ export async function downloadImage(url: string): Promise<Buffer> {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      throw new Error(`HTTP ${String(response.status)}: ${response.statusText}`);
+      throw new Error(
+        `HTTP ${String(response.status)}: ${response.statusText}`,
+      );
     }
 
     const contentLength = response.headers.get("content-length");

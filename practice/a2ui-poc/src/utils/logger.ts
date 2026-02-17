@@ -18,7 +18,11 @@ class Logger {
     return LOG_LEVELS[level] >= LOG_LEVELS[this.level];
   }
 
-  private formatMessage(level: LogLevel, message: string, meta?: unknown): string {
+  private formatMessage(
+    level: LogLevel,
+    message: string,
+    meta?: unknown,
+  ): string {
     const timestamp = new Date().toISOString();
     const levelStr = level.toUpperCase().padEnd(5);
     let output = `[${timestamp}] ${levelStr} ${message}`;

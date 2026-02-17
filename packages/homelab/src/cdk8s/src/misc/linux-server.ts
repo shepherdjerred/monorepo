@@ -1,4 +1,4 @@
-import type { ContainerProps} from "cdk8s-plus-31";
+import type { ContainerProps } from "cdk8s-plus-31";
 import { EnvValue } from "cdk8s-plus-31";
 import { commonProps, ROOT_GID, ROOT_UID } from "./common.ts";
 import { merge } from "lodash";
@@ -11,8 +11,10 @@ export const LINUXSERVER_GID = 1000;
  * These images run as root internally and require a writable filesystem.
  */
 export const LINUXSERVER_KUBE_LINTER_ANNOTATIONS = {
-  "ignore-check.kube-linter.io/run-as-non-root": "LinuxServer.io images run as root internally",
-  "ignore-check.kube-linter.io/no-read-only-root-fs": "LinuxServer.io images require writable filesystem",
+  "ignore-check.kube-linter.io/run-as-non-root":
+    "LinuxServer.io images run as root internally",
+  "ignore-check.kube-linter.io/no-read-only-root-fs":
+    "LinuxServer.io images require writable filesystem",
 } as const;
 
 const commonLinuxServerProps: Partial<ContainerProps> = {
@@ -32,6 +34,8 @@ const commonLinuxServerProps: Partial<ContainerProps> = {
   },
 };
 
-export function withCommonLinuxServerProps(props: ContainerProps): ContainerProps {
+export function withCommonLinuxServerProps(
+  props: ContainerProps,
+): ContainerProps {
   return merge({}, commonLinuxServerProps, props);
 }

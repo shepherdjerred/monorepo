@@ -28,7 +28,9 @@ const MIN_CONTENT_LENGTH = 20;
 /**
  * Handle a Discord message with VoltAgent streaming and progressive updates.
  */
-export async function handleMessageWithStreaming(context: MessageContext): Promise<void> {
+export async function handleMessageWithStreaming(
+  context: MessageContext,
+): Promise<void> {
   const discordContext = {
     guildId: context.guildId,
     channelId: context.channelId,
@@ -73,9 +75,10 @@ export async function handleMessageWithStreaming(context: MessageContext): Promi
     }
 
     // 4. Build conversation history
-    const conversationHistory = recentMessages.length > 0
-      ? `\n## Recent Conversation\n${recentMessages.map(msg => `${msg.authorName}${msg.isBot ? " [BOT]" : ""}: ${msg.content}`).join("\n")}\n`
-      : "";
+    const conversationHistory =
+      recentMessages.length > 0
+        ? `\n## Recent Conversation\n${recentMessages.map((msg) => `${msg.authorName}${msg.isBot ? " [BOT]" : ""}: ${msg.content}`).join("\n")}\n`
+        : "";
 
     // 5. Build prompt with context
     const prompt = `User ${context.username} (ID: ${context.userId}) in channel ${context.channelId} says:
@@ -115,7 +118,8 @@ ${memoryContext}${conversationHistory}`;
           ? { role: "user" as const, content: messageContent }
           : messageContent;
 
-        const inputStr = typeof input === "string" ? input : JSON.stringify(input);
+        const inputStr =
+          typeof input === "string" ? input : JSON.stringify(input);
         const response = await agent.streamText(inputStr, {
           userId: context.userId,
           conversationId: getChannelConversationId(context.channelId),
@@ -186,10 +190,9 @@ ${memoryContext}${conversationHistory}`;
 
     const errorMessage = error instanceof Error ? error.message : String(error);
     await context.message.reply(
-      `Sorry, I encountered an error processing your request.\n\`\`\`\n${errorMessage}\n\`\`\``
+      `Sorry, I encountered an error processing your request.\n\`\`\`\n${errorMessage}\n\`\`\``,
     );
   } finally {
     clearSentryContext();
   }
 }
-

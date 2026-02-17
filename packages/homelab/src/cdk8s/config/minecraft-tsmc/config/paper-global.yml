@@ -67,7 +67,8 @@ messages:
     connection-throttle: Connection throttled! Please wait before reconnecting.
     flying-player: <lang:multiplayer.disconnect.flying>
     flying-vehicle: <lang:multiplayer.disconnect.flying>
-  no-permission: <red>I'm sorry, but you do not have permission to perform this command.
+  no-permission:
+    <red>I'm sorry, but you do not have permission to perform this command.
     Please contact the server administrators if you believe that this is in error.
   use-display-name-in-quit-message: false
 misc:

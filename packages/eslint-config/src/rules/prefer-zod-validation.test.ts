@@ -17,7 +17,9 @@ const ruleTester = new RuleTester({
 ruleTester.run("prefer-zod-validation", preferZodValidation, {
   valid: [
     { code: `if (typeof obj.field === "string") { console.log(obj.field); }` },
-    { code: `if (typeof obj.nested.value === "string") { console.log(obj.nested.value); }` },
+    {
+      code: `if (typeof obj.nested.value === "string") { console.log(obj.nested.value); }`,
+    },
     { code: `if (data.user.profile.settings.theme === "dark") { }` },
     { code: `if (obj.field instanceof Error) { console.log(obj.field); }` },
     { code: `if (obj.value instanceof MyClass) { console.log(obj.value); }` },

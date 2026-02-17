@@ -1,16 +1,24 @@
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { PersistentVolumeAccessMode, PersistentVolumeClaim, PersistentVolumeMode } from "cdk8s-plus-31";
+import {
+  PersistentVolumeAccessMode,
+  PersistentVolumeClaim,
+  PersistentVolumeMode,
+} from "cdk8s-plus-31";
 import { KubeCronJob, Quantity } from "../../generated/imports/k8s.ts";
 import { OnePasswordItem } from "../../generated/imports/onepassword.com.ts";
 import { NVME_STORAGE_CLASS } from "../misc/storage-classes.ts";
-import { S3_CREDENTIALS_SECRET_NAME, S3_ENDPOINT } from "./s3-static-sites/sites.ts";
+import {
+  S3_CREDENTIALS_SECRET_NAME,
+  S3_ENDPOINT,
+} from "./s3-static-sites/sites.ts";
 import versions from "../versions.ts";
 
 export function createBetterSkillCappedFetcher(chart: Chart) {
   new OnePasswordItem(chart, "better-skill-capped-s3-credentials", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/vet52jaeh75chsalu6lulugium",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/vet52jaeh75chsalu6lulugium",
     },
     metadata: {
       name: S3_CREDENTIALS_SECRET_NAME,
@@ -18,26 +26,32 @@ export function createBetterSkillCappedFetcher(chart: Chart) {
     },
   });
 
-  const manifestPvc = new PersistentVolumeClaim(chart, "better-skill-capped-manifest-pvc", {
-    storage: Size.gibibytes(1),
-    storageClassName: NVME_STORAGE_CLASS,
-    accessModes: [PersistentVolumeAccessMode.READ_WRITE_MANY],
-    volumeMode: PersistentVolumeMode.FILE_SYSTEM,
-    metadata: {
-      name: "better-skill-capped-manifest",
-      labels: {
-        "velero.io/backup": "disabled",
-        "velero.io/exclude-from-backup": "false",
+  const manifestPvc = new PersistentVolumeClaim(
+    chart,
+    "better-skill-capped-manifest-pvc",
+    {
+      storage: Size.gibibytes(1),
+      storageClassName: NVME_STORAGE_CLASS,
+      accessModes: [PersistentVolumeAccessMode.READ_WRITE_MANY],
+      volumeMode: PersistentVolumeMode.FILE_SYSTEM,
+      metadata: {
+        name: "better-skill-capped-manifest",
+        labels: {
+          "velero.io/backup": "disabled",
+          "velero.io/exclude-from-backup": "false",
+        },
       },
     },
-  });
+  );
 
   new KubeCronJob(chart, "better-skill-capped-fetcher-cronjob", {
     metadata: {
       name: "better-skill-capped-fetcher",
       annotations: {
-        "ignore-check.kube-linter.io/run-as-non-root": "Container runs as default user",
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "Container requires writable filesystem",
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "Container runs as default user",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "Container requires writable filesystem",
       },
     },
     spec: {

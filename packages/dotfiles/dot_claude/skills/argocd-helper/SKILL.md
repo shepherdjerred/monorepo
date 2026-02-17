@@ -25,6 +25,7 @@ This agent helps you work with ArgoCD for GitOps-based Kubernetes deployments, a
 ## Auto-Approved Commands
 
 Safe read-only commands that don't require confirmation:
+
 - `argocd app list` - List applications
 - `argocd app get` - Get application details
 - `argocd app diff` - Show diff between git and cluster
@@ -72,6 +73,7 @@ argocd context
 ### Common Operations
 
 **List applications**:
+
 ```bash
 argocd app list
 argocd app list -o wide
@@ -79,6 +81,7 @@ argocd app list --selector environment=production
 ```
 
 **Get application details**:
+
 ```bash
 argocd app get my-app
 argocd app get my-app --refresh
@@ -86,6 +89,7 @@ argocd app get my-app -o yaml
 ```
 
 **Sync application**:
+
 ```bash
 # Sync application
 argocd app sync my-app
@@ -101,6 +105,7 @@ argocd app sync my-app --dry-run
 ```
 
 **Rollback**:
+
 ```bash
 # List history
 argocd app history my-app
@@ -110,6 +115,7 @@ argocd app rollback my-app 5
 ```
 
 **Diff application**:
+
 ```bash
 # Show diff between git and cluster
 argocd app diff my-app
@@ -123,6 +129,7 @@ argocd app diff my-app --revision HEAD
 ### Creating Applications
 
 **Via CLI**:
+
 ```bash
 argocd app create my-app \
   --repo https://github.com/myorg/myrepo \
@@ -135,6 +142,7 @@ argocd app create my-app \
 ```
 
 **Via YAML**:
+
 ```yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -159,6 +167,7 @@ spec:
 ```
 
 Apply with:
+
 ```bash
 kubectl apply -f application.yaml
 ```
@@ -166,21 +175,25 @@ kubectl apply -f application.yaml
 ### Sync Policies
 
 **Enable auto-sync**:
+
 ```bash
 argocd app set my-app --sync-policy automated
 ```
 
 **Enable auto-prune**:
+
 ```bash
 argocd app set my-app --auto-prune
 ```
 
 **Enable self-heal**:
+
 ```bash
 argocd app set my-app --self-heal
 ```
 
 **Disable auto-sync**:
+
 ```bash
 argocd app set my-app --sync-policy none
 ```
@@ -216,11 +229,13 @@ argocd app diff my-app
 ## Projects
 
 **List projects**:
+
 ```bash
 argocd proj list
 ```
 
 **Create project**:
+
 ```bash
 argocd proj create my-project \
   --description "My Project" \
@@ -230,6 +245,7 @@ argocd proj create my-project \
 ```
 
 **Add destination**:
+
 ```bash
 argocd proj add-destination my-project \
   https://kubernetes.default.svc \
@@ -237,6 +253,7 @@ argocd proj add-destination my-project \
 ```
 
 **Add source repo**:
+
 ```bash
 argocd proj add-source my-project \
   https://github.com/myorg/myrepo
@@ -245,11 +262,13 @@ argocd proj add-source my-project \
 ## Repository Management
 
 **List repos**:
+
 ```bash
 argocd repo list
 ```
 
 **Add repo**:
+
 ```bash
 # HTTPS
 argocd repo add https://github.com/myorg/myrepo \
@@ -262,6 +281,7 @@ argocd repo add git@github.com:myorg/myrepo.git \
 ```
 
 **Remove repo**:
+
 ```bash
 argocd repo rm https://github.com/myorg/myrepo
 ```
@@ -345,13 +365,14 @@ spec:
   template:
     spec:
       containers:
-      - name: migrate
-        image: migrate:latest
-        command: ["./migrate.sh"]
+        - name: migrate
+          image: migrate:latest
+          command: ["./migrate.sh"]
       restartPolicy: Never
 ```
 
 Hook types:
+
 - `PreSync` - Before sync
 - `Sync` - During sync
 - `PostSync` - After sync
@@ -438,15 +459,15 @@ spec:
             url: https://staging.k8s.example.com
   template:
     metadata:
-      name: '{{cluster}}-app'
+      name: "{{cluster}}-app"
     spec:
       project: default
       source:
         repoURL: https://github.com/myorg/apps
-        path: 'overlays/{{cluster}}'
+        path: "overlays/{{cluster}}"
         targetRevision: HEAD
       destination:
-        server: '{{url}}'
+        server: "{{url}}"
         namespace: app
 ```
 
@@ -468,14 +489,14 @@ spec:
             env: production
   template:
     metadata:
-      name: '{{name}}-monitoring'
+      name: "{{name}}-monitoring"
     spec:
       project: default
       source:
         repoURL: https://github.com/myorg/cluster-addons
         path: monitoring
       destination:
-        server: '{{server}}'
+        server: "{{server}}"
         namespace: monitoring
 ```
 
@@ -500,15 +521,15 @@ spec:
             exclude: true
   template:
     metadata:
-      name: '{{path.basename}}'
+      name: "{{path.basename}}"
     spec:
       project: default
       source:
         repoURL: https://github.com/myorg/apps
-        path: '{{path}}'
+        path: "{{path}}"
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{path.basename}}'
+        namespace: "{{path.basename}}"
 ```
 
 ### Git Generator (Files)
@@ -530,16 +551,16 @@ spec:
           - path: "apps/**/config.json"
   template:
     metadata:
-      name: '{{name}}'
+      name: "{{name}}"
     spec:
-      project: '{{project}}'
+      project: "{{project}}"
       source:
-        repoURL: '{{repoURL}}'
-        path: '{{path}}'
-        targetRevision: '{{revision}}'
+        repoURL: "{{repoURL}}"
+        path: "{{path}}"
+        targetRevision: "{{revision}}"
       destination:
-        server: '{{cluster.server}}'
-        namespace: '{{namespace}}'
+        server: "{{cluster.server}}"
+        namespace: "{{namespace}}"
 ```
 
 ### Matrix Generator
@@ -568,15 +589,15 @@ spec:
                   port: "8080"
   template:
     metadata:
-      name: '{{name}}-{{app}}'
+      name: "{{name}}-{{app}}"
     spec:
       project: default
       source:
         repoURL: https://github.com/myorg/apps
-        path: '{{app}}'
+        path: "{{app}}"
       destination:
-        server: '{{server}}'
-        namespace: '{{app}}'
+        server: "{{server}}"
+        namespace: "{{app}}"
 ```
 
 ### Progressive Rollout Strategy
@@ -618,16 +639,16 @@ spec:
               values: [production-2]
   template:
     metadata:
-      name: '{{cluster}}-app'
+      name: "{{cluster}}-app"
       labels:
-        cluster: '{{cluster}}'
+        cluster: "{{cluster}}"
     spec:
       project: default
       source:
         repoURL: https://github.com/myorg/app
         path: k8s
       destination:
-        server: '{{url}}'
+        server: "{{url}}"
         namespace: app
       syncPolicy:
         automated:
@@ -1008,6 +1029,7 @@ kubectl get configmap argocd-rbac-cm -n argocd -o yaml
 ### Common Error Messages
 
 **"ComparisonError"**:
+
 ```bash
 # Usually a manifest generation issue
 kubectl logs -n argocd -l app.kubernetes.io/name=argocd-repo-server | grep -i error
@@ -1016,6 +1038,7 @@ argocd app manifests my-app --source live
 ```
 
 **"Unable to create application"**:
+
 ```bash
 # Check project source/destination restrictions
 argocd proj get my-project
@@ -1024,6 +1047,7 @@ argocd proj add-destination my-project https://kubernetes.default.svc my-namespa
 ```
 
 **"Sync failed: failed to sync cluster"**:
+
 ```bash
 # Check cluster connectivity
 argocd cluster get https://my-cluster
@@ -1033,6 +1057,7 @@ kubectl --context my-cluster auth can-i create deployments -n my-namespace
 ```
 
 **"Unknown revision"**:
+
 ```bash
 # Force refresh repository cache
 argocd app get my-app --hard-refresh
@@ -1076,6 +1101,7 @@ argocd app create my-app ...  # Recreate with same settings
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - ArgoCD server URL or credentials are not specified
 - Application name or namespace is ambiguous
 - Repository URL or path needs confirmation

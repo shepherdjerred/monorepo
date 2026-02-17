@@ -40,15 +40,15 @@ Choose Zellij over Docker when you:
 
 ## Backend Comparison
 
-| Feature | Zellij | Docker | Kubernetes | Sprites | Apple |
-|---------|--------|--------|------------|---------|-------|
-| Isolation | Process | Container | Pod | Container | Container |
-| Startup | ~100ms | ~2-5s | ~10-30s | ~5-10s | ~1s |
-| Host tools | Full | Limited | None | None | Limited |
-| Custom image | No | Yes | Yes | Yes | No |
-| Resource limits | No | Yes | Yes | Yes | Yes |
-| Cloud native | No | No | Yes | Yes | No |
-| Platform | Any | Any | Any | Any | macOS 26+ |
+| Feature         | Zellij  | Docker    | Kubernetes | Sprites   | Apple     |
+| --------------- | ------- | --------- | ---------- | --------- | --------- |
+| Isolation       | Process | Container | Pod        | Container | Container |
+| Startup         | ~100ms  | ~2-5s     | ~10-30s    | ~5-10s    | ~1s       |
+| Host tools      | Full    | Limited   | None       | None      | Limited   |
+| Custom image    | No      | Yes       | Yes        | Yes       | No        |
+| Resource limits | No      | Yes       | Yes        | Yes       | Yes       |
+| Cloud native    | No      | No        | Yes        | Yes       | No        |
+| Platform        | Any     | Any       | Any        | Any       | macOS 26+ |
 
 ## Configuration
 
@@ -78,13 +78,13 @@ zellij attach clauderon-<session-name>
 
 The following environment variables are set in Zellij sessions:
 
-| Variable | Purpose |
-|----------|---------|
-| `HTTP_PROXY` | Points to clauderon proxy |
-| `HTTPS_PROXY` | Points to clauderon proxy |
-| `SSL_CERT_FILE` | CA certificate path |
-| `NODE_EXTRA_CA_CERTS` | CA for Node.js |
-| `REQUESTS_CA_BUNDLE` | CA for Python |
+| Variable              | Purpose                   |
+| --------------------- | ------------------------- |
+| `HTTP_PROXY`          | Points to clauderon proxy |
+| `HTTPS_PROXY`         | Points to clauderon proxy |
+| `SSL_CERT_FILE`       | CA certificate path       |
+| `NODE_EXTRA_CA_CERTS` | CA for Node.js            |
+| `REQUESTS_CA_BUNDLE`  | CA for Python             |
 
 ## Multiple Sessions
 

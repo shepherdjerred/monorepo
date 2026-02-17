@@ -17,7 +17,14 @@ export type PVMappingKey = keyof typeof PV_MAPPINGS;
  * @param logicalName - The logical name from PV_MAPPINGS
  * @returns IPersistentVolume reference
  */
-export function getPersistentVolume(scope: Construct, logicalName: PVMappingKey): IPersistentVolume {
+export function getPersistentVolume(
+  scope: Construct,
+  logicalName: PVMappingKey,
+): IPersistentVolume {
   const pvName = PV_MAPPINGS[logicalName];
-  return PersistentVolume.fromPersistentVolumeName(scope, `pv-${logicalName}`, pvName);
+  return PersistentVolume.fromPersistentVolumeName(
+    scope,
+    `pv-${logicalName}`,
+    pvName,
+  );
 }

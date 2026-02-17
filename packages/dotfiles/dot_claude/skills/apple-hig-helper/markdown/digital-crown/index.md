@@ -26,11 +26,11 @@ The Digital Crown on Apple Watch
 
 On Apple Vision Pro, people use the Digital Crown to:
 
-* Adjust volume
-* Adjust the amount of immersion in a portal, an Environment, or an app or game running in a Full Space (for guidance, see [Immersive experiences](/design/human-interface-guidelines/immersive-experiences))
-* Recenter content so it’s in front of them
-* Open Accessibility settings
-* Exit an app and return to the Home View
+- Adjust volume
+- Adjust the amount of immersion in a portal, an Environment, or an app or game running in a Full Space (for guidance, see [Immersive experiences](/design/human-interface-guidelines/immersive-experiences))
+- Recenter content so it’s in front of them
+- Open Accessibility settings
+- Exit an app and return to the Home View
 
 ## [Apple Watch](/design/human-interface-guidelines/digital-crown#Apple-Watch)
 
@@ -44,7 +44,7 @@ Note
 
 Apps don’t respond to presses on the Digital Crown because watchOS reserves these interactions for system-provided functionality like revealing the Home Screen.
 
-Most Apple Watch models provide haptic feedback for the Digital Crown, which gives people a more tactile experience as they scroll through content. By default, the system provides linear haptic *detents* — or taps — as people turn the Digital Crown a specific distance. Some system controls, like table views, provide detents as new items scroll onto the screen.
+Most Apple Watch models provide haptic feedback for the Digital Crown, which gives people a more tactile experience as they scroll through content. By default, the system provides linear haptic _detents_ — or taps — as people turn the Digital Crown a specific distance. Some system controls, like table views, provide detents as new items scroll onto the screen.
 
 **Anchor your app’s navigation to the Digital Crown.** Starting with watchOS 10, turning the Digital Crown is the main way people navigate within and between apps. List, tab, and scroll views are vertically oriented, allowing people to use the Digital Crown to easily move between the important elements of your app’s interface. When anchoring interactions to the Digital Crown, also be sure to back them up with corresponding touch screen interactions.
 
@@ -58,7 +58,7 @@ Most Apple Watch models provide haptic feedback for the Digital Crown, which giv
 
 ## [Platform considerations](/design/human-interface-guidelines/digital-crown#Platform-considerations)
 
-*Not supported in iOS, iPadOS, macOS, or tvOS.*
+_Not supported in iOS, iPadOS, macOS, or tvOS._
 
 ## [Resources](/design/human-interface-guidelines/digital-crown#Resources)
 
@@ -76,8 +76,8 @@ Most Apple Watch models provide haptic feedback for the Digital Crown, which giv
 
 ## [Change log](/design/human-interface-guidelines/digital-crown#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date             | Changes                                                                                                                                       |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | December 5, 2023 | Added artwork for Apple Vision Pro and Apple Watch, and clarified that visionOS apps don’t receive direct information from the Digital Crown. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
-| June 5, 2023 | Added guidelines emphasizing the central role of the Digital Crown for navigation. |
+| June 21, 2023    | Updated to include guidance for visionOS.                                                                                                     |
+| June 5, 2023     | Added guidelines emphasizing the central role of the Digital Crown for navigation.                                                            |

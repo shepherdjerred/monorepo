@@ -61,7 +61,8 @@ export class PostalMariaDB extends Construct {
         namespace: props.namespace,
       },
       spec: {
-        itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/zlz4hlpcgk74nhqysgrre5wv4i",
+        itemPath:
+          "vaults/v64ocnykdqju4ui6j6pua56xw4/items/zlz4hlpcgk74nhqysgrre5wv4i",
       },
     });
 

@@ -1,6 +1,6 @@
-import {isRSAA, RSAA} from 'redux-api-middleware';
+import { isRSAA, RSAA } from "redux-api-middleware";
 
-export const contentTypeMiddleware = store => next => action => {
+export const contentTypeMiddleware = (store) => (next) => (action) => {
   if (isRSAA(action)) {
     const actionWithContentType = {
       ...action,
@@ -8,9 +8,9 @@ export const contentTypeMiddleware = store => next => action => {
         ...action[RSAA],
         headers: {
           ...action[RSAA].headers,
-          'Content-Type': 'application/json'
-        }
-      }
+          "Content-Type": "application/json",
+        },
+      },
     };
     return next(actionWithContentType);
   }

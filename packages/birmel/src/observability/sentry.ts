@@ -55,7 +55,9 @@ export type DiscordContext = {
 };
 
 export function setSentryContext(context: DiscordContext): void {
-  if (!sentryInitialized) {return;}
+  if (!sentryInitialized) {
+    return;
+  }
 
   Sentry.setContext("discord", context as Record<string, unknown>);
 
@@ -68,7 +70,9 @@ export function setSentryContext(context: DiscordContext): void {
 }
 
 export function clearSentryContext(): void {
-  if (!sentryInitialized) {return;}
+  if (!sentryInitialized) {
+    return;
+  }
 
   Sentry.setContext("discord", null);
   Sentry.setUser(null);
@@ -78,10 +82,10 @@ export function clearSentryContext(): void {
  * Wrap an async function to capture exceptions to Sentry.
  * Similar pattern to Scout for LoL's logErrors wrapper.
  */
-export function logErrors<T extends (...args: never[]) => Promise<R>, R = unknown>(
-  fn: T,
-  operationName?: string,
-): T {
+export function logErrors<
+  T extends (...args: never[]) => Promise<R>,
+  R = unknown,
+>(fn: T, operationName?: string): T {
   return (async (...args: Parameters<T>): Promise<R> => {
     try {
       return await fn(...args);
@@ -109,7 +113,9 @@ export function captureException(
     extra?: Record<string, unknown>;
   },
 ): void {
-  if (!sentryInitialized) {return;}
+  if (!sentryInitialized) {
+    return;
+  }
 
   Sentry.withScope((scope) => {
     if (context?.operation) {
@@ -132,7 +138,9 @@ export function captureMessage(
   message: string,
   level: "fatal" | "error" | "warning" | "log" | "info" | "debug" = "info",
 ): void {
-  if (!sentryInitialized) {return;}
+  if (!sentryInitialized) {
+    return;
+  }
   Sentry.captureMessage(message, level);
 }
 
@@ -140,6 +148,8 @@ export function captureMessage(
  * Flush Sentry events before shutdown.
  */
 export async function flushSentry(timeout = 2000): Promise<void> {
-  if (!sentryInitialized) {return;}
+  if (!sentryInitialized) {
+    return;
+  }
   await Sentry.flush(timeout);
 }

@@ -3,11 +3,11 @@
  * @param action The name of the action that is being performed
  * @returns {{success: string, error: string, begin: string}}
  */
-export function createRsaaActionTypes (action) {
+export function createRsaaActionTypes(action) {
   return {
-    begin: 'FETCH_' + action + '_BEGIN',
-    success: 'FETCH_' + action + '_SUCCESS',
-    error: 'FETCH_' + action + '_ERROR'
+    begin: "FETCH_" + action + "_BEGIN",
+    success: "FETCH_" + action + "_SUCCESS",
+    error: "FETCH_" + action + "_ERROR",
   };
 }
 
@@ -16,7 +16,7 @@ export function createRsaaActionTypes (action) {
  * @param types An object with a begin, success, and error property
  * @returns {*[]} An array of RSAA action types
  */
-export function actionTypesToRsaaArray (types) {
+export function actionTypesToRsaaArray(types) {
   return [types.begin, types.success, types.error];
 }
 
@@ -25,10 +25,10 @@ export function actionTypesToRsaaArray (types) {
  * @param actions {{success: string, error: string, begin: string}}
  * @returns {Function}
  */
-export function createRsaaReducer (actions) {
+export function createRsaaReducer(actions) {
   const initialState = {
     isFetching: false,
-    error: false
+    error: false,
   };
   return (state = initialState, action) => {
     switch (action) {
@@ -36,19 +36,19 @@ export function createRsaaReducer (actions) {
         return {
           ...state,
           isFetching: true,
-          error: null
+          error: null,
         };
       case actions.success:
         return {
           ...state,
           isFetching: false,
-          error: null
+          error: null,
         };
       case actions.error:
         return {
           ...state,
           isFetching: false,
-          error: action.payload
+          error: action.payload,
         };
       default:
         return state;

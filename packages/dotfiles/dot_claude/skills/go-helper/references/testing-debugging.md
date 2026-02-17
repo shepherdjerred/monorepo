@@ -582,25 +582,25 @@ Install the Go extension. It uses delve automatically. Add launch configuration:
 
 ```json
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Launch Package",
-            "type": "go",
-            "request": "launch",
-            "mode": "auto",
-            "program": "${workspaceFolder}/cmd/myapp",
-            "args": ["--config", "config.yaml"]
-        },
-        {
-            "name": "Debug Test",
-            "type": "go",
-            "request": "launch",
-            "mode": "test",
-            "program": "${workspaceFolder}/pkg/mypackage",
-            "args": ["-test.run", "TestMyFunction"]
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Package",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/myapp",
+      "args": ["--config", "config.yaml"]
+    },
+    {
+      "name": "Debug Test",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${workspaceFolder}/pkg/mypackage",
+      "args": ["-test.run", "TestMyFunction"]
+    }
+  ]
 }
 ```
 
@@ -715,6 +715,7 @@ go tool trace trace.out
 ```
 
 The trace viewer shows:
+
 - Goroutine scheduling and blocking
 - System calls
 - GC events
@@ -833,7 +834,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.26'
+          go-version: "1.26"
 
       - name: Vet
         run: go vet ./...

@@ -71,7 +71,9 @@ describe("checkSendMessagePermission", () => {
       guild: {
         members: {
           me: null,
-          fetch: async () => { throw new Error("Fetch failed"); },
+          fetch: async () => {
+            throw new Error("Fetch failed");
+          },
         },
       },
     });
@@ -90,7 +92,9 @@ describe("checkSendMessagePermission", () => {
       guild: {
         members: {
           me: null,
-          fetch: async () => { throw new Error("Fetch failed"); },
+          fetch: async () => {
+            throw new Error("Fetch failed");
+          },
         },
       },
     });
@@ -111,7 +115,9 @@ describe("checkSendMessagePermission", () => {
       guild: {
         members: {
           me: null,
-          fetch: async () => { throw new Error("Fetch failed"); },
+          fetch: async () => {
+            throw new Error("Fetch failed");
+          },
         },
       },
     });
@@ -132,7 +138,9 @@ describe("checkSendMessagePermission", () => {
       guild: {
         members: {
           me: null,
-          fetch: async () => { throw new Error("Fetch failed"); },
+          fetch: async () => {
+            throw new Error("Fetch failed");
+          },
         },
       },
     });
@@ -156,7 +164,9 @@ describe("checkSendMessagePermission", () => {
       guild: {
         members: {
           me: null,
-          fetch: async () => { throw new Error("Fetch failed"); },
+          fetch: async () => {
+            throw new Error("Fetch failed");
+          },
         },
       },
     });
@@ -174,7 +184,9 @@ describe("checkSendMessagePermission", () => {
       guild: {
         members: {
           me: null,
-          fetch: async () => { throw new Error("Fetch failed"); },
+          fetch: async () => {
+            throw new Error("Fetch failed");
+          },
         },
       },
     });

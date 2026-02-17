@@ -1,4 +1,3 @@
-
 # Overview
 
 The program `checksum.py` is very simple: it can be used to calculate checksums
@@ -28,7 +27,7 @@ prompt>
 
 In this example, the program produces a random set of four numbers (the
 "data") of 216 194 107 66 (decimal). The numbers are also shown in hex and
-binary. 
+binary.
 
 The program then asks you to compute the additive, xor-based, and fletcher
 checksums. The addition is just the result of adding each of the bytes
@@ -55,7 +54,7 @@ Add:      ?
 Xor:      ?
 Fletcher: ?
 
-prompt> 
+prompt>
 ```
 
 You can specify a different length for the random data:
@@ -81,7 +80,7 @@ Add:      ?
 Xor:      ?
 Fletcher: ?
 
-prompt> 
+prompt>
 ```
 
 Finally, you can use `-c` to have the program compute the checksums for you.
@@ -101,7 +100,7 @@ Add:             10       (0b00001010)
 Xor:              4       (0b00000100)
 Fletcher(a,b):   10, 20   (0b00001010,0b00010100)
 
-prompt> 
+prompt>
 ```
 
 Thus ends the worst README in this collection of READMEs.

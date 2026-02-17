@@ -15,17 +15,23 @@ import { toast } from "sonner";
 import { Plus, RefreshCw, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type SessionListProps = {
   onAttach: (session: Session) => void;
   onCreateNew: () => void;
-}
+};
 
 type FilterStatus = "all" | "running" | "idle" | "completed" | "archived";
 
-const TAB_TRIGGER_CLASS = "cursor-pointer transition-all duration-200 hover:bg-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-2 data-[state=active]:border-primary data-[state=active]:shadow-[4px_4px_0_hsl(220,85%,25%)] data-[state=active]:font-bold";
+const TAB_TRIGGER_CLASS =
+  "cursor-pointer transition-all duration-200 hover:bg-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-2 data-[state=active]:border-primary data-[state=active]:shadow-[4px_4px_0_hsl(220,85%,25%)] data-[state=active]:font-bold";
 
 export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   const {
@@ -51,7 +57,10 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   const getInitialFilter = (): FilterStatus => {
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get("tab");
-    if (tabParam && ["all", "running", "idle", "completed", "archived"].includes(tabParam)) {
+    if (
+      tabParam &&
+      ["all", "running", "idle", "completed", "archived"].includes(tabParam)
+    ) {
       return tabParam as FilterStatus;
     }
     return "all";
@@ -112,24 +121,30 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
       });
     }, 2000);
 
-    return () => { clearInterval(interval); };
+    return () => {
+      clearInterval(interval);
+    };
   }, [refreshSessions, refreshHealth]);
 
   // Update time display every second
   useEffect(() => {
     const interval = setInterval(() => {
-      setTickCounter(prev => prev + 1);
+      setTickCounter((prev) => prev + 1);
     }, 1000);
 
-    return () => { clearInterval(interval); };
+    return () => {
+      clearInterval(interval);
+    };
   }, []);
 
   // Startup health check - show modal if there are unhealthy sessions
   useEffect(() => {
-    if (startupHealthCheckDone || isLoading || healthReports.size === 0) {return;}
+    if (startupHealthCheckDone || isLoading || healthReports.size === 0) {
+      return;
+    }
 
     const unhealthySessions = [...healthReports.values()].filter(
-      (report) => report.state.type !== "Healthy"
+      (report) => report.state.type !== "Healthy",
     );
 
     if (unhealthySessions.length > 0) {
@@ -141,15 +156,19 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   // Compute unhealthy sessions for the startup modal
   const unhealthySessions = useMemo(() => {
     return [...healthReports.values()].filter(
-      (report) => report.state.type !== "Healthy"
+      (report) => report.state.type !== "Healthy",
     );
   }, [healthReports]);
 
   // Format last refresh time for display
   const getTimeSinceRefresh = (): string => {
     const seconds = Math.floor((Date.now() - lastRefreshTime.getTime()) / 1000);
-    if (seconds < 5) {return "just now";}
-    if (seconds < 60) {return `${String(seconds)}s ago`;}
+    if (seconds < 5) {
+      return "just now";
+    }
+    if (seconds < 60) {
+      return `${String(seconds)}s ago`;
+    }
     const minutes = Math.floor(seconds / 60);
     return `${String(minutes)}m ago`;
   };
@@ -185,52 +204,82 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     }
   };
 
-  const handleMergePr = (session: Session, method: MergeMethod, deleteBranch: boolean) => {
-    void mergePr(session.id, method, deleteBranch).then(() => {
-      toast.success(`Pull request for "${session.name}" merged successfully`);
-    }).catch((err: unknown) => {
-      toast.error(`Failed to merge PR: ${err instanceof Error ? err.message : String(err)}`);
-    });
+  const handleMergePr = (
+    session: Session,
+    method: MergeMethod,
+    deleteBranch: boolean,
+  ) => {
+    void mergePr(session.id, method, deleteBranch)
+      .then(() => {
+        toast.success(`Pull request for "${session.name}" merged successfully`);
+      })
+      .catch((err: unknown) => {
+        toast.error(
+          `Failed to merge PR: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      });
   };
 
   const handleConfirm = () => {
-    if (!confirmDialog) {return;}
+    if (!confirmDialog) {
+      return;
+    }
 
     switch (confirmDialog.type) {
-    case "archive": {
-      void archiveSession(confirmDialog.session.id).then(() => {
-        toast.success(`Session "${confirmDialog.session.name}" archived`);
-      }).catch((err: unknown) => {
-        toast.error(`Failed to archive: ${err instanceof Error ? err.message : String(err)}`);
-      });
-    
-    break;
-    }
-    case "unarchive": {
-      void unarchiveSession(confirmDialog.session.id).then(() => {
-        toast.success(`Session "${confirmDialog.session.name}" restored from archive`);
-      }).catch((err: unknown) => {
-        toast.error(`Failed to unarchive: ${err instanceof Error ? err.message : String(err)}`);
-      });
-    
-    break;
-    }
-    case "refresh": {
-      void refreshSession(confirmDialog.session.id).then(() => {
-        toast.success(`Session "${confirmDialog.session.name}" is being refreshed`);
-      }).catch((err: unknown) => {
-        toast.error(`Failed to refresh: ${err instanceof Error ? err.message : String(err)}`);
-      });
-    
-    break;
-    }
-    default: {
-      void deleteSession(confirmDialog.session.id).then(() => {
-        toast.info(`Deleting session "${confirmDialog.session.name}"...`);
-      }).catch((err: unknown) => {
-        toast.error(`Failed to delete: ${err instanceof Error ? err.message : String(err)}`);
-      });
-    }
+      case "archive": {
+        void archiveSession(confirmDialog.session.id)
+          .then(() => {
+            toast.success(`Session "${confirmDialog.session.name}" archived`);
+          })
+          .catch((err: unknown) => {
+            toast.error(
+              `Failed to archive: ${err instanceof Error ? err.message : String(err)}`,
+            );
+          });
+
+        break;
+      }
+      case "unarchive": {
+        void unarchiveSession(confirmDialog.session.id)
+          .then(() => {
+            toast.success(
+              `Session "${confirmDialog.session.name}" restored from archive`,
+            );
+          })
+          .catch((err: unknown) => {
+            toast.error(
+              `Failed to unarchive: ${err instanceof Error ? err.message : String(err)}`,
+            );
+          });
+
+        break;
+      }
+      case "refresh": {
+        void refreshSession(confirmDialog.session.id)
+          .then(() => {
+            toast.success(
+              `Session "${confirmDialog.session.name}" is being refreshed`,
+            );
+          })
+          .catch((err: unknown) => {
+            toast.error(
+              `Failed to refresh: ${err instanceof Error ? err.message : String(err)}`,
+            );
+          });
+
+        break;
+      }
+      default: {
+        void deleteSession(confirmDialog.session.id)
+          .then(() => {
+            toast.info(`Deleting session "${confirmDialog.session.name}"...`);
+          })
+          .catch((err: unknown) => {
+            toast.error(
+              `Failed to delete: ${err instanceof Error ? err.message : String(err)}`,
+            );
+          });
+      }
     }
   };
 
@@ -238,12 +287,16 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     <div className="flex flex-col h-full">
       {/* Header */}
       <header className="flex items-center justify-between p-4 border-b-4 border-primary">
-        <h1 className="text-3xl font-bold font-mono uppercase tracking-wider">Sessions</h1>
+        <h1 className="text-3xl font-bold font-mono uppercase tracking-wider">
+          Sessions
+        </h1>
         <div className="flex items-center gap-3">
           {/* Auto-refresh indicator */}
           <div className="flex items-center gap-2 px-3 py-1 border-2 border-primary bg-background text-xs font-mono">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-muted-foreground">Auto-refresh: {getTimeSinceRefresh()}</span>
+            <span className="text-muted-foreground">
+              Auto-refresh: {getTimeSinceRefresh()}
+            </span>
           </div>
           <ThemeToggle />
           <Button
@@ -258,12 +311,16 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
             aria-label="Refresh sessions"
             className="cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-md"
           >
-            <RefreshCw className={`w-5 h-5 ${isLoading ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`w-5 h-5 ${isLoading ? "animate-spin" : ""}`}
+            />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => { setShowStatusDialog(true); }}
+            onClick={() => {
+              setShowStatusDialog(true);
+            }}
             aria-label="System status"
             className="cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-md"
           >
@@ -282,7 +339,12 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
 
       {/* Filters */}
       <nav className="p-4 border-b-2" aria-label="Session filters">
-        <Tabs value={filter} onValueChange={(v) => { setFilter(v as FilterStatus); }}>
+        <Tabs
+          value={filter}
+          onValueChange={(v) => {
+            setFilter(v as FilterStatus);
+          }}
+        >
           <TabsList className="grid w-full grid-cols-5 border-2 gap-2 p-2">
             <TabsTrigger
               value="all"
@@ -290,28 +352,16 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
             >
               All
             </TabsTrigger>
-            <TabsTrigger
-              value="running"
-              className={TAB_TRIGGER_CLASS}
-            >
+            <TabsTrigger value="running" className={TAB_TRIGGER_CLASS}>
               Running
             </TabsTrigger>
-            <TabsTrigger
-              value="idle"
-              className={TAB_TRIGGER_CLASS}
-            >
+            <TabsTrigger value="idle" className={TAB_TRIGGER_CLASS}>
               Idle
             </TabsTrigger>
-            <TabsTrigger
-              value="completed"
-              className={TAB_TRIGGER_CLASS}
-            >
+            <TabsTrigger value="completed" className={TAB_TRIGGER_CLASS}>
               Completed
             </TabsTrigger>
-            <TabsTrigger
-              value="archived"
-              className={TAB_TRIGGER_CLASS}
-            >
+            <TabsTrigger value="archived" className={TAB_TRIGGER_CLASS}>
               Archived
             </TabsTrigger>
           </TabsList>
@@ -330,8 +380,9 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
           <div
             className="grid gap-4 auto-rows-auto"
             style={{
-              gridTemplateColumns: 'repeat(auto-fill, minmax(min(350px, 100%), 1fr))',
-              gridAutoFlow: 'dense'
+              gridTemplateColumns:
+                "repeat(auto-fill, minmax(min(350px, 100%), 1fr))",
+              gridAutoFlow: "dense",
             }}
           >
             {[1, 2, 3].map((i) => (
@@ -370,8 +421,9 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
           <div
             className="grid gap-4 auto-rows-auto"
             style={{
-              gridTemplateColumns: 'repeat(auto-fill, minmax(min(350px, 100%), 1fr))',
-              gridAutoFlow: 'dense'
+              gridTemplateColumns:
+                "repeat(auto-fill, minmax(min(350px, 100%), 1fr))",
+              gridAutoFlow: "dense",
             }}
           >
             {filteredSessions.map((session) => {
@@ -440,13 +492,19 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
       {editingSession && (
         <EditSessionDialog
           session={editingSession}
-          onClose={() => { setEditingSession(null); }}
+          onClose={() => {
+            setEditingSession(null);
+          }}
         />
       )}
 
       {/* Status Dialog */}
       {showStatusDialog && (
-        <StatusDialog onClose={() => { setShowStatusDialog(false); }} />
+        <StatusDialog
+          onClose={() => {
+            setShowStatusDialog(false);
+          }}
+        />
       )}
 
       {/* Startup Health Modal */}
@@ -472,46 +530,82 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
           session={recreateModalSession.session}
           healthReport={recreateModalSession.healthReport}
           onStart={() => {
-            void startSession(recreateModalSession.session.id).then(() => {
-              toast.success(`Session "${recreateModalSession.session.name}" started`);
-            }).catch((err: unknown) => {
-              toast.error(`Failed to start: ${err instanceof Error ? err.message : String(err)}`);
-            });
+            void startSession(recreateModalSession.session.id)
+              .then(() => {
+                toast.success(
+                  `Session "${recreateModalSession.session.name}" started`,
+                );
+              })
+              .catch((err: unknown) => {
+                toast.error(
+                  `Failed to start: ${err instanceof Error ? err.message : String(err)}`,
+                );
+              });
           }}
           onWake={() => {
-            void wakeSession(recreateModalSession.session.id).then(() => {
-              toast.success(`Session "${recreateModalSession.session.name}" is waking up`);
-            }).catch((err: unknown) => {
-              toast.error(`Failed to wake: ${err instanceof Error ? err.message : String(err)}`);
-            });
+            void wakeSession(recreateModalSession.session.id)
+              .then(() => {
+                toast.success(
+                  `Session "${recreateModalSession.session.name}" is waking up`,
+                );
+              })
+              .catch((err: unknown) => {
+                toast.error(
+                  `Failed to wake: ${err instanceof Error ? err.message : String(err)}`,
+                );
+              });
           }}
           onRecreate={() => {
-            void recreateSession(recreateModalSession.session.id).then(() => {
-              toast.success(`Session "${recreateModalSession.session.name}" is being recreated`);
-            }).catch((err: unknown) => {
-              toast.error(`Failed to recreate: ${err instanceof Error ? err.message : String(err)}`);
-            });
+            void recreateSession(recreateModalSession.session.id)
+              .then(() => {
+                toast.success(
+                  `Session "${recreateModalSession.session.name}" is being recreated`,
+                );
+              })
+              .catch((err: unknown) => {
+                toast.error(
+                  `Failed to recreate: ${err instanceof Error ? err.message : String(err)}`,
+                );
+              });
           }}
           onRecreateFresh={() => {
-            void recreateSession(recreateModalSession.session.id).then(() => {
-              toast.success(`Session "${recreateModalSession.session.name}" is being recreated fresh`);
-            }).catch((err: unknown) => {
-              toast.error(`Failed to recreate fresh: ${err instanceof Error ? err.message : String(err)}`);
-            });
+            void recreateSession(recreateModalSession.session.id)
+              .then(() => {
+                toast.success(
+                  `Session "${recreateModalSession.session.name}" is being recreated fresh`,
+                );
+              })
+              .catch((err: unknown) => {
+                toast.error(
+                  `Failed to recreate fresh: ${err instanceof Error ? err.message : String(err)}`,
+                );
+              });
           }}
           onUpdateImage={() => {
-            void refreshSession(recreateModalSession.session.id).then(() => {
-              toast.success(`Session "${recreateModalSession.session.name}" is being refreshed with latest image`);
-            }).catch((err: unknown) => {
-              toast.error(`Failed to update image: ${err instanceof Error ? err.message : String(err)}`);
-            });
+            void refreshSession(recreateModalSession.session.id)
+              .then(() => {
+                toast.success(
+                  `Session "${recreateModalSession.session.name}" is being refreshed with latest image`,
+                );
+              })
+              .catch((err: unknown) => {
+                toast.error(
+                  `Failed to update image: ${err instanceof Error ? err.message : String(err)}`,
+                );
+              });
           }}
           onCleanup={() => {
-            void cleanupSession(recreateModalSession.session.id).then(() => {
-              toast.success(`Session "${recreateModalSession.session.name}" cleaned up`);
-            }).catch((err: unknown) => {
-              toast.error(`Failed to cleanup: ${err instanceof Error ? err.message : String(err)}`);
-            });
+            void cleanupSession(recreateModalSession.session.id)
+              .then(() => {
+                toast.success(
+                  `Session "${recreateModalSession.session.name}" cleaned up`,
+                );
+              })
+              .catch((err: unknown) => {
+                toast.error(
+                  `Failed to cleanup: ${err instanceof Error ? err.message : String(err)}`,
+                );
+              });
           }}
         />
       )}

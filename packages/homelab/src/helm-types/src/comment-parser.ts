@@ -20,19 +20,24 @@ export function cleanYAMLComment(comment: string): string {
 
     // Skip empty lines
     if (currentLine.length === 0) {
-      if (inCodeBlock) {inCodeBlock = false;}
+      if (inCodeBlock) {
+        inCodeBlock = false;
+      }
       continue;
     }
 
     // Skip @default lines (we'll generate our own)
-    if (currentLine.startsWith("@default")) {continue;}
+    if (currentLine.startsWith("@default")) {
+      continue;
+    }
 
     // Detect various patterns that indicate this is an example/code block, not documentation
     const isExample =
       /^-{3,}/.test(currentLine) ||
       /^BEGIN .*(KEY|CERTIFICATE)/.test(currentLine) ||
       /^END .*(KEY|CERTIFICATE)/.test(currentLine) ||
-      (currentLine.startsWith("-") && (currentLine.includes(":") || /^-\s+\|/.test(currentLine))) ||
+      (currentLine.startsWith("-") &&
+        (currentLine.includes(":") || /^-\s+\|/.test(currentLine))) ||
       /^\w+:$/.test(currentLine) ||
       /^[\w-]+:\s*$/.test(currentLine) ||
       /^[\w.-]+:\s*\|/.test(currentLine) || // YAML multiline indicator (e.g., "policy.csv: |")
@@ -110,16 +115,25 @@ export function parseYAMLComments(yamlContent: string): Map<string, string> {
     if (keyMatch) {
       const indent = keyMatch[1]?.length ?? 0;
       const key = keyMatch[2];
-      if (!key) {continue;}
+      if (!key) {
+        continue;
+      }
 
       // Update indent stack
       const lastIndent = indentStack.at(-1);
-      while (indentStack.length > 0 && lastIndent && lastIndent.indent >= indent) {
+      while (
+        indentStack.length > 0 &&
+        lastIndent &&
+        lastIndent.indent >= indent
+      ) {
         indentStack.pop();
       }
 
       // Build full key path
-      const keyPath = indentStack.length > 0 ? `${indentStack.map((s) => s.key).join(".")}.${key}` : key;
+      const keyPath =
+        indentStack.length > 0
+          ? `${indentStack.map((s) => s.key).join(".")}.${key}`
+          : key;
 
       // Check for inline comment
       const inlineCommentMatch = /#\s*(.+)$/.exec(currentLine);
@@ -129,12 +143,16 @@ export function parseYAMLComments(yamlContent: string): Map<string, string> {
 
       // Filter pending comments to only those at the same or shallower indent level as this key
       // This prevents comments from deeper nested properties being associated with a shallower property
-      const relevantComments = pendingComments.filter((c) => c.indent <= indent);
+      const relevantComments = pendingComments.filter(
+        (c) => c.indent <= indent,
+      );
 
       // Associate relevant comments with this key
       if (relevantComments.length > 0) {
         // Join and clean comments
-        const commentText = cleanYAMLComment(relevantComments.map((c) => c.text).join("\n"));
+        const commentText = cleanYAMLComment(
+          relevantComments.map((c) => c.text).join("\n"),
+        );
         if (commentText) {
           comments.set(keyPath, commentText);
         }

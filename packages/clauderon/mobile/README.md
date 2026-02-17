@@ -13,6 +13,7 @@ React Native mobile app for Clauderon, targeting iOS, Android, macOS, and Window
 ## Platform Support
 
 ✅ **Fully Supported:**
+
 - iOS (15.1+)
 - Android (API 24+)
 - iPad (universal iOS app)
@@ -29,47 +30,47 @@ See [PLATFORM_SUPPORT.md](./PLATFORM_SUPPORT.md) for detailed platform-specific 
 
 ### All Platforms
 
-| Requirement | Version | Notes |
-|-------------|---------|-------|
-| Node.js | >= 20.19.4 | Minimum required by RN 0.81+ |
-| Node.js | 24.x LTS (recommended) | Active LTS "Krypton" - best support |
-| Watchman | Latest | Recommended for file watching |
+| Requirement | Version                | Notes                               |
+| ----------- | ---------------------- | ----------------------------------- |
+| Node.js     | >= 20.19.4             | Minimum required by RN 0.81+        |
+| Node.js     | 24.x LTS (recommended) | Active LTS "Krypton" - best support |
+| Watchman    | Latest                 | Recommended for file watching       |
 
 ### iOS Development (requires macOS)
 
-| Requirement | Version | Notes |
-|-------------|---------|-------|
-| macOS | 26 Tahoe (latest) | Required for Xcode 26 |
-| macOS | 15 Sequoia | Required for Xcode 16.x |
-| Xcode | 16.4 (stable) | Recommended for React Native stability |
-| Xcode | 26.2 (latest) | Has RN issues; requires `SWIFT_ENABLE_EXPLICIT_MODULES=NO` |
-| Xcode Command Line Tools | Latest | Install via `xcode-select --install` |
-| CocoaPods | >= 1.13 | Avoid versions 1.15.0 and 1.15.1 |
-| Ruby | >= 2.7 | macOS ships with older version; upgrade recommended |
-| iOS Deployment Target | 15.1 | Minimum iOS version (since RN 0.76) |
-| iOS SDK | 18+ or 26 | Depending on Xcode version |
+| Requirement              | Version           | Notes                                                      |
+| ------------------------ | ----------------- | ---------------------------------------------------------- |
+| macOS                    | 26 Tahoe (latest) | Required for Xcode 26                                      |
+| macOS                    | 15 Sequoia        | Required for Xcode 16.x                                    |
+| Xcode                    | 16.4 (stable)     | Recommended for React Native stability                     |
+| Xcode                    | 26.2 (latest)     | Has RN issues; requires `SWIFT_ENABLE_EXPLICIT_MODULES=NO` |
+| Xcode Command Line Tools | Latest            | Install via `xcode-select --install`                       |
+| CocoaPods                | >= 1.13           | Avoid versions 1.15.0 and 1.15.1                           |
+| Ruby                     | >= 2.7            | macOS ships with older version; upgrade recommended        |
+| iOS Deployment Target    | 15.1              | Minimum iOS version (since RN 0.76)                        |
+| iOS SDK                  | 18+ or 26         | Depending on Xcode version                                 |
 
 > **Xcode 26 Note:** As of January 2026, Xcode 26.2 is the latest but has known React Native compatibility issues. Prebuilt binaries don't work due to Swift explicit modules. Either use Xcode 16.4 for stability, or set `SWIFT_ENABLE_EXPLICIT_MODULES=NO` in your Xcode project when using Xcode 26.
 
 ### Android Development
 
-| Requirement | Version | Notes |
-|-------------|---------|-------|
-| JDK | 17 | Higher versions may cause issues |
-| Android Studio | Latest (Ladybug+) | With SDK Manager |
-| Android SDK | Platform 35+ | Google Play requires targetSdk 35+ since Aug 2025 |
-| Android SDK | Platform 36 (Android 16) | Latest available (Baklava) |
-| Android SDK | Platform 24+ (Android 7.0+) | Minimum supported |
-| Android Build Tools | 35.0.0 or 36.0.0 | Match your target SDK |
+| Requirement         | Version                     | Notes                                             |
+| ------------------- | --------------------------- | ------------------------------------------------- |
+| JDK                 | 17                          | Higher versions may cause issues                  |
+| Android Studio      | Latest (Ladybug+)           | With SDK Manager                                  |
+| Android SDK         | Platform 35+                | Google Play requires targetSdk 35+ since Aug 2025 |
+| Android SDK         | Platform 36 (Android 16)    | Latest available (Baklava)                        |
+| Android SDK         | Platform 24+ (Android 7.0+) | Minimum supported                                 |
+| Android Build Tools | 35.0.0 or 36.0.0            | Match your target SDK                             |
 
 ### Windows Development
 
-| Requirement | Version | Notes |
-|-------------|---------|-------|
-| Windows | 10/11 (64-bit) | Latest updates required |
-| Visual Studio | 2022 | With specific workloads (see below) |
-| Windows SDK | 10.0.22621.0+ | |
-| .NET SDK | 6.0+ | |
+| Requirement   | Version        | Notes                               |
+| ------------- | -------------- | ----------------------------------- |
+| Windows       | 10/11 (64-bit) | Latest updates required             |
+| Visual Studio | 2022           | With specific workloads (see below) |
+| Windows SDK   | 10.0.22621.0+  |                                     |
+| .NET SDK      | 6.0+           |                                     |
 
 ### Hardware Recommendations
 
@@ -124,16 +125,19 @@ export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
 #### 6. Install CocoaPods
 
 **Option A: Via Homebrew (recommended for Apple Silicon)**
+
 ```bash
 brew install cocoapods
 ```
 
 **Option B: Via Ruby gem**
+
 ```bash
 sudo gem install cocoapods
 ```
 
 **Option C: Via Bundler (most reliable)**
+
 ```bash
 # In project root, create Gemfile if not exists
 cat > Gemfile << 'EOF'
@@ -186,18 +190,21 @@ choco install microsoft-openjdk17
 Download and install from [developer.android.com/studio](https://developer.android.com/studio)
 
 Set environment variables:
+
 - `ANDROID_HOME`: `%LOCALAPPDATA%\Android\Sdk`
 - Add to Path: `%LOCALAPPDATA%\Android\Sdk\platform-tools`
 
 #### 4. Install Visual Studio 2022 (for Windows app development)
 
 Install with these workloads:
+
 - Node.js development
 - .NET Desktop development
 - Desktop development with C++
 - Universal Windows Platform development
 
 Required components:
+
 - MSVC v143 - VS 2022 C++ x64/x86 build tools
 - C++ (v143) Universal Windows Platform tools
 
@@ -261,16 +268,19 @@ bun start -- --reset-cache
 ### Running on iOS Simulator
 
 **Default simulator (iPhone 14):**
+
 ```bash
 bun run ios
 ```
 
 **List available simulators:**
+
 ```bash
 xcrun simctl list devices available
 ```
 
 **Run on specific simulator:**
+
 ```bash
 bun run ios -- --simulator "iPhone 17"
 bun run ios -- --simulator "iPhone SE (3rd generation)"
@@ -278,17 +288,20 @@ bun run ios -- --simulator "iPad Pro 13-inch (M5)"
 ```
 
 **Run on specific simulator by UDID:**
+
 ```bash
 # Get UDID from: xcrun simctl list devices
 bun run ios -- --udid XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 ```
 
 **Interactive device selection:**
+
 ```bash
 bun run ios -- --list-devices
 ```
 
 **Other useful flags:**
+
 ```bash
 bun run ios -- --mode Release           # Build in release mode
 bun run ios -- --scheme MyScheme        # Use specific Xcode scheme
@@ -326,6 +339,7 @@ bun run ios -- --verbose                # Show detailed build output
 #### Build and Run
 
 **Option A: Via command line**
+
 ```bash
 # List connected devices
 xcrun devicectl list devices
@@ -341,6 +355,7 @@ bun run ios -- --list-devices
 ```
 
 **Option B: Via Xcode**
+
 1. Open `ios/ClauderonMobile.xcworkspace`
 2. Select your device in the toolbar dropdown
 3. Press Cmd+R or Product → Run
@@ -348,6 +363,7 @@ bun run ios -- --list-devices
 #### Trust Developer Certificate (first time only)
 
 If you see "Untrusted Developer" on device:
+
 1. On device: Settings → General → VPN & Device Management
 2. Find your developer profile
 3. Tap "Trust"
@@ -377,23 +393,27 @@ Your Mac and iOS device must be on the same Wi-Fi network.
 6. Finish and launch the emulator
 
 **Run on emulator:**
+
 ```bash
 # Start emulator first, then:
 bun run android
 ```
 
 **List available emulators:**
+
 ```bash
 emulator -list-avds
 ```
 
 **Run on specific emulator:**
+
 ```bash
 # Get device ID from: adb devices
 bun run android -- --device emulator-5554
 ```
 
 **Interactive device selection:**
+
 ```bash
 bun run android -- --list-devices
 # or
@@ -401,6 +421,7 @@ bun run android -- -i
 ```
 
 **Other useful flags:**
+
 ```bash
 bun run android -- --mode release       # Build in release mode
 bun run android -- --no-packager        # Don't start Metro bundler
@@ -434,6 +455,7 @@ bun run android
 ```
 
 If multiple devices connected:
+
 ```bash
 # Use --device (--deviceId is deprecated)
 bun run android -- --device ABC123DEF456
@@ -445,11 +467,13 @@ bun run android -- -i
 #### Development Server Connection (Physical Device)
 
 **Option A: adb reverse (recommended, requires USB)**
+
 ```bash
 adb reverse tcp:8081 tcp:8081
 ```
 
 **Option B: Wi-Fi connection**
+
 1. Ensure phone and computer on same network
 2. Open app on device
 3. Shake to open Dev Menu
@@ -493,6 +517,7 @@ bun run windows
 ```
 
 Or open the solution in Visual Studio:
+
 1. Open `windows/ClauderonMobile.sln`
 2. Select Debug configuration and x64 platform
 3. Ensure Metro bundler is running (`bun start`)
@@ -505,6 +530,7 @@ Or open the solution in Visual Studio:
 ### CocoaPods Issues
 
 **"pod install" fails or hangs:**
+
 ```bash
 # Update CocoaPods repo
 pod repo update
@@ -516,6 +542,7 @@ pod install --repo-update
 ```
 
 **Ruby version mismatch:**
+
 ```bash
 # Install rbenv for Ruby version management
 brew install rbenv
@@ -527,6 +554,7 @@ gem install cocoapods
 ```
 
 **M1/M2/M3 Mac architecture issues:**
+
 ```bash
 # If you see ffi_c.bundle errors:
 sudo arch -x86_64 gem install ffi
@@ -536,6 +564,7 @@ arch -x86_64 pod install
 ```
 
 **"activesupport" or "logger" errors:**
+
 ```bash
 bundle pristine
 bundle update activesupport cocoapods
@@ -544,18 +573,21 @@ bundle update activesupport cocoapods
 ### iOS Build Issues
 
 **Code signing errors:**
+
 1. Open Xcode
 2. Ensure Team is selected in Signing & Capabilities
 3. Try: Product → Clean Build Folder (Cmd+Shift+K)
 4. Delete DerivedData: `rm -rf ~/Library/Developer/Xcode/DerivedData`
 
 **Device not appearing:**
+
 1. Ensure device is unlocked
 2. Trust the computer when prompted on device
 3. Check cable connection
 4. Restart Xcode
 
 **"Unable to find destination" errors:**
+
 ```bash
 # List available destinations
 xcodebuild -workspace ios/ClauderonMobile.xcworkspace -scheme ClauderonMobile -showdestinations
@@ -564,6 +596,7 @@ xcodebuild -workspace ios/ClauderonMobile.xcworkspace -scheme ClauderonMobile -s
 ### Xcode 26 / iOS 26 Issues
 
 **Prebuilt binaries fail with Swift explicit modules:**
+
 ```bash
 # In Xcode: Build Settings → Swift Compiler - General
 # Set "Explicitly Built Modules" to NO
@@ -577,6 +610,7 @@ This is a known issue with iOS 26. Libraries using `ALAssetsLibrary` need to mig
 
 **Build fails on Xcode 26:**
 If you encounter persistent issues, consider using Xcode 16.4 for stability (requires macOS 15 Sequoia):
+
 ```bash
 # Switch Xcode version (if you have both installed)
 sudo xcode-select -s /Applications/Xcode-16.4.app
@@ -588,6 +622,7 @@ xcode-select -p
 ### Android Build Issues
 
 **Gradle build fails:**
+
 ```bash
 cd android
 ./gradlew clean
@@ -596,12 +631,14 @@ bun run android
 ```
 
 **JAVA_HOME not set:**
+
 ```bash
 # Add to ~/.zshrc
 export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
 ```
 
 **Device not recognized:**
+
 ```bash
 # Restart ADB
 adb kill-server
@@ -612,6 +649,7 @@ adb devices
 ### Metro Bundler Issues
 
 **Port already in use:**
+
 ```bash
 # Kill process on port 8081
 lsof -i :8081
@@ -623,6 +661,7 @@ bun run ios -- --port 8082
 ```
 
 **Cache issues:**
+
 ```bash
 # Clear all caches
 watchman watch-del-all
@@ -636,6 +675,7 @@ bun start -- --reset-cache
 ### Connection Issues
 
 **Cannot connect to daemon:**
+
 - Ensure daemon URL is correct (include `http://` prefix)
 - Verify daemon is running and accessible from device
 - Check network/firewall settings
@@ -643,6 +683,7 @@ bun start -- --reset-cache
 - Ensure device and computer are on same network
 
 **Type errors:**
+
 - Run `cargo build` in clauderon package to regenerate types
 - Symlink may need recreation if types directory is missing
 

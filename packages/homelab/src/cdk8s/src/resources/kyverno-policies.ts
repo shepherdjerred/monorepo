@@ -1,4 +1,4 @@
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { ApiObject } from "cdk8s";
 
 /**

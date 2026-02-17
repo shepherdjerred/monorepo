@@ -1,19 +1,19 @@
-import jwtDecode from 'jwt-decode';
+import jwtDecode from "jwt-decode";
 
-export const SET_JWT = 'SET_JWT';
-export const REMOVE_JWT = 'REMOVE_JWT';
+export const SET_JWT = "SET_JWT";
+export const REMOVE_JWT = "REMOVE_JWT";
 
-export function setJwt (jwt) {
+export function setJwt(jwt) {
   let decoded = jwtDecode(jwt);
   return {
     type: SET_JWT,
     token: jwt,
-    decoded
+    decoded,
   };
 }
 
-export function removeJwt () {
+export function removeJwt() {
   return {
-    type: REMOVE_JWT
+    type: REMOVE_JWT,
   };
 }

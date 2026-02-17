@@ -16,7 +16,11 @@ export function assertPathExists(s: string, pathName: string) {
   const path = resolve(s);
 
   if (!existsSync(path)) {
-    logger.error(addErrorLinks(`The ${pathName} do not exist at expected path, which is ${path}`));
+    logger.error(
+      addErrorLinks(
+        `The ${pathName} do not exist at expected path, which is ${path}`,
+      ),
+    );
     throw Error(`${path} does not exist`);
   }
 }

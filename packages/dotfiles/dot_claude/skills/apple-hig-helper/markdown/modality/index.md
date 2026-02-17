@@ -14,12 +14,12 @@ Modality is a design technique that presents content in a separate, dedicated mo
 
 Presenting content modally can:
 
-* Ensure that people receive critical information and, if necessary, act on it
-* Provide options that let people confirm or modify their most recent action
-* Help people perform a distinct, narrowly scoped task without losing track of their previous context
-* Give people an immersive experience or help them concentrate on a complex task
+- Ensure that people receive critical information and, if necessary, act on it
+- Provide options that let people confirm or modify their most recent action
+- Help people perform a distinct, narrowly scoped task without losing track of their previous context
+- Give people an immersive experience or help them concentrate on a complex task
 
-Depending on the platform, you might use different components to present these types of modal experiences. For example, all platforms can present an *alert*, which is a modal view that delivers important information related to your app or game. In addition, each platform may define various types of modal views for presenting context-specific options, such as *activity views,* *sheets*, and *confirmation dialogs* or *action sheets*. To help people perform a distinct task, iOS, iPadOS, and macOS apps tend to use sheets or popovers, but iPadOS, macOS, and visionOS apps might also just use a separate window.
+Depending on the platform, you might use different components to present these types of modal experiences. For example, all platforms can present an _alert_, which is a modal view that delivers important information related to your app or game. In addition, each platform may define various types of modal views for presenting context-specific options, such as _activity views,_ _sheets_, and _confirmation dialogs_ or _action sheets_. To help people perform a distinct task, iOS, iPadOS, and macOS apps tend to use sheets or popovers, but iPadOS, macOS, and visionOS apps might also just use a separate window.
 
 To provide a temporary experience, like viewing media, or to help people perform a distinct, multistep task, like editing content, apps can offer a full-screen modal experience. In contrast, apps may also offer nonmodal types of full-screen experiences; for guidance, see [Going full screen](/design/human-interface-guidelines/going-full-screen). visionOS apps can offer a range of immersive experiences; for guidance, see [Immersive experiences](/design/human-interface-guidelines/immersive-experiences).
 
@@ -43,7 +43,7 @@ To provide a temporary experience, like viewing media, or to help people perform
 
 ## [Platform considerations](/design/human-interface-guidelines/modality#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/modality#Resources)
 
@@ -75,7 +75,7 @@ Get to know the new design system](https://developer.apple.com/videos/play/wwdc2
 
 ## [Change log](/design/human-interface-guidelines/modality#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date             | Changes                                                                                          |
+| ---------------- | ------------------------------------------------------------------------------------------------ |
 | December 5, 2023 | Enhanced guidance for in-depth modal experiences and clarified guidance on multiple modal views. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
+| June 21, 2023    | Updated to include guidance for visionOS.                                                        |

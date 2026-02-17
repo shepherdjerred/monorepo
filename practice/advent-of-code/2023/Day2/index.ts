@@ -36,11 +36,11 @@ export async function solvePartOne(file: string): Promise<number> {
 
             assert(
               ["red", "blue", "green"].includes(color),
-              `Invalid color: ${color}`
+              `Invalid color: ${color}`,
             );
 
             return { [color]: Number(count) };
-          }
+          },
         );
 
         const merged: Partial<ColorCount> = R.mergeAll(cubes);
@@ -56,7 +56,7 @@ export async function solvePartOne(file: string): Promise<number> {
         id: Number(id),
         rounds: rounds,
       };
-    })
+    }),
   );
 
   const possible = R.pipe(
@@ -67,13 +67,13 @@ export async function solvePartOne(file: string): Promise<number> {
           return round.red > 12 || round.blue > 14 || round.green > 13;
         }) !== undefined
       );
-    })
+    }),
   );
 
   return R.pipe(
     possible,
     R.map((game) => game.id),
-    R.sumBy(R.identity)
+    R.sumBy(R.identity),
   );
 }
 
@@ -98,11 +98,11 @@ export async function solvePartTwo(file: string): Promise<number> {
 
             assert(
               ["red", "blue", "green"].includes(color),
-              `Invalid color: ${color}`
+              `Invalid color: ${color}`,
             );
 
             return { [color]: Number(count) };
-          }
+          },
         );
 
         const merged: Partial<ColorCount> = R.mergeAll(cubes);
@@ -118,7 +118,7 @@ export async function solvePartTwo(file: string): Promise<number> {
         id: Number(id),
         rounds: rounds,
       };
-    })
+    }),
   );
 
   const minimum = R.pipe(
@@ -133,9 +133,9 @@ export async function solvePartTwo(file: string): Promise<number> {
             green: Math.max(acc.green, round.green),
           };
         },
-        { red: 0, blue: 0, green: 0 }
+        { red: 0, blue: 0, green: 0 },
       );
-    })
+    }),
   );
 
   return R.pipe(
@@ -143,6 +143,6 @@ export async function solvePartTwo(file: string): Promise<number> {
     R.map((min) => {
       return min.red * min.blue * min.green;
     }),
-    R.sumBy(R.identity)
+    R.sumBy(R.identity),
   );
 }

@@ -229,11 +229,7 @@ app.get("/custom", (c) => {
 
 // Response with headers inline
 app.get("/inline", (c) => {
-  return c.json(
-    { data: "value" },
-    200,
-    { "X-Custom": "header" }
-  );
+  return c.json({ data: "value" }, 200, { "X-Custom": "header" });
 });
 ```
 
@@ -323,12 +319,14 @@ import { csrf } from "hono/csrf";
 import { timing } from "hono/timing";
 
 // CORS
-app.use(cors({
-  origin: ["https://example.com"],
-  allowMethods: ["GET", "POST", "PUT", "DELETE"],
-  allowHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: ["https://example.com"],
+    allowMethods: ["GET", "POST", "PUT", "DELETE"],
+    allowHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  }),
+);
 
 // Logging
 app.use(logger());
@@ -343,15 +341,21 @@ app.use(compress());
 app.use(etag());
 
 // Basic auth
-app.use("/admin/*", basicAuth({
-  username: "admin",
-  password: "secret",
-}));
+app.use(
+  "/admin/*",
+  basicAuth({
+    username: "admin",
+    password: "secret",
+  }),
+);
 
 // Bearer token auth
-app.use("/api/*", bearerAuth({
-  token: "my-secret-token",
-}));
+app.use(
+  "/api/*",
+  bearerAuth({
+    token: "my-secret-token",
+  }),
+);
 
 // CSRF protection
 app.use(csrf());
@@ -380,15 +384,11 @@ const CreateUserSchema = z.object({
   age: z.number().int().positive().optional(),
 });
 
-app.post(
-  "/users",
-  zValidator("json", CreateUserSchema),
-  (c) => {
-    const data = c.req.valid("json");
-    // data is typed: { name: string; email: string; age?: number }
-    return c.json({ created: data });
-  }
-);
+app.post("/users", zValidator("json", CreateUserSchema), (c) => {
+  const data = c.req.valid("json");
+  // data is typed: { name: string; email: string; age?: number }
+  return c.json({ created: data });
+});
 ```
 
 ### Multiple Validators
@@ -411,7 +411,7 @@ app.get(
     const { id } = c.req.valid("param");
     const { page, limit } = c.req.valid("query");
     return c.json({ id, page, limit });
-  }
+  },
 );
 ```
 
@@ -419,22 +419,22 @@ app.get(
 
 ```typescript
 // JSON body
-zValidator("json", schema)
+zValidator("json", schema);
 
 // Query parameters
-zValidator("query", schema)
+zValidator("query", schema);
 
 // URL parameters
-zValidator("param", schema)
+zValidator("param", schema);
 
 // Form data
-zValidator("form", schema)
+zValidator("form", schema);
 
 // Headers
-zValidator("header", schema)
+zValidator("header", schema);
 
 // Cookies
-zValidator("cookie", schema)
+zValidator("cookie", schema);
 ```
 
 ### Custom Error Handling
@@ -444,16 +444,19 @@ app.post(
   "/users",
   zValidator("json", CreateUserSchema, (result, c) => {
     if (!result.success) {
-      return c.json({
-        error: "Validation failed",
-        issues: result.error.issues,
-      }, 400);
+      return c.json(
+        {
+          error: "Validation failed",
+          issues: result.error.issues,
+        },
+        400,
+      );
     }
   }),
   (c) => {
     const data = c.req.valid("json");
     return c.json({ created: data });
-  }
+  },
 );
 ```
 
@@ -469,10 +472,13 @@ app.onError((err, c) => {
     return err.getResponse();
   }
 
-  return c.json({
-    error: "Internal Server Error",
-    message: process.env.NODE_ENV === "development" ? err.message : undefined,
-  }, 500);
+  return c.json(
+    {
+      error: "Internal Server Error",
+      message: process.env.NODE_ENV === "development" ? err.message : undefined,
+    },
+    500,
+  );
 });
 ```
 
@@ -496,10 +502,13 @@ app.get("/protected", (c) => {
 
 ```typescript
 app.notFound((c) => {
-  return c.json({
-    error: "Not Found",
-    path: c.req.path,
-  }, 404);
+  return c.json(
+    {
+      error: "Not Found",
+      path: c.req.path,
+    },
+    404,
+  );
 });
 ```
 
@@ -514,14 +523,10 @@ import { z } from "zod";
 
 const app = new Hono()
   .get("/users", (c) => c.json({ users: [] }))
-  .post(
-    "/users",
-    zValidator("json", z.object({ name: z.string() })),
-    (c) => {
-      const { name } = c.req.valid("json");
-      return c.json({ id: 1, name });
-    }
-  )
+  .post("/users", zValidator("json", z.object({ name: z.string() })), (c) => {
+    const { name } = c.req.valid("json");
+    return c.json({ id: 1, name });
+  })
   .get("/users/:id", (c) => {
     const id = c.req.param("id");
     return c.json({ id, name: "John" });
@@ -755,15 +760,11 @@ app.get("/users", async (c) => {
   return c.json({ users });
 });
 
-app.post(
-  "/users",
-  zValidator("json", CreateUserSchema),
-  async (c) => {
-    const data = c.req.valid("json");
-    const user = await prisma.user.create({ data });
-    return c.json(user, 201);
-  }
-);
+app.post("/users", zValidator("json", CreateUserSchema), async (c) => {
+  const data = c.req.valid("json");
+  const user = await prisma.user.create({ data });
+  return c.json(user, 201);
+});
 ```
 
 ### Authentication Pattern
@@ -786,7 +787,7 @@ app.post("/login", async (c) => {
   // Validate credentials...
   const token = await sign(
     { sub: user.id, exp: Math.floor(Date.now() / 1000) + 60 * 60 },
-    process.env.JWT_SECRET!
+    process.env.JWT_SECRET!,
   );
 
   return c.json({ token });

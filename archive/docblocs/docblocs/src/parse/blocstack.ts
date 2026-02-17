@@ -11,8 +11,10 @@ import { ParseError } from "./error";
 function canClose(open: ast.Expression, close: ast.Expression): boolean {
   return (
     ast.equals(open, close) ||
-    open.type == "Application" && canClose(open.fn, close) ||
-    open.type == "BinaryOperation" && open.op == "|" && canClose(open.left, close)
+    (open.type == "Application" && canClose(open.fn, close)) ||
+    (open.type == "BinaryOperation" &&
+      open.op == "|" &&
+      canClose(open.left, close))
   );
 }
 
@@ -29,15 +31,14 @@ export interface ContainerBloc {
  * the block.  The template is the contents of the block.
  */
 export class BlocStack {
-
   /** Stack of blocks */
-  blocs: (ContainerBloc)[] = [];
+  blocs: ContainerBloc[] = [];
 
   /** Top of block stack */
-  bloc: (ContainerBloc);
+  bloc: ContainerBloc;
 
   /** Stack of identifiers. */
-  ids: (ast.Expression|null)[] = [];
+  ids: (ast.Expression | null)[] = [];
 
   /** Top of identifier stack. */
   id: ast.Expression;
@@ -47,7 +48,7 @@ export class BlocStack {
    * @param id        Identifying node for the block
    * @param template  Template for block contents
    */
-  push(bloc: ContainerBloc, id: ast.Expression|null) {
+  push(bloc: ContainerBloc, id: ast.Expression | null) {
     this.blocs.push(bloc);
     this.ids.push(id);
     this.bloc = bloc;
@@ -78,14 +79,11 @@ export class BlocStack {
         --i;
       }
       this.id = this.ids[i] as ast.Expression;
-    }
-    else if (this.ids.length == 1) {
+    } else if (this.ids.length == 1) {
       // The root bloc is implicit; shouldn't be explicitly closed
       throw new ParseError(`Unexpected closing tag: ${id}`, id);
-    }
-    else {
+    } else {
       throw new ParseError(`Expected [[-${ast.toString(this.id)}]]`, id);
     }
   }
-
 }

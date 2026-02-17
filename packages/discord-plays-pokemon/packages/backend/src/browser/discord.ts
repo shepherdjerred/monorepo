@@ -44,15 +44,21 @@ async function login(driver: WebDriver) {
   await driver.get("https://discord.com/login");
 
   logger.info("typing email");
-  const emailInput = driver.wait(until.elementLocated(By.css("input[name=email]")));
+  const emailInput = driver.wait(
+    until.elementLocated(By.css("input[name=email]")),
+  );
   await emailInput.sendKeys(getConfig().stream.userbot.username);
 
   logger.info("typing password");
-  const passwordInput = driver.wait(until.elementLocated(By.css("input[name=password]")));
+  const passwordInput = driver.wait(
+    until.elementLocated(By.css("input[name=password]")),
+  );
   await passwordInput.sendKeys(getConfig().stream.userbot.password);
 
   logger.info("click submit button");
-  const submitButton = driver.wait(until.elementLocated(By.css("button[type=submit]")));
+  const submitButton = driver.wait(
+    until.elementLocated(By.css("button[type=submit]")),
+  );
   await submitButton.click();
 
   logger.info("waiting for redirect");
@@ -68,7 +74,11 @@ async function navigateToTextChannel(driver: WebDriver) {
   await driver.get(textChannelUrl);
   logger.info("waiting for text channel to be listed");
   const textChat = await driver.wait(
-    until.elementLocated(By.css(`a[data-list-item-id="channels___${getConfig().game.commands.channel_id}"]`)),
+    until.elementLocated(
+      By.css(
+        `a[data-list-item-id="channels___${getConfig().game.commands.channel_id}"]`,
+      ),
+    ),
   );
   const delay = 5000;
   logger.info(`waiting ${delay}ms for text channel to become clickable`);
@@ -115,7 +125,9 @@ async function updateSettings(driver: WebDriver) {
 export async function joinVoiceChat(driver: WebDriver) {
   logger.info("trying to join voice chat");
   const voiceChannelSelector = `a[data-list-item-id="channels___${getConfig().stream.channel_id}"]`;
-  const voiceChatButton = await driver.wait(until.elementLocated(By.css(voiceChannelSelector)));
+  const voiceChatButton = await driver.wait(
+    until.elementLocated(By.css(voiceChannelSelector)),
+  );
   logger.info("joined voice chat");
   await voiceChatButton.click();
 }
@@ -123,7 +135,9 @@ export async function joinVoiceChat(driver: WebDriver) {
 export async function shareScreen(driver: WebDriver) {
   logger.info("trying to share screen");
   const videoShareSelector = 'button[aria-label="Share Your Screen"]';
-  const videoShareButton = await driver.wait(until.elementLocated(By.css(videoShareSelector)));
+  const videoShareButton = await driver.wait(
+    until.elementLocated(By.css(videoShareSelector)),
+  );
   logger.info("clicking sharing screen button");
   await videoShareButton.click();
 }
@@ -131,7 +145,9 @@ export async function shareScreen(driver: WebDriver) {
 export async function stopShareScreen(driver: WebDriver) {
   logger.info("trying to stop screen sharing");
   const videoShareSelector = 'button[aria-label="Stop Streaming"]';
-  const videoShareButton = await driver.wait(until.elementLocated(By.css(videoShareSelector)));
+  const videoShareButton = await driver.wait(
+    until.elementLocated(By.css(videoShareSelector)),
+  );
   logger.info("clicking stop sharing screen button");
   await videoShareButton.click();
 }
@@ -140,7 +156,9 @@ export async function disconnect(driver: WebDriver) {
   logger.info("trying to disconnect");
   await driver.switchTo().window((await driver.getAllWindowHandles())[0]);
   const disconnectSelector = 'button[aria-label="Disconnect"]';
-  const disconnectButton = await driver.wait(until.elementLocated(By.css(disconnectSelector)));
+  const disconnectButton = await driver.wait(
+    until.elementLocated(By.css(disconnectSelector)),
+  );
   logger.info("clicking disconnect button");
   await disconnectButton.click();
 }

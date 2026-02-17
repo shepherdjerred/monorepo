@@ -9,7 +9,7 @@ type RecreateBlockedModalProps = {
   onOpenChange: (open: boolean) => void;
   session: Session;
   healthReport: SessionHealthReport;
-}
+};
 
 export function RecreateBlockedModal({
   open,
@@ -20,19 +20,23 @@ export function RecreateBlockedModal({
   // Handle ESC key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onOpenChange(false);
       }
     };
 
     if (open) {
-      document.addEventListener('keydown', handleEscape);
-      return () => { document.removeEventListener('keydown', handleEscape); };
+      document.addEventListener("keydown", handleEscape);
+      return () => {
+        document.removeEventListener("keydown", handleEscape);
+      };
     }
     return;
   }, [open, onOpenChange]);
 
-  if (!open) {return null;}
+  if (!open) {
+    return null;
+  }
 
   return (
     <>
@@ -40,10 +44,12 @@ export function RecreateBlockedModal({
       <div
         className="fixed inset-0 z-40"
         style={{
-          backgroundColor: 'hsl(220, 90%, 8%)',
-          opacity: 0.85
+          backgroundColor: "hsl(220, 90%, 8%)",
+          opacity: 0.85,
         }}
-        onClick={() => { onOpenChange(false); }}
+        onClick={() => {
+          onOpenChange(false);
+        }}
         aria-hidden="true"
       />
 
@@ -52,15 +58,18 @@ export function RecreateBlockedModal({
         <div
           className="max-w-lg w-full flex flex-col border-4 border-red-500"
           style={{
-            backgroundColor: 'hsl(220, 15%, 95%)',
-            boxShadow: '12px 12px 0 hsl(0, 70%, 35%), 24px 24px 0 hsl(0, 80%, 20%)'
+            backgroundColor: "hsl(220, 15%, 95%)",
+            boxShadow:
+              "12px 12px 0 hsl(0, 70%, 35%), 24px 24px 0 hsl(0, 80%, 20%)",
           }}
-          onClick={(e) => { e.stopPropagation(); }}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
         >
           {/* Header */}
           <div
             className="flex items-center justify-between p-4 border-b-4 border-red-500"
-            style={{ backgroundColor: 'hsl(0, 70%, 45%)' }}
+            style={{ backgroundColor: "hsl(0, 70%, 45%)" }}
           >
             <div className="flex items-center gap-3">
               <AlertTriangle className="w-6 h-6 text-white" />
@@ -69,7 +78,9 @@ export function RecreateBlockedModal({
               </h2>
             </div>
             <button
-              onClick={() => { onOpenChange(false); }}
+              onClick={() => {
+                onOpenChange(false);
+              }}
               className="cursor-pointer p-2 border-2 border-white bg-white/10 hover:bg-red-800 hover:text-white transition-all duration-200 font-bold text-white"
               title="Close dialog"
               aria-label="Close dialog"
@@ -79,12 +90,17 @@ export function RecreateBlockedModal({
           </div>
 
           {/* Content */}
-          <div className="p-6 space-y-4" style={{ backgroundColor: 'hsl(220, 15%, 95%)' }}>
+          <div
+            className="p-6 space-y-4"
+            style={{ backgroundColor: "hsl(220, 15%, 95%)" }}
+          >
             {/* Session Info */}
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <span className="text-sm font-semibold">Session:</span>
-                <span className="font-mono text-sm">{session.title ?? session.name}</span>
+                <span className="font-mono text-sm">
+                  {session.title ?? session.name}
+                </span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-sm font-semibold">Backend:</span>
@@ -100,7 +116,8 @@ export function RecreateBlockedModal({
                 This session cannot be recreated.
               </p>
               <p className="text-sm text-red-600">
-                Uncommitted work and Claude conversation history would be permanently lost.
+                Uncommitted work and Claude conversation history would be
+                permanently lost.
               </p>
             </div>
 
@@ -122,7 +139,12 @@ export function RecreateBlockedModal({
 
             {/* Footer */}
             <div className="flex gap-3 pt-4 border-t-2 justify-end">
-              <Button variant="brutalist" onClick={() => { onOpenChange(false); }}>
+              <Button
+                variant="brutalist"
+                onClick={() => {
+                  onOpenChange(false);
+                }}
+              >
                 OK
               </Button>
             </div>

@@ -12,7 +12,12 @@ import tailwindcss from "@tailwindcss/vite";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-const fontPath = fileURLToPath(new URL("public/fonts/CommitMono/CommitMono-700-Regular.otf", import.meta.url));
+const fontPath = fileURLToPath(
+  new URL(
+    "public/fonts/CommitMono/CommitMono-700-Regular.otf",
+    import.meta.url,
+  ),
+);
 const fontData = readFileSync(fontPath).buffer;
 
 // https://astro.build/config

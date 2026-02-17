@@ -48,7 +48,9 @@ function getHealthColor(state: ResourceState): string {
 }
 
 // Helper to create mock health reports
-function createMockHealthReport(overrides: Partial<SessionHealthReport> = {}): SessionHealthReport {
+function createMockHealthReport(
+  overrides: Partial<SessionHealthReport> = {},
+): SessionHealthReport {
   return {
     session_id: "session-123",
     session_name: "Test Session",
@@ -81,7 +83,9 @@ describe("StartupHealthModal helpers", () => {
     });
 
     test("returns Error for error state", () => {
-      expect(getHealthLabel({ type: "Error", message: "Something went wrong" })).toBe("Error");
+      expect(
+        getHealthLabel({ type: "Error", message: "Something went wrong" }),
+      ).toBe("Error");
     });
 
     test("returns Crash Loop for crash loop state", () => {
@@ -89,15 +93,21 @@ describe("StartupHealthModal helpers", () => {
     });
 
     test("returns Deleted Externally for deleted externally state", () => {
-      expect(getHealthLabel({ type: "DeletedExternally" })).toBe("Deleted Externally");
+      expect(getHealthLabel({ type: "DeletedExternally" })).toBe(
+        "Deleted Externally",
+      );
     });
 
     test("returns Data Lost for data lost state", () => {
-      expect(getHealthLabel({ type: "DataLost", reason: "PVC deleted" })).toBe("Data Lost");
+      expect(getHealthLabel({ type: "DataLost", reason: "PVC deleted" })).toBe(
+        "Data Lost",
+      );
     });
 
     test("returns Worktree Missing for worktree missing state", () => {
-      expect(getHealthLabel({ type: "WorktreeMissing" })).toBe("Worktree Missing");
+      expect(getHealthLabel({ type: "WorktreeMissing" })).toBe(
+        "Worktree Missing",
+      );
     });
 
     test("returns Unknown for healthy state (not shown in modal)", () => {
@@ -107,27 +117,36 @@ describe("StartupHealthModal helpers", () => {
 
   describe("getHealthColor", () => {
     test("returns yellow colors for warning states", () => {
-      const yellowColor = "bg-yellow-500/20 text-yellow-700 border-yellow-500/50";
+      const yellowColor =
+        "bg-yellow-500/20 text-yellow-700 border-yellow-500/50";
       expect(getHealthColor({ type: "Stopped" })).toBe(yellowColor);
       expect(getHealthColor({ type: "Hibernated" })).toBe(yellowColor);
       expect(getHealthColor({ type: "Pending" })).toBe(yellowColor);
     });
 
     test("returns orange color for missing state", () => {
-      expect(getHealthColor({ type: "Missing" })).toBe("bg-orange-500/20 text-orange-700 border-orange-500/50");
+      expect(getHealthColor({ type: "Missing" })).toBe(
+        "bg-orange-500/20 text-orange-700 border-orange-500/50",
+      );
     });
 
     test("returns red colors for error states", () => {
       const redColor = "bg-red-500/20 text-red-700 border-red-500/50";
-      expect(getHealthColor({ type: "Error", message: "Error" })).toBe(redColor);
+      expect(getHealthColor({ type: "Error", message: "Error" })).toBe(
+        redColor,
+      );
       expect(getHealthColor({ type: "CrashLoop" })).toBe(redColor);
       expect(getHealthColor({ type: "DeletedExternally" })).toBe(redColor);
-      expect(getHealthColor({ type: "DataLost", reason: "PVC deleted" })).toBe(redColor);
+      expect(getHealthColor({ type: "DataLost", reason: "PVC deleted" })).toBe(
+        redColor,
+      );
       expect(getHealthColor({ type: "WorktreeMissing" })).toBe(redColor);
     });
 
     test("returns gray color for unknown states", () => {
-      expect(getHealthColor({ type: "Healthy" })).toBe("bg-gray-500/20 text-gray-700 border-gray-500/50");
+      expect(getHealthColor({ type: "Healthy" })).toBe(
+        "bg-gray-500/20 text-gray-700 border-gray-500/50",
+      );
     });
   });
 

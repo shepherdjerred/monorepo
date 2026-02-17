@@ -20,7 +20,11 @@ mock.module("@mastra/core/agent", () => ({
     name: string;
     private _instructions: string;
 
-    constructor(config: { name: string; instructions: string; [key: string]: unknown }) {
+    constructor(config: {
+      name: string;
+      instructions: string;
+      [key: string]: unknown;
+    }) {
       this.name = config.name;
       this._instructions = config.instructions;
     }
@@ -33,7 +37,11 @@ mock.module("@mastra/core/agent", () => ({
 
 // Mock @mastra/core/tools
 mock.module("@mastra/core/tools", () => ({
-  createTool: (config: { id: string; description: string; [key: string]: unknown }) => ({
+  createTool: (config: {
+    id: string;
+    description: string;
+    [key: string]: unknown;
+  }) => ({
     ...config,
   }),
 }));
@@ -46,7 +54,7 @@ const mockOpenai: OpenaiMock = Object.assign(
   {
     chat: (model: string) => ({ provider: "openai.chat", model }),
     responses: (model: string) => ({ provider: "openai.responses", model }),
-  }
+  },
 );
 mock.module("@ai-sdk/openai", () => ({
   openai: mockOpenai,
@@ -195,7 +203,8 @@ mock.module("discord-player", () => ({
     url = "https://example.com/playlist";
   },
   Util: {
-    buildTimeCode: (ms: number) => `${String(Math.floor(ms / 60000))}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, "0")}`,
+    buildTimeCode: (ms: number) =>
+      `${String(Math.floor(ms / 60000))}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, "0")}`,
     parseMS: (_str: string) => 0,
   },
   BaseExtractor: class MockBaseExtractor {

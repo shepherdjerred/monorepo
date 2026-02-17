@@ -5,7 +5,7 @@ nav.navbar {
   right: 0;
   left: 0;
   color: #fff;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   z-index: 10;
 
   @media screen and (max-width: 768px) {
@@ -49,8 +49,10 @@ nav.navbar {
         font-size: 16px;
         font-weight: 300;
 
-        &:focus, &:hover, &:active {
-          color: #F0340F;
+        &:focus,
+        &:hover,
+        &:active {
+          color: #f0340f;
         }
 
         @media screen and (max-width: 768px) {

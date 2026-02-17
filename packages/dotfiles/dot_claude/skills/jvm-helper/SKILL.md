@@ -348,6 +348,7 @@ suspend fun loadDashboard() = coroutineScope {
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - Choice between Java and Kotlin for a new module is unclear
 - Build tool selection (Gradle vs Maven) needs deciding
 - Spring Boot vs Quarkus vs Micronaut framework choice
@@ -359,6 +360,7 @@ Ask the user for clarification when:
 ---
 
 See `references/` for detailed guides:
+
 - `modern-java.md` - Records, sealed classes, pattern matching, virtual threads, structured concurrency, FFM API
 - `kotlin-patterns.md` - Null safety, coroutines, sealed classes, extension functions, K2 compiler, KMP
 - `build-tools.md` - Gradle Kotlin DSL, Maven, GraalVM native-image, jlink, jpackage, JVM tuning

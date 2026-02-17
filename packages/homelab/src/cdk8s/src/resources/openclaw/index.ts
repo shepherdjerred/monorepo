@@ -1,13 +1,27 @@
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { ConfigMap, Cpu, Deployment, DeploymentStrategy, EnvValue, Secret, Service, Volume } from "cdk8s-plus-31";
+import {
+  ConfigMap,
+  Cpu,
+  Deployment,
+  DeploymentStrategy,
+  EnvValue,
+  Secret,
+  Service,
+  Volume,
+} from "cdk8s-plus-31";
 import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
 import { KubeNetworkPolicy } from "../../../generated/imports/k8s.ts";
 import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "../../misc/tailscale.ts";
 import { withCommonProps } from "../../misc/common.ts";
 import versions from "../../versions.ts";
-import { homeassistantSkill, todoistSkill, fastmailSkill, gmailSkill } from "./skills/index.ts";
+import {
+  homeassistantSkill,
+  todoistSkill,
+  fastmailSkill,
+  gmailSkill,
+} from "./skills/index.ts";
 
 const OPENCLAW_CONFIG = {
   // Agent defaults - model, workspace, sandbox settings
@@ -102,31 +116,40 @@ const OPENCLAW_CONFIG = {
 const MCPORTER_CONFIG = {
   mcpServers: {
     canvas: {
-      baseUrl: "http://mcp-gateway.mcp-gateway.svc.cluster.local:9090/canvas/sse",
+      baseUrl:
+        "http://mcp-gateway.mcp-gateway.svc.cluster.local:9090/canvas/sse",
     },
     todoist: {
-      baseUrl: "http://mcp-gateway.mcp-gateway.svc.cluster.local:9090/todoist/sse",
+      baseUrl:
+        "http://mcp-gateway.mcp-gateway.svc.cluster.local:9090/todoist/sse",
     },
     piazza: {
-      baseUrl: "http://mcp-gateway.mcp-gateway.svc.cluster.local:9090/piazza/sse",
+      baseUrl:
+        "http://mcp-gateway.mcp-gateway.svc.cluster.local:9090/piazza/sse",
     },
     "home-assistant": {
-      baseUrl: "http://mcp-gateway.mcp-gateway.svc.cluster.local:9090/home-assistant/sse",
+      baseUrl:
+        "http://mcp-gateway.mcp-gateway.svc.cluster.local:9090/home-assistant/sse",
     },
     github: {
-      baseUrl: "http://mcp-gateway.mcp-gateway.svc.cluster.local:9090/github/sse",
+      baseUrl:
+        "http://mcp-gateway.mcp-gateway.svc.cluster.local:9090/github/sse",
     },
     sonos: {
-      baseUrl: "http://mcp-gateway.mcp-gateway.svc.cluster.local:9090/sonos/sse",
+      baseUrl:
+        "http://mcp-gateway.mcp-gateway.svc.cluster.local:9090/sonos/sse",
     },
     fastmail: {
-      baseUrl: "http://mcp-gateway.mcp-gateway.svc.cluster.local:9090/fastmail/sse",
+      baseUrl:
+        "http://mcp-gateway.mcp-gateway.svc.cluster.local:9090/fastmail/sse",
     },
     weather: {
-      baseUrl: "http://mcp-gateway.mcp-gateway.svc.cluster.local:9090/weather/sse",
+      baseUrl:
+        "http://mcp-gateway.mcp-gateway.svc.cluster.local:9090/weather/sse",
     },
     gmail: {
-      baseUrl: "http://mcp-gateway.mcp-gateway.svc.cluster.local:9090/gmail/sse",
+      baseUrl:
+        "http://mcp-gateway.mcp-gateway.svc.cluster.local:9090/gmail/sse",
     },
   },
 };
@@ -210,7 +233,9 @@ export function createOpenclawDeployment(chart: Chart) {
       policyTypes: ["Egress"],
       egress: [
         {
-          to: [{ ipBlock: { cidr: "0.0.0.0/0", except: ["169.254.169.254/32"] } }],
+          to: [
+            { ipBlock: { cidr: "0.0.0.0/0", except: ["169.254.169.254/32"] } },
+          ],
         },
       ],
     },
@@ -235,17 +260,37 @@ export function createOpenclawDeployment(chart: Chart) {
   });
 
   // Create volumes once to share between init and main containers
-  const dataVol = Volume.fromPersistentVolumeClaim(chart, "openclaw-data-vol", dataVolume.claim);
-  const configVol = Volume.fromConfigMap(chart, "openclaw-config-vol", configMap);
-  const skillsVol = Volume.fromConfigMap(chart, "openclaw-skills-vol", skillsConfigMap);
-  const mcporterVol = Volume.fromConfigMap(chart, "openclaw-mcporter-vol", mcporterConfigMap);
+  const dataVol = Volume.fromPersistentVolumeClaim(
+    chart,
+    "openclaw-data-vol",
+    dataVolume.claim,
+  );
+  const configVol = Volume.fromConfigMap(
+    chart,
+    "openclaw-config-vol",
+    configMap,
+  );
+  const skillsVol = Volume.fromConfigMap(
+    chart,
+    "openclaw-skills-vol",
+    skillsConfigMap,
+  );
+  const mcporterVol = Volume.fromConfigMap(
+    chart,
+    "openclaw-mcporter-vol",
+    mcporterConfigMap,
+  );
 
   // Init container to copy config from ConfigMap to writable location (always overwrites)
   // fsGroup handles ownership, so no chown needed
   deployment.addInitContainer({
     name: "init-config",
     image: `library/busybox:${versions["library/busybox"]}`,
-    command: ["sh", "-c", "cp /config-template/openclaw.json /data/openclaw.json"],
+    command: [
+      "sh",
+      "-c",
+      "cp /config-template/openclaw.json /data/openclaw.json",
+    ],
     securityContext: {
       user: UID,
       group: GID,
@@ -302,47 +347,91 @@ export function createOpenclawDeployment(chart: Chart) {
       envVariables: {
         OPENCLAW_STATE_DIR: EnvValue.fromValue("/data"),
         ANTHROPIC_API_KEY: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "openclaw-anthropic-key-secret", onePasswordItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "openclaw-anthropic-key-secret",
+            onePasswordItem.name,
+          ),
           key: "anthropic-api-key",
         }),
         DISCORD_BOT_TOKEN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "openclaw-discord-token-secret", onePasswordItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "openclaw-discord-token-secret",
+            onePasswordItem.name,
+          ),
           key: "discord-bot-token",
         }),
         GH_TOKEN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "openclaw-gh-token-secret", onePasswordItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "openclaw-gh-token-secret",
+            onePasswordItem.name,
+          ),
           key: "gh-token",
         }),
         OPENCLAW_GATEWAY_TOKEN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "openclaw-gateway-token-secret", onePasswordItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "openclaw-gateway-token-secret",
+            onePasswordItem.name,
+          ),
           key: "gateway-token",
         }),
         TODOIST_API_KEY: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "todoist-secret", todoistItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "todoist-secret",
+            todoistItem.name,
+          ),
           key: "api-key",
         }),
         FASTMAIL_TOKEN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "openclaw-fastmail-secret", onePasswordItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "openclaw-fastmail-secret",
+            onePasswordItem.name,
+          ),
           key: "fastmail-token",
         }),
         GMAIL_TOKEN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "openclaw-gmail-secret", onePasswordItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "openclaw-gmail-secret",
+            onePasswordItem.name,
+          ),
           key: "gmail-token",
         }),
         HOMEASSISTANT_TOKEN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "openclaw-homeassistant-secret", onePasswordItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "openclaw-homeassistant-secret",
+            onePasswordItem.name,
+          ),
           key: "homeassistant-token",
         }),
         CANVAS_API_TOKEN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "canvas-token-secret", canvasItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "canvas-token-secret",
+            canvasItem.name,
+          ),
           key: "api-token",
         }),
         CANVAS_BASE_URL: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "canvas-url-secret", canvasItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "canvas-url-secret",
+            canvasItem.name,
+          ),
           key: "base-url",
         }),
         BRAVE_API_KEY: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "openclaw-brave-secret", onePasswordItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "openclaw-brave-secret",
+            onePasswordItem.name,
+          ),
           key: "brave-api-key",
         }),
       },

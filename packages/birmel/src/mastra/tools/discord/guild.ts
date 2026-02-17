@@ -6,44 +6,64 @@ import { validateSnowflakes } from "./validation.js";
 
 export const manageGuildTool = createTool({
   id: "manage-guild",
-  description: "Manage Discord guild/server: get info, get owner, modify settings, set icon, set banner, or get audit logs",
+  description:
+    "Manage Discord guild/server: get info, get owner, modify settings, set icon, set banner, or get audit logs",
   inputSchema: z.object({
     guildId: z.string().describe("The ID of the guild"),
-    action: z.enum(["get-info", "get-owner", "modify", "set-icon", "set-banner", "get-audit-logs"]).describe("The action to perform"),
+    action: z
+      .enum([
+        "get-info",
+        "get-owner",
+        "modify",
+        "set-icon",
+        "set-banner",
+        "get-audit-logs",
+      ])
+      .describe("The action to perform"),
     name: z.string().optional().describe("New server name (for modify)"),
-    description: z.string().optional().describe("New server description (for modify)"),
+    description: z
+      .string()
+      .optional()
+      .describe("New server description (for modify)"),
     iconUrl: z.string().optional().describe("URL for new icon (for set-icon)"),
-    bannerUrl: z.string().optional().describe("URL for new banner (for set-banner)"),
+    bannerUrl: z
+      .string()
+      .optional()
+      .describe("URL for new banner (for set-banner)"),
     limit: z.number().optional().describe("Max entries (for get-audit-logs)"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
     message: z.string(),
-    data: z.union([
-      z.object({
-        id: z.string(),
-        name: z.string(),
-        memberCount: z.number(),
-        description: z.string().nullable(),
-        ownerId: z.string(),
-        createdAt: z.string(),
-        iconUrl: z.string().nullable(),
-        channelCount: z.number(),
-        roleCount: z.number(),
-      }),
-      z.object({
-        ownerId: z.string(),
-        ownerUsername: z.string(),
-        ownerDisplayName: z.string(),
-      }),
-      z.array(z.object({
-        action: z.string(),
-        executor: z.string().nullable(),
-        target: z.string().nullable(),
-        reason: z.string().nullable(),
-        createdAt: z.string(),
-      })),
-    ]).optional(),
+    data: z
+      .union([
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          memberCount: z.number(),
+          description: z.string().nullable(),
+          ownerId: z.string(),
+          createdAt: z.string(),
+          iconUrl: z.string().nullable(),
+          channelCount: z.number(),
+          roleCount: z.number(),
+        }),
+        z.object({
+          ownerId: z.string(),
+          ownerUsername: z.string(),
+          ownerDisplayName: z.string(),
+        }),
+        z.array(
+          z.object({
+            action: z.string(),
+            executor: z.string().nullable(),
+            target: z.string().nullable(),
+            reason: z.string().nullable(),
+            createdAt: z.string(),
+          }),
+        ),
+      ])
+      .optional(),
   }),
   execute: async (ctx) => {
     try {
@@ -51,7 +71,9 @@ export const manageGuildTool = createTool({
       const idError = validateSnowflakes([
         { value: ctx.guildId, fieldName: "guildId" },
       ]);
-      if (idError) {return { success: false, message: idError };}
+      if (idError) {
+        return { success: false, message: idError };
+      }
 
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
@@ -90,8 +112,12 @@ export const manageGuildTool = createTool({
 
         case "modify": {
           const updates: { name?: string; description?: string } = {};
-          if (ctx.name) {updates.name = ctx.name;}
-          if (ctx.description) {updates.description = ctx.description;}
+          if (ctx.name) {
+            updates.name = ctx.name;
+          }
+          if (ctx.description) {
+            updates.description = ctx.description;
+          }
           if (Object.keys(updates).length === 0) {
             return { success: false, message: "No changes specified" };
           }
@@ -100,19 +126,28 @@ export const manageGuildTool = createTool({
         }
 
         case "set-icon": {
-          if (!ctx.iconUrl) {return { success: false, message: "iconUrl is required" };}
+          if (!ctx.iconUrl) {
+            return { success: false, message: "iconUrl is required" };
+          }
           await guild.setIcon(ctx.iconUrl);
           return { success: true, message: "Server icon updated successfully" };
         }
 
         case "set-banner": {
-          if (!ctx.bannerUrl) {return { success: false, message: "bannerUrl is required" };}
+          if (!ctx.bannerUrl) {
+            return { success: false, message: "bannerUrl is required" };
+          }
           await guild.setBanner(ctx.bannerUrl);
-          return { success: true, message: "Server banner updated successfully" };
+          return {
+            success: true,
+            message: "Server banner updated successfully",
+          };
         }
 
         case "get-audit-logs": {
-          const auditLogs = await guild.fetchAuditLogs({ limit: ctx.limit ?? 10 });
+          const auditLogs = await guild.fetchAuditLogs({
+            limit: ctx.limit ?? 10,
+          });
           const entries = auditLogs.entries.map((entry) => {
             let targetId: string | null = null;
             if (entry.target && "id" in entry.target && entry.target.id) {
@@ -135,7 +170,10 @@ export const manageGuildTool = createTool({
       }
     } catch (error) {
       logger.error("Failed to manage guild", error);
-      return { success: false, message: `Failed to manage guild: ${(error as Error).message}` };
+      return {
+        success: false,
+        message: `Failed to manage guild: ${(error as Error).message}`,
+      };
     }
   },
 });

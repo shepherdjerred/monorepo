@@ -1,4 +1,4 @@
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
 import {
   ConfigMap,
@@ -85,7 +85,8 @@ export async function createMcpGatewayDeployment(chart: Chart) {
     },
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "MCP Gateway requires writable filesystem for runtime data",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "MCP Gateway requires writable filesystem for runtime data",
       },
     },
   });
@@ -128,53 +129,95 @@ export async function createMcpGatewayDeployment(chart: Chart) {
         HOME: EnvValue.fromValue("/tmp"),
         // Canvas configuration (shared credential)
         CANVAS_API_TOKEN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "canvas-token-secret", canvasItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "canvas-token-secret",
+            canvasItem.name,
+          ),
           key: "api-token",
         }),
         CANVAS_BASE_URL: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "canvas-url-secret", canvasItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "canvas-url-secret",
+            canvasItem.name,
+          ),
           key: "base-url",
         }),
         // Todoist configuration - todoist-mcp expects API_KEY env var
         API_KEY: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "todoist-secret", todoistItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "todoist-secret",
+            todoistItem.name,
+          ),
           key: "api-key",
         }),
         // Piazza configuration
         PIAZZA_EMAIL: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "piazza-email-secret", piazzaItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "piazza-email-secret",
+            piazzaItem.name,
+          ),
           key: "email",
         }),
         PIAZZA_PASSWORD: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "piazza-password-secret", piazzaItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "piazza-password-secret",
+            piazzaItem.name,
+          ),
           key: "password",
         }),
         PIAZZA_COURSES: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "piazza-courses-secret", piazzaItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "piazza-courses-secret",
+            piazzaItem.name,
+          ),
           key: "courses",
         }),
         // GitHub configuration - @modelcontextprotocol/server-github expects GITHUB_TOKEN
         GITHUB_TOKEN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "github-token-secret", openclawItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "github-token-secret",
+            openclawItem.name,
+          ),
           key: "gh-token",
         }),
         // Fastmail JMAP configuration - token stored in openclaw 1Password item
-        JMAP_SESSION_URL: EnvValue.fromValue("https://api.fastmail.com/jmap/session"),
+        JMAP_SESSION_URL: EnvValue.fromValue(
+          "https://api.fastmail.com/jmap/session",
+        ),
         JMAP_TOKEN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "fastmail-jmap-token-secret", openclawItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "fastmail-jmap-token-secret",
+            openclawItem.name,
+          ),
           key: "fastmail-token",
         }),
         // Gmail IMAP configuration - @automatearmy/email-reader-mcp expects USER_EMAIL and USER_PASS
         USER_EMAIL: EnvValue.fromValue("shepherdjerred@gmail.com"),
         USER_PASS: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "gmail-pass-secret", openclawItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "gmail-pass-secret",
+            openclawItem.name,
+          ),
           key: "gmail-token",
         }),
       },
       volumeMounts: [
         {
           path: "/config",
-          volume: Volume.fromConfigMap(chart, "mcp-proxy-config-volume", mcpProxyConfig),
+          volume: Volume.fromConfigMap(
+            chart,
+            "mcp-proxy-config-volume",
+            mcpProxyConfig,
+          ),
         },
       ],
     }),

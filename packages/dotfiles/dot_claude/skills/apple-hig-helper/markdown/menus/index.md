@@ -12,7 +12,7 @@ A menu reveals its options when people interact with it, making it a space-effic
 
 ![A stylized representation of a menu containing a selected item and displaying a submenu. The image is tinted red to subtly reflect the red in the original six-color Apple logo.](https://docs-assets.developer.apple.com/published/a64b5649dc039710622ba211979e116b/components-menus-intro%402x.png)
 
-Menus are ubiquitous in apps and games, so most people already know how to use them. Whether you use system-provided components or custom ones, people expect menus to behave in familiar ways. For example, people understand that opening a menu reveals one or more *menu items*, each of which represents a command, option, or state that affects the current selection or context. The guidance for labeling and organizing menu items applies to all types of menus in all experiences.
+Menus are ubiquitous in apps and games, so most people already know how to use them. Whether you use system-provided components or custom ones, people expect menus to behave in familiar ways. For example, people understand that opening a menu reveals one or more _menu items_, each of which represents a command, option, or state that affects the current selection or context. The guidance for labeling and organizing menu items applies to all types of menus in all experiences.
 
 Note
 
@@ -30,7 +30,7 @@ Depending on menu layout, an iOS, iPadOS, or visionOS app can display a few unla
 
 **To be consistent with platform experiences, use title-style capitalization.** Although a game might have a different writing style, generally prefer using title-style capitalization, which capitalizes every word except articles, coordinating conjunctions, and short prepositions, and capitalizes the last word in the label, regardless of the part of speech. For complete guidance on this style of capitalization in English, see [title-style capitalization](https://support.apple.com/guide/applestyleguide/c-apsgb744e4a3/web#apdca93e113f1d64).
 
-**Remove articles like *a*, *an*, and *the* from menu-item labels to save space.** In English, articles always lengthen labels, but rarely enhance understanding. For example, changing a menu-item label from View Settings to View the Settings doesn’t provide additional clarification.
+**Remove articles like _a_, _an_, and _the_ from menu-item labels to save space.** In English, articles always lengthen labels, but rarely enhance understanding. For example, changing a menu-item label from View Settings to View the Settings doesn’t provide additional clarification.
 
 **Show people when a menu item is unavailable.** An unavailable menu item often appears dimmed and doesn’t respond to interactions. If all of a menu’s items are unavailable, the menu itself needs to remain available so people can open it and learn about the commands it contains.
 
@@ -70,7 +70,7 @@ Organizing menu items in ways that reflect how people use your app or game can m
 
 **Prefer listing important or frequently used menu items first.** People tend to start scanning a menu from the top, so listing high-priority items first often means that people can find what they want without reading the entire menu.
 
-**Consider grouping logically related items.** For example, grouping editing commands like Copy, Cut, and Paste or camera commands like Look Up, Look Down, and Look Left can help people remember where to find them. To help people visually distinguish such groups, use a separator. Depending on the platform and type of menu, a *separator* appears between groups of items as a horizontal line or a short gap in the menu’s background appearance.
+**Consider grouping logically related items.** For example, grouping editing commands like Copy, Cut, and Paste or camera commands like Look Up, Look Down, and Look Left can help people remember where to find them. To help people visually distinguish such groups, use a separator. Depending on the platform and type of menu, a _separator_ appears between groups of items as a horizontal line or a short gap in the menu’s background appearance.
 
 **Prefer keeping all logically related commands in the same group, even if the commands don’t all have the same importance.** For example, people generally use Paste and Match Style much less often than they use Paste, but they expect to find both commands in the same group that contains more frequently used editing commands like Copy and Cut.
 
@@ -78,9 +78,9 @@ Organizing menu items in ways that reflect how people use your app or game can m
 
 ## [Submenus](/design/human-interface-guidelines/menus#Submenus)
 
-Sometimes, a menu item can reveal a set of closely related items in a subordinate list called a *submenu*. A menu item indicates the presence of a submenu by displaying a symbol — like a chevron — after its label. Submenus are functionally identical to menus, aside from their hierarchical positioning.
+Sometimes, a menu item can reveal a set of closely related items in a subordinate list called a _submenu_. A menu item indicates the presence of a submenu by displaying a symbol — like a chevron — after its label. Submenus are functionally identical to menus, aside from their hierarchical positioning.
 
-**Use submenus sparingly.** Each submenu adds complexity to the interface and hides the items it contains. You might consider creating a submenu when a term appears in more than two menu items in the same group. For example, instead of offering separate menu items for Sort by Date, Sort by Score, and Sort by Time, a game could present a menu item that uses a submenu to list the sorting options Date, Score, and Time. It generally works well to use the repeated term — in this case, *Sort by* — in the menu item’s label to help people predict the contents of the submenu.
+**Use submenus sparingly.** Each submenu adds complexity to the interface and hides the items it contains. You might consider creating a submenu when a term appears in more than two menu items in the same group. For example, instead of offering separate menu items for Sort by Date, Sort by Score, and Sort by Time, a game could present a menu item that uses a submenu to list the sorting options Date, Score, and Time. It generally works well to use the repeated term — in this case, _Sort by_ — in the menu item’s label to help people predict the contents of the submenu.
 
 **Limit the depth and length of submenus.** It can be difficult for people to reveal multiple levels of hierarchical submenus, so it’s generally best to restrict them to a single level. Also, if a submenu contains more than about five items, consider creating a new menu.
 
@@ -112,7 +112,7 @@ In-game menus give players ways to control gameplay as well as determine [settin
 
 ## [Platform considerations](/design/human-interface-guidelines/menus#Platform-considerations)
 
-*No additional considerations for macOS, tvOS, or watchOS.*
+_No additional considerations for macOS, tvOS, or watchOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/menus#iOS-iPadOS)
 
@@ -120,9 +120,9 @@ In iOS and iPadOS, a menu can display items in one of the following three layout
 
 ![A diagram showing small, medium, and large menu layouts, each containing the same set of menu items.](https://docs-assets.developer.apple.com/published/d04cabb2d7b38602590cd6d59d79a0a0/small-medium-large-menu-layouts%402x.png)
 
-* **Small.** A row of four items appears at the top of the menu, above a list that contains the remaining items. For each item in the top row, the menu displays a symbol or icon, but no label.
-* **Medium.** A row of three items appears at the top of the menu, above a list that contains the remaining items. For each item in the top row, the menu displays a symbol or icon above a short label.
-* **Large (the default).** The menu displays all items in a list.
+- **Small.** A row of four items appears at the top of the menu, above a list that contains the remaining items. For each item in the top row, the menu displays a symbol or icon, but no label.
+- **Medium.** A row of three items appears at the top of the menu, above a list that contains the remaining items. For each item in the top row, the menu displays a symbol or icon above a short label.
+- **Large (the default).** The menu displays all items in a list.
 
 For developer guidance, see [`preferredElementSize`](/documentation/UIKit/UIMenu/preferredElementSize).
 
@@ -130,7 +130,7 @@ For developer guidance, see [`preferredElementSize`](/documentation/UIKit/UIMenu
 
 ### [visionOS](/design/human-interface-guidelines/menus#visionOS)
 
-In visionOS, a menu can display items using the small or large layout styles that iOS and iPadOS define (for guidance, see [iOS, iPadOS](/design/human-interface-guidelines/menus#iOS-iPadOS)). You can present a menu in your app or game from 3D content using a SwiftUI view. To ensure that your menu is always visible to people, even when other content occludes it, you can apply a [breakthrough effect](https://developer.apple.com/documentation/swiftui/view/presentationbreakthrougheffect(_:)). As in macOS, an open menu in a visionOS window can appear outside of the window’s boundaries.
+In visionOS, a menu can display items using the small or large layout styles that iOS and iPadOS define (for guidance, see [iOS, iPadOS](/design/human-interface-guidelines/menus#iOS-iPadOS)). You can present a menu in your app or game from 3D content using a SwiftUI view. To ensure that your menu is always visible to people, even when other content occludes it, you can apply a [breakthrough effect](<https://developer.apple.com/documentation/swiftui/view/presentationbreakthrougheffect(_:)>). As in macOS, an open menu in a visionOS window can appear outside of the window’s boundaries.
 
 **Prefer displaying a menu near the content it controls.** Because people need to look at a menu item before tapping it, they might miss the item’s effect if the content it controls is too far away.
 
@@ -160,9 +160,9 @@ In visionOS, a menu can display items using the small or large layout styles tha
 
 ## [Change log](/design/human-interface-guidelines/menus#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| July 28, 2025 | Added guidance for representing menu items with icons. |
-| June 10, 2024 | Added guidance for in-game menus and included game-specific examples. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
+| Date               | Changes                                                                         |
+| ------------------ | ------------------------------------------------------------------------------- |
+| July 28, 2025      | Added guidance for representing menu items with icons.                          |
+| June 10, 2024      | Added guidance for in-game menus and included game-specific examples.           |
+| June 21, 2023      | Updated to include guidance for visionOS.                                       |
 | September 14, 2022 | Added guidelines for using the small, medium, and large menu layouts in iPadOS. |

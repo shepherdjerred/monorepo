@@ -13,7 +13,11 @@ import { KarmaReceived } from "./karma-received.ts";
       .addSelect("given.karmaGiven", "karmaGiven")
       .from(Person, "person")
       .leftJoin(KarmaGiven, "given", "given.id = person.id")
-      .leftJoin(KarmaReceived, "received", "received.id = person.id AND received.guildId = given.guildId"),
+      .leftJoin(
+        KarmaReceived,
+        "received",
+        "received.id = person.id AND received.guildId = given.guildId",
+      ),
 })
 export class KarmaCounts {
   @ViewColumn()

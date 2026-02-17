@@ -258,7 +258,7 @@ RTL variant of a symbol that depicts a tool
 
 ## [Platform considerations](/design/human-interface-guidelines/right-to-left#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/right-to-left#Resources)
 

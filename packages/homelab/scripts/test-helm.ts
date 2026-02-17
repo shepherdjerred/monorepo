@@ -48,7 +48,9 @@ function testSingleChart(chartTgz: string, chartName: string): void {
       throw new Error("Templates directory not found!");
     }
 
-    const templateFiles = readdirSync("templates").filter((file) => file.endsWith(".yaml") || file.endsWith(".yml"));
+    const templateFiles = readdirSync("templates").filter(
+      (file) => file.endsWith(".yaml") || file.endsWith(".yml"),
+    );
     console.log(`   Found ${templateFiles.length} template files`);
 
     // Run helm lint
@@ -83,7 +85,11 @@ async function testHelmChart(): Promise<void> {
     // Check for chart subdirectories (new multi-chart layout)
     const chartDirs = entries.filter((entry) => {
       const stat = statSync(entry);
-      if (!stat.isDirectory() || entry === "node_modules" || entry.startsWith(".")) {
+      if (
+        !stat.isDirectory() ||
+        entry === "node_modules" ||
+        entry.startsWith(".")
+      ) {
         return false;
       }
       // Check if directory contains a .tgz file
@@ -128,7 +134,9 @@ async function testHelmChart(): Promise<void> {
         testSingleChart(chart.tgzPath, chart.name);
         passed++;
       } catch (error) {
-        console.log(`   ❌ ${chart.name} failed: ${error instanceof Error ? error.message : error}`);
+        console.log(
+          `   ❌ ${chart.name} failed: ${error instanceof Error ? error.message : error}`,
+        );
         failed++;
       }
       console.log("");

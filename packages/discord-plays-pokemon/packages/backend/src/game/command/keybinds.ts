@@ -1,4 +1,14 @@
-import { Command, isLeft, isRight, isUp, isDown, isA, isB, isSelect, isStart } from "./command.js";
+import {
+  Command,
+  isLeft,
+  isRight,
+  isUp,
+  isDown,
+  isA,
+  isB,
+  isSelect,
+  isStart,
+} from "./command.js";
 import { parseChord } from "./chord.js";
 import { CommandInput } from "./commandInput.js";
 import { Key } from "selenium-webdriver";
@@ -17,7 +27,9 @@ export function toGameboyAdvanceKeyInput(command: Command): KeyInput {
   throw Error("illegal command");
 }
 
-export function commandToGameboyAdvanceKeyInput(command: CommandInput): KeyInput[] {
+export function commandToGameboyAdvanceKeyInput(
+  command: CommandInput,
+): KeyInput[] {
   const keys: KeyInput[] = [];
   for (let i = 0; i < command.quantity; i++) {
     keys.push(toGameboyAdvanceKeyInput(command.command));
@@ -25,6 +37,8 @@ export function commandToGameboyAdvanceKeyInput(command: CommandInput): KeyInput
   return keys;
 }
 
-export function parseGameboyAdvanceKeyInput(input: string): KeyInput[] | undefined {
+export function parseGameboyAdvanceKeyInput(
+  input: string,
+): KeyInput[] | undefined {
   return parseChord(input)?.flatMap(commandToGameboyAdvanceKeyInput);
 }

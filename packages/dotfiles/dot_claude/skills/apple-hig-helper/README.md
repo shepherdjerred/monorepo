@@ -24,6 +24,7 @@ apple-hig-helper/
 **File**: `skill.md`
 
 The main skill file containing:
+
 - YAML frontmatter with activation triggers
 - Overview of HIG coverage (174 topics)
 - Rich summaries for 30+ major topics
@@ -37,6 +38,7 @@ The main skill file containing:
 **Directory**: `data/`
 
 Contains 174 HTML files downloaded from Apple's official HIG website:
+
 - **Platforms**: iOS, iPadOS, macOS, tvOS, visionOS, watchOS
 - **Components**: Buttons, Menus, Alerts, Sheets, Lists, and 35+ more
 - **Patterns**: Navigation, Modality, Feedback, Loading, Settings, and 17+ more
@@ -53,6 +55,7 @@ Each topic is in its own subdirectory with an `index.html` file.
 Wrapper script that runs the Python scraper to download/update HIG documentation.
 
 **Usage**:
+
 ```bash
 # From the skill directory
 ./scrape.sh
@@ -66,6 +69,7 @@ Wrapper script that runs the Python scraper to download/update HIG documentation
 ## Using the Skill
 
 The skill activates when users ask about:
+
 - Apple design guidelines, HIG
 - Platform-specific design (iOS, macOS, visionOS, etc.)
 - UI components (buttons, alerts, menus, etc.)
@@ -73,6 +77,7 @@ The skill activates when users ask about:
 - Apple technologies (Apple Pay, Siri, etc.)
 
 **Example queries**:
+
 - "What does HIG say about buttons?"
 - "Show me iOS design guidelines"
 - "Accessibility best practices from HIG"
@@ -83,6 +88,7 @@ The skill activates when users ask about:
 To refresh the HIG documentation:
 
 1. Run the scraper:
+
    ```bash
    cd /workspace
    ./packages/claude-plugin/agents/apple-hig-helper/scrape.sh
@@ -95,6 +101,7 @@ To refresh the HIG documentation:
    ```
 
 The scraper will:
+
 - Resume from previous downloads (tracks progress in `.visited.json`)
 - Respect rate limits (1 second between requests)
 - Save all pages to the `data/` directory
@@ -121,6 +128,7 @@ uv run packages/claude-plugin/agents/apple-hig-helper/process-to-markdown.py --s
 ```
 
 **Output**:
+
 - **Location**: `markdown/` directory
 - **Size**: ~700 KB (174 files)
 - **Time**: ~30 seconds
@@ -139,6 +147,7 @@ Uses Playwright to render pages and extract full content:
 ```
 
 **Output**:
+
 - **Location**: `markdown/` directory
 - **Size**: ~2.6 MB (174 files with full content, 24,459 lines)
 - **Time**: ~8-10 minutes

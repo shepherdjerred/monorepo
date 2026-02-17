@@ -16,9 +16,15 @@ const ruleTester = new RuleTester({
 
 ruleTester.run("no-function-overloads", noFunctionOverloads, {
   valid: [
-    { code: `function myFunction(x: string | number): void { console.log(x); }` },
-    { code: `function process(input: string | number): string { return String(input); }` },
-    { code: `function greet(name: string, title?: string): string { return title ? \`\${title} \${name}\` : name; }` },
+    {
+      code: `function myFunction(x: string | number): void { console.log(x); }`,
+    },
+    {
+      code: `function process(input: string | number): string { return String(input); }`,
+    },
+    {
+      code: `function greet(name: string, title?: string): string { return title ? \`\${title} \${name}\` : name; }`,
+    },
   ],
   invalid: [
     {
@@ -27,7 +33,11 @@ ruleTester.run("no-function-overloads", noFunctionOverloads, {
         function myFunction(x: number): void;
         function myFunction(x: string | number): void { console.log(x); }
       `,
-      errors: [{ messageId: "functionOverload" }, { messageId: "functionOverload" }, { messageId: "functionOverload" }],
+      errors: [
+        { messageId: "functionOverload" },
+        { messageId: "functionOverload" },
+        { messageId: "functionOverload" },
+      ],
     },
     {
       code: `
@@ -35,7 +45,11 @@ ruleTester.run("no-function-overloads", noFunctionOverloads, {
         export function process(x: number): string;
         export function process(x: string | number): string { return String(x); }
       `,
-      errors: [{ messageId: "functionOverload" }, { messageId: "functionOverload" }, { messageId: "functionOverload" }],
+      errors: [
+        { messageId: "functionOverload" },
+        { messageId: "functionOverload" },
+        { messageId: "functionOverload" },
+      ],
     },
   ],
 });

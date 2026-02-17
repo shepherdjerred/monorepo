@@ -4,32 +4,34 @@ import { encodeBase64 } from "https://deno.land/std@0.218.2/encoding/base64.ts";
 
 const images: Record<Lane | "unknown", string> = {
   top: encodeBase64(
-    (await Deno.readFile(new URL("assets/top.png", import.meta.url))).toString()
+    (
+      await Deno.readFile(new URL("assets/top.png", import.meta.url))
+    ).toString(),
   ).toString(),
   jungle: encodeBase64(
     (
       await Deno.readFile(new URL("assets/jungle.png", import.meta.url))
-    ).toString()
+    ).toString(),
   ).toString(),
   middle: encodeBase64(
     (
       await Deno.readFile(new URL("assets/middle.png", import.meta.url))
-    ).toString()
+    ).toString(),
   ).toString(),
   adc: encodeBase64(
     (
       await Deno.readFile(new URL("assets/bottom.png", import.meta.url))
-    ).toString()
+    ).toString(),
   ).toString(),
   support: encodeBase64(
     (
       await Deno.readFile(new URL("assets/support.png", import.meta.url))
-    ).toString()
+    ).toString(),
   ).toString(),
   unknown: encodeBase64(
     (
       await Deno.readFile(new URL("assets/unknown.png", import.meta.url))
-    ).toString()
+    ).toString(),
   ).toString(),
 };
 

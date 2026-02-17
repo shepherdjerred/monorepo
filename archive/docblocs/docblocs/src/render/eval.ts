@@ -3,7 +3,11 @@ import * as ast from "../ast";
 import { ExpressionVisitor, visit } from "../ast/visit";
 import { Dictionary, eventuallyCall, resolvePromises } from "../util";
 
-export function evaluate(expr: ast.Expression, locals: Dictionary<any>, context: Dictionary<any>): any {
+export function evaluate(
+  expr: ast.Expression,
+  locals: Dictionary<any>,
+  context: Dictionary<any>,
+): any {
   let visitor = new EvalVisitor(locals, context);
   return eventuallyCall(visitor.evalHelper, visit(visitor, expr));
 }
@@ -41,8 +45,7 @@ class EvalVisitor implements ExpressionVisitor<any> {
   visitIdentifier(i: ast.Identifier): any {
     if (i.text in this.locals) {
       return this.locals[i.text];
-    }
-    else {
+    } else {
       return this.context[i.text];
     }
   }
@@ -52,12 +55,11 @@ class EvalVisitor implements ExpressionVisitor<any> {
       (obj: Dictionary<any>) => {
         if (obj === undefined || obj === null) {
           return undefined;
-        }
-        else {
+        } else {
           return obj[p.property.text];
         }
       },
-      visit(this, p.object)
+      visit(this, p.object),
     );
   }
 
@@ -66,13 +68,12 @@ class EvalVisitor implements ExpressionVisitor<any> {
       (obj: Dictionary<any>, index: any) => {
         if (obj === undefined || obj === null) {
           return undefined;
-        }
-        else {
-          return obj[index]
+        } else {
+          return obj[index];
         }
       },
       visit(this, i.object),
-      visit(this, i.index)
+      visit(this, i.index),
     );
   }
 
@@ -82,13 +83,12 @@ class EvalVisitor implements ExpressionVisitor<any> {
       (fn: Function, args: any[]) => {
         if (typeof fn !== "function") {
           throw new TypeError(ast.toString(a.fn) + " is not a function");
-        }
-        else {
+        } else {
           return fn.apply(null, args);
         }
       },
       visit(this, a.fn),
-      resolvePromises(args)
+      resolvePromises(args),
     );
   }
 
@@ -105,7 +105,7 @@ class EvalVisitor implements ExpressionVisitor<any> {
   }
 
   visitObjectConstruction(o: ast.ObjectConstruction): Dictionary<any> {
-    let result: Dictionary<any> = { };
+    let result: Dictionary<any> = {};
     for (let key in o.value) {
       result[key] = visit(this, o.value[key]);
     }
@@ -114,59 +114,103 @@ class EvalVisitor implements ExpressionVisitor<any> {
 
   evalHelper(helper: any): any {
     if (typeof helper == "function") {
-      return eventuallyCall(this.evalHelper, helper(this.context, this.locals.this));
-    }
-    else {
+      return eventuallyCall(
+        this.evalHelper,
+        helper(this.context, this.locals.this),
+      );
+    } else {
       return eventuallyCall(constructResult, helper);
     }
   }
-
 }
 
-let unop : Dictionary<(right: ast.Expression, visitor: EvalVisitor) => any> = {
-  "+": (right, visitor) =>
-    eventuallyCall(a => + a, visit(visitor, right)),
+let unop: Dictionary<(right: ast.Expression, visitor: EvalVisitor) => any> = {
+  "+": (right, visitor) => eventuallyCall((a) => +a, visit(visitor, right)),
 
-  "-": (right, visitor) =>
-    eventuallyCall(a => - a, visit(visitor, right)),
+  "-": (right, visitor) => eventuallyCall((a) => -a, visit(visitor, right)),
 
-  "!": (right, visitor) =>
-    eventuallyCall(a => ! a, visit(visitor, right)),
+  "!": (right, visitor) => eventuallyCall((a) => !a, visit(visitor, right)),
 };
 
-let binop : Dictionary<(left: ast.Expression, right: ast.Expression, visitor: EvalVisitor) => any> = {
-  "+":  (left, right, visitor) =>
-    eventuallyCall((a, b) => a + b, visit(visitor, left), visit(visitor, right)),
+let binop: Dictionary<
+  (left: ast.Expression, right: ast.Expression, visitor: EvalVisitor) => any
+> = {
+  "+": (left, right, visitor) =>
+    eventuallyCall(
+      (a, b) => a + b,
+      visit(visitor, left),
+      visit(visitor, right),
+    ),
 
-  "-":  (left, right, visitor) =>
-    eventuallyCall((a, b) => a - b, visit(visitor, left), visit(visitor, right)),
+  "-": (left, right, visitor) =>
+    eventuallyCall(
+      (a, b) => a - b,
+      visit(visitor, left),
+      visit(visitor, right),
+    ),
 
-  "*":  (left, right, visitor) =>
-    eventuallyCall((a, b) => a * b, visit(visitor, left), visit(visitor, right)),
+  "*": (left, right, visitor) =>
+    eventuallyCall(
+      (a, b) => a * b,
+      visit(visitor, left),
+      visit(visitor, right),
+    ),
 
-  "/":  (left, right, visitor) =>
-    eventuallyCall((a, b) => a / b, visit(visitor, left),  visit(visitor, right)),
+  "/": (left, right, visitor) =>
+    eventuallyCall(
+      (a, b) => a / b,
+      visit(visitor, left),
+      visit(visitor, right),
+    ),
 
-  "%":  (left, right, visitor) =>
-    eventuallyCall((a, b) => a % b, visit(visitor, left),  visit(visitor, right)),
+  "%": (left, right, visitor) =>
+    eventuallyCall(
+      (a, b) => a % b,
+      visit(visitor, left),
+      visit(visitor, right),
+    ),
 
-  "<":  (left, right, visitor) =>
-    eventuallyCall((a, b) => a < b, visit(visitor, left),  visit(visitor, right)),
+  "<": (left, right, visitor) =>
+    eventuallyCall(
+      (a, b) => a < b,
+      visit(visitor, left),
+      visit(visitor, right),
+    ),
 
-  ">":  (left, right, visitor) =>
-    eventuallyCall((a, b) => a > b, visit(visitor, left),  visit(visitor, right)),
+  ">": (left, right, visitor) =>
+    eventuallyCall(
+      (a, b) => a > b,
+      visit(visitor, left),
+      visit(visitor, right),
+    ),
 
   "==": (left, right, visitor) =>
-    eventuallyCall((a, b) => a == b, visit(visitor, left),  visit(visitor, right)),
+    eventuallyCall(
+      (a, b) => a == b,
+      visit(visitor, left),
+      visit(visitor, right),
+    ),
 
   ">=": (left, right, visitor) =>
-    eventuallyCall((a, b) => a >= b, visit(visitor, left),  visit(visitor, right)),
+    eventuallyCall(
+      (a, b) => a >= b,
+      visit(visitor, left),
+      visit(visitor, right),
+    ),
 
   "<=": (left, right, visitor) =>
-    eventuallyCall((a, b) => a <= b, visit(visitor, left),  visit(visitor, right)),
+    eventuallyCall(
+      (a, b) => a <= b,
+      visit(visitor, left),
+      visit(visitor, right),
+    ),
 
   "!=": (left, right, visitor) =>
-    eventuallyCall((a, b) => a != b, visit(visitor, left),  visit(visitor, right)),
+    eventuallyCall(
+      (a, b) => a != b,
+      visit(visitor, left),
+      visit(visitor, right),
+    ),
 
   "&&": (left, right, visitor) =>
     eventuallyCall((a) => a && visit(visitor, right), visit(visitor, left)),
@@ -174,19 +218,20 @@ let binop : Dictionary<(left: ast.Expression, right: ast.Expression, visitor: Ev
   "||": (left, right, visitor) =>
     eventuallyCall((a) => a || visit(visitor, right), visit(visitor, left)),
 
-  "|":  (left, right, visitor) =>
-    eventuallyCall(f => {
-      if (typeof f == "function") {
-        return eventuallyCall(
-          f,
-          eventuallyCall(visitor.evalHelper, visit(visitor, left))
-        )
-      }
-      else {
-        throw new TypeError(ast.toString(right) + " is not a function")
-      }
-    }, visit(visitor, right)
-  )
+  "|": (left, right, visitor) =>
+    eventuallyCall(
+      (f) => {
+        if (typeof f == "function") {
+          return eventuallyCall(
+            f,
+            eventuallyCall(visitor.evalHelper, visit(visitor, left)),
+          );
+        } else {
+          throw new TypeError(ast.toString(right) + " is not a function");
+        }
+      },
+      visit(visitor, right),
+    ),
 };
 
 //  visit(visitor, right).call(null, visitor.evalHelper(visit(visitor, left)))

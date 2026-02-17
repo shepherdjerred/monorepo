@@ -28,11 +28,11 @@ For example, an alert can tell people about a problem, warn them when their acti
 
 An alert is a modal view that can look different in different platforms and devices.
 
-* [iOS](#)
-* [macOS](#)
-* [tvOS](#)
-* [visionOS](#)
-* [watchOS](#)
+- [iOS](#)
+- [macOS](#)
+- [tvOS](#)
+- [visionOS](#)
+- [watchOS](#)
 
 ![An illustration of an alert in the middle of the screen on iPhone.](https://docs-assets.developer.apple.com/published/ec9df875e228750105a393c96279bea5/alert-ios%402x.png)
 
@@ -48,9 +48,9 @@ An alert is a modal view that can look different in different platforms and devi
 
 In all platforms, alerts display a title, optional informative text, and up to three buttons. On some platforms, alerts can include additional elements.
 
-* In iOS, iPadOS, macOS, and visionOS, an alert can include a text field.
-* Alerts in macOS and visionOS can include an icon and an accessory view.
-* macOS alerts can add a suppression [checkbox](/design/human-interface-guidelines/toggles#Checkboxes) and a [Help button](/design/human-interface-guidelines/buttons#Help-buttons).
+- In iOS, iPadOS, macOS, and visionOS, an alert can include a text field.
+- Alerts in macOS and visionOS can include an icon and an accessory view.
+- macOS alerts can add a suppression [checkbox](/design/human-interface-guidelines/toggles#Checkboxes) and a [Help button](/design/human-interface-guidelines/buttons#Help-buttons).
 
 **In all alert copy, be direct, and use a neutral, approachable tone.** Alerts often describe problems and serious situations, so avoid being oblique or accusatory, or masking the severity of the issue.
 
@@ -58,7 +58,7 @@ In all platforms, alerts display a title, optional informative text, and up to t
 
 **Include informative text only if it adds value.** If you need to add an informative message, keep it as short as possible, using complete sentences, sentence-style capitalization, and appropriate punctuation.
 
-**Avoid explaining alert buttons.** If your alert text and button titles are clear, you don’t need to explain what the buttons do. In rare cases where you need to provide guidance on choosing a button, use a term like *choose* to account for people’s current device and interaction method, and refer to a button using its exact title without quotes. For guidance, see [Buttons](/design/human-interface-guidelines/alerts#Buttons).
+**Avoid explaining alert buttons.** If your alert text and button titles are clear, you don’t need to explain what the buttons do. In rare cases where you need to provide guidance on choosing a button, use a term like _choose_ to account for people’s current device and interaction method, and refer to a button using its exact title without quotes. For guidance, see [Buttons](/design/human-interface-guidelines/alerts#Buttons).
 
 **If supported, include a text field only if you need people’s input to resolve the situation.** For example, you might need to present a secure text field to receive a password.
 
@@ -76,15 +76,15 @@ In all platforms, alerts display a title, optional informative text, and up to t
 
 **Provide alternative ways to cancel an alert when it makes sense.** In addition to choosing a Cancel button, people appreciate using keyboard shortcuts or other quick ways to cancel an onscreen alert. For example:
 
-| Action | Platform |
-| --- | --- |
-| Exit to the Home Screen | iOS, iPadOS |
+| Action                                                              | Platform                     |
+| ------------------------------------------------------------------- | ---------------------------- |
+| Exit to the Home Screen                                             | iOS, iPadOS                  |
 | Pressing Escape (Esc) or Command-Period (.) on an attached keyboard | iOS, iPadOS, macOS, visionOS |
-| Pressing Menu on the remote | tvOS |
+| Pressing Menu on the remote                                         | tvOS                         |
 
 ## [Platform considerations](/design/human-interface-guidelines/alerts#Platform-considerations)
 
-*No additional considerations for tvOS or watchOS.*
+_No additional considerations for tvOS or watchOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/alerts#iOS-iPadOS)
 
@@ -96,9 +96,9 @@ In all platforms, alerts display a title, optional informative text, and up to t
 
 macOS automatically displays your app icon in an alert, but you can supply an alternative icon or symbol. In addition, macOS lets you:
 
-* Configure repeating alerts to let people suppress subsequent occurrences of the same alert.
-* Append a custom view if it’s necessary to provide additional information (for developer guidance, see [`accessoryView`](/documentation/AppKit/NSAlert/accessoryView)).
-* Include a Help button that opens your help documentation (see [Help buttons](/design/human-interface-guidelines/buttons#Help-buttons)).
+- Configure repeating alerts to let people suppress subsequent occurrences of the same alert.
+- Append a custom view if it’s necessary to provide additional information (for developer guidance, see [`accessoryView`](/documentation/AppKit/NSAlert/accessoryView)).
+- Include a Help button that opens your help documentation (see [Help buttons](/design/human-interface-guidelines/buttons#Help-buttons)).
 
 **Use a caution symbol sparingly.** Using a caution symbol like `exclamationmark.triangle` too frequently in your alerts diminishes its significance. Use the symbol only when extra attention is really needed, as when confirming an action that might result in unexpected loss of data. Don’t use the symbol for tasks whose only purpose is to overwrite or remove data, such as a save or empty trash.
 
@@ -106,19 +106,19 @@ macOS automatically displays your app icon in an alert, but you can supply an al
 
 When your app is running in the Shared Space, visionOS displays an alert in front of the app’s window, slightly forward along the z-axis.
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/9da37dc5cc9da5413f4bdaa4c4f57ddf/alerts-freeform-delete-warning%402x.png)](https://docs-assets.developer.apple.com/published/209fa2d4200ef1ec6811fa7695206bd5/alerts-freeform-delete-warning.mp4) Content description: A video of an alert in the Freeform app running in the Shared Space in visionOS. When the video plays, someone chooses to permanently delete a recently deleted Freeform board. An alert then appears in front of the Freeform window to ask for confirmation.
 
- [Play](#)
+[Play](#)
 
 If someone moves a window without dismissing its alert, the alert remains anchored to the window. If your app is running in a Full Space, the system displays the alert centered in the wearer’s [field of view](/design/human-interface-guidelines/spatial-layout#Field-of-view).
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/2fe2bfc9a497efbf7859348ca84bfc99/alerts-shared-space-pinning-to-window%402x.png)](https://docs-assets.developer.apple.com/published/7e968eebda99e9816a585de03ae0faf9/alerts-shared-space-pinning-to-window.mp4) Content description: A video of an alert in the Freeform app running in the Shared Space in visionOS. When the video plays, someone chooses to permanently delete a recently deleted Freeform board. An alert then appears in front of the Freeform window to ask for confirmation. The alert is not dismissed and remains anchored to the Freeform window as it’s moved around the Shared Space.
 
- [Play](#)
+[Play](#)
 
 If you need to display an accessory view in a visionOS alert, create a view that has a maximum height of 154 pt and a 16-pt corner radius.
 
@@ -134,7 +134,7 @@ If you need to display an accessory view in a visionOS alert, create a view that
 
 #### [Developer documentation](/design/human-interface-guidelines/alerts#Developer-documentation)
 
-[`alert(_:isPresented:actions:)`](/documentation/SwiftUI/View/alert(_:isPresented:actions:)-1bkka) — SwiftUI
+[`alert(_:isPresented:actions:)`](</documentation/SwiftUI/View/alert(_:isPresented:actions:)-1bkka>) — SwiftUI
 
 [`UIAlertController`](/documentation/UIKit/UIAlertController) — UIKit
 
@@ -142,8 +142,8 @@ If you need to display an accessory view in a visionOS alert, create a view that
 
 ## [Change log](/design/human-interface-guidelines/alerts#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| February 2, 2024 | Enhanced guidance for using default and Cancel buttons. |
-| September 12, 2023 | Added anatomy artwork for visionOS. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
+| Date               | Changes                                                 |
+| ------------------ | ------------------------------------------------------- |
+| February 2, 2024   | Enhanced guidance for using default and Cancel buttons. |
+| September 12, 2023 | Added anatomy artwork for visionOS.                     |
+| June 21, 2023      | Updated to include guidance for visionOS.               |

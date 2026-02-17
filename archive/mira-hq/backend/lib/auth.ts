@@ -37,7 +37,7 @@ class Auth {
       this.auth0.parseHash(
         (
           err: Auth0ParseHashError | null,
-          authResult: Auth0DecodedHash | null
+          authResult: Auth0DecodedHash | null,
         ) => {
           if (err) return reject(err);
           if (!authResult || !authResult.idToken) {
@@ -45,7 +45,7 @@ class Auth {
           }
           this.setSession(authResult);
           resolve();
-        }
+        },
       );
     });
   }

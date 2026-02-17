@@ -27,13 +27,20 @@ const ErrorSchema = z.instanceof(Error);
  * @param args The command and arguments to execute
  * @returns ExecResult with stdout, stderr, and exitCode
  */
-export async function execWithOutput(container: Container, args: string[]): Promise<ExecResult> {
+export async function execWithOutput(
+  container: Container,
+  args: string[],
+): Promise<ExecResult> {
   // Escape args for shell execution and capture stdout/stderr/exitcode to files
   // This avoids calling .stdout() which triggers a Dagger SDK bug with Bun
-  const escapedArgs = args.map((arg) => `'${arg.replace(/'/g, "'\\''")}'`).join(" ");
+  const escapedArgs = args
+    .map((arg) => `'${arg.replace(/'/g, "'\\''")}'`)
+    .join(" ");
   const shellCmd = `${escapedArgs} > /tmp/stdout.txt 2> /tmp/stderr.txt; echo $? > /tmp/exitcode.txt`;
 
-  const ctr = await container.withExec(["sh", "-c", shellCmd], { expect: ReturnType.Any }).sync();
+  const ctr = await container
+    .withExec(["sh", "-c", shellCmd], { expect: ReturnType.Any })
+    .sync();
 
   // Read results from files instead of using .stdout()/.stderr()
   const [stdout, stderr, exitCodeStr] = await Promise.all([
@@ -54,7 +61,10 @@ export async function execWithOutput(container: Container, args: string[]): Prom
  * @returns stdout on success
  * @throws Error with stderr (or stdout) on non-zero exit code
  */
-export async function execOrThrow(container: Container, args: string[]): Promise<string> {
+export async function execOrThrow(
+  container: Container,
+  args: string[],
+): Promise<string> {
   const result = await execWithOutput(container, args);
 
   if (result.exitCode !== 0) {
@@ -67,7 +77,9 @@ export async function execOrThrow(container: Container, args: string[]): Promise
       parts.push(result.stderr.trim());
     }
     const output = parts.join("\n") || "No output";
-    throw new Error(`Command failed (exit code ${String(result.exitCode)}):\n${output}`);
+    throw new Error(
+      `Command failed (exit code ${String(result.exitCode)}):\n${output}`,
+    );
   }
 
   return result.stdout;
@@ -87,7 +99,8 @@ export function formatDaggerError(error: unknown): string {
     // Prefer stderr for error output, fall back to stdout
     const output = execError.stderr.trim() || execError.stdout.trim() || "";
     const exitInfo = `Exit code: ${String(execError.exitCode)}`;
-    const cmdInfo = execError.cmd.length > 0 ? `Command: ${execError.cmd.join(" ")}` : "";
+    const cmdInfo =
+      execError.cmd.length > 0 ? `Command: ${execError.cmd.join(" ")}` : "";
 
     return [exitInfo, cmdInfo, output].filter(Boolean).join("\n");
   }
@@ -101,8 +114,14 @@ export function formatDaggerError(error: unknown): string {
       errors: z.array(z.object({ message: z.string().optional() })).optional(),
     });
     const responseResult = GraphQLResponseSchema.safeParse(gqlError.response);
-    if (responseResult.success && responseResult.data.errors && responseResult.data.errors.length > 0) {
-      const messages = responseResult.data.errors.map((e) => e.message ?? "Unknown error");
+    if (
+      responseResult.success &&
+      responseResult.data.errors &&
+      responseResult.data.errors.length > 0
+    ) {
+      const messages = responseResult.data.errors.map(
+        (e) => e.message ?? "Unknown error",
+      );
       return messages.join("\n");
     }
     // Fall back to the error message

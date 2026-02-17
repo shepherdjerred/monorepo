@@ -29,7 +29,7 @@ export function createAutoScalingGroup(
   vpc: Vpc,
   securityGroup: SecurityGroup,
   keyPair: KeyPair,
-  availabilityZone: string
+  availabilityZone: string,
 ): AutoScalingGroup {
   const mountPoint = "/xenforo";
   const ebsDeviceName = "/dev/xvdb";

@@ -6,7 +6,9 @@ import * as Sentry from "@sentry/react";
 
 // Set up dark mode based on system preference
 function setupTheme() {
-  const prefersDark = globalThis.matchMedia("(prefers-color-scheme: dark)").matches;
+  const prefersDark = globalThis.matchMedia(
+    "(prefers-color-scheme: dark)",
+  ).matches;
   document.documentElement.dataset.theme = prefersDark ? "dark" : "light";
 }
 
@@ -14,7 +16,9 @@ function setupTheme() {
 setupTheme();
 
 // Listen for system theme changes
-globalThis.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", setupTheme);
+globalThis
+  .matchMedia("(prefers-color-scheme: dark)")
+  .addEventListener("change", setupTheme);
 
 Sentry.init({
   dsn: "https://34fcb766ca0f49499b001635c5cc5cb2@bugsink.sjer.red/3",

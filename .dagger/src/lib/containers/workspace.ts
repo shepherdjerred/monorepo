@@ -1,4 +1,9 @@
-import { dag, type Container, type Directory, type Platform } from "@dagger.io/dagger";
+import {
+  dag,
+  type Container,
+  type Directory,
+  type Platform,
+} from "@dagger.io/dagger";
 import { getMiseRuntimeContainer, type MiseToolVersions } from "./mise";
 
 /**
@@ -49,7 +54,9 @@ export function getWorkspaceContainer(
     eslintRulesDir,
   } = config;
 
-  let container = getMiseRuntimeContainer(platform, toolVersions).withWorkdir("/workspace");
+  let container = getMiseRuntimeContainer(platform, toolVersions).withWorkdir(
+    "/workspace",
+  );
 
   // Copy root-level files
   for (const file of rootFiles) {
@@ -63,35 +70,57 @@ export function getWorkspaceContainer(
 
   // Copy config files if specified
   if (configFiles.eslint) {
-    container = container.withFile(configFiles.eslint, repoRoot.file(configFiles.eslint));
+    container = container.withFile(
+      configFiles.eslint,
+      repoRoot.file(configFiles.eslint),
+    );
   }
   if (configFiles.prettier) {
-    container = container.withFile(configFiles.prettier, repoRoot.file(configFiles.prettier));
+    container = container.withFile(
+      configFiles.prettier,
+      repoRoot.file(configFiles.prettier),
+    );
   }
   if (configFiles.tsconfig) {
-    container = container.withFile(configFiles.tsconfig, repoRoot.file(configFiles.tsconfig));
+    container = container.withFile(
+      configFiles.tsconfig,
+      repoRoot.file(configFiles.tsconfig),
+    );
   }
 
   // Copy eslint rules directory if specified
   if (eslintRulesDir) {
-    container = container.withDirectory(eslintRulesDir, repoRoot.directory(eslintRulesDir));
+    container = container.withDirectory(
+      eslintRulesDir,
+      repoRoot.directory(eslintRulesDir),
+    );
   }
 
   // Copy all workspace package.json files for proper monorepo dependency resolution
   for (const workspace of workspaces) {
-    container = container.withFile(`${workspace}/package.json`, repoRoot.file(`${workspace}/package.json`));
+    container = container.withFile(
+      `${workspace}/package.json`,
+      repoRoot.file(`${workspace}/package.json`),
+    );
   }
 
   // Copy all workspace sources BEFORE install (needed for workspace symlinks)
   for (const workspace of workspaces) {
-    container = container.withDirectory(workspace, repoRoot.directory(workspace), {
-      exclude: ["package.json", "node_modules"],
-    });
+    container = container.withDirectory(
+      workspace,
+      repoRoot.directory(workspace),
+      {
+        exclude: ["package.json", "node_modules"],
+      },
+    );
   }
 
   // Install dependencies (cached unless dependency files change)
   container = container
-    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(`bun-cache-${platform ?? "default"}`))
+    .withMountedCache(
+      "/root/.bun/install/cache",
+      dag.cacheVolume(`bun-cache-${platform ?? "default"}`),
+    )
     .withExec(["bun", "install", "--frozen-lockfile"])
     // Set working directory to the workspace
     .withWorkdir(`/workspace/${workspacePath}`);

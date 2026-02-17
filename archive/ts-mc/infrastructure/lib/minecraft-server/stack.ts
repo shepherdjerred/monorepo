@@ -24,7 +24,7 @@ export class MinecraftServerStack extends Stack {
       this,
       props.vpc,
       props.keyPair,
-      props.availabilityZone
+      props.availabilityZone,
     );
 
     const eip = createElasticIp(this, instance);

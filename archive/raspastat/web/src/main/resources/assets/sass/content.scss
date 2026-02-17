@@ -1,9 +1,12 @@
 .content {
   padding-top: 20px;
-  background-color: #F0F1F5;
+  background-color: #f0f1f5;
   max-width: 100vw;
 
-  .controls, .log, .schedule, .graph {
+  .controls,
+  .log,
+  .schedule,
+  .graph {
     & > div {
       overflow-x: hidden;
       background-color: #fff;

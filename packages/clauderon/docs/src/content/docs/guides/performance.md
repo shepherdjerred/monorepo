@@ -11,13 +11,13 @@ Different backends offer different performance characteristics:
 
 ### Startup Time Comparison
 
-| Backend | Cold Start | Warm Start | Best For |
-|---------|-----------|------------|----------|
-| **Zellij** | ~100ms | ~50ms | Local development, fastest |
-| **Apple Container** | ~1s | ~500ms | macOS native, fast |
-| **Docker** | 2-5s | 1-2s | General use, balanced |
-| **Kubernetes** | 10-30s | 5-10s | Production, scalable |
-| **Sprites** | 5-15s | 3-8s | Remote, variable (network) |
+| Backend             | Cold Start | Warm Start | Best For                   |
+| ------------------- | ---------- | ---------- | -------------------------- |
+| **Zellij**          | ~100ms     | ~50ms      | Local development, fastest |
+| **Apple Container** | ~1s        | ~500ms     | macOS native, fast         |
+| **Docker**          | 2-5s       | 1-2s       | General use, balanced      |
+| **Kubernetes**      | 10-30s     | 5-10s      | Production, scalable       |
+| **Sprites**         | 5-15s      | 3-8s       | Remote, variable (network) |
 
 **Cold start:** First session creation (image pull, container creation)
 **Warm start:** Subsequent sessions (image cached, container reuse)
@@ -25,30 +25,35 @@ Different backends offer different performance characteristics:
 ### Backend Performance Characteristics
 
 **Zellij (Fastest):**
+
 - ✅ No container overhead
 - ✅ Native filesystem performance
 - ✅ Instant session creation
 - ❌ No isolation (shares host environment)
 
 **Apple Container (Very Fast):**
+
 - ✅ Native macOS integration
 - ✅ Fast filesystem (APFS)
 - ✅ Minimal overhead
 - ❌ macOS only
 
 **Docker (Balanced):**
+
 - ✅ Good performance with proper configuration
 - ✅ Extensive caching options
 - ✅ Wide compatibility
 - ⚠️ Volume performance can vary
 
 **Kubernetes (Scalable):**
+
 - ✅ Excellent for many concurrent sessions
 - ✅ Resource scheduling and limits
 - ❌ Slowest startup time
 - ❌ Higher overhead per session
 
 **Sprites (Remote):**
+
 - ✅ No local resource usage
 - ✅ Powerful remote hardware
 - ❌ Network latency impacts git operations
@@ -57,29 +62,34 @@ Different backends offer different performance characteristics:
 ### When to Use Each Backend
 
 **Zellij:**
+
 - Quick experiments and prototypes
 - Latency-sensitive workflows
 - Limited resource environments
 - When you trust the repository code
 
 **Apple Container:**
+
 - macOS development
 - Native performance requirements
 - iOS/macOS app development
 
 **Docker:**
+
 - General-purpose development
 - Isolation required
 - Cross-platform consistency
 - Moderate performance needs
 
 **Kubernetes:**
+
 - Many concurrent sessions
 - Production-like environments
 - Resource isolation critical
 - Startup time not critical
 
 **Sprites:**
+
 - Limited local resources
 - Large repository cloning
 - Powerful compute needs
@@ -92,6 +102,7 @@ Different backends offer different performance characteristics:
 Two strategies with different performance trade-offs:
 
 **Bind Mounts (Default):**
+
 ```bash
 clauderon create --backend docker --volume-mode bind
 ```
@@ -102,6 +113,7 @@ clauderon create --backend docker --volume-mode bind
 - ❌ Slower I/O on macOS/Windows (especially with large file counts)
 
 **Docker Volumes:**
+
 ```bash
 clauderon create --backend docker --volume-mode volume
 ```
@@ -113,14 +125,15 @@ clauderon create --backend docker --volume-mode volume
 
 **Performance comparison (macOS):**
 
-| Operation | Bind Mount | Docker Volume |
-|-----------|------------|---------------|
-| Session create | 1s | 5s (+ copy time) |
-| File read (1000 files) | 2s | 0.5s |
-| File write (1000 files) | 3s | 0.8s |
-| Git operations | 1.5x | 1x (baseline) |
+| Operation               | Bind Mount | Docker Volume    |
+| ----------------------- | ---------- | ---------------- |
+| Session create          | 1s         | 5s (+ copy time) |
+| File read (1000 files)  | 2s         | 0.5s             |
+| File write (1000 files) | 3s         | 0.8s             |
+| Git operations          | 1.5x       | 1x (baseline)    |
 
 **Recommendation:**
+
 - **Linux:** Bind mounts (minimal difference)
 - **macOS/Windows:** Docker volumes for I/O-heavy workloads
 - **Small repos (<100MB):** Bind mounts
@@ -137,17 +150,20 @@ image_pull_policy = "IfNotPresent"  # Options: Always, IfNotPresent, Never
 ```
 
 **Always:**
+
 - Pulls image every session creation
 - Ensures latest image
 - Slowest (network overhead)
 - Use for: Production, frequent image updates
 
 **IfNotPresent (Default):**
+
 - Pulls only if image not cached
 - Balanced performance
 - Use for: Most development workflows
 
 **Never:**
+
 - Never pulls, uses cached image only
 - Fastest startup
 - Fails if image not cached
@@ -211,11 +227,13 @@ preserve_build_cache = true
 ### CPU Limits
 
 **When to use:**
+
 - Preventing resource monopolization
 - Running many concurrent sessions
 - Enforcing fair resource sharing
 
 **When NOT to use:**
+
 - Single-user development machine
 - Latency-sensitive workloads
 - Sessions need full CPU for builds
@@ -236,22 +254,24 @@ default_cpu_limit = 2  # CPU cores
 
 **Impact on build times:**
 
-| Build Type | No Limit | 2 CPU Limit | 1 CPU Limit |
-|------------|----------|-------------|-------------|
-| Rust (cargo build) | 60s | 90s | 180s |
-| Node (npm install) | 30s | 40s | 60s |
-| Go (go build) | 15s | 20s | 30s |
+| Build Type         | No Limit | 2 CPU Limit | 1 CPU Limit |
+| ------------------ | -------- | ----------- | ----------- |
+| Rust (cargo build) | 60s      | 90s         | 180s        |
+| Node (npm install) | 30s      | 40s         | 60s         |
+| Go (go build)      | 15s      | 20s         | 30s         |
 
 **Recommendation:** Avoid CPU limits unless necessary.
 
 ### Memory Limits
 
 **When to use:**
+
 - Preventing OOM kills of host system
 - Enforcing resource constraints
 - Testing low-memory scenarios
 
 **When NOT to use:**
+
 - Single session on powerful machine
 - Memory-intensive builds (Rust, C++)
 - Large language model operations
@@ -272,12 +292,12 @@ default_memory_limit = "4g"
 
 **Typical memory requirements:**
 
-| Task | Minimum | Recommended | Comfortable |
-|------|---------|-------------|-------------|
-| Light editing | 512MB | 1GB | 2GB |
-| Node.js build | 1GB | 2GB | 4GB |
-| Rust build | 2GB | 4GB | 8GB |
-| Large AI model | 4GB | 8GB | 16GB |
+| Task           | Minimum | Recommended | Comfortable |
+| -------------- | ------- | ----------- | ----------- |
+| Light editing  | 512MB   | 1GB         | 2GB         |
+| Node.js build  | 1GB     | 2GB         | 4GB         |
+| Rust build     | 2GB     | 4GB         | 8GB         |
+| Large AI model | 4GB     | 8GB         | 16GB        |
 
 **Recommendation:** Set memory limit to 50-75% of available host memory for single-session use, or divide evenly for concurrent sessions.
 
@@ -293,16 +313,19 @@ proxy_port_reuse = true
 ```
 
 **Benefits:**
+
 - Faster session creation (~100ms improvement)
 - Reduced port exhaustion
 - Better resource utilization
 
 **Risks:**
+
 - Race conditions during rapid session creation
 - Port conflicts if timing is unlucky
 - Not recommended for production (yet)
 
 **When to enable:**
+
 - Development environments
 - Single-user setups
 - Frequent session create/delete cycles
@@ -312,6 +335,7 @@ proxy_port_reuse = true
 Proxy uses TLS for all credential injection. Impact is minimal but measurable:
 
 **Performance impact:**
+
 - Overhead: ~5-10ms per API request
 - Throughput: ~95% of non-TLS
 - CPU usage: +2-5% for agent requests
@@ -319,6 +343,7 @@ Proxy uses TLS for all credential injection. Impact is minimal but measurable:
 **Optimization:**
 
 Cannot disable TLS (required for security), but can:
+
 - Use faster ciphers (automatically selected)
 - Enable TLS session resumption (enabled by default)
 - Use connection pooling (implemented)
@@ -334,18 +359,20 @@ audit_logging = true  # Logs all proxy requests
 
 **Performance impact:**
 
-| Metric | No Audit | With Audit | Overhead |
-|--------|----------|------------|----------|
-| Request latency | 10ms | 12ms | +20% |
-| Throughput | 1000 req/s | 850 req/s | -15% |
-| Disk I/O | Minimal | Moderate | Varies |
+| Metric          | No Audit   | With Audit | Overhead |
+| --------------- | ---------- | ---------- | -------- |
+| Request latency | 10ms       | 12ms       | +20%     |
+| Throughput      | 1000 req/s | 850 req/s  | -15%     |
+| Disk I/O        | Minimal    | Moderate   | Varies   |
 
 **When to enable:**
+
 - Security compliance required
 - Debugging credential issues
 - Production environments
 
 **When to disable:**
+
 - Performance-critical workflows
 - High-frequency API calls
 - Local development
@@ -357,11 +384,13 @@ audit_logging = true  # Logs all proxy requests
 Clauderon uses git worktrees by default (except Sprites):
 
 **Worktree advantages:**
+
 - Instant creation (no clone time)
 - Shared object database (saves disk space)
 - Faster session creation
 
 **Clone advantages:**
+
 - No dependency on main repository
 - Can be moved independently
 - Better for remote backends (Sprites)
@@ -369,50 +398,56 @@ Clauderon uses git worktrees by default (except Sprites):
 **Performance comparison:**
 
 | Repository Size | Worktree Creation | Full Clone |
-|----------------|------------------|------------|
-| 10MB | 100ms | 2s |
-| 100MB | 200ms | 10s |
-| 1GB | 500ms | 60s |
-| 10GB | 2s | 600s |
+| --------------- | ----------------- | ---------- |
+| 10MB            | 100ms             | 2s         |
+| 100MB           | 200ms             | 10s        |
+| 1GB             | 500ms             | 60s        |
+| 10GB            | 2s                | 600s       |
 
 ### Large Repository Strategies
 
 For very large repositories (>1GB):
 
 **1. Use Sprites backend:**
+
 - Remote clone avoids local disk usage
 - Powerful remote machines handle large repos better
 
 **2. Use shallow clones (future feature):**
+
 ```bash
 clauderon create --shallow --depth 1
 ```
 
 **3. Use sparse checkout (future feature):**
+
 ```bash
 clauderon create --sparse-checkout "src/*"
 ```
 
 **4. Split into smaller repositories:**
+
 - If possible, refactor into smaller repos
 - Use multi-repo sessions for coordination
 
 **5. Use Docker volumes:**
+
 - Better I/O performance for large file counts
 
 ### Git Operation Performance
 
 **Worktree filesystem performance:**
 
-| Operation | Speed | Notes |
-|-----------|-------|-------|
-| Checkout branch | Fast | Shared objects |
-| Commit | Fast | No network |
-| Push | Normal | Network dependent |
-| Fetch | Fast | Shared objects |
-| Rebase | Fast | Local operation |
+| Operation       | Speed  | Notes             |
+| --------------- | ------ | ----------------- |
+| Checkout branch | Fast   | Shared objects    |
+| Commit          | Fast   | No network        |
+| Push            | Normal | Network dependent |
+| Fetch           | Fast   | Shared objects    |
+| Rebase          | Fast   | Local operation   |
 
 **Optimization tips:**
+
 - Keep repository clean (no large untracked files)
 - Use `.gitignore` properly
 - Avoid committing build artifacts
@@ -437,6 +472,7 @@ persistent_caches = ["cargo"]
 ```
 
 **Cache hit improvement:**
+
 - Cold build: 5-10 minutes
 - Warm build: 30-60 seconds
 - Savings: 80-90%
@@ -451,6 +487,7 @@ persistent_caches = ["npm", "bun"]
 ```
 
 **Cache hit improvement:**
+
 - Cold install: 2-5 minutes
 - Warm install: 10-30 seconds
 - Savings: 70-85%
@@ -458,6 +495,7 @@ persistent_caches = ["npm", "bun"]
 **Bun-specific optimization:**
 
 Bun is faster than npm/yarn:
+
 - `bun install` ~3x faster than `npm install`
 - Better caching and parallelization
 
@@ -503,33 +541,39 @@ Different AI models have different response times:
 ### Fastest Models
 
 **For quick iterations:**
+
 - Claude Haiku 4.5 (fastest Claude)
 - GPT-5.2-Instant (fastest GPT)
 - Gemini 3 Flash (fastest Gemini)
 
 **Typical latency:**
+
 - First token: 200-500ms
 - Tokens/second: 50-100
 
 ### Balanced Models (Default)
 
 **For most tasks:**
+
 - Claude Sonnet 4.5 (default)
 - GPT-5.2-Codex
 - Gemini 3 Pro
 
 **Typical latency:**
+
 - First token: 500-1000ms
 - Tokens/second: 30-60
 
 ### Slowest Models
 
 **For complex tasks only:**
+
 - Claude Opus 4.5
 - GPT-5.2-Thinking
 - GPT-5.2-Pro
 
 **Typical latency:**
+
 - First token: 1-3s
 - Tokens/second: 20-40
 
@@ -547,6 +591,7 @@ time clauderon create --backend docker --repo ~/project --prompt "test"
 ```
 
 **Target times:**
+
 - Zellij: <500ms
 - Docker (bind): 1-3s
 - Docker (volume): 3-10s (depends on repo size)
@@ -563,6 +608,7 @@ clauderon status <session-name>
 ```
 
 **Factors affecting startup:**
+
 - Image size (larger = slower pull)
 - Container initialization scripts
 - Resource allocation delays
@@ -578,6 +624,7 @@ curl -w "Total time: %{time_total}s\n" http://localhost:3030/api/sessions
 ```
 
 **Expected latency:**
+
 - Session list: 10-50ms
 - Session detail: 20-100ms
 - Create session: 1-30s (depends on backend)
@@ -610,18 +657,21 @@ time curl https://api.anthropic.com/v1/messages
 ### Backend-Specific
 
 **Docker:**
+
 - Use volumes on macOS/Windows for I/O performance
 - Set `image_pull_policy = "IfNotPresent"`
 - Pre-pull images before heavy session creation
 - Use persistent caches for build tools
 
 **Kubernetes:**
+
 - Use node affinity for session locality
 - Pre-create storage classes
 - Set appropriate resource requests (not just limits)
 - Use local storage when possible
 
 **Sprites:**
+
 - Enable build caching
 - Use hibernation for idle sessions
 - Choose region closest to you
@@ -639,10 +689,12 @@ time curl https://api.anthropic.com/v1/messages
 ### Slow Docker Image Pulls
 
 **Symptoms:**
+
 - Session creation takes 30s-5min
 - "Pulling image..." message for long time
 
 **Solutions:**
+
 - Pre-pull images: `docker pull clauderon/agent:latest`
 - Use `image_pull_policy = "IfNotPresent"`
 - Check network speed: `docker pull alpine` (should be fast)
@@ -651,10 +703,12 @@ time curl https://api.anthropic.com/v1/messages
 ### High Proxy Latency
 
 **Symptoms:**
+
 - Agent responses delayed by seconds
 - API calls take much longer than expected
 
 **Solutions:**
+
 - Check `clauderon serve` logs for errors
 - Verify proxy is running locally (not remote)
 - Disable audit logging if enabled
@@ -663,10 +717,12 @@ time curl https://api.anthropic.com/v1/messages
 ### Slow Git Operations
 
 **Symptoms:**
+
 - `git status` takes >5s
 - Git operations hang or timeout
 
 **Solutions:**
+
 - Run `git gc` on main repository
 - Check for large untracked files
 - Verify filesystem performance (disk full?)
@@ -675,11 +731,13 @@ time curl https://api.anthropic.com/v1/messages
 ### Resource Contention
 
 **Symptoms:**
+
 - All operations slower than usual
 - CPU/memory maxed out
 - System becomes unresponsive
 
 **Solutions:**
+
 - Reduce concurrent sessions
 - Set CPU/memory limits
 - Archive old sessions
@@ -688,11 +746,13 @@ time curl https://api.anthropic.com/v1/messages
 ### Network Issues (Sprites)
 
 **Symptoms:**
+
 - Session creation very slow
 - Git operations timeout
 - Intermittent connection failures
 
 **Solutions:**
+
 - Check internet speed (run speedtest)
 - Try different Sprites region
 - Use Docker/Zellij for network-independent work
@@ -702,31 +762,31 @@ time curl https://api.anthropic.com/v1/messages
 
 ### Target Latency (95th percentile)
 
-| Operation | Target | Acceptable | Slow |
-|-----------|--------|------------|------|
-| Session list API | 50ms | 100ms | >200ms |
-| Session create (Zellij) | 500ms | 1s | >2s |
-| Session create (Docker) | 3s | 10s | >20s |
-| Agent first token | 1s | 3s | >5s |
-| Proxy overhead | 10ms | 20ms | >50ms |
+| Operation               | Target | Acceptable | Slow   |
+| ----------------------- | ------ | ---------- | ------ |
+| Session list API        | 50ms   | 100ms      | >200ms |
+| Session create (Zellij) | 500ms  | 1s         | >2s    |
+| Session create (Docker) | 3s     | 10s        | >20s   |
+| Agent first token       | 1s     | 3s         | >5s    |
+| Proxy overhead          | 10ms   | 20ms       | >50ms  |
 
 ### Resource Usage Targets
 
-| Component | CPU | Memory | Disk |
-|-----------|-----|--------|------|
-| clauderon daemon | <5% idle | 50-100MB | Minimal |
-| Proxy per session | <2% | 10-20MB | Logs only |
-| Docker container | Varies | 512MB-8GB | Repo size |
-| Database | <1% | 10-20MB | 10-100MB |
+| Component         | CPU      | Memory    | Disk      |
+| ----------------- | -------- | --------- | --------- |
+| clauderon daemon  | <5% idle | 50-100MB  | Minimal   |
+| Proxy per session | <2%      | 10-20MB   | Logs only |
+| Docker container  | Varies   | 512MB-8GB | Repo size |
+| Database          | <1%      | 10-20MB   | 10-100MB  |
 
 ### Throughput Targets
 
-| Metric | Target | Notes |
-|--------|--------|-------|
-| Sessions per minute (create) | 10-20 | Docker backend |
-| Concurrent sessions | 20-50 | Depends on resources |
-| API requests/second | 100+ | Daemon capacity |
-| Proxy requests/second | 50-100 | Per session |
+| Metric                       | Target | Notes                |
+| ---------------------------- | ------ | -------------------- |
+| Sessions per minute (create) | 10-20  | Docker backend       |
+| Concurrent sessions          | 20-50  | Depends on resources |
+| API requests/second          | 100+   | Daemon capacity      |
+| Proxy requests/second        | 50-100 | Per session          |
 
 ## See Also
 

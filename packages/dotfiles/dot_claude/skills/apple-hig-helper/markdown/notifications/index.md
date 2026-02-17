@@ -18,11 +18,11 @@ Before you can send any notifications to people, you have to get their consent (
 
 Depending on the platform, a notification can use various styles, such as:
 
-* A banner or view on a Lock Screen, Home Screen, Home View, or desktop
-* A badge on an app icon
-* An item in Notification Center
+- A banner or view on a Lock Screen, Home Screen, Home View, or desktop
+- A badge on an app icon
+- An item in Notification Center
 
-In addition, a notification related to direct communication — like a phone call or message — can provide an interface that’s distinct from noncommunication notifications, featuring prominent contact images (or *avatars*) and group names instead of the app icon.
+In addition, a notification related to direct communication — like a phone call or message — can provide an interface that’s distinct from noncommunication notifications, featuring prominent contact images (or _avatars_) and group names instead of the app icon.
 
 ## [Best practices](/design/human-interface-guidelines/notifications#Best-practices)
 
@@ -46,7 +46,7 @@ When a notification includes a title, the system displays it at the top where it
 
 **Write succinct, easy-to-read notification content.** Use complete sentences, sentence case, and proper punctuation, and don’t truncate your message — the system does this automatically when necessary.
 
-**Provide generically descriptive text to display when notification previews aren’t available.** In Settings, people can choose to hide notification previews for all apps. In this situation, the system shows only your app icon and the default title *Notification*. To give people sufficient context to know whether they want to view the full notification, write body text that succinctly describes the notification content without revealing too many details, like “Friend request,” “New comment,” “Reminder,” or “Shipment” (for developer guidance, see [`hiddenPreviewsBodyPlaceholder`](/documentation/UserNotifications/UNNotificationCategory/hiddenPreviewsBodyPlaceholder)). Use sentence-style [capitalization](https://support.apple.com/guide/applestyleguide/c-apsgb744e4a3/web#apdca93e113f1d64) for this text.
+**Provide generically descriptive text to display when notification previews aren’t available.** In Settings, people can choose to hide notification previews for all apps. In this situation, the system shows only your app icon and the default title _Notification_. To give people sufficient context to know whether they want to view the full notification, write body text that succinctly describes the notification content without revealing too many details, like “Friend request,” “New comment,” “Reminder,” or “Shipment” (for developer guidance, see [`hiddenPreviewsBodyPlaceholder`](/documentation/UserNotifications/UNNotificationCategory/hiddenPreviewsBodyPlaceholder)). Use sentence-style [capitalization](https://support.apple.com/guide/applestyleguide/c-apsgb744e4a3/web#apdca93e113f1d64) for this text.
 
 **Avoid including your app name or icon.** The system automatically displays a large version of your app icon at the leading edge of each notification; in a communication notification, the system displays the sender’s contact image badged with a small version of your icon.
 
@@ -78,11 +78,11 @@ A badge is a small, filled oval containing a number that can appear on an app ic
 
 ## [Platform considerations](/design/human-interface-guidelines/notifications#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, or visionOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, or visionOS._
 
 ### [watchOS](/design/human-interface-guidelines/notifications#watchOS)
 
-On Apple Watch, notifications occur in two stages: *short look* and *long look*. People can also view notifications in Notification Center. On supported devices, people can double-tap to respond to notifications.
+On Apple Watch, notifications occur in two stages: _short look_ and _long look_. People can also view notifications in Notification Center. On supported devices, people can double-tap to respond to notifications.
 
 You can help people have a great notification experience by designing app-specific assets and actions that are relevant on Apple Watch. If your watchOS app has an iPhone companion that supports notifications, watchOS can automatically provide default short-look and long-look interfaces if necessary.
 
@@ -102,9 +102,9 @@ Long looks provide more detail about a notification. If necessary, people can sw
 
 ![An illustration that represents a long look notification from a generic app. It includes a small primary image in the upper left corner, badging a platter with the notification title and content. Beneath the notification are two full width action buttons, the second of which extends off the screen to indicate that the view is scrollable.](https://docs-assets.developer.apple.com/published/a48f434c960e0f14429018803ee4b180/notifications-long-looks%402x.png)
 
-A custom long-look interface can be static or dynamic. The *static* interface lets you display a notification’s message along with additional static text and images. The *dynamic* interface gives you access to the notification’s full content and offers more options for configuring the appearance of the interface.
+A custom long-look interface can be static or dynamic. The _static_ interface lets you display a notification’s message along with additional static text and images. The _dynamic_ interface gives you access to the notification’s full content and offers more options for configuring the appearance of the interface.
 
-You can customize the content area for both static and dynamic long looks, but you can’t change the overall structure of the interface. The system-defined structure includes a *sash* at the top of the interface and a Dismiss button at the bottom, below all custom buttons.
+You can customize the content area for both static and dynamic long looks, but you can’t change the overall structure of the interface. The system-defined structure includes a _sash_ at the top of the interface and a Dismiss button at the bottom, below all custom buttons.
 
 **Consider using a rich, custom long-look notification to let people get the information they need without launching your app.** You can use SwiftUI [Animations](/documentation/SwiftUI/Animations) to create engaging, interruptible animations; alternatively, you can use [SpriteKit](/documentation/SpriteKit) or [SceneKit](/documentation/SceneKit).
 
@@ -150,6 +150,6 @@ The Push Notifications primer](https://developer.apple.com/videos/play/wwdc2020/
 
 ## [Change log](/design/human-interface-guidelines/notifications#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date             | Changes                                                                                                    |
+| ---------------- | ---------------------------------------------------------------------------------------------------------- |
 | October 24, 2023 | Updated watchOS platform considerations with guidance for presenting notification responses to double tap. |

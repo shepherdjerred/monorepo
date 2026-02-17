@@ -1,11 +1,11 @@
-const ClubModel = require('./model');
-const NamespaceModel = require('../user/authorization/statement/model');
+const ClubModel = require("./model");
+const NamespaceModel = require("../user/authorization/statement/model");
 
-async function addClub (req, res, next) {
+async function addClub(req, res, next) {
   let club = new ClubModel({
     name: req.body.name,
     shortName: req.body.shortName,
-    members: req.body.members
+    members: req.body.members,
   });
 
   try {
@@ -13,7 +13,7 @@ async function addClub (req, res, next) {
   } catch (err) {
     next({
       status: 500,
-      error: err
+      error: err,
     });
   }
 
@@ -34,24 +34,24 @@ async function addClub (req, res, next) {
   res.json(club);
 }
 
-async function getClubs (req, res, next) {
+async function getClubs(req, res, next) {
   try {
     let clubs = await ClubModel.find();
     res.json(clubs);
   } catch (err) {
     next({
       status: 500,
-      error: err
+      error: err,
     });
   }
 }
 
-async function getClub (req, res, next) {
+async function getClub(req, res, next) {
   let club = res.locals.club;
   res.json(club);
 }
 
-async function updateClub (req, res, next) {
+async function updateClub(req, res, next) {
   let club = res.locals.club;
   club.name = req.body.name || club.name;
   club.shortName = req.body.shortName || club.shortName;
@@ -62,19 +62,19 @@ async function updateClub (req, res, next) {
   } catch (err) {
     next({
       status: 500,
-      error: err
+      error: err,
     });
   }
 }
 
-async function deleteClub (req, res, next) {
+async function deleteClub(req, res, next) {
   try {
     let club = await res.locals.club.remove();
     res.json(club);
   } catch (err) {
     next({
       status: 500,
-      error: err
+      error: err,
     });
   }
 }
@@ -84,5 +84,5 @@ module.exports = {
   getClubs,
   getClub,
   updateClub,
-  deleteClub
+  deleteClub,
 };

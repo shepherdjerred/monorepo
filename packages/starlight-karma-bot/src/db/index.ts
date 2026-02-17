@@ -18,6 +18,8 @@ export const dataSource = new DataSource({
   migrations: [],
 });
 
-console.warn(`[Database] Initializing database connection to ${configuration.dataDir}/glitter.sqlite`);
+console.warn(
+  `[Database] Initializing database connection to ${configuration.dataDir}/glitter.sqlite`,
+);
 await dataSource.initialize();
 console.warn("[Database] Database connection initialized successfully");

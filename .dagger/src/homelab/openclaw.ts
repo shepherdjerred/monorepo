@@ -17,12 +17,24 @@ function buildOpenclawContainer(): Container {
       // Install himalaya CLI for email operations (Fastmail/Gmail skills)
       .withExec(["apt-get", "update"])
       .withExec(["apt-get", "install", "-y", "curl"])
-      .withExec(["sh", "-c", "curl -sSL https://raw.githubusercontent.com/pimalaya/himalaya/master/install.sh | sh"])
+      .withExec([
+        "sh",
+        "-c",
+        "curl -sSL https://raw.githubusercontent.com/pimalaya/himalaya/master/install.sh | sh",
+      ])
       // Clone and checkout pinned commit for supply chain security
-      .withExec(["git", "clone", "https://github.com/openclaw/openclaw.git", "/app"])
+      .withExec([
+        "git",
+        "clone",
+        "https://github.com/openclaw/openclaw.git",
+        "/app",
+      ])
       .withWorkdir("/app")
       .withExec(["git", "checkout", versions.openclawCommit])
-      .withMountedCache("/root/.local/share/pnpm/store", dag.cacheVolume("pnpm-cache-openclaw"))
+      .withMountedCache(
+        "/root/.local/share/pnpm/store",
+        dag.cacheVolume("pnpm-cache-openclaw"),
+      )
       .withExec(["pnpm", "install"])
       .withExec(["pnpm", "ui:build"]) // Build the UI first (auto-installs UI deps)
       .withExec(["pnpm", "build"])
@@ -62,7 +74,9 @@ export async function buildAndPushOpenclawImage(
       };
     }
     // Publish the image
-    const result = await container.withRegistryAuth("ghcr.io", ghcrUsername, ghcrPassword).publish(imageName);
+    const result = await container
+      .withRegistryAuth("ghcr.io", ghcrUsername, ghcrPassword)
+      .publish(imageName);
 
     return {
       status: "passed",

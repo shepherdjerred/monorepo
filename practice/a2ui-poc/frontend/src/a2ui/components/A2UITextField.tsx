@@ -1,7 +1,10 @@
 import { useState } from "react";
 import type { TextFieldComponent } from "../types";
 import { useSurface } from "../SurfaceManager";
-import { resolveString, resolveActionContext } from "../../hooks/useDataBinding";
+import {
+  resolveString,
+  resolveActionContext,
+} from "../../hooks/useDataBinding";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -30,7 +33,10 @@ export function A2UITextField({
 
   const handleChange = (newValue: string) => {
     setValue(newValue);
-    const resolvedContext = resolveActionContext(component.action.context, dataModel);
+    const resolvedContext = resolveActionContext(
+      component.action.context,
+      dataModel,
+    );
     resolvedContext.value = newValue;
     dispatchAction(surfaceId, id, component.action.name, resolvedContext);
   };

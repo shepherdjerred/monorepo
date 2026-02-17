@@ -12,13 +12,13 @@ In visionOS, people look at a virtual object to identify it as a target they can
 
 ![A sketch of a human eye. The image is overlaid with rectangular and circular grid lines and is tinted purple to subtly reflect the purple in the original six-color Apple logo.](https://docs-assets.developer.apple.com/published/126393ded1c486236fc7a9feabea30ea/inputs-eyes-intro%402x.png)
 
-When people look at an interactive element, visionOS highlights it, providing visual feedback that helps them confirm the item is one they want. The visual feedback, or *hover effect*, shows people that they can use an [indirect gesture](/design/human-interface-guidelines/gestures#visionOS) like tap to interact with the element.
+When people look at an interactive element, visionOS highlights it, providing visual feedback that helps them confirm the item is one they want. The visual feedback, or _hover effect_, shows people that they can use an [indirect gesture](/design/human-interface-guidelines/gestures#visionOS) like tap to interact with the element.
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/3b6ecfc368ebc0cb879ea7d47c90edf4/visionos-focus-and-selection-settings%402x.png)](https://docs-assets.developer.apple.com/published/592428fafa4977447c16993a8daff765/visionos-focus-and-selection-settings.mp4) Content description: A recording of the Settings app showing the hover effect appear on several individual settings in turn as someone's eyes move from one to another.
 
- [Play](#)
+[Play](#)
 
 In some cases, the system can automatically display an expanded view of a component after people look at it. For example, when people look at a tab bar, the entire bar resizes to reveal text labels next to each tab. In this scenario, an individual tab also highlights before the tab bar expansion to let people select it before revealing the labels. Another example is a button that can reveal a tooltip when people look at it.
 
@@ -26,7 +26,7 @@ Important
 
 To help preserve people’s privacy, visionOS doesn’t provide direct information about where people are looking before they tap. When you use system-provided components, visionOS automatically tells you when people tap the component. For developer guidance, see [Adopting best practices for privacy and user preferences](/documentation/visionOS/adopting-best-practices-for-privacy).
 
-visionOS also supports *focus effects* that help people navigate apps and the system using a connected input device like a keyboard or game controller. Focus effects are unrelated to the hover effect; to learn more, see [Focus and selection](/design/human-interface-guidelines/focus-and-selection).
+visionOS also supports _focus effects_ that help people navigate apps and the system using a connected input device like a keyboard or game controller. Focus effects are unrelated to the hover effect; to learn more, see [Focus and selection](/design/human-interface-guidelines/focus-and-selection).
 
 ## [Best practices](/design/human-interface-guidelines/eyes#Best-practices)
 
@@ -74,9 +74,9 @@ As an example that shows what a custom hover effect can and can’t do, consider
 
 **Choose the right delay.** An element’s custom hover effect can appear instantly, after a short delay, or after a slightly longer delay, depending on how you expect people to interact with the element.
 
-* **No delay (default).** A custom hover effect that appears without delay tends to be especially useful when the effect is subtle or invites interaction, like when a knob appears on a slider.
-* **Short delay.** Consider using a short delay to let people look at an element and quickly interact with it without waiting for the effect to appear; for example, the expansion of tabs in a tab bar works this way.
-* **Long delay.** If your custom hover effect shows additional information, like when a tooltip appears below a button, a slightly longer delay can work well because most people won’t need to view the additional information every time.
+- **No delay (default).** A custom hover effect that appears without delay tends to be especially useful when the effect is subtle or invites interaction, like when a knob appears on a slider.
+- **Short delay.** Consider using a short delay to let people look at an element and quickly interact with it without waiting for the effect to appear; for example, the expansion of tabs in a tab bar works this way.
+- **Long delay.** If your custom hover effect shows additional information, like when a tooltip appears below a button, a slightly longer delay can work well because most people won’t need to view the additional information every time.
 
 **Aim to keep one or more of the element’s primary views unchanged in both states of a custom hover effect.** When at least one primary view remains constant during a hover effect’s animation, it provides visual stability that can help people follow the element’s transition. If all of an element’s views move or change during a custom hover effect, it can disorient people and make them lose track of what’s happening.
 
@@ -84,7 +84,7 @@ As an example that shows what a custom hover effect can and can’t do, consider
 
 ## [Platform considerations](/design/human-interface-guidelines/eyes#Platform-considerations)
 
-*Not supported in iOS, iPadOS, macOS, tvOS, or watchOS.*
+_Not supported in iOS, iPadOS, macOS, tvOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/eyes#Resources)
 
@@ -116,9 +116,9 @@ Design considerations for vision and motion](https://developer.apple.com/videos/
 
 ## [Change log](/design/human-interface-guidelines/eyes#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| June 10, 2024 | Added guidance for custom hover effects. |
-| March 29, 2024 | Added artwork showing the visionOS hover effect. |
+| Date             | Changes                                                                       |
+| ---------------- | ----------------------------------------------------------------------------- |
+| June 10, 2024    | Added guidance for custom hover effects.                                      |
+| March 29, 2024   | Added artwork showing the visionOS hover effect.                              |
 | October 24, 2023 | Clarified the difference between focus effects and the visionOS hover effect. |
-| June 21, 2023 | New page. |
+| June 21, 2023    | New page.                                                                     |

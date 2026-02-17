@@ -6,17 +6,12 @@ Resources:
       TableName: Cashly
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
-        -
-          AttributeName: TableHashKey
+        - AttributeName: TableHashKey
           AttributeType: "S"
-        -
-          AttributeName: TableSortKey
+        - AttributeName: TableSortKey
           AttributeType: "S"
       KeySchema:
-        -
-          AttributeName: TableHashKey
+        - AttributeName: TableHashKey
           KeyType: HASH
-        -
-          AttributeName: TableSortKey
+        - AttributeName: TableSortKey
           KeyType: RANGE
-

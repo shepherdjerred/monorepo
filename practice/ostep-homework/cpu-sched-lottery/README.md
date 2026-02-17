@@ -1,15 +1,14 @@
-
 # Overview
 
 This program, lottery.py, allows you to see how a lottery scheduler
 works. As always, there are two steps to running the program. First, run
 without the -c flag: this shows you what problem to solve without
-revealing the answers. 
+revealing the answers.
 
 ```sh
 prompt> ./lottery.py -j 2 -s 0
 ...
-Here is the job list, with the run time of each job: 
+Here is the job list, with the run time of each job:
   Job 0 ( length = 8, tickets = 75 )
   Job 1 ( length = 4, tickets = 25 )
 
@@ -35,7 +34,7 @@ which you will need to determine what the lottery scheduler will do. The
 random numbers are chosen to be between 0 and a large number; thus, you'll
 have to use the modulo operator to compute the lottery winner (i.e., winner
 should equal this random number modulo the total number of tickets in the
-system). 
+system).
 
 Running with -c shows exactly what you are supposed to calculate:
 
@@ -95,7 +94,7 @@ Random 511275 -> Winning ticket 75 (of 100) -> Run 1
 ```
 
 As you can see, the first line summarizes what happens, and the second simply
-shows the entire job queue, with an * denoting which job was chosen.
+shows the entire job queue, with an \* denoting which job was chosen.
 
 The simulator has a few other options, most of which should be
 self-explanatory. Most notably, the -l/--jlist flag can be used to specify an
@@ -107,11 +106,11 @@ prompt> ./lottery.py -h
 Usage: lottery.py [options]
 
 Options:
-  -h, --help            
+  -h, --help
       show this help message and exit
-  -s SEED, --seed=SEED  
+  -s SEED, --seed=SEED
       the random seed
-  -j JOBS, --jobs=JOBS  
+  -j JOBS, --jobs=JOBS
       number of jobs in the system
   -l JLIST, --jlist=JLIST
       instead of random jobs, provide a comma-separated list
@@ -127,4 +126,3 @@ Options:
   -c, --compute
       compute answers for me
 ```
-

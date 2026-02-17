@@ -2,7 +2,14 @@ import { Karma } from "#src/db/karma.ts";
 import { KarmaCounts } from "#src/db/karma-counts.ts";
 import { KarmaReceived } from "#src/db/karma-received.ts";
 import { Person } from "#src/db/person.ts";
-import { bold, type ChatInputCommandInteraction, inlineCode, SlashCommandBuilder, time, userMention } from "discord.js";
+import {
+  bold,
+  type ChatInputCommandInteraction,
+  inlineCode,
+  SlashCommandBuilder,
+  time,
+  userMention,
+} from "discord.js";
 import { dataSource } from "#src/db/index.ts";
 import _ from "lodash";
 import client from "#src/discord/client.ts";
@@ -15,21 +22,32 @@ const karmaCommand = new SlashCommandBuilder()
       .setName("give")
       .setDescription("Give karma to someone")
       .addUserOption((option) =>
-        option.setName("target").setDescription("The person you'd like to give karma to").setRequired(true),
+        option
+          .setName("target")
+          .setDescription("The person you'd like to give karma to")
+          .setRequired(true),
       )
       .addStringOption((option) =>
-        option.setName("reason").setDescription("An optional reason about why they deserve karma").setMaxLength(200),
+        option
+          .setName("reason")
+          .setDescription("An optional reason about why they deserve karma")
+          .setMaxLength(200),
       ),
   )
   .addSubcommand((subcommand) =>
-    subcommand.setName("leaderboard").setDescription("See karma values for everyone on the server"),
+    subcommand
+      .setName("leaderboard")
+      .setDescription("See karma values for everyone on the server"),
   )
   .addSubcommand((subcommand) =>
     subcommand
       .setName("history")
       .setDescription("View recent changes to a person's karma")
       .addUserOption((option) =>
-        option.setName("target").setDescription("The person whose karma history you'd like to view").setRequired(true),
+        option
+          .setName("target")
+          .setDescription("The person whose karma history you'd like to view")
+          .setRequired(true),
       ),
   );
 
@@ -38,7 +56,14 @@ async function getOrCreate(id: string): Promise<Person> {
     where: {
       id,
     },
-    relations: ["received", "given", "given.receiver", "given.giver", "received.receiver", "received.giver"],
+    relations: [
+      "received",
+      "given",
+      "given.receiver",
+      "given.giver",
+      "received.receiver",
+      "received.giver",
+    ],
   });
   if (person === null) {
     console.warn(`[Karma DB] Creating new person record for user ID: ${id}`);
@@ -88,7 +113,9 @@ async function handleKarmaGive(interaction: ChatInputCommandInteraction) {
   const receiverUser = interaction.options.getUser("target", true);
 
   if (interaction.guildId === null) {
-    console.warn(`[Karma Give] ${giverUser.tag} (${giverUser.id}) attempted to give karma in DMs - rejected`);
+    console.warn(
+      `[Karma Give] ${giverUser.tag} (${giverUser.id}) attempted to give karma in DMs - rejected`,
+    );
     await interaction.reply({
       content: "Karma can only be given in a server, not in DMs.",
       ephemeral: true,
@@ -108,8 +135,16 @@ async function handleKarmaGive(interaction: ChatInputCommandInteraction) {
   }
 
   if (receiverUser.id === giverUser.id) {
-    console.warn(`[Karma Give] ${giverUser.tag} (${giverUser.id}) attempted self-karma - applying penalty (-1)`);
-    await modifyKarma({ giverId: giverUser.id, receiverId: receiverUser.id, amount: -1, guildId: interaction.guildId, reason: "tried altering their own karma" });
+    console.warn(
+      `[Karma Give] ${giverUser.tag} (${giverUser.id}) attempted self-karma - applying penalty (-1)`,
+    );
+    await modifyKarma({
+      giverId: giverUser.id,
+      receiverId: receiverUser.id,
+      amount: -1,
+      guildId: interaction.guildId,
+      reason: "tried altering their own karma",
+    });
     const newKarma = await getKarma(receiverUser.id, interaction.guildId);
     console.warn(
       `[Karma Give] Penalty applied to ${giverUser.tag} (${giverUser.id}), new karma: ${newKarma.toString()}`,
@@ -127,7 +162,13 @@ async function handleKarmaGive(interaction: ChatInputCommandInteraction) {
   console.warn(
     `[Karma Give] ${giverUser.tag} (${giverUser.id}) giving karma to ${receiverUser.tag} (${receiverUser.id})${reason !== undefined && reason !== "" ? ` - reason: "${reason}"` : ""}`,
   );
-  await modifyKarma({ giverId: giverUser.id, receiverId: receiverUser.id, amount: 1, guildId: interaction.guildId, reason });
+  await modifyKarma({
+    giverId: giverUser.id,
+    receiverId: receiverUser.id,
+    amount: 1,
+    guildId: interaction.guildId,
+    reason,
+  });
   const newReceiverKarma = await getKarma(receiverUser.id, interaction.guildId);
   console.warn(
     `[Karma Give] Success! ${receiverUser.tag} (${receiverUser.id}) now has ${newReceiverKarma.toString()} karma`,
@@ -143,8 +184,12 @@ async function handleKarmaGive(interaction: ChatInputCommandInteraction) {
   );
 }
 
-async function handleKarmaLeaderboard(interaction: ChatInputCommandInteraction) {
-  console.warn(`[Karma Leaderboard] ${interaction.user.tag} (${interaction.user.id}) requested leaderboard`);
+async function handleKarmaLeaderboard(
+  interaction: ChatInputCommandInteraction,
+) {
+  console.warn(
+    `[Karma Leaderboard] ${interaction.user.tag} (${interaction.user.id}) requested leaderboard`,
+  );
   await interaction.deferReply({ ephemeral: true });
 
   if (interaction.guildId === null) {
@@ -198,7 +243,9 @@ async function handleKarmaLeaderboard(interaction: ChatInputCommandInteraction) 
     }),
   );
   const leaderboard = leaderboardEntries.join("\n");
-  console.warn(`[Karma Leaderboard] Leaderboard generated and sent to ${interaction.user.tag} (${interaction.user.id})`);
+  console.warn(
+    `[Karma Leaderboard] Leaderboard generated and sent to ${interaction.user.tag} (${interaction.user.id})`,
+  );
   await interaction.editReply({
     content: `Karma Leaderboard:\n${leaderboard}`,
   });
@@ -238,7 +285,9 @@ async function handleKarmaHistory(interaction: ChatInputCommandInteraction) {
   );
 
   if (karmaRecords.length === 0) {
-    console.warn(`[Karma History] No history found for ${target.tag} (${target.id})`);
+    console.warn(
+      `[Karma History] No history found for ${target.tag} (${target.id})`,
+    );
     await interaction.reply({
       content: `${userMention(target.id)} has no karma history in this server yet.`,
       ephemeral: true,
@@ -269,7 +318,9 @@ async function handleKarmaHistory(interaction: ChatInputCommandInteraction) {
       return "Unknown";
     })
     .join("\n");
-  console.warn(`[Karma History] History generated and sent to ${interaction.user.tag} (${interaction.user.id})`);
+  console.warn(
+    `[Karma History] History generated and sent to ${interaction.user.tag} (${interaction.user.id})`,
+  );
   await interaction.reply({
     content: `${userMention(target.id)}'s Karma History:\n${str}`,
     ephemeral: true,

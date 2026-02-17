@@ -46,11 +46,11 @@ In games, players tend to adjust their approach to a specific task as part of th
 
 ## [Platform considerations](/design/human-interface-guidelines/settings#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, tvOS, or visionOS.*
+_No additional considerations for iOS, iPadOS, tvOS, or visionOS._
 
 ### [macOS](/design/human-interface-guidelines/settings#macOS)
 
-When people choose the Settings item in your app’s or game’s App menu, your custom settings window opens. Typically, a custom settings window contains a toolbar that includes buttons for switching between views — called *panes* — that each contain a group of related settings.
+When people choose the Settings item in your app’s or game’s App menu, your custom settings window opens. Typically, a custom settings window contains a toolbar that includes buttons for switching between views — called _panes_ — that each contain a group of related settings.
 
 **Include a settings item in the [App menu](/design/human-interface-guidelines/the-menu-bar#App-menu).** Avoid adding settings buttons to a window’s toolbar, because doing so decreases the space available for essential commands that people use frequently. If you provide document-level options, add this item to your app’s [File menu](/design/human-interface-guidelines/the-menu-bar#File-menu).
 
@@ -58,7 +58,7 @@ When people choose the Settings item in your app’s or game’s App menu, your 
 
 **In your settings window, use a noncustomizable toolbar that remains visible and always indicates the active toolbar button.** A settings window’s toolbar identifies the areas people can customize and helps people navigate among those areas. People rely on a stable settings interface to help them find what they need.
 
-**Update the window’s title to reflect the currently visible pane.** If your settings window doesn’t have multiple panes, use the title *App Name* Settings.
+**Update the window’s title to reflect the currently visible pane.** If your settings window doesn’t have multiple panes, use the title _App Name_ Settings.
 
 **Restore the most recently viewed pane.** People often adjust related settings more than once, so it can be convenient when a settings window opens to the last pane people used.
 
@@ -82,6 +82,6 @@ In watchOS, apps and games don’t add custom settings to the system-provided Se
 
 ## [Change log](/design/human-interface-guidelines/settings#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date          | Changes                                                                     |
+| ------------- | --------------------------------------------------------------------------- |
 | June 10, 2024 | Reorganized some guidance into new topics and added game-specific examples. |

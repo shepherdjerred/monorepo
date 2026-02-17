@@ -4,11 +4,11 @@ export type GhCommandResult<T> = {
   success: boolean;
   data?: T | undefined;
   error?: string | undefined;
-}
+};
 
 export async function runGhCommand<T>(
   args: string[],
-  repo?: string
+  repo?: string,
 ): Promise<GhCommandResult<T>> {
   const repoArgs = repo ? ["--repo", repo] : [];
   const fullArgs = [...args, ...repoArgs];
@@ -36,7 +36,7 @@ export async function runGhCommand<T>(
 
 export async function runGhCommandRaw(
   args: string[],
-  repo?: string
+  repo?: string,
 ): Promise<GhCommandResult<string>> {
   const repoArgs = repo ? ["--repo", repo] : [];
   const fullArgs = [...args, ...repoArgs];
