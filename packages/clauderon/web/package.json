@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
-    "concurrently": "^9.2.1"
+    "concurrently": "^9.2.1",
+    "jiti": "^2.6.1"
   }
 }

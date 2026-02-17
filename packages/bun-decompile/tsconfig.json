@@ -4,5 +4,5 @@
     "types": ["bun-types"],
     "noEmit": true
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "eslint.config.ts"]
 }
