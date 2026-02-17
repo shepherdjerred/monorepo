@@ -52,7 +52,11 @@ export function welcomeHome({ hass, logger }: TServiceParams) {
           verifyAfterDelay({
             entityId: bedroomHeater.entity_id,
             workflowName: "climate_welcome_home",
-            getActualState: () => z.coerce.string().catch("unknown").parse(bedroomHeater.attributes.temperature),
+            getActualState: () =>
+              z.coerce
+                .string()
+                .catch("unknown")
+                .parse(bedroomHeater.attributes.temperature),
             check: (actual) => actual === "22",
             delay: { amount: 30, unit: "s" },
             description: "target 22°C",
@@ -61,7 +65,9 @@ export function welcomeHome({ hass, logger }: TServiceParams) {
           });
 
           logger.debug("Turning on entryway light");
-          await hass.call.switch.turn_on({ entity_id: entrywayLight.entity_id });
+          await hass.call.switch.turn_on({
+            entity_id: entrywayLight.entity_id,
+          });
 
           // Verify entryway light
           verifyAfterDelay({
@@ -75,7 +81,9 @@ export function welcomeHome({ hass, logger }: TServiceParams) {
           });
 
           logger.debug("Setting living room scene to bright");
-          await hass.call.scene.turn_on({ entity_id: livingRoomScene.entity_id });
+          await hass.call.scene.turn_on({
+            entity_id: livingRoomScene.entity_id,
+          });
 
           // TODO: Re-enable when Christmas decorations are back
           // const randomScene = christmasScenes[Math.floor(Math.random() * christmasScenes.length)];
@@ -103,10 +111,15 @@ export function welcomeHome({ hass, logger }: TServiceParams) {
       newState: ENTITY_STATE<"person.jerred"> | undefined,
       oldState: ENTITY_STATE<"person.jerred"> | undefined,
     ) => {
-      if (oldState && newState && newState.state === "home" && oldState.state === "not_home" && // Only trigger if Shuxin is not home (this is the first arrival)
-        personShuxin.state === "not_home") {
-          await runWelcomeHome();
-        }
+      if (
+        oldState &&
+        newState &&
+        newState.state === "home" &&
+        oldState.state === "not_home" && // Only trigger if Shuxin is not home (this is the first arrival)
+        personShuxin.state === "not_home"
+      ) {
+        await runWelcomeHome();
+      }
     },
   );
 
@@ -115,10 +128,15 @@ export function welcomeHome({ hass, logger }: TServiceParams) {
       newState: ENTITY_STATE<"person.shuxin"> | undefined,
       oldState: ENTITY_STATE<"person.shuxin"> | undefined,
     ) => {
-      if (oldState && newState && newState.state === "home" && oldState.state === "not_home" && // Only trigger if Jerred is not home (this is the first arrival)
-        personJerred.state === "not_home") {
-          await runWelcomeHome();
-        }
+      if (
+        oldState &&
+        newState &&
+        newState.state === "home" &&
+        oldState.state === "not_home" && // Only trigger if Jerred is not home (this is the first arrival)
+        personJerred.state === "not_home"
+      ) {
+        await runWelcomeHome();
+      }
     },
   );
 }

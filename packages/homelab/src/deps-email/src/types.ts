@@ -120,7 +120,9 @@ export function parseImageString(imageStr: string): ImageRef | null {
   return null;
 }
 
-function parseImageWithoutDigest(imagePart: string): Omit<ImageRef, "tag"> | null {
+function parseImageWithoutDigest(
+  imagePart: string,
+): Omit<ImageRef, "tag"> | null {
   const parts = imagePart.split("/");
 
   if (parts.length === 1) {
@@ -239,7 +241,12 @@ export type AppVersionUpdate = {
 /**
  * Source of release notes
  */
-export type ReleaseNoteSource = "github-releases" | "changelog" | "artifacthub" | "git-compare" | "llm-extracted";
+export type ReleaseNoteSource =
+  | "github-releases"
+  | "changelog"
+  | "artifacthub"
+  | "git-compare"
+  | "llm-extracted";
 
 /**
  * Single release note entry
@@ -281,7 +288,10 @@ export const REPO_ALIASES: Record<string, string> = {
 /**
  * Resolve a repository reference to a full URL
  */
-export function resolveRepositoryUrl(repoRef: string | undefined, parentRepoUrl?: string): string | null {
+export function resolveRepositoryUrl(
+  repoRef: string | undefined,
+  parentRepoUrl?: string,
+): string | null {
   if (!repoRef) {
     // Empty/undefined means bundled subchart
     return parentRepoUrl ?? null;

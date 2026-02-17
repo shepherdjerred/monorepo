@@ -17,7 +17,10 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
   const bedroomScene = hass.refBy.id("scene.bedroom_dimmed");
   const bedroomMediaPlayer = hass.refBy.id("media_player.bedroom");
   const bedroomBrightScene = hass.refBy.id("scene.bedroom_bright");
-  const extraMediaPlayers = [hass.refBy.id("media_player.main_bathroom"), hass.refBy.id("media_player.entryway")];
+  const extraMediaPlayers = [
+    hass.refBy.id("media_player.main_bathroom"),
+    hass.refBy.id("media_player.entryway"),
+  ];
   const bedroomHeater = hass.refBy.id("climate.bedroom_thermostat");
   // TODO: Re-enable when living room thermostat is back online
   // const livingRoomClimate = hass.refBy.id("climate.living_room");
@@ -45,19 +48,28 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
 
   // one hour before
   scheduler.cron({
-    schedule: [`0 ${(weekdayWakeUpHour - 1).toString()} * * 1-5`, `0 ${(weekendWakeUpHour - 1).toString()} * * 6,0`],
+    schedule: [
+      `0 ${(weekdayWakeUpHour - 1).toString()} * * 1-5`,
+      `0 ${(weekendWakeUpHour - 1).toString()} * * 6,0`,
+    ],
     exec: () => instrumentWorkflow("good_morning_early", runEarly),
   });
 
   // at wake up time
   scheduler.cron({
-    schedule: [`0 ${weekdayWakeUpHour.toString()} * * 1-5`, `0 ${weekendWakeUpHour.toString()} * * 6,0`],
+    schedule: [
+      `0 ${weekdayWakeUpHour.toString()} * * 1-5`,
+      `0 ${weekendWakeUpHour.toString()} * * 6,0`,
+    ],
     exec: () => instrumentWorkflow("good_morning_wake_up", runWakeUp),
   });
 
   // 15 minutes later
   scheduler.cron({
-    schedule: [`15 ${weekdayWakeUpHour.toString()} * * 1-5`, `15 ${weekendWakeUpHour.toString()} * * 6,0`],
+    schedule: [
+      `15 ${weekdayWakeUpHour.toString()} * * 1-5`,
+      `15 ${weekendWakeUpHour.toString()} * * 6,0`,
+    ],
     exec: () => instrumentWorkflow("good_morning_get_up", runGetUp),
   });
 
@@ -109,17 +121,28 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                 runSequential([
                   // Debug: Log the full state before doing anything
                   () => {
-                    logger.info(`Before any changes - Full state: ${JSON.stringify(bedroomMediaPlayer.attributes)}`);
-                    logger.info(`Before any changes - Entity state: ${bedroomMediaPlayer.state}`);
+                    logger.info(
+                      `Before any changes - Full state: ${JSON.stringify(bedroomMediaPlayer.attributes)}`,
+                    );
+                    logger.info(
+                      `Before any changes - Entity state: ${bedroomMediaPlayer.state}`,
+                    );
                     return Promise.resolve();
                   },
-                  () => hass.call.media_player.unjoin({ entity_id: bedroomMediaPlayer.entity_id }),
+                  () =>
+                    hass.call.media_player.unjoin({
+                      entity_id: bedroomMediaPlayer.entity_id,
+                    }),
                   // Wait longer for unjoin to complete fully
                   () => wait({ amount: 5, unit: "s" }),
                   // Debug: Log state after unjoin
                   () => {
-                    logger.info(`After unjoin - Full state: ${JSON.stringify(bedroomMediaPlayer.attributes)}`);
-                    logger.info(`After unjoin - Entity state: ${bedroomMediaPlayer.state}`);
+                    logger.info(
+                      `After unjoin - Full state: ${JSON.stringify(bedroomMediaPlayer.attributes)}`,
+                    );
+                    logger.info(
+                      `After unjoin - Entity state: ${bedroomMediaPlayer.state}`,
+                    );
                     return Promise.resolve();
                   },
                   // Try volume_set with explicit value
@@ -137,14 +160,18 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                   () => wait({ amount: 2, unit: "s" }),
                   // Debug: Log state after volume_set
                   () => {
-                    logger.info(`After volume_set - Full state: ${JSON.stringify(bedroomMediaPlayer.attributes)}`);
+                    logger.info(
+                      `After volume_set - Full state: ${JSON.stringify(bedroomMediaPlayer.attributes)}`,
+                    );
                     return Promise.resolve();
                   },
                   // Play media with error handling and retry
                   () =>
                     (async () => {
                       try {
-                        logger.info("Attempting to play media on bedroom player");
+                        logger.info(
+                          "Attempting to play media on bedroom player",
+                        );
                         await hass.call.media_player.play_media({
                           entity_id: bedroomMediaPlayer.entity_id,
                           media: JSON.stringify({
@@ -159,7 +186,9 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                           .transform((error) => error.message)
                           .catch((error) => String(error.value))
                           .parse(playError);
-                        logger.error(`First play_media attempt failed: ${errorMsg}`);
+                        logger.error(
+                          `First play_media attempt failed: ${errorMsg}`,
+                        );
                         logger.info("Waiting additional time and retrying...");
                         await wait({ amount: 3, unit: "s" });
                         try {
@@ -185,7 +214,10 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                   () =>
                     runSequentialWithDelay(
                       repeat(
-                        () => hass.call.media_player.volume_up({ entity_id: bedroomMediaPlayer.entity_id }),
+                        () =>
+                          hass.call.media_player.volume_up({
+                            entity_id: bedroomMediaPlayer.entity_id,
+                          }),
                         initialVolumeSteps,
                       ),
                       {
@@ -194,10 +226,16 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                       },
                     ),
                 ]),
-              () => hass.call.scene.turn_on({ entity_id: bedroomScene.entity_id, transition: 3 }),
+              () =>
+                hass.call.scene.turn_on({
+                  entity_id: bedroomScene.entity_id,
+                  transition: 3,
+                }),
               () =>
                 (async () => {
-                  await hass.call.switch.turn_on({ entity_id: mainBathroomLight.entity_id });
+                  await hass.call.switch.turn_on({
+                    entity_id: mainBathroomLight.entity_id,
+                  });
                   verifyAfterDelay({
                     entityId: mainBathroomLight.entity_id,
                     workflowName: "switch_on",
@@ -223,9 +261,16 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
         runParallel([
           () =>
             runIf(personShuxin.state === "not_home", () =>
-              openCoversWithDelay(hass, logger, ["cover.bedroom_left", "cover.bedroom_right"]),
+              openCoversWithDelay(hass, logger, [
+                "cover.bedroom_left",
+                "cover.bedroom_right",
+              ]),
             ),
-          () => hass.call.scene.turn_on({ entity_id: bedroomBrightScene.entity_id, transition: 60 }),
+          () =>
+            hass.call.scene.turn_on({
+              entity_id: bedroomBrightScene.entity_id,
+              transition: 60,
+            }),
           () =>
             runSequential([
               // Set extra players to start volume
@@ -249,12 +294,18 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                 runSequentialWithDelay(
                   repeat(async () => {
                     // Increase bedroom player volume
-                    await hass.call.media_player.volume_up({ entity_id: bedroomMediaPlayer.entity_id });
+                    await hass.call.media_player.volume_up({
+                      entity_id: bedroomMediaPlayer.entity_id,
+                    });
                     // Increase extra players volume
                     await Promise.all(
                       extraMediaPlayers.map(async (player) => {
-                        logger.debug(`Increasing volume for ${player.entity_id}`);
-                        await hass.call.media_player.volume_up({ entity_id: player.entity_id });
+                        logger.debug(
+                          `Increasing volume for ${player.entity_id}`,
+                        );
+                        await hass.call.media_player.volume_up({
+                          entity_id: player.entity_id,
+                        });
                       }),
                     );
                   }, additionalVolumeSteps), // Only 2 additional steps instead of 5+3
@@ -266,7 +317,9 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
             ]),
           () =>
             (async () => {
-              await hass.call.switch.turn_on({ entity_id: entrywayLight.entity_id });
+              await hass.call.switch.turn_on({
+                entity_id: entrywayLight.entity_id,
+              });
               verifyAfterDelay({
                 entityId: entrywayLight.entity_id,
                 workflowName: "switch_on",

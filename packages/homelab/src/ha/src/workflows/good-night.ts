@@ -1,6 +1,12 @@
 import type { TServiceParams } from "@digital-alchemy/core";
 import { z } from "zod";
-import { wait, openCoversWithDelay, closeCoversWithDelay, verifyAfterDelay, withTimeout } from "../util.ts";
+import {
+  wait,
+  openCoversWithDelay,
+  closeCoversWithDelay,
+  verifyAfterDelay,
+  withTimeout,
+} from "../util.ts";
 import { instrumentWorkflow } from "../metrics.ts";
 
 export function goodNight({ hass, logger, context }: TServiceParams) {
@@ -28,7 +34,11 @@ export function goodNight({ hass, logger, context }: TServiceParams) {
               })
               .safeParse(event);
 
-            if (!result.success || result.data.data.actionID !== "A91A15AA-479E-416C-8F51-BD983A999266") {
+            if (
+              !result.success ||
+              result.data.data.actionID !==
+                "A91A15AA-479E-416C-8F51-BD983A999266"
+            ) {
               logger.debug("Event actionID does not match; ignoring");
             }
 
@@ -48,7 +58,11 @@ export function goodNight({ hass, logger, context }: TServiceParams) {
             verifyAfterDelay({
               entityId: bedroomHeater.entity_id,
               workflowName: "climate_good_night",
-              getActualState: () => z.coerce.string().catch("unknown").parse(bedroomHeater.attributes.temperature),
+              getActualState: () =>
+                z.coerce
+                  .string()
+                  .catch("unknown")
+                  .parse(bedroomHeater.attributes.temperature),
               check: (actual) => actual === "22",
               delay: { amount: 30, unit: "s" },
               description: "target 22°C",
@@ -67,11 +81,15 @@ export function goodNight({ hass, logger, context }: TServiceParams) {
 
             if (bedroomLight.state === "on") {
               logger.debug("Turning on bedroom scene");
-              await hass.call.scene.turn_on({ entity_id: bedroomScene.entity_id });
+              await hass.call.scene.turn_on({
+                entity_id: bedroomScene.entity_id,
+              });
             }
 
             logger.debug("Unjoining bedroom media player");
-            await hass.call.media_player.unjoin({ entity_id: bedroomMediaPlayer.entity_id });
+            await hass.call.media_player.unjoin({
+              entity_id: bedroomMediaPlayer.entity_id,
+            });
 
             logger.debug("Setting bedroom media player volume to 0");
             await hass.call.media_player.volume_set({
@@ -89,16 +107,23 @@ export function goodNight({ hass, logger, context }: TServiceParams) {
             });
 
             for (let i = 0; i < 9; i++) {
-              logger.debug(`Increasing bedroom media player volume (step ${(i + 1).toString()})`);
+              logger.debug(
+                `Increasing bedroom media player volume (step ${(i + 1).toString()})`,
+              );
               await wait({
                 amount: 5,
                 unit: "s",
               });
-              await hass.call.media_player.volume_up({ entity_id: bedroomMediaPlayer.entity_id });
+              await hass.call.media_player.volume_up({
+                entity_id: bedroomMediaPlayer.entity_id,
+              });
             }
 
             logger.debug("Closing bedroom covers");
-            await closeCoversWithDelay(hass, logger, ["cover.bedroom_left", "cover.bedroom_right"]);
+            await closeCoversWithDelay(hass, logger, [
+              "cover.bedroom_left",
+              "cover.bedroom_right",
+            ]);
 
             logger.debug("Opening living room covers");
             await openCoversWithDelay(hass, logger, [

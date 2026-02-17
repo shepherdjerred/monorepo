@@ -83,7 +83,10 @@ export function setConnectionChecker(checker: () => boolean) {
 /**
  * Wrapper function to instrument any async function with Prometheus metrics
  */
-export async function instrumentWorkflow<T>(workflowName: string, fn: () => Promise<T>): Promise<T | undefined> {
+export async function instrumentWorkflow<T>(
+  workflowName: string,
+  fn: () => Promise<T>,
+): Promise<T | undefined> {
   if (isConnected && !isConnected()) {
     workflowExecutionsTotal.inc({ workflow: workflowName, status: "skipped" });
     return undefined;
@@ -101,7 +104,10 @@ export async function instrumentWorkflow<T>(workflowName: string, fn: () => Prom
   try {
     const result = await fn();
     workflowExecutionsTotal.inc({ workflow: workflowName, status: "success" });
-    workflowLastExecutionTimestamp.set({ workflow: workflowName, status: "success" }, Date.now() / 1000);
+    workflowLastExecutionTimestamp.set(
+      { workflow: workflowName, status: "success" },
+      Date.now() / 1000,
+    );
 
     Sentry.addBreadcrumb({
       category: "workflow",
@@ -112,7 +118,10 @@ export async function instrumentWorkflow<T>(workflowName: string, fn: () => Prom
     return result;
   } catch (error: unknown) {
     workflowExecutionsTotal.inc({ workflow: workflowName, status: "failure" });
-    workflowLastExecutionTimestamp.set({ workflow: workflowName, status: "failure" }, Date.now() / 1000);
+    workflowLastExecutionTimestamp.set(
+      { workflow: workflowName, status: "failure" },
+      Date.now() / 1000,
+    );
 
     const errorType = z
       .instanceof(Error)

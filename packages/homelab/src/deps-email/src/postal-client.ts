@@ -65,7 +65,9 @@ export class PostalClient {
   constructor(config: PostalClientConfig) {
     // Handle both full URLs (http://...) and bare hostnames
     this.baseUrl =
-      config.host.startsWith("http://") || config.host.startsWith("https://") ? config.host : `https://${config.host}`;
+      config.host.startsWith("http://") || config.host.startsWith("https://")
+        ? config.host
+        : `https://${config.host}`;
     this.apiKey = config.apiKey;
     this.defaultFrom = config.defaultFrom ?? "updates@homelab.local";
     this.hostHeader = config.hostHeader;
@@ -83,9 +85,9 @@ export class PostalClient {
     const singleRecipientParsed = z.string().safeParse(params.to);
     const recipients = recipientsParsed.success
       ? recipientsParsed.data
-      : (singleRecipientParsed.success
+      : singleRecipientParsed.success
         ? [singleRecipientParsed.data]
-        : []);
+        : [];
 
     const payload: PostalSendMessage = {
       to: recipients,
@@ -118,7 +120,9 @@ export class PostalClient {
     }
 
     if (parsed.data.status === "error") {
-      throw new Error(`Postal API error: ${parsed.data.error ?? "Unknown error"}`);
+      throw new Error(
+        `Postal API error: ${parsed.data.error ?? "Unknown error"}`,
+      );
     }
 
     return parsed.data;

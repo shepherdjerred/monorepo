@@ -43,7 +43,9 @@ const CHART_DEFAULT_VALUES: Record<string, Record<string, unknown>> = {
 /**
  * Get default values for a chart if it has required fields
  */
-function getDefaultValuesForChart(chartName: string): Record<string, unknown> | null {
+function getDefaultValuesForChart(
+  chartName: string,
+): Record<string, unknown> | null {
   return CHART_DEFAULT_VALUES[chartName] ?? null;
 }
 
@@ -104,7 +106,12 @@ export async function extractAllImages(
   version: string,
   values?: Record<string, unknown>,
 ): Promise<ImageRef[]> {
-  const manifests = await renderHelmTemplate(chartName, registryUrl, version, values);
+  const manifests = await renderHelmTemplate(
+    chartName,
+    registryUrl,
+    version,
+    values,
+  );
   const images = extractImagesFromManifests(manifests);
   return deduplicateImages(images);
 }
@@ -210,7 +217,9 @@ function extractImagesFromManifests(manifests: unknown[]): ImageRef[] {
 
   for (const manifest of manifests) {
     const parsed = K8sManifestSchema.safeParse(manifest);
-    if (!parsed.success) {continue;}
+    if (!parsed.success) {
+      continue;
+    }
 
     const { kind, spec } = parsed.data;
 
@@ -221,7 +230,9 @@ function extractImagesFromManifests(manifests: unknown[]): ImageRef[] {
         case "DaemonSet":
         case "ReplicaSet":
         case "Job": {
-          const templateParsed = PodTemplateSpecSchema.safeParse(spec["template"]);
+          const templateParsed = PodTemplateSpecSchema.safeParse(
+            spec["template"],
+          );
           if (templateParsed.success) {
             extractFromPodSpec(templateParsed.data.spec, images);
           }
@@ -233,7 +244,9 @@ function extractImagesFromManifests(manifests: unknown[]): ImageRef[] {
           if (cronJobParsed.success) {
             const jobSpec = cronJobParsed.data.jobTemplate?.spec;
             if (jobSpec) {
-              const templateParsed = PodTemplateSpecSchema.safeParse(jobSpec.template);
+              const templateParsed = PodTemplateSpecSchema.safeParse(
+                jobSpec.template,
+              );
               if (templateParsed.success) {
                 extractFromPodSpec(templateParsed.data.spec, images);
               }
@@ -274,8 +287,13 @@ function extractImagesFromManifests(manifests: unknown[]): ImageRef[] {
 /**
  * Extract images from a PodSpec (using Zod-validated data)
  */
-function extractFromPodSpec(podSpec: z.infer<typeof PodSpecSchema> | undefined, images: ImageRef[]): void {
-  if (!podSpec) {return;}
+function extractFromPodSpec(
+  podSpec: z.infer<typeof PodSpecSchema> | undefined,
+  images: ImageRef[],
+): void {
+  if (!podSpec) {
+    return;
+  }
 
   // Main containers
   if (podSpec.containers) {
@@ -317,7 +335,10 @@ function extractFromPodSpec(podSpec: z.infer<typeof PodSpecSchema> | undefined, 
 /**
  * Extract image from Prometheus Operator CRDs (using Zod-validated data)
  */
-function extractCRDImage(spec: z.infer<typeof PrometheusCRDSpecSchema>, images: ImageRef[]): void {
+function extractCRDImage(
+  spec: z.infer<typeof PrometheusCRDSpecSchema>,
+  images: ImageRef[],
+): void {
   // Direct image field (Prometheus, Alertmanager)
   if (spec.image) {
     const parsed = parseImageString(spec.image);
@@ -364,9 +385,15 @@ const RecursiveImageSchema = z.looseObject({
  * Recursively extract images from any object structure
  * Used as fallback for unknown resource types
  */
-function extractImagesRecursively(obj: unknown, images: ImageRef[], depth = 0): void {
+function extractImagesRecursively(
+  obj: unknown,
+  images: ImageRef[],
+  depth = 0,
+): void {
   // Prevent infinite recursion
-  if (depth > 10) {return;}
+  if (depth > 10) {
+    return;
+  }
 
   // Try to parse as array
   const arrayResult = z.array(z.unknown()).safeParse(obj);
@@ -379,7 +406,9 @@ function extractImagesRecursively(obj: unknown, images: ImageRef[], depth = 0): 
 
   // Try to parse as object with optional image field
   const objResult = RecursiveImageSchema.safeParse(obj);
-  if (!objResult.success) {return;}
+  if (!objResult.success) {
+    return;
+  }
 
   const record = objResult.data;
 

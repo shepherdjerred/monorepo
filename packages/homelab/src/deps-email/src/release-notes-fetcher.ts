@@ -49,9 +49,12 @@ export const IMAGE_TO_GITHUB: Record<string, string> = {
   "prometheus/node-exporter": "prometheus/node_exporter",
   "prometheus/blackbox-exporter": "prometheus/blackbox_exporter",
   "prometheus/pushgateway": "prometheus/pushgateway",
-  "prometheus-operator/prometheus-operator": "prometheus-operator/prometheus-operator",
-  "prometheus-operator/prometheus-config-reloader": "prometheus-operator/prometheus-operator",
-  "prometheus-operator/admission-webhook": "prometheus-operator/prometheus-operator",
+  "prometheus-operator/prometheus-operator":
+    "prometheus-operator/prometheus-operator",
+  "prometheus-operator/prometheus-config-reloader":
+    "prometheus-operator/prometheus-operator",
+  "prometheus-operator/admission-webhook":
+    "prometheus-operator/prometheus-operator",
 
   // Grafana ecosystem
   "grafana/grafana": "grafana/grafana",
@@ -181,7 +184,11 @@ function getGitHubHeaders(): Record<string, string> {
 /**
  * Fetch all releases in a version range from GitHub Releases
  */
-async function fetchFromGitHubReleases(repo: string, oldVersion: string, newVersion: string): Promise<ReleaseNote[]> {
+async function fetchFromGitHubReleases(
+  repo: string,
+  oldVersion: string,
+  newVersion: string,
+): Promise<ReleaseNote[]> {
   const [owner, repoName] = repo.split("/");
   if (!owner || !repoName) {
     return [];
@@ -215,18 +222,24 @@ async function fetchFromGitHubReleases(repo: string, oldVersion: string, newVers
 
       for (const release of parsed.data) {
         const tag = release.tag_name;
-        if (!tag) {continue;}
+        if (!tag) {
+          continue;
+        }
 
         // Check if this version is in range
-        if (isVersionInRange(tag, oldVersion, newVersion) && release.body && release.body.length > 10) {
-            notes.push({
-              version: tag,
-              body: release.body,
-              url: release.html_url,
-              source: "github-releases",
-              publishedAt: release.published_at,
-            });
-          }
+        if (
+          isVersionInRange(tag, oldVersion, newVersion) &&
+          release.body &&
+          release.body.length > 10
+        ) {
+          notes.push({
+            version: tag,
+            body: release.body,
+            url: release.html_url,
+            source: "github-releases",
+            publishedAt: release.published_at,
+          });
+        }
 
         // If we've gone past the old version, stop
         if (isVersionLessThanOrEqual(tag, oldVersion)) {
@@ -254,14 +267,24 @@ async function fetchFromGitHubReleases(repo: string, oldVersion: string, newVers
 /**
  * Fetch and parse CHANGELOG.md from GitHub
  */
-async function fetchFromChangelog(repo: string, oldVersion: string, newVersion: string): Promise<ReleaseNote[]> {
+async function fetchFromChangelog(
+  repo: string,
+  oldVersion: string,
+  newVersion: string,
+): Promise<ReleaseNote[]> {
   const [owner, repoName] = repo.split("/");
   if (!owner || !repoName) {
     return [];
   }
 
   // Try different changelog filenames and branches
-  const filenames = ["CHANGELOG.md", "CHANGELOG", "CHANGES.md", "HISTORY.md", "NEWS.md"];
+  const filenames = [
+    "CHANGELOG.md",
+    "CHANGELOG",
+    "CHANGES.md",
+    "HISTORY.md",
+    "NEWS.md",
+  ];
   const branches = ["main", "master"];
 
   for (const branch of branches) {
@@ -290,7 +313,11 @@ async function fetchFromChangelog(repo: string, oldVersion: string, newVersion: 
 /**
  * Parse a CHANGELOG file to extract version entries
  */
-function parseChangelog(content: string, oldVersion: string, newVersion: string): ReleaseNote[] {
+function parseChangelog(
+  content: string,
+  oldVersion: string,
+  newVersion: string,
+): ReleaseNote[] {
   const notes: ReleaseNote[] = [];
 
   // Common changelog header patterns
@@ -323,7 +350,9 @@ function parseChangelog(content: string, oldVersion: string, newVersion: string)
   // Extract content between version headers
   for (let i = 0; i < versionPositions.length; i++) {
     const current = versionPositions[i];
-    if (!current) {continue;}
+    if (!current) {
+      continue;
+    }
 
     const next = versionPositions[i + 1];
     const end = next ? next.start : content.length;
@@ -337,7 +366,8 @@ function parseChangelog(content: string, oldVersion: string, newVersion: string)
 
       // Remove the header line
       const bodyStart = sectionContent.indexOf("\n");
-      const body = bodyStart === -1 ? "" : sectionContent.slice(bodyStart + 1).trim();
+      const body =
+        bodyStart === -1 ? "" : sectionContent.slice(bodyStart + 1).trim();
 
       if (body.length > 10) {
         notes.push({
@@ -359,7 +389,11 @@ function parseChangelog(content: string, oldVersion: string, newVersion: string)
 /**
  * Fetch commit messages between two versions using GitHub compare API
  */
-async function fetchFromGitCompare(repo: string, oldVersion: string, newVersion: string): Promise<ReleaseNote[]> {
+async function fetchFromGitCompare(
+  repo: string,
+  oldVersion: string,
+  newVersion: string,
+): Promise<ReleaseNote[]> {
   const [owner, repoName] = repo.split("/");
   if (!owner || !repoName) {
     return [];
@@ -390,7 +424,11 @@ async function fetchFromGitCompare(repo: string, oldVersion: string, newVersion:
         const rawData: unknown = await response.json();
         const parsed = GitHubCompareResponseSchema.safeParse(rawData);
 
-        if (!parsed.success || !parsed.data.commits || parsed.data.commits.length === 0) {
+        if (
+          !parsed.success ||
+          !parsed.data.commits ||
+          parsed.data.commits.length === 0
+        ) {
           continue;
         }
 
@@ -405,7 +443,11 @@ async function fetchFromGitCompare(repo: string, oldVersion: string, newVersion:
         const commitMessages = messages.join("\n---\n");
 
         // Use LLM to extract meaningful release notes from commits
-        const extracted = await extractWithLLM(commitMessages, oldVersion, newVersion);
+        const extracted = await extractWithLLM(
+          commitMessages,
+          oldVersion,
+          newVersion,
+        );
 
         if (extracted.length > 0) {
           return extracted;
@@ -422,7 +464,11 @@ async function fetchFromGitCompare(repo: string, oldVersion: string, newVersion:
 /**
  * Use LLM to extract release notes from unstructured content
  */
-async function extractWithLLM(content: string, oldVersion: string, newVersion: string): Promise<ReleaseNote[]> {
+async function extractWithLLM(
+  content: string,
+  oldVersion: string,
+  newVersion: string,
+): Promise<ReleaseNote[]> {
   const apiKey = Bun.env["OPENAI_API_KEY"];
   if (!apiKey) {
     // Return raw commits as fallback
@@ -486,13 +532,18 @@ ${content.slice(0, 10_000)}`;
  * Check if a version is in the range (oldVersion, newVersion]
  * i.e., greater than oldVersion and less than or equal to newVersion
  */
-function isVersionInRange(version: string, oldVersion: string, newVersion: string): boolean {
+function isVersionInRange(
+  version: string,
+  oldVersion: string,
+  newVersion: string,
+): boolean {
   const normalizedVersion = normalizeVersion(version);
   const normalizedOld = normalizeVersion(oldVersion);
   const normalizedNew = normalizeVersion(newVersion);
 
   return (
-    compareVersions(normalizedVersion, normalizedOld) > 0 && compareVersions(normalizedVersion, normalizedNew) <= 0
+    compareVersions(normalizedVersion, normalizedOld) > 0 &&
+    compareVersions(normalizedVersion, normalizedNew) <= 0
   );
 }
 
@@ -534,8 +585,12 @@ function compareVersions(v1: string, v2: string): number {
     const p1 = parts1[i] ?? 0;
     const p2 = parts2[i] ?? 0;
 
-    if (p1 < p2) {return -1;}
-    if (p1 > p2) {return 1;}
+    if (p1 < p2) {
+      return -1;
+    }
+    if (p1 > p2) {
+      return 1;
+    }
   }
 
   return 0;

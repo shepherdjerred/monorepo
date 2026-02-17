@@ -24,14 +24,20 @@ function timeToMs({ amount, unit = "ms" }: Time): number {
 }
 
 export function wait({ amount, unit = "ms" }: Time) {
-  return new Promise((resolve) => setTimeout(resolve, timeToMs({ amount, unit })));
+  return new Promise((resolve) =>
+    setTimeout(resolve, timeToMs({ amount, unit })),
+  );
 }
 
 /**
  * Wrap a promise with a timeout. If the promise doesn't resolve/reject within
  * the specified time, it will reject with a TimeoutError.
  */
-export function withTimeout<T>(promise: Promise<T>, timeout: Time, operationName?: string): Promise<T> {
+export function withTimeout<T>(
+  promise: Promise<T>,
+  timeout: Time,
+  operationName?: string,
+): Promise<T> {
   const timeoutMs = timeToMs(timeout);
   const operation = operationName ? ` for ${operationName}` : "";
 
@@ -39,7 +45,11 @@ export function withTimeout<T>(promise: Promise<T>, timeout: Time, operationName
     promise,
     new Promise<T>((_, reject) =>
       setTimeout(() => {
-        reject(new TimeoutError(`Operation timeout after ${timeoutMs.toString()}ms${operation}`));
+        reject(
+          new TimeoutError(
+            `Operation timeout after ${timeoutMs.toString()}ms${operation}`,
+          ),
+        );
       }, timeoutMs),
     ),
   ]);
@@ -66,7 +76,10 @@ type DscCheckBase = {
 };
 
 type DscCheckExact = DscCheckBase & { check: string };
-type DscCheckPredicate = DscCheckBase & { check: (actual: string) => boolean; description?: string };
+type DscCheckPredicate = DscCheckBase & {
+  check: (actual: string) => boolean;
+  description?: string;
+};
 type DscCheck = DscCheckExact | DscCheckPredicate;
 
 function resolveDscCheck(check: DscCheck["check"], actual: string): boolean {
@@ -74,7 +87,10 @@ function resolveDscCheck(check: DscCheck["check"], actual: string): boolean {
 }
 
 function describeDscCheck(opts: DscCheck): string {
-  return typeof opts.check === "function" ? ("description" in opts ? (opts.description ?? "predicate") : "predicate") : opts.check;
+  if (typeof opts.check === "function") {
+    return "description" in opts ? (opts.description ?? "predicate") : "predicate";
+  }
+  return opts.check;
 }
 
 export function verifyAfterDelay(opts: DscCheck): void {
@@ -88,17 +104,30 @@ export function verifyAfterDelay(opts: DscCheck): void {
       }
 
       const expected = describeDscCheck(opts);
-      const error = new DscVerificationError(opts.entityId, expected, actual, opts.workflowName);
+      const error = new DscVerificationError(
+        opts.entityId,
+        expected,
+        actual,
+        opts.workflowName,
+      );
       opts.logger.error(error.message);
 
       Sentry.withScope((scope) => {
         scope.setTag("entity_id", opts.entityId);
         scope.setTag("workflow", opts.workflowName);
-        scope.setContext("dsc", { entityId: opts.entityId, expected, actual, workflowName: opts.workflowName });
+        scope.setContext("dsc", {
+          entityId: opts.entityId,
+          expected,
+          actual,
+          workflowName: opts.workflowName,
+        });
         Sentry.captureException(error);
       });
 
-      await opts.hass.call.notify.notify({ title: "Device Verification Failed", message: error.message });
+      await opts.hass.call.notify.notify({
+        title: "Device Verification Failed",
+        message: error.message,
+      });
       throw error;
     });
   }, timeToMs(opts.delay));
@@ -171,7 +200,9 @@ export function isErrorState(state: ByIdProxy<"vacuum.roomba">["state"]) {
     .exhaustive();
 }
 
-export function shouldStartCleaning(state: ByIdProxy<"vacuum.roomba">["state"]) {
+export function shouldStartCleaning(
+  state: ByIdProxy<"vacuum.roomba">["state"],
+) {
   return match(state)
     .with("error", () => false)
     .with("docked", () => true)
@@ -216,18 +247,25 @@ export function startRoombaWithVerification(
   });
 }
 
-export function runIf(condition: boolean, promiseFactory: () => Promise<unknown>): Promise<unknown> {
+export function runIf(
+  condition: boolean,
+  promiseFactory: () => Promise<unknown>,
+): Promise<unknown> {
   if (condition) {
     return promiseFactory();
   }
   return Promise.resolve();
 }
 
-export function runParallel(promiseFactories: (() => Promise<unknown>)[]): Promise<unknown> {
+export function runParallel(
+  promiseFactories: (() => Promise<unknown>)[],
+): Promise<unknown> {
   return Promise.all(promiseFactories.map((factory) => factory()));
 }
 
-export function runSequential(promiseFactories: (() => Promise<unknown>)[]): Promise<unknown> {
+export function runSequential(
+  promiseFactories: (() => Promise<unknown>)[],
+): Promise<unknown> {
   let chain: Promise<unknown> = Promise.resolve();
   for (const factory of promiseFactories) {
     chain = chain.then(() => factory());
@@ -235,7 +273,10 @@ export function runSequential(promiseFactories: (() => Promise<unknown>)[]): Pro
   return chain;
 }
 
-export function runSequentialWithDelay(promiseFactories: (() => Promise<unknown>)[], delay: Time): Promise<unknown> {
+export function runSequentialWithDelay(
+  promiseFactories: (() => Promise<unknown>)[],
+  delay: Time,
+): Promise<unknown> {
   let chain: Promise<unknown> = Promise.resolve();
   for (const factory of promiseFactories) {
     chain = chain.then(() => factory()).then(() => wait(delay));
@@ -243,7 +284,10 @@ export function runSequentialWithDelay(promiseFactories: (() => Promise<unknown>
   return chain;
 }
 
-export function repeat(promiseFactory: () => Promise<unknown>, times: number): (() => Promise<unknown>)[] {
+export function repeat(
+  promiseFactory: () => Promise<unknown>,
+  times: number,
+): (() => Promise<unknown>)[] {
   const factories: (() => Promise<unknown>)[] = [];
   for (let i = 0; i < times; i++) {
     factories.push(promiseFactory);
