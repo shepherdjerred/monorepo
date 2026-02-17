@@ -5,14 +5,6 @@ export function createStarlightKarmaBotProdApp(chart: Chart) {
   return new Application(chart, "starlight-karma-bot-prod-app", {
     metadata: {
       name: "starlight-karma-bot-prod",
-      annotations: {
-        "argocd-image-updater.argoproj.io/image-list":
-          "starlight=ghcr.io/shepherdjerred/starlight-karma-bot",
-        "argocd-image-updater.argoproj.io/starlight.update-strategy": "semver",
-        "argocd-image-updater.argoproj.io/write-back-method":
-          "git:secret:argocd/image-updater-git-creds",
-        "argocd-image-updater.argoproj.io/git-branch": "main",
-      },
     },
     spec: {
       revisionHistoryLimit: 5,

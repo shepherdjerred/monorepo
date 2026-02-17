@@ -64,9 +64,7 @@ async function runCommand(command: string, args: string[]): Promise<string> {
 /**
  * Fetch a Helm chart and extract its values.yaml and optional schema
  */
-export async function fetchHelmChart(
-  chart: ChartInfo,
-): Promise<{
+export async function fetchHelmChart(chart: ChartInfo): Promise<{
   values: HelmValue;
   schema: JSONSchemaProperty | null;
   yamlComments: Map<string, string>;

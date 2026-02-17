@@ -3,8 +3,6 @@ const versions = {
   connect: "2.2.1",
   // renovate: datasource=helm registryUrl=https://argoproj.github.io/argo-helm versioning=semver
   "argo-cd": "9.3.4",
-  // renovate: datasource=helm registryUrl=https://argoproj.github.io/argo-helm versioning=semver
-  "argocd-image-updater": "1.0.4",
   // renovate: datasource=helm registryUrl=https://charts.jetstack.io versioning=semver-coerced
   "cert-manager": "v1.19.2",
   // renovate: datasource=helm registryUrl=https://intel.github.io/helm-charts/ versioning=semver
@@ -209,10 +207,6 @@ const versions = {
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
     "latest@sha256:94a9083245e3e58a43646ab85a949845e46fde3ceb9eb4bbf638ee91e2a6b52f",
-  // Custom openclaw image - updated by CI pipeline
-  // not managed by renovate
-  "shepherdjerred/openclaw":
-    "latest@sha256:43446319c3fe125d0ff73525f9a5a8303c0c020f9136427e5d49b39f863af635",
 };
 
 const daggerVersion = versions["dagger-helm"].split("@")[0];

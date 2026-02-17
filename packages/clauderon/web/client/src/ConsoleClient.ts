@@ -29,9 +29,9 @@ export type ConsoleClientConfig = {
  * In non-browser context, defaults to localhost:3030.
  */
 function getDefaultWsBaseUrl(): string {
-  if (typeof window !== "undefined") {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    return `${protocol}//${window.location.host}/ws/console`;
+  if (globalThis.window !== undefined) {
+    const protocol = globalThis.location.protocol === "https:" ? "wss:" : "ws:";
+    return `${protocol}//${globalThis.location.host}/ws/console`;
   }
   return "ws://localhost:3030/ws/console";
 }
@@ -46,7 +46,7 @@ function isValidBase64(str: string): boolean {
   }
 
   // Base64 should only contain A-Z, a-z, 0-9, +, /, and = for padding
-  const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
+  const base64Regex = /^[A-Z0-9+/]*={0,2}$/i;
 
   // Check format
   if (!base64Regex.test(str)) {
@@ -82,7 +82,7 @@ export class ConsoleClient {
   private readonly MAX_ERRORS_PER_SECOND = 5;
   private isErrorThrottled = false;
 
-  private listeners: {
+  private readonly listeners: {
     connected: (() => void)[];
     disconnected: (() => void)[];
     data: ((data: string) => void)[];
@@ -160,7 +160,7 @@ export class ConsoleClient {
                 console.error(
                   `[ConsoleClient] Invalid base64 format (stage: validation) for session ${String(this.sessionId)}. ` +
                     `Length: ${String(message.data.length)}, ` +
-                    `First 50 chars: ${message.data.substring(0, 50)}`,
+                    `First 50 chars: ${message.data.slice(0, 50)}`,
                 );
                 this.emit(
                   "error",
@@ -170,7 +170,7 @@ export class ConsoleClient {
                     {
                       sessionId: this.sessionId,
                       dataLength: message.data.length,
-                      dataSample: message.data.substring(0, 100),
+                      dataSample: message.data.slice(0, 100),
                     },
                   ),
                 );
@@ -200,7 +200,7 @@ export class ConsoleClient {
             console.debug(
               `[ConsoleClient] Processing output message for session ${String(this.sessionId)}. ` +
                 `Data length: ${String(message.data.length)}, ` +
-                `First 50 chars: ${message.data.substring(0, 50)}`,
+                `First 50 chars: ${message.data.slice(0, 50)}`,
             );
 
             // Decode base64 data with staged error handling for better debugging
@@ -216,7 +216,7 @@ export class ConsoleClient {
               console.debug(
                 `[ConsoleClient] Base64 decoded for session ${String(this.sessionId)}. ` +
                   `Bytes length: ${String(bytes.length)}, ` +
-                  `First 32 bytes: ${Array.from(bytes.slice(0, 32))
+                  `First 32 bytes: ${[...bytes.slice(0, 32)]
                     .map((b) => "0x" + b.toString(16).padStart(2, "0"))
                     .join(" ")}`,
               );
@@ -229,7 +229,7 @@ export class ConsoleClient {
                 console.error(
                   `[ConsoleClient] Base64 decode error (stage: atob) for session ${String(this.sessionId)}: ${errorMsg}. ` +
                     `Data length: ${String(message.data.length)}, ` +
-                    `Sample: ${message.data.substring(0, 100)}`,
+                    `Sample: ${message.data.slice(0, 100)}`,
                 );
                 this.emit(
                   "error",
@@ -239,7 +239,7 @@ export class ConsoleClient {
                     {
                       sessionId: this.sessionId,
                       dataLength: message.data.length,
-                      dataSample: message.data.substring(0, 100),
+                      dataSample: message.data.slice(0, 100),
                     },
                     atobError,
                   ),
@@ -265,7 +265,7 @@ export class ConsoleClient {
                     ? utf8Error.message
                     : String(utf8Error);
                 // Include hex dump of first 32 bytes for debugging
-                const hexSample = Array.from(bytes.slice(0, 32))
+                const hexSample = [...bytes.slice(0, 32)]
                   .map((b) => "0x" + b.toString(16).padStart(2, "0"))
                   .join(" ");
                 console.error(
@@ -274,7 +274,7 @@ export class ConsoleClient {
                     `Hex sample: ${hexSample}, ` +
                     `Decoder state: ${this.decoder ? "initialized" : "null"}, ` +
                     `Original base64 length: ${String(message.data.length)}, ` +
-                    `Original base64 sample: ${message.data.substring(0, 100)}`,
+                    `Original base64 sample: ${message.data.slice(0, 100)}`,
                 );
                 this.emit(
                   "error",

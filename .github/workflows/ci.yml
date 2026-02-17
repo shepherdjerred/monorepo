@@ -129,6 +129,7 @@ jobs:
               --git-sha="${{ github.sha }}"
               --registry-username="${{ github.actor }}"
               --registry-password=env:GITHUB_TOKEN
+              --commit-back-token=env:GITHUB_TOKEN
             )
           fi
 

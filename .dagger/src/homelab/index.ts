@@ -26,7 +26,6 @@ import { sync as argocdSync } from "./argocd.js";
 import { buildAndPushDependencySummaryImage } from "./dependency-summary.js";
 import { buildAndPushDnsAuditImage } from "./dns-audit.js";
 import { buildAndPushCaddyS3ProxyImage } from "./caddy-s3proxy.js";
-import { buildAndPushOpenclawImage } from "./openclaw.js";
 import { buildAllCharts, HELM_CHARTS, publishAllCharts } from "./helm.js";
 import { Stage } from "./stage.js";
 import versions from "./versions.js";
@@ -60,6 +59,7 @@ export type HomelabSecrets = {
   githubToken?: Secret;
   npmToken?: Secret;
   tofuGithubToken?: Secret;
+  appVersions?: Record<string, string>;
 };
 
 /**
@@ -144,12 +144,21 @@ export async function ciHomelab(
   // Update image versions in versions.ts if prod
   let updatedSource = source;
   if (env === Stage.Prod) {
-    updatedSource = homelabUpdateHaVersion(source, chartVersion);
-    updatedSource = homelabUpdateDependencySummaryVersion(
-      updatedSource,
-      chartVersion,
-    );
-    updatedSource = homelabUpdateDnsAuditVersion(updatedSource, chartVersion);
+    // Infra images use chartVersion
+    for (const key of [
+      "shepherdjerred/homelab",
+      "shepherdjerred/dependency-summary",
+      "shepherdjerred/dns-audit",
+      "shepherdjerred/caddy-s3proxy",
+    ]) {
+      updatedSource = homelabUpdateVersion(updatedSource, key, chartVersion);
+    }
+    // App images from upstream callers
+    if (secrets.appVersions) {
+      for (const [key, ver] of Object.entries(secrets.appVersions)) {
+        updatedSource = homelabUpdateVersion(updatedSource, key, ver);
+      }
+    }
   }
 
   // Prepare shared containers once
@@ -382,10 +391,6 @@ export async function ciHomelab(
     status: "skipped",
     message: "[SKIPPED] Not prod",
   };
-  let openclawPublishResult: StepResult = {
-    status: "skipped",
-    message: "[SKIPPED] Not prod",
-  };
   let helmPublishResult: StepResult = {
     status: "skipped",
     message: "[SKIPPED] Not prod",
@@ -397,7 +402,6 @@ export async function ciHomelab(
       depSummaryResults,
       dnsAuditResults,
       caddyS3ProxyResult,
-      openclawResult,
       helmResult,
     ] = await Promise.all([
       Promise.all([
@@ -446,18 +450,26 @@ export async function ciHomelab(
           false,
         ),
       ]),
-      buildAndPushCaddyS3ProxyImage(
-        `ghcr.io/shepherdjerred/caddy-s3proxy:latest`,
-        ghcrUsername,
-        ghcrPassword,
-        false,
-      ),
-      buildAndPushOpenclawImage(
-        `ghcr.io/shepherdjerred/openclaw:latest`,
-        ghcrUsername,
-        ghcrPassword,
-        false,
-      ),
+      Promise.all([
+        buildAndPushCaddyS3ProxyImage(
+          `ghcr.io/shepherdjerred/caddy-s3proxy:${chartVersion}`,
+          ghcrUsername,
+          ghcrPassword,
+          false,
+        ),
+        buildAndPushCaddyS3ProxyImage(
+          `ghcr.io/shepherdjerred/caddy-s3proxy:latest`,
+          ghcrUsername,
+          ghcrPassword,
+          false,
+        ),
+      ]).then(([versioned, latest]) => ({
+        status:
+          versioned.status === "passed" && latest.status === "passed"
+            ? ("passed" as const)
+            : ("failed" as const),
+        message: `Versioned tag: ${versioned.message}\nLatest tag: ${latest.message}`,
+      })),
       helmBuildResult.dist
         ? homelabHelmPublishBuilt(
             helmBuildResult.dist,
@@ -497,7 +509,6 @@ export async function ciHomelab(
       message: `Versioned tag: ${dnsAuditResults[0].message}\nLatest tag: ${dnsAuditResults[1].message}`,
     };
     caddyS3ProxyPublishResult = caddyS3ProxyResult;
-    openclawPublishResult = openclawResult;
     helmPublishResult = helmResult;
   }
 
@@ -537,7 +548,6 @@ export async function ciHomelab(
     `Dependency Summary Image Publish result:\n${depSummaryPublishResult.message}`,
     `Dns Audit Image Publish result:\n${dnsAuditPublishResult.message}`,
     `Caddy S3Proxy Image Publish result:\n${caddyS3ProxyPublishResult.message}`,
-    `OpenClaw Image Publish result:\n${openclawPublishResult.message}`,
     `Helm Chart Publish result:\n${helmPublishResult.message}`,
     `Release-please result:\n${releasePleaseResult.message}`,
     tofuPlanResult.message,
@@ -561,7 +571,6 @@ export async function ciHomelab(
         depSummaryPublishResult.status === "failed" ||
         dnsAuditPublishResult.status === "failed" ||
         caddyS3ProxyPublishResult.status === "failed" ||
-        openclawPublishResult.status === "failed" ||
         helmPublishResult.status === "failed"))
   ) {
     throw new Error(summary);
@@ -570,32 +579,15 @@ export async function ciHomelab(
 }
 
 /**
- * Update the versions.ts file with the HA image version.
+ * Update a single image version in versions.ts using sed.
  * Accepts homelab source directory (not monorepo root).
  */
-function homelabUpdateHaVersion(source: Directory, version: string): Directory {
-  return dag
-    .container()
-    .from(`alpine:${versions.alpine}`)
-    .withMountedDirectory("/workspace", source)
-    .withWorkdir("/workspace")
-    .withExec([
-      "sed",
-      "-i",
-      `s/"shepherdjerred\\/homelab": "[^"]*"/"shepherdjerred\\/homelab": "${version}"/`,
-      "src/cdk8s/src/versions.ts",
-    ])
-    .directory("/workspace");
-}
-
-/**
- * Update the versions.ts file with the dependency-summary image version.
- * Accepts homelab source directory (not monorepo root).
- */
-function homelabUpdateDependencySummaryVersion(
+function homelabUpdateVersion(
   source: Directory,
+  imageKey: string,
   version: string,
 ): Directory {
+  const escapedKey = imageKey.replaceAll("/", "\\/");
   return dag
     .container()
     .from(`alpine:${versions.alpine}`)
@@ -604,29 +596,7 @@ function homelabUpdateDependencySummaryVersion(
     .withExec([
       "sed",
       "-i",
-      `s/"shepherdjerred\\/dependency-summary": "[^"]*"/"shepherdjerred\\/dependency-summary": "${version}"/`,
-      "src/cdk8s/src/versions.ts",
-    ])
-    .directory("/workspace");
-}
-
-/**
- * Update the versions.ts file with the dns-audit image version.
- * Accepts homelab source directory (not monorepo root).
- */
-function homelabUpdateDnsAuditVersion(
-  source: Directory,
-  version: string,
-): Directory {
-  return dag
-    .container()
-    .from(`alpine:${versions.alpine}`)
-    .withMountedDirectory("/workspace", source)
-    .withWorkdir("/workspace")
-    .withExec([
-      "sed",
-      "-i",
-      `s/"shepherdjerred\\/dns-audit": "[^"]*"/"shepherdjerred\\/dns-audit": "${version}"/`,
+      `s/"${escapedKey}": "[^"]*"/"${escapedKey}": "${version}"/`,
       "src/cdk8s/src/versions.ts",
     ])
     .directory("/workspace");

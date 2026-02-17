@@ -57,8 +57,8 @@ export type ClauderonClientConfig = {
  * In non-browser context, defaults to localhost:3030.
  */
 function getDefaultBaseUrl(): string {
-  if (typeof window !== "undefined") {
-    return `${window.location.protocol}//${window.location.host}`;
+  if (globalThis.window !== undefined) {
+    return `${globalThis.location.protocol}//${globalThis.location.host}`;
   }
   return "http://localhost:3030";
 }

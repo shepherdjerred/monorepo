@@ -45,9 +45,9 @@ export type EventsClientConfig = {
  * In non-browser context, defaults to localhost:3030.
  */
 function getDefaultWebSocketUrl(): string {
-  if (typeof window !== "undefined") {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    return `${protocol}//${window.location.host}/ws/events`;
+  if (globalThis.window !== undefined) {
+    const protocol = globalThis.location.protocol === "https:" ? "wss:" : "ws:";
+    return `${protocol}//${globalThis.location.host}/ws/events`;
   }
   return "ws://localhost:3030/ws/events";
 }
@@ -63,7 +63,7 @@ export class EventsClient {
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private intentionallyClosed = false;
 
-  private listeners: {
+  private readonly listeners: {
     connected: (() => void)[];
     disconnected: (() => void)[];
     event: ((event: SessionEvent) => void)[];

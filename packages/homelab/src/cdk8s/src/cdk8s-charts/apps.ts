@@ -2,7 +2,6 @@ import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { createOnePasswordApp } from "../resources/argo-applications/1password.ts";
 import { createArgoCdApp } from "../resources/argo-applications/argocd.ts";
-import { createArgoCdImageUpdaterApp } from "../resources/argo-applications/argocd-image-updater.ts";
 import { createPrometheusApp } from "../resources/argo-applications/prometheus.ts";
 import { createPrometheusAdapterApp } from "../resources/argo-applications/prometheus-adapter.ts";
 import { createBlackboxExporterApp } from "../resources/argo-applications/blackbox-exporter.ts";
@@ -58,7 +57,6 @@ import { createS3StaticSitesApp } from "../resources/argo-applications/s3-static
 import { createKyvernoApp } from "../resources/argo-applications/kyverno.ts";
 import { createKyvernoPoliciesApp } from "../resources/argo-applications/kyverno-policies.ts";
 import { createMcpGatewayApp } from "../resources/argo-applications/mcp-gateway.ts";
-import { createOpenclawApp } from "../resources/argo-applications/openclaw.ts";
 import { createBugsinkApp } from "../resources/argo-applications/bugsink.ts";
 import { createDnsAuditApp } from "../resources/argo-applications/dns-audit.ts";
 
@@ -94,7 +92,6 @@ export async function createAppsChart(app: App) {
   createOpenEBSApp(chart);
   createOnePasswordApp(chart);
   createArgoCdApp(chart);
-  createArgoCdImageUpdaterApp(chart);
   createTailscaleApp(chart);
   await createPrometheusApp(chart);
   createPrometheusAdapterApp(chart);
@@ -155,7 +152,6 @@ export async function createAppsChart(app: App) {
   createGickupApp(chart);
   createGrafanaDbApp(chart);
   createMcpGatewayApp(chart);
-  createOpenclawApp(chart);
   createBugsinkApp(chart);
   createDnsAuditApp(chart);
 

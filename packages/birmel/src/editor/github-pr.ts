@@ -251,7 +251,7 @@ export function generatePRBody(
   const fileList = changes
     .map((c) => {
       const icon =
-        c.changeType === "create" ? "+" : c.changeType === "delete" ? "-" : "~";
+        c.changeType === "create" ? "+" : (c.changeType === "delete" ? "-" : "~");
       return `- ${icon} \`${c.filePath}\``;
     })
     .join("\n");

@@ -2,7 +2,6 @@ import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 import {
   syncToS3,
-  updateHomelabVersion,
   publishToGhcrMultiple,
 } from "./lib/containers/index.js";
 
@@ -61,7 +60,7 @@ export async function deployBetterSkillCapped(
   s3SecretAccessKey: Secret,
   ghcrUsername: string,
   ghcrPassword: Secret,
-  ghToken: Secret,
+  _ghToken: Secret,
 ): Promise<string> {
   const pkgSource = source.directory("packages/better-skill-capped");
   const mainSource = pkgSource.withoutDirectory("fetcher");
@@ -100,14 +99,6 @@ export async function deployBetterSkillCapped(
     password: ghcrPassword,
   });
   outputs.push("✓ Fetcher published to GHCR");
-
-  // Deploy fetcher to homelab
-  await updateHomelabVersion({
-    ghToken,
-    appName: "better-skill-capped-fetcher",
-    version,
-  });
-  outputs.push("✓ Fetcher deployed to homelab");
 
   return outputs.join("\n");
 }

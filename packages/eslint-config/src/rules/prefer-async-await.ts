@@ -28,9 +28,7 @@ export const preferAsyncAwait = createRule<[], MessageIds>({
   },
   defaultOptions: [],
   create(context) {
-    function isPromiseMethodCall(
-      node: TSESTree.CallExpression,
-    ): {
+    function isPromiseMethodCall(node: TSESTree.CallExpression): {
       method: "then" | "catch" | "finally";
       callee: TSESTree.MemberExpression;
     } | null {

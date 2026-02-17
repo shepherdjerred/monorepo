@@ -1,8 +1,5 @@
 import type { Directory, Secret } from "@dagger.io/dagger";
-import {
-  publishToGhcrMultiple,
-  updateHomelabVersion,
-} from "./lib/containers/index.js";
+import { publishToGhcrMultiple } from "./lib/containers/index.js";
 
 /**
  * Check starlight-karma-bot: Docker build validation
@@ -28,7 +25,7 @@ export async function deployStarlightKarmaBot(
   gitSha: string,
   ghcrUsername: string,
   ghcrPassword: Secret,
-  ghToken: Secret,
+  _ghToken: Secret,
 ): Promise<string> {
   const pkgSource = source.directory("packages/starlight-karma-bot");
   const outputs: string[] = [];
@@ -51,14 +48,6 @@ export async function deployStarlightKarmaBot(
     password: ghcrPassword,
   });
   outputs.push("✓ Published to GHCR");
-
-  // Deploy to homelab
-  const deployResult = await updateHomelabVersion({
-    ghToken,
-    appName: "starlight-karma-bot/beta",
-    version,
-  });
-  outputs.push(`✓ ${deployResult}`);
 
   return outputs.join("\n");
 }
