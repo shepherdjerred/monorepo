@@ -6,7 +6,10 @@ use std::path::PathBuf;
 ///
 /// Panics if the home directory cannot be determined.
 #[must_use]
-#[expect(clippy::expect_used, reason = "home directory is required for application to function")]
+#[expect(
+    clippy::expect_used,
+    reason = "home directory is required for application to function"
+)]
 pub fn base_dir() -> PathBuf {
     dirs::home_dir()
         .expect("Could not find home directory")

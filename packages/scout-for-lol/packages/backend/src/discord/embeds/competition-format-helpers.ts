@@ -3,9 +3,9 @@ import type {
   CompetitionQueueType,
   CompetitionWithCriteria,
   Rank,
+  getCompetitionStatus,
 } from "@scout-for-lol/data";
 import {
-  getCompetitionStatus,
   competitionQueueTypeToString,
   rankToString,
   RankSchema,

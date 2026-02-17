@@ -92,7 +92,6 @@ const ownerId2 = testAccountId("200000000020");
 const channelId = testChannelId("1000000001");
 
 describe("Competition List Query", () => {
-
   test("empty list when no competitions exist", async () => {
     const competitions = await getCompetitionsByServer(prisma, serverId);
     expect(competitions).toEqual([]);

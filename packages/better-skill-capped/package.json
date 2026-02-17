@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "type": "module",
   "private": true,
+  "imports": {
+    "#src/*": "./src/*"
+  },
   "scripts": {
     "start": "vite serve --host",
     "build": "vite build",

@@ -547,7 +547,10 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
     /// # Errors
     ///
     /// Returns an error if the proxy CA certificate is required but missing.
-    #[expect(clippy::too_many_arguments, reason = "container creation requires many configuration parameters")]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "container creation requires many configuration parameters"
+    )]
     pub fn build_create_args(
         name: &str,
         workdir: &Path,
@@ -914,7 +917,8 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
                     // The proxy will intercept API requests and inject the real OAuth token
                     args.extend([
                         "-e".to_owned(),
-                        "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-clauderon-proxy-placeholder".to_owned(),
+                        "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-clauderon-proxy-placeholder"
+                            .to_owned(),
                     ]);
                 }
                 AgentType::Codex => {

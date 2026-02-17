@@ -1,9 +1,5 @@
-import type {
-  CompetitionWithCriteria,
-} from "@scout-for-lol/data";
-import {
-  getCompetitionStatus,
-} from "@scout-for-lol/data";
+import type { CompetitionWithCriteria } from "@scout-for-lol/data";
+import { getCompetitionStatus } from "@scout-for-lol/data";
 import { EmbedBuilder } from "discord.js";
 import { match } from "ts-pattern";
 import type { RankedLeaderboardEntry } from "@scout-for-lol/backend/league/competition/leaderboard.ts";

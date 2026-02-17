@@ -459,7 +459,7 @@ export default tseslint.config(
       astro: astroPlugin,
     },
     // Extend astro's recommended flat config which includes the parser
-    extends: (astroPlugin.configs ?? {})["flat/base"],
+    extends: astroPlugin.configs["flat/base"],
     languageOptions: {
       parserOptions: {
         parser: "@typescript-eslint/parser",

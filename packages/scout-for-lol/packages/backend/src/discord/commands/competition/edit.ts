@@ -4,6 +4,8 @@ import {
   ChampionIdSchema,
   DiscordAccountIdSchema,
   type CompetitionCriteria,
+  type CompetitionId,
+  type DiscordAccountId,
 } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
 import { match, P } from "ts-pattern";
@@ -26,8 +28,6 @@ const logger = createLogger("competition-edit");
 import {
   EditableAlwaysArgsSchema,
   EditableDraftOnlyArgsSchema,
-  FixedDatesEditArgsSchema,
-  SeasonEditArgsSchema,
   MostGamesPlayedEditArgsSchema,
   HighestRankEditArgsSchema,
   MostRankClimbEditArgsSchema,
@@ -59,11 +59,6 @@ const CriteriaEditSchema = z
     HighestWinRateEditArgsSchema,
   ])
   .optional();
-
-// Union of date edit schemas
-type DatesEditSchema =
-  | z.infer<typeof FixedDatesEditArgsSchema>
-  | z.infer<typeof SeasonEditArgsSchema>;
 
 type EditCommandArgs = z.infer<typeof EditCommandArgsBaseSchema> & {
   dates?: DatesEditSchema;

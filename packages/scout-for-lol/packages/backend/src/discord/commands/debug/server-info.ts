@@ -1,7 +1,4 @@
-import {
-  type ChatInputCommandInteraction,
-  EmbedBuilder,
-} from "discord.js";
+import { type ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data/index";
 import configuration from "@scout-for-lol/backend/configuration.ts";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
@@ -86,13 +83,41 @@ export async function executeDebugServerInfo(
       .setTitle("📊 Server Overview")
       .setColor(0x5865f2)
       .addFields(
-        { name: "👥 Total Players", value: players.length.toString(), inline: true },
-        { name: "🎮 Total Accounts", value: accounts.length.toString(), inline: true },
-        { name: "🔔 Subscriptions", value: subscriptions.length.toString(), inline: true },
-        { name: "📺 Subscribed Channels", value: Object.keys(channelMap).length.toString(), inline: true },
-        { name: "🏆 Total Competitions", value: competitions.length.toString(), inline: true },
-        { name: "✅ Active Competitions", value: activeCompetitions.length.toString(), inline: true },
-        { name: "🔑 Permissions Granted", value: permissions.length.toString(), inline: true },
+        {
+          name: "👥 Total Players",
+          value: players.length.toString(),
+          inline: true,
+        },
+        {
+          name: "🎮 Total Accounts",
+          value: accounts.length.toString(),
+          inline: true,
+        },
+        {
+          name: "🔔 Subscriptions",
+          value: subscriptions.length.toString(),
+          inline: true,
+        },
+        {
+          name: "📺 Subscribed Channels",
+          value: Object.keys(channelMap).length.toString(),
+          inline: true,
+        },
+        {
+          name: "🏆 Total Competitions",
+          value: competitions.length.toString(),
+          inline: true,
+        },
+        {
+          name: "✅ Active Competitions",
+          value: activeCompetitions.length.toString(),
+          inline: true,
+        },
+        {
+          name: "🔑 Permissions Granted",
+          value: permissions.length.toString(),
+          inline: true,
+        },
       )
       .setTimestamp();
     embeds.push(overviewEmbed);
@@ -103,14 +128,18 @@ export async function executeDebugServerInfo(
         .setColor(0x57f287);
       const playersList = players.slice(0, 10).map((player) => {
         const accountCount = player.accounts.length;
-        const discordMention = player.discordId ? `<@${player.discordId}>` : "No Discord";
+        const discordMention = player.discordId
+          ? `<@${player.discordId}>`
+          : "No Discord";
         return `**${player.alias}** - ${accountCount.toString()} account${accountCount !== 1 ? "s" : ""} - ${discordMention}`;
       });
       if (playersList.length > 0) {
         playersEmbed.setDescription(playersList.join("\n"));
       }
       if (players.length > 10) {
-        playersEmbed.setFooter({ text: `Showing 10 of ${players.length.toString()} players` });
+        playersEmbed.setFooter({
+          text: `Showing 10 of ${players.length.toString()} players`,
+        });
       }
       embeds.push(playersEmbed);
     }
@@ -127,7 +156,9 @@ export async function executeDebugServerInfo(
         accountsEmbed.setDescription(accountsList.join("\n\n"));
       }
       if (accounts.length > 10) {
-        accountsEmbed.setFooter({ text: `Showing 10 of ${accounts.length.toString()} accounts` });
+        accountsEmbed.setFooter({
+          text: `Showing 10 of ${accounts.length.toString()} accounts`,
+        });
       }
       embeds.push(accountsEmbed);
     }
@@ -186,9 +217,23 @@ export async function executeDebugServerInfo(
       .addFields(
         { name: "Bot Version", value: configuration.version, inline: true },
         { name: "Environment", value: configuration.environment, inline: true },
-        { name: "Git SHA", value: configuration.gitSha.substring(0, 8), inline: true },
-        { name: "Database", value: configuration.databaseUrl.includes("file:") ? "SQLite" : "External", inline: true },
-        { name: "S3 Bucket", value: configuration.s3BucketName ?? "Not configured", inline: true },
+        {
+          name: "Git SHA",
+          value: configuration.gitSha.substring(0, 8),
+          inline: true,
+        },
+        {
+          name: "Database",
+          value: configuration.databaseUrl.includes("file:")
+            ? "SQLite"
+            : "External",
+          inline: true,
+        },
+        {
+          name: "S3 Bucket",
+          value: configuration.s3BucketName ?? "Not configured",
+          inline: true,
+        },
       );
     embeds.push(debugEmbed);
 

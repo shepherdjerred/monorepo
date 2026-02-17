@@ -134,10 +134,7 @@ export function getMatchSummary(match: CompletedMatch | ArenaMatch): string {
   }
 }
 
-export function generateDatePrefixes(
-  startDate: Date,
-  endDate: Date,
-): string[] {
+export function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
   const days = eachDayOfInterval({
     start: startOfDay(startDate),
     end: endOfDay(endDate),

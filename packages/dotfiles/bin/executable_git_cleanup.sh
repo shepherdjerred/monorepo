@@ -176,14 +176,16 @@ check_pr_status() {
     cd "$repo_path"
 
     # Check if this is a GitHub repo
-    local remote_url=$(git remote get-url origin 2>/dev/null || echo "")
+    local remote_url
+    remote_url=$(git remote get-url origin 2>/dev/null || echo "")
     if [[ ! "$remote_url" =~ github\.com ]]; then
         echo "none"
         return
     fi
 
     # Get PR status for this branch
-    local pr_state=$(gh pr list --head "$branch" --json state,closed --jq '.[0] | if .state == "MERGED" then "merged" elif .closed then "closed" elif .state == "OPEN" then "open" else "none" end' 2>/dev/null || echo "none")
+    local pr_state
+    pr_state=$(gh pr list --head "$branch" --json state,closed --jq '.[0] | if .state == "MERGED" then "merged" elif .closed then "closed" elif .state == "OPEN" then "open" else "none" end' 2>/dev/null || echo "none")
 
     echo "$pr_state"
 }
@@ -211,13 +213,15 @@ list_all_prs() {
 
     cd "$repo_path"
 
-    local remote_url=$(git remote get-url origin 2>/dev/null || echo "")
+    local remote_url
+    remote_url=$(git remote get-url origin 2>/dev/null || echo "")
     if [[ ! "$remote_url" =~ github\.com ]]; then
         print_info "[Not a GitHub repository]"
         return
     fi
 
-    local prs=$(gh pr list --state all --json number,headRefName,state,title --limit 100 2>/dev/null || echo "[]")
+    local prs
+    prs=$(gh pr list --state all --json number,headRefName,state,title --limit 100 2>/dev/null || echo "[]")
 
     if [ "$prs" = "[]" ]; then
         print_info "No PRs found"
@@ -254,7 +258,8 @@ is_worktree_clean() {
     fi
 
     # Check for commits ahead of default branch
-    local commits_ahead=$(git rev-list --count "origin/$default_branch..HEAD" 2>/dev/null || echo "999")
+    local commits_ahead
+    commits_ahead=$(git rev-list --count "origin/$default_branch..HEAD" 2>/dev/null || echo "999")
 
     if [ "$commits_ahead" != "0" ]; then
         return 1
@@ -271,11 +276,13 @@ has_unpushed_commits() {
     cd "$worktree_path" 2>/dev/null || return 1
 
     # Check if branch has upstream configured
-    local upstream=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null || echo "")
+    local upstream
+    upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo "")
 
     if [ -z "$upstream" ]; then
         # No upstream configured - check if there are any commits
-        local commit_count=$(git rev-list --count HEAD 2>/dev/null || echo "0")
+        local commit_count
+        commit_count=$(git rev-list --count HEAD 2>/dev/null || echo "0")
         if [ "$commit_count" -gt 0 ]; then
             return 0  # Has commits but no upstream = unpushed
         else
@@ -284,7 +291,8 @@ has_unpushed_commits() {
     fi
 
     # Check for commits ahead of upstream
-    local commits_ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
+    local commits_ahead
+    commits_ahead=$(git rev-list --count '@{u}..HEAD' 2>/dev/null || echo "0")
 
     if [ "$commits_ahead" -gt 0 ]; then
         return 0  # Has unpushed commits
@@ -306,7 +314,8 @@ check_pr_staleness() {
 
     cd "$repo_path"
 
-    local updated_at=$(gh pr list --head "$branch" --json updatedAt --jq '.[0].updatedAt' 2>/dev/null || echo "")
+    local updated_at
+    updated_at=$(gh pr list --head "$branch" --json updatedAt --jq '.[0].updatedAt' 2>/dev/null || echo "")
 
     if [ -z "$updated_at" ]; then
         echo "none"
@@ -314,8 +323,10 @@ check_pr_staleness() {
     fi
 
     # Convert to epoch (macOS compatible)
-    local pr_timestamp=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$updated_at" "+%s" 2>/dev/null || echo "0")
-    local current_timestamp=$(date -u "+%s")
+    local pr_timestamp
+    pr_timestamp=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$updated_at" "+%s" 2>/dev/null || echo "0")
+    local current_timestamp
+    current_timestamp=$(date -u "+%s")
     local days_inactive=$(( (current_timestamp - pr_timestamp) / 86400 ))
 
     if [ "$days_inactive" -ge "$days_threshold" ]; then
@@ -503,7 +514,7 @@ for repo in "$GIT_DIR"/*/; do
     git worktree prune 2>/dev/null || true
 
     # Clean up remote tracking branches that no longer exist on remote
-    pruned=$(git remote prune origin --dry-run 2>/dev/null | grep "^\s*\*" | wc -l | tr -d ' \n' || echo "0")
+    pruned=$(git remote prune origin --dry-run 2>/dev/null | grep -c "^\s*\*" || echo "0")
     if [ "$pruned" -gt 0 ]; then
         if [ "$repo_header_printed" = "false" ]; then
             print_header "$repo_name"
@@ -698,9 +709,9 @@ for repo in "$GIT_DIR"/*/; do
 
         if [ "$HAS_GH" = "true" ]; then
             cd "$repo"
-            local remote_url=$(git remote get-url origin 2>/dev/null || echo "")
+            remote_url=$(git remote get-url origin 2>/dev/null || echo "")
             if [[ "$remote_url" =~ github\.com ]]; then
-                local open_prs=$(gh pr list --state open --json number,headRefName,title 2>/dev/null || echo "[]")
+                open_prs=$(gh pr list --state open --json number,headRefName,title 2>/dev/null || echo "[]")
                 if [ "$open_prs" = "[]" ]; then
                     print_info "No open PRs"
                 else

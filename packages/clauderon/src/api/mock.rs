@@ -396,7 +396,10 @@ impl ApiClient for MockApiClient {
 
         // Return mock health status - all sessions healthy
         let sessions = self.sessions.read().await;
-        #[expect(clippy::cast_possible_truncation, reason = "session count is bounded by application logic")]
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "session count is bounded by application logic"
+        )]
         let healthy_count = sessions.len() as u32;
         let reports: Vec<SessionHealthReport> = sessions
             .values()

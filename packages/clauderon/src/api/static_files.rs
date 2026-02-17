@@ -50,7 +50,10 @@ pub async fn serve_docs(uri: Uri) -> Response {
 }
 
 /// Serve a specific file with appropriate content type
-#[expect(clippy::unwrap_used, reason = "MIME types from mime_guess are always valid header values")]
+#[expect(
+    clippy::unwrap_used,
+    reason = "MIME types from mime_guess are always valid header values"
+)]
 fn serve_file(file: &include_dir::File<'_>) -> Response {
     let mime = mime_guess::from_path(file.path()).first_or_octet_stream();
     let mime_type = mime.as_ref();

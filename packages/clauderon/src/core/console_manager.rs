@@ -430,7 +430,10 @@ impl ConsoleManager {
     }
 
     /// Get or create a console session for the given session ID.
-    #[expect(clippy::missing_errors_doc, reason = "internal API, error conditions are self-evident")]
+    #[expect(
+        clippy::missing_errors_doc,
+        reason = "internal API, error conditions are self-evident"
+    )]
     pub async fn ensure_session(
         &self,
         session_id: Uuid,
@@ -486,7 +489,8 @@ pub struct ConsoleSessionHandle {
 
 impl std::fmt::Debug for ConsoleSessionHandle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ConsoleSessionHandle").finish_non_exhaustive()
+        f.debug_struct("ConsoleSessionHandle")
+            .finish_non_exhaustive()
     }
 }
 
@@ -512,7 +516,10 @@ impl ConsoleSessionHandle {
     }
 
     /// Write input data to the PTY.
-    #[expect(clippy::missing_errors_doc, reason = "internal API, error conditions are self-evident")]
+    #[expect(
+        clippy::missing_errors_doc,
+        reason = "internal API, error conditions are self-evident"
+    )]
     pub async fn send_input(&self, data: Vec<u8>) -> anyhow::Result<()> {
         self.session.send_input(data).await
     }
@@ -523,7 +530,10 @@ impl ConsoleSessionHandle {
     }
 
     /// Send a Unix signal to the PTY process.
-    #[expect(clippy::missing_errors_doc, reason = "internal API, error conditions are self-evident")]
+    #[expect(
+        clippy::missing_errors_doc,
+        reason = "internal API, error conditions are self-evident"
+    )]
     #[tracing::instrument(skip(self), fields(signal = ?signal))]
     pub async fn send_signal(&self, signal: SignalType) -> anyhow::Result<()> {
         self.session.send_signal(signal).await

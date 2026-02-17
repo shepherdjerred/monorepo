@@ -75,30 +75,25 @@ async fn rewrite_refresh_request(
     };
 
     let body = std::mem::replace(req.body_mut(), Body::empty());
-    let collected = body
-        .collect()
-        .await
-        .map_err(|e| {
-            tracing::debug!(error = %e, "Failed to collect refresh body");
-            build_error_response("INVALID_REFRESH_BODY")
-        })?;
+    let collected = body.collect().await.map_err(|e| {
+        tracing::debug!(error = %e, "Failed to collect refresh body");
+        build_error_response("INVALID_REFRESH_BODY")
+    })?;
     let body_bytes = collected.to_bytes();
-    let mut json: Value = serde_json::from_slice(&body_bytes)
-        .map_err(|e| {
-            tracing::debug!(error = %e, "Failed to parse refresh payload");
-            build_error_response("INVALID_REFRESH_PAYLOAD")
-        })?;
+    let mut json: Value = serde_json::from_slice(&body_bytes).map_err(|e| {
+        tracing::debug!(error = %e, "Failed to parse refresh payload");
+        build_error_response("INVALID_REFRESH_PAYLOAD")
+    })?;
 
     let Some(token_value) = json.get_mut("refresh_token") else {
         return Err(build_error_response("MISSING_REFRESH_TOKEN_FIELD"));
     };
     *token_value = Value::String(refresh_token);
 
-    let updated_body =
-        serde_json::to_vec(&json).map_err(|e| {
-            tracing::debug!(error = %e, "Failed to serialize refresh payload");
-            build_error_response("INVALID_REFRESH_PAYLOAD")
-        })?;
+    let updated_body = serde_json::to_vec(&json).map_err(|e| {
+        tracing::debug!(error = %e, "Failed to serialize refresh payload");
+        build_error_response("INVALID_REFRESH_PAYLOAD")
+    })?;
     let updated_body = String::from_utf8(updated_body).unwrap_or_default();
     *req.body_mut() = Body::from(updated_body);
     Ok(())
@@ -296,7 +291,10 @@ fn classify_client_error(err: &ClientError) -> &'static str {
 }
 
 /// Build an error response with proper fallback handling.
-#[expect(clippy::expect_used, reason = "Response::builder with static status/header is infallible")]
+#[expect(
+    clippy::expect_used,
+    reason = "Response::builder with static status/header is infallible"
+)]
 fn build_error_response(error_type: &'static str) -> Response<Body> {
     Response::builder()
         .status(502)
@@ -309,7 +307,10 @@ fn build_error_response(error_type: &'static str) -> Response<Body> {
 }
 
 /// Build an error response with a custom status code and message.
-#[expect(clippy::expect_used, reason = "Response::builder with static status is infallible")]
+#[expect(
+    clippy::expect_used,
+    reason = "Response::builder with static status is infallible"
+)]
 fn build_error_response_with_status(status: u16, message: &str) -> Response<Body> {
     Response::builder()
         .status(status)
@@ -466,7 +467,10 @@ impl HttpHandler for AuthInjector {
             let mut should_rewrite_refresh = false;
 
             if let Some(pending) = pending {
-                #[expect(clippy::cast_possible_truncation, reason = "duration in ms will not exceed u64::MAX")]
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "duration in ms will not exceed u64::MAX"
+                )]
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
                 should_rewrite_refresh = pending.auth_refresh;
 
@@ -531,7 +535,10 @@ impl HttpHandler for AuthInjector {
             let error_type = classify_client_error(&err);
 
             if let Some(pending) = pending {
-                #[expect(clippy::cast_possible_truncation, reason = "duration in ms will not exceed u64::MAX")]
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "duration in ms will not exceed u64::MAX"
+                )]
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
 
                 // Log full error details for debugging (not sent to client)
@@ -769,7 +776,10 @@ impl HttpHandler for FilteringHandler {
             let mut should_rewrite_refresh = false;
 
             if let Some(pending) = pending {
-                #[expect(clippy::cast_possible_truncation, reason = "duration in ms will not exceed u64::MAX")]
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "duration in ms will not exceed u64::MAX"
+                )]
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
                 should_rewrite_refresh = pending.auth_refresh;
 
@@ -838,7 +848,10 @@ impl HttpHandler for FilteringHandler {
             let error_type = classify_client_error(&err);
 
             if let Some(pending) = pending {
-                #[expect(clippy::cast_possible_truncation, reason = "duration in ms will not exceed u64::MAX")]
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "duration in ms will not exceed u64::MAX"
+                )]
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
 
                 // Log full error details for debugging (not sent to client)

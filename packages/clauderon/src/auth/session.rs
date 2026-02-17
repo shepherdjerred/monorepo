@@ -105,7 +105,10 @@ impl SessionStore {
             .execute(&self.pool)
             .await?;
 
-        #[expect(clippy::cast_possible_truncation, reason = "rows affected count is bounded by session count")]
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "rows affected count is bounded by session count"
+        )]
         Ok(result.rows_affected() as usize)
     }
 }

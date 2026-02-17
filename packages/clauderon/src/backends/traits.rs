@@ -14,7 +14,10 @@ use super::container_config::{ImageConfig, ResourceLimits};
 /// data is preserved during recreation. This helps the UI determine what
 /// actions to offer and what warnings to show.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[expect(clippy::struct_excessive_bools, reason = "independent capability flags")]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "independent capability flags"
+)]
 pub struct BackendCapabilities {
     /// Whether this backend supports proactive recreation when healthy
     pub can_recreate: bool,
@@ -142,7 +145,10 @@ pub trait GitOperations: Send + Sync {
 
 /// Options for creating an execution backend session.
 #[derive(Debug, Clone, Default)]
-#[expect(clippy::struct_excessive_bools, reason = "independent configuration flags for session creation")]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "independent configuration flags for session creation"
+)]
 pub struct CreateOptions {
     /// Agent to run (Claude Code, Codex, or Gemini).
     pub agent: AgentType,

@@ -542,7 +542,10 @@ async fn main() -> anyhow::Result<()> {
 
     // Install the ring crypto provider for rustls before any TLS operations
     // This is required because multiple dependencies enable conflicting crypto providers
-    #[expect(clippy::expect_used, reason = "crypto provider must be installed before any TLS operations")]
+    #[expect(
+        clippy::expect_used,
+        reason = "crypto provider must be installed before any TLS operations"
+    )]
     rustls::crypto::ring::default_provider()
         .install_default()
         .expect("Failed to install rustls crypto provider");

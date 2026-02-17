@@ -18,7 +18,9 @@ console.log("Running knip...");
 const knipStart = Date.now();
 const knipResult = await $`bunx knip --reporter json`.quiet();
 await Bun.write(".knip-cache.json", knipResult.stdout);
-console.log(`  ✓ .knip-cache.json updated (${Date.now() - knipStart}ms)\n`);
+console.log(
+  `  ✓ .knip-cache.json updated (${(Date.now() - knipStart).toString()}ms)\n`,
+);
 
 // Generate jscpd cache
 console.log("Running jscpd (this may take a while)...");
@@ -28,6 +30,8 @@ const jscpdReport = await Bun.file(
   "/tmp/jscpd-lint-cache/jscpd-report.json",
 ).text();
 await Bun.write(".jscpd-cache.json", jscpdReport);
-console.log(`  ✓ .jscpd-cache.json updated (${Date.now() - jscpdStart}ms)\n`);
+console.log(
+  `  ✓ .jscpd-cache.json updated (${(Date.now() - jscpdStart).toString()}ms)\n`,
+);
 
 console.log("Done! ESLint will now use the cached analysis results.");

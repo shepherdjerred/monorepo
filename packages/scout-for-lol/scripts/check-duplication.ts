@@ -9,62 +9,84 @@
  */
 
 import { $ } from "bun";
-import * as path from "path";
+import { z } from "zod";
 
-type JscpdFileStats = {
-  lines: number;
-  tokens: number;
-  sources: number;
-  clones: number;
-  duplicatedLines: number;
-  duplicatedTokens: number;
-  percentage: number;
-  percentageTokens: number;
-  newDuplicatedLines: number;
-  newClones: number;
-};
+const JscpdFileStatsSchema = z.object({
+  lines: z.number(),
+  tokens: z.number(),
+  sources: z.number(),
+  clones: z.number(),
+  duplicatedLines: z.number(),
+  duplicatedTokens: z.number(),
+  percentage: z.number(),
+  percentageTokens: z.number(),
+  newDuplicatedLines: z.number(),
+  newClones: z.number(),
+});
 
-type JscpdStatistics = {
-  detectionDate: string;
-  formats: Record<string, { sources: Record<string, JscpdFileStats> }>;
-  total: JscpdFileStats;
-};
+const JscpdLocSchema = z.object({ line: z.number(), column: z.number() });
 
-type JscpdDuplicate = {
-  format: string;
-  lines: number;
-  tokens: number;
-  firstFile: {
-    name: string;
-    start: number;
-    end: number;
-    startLoc: { line: number; column: number };
-    endLoc: { line: number; column: number };
-  };
-  secondFile: {
-    name: string;
-    start: number;
-    end: number;
-    startLoc: { line: number; column: number };
-    endLoc: { line: number; column: number };
-  };
-  fragment: string;
-};
+const JscpdFileRefSchema = z.object({
+  name: z.string(),
+  start: z.number(),
+  end: z.number(),
+  startLoc: JscpdLocSchema,
+  endLoc: JscpdLocSchema,
+});
 
-type JscpdResult = {
-  statistics: JscpdStatistics;
-  duplicates: JscpdDuplicate[];
-};
+const JscpdDuplicateSchema = z.object({
+  format: z.string(),
+  lines: z.number(),
+  tokens: z.number(),
+  firstFile: JscpdFileRefSchema,
+  secondFile: JscpdFileRefSchema,
+  fragment: z.string(),
+});
+
+const JscpdFormatSchema = z.object({
+  sources: z.record(z.string(), JscpdFileStatsSchema),
+});
+
+const JscpdStatisticsSchema = z.object({
+  detectionDate: z.string(),
+  formats: z.record(z.string(), JscpdFormatSchema),
+  total: JscpdFileStatsSchema,
+});
+
+const JscpdResultSchema = z.object({
+  statistics: JscpdStatisticsSchema,
+  duplicates: z.array(JscpdDuplicateSchema),
+});
+
+type JscpdFileStats = z.infer<typeof JscpdFileStatsSchema>;
+type JscpdResult = z.infer<typeof JscpdResultSchema>;
+
+async function readJscpdResult(filePath: string): Promise<JscpdResult> {
+  const text = await Bun.file(filePath).text();
+  const data: unknown = JSON.parse(text);
+  return JscpdResultSchema.parse(data);
+}
+
+function relativePath(from: string, to: string): string {
+  const prefix = from.endsWith("/") ? from : `${from}/`;
+  if (to.startsWith(prefix)) {
+    return to.slice(prefix.length);
+  }
+  return to;
+}
 
 const AGGREGATE_THRESHOLD = 12;
 const PER_FILE_THRESHOLD = 100; // Effectively disabled - only aggregate threshold enforced
-const WORKSPACE_ROOT = path.resolve(import.meta.dir, "..");
+const WORKSPACE_ROOT = new URL("..", import.meta.url).pathname.replace(
+  /\/$/,
+  "",
+);
 
 async function main(): Promise<void> {
   console.log("🔍 Running code duplication analysis...\n");
 
   // Run jscpd with JSON output
-  const jscpdConfigPath = path.join(WORKSPACE_ROOT, ".jscpd.json");
+  const jscpdConfigPath = `${WORKSPACE_ROOT}/.jscpd.json`;
 
   try {
     await $`bunx jscpd packages/ --config ${jscpdConfigPath} --reporters json --output ./jscpd-report`.quiet();
@@ -74,11 +96,7 @@ async function main(): Promise<void> {
   }
 
   // Read JSON output
-  const jsonPath = path.join(
-    WORKSPACE_ROOT,
-    "jscpd-report",
-    "jscpd-report.json",
-  );
+  const jsonPath = `${WORKSPACE_ROOT}/jscpd-report/jscpd-report.json`;
   const jsonFile = Bun.file(jsonPath);
 
   if (!(await jsonFile.exists())) {
@@ -86,7 +104,7 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const result = (await jsonFile.json()) as JscpdResult;
+  const result = await readJscpdResult(jsonPath);
   const { statistics, duplicates } = result;
 
   // Check aggregate threshold
@@ -106,7 +124,7 @@ async function main(): Promise<void> {
   // Collect per-file statistics from jscpd output
   const fileStats = new Map<string, JscpdFileStats>();
 
-  for (const format of Object.values(statistics.formats)) {
+  for (const [, format] of Object.entries(statistics.formats)) {
     for (const [filePath, stats] of Object.entries(format.sources)) {
       fileStats.set(filePath, stats);
     }
@@ -146,7 +164,7 @@ async function main(): Promise<void> {
     failedFiles.sort((a, b) => b.percentage - a.percentage);
 
     for (const failure of failedFiles) {
-      const relPath = path.relative(WORKSPACE_ROOT, failure.file);
+      const relPath = relativePath(WORKSPACE_ROOT, failure.file);
       const stats = fileStats.get(failure.file);
 
       console.log(`   ${relPath}`);
@@ -172,8 +190,8 @@ async function main(): Promise<void> {
       .sort((a, b) => b.lines - a.lines);
 
     for (const duplicate of sortedDuplicates.slice(0, 5)) {
-      const file1 = path.relative(WORKSPACE_ROOT, duplicate.firstFile.name);
-      const file2 = path.relative(WORKSPACE_ROOT, duplicate.secondFile.name);
+      const file1 = relativePath(WORKSPACE_ROOT, duplicate.firstFile.name);
+      const file2 = relativePath(WORKSPACE_ROOT, duplicate.secondFile.name);
 
       console.log(`   ${duplicate.lines.toString()} lines duplicated:`);
       console.log(
@@ -214,7 +232,9 @@ async function main(): Promise<void> {
   console.log("\n💡 View detailed report: jscpd-report/html/index.html\n");
 }
 
-main().catch((error: unknown) => {
+try {
+  await main();
+} catch (error) {
   console.error("❌ Error running duplication check:", error);
   process.exit(1);
-});
+}

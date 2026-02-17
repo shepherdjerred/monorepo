@@ -155,7 +155,8 @@ impl OnePasswordClient {
 
         let value = String::from_utf8(output.stdout)
             .context("Failed to parse op CLI output as UTF-8")?
-            .trim().to_owned();
+            .trim()
+            .to_owned();
 
         if value.is_empty() {
             anyhow::bail!(
