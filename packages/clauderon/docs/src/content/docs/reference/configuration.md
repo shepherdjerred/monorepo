@@ -146,18 +146,18 @@ chmod 600 ~/.clauderon/secrets/*
 
 ### Supported Credential Files
 
-| File Name | Service | Injected As |
-|-----------|---------|-------------|
-| `github_token` | GitHub API & git | `Authorization: Bearer` |
-| `anthropic_oauth_token` | Anthropic API | `Authorization: Bearer` |
-| `openai_api_key` | OpenAI/Codex | `Authorization: Bearer` |
-| `pagerduty_token` | PagerDuty API | `Authorization: Token` |
-| `sentry_auth_token` | Sentry API | `Authorization: Bearer` |
-| `grafana_api_key` | Grafana API | `Authorization: Bearer` |
-| `npm_token` | npm registry | `Authorization: Bearer` |
-| `docker_token` | Docker Hub | `Authorization: Bearer` |
-| `k8s_token` | Kubernetes API | `Authorization: Bearer` |
-| `talos_token` | Talos API | mTLS |
+| File Name               | Service          | Injected As             |
+| ----------------------- | ---------------- | ----------------------- |
+| `github_token`          | GitHub API & git | `Authorization: Bearer` |
+| `anthropic_oauth_token` | Anthropic API    | `Authorization: Bearer` |
+| `openai_api_key`        | OpenAI/Codex     | `Authorization: Bearer` |
+| `pagerduty_token`       | PagerDuty API    | `Authorization: Token`  |
+| `sentry_auth_token`     | Sentry API       | `Authorization: Bearer` |
+| `grafana_api_key`       | Grafana API      | `Authorization: Bearer` |
+| `npm_token`             | npm registry     | `Authorization: Bearer` |
+| `docker_token`          | Docker Hub       | `Authorization: Bearer` |
+| `k8s_token`             | Kubernetes API   | `Authorization: Bearer` |
+| `talos_token`           | Talos API        | mTLS                    |
 
 ## Credential Priority
 

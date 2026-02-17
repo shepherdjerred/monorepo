@@ -1,9 +1,9 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Transform: 'AWS::Serverless-2016-10-31'
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
 Description: An AWS Serverless Specification template describing your function.
 Resources:
   Lambda:
-    Type: 'AWS::Serverless::Function'
+    Type: "AWS::Serverless::Function"
     Properties:
       FunctionName: WestElmShipmentNotifierFunction
       CodeUri: src/
@@ -27,8 +27,7 @@ Resources:
     Type: "AWS::CloudWatch::Alarm"
     Properties:
       AlarmActions:
-        -
-          Ref: AlertSnsTopic
+        - Ref: AlertSnsTopic
       ComparisonOperator: "GreaterThanThreshold"
       EvaluationPeriods: 8
       Period: 3600 # 1 hour
@@ -36,8 +35,7 @@ Resources:
       Threshold: 1
       Namespace: "AWS/Lambda"
       Dimensions:
-        -
-          Name: FunctionName
+        - Name: FunctionName
           Value:
             Ref: Lambda
       MetricName: "Errors"
@@ -48,7 +46,5 @@ Resources:
     Properties:
       TopicName: "WestElmShipmentNotifications"
       Subscription:
-        -
-          Endpoint: "shepherdjerred@gmail.com"
+        - Endpoint: "shepherdjerred@gmail.com"
           Protocol: "email"
-

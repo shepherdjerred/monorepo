@@ -18,9 +18,9 @@ After people choose an item in a pull-down button’s menu, the menu closes, and
 
 **Use a pull-down button to present commands or items that are directly related to the button’s action.** The menu lets you help people clarify the button’s target or customize its behavior without requiring additional buttons in your interface. For example:
 
-* An Add button could present a menu that lets people specify the item they want to add.
-* A Sort button could use a menu to let people select an attribute on which to sort.
-* A Back button could let people choose a specific location to revisit instead of opening the previous one.
+- An Add button could present a menu that lets people specify the item they want to add.
+- A Sort button could use a menu to let people select an attribute on which to sort.
+- A Back button could let people choose a specific location to revisit instead of opening the previous one.
 
 If you need to provide a list of mutually exclusive choices that aren’t commands, use a [pop-up button](/design/human-interface-guidelines/pop-up-buttons) instead.
 
@@ -36,7 +36,7 @@ If you need to provide a list of mutually exclusive choices that aren’t comman
 
 ## [Platform considerations](/design/human-interface-guidelines/pull-down-buttons#Platform-considerations)
 
-*No additional considerations for macOS or visionOS. Not supported in tvOS or watchOS.*
+_No additional considerations for macOS or visionOS. Not supported in tvOS or watchOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/pull-down-buttons#iOS-iPadOS)
 
@@ -70,6 +70,6 @@ You can also let people reveal a pull-down menu by performing a specific gesture
 
 ## [Change log](/design/human-interface-guidelines/pull-down-buttons#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date               | Changes                                             |
+| ------------------ | --------------------------------------------------- |
 | September 14, 2022 | Refined guidance on designing a useful menu length. |

@@ -13,7 +13,11 @@ function shouldLog(level: LogLevel): boolean {
   return LOG_LEVELS[level] >= LOG_LEVELS[currentLevel];
 }
 
-function formatMessage(level: LogLevel, message: string, data?: unknown): string {
+function formatMessage(
+  level: LogLevel,
+  message: string,
+  data?: unknown,
+): string {
   const timestamp = new Date().toISOString();
   const dataStr = data ? ` ${JSON.stringify(data)}` : "";
   return `[${timestamp}] [${level.toUpperCase()}] ${message}${dataStr}`;

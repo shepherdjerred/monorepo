@@ -42,7 +42,7 @@ Sometimes, people need to work with complex data in a multicolumn table or a spr
 
 ### [iOS, iPadOS, visionOS](/design/human-interface-guidelines/lists-and-tables#iOS-iPadOS-visionOS)
 
-**Use an info button only to reveal more information about a row’s content.** An info button — called a *detail disclosure button* when it appears in a list row — doesn’t support navigation through a hierarchical table or list. If you need to let people drill into a list or table row’s subviews, use a disclosure indicator accessory control. For developer guidance, see [`UITableViewCell.AccessoryType.disclosureIndicator`](/documentation/UIKit/UITableViewCell/AccessoryType-swift.enum/disclosureIndicator).
+**Use an info button only to reveal more information about a row’s content.** An info button — called a _detail disclosure button_ when it appears in a list row — doesn’t support navigation through a hierarchical table or list. If you need to let people drill into a list or table row’s subviews, use a disclosure indicator accessory control. For developer guidance, see [`UITableViewCell.AccessoryType.disclosureIndicator`](/documentation/UIKit/UITableViewCell/AccessoryType-swift.enum/disclosureIndicator).
 
 ![An illustration of a grouped list of rows. Each list item includes an info button at the trailing end of the row.](https://docs-assets.developer.apple.com/published/fd301d26835e0341b95eaa2027f200f2/info-button-in-list%402x.png)
 
@@ -52,7 +52,7 @@ An info button shows details about a list item; it doesn’t support navigation.
 
 A disclosure indicator reveals the next level in a hierarchy; it doesn’t show details about the item.
 
-**Avoid adding an index to a table that displays controls — like disclosure indicators — in the trailing ends of its rows.** An *index* typically consists of the letters in an alphabet, displayed vertically at the trailing side of a list. People can jump to a specific section in the list by choosing the index letter that maps to it. Because both the index and elements like disclosure indicators appear on the trailing side of a list, it can be difficult for people to use one element without activating the other.
+**Avoid adding an index to a table that displays controls — like disclosure indicators — in the trailing ends of its rows.** An _index_ typically consists of the letters in an alphabet, displayed vertically at the trailing side of a list. People can jump to a specific section in the list by choosing the index letter that maps to it. Because both the index and elements like disclosure indicators appear on the trailing side of a list, it can be difficult for people to use one element without activating the other.
 
 ### [macOS](/design/human-interface-guidelines/lists-and-tables#macOS)
 
@@ -102,7 +102,7 @@ Stacks, Grids, and Outlines in SwiftUI](https://developer.apple.com/videos/play/
 
 ## [Change log](/design/human-interface-guidelines/lists-and-tables#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| June 21, 2023 | Updated to include guidance for visionOS. |
-| June 5, 2023 | Updated guidance to reflect changes in watchOS 10. |
+| Date          | Changes                                            |
+| ------------- | -------------------------------------------------- |
+| June 21, 2023 | Updated to include guidance for visionOS.          |
+| June 5, 2023  | Updated guidance to reflect changes in watchOS 10. |

@@ -8,7 +8,7 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { withCommonLinuxServerProps } from "../../misc/linux-server.ts";
 import { withCommonProps } from "../../misc/common.ts";
@@ -26,13 +26,15 @@ export function createQBitTorrentDeployment(
 ) {
   const item = new OnePasswordItem(chart, "mullvad", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/74rqjncejp7rpgelymnmul5ssm",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/74rqjncejp7rpgelymnmul5ssm",
     },
   });
 
   const qBitTorrentItem = new OnePasswordItem(chart, "qbittorrent-item", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/2bbw7oe6s5clygljwmeflwtovm",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/2bbw7oe6s5clygljwmeflwtovm",
     },
   });
 
@@ -43,9 +45,12 @@ export function createQBitTorrentDeployment(
       annotations: {
         "ignore-check.kube-linter.io/privileged-container":
           "Gluetun VPN container requires privileged for network setup",
-        "ignore-check.kube-linter.io/privilege-escalation-container": "Required when privileged is true",
-        "ignore-check.kube-linter.io/run-as-non-root": "Gluetun and LinuxServer images require root",
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "VPN and torrent client require writable filesystem",
+        "ignore-check.kube-linter.io/privilege-escalation-container":
+          "Required when privileged is true",
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "Gluetun and LinuxServer images require root",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "VPN and torrent client require writable filesystem",
       },
     },
   });
@@ -77,10 +82,16 @@ export function createQBitTorrentDeployment(
           key: "private-key",
         }),
         WIREGUARD_PRESHARED_KEY: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "airvpn-preshared-key", item.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "airvpn-preshared-key",
+            item.name,
+          ),
           key: "preshared-key",
         }),
-        WIREGUARD_ADDRESSES: EnvValue.fromValue("10.154.174.240/32,fd7d:76ee:e68f:a993:af57:e79c:b39d:9dde/128"),
+        WIREGUARD_ADDRESSES: EnvValue.fromValue(
+          "10.154.174.240/32,fd7d:76ee:e68f:a993:af57:e79c:b39d:9dde/128",
+        ),
         FIREWALL_VPN_INPUT_PORTS: EnvValue.fromValue("17826"),
       },
     }),
@@ -103,10 +114,18 @@ export function createQBitTorrentDeployment(
       volumeMounts: [
         {
           path: "/config",
-          volume: Volume.fromPersistentVolumeClaim(chart, "qbittorrent-volume", localPathVolume.claim),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "qbittorrent-volume",
+            localPathVolume.claim,
+          ),
         },
         {
-          volume: Volume.fromPersistentVolumeClaim(chart, "qbittorrent-hdd-volume", claims.downloads),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "qbittorrent-hdd-volume",
+            claims.downloads,
+          ),
           path: "/downloads",
         },
       ],
@@ -130,7 +149,11 @@ export function createQBitTorrentDeployment(
         QBITTORRENT_PORT: EnvValue.fromValue("8080"),
         QBITTORRENT_USER: EnvValue.fromValue("admin"),
         QBITTORRENT_PASS: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "qbittorrent-password", qBitTorrentItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "qbittorrent-password",
+            qBitTorrentItem.name,
+          ),
           key: "password",
         }),
         EXPORTER_PORT: EnvValue.fromValue("17871"),

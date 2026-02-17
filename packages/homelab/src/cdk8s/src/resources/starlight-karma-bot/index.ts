@@ -1,5 +1,11 @@
-import { Deployment, DeploymentStrategy, EnvValue, Secret, Volume } from "cdk8s-plus-31";
-import type { Chart} from "cdk8s";
+import {
+  Deployment,
+  DeploymentStrategy,
+  EnvValue,
+  Secret,
+  Volume,
+} from "cdk8s-plus-31";
+import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { withCommonProps } from "../../misc/common.ts";
 import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
@@ -19,8 +25,10 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
     },
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/run-as-non-root": "Starlight Karma Bot requires flexible user permissions",
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "Bot requires writable filesystem for SQLite database",
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "Starlight Karma Bot requires flexible user permissions",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "Bot requires writable filesystem for SQLite database",
       },
     },
   });
@@ -48,9 +56,13 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
     },
   });
 
-  const localPathVolume = new ZfsNvmeVolume(chart, "starlight-karma-bot-storage-claim", {
-    storage: Size.gibibytes(2),
-  });
+  const localPathVolume = new ZfsNvmeVolume(
+    chart,
+    "starlight-karma-bot-storage-claim",
+    {
+      storage: Size.gibibytes(2),
+    },
+  );
 
   deployment.addContainer(
     withCommonProps({
@@ -62,12 +74,20 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
       volumeMounts: [
         {
           path: "/data",
-          volume: Volume.fromPersistentVolumeClaim(chart, "starlight-karma-bot-volume", localPathVolume.claim),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "starlight-karma-bot-volume",
+            localPathVolume.claim,
+          ),
         },
       ],
       envVariables: {
         DISCORD_TOKEN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "discord-token-secret", onePasswordItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "discord-token-secret",
+            onePasswordItem.name,
+          ),
           key: "discord-api-token",
         }),
         APPLICATION_ID: EnvValue.fromValue(applicationId),
@@ -75,7 +95,11 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
         ENVIRONMENT: EnvValue.fromValue(stage),
         PORT: EnvValue.fromValue("8000"),
         SENTRY_DSN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(chart, "sentry-dsn-secret", onePasswordItem.name),
+          secret: Secret.fromSecretName(
+            chart,
+            "sentry-dsn-secret",
+            onePasswordItem.name,
+          ),
           key: "sentry-dsn",
         }),
       },

@@ -110,7 +110,7 @@ describe("TelemetryConfigSchema", () => {
     if (result.success) {
       expect(result.data.enabled).toBe(true);
       expect(result.data.otlpEndpoint).toBe(
-        "http://tempo.monitoring.svc.cluster.local:4318"
+        "http://tempo.monitoring.svc.cluster.local:4318",
       );
       expect(result.data.serviceName).toBe("birmel");
     }

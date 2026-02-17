@@ -9,19 +9,18 @@ export class ParseError extends Error {
   lineNumber: number;
   charNumber: number;
 
-  constructor(message: string,
-              loc: Location) {
+  constructor(message: string, loc: Location) {
     super(message);
     this.lineNumber = loc.line;
     this.charNumber = loc.char;
-    this.name = 'ParseError';
-    this.stack = `ParseError: ${message}\n    at ${this.fileName ? this.fileName + ':' : ''}${this.lineNumber}:${this.charNumber}`;
+    this.name = "ParseError";
+    this.stack = `ParseError: ${message}\n    at ${this.fileName ? this.fileName + ":" : ""}${this.lineNumber}:${this.charNumber}`;
   }
 
   toString(): string {
-    return `${this.message} at ${this.fileName ? this.fileName + ':' : ''}${this.lineNumber}:${this.charNumber}`;
+    return `${this.message} at ${this.fileName ? this.fileName + ":" : ""}${this.lineNumber}:${this.charNumber}`;
   }
 }
 
 // Every ParseError has the same name
-ParseError.prototype.name = 'ParseError';
+ParseError.prototype.name = "ParseError";

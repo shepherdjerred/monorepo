@@ -18,7 +18,7 @@ export type HistoryState = {
  */
 export function useSessionHistory(
   sessionId: string | null,
-  pollingInterval = 2000
+  pollingInterval = 2000,
 ): HistoryState {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,7 +44,7 @@ export function useSessionHistory(
         // Fetch new lines since last poll
         const response = await client.getSessionHistory(
           sessionId,
-          lastLineRef.current // no limit
+          lastLineRef.current, // no limit
         );
 
         if (!isActive) {
@@ -55,7 +55,7 @@ export function useSessionHistory(
 
         if (!response.fileExists) {
           setError(
-            "History file does not exist yet. Start a conversation to create it."
+            "History file does not exist yet. Start a conversation to create it.",
           );
           setIsLoading(false);
           return;
@@ -79,7 +79,9 @@ export function useSessionHistory(
           return;
         }
 
-        setError(err instanceof Error ? err.message : "Failed to fetch history");
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch history",
+        );
         setIsLoading(false);
       }
     };

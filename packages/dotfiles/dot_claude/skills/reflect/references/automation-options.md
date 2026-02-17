@@ -5,12 +5,14 @@ Comprehensive guide to Claude Code automation capabilities: skills, MCPs, hooks,
 ## Skills
 
 ### What Skills Do
+
 - Encapsulate multi-step workflows
 - Provide domain-specific instructions
 - Bundle related tools and permissions
 - Enable user-invocable commands via `/skill-name`
 
 ### Skill Structure
+
 ```
 skill-name/
 ├── SKILL.md           # Main instructions
@@ -22,6 +24,7 @@ skill-name/
 ```
 
 ### SKILL.md Format
+
 ```markdown
 ---
 name: skill-name
@@ -37,40 +40,47 @@ allowed-tools:
 # Skill Title
 
 ## Overview
+
 What this skill does.
 
 ## Steps
+
 1. First step
 2. Second step
 3. Verification
 
 ## Examples
+
 How to use this skill.
 ```
 
 ### When to Suggest a Skill
+
 - Multi-step workflow repeated 2+ times
 - Complex domain knowledge needed
 - Project-specific automation
 - Standardized process enforcement
 
 ### Skill Examples
-| Workflow | Skill Suggestion |
-|----------|-----------------|
-| Release process | `/release` skill with version bump, changelog, tag |
-| Component scaffolding | `/component` skill with templates |
-| Database migration | `/migrate` skill with safety checks |
-| Deploy preparation | `/deploy-prep` skill with checklists |
+
+| Workflow              | Skill Suggestion                                   |
+| --------------------- | -------------------------------------------------- |
+| Release process       | `/release` skill with version bump, changelog, tag |
+| Component scaffolding | `/component` skill with templates                  |
+| Database migration    | `/migrate` skill with safety checks                |
+| Deploy preparation    | `/deploy-prep` skill with checklists               |
 
 ## MCP Servers
 
 ### What MCPs Do
+
 - Provide access to external services
 - Enable database queries
 - Integrate third-party APIs
 - Extend Claude's capabilities
 
 ### MCP Configuration
+
 ```json
 // .mcp.json or ~/.claude/.mcp.json
 {
@@ -89,6 +99,7 @@ How to use this skill.
 ### Common MCP Servers
 
 **Database Access:**
+
 ```json
 {
   "postgres": {
@@ -104,6 +115,7 @@ How to use this skill.
 ```
 
 **File System:**
+
 ```json
 {
   "filesystem": {
@@ -114,6 +126,7 @@ How to use this skill.
 ```
 
 **GitHub:**
+
 ```json
 {
   "github": {
@@ -125,6 +138,7 @@ How to use this skill.
 ```
 
 **Fetch/HTTP:**
+
 ```json
 {
   "fetch": {
@@ -135,6 +149,7 @@ How to use this skill.
 ```
 
 ### When to Suggest an MCP
+
 - Need to query databases
 - External API access required
 - File system operations outside project
@@ -143,6 +158,7 @@ How to use this skill.
 ## Hooks
 
 ### What Hooks Do
+
 - Execute before/after tool use
 - Validate operations
 - Transform inputs/outputs
@@ -150,37 +166,45 @@ How to use this skill.
 
 ### Hook Events
 
-| Event | Trigger | Use Case |
-|-------|---------|----------|
-| `PreToolUse` | Before tool execution | Validation, blocking |
-| `PostToolUse` | After tool execution | Formatting, logging |
-| `Stop` | When Claude stops | Notification, cleanup |
-| `SubagentStop` | When subagent stops | Aggregation |
-| `SessionStart` | Session begins | Setup, context loading |
-| `SessionEnd` | Session ends | Cleanup, saving |
+| Event          | Trigger               | Use Case               |
+| -------------- | --------------------- | ---------------------- |
+| `PreToolUse`   | Before tool execution | Validation, blocking   |
+| `PostToolUse`  | After tool execution  | Formatting, logging    |
+| `Stop`         | When Claude stops     | Notification, cleanup  |
+| `SubagentStop` | When subagent stops   | Aggregation            |
+| `SessionStart` | Session begins        | Setup, context loading |
+| `SessionEnd`   | Session ends          | Cleanup, saving        |
 
 ### Hook Configuration
+
 ```json
 // In settings.json or settings.local.json
 {
   "hooks": {
-    "PreToolUse": [{
-      "matcher": "Bash",
-      "command": "validate-bash.sh",
-      "timeout": 5000
-    }],
-    "PostToolUse": [{
-      "matcher": "Write",
-      "command": "format-file.sh"
-    }],
-    "Stop": [{
-      "command": "notify-complete.sh"
-    }]
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "command": "validate-bash.sh",
+        "timeout": 5000
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "command": "format-file.sh"
+      }
+    ],
+    "Stop": [
+      {
+        "command": "notify-complete.sh"
+      }
+    ]
   }
 }
 ```
 
 ### Hook Matchers
+
 ```json
 // Match specific tool
 { "matcher": "Bash" }
@@ -193,6 +217,7 @@ How to use this skill.
 ```
 
 ### When to Suggest Hooks
+
 - Need pre-execution validation
 - Want automatic formatting
 - Require notifications
@@ -201,6 +226,7 @@ How to use this skill.
 ### Hook Examples
 
 **Prevent Dangerous Commands:**
+
 ```bash
 #!/bin/bash
 # validate-bash.sh
@@ -211,6 +237,7 @@ fi
 ```
 
 **Auto-Format on Write:**
+
 ```bash
 #!/bin/bash
 # format-file.sh
@@ -218,6 +245,7 @@ prettier --write "$FILE" 2>/dev/null || true
 ```
 
 **Notify on Complete:**
+
 ```bash
 #!/bin/bash
 # notify-complete.sh
@@ -230,6 +258,7 @@ osascript -e 'display notification "Claude task complete" with title "Claude Cod
 
 **Allow List:**
 Commands that can run without prompting.
+
 ```json
 {
   "permissions": {
@@ -245,6 +274,7 @@ Commands that can run without prompting.
 
 **Deny List:**
 Commands that are always blocked.
+
 ```json
 {
   "permissions": {
@@ -260,22 +290,24 @@ Commands that are always blocked.
 
 ### Permission Patterns
 
-| Pattern | Matches |
-|---------|---------|
-| `Bash(npm test:*)` | Any npm test command |
-| `Bash(git:*)` | Any git command |
-| `Bash(docker compose:*)` | Docker compose commands |
+| Pattern                    | Matches                  |
+| -------------------------- | ------------------------ |
+| `Bash(npm test:*)`         | Any npm test command     |
+| `Bash(git:*)`              | Any git command          |
+| `Bash(docker compose:*)`   | Docker compose commands  |
 | `Bash(**/node_modules/**)` | Commands in node_modules |
 
 ### When to Suggest Permissions
 
 **Allow List Additions:**
+
 - Command approved 2+ times
 - Standard development commands
 - Read-only operations
 - Project build/test scripts
 
 **Deny List Additions:**
+
 - Command rejected by user
 - Destructive operations
 - Commands with side effects
@@ -284,18 +316,15 @@ Commands that are always blocked.
 ### Permission Examples
 
 **Development Workflow:**
+
 ```json
 {
-  "allow": [
-    "Bash(npm:*)",
-    "Bash(yarn:*)",
-    "Bash(pnpm:*)",
-    "Bash(bun:*)"
-  ]
+  "allow": ["Bash(npm:*)", "Bash(yarn:*)", "Bash(pnpm:*)", "Bash(bun:*)"]
 }
 ```
 
 **Git Operations:**
+
 ```json
 {
   "allow": [
@@ -304,14 +333,12 @@ Commands that are always blocked.
     "Bash(git log:*)",
     "Bash(git branch:*)"
   ],
-  "deny": [
-    "Bash(git push --force:*)",
-    "Bash(git reset --hard:*)"
-  ]
+  "deny": ["Bash(git push --force:*)", "Bash(git reset --hard:*)"]
 }
 ```
 
 **Docker:**
+
 ```json
 {
   "allow": [
@@ -319,26 +346,25 @@ Commands that are always blocked.
     "Bash(docker compose down:*)",
     "Bash(docker ps:*)"
   ],
-  "deny": [
-    "Bash(docker system prune:*)"
-  ]
+  "deny": ["Bash(docker system prune:*)"]
 }
 ```
 
 ## Choosing the Right Automation
 
-| Need | Solution |
-|------|----------|
-| Multi-step workflow | Skill |
-| External service access | MCP |
-| Pre/post validation | Hook |
-| Speed up approvals | Allow list |
-| Block dangerous ops | Deny list |
-| Documentation | CLAUDE.md |
+| Need                    | Solution   |
+| ----------------------- | ---------- |
+| Multi-step workflow     | Skill      |
+| External service access | MCP        |
+| Pre/post validation     | Hook       |
+| Speed up approvals      | Allow list |
+| Block dangerous ops     | Deny list  |
+| Documentation           | CLAUDE.md  |
 
 ## Combining Automations
 
 Skills can reference other automations:
+
 ```markdown
 ---
 name: deploy
@@ -353,11 +379,14 @@ and allowed Bash commands for speed.
 ```
 
 Hooks can enforce skill behavior:
+
 ```json
 {
-  "PreToolUse": [{
-    "matcher": "Bash(npm publish:*)",
-    "command": "check-version-bump.sh"
-  }]
+  "PreToolUse": [
+    {
+      "matcher": "Bash(npm publish:*)",
+      "command": "check-version-bump.sh"
+    }
+  ]
 }
 ```

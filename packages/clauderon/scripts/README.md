@@ -21,6 +21,7 @@ cd web/frontend && bun run screenshots
 ## What Each Script Does
 
 ### `generate-cli-screenshots.sh`
+
 - **Input**: Real `clauderon` binary (from `target/release/` or `target/debug/`)
 - **Output**: SVG files in `screenshots/cli/`
 - **Format**: SVG (vector graphics, scales well)
@@ -29,6 +30,7 @@ cd web/frontend && bun run screenshots
 Generates screenshots by running actual CLI commands and wrapping output in SVG templates.
 
 ### `screenshot_tests.rs` (TUI)
+
 - **Input**: Real TUI components via ratatui TestBackend
 - **Output**: PNG files in `screenshots/tui/`
 - **Format**: PNG with monospace font rendering
@@ -37,6 +39,7 @@ Generates screenshots by running actual CLI commands and wrapping output in SVG 
 Uses the actual App state and UI rendering code to generate pixel-perfect screenshots.
 
 ### Playwright Tests (Web)
+
 - **Input**: Real React application at http://localhost:5173
 - **Output**: PNG files in `screenshots/web/`
 - **Format**: PNG (browser screenshots)
@@ -48,6 +51,7 @@ Uses the actual App state and UI rendering code to generate pixel-perfect screen
 Launches headless Chromium to screenshot the actual web application.
 
 ### `update-docs-screenshots.sh`
+
 - **Input**: Screenshots from `screenshots/`
 - **Output**: Copied to `docs/src/assets/screenshots/`
 - **Purpose**: Make screenshots available to Astro docs site
@@ -55,6 +59,7 @@ Launches headless Chromium to screenshot the actual web application.
 Simple copy script that maintains directory structure (cli/, tui/, web/).
 
 ### `generate-all-screenshots.sh`
+
 - **Master orchestration script**
 - Runs all three screenshot generation methods in sequence
 - Copies results to docs

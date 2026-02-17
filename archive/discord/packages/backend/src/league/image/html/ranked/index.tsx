@@ -16,57 +16,57 @@ const images: Record<Tier, string> = {
   iron: encodeBase64(
     (
       await Deno.readFile(new URL("assets/Rank=Iron.png", import.meta.url))
-    ).toString()
+    ).toString(),
   ).toString(),
   bronze: encodeBase64(
     (
       await Deno.readFile(new URL("assets/Rank=Bronze.png", import.meta.url))
-    ).toString()
+    ).toString(),
   ).toString(),
   silver: encodeBase64(
     (
       await Deno.readFile(new URL("assets/Rank=Silver.png", import.meta.url))
-    ).toString()
+    ).toString(),
   ).toString(),
   gold: encodeBase64(
     (
       await Deno.readFile(new URL("assets/Rank=Gold.png", import.meta.url))
-    ).toString()
+    ).toString(),
   ).toString(),
 
   platinum: encodeBase64(
     (
       await Deno.readFile(new URL("assets/Rank=Platinum.png", import.meta.url))
-    ).toString()
+    ).toString(),
   ).toString(),
   emerald: encodeBase64(
     (
       await Deno.readFile(new URL("assets/Rank=Emerald.png", import.meta.url))
-    ).toString()
+    ).toString(),
   ).toString(),
   diamond: encodeBase64(
     (
       await Deno.readFile(new URL("assets/Rank=Diamond.png", import.meta.url))
-    ).toString()
+    ).toString(),
   ).toString(),
   master: encodeBase64(
     (
       await Deno.readFile(new URL("assets/Rank=Master.png", import.meta.url))
-    ).toString()
+    ).toString(),
   ).toString(),
   grandmaster: encodeBase64(
     (
       await Deno.readFile(
-        new URL("assets/Rank=Grandmaster.png", import.meta.url)
+        new URL("assets/Rank=Grandmaster.png", import.meta.url),
       )
-    ).toString()
+    ).toString(),
   ).toString(),
   challenger: encodeBase64(
     (
       await Deno.readFile(
-        new URL("assets/Rank=Challenger.png", import.meta.url)
+        new URL("assets/Rank=Challenger.png", import.meta.url),
       )
-    ).toString()
+    ).toString(),
   ).toString(),
 };
 

@@ -28,7 +28,10 @@ export function bound(path: string): BoundString {
   return { path };
 }
 
-export function boundWithDefault(path: string, defaultValue: string): BoundString {
+export function boundWithDefault(
+  path: string,
+  defaultValue: string,
+): BoundString {
   return { path, literalString: defaultValue };
 }
 
@@ -44,7 +47,7 @@ export function boundNumber(path: string): BoundNumber {
 
 export function action(
   name: string,
-  context?: Record<string, string | number | boolean>
+  context?: Record<string, string | number | boolean>,
 ): Action {
   if (!context) {
     return { name };
@@ -59,7 +62,7 @@ export function action(
           : typeof value === "number"
             ? { literalNumber: value }
             : { literalBoolean: value },
-    })
+    }),
   );
 
   return { name, context: actionContext };
@@ -70,14 +73,12 @@ export function action(
 export function text(
   id: string,
   textValue: BoundString,
-  usageHint?: TextUsageHint
+  usageHint?: TextUsageHint,
 ): A2UIComponent {
   return {
     id,
     component: {
-      Text: usageHint
-        ? { text: textValue, usageHint }
-        : { text: textValue },
+      Text: usageHint ? { text: textValue, usageHint } : { text: textValue },
     },
   };
 }
@@ -86,7 +87,7 @@ export function button(
   id: string,
   childId: string,
   buttonAction: Action,
-  primary = false
+  primary = false,
 ): A2UIComponent {
   return {
     id,
@@ -111,7 +112,7 @@ export function column(
   options?: {
     distribution?: ColumnDistribution;
     alignment?: Alignment;
-  }
+  },
 ): A2UIComponent {
   return {
     id,
@@ -130,7 +131,7 @@ export function row(
   options?: {
     distribution?: RowDistribution;
     alignment?: Alignment;
-  }
+  },
 ): A2UIComponent {
   return {
     id,
@@ -147,9 +148,13 @@ export function list(
   id: string,
   children: Children,
   direction: "vertical" | "horizontal" = "vertical",
-  alignment?: Alignment
+  alignment?: Alignment,
 ): A2UIComponent {
-  const listProps: { children: Children; direction: "vertical" | "horizontal"; alignment?: Alignment } = {
+  const listProps: {
+    children: Children;
+    direction: "vertical" | "horizontal";
+    alignment?: Alignment;
+  } = {
     children,
     direction,
   };
@@ -175,7 +180,7 @@ export function icon(id: string, name: string): A2UIComponent {
 
 export function divider(
   id: string,
-  axis: "horizontal" | "vertical" = "horizontal"
+  axis: "horizontal" | "vertical" = "horizontal",
 ): A2UIComponent {
   return {
     id,
@@ -191,7 +196,7 @@ export function image(
   options?: {
     fit?: ImageFit;
     usageHint?: ImageUsageHint;
-  }
+  },
 ): A2UIComponent {
   return {
     id,
@@ -204,21 +209,19 @@ export function image(
 export function progressIndicator(
   id: string,
   progress: BoundNumber,
-  label?: BoundString
+  label?: BoundString,
 ): A2UIComponent {
   return {
     id,
     component: {
-      ProgressIndicator: label
-        ? { progress, label }
-        : { progress },
+      ProgressIndicator: label ? { progress, label } : { progress },
     },
   };
 }
 
 export function tabs(
   id: string,
-  tabItems: Array<{ title: BoundString; child: string }>
+  tabItems: Array<{ title: BoundString; child: string }>,
 ): A2UIComponent {
   return {
     id,
@@ -231,7 +234,7 @@ export function tabs(
 export function modal(
   id: string,
   entryPointChild: string,
-  contentChild: string
+  contentChild: string,
 ): A2UIComponent {
   return {
     id,
@@ -247,7 +250,7 @@ export function video(
   options?: {
     autoplay?: boolean;
     loop?: boolean;
-  }
+  },
 ): A2UIComponent {
   return {
     id,
@@ -260,7 +263,7 @@ export function video(
 export function audioPlayer(
   id: string,
   url: BoundString,
-  description?: BoundString
+  description?: BoundString,
 ): A2UIComponent {
   return {
     id,
@@ -274,7 +277,7 @@ export function checkbox(
   id: string,
   label: BoundString,
   value: BoundString,
-  checkboxAction: Action
+  checkboxAction: Action,
 ): A2UIComponent {
   return {
     id,
@@ -296,7 +299,7 @@ export function textField(
   options?: {
     placeholder?: BoundString;
     label?: BoundString;
-  }
+  },
 ): A2UIComponent {
   return {
     id,
@@ -316,7 +319,7 @@ export function multipleChoice(
   choiceOptions: Array<{ label: BoundString; value: BoundString }>,
   value: BoundString,
   choiceAction: Action,
-  label?: BoundString
+  label?: BoundString,
 ): A2UIComponent {
   return {
     id,
@@ -340,7 +343,7 @@ export function slider(
   options?: {
     step?: BoundNumber;
     label?: BoundString;
-  }
+  },
 ): A2UIComponent {
   return {
     id,
@@ -361,7 +364,7 @@ export function dateTimeInput(
   type: "date" | "time" | "datetime",
   value: BoundString,
   dateTimeAction: Action,
-  label?: BoundString
+  label?: BoundString,
 ): A2UIComponent {
   return {
     id,

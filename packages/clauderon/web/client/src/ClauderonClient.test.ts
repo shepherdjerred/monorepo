@@ -1,12 +1,19 @@
 import { describe, expect, test, mock } from "bun:test";
 import { ClauderonClient } from "./ClauderonClient";
 import { ApiError, NetworkError, SessionNotFoundError } from "./errors";
-import { SessionStatus, AccessMode, BackendType, AgentType, ClaudeWorkingStatus } from "@clauderon/shared";
-import type { Session
-, CreateSessionRequest } from "@clauderon/shared";
+import {
+  SessionStatus,
+  AccessMode,
+  BackendType,
+  AgentType,
+  ClaudeWorkingStatus,
+} from "@clauderon/shared";
+import type { Session, CreateSessionRequest } from "@clauderon/shared";
 
 // Helper to create a mock fetch function
-function createMockFetch(responses: Map<string, { status: number; body?: unknown }>) {
+function createMockFetch(
+  responses: Map<string, { status: number; body?: unknown }>,
+) {
   return mock((url: string, init?: RequestInit) => {
     const method = init?.method ?? "GET";
     const key = `${method} ${url}`;
@@ -70,11 +77,17 @@ describe("ClauderonClient", () => {
 
       const mockFetch = createMockFetch(
         new Map([
-          ["GET http://localhost:3030/api/sessions", { status: 200, body: { sessions: mockSessions } }],
-        ])
+          [
+            "GET http://localhost:3030/api/sessions",
+            { status: 200, body: { sessions: mockSessions } },
+          ],
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
       const sessions = await client.listSessions();
 
       expect(sessions).toEqual(mockSessions);
@@ -82,9 +95,14 @@ describe("ClauderonClient", () => {
     });
 
     test("throws NetworkError on fetch failure", async () => {
-      const mockFetch = mock(() => Promise.reject(new Error("Network failure")));
+      const mockFetch = mock(() =>
+        Promise.reject(new Error("Network failure")),
+      );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
 
       await expect(client.listSessions()).rejects.toThrow(NetworkError);
     });
@@ -96,11 +114,17 @@ describe("ClauderonClient", () => {
 
       const mockFetch = createMockFetch(
         new Map([
-          ["GET http://localhost:3030/api/sessions/session1", { status: 200, body: { session: mockSession } }],
-        ])
+          [
+            "GET http://localhost:3030/api/sessions/session1",
+            { status: 200, body: { session: mockSession } },
+          ],
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
       const session = await client.getSession("session1");
 
       expect(session).toEqual(mockSession);
@@ -109,13 +133,21 @@ describe("ClauderonClient", () => {
     test("throws SessionNotFoundError for 404", async () => {
       const mockFetch = createMockFetch(
         new Map([
-          ["GET http://localhost:3030/api/sessions/nonexistent", { status: 404, body: { error: "Not found" } }],
-        ])
+          [
+            "GET http://localhost:3030/api/sessions/nonexistent",
+            { status: 404, body: { error: "Not found" } },
+          ],
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
 
-      await expect(client.getSession("nonexistent")).rejects.toThrow(SessionNotFoundError);
+      await expect(client.getSession("nonexistent")).rejects.toThrow(
+        SessionNotFoundError,
+      );
     });
 
     test("encodes session id in URL", async () => {
@@ -127,10 +159,13 @@ describe("ClauderonClient", () => {
             "GET http://localhost:3030/api/sessions/session%2Fwith%2Fslashes",
             { status: 200, body: { session: mockSession } },
           ],
-        ])
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
       const session = await client.getSession("session/with/slashes");
 
       expect(session.id).toBe("session/with/slashes");
@@ -140,10 +175,18 @@ describe("ClauderonClient", () => {
   describe("createSession", () => {
     test("creates session and returns id", async () => {
       const mockFetch = createMockFetch(
-        new Map([["POST http://localhost:3030/api/sessions", { status: 200, body: { id: "new-session" } }]])
+        new Map([
+          [
+            "POST http://localhost:3030/api/sessions",
+            { status: 200, body: { id: "new-session" } },
+          ],
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
       const request: CreateSessionRequest = {
         name: "New Session",
         repo_path: "/tmp/repo",
@@ -163,12 +206,18 @@ describe("ClauderonClient", () => {
         new Map([
           [
             "POST http://localhost:3030/api/sessions",
-            { status: 200, body: { id: "new-session", warnings: ["Warning 1"] } },
+            {
+              status: 200,
+              body: { id: "new-session", warnings: ["Warning 1"] },
+            },
           ],
-        ])
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
       const request: CreateSessionRequest = {
         name: "New Session",
         repo_path: "/tmp/repo",
@@ -187,10 +236,18 @@ describe("ClauderonClient", () => {
   describe("deleteSession", () => {
     test("deletes session successfully", async () => {
       const mockFetch = createMockFetch(
-        new Map([["DELETE http://localhost:3030/api/sessions/session1", { status: 204 }]])
+        new Map([
+          [
+            "DELETE http://localhost:3030/api/sessions/session1",
+            { status: 204 },
+          ],
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
       await expect(client.deleteSession("session1")).resolves.toBeUndefined();
     });
   });
@@ -198,10 +255,18 @@ describe("ClauderonClient", () => {
   describe("archiveSession", () => {
     test("archives session successfully", async () => {
       const mockFetch = createMockFetch(
-        new Map([["POST http://localhost:3030/api/sessions/session1/archive", { status: 204 }]])
+        new Map([
+          [
+            "POST http://localhost:3030/api/sessions/session1/archive",
+            { status: 204 },
+          ],
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
       await expect(client.archiveSession("session1")).resolves.toBeUndefined();
     });
   });
@@ -214,10 +279,18 @@ describe("ClauderonClient", () => {
       ];
 
       const mockFetch = createMockFetch(
-        new Map([["GET http://localhost:3030/api/recent-repos", { status: 200, body: { repos: mockRepos } }]])
+        new Map([
+          [
+            "GET http://localhost:3030/api/recent-repos",
+            { status: 200, body: { repos: mockRepos } },
+          ],
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
       const repos = await client.getRecentRepos();
 
       expect(repos).toEqual(mockRepos);
@@ -227,21 +300,39 @@ describe("ClauderonClient", () => {
   describe("updateAccessMode", () => {
     test("updates access mode successfully", async () => {
       const mockFetch = createMockFetch(
-        new Map([["POST http://localhost:3030/api/sessions/session1/access-mode", { status: 204 }]])
+        new Map([
+          [
+            "POST http://localhost:3030/api/sessions/session1/access-mode",
+            { status: 204 },
+          ],
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
-      await expect(client.updateAccessMode("session1", AccessMode.ReadWrite)).resolves.toBeUndefined();
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
+      await expect(
+        client.updateAccessMode("session1", AccessMode.ReadWrite),
+      ).resolves.toBeUndefined();
     });
   });
 
   describe("error handling", () => {
     test("throws ApiError for non-404 errors", async () => {
       const mockFetch = createMockFetch(
-        new Map([["GET http://localhost:3030/api/sessions", { status: 500, body: { error: "Internal error" } }]])
+        new Map([
+          [
+            "GET http://localhost:3030/api/sessions",
+            { status: 500, body: { error: "Internal error" } },
+          ],
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
 
       try {
         await client.listSessions();
@@ -275,10 +366,18 @@ describe("ClauderonClient", () => {
       };
 
       const mockFetch = createMockFetch(
-        new Map([["GET http://localhost:3030/api/health", { status: 200, body: mockHealth }]])
+        new Map([
+          [
+            "GET http://localhost:3030/api/health",
+            { status: 200, body: mockHealth },
+          ],
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
       const result = await client.getHealth();
 
       expect(result.sessions).toHaveLength(1);
@@ -302,10 +401,18 @@ describe("ClauderonClient", () => {
       };
 
       const mockFetch = createMockFetch(
-        new Map([["GET http://localhost:3030/api/sessions/session1/health", { status: 200, body: mockReport }]])
+        new Map([
+          [
+            "GET http://localhost:3030/api/sessions/session1/health",
+            { status: 200, body: mockReport },
+          ],
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
       const result = await client.getSessionHealth("session1");
 
       expect(result.session_id).toBe("session1");
@@ -317,10 +424,18 @@ describe("ClauderonClient", () => {
   describe("startSession", () => {
     test("starts a stopped session successfully", async () => {
       const mockFetch = createMockFetch(
-        new Map([["POST http://localhost:3030/api/sessions/session1/start", { status: 204 }]])
+        new Map([
+          [
+            "POST http://localhost:3030/api/sessions/session1/start",
+            { status: 204 },
+          ],
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
       await expect(client.startSession("session1")).resolves.toBeUndefined();
     });
 
@@ -331,10 +446,13 @@ describe("ClauderonClient", () => {
             "POST http://localhost:3030/api/sessions/session1/start",
             { status: 400, body: { error: "Session is not in stopped state" } },
           ],
-        ])
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
       await expect(client.startSession("session1")).rejects.toThrow(ApiError);
     });
   });
@@ -342,10 +460,18 @@ describe("ClauderonClient", () => {
   describe("wakeSession", () => {
     test("wakes a hibernated session successfully", async () => {
       const mockFetch = createMockFetch(
-        new Map([["POST http://localhost:3030/api/sessions/session1/wake", { status: 204 }]])
+        new Map([
+          [
+            "POST http://localhost:3030/api/sessions/session1/wake",
+            { status: 204 },
+          ],
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
       await expect(client.wakeSession("session1")).resolves.toBeUndefined();
     });
 
@@ -356,10 +482,13 @@ describe("ClauderonClient", () => {
             "POST http://localhost:3030/api/sessions/session1/wake",
             { status: 400, body: { error: "Session is not hibernated" } },
           ],
-        ])
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
       await expect(client.wakeSession("session1")).rejects.toThrow(ApiError);
     });
   });
@@ -374,10 +503,18 @@ describe("ClauderonClient", () => {
       };
 
       const mockFetch = createMockFetch(
-        new Map([["POST http://localhost:3030/api/sessions/session1/recreate", { status: 200, body: mockResult }]])
+        new Map([
+          [
+            "POST http://localhost:3030/api/sessions/session1/recreate",
+            { status: 200, body: mockResult },
+          ],
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
       const result = await client.recreateSession("session1");
 
       expect(result.success).toBe(true);
@@ -389,12 +526,18 @@ describe("ClauderonClient", () => {
         new Map([
           [
             "POST http://localhost:3030/api/sessions/session1/recreate",
-            { status: 409, body: { error: "Cannot recreate: data would be lost" } },
+            {
+              status: 409,
+              body: { error: "Cannot recreate: data would be lost" },
+            },
           ],
-        ])
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
 
       try {
         await client.recreateSession("session1");
@@ -409,10 +552,18 @@ describe("ClauderonClient", () => {
   describe("cleanupSession", () => {
     test("cleans up session successfully", async () => {
       const mockFetch = createMockFetch(
-        new Map([["POST http://localhost:3030/api/sessions/session1/cleanup", { status: 204 }]])
+        new Map([
+          [
+            "POST http://localhost:3030/api/sessions/session1/cleanup",
+            { status: 204 },
+          ],
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
       await expect(client.cleanupSession("session1")).resolves.toBeUndefined();
     });
 
@@ -421,12 +572,18 @@ describe("ClauderonClient", () => {
         new Map([
           [
             "POST http://localhost:3030/api/sessions/session1/cleanup",
-            { status: 400, body: { error: "Session still has active resources" } },
+            {
+              status: 400,
+              body: { error: "Session still has active resources" },
+            },
           ],
-        ])
+        ]),
       );
 
-      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const client = new ClauderonClient({
+        baseUrl: "http://localhost:3030",
+        fetch: mockFetch,
+      });
       await expect(client.cleanupSession("session1")).rejects.toThrow(ApiError);
     });
   });

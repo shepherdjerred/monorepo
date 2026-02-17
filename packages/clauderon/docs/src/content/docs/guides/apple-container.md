@@ -115,22 +115,24 @@ clauderon create --backend apple \
 
 ## Comparison with Docker
 
-| Feature | Apple Container | Docker |
-|---------|----------------|--------|
-| Startup | ~1s | ~2-5s |
-| macOS SDK | Yes | Limited |
-| Xcode | Yes | No |
-| Linux tools | No | Yes |
-| Custom images | No | Yes |
-| Cross-platform | macOS only | Any |
+| Feature        | Apple Container | Docker  |
+| -------------- | --------------- | ------- |
+| Startup        | ~1s             | ~2-5s   |
+| macOS SDK      | Yes             | Limited |
+| Xcode          | Yes             | No      |
+| Linux tools    | No              | Yes     |
+| Custom images  | No              | Yes     |
+| Cross-platform | macOS only      | Any     |
 
 **Choose Apple Container when:**
+
 - Building iOS/macOS apps
 - Need native performance
 - Using Xcode tools
 - Only working on macOS
 
 **Choose Docker when:**
+
 - Need Linux environment
 - Custom runtime requirements
 - Cross-platform development
@@ -168,6 +170,7 @@ Ensure SIP settings don't block containerization.
 ### Performance Issues (Intel)
 
 On Intel Macs, consider:
+
 - Using Zellij instead for lightweight tasks
 - Using Docker for isolation with Rosetta
 - Upgrading to Apple Silicon

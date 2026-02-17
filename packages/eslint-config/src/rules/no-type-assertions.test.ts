@@ -22,10 +22,25 @@ ruleTester.run("no-type-assertions", noTypeAssertions, {
     { code: `const colors = ["red", "blue"] as const;` },
   ],
   invalid: [
-    { code: `const x = value as string;`, errors: [{ messageId: "noAsExpression" }] },
-    { code: `const x = data as MyInterface;`, errors: [{ messageId: "noAsExpression" }] },
-    { code: `const x = <string>value;`, errors: [{ messageId: "noTypeAssertion" }] },
-    { code: `const x = value as any;`, errors: [{ messageId: "noAsExpression" }] },
-    { code: `const x = (value as unknown) as string;`, errors: [{ messageId: "noAsExpression" }] },
+    {
+      code: `const x = value as string;`,
+      errors: [{ messageId: "noAsExpression" }],
+    },
+    {
+      code: `const x = data as MyInterface;`,
+      errors: [{ messageId: "noAsExpression" }],
+    },
+    {
+      code: `const x = <string>value;`,
+      errors: [{ messageId: "noTypeAssertion" }],
+    },
+    {
+      code: `const x = value as any;`,
+      errors: [{ messageId: "noAsExpression" }],
+    },
+    {
+      code: `const x = (value as unknown) as string;`,
+      errors: [{ messageId: "noAsExpression" }],
+    },
   ],
 });

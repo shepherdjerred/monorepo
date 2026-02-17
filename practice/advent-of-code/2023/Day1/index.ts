@@ -18,7 +18,7 @@ export async function solvePartOne(file: string): Promise<number> {
       assert(last !== undefined, `${nums} has no last`);
       return first * 10 + last;
     }),
-    R.sumBy(R.identity)
+    R.sumBy(R.identity),
   );
 }
 
@@ -82,6 +82,6 @@ export async function solvePartTwo(file: string): Promise<number> {
       assert(last !== undefined, `${nums} has no last`);
       return first * 10 + last;
     }),
-    R.sumBy(R.identity)
+    R.sumBy(R.identity),
   );
 }

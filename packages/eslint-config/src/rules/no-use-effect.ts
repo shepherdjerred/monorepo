@@ -2,7 +2,8 @@ import { AST_NODE_TYPES, ESLintUtils } from "@typescript-eslint/utils";
 import type { TSESTree } from "@typescript-eslint/utils";
 
 const createRule = ESLintUtils.RuleCreator(
-  (name) => `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
+  (name) =>
+    `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
 );
 
 type MessageIds =
@@ -43,7 +44,10 @@ export const noUseEffect = createRule<[], MessageIds>({
     return {
       CallExpression(node: TSESTree.CallExpression) {
         // Check if this is a useEffect call
-        if (node.callee.type === AST_NODE_TYPES.Identifier && node.callee.name === "useEffect") {
+        if (
+          node.callee.type === AST_NODE_TYPES.Identifier &&
+          node.callee.name === "useEffect"
+        ) {
           const sourceCode = context.sourceCode;
           const effectArg = node.arguments[0];
           const depsArg = node.arguments[1];
@@ -58,12 +62,16 @@ export const noUseEffect = createRule<[], MessageIds>({
           // Heuristic: check if there's no dependency array
           if (!depsArg) {
             suggestion = "useEffectWithoutDeps";
-          } else if (depsArg.type === AST_NODE_TYPES.ArrayExpression && depsArg.elements.length === 0) {
+          } else if (
+            depsArg.type === AST_NODE_TYPES.ArrayExpression &&
+            depsArg.elements.length === 0
+          ) {
             // Empty dependency array - likely app initialization or subscription
             suggestion = "useEffectWithoutDeps";
           } else {
             // With dependencies - check if it looks like data transformation
-            const effectCode = effectArg && sourceCode.getText(effectArg).toLowerCase();
+            const effectCode =
+              effectArg && sourceCode.getText(effectArg).toLowerCase();
 
             if (
               effectCode &&
@@ -83,7 +91,11 @@ export const noUseEffect = createRule<[], MessageIds>({
                 effectCode.includes("subscribe"))
             ) {
               suggestion = "useEffectEventHandler";
-            } else if (effectCode && (effectCode.includes("setcomment") || effectCode.includes("reset"))) {
+            } else if (
+              effectCode &&
+              (effectCode.includes("setcomment") ||
+                effectCode.includes("reset"))
+            ) {
               suggestion = "useEffectStateSync";
             }
           }

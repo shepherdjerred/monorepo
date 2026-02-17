@@ -21,7 +21,8 @@ const versions = {
 
   // Docker images with digests
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
-  "linuxserver/sonarr": "4.0.16@sha256:8b9f2138ec50fc9e521960868f79d2ad0d529bc610aef19031ea8ff80b54c5e0",
+  "linuxserver/sonarr":
+    "4.0.16@sha256:8b9f2138ec50fc9e521960868f79d2ad0d529bc610aef19031ea8ff80b54c5e0",
 
   // Custom images (not managed by Renovate)
   // not managed by renovate

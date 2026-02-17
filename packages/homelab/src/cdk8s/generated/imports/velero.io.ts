@@ -82,7 +82,9 @@ export interface BackupProps {
  * Converts an object of type 'BackupProps' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_BackupProps(obj: BackupProps | undefined): Record<string, any> | undefined {
+export function toJson_BackupProps(
+  obj: BackupProps | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -91,7 +93,10 @@ export function toJson_BackupProps(obj: BackupProps | undefined): Record<string,
     spec: toJson_BackupSpec(obj.spec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -329,7 +334,9 @@ export interface BackupSpec {
  * Converts an object of type 'BackupSpec' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_BackupSpec(obj: BackupSpec | undefined): Record<string, any> | undefined {
+export function toJson_BackupSpec(
+  obj: BackupSpec | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -338,24 +345,37 @@ export function toJson_BackupSpec(obj: BackupSpec | undefined): Record<string, a
     datamover: obj.datamover,
     defaultVolumesToFsBackup: obj.defaultVolumesToFsBackup,
     defaultVolumesToRestic: obj.defaultVolumesToRestic,
-    excludedClusterScopedResources: obj.excludedClusterScopedResources?.map((y) => y),
-    excludedNamespaceScopedResources: obj.excludedNamespaceScopedResources?.map((y) => y),
+    excludedClusterScopedResources: obj.excludedClusterScopedResources?.map(
+      (y) => y,
+    ),
+    excludedNamespaceScopedResources: obj.excludedNamespaceScopedResources?.map(
+      (y) => y,
+    ),
     excludedNamespaces: obj.excludedNamespaces?.map((y) => y),
     excludedResources: obj.excludedResources?.map((y) => y),
     hooks: toJson_BackupSpecHooks(obj.hooks),
     includeClusterResources: obj.includeClusterResources,
-    includedClusterScopedResources: obj.includedClusterScopedResources?.map((y) => y),
-    includedNamespaceScopedResources: obj.includedNamespaceScopedResources?.map((y) => y),
+    includedClusterScopedResources: obj.includedClusterScopedResources?.map(
+      (y) => y,
+    ),
+    includedNamespaceScopedResources: obj.includedNamespaceScopedResources?.map(
+      (y) => y,
+    ),
     includedNamespaces: obj.includedNamespaces?.map((y) => y),
     includedResources: obj.includedResources?.map((y) => y),
     itemOperationTimeout: obj.itemOperationTimeout,
     labelSelector: toJson_BackupSpecLabelSelector(obj.labelSelector),
     metadata: toJson_BackupSpecMetadata(obj.metadata),
-    orLabelSelectors: obj.orLabelSelectors?.map((y) => toJson_BackupSpecOrLabelSelectors(y)),
+    orLabelSelectors: obj.orLabelSelectors?.map((y) =>
+      toJson_BackupSpecOrLabelSelectors(y),
+    ),
     orderedResources:
       obj.orderedResources === undefined
         ? undefined
-        : Object.entries(obj.orderedResources).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.orderedResources).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
     resourcePolicy: toJson_BackupSpecResourcePolicy(obj.resourcePolicy),
     snapshotMoveData: obj.snapshotMoveData,
     snapshotVolumes: obj.snapshotVolumes,
@@ -366,7 +386,10 @@ export function toJson_BackupSpec(obj: BackupSpec | undefined): Record<string, a
     volumeSnapshotLocations: obj.volumeSnapshotLocations?.map((y) => y),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -388,7 +411,9 @@ export interface BackupSpecHooks {
  * Converts an object of type 'BackupSpecHooks' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_BackupSpecHooks(obj: BackupSpecHooks | undefined): Record<string, any> | undefined {
+export function toJson_BackupSpecHooks(
+  obj: BackupSpecHooks | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -396,7 +421,10 @@ export function toJson_BackupSpecHooks(obj: BackupSpecHooks | undefined): Record
     resources: obj.resources?.map((y) => toJson_BackupSpecHooksResources(y)),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -436,14 +464,22 @@ export function toJson_BackupSpecLabelSelector(
     return undefined;
   }
   const result = {
-    matchExpressions: obj.matchExpressions?.map((y) => toJson_BackupSpecLabelSelectorMatchExpressions(y)),
+    matchExpressions: obj.matchExpressions?.map((y) =>
+      toJson_BackupSpecLabelSelectorMatchExpressions(y),
+    ),
     matchLabels:
       obj.matchLabels === undefined
         ? undefined
-        : Object.entries(obj.matchLabels).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.matchLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -461,7 +497,9 @@ export interface BackupSpecMetadata {
  * Converts an object of type 'BackupSpecMetadata' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_BackupSpecMetadata(obj: BackupSpecMetadata | undefined): Record<string, any> | undefined {
+export function toJson_BackupSpecMetadata(
+  obj: BackupSpecMetadata | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -469,10 +507,16 @@ export function toJson_BackupSpecMetadata(obj: BackupSpecMetadata | undefined): 
     labels:
       obj.labels === undefined
         ? undefined
-        : Object.entries(obj.labels).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.labels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -512,14 +556,22 @@ export function toJson_BackupSpecOrLabelSelectors(
     return undefined;
   }
   const result = {
-    matchExpressions: obj.matchExpressions?.map((y) => toJson_BackupSpecOrLabelSelectorsMatchExpressions(y)),
+    matchExpressions: obj.matchExpressions?.map((y) =>
+      toJson_BackupSpecOrLabelSelectorsMatchExpressions(y),
+    ),
     matchLabels:
       obj.matchLabels === undefined
         ? undefined
-        : Object.entries(obj.matchLabels).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.matchLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -569,7 +621,10 @@ export function toJson_BackupSpecResourcePolicy(
     name: obj.name,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -601,7 +656,10 @@ export function toJson_BackupSpecUploaderConfig(
     parallelFilesUpload: obj.parallelFilesUpload,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -688,13 +746,18 @@ export function toJson_BackupSpecHooksResources(
     excludedResources: obj.excludedResources?.map((y) => y),
     includedNamespaces: obj.includedNamespaces?.map((y) => y),
     includedResources: obj.includedResources?.map((y) => y),
-    labelSelector: toJson_BackupSpecHooksResourcesLabelSelector(obj.labelSelector),
+    labelSelector: toJson_BackupSpecHooksResourcesLabelSelector(
+      obj.labelSelector,
+    ),
     name: obj.name,
     post: obj.post?.map((y) => toJson_BackupSpecHooksResourcesPost(y)),
     pre: obj.pre?.map((y) => toJson_BackupSpecHooksResourcesPre(y)),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -747,7 +810,10 @@ export function toJson_BackupSpecLabelSelectorMatchExpressions(
     values: obj.values?.map((y) => y),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -800,7 +866,10 @@ export function toJson_BackupSpecOrLabelSelectorsMatchExpressions(
     values: obj.values?.map((y) => y),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -838,14 +907,22 @@ export function toJson_BackupSpecHooksResourcesLabelSelector(
     return undefined;
   }
   const result = {
-    matchExpressions: obj.matchExpressions?.map((y) => toJson_BackupSpecHooksResourcesLabelSelectorMatchExpressions(y)),
+    matchExpressions: obj.matchExpressions?.map((y) =>
+      toJson_BackupSpecHooksResourcesLabelSelectorMatchExpressions(y),
+    ),
     matchLabels:
       obj.matchLabels === undefined
         ? undefined
-        : Object.entries(obj.matchLabels).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.matchLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -877,7 +954,10 @@ export function toJson_BackupSpecHooksResourcesPost(
     exec: toJson_BackupSpecHooksResourcesPostExec(obj.exec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -909,7 +989,10 @@ export function toJson_BackupSpecHooksResourcesPre(
     exec: toJson_BackupSpecHooksResourcesPreExec(obj.exec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -962,7 +1045,10 @@ export function toJson_BackupSpecHooksResourcesLabelSelectorMatchExpressions(
     values: obj.values?.map((y) => y),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1020,7 +1106,10 @@ export function toJson_BackupSpecHooksResourcesPostExec(
     timeout: obj.timeout,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1078,7 +1167,10 @@ export function toJson_BackupSpecHooksResourcesPreExec(
     timeout: obj.timeout,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1140,7 +1232,11 @@ export class BackupRepository extends ApiObject {
    * @param id a scope-local name for the object
    * @param props initialization props
    */
-  public constructor(scope: Construct, id: string, props: BackupRepositoryProps = {}) {
+  public constructor(
+    scope: Construct,
+    id: string,
+    props: BackupRepositoryProps = {},
+  ) {
     super(scope, id, {
       ...BackupRepository.GVK,
       ...props,
@@ -1181,7 +1277,9 @@ export interface BackupRepositoryProps {
  * Converts an object of type 'BackupRepositoryProps' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_BackupRepositoryProps(obj: BackupRepositoryProps | undefined): Record<string, any> | undefined {
+export function toJson_BackupRepositoryProps(
+  obj: BackupRepositoryProps | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -1190,7 +1288,10 @@ export function toJson_BackupRepositoryProps(obj: BackupRepositoryProps | undefi
     spec: toJson_BackupRepositorySpec(obj.spec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1250,7 +1351,9 @@ export interface BackupRepositorySpec {
  * Converts an object of type 'BackupRepositorySpec' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_BackupRepositorySpec(obj: BackupRepositorySpec | undefined): Record<string, any> | undefined {
+export function toJson_BackupRepositorySpec(
+  obj: BackupRepositorySpec | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -1260,13 +1363,19 @@ export function toJson_BackupRepositorySpec(obj: BackupRepositorySpec | undefine
     repositoryConfig:
       obj.repositoryConfig === undefined
         ? undefined
-        : Object.entries(obj.repositoryConfig).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.repositoryConfig).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
     repositoryType: obj.repositoryType,
     resticIdentifier: obj.resticIdentifier,
     volumeNamespace: obj.volumeNamespace,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1316,7 +1425,11 @@ export class BackupStorageLocation extends ApiObject {
    * @param id a scope-local name for the object
    * @param props initialization props
    */
-  public constructor(scope: Construct, id: string, props: BackupStorageLocationProps = {}) {
+  public constructor(
+    scope: Construct,
+    id: string,
+    props: BackupStorageLocationProps = {},
+  ) {
     super(scope, id, {
       ...BackupStorageLocation.GVK,
       ...props,
@@ -1370,7 +1483,10 @@ export function toJson_BackupStorageLocationProps(
     spec: toJson_BackupStorageLocationSpec(obj.spec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1453,15 +1569,23 @@ export function toJson_BackupStorageLocationSpec(
     config:
       obj.config === undefined
         ? undefined
-        : Object.entries(obj.config).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.config).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
     credential: toJson_BackupStorageLocationSpecCredential(obj.credential),
     default: obj.default,
-    objectStorage: toJson_BackupStorageLocationSpecObjectStorage(obj.objectStorage),
+    objectStorage: toJson_BackupStorageLocationSpecObjectStorage(
+      obj.objectStorage,
+    ),
     provider: obj.provider,
     validationFrequency: obj.validationFrequency,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1525,7 +1649,10 @@ export function toJson_BackupStorageLocationSpecCredential(
     optional: obj.optional,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1573,7 +1700,10 @@ export function toJson_BackupStorageLocationSpecObjectStorage(
     prefix: obj.prefix,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1611,7 +1741,11 @@ export class DataDownload extends ApiObject {
    * @param id a scope-local name for the object
    * @param props initialization props
    */
-  public constructor(scope: Construct, id: string, props: DataDownloadProps = {}) {
+  public constructor(
+    scope: Construct,
+    id: string,
+    props: DataDownloadProps = {},
+  ) {
     super(scope, id, {
       ...DataDownload.GVK,
       ...props,
@@ -1654,7 +1788,9 @@ export interface DataDownloadProps {
  * Converts an object of type 'DataDownloadProps' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_DataDownloadProps(obj: DataDownloadProps | undefined): Record<string, any> | undefined {
+export function toJson_DataDownloadProps(
+  obj: DataDownloadProps | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -1663,7 +1799,10 @@ export function toJson_DataDownloadProps(obj: DataDownloadProps | undefined): Re
     spec: toJson_DataDownloadSpec(obj.spec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1746,7 +1885,9 @@ export interface DataDownloadSpec {
  * Converts an object of type 'DataDownloadSpec' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_DataDownloadSpec(obj: DataDownloadSpec | undefined): Record<string, any> | undefined {
+export function toJson_DataDownloadSpec(
+  obj: DataDownloadSpec | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -1756,7 +1897,10 @@ export function toJson_DataDownloadSpec(obj: DataDownloadSpec | undefined): Reco
     dataMoverConfig:
       obj.dataMoverConfig === undefined
         ? undefined
-        : Object.entries(obj.dataMoverConfig).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.dataMoverConfig).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
     datamover: obj.datamover,
     nodeOS: obj.nodeOs,
     operationTimeout: obj.operationTimeout,
@@ -1765,7 +1909,10 @@ export function toJson_DataDownloadSpec(obj: DataDownloadSpec | undefined): Reco
     targetVolume: toJson_DataDownloadSpecTargetVolume(obj.targetVolume),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1827,7 +1974,10 @@ export function toJson_DataDownloadSpecTargetVolume(
     pvc: obj.pvc,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -1865,7 +2015,11 @@ export class DataUpload extends ApiObject {
    * @param id a scope-local name for the object
    * @param props initialization props
    */
-  public constructor(scope: Construct, id: string, props: DataUploadProps = {}) {
+  public constructor(
+    scope: Construct,
+    id: string,
+    props: DataUploadProps = {},
+  ) {
     super(scope, id, {
       ...DataUpload.GVK,
       ...props,
@@ -1908,7 +2062,9 @@ export interface DataUploadProps {
  * Converts an object of type 'DataUploadProps' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_DataUploadProps(obj: DataUploadProps | undefined): Record<string, any> | undefined {
+export function toJson_DataUploadProps(
+  obj: DataUploadProps | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -1917,7 +2073,10 @@ export function toJson_DataUploadProps(obj: DataUploadProps | undefined): Record
     spec: toJson_DataUploadSpec(obj.spec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -2000,7 +2159,9 @@ export interface DataUploadSpec {
  * Converts an object of type 'DataUploadSpec' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_DataUploadSpec(obj: DataUploadSpec | undefined): Record<string, any> | undefined {
+export function toJson_DataUploadSpec(
+  obj: DataUploadSpec | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -2011,7 +2172,10 @@ export function toJson_DataUploadSpec(obj: DataUploadSpec | undefined): Record<s
     dataMoverConfig:
       obj.dataMoverConfig === undefined
         ? undefined
-        : Object.entries(obj.dataMoverConfig).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.dataMoverConfig).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
     datamover: obj.datamover,
     operationTimeout: obj.operationTimeout,
     snapshotType: obj.snapshotType,
@@ -2019,7 +2183,10 @@ export function toJson_DataUploadSpec(obj: DataUploadSpec | undefined): Record<s
     sourcePVC: obj.sourcePvc,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -2075,7 +2242,10 @@ export function toJson_DataUploadSpecCsiSnapshot(
     volumeSnapshot: obj.volumeSnapshot,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -2113,7 +2283,11 @@ export class DeleteBackupRequest extends ApiObject {
    * @param id a scope-local name for the object
    * @param props initialization props
    */
-  public constructor(scope: Construct, id: string, props: DeleteBackupRequestProps = {}) {
+  public constructor(
+    scope: Construct,
+    id: string,
+    props: DeleteBackupRequestProps = {},
+  ) {
     super(scope, id, {
       ...DeleteBackupRequest.GVK,
       ...props,
@@ -2167,7 +2341,10 @@ export function toJson_DeleteBackupRequestProps(
     spec: toJson_DeleteBackupRequestSpec(obj.spec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -2197,7 +2374,10 @@ export function toJson_DeleteBackupRequestSpec(
     backupName: obj.backupName,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -2236,7 +2416,11 @@ export class DownloadRequest extends ApiObject {
    * @param id a scope-local name for the object
    * @param props initialization props
    */
-  public constructor(scope: Construct, id: string, props: DownloadRequestProps = {}) {
+  public constructor(
+    scope: Construct,
+    id: string,
+    props: DownloadRequestProps = {},
+  ) {
     super(scope, id, {
       ...DownloadRequest.GVK,
       ...props,
@@ -2280,7 +2464,9 @@ export interface DownloadRequestProps {
  * Converts an object of type 'DownloadRequestProps' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_DownloadRequestProps(obj: DownloadRequestProps | undefined): Record<string, any> | undefined {
+export function toJson_DownloadRequestProps(
+  obj: DownloadRequestProps | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -2289,7 +2475,10 @@ export function toJson_DownloadRequestProps(obj: DownloadRequestProps | undefine
     spec: toJson_DownloadRequestSpec(obj.spec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -2311,7 +2500,9 @@ export interface DownloadRequestSpec {
  * Converts an object of type 'DownloadRequestSpec' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_DownloadRequestSpec(obj: DownloadRequestSpec | undefined): Record<string, any> | undefined {
+export function toJson_DownloadRequestSpec(
+  obj: DownloadRequestSpec | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -2319,7 +2510,10 @@ export function toJson_DownloadRequestSpec(obj: DownloadRequestSpec | undefined)
     target: toJson_DownloadRequestSpecTarget(obj.target),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -2359,7 +2553,10 @@ export function toJson_DownloadRequestSpecTarget(
     name: obj.name,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -2433,7 +2630,11 @@ export class PodVolumeBackup extends ApiObject {
    * @param id a scope-local name for the object
    * @param props initialization props
    */
-  public constructor(scope: Construct, id: string, props: PodVolumeBackupProps = {}) {
+  public constructor(
+    scope: Construct,
+    id: string,
+    props: PodVolumeBackupProps = {},
+  ) {
     super(scope, id, {
       ...PodVolumeBackup.GVK,
       ...props,
@@ -2474,7 +2675,9 @@ export interface PodVolumeBackupProps {
  * Converts an object of type 'PodVolumeBackupProps' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_PodVolumeBackupProps(obj: PodVolumeBackupProps | undefined): Record<string, any> | undefined {
+export function toJson_PodVolumeBackupProps(
+  obj: PodVolumeBackupProps | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -2483,7 +2686,10 @@ export function toJson_PodVolumeBackupProps(obj: PodVolumeBackupProps | undefine
     spec: toJson_PodVolumeBackupSpec(obj.spec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -2566,7 +2772,9 @@ export interface PodVolumeBackupSpec {
  * Converts an object of type 'PodVolumeBackupSpec' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_PodVolumeBackupSpec(obj: PodVolumeBackupSpec | undefined): Record<string, any> | undefined {
+export function toJson_PodVolumeBackupSpec(
+  obj: PodVolumeBackupSpec | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -2579,16 +2787,25 @@ export function toJson_PodVolumeBackupSpec(obj: PodVolumeBackupSpec | undefined)
     tags:
       obj.tags === undefined
         ? undefined
-        : Object.entries(obj.tags).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.tags).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
     uploaderSettings:
       obj.uploaderSettings === undefined
         ? undefined
-        : Object.entries(obj.uploaderSettings).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.uploaderSettings).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
     uploaderType: obj.uploaderType,
     volume: obj.volume,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -2679,7 +2896,10 @@ export function toJson_PodVolumeBackupSpecPod(
     uid: obj.uid,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -2729,7 +2949,11 @@ export class PodVolumeRestore extends ApiObject {
    * @param id a scope-local name for the object
    * @param props initialization props
    */
-  public constructor(scope: Construct, id: string, props: PodVolumeRestoreProps = {}) {
+  public constructor(
+    scope: Construct,
+    id: string,
+    props: PodVolumeRestoreProps = {},
+  ) {
     super(scope, id, {
       ...PodVolumeRestore.GVK,
       ...props,
@@ -2770,7 +2994,9 @@ export interface PodVolumeRestoreProps {
  * Converts an object of type 'PodVolumeRestoreProps' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_PodVolumeRestoreProps(obj: PodVolumeRestoreProps | undefined): Record<string, any> | undefined {
+export function toJson_PodVolumeRestoreProps(
+  obj: PodVolumeRestoreProps | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -2779,7 +3005,10 @@ export function toJson_PodVolumeRestoreProps(obj: PodVolumeRestoreProps | undefi
     spec: toJson_PodVolumeRestoreSpec(obj.spec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -2860,7 +3089,9 @@ export interface PodVolumeRestoreSpec {
  * Converts an object of type 'PodVolumeRestoreSpec' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_PodVolumeRestoreSpec(obj: PodVolumeRestoreSpec | undefined): Record<string, any> | undefined {
+export function toJson_PodVolumeRestoreSpec(
+  obj: PodVolumeRestoreSpec | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -2874,12 +3105,18 @@ export function toJson_PodVolumeRestoreSpec(obj: PodVolumeRestoreSpec | undefine
     uploaderSettings:
       obj.uploaderSettings === undefined
         ? undefined
-        : Object.entries(obj.uploaderSettings).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.uploaderSettings).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
     uploaderType: obj.uploaderType,
     volume: obj.volume,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -2970,7 +3207,10 @@ export function toJson_PodVolumeRestoreSpecPod(
     uid: obj.uid,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -3065,7 +3305,9 @@ export interface RestoreProps {
  * Converts an object of type 'RestoreProps' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_RestoreProps(obj: RestoreProps | undefined): Record<string, any> | undefined {
+export function toJson_RestoreProps(
+  obj: RestoreProps | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -3074,7 +3316,10 @@ export function toJson_RestoreProps(obj: RestoreProps | undefined): Record<strin
     spec: toJson_RestoreSpec(obj.spec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -3236,7 +3481,9 @@ export interface RestoreSpec {
  * Converts an object of type 'RestoreSpec' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_RestoreSpec(obj: RestoreSpec | undefined): Record<string, any> | undefined {
+export function toJson_RestoreSpec(
+  obj: RestoreSpec | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -3254,8 +3501,13 @@ export function toJson_RestoreSpec(obj: RestoreSpec | undefined): Record<string,
     namespaceMapping:
       obj.namespaceMapping === undefined
         ? undefined
-        : Object.entries(obj.namespaceMapping).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
-    orLabelSelectors: obj.orLabelSelectors?.map((y) => toJson_RestoreSpecOrLabelSelectors(y)),
+        : Object.entries(obj.namespaceMapping).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    orLabelSelectors: obj.orLabelSelectors?.map((y) =>
+      toJson_RestoreSpecOrLabelSelectors(y),
+    ),
     preserveNodePorts: obj.preserveNodePorts,
     resourceModifier: toJson_RestoreSpecResourceModifier(obj.resourceModifier),
     restorePVs: obj.restorePVs,
@@ -3264,7 +3516,10 @@ export function toJson_RestoreSpec(obj: RestoreSpec | undefined): Record<string,
     uploaderConfig: toJson_RestoreSpecUploaderConfig(obj.uploaderConfig),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -3284,7 +3539,9 @@ export interface RestoreSpecHooks {
  * Converts an object of type 'RestoreSpecHooks' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_RestoreSpecHooks(obj: RestoreSpecHooks | undefined): Record<string, any> | undefined {
+export function toJson_RestoreSpecHooks(
+  obj: RestoreSpecHooks | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -3292,7 +3549,10 @@ export function toJson_RestoreSpecHooks(obj: RestoreSpecHooks | undefined): Reco
     resources: obj.resources?.map((y) => toJson_RestoreSpecHooksResources(y)),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -3332,14 +3592,22 @@ export function toJson_RestoreSpecLabelSelector(
     return undefined;
   }
   const result = {
-    matchExpressions: obj.matchExpressions?.map((y) => toJson_RestoreSpecLabelSelectorMatchExpressions(y)),
+    matchExpressions: obj.matchExpressions?.map((y) =>
+      toJson_RestoreSpecLabelSelectorMatchExpressions(y),
+    ),
     matchLabels:
       obj.matchLabels === undefined
         ? undefined
-        : Object.entries(obj.matchLabels).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.matchLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -3379,14 +3647,22 @@ export function toJson_RestoreSpecOrLabelSelectors(
     return undefined;
   }
   const result = {
-    matchExpressions: obj.matchExpressions?.map((y) => toJson_RestoreSpecOrLabelSelectorsMatchExpressions(y)),
+    matchExpressions: obj.matchExpressions?.map((y) =>
+      toJson_RestoreSpecOrLabelSelectorsMatchExpressions(y),
+    ),
     matchLabels:
       obj.matchLabels === undefined
         ? undefined
-        : Object.entries(obj.matchLabels).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.matchLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -3436,7 +3712,10 @@ export function toJson_RestoreSpecResourceModifier(
     name: obj.name,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -3478,7 +3757,10 @@ export function toJson_RestoreSpecRestoreStatus(
     includedResources: obj.includedResources?.map((y) => y),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -3518,7 +3800,10 @@ export function toJson_RestoreSpecUploaderConfig(
     writeSparseFiles: obj.writeSparseFiles,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -3596,12 +3881,19 @@ export function toJson_RestoreSpecHooksResources(
     excludedResources: obj.excludedResources?.map((y) => y),
     includedNamespaces: obj.includedNamespaces?.map((y) => y),
     includedResources: obj.includedResources?.map((y) => y),
-    labelSelector: toJson_RestoreSpecHooksResourcesLabelSelector(obj.labelSelector),
+    labelSelector: toJson_RestoreSpecHooksResourcesLabelSelector(
+      obj.labelSelector,
+    ),
     name: obj.name,
-    postHooks: obj.postHooks?.map((y) => toJson_RestoreSpecHooksResourcesPostHooks(y)),
+    postHooks: obj.postHooks?.map((y) =>
+      toJson_RestoreSpecHooksResourcesPostHooks(y),
+    ),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -3654,7 +3946,10 @@ export function toJson_RestoreSpecLabelSelectorMatchExpressions(
     values: obj.values?.map((y) => y),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -3707,7 +4002,10 @@ export function toJson_RestoreSpecOrLabelSelectorsMatchExpressions(
     values: obj.values?.map((y) => y),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -3751,10 +4049,16 @@ export function toJson_RestoreSpecHooksResourcesLabelSelector(
     matchLabels:
       obj.matchLabels === undefined
         ? undefined
-        : Object.entries(obj.matchLabels).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.matchLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -3794,7 +4098,10 @@ export function toJson_RestoreSpecHooksResourcesPostHooks(
     init: toJson_RestoreSpecHooksResourcesPostHooksInit(obj.init),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -3847,7 +4154,10 @@ export function toJson_RestoreSpecHooksResourcesLabelSelectorMatchExpressions(
     values: obj.values?.map((y) => y),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -3922,7 +4232,10 @@ export function toJson_RestoreSpecHooksResourcesPostHooksExec(
     waitTimeout: obj.waitTimeout,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -3962,7 +4275,10 @@ export function toJson_RestoreSpecHooksResourcesPostHooksInit(
     timeout: obj.timeout,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -4057,7 +4373,9 @@ export interface ScheduleProps {
  * Converts an object of type 'ScheduleProps' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_ScheduleProps(obj: ScheduleProps | undefined): Record<string, any> | undefined {
+export function toJson_ScheduleProps(
+  obj: ScheduleProps | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -4066,7 +4384,10 @@ export function toJson_ScheduleProps(obj: ScheduleProps | undefined): Record<str
     spec: toJson_ScheduleSpec(obj.spec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -4122,7 +4443,9 @@ export interface ScheduleSpec {
  * Converts an object of type 'ScheduleSpec' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_ScheduleSpec(obj: ScheduleSpec | undefined): Record<string, any> | undefined {
+export function toJson_ScheduleSpec(
+  obj: ScheduleSpec | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -4134,7 +4457,10 @@ export function toJson_ScheduleSpec(obj: ScheduleSpec | undefined): Record<strin
     useOwnerReferencesInBackup: obj.useOwnerReferencesInBackup,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -4373,7 +4699,9 @@ export interface ScheduleSpecTemplate {
  * Converts an object of type 'ScheduleSpecTemplate' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_ScheduleSpecTemplate(obj: ScheduleSpecTemplate | undefined): Record<string, any> | undefined {
+export function toJson_ScheduleSpecTemplate(
+  obj: ScheduleSpecTemplate | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -4382,35 +4710,55 @@ export function toJson_ScheduleSpecTemplate(obj: ScheduleSpecTemplate | undefine
     datamover: obj.datamover,
     defaultVolumesToFsBackup: obj.defaultVolumesToFsBackup,
     defaultVolumesToRestic: obj.defaultVolumesToRestic,
-    excludedClusterScopedResources: obj.excludedClusterScopedResources?.map((y) => y),
-    excludedNamespaceScopedResources: obj.excludedNamespaceScopedResources?.map((y) => y),
+    excludedClusterScopedResources: obj.excludedClusterScopedResources?.map(
+      (y) => y,
+    ),
+    excludedNamespaceScopedResources: obj.excludedNamespaceScopedResources?.map(
+      (y) => y,
+    ),
     excludedNamespaces: obj.excludedNamespaces?.map((y) => y),
     excludedResources: obj.excludedResources?.map((y) => y),
     hooks: toJson_ScheduleSpecTemplateHooks(obj.hooks),
     includeClusterResources: obj.includeClusterResources,
-    includedClusterScopedResources: obj.includedClusterScopedResources?.map((y) => y),
-    includedNamespaceScopedResources: obj.includedNamespaceScopedResources?.map((y) => y),
+    includedClusterScopedResources: obj.includedClusterScopedResources?.map(
+      (y) => y,
+    ),
+    includedNamespaceScopedResources: obj.includedNamespaceScopedResources?.map(
+      (y) => y,
+    ),
     includedNamespaces: obj.includedNamespaces?.map((y) => y),
     includedResources: obj.includedResources?.map((y) => y),
     itemOperationTimeout: obj.itemOperationTimeout,
     labelSelector: toJson_ScheduleSpecTemplateLabelSelector(obj.labelSelector),
     metadata: toJson_ScheduleSpecTemplateMetadata(obj.metadata),
-    orLabelSelectors: obj.orLabelSelectors?.map((y) => toJson_ScheduleSpecTemplateOrLabelSelectors(y)),
+    orLabelSelectors: obj.orLabelSelectors?.map((y) =>
+      toJson_ScheduleSpecTemplateOrLabelSelectors(y),
+    ),
     orderedResources:
       obj.orderedResources === undefined
         ? undefined
-        : Object.entries(obj.orderedResources).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
-    resourcePolicy: toJson_ScheduleSpecTemplateResourcePolicy(obj.resourcePolicy),
+        : Object.entries(obj.orderedResources).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    resourcePolicy: toJson_ScheduleSpecTemplateResourcePolicy(
+      obj.resourcePolicy,
+    ),
     snapshotMoveData: obj.snapshotMoveData,
     snapshotVolumes: obj.snapshotVolumes,
     storageLocation: obj.storageLocation,
     ttl: obj.ttl,
-    uploaderConfig: toJson_ScheduleSpecTemplateUploaderConfig(obj.uploaderConfig),
+    uploaderConfig: toJson_ScheduleSpecTemplateUploaderConfig(
+      obj.uploaderConfig,
+    ),
     volumeGroupSnapshotLabelKey: obj.volumeGroupSnapshotLabelKey,
     volumeSnapshotLocations: obj.volumeSnapshotLocations?.map((y) => y),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -4439,10 +4787,15 @@ export function toJson_ScheduleSpecTemplateHooks(
     return undefined;
   }
   const result = {
-    resources: obj.resources?.map((y) => toJson_ScheduleSpecTemplateHooksResources(y)),
+    resources: obj.resources?.map((y) =>
+      toJson_ScheduleSpecTemplateHooksResources(y),
+    ),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -4482,14 +4835,22 @@ export function toJson_ScheduleSpecTemplateLabelSelector(
     return undefined;
   }
   const result = {
-    matchExpressions: obj.matchExpressions?.map((y) => toJson_ScheduleSpecTemplateLabelSelectorMatchExpressions(y)),
+    matchExpressions: obj.matchExpressions?.map((y) =>
+      toJson_ScheduleSpecTemplateLabelSelectorMatchExpressions(y),
+    ),
     matchLabels:
       obj.matchLabels === undefined
         ? undefined
-        : Object.entries(obj.matchLabels).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.matchLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -4517,10 +4878,16 @@ export function toJson_ScheduleSpecTemplateMetadata(
     labels:
       obj.labels === undefined
         ? undefined
-        : Object.entries(obj.labels).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.labels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -4560,14 +4927,22 @@ export function toJson_ScheduleSpecTemplateOrLabelSelectors(
     return undefined;
   }
   const result = {
-    matchExpressions: obj.matchExpressions?.map((y) => toJson_ScheduleSpecTemplateOrLabelSelectorsMatchExpressions(y)),
+    matchExpressions: obj.matchExpressions?.map((y) =>
+      toJson_ScheduleSpecTemplateOrLabelSelectorsMatchExpressions(y),
+    ),
     matchLabels:
       obj.matchLabels === undefined
         ? undefined
-        : Object.entries(obj.matchLabels).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.matchLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -4617,7 +4992,10 @@ export function toJson_ScheduleSpecTemplateResourcePolicy(
     name: obj.name,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -4649,7 +5027,10 @@ export function toJson_ScheduleSpecTemplateUploaderConfig(
     parallelFilesUpload: obj.parallelFilesUpload,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -4736,13 +5117,20 @@ export function toJson_ScheduleSpecTemplateHooksResources(
     excludedResources: obj.excludedResources?.map((y) => y),
     includedNamespaces: obj.includedNamespaces?.map((y) => y),
     includedResources: obj.includedResources?.map((y) => y),
-    labelSelector: toJson_ScheduleSpecTemplateHooksResourcesLabelSelector(obj.labelSelector),
+    labelSelector: toJson_ScheduleSpecTemplateHooksResourcesLabelSelector(
+      obj.labelSelector,
+    ),
     name: obj.name,
-    post: obj.post?.map((y) => toJson_ScheduleSpecTemplateHooksResourcesPost(y)),
+    post: obj.post?.map((y) =>
+      toJson_ScheduleSpecTemplateHooksResourcesPost(y),
+    ),
     pre: obj.pre?.map((y) => toJson_ScheduleSpecTemplateHooksResourcesPre(y)),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -4795,7 +5183,10 @@ export function toJson_ScheduleSpecTemplateLabelSelectorMatchExpressions(
     values: obj.values?.map((y) => y),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -4848,7 +5239,10 @@ export function toJson_ScheduleSpecTemplateOrLabelSelectorsMatchExpressions(
     values: obj.values?.map((y) => y),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -4892,10 +5286,16 @@ export function toJson_ScheduleSpecTemplateHooksResourcesLabelSelector(
     matchLabels:
       obj.matchLabels === undefined
         ? undefined
-        : Object.entries(obj.matchLabels).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.matchLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -4927,7 +5327,10 @@ export function toJson_ScheduleSpecTemplateHooksResourcesPost(
     exec: toJson_ScheduleSpecTemplateHooksResourcesPostExec(obj.exec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -4959,7 +5362,10 @@ export function toJson_ScheduleSpecTemplateHooksResourcesPre(
     exec: toJson_ScheduleSpecTemplateHooksResourcesPreExec(obj.exec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -5001,7 +5407,9 @@ export interface ScheduleSpecTemplateHooksResourcesLabelSelectorMatchExpressions
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 export function toJson_ScheduleSpecTemplateHooksResourcesLabelSelectorMatchExpressions(
-  obj: ScheduleSpecTemplateHooksResourcesLabelSelectorMatchExpressions | undefined,
+  obj:
+    | ScheduleSpecTemplateHooksResourcesLabelSelectorMatchExpressions
+    | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
@@ -5012,7 +5420,10 @@ export function toJson_ScheduleSpecTemplateHooksResourcesLabelSelectorMatchExpre
     values: obj.values?.map((y) => y),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -5070,7 +5481,10 @@ export function toJson_ScheduleSpecTemplateHooksResourcesPostExec(
     timeout: obj.timeout,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -5128,7 +5542,10 @@ export function toJson_ScheduleSpecTemplateHooksResourcesPreExec(
     timeout: obj.timeout,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -5191,7 +5608,11 @@ export class ServerStatusRequest extends ApiObject {
    * @param id a scope-local name for the object
    * @param props initialization props
    */
-  public constructor(scope: Construct, id: string, props: ServerStatusRequestProps = {}) {
+  public constructor(
+    scope: Construct,
+    id: string,
+    props: ServerStatusRequestProps = {},
+  ) {
     super(scope, id, {
       ...ServerStatusRequest.GVK,
       ...props,
@@ -5246,7 +5667,10 @@ export function toJson_ServerStatusRequestProps(
     spec: obj.spec,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -5284,7 +5708,11 @@ export class VolumeSnapshotLocation extends ApiObject {
    * @param id a scope-local name for the object
    * @param props initialization props
    */
-  public constructor(scope: Construct, id: string, props: VolumeSnapshotLocationProps = {}) {
+  public constructor(
+    scope: Construct,
+    id: string,
+    props: VolumeSnapshotLocationProps = {},
+  ) {
     super(scope, id, {
       ...VolumeSnapshotLocation.GVK,
       ...props,
@@ -5338,7 +5766,10 @@ export function toJson_VolumeSnapshotLocationProps(
     spec: toJson_VolumeSnapshotLocationSpec(obj.spec),
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -5384,12 +5815,18 @@ export function toJson_VolumeSnapshotLocationSpec(
     config:
       obj.config === undefined
         ? undefined
-        : Object.entries(obj.config).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {}),
+        : Object.entries(obj.config).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
     credential: toJson_VolumeSnapshotLocationSpecCredential(obj.credential),
     provider: obj.provider,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -5441,6 +5878,9 @@ export function toJson_VolumeSnapshotLocationSpecCredential(
     optional: obj.optional,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */

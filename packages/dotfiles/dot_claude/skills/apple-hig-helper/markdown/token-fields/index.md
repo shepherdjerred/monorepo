@@ -8,7 +8,7 @@
 
 # Token fields
 
-A token field is a type of text field that can convert text into *tokens* that are easy to select and manipulate.
+A token field is a type of text field that can convert text into _tokens_ that are easy to select and manipulate.
 
 ![A stylized representation of a text field containing a person's name formatted as a token. The image is tinted red to subtly reflect the red in the original six-color Apple logo.](https://docs-assets.developer.apple.com/published/ae1ce6c362273339a9c3ec4a3538db61/components-token-field-intro%402x.png)
 
@@ -34,7 +34,7 @@ Tokens can also represent search terms in some situations; for guidance, see [Se
 
 ## [Platform considerations](/design/human-interface-guidelines/token-fields#Platform-considerations)
 
-*Not supported in iOS, iPadOS, tvOS, visionOS, and watchOS.*
+_Not supported in iOS, iPadOS, tvOS, visionOS, and watchOS._
 
 ## [Resources](/design/human-interface-guidelines/token-fields#Resources)
 

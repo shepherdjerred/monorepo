@@ -17,12 +17,16 @@ export class LocalStorageBookmarkDatastore implements BookmarkDatastore {
   add(bookmark: Bookmark): void {
     const existingBookmarks = this.get();
     existingBookmarks.push(bookmark);
-    existingBookmarks.sort((left, right) => right.date.getTime() - left.date.getTime());
+    existingBookmarks.sort(
+      (left, right) => right.date.getTime() - left.date.getTime(),
+    );
     this.set(existingBookmarks);
   }
 
   get(): Bookmark[] {
-    const bookmarks: Bookmark[] = JSON.parse(globalThis.localStorage.getItem(IDENTIFIER) ?? "[]") as Bookmark[];
+    const bookmarks: Bookmark[] = JSON.parse(
+      globalThis.localStorage.getItem(IDENTIFIER) ?? "[]",
+    ) as Bookmark[];
     const updatedBookmarks: Bookmark[] = bookmarks.flatMap((bookmark) => {
       let matchedItem: Bookmarkable | undefined;
 
@@ -41,7 +45,9 @@ export class LocalStorageBookmarkDatastore implements BookmarkDatastore {
       }
 
       if (matchedItem === undefined) {
-        console.warn(`Couldn't find matching item for bookmark ${JSON.stringify(bookmark)}`);
+        console.warn(
+          `Couldn't find matching item for bookmark ${JSON.stringify(bookmark)}`,
+        );
         return [];
       } else {
         return {
@@ -56,7 +62,9 @@ export class LocalStorageBookmarkDatastore implements BookmarkDatastore {
 
   remove(bookmark: Bookmark): void {
     const filteredBookmarks = this.get().filter((candidate: Bookmark) => {
-      return candidate !== bookmark && candidate.item.uuid !== bookmark.item.uuid;
+      return (
+        candidate !== bookmark && candidate.item.uuid !== bookmark.item.uuid
+      );
     });
     this.set(filteredBookmarks);
   }

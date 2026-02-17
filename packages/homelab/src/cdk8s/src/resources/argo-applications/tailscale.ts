@@ -6,7 +6,8 @@ import versions from "../../versions.ts";
 export function createTailscaleApp(chart: Chart) {
   new OnePasswordItem(chart, "tailscale-operator-oauth-onepassword", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/mboftvs4fyptyqvg3anrfjy6vu",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/mboftvs4fyptyqvg3anrfjy6vu",
     },
     metadata: {
       name: "operator-oauth",

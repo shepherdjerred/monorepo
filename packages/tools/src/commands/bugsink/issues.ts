@@ -33,7 +33,9 @@ function formatIssue(issue: BugsinkIssue): string {
 
   lines.push(`- ${levelEmoji} **${issue.short_id}**: ${issue.title}`);
   lines.push(`  - Project: ${issue.project.name}`);
-  lines.push(`  - Events: ${String(issue.count)} (${String(issue.user_count)} users)`);
+  lines.push(
+    `  - Events: ${String(issue.count)} (${String(issue.user_count)} users)`,
+  );
 
   if (issue.culprit) {
     lines.push(`  - Culprit: \`${issue.culprit}\``);
@@ -61,7 +63,7 @@ function formatIssuesMarkdown(issues: BugsinkIssue[]): string {
   const errors = issues.filter((i) => i.level === "error");
   const warnings = issues.filter((i) => i.level === "warning");
   const other = issues.filter(
-    (i) => i.level !== "fatal" && i.level !== "error" && i.level !== "warning"
+    (i) => i.level !== "fatal" && i.level !== "error" && i.level !== "warning",
   );
 
   if (fatal.length > 0) {
@@ -111,7 +113,7 @@ function formatIssuesMarkdown(issues: BugsinkIssue[]): string {
 }
 
 export async function issuesCommand(
-  options: IssuesOptions = {}
+  options: IssuesOptions = {},
 ): Promise<void> {
   try {
     const issues = await getIssues({

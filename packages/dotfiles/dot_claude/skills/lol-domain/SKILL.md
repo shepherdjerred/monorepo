@@ -16,18 +16,18 @@ Comprehensive reference for League of Legends game concepts, terminology, and da
 
 ### Tiers (Low to High)
 
-| Tier | Divisions | Notes |
-| ------ | ----------- | ------- |
-| Iron | IV, III, II, I | Lowest tier |
-| Bronze | IV, III, II, I | |
-| Silver | IV, III, II, I | Most populated |
-| Gold | IV, III, II, I | |
-| Platinum | IV, III, II, I | |
-| Emerald | IV, III, II, I | Added Season 13 |
-| Diamond | IV, III, II, I | |
-| Master | None | Top 0.2% |
-| Grandmaster | None | Top players, 200+ LP |
-| Challenger | None | Top 300 players per region |
+| Tier        | Divisions      | Notes                      |
+| ----------- | -------------- | -------------------------- |
+| Iron        | IV, III, II, I | Lowest tier                |
+| Bronze      | IV, III, II, I |                            |
+| Silver      | IV, III, II, I | Most populated             |
+| Gold        | IV, III, II, I |                            |
+| Platinum    | IV, III, II, I |                            |
+| Emerald     | IV, III, II, I | Added Season 13            |
+| Diamond     | IV, III, II, I |                            |
+| Master      | None           | Top 0.2%                   |
+| Grandmaster | None           | Top players, 200+ LP       |
+| Challenger  | None           | Top 300 players per region |
 
 ### LP (League Points)
 
@@ -59,26 +59,26 @@ Comprehensive reference for League of Legends game concepts, terminology, and da
 
 ### Ranked Queues
 
-| Queue | ID | Players | Notes |
-| ------- | ----- | --------- | ------- |
-| Solo/Duo | 420 | 1-2 | Main competitive queue |
-| Flex 5v5 | 440 | 1, 2, 3, or 5 | No parties of 4 |
+| Queue    | ID  | Players       | Notes                  |
+| -------- | --- | ------------- | ---------------------- |
+| Solo/Duo | 420 | 1-2           | Main competitive queue |
+| Flex 5v5 | 440 | 1, 2, 3, or 5 | No parties of 4        |
 
 ### Casual Queues
 
-| Queue | ID | Notes |
-| ------- | ----- | ------- |
-| Normal (Draft) | 400 | Same rules as ranked |
+| Queue          | ID  | Notes                   |
+| -------------- | --- | ----------------------- |
+| Normal (Draft) | 400 | Same rules as ranked    |
 | Normal (Blind) | 430 | Mirror matchups allowed |
-| ARAM | 450 | All Random, All Mid |
+| ARAM           | 450 | All Random, All Mid     |
 
 ### Special Queues
 
-| Queue | Notes |
-| ------- | ------- |
-| Clash | Tournament mode |
-| Arena | 2v2v2v2 mode |
-| URF | Ultra Rapid Fire (rotating) |
+| Queue       | Notes                        |
+| ----------- | ---------------------------- |
+| Clash       | Tournament mode              |
+| Arena       | 2v2v2v2 mode                 |
+| URF         | Ultra Rapid Fire (rotating)  |
 | One for All | All same champion (rotating) |
 
 ---
@@ -87,36 +87,36 @@ Comprehensive reference for League of Legends game concepts, terminology, and da
 
 ### Primary Classes
 
-| Class | Role | Examples |
-| ------- | ------ | ---------- |
-| **Tank** | Absorb damage, initiate | Malphite, Ornn, Leona |
-| **Fighter** | Sustained damage + durability | Darius, Fiora, Jax |
-| **Assassin** | Burst damage, high mobility | Zed, Akali, Katarina |
-| **Mage** | Ability-based damage | Lux, Syndra, Orianna |
-| **Marksman** | Sustained ranged damage | Jinx, Caitlyn, Kai'Sa |
-| **Support** | Utility, protection | Thresh, Lulu, Yuumi |
+| Class        | Role                          | Examples              |
+| ------------ | ----------------------------- | --------------------- |
+| **Tank**     | Absorb damage, initiate       | Malphite, Ornn, Leona |
+| **Fighter**  | Sustained damage + durability | Darius, Fiora, Jax    |
+| **Assassin** | Burst damage, high mobility   | Zed, Akali, Katarina  |
+| **Mage**     | Ability-based damage          | Lux, Syndra, Orianna  |
+| **Marksman** | Sustained ranged damage       | Jinx, Caitlyn, Kai'Sa |
+| **Support**  | Utility, protection           | Thresh, Lulu, Yuumi   |
 
 ### Fighter Subclasses
 
-| Subclass | Traits | Examples |
-| ---------- | -------- | ---------- |
+| Subclass       | Traits                               | Examples                   |
+| -------------- | ------------------------------------ | -------------------------- |
 | **Juggernaut** | Low mobility, high damage/durability | Darius, Mordekaiser, Garen |
-| **Diver** | Engage into backline | Irelia, Vi, Camille |
+| **Diver**      | Engage into backline                 | Irelia, Vi, Camille        |
 
 ### Mage Subclasses
 
-| Subclass | Traits | Examples |
-| ---------- | -------- | ---------- |
-| **Burst Mage** | High combo damage | Syndra, Annie, Veigar |
-| **Battlemage** | Sustained AoE in fights | Cassiopeia, Ryze, Swain |
-| **Artillery Mage** | Extreme range | Xerath, Lux, Vel'Koz |
+| Subclass           | Traits                  | Examples                |
+| ------------------ | ----------------------- | ----------------------- |
+| **Burst Mage**     | High combo damage       | Syndra, Annie, Veigar   |
+| **Battlemage**     | Sustained AoE in fights | Cassiopeia, Ryze, Swain |
+| **Artillery Mage** | Extreme range           | Xerath, Lux, Vel'Koz    |
 
 ### Assassin Subclasses
 
-| Subclass | Traits | Examples |
-| ---------- | -------- | ---------- |
-| **Assassin** | Quick in-and-out | Zed, Talon, Akali |
-| **Skirmisher** | Extended duels | Yasuo, Yone, Fiora |
+| Subclass       | Traits           | Examples           |
+| -------------- | ---------------- | ------------------ |
+| **Assassin**   | Quick in-and-out | Zed, Talon, Akali  |
+| **Skirmisher** | Extended duels   | Yasuo, Yone, Fiora |
 
 ---
 
@@ -126,14 +126,14 @@ Comprehensive reference for League of Legends game concepts, terminology, and da
 
 Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants **Dragon Soul**.
 
-| Drake | Buff | Soul Effect |
-| ------- | ------ | ------------- |
-| **Infernal** | +AD/AP | Attacks cause AoE explosion |
-| **Mountain** | +Armor/MR | Shield after not taking damage |
-| **Ocean** | +HP regen | Damaging enemies heals you |
-| **Cloud** | +Movement speed (OOC) | +Movement speed (permanent) |
-| **Hextech** | +Attack speed + ability haste | Chain lightning on attacks |
-| **Chemtech** | +Tenacity + heal/shield power | Brief zombie state on death |
+| Drake        | Buff                          | Soul Effect                    |
+| ------------ | ----------------------------- | ------------------------------ |
+| **Infernal** | +AD/AP                        | Attacks cause AoE explosion    |
+| **Mountain** | +Armor/MR                     | Shield after not taking damage |
+| **Ocean**    | +HP regen                     | Damaging enemies heals you     |
+| **Cloud**    | +Movement speed (OOC)         | +Movement speed (permanent)    |
+| **Hextech**  | +Attack speed + ability haste | Chain lightning on attacks     |
+| **Chemtech** | +Tenacity + heal/shield power | Brief zombie state on death    |
 
 ### Elder Dragon
 
@@ -170,41 +170,41 @@ Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants 
 
 ### Core Stats
 
-| Stat | Description |
-| ------ | ------------- |
-| **KDA** | Kills/Deaths/Assists ratio: (K+A)/D |
-| **CS** | Creep Score (minions + jungle monsters killed) |
-| **Gold** | Total gold earned |
-| **Damage Dealt** | Total damage to champions |
-| **Damage Taken** | Total damage received |
-| **Vision Score** | Wards placed + destroyed + control |
+| Stat             | Description                                    |
+| ---------------- | ---------------------------------------------- |
+| **KDA**          | Kills/Deaths/Assists ratio: (K+A)/D            |
+| **CS**           | Creep Score (minions + jungle monsters killed) |
+| **Gold**         | Total gold earned                              |
+| **Damage Dealt** | Total damage to champions                      |
+| **Damage Taken** | Total damage received                          |
+| **Vision Score** | Wards placed + destroyed + control             |
 
 ### Gold Values
 
-| Event | Gold |
-| ------- | ------ |
-| Melee minion | ~21 |
-| Caster minion | ~14 |
-| Cannon minion | ~60-90 |
-| Champion kill (base) | 300 |
-| First Blood | +100 bonus |
-| Assist | ~half of kill gold |
-| Shutdown (2+ kills) | +150 per streak level |
-| Dragon | ~25-100 per player |
-| Baron | ~300 per player |
-| Tower | ~50-250 local + ~100 global |
+| Event                | Gold                        |
+| -------------------- | --------------------------- |
+| Melee minion         | ~21                         |
+| Caster minion        | ~14                         |
+| Cannon minion        | ~60-90                      |
+| Champion kill (base) | 300                         |
+| First Blood          | +100 bonus                  |
+| Assist               | ~half of kill gold          |
+| Shutdown (2+ kills)  | +150 per streak level       |
+| Dragon               | ~25-100 per player          |
+| Baron                | ~300 per player             |
+| Tower                | ~50-250 local + ~100 global |
 
 ### Bounty System
 
-| Kill Streak | Bounty |
-| ------------- | -------- |
-| 0 (base) | 300 |
-| 2 kills | 450 |
-| 3 kills | 600 |
-| 4 kills | 700 |
-| 5 kills | 800 |
-| 6 kills | 900 |
-| 7+ kills | 1000 (max) |
+| Kill Streak | Bounty     |
+| ----------- | ---------- |
+| 0 (base)    | 300        |
+| 2 kills     | 450        |
+| 3 kills     | 600        |
+| 4 kills     | 700        |
+| 5 kills     | 800        |
+| 6 kills     | 900        |
+| 7+ kills    | 1000 (max) |
 
 ---
 
@@ -212,81 +212,81 @@ Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants 
 
 ### Rune Paths
 
-| Path | Theme | Classes |
-| ------ | ------- | --------- |
-| **Precision** | Sustained damage, attacks | Marksmen, fighters |
-| **Domination** | Burst damage, hunting | Assassins, mages |
-| **Sorcery** | Abilities, utility | Mages, enchanters |
-| **Resolve** | Durability, defense | Tanks, supports |
-| **Inspiration** | Creative, rule-breaking | Various |
+| Path            | Theme                     | Classes            |
+| --------------- | ------------------------- | ------------------ |
+| **Precision**   | Sustained damage, attacks | Marksmen, fighters |
+| **Domination**  | Burst damage, hunting     | Assassins, mages   |
+| **Sorcery**     | Abilities, utility        | Mages, enchanters  |
+| **Resolve**     | Durability, defense       | Tanks, supports    |
+| **Inspiration** | Creative, rule-breaking   | Various            |
 
 ### Precision Keystones
 
-| Keystone | Effect |
-| ---------- | -------- |
+| Keystone             | Effect                             |
+| -------------------- | ---------------------------------- |
 | **Press the Attack** | 3 hits = bonus damage + damage amp |
-| **Lethal Tempo** | Stacking attack speed |
-| **Fleet Footwork** | Energized heal + movement speed |
-| **Conqueror** | Stacking AD/AP + healing |
+| **Lethal Tempo**     | Stacking attack speed              |
+| **Fleet Footwork**   | Energized heal + movement speed    |
+| **Conqueror**        | Stacking AD/AP + healing           |
 
 ### Domination Keystones
 
-| Keystone | Effect |
-| ---------- | -------- |
-| **Electrocute** | 3 hits/abilities = burst damage |
-| **Dark Harvest** | Execute-style scaling damage |
-| **Hail of Blades** | Burst attack speed (3 attacks) |
-| **Predator** | Movement speed + damage on first hit |
+| Keystone           | Effect                               |
+| ------------------ | ------------------------------------ |
+| **Electrocute**    | 3 hits/abilities = burst damage      |
+| **Dark Harvest**   | Execute-style scaling damage         |
+| **Hail of Blades** | Burst attack speed (3 attacks)       |
+| **Predator**       | Movement speed + damage on first hit |
 
 ### Sorcery Keystones
 
-| Keystone | Effect |
-| ---------- | -------- |
-| **Summon Aery** | Damage enemies or shield allies |
-| **Arcane Comet** | Ability hits launch comet |
-| **Phase Rush** | 3 hits = burst of movement speed |
+| Keystone         | Effect                           |
+| ---------------- | -------------------------------- |
+| **Summon Aery**  | Damage enemies or shield allies  |
+| **Arcane Comet** | Ability hits launch comet        |
+| **Phase Rush**   | 3 hits = burst of movement speed |
 
 ### Resolve Keystones
 
-| Keystone | Effect |
-| ---------- | -------- |
+| Keystone                 | Effect                           |
+| ------------------------ | -------------------------------- |
 | **Grasp of the Undying** | Periodic empowered attack + heal |
-| **Aftershock** | CC triggers resistances + damage |
-| **Guardian** | Shield nearby ally when damaged |
+| **Aftershock**           | CC triggers resistances + damage |
+| **Guardian**             | Shield nearby ally when damaged  |
 
 ### Inspiration Keystones
 
-| Keystone | Effect |
-| ---------- | -------- |
-| **Glacial Augment** | Slowing zone on immobilize |
-| **Unsealed Spellbook** | Swap summoner spells |
-| **First Strike** | Bonus gold/damage when striking first |
+| Keystone               | Effect                                |
+| ---------------------- | ------------------------------------- |
+| **Glacial Augment**    | Slowing zone on immobilize            |
+| **Unsealed Spellbook** | Swap summoner spells                  |
+| **First Strike**       | Bonus gold/damage when striking first |
 
 ---
 
 ## Summoner Spells
 
-| Spell | Cooldown | Effect |
-| ------- | ---------- | -------- |
-| **Flash** | 300s | Blink short distance |
-| **Ignite** | 180s | True damage DoT + Grievous Wounds |
-| **Teleport** | 360s | Channel to allied structure/minion |
-| **Heal** | 240s | Heal self + ally + movement speed |
-| **Exhaust** | 210s | Slow + damage reduction on enemy |
-| **Barrier** | 180s | Temporary shield |
-| **Cleanse** | 210s | Remove CC + reduce incoming CC |
-| **Ghost** | 210s | Movement speed boost |
-| **Smite** | 90s | Damage to monster/minion (jungler) |
+| Spell        | Cooldown | Effect                             |
+| ------------ | -------- | ---------------------------------- |
+| **Flash**    | 300s     | Blink short distance               |
+| **Ignite**   | 180s     | True damage DoT + Grievous Wounds  |
+| **Teleport** | 360s     | Channel to allied structure/minion |
+| **Heal**     | 240s     | Heal self + ally + movement speed  |
+| **Exhaust**  | 210s     | Slow + damage reduction on enemy   |
+| **Barrier**  | 180s     | Temporary shield                   |
+| **Cleanse**  | 210s     | Remove CC + reduce incoming CC     |
+| **Ghost**    | 210s     | Movement speed boost               |
+| **Smite**    | 90s      | Damage to monster/minion (jungler) |
 
 ### Common Combinations
 
-| Role | Common Spells |
-| ------ | --------------- |
-| Top | Flash + Teleport, Flash + Ignite |
-| Jungle | Flash + Smite (required) |
-| Mid | Flash + Ignite, Flash + Teleport |
-| ADC | Flash + Heal |
-| Support | Flash + Ignite, Flash + Exhaust |
+| Role    | Common Spells                    |
+| ------- | -------------------------------- |
+| Top     | Flash + Teleport, Flash + Ignite |
+| Jungle  | Flash + Smite (required)         |
+| Mid     | Flash + Ignite, Flash + Teleport |
+| ADC     | Flash + Heal                     |
+| Support | Flash + Ignite, Flash + Exhaust  |
 
 ---
 
@@ -294,50 +294,50 @@ Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants 
 
 ### Gameplay Terms
 
-| Term | Meaning |
-| ------ | --------- |
-| **AA** | Auto-attack (basic attack) |
-| **AoE** | Area of Effect |
-| **CC** | Crowd Control (stun, slow, etc.) |
-| **CD** | Cooldown |
-| **DPS** | Damage Per Second |
-| **DoT** | Damage over Time |
-| **OOM** | Out of Mana |
-| **OOC** | Out of Combat |
+| Term    | Meaning                          |
+| ------- | -------------------------------- |
+| **AA**  | Auto-attack (basic attack)       |
+| **AoE** | Area of Effect                   |
+| **CC**  | Crowd Control (stun, slow, etc.) |
+| **CD**  | Cooldown                         |
+| **DPS** | Damage Per Second                |
+| **DoT** | Damage over Time                 |
+| **OOM** | Out of Mana                      |
+| **OOC** | Out of Combat                    |
 
 ### Strategic Terms
 
-| Term | Meaning |
-| ------ | --------- |
-| **Aggro** | Aggressive play/drawing enemy attention |
-| **All-in** | Commit all abilities for a kill |
-| **Backdoor** | Destroy nexus by bypassing enemy team |
-| **Dive** | Attack under enemy tower |
-| **Gank** | Surprise attack from jungler |
-| **Kite** | Attack while retreating |
-| **Peel** | Protect carry from threats |
-| **Poke** | Harass from range |
-| **Roam** | Leave lane to help elsewhere |
-| **Split push** | Push side lane while team distracts |
-| **Zone** | Deny area to enemies with threat |
+| Term           | Meaning                                 |
+| -------------- | --------------------------------------- |
+| **Aggro**      | Aggressive play/drawing enemy attention |
+| **All-in**     | Commit all abilities for a kill         |
+| **Backdoor**   | Destroy nexus by bypassing enemy team   |
+| **Dive**       | Attack under enemy tower                |
+| **Gank**       | Surprise attack from jungler            |
+| **Kite**       | Attack while retreating                 |
+| **Peel**       | Protect carry from threats              |
+| **Poke**       | Harass from range                       |
+| **Roam**       | Leave lane to help elsewhere            |
+| **Split push** | Push side lane while team distracts     |
+| **Zone**       | Deny area to enemies with threat        |
 
 ### Player State Terms
 
-| Term | Meaning |
-| ------ | --------- |
-| **Fed** | Has many kills, strong |
-| **Behind** | Less gold/XP than opponent |
-| **Tilted** | Frustrated, playing worse |
+| Term         | Meaning                     |
+| ------------ | --------------------------- |
+| **Fed**      | Has many kills, strong      |
+| **Behind**   | Less gold/XP than opponent  |
+| **Tilted**   | Frustrated, playing worse   |
 | **Autofill** | Assigned non-preferred role |
 
 ### Meta Terms
 
-| Term | Meaning |
-| ------ | --------- |
-| **Meta** | Most effective tactics available |
-| **Powerspike** | Point where champion becomes strong |
-| **Scaling** | Champion strength growth over time |
-| **Early/Mid/Late game** | Game phases (~0-15/15-30/30+ min) |
+| Term                    | Meaning                             |
+| ----------------------- | ----------------------------------- |
+| **Meta**                | Most effective tactics available    |
+| **Powerspike**          | Point where champion becomes strong |
+| **Scaling**             | Champion strength growth over time  |
+| **Early/Mid/Late game** | Game phases (~0-15/15-30/30+ min)   |
 
 ---
 
@@ -369,7 +369,7 @@ Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants 
 ## Sources
 
 - [League of Legends Wiki - Terminology](https://wiki.leagueoflegends.com/en-us/Terminology)
-- [League of Legends Fandom - Terminology](https://leagueoflegends.fandom.com/wiki/Terminology_(League_of_Legends))
+- [League of Legends Fandom - Terminology](<https://leagueoflegends.fandom.com/wiki/Terminology_(League_of_Legends)>)
 - [League of Legends Wiki - Champion Classes](https://wiki.leagueoflegends.com/en-us/Champion_classes)
 - [League of Legends Wiki - Ranked Game](https://wiki.leagueoflegends.com/en-us/Ranked_game)
 - [Riot Support - Ranked Tiers, Divisions, and Queues](https://support-leagueoflegends.riotgames.com/hc/en-us/articles/4406004330643-Ranked-Tiers-Divisions-and-Queues)

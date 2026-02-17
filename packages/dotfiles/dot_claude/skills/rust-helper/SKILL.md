@@ -121,6 +121,7 @@ cargo clippy -p my-crate
 ```
 
 Configure in `clippy.toml` or via attributes:
+
 ```rust
 // Allow specific lint
 #[allow(clippy::needless_return)]
@@ -147,6 +148,7 @@ cargo fmt -- --emit diff
 ```
 
 Configure in `rustfmt.toml`:
+
 ```toml
 edition = "2024"
 max_width = 100
@@ -295,6 +297,7 @@ bacon
 ```
 
 Configure in `bacon.toml`:
+
 ```toml
 [jobs.check]
 command = ["cargo", "check", "--all-targets"]
@@ -388,6 +391,7 @@ opt-level = 2    # Optimize dependencies even in dev
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - Lifetime annotations are ambiguous or complex
 - Choice between async and sync is unclear
 - Error handling strategy (anyhow vs thiserror vs custom) needs deciding
@@ -398,6 +402,7 @@ Ask the user for clarification when:
 ---
 
 See `references/` for detailed guides:
+
 - `patterns.md` - Ownership, traits, generics, lifetimes, async/await, iterators
 - `cargo-ecosystem.md` - Cargo commands, workspaces, popular crates, features, build scripts
 - `testing-debugging.md` - Testing with nextest, bacon, debugging with lldb, profiling, miri

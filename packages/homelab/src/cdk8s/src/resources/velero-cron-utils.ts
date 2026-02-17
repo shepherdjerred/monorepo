@@ -17,7 +17,10 @@ export function calculateMonitoringFromCron(cronExpression: string): {
   const exec3 = interval.next().toDate();
 
   // Calculate average interval between executions in milliseconds
-  const intervals = [exec2.getTime() - exec1.getTime(), exec3.getTime() - exec2.getTime()];
+  const intervals = [
+    exec2.getTime() - exec1.getTime(),
+    exec3.getTime() - exec2.getTime(),
+  ];
   const avgIntervalMs = intervals.reduce((a, b) => a + b, 0) / intervals.length;
 
   // Convert to hours

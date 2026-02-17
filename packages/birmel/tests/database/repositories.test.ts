@@ -101,9 +101,10 @@ describe("database repositories", () => {
       );
 
       const results = testDb
-        .query<{ content: string }, [string, string, number]>(
-          `SELECT * FROM conversations WHERE guild_id = ? AND user_id = ? ORDER BY created_at DESC LIMIT ?`,
-        )
+        .query<
+          { content: string },
+          [string, string, number]
+        >(`SELECT * FROM conversations WHERE guild_id = ? AND user_id = ? ORDER BY created_at DESC LIMIT ?`)
         .all("guild1", "user1", 10);
 
       expect(results.length).toBe(2);
@@ -157,9 +158,10 @@ describe("database repositories", () => {
       );
 
       const results = testDb
-        .query<{ event_type: string }, [string, number]>(
-          `SELECT * FROM server_events WHERE guild_id = ? ORDER BY created_at DESC LIMIT ?`,
-        )
+        .query<
+          { event_type: string },
+          [string, number]
+        >(`SELECT * FROM server_events WHERE guild_id = ? ORDER BY created_at DESC LIMIT ?`)
         .all("guild1", 10);
 
       expect(results.length).toBe(2);
@@ -188,9 +190,7 @@ describe("database repositories", () => {
         .query<
           { preference_value: string },
           [string, string, string]
-        >(
-          `SELECT preference_value FROM user_preferences WHERE user_id = ? AND guild_id = ? AND preference_key = ?`,
-        )
+        >(`SELECT preference_value FROM user_preferences WHERE user_id = ? AND guild_id = ? AND preference_key = ?`)
         .get("user1", "guild1", "theme");
 
       expect(result?.preference_value).toBe("dark");
@@ -213,9 +213,7 @@ describe("database repositories", () => {
         .query<
           { preference_value: string },
           [string, string, string]
-        >(
-          `SELECT preference_value FROM user_preferences WHERE user_id = ? AND guild_id = ? AND preference_key = ?`,
-        )
+        >(`SELECT preference_value FROM user_preferences WHERE user_id = ? AND guild_id = ? AND preference_key = ?`)
         .get("user1", "guild1", "theme");
 
       expect(result?.preference_value).toBe("light");
@@ -234,9 +232,10 @@ describe("database repositories", () => {
       );
 
       const results = testDb
-        .query<{ preference_key: string; preference_value: string }, [string, string]>(
-          `SELECT preference_key, preference_value FROM user_preferences WHERE user_id = ? AND guild_id = ?`,
-        )
+        .query<
+          { preference_key: string; preference_value: string },
+          [string, string]
+        >(`SELECT preference_key, preference_value FROM user_preferences WHERE user_id = ? AND guild_id = ?`)
         .all("user1", "guild1");
 
       expect(results.length).toBe(2);
@@ -248,7 +247,14 @@ describe("database repositories", () => {
       const result = testDb.run(
         `INSERT INTO music_history (guild_id, channel_id, requested_by, track_title, track_url, track_duration)
          VALUES (?, ?, ?, ?, ?, ?)`,
-        ["guild1", "channel1", "user1", "Test Song", "https://example.com", 180],
+        [
+          "guild1",
+          "channel1",
+          "user1",
+          "Test Song",
+          "https://example.com",
+          180,
+        ],
       );
 
       expect(result.lastInsertRowid).toBeGreaterThan(0);
@@ -267,9 +273,10 @@ describe("database repositories", () => {
       );
 
       const results = testDb
-        .query<{ track_title: string }, [string, number]>(
-          `SELECT * FROM music_history WHERE guild_id = ? ORDER BY played_at DESC LIMIT ?`,
-        )
+        .query<
+          { track_title: string },
+          [string, number]
+        >(`SELECT * FROM music_history WHERE guild_id = ? ORDER BY played_at DESC LIMIT ?`)
         .all("guild1", 10);
 
       expect(results.length).toBe(2);
@@ -293,9 +300,10 @@ describe("database repositories", () => {
       );
 
       const results = testDb
-        .query<{ track_title: string }, [string, string, number]>(
-          `SELECT * FROM music_history WHERE guild_id = ? AND requested_by = ? ORDER BY played_at DESC LIMIT ?`,
-        )
+        .query<
+          { track_title: string },
+          [string, string, number]
+        >(`SELECT * FROM music_history WHERE guild_id = ? AND requested_by = ? ORDER BY played_at DESC LIMIT ?`)
         .all("guild1", "user1", 10);
 
       expect(results.length).toBe(2);
@@ -305,12 +313,24 @@ describe("database repositories", () => {
       testDb.run(
         `INSERT INTO music_history (guild_id, channel_id, requested_by, track_title, track_url)
          VALUES (?, ?, ?, ?, ?)`,
-        ["guild1", "channel1", "user1", "Popular Song", "https://example.com/1"],
+        [
+          "guild1",
+          "channel1",
+          "user1",
+          "Popular Song",
+          "https://example.com/1",
+        ],
       );
       testDb.run(
         `INSERT INTO music_history (guild_id, channel_id, requested_by, track_title, track_url)
          VALUES (?, ?, ?, ?, ?)`,
-        ["guild1", "channel1", "user2", "Popular Song", "https://example.com/1"],
+        [
+          "guild1",
+          "channel1",
+          "user2",
+          "Popular Song",
+          "https://example.com/1",
+        ],
       );
       testDb.run(
         `INSERT INTO music_history (guild_id, channel_id, requested_by, track_title, track_url)
@@ -319,9 +339,10 @@ describe("database repositories", () => {
       );
 
       const results = testDb
-        .query<{ track_title: string; play_count: number }, [string, number]>(
-          `SELECT track_title, COUNT(*) as play_count FROM music_history WHERE guild_id = ? GROUP BY track_url ORDER BY play_count DESC LIMIT ?`,
-        )
+        .query<
+          { track_title: string; play_count: number },
+          [string, number]
+        >(`SELECT track_title, COUNT(*) as play_count FROM music_history WHERE guild_id = ? GROUP BY track_url ORDER BY play_count DESC LIMIT ?`)
         .all("guild1", 10);
 
       expect(results.length).toBe(2);

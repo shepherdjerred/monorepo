@@ -178,6 +178,7 @@ git diff --staged file.js | bat -l diff
 ```
 
 **Benefits of Git Integration:**
+
 - Visual indicators for all changes
 - No need to run `git diff` separately
 - Works automatically with any Git repository

@@ -28,7 +28,7 @@ When designing your app or game, think of the Action button as another way for s
 
 ## [Platform considerations](/design/human-interface-guidelines/action-button#Platform-considerations)
 
-*Not supported in iPadOS, macOS, tvOS, or visionOS.*
+_Not supported in iPadOS, macOS, tvOS, or visionOS._
 
 ### [iOS](/design/human-interface-guidelines/action-button#iOS)
 
@@ -58,7 +58,7 @@ In watchOS, a person can assign the Action button’s first press to drop a wayp
 
 ## [Change log](/design/human-interface-guidelines/action-button#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date               | Changes                              |
+| ------------------ | ------------------------------------ |
 | September 12, 2023 | Updated to include guidance for iOS. |
-| September 14, 2022 | New page. |
+| September 14, 2022 | New page.                            |

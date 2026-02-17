@@ -34,7 +34,7 @@ In addition to expressing your brand in your [app icon](https://developer.apple.
 
 ## [Platform considerations](/design/human-interface-guidelines/branding#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/branding#Resources)
 

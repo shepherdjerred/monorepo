@@ -5,12 +5,15 @@ import "./TipsButton.css";
 
 export type TipsButtonProps = {
   onClick: () => void;
-}
+};
 
 export function TipsButton({ onClick }: TipsButtonProps): React.ReactElement {
   return (
     <div className="tips-button">
-      <button className="button is-rounded is-primary is-outlined" onClick={onClick}>
+      <button
+        className="button is-rounded is-primary is-outlined"
+        onClick={onClick}
+      >
         <span className="is-icon is-small">
           <FontAwesomeIcon icon={faQuestionCircle} />
         </span>

@@ -18,7 +18,7 @@ export class InvalidBinaryError extends DecompileError {
 export class InvalidTrailerError extends DecompileError {
   constructor() {
     super(
-      'Missing or invalid Bun trailer. This file may not be a Bun-compiled executable.',
+      "Missing or invalid Bun trailer. This file may not be a Bun-compiled executable.",
     );
     this.name = "InvalidTrailerError";
   }
@@ -50,7 +50,11 @@ export class ExtractionError extends DecompileError {
     reason: string,
     public readonly path?: string,
   ) {
-    super(path ? `Extraction failed for ${path}: ${reason}` : `Extraction failed: ${reason}`);
+    super(
+      path
+        ? `Extraction failed for ${path}: ${reason}`
+        : `Extraction failed: ${reason}`,
+    );
     this.name = "ExtractionError";
   }
 }

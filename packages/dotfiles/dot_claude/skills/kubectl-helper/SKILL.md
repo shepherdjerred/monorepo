@@ -25,6 +25,7 @@ This agent helps you work with Kubernetes clusters using `kubectl` for resource 
 ### Auto-Approved Commands
 
 The following `kubectl` commands are auto-approved and safe to use:
+
 - `kubectl get` - List resources
 - `kubectl describe` - Show detailed resource information
 - `kubectl logs` - View container logs
@@ -38,6 +39,7 @@ The following `kubectl` commands are auto-approved and safe to use:
 ### Modern Apply Patterns (2025)
 
 **Server-side apply (recommended)**:
+
 ```bash
 # Apply with server-side processing (better conflict resolution)
 kubectl apply -f deployment.yaml --server-side
@@ -50,6 +52,7 @@ kubectl apply -f deployment.yaml --server-side --force-conflicts
 ```
 
 **Preview changes before applying**:
+
 ```bash
 # Show diff of what will change
 kubectl diff -f deployment.yaml
@@ -62,6 +65,7 @@ kubectl apply -f deployment.yaml --dry-run=client
 ```
 
 **Why server-side apply?**
+
 - Better conflict resolution (server decides, not client)
 - Supports collaborative editing (multiple sources can manage same resource)
 - Respects field ownership (who owns each field)
@@ -70,6 +74,7 @@ kubectl apply -f deployment.yaml --dry-run=client
 ### Common Operations
 
 **Get resources**:
+
 ```bash
 kubectl get pods
 kubectl get pods -n production
@@ -79,6 +84,7 @@ kubectl get services
 ```
 
 **Advanced label selectors (2025)**:
+
 ```bash
 # Single label match
 kubectl get pods -l app=nginx
@@ -100,6 +106,7 @@ kubectl scale deployment -l app=api --replicas=3
 ```
 
 **Describe resources**:
+
 ```bash
 kubectl describe pod my-pod
 kubectl describe node node-1
@@ -107,6 +114,7 @@ kubectl describe deployment my-app
 ```
 
 **View logs**:
+
 ```bash
 kubectl logs my-pod
 kubectl logs my-pod -c container-name
@@ -116,6 +124,7 @@ kubectl logs -l app=nginx  # Logs from all pods with label
 ```
 
 **Context and namespace management**:
+
 ```bash
 kubectl config get-contexts
 kubectl config current-context
@@ -124,6 +133,7 @@ kubectl config set-context --current --namespace=my-namespace
 ```
 
 **Rollout management and canary deployments**:
+
 ```bash
 # View rollout status
 kubectl rollout status deployment/my-app
@@ -145,6 +155,7 @@ kubectl rollout undo deployment/my-app --to-revision=2
 ```
 
 **Canary deployment workflow**:
+
 ```bash
 # 1. Update deployment (triggers rollout)
 kubectl apply -f deployment.yaml --server-side
@@ -275,6 +286,7 @@ kubectl get pods --watch --output-watch-events
 ### Infrastructure as Code
 
 1. **Always use version control for manifests**:
+
    ```bash
    # Good: Manifests in git
    git add k8s/
@@ -286,12 +298,14 @@ kubectl get pods --watch --output-watch-events
    ```
 
 2. **Prefer server-side apply** for all manifest applications
+
    ```bash
    # Default to server-side
    kubectl apply -f . --server-side --recursive
    ```
 
 3. **Preview changes before applying**:
+
    ```bash
    # Always diff first
    kubectl diff -f deployment.yaml
@@ -468,6 +482,7 @@ kubectl debug my-pod -it --copy-to=my-pod-debug --container=debugger --image=bus
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - The cluster context or namespace is ambiguous
 - Destructive operations are needed (delete, drain, cordon)
 - RBAC permissions might be insufficient

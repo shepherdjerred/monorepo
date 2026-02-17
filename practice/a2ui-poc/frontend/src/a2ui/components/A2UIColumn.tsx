@@ -23,8 +23,10 @@ const distributionClasses: Record<string, string> = {
 };
 
 export function A2UIColumn({ component, surfaceId }: A2UIColumnProps) {
-  const alignment = alignmentClasses[component.alignment || "stretch"] || "items-stretch";
-  const distribution = distributionClasses[component.distribution || "start"] || "justify-start";
+  const alignment =
+    alignmentClasses[component.alignment || "stretch"] || "items-stretch";
+  const distribution =
+    distributionClasses[component.distribution || "start"] || "justify-start";
 
   // Handle explicit list children
   if ("explicitList" in component.children) {

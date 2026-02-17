@@ -18,7 +18,7 @@ For developer guidance, see [Adding a search interface to your app](/documentati
 
 ## [Best practices](/design/human-interface-guidelines/search-fields#Best-practices)
 
-**Display placeholder text that describes the type of information people can search for.** For example, the Apple TV app includes the placeholder text *Shows, Movies, and More*. Avoid using a term like *Search* for placeholder text because it doesn’t provide any helpful information.
+**Display placeholder text that describes the type of information people can search for.** For example, the Apple TV app includes the placeholder text _Shows, Movies, and More_. Avoid using a term like _Search_ for placeholder text because it doesn’t provide any helpful information.
 
 **If possible, start search immediately when a person types.** Searching while someone types makes the search experience feel more responsive because it provides results that are continuously refined as the text becomes more specific.
 
@@ -32,8 +32,8 @@ For developer guidance, see [Adding a search interface to your app](/documentati
 
 Scope controls and tokens are components you can use to let someone narrow the parameters of a search either before or after they make it.
 
-* A *scope control* acts like a [segmented control](/design/human-interface-guidelines/segmented-controls) for choosing a category for the search.
-* A *token* is a visual representation of a search term that someone can select and edit, and acts as a filter for any additional terms in the search.
+- A _scope control_ acts like a [segmented control](/design/human-interface-guidelines/segmented-controls) for choosing a category for the search.
+- A _token_ is a visual representation of a search term that someone can select and edit, and acts as a filter for any additional terms in the search.
 
 ![A diagram of the Mail app on iPhone with the search field open above the keyboard and the word Design entered in the field. Callouts indicate a scope control at the top of the screen to switch between searching all mailboxes and the current mailbox, and a list of tokens in a Suggestions area beneath the control that represent different filters for the search.](https://docs-assets.developer.apple.com/published/c39602d60041fae736e46f91641d8373/search-fields-scope-control-tokens%402x.png)
 
@@ -47,15 +47,15 @@ Scope controls and tokens are components you can use to let someone narrow the p
 
 ## [Platform considerations](/design/human-interface-guidelines/search-fields#Platform-considerations)
 
-*No additional considerations for visionOS*.
+_No additional considerations for visionOS_.
 
 ### [iOS](/design/human-interface-guidelines/search-fields#iOS)
 
 There are three main places you can position the entry point for search:
 
-* In a tab bar at the bottom of the screen
-* In a toolbar at the bottom or top of the screen
-* Directly inline with content
+- In a tab bar at the bottom of the screen
+- In a toolbar at the bottom or top of the screen
+- Directly inline with content
 
 Where search makes the most sense depends on the layout, content, and navigation of your app.
 
@@ -65,7 +65,7 @@ You can place search as a visually distinct tab on the trailing side of a tab ba
 
 ![An illustration of a tab bar at the bottom of an iPhone screen. A tab for search appears on the trailing edge in a visually distinct group.](https://docs-assets.developer.apple.com/published/ca6977596a62743265fdd2132616a4c8/search-fields-search-as-tab%402x.png)
 
-When someone navigates to the search tab, the search field that appears can start as *focused* or *unfocused*.
+When someone navigates to the search tab, the search field that appears can start as _focused_ or _unfocused_.
 
 ![An illustration of an iPhone screen with search in a tab bar at the bottom of the screen. The tab bar is hidden by the keyboard and the search field is open above the keyboard, ready for text entry.](https://docs-assets.developer.apple.com/published/cbd1eb280ecd0f8f71aab784a2bcd042/search-fields-tab-focused%402x.png)
 
@@ -83,8 +83,8 @@ Unfocused
 
 As an alternative to search in a tab bar, you can also place search in a toolbar either at the bottom or top of the screen.
 
-* You can include search in a bottom toolbar either as an expanded field or as a toolbar button, depending on how much space is available and how important search is to your app. When someone taps it, it animates into a search field above the keyboard so they can begin typing.
-* You can include search in a top toolbar, also called a navigation bar, where it appears as a toolbar button. When someone taps it, it animates into a search field that appears either above the keyboard or inline at the top if there isn’t space at the bottom.
+- You can include search in a bottom toolbar either as an expanded field or as a toolbar button, depending on how much space is available and how important search is to your app. When someone taps it, it animates into a search field above the keyboard so they can begin typing.
+- You can include search in a top toolbar, also called a navigation bar, where it appears as a toolbar button. When someone taps it, it animates into a search field that appears either above the keyboard or inline at the top if there isn’t space at the bottom.
 
 ![An illustration of an iPhone screen with search in a bottom toolbar. The search field is positioned in an isolated group between a Filter button on the leading edge and a Compose button on the trailing edge.](https://docs-assets.developer.apple.com/published/face9eed2f9c99f2c12ca3a400919e03/search-fields-ios-toolbar-with-items%402x.png)
 
@@ -158,7 +158,7 @@ When someone taps the search field, the system displays a text-input control tha
 
 [Adding a search interface to your app](/documentation/SwiftUI/Adding-a-search-interface-to-your-app) — SwiftUI
 
-[`searchable(text:placement:)`](/documentation/SwiftUI/View/searchable(text:placement:)) — SwiftUI
+[`searchable(text:placement:)`](</documentation/SwiftUI/View/searchable(text:placement:)>) — SwiftUI
 
 [`UISearchBar`](/documentation/UIKit/UISearchBar) — UIKit
 
@@ -182,8 +182,8 @@ Craft search experiences in SwiftUI](https://developer.apple.com/videos/play/wwd
 
 ## [Change log](/design/human-interface-guidelines/search-fields#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| June 9, 2025 | Updated guidance for search placement in iOS, consolidated iPadOS and macOS platform considerations, and added guidance for tokens. |
-| September 12, 2023 | Combined guidance common to all platforms. |
-| June 5, 2023 | Added guidance for using search fields in watchOS. |
+| Date               | Changes                                                                                                                             |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| June 9, 2025       | Updated guidance for search placement in iOS, consolidated iPadOS and macOS platform considerations, and added guidance for tokens. |
+| September 12, 2023 | Combined guidance common to all platforms.                                                                                          |
+| June 5, 2023       | Added guidance for using search fields in watchOS.                                                                                  |

@@ -2,9 +2,9 @@ name: Haskell CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build:
@@ -14,10 +14,10 @@ jobs:
       - uses: actions/checkout@v2
       - uses: haskell/actions/setup@v1
         with:
-          ghc-version: '9.0.1'
-          cabal-version: 'latest'
+          ghc-version: "9.0.1"
+          cabal-version: "latest"
           enable-stack: true
-          stack-version: 'latest'
+          stack-version: "latest"
       - run: stack build
   test:
     name: Test
@@ -26,8 +26,8 @@ jobs:
       - uses: actions/checkout@v2
       - uses: haskell/actions/setup@v1
         with:
-          ghc-version: '9.0.1'
-          cabal-version: 'latest'
+          ghc-version: "9.0.1"
+          cabal-version: "latest"
           enable-stack: true
-          stack-version: 'latest'
+          stack-version: "latest"
       - run: stack test

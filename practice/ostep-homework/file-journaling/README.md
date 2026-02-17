@@ -1,4 +1,3 @@
-
 # Overview
 
 This homework introduces `fsck.py`, a simple file system simulator. Some
@@ -11,7 +10,7 @@ system consistency checker would do (e.g., fsck). The file system itself is
 based on a simplified VSFS, the very simple file system described in an
 earlier chapter. The tool first generates an on-disk file system; then, either
 randomly or through more specific controls, the tool changes the on-disk state
-of one aspect of the file system. 
+of one aspect of the file system.
 
 The challenge for you, the user, is to figure out which part of the file
 system's on-disk state was changed and hence has become inconsistent. In many
@@ -25,15 +24,15 @@ prompt> ./fsck.py -S 1
 Final state of file system:
 
 inode bitmap 1100100010000010
-inodes       [d a:0 r:4] [f a:-1 r:1] [] [] [d a:8 r:2] [] [] [] 
+inodes       [d a:0 r:4] [f a:-1 r:1] [] [] [d a:8 r:2] [] [] []
              [d a:6 r:2] [] [] [] [] [f a:15 r:1] [f a:12 r:1] []
 data bitmap  1000001010001001
-data         [(.,0) (..,0) (g,8) (t,14) (w,4) (m,13)] [] [] [] [] [] 
+data         [(.,0) (..,0) (g,8) (t,14) (w,4) (m,13)] [] [] [] [] []
              [(.,8) (..,0)] [] [(.,4) (..,0) (p,1)] [] [] [] [z] [] [] [g]
 
 Can you figure out how the file system was corrupted?
 
-prompt> 
+prompt>
 ```
 
 In this case, we run the tool with flag `-S` set to 1 (for reasons
@@ -69,6 +68,7 @@ this point that you can start in order to build knowledge of the entire file
 system and its contents.
 
 This particular file system contains the following files and directories:
+
 ```sh
   Directories: '/', '/g', '/w'
   Files:       '/t', '/m', '/w/p'
@@ -76,7 +76,7 @@ This particular file system contains the following files and directories:
 
 Can you see why? Spend some time, starting with the root directory, and
 see if you can figure it out. If not, well, this homework will be hard for
-you. 
+you.
 
 Now, let's get to the inconsistency part. This particular file system has a
 simple specific inconsistency within it. Can you see it?
@@ -93,7 +93,7 @@ inode bitmap 1100100010000110
 inodes       [d a:0 r:4] [f a:-1 r:1] [] [] [d a:8 r:2] [] [] [] [d a:6 r:2]
              [] [] [] [] [f a:15 r:1] [f a:12 r:1] []
 data bitmap  1000001010001001
-data         [(.,0) (..,0) (g,8) (t,14) (w,4) (m,13)] [] [] [] [] [] 
+data         [(.,0) (..,0) (g,8) (t,14) (w,4) (m,13)] [] [] [] [] []
              [(.,8) (..,0)] [] [(.,4) (..,0) (p,1)] [] [] [] [z] [] [] [g]
 
 CORRUPTION::INODE BITMAP corrupt bit 13
@@ -104,10 +104,10 @@ inode bitmap 1100100010000010
 inodes       [d a:0 r:4] [f a:-1 r:1] [] [] [d a:8 r:2] [] [] [] [d a:6 r:2]
              [] [] [] [] [f a:15 r:1] [f a:12 r:1] []
 data bitmap  1000001010001001
-data         [(.,0) (..,0) (g,8) (t,14) (w,4) (m,13)] [] [] [] [] [] 
+data         [(.,0) (..,0) (g,8) (t,14) (w,4) (m,13)] [] [] [] [] []
              [(.,8) (..,0)] [] [(.,4) (..,0) (p,1)] [] [] [] [z] [] [] [g]
 
-prompt> 
+prompt>
 ```
 
 As you can see from the output, the inode bitmap was changed in bit 13,
@@ -118,7 +118,7 @@ this file is in the root directory (/m). Thus, concluding that the inode
 bitmap changed here is fairly straightforward.
 
 Many other corruptions are possible (but the tool only introduces one state
-change at a time, to keep your life simple). Do the homework to find out 
+change at a time, to keep your life simple). Do the homework to find out
 more about them.
 
 The other flags available for the tool are:
@@ -147,7 +147,7 @@ The reason for two random seeds is worth describing. The first one, `-s`,
 creates different random file systems. The second one, `-S`, inserts different
 file system state changes (corruptions). Thus, you can generate one particular
 random file system and then try a bunch of different random corruptions upon
-it. 
+it.
 
 Some other flags just control the size of the file system (`-i` and `-d`), whereas
 others determine how many file operations are run against the file system
@@ -155,12 +155,3 @@ others determine how many file operations are run against the file system
 `-w` flag allows you to specify a particular corruption (although this is mostly
 for testing); the `-D` flag turns off corruption to, allowing you to examine an
 intact file system.
-
-
-
-
-
-
-
-
-

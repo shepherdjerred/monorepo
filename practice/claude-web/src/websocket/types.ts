@@ -14,7 +14,12 @@ export type ServerMessage =
   | { type: "ready"; sessionId: string }
   | { type: "system"; data: unknown }
   | { type: "assistant"; content: unknown[] }
-  | { type: "result"; subtype: "success" | "error"; result?: string; error?: string }
+  | {
+      type: "result";
+      subtype: "success" | "error";
+      result?: string;
+      error?: string;
+    }
   | { type: "interrupted" }
   | { type: "error"; message: string }
   | { type: "pong" };

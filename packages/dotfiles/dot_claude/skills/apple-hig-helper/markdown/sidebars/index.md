@@ -18,7 +18,7 @@ A sidebar requires a large amount of vertical and horizontal space. When space i
 
 ## [Best practices](/design/human-interface-guidelines/sidebars#Best-practices)
 
-**Extend content beneath the sidebar.** In iOS, iPadOS, and macOS, as with other controls such as toolbars and tab bars, sidebars float above content in the [Liquid Glass](/design/human-interface-guidelines/materials#Liquid-Glass) layer. To reinforce the separation and floating appearance of the sidebar, extend content beneath it either by letting it horizontally scroll or applying a background extension view, which mirrors adjacent content to give the impression of stretching it under the sidebar. For developer guidance, see [`backgroundExtensionEffect()`](/documentation/SwiftUI/View/backgroundExtensionEffect()).
+**Extend content beneath the sidebar.** In iOS, iPadOS, and macOS, as with other controls such as toolbars and tab bars, sidebars float above content in the [Liquid Glass](/design/human-interface-guidelines/materials#Liquid-Glass) layer. To reinforce the separation and floating appearance of the sidebar, extend content beneath it either by letting it horizontally scroll or applying a background extension view, which mirrors adjacent content to give the impression of stretching it under the sidebar. For developer guidance, see [`backgroundExtensionEffect()`](</documentation/SwiftUI/View/backgroundExtensionEffect()>).
 
 ![A screenshot of the leading side of an app on iPad. An image spans the upper part of the window, stopping at the edge of the sidebar.](https://docs-assets.developer.apple.com/published/d50ee5db90fbe0cae8f34304aa315053/sidebars-extend-content-beneath-sidebar-incorrect%402x.png)
 
@@ -42,7 +42,7 @@ A sidebar requires a large amount of vertical and horizontal space. When space i
 
 ## [Platform considerations](/design/human-interface-guidelines/sidebars#Platform-considerations)
 
-*No additional considerations for tvOS. Not supported in watchOS.*
+_No additional considerations for tvOS. Not supported in watchOS._
 
 ### [iOS](/design/human-interface-guidelines/sidebars#iOS)
 
@@ -106,9 +106,9 @@ Elevate the design of your iPad app](https://developer.apple.com/videos/play/wwd
 
 ## [Change log](/design/human-interface-guidelines/sidebars#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| June 9, 2025 | Added guidance for extending content beneath the sidebar. |
-| August 6, 2024 | Updated guidance to include the SwiftUI adaptable sidebar style. |
-| December 5, 2023 | Added artwork for iPadOS. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
+| Date             | Changes                                                          |
+| ---------------- | ---------------------------------------------------------------- |
+| June 9, 2025     | Added guidance for extending content beneath the sidebar.        |
+| August 6, 2024   | Updated guidance to include the SwiftUI adaptable sidebar style. |
+| December 5, 2023 | Added artwork for iPadOS.                                        |
+| June 21, 2023    | Updated to include guidance for visionOS.                        |

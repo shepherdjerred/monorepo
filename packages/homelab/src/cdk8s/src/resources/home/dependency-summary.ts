@@ -1,5 +1,9 @@
 import type { Chart } from "cdk8s";
-import { KubeCronJob, KubeNamespace, Quantity } from "../../../generated/imports/k8s.ts";
+import {
+  KubeCronJob,
+  KubeNamespace,
+  Quantity,
+} from "../../../generated/imports/k8s.ts";
 import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
 import versions from "../../versions.ts";
 
@@ -14,7 +18,8 @@ export function createDependencySummaryCronJob(chart: Chart) {
   // 1Password secret for API keys
   const secretItem = new OnePasswordItem(chart, "dependency-summary-secrets", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/zuz7msnwhrkmjsxxgmxxv2mnkm",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/zuz7msnwhrkmjsxxgmxxv2mnkm",
     },
     metadata: {
       name: "dependency-summary-secrets",
@@ -28,8 +33,10 @@ export function createDependencySummaryCronJob(chart: Chart) {
       name: "dependency-summary",
       namespace: "dependency-summary",
       annotations: {
-        "ignore-check.kube-linter.io/run-as-non-root": "Container runs as default user",
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "Container requires writable filesystem",
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "Container runs as default user",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "Container requires writable filesystem",
       },
     },
     spec: {
@@ -50,7 +57,13 @@ export function createDependencySummaryCronJob(chart: Chart) {
                 {
                   name: "dependency-summary",
                   image: `ghcr.io/shepherdjerred/dependency-summary:${versions["shepherdjerred/dependency-summary"]}`,
-                  command: ["timeout", "300", "bun", "run", "src/deps-email/src/main.ts"],
+                  command: [
+                    "timeout",
+                    "300",
+                    "bun",
+                    "run",
+                    "src/deps-email/src/main.ts",
+                  ],
                   env: [
                     {
                       name: "OPENAI_API_KEY",
@@ -72,7 +85,8 @@ export function createDependencySummaryCronJob(chart: Chart) {
                     },
                     {
                       name: "POSTAL_HOST",
-                      value: "http://postal-postal-web-service.postal.svc.cluster.local:5000",
+                      value:
+                        "http://postal-postal-web-service.postal.svc.cluster.local:5000",
                     },
                     {
                       name: "POSTAL_HOST_HEADER",

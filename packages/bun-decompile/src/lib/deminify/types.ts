@@ -21,7 +21,7 @@ export type ParameterInfo = {
   hasDefault: boolean;
   /** Whether parameter is a rest parameter */
   isRest: boolean;
-}
+};
 
 /** Represents a parsed function from the minified code */
 export type ExtractedFunction = {
@@ -53,7 +53,7 @@ export type ExtractedFunction = {
   children: string[];
   /** AST node reference */
   node: Node;
-}
+};
 
 /** A segment of top-level code (not inside any function) */
 export type CodeSegment = {
@@ -67,7 +67,7 @@ export type CodeSegment = {
   source: string;
   /** Function names called in this segment */
   callees: string[];
-}
+};
 
 /** Import statement info */
 export type ImportInfo = {
@@ -79,7 +79,7 @@ export type ImportInfo = {
   start: number;
   /** End position */
   end: number;
-}
+};
 
 /** Export statement info */
 export type ExportInfo = {
@@ -91,7 +91,7 @@ export type ExportInfo = {
   start: number;
   /** End position */
   end: number;
-}
+};
 
 /** Call graph representing function relationships */
 export type CallGraph = {
@@ -107,7 +107,7 @@ export type CallGraph = {
   exports: ExportInfo[];
   /** Original source code */
   source: string;
-}
+};
 
 /** Context for a single function provided to Claude */
 export type FunctionContext = {
@@ -119,7 +119,7 @@ export type FunctionContext = {
   deminifiedSource: string | null;
   /** Suggested name (if already inferred) */
   suggestedName: string | null;
-}
+};
 
 /** File-level context */
 export type FileContext = {
@@ -131,7 +131,7 @@ export type FileContext = {
   exports: ExportInfo[];
   /** Whether this is the entry point */
   isEntryPoint: boolean;
-}
+};
 
 /** Full context provided to Claude for de-minification */
 export type DeminifyContext = {
@@ -145,7 +145,7 @@ export type DeminifyContext = {
   knownNames: Map<string, string>;
   /** File-level context */
   fileContext: FileContext;
-}
+};
 
 /** Result of de-minifying a single function */
 export type DeminifyResult = {
@@ -163,7 +163,7 @@ export type DeminifyResult = {
   parameterNames: Record<string, string>;
   /** Local variable name mappings (original -> suggested) */
   localVariableNames: Record<string, string>;
-}
+};
 
 /** Configuration for de-minification */
 export type DeminifyConfig = {
@@ -189,7 +189,7 @@ export type DeminifyConfig = {
   maxFunctionSize: number;
   /** Min function size to process (skip trivial functions) */
   minFunctionSize: number;
-}
+};
 
 /** Default configuration values (cacheDir must be provided based on output path) */
 export const DEFAULT_CONFIG: Omit<DeminifyConfig, "apiKey" | "cacheDir"> = {
@@ -220,7 +220,7 @@ export type DeminifyProgress = {
   total: number;
   /** Current item name (if applicable) */
   currentItem?: string;
-}
+};
 
 /** Extended progress with live statistics */
 export type ExtendedProgress = {
@@ -240,7 +240,7 @@ export type ExtendedProgress = {
   startTime: number;
   /** Elapsed time in milliseconds */
   elapsed: number;
-} & DeminifyProgress
+} & DeminifyProgress;
 
 /** Cost estimate for de-minification */
 export type CostEstimate = {
@@ -254,7 +254,7 @@ export type CostEstimate = {
   functionCount: number;
   /** Number of API requests */
   requestCount: number;
-}
+};
 
 /** Cache entry */
 export type CacheEntry = {
@@ -266,7 +266,7 @@ export type CacheEntry = {
   timestamp: number;
   /** Model version used */
   modelVersion: string;
-}
+};
 
 /** Statistics from de-minification run */
 export type DeminifyStats = {
@@ -286,4 +286,4 @@ export type DeminifyStats = {
   averageConfidence: number;
   /** Time taken in milliseconds */
   timeTaken: number;
-}
+};

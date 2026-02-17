@@ -7,23 +7,25 @@ clauderon supports multiple AI agents, allowing you to choose the best model for
 
 ## Supported Agents
 
-| Agent | Provider | Context Window | Best For |
-|-------|----------|---------------|----------|
-| Claude Code | Anthropic | 200K tokens | General coding, complex reasoning |
-| Codex | OpenAI | 128K tokens | Code generation, completions |
-| Gemini | Google | 1M tokens | Large codebase analysis |
+| Agent       | Provider  | Context Window | Best For                          |
+| ----------- | --------- | -------------- | --------------------------------- |
+| Claude Code | Anthropic | 200K tokens    | General coding, complex reasoning |
+| Codex       | OpenAI    | 128K tokens    | Code generation, completions      |
+| Gemini      | Google    | 1M tokens      | Large codebase analysis           |
 
 ## Claude Code (Default)
 
 Anthropic's Claude-based coding agent, optimized for software engineering tasks.
 
 **Strengths:**
+
 - Strong reasoning and planning
 - Excellent code understanding
 - Good at explaining decisions
 - Follows instructions carefully
 
 **Best for:**
+
 - Complex refactoring
 - Debugging difficult issues
 - Code review
@@ -55,11 +57,13 @@ anthropic_oauth_token = "op://Private/Claude/oauth-token"
 OpenAI's code-focused model, designed for code generation and completion.
 
 **Strengths:**
+
 - Fast code generation
 - Good at completing patterns
 - Strong at common programming tasks
 
 **Best for:**
+
 - Quick code generation
 - Boilerplate creation
 - Simple modifications
@@ -97,11 +101,13 @@ codex_auth_json_path = "~/.codex/auth.json"
 Google's multimodal model with an exceptionally large context window.
 
 **Strengths:**
+
 - 1 million token context window
 - Good at analyzing large codebases
 - Multimodal capabilities (images)
 
 **Best for:**
+
 - Large codebase exploration
 - Understanding complex systems
 - Projects with many files
@@ -123,24 +129,24 @@ chmod 600 ~/.clauderon/secrets/google_api_key
 
 ### By Task Type
 
-| Task | Recommended Agent |
-|------|------------------|
-| Complex refactoring | Claude Code |
-| Quick fixes | Claude Code or Codex |
-| Large codebase analysis | Gemini |
-| Code generation | Codex |
-| Architecture planning | Claude Code |
-| Code review | Claude Code |
-| Documentation | Claude Code or Gemini |
+| Task                    | Recommended Agent     |
+| ----------------------- | --------------------- |
+| Complex refactoring     | Claude Code           |
+| Quick fixes             | Claude Code or Codex  |
+| Large codebase analysis | Gemini                |
+| Code generation         | Codex                 |
+| Architecture planning   | Claude Code           |
+| Code review             | Claude Code           |
+| Documentation           | Claude Code or Gemini |
 
 ### By Codebase Size
 
-| Size | Recommended Agent |
-|------|------------------|
-| Small (<10K lines) | Any |
-| Medium (10K-100K lines) | Claude Code |
-| Large (100K-500K lines) | Claude Code or Gemini |
-| Very large (>500K lines) | Gemini |
+| Size                     | Recommended Agent     |
+| ------------------------ | --------------------- |
+| Small (<10K lines)       | Any                   |
+| Medium (10K-100K lines)  | Claude Code           |
+| Large (100K-500K lines)  | Claude Code or Gemini |
+| Very large (>500K lines) | Gemini                |
 
 ## Setting Default Agent
 
@@ -201,11 +207,11 @@ clauderon list
 
 ## Credential Summary
 
-| Agent | Secret File | Environment Variable |
-|-------|-------------|---------------------|
+| Agent       | Secret File             | Environment Variable      |
+| ----------- | ----------------------- | ------------------------- |
 | Claude Code | `anthropic_oauth_token` | `CLAUDE_CODE_OAUTH_TOKEN` |
-| Codex | `openai_api_key` | `OPENAI_API_KEY` |
-| Gemini | `google_api_key` | `GOOGLE_API_KEY` |
+| Codex       | `openai_api_key`        | `OPENAI_API_KEY`          |
+| Gemini      | `google_api_key`        | `GOOGLE_API_KEY`          |
 
 All credentials can also be stored in 1Password. See [1Password Guide](/guides/onepassword/).
 

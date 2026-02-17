@@ -1,7 +1,11 @@
 import * as R from "remeda";
 import { fetchAllCached } from "./cache.js";
 import { fetchAll as fetchAllUncached } from "./fetch.js";
-import { type Configuration, type Result, CachedConfigurationSchema } from "./types.js";
+import {
+  type Configuration,
+  type Result,
+  CachedConfigurationSchema,
+} from "./types.js";
 
 export async function run(config: Configuration): Promise<Result> {
   const { success, data } = CachedConfigurationSchema.safeParse(config);
@@ -21,7 +25,11 @@ export async function run(config: Configuration): Promise<Result> {
     R.reverse(),
     R.filter((entry) => {
       const filterFn = entry.source.filter;
-      if (filterFn === undefined || entry.preview === undefined || entry.preview === "") {
+      if (
+        filterFn === undefined ||
+        entry.preview === undefined ||
+        entry.preview === ""
+      ) {
         return true;
       }
       return filterFn(entry.preview);

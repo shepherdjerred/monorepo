@@ -1,10 +1,6 @@
 import type { ModalComponent } from "../types";
 import { ComponentRenderer } from "../ComponentRegistry";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 
 interface A2UIModalProps {
   id: string;

@@ -49,7 +49,9 @@ function formatStacktrace(event: BugsinkEvent): string[] {
         lines.push(`  at ${frame.function} (${location})${inApp}`);
       }
       if (exception.stacktrace.frames.length > 10) {
-        lines.push(`  ... ${String(exception.stacktrace.frames.length - 10)} more frames`);
+        lines.push(
+          `  ... ${String(exception.stacktrace.frames.length - 10)} more frames`,
+        );
       }
       lines.push("```");
     }
@@ -60,7 +62,7 @@ function formatStacktrace(event: BugsinkEvent): string[] {
 
 function formatIssueDetails(
   issue: BugsinkIssue,
-  latestEvent: BugsinkEvent | null
+  latestEvent: BugsinkEvent | null,
 ): string {
   const lines: string[] = [];
 
@@ -68,7 +70,9 @@ function formatIssueDetails(
   lines.push("");
 
   // Status section
-  lines.push(`### Level: ${getLevelEmoji(issue.level)} ${issue.level.toUpperCase()}`);
+  lines.push(
+    `### Level: ${getLevelEmoji(issue.level)} ${issue.level.toUpperCase()}`,
+  );
   lines.push("");
 
   // Details
@@ -85,7 +89,9 @@ function formatIssueDetails(
 
   lines.push(`- **Events:** ${String(issue.count)}`);
   lines.push(`- **Users affected:** ${String(issue.user_count)}`);
-  lines.push(`- **First seen:** ${new Date(issue.first_seen).toLocaleString()}`);
+  lines.push(
+    `- **First seen:** ${new Date(issue.first_seen).toLocaleString()}`,
+  );
   lines.push(`- **Last seen:** ${new Date(issue.last_seen).toLocaleString()}`);
   lines.push("");
 
@@ -113,12 +119,18 @@ function formatIssueDetails(
     lines.push("### Latest Event");
     lines.push("");
     lines.push(`- **Event ID:** ${latestEvent.event_id}`);
-    lines.push(`- **Occurred:** ${new Date(latestEvent.timestamp).toLocaleString()}`);
+    lines.push(
+      `- **Occurred:** ${new Date(latestEvent.timestamp).toLocaleString()}`,
+    );
 
     if (latestEvent.user) {
       const user = latestEvent.user;
       const userInfo =
-        user.email ?? user.username ?? user.id ?? user.ip_address ?? "anonymous";
+        user.email ??
+        user.username ??
+        user.id ??
+        user.ip_address ??
+        "anonymous";
       lines.push(`- **User:** ${userInfo}`);
     }
     lines.push("");
@@ -148,7 +160,7 @@ function formatIssueDetails(
 
 export async function issueCommand(
   issueId: string,
-  options: IssueOptions = {}
+  options: IssueOptions = {},
 ): Promise<void> {
   try {
     const issue = await getIssue(issueId);

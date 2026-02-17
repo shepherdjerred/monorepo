@@ -1,10 +1,15 @@
 import type { Directory, Secret } from "@dagger.io/dagger";
-import { publishToGhcrMultiple, updateHomelabVersion } from "./lib/containers/index.js";
+import {
+  publishToGhcrMultiple,
+  updateHomelabVersion,
+} from "./lib/containers/index.js";
 
 /**
  * Check starlight-karma-bot: Docker build validation
  */
-export async function checkStarlightKarmaBot(source: Directory): Promise<string> {
+export async function checkStarlightKarmaBot(
+  source: Directory,
+): Promise<string> {
   const pkgSource = source.directory("packages/starlight-karma-bot");
 
   // Build the Docker image using Dockerfile to validate it compiles

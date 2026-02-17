@@ -30,7 +30,7 @@ An image view can contain rich image data in various formats, like PNG, JPEG, an
 
 ## [Platform considerations](/design/human-interface-guidelines/image-views#Platform-considerations)
 
-*No additional considerations for iOS or iPadOS.*
+_No additional considerations for iOS or iPadOS._
 
 ### [macOS](/design/human-interface-guidelines/image-views#macOS)
 
@@ -84,6 +84,6 @@ Add rich graphics to your SwiftUI app](https://developer.apple.com/videos/play/w
 
 ## [Change log](/design/human-interface-guidelines/image-views#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date          | Changes                                   |
+| ------------- | ----------------------------------------- |
 | June 21, 2023 | Updated to include guidance for visionOS. |

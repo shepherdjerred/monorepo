@@ -615,13 +615,14 @@ export type NodefeaturediscoveryHelmValuesTopologyUpdaterServiceAccount = {
   name?: unknown;
 };
 
-export type NodefeaturediscoveryHelmValuesTopologyUpdaterServiceAccountAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type NodefeaturediscoveryHelmValuesTopologyUpdaterServiceAccountAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
 export type NodefeaturediscoveryHelmValuesTopologyUpdaterRbac = {
   /**
@@ -630,7 +631,8 @@ export type NodefeaturediscoveryHelmValuesTopologyUpdaterRbac = {
   create?: boolean;
 };
 
-export type NodefeaturediscoveryHelmValuesTopologyUpdaterPodSecurityContext = object;
+export type NodefeaturediscoveryHelmValuesTopologyUpdaterPodSecurityContext =
+  object;
 
 export type NodefeaturediscoveryHelmValuesTopologyUpdaterSecurityContext = {
   /**
@@ -651,9 +653,10 @@ export type NodefeaturediscoveryHelmValuesTopologyUpdaterSecurityContext = {
   runAsUser?: number;
 };
 
-export type NodefeaturediscoveryHelmValuesTopologyUpdaterSecurityContextCapabilities = {
-  drop?: string[];
-};
+export type NodefeaturediscoveryHelmValuesTopologyUpdaterSecurityContextCapabilities =
+  {
+    drop?: string[];
+  };
 
 export type NodefeaturediscoveryHelmValuesTopologyUpdaterLivenessProbe = {
   /**
@@ -712,7 +715,8 @@ export type NodefeaturediscoveryHelmValuesTopologyUpdaterAnnotations = {
   [key: string]: unknown;
 };
 
-export type NodefeaturediscoveryHelmValuesTopologyUpdaterDaemonsetAnnotations = object;
+export type NodefeaturediscoveryHelmValuesTopologyUpdaterDaemonsetAnnotations =
+  object;
 
 export type NodefeaturediscoveryHelmValuesTopologyUpdaterAffinity = object;
 

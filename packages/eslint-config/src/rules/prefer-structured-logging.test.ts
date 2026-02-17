@@ -19,11 +19,23 @@ ruleTester.run("prefer-structured-logging", preferStructuredLogging, {
   ],
   invalid: [
     { code: 'console.log("Hello");', errors: [{ messageId: "preferLogger" }] },
-    { code: 'console.error("Error occurred");', errors: [{ messageId: "preferLogger" }] },
-    { code: 'console.warn("Warning");', errors: [{ messageId: "preferLogger" }] },
+    {
+      code: 'console.error("Error occurred");',
+      errors: [{ messageId: "preferLogger" }],
+    },
+    {
+      code: 'console.warn("Warning");',
+      errors: [{ messageId: "preferLogger" }],
+    },
     { code: 'console.info("Info");', errors: [{ messageId: "preferLogger" }] },
-    { code: 'console.debug("Debug");', errors: [{ messageId: "preferLogger" }] },
-    { code: 'console.trace("Trace");', errors: [{ messageId: "preferLogger" }] },
+    {
+      code: 'console.debug("Debug");',
+      errors: [{ messageId: "preferLogger" }],
+    },
+    {
+      code: 'console.trace("Trace");',
+      errors: [{ messageId: "preferLogger" }],
+    },
     {
       code: `
         console.log("First");

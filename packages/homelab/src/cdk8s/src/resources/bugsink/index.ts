@@ -1,7 +1,21 @@
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
-import { Cpu, Deployment, DeploymentStrategy, EnvValue, Probe, Secret, Service, Volume } from "cdk8s-plus-31";
-import { IntOrString, KubeCronJob, KubeNetworkPolicy, Quantity } from "../../../generated/imports/k8s.ts";
+import {
+  Cpu,
+  Deployment,
+  DeploymentStrategy,
+  EnvValue,
+  Probe,
+  Secret,
+  Service,
+  Volume,
+} from "cdk8s-plus-31";
+import {
+  IntOrString,
+  KubeCronJob,
+  KubeNetworkPolicy,
+  Quantity,
+} from "../../../generated/imports/k8s.ts";
 import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
 import { TailscaleIngress } from "../../misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "../../misc/cloudflare-tunnel.ts";
@@ -23,10 +37,15 @@ export function createBugsinkDeployment(chart: Chart) {
       itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/bugsink-credentials",
     },
   });
-  const secretRef = Secret.fromSecretName(chart, "bugsink-secrets-ref", bugsinkSecrets.name);
+  const secretRef = Secret.fromSecretName(
+    chart,
+    "bugsink-secrets-ref",
+    bugsinkSecrets.name,
+  );
 
   // PostgreSQL credentials from postgres-operator
-  const postgresSecretName = "bugsink.bugsink-postgresql.credentials.postgresql.acid.zalan.do";
+  const postgresSecretName =
+    "bugsink.bugsink-postgresql.credentials.postgresql.acid.zalan.do";
 
   const deployment = new Deployment(chart, "bugsink", {
     replicas: 1,
@@ -36,7 +55,8 @@ export function createBugsinkDeployment(chart: Chart) {
     },
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "Bugsink requires writable filesystem for Django runtime",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "Bugsink requires writable filesystem for Django runtime",
       },
     },
     podMetadata: {
@@ -55,10 +75,18 @@ export function createBugsinkDeployment(chart: Chart) {
       name: "pg-secret",
     },
   );
-  const dbUrlVolume = Volume.fromEmptyDir(chart, "bugsink-db-url-volume", "bugsink-db-url");
+  const dbUrlVolume = Volume.fromEmptyDir(
+    chart,
+    "bugsink-db-url-volume",
+    "bugsink-db-url",
+  );
   // Shared /tmp volume for snappea SQLite database (/tmp/snappea.sqlite3)
   // Both main container and snappea worker need access to this
-  const tmpVolume = Volume.fromEmptyDir(chart, "bugsink-tmp-volume", "bugsink-tmp");
+  const tmpVolume = Volume.fromEmptyDir(
+    chart,
+    "bugsink-tmp-volume",
+    "bugsink-tmp",
+  );
 
   // Init container to build DATABASE_URL from postgres-operator secret
   deployment.addInitContainer(
@@ -100,7 +128,9 @@ echo "Database URL built successfully"
       name: "migrate",
       image: `bugsink/bugsink:${versions["bugsink/bugsink"]}`,
       command: ["/bin/sh", "-c"],
-      args: ["export DATABASE_URL=$(cat /db-url/url) && bugsink-manage migrate --noinput"],
+      args: [
+        "export DATABASE_URL=$(cat /db-url/url) && bugsink-manage migrate --noinput",
+      ],
       securityContext: {
         user: UID,
         group: GID,
@@ -133,7 +163,9 @@ echo "Database URL built successfully"
       name: "migrate-snappea",
       image: `bugsink/bugsink:${versions["bugsink/bugsink"]}`,
       command: ["/bin/sh", "-c"],
-      args: ["export DATABASE_URL=$(cat /db-url/url) && bugsink-manage migrate --database=snappea --noinput"],
+      args: [
+        "export DATABASE_URL=$(cat /db-url/url) && bugsink-manage migrate --database=snappea --noinput",
+      ],
       securityContext: {
         user: UID,
         group: GID,
@@ -167,7 +199,9 @@ echo "Database URL built successfully"
       name: "bugsink",
       image: `bugsink/bugsink:${versions["bugsink/bugsink"]}`,
       command: ["/bin/sh", "-c"],
-      args: ["export DATABASE_URL=$(cat /db-url/url) && bugsink-manage runserver 0.0.0.0:8000"],
+      args: [
+        "export DATABASE_URL=$(cat /db-url/url) && bugsink-manage runserver 0.0.0.0:8000",
+      ],
       ports: [{ name: "http", number: 8000 }],
       envVariables: {
         // Security configuration
@@ -259,7 +293,9 @@ echo "Database URL built successfully"
       name: "snappea-worker",
       image: `bugsink/bugsink:${versions["bugsink/bugsink"]}`,
       command: ["/bin/sh", "-c"],
-      args: ["export DATABASE_URL=$(cat /db-url/url) && bugsink-manage runsnappea"],
+      args: [
+        "export DATABASE_URL=$(cat /db-url/url) && bugsink-manage runsnappea",
+      ],
       envVariables: {
         SECRET_KEY: EnvValue.fromSecretValue({
           secret: secretRef,
@@ -421,12 +457,16 @@ echo "Database URL built successfully"
   return { deployment, service, bugsinkSecrets };
 }
 
-export function createBugsinkHousekeepingCronJob(chart: Chart, bugsinkSecrets: OnePasswordItem) {
+export function createBugsinkHousekeepingCronJob(
+  chart: Chart,
+  bugsinkSecrets: OnePasswordItem,
+) {
   const UID = 14_237;
   const GID = 14_237;
 
   // PostgreSQL credentials
-  const postgresSecretName = "bugsink.bugsink-postgresql.credentials.postgresql.acid.zalan.do";
+  const postgresSecretName =
+    "bugsink.bugsink-postgresql.credentials.postgresql.acid.zalan.do";
 
   // CronJob for daily housekeeping at 3am
   new KubeCronJob(chart, "bugsink-housekeeping", {

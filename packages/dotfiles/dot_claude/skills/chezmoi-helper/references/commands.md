@@ -4,31 +4,31 @@
 
 These flags apply to all commands:
 
-| Flag | Description |
-|------|-------------|
-| `--color auto\|on\|off` | Colorize output |
-| `-c, --config path` | Config file path |
-| `--config-format format` | Force config format |
-| `-D, --destination path` | Destination directory (default: `~`) |
-| `-n, --dry-run` | Do not make changes |
-| `--force` | Override safety checks |
-| `-k, --keep-going` | Continue on errors |
-| `--no-pager` | Disable pager |
-| `--no-tty` | Do not use TTY |
-| `-o, --output path` | Write output to file |
-| `-S, --source path` | Source directory path |
-| `-v, --verbose` | Verbose output |
-| `-W, --working-tree path` | Working tree directory |
+| Flag                      | Description                          |
+| ------------------------- | ------------------------------------ |
+| `--color auto\|on\|off`   | Colorize output                      |
+| `-c, --config path`       | Config file path                     |
+| `--config-format format`  | Force config format                  |
+| `-D, --destination path`  | Destination directory (default: `~`) |
+| `-n, --dry-run`           | Do not make changes                  |
+| `--force`                 | Override safety checks               |
+| `-k, --keep-going`        | Continue on errors                   |
+| `--no-pager`              | Disable pager                        |
+| `--no-tty`                | Do not use TTY                       |
+| `-o, --output path`       | Write output to file                 |
+| `-S, --source path`       | Source directory path                |
+| `-v, --verbose`           | Verbose output                       |
+| `-W, --working-tree path` | Working tree directory               |
 
 ## Common Flags (shared by many commands)
 
-| Flag | Description |
-|------|-------------|
-| `-x, --exclude types` | Exclude entry types |
-| `-i, --include types` | Include entry types |
-| `--init` | Regenerate config from template first |
-| `-P, --parent-dirs` | Include parent directories |
-| `-r, --recursive` | Recurse into subdirectories (default: true) |
+| Flag                  | Description                                 |
+| --------------------- | ------------------------------------------- |
+| `-x, --exclude types` | Exclude entry types                         |
+| `-i, --include types` | Include entry types                         |
+| `--init`              | Regenerate config from template first       |
+| `-P, --parent-dirs`   | Include parent directories                  |
+| `-r, --recursive`     | Recurse into subdirectories (default: true) |
 
 ### Entry Types for --include/--exclude
 
@@ -52,18 +52,18 @@ chezmoi add --new ~/.newfile            # Create new file if target doesn't exis
 chezmoi add -p ~/.bashrc               # Prompt for confirmation
 ```
 
-| Flag | Description |
-|------|-------------|
-| `-a, --autotemplate` | Auto-generate template from config data |
-| `--create` | Set `create_` attribute |
-| `--encrypt` | Encrypt with configured method |
-| `--exact` | Set `exact_` attribute on directories |
-| `--follow` | Follow symlinks |
-| `--new` | Create new file |
-| `-p, --prompt` | Confirm each file interactively |
-| `-T, --template` | Set `.tmpl` attribute |
-| `--template-symlinks` | Make symlinks portable via templates |
-| `--secrets ignore\|warning\|error` | Secret detection behavior |
+| Flag                               | Description                             |
+| ---------------------------------- | --------------------------------------- |
+| `-a, --autotemplate`               | Auto-generate template from config data |
+| `--create`                         | Set `create_` attribute                 |
+| `--encrypt`                        | Encrypt with configured method          |
+| `--exact`                          | Set `exact_` attribute on directories   |
+| `--follow`                         | Follow symlinks                         |
+| `--new`                            | Create new file                         |
+| `-p, --prompt`                     | Confirm each file interactively         |
+| `-T, --template`                   | Set `.tmpl` attribute                   |
+| `--template-symlinks`              | Make symlinks portable via templates    |
+| `--secrets ignore\|warning\|error` | Secret detection behavior               |
 
 ### apply
 
@@ -91,11 +91,11 @@ chezmoi diff --pager less               # Use specific pager
 chezmoi diff --exclude=scripts          # Exclude scripts
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--pager command` | Override pager |
-| `--reverse` | Show changes needed for destination to match target |
-| `--script-contents` | Show script contents (default: true) |
+| Flag                | Description                                         |
+| ------------------- | --------------------------------------------------- |
+| `--pager command`   | Override pager                                      |
+| `--reverse`         | Show changes needed for destination to match target |
+| `--script-contents` | Show script contents (default: true)                |
 
 ### edit
 
@@ -108,11 +108,11 @@ chezmoi edit --watch ~/.bashrc          # Auto-apply on save
 chezmoi edit                            # Open source directory in editor
 ```
 
-| Flag | Description |
-|------|-------------|
-| `-a, --apply` | Apply after editing |
+| Flag              | Description                    |
+| ----------------- | ------------------------------ |
+| `-a, --apply`     | Apply after editing            |
 | `--hardlink bool` | Use hard links (default: true) |
-| `--watch` | Apply on file save |
+| `--watch`         | Apply on file save             |
 
 ### edit-config
 
@@ -165,13 +165,13 @@ chezmoi managed --path-style=source-relative  # Source-relative paths
 chezmoi managed -0                      # NUL-separated output
 ```
 
-| Path Style | Description |
-|------------|-------------|
-| `relative` | Relative to destination (default) |
-| `absolute` | Absolute destination paths |
-| `source-relative` | Relative to source directory |
-| `source-absolute` | Absolute source paths |
-| `all` | All path styles |
+| Path Style        | Description                       |
+| ----------------- | --------------------------------- |
+| `relative`        | Relative to destination (default) |
+| `absolute`        | Absolute destination paths        |
+| `source-relative` | Relative to source directory      |
+| `source-absolute` | Absolute source paths             |
+| `all`             | All path styles                   |
 
 ### unmanaged
 
@@ -275,17 +275,17 @@ chezmoi init --one-shot user            # Apply then remove chezmoi
 chezmoi init --purge --force            # Remove source + config dirs
 ```
 
-| Flag | Description |
-|------|-------------|
-| `-a, --apply` | Apply after init |
-| `--branch name` | Git branch to checkout |
-| `-d, --depth int` | Git clone depth |
-| `--ssh` | Use SSH URLs |
-| `--one-shot` | Apply, then purge everything |
-| `-p, --purge` | Remove source and config dirs |
-| `--purge-binary` | Remove chezmoi binary |
-| `--guess-repo-url=false` | Disable URL guessing |
-| `--prompt*` | Pre-populate template prompts |
+| Flag                     | Description                   |
+| ------------------------ | ----------------------------- |
+| `-a, --apply`            | Apply after init              |
+| `--branch name`          | Git branch to checkout        |
+| `-d, --depth int`        | Git clone depth               |
+| `--ssh`                  | Use SSH URLs                  |
+| `--one-shot`             | Apply, then purge everything  |
+| `-p, --purge`            | Remove source and config dirs |
+| `--purge-binary`         | Remove chezmoi binary         |
+| `--guess-repo-url=false` | Disable URL guessing          |
+| `--prompt*`              | Pre-populate template prompts |
 
 ### update
 

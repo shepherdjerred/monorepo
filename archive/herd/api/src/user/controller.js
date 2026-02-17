@@ -1,7 +1,7 @@
-const UserModel = require('./model');
-const authenticationController = require('./authentication/controller');
+const UserModel = require("./model");
+const authenticationController = require("./authentication/controller");
 
-async function addUser (req, res, next) {
+async function addUser(req, res, next) {
   let isRegistering = req.body.register;
   let user;
   if (isRegistering) {
@@ -15,7 +15,7 @@ async function addUser (req, res, next) {
       hNumber: req.body.hNumber,
       password: req.body.password,
       roles: [],
-      confirmed: false
+      confirmed: false,
     });
   } else {
     user = new UserModel({
@@ -25,7 +25,7 @@ async function addUser (req, res, next) {
       hNumber: req.body.hNumber,
       password: req.body.password,
       roles: req.body.roles,
-      confirmed: req.body.confirmed
+      confirmed: req.body.confirmed,
     });
   }
 
@@ -40,28 +40,28 @@ async function addUser (req, res, next) {
   } catch (err) {
     next({
       statusCode: 500,
-      error: err
+      error: err,
     });
   }
 }
 
-async function getUsers (req, res, next) {
+async function getUsers(req, res, next) {
   try {
     let users = await UserModel.find();
     res.json(users);
   } catch (err) {
     next({
       statusCode: 500,
-      error: err
+      error: err,
     });
   }
 }
 
-async function getUser (req, res, next) {
+async function getUser(req, res, next) {
   res.json(res.locals.user);
 }
 
-async function updateUser (req, res, next) {
+async function updateUser(req, res, next) {
   let user = res.locals.user;
   user.firstName = req.body.firstName || user.firstName;
   user.lastName = req.body.lastName || user.lastName;
@@ -76,24 +76,24 @@ async function updateUser (req, res, next) {
   } catch (err) {
     next({
       statusCode: 500,
-      error: err
+      error: err,
     });
   }
 }
 
-async function deleteUser (req, res, next) {
+async function deleteUser(req, res, next) {
   try {
     let user = await res.locals.user.remove();
     res.json(user);
   } catch (err) {
     next({
       statusCode: 500,
-      error: err
+      error: err,
     });
   }
 }
 
-async function addRoleToUser (req, res, next) {
+async function addRoleToUser(req, res, next) {
   let user = res.locals.user;
   let role = res.locals.role;
   user.roles.push(role);
@@ -103,28 +103,28 @@ async function addRoleToUser (req, res, next) {
   } catch (err) {
     next({
       statusCode: 500,
-      error: err
+      error: err,
     });
   }
 }
 
-async function getRolesForUser (req, res, next) {
+async function getRolesForUser(req, res, next) {
   let user = res.locals.user;
   try {
-    user = await UserModel.findOne({'_id': user._id}).populate({
-      path: 'roles',
+    user = await UserModel.findOne({ _id: user._id }).populate({
+      path: "roles",
       populate: {
-        path: 'policies',
+        path: "policies",
         populate: {
-          path: 'statements'
-        }
-      }
+          path: "statements",
+        },
+      },
     });
     res.json(user.roles);
   } catch (err) {
     next({
       statusCode: 500,
-      error: err
+      error: err,
     });
   }
 }
@@ -136,5 +136,5 @@ module.exports = {
   updateUser,
   deleteUser,
   addRoleToUser,
-  getRolesForUser
+  getRolesForUser,
 };

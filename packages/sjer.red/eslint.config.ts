@@ -10,7 +10,8 @@ export default [
         "error",
         {
           name: "Bun",
-          message: "Bun globals are not available in Astro/Playwright config files. Use Node.js APIs instead.",
+          message:
+            "Bun globals are not available in Astro/Playwright config files. Use Node.js APIs instead.",
         },
       ],
       "no-restricted-imports": "off",

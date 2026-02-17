@@ -80,14 +80,14 @@ type CliOptions = {
   noCache: boolean;
   concurrency: number;
   yes: boolean;
-}
+};
 
 type ValidatedInput = {
   binaryPath: string | undefined;
   filePath: string | undefined;
   outputPath: string;
   options: CliOptions;
-}
+};
 
 // ============================================================================
 // Input Validation
@@ -170,7 +170,7 @@ function parseAndValidateArgs(): {
   const provider = values.provider;
   if (provider !== "openai" && provider !== "anthropic") {
     console.error(
-      `Error: --provider must be 'openai' or 'anthropic', got '${provider}'`
+      `Error: --provider must be 'openai' or 'anthropic', got '${provider}'`,
     );
     process.exit(1);
   }
@@ -213,7 +213,7 @@ function parseAndValidateArgs(): {
  */
 async function validateInput(
   binary: string | undefined,
-  options: CliOptions
+  options: CliOptions,
 ): Promise<ValidatedInput> {
   if (options.help) {
     console.log(USAGE);
@@ -266,14 +266,14 @@ async function validateInput(
  */
 function validateApiKey(
   apiKey: string | undefined,
-  provider: "openai" | "anthropic"
+  provider: "openai" | "anthropic",
 ): string {
   if (!apiKey) {
     const envKey =
       provider === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
     console.error(`\nError: De-minification requires an API key.`);
     console.error(
-      `Provide via --api-key flag or ${envKey} environment variable.`
+      `Provide via --api-key flag or ${envKey} environment variable.`,
     );
     process.exit(1);
   }
@@ -298,7 +298,7 @@ function validateApiKey(
 async function runDecompilation(
   binaryPath: string,
   outputPath: string,
-  verbose: boolean
+  verbose: boolean,
 ): Promise<DecompileResult> {
   console.log(`Decompiling: ${binaryPath}`);
 
@@ -325,14 +325,14 @@ async function runDecompilation(
 async function runDeminification(
   result: DecompileResult,
   outputPath: string,
-  options: CliOptions
+  options: CliOptions,
 ): Promise<void> {
   // Get and validate API key
   const envKey =
     options.provider === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
   const apiKey = validateApiKey(
     options.apiKey ?? Bun.env[envKey],
-    options.provider
+    options.provider,
   );
 
   console.log("\n--- De-minification ---");
@@ -354,7 +354,7 @@ async function runDeminification(
       m.loader === "js" ||
       m.loader === "jsx" ||
       m.loader === "tsx" ||
-      m.loader === "ts"
+      m.loader === "ts",
   );
 
   if (jsModules.length === 0) {
@@ -362,14 +362,18 @@ async function runDeminification(
     return;
   }
 
-  console.log(`Found ${String(jsModules.length)} JavaScript module(s) to de-minify.`);
+  console.log(
+    `Found ${String(jsModules.length)} JavaScript module(s) to de-minify.`,
+  );
 
   // Create deminified output directory
   const deminifiedDir = join(outputPath, "deminified");
   await mkdir(deminifiedDir, { recursive: true });
 
   for (const module of jsModules) {
-    if (module.contents.length === 0) {continue;}
+    if (module.contents.length === 0) {
+      continue;
+    }
 
     const source = new TextDecoder().decode(module.contents);
     const fileName = module.name || "unknown.js";
@@ -439,7 +443,9 @@ async function runDeminification(
 
       // Write de-minified output
       let outFileName = module.name.replace(/^\//, "");
-      if (!outFileName) {outFileName = "module.js";}
+      if (!outFileName) {
+        outFileName = "module.js";
+      }
       if (!outFileName.endsWith(".js")) {
         outFileName += ".js";
       }
@@ -447,7 +453,7 @@ async function runDeminification(
       const outPath = join(deminifiedDir, outFileName);
       const outDir = join(
         deminifiedDir,
-        ...outFileName.split("/").slice(0, -1)
+        ...outFileName.split("/").slice(0, -1),
       );
       await mkdir(outDir, { recursive: true });
       await Bun.write(outPath, deminified);
@@ -462,7 +468,7 @@ async function runDeminification(
       // Recoverable error: log and continue with next module
       progressDisplay.clear();
       console.error(
-        `Error processing ${fileName}: ${(error as Error).message}`
+        `Error processing ${fileName}: ${(error as Error).message}`,
       );
     }
   }
@@ -479,14 +485,14 @@ async function runDeminification(
 async function runFileDeminification(
   filePath: string,
   outputPath: string,
-  options: CliOptions
+  options: CliOptions,
 ): Promise<void> {
   // Get and validate API key
   const envKey =
     options.provider === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
   const apiKey = validateApiKey(
     options.apiKey ?? Bun.env[envKey],
-    options.provider
+    options.provider,
   );
 
   console.log(`De-minifying: ${filePath}`);
@@ -614,7 +620,10 @@ function displayResults(result: DecompileResult, verbose: boolean): void {
 
 async function main(): Promise<void> {
   const { binary, options } = parseAndValidateArgs();
-  const { binaryPath, filePath, outputPath } = await validateInput(binary, options);
+  const { binaryPath, filePath, outputPath } = await validateInput(
+    binary,
+    options,
+  );
 
   // File-only mode: de-minify a JS file directly
   if (filePath) {
@@ -633,7 +642,7 @@ async function main(): Promise<void> {
   const result = await runDecompilation(
     binaryPath,
     outputPath,
-    options.verbose
+    options.verbose,
   );
 
   // Display extraction results

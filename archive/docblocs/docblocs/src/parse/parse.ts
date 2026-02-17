@@ -1,27 +1,24 @@
 import * as ast from "../ast";
-import { Maybe,
-         Dictionary,
-         Stack         } from "../util";
-import { ParseError    } from "./error";
-import { BlocStack,
-         ContainerBloc } from "./blocstack";
-import { Token         } from "./token";
+import { Maybe, Dictionary, Stack } from "../util";
+import { ParseError } from "./error";
+import { BlocStack, ContainerBloc } from "./blocstack";
+import { Token } from "./token";
 
 const precedences: Dictionary<number> = {
-  "*" : 80,
-  "/" : 80,
-  "%" : 80,
-  "+" : 70,
-  "-" : 70,
-  "<" : 60,
+  "*": 80,
+  "/": 80,
+  "%": 80,
+  "+": 70,
+  "-": 70,
+  "<": 60,
   "<=": 60,
-  ">" : 60,
+  ">": 60,
   ">=": 60,
   "==": 50,
   "!=": 50,
   "&&": 30,
   "||": 20,
-  "|" : 10
+  "|": 10,
 };
 
 interface BlocMods {
@@ -37,7 +34,7 @@ export function parse(text: string, source?: string): ast.Template {
   let curPos = 0;
 
   /** Current location in the source. */
-  let curLoc = {line: 1, char: 1};
+  let curLoc = { line: 1, char: 1 };
 
   /** Position (index) of the end of the text. */
   let endPos = text.length;
@@ -62,7 +59,6 @@ export function parse(text: string, source?: string): ast.Template {
   let lastMatch: RegExpMatchArray;
 
   try {
-
     // Parse unitl there's nothing left
     while (curPos < endPos) {
       parseText();
@@ -73,18 +69,18 @@ export function parse(text: string, source?: string): ast.Template {
     stack.pop(ast.Identifier(curLoc, rootId));
     if (rootBloc.contents.children.length == 1) {
       let child = rootBloc.contents.children[0];
-      if (typeof child != "string" &&
-          child.type == "Bloc" &&
-          child.expression.type == "Identifier" &&
-          child.expression.text == "template" &&
-          child.contents                          ) {
+      if (
+        typeof child != "string" &&
+        child.type == "Bloc" &&
+        child.expression.type == "Identifier" &&
+        child.expression.text == "template" &&
+        child.contents
+      ) {
         return child.contents;
       }
     }
     return rootBloc.contents;
-
-  }
-  catch (e) {
+  } catch (e) {
     if (source) {
       e.fileName = source;
     }
@@ -116,19 +112,18 @@ export function parse(text: string, source?: string): ast.Template {
         if (mods.comment) {
           parseBlocComment(opening);
           closed = true;
-        }
-        else {
+        } else {
           let bloc = parseBlocContents(opening, mods);
           let params = parseBlocParams(mods);
           let firstExpr, firstParams;
-          if (mods.property && ! params) {
+          if (mods.property && !params) {
             firstExpr = parseExpression();
             if (firstExpr) {
               firstParams = parseBlocParams(mods);
             }
           }
 
-          if (! parseToken("]]")) {
+          if (!parseToken("]]")) {
             throw new ParseError("Unexpected character in bloc", curLoc);
           }
           closed = true;
@@ -138,22 +133,20 @@ export function parse(text: string, source?: string): ast.Template {
               removeBlankLine();
             }
             completeBloc(bloc, mods, params);
-          }
-          else {
+          } else {
             removeBlankLine();
             completeDefinition(bloc, mods, params);
             if (firstExpr) {
               completeBloc(
                 ast.Bloc(opening, firstExpr),
                 { open: true, implicit: true },
-                firstParams
-              )
+                firstParams,
+              );
             }
           }
         }
-      }
-      finally {
-        if (! closed && match(/(\]|\](?!\]))*]]/y)) {
+      } finally {
+        if (!closed && match(/(\]|\](?!\]))*]]/y)) {
           advance();
         }
       }
@@ -167,15 +160,21 @@ export function parse(text: string, source?: string): ast.Template {
     if (blocMods) {
       advance();
       switch (blocMods[0]) {
-        case "#":  return { comment: true };
-        case "+":  return { open: true };
-        case "+:": return { open: true, property: true };
-        case "*":  return { open: true, implicit: true };
-        case "*:": return { open: true, implicit: true, property: true };
-        case "-":  return { close: true };
+        case "#":
+          return { comment: true };
+        case "+":
+          return { open: true };
+        case "+:":
+          return { open: true, property: true };
+        case "*":
+          return { open: true, implicit: true };
+        case "*:":
+          return { open: true, implicit: true, property: true };
+        case "-":
+          return { close: true };
       }
     }
-    return { };
+    return {};
   }
 
   /**
@@ -190,7 +189,10 @@ export function parse(text: string, source?: string): ast.Template {
 
   /**
    */
-  function parseBlocContents(opening: Token, mods: BlocMods): ast.Bloc | ast.Definition {
+  function parseBlocContents(
+    opening: Token,
+    mods: BlocMods,
+  ): ast.Bloc | ast.Definition {
     let expr = parseExpression();
     if (!expr) {
       throw new ParseError("Expected bloc expression", curLoc);
@@ -199,7 +201,10 @@ export function parse(text: string, source?: string): ast.Template {
     let colon = parseToken(":");
     if (colon) {
       if (mods.property) {
-        throw new ParseError("Property definition cannot both open with : and contain :", colon);
+        throw new ParseError(
+          "Property definition cannot both open with : and contain :",
+          colon,
+        );
       }
       if (expr.type != "Identifier") {
         throw new ParseError("Bloc property must be an identifier", expr);
@@ -212,14 +217,12 @@ export function parse(text: string, source?: string): ast.Template {
       }
 
       return ast.Definition(opening, id, expr);
-    }
-    else if (mods.property) {
+    } else if (mods.property) {
       if (expr.type != "Identifier") {
         throw new ParseError("Bloc property must be an identifier", expr);
       }
       return ast.Definition(opening, expr);
-    }
-    else {
+    } else {
       return ast.Bloc(opening, expr);
     }
   }
@@ -233,7 +236,7 @@ export function parse(text: string, source?: string): ast.Template {
         throw new ParseError("Only opening blocs can have parameters", arrow);
       }
       let identifiers = parseSequence(parseIdentifier, "parameter name");
-      if (! identifiers) {
+      if (!identifiers) {
         throw new ParseError("Expected parameter list", curLoc);
       }
       let type: "local" | "global" = arrow.text == "->" ? "local" : "global";
@@ -243,7 +246,11 @@ export function parse(text: string, source?: string): ast.Template {
 
   /**
    */
-  function completeBloc(bloc: ast.Bloc, mods: BlocMods, params?: ast.TemplateParamList) {
+  function completeBloc(
+    bloc: ast.Bloc,
+    mods: BlocMods,
+    params?: ast.TemplateParamList,
+  ) {
     // Only possibilities at this point are: open, open+implicit, close, and nothing
     if (mods.open) {
       // Add bloc to template
@@ -253,12 +260,10 @@ export function parse(text: string, source?: string): ast.Template {
       bloc.contents = ast.Template(curLoc, params);
       let id = mods.implicit ? null : bloc.expression;
       stack.push(bloc as ContainerBloc, id);
-    }
-    else if (mods.close) {
+    } else if (mods.close) {
       // Finished parsing contents; go back to previous template
       stack.pop(bloc.expression);
-    }
-    else {
+    } else {
       // Add bloc to template, continue parsing same template
       stack.bloc.contents.children.push(bloc);
     }
@@ -266,11 +271,18 @@ export function parse(text: string, source?: string): ast.Template {
 
   /**
    */
-  function completeDefinition(defn: ast.Definition, mods: BlocMods, params?: ast.TemplateParamList) {
+  function completeDefinition(
+    defn: ast.Definition,
+    mods: BlocMods,
+    params?: ast.TemplateParamList,
+  ) {
     // Only possibilities at this point are: open, open+implicit, and nothing
 
     if (stack.bloc.type == "Definition") {
-      throw new ParseError("Bloc property may not contain nested properties", defn);
+      throw new ParseError(
+        "Bloc property may not contain nested properties",
+        defn,
+      );
     }
     if (stack.bloc.type == "RootBloc") {
       throw new ParseError("Root bloc may not contain properties", defn);
@@ -279,9 +291,8 @@ export function parse(text: string, source?: string): ast.Template {
     // Add definition to current bloc
     if (stack.bloc.properties) {
       stack.bloc.properties.push(defn);
-    }
-    else {
-      stack.bloc.properties = [ defn ];
+    } else {
+      stack.bloc.properties = [defn];
     }
 
     if (mods.open) {
@@ -305,7 +316,10 @@ export function parse(text: string, source?: string): ast.Template {
       while (op) {
         primary = parsePrimary();
         if (primary) {
-          while (opStack.top && precedences[opStack.top.text] >= precedences[op.text]) {
+          while (
+            opStack.top &&
+            precedences[opStack.top.text] >= precedences[op.text]
+          ) {
             let op = Stack.pop(opStack);
             let right = Stack.pop(valStack);
             let left = Stack.pop(valStack);
@@ -314,9 +328,8 @@ export function parse(text: string, source?: string): ast.Template {
 
           Stack.push(opStack, op);
           Stack.push(valStack, primary);
-        }
-        else {
-          throw new ParseError('Expected operand', curLoc);
+        } else {
+          throw new ParseError("Expected operand", curLoc);
         }
 
         op = parseBinary();
@@ -366,14 +379,21 @@ export function parse(text: string, source?: string): ast.Template {
     }
 
     let expr: Maybe<ast.Expression> =
-      parseUndefined() || parseNull() || parseBoolean() || parseNumber() ||
-      parseString() || parseArrayConstruction() || parseObjectConstruction() ||
-      parseIdentifier() || parseNested();
+      parseUndefined() ||
+      parseNull() ||
+      parseBoolean() ||
+      parseNumber() ||
+      parseString() ||
+      parseArrayConstruction() ||
+      parseObjectConstruction() ||
+      parseIdentifier() ||
+      parseNested();
     if (expr) {
       let next: Maybe<ast.Expression>;
-      while (next = parseApplication(expr) ||
-                    parseIndex(expr) ||
-                    parseProperty(expr)      ) {
+      while (
+        (next =
+          parseApplication(expr) || parseIndex(expr) || parseProperty(expr))
+      ) {
         expr = next;
       }
     }
@@ -412,10 +432,12 @@ export function parse(text: string, source?: string): ast.Template {
     if (lparen) {
       let args = parseSequence(parseExpression, "expression");
       if (parseToken(")")) {
-        return ast.Application(lparen, left, args || [],);
-      }
-      else {
-        throw new ParseError("Expected closing parenthesis after argument list", curLoc);
+        return ast.Application(lparen, left, args || []);
+      } else {
+        throw new ParseError(
+          "Expected closing parenthesis after argument list",
+          curLoc,
+        );
       }
     }
   }
@@ -430,12 +452,10 @@ export function parse(text: string, source?: string): ast.Template {
       if (expr) {
         if (parseToken("]")) {
           return ast.Index(opening, left, expr);
-        }
-        else {
+        } else {
           throw new ParseError("Expected closing bracket for index", curLoc);
         }
-      }
-      else {
+      } else {
         throw new ParseError("Expected expression for index", curLoc);
       }
     }
@@ -450,8 +470,7 @@ export function parse(text: string, source?: string): ast.Template {
       let id = parseIdentifier();
       if (id) {
         return ast.Property(dot, left, id);
-      }
-      else {
+      } else {
         throw new ParseError("Expected identifier for property name", curLoc);
       }
     }
@@ -461,24 +480,22 @@ export function parse(text: string, source?: string): ast.Template {
    * Nested := "(" Expression ")"
    */
   function parseNested(): Maybe<ast.Expression> {
-    let lparen = parseToken('(');
+    let lparen = parseToken("(");
     if (lparen) {
       let expr = parseExpression();
       if (expr) {
-        if (parseToken(')')) {
+        if (parseToken(")")) {
           return expr;
-        }
-        else {
+        } else {
           throw new ParseError(
-            'Expected closing parenthesis after nested expression',
-            curLoc
+            "Expected closing parenthesis after nested expression",
+            curLoc,
           );
         }
-      }
-      else {
+      } else {
         throw new ParseError(
-          'Expected expression after opening parenthesis',
-          curLoc
+          "Expected expression after opening parenthesis",
+          curLoc,
         );
       }
     }
@@ -498,28 +515,31 @@ export function parse(text: string, source?: string): ast.Template {
       }
       if (parseToken("}")) {
         return ast.ObjectConstruction(opening, obj);
-      }
-      else {
-        throw new ParseError("Expected closing brace after object construction", curLoc);
+      } else {
+        throw new ParseError(
+          "Expected closing brace after object construction",
+          curLoc,
+        );
       }
     }
   }
 
   /**
    */
-  function parseKeyValue(): Maybe<{key: ast.Identifier, value: ast.Expression}> {
+  function parseKeyValue(): Maybe<{
+    key: ast.Identifier;
+    value: ast.Expression;
+  }> {
     let key = parseIdentifier();
     if (key) {
       if (parseToken(":")) {
         let value = parseExpression();
         if (value) {
           return { key, value };
-        }
-        else {
+        } else {
           throw new ParseError("Expected property value after colon", curLoc);
         }
-      }
-      else {
+      } else {
         throw new ParseError("Expected colon after property name", curLoc);
       }
     }
@@ -530,12 +550,14 @@ export function parse(text: string, source?: string): ast.Template {
   function parseArrayConstruction(): Maybe<ast.ArrayConstruction> {
     let opening = parseToken("[");
     if (opening) {
-      let arr = parseSequence(parseExpression, "value in array literal") || []
+      let arr = parseSequence(parseExpression, "value in array literal") || [];
       if (parseToken("]")) {
         return ast.ArrayConstruction(opening, arr);
-      }
-      else {
-        throw new ParseError("Expected closing bracket after array literal", curLoc);
+      } else {
+        throw new ParseError(
+          "Expected closing bracket after array literal",
+          curLoc,
+        );
       }
     }
   }
@@ -546,15 +568,19 @@ export function parse(text: string, source?: string): ast.Template {
     skipWs();
     let id = match(/[a-zA-Z_$][\w$]*/y);
     if (id) {
-      if (id[0] == "true" || id[0] == "false" || id[0] == "null" || id[0] == "undefined") {
+      if (
+        id[0] == "true" ||
+        id[0] == "false" ||
+        id[0] == "null" ||
+        id[0] == "undefined"
+      ) {
         let error = new ParseError(
           `Cannot use reserved word "${id[0]}" as identifier`,
-          curLoc
+          curLoc,
         );
         advance();
         throw error;
-      }
-      else {
+      } else {
         let node = ast.Identifier(curLoc, id[0]);
         advance();
         return node;
@@ -570,11 +596,14 @@ export function parse(text: string, source?: string): ast.Template {
     if (str) {
       let unescaped = str[1].replace(/\\(.|\n)/g, (s, c) => {
         switch (c) {
-          case 'n': return '\n';
-          case 't': return '\t';
-          default:  return c;
+          case "n":
+            return "\n";
+          case "t":
+            return "\t";
+          default:
+            return c;
         }
-      })
+      });
       let node = ast.String(curLoc, unescaped);
       advance();
       if (!str[2]) {
@@ -634,13 +663,16 @@ export function parse(text: string, source?: string): ast.Template {
 
   /**
    */
-  function parseSequence<T>(parseT: () => Maybe<T>, description: string): Maybe<T[]> {
+  function parseSequence<T>(
+    parseT: () => Maybe<T>,
+    description: string,
+  ): Maybe<T[]> {
     let next = parseT();
     if (next) {
       let all = [next];
       while (parseToken(",")) {
         next = parseT();
-        if (! next) {
+        if (!next) {
           throw new ParseError(`Expected ${description}`, curLoc);
         }
         all.push(next);
@@ -673,13 +705,13 @@ export function parse(text: string, source?: string): ast.Template {
         return;
       }
       leading = last.match(/^([^]*\n|)[ \t]*$/);
-      if (! leading) {
+      if (!leading) {
         return;
       }
     }
 
     let trailing = match(/[ \t]*(\n|$)/y);
-    if (! trailing) {
+    if (!trailing) {
       return;
     }
 
@@ -702,9 +734,11 @@ export function parse(text: string, source?: string): ast.Template {
 
   /**
    */
-  function match(regexp: RegExp): RegExpMatchArray|null {
-    if (! regexp.sticky) {
-      throw new Error("Precondition violation: match called on non-sticky regexp: " + regexp);
+  function match(regexp: RegExp): RegExpMatchArray | null {
+    if (!regexp.sticky) {
+      throw new Error(
+        "Precondition violation: match called on non-sticky regexp: " + regexp,
+      );
     }
     regexp.lastIndex = curPos;
     let m = regexp.exec(text);
@@ -715,14 +749,12 @@ export function parse(text: string, source?: string): ast.Template {
     return m;
   }
 
-
   /**
    */
   function advance() {
     curPos = lastRegexp.lastIndex;
     countLines(lastMatch[0]);
   }
-
 
   /**
    */
@@ -732,10 +764,8 @@ export function parse(text: string, source?: string): ast.Template {
     if (lineCount) {
       curLoc.line += lineCount.length;
       curLoc.char = 1 + colCount.length;
-    }
-    else {
+    } else {
       curLoc.char += colCount.length;
     }
   }
-
 }

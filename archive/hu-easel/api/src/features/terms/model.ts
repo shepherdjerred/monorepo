@@ -1,5 +1,15 @@
-import { AllowNull, Column, DataType, Default, HasMany, IsUUID, Model, PrimaryKey, Table } from 'sequelize-typescript';
-import { Course } from '../courses/model';
+import {
+  AllowNull,
+  Column,
+  DataType,
+  Default,
+  HasMany,
+  IsUUID,
+  Model,
+  PrimaryKey,
+  Table,
+} from "sequelize-typescript";
+import { Course } from "../courses/model";
 
 export enum TermType {
   FALL,
@@ -7,7 +17,7 @@ export enum TermType {
   SUMMER_ONE,
   SUMMER_TWO,
   INTERSESSION_ONE,
-  INTERSESSION_TWO
+  INTERSESSION_TWO,
 }
 
 @Table

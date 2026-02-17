@@ -16,9 +16,9 @@ To make sure your artwork looks great on all devices you support, learn how the 
 
 Different devices can display images at different resolutions. For example, a 2D device displays images according to the resolution of its screen.
 
-A *point* is an abstract unit of measurement that helps visual content remain consistent regardless of how it’s displayed. In 2D platforms, a point maps to a number of pixels that can vary according to the resolution of the display; in visionOS, a point is an angular value that allows visual content to scale according to its distance from the viewer.
+A _point_ is an abstract unit of measurement that helps visual content remain consistent regardless of how it’s displayed. In 2D platforms, a point maps to a number of pixels that can vary according to the resolution of the display; in visionOS, a point is an angular value that allows visual content to scale according to its distance from the viewer.
 
-When creating bitmap images, you specify a *scale factor* which determines the resolution of an image. You can visualize scale factor by considering the density of pixels per point in 2D displays of various resolutions. For example, a scale factor of 1 (also called @1x) describes a 1:1 pixel density, where one pixel is equal to one point. High-resolution 2D displays have higher pixel densities, such as 2:1 or 3:1. A 2:1 density (called @2x) has a scale factor of 2, and a 3:1 density (called @3x) has a scale factor of 3. Because of higher pixel densities, high-resolution displays demand images with more pixels.
+When creating bitmap images, you specify a _scale factor_ which determines the resolution of an image. You can visualize scale factor by considering the density of pixels per point in 2D displays of various resolutions. For example, a scale factor of 1 (also called @1x) describes a 1:1 pixel density, where one pixel is equal to one point. High-resolution 2D displays have higher pixel densities, such as 2:1 or 3:1. A 2:1 density (called @2x) has a scale factor of 2, and a 3:1 density (called @3x) has a scale factor of 3. Because of higher pixel densities, high-resolution displays demand images with more pixels.
 
 ![Image of a circle that's in standard resolution at scale factor of @1x, and is 10 by 10 pixels.](https://docs-assets.developer.apple.com/published/a9b04545f30aff45ca503e263c02d464/image-resolution-1x%402x.png)
 
@@ -34,12 +34,12 @@ When creating bitmap images, you specify a *scale factor* which determines the r
 
 **Provide high-resolution assets for all bitmap images in your app, for every device you support.** As you add each image to your project’s asset catalog, identify its scale factor by appending “@1x,” “@2x,” or “@3x” to its filename. Use the following values for guidance; for additional scale factors, see [Layout](/design/human-interface-guidelines/layout).
 
-| Platform | Scale factors |
-| --- | --- |
-| iPadOS, watchOS | @2x |
-| iOS | @2x and @3x |
-| visionOS | @2x or higher (see [visionOS](/design/human-interface-guidelines/images#visionOS)) |
-| macOS, tvOS | @1x and @2x |
+| Platform        | Scale factors                                                                      |
+| --------------- | ---------------------------------------------------------------------------------- |
+| iPadOS, watchOS | @2x                                                                                |
+| iOS             | @2x and @3x                                                                        |
+| visionOS        | @2x or higher (see [visionOS](/design/human-interface-guidelines/images#visionOS)) |
+| macOS, tvOS     | @1x and @2x                                                                        |
 
 **In general, design images at the lowest resolution and scale them up to create high-resolution assets.** When you use resizable vectorized shapes, you might want to position control points at whole values so that they’re cleanly aligned at 1x. This positioning allows the points to remain cleanly aligned to the raster grid at higher resolutions, because 2x and 3x are multiples of 1x.
 
@@ -47,13 +47,13 @@ When creating bitmap images, you specify a *scale factor* which determines the r
 
 As you create different types of images, consider the following recommendations.
 
-| Image type | Format |
-| --- | --- |
-| Bitmap or raster work | De-interlaced PNG files |
-| PNG graphics that don’t require full 24-bit color | An 8-bit color palette |
-| Photos | JPEG files, optimized as necessary, or HEIC files |
-| Stereo or spatial photos | Stereo HEIC |
-| Flat icons, interface icons, and other flat artwork that requires high-resolution scaling | PDF or SVG files |
+| Image type                                                                                | Format                                            |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Bitmap or raster work                                                                     | De-interlaced PNG files                           |
+| PNG graphics that don’t require full 24-bit color                                         | An 8-bit color palette                            |
+| Photos                                                                                    | JPEG files, optimized as necessary, or HEIC files |
+| Stereo or spatial photos                                                                  | Stereo HEIC                                       |
+| Flat icons, interface icons, and other flat artwork that requires high-resolution scaling | PDF or SVG files                                  |
 
 ## [Best practices](/design/human-interface-guidelines/images#Best-practices)
 
@@ -63,7 +63,7 @@ As you create different types of images, consider the following recommendations.
 
 ## [Platform considerations](/design/human-interface-guidelines/images#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, or macOS.*
+_No additional considerations for iOS, iPadOS, or macOS._
 
 ### [tvOS](/design/human-interface-guidelines/images#tvOS)
 
@@ -71,19 +71,19 @@ Layered images are at the heart of the Apple TV user experience. The system comb
 
 #### [Parallax effect](/design/human-interface-guidelines/images#Parallax-effect)
 
-*Parallax* is a subtle visual effect the system uses to convey depth and dynamism when an element is in focus. As an element comes into focus, the system elevates it to the foreground, gently swaying it while applying illumination that makes the element’s surface appear to shine. After a period of inactivity, out-of-focus content dims and the focused element expands.
+_Parallax_ is a subtle visual effect the system uses to convey depth and dynamism when an element is in focus. As an element comes into focus, the system elevates it to the foreground, gently swaying it while applying illumination that makes the element’s surface appear to shine. After a period of inactivity, out-of-focus content dims and the focused element expands.
 
 Layered images are required to support the parallax effect.
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/8a218d8d62d1c6ee701554f8f7e90ae7/tvos-app-icon-parallax-effect-animation%402x.png)](https://docs-assets.developer.apple.com/published/2b757391385337fb423a39a8fea4e88c/tvos-app-icon-parallax-effect-animation.mp4) Content description: An animation of a tvOS app icon moving to show the parallax effect.
 
- [Play](#)
+[Play](#)
 
 #### [Layered images](/design/human-interface-guidelines/images#Layered-images)
 
-A *layered image* consists of two to five distinct layers that come together to form a single image. The separation between layers, along with use of transparency, creates a feeling of depth. As someone interacts with an image, layers closer to the surface elevate and scale, overlapping lower layers farther back and producing a 3D effect.
+A _layered image_ consists of two to five distinct layers that come together to form a single image. The separation between layers, along with use of transparency, creates a feeling of depth. As someone interacts with an image, layers closer to the surface elevate and scale, overlapping lower layers farther back and producing a 3D effect.
 
 Important
 
@@ -121,7 +121,7 @@ In visionOS, people can view images at a much larger range of sizes than in any 
 
 #### [Spatial photos and spatial scenes](/design/human-interface-guidelines/images#Spatial-photos-and-spatial-scenes)
 
-In addition to 2D and stereoscopic images, visionOS apps and games can use RealityKit to display spatial photos and spatial scenes. A *spatial photo* is a stereoscopic photo with additional spatial metadata, as captured on iPhone 15 Pro or later, Apple Vision Pro, or other compatible camera. A *spatial scene* is a 3D image generated from a 2D image to add a parallax effect that responds to head movement. For developer guidance, see [`ImagePresentationComponent`](/documentation/RealityKit/ImagePresentationComponent).
+In addition to 2D and stereoscopic images, visionOS apps and games can use RealityKit to display spatial photos and spatial scenes. A _spatial photo_ is a stereoscopic photo with additional spatial metadata, as captured on iPhone 15 Pro or later, Apple Vision Pro, or other compatible camera. A _spatial scene_ is a 3D image generated from a 2D image to add a parallax effect that responds to head movement. For developer guidance, see [`ImagePresentationComponent`](/documentation/RealityKit/ImagePresentationComponent).
 
 **Make sure spatial photos render correctly in your app.** Use the stereo High-Efficiency Image Codec (HEIC) format to display a spatial photo in your app. When you add spatial metadata to a stereo HEIC, visionOS recognizes the photo as spatial and includes visual treatments that help minimize common causes of stereo-viewing discomfort.
 
@@ -144,14 +144,14 @@ In addition to 2D and stereoscopic images, visionOS apps and games can use Reali
 **Use autoscaling PDFs to let you provide a single asset for all screen sizes.** Design your image for the 40mm and 42mm screens at 2x. When you load the PDF, WatchKit automatically scales the image based on the device’s screen size, using the values shown below:
 
 | Screen size | Image scale |
-| --- | --- |
-| 38mm | 90% |
-| 40mm | 100% |
-| 41mm | 106% |
-| 42mm | 100% |
-| 44mm | 110% |
-| 45mm | 119% |
-| 49mm | 119% |
+| ----------- | ----------- |
+| 38mm        | 90%         |
+| 40mm        | 100%        |
+| 41mm        | 106%        |
+| 42mm        | 100%        |
+| 44mm        | 110%        |
+| 45mm        | 119%        |
+| 49mm        | 119%        |
 
 ## [Resources](/design/human-interface-guidelines/images#Resources)
 
@@ -181,8 +181,8 @@ Get Started with Display P3](https://developer.apple.com/videos/play/wwdc2017/82
 
 ## [Change log](/design/human-interface-guidelines/images#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| December 5, 2023 | Clarified guidance on choosing a resolution for a rasterized image in a visionOS app. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
-| September 14, 2022 | Added specifications for Apple Watch Ultra. |
+| Date               | Changes                                                                               |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| December 5, 2023   | Clarified guidance on choosing a resolution for a rasterized image in a visionOS app. |
+| June 21, 2023      | Updated to include guidance for visionOS.                                             |
+| September 14, 2022 | Added specifications for Apple Watch Ultra.                                           |

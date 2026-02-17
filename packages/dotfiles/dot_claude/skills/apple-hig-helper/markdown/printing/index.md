@@ -22,17 +22,17 @@ An iOS, iPadOS, macOS, or visionOS app can integrate system-provided print funct
 
 ## [Platform considerations](/design/human-interface-guidelines/printing#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, or visionOS. Not supported in tvOS or watchOS.*
+_No additional considerations for iOS, iPadOS, or visionOS. Not supported in tvOS or watchOS._
 
 ### [macOS](/design/human-interface-guidelines/printing#macOS)
 
 **If your macOS app offers app-specific print options that the system doesn’t offer, consider creating a custom category for the print panel.** By default, the print panel offers several categories of settings, such as Layout, Paper Handling, and Media & Quality. Give your custom category a unique name, such as your app name, and include options that help people have a great print experience in your app. For example, Keynote offers presentation-specific options, like the ability to print presenter notes, slide backgrounds, and skipped slides.
 
-**If your app supports document-specific page settings, consider presenting a page setup dialog.** A *page setup dialog* includes rarely changed settings for page size, orientation, and scaling that apply to printing a particular document. If this makes sense in your app, avoid implementing features the system already provides. For example, you don’t need to include options like changing the page orientation or printing in reverse order because the system implements these options.
+**If your app supports document-specific page settings, consider presenting a page setup dialog.** A _page setup dialog_ includes rarely changed settings for page size, orientation, and scaling that apply to printing a particular document. If this makes sense in your app, avoid implementing features the system already provides. For example, you don’t need to include options like changing the page orientation or printing in reverse order because the system implements these options.
 
 **Make sure interdependencies between options are clear.** For example, if double-sided printing is available, an option to print on transparencies becomes unavailable.
 
-**Separate advanced features from frequently used features.** Consider using a disclosure control to hide advanced options until they’re needed. Label advanced options as *Advanced Options*.
+**Separate advanced features from frequently used features.** Consider using a disclosure control to hide advanced options until they’re needed. Label advanced options as _Advanced Options_.
 
 **Consider letting people preview the effect of a setting.** For example, you could update a thumbnail image to show the effect of changing a tone control.
 

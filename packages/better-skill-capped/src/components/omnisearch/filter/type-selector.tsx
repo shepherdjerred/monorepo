@@ -4,13 +4,14 @@ import Type from "#src/model/type";
 export type TypeSelectorProps = {
   selectedTypes: Type[];
   onTypesUpdate: (newTypes: Type[]) => void;
-}
+};
 
-export default function TypeSelector({ selectedTypes, onTypesUpdate }: TypeSelectorProps): React.ReactElement {
+export default function TypeSelector({
+  selectedTypes,
+  onTypesUpdate,
+}: TypeSelectorProps): React.ReactElement {
   const isChecked = (type: Type) => {
-    return (
-      selectedTypes.includes(type)
-    );
+    return selectedTypes.includes(type);
   };
 
   const getNewTypes = (type: Type) => {

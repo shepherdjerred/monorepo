@@ -127,7 +127,9 @@ export const BookmarksSchema = z.record(z.string().url(), BookmarkSchema);
 
 export type Bookmarks = z.infer<typeof BookmarksSchema>;
 
-const bookmarksFromFile = BookmarksSchema.parse(JSON.parse(await readFile(file, "utf8")));
+const bookmarksFromFile = BookmarksSchema.parse(
+  JSON.parse(await readFile(file, "utf8")),
+);
 
 const results = await Promise.all(
   links.map(async (link) => {
@@ -145,7 +147,9 @@ const results = await Promise.all(
           added: new Date(),
           tags: [],
         };
-        const description = htmlDoc.querySelector("meta[name=description]")?.getAttribute("content");
+        const description = htmlDoc
+          .querySelector("meta[name=description]")
+          ?.getAttribute("content");
         if (description !== null && description !== "") {
           base.description = description;
         }
@@ -161,7 +165,10 @@ const results = await Promise.all(
 );
 
 export const bookmarks: Bookmarks = BookmarksSchema.parse(
-  Object.assign(bookmarksFromFile, Object.fromEntries(links.map((link, i) => [link, results[i]]))),
+  Object.assign(
+    bookmarksFromFile,
+    Object.fromEntries(links.map((link, i) => [link, results[i]])),
+  ),
 );
 
 await writeFile(file, JSON.stringify(bookmarks, null, 2));

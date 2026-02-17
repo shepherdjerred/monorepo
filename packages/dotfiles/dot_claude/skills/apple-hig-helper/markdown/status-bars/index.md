@@ -30,7 +30,7 @@ The Photos app with the status bar hidden
 
 ## [Platform considerations](/design/human-interface-guidelines/status-bars#Platform-considerations)
 
-*No additional considerations for iOS or iPadOS. Not supported in macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS or iPadOS. Not supported in macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/status-bars#Resources)
 

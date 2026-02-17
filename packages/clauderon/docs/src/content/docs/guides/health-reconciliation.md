@@ -11,16 +11,16 @@ Every session has a health state representing the status of its backend resource
 
 ### State Definitions
 
-| State | Description | Recoverable | User Action |
-|-------|-------------|-------------|-------------|
-| **Healthy** | Session running normally | N/A | None needed |
-| **Stopped** | Container stopped but intact | ✅ Yes | Start |
-| **Hibernated** | Session suspended to save resources | ✅ Yes | Wake |
-| **Pending** | Resource creation in progress | ⏳ Wait | Wait or cancel |
-| **Error** | Container failed to start/run | ✅ Yes | Recreate |
-| **CrashLoop** | Container repeatedly crashing (K8s) | ⚠️ Maybe | Recreate Fresh |
-| **Missing** | Resource deleted externally | ✅ Yes | Recreate |
-| **DeletedExternally** | Resource removed outside Clauderon | ✅ Yes | Recreate or Cleanup |
+| State                 | Description                         | Recoverable | User Action         |
+| --------------------- | ----------------------------------- | ----------- | ------------------- |
+| **Healthy**           | Session running normally            | N/A         | None needed         |
+| **Stopped**           | Container stopped but intact        | ✅ Yes      | Start               |
+| **Hibernated**        | Session suspended to save resources | ✅ Yes      | Wake                |
+| **Pending**           | Resource creation in progress       | ⏳ Wait     | Wait or cancel      |
+| **Error**             | Container failed to start/run       | ✅ Yes      | Recreate            |
+| **CrashLoop**         | Container repeatedly crashing (K8s) | ⚠️ Maybe    | Recreate Fresh      |
+| **Missing**           | Resource deleted externally         | ✅ Yes      | Recreate            |
+| **DeletedExternally** | Resource removed outside Clauderon  | ✅ Yes      | Recreate or Cleanup |
 
 ### State Transitions
 
@@ -56,12 +56,14 @@ Every session has a health state representing the status of its backend resource
 Different backends report health differently:
 
 **Docker:**
+
 - **Healthy** - Container running
 - **Stopped** - Container exists but not running
 - **Missing** - Container deleted
 - **Error** - Container exited with error
 
 **Kubernetes:**
+
 - **Healthy** - Pod running and ready
 - **Pending** - Pod scheduled but not yet running
 - **CrashLoop** - Pod in CrashLoopBackOff state
@@ -69,17 +71,20 @@ Different backends report health differently:
 - **Missing** - Pod/deployment deleted
 
 **Zellij:**
+
 - **Healthy** - Zellij session active
 - **Missing** - Zellij session not found
 - **Error** - Zellij process exited
 
 **Sprites:**
+
 - **Healthy** - Container running
 - **Hibernated** - Container suspended
 - **Error** - Container failed
 - **Missing** - Container not found on sprites.dev
 
 **Apple Container:**
+
 - **Healthy** - Container running
 - **Stopped** - Container stopped
 - **Error** - Container failed
@@ -104,6 +109,7 @@ GET /api/sessions/{id}/health
 ```
 
 **Response:**
+
 ```json
 {
   "session_id": "abc123",
@@ -126,16 +132,19 @@ GET /api/sessions/{id}/health
 ### Health in User Interfaces
 
 **Web UI:**
+
 - Health badge on session card
 - Detailed health view in session detail page
 - Action buttons based on available actions
 
 **TUI:**
+
 - Color-coded session list (green=healthy, yellow=stopped, red=error)
 - Press `h` on session to show health modal
 - Health modal shows state, actions, and data preservation
 
 **CLI:**
+
 ```bash
 # View session status (includes health)
 clauderon status <session-name>
@@ -150,59 +159,59 @@ Actions you can take depend on the current health state:
 
 ### Healthy State
 
-| Action | Effect | Preserves Data |
-|--------|--------|----------------|
-| **Recreate** | Rebuild container | ✅ Yes |
-| **Cleanup** | Delete all resources | ❌ No |
+| Action       | Effect               | Preserves Data |
+| ------------ | -------------------- | -------------- |
+| **Recreate** | Rebuild container    | ✅ Yes         |
+| **Cleanup**  | Delete all resources | ❌ No          |
 
 **Use case:** Force rebuild without stopping first
 
 ### Stopped State
 
-| Action | Effect | Preserves Data |
-|--------|--------|----------------|
-| **Start** | Start existing container | ✅ Yes |
-| **Recreate** | Rebuild container | ✅ Yes |
-| **Cleanup** | Delete all resources | ❌ No |
+| Action       | Effect                   | Preserves Data |
+| ------------ | ------------------------ | -------------- |
+| **Start**    | Start existing container | ✅ Yes         |
+| **Recreate** | Rebuild container        | ✅ Yes         |
+| **Cleanup**  | Delete all resources     | ❌ No          |
 
 **Use case:** Resume stopped session or rebuild if needed
 
 ### Hibernated State
 
-| Action | Effect | Preserves Data |
-|--------|--------|----------------|
-| **Wake** | Resume from hibernation | ✅ Yes |
-| **Recreate** | Rebuild container | ✅ Yes |
-| **Cleanup** | Delete all resources | ❌ No |
+| Action       | Effect                  | Preserves Data |
+| ------------ | ----------------------- | -------------- |
+| **Wake**     | Resume from hibernation | ✅ Yes         |
+| **Recreate** | Rebuild container       | ✅ Yes         |
+| **Cleanup**  | Delete all resources    | ❌ No          |
 
 **Use case:** Wake to continue working or rebuild if corrupted
 
 ### Error State
 
-| Action | Effect | Preserves Data |
-|--------|--------|----------------|
-| **Recreate** | Rebuild with existing clone | ✅ Yes (uncommitted changes) |
-| **Recreate Fresh** | Rebuild with fresh clone | ⚠️ Partial (committed only) |
-| **Cleanup** | Delete all resources | ❌ No |
+| Action             | Effect                      | Preserves Data               |
+| ------------------ | --------------------------- | ---------------------------- |
+| **Recreate**       | Rebuild with existing clone | ✅ Yes (uncommitted changes) |
+| **Recreate Fresh** | Rebuild with fresh clone    | ⚠️ Partial (committed only)  |
+| **Cleanup**        | Delete all resources        | ❌ No                        |
 
 **Use case:** Fix broken container while preserving work
 
 ### CrashLoop State
 
-| Action | Effect | Preserves Data |
-|--------|--------|----------------|
+| Action             | Effect                   | Preserves Data              |
+| ------------------ | ------------------------ | --------------------------- |
 | **Recreate Fresh** | Rebuild with fresh clone | ⚠️ Partial (committed only) |
-| **Cleanup** | Delete all resources | ❌ No |
+| **Cleanup**        | Delete all resources     | ❌ No                       |
 
 **Use case:** Container won't start - fresh rebuild likely needed
 
 ### Missing State
 
-| Action | Effect | Preserves Data |
-|--------|--------|----------------|
-| **Recreate** | Rebuild with existing clone | ✅ Yes (if clone exists) |
-| **Recreate Fresh** | Rebuild with fresh clone | ⚠️ Partial (committed only) |
-| **Cleanup** | Delete all resources | ❌ No |
+| Action             | Effect                      | Preserves Data              |
+| ------------------ | --------------------------- | --------------------------- |
+| **Recreate**       | Rebuild with existing clone | ✅ Yes (if clone exists)    |
+| **Recreate Fresh** | Rebuild with fresh clone    | ⚠️ Partial (committed only) |
+| **Cleanup**        | Delete all resources        | ❌ No                       |
 
 **Use case:** Container deleted externally - recreate from database state
 
@@ -215,12 +224,14 @@ Understanding what each action preserves:
 **Actions:** Start, Wake, Recreate (if git clone exists)
 
 **Preserved:**
+
 - Session chat history and metadata
 - Git repository state (committed and uncommitted)
 - Container filesystem (if recreating from existing clone)
 - Environment variables and configuration
 
 **Lost:**
+
 - Running processes (must restart)
 - In-memory state
 
@@ -229,11 +240,13 @@ Understanding what each action preserves:
 **Actions:** Recreate Fresh
 
 **Preserved:**
+
 - Session chat history and metadata
 - Git repository committed changes
 - Configuration and settings
 
 **Lost:**
+
 - Uncommitted changes (git working directory)
 - Untracked files
 - Container filesystem state
@@ -243,6 +256,7 @@ Understanding what each action preserves:
 **Actions:** Cleanup
 
 **Destroyed:**
+
 - Session record in database
 - All git repository data
 - All container resources
@@ -266,11 +280,13 @@ Reconciliation attempts to:
 ### Reconciliation Triggers
 
 **Automatic (if enabled):**
+
 - On Clauderon startup (feature flag: `reconcile_on_startup`)
 - After backend errors during operations
 - Periodic background reconciliation (future feature)
 
 **Manual:**
+
 ```bash
 clauderon reconcile [session-name]
 ```
@@ -281,12 +297,12 @@ Reconciles all sessions or specific session.
 
 Reconciliation uses exponential backoff:
 
-| Attempt | Delay | Total Time |
-|---------|-------|------------|
-| 1 | 30 seconds | 30s |
-| 2 | 2 minutes | 2m 30s |
-| 3 | 5 minutes | 7m 30s |
-| **Max** | Stops after 3 attempts | - |
+| Attempt | Delay                  | Total Time |
+| ------- | ---------------------- | ---------- |
+| 1       | 30 seconds             | 30s        |
+| 2       | 2 minutes              | 2m 30s     |
+| 3       | 5 minutes              | 7m 30s     |
+| **Max** | Stops after 3 attempts | -          |
 
 **After 3 failures**, reconciliation stops and session remains in error state. Manual intervention required.
 
@@ -302,6 +318,7 @@ reconciliation_error: "OCI runtime create failed"
 ```
 
 View via API:
+
 ```bash
 GET /api/sessions/{id}
 ```
@@ -319,14 +336,14 @@ GET /api/sessions/{id}
 
 ### Reconciliation Strategies by State
 
-| State | Reconciliation Action |
-|-------|----------------------|
-| Error | Attempt recreate |
-| Missing | Attempt recreate (if clone exists) |
-| CrashLoop | Wait, then attempt recreate fresh |
-| DeletedExternally | Mark as missing, attempt recreate |
-| Stopped | Do nothing (intentional stop) |
-| Hibernated | Do nothing (intentional hibernation) |
+| State             | Reconciliation Action                |
+| ----------------- | ------------------------------------ |
+| Error             | Attempt recreate                     |
+| Missing           | Attempt recreate (if clone exists)   |
+| CrashLoop         | Wait, then attempt recreate fresh    |
+| DeletedExternally | Mark as missing, attempt recreate    |
+| Stopped           | Do nothing (intentional stop)        |
+| Hibernated        | Do nothing (intentional hibernation) |
 
 ## Recovery Workflows
 
@@ -377,16 +394,19 @@ GET /api/sessions/{id}
 ### Via CLI
 
 **Start stopped session:**
+
 ```bash
 clauderon start <session-name>
 ```
 
 **Wake hibernated session:**
+
 ```bash
 clauderon wake <session-name>
 ```
 
 **Recreate failed session:**
+
 ```bash
 clauderon recreate <session-name>
 # or for fresh rebuild
@@ -394,6 +414,7 @@ clauderon recreate <session-name> --fresh
 ```
 
 **Cleanup session:**
+
 ```bash
 clauderon cleanup <session-name>
 # or delete entirely
@@ -403,26 +424,31 @@ clauderon delete <session-name>
 ### Via API
 
 **Start:**
+
 ```bash
 POST /api/sessions/{id}/start
 ```
 
 **Wake:**
+
 ```bash
 POST /api/sessions/{id}/wake
 ```
 
 **Recreate:**
+
 ```bash
 POST /api/sessions/{id}/recreate
 ```
 
 **Recreate Fresh:**
+
 ```bash
 POST /api/sessions/{id}/recreate-fresh
 ```
 
 **Cleanup:**
+
 ```bash
 POST /api/sessions/{id}/cleanup
 ```
@@ -459,10 +485,12 @@ Clauderon detects CrashLoop by:
 ### Recovery
 
 **Automatic reconciliation:**
+
 1. Waits for backoff period
 2. Attempts recreate fresh (resets restart count)
 
 **Manual recovery:**
+
 ```bash
 # Recreate with fresh clone
 clauderon recreate <session-name> --fresh
@@ -476,13 +504,13 @@ clauderon create <session-name> --backend kubernetes
 
 Clauderon uses these restart policies:
 
-| Backend | Restart Policy | Notes |
-|---------|---------------|-------|
-| Docker | `unless-stopped` | Restarts unless manually stopped |
-| Kubernetes | `Always` | Always restarts, may enter CrashLoop |
-| Zellij | N/A | No restart (process management) |
-| Sprites | Automatic | sprites.dev manages restarts |
-| Apple Container | `unless-stopped` | Similar to Docker |
+| Backend         | Restart Policy   | Notes                                |
+| --------------- | ---------------- | ------------------------------------ |
+| Docker          | `unless-stopped` | Restarts unless manually stopped     |
+| Kubernetes      | `Always`         | Always restarts, may enter CrashLoop |
+| Zellij          | N/A              | No restart (process management)      |
+| Sprites         | Automatic        | sprites.dev manages restarts         |
+| Apple Container | `unless-stopped` | Similar to Docker                    |
 
 ## Troubleshooting
 
@@ -491,6 +519,7 @@ Clauderon uses these restart policies:
 **Problem:** Session fails to reconcile after 3 attempts
 
 **Diagnosis:**
+
 ```bash
 # Check reconciliation status
 clauderon inspect <session-name>
@@ -500,12 +529,14 @@ clauderon inspect <session-name>
 ```
 
 **Common causes:**
+
 - Backend resource limits reached (Docker/K8s)
 - Network issues (Sprites)
 - Corrupted git clone
 - Invalid configuration
 
 **Solutions:**
+
 ```bash
 # Try manual recreate fresh
 clauderon recreate <session-name> --fresh
@@ -520,7 +551,9 @@ clauderon create <session-name>
 **Problem:** Session always returns to error state
 
 **Diagnosis:**
+
 1. Check backend logs:
+
    ```bash
    # Docker
    docker logs <container-id>
@@ -530,6 +563,7 @@ clauderon create <session-name>
    ```
 
 2. Check session logs:
+
    ```bash
    clauderon logs <session-name>
    ```
@@ -540,6 +574,7 @@ clauderon create <session-name>
    ```
 
 **Solutions:**
+
 - Fix underlying backend issue (disk space, permissions, etc.)
 - Update session configuration (resource limits, image, etc.)
 - Recreate with different backend
@@ -549,11 +584,13 @@ clauderon create <session-name>
 **Problem:** Backend resources exist but Clauderon lost track
 
 **Symptoms:**
+
 - Session shows as "Missing" but container still running
 - `docker ps` shows container, but Clauderon doesn't see it
 - Resources consuming resources but not accessible
 
 **Solutions:**
+
 ```bash
 # Cleanup orphaned resources manually
 docker stop <container-id>
@@ -571,10 +608,12 @@ clauderon cleanup <session-name>
 **Problem:** Someone deleted container/pod outside Clauderon
 
 **Detection:**
+
 - Session shows "DeletedExternally" state
 - Health check fails with "not found"
 
 **Recovery:**
+
 ```bash
 # Recreate from database state
 clauderon recreate <session-name>
@@ -588,12 +627,14 @@ clauderon cleanup <session-name>
 **Problem:** Reconciliation takes too long
 
 **Causes:**
+
 - Large git repository (slow to clone)
 - Slow container image pull
 - Backend resource contention
 - Network latency (Sprites)
 
 **Solutions:**
+
 - Use local backends for faster recovery
 - Pre-pull container images
 - Increase backend resources

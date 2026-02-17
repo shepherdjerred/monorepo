@@ -18,36 +18,36 @@ A Rust-based session manager for running isolated Claude Code or Codex sessions 
 
 ### TUI (Terminal UI)
 
-| Session List | Create Session |
-|:---:|:---:|
+|                     Session List                     |             Create Session             |
+| :--------------------------------------------------: | :------------------------------------: |
 | ![TUI Session List](assets/tui%20session%20list.png) | ![TUI Create](assets/tui%20create.png) |
 
-| Terminal | File System |
-|:---:|:---:|
+|                  Terminal                  |               File System               |
+| :----------------------------------------: | :-------------------------------------: |
 | ![TUI Terminal](assets/tui%20terminal.png) | ![TUI File System](assets/tui%20fs.png) |
 
 ### Web Interface
 
-| Session List | Create Session |
-|:---:|:---:|
+|                     Session List                     |             Create Session             |
+| :--------------------------------------------------: | :------------------------------------: |
 | ![Web Session List](assets/web%20session%20list.png) | ![Web Create](assets/web%20create.png) |
 
-| Chat | Terminal |
-|:---:|:---:|
+|                Chat                |                  Terminal                  |
+| :--------------------------------: | :----------------------------------------: |
 | ![Web Chat](assets/web%20chat.png) | ![Web Terminal](assets/web%20terminal.png) |
 
-| File System | File System (Detail) |
-|:---:|:---:|
+|                  File System                  |             File System (Detail)              |
+| :-------------------------------------------: | :-------------------------------------------: |
 | ![Web File System 1](assets/web%20fs%201.png) | ![Web File System 2](assets/web%20fs%202.png) |
 
-| Session Info |
-|:---:|
+|            Session Info            |
+| :--------------------------------: |
 | ![Web Info](assets/web%20info.png) |
 
 ### iOS App
 
-| Session List | Chat | Settings |
-|:---:|:---:|:---:|
+|                     Session List                      |                Chat                 |                  Settings                   |
+| :---------------------------------------------------: | :---------------------------------: | :-----------------------------------------: |
 | ![iOS Session List](assets/ios%20session%20list.jpeg) | ![iOS Chat](assets/ios%20chat.jpeg) | ![iOS Settings](assets/ios%20settings.jpeg) |
 
 ## Prerequisites
@@ -59,10 +59,12 @@ A Rust-based session manager for running isolated Claude Code or Codex sessions 
 - **Codex CLI** - `codex` on PATH (for Codex sessions)
 
 If you use Codex with the proxy enabled, clauderon reads the host Codex auth file:
+
 - `~/.codex/auth.json` (override with `CODEX_AUTH_JSON_PATH`)
 - or `CODEX_ACCESS_TOKEN`, `CODEX_REFRESH_TOKEN`, `CODEX_ID_TOKEN`, `CODEX_ACCOUNT_ID` env vars
 
 You can provide an OpenAI API key via:
+
 - `OPENAI_API_KEY` or `CODEX_API_KEY` environment variables, or
 - `~/.clauderon/secrets/openai_api_key` (for the clauderon proxy to inject)
 
@@ -102,17 +104,20 @@ Clauderon can securely retrieve credentials from 1Password instead of storing th
 #### Setup
 
 1. Install 1Password CLI:
+
    ```bash
    brew install 1password-cli
    # or download from https://1password.com/downloads/command-line/
    ```
 
 2. Authenticate with 1Password:
+
    ```bash
    op signin
    ```
 
 3. Configure credentials in `~/.clauderon/proxy.toml`:
+
    ```toml
    [onepassword]
    enabled = true
@@ -152,6 +157,7 @@ export OP_SERVICE_ACCOUNT_TOKEN="ops_..."
 Service account tokens are automatically detected by the `op` CLI.
 
 **Best Practices:**
+
 - Grant service accounts read-only access to specific vaults only
 - Use separate service accounts for production vs. staging environments
 - Rotate service account tokens regularly
@@ -181,15 +187,18 @@ export GITHUB_TOKEN="from-env"              # ← Used (highest priority)
 #### Troubleshooting
 
 **"1Password CLI (op) not found"**
+
 - Ensure `op` is installed and in your PATH
 - Or set a custom path in `proxy.toml`: `op_path = "/custom/path/to/op"`
 
 **"Failed to fetch credential from 1Password"**
+
 - Verify you're signed in: `op whoami`
 - Check the vault/item/field names in your references
 - Ensure you have access to the specified vault
 
 **Graceful Degradation**
+
 - If `op` CLI is not available, clauderon will skip 1Password and use environment variables or files
 - Individual credential fetch failures are logged but don't prevent startup
 - The system continues with credentials from other sources
@@ -224,6 +233,7 @@ clauderon create --image your-image:tag --name session-name --repository /path/t
 ### Image requirements
 
 Your image must have:
+
 - `claude` or `codex` CLI in PATH
 - `bash` shell (not just `/bin/sh`)
 - Writable `/workspace` directory
@@ -231,6 +241,7 @@ Your image must have:
 - Standard Unix utilities: `mkdir`, `chmod`, `cat`, `date`
 
 Strongly recommended:
+
 - `git` CLI (for git operations)
 
 See [`docs/IMAGE_COMPATIBILITY.md`](docs/IMAGE_COMPATIBILITY.md) for complete requirements and troubleshooting.

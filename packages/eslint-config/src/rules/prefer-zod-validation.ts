@@ -2,7 +2,8 @@ import { AST_NODE_TYPES, ESLintUtils } from "@typescript-eslint/utils";
 import type { TSESTree } from "@typescript-eslint/utils";
 
 const createRule = ESLintUtils.RuleCreator(
-  (name) => `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
+  (name) =>
+    `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
 );
 
 export const preferZodValidation = createRule({
@@ -36,7 +37,10 @@ export const preferZodValidation = createRule({
         while (current.type === AST_NODE_TYPES.MemberExpression) {
           if (current.property.type === AST_NODE_TYPES.Identifier) {
             parts.unshift(current.property.name);
-          } else if (current.property.type === AST_NODE_TYPES.Literal && typeof current.property.value === "string") {
+          } else if (
+            current.property.type === AST_NODE_TYPES.Literal &&
+            typeof current.property.value === "string"
+          ) {
             parts.unshift(current.property.value);
           } else {
             return null;
@@ -56,17 +60,26 @@ export const preferZodValidation = createRule({
     // Check if a node is a type-checking operation
     function isTypeCheck(node: TSESTree.Node): boolean {
       // typeof checks
-      if (node.type === AST_NODE_TYPES.UnaryExpression && node.operator === "typeof") {
+      if (
+        node.type === AST_NODE_TYPES.UnaryExpression &&
+        node.operator === "typeof"
+      ) {
         return true;
       }
 
       // instanceof checks
-      if (node.type === AST_NODE_TYPES.BinaryExpression && node.operator === "instanceof") {
+      if (
+        node.type === AST_NODE_TYPES.BinaryExpression &&
+        node.operator === "instanceof"
+      ) {
         return true;
       }
 
       // 'in' operator checks
-      if (node.type === AST_NODE_TYPES.BinaryExpression && node.operator === "in") {
+      if (
+        node.type === AST_NODE_TYPES.BinaryExpression &&
+        node.operator === "in"
+      ) {
         return true;
       }
 
@@ -98,7 +111,10 @@ export const preferZodValidation = createRule({
 
       // For binary expressions that contain typeof
       if (node.type === AST_NODE_TYPES.BinaryExpression) {
-        if (node.left.type === AST_NODE_TYPES.UnaryExpression && node.left.operator === "typeof") {
+        if (
+          node.left.type === AST_NODE_TYPES.UnaryExpression &&
+          node.left.operator === "typeof"
+        ) {
           return 1;
         }
       }
@@ -109,7 +125,10 @@ export const preferZodValidation = createRule({
     return {
       // Track typeof checks on member expressions (for repeated checks)
       UnaryExpression(node) {
-        if (node.operator === "typeof" && node.argument.type === AST_NODE_TYPES.MemberExpression) {
+        if (
+          node.operator === "typeof" &&
+          node.argument.type === AST_NODE_TYPES.MemberExpression
+        ) {
           const path = getMemberPath(node.argument);
           if (path) {
             const checks = typeCheckMap.get(path) ?? [];
@@ -129,7 +148,10 @@ export const preferZodValidation = createRule({
 
       // Track instanceof checks on member expressions (for repeated checks)
       BinaryExpression(node) {
-        if (node.operator === "instanceof" && node.left.type === AST_NODE_TYPES.MemberExpression) {
+        if (
+          node.operator === "instanceof" &&
+          node.left.type === AST_NODE_TYPES.MemberExpression
+        ) {
           const path = getMemberPath(node.left);
           if (path) {
             const checks = typeCheckMap.get(path) ?? [];
@@ -159,7 +181,10 @@ export const preferZodValidation = createRule({
         // Collect all leaf terms of the && chain
         const terms: TSESTree.Node[] = [];
         function collectTerms(n: TSESTree.Node): void {
-          if (n.type === AST_NODE_TYPES.LogicalExpression && n.operator === "&&") {
+          if (
+            n.type === AST_NODE_TYPES.LogicalExpression &&
+            n.operator === "&&"
+          ) {
             collectTerms(n.left);
             collectTerms(n.right);
           } else {
@@ -191,7 +216,10 @@ export const preferZodValidation = createRule({
             const name = getIdentifierName(term.left.argument);
             if (name) typeofObjectVars.add(name);
           }
-          if (term.type === AST_NODE_TYPES.BinaryExpression && term.operator === "in") {
+          if (
+            term.type === AST_NODE_TYPES.BinaryExpression &&
+            term.operator === "in"
+          ) {
             const name = getIdentifierName(term.right);
             if (name) inCheckVars.add(name);
           }

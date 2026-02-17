@@ -58,48 +58,48 @@ Use a custom color when other technology icons also appear in the same color.
 
 **Position the AirPlay icon consistently with other technology icons.** If you display other technology icons within shapes, you can display the AirPlay icon in the same manner.
 
-**Don’t use the AirPlay icon or name in custom buttons or interactive elements.** Use the icon and the name *AirPlay* only in noninteractive ways.
+**Don’t use the AirPlay icon or name in custom buttons or interactive elements.** Use the icon and the name _AirPlay_ only in noninteractive ways.
 
-**Pair the icon with the name *AirPlay* correctly.** You can show the name below or beside the icon if you also reference other technologies in this way. Use the same font you use in the rest of your layout. Avoid using the AirPlay icon within text or as a replacement for the name *AirPlay*.
+**Pair the icon with the name _AirPlay_ correctly.** You can show the name below or beside the icon if you also reference other technologies in this way. Use the same font you use in the rest of your layout. Avoid using the AirPlay icon within text or as a replacement for the name _AirPlay_.
 
 **Emphasize your app over AirPlay.** Make references to AirPlay less prominent than your app name or main identity.
 
 ## [Referring to AirPlay](/design/human-interface-guidelines/airplay#Referring-to-AirPlay)
 
-**Use correct capitalization when using the term *AirPlay*.** *AirPlay* is one word, with an uppercase *A* and uppercase *P*, each followed by lowercase letters. If your layout displays only all-uppercase designations, you can typeset *AirPlay* in all uppercase to match the style of the rest of the layout.
+**Use correct capitalization when using the term _AirPlay_.** _AirPlay_ is one word, with an uppercase _A_ and uppercase _P_, each followed by lowercase letters. If your layout displays only all-uppercase designations, you can typeset _AirPlay_ in all uppercase to match the style of the rest of the layout.
 
-**Always use *AirPlay* as a noun.**
+**Always use _AirPlay_ as a noun.**
 
-|  | Example text |
-| --- | --- |
+|                                                    | Example text                          |
+| -------------------------------------------------- | ------------------------------------- |
 | A checkmark in a circle to indicate correct usage. | Use AirPlay to listen on your speaker |
-| An X in a circle to indicate incorrect usage. | AirPlay to your speaker |
-| An X in a circle to indicate incorrect usage. | You can AirPlay with [App Name] |
+| An X in a circle to indicate incorrect usage.      | AirPlay to your speaker               |
+| An X in a circle to indicate incorrect usage.      | You can AirPlay with [App Name]       |
 
-**Use terms like *works with*, *use*, *supports*, and *compatible*.**
+**Use terms like _works with_, _use_, _supports_, and _compatible_.**
 
-|  | Example text |
-| --- | --- |
+|                                                    | Example text                          |
+| -------------------------------------------------- | ------------------------------------- |
 | A checkmark in a circle to indicate correct usage. | [App Name] is compatible with AirPlay |
-| A checkmark in a circle to indicate correct usage. | AirPlay-enabled speaker |
-| A checkmark in a circle to indicate correct usage. | You can use AirPlay with [App Name] |
-| An X in a circle to indicate incorrect usage. | [App Name] has AirPlay |
+| A checkmark in a circle to indicate correct usage. | AirPlay-enabled speaker               |
+| A checkmark in a circle to indicate correct usage. | You can use AirPlay with [App Name]   |
+| An X in a circle to indicate incorrect usage.      | [App Name] has AirPlay                |
 
-**Use the name *Apple* with the name *AirPlay* if desired.**
+**Use the name _Apple_ with the name _AirPlay_ if desired.**
 
-|  | Example text |
-| --- | --- |
+|                                                    | Example text                  |
+| -------------------------------------------------- | ----------------------------- |
 | A checkmark in a circle to indicate correct usage. | Compatible with Apple AirPlay |
 
 **Refer to AirPlay if appropriate and to add clarity.** If your content is specific to AirPlay, you can use Airplay to make that clear. You can also refer to AirPlay in technical specifications.
 
-|  | Example text |
-| --- | --- |
+|                                                    | Example text                    |
+| -------------------------------------------------- | ------------------------------- |
 | A checkmark in a circle to indicate correct usage. | [App Name] now supports AirPlay |
 
 ## [Platform considerations](/design/human-interface-guidelines/airplay#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, or visionOS. Not supported in watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, or visionOS. Not supported in watchOS._
 
 ## [Resources](/design/human-interface-guidelines/airplay#Resources)
 
@@ -125,6 +125,6 @@ Reaching the Big Screen with AirPlay 2](https://developer.apple.com/videos/play/
 
 ## [Change log](/design/human-interface-guidelines/airplay#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date        | Changes                              |
+| ----------- | ------------------------------------ |
 | May 2, 2023 | Consolidated guidance into one page. |

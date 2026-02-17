@@ -21,7 +21,9 @@ export const getSessionTool = createTool({
     sessionId: z
       .string()
       .optional()
-      .describe("Specific session ID to fetch. If not provided, lists all active sessions."),
+      .describe(
+        "Specific session ID to fetch. If not provided, lists all active sessions.",
+      ),
   }),
   outputSchema: z.object({
     success: z.boolean(),

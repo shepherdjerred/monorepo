@@ -28,7 +28,11 @@
       "pinDigests": true
     },
     {
-      "matchPackageNames": ["dagger-helm", "gha-runner-scale-set-controller", "gha-runner-scale-set"],
+      "matchPackageNames": [
+        "dagger-helm",
+        "gha-runner-scale-set-controller",
+        "gha-runner-scale-set"
+      ],
       "pinDigests": false
     },
     {
@@ -37,14 +41,21 @@
     },
     {
       "description": "Critical infrastructure - no delay, no automerge",
-      "matchPackageNames": ["paper", "siderolabs/talos", "kubernetes/kubernetes"],
+      "matchPackageNames": [
+        "paper",
+        "siderolabs/talos",
+        "kubernetes/kubernetes"
+      ],
       "automerge": false,
       "minimumReleaseAge": "0 days",
       "schedule": ["at any time"]
     },
     {
       "description": "Prod images - no delay, no automerge",
-      "matchPackageNames": ["shepherdjerred/scout-for-lol/prod", "shepherdjerred/starlight-karma-bot/prod"],
+      "matchPackageNames": [
+        "shepherdjerred/scout-for-lol/prod",
+        "shepherdjerred/starlight-karma-bot/prod"
+      ],
       "automerge": false,
       "minimumReleaseAge": "0 days",
       "schedule": ["at any time"]

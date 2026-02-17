@@ -1173,7 +1173,8 @@ export type MariadbHelmValuesPrimaryContainerSecurityContext = {
   seccompProfile?: MariadbHelmValuesPrimaryContainerSecurityContextSeccompProfile;
 };
 
-export type MariadbHelmValuesPrimaryContainerSecurityContextSeLinuxOptions = object;
+export type MariadbHelmValuesPrimaryContainerSecurityContextSeLinuxOptions =
+  object;
 
 export type MariadbHelmValuesPrimaryContainerSecurityContextCapabilities = {
   /**
@@ -2221,7 +2222,8 @@ export type MariadbHelmValuesSecondaryContainerSecurityContext = {
   seccompProfile?: MariadbHelmValuesSecondaryContainerSecurityContextSeccompProfile;
 };
 
-export type MariadbHelmValuesSecondaryContainerSecurityContextSeLinuxOptions = object;
+export type MariadbHelmValuesSecondaryContainerSecurityContextSeLinuxOptions =
+  object;
 
 export type MariadbHelmValuesSecondaryContainerSecurityContextCapabilities = {
   /**
@@ -3030,29 +3032,32 @@ export type MariadbHelmValuesPasswordUpdateJobContainerSecurityContext = {
   seccompProfile?: MariadbHelmValuesPasswordUpdateJobContainerSecurityContextSeccompProfile;
 };
 
-export type MariadbHelmValuesPasswordUpdateJobContainerSecurityContextSeLinuxOptions = object;
+export type MariadbHelmValuesPasswordUpdateJobContainerSecurityContextSeLinuxOptions =
+  object;
 
-export type MariadbHelmValuesPasswordUpdateJobContainerSecurityContextCapabilities = {
-  /**
-   * List of capabilities to be dropped
-   *
-   * List of capabilities to be dropped
-   *
-   * @default ["ALL"]
-   */
-  drop?: string[];
-};
+export type MariadbHelmValuesPasswordUpdateJobContainerSecurityContextCapabilities =
+  {
+    /**
+     * List of capabilities to be dropped
+     *
+     * List of capabilities to be dropped
+     *
+     * @default ["ALL"]
+     */
+    drop?: string[];
+  };
 
-export type MariadbHelmValuesPasswordUpdateJobContainerSecurityContextSeccompProfile = {
-  /**
-   * Set container's Security Context seccomp profile
-   *
-   * Set container's Security Context seccomp profile
-   *
-   * @default "RuntimeDefault"
-   */
-  type?: string;
-};
+export type MariadbHelmValuesPasswordUpdateJobContainerSecurityContextSeccompProfile =
+  {
+    /**
+     * Set container's Security Context seccomp profile
+     *
+     * Set container's Security Context seccomp profile
+     *
+     * @default "RuntimeDefault"
+     */
+    type?: string;
+  };
 
 export type MariadbHelmValuesPasswordUpdateJobPodSecurityContext = {
   /**
@@ -3532,7 +3537,8 @@ export type MariadbHelmValuesMetricsContainerSecurityContext = {
   seccompProfile?: MariadbHelmValuesMetricsContainerSecurityContextSeccompProfile;
 };
 
-export type MariadbHelmValuesMetricsContainerSecurityContextSeLinuxOptions = object;
+export type MariadbHelmValuesMetricsContainerSecurityContextSeLinuxOptions =
+  object;
 
 export type MariadbHelmValuesMetricsContainerSecurityContextCapabilities = {
   /**

@@ -1,7 +1,12 @@
-import { AST_NODE_TYPES, ESLintUtils, type TSESTree } from "@typescript-eslint/utils";
+import {
+  AST_NODE_TYPES,
+  ESLintUtils,
+  type TSESTree,
+} from "@typescript-eslint/utils";
 
 const createRule = ESLintUtils.RuleCreator(
-  (name) => `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
+  (name) =>
+    `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
 );
 
 type MessageIds = "missingDisconnect";
@@ -32,7 +37,10 @@ export const prismaClientDisconnect = createRule<Options, MessageIds>({
       return {};
     }
 
-    const prismaClientNodes: { variable: string; node: TSESTree.VariableDeclarator }[] = [];
+    const prismaClientNodes: {
+      variable: string;
+      node: TSESTree.VariableDeclarator;
+    }[] = [];
     let hasAfterAllWithDisconnect = false;
     let lastLifecycleHook: TSESTree.Node | undefined;
     let bunTestImport: TSESTree.ImportDeclaration | undefined;
@@ -40,7 +48,9 @@ export const prismaClientDisconnect = createRule<Options, MessageIds>({
 
     return {
       // Track imports from "bun:test" and check if afterAll is imported
-      "ImportDeclaration[source.value='bun:test']"(node: TSESTree.ImportDeclaration) {
+      "ImportDeclaration[source.value='bun:test']"(
+        node: TSESTree.ImportDeclaration,
+      ) {
         bunTestImport = node;
         // Check if afterAll is already imported
         hasAfterAllImport = node.specifiers.some(
@@ -52,7 +62,9 @@ export const prismaClientDisconnect = createRule<Options, MessageIds>({
       },
 
       // Track PrismaClient instantiations
-      "VariableDeclarator[init.callee.name='PrismaClient']"(node: TSESTree.VariableDeclarator) {
+      "VariableDeclarator[init.callee.name='PrismaClient']"(
+        node: TSESTree.VariableDeclarator,
+      ) {
         if (node.id.type === AST_NODE_TYPES.Identifier) {
           prismaClientNodes.push({ variable: node.id.name, node });
         }
@@ -64,7 +76,10 @@ export const prismaClientDisconnect = createRule<Options, MessageIds>({
       ) {
         // Find the parent ExpressionStatement to get the full statement
         let parent: TSESTree.Node | undefined = node.parent;
-        while (parent !== undefined && parent.type !== AST_NODE_TYPES.ExpressionStatement) {
+        while (
+          parent !== undefined &&
+          parent.type !== AST_NODE_TYPES.ExpressionStatement
+        ) {
           parent = parent.parent;
         }
         if (parent !== undefined) {
@@ -104,7 +119,10 @@ export const prismaClientDisconnect = createRule<Options, MessageIds>({
       "Program:exit"() {
         if (prismaClientNodes.length > 0 && !hasAfterAllWithDisconnect) {
           // Report on each PrismaClient instantiation
-          for (const [index, { variable, node: prismaNode }] of prismaClientNodes.entries()) {
+          for (const [
+            index,
+            { variable, node: prismaNode },
+          ] of prismaClientNodes.entries()) {
             context.report({
               node: prismaNode,
               messageId: "missingDisconnect",
@@ -114,7 +132,9 @@ export const prismaClientDisconnect = createRule<Options, MessageIds>({
               // Only provide fix on the first reported error to avoid duplication
               ...(index === 0
                 ? {
-                    fix: (fixer): ReturnType<typeof fixer.replaceText>[] | null => {
+                    fix: (
+                      fixer,
+                    ): ReturnType<typeof fixer.replaceText>[] | null => {
                       const fixes: ReturnType<typeof fixer.replaceText>[] = [];
 
                       // Add afterAll to imports if missing
@@ -131,7 +151,9 @@ export const prismaClientDisconnect = createRule<Options, MessageIds>({
                             /^(import\s*\{)([^}]+)(\}\s*from)/,
                             "$1afterAll, $2$3",
                           );
-                          fixes.push(fixer.replaceText(bunTestImport, newImportText));
+                          fixes.push(
+                            fixer.replaceText(bunTestImport, newImportText),
+                          );
                         }
                       }
 
@@ -155,7 +177,9 @@ export const prismaClientDisconnect = createRule<Options, MessageIds>({
                         if (firstPrismaNode !== undefined) {
                           let current: TSESTree.Node = firstPrismaNode.node;
                           // Walk up until we find a direct child of the Program
-                          while (current.parent.type !== AST_NODE_TYPES.Program) {
+                          while (
+                            current.parent.type !== AST_NODE_TYPES.Program
+                          ) {
                             current = current.parent;
                           }
                           insertionPoint = current;
@@ -166,7 +190,9 @@ export const prismaClientDisconnect = createRule<Options, MessageIds>({
                         return null;
                       }
 
-                      fixes.push(fixer.insertTextAfter(insertionPoint, afterAllHook));
+                      fixes.push(
+                        fixer.insertTextAfter(insertionPoint, afterAllHook),
+                      );
 
                       return fixes;
                     },

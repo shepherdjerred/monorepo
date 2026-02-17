@@ -37,7 +37,11 @@ export class OnePasswordItem extends ApiObject {
    * @param id a scope-local name for the object
    * @param props initialization props
    */
-  public constructor(scope: Construct, id: string, props: OnePasswordItemProps = {}) {
+  public constructor(
+    scope: Construct,
+    id: string,
+    props: OnePasswordItemProps = {},
+  ) {
     super(scope, id, {
       ...OnePasswordItem.GVK,
       ...props,
@@ -87,7 +91,9 @@ export interface OnePasswordItemProps {
  * Converts an object of type 'OnePasswordItemProps' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_OnePasswordItemProps(obj: OnePasswordItemProps | undefined): Record<string, any> | undefined {
+export function toJson_OnePasswordItemProps(
+  obj: OnePasswordItemProps | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -97,7 +103,10 @@ export function toJson_OnePasswordItemProps(obj: OnePasswordItemProps | undefine
     type: obj.type,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
@@ -117,7 +126,9 @@ export interface OnePasswordItemSpec {
  * Converts an object of type 'OnePasswordItemSpec' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_OnePasswordItemSpec(obj: OnePasswordItemSpec | undefined): Record<string, any> | undefined {
+export function toJson_OnePasswordItemSpec(
+  obj: OnePasswordItemSpec | undefined,
+): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
@@ -125,6 +136,9 @@ export function toJson_OnePasswordItemSpec(obj: OnePasswordItemSpec | undefined)
     itemPath: obj.itemPath,
   };
   // filter undefined values
-  return Object.entries(result).reduce((r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }), {});
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */

@@ -23,6 +23,7 @@ cargo build --release
 ```
 
 This will create:
+
 - `screenshots/cli/clauderon-help.svg` - Main help output
 - `screenshots/cli/clauderon-version.svg` - Version info
 - `screenshots/cli/clauderon-list.svg` - Session list
@@ -49,6 +50,7 @@ cargo test --test screenshot_tests -- --ignored --nocapture
 ```
 
 This will create:
+
 - `screenshots/tui/session-list.png` - Session list view
 - `screenshots/tui/create-dialog.png` - Create dialog
 - `screenshots/tui/help-screen.png` - Help screen
@@ -65,12 +67,15 @@ This will create:
 Generate PNG screenshots from the real web application using Playwright:
 
 **Prerequisites**:
+
 1. **Start Clauderon daemon** (in terminal 1):
+
    ```bash
    cargo run -- daemon
    ```
 
 2. **Start dev server** (in terminal 2):
+
    ```bash
    cd web/frontend
    export PATH="$HOME/.bun/bin:$PATH"
@@ -80,6 +85,7 @@ Generate PNG screenshots from the real web application using Playwright:
    Wait for it to say "ready" at http://localhost:5173
 
 3. **(Optional) Create some sessions** for better screenshots:
+
    ```bash
    # In terminal 3
    cargo run -- create --repo ~/some-project --prompt "Example task"
@@ -93,6 +99,7 @@ Generate PNG screenshots from the real web application using Playwright:
    ```
 
 This will create:
+
 - `screenshots/web/login.png` - Login page (1920x1080)
 - `screenshots/web/dashboard.png` - Session dashboard (1920x1080)
 - `screenshots/web/create-dialog.png` - Create session dialog (1920x1080)
@@ -157,17 +164,21 @@ bun run preview
 ## Troubleshooting
 
 **"clauderon binary not found"**:
+
 - Run `cargo build --release` first
 
 **"Could not find create button"**:
+
 - Make sure the dev server is actually running at http://localhost:5173
 - Check that you're logged in (if WebAuthn is enabled)
 
 **TUI tests fail to compile**:
+
 - Make sure dev dependencies are installed: `cargo fetch`
 - Check that `image`, `ab_glyph`, and `imageproc` crates are in Cargo.toml
 
 **Web screenshots timeout**:
+
 - Ensure daemon is running: `cargo run -- daemon`
 - Ensure dev server is running: `cd web/frontend && bun run dev`
 - Check http://localhost:5173 loads in your browser

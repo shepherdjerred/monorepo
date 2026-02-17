@@ -10,13 +10,13 @@ export type ToolUse = {
   description: string | undefined;
   input: Record<string, unknown> | undefined;
   result: string | undefined;
-}
+};
 
 export type CodeBlock = {
   language: string;
   code: string;
   filePath?: string;
-}
+};
 
 export type Message = {
   id: string;
@@ -25,7 +25,7 @@ export type Message = {
   timestamp: Date;
   toolUses: ToolUse[] | undefined;
   codeBlocks: CodeBlock[] | undefined;
-}
+};
 
 /**
  * Strip ANSI escape codes from terminal output

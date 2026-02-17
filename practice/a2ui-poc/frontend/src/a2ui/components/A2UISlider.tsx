@@ -1,6 +1,10 @@
 import type { SliderComponent } from "../types";
 import { useSurface } from "../SurfaceManager";
-import { resolveNumber, resolveString, resolveActionContext } from "../../hooks/useDataBinding";
+import {
+  resolveNumber,
+  resolveString,
+  resolveActionContext,
+} from "../../hooks/useDataBinding";
 import { Slider } from "@/components/ui/slider";
 
 interface A2UISliderProps {
@@ -27,7 +31,10 @@ export function A2UISlider({
 
   const handleValueChange = (values: number[]) => {
     const newValue = values[0] ?? currentValue;
-    const resolvedContext = resolveActionContext(component.action.context, dataModel);
+    const resolvedContext = resolveActionContext(
+      component.action.context,
+      dataModel,
+    );
     resolvedContext.value = newValue;
     dispatchAction(surfaceId, id, component.action.name, resolvedContext);
   };

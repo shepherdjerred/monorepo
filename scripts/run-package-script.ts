@@ -17,7 +17,14 @@ async function getPackageJsonPaths(): Promise<string[]> {
   async function walk(dir: string): Promise<void> {
     const entries = await readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
-      if (entry.name === "node_modules" || entry.name === "dist" || entry.name === "build" || entry.name === ".git" || entry.name === "examples" || entry.name === "example") {
+      if (
+        entry.name === "node_modules" ||
+        entry.name === "dist" ||
+        entry.name === "build" ||
+        entry.name === ".git" ||
+        entry.name === "examples" ||
+        entry.name === "example"
+      ) {
         continue;
       }
       const fullPath = join(dir, entry.name);
@@ -35,7 +42,10 @@ async function getPackageJsonPaths(): Promise<string[]> {
 
 async function loadPackageMeta(path: string): Promise<PackageMeta> {
   const text = await readFile(path, "utf8");
-  const parsed = JSON.parse(text) as { name?: string; scripts?: Record<string, string> };
+  const parsed = JSON.parse(text) as {
+    name?: string;
+    scripts?: Record<string, string>;
+  };
   return {
     dir: dirname(path),
     name: parsed.name ?? relative("packages", dirname(path)),
@@ -56,12 +66,16 @@ async function main(): Promise<void> {
   }
 
   const packageJsonPaths = await getPackageJsonPaths();
-  const metas = await Promise.all(packageJsonPaths.map((path) => loadPackageMeta(path)));
+  const metas = await Promise.all(
+    packageJsonPaths.map((path) => loadPackageMeta(path)),
+  );
   const runnable = metas.filter((meta) => meta.scripts[scriptName]);
   const skipped = metas.length - runnable.length;
   const failures: Array<{ dir: string; error: unknown }> = [];
 
-  console.log(`Running '${scriptName}' in ${String(runnable.length)} package(s) (${String(skipped)} skipped)...`);
+  console.log(
+    `Running '${scriptName}' in ${String(runnable.length)} package(s) (${String(skipped)} skipped)...`,
+  );
 
   for (const meta of runnable) {
     console.log(`\n--- ${meta.name} (${meta.dir}) ---`);
@@ -73,9 +87,14 @@ async function main(): Promise<void> {
   }
 
   if (failures.length > 0) {
-    console.error(`\n${String(failures.length)} package(s) failed '${scriptName}':`);
+    console.error(
+      `\n${String(failures.length)} package(s) failed '${scriptName}':`,
+    );
     for (const failure of failures) {
-      const message = failure.error instanceof Error ? failure.error.message : String(failure.error);
+      const message =
+        failure.error instanceof Error
+          ? failure.error.message
+          : String(failure.error);
       console.error(`- ${failure.dir}: ${message}`);
     }
     process.exit(1);

@@ -1,4 +1,3 @@
-
 # Overview
 
 This is the README for `ffs.py`, a simulator of FFS allocation policies. Use it
@@ -6,7 +5,7 @@ to study FFS behavior under different file and directory creation scenarios.
 
 The tool is invoked by specifying a command file with the -f flag, which
 consists of a series of file create, file delete, and directory create
-operations. 
+operations.
 
 For example, run:
 
@@ -15,7 +14,7 @@ prompt> ./ffs.py -f in.example1 -c
 ```
 
 to see the output from the first example in the chapter on how FFS based
-allocation works. 
+allocation works.
 
 The file `in.example1` consists of the following commands:
 
@@ -116,11 +115,12 @@ f           21  /b/f           regular
 Here, you can see the root directory is represented by the symbol /, the file
 /a by the symbol a, and so forth.
 
-Looking at the output, you can thus see a number of interesting things: 
+Looking at the output, you can thus see a number of interesting things:
+
 - The root inode is in the first slot of the Group 0's piece of the inode table
 - The root data block is found in the first allocated data block (Group 0)
 - Directory /a was placed in Group 1, directory /b in Group 2
-- The files (inodes and data) for each regular file are found in 
+- The files (inodes and data) for each regular file are found in
   the same group as their parent inodes (as per FFS)
 
 The rest of the options let you play around with FFS and some minor
@@ -166,6 +166,3 @@ Options:
 ```
 
 We'll explore more of these options in the homework.
-
-
-

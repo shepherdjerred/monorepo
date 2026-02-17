@@ -384,7 +384,8 @@ export type ArgocdimageupdaterHelmValuesMetricsServiceMonitor = {
 
 export type ArgocdimageupdaterHelmValuesMetricsServiceMonitorSelector = object;
 
-export type ArgocdimageupdaterHelmValuesMetricsServiceMonitorAdditionalLabels = object;
+export type ArgocdimageupdaterHelmValuesMetricsServiceMonitorAdditionalLabels =
+  object;
 
 export type ArgocdimageupdaterHelmValuesContainerPorts = {
   /**

@@ -16,13 +16,21 @@ const ruleTester = new RuleTester({
 
 ruleTester.run("no-type-guards", noTypeGuards, {
   valid: [
-    { code: `function isString(value: unknown): boolean { return typeof value === "string"; }` },
-    { code: `const isString = (value: unknown): boolean => typeof value === "string";` },
-    { code: `const isString = function(value: unknown): boolean { return typeof value === "string"; };` },
+    {
+      code: `function isString(value: unknown): boolean { return typeof value === "string"; }`,
+    },
+    {
+      code: `const isString = (value: unknown): boolean => typeof value === "string";`,
+    },
+    {
+      code: `const isString = function(value: unknown): boolean { return typeof value === "string"; };`,
+    },
     {
       code: `class Validator { isValid(value: unknown): boolean { return true; } }`,
     },
-    { code: `function isString(value: unknown) { return typeof value === "string"; }` },
+    {
+      code: `function isString(value: unknown) { return typeof value === "string"; }`,
+    },
     { code: `const isString = (value: unknown) => typeof value === "string";` },
   ],
   invalid: [

@@ -1,5 +1,5 @@
 class Counter {
-  constructor (uuid, currentValue, maxValue) {
+  constructor(uuid, currentValue, maxValue) {
     this.uuid = uuid;
     this.currentValue = currentValue;
     this.maxValue = maxValue;

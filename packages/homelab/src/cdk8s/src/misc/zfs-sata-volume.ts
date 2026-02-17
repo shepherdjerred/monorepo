@@ -1,6 +1,5 @@
 import { merge } from "lodash";
-import type {
-  PersistentVolumeClaimProps} from "cdk8s-plus-31";
+import type { PersistentVolumeClaimProps } from "cdk8s-plus-31";
 import {
   PersistentVolumeAccessMode,
   PersistentVolumeClaim,
@@ -25,7 +24,8 @@ export class ZfsSataVolume extends Construct {
 
     // Check if storage is under 200GB for backup labeling
     // Use native CDK8s Size conversion methods for accurate comparison
-    const shouldBackup = props.storage.toKibibytes() < Size.gibibytes(200).toKibibytes();
+    const shouldBackup =
+      props.storage.toKibibytes() < Size.gibibytes(200).toKibibytes();
 
     const baseProps: PersistentVolumeClaimProps = {
       storage: props.storage,
@@ -41,6 +41,10 @@ export class ZfsSataVolume extends Construct {
       },
     };
 
-    this.claim = new PersistentVolumeClaim(scope, `${id}-pvc`, merge({}, baseProps, props));
+    this.claim = new PersistentVolumeClaim(
+      scope,
+      `${id}-pvc`,
+      merge({}, baseProps, props),
+    );
   }
 }

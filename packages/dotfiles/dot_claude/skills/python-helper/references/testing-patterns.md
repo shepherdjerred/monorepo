@@ -288,17 +288,17 @@ def test_config(tmp_path, monkeypatch):
 
 ### Common pytest Plugins
 
-| Plugin | Purpose |
-|--------|---------|
-| `pytest-cov` | Coverage reporting |
-| `pytest-asyncio` | Async test support |
-| `pytest-xdist` | Parallel test execution |
-| `pytest-mock` | Simplified mocking |
-| `pytest-timeout` | Test timeout enforcement |
-| `pytest-randomly` | Randomize test order |
-| `pytest-benchmark` | Performance benchmarks |
-| `pytest-httpx` | Mock httpx requests |
-| `pytest-freezegun` | Freeze time in tests |
+| Plugin             | Purpose                  |
+| ------------------ | ------------------------ |
+| `pytest-cov`       | Coverage reporting       |
+| `pytest-asyncio`   | Async test support       |
+| `pytest-xdist`     | Parallel test execution  |
+| `pytest-mock`      | Simplified mocking       |
+| `pytest-timeout`   | Test timeout enforcement |
+| `pytest-randomly`  | Randomize test order     |
+| `pytest-benchmark` | Performance benchmarks   |
+| `pytest-httpx`     | Mock httpx requests      |
+| `pytest-freezegun` | Freeze time in tests     |
 
 ## unittest (Standard Library)
 

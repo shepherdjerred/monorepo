@@ -74,12 +74,16 @@ describe("YAML Comment Helper Functions", () => {
     });
 
     test("should detect config keyword headers", () => {
-      expect(isSectionHeader("Advanced configuration options", "advanced.config:")).toBe(true);
+      expect(
+        isSectionHeader("Advanced configuration options", "advanced.config:"),
+      ).toBe(true);
       expect(isSectionHeader("Setup parameters", "setup:")).toBe(true);
     });
 
     test("should not detect sentences as headers", () => {
-      expect(isSectionHeader("This is a complete sentence.", "key:")).toBe(false);
+      expect(isSectionHeader("This is a complete sentence.", "key:")).toBe(
+        false,
+      );
       expect(isSectionHeader("Configure the application", "app:")).toBe(false);
       expect(isSectionHeader("The database connection", "db:")).toBe(false);
     });
@@ -110,7 +114,9 @@ describe("YAML Comment Helper Functions", () => {
     });
 
     test("should not detect simple values with high word count", () => {
-      expect(isCodeExample("description: this is a long description here", 7)).toBe(false);
+      expect(
+        isCodeExample("description: this is a long description here", 7),
+      ).toBe(false);
     });
 
     test("should detect YAML lists", () => {
@@ -147,7 +153,9 @@ describe("YAML Comment Helper Functions", () => {
 
     test("should not detect prose", () => {
       expect(isCodeExample("This is a regular sentence", 5)).toBe(false);
-      expect(isCodeExample("Configure the application properly", 4)).toBe(false);
+      expect(isCodeExample("Configure the application properly", 4)).toBe(
+        false,
+      );
     });
   });
 
@@ -164,7 +172,9 @@ describe("YAML Comment Helper Functions", () => {
     });
 
     test("should detect sentences with URLs", () => {
-      expect(looksLikeProse("See https://example.com for details", 5)).toBe(true);
+      expect(looksLikeProse("See https://example.com for details", 5)).toBe(
+        true,
+      );
       expect(looksLikeProse("Reference http://docs.example.org", 3)).toBe(true);
     });
 
@@ -175,7 +185,9 @@ describe("YAML Comment Helper Functions", () => {
     });
 
     test("should detect multi-word sentences starting with capitals", () => {
-      expect(looksLikeProse("Redis master configuration parameters", 4)).toBe(true);
+      expect(looksLikeProse("Redis master configuration parameters", 4)).toBe(
+        true,
+      );
       expect(looksLikeProse("Database connection settings", 3)).toBe(true);
     });
 
@@ -207,13 +219,21 @@ describe("YAML Comment Helper Functions", () => {
     });
 
     test("should remove @param directives", () => {
-      expect(normalizeCommentLine("@param key.path Description text")).toBe("Description text");
-      expect(normalizeCommentLine("@param auth.enabled Enable authentication")).toBe("Enable authentication");
+      expect(normalizeCommentLine("@param key.path Description text")).toBe(
+        "Description text",
+      );
+      expect(
+        normalizeCommentLine("@param auth.enabled Enable authentication"),
+      ).toBe("Enable authentication");
     });
 
     test("should handle combinations", () => {
-      expect(normalizeCommentLine("## @param redis.port Redis port number")).toBe("Redis port number");
-      expect(normalizeCommentLine("# -- @param db.host Database host")).toBe("Database host");
+      expect(
+        normalizeCommentLine("## @param redis.port Redis port number"),
+      ).toBe("Redis port number");
+      expect(normalizeCommentLine("# -- @param db.host Database host")).toBe(
+        "Database host",
+      );
     });
 
     test("should trim whitespace", () => {
@@ -228,7 +248,9 @@ describe("YAML Comment Helper Functions", () => {
     });
 
     test("should preserve internal # symbols", () => {
-      expect(normalizeCommentLine("# Use #DEBUG for logging")).toBe("Use #DEBUG for logging");
+      expect(normalizeCommentLine("# Use #DEBUG for logging")).toBe(
+        "Use #DEBUG for logging",
+      );
     });
   });
 
@@ -267,9 +289,13 @@ that should be preserved.`;
 
       expect(result.params.size).toBe(2);
       expect(result.params.get("auth.enabled")).toBe("Enable authentication");
-      expect(result.params.get("auth.password")).toBe("Authentication password");
+      expect(result.params.get("auth.password")).toBe(
+        "Authentication password",
+      );
       expect(result.remainingLines.length).toBe(2);
-      expect(result.remainingLines[0]).toBe("This is additional documentation text");
+      expect(result.remainingLines[0]).toBe(
+        "This is additional documentation text",
+      );
       expect(result.remainingLines[1]).toBe("that should be preserved.");
     });
 
@@ -280,8 +306,12 @@ that should be preserved.`;
       const result = parseBitnamiParams(comment);
 
       expect(result.params.size).toBe(2);
-      expect(result.params.get("primary.persistence.enabled")).toBe("Enable persistence");
-      expect(result.params.get("primary.persistence.size")).toBe("Storage size");
+      expect(result.params.get("primary.persistence.enabled")).toBe(
+        "Enable persistence",
+      );
+      expect(result.params.get("primary.persistence.size")).toBe(
+        "Storage size",
+      );
     });
 
     test("should handle empty lines", () => {
@@ -315,11 +345,14 @@ just prose text`;
     });
 
     test("should handle dotted keys in @param", () => {
-      const comment = "@param server.ingress.tls.enabled Enable TLS for ingress";
+      const comment =
+        "@param server.ingress.tls.enabled Enable TLS for ingress";
       const result = parseBitnamiParams(comment);
 
       expect(result.params.size).toBe(1);
-      expect(result.params.get("server.ingress.tls.enabled")).toBe("Enable TLS for ingress");
+      expect(result.params.get("server.ingress.tls.enabled")).toBe(
+        "Enable TLS for ingress",
+      );
     });
 
     test("should ignore malformed @param lines", () => {

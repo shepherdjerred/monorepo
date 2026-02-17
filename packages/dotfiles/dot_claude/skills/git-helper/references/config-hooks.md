@@ -178,18 +178,18 @@ Hooks are scripts in `.git/hooks/` that execute at specific points in the Git wo
 
 ### Client-Side Hooks
 
-| Hook | Trigger | Common Use |
-|------|---------|------------|
-| `pre-commit` | Before commit is created | Lint, format, run fast tests |
-| `prepare-commit-msg` | After default message, before editor | Template commit messages |
-| `commit-msg` | After user enters message | Validate commit message format |
-| `post-commit` | After commit is created | Notifications |
-| `pre-rebase` | Before rebase starts | Prevent rebase of published branches |
-| `pre-push` | Before push to remote | Run full test suite |
-| `pre-merge-commit` | Before merge commit | Validate merge |
-| `post-merge` | After merge completes | Install dependencies |
-| `post-checkout` | After checkout/switch | Install dependencies, build |
-| `post-rewrite` | After rebase/amend | Update dependent data |
+| Hook                 | Trigger                              | Common Use                           |
+| -------------------- | ------------------------------------ | ------------------------------------ |
+| `pre-commit`         | Before commit is created             | Lint, format, run fast tests         |
+| `prepare-commit-msg` | After default message, before editor | Template commit messages             |
+| `commit-msg`         | After user enters message            | Validate commit message format       |
+| `post-commit`        | After commit is created              | Notifications                        |
+| `pre-rebase`         | Before rebase starts                 | Prevent rebase of published branches |
+| `pre-push`           | Before push to remote                | Run full test suite                  |
+| `pre-merge-commit`   | Before merge commit                  | Validate merge                       |
+| `post-merge`         | After merge completes                | Install dependencies                 |
+| `post-checkout`      | After checkout/switch                | Install dependencies, build          |
+| `post-rewrite`       | After rebase/amend                   | Update dependent data                |
 
 ### Sharing Hooks with the Team
 
@@ -297,7 +297,7 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files
-        args: ['--maxkb=500']
+        args: ["--maxkb=500"]
       - id: check-merge-conflict
       - id: detect-private-key
 
@@ -402,6 +402,7 @@ scalar diagnose
 ```
 
 Scalar automatically enables:
+
 - Background maintenance (`git maintenance`)
 - Filesystem monitor (`core.fsmonitor`)
 - Multi-pack index (`core.multiPackIndex`)

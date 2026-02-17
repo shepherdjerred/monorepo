@@ -16,7 +16,7 @@ Focus supports simplified, component-based navigation. Using inputs like a remot
 
 In many cases, focusing an item also selects it. The exception is when automatic selection might cause a distracting context shift, like opening a new view. In tvOS, for example, people use the remote to move focus from item to item as they seek the one they want, but because selecting a focused item opens or activates it, selection requires a separate gesture.
 
-Different platforms communicate focus in different ways. For example, iPadOS and macOS show focus by drawing a ring around an item or highlighting it; tvOS generally uses the [parallax effect](/design/human-interface-guidelines/images#Parallax-effect) to give the focused item an appearance of depth and liveliness. The combination of focus effects and interactions is sometimes called a *focus system* or *focus model*.
+Different platforms communicate focus in different ways. For example, iPadOS and macOS show focus by drawing a ring around an item or highlighting it; tvOS generally uses the [parallax effect](/design/human-interface-guidelines/images#Parallax-effect) to give the focused item an appearance of depth and liveliness. The combination of focus effects and interactions is sometimes called a _focus system_ or _focus model_.
 
 ## [Best practices](/design/human-interface-guidelines/focus-and-selection#Best-practices)
 
@@ -32,20 +32,20 @@ Different platforms communicate focus in different ways. For example, iPadOS and
 
 ## [Platform considerations](/design/human-interface-guidelines/focus-and-selection#Platform-considerations)
 
-*Not supported in iOS or watchOS.*
+_Not supported in iOS or watchOS._
 
 ### [iPadOS](/design/human-interface-guidelines/focus-and-selection#iPadOS)
 
 iPadOS 15 and later defines a focus system that supports keyboard interactions for navigating text fields, text views, and sidebars, in addition to various types of collection views and other custom views in your app.
 
-The iPadOS and tvOS focus systems are similar. People perform actions by moving a focus indicator to an item and then selecting it (for guidance, see [tvOS](/design/human-interface-guidelines/focus-and-selection#tvOS)). Although the underlying system is the same, the user experiences are a little different. tvOS uses *directional focus*, which means people can use the same interaction — that is, swiping the Siri Remote or using only the arrow keys on a connected keyboard — to navigate to every onscreen component. In contrast, iPadOS defines *focus groups*, which represent specific areas within an app, like a sidebar, grid, or list. Using focus groups, iPadOS can support two different keyboard interactions.
+The iPadOS and tvOS focus systems are similar. People perform actions by moving a focus indicator to an item and then selecting it (for guidance, see [tvOS](/design/human-interface-guidelines/focus-and-selection#tvOS)). Although the underlying system is the same, the user experiences are a little different. tvOS uses _directional focus_, which means people can use the same interaction — that is, swiping the Siri Remote or using only the arrow keys on a connected keyboard — to navigate to every onscreen component. In contrast, iPadOS defines _focus groups_, which represent specific areas within an app, like a sidebar, grid, or list. Using focus groups, iPadOS can support two different keyboard interactions.
 
-* Pressing the Tab key moves focus among focus groups, letting people navigate to sidebars, grids, and other app areas.
-* Pressing an arrow key supports a directional focus interaction that’s similar to tvOS, but limited to navigation among items in the same focus group. For example, people can use an arrow key to move through the items in a list or a sidebar.
+- Pressing the Tab key moves focus among focus groups, letting people navigate to sidebars, grids, and other app areas.
+- Pressing an arrow key supports a directional focus interaction that’s similar to tvOS, but limited to navigation among items in the same focus group. For example, people can use an arrow key to move through the items in a list or a sidebar.
 
 Onscreen components can indicate focus by using the halo effect or the highlighted appearance.
 
-The *halo* focus effect — also known as the *focus ring* — displays a customizable outline around the component. You can apply the halo effect to custom views and to fully opaque content within a collection or list cell, such as an image.
+The _halo_ focus effect — also known as the _focus ring_ — displays a customizable outline around the component. You can apply the halo effect to custom views and to fully opaque content within a collection or list cell, such as an image.
 
 ![An illustration of a collection view of photos showing the standard halo effect that outlines the focused photo.](https://docs-assets.developer.apple.com/published/2bfe6fedc5a6a8ecf6d7e74e9492a096/focus-and-selection-halo-focus-effect%402x.png)
 
@@ -53,13 +53,13 @@ The *halo* focus effect — also known as the *focus ring* — displays a custom
 
 ![An illustration of a collection view of photos showing a rounded-rectangle halo effect that outlines the focused photo.](https://docs-assets.developer.apple.com/published/1a84f872d0624355e89fa03b357ddd13/focus-and-selection-customized-halo%402x.png)
 
-The *highlighted* appearance — in which the component’s text uses the app’s accent color — also indicates focus, but it’s not a focus effect. The highlight appearance occurs automatically when people select a collection view cell on which you’ve set content configurations (for developer guidance, see [`UICollectionViewCell`](/documentation/UIKit/UICollectionViewCell)).
+The _highlighted_ appearance — in which the component’s text uses the app’s accent color — also indicates focus, but it’s not a focus effect. The highlight appearance occurs automatically when people select a collection view cell on which you’ve set content configurations (for developer guidance, see [`UICollectionViewCell`](/documentation/UIKit/UICollectionViewCell)).
 
 ![An illustration of a list of menu items with the second item highlighted. The item's title and icon are tinted with a red accent color.](https://docs-assets.developer.apple.com/published/01261865c38379fa118f16057a54f23e/focus-and-selection-highlighted-appearance%402x.png)
 
 **Ensure that focus moves through your custom views in ways that make sense.** As people continue pressing the Tab key, focus moves through focus groups in reading order: leading to trailing, and top to bottom. Although focus moves through system-provided views in ways that people expect, you might need to adjust the order in which the focus system visits your custom views. For example, if you want focus to move down through a vertical stack of custom views before it moves in the trailing direction to the next view, you need to identify the stack container as a single focus group. For developer guidance, see [`focusGroupIdentifier`](/documentation/UIKit/UIFocusEnvironment/focusGroupIdentifier).
 
-**Adjust the priority of an item to reflect its importance within a focus group.** When a group receives focus, its *primary item* automatically receives focus too, making it easy for people to select the item they’re most likely to want. You can make an item primary by increasing its priority. For developer guidance, see [`UIFocusGroupPriority`](/documentation/UIKit/UIFocusGroupPriority).
+**Adjust the priority of an item to reflect its importance within a focus group.** When a group receives focus, its _primary item_ automatically receives focus too, making it easy for people to select the item they’re most likely to want. You can make an item primary by increasing its priority. For developer guidance, see [`UIFocusGroupPriority`](/documentation/UIKit/UIFocusGroupPriority).
 
 ### [tvOS](/design/human-interface-guidelines/focus-and-selection#tvOS)
 
@@ -69,13 +69,13 @@ The *highlighted* appearance — in which the component’s text uses the app’
 
 **Design your interface to accommodate components in various focus states.** In tvOS, focusable items can have up to five different states, each of which is visually distinct. Because focusing an item often increases its scale, you need to supply assets for the larger, focused size to ensure they always look sharp, and you need to make sure the larger item doesn’t crowd the surrounding interface.
 
-| State | Description |
-| --- | --- |
-| An image of an unfocused button on top of a photograph. A small drop shadow makes it appear very close to the content behind it, with a translucent background infused by the colors of the content, and a high-contrast text color. | The viewer hasn’t brought focus to the item. Unfocused items appear less prominent than focused items. |
-| An image of a focused button on top of a photograph. It’s larger than an unfocused button, and a drop shadow makes it appear farther away from the content behind it, with an opaque white background and a black text label. | The viewer brings focus to the item. A focused item visually stands out from the other onscreen content through elevation to the foreground, illumination, and animation. |
-| An image of a highlighted button on top of a photograph. It’s the same size as an unfocused button, and a drop shadow makes it appear a little farther away from the surface of the content behind it, with an opaque white background and a black text label. | The viewer chooses the focused item. A focused item provides instant visual feedback when people choose it. For example, a button might briefly invert its colors and animate before it transitions to its selected appearance. |
-| An image of a selected button on top of a photograph. It’s the same size as an unfocused button, and a small drop shadow makes it appear very close to the content behind it, with an opaque white background and a black text label. | The viewer has chosen or activated the item in some way. For example, a heart-shaped button that people can use to favorite a photo might appear filled in the selected state and empty in the deselected state. |
-| An image of an unavailable button on top of a photograph. It’s the same size as an unfocused button. It lacks a drop shadow and appears to rest directly on the content behind it, with a translucent background tinted by the the colors of nearby content, and a low-contrast text color. | The viewer can’t bring focus to the item or choose it. An unavailable item appears inactive. |
+| State                                                                                                                                                                                                                                                                                       | Description                                                                                                                                                                                                                     |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| An image of an unfocused button on top of a photograph. A small drop shadow makes it appear very close to the content behind it, with a translucent background infused by the colors of the content, and a high-contrast text color.                                                        | The viewer hasn’t brought focus to the item. Unfocused items appear less prominent than focused items.                                                                                                                          |
+| An image of a focused button on top of a photograph. It’s larger than an unfocused button, and a drop shadow makes it appear farther away from the content behind it, with an opaque white background and a black text label.                                                               | The viewer brings focus to the item. A focused item visually stands out from the other onscreen content through elevation to the foreground, illumination, and animation.                                                       |
+| An image of a highlighted button on top of a photograph. It’s the same size as an unfocused button, and a drop shadow makes it appear a little farther away from the surface of the content behind it, with an opaque white background and a black text label.                              | The viewer chooses the focused item. A focused item provides instant visual feedback when people choose it. For example, a button might briefly invert its colors and animate before it transitions to its selected appearance. |
+| An image of a selected button on top of a photograph. It’s the same size as an unfocused button, and a small drop shadow makes it appear very close to the content behind it, with an opaque white background and a black text label.                                                       | The viewer has chosen or activated the item in some way. For example, a heart-shaped button that people can use to favorite a photo might appear filled in the selected state and empty in the deselected state.                |
+| An image of an unavailable button on top of a photograph. It’s the same size as an unfocused button. It lacks a drop shadow and appears to rest directly on the content behind it, with a translucent background tinted by the the colors of nearby content, and a low-contrast text color. | The viewer can’t bring focus to the item or choose it. An unavailable item appears inactive.                                                                                                                                    |
 
 For developer guidance, see [Adding user-focusable elements to a tvOS app](/documentation/UIKit/adding-user-focusable-elements-to-a-tvos-app).
 
@@ -85,7 +85,7 @@ visionOS supports the same focus system as in iPadOS and tvOS, letting people us
 
 Note
 
-When people look at a virtual object to identify it as the object they want to interact with, the system uses the *hover effect*, not a focus effect, to provide visual feedback (for guidance, see [Eyes](/design/human-interface-guidelines/eyes)). The hover effect isn’t related to the focus system.
+When people look at a virtual object to identify it as the object they want to interact with, the system uses the _hover effect_, not a focus effect, to provide visual feedback (for guidance, see [Eyes](/design/human-interface-guidelines/eyes)). The hover effect isn’t related to the focus system.
 
 ## [Resources](/design/human-interface-guidelines/focus-and-selection#Resources)
 
@@ -119,7 +119,7 @@ Design for the iPadOS pointer](https://developer.apple.com/videos/play/wwdc2020/
 
 ## [Change log](/design/human-interface-guidelines/focus-and-selection#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date             | Changes                                                                       |
+| ---------------- | ----------------------------------------------------------------------------- |
 | October 24, 2023 | Clarified the difference between focus effects and the visionOS hover effect. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
+| June 21, 2023    | Updated to include guidance for visionOS.                                     |

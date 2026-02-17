@@ -24,41 +24,49 @@ The Apple Human Interface Guidelines (HIG) provides comprehensive design guidanc
 ### Design Foundations
 
 #### Color
+
 **Path**: `data/color/index.html`
 
 Judicious use of color can enhance communication, evoke your brand, provide visual continuity, communicate status and feedback, and help people understand information.
 
 #### Typography
+
 **Path**: `data/typography/index.html`
 
 Your typographic choices can help you display legible text, convey an information hierarchy, communicate important content, and express your brand or style.
 
 #### Icons
+
 **Path**: `data/icons/index.html`
 
 An effective icon is a graphic asset that expresses a single concept in ways people instantly understand.
 
 #### Layout
+
 **Path**: `data/layout/index.html`
 
 A consistent layout that adapts to various contexts makes your experience more approachable and helps people enjoy their favorite apps and games on all their devices.
 
 #### Materials
+
 **Path**: `data/materials/index.html`
 
 A material is a visual effect that creates a sense of depth, layering, and hierarchy between foreground and background elements.
 
 #### Branding
+
 **Path**: `data/branding/index.html`
 
 Apps and games express their unique brand identity in ways that make them instantly recognizable while feeling at home on the platform and giving people a consistent experience.
 
 #### Dark Mode
+
 **Path**: `data/dark-mode/index.html`
 
 Dark Mode is a systemwide appearance setting that uses a dark color palette to provide a comfortable viewing experience tailored for low-light environments.
 
 #### Images
+
 **Path**: `data/images/index.html`
 
 To make sure your artwork looks great on all devices you support, learn how the system displays content and how to deliver art at the appropriate scale factors.
@@ -66,11 +74,13 @@ To make sure your artwork looks great on all devices you support, learn how the 
 ### Accessibility & Inclusion
 
 #### Accessibility
+
 **Path**: `data/accessibility/index.html`
 
 Accessible user interfaces empower everyone to have a great experience with your app or game.
 
 #### Inclusion
+
 **Path**: `data/inclusion/index.html`
 
 Inclusive apps and games put people first by prioritizing respectful communication and presenting content and functionality in ways that everyone can access and understand.
@@ -78,46 +88,55 @@ Inclusive apps and games put people first by prioritizing respectful communicati
 ### Common UI Components
 
 #### Buttons
+
 **Path**: `data/buttons/index.html`
 
 A button initiates an instantaneous action.
 
 #### Menus
+
 **Path**: `data/menus/index.html`
 
 A menu reveals its options when people interact with it, making it a space-efficient way to present commands in your app or game.
 
 #### Alerts
+
 **Path**: `data/alerts/index.html`
 
 An alert gives people critical information they need right away.
 
 #### Sheets
+
 **Path**: `data/sheets/index.html`
 
 A sheet helps people perform a scoped task that's closely related to their current context.
 
 #### Lists and Tables
+
 **Path**: `data/lists-and-tables/index.html`
 
 Lists and tables present data in one or more columns of rows.
 
 #### Pickers
+
 **Path**: `data/pickers/index.html`
 
 A picker displays one or more scrollable lists of distinct values that people can choose from.
 
 #### Sliders
+
 **Path**: `data/sliders/index.html`
 
 A slider is a horizontal track with a control, called a thumb, that people can adjust between a minimum and maximum value.
 
 #### Toggles
+
 **Path**: `data/toggles/index.html`
 
 A toggle lets people choose between a pair of opposing states, like on and off, using a different appearance to indicate each state.
 
 #### Text Fields
+
 **Path**: `data/text-fields/index.html`
 
 A text field is a rectangular area in which people enter or edit small, specific pieces of text.
@@ -125,31 +144,37 @@ A text field is a rectangular area in which people enter or edit small, specific
 ### Design Patterns
 
 #### Modality
+
 **Path**: `data/modality/index.html`
 
 Modality is a design technique that presents content in a separate, dedicated mode that prevents interaction with the parent view and requires an explicit action to dismiss.
 
 #### Navigation and Search
+
 **Path**: `data/navigation-and-search/index.html`
 
 Help people navigate and find content efficiently.
 
 #### Feedback
+
 **Path**: `data/feedback/index.html`
 
 Feedback helps people know what's happening, discover what they can do next, understand the results of actions, and avoid mistakes.
 
 #### Loading
+
 **Path**: `data/loading/index.html`
 
 The best content-loading experience finishes before people become aware of it.
 
 #### Settings
+
 **Path**: `data/settings/index.html`
 
 People expect apps and games to just work, but they also appreciate having ways to customize the experience to fit their needs.
 
 #### Onboarding
+
 **Path**: `data/onboarding/index.html`
 
 Onboarding can help people get a quick start using your app or game.
@@ -157,31 +182,37 @@ Onboarding can help people get a quick start using your app or game.
 ### Platform-Specific Guidelines
 
 #### Designing for iOS
+
 **Path**: `data/designing-for-ios/index.html`
 
 People depend on their iPhone to help them stay connected, play games, view media, accomplish tasks, and track personal data in any location and while on the go.
 
 #### Designing for iPadOS
+
 **Path**: `data/designing-for-ipados/index.html`
 
 People value the power, mobility, and flexibility of iPad as they enjoy media, play games, perform detailed productivity tasks, and bring their creations to life.
 
 #### Designing for macOS
+
 **Path**: `data/designing-for-macos/index.html`
 
 People rely on the power, spaciousness, and flexibility of a Mac as they perform in-depth productivity tasks, view media or content, and play games, often using several apps at once.
 
 #### Designing for tvOS
+
 **Path**: `data/designing-for-tvos/index.html`
 
 People enjoy the vibrant content, immersive experiences, and streamlined interactions that tvOS delivers in media and games, as well as in fitness, education, and home utility apps.
 
 #### Designing for visionOS
+
 **Path**: `data/designing-for-visionos/index.html`
 
 When people wear Apple Vision Pro, they enter an infinite 3D space where they can engage with your app or game while staying connected to their surroundings.
 
 #### Designing for watchOS
+
 **Path**: `data/designing-for-watchos/index.html`
 
 When people glance at their Apple Watch, they know they can access essential information and perform simple, timely tasks whether they're stationary or in motion.
@@ -191,6 +222,7 @@ When people glance at their Apple Watch, they know they can access essential inf
 ### By Category
 
 #### Foundations (9 topics)
+
 - accessibility
 - branding
 - color
@@ -202,6 +234,7 @@ When people glance at their Apple Watch, they know they can access essential inf
 - typography
 
 #### Components - Content (11 topics)
+
 - activity-rings
 - charts
 - gauges
@@ -215,6 +248,7 @@ When people glance at their Apple Watch, they know they can access essential inf
 - sf-symbols
 
 #### Components - Layout & Organization (13 topics)
+
 - boxes
 - collections
 - column-views
@@ -230,6 +264,7 @@ When people glance at their Apple Watch, they know they can access essential inf
 - windows
 
 #### Components - Menus & Actions (11 topics)
+
 - activity-views
 - buttons
 - context-menus
@@ -243,6 +278,7 @@ When people glance at their Apple Watch, they know they can access essential inf
 - segmented-controls
 
 #### Components - Navigation & Search (7 topics)
+
 - navigation-and-search
 - page-controls
 - path-controls
@@ -252,6 +288,7 @@ When people glance at their Apple Watch, they know they can access essential inf
 - toolbars
 
 #### Components - Presentation (8 topics)
+
 - action-sheets
 - alerts
 - panels
@@ -262,6 +299,7 @@ When people glance at their Apple Watch, they know they can access essential inf
 - status-bars
 
 #### Components - Selection & Input (11 topics)
+
 - color-wells
 - combo-boxes
 - digit-entry-views
@@ -275,6 +313,7 @@ When people glance at their Apple Watch, they know they can access essential inf
 - virtual-keyboards
 
 #### Components - System Experiences (6 topics)
+
 - complications
 - live-activities
 - notifications
@@ -283,6 +322,7 @@ When people glance at their Apple Watch, they know they can access essential inf
 - widgets
 
 #### Patterns (22 topics)
+
 - charting-data
 - collaboration-and-sharing
 - drag-and-drop
@@ -308,6 +348,7 @@ When people glance at their Apple Watch, they know they can access essential inf
 - workouts
 
 #### Inputs (8 topics)
+
 - action-button
 - apple-pencil-and-scribble
 - camera-control
@@ -324,6 +365,7 @@ When people glance at their Apple Watch, they know they can access essential inf
 - spatial-interactions
 
 #### Technologies (30 topics)
+
 - airplay
 - always-on
 - app-clips
@@ -356,6 +398,7 @@ When people glance at their Apple Watch, they know they can access essential inf
 - wallet
 
 #### Platforms (6 topics)
+
 - designing-for-games
 - designing-for-ios
 - designing-for-ipados
@@ -365,6 +408,7 @@ When people glance at their Apple Watch, they know they can access essential inf
 - designing-for-watchos
 
 #### Cross-Cutting Concerns (8 topics)
+
 - accessibility
 - dark-mode
 - inclusion
@@ -505,6 +549,7 @@ ls packages/claude-plugin/agents/apple-hig-helper/data/ | grep -E "(button|menu|
 ### Example 5: "What technologies does HIG cover?"
 
 **Technologies covered** (30 topics):
+
 - Apple Pay, Siri, HomeKit, CarPlay
 - ARKit, HealthKit, SharePlay, Wallet
 - Game Center, Maps, Machine Learning
@@ -565,6 +610,7 @@ ls packages/claude-plugin/agents/apple-hig-helper/data/ | grep -E "(button|menu|
 ## When to Ask for Help
 
 If you need:
+
 - **Comparison across platforms**: "How do alerts differ between iOS and macOS?"
 - **Implementation guidance**: "Show me how to implement the button styles from HIG"
 - **Design critique**: "Does this design follow HIG principles?"

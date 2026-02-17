@@ -4,13 +4,14 @@ import { Role } from "#src/model/role";
 export type RoleSelectorProps = {
   selectedRoles: Role[];
   onRolesUpdate: (newRoles: Role[]) => void;
-}
+};
 
-export default function RoleSelector({ selectedRoles, onRolesUpdate }: RoleSelectorProps): React.ReactElement {
+export default function RoleSelector({
+  selectedRoles,
+  onRolesUpdate,
+}: RoleSelectorProps): React.ReactElement {
   const isChecked = (role: Role) => {
-    return (
-      selectedRoles.includes(role)
-    );
+    return selectedRoles.includes(role);
   };
 
   const getNewRoles = (role: Role) => {

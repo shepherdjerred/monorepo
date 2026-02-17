@@ -8,9 +8,11 @@ export type BookmarkButtonProps = {
   item: Bookmarkable;
   isBookmarked: boolean;
   onToggleBookmark: (item: Bookmarkable) => void;
-}
+};
 
-export function ToggleBookmarkButton(props: BookmarkButtonProps): React.ReactElement {
+export function ToggleBookmarkButton(
+  props: BookmarkButtonProps,
+): React.ReactElement {
   const { item, isBookmarked, onToggleBookmark } = props;
 
   return (

@@ -81,25 +81,30 @@ If you want to test the apps in development, you can build from source.
 ### Prerequisites
 
 **All Platforms:**
+
 - Node.js 18+ or Bun
 - React Native CLI
 - Git
 
 **iOS/iPadOS:**
+
 - macOS with Xcode 14+
 - CocoaPods (`gem install cocoapods`)
 - iOS Simulator or physical device
 
 **Android:**
+
 - Android Studio with Android SDK
 - Java Development Kit (JDK) 17+
 - Android emulator or physical device
 
 **macOS:**
+
 - macOS with Xcode 14+
 - React Native macOS dependencies
 
 **Windows:**
+
 - Windows 10+ with Visual Studio 2019+
 - Windows SDK
 - React Native Windows dependencies
@@ -148,6 +153,7 @@ bun run ios  # or android/macos/windows
 **Status:** In active development
 
 **Current Options:**
+
 1. **Web UI (Recommended)** - Visit your clauderon server in Safari
    - Add to Home Screen for app-like experience
    - Full feature parity with desktop
@@ -161,6 +167,7 @@ bun run ios  # or android/macos/windows
    ```
 
 **Future Availability:**
+
 - App Store release planned after beta testing phase
 - TestFlight beta program (join waitlist on GitHub)
 
@@ -169,6 +176,7 @@ bun run ios  # or android/macos/windows
 **Status:** In active development
 
 **Current Options:**
+
 1. **Web UI (Recommended)** - Visit your clauderon server in Chrome/Firefox
    - Add to Home Screen for app-like experience
    - Full feature parity with desktop
@@ -182,6 +190,7 @@ bun run ios  # or android/macos/windows
    ```
 
 **Future Availability:**
+
 - Google Play release planned after beta testing phase
 - Direct APK downloads may be available before Play Store release
 
@@ -190,8 +199,10 @@ bun run ios  # or android/macos/windows
 **Status:** In active development
 
 **Current Options:**
+
 1. **Web UI** - Visit your clauderon server in any browser
 2. **CLI/TUI** - Full desktop experience via terminal
+
    ```bash
    # Install via cargo
    cargo install clauderon
@@ -212,8 +223,10 @@ bun run ios  # or android/macos/windows
 **Status:** In active development
 
 **Current Options:**
+
 1. **Web UI** - Visit your clauderon server in any browser
 2. **CLI** - Windows support via WSL or native Windows build
+
    ```bash
    # Via cargo
    cargo install clauderon
@@ -227,6 +240,7 @@ bun run ios  # or android/macos/windows
    ```
 
 **Future Availability:**
+
 - Direct download installers (.exe)
 - Microsoft Store consideration (after initial release)
 
@@ -279,12 +293,12 @@ You can add multiple clauderon servers:
 
 ### Notification Settings
 
-| Event | Default |
-|-------|---------|
-| Session completed | On |
-| Session errors | On |
-| New chat messages | Off |
-| Session started | Off |
+| Event             | Default |
+| ----------------- | ------- |
+| Session completed | On      |
+| Session errors    | On      |
+| New chat messages | Off     |
+| Session started   | Off     |
 
 ## Offline Mode
 
@@ -359,15 +373,15 @@ If your server is only accessible via VPN:
 
 ## App Permissions
 
-| Permission | Platform | Purpose |
-|------------|----------|---------|
-| Face ID / Touch ID | iOS/iPadOS | Biometric authentication |
-| Fingerprint / Face Unlock | Android | Biometric authentication |
-| Windows Hello | Windows | Biometric authentication |
-| Notifications | iOS/Android | Push notifications |
-| Network | All | Server communication |
-| Camera | Mobile | QR code scanning (optional) |
-| File System | Desktop | Session file access (optional) |
+| Permission                | Platform    | Purpose                        |
+| ------------------------- | ----------- | ------------------------------ |
+| Face ID / Touch ID        | iOS/iPadOS  | Biometric authentication       |
+| Fingerprint / Face Unlock | Android     | Biometric authentication       |
+| Windows Hello             | Windows     | Biometric authentication       |
+| Notifications             | iOS/Android | Push notifications             |
+| Network                   | All         | Server communication           |
+| Camera                    | Mobile      | QR code scanning (optional)    |
+| File System               | Desktop     | Session file access (optional) |
 
 ## See Also
 

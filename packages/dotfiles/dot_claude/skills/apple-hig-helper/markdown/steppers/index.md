@@ -22,7 +22,7 @@ A stepper sits next to a field that displays its current value, because the step
 
 ## [Platform considerations](/design/human-interface-guidelines/steppers#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, or visionOS. Not supported in watchOS or tvOS.*
+_No additional considerations for iOS, iPadOS, or visionOS. Not supported in watchOS or tvOS._
 
 ### [macOS](/design/human-interface-guidelines/steppers#macOS)
 

@@ -11,10 +11,26 @@ export function getSystemContainer(platform?: Platform): Container {
       .container(platform ? { platform } : {})
       .from(`ubuntu:${versions.ubuntu}`)
       // Cache APT packages
-      .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-${platform ?? "default"}`))
-      .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-${platform ?? "default"}`))
+      .withMountedCache(
+        "/var/cache/apt",
+        dag.cacheVolume(`apt-cache-${platform ?? "default"}`),
+      )
+      .withMountedCache(
+        "/var/lib/apt",
+        dag.cacheVolume(`apt-lib-${platform ?? "default"}`),
+      )
       .withExec(["apt-get", "update"])
-      .withExec(["apt-get", "install", "-y", "gpg", "wget", "curl", "git", "build-essential", "python3"])
+      .withExec([
+        "apt-get",
+        "install",
+        "-y",
+        "gpg",
+        "wget",
+        "curl",
+        "git",
+        "build-essential",
+        "python3",
+      ])
   );
 }
 
@@ -34,7 +50,11 @@ export function getMiseRuntimeContainer(platform?: Platform): Container {
  * @param platform Optional platform specification
  * @returns A configured container with workspace dependencies installed
  */
-export function getWorkspaceContainer(repoRoot: Directory, workspacePath: string, platform?: Platform): Container {
+export function getWorkspaceContainer(
+  repoRoot: Directory,
+  workspacePath: string,
+  platform?: Platform,
+): Container {
   const container = getMiseRuntimeContainer(platform)
     .withWorkdir("/workspace")
     // Copy root package.json and bun.lock for proper dependency resolution
@@ -61,12 +81,23 @@ export function getWorkspaceContainer(repoRoot: Directory, workspacePath: string
       // Copy all workspace sources BEFORE install (needed for workspace symlinks)
       // Note: Don't exclude package.json - withDirectory replaces the target directory,
       // so excluding package.json would remove the ones we copied earlier
-      .withDirectory("src/ha", repoRoot.directory("src/ha"), { exclude: ["node_modules"] })
-      .withDirectory("src/cdk8s", repoRoot.directory("src/cdk8s"), { exclude: ["node_modules"] })
-      .withDirectory("src/helm-types", repoRoot.directory("src/helm-types"), { exclude: ["node_modules"] })
-      .withDirectory("src/deps-email", repoRoot.directory("src/deps-email"), { exclude: ["node_modules"] })
+      .withDirectory("src/ha", repoRoot.directory("src/ha"), {
+        exclude: ["node_modules"],
+      })
+      .withDirectory("src/cdk8s", repoRoot.directory("src/cdk8s"), {
+        exclude: ["node_modules"],
+      })
+      .withDirectory("src/helm-types", repoRoot.directory("src/helm-types"), {
+        exclude: ["node_modules"],
+      })
+      .withDirectory("src/deps-email", repoRoot.directory("src/deps-email"), {
+        exclude: ["node_modules"],
+      })
       // Install dependencies (cached unless dependency files change)
-      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(`bun-cache-${platform ?? "default"}`))
+      .withMountedCache(
+        "/root/.bun/install/cache",
+        dag.cacheVolume(`bun-cache-${platform ?? "default"}`),
+      )
       .withExec(["bun", "install", "--frozen-lockfile"])
       // Set working directory to the workspace
       .withWorkdir(`/workspace/${workspacePath}`)
@@ -79,8 +110,13 @@ export function getWorkspaceContainer(repoRoot: Directory, workspacePath: string
  * @param platform The platform to build for (optional).
  * @returns A configured Dagger Container ready for further commands.
  */
-export function getUbuntuBaseContainer(source: Directory, platform?: Platform): Container {
-  return getSystemContainer(platform).withWorkdir("/workspace").withMountedDirectory("/workspace", source);
+export function getUbuntuBaseContainer(
+  source: Directory,
+  platform?: Platform,
+): Container {
+  return getSystemContainer(platform)
+    .withWorkdir("/workspace")
+    .withMountedDirectory("/workspace", source);
 }
 
 /**
@@ -118,9 +154,13 @@ export function withMiseTools(baseContainer: Container): Container {
           "apt-get update && apt-get install -y mise",
       ])
       // Set PATH so mise shims are available
-      .withEnvVariable("PATH", "/root/.local/share/mise/shims:/root/.local/bin:${PATH}", {
-        expand: true,
-      })
+      .withEnvVariable(
+        "PATH",
+        "/root/.local/share/mise/shims:/root/.local/bin:${PATH}",
+        {
+          expand: true,
+        },
+      )
       // Install tools directly (no cache mount - tools must be in the final image)
       // Note: This runs every build but ensures tools are baked into the image
       .withExec([

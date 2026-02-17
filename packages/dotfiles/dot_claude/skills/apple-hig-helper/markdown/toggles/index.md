@@ -26,7 +26,7 @@ In addition to toggles, all platforms also support buttons that behave like togg
 
 ## [Platform considerations](/design/human-interface-guidelines/toggles#Platform-considerations)
 
-*No additional considerations for tvOS, visionOS, or watchOS.*
+_No additional considerations for tvOS, visionOS, or watchOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/toggles#iOS-iPadOS)
 
@@ -138,7 +138,7 @@ Deselected
 
 ## [Change log](/design/human-interface-guidelines/toggles#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| March 29, 2024 | Enhanced guidance for using switches in macOS apps, clarified when a checkbox has a title, and added artwork for radio buttons. |
-| September 12, 2023 | Updated artwork. |
+| Date               | Changes                                                                                                                         |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| March 29, 2024     | Enhanced guidance for using switches in macOS apps, clarified when a checkbox has a title, and added artwork for radio buttons. |
+| September 12, 2023 | Updated artwork.                                                                                                                |

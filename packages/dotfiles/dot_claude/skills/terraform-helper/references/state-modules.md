@@ -307,11 +307,13 @@ terraform {
 ### When to Use Workspaces
 
 Workspaces are best for:
+
 - Feature branch testing with identical infrastructure
 - Short-lived environments (PR previews, experiments)
 - Slight variations of the same configuration
 
 Avoid workspaces for:
+
 - Long-lived environment separation (dev/staging/prod) - use directory structure instead
 - Configurations that differ significantly between environments
 

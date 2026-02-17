@@ -1,12 +1,16 @@
-const Counter = require.main.require('./models/counter');
-const Setting = require.main.require('./models/setting');
-const uuid = require('uuid/v4');
+const Counter = require.main.require("./models/counter");
+const Setting = require.main.require("./models/setting");
+const uuid = require("uuid/v4");
 
 let connectedUsers = 0;
 
 module.exports = function (connection) {
-  const counterDao = require.main.require('./database/dao/counterDao')(connection);
-  const settingDao = require.main.require('./database/dao/settingDao')(connection);
+  const counterDao = require.main.require("./database/dao/counterDao")(
+    connection,
+  );
+  const settingDao = require.main.require("./database/dao/settingDao")(
+    connection,
+  );
 
   let getConnectedUsers = function () {
     return connectedUsers;
@@ -20,16 +24,16 @@ module.exports = function (connection) {
     connectedUsers -= 1;
   };
 
-  let getCounter = async function getCounter () {
+  let getCounter = async function getCounter() {
     let counter;
-    let setting = await settingDao.select('active_counter');
+    let setting = await settingDao.select("active_counter");
 
     if (setting) {
       counter = counterDao.select(setting.settingValue);
     } else {
       counter = new Counter(uuid(), 0, 1);
       counterDao.insert(counter);
-      settingDao.insert(new Setting('active_counter', counter.uuid));
+      settingDao.insert(new Setting("active_counter", counter.uuid));
     }
 
     return counter;
@@ -38,14 +42,14 @@ module.exports = function (connection) {
   let incrementCounter = async function () {
     let counter;
     let reward = false;
-    let setting = await settingDao.select('active_counter');
+    let setting = await settingDao.select("active_counter");
 
     if (setting) {
       counter = await counterDao.select(setting.settingValue);
     } else {
       counter = new Counter(uuid(), 0, 1);
       counterDao.insert(counter);
-      settingDao.insert(new Setting('active_counter', counter.uuid));
+      settingDao.insert(new Setting("active_counter", counter.uuid));
     }
 
     counter.currentValue++;
@@ -59,7 +63,7 @@ module.exports = function (connection) {
 
     return {
       counter,
-      reward
+      reward,
     };
   };
 
@@ -68,6 +72,6 @@ module.exports = function (connection) {
     incrementConnectedUsers,
     decrementConnectedUsers,
     getCounter,
-    incrementCounter
+    incrementCounter,
   };
 };

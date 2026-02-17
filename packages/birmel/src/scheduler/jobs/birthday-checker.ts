@@ -32,7 +32,7 @@ export async function checkAndPostBirthdays(): Promise<void> {
 
           logger.info("Found birthdays", {
             guildId,
-            count: birthdays.length
+            count: birthdays.length,
           });
 
           // Fetch full guild data
@@ -69,7 +69,7 @@ export async function checkAndPostBirthdays(): Promise<void> {
                     guildId,
                     userId: birthday.userId,
                     username,
-                    channelId
+                    channelId,
                   });
 
                   // Optionally assign birthday role if configured
@@ -79,31 +79,35 @@ export async function checkAndPostBirthdays(): Promise<void> {
                       await member.roles.add(birthdayRoleId);
                       logger.info("Added birthday role", {
                         userId: birthday.userId,
-                        roleId: birthdayRoleId
+                        roleId: birthdayRoleId,
                       });
 
                       // Schedule role removal after 24 hours
-                      setTimeout(() => {
-                        void (async () => {
-                          try {
-                            const memberToUpdate = await fullGuild.members.fetch(birthday.userId);
-                            await memberToUpdate.roles.remove(birthdayRoleId);
-                            logger.info("Removed birthday role", {
-                              userId: birthday.userId,
-                              roleId: birthdayRoleId
-                            });
-                          } catch (error) {
-                            logger.warn("Failed to remove birthday role", {
-                              userId: birthday.userId,
-                              error
-                            });
-                          }
-                        })();
-                      }, 24 * 60 * 60 * 1000); // 24 hours
+                      setTimeout(
+                        () => {
+                          void (async () => {
+                            try {
+                              const memberToUpdate =
+                                await fullGuild.members.fetch(birthday.userId);
+                              await memberToUpdate.roles.remove(birthdayRoleId);
+                              logger.info("Removed birthday role", {
+                                userId: birthday.userId,
+                                roleId: birthdayRoleId,
+                              });
+                            } catch (error) {
+                              logger.warn("Failed to remove birthday role", {
+                                userId: birthday.userId,
+                                error,
+                              });
+                            }
+                          })();
+                        },
+                        24 * 60 * 60 * 1000,
+                      ); // 24 hours
                     } catch (error) {
                       logger.warn("Failed to add birthday role", {
                         userId: birthday.userId,
-                        error
+                        error,
                       });
                     }
                   }
@@ -111,19 +115,19 @@ export async function checkAndPostBirthdays(): Promise<void> {
               } else {
                 logger.warn("No channel available for birthday message", {
                   guildId,
-                  userId: birthday.userId
+                  userId: birthday.userId,
                 });
               }
             } catch (error) {
               logger.error("Failed to process birthday", error as Error, {
                 guildId,
-                userId: birthday.userId
+                userId: birthday.userId,
               });
             }
           }
         } catch (error) {
           logger.error("Failed to check birthdays for guild", error as Error, {
-            guildId
+            guildId,
           });
         }
       }

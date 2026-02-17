@@ -1,21 +1,21 @@
 {
   "folders": [
     {
-      "path": "packages/backend"
+      "path": "packages/backend",
     },
     {
-      "path": "packages/data"
+      "path": "packages/data",
     },
     {
-      "path": "packages/frontend"
+      "path": "packages/frontend",
     },
     {
-      "path": "packages/preview"
+      "path": "packages/preview",
     },
     {
       "name": "root",
-      "path": "."
-    }
+      "path": ".",
+    },
   ],
   "extensions": {
     "recommendations": [
@@ -32,8 +32,8 @@
       "arahata.linter-actionlint",
       "dbaeumer.vscode-eslint",
       "bradlc.vscode-tailwindcss",
-      "lightyen.tailwindcss-intellisense-twin"
-    ]
+      "lightyen.tailwindcss-intellisense-twin",
+    ],
   },
   "settings": {
     "testing.automaticallyOpenPeekView": "never",
@@ -47,8 +47,8 @@
     "deno.codeLens.test": true,
     "deno.suggest.imports.autoDiscover": true,
     "[typescript]": {
-      "editor.defaultFormatter": "denoland.vscode-deno"
-    }
+      "editor.defaultFormatter": "denoland.vscode-deno",
+    },
   },
   "launch": {
     "configurations": [
@@ -56,8 +56,8 @@
         "type": "chrome",
         "name": "https://localhost:4321",
         "request": "launch",
-        "url": "https://localhost:4321"
-      }
-    ]
-  }
+        "url": "https://localhost:4321",
+      },
+    ],
+  },
 }

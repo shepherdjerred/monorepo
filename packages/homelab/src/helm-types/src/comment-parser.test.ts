@@ -18,7 +18,9 @@ describe("YAML Comment Parsing", () => {
     const comments = parseYAMLComments(yaml);
 
     // tty should only get its own comment, not the comments from the deeper nested properties
-    expect(comments.get("tty")).toBe("set this to false to not have colorized logs");
+    expect(comments.get("tty")).toBe(
+      "set this to false to not have colorized logs",
+    );
     expect(comments.get("tty")).not.toContain("loadBalancerSourceRanges");
     expect(comments.get("tty")).not.toContain("externalTrafficPolicy");
   });

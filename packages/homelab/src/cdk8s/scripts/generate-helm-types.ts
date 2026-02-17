@@ -14,7 +14,10 @@ import {
   type HelmValue,
   type JSONSchemaProperty,
 } from "@shepherdjerred/helm-types";
-import { parseChartInfoFromVersions, type ChartInfo } from "./parse-helm-charts.ts";
+import {
+  parseChartInfoFromVersions,
+  type ChartInfo,
+} from "./parse-helm-charts.ts";
 
 const VERSIONS_FILE = "src/versions.ts";
 const OUTPUT_DIR = "generated/helm";
@@ -68,22 +71,29 @@ async function generateHelmTypes() {
   // Generate index file
   if (generatedFiles.length > 0) {
     await generateIndexFile(generatedFiles);
-    console.log(`\n✅ Generated index.ts with ${generatedFiles.length.toString()} exports`);
+    console.log(
+      `\n✅ Generated index.ts with ${generatedFiles.length.toString()} exports`,
+    );
   }
 
   if (generatedFiles.length > 0) {
     // Run prettier on generated files
     console.log("\n🎨 Running prettier on generated files...");
     try {
-      const prettierProc = Bun.spawn(["bun", "x", "prettier", "--write", OUTPUT_DIR], {
-        stdio: ["inherit", "inherit", "inherit"],
-      });
+      const prettierProc = Bun.spawn(
+        ["bun", "x", "prettier", "--write", OUTPUT_DIR],
+        {
+          stdio: ["inherit", "inherit", "inherit"],
+        },
+      );
 
       const prettierExitCode = await prettierProc.exited;
       if (prettierExitCode === 0) {
         console.log("✅ Prettier formatting completed");
       } else {
-        console.warn(`Prettier failed with code ${prettierExitCode.toString()}, continuing...`);
+        console.warn(
+          `Prettier failed with code ${prettierExitCode.toString()}, continuing...`,
+        );
       }
     } catch (error) {
       console.warn(`Failed to run prettier: ${String(error)}, continuing...`);
@@ -93,9 +103,12 @@ async function generateHelmTypes() {
     console.log("\n🔧 Running TypeScript compilation check...");
     try {
       // Use shell to expand glob pattern
-      const tscProc = Bun.spawn(["sh", "-c", `bun x tsc --noEmit --skipLibCheck "${OUTPUT_DIR}"/*.ts`], {
-        stdio: ["inherit", "pipe", "pipe"],
-      });
+      const tscProc = Bun.spawn(
+        ["sh", "-c", `bun x tsc --noEmit --skipLibCheck "${OUTPUT_DIR}"/*.ts`],
+        {
+          stdio: ["inherit", "pipe", "pipe"],
+        },
+      );
 
       const tscOutput = await new Response(tscProc.stderr).text();
       const tscExitCode = await tscProc.exited;
@@ -108,13 +121,17 @@ async function generateHelmTypes() {
         console.warn("Generated types may have compilation errors");
       }
     } catch (error) {
-      console.warn(`Failed to run TypeScript check: ${String(error)}, continuing...`);
+      console.warn(
+        `Failed to run TypeScript check: ${String(error)}, continuing...`,
+      );
     }
   }
 
   console.log("\n🎉 Helm chart type generation completed!");
   if (generatedFiles.length > 0) {
-    console.log(`📁 Generated ${generatedFiles.length.toString()} type files in ${OUTPUT_DIR}`);
+    console.log(
+      `📁 Generated ${generatedFiles.length.toString()} type files in ${OUTPUT_DIR}`,
+    );
     console.log(`🔍 Files validated with prettier, tsc`);
   }
 }
@@ -126,25 +143,32 @@ async function generateChartTypes(chart: ChartInfo) {
   console.log(`  📊 Fetching Helm values for ${chart.name}...`);
 
   // Fetch the actual Helm chart values, schema, and comments
-  const chartData: { values: HelmValue; schema: JSONSchemaProperty | null; yamlComments: Map<string, string> } =
-    await fetchHelmChart(chart);
+  const chartData: {
+    values: HelmValue;
+    schema: JSONSchemaProperty | null;
+    yamlComments: Map<string, string>;
+  } = await fetchHelmChart(chart);
   const { values: helmValues, schema, yamlComments } = chartData;
 
   // Debug logging for main script
-  console.log(`  🔍 Found ${Object.keys(helmValues).length.toString()} top-level properties`);
+  console.log(
+    `  🔍 Found ${Object.keys(helmValues).length.toString()} top-level properties`,
+  );
   if (Object.keys(helmValues).length <= 5) {
     console.log(`  🔍 Keys: ${Object.keys(helmValues).join(", ")}`);
   }
 
   if (Object.keys(helmValues).length === 0) {
-    console.warn(`  ⚠️  No values found for ${chart.name}, generating empty interface`);
+    console.warn(
+      `  ⚠️  No values found for ${chart.name}, generating empty interface`,
+    );
 
     // Generate minimal type for charts with no values
     const code = `// Generated TypeScript types for ${chart.name} Helm chart
 
-export type ${capitalizeFirst(chart.name).replaceAll('-', "")}HelmValues = object;
+export type ${capitalizeFirst(chart.name).replaceAll("-", "")}HelmValues = object;
 
-export type ${capitalizeFirst(chart.name).replaceAll('-', "")}HelmParameters = {
+export type ${capitalizeFirst(chart.name).replaceAll("-", "")}HelmParameters = {
   [key: string]: string;
 };
 `;
@@ -155,7 +179,7 @@ export type ${capitalizeFirst(chart.name).replaceAll('-', "")}HelmParameters = {
   }
 
   console.log(`  🏗️  Converting to TypeScript interfaces...`);
-  const interfaceName = `${capitalizeFirst(chart.name).replaceAll('-', "")}HelmValues`;
+  const interfaceName = `${capitalizeFirst(chart.name).replaceAll("-", "")}HelmValues`;
   const tsInterface: TypeScriptInterface = convertToTypeScriptInterface(
     helmValues,
     interfaceName,

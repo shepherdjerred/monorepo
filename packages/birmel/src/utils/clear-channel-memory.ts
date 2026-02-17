@@ -1,4 +1,7 @@
-import { getMemory, getChannelConversationId } from "../voltagent/memory/index.js";
+import {
+  getMemory,
+  getChannelConversationId,
+} from "../voltagent/memory/index.js";
 import { logger } from "./logger.js";
 
 /**
@@ -9,7 +12,9 @@ import { logger } from "./logger.js";
  */
 export async function clearChannelMemory(channelId: string): Promise<void> {
   const conversationId = getChannelConversationId(channelId);
-  logger.info(`Clearing memory for channel ${channelId} (conversation: ${conversationId})`);
+  logger.info(
+    `Clearing memory for channel ${channelId} (conversation: ${conversationId})`,
+  );
 
   try {
     const memory = getMemory();
@@ -32,7 +37,9 @@ if (import.meta.main) {
   const channelId = process.argv[2];
 
   if (!channelId) {
-    console.error("Usage: bun run src/utils/clear-channel-memory.ts <channelId>");
+    console.error(
+      "Usage: bun run src/utils/clear-channel-memory.ts <channelId>",
+    );
     process.exit(1);
   }
 

@@ -15,6 +15,7 @@ MagicDNS automatically registers DNS names for all tailnet devices, eliminating 
 ### DNS Name Structure
 
 Every device gets a fully qualified domain name:
+
 ```
 <machine-name>.<tailnet-name>.ts.net
 ```
@@ -22,6 +23,7 @@ Every device gets a fully qualified domain name:
 Example: `myserver.yak-bebop.ts.net`
 
 Search domains are automatically configured, so short names work:
+
 ```bash
 ssh user@myserver          # Short name works
 ping myserver              # Resolves via search domain
@@ -66,6 +68,7 @@ Subnet routers extend the tailnet to networks and devices that cannot run Tailsc
 ### Setup (Linux)
 
 1. Enable IP forwarding:
+
 ```bash
 echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
 echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
@@ -73,6 +76,7 @@ sudo sysctl -p /etc/sysctl.d/99-tailscale.conf
 ```
 
 2. Advertise routes:
+
 ```bash
 sudo tailscale set --advertise-routes=192.168.1.0/24,10.0.0.0/8
 ```
@@ -80,6 +84,7 @@ sudo tailscale set --advertise-routes=192.168.1.0/24,10.0.0.0/8
 3. Approve routes in the admin console (Machines > device > Edit route settings) or use `autoApprovers` in the policy file.
 
 4. Accept routes on client devices:
+
 ```bash
 # Linux requires explicit opt-in
 sudo tailscale set --accept-routes
@@ -111,6 +116,7 @@ Use case: Multiple branch offices using the same `192.168.1.0/24` range.
 ### Longest Prefix Matching
 
 When multiple routers advertise overlapping routes with different prefix lengths, traffic follows the most specific route:
+
 - Router A: `10.0.0.0/16` -> catches broad traffic
 - Router B: `10.0.1.0/24` -> catches specific subnet
 - Traffic to `10.0.1.5` goes through Router B (more specific)
@@ -121,6 +127,7 @@ When multiple routers advertise overlapping routes with different prefix lengths
 Exit nodes route ALL internet traffic through a designated tailnet device, not just tailnet-bound traffic.
 
 ### Use Cases
+
 - Secure internet access on untrusted networks (airports, hotels)
 - Access geo-restricted services while traveling
 - Comply with organizational VPN requirements
@@ -129,6 +136,7 @@ Exit nodes route ALL internet traffic through a designated tailnet device, not j
 ### Server Setup
 
 **Linux:**
+
 ```bash
 # Enable IP forwarding
 echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
@@ -184,6 +192,7 @@ DERP (Designated Encrypted Relay for Packets) servers facilitate connectivity wh
 ### Geographic Distribution
 
 Tailscale operates 20+ DERP regions globally:
+
 - **Americas:** Multiple US cities (NYC, SFO, Chicago, Dallas, Miami, Denver, Seattle), Toronto, Sao Paulo
 - **Europe:** London, Amsterdam, Frankfurt, Paris, Warsaw, Madrid, Helsinki, Nuremberg
 - **Asia-Pacific:** Tokyo, Singapore, Hong Kong, Sydney, Bangalore
@@ -203,25 +212,28 @@ Self-host DERP relays by building the `cmd/derper` binary from the Tailscale rep
         "RegionID": 900,
         "RegionCode": "myderp",
         "RegionName": "My DERP",
-        "Nodes": [{
-          "Name": "myderp1",
-          "RegionID": 900,
-          "HostName": "derp.example.com"
-        }]
-      }
-    }
-  }
+        "Nodes": [
+          {
+            "Name": "myderp1",
+            "RegionID": 900,
+            "HostName": "derp.example.com",
+          },
+        ],
+      },
+    },
+  },
 }
 ```
 
 Disable specific default regions by setting them to `null`:
+
 ```jsonc
 {
   "derpMap": {
     "Regions": {
-      "1": null  // Disable NYC region
-    }
-  }
+      "1": null, // Disable NYC region
+    },
+  },
 }
 ```
 
@@ -229,15 +241,16 @@ Disable specific default regions by setting them to `null`:
 
 Peer Relays (beta, v1.86+) use existing tailnet nodes as relay servers instead of Tailscale-managed DERP infrastructure:
 
-| Feature | DERP | Peer Relays |
-|---------|------|-------------|
-| **Managed by** | Tailscale | Customer |
-| **Throughput** | Limited (shared) | Near-direct speed |
-| **Cost** | Included | Customer egress |
-| **Setup** | Automatic | Manual opt-in |
-| **Availability** | All plans | All plans (2 free) |
+| Feature          | DERP             | Peer Relays        |
+| ---------------- | ---------------- | ------------------ |
+| **Managed by**   | Tailscale        | Customer           |
+| **Throughput**   | Limited (shared) | Near-direct speed  |
+| **Cost**         | Included         | Customer egress    |
+| **Setup**        | Automatic        | Manual opt-in      |
+| **Availability** | All plans        | All plans (2 free) |
 
 Enable peer relay on a node:
+
 ```bash
 tailscale set --advertise-peer-relay
 ```
@@ -255,6 +268,7 @@ Tailscale uses multiple techniques to establish direct connections:
 5. **DERP Fallback:** When all direct methods fail, traffic flows through DERP relay.
 
 Check NAT traversal status:
+
 ```bash
 tailscale netcheck              # Full network report
 tailscale ping --until-direct <peer>  # Wait for direct connection
@@ -262,6 +276,7 @@ tailscale status                # Shows direct vs relay per peer
 ```
 
 `tailscale netcheck` output includes:
+
 - UDP connectivity (v4/v6)
 - Mapping type (endpoint independent, address dependent, etc.)
 - Port mapping protocols available
@@ -279,24 +294,24 @@ docker pull tailscale/tailscale:latest
 
 ### Environment Variables
 
-| Variable | Purpose | Default |
-|----------|---------|---------|
-| `TS_AUTHKEY` | Auth key for registration | - |
-| `TS_CLIENT_ID` | OAuth client ID | - |
-| `TS_CLIENT_SECRET` | OAuth client secret | - |
-| `TS_HOSTNAME` | Node hostname | container ID |
-| `TS_STATE_DIR` | Persistent state directory | - |
-| `TS_ROUTES` | Subnet routes to advertise | - |
-| `TS_USERSPACE` | Userspace networking mode | true |
-| `TS_ACCEPT_DNS` | Accept MagicDNS config | false |
-| `TS_EXTRA_ARGS` | Additional `tailscale up` flags | - |
-| `TS_TAILSCALED_EXTRA_ARGS` | Additional daemon flags | - |
-| `TS_SOCKS5_SERVER` | SOCKS5 proxy address | - |
-| `TS_OUTBOUND_HTTP_PROXY_LISTEN` | HTTP proxy address | - |
-| `TS_ENABLE_HEALTH_CHECK` | Enable /healthz endpoint | false |
-| `TS_ENABLE_METRICS` | Enable /metrics endpoint | false |
-| `TS_ID_TOKEN` | Workload identity JWT | - |
-| `TS_AUDIENCE` | Workload identity audience | - |
+| Variable                        | Purpose                         | Default      |
+| ------------------------------- | ------------------------------- | ------------ |
+| `TS_AUTHKEY`                    | Auth key for registration       | -            |
+| `TS_CLIENT_ID`                  | OAuth client ID                 | -            |
+| `TS_CLIENT_SECRET`              | OAuth client secret             | -            |
+| `TS_HOSTNAME`                   | Node hostname                   | container ID |
+| `TS_STATE_DIR`                  | Persistent state directory      | -            |
+| `TS_ROUTES`                     | Subnet routes to advertise      | -            |
+| `TS_USERSPACE`                  | Userspace networking mode       | true         |
+| `TS_ACCEPT_DNS`                 | Accept MagicDNS config          | false        |
+| `TS_EXTRA_ARGS`                 | Additional `tailscale up` flags | -            |
+| `TS_TAILSCALED_EXTRA_ARGS`      | Additional daemon flags         | -            |
+| `TS_SOCKS5_SERVER`              | SOCKS5 proxy address            | -            |
+| `TS_OUTBOUND_HTTP_PROXY_LISTEN` | HTTP proxy address              | -            |
+| `TS_ENABLE_HEALTH_CHECK`        | Enable /healthz endpoint        | false        |
+| `TS_ENABLE_METRICS`             | Enable /metrics endpoint        | false        |
+| `TS_ID_TOKEN`                   | Workload identity JWT           | -            |
+| `TS_AUDIENCE`                   | Workload identity audience      | -            |
 
 ### Docker Compose Example
 
@@ -358,11 +373,13 @@ services:
 The Tailscale Kubernetes Operator manages Tailscale networking for K8s clusters.
 
 **Installation prerequisites:**
+
 1. Create OAuth client with scopes: `Devices Core`, `Auth Keys`, `Services` (write)
 2. Add tags to policy: `tag:k8s-operator`, `tag:k8s`
 3. Install via Helm or static manifests
 
 **Helm installation:**
+
 ```bash
 helm repo add tailscale https://pkgs.tailscale.com/helmcharts
 helm repo update
@@ -375,15 +392,15 @@ helm upgrade --install tailscale-operator tailscale/tailscale-operator \
 
 ### Operator Capabilities
 
-| Feature | Description |
-|---------|-------------|
-| **Ingress** | Expose K8s services to tailnet via `Ingress` class |
-| **Egress** | Access tailnet services from K8s via `ExternalName` |
-| **API Proxy** | Secure kubectl access through Tailscale |
-| **Subnet Router** | Advertise cluster CIDRs to tailnet |
-| **Exit Node** | Run exit node as K8s pod |
-| **App Connector** | Connect SaaS apps through K8s |
-| **ProxyGroup** | Multi-replica HA proxy deployment |
+| Feature           | Description                                         |
+| ----------------- | --------------------------------------------------- |
+| **Ingress**       | Expose K8s services to tailnet via `Ingress` class  |
+| **Egress**        | Access tailnet services from K8s via `ExternalName` |
+| **API Proxy**     | Secure kubectl access through Tailscale             |
+| **Subnet Router** | Advertise cluster CIDRs to tailnet                  |
+| **Exit Node**     | Run exit node as K8s pod                            |
+| **App Connector** | Connect SaaS apps through K8s                       |
+| **ProxyGroup**    | Multi-replica HA proxy deployment                   |
 
 ### Ingress Example
 
@@ -418,7 +435,7 @@ metadata:
     tailscale.com/tailnet-fqdn: myserver.tailnet-name.ts.net
 spec:
   type: ExternalName
-  externalName: placeholder  # Replaced by operator
+  externalName: placeholder # Replaced by operator
 ```
 
 ### ProxyGroup for HA
@@ -452,6 +469,7 @@ Tailscale Services (GA, Jan 2026) decouple applications from hosting devices:
 - **Hosts:** Multiple devices can advertise the same service
 
 Define services via the admin console or Tailscale API. Useful for:
+
 - High-availability internal applications
 - Ephemeral workloads (containers, serverless)
 - Services with dynamic IP addresses
@@ -464,22 +482,28 @@ App connectors route traffic to SaaS applications through the tailnet, providing
 ### Setup
 
 1. Tag a device as an app connector:
+
 ```bash
 tailscale set --advertise-connector
 ```
 
 2. Configure domains in the policy file:
+
 ```jsonc
 {
-  "nodeAttrs": [{
-    "target": ["*"],
-    "app": {
-      "tailscale.com/app-connectors": [{
-        "connectors": ["tag:connector"],
-        "domains": ["*.salesforce.com", "*.amazonaws.com"]
-      }]
-    }
-  }]
+  "nodeAttrs": [
+    {
+      "target": ["*"],
+      "app": {
+        "tailscale.com/app-connectors": [
+          {
+            "connectors": ["tag:connector"],
+            "domains": ["*.salesforce.com", "*.amazonaws.com"],
+          },
+        ],
+      },
+    },
+  ],
 }
 ```
 
@@ -488,6 +512,7 @@ tailscale set --advertise-connector
 ### Preset Apps (v1.88+)
 
 Pre-configured app connector profiles for common SaaS services:
+
 - AWS Console and APIs
 - Salesforce
 - Microsoft 365
@@ -498,6 +523,7 @@ Pre-configured app connector profiles for common SaaS services:
 ### Synology
 
 Install the Tailscale package from the Synology Package Center or sideload the SPK. Configure via:
+
 ```bash
 tailscale configure synology
 ```
@@ -513,18 +539,19 @@ Install via QNAP App Center. Supports standard Tailscale features including subn
 ### MTU Considerations
 
 Tailscale uses WireGuard encapsulation which adds overhead. Default MTU is typically 1280 for IPv6 compatibility. Adjust if experiencing fragmentation:
+
 - WireGuard overhead: 60-80 bytes
 - Path MTU discovery is automatic
 - Override with `TS_DEBUG_MTU` environment variable on the daemon
 
 ### Connection Types
 
-| Type | Latency | Throughput | When Used |
-|------|---------|------------|-----------|
-| **Direct (UDP)** | Lowest | Highest | NAT traversal succeeds |
-| **Direct (TCP)** | Low | High | UDP blocked, TCP fallback |
-| **Peer Relay** | Medium | Near-direct | Direct fails, peer relay available |
-| **DERP Relay** | Higher | Limited | All direct methods fail |
+| Type             | Latency | Throughput  | When Used                          |
+| ---------------- | ------- | ----------- | ---------------------------------- |
+| **Direct (UDP)** | Lowest  | Highest     | NAT traversal succeeds             |
+| **Direct (TCP)** | Low     | High        | UDP blocked, TCP fallback          |
+| **Peer Relay**   | Medium  | Near-direct | Direct fails, peer relay available |
+| **DERP Relay**   | Higher  | Limited     | All direct methods fail            |
 
 Check per-peer connection type with `tailscale status`. The "relay" column shows the DERP region if relayed, or "direct" for direct connections.
 
@@ -540,6 +567,7 @@ Check per-peer connection type with `tailscale status`. The "relay" column shows
 Monitor tailnet traffic with network flow logs. Enable log streaming in the admin console. v1.92+ automatically records node information in flow logs.
 
 Flow logs capture:
+
 - Source and destination devices
 - Ports and protocols
 - Connection timestamps
@@ -547,6 +575,7 @@ Flow logs capture:
 - Connection type (direct/relay)
 
 Configure log streaming destinations:
+
 - Datadog
 - Elastic
 - Panther
@@ -561,12 +590,14 @@ Available on Enterprise plans.
 ### AWS
 
 Deploy Tailscale on EC2 instances as subnet routers to expose VPC networks:
+
 ```bash
 # On EC2 instance
 sudo tailscale set --advertise-routes=10.0.0.0/16 --advertise-exit-node
 ```
 
 Use with AWS Systems Manager for automated deployment via cloud-init:
+
 ```yaml
 #cloud-config
 runcmd:
@@ -585,6 +616,7 @@ Use the Docker image with auth key for platform-as-a-service deployments. Epheme
 ## WireGuard Details
 
 Tailscale builds on WireGuard for the data plane:
+
 - **Protocol:** Noise protocol framework for key exchange
 - **Encryption:** ChaCha20-Poly1305 for data, Curve25519 for key agreement
 - **Port:** UDP port 41641 preferred; falls back to random ports or TCP relay
@@ -592,6 +624,7 @@ Tailscale builds on WireGuard for the data plane:
 - **Handshake:** Every 2 minutes to maintain NAT mappings
 
 Unlike standalone WireGuard, Tailscale handles:
+
 - Automatic key distribution via coordination server
 - Dynamic peer discovery and configuration
 - NAT traversal and relay fallback

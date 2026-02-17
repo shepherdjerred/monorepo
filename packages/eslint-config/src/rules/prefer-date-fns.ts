@@ -13,7 +13,8 @@ import type { TSESTree } from "@typescript-eslint/utils";
 import { ESLintUtils } from "@typescript-eslint/utils";
 
 const createRule = ESLintUtils.RuleCreator(
-  (name) => `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
+  (name) =>
+    `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
 );
 
 export const preferDateFns = createRule({
@@ -21,7 +22,8 @@ export const preferDateFns = createRule({
   meta: {
     type: "suggestion",
     docs: {
-      description: "Prefer date-fns functions over manual Date arithmetic and formatting",
+      description:
+        "Prefer date-fns functions over manual Date arithmetic and formatting",
     },
     schema: [],
     messages: {
@@ -35,7 +37,8 @@ export const preferDateFns = createRule({
         "Use date-fns (eachDayOfInterval, startOfDay, endOfDay) instead of while loops with manual day iteration",
       toLocaleStringFormatting:
         "Use date-fns format() instead of toLocaleString/toLocaleDateString for deterministic formatting",
-      isoStringReplace: "Use date-fns format() instead of toISOString().replace() for file-safe timestamps",
+      isoStringReplace:
+        "Use date-fns format() instead of toISOString().replace() for file-safe timestamps",
       customDateHelper:
         "Use date-fns functions instead of custom date formatting/calculation helpers (e.g., format, differenceInMinutes, differenceInHours, etc.)",
     },
@@ -47,7 +50,11 @@ export const preferDateFns = createRule({
       // Also detect: date.getTime() / 1000 (Unix timestamp conversion)
       BinaryExpression(node: TSESTree.BinaryExpression) {
         // Pattern 1: Division by millisecond constants like (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24)
-        if (node.operator === "/" && node.right.type === "BinaryExpression" && node.right.operator === "*") {
+        if (
+          node.operator === "/" &&
+          node.right.type === "BinaryExpression" &&
+          node.right.operator === "*"
+        ) {
           const left = node.left;
 
           // Check if left side is a subtraction involving getTime() or Date.now()
@@ -60,7 +67,8 @@ export const preferDateFns = createRule({
                     (left.left.callee.property.name === "now" &&
                       left.left.callee.object.type === "Identifier" &&
                       left.left.callee.object.name === "Date"))) ||
-                  (left.left.callee.type === "Identifier" && left.left.callee.name === "Date"))) ||
+                  (left.left.callee.type === "Identifier" &&
+                    left.left.callee.name === "Date"))) ||
               (left.right.type === "CallExpression" &&
                 left.right.callee.type === "MemberExpression" &&
                 left.right.callee.property.type === "Identifier" &&
@@ -94,7 +102,10 @@ export const preferDateFns = createRule({
 
       // Detect: date.setDate(...), date.setUTCDate(...), date.setUTCHours(...)
       CallExpression(node: TSESTree.CallExpression) {
-        if (node.callee.type === "MemberExpression" && node.callee.property.type === "Identifier") {
+        if (
+          node.callee.type === "MemberExpression" &&
+          node.callee.property.type === "Identifier"
+        ) {
           const propertyName = node.callee.property.name;
           const methodNames = [
             "setDate",
@@ -116,9 +127,15 @@ export const preferDateFns = createRule({
         }
 
         // Detect: toLocaleString, toLocaleDateString
-        if (node.callee.type === "MemberExpression" && node.callee.property.type === "Identifier") {
+        if (
+          node.callee.type === "MemberExpression" &&
+          node.callee.property.type === "Identifier"
+        ) {
           const propertyName = node.callee.property.name;
-          if (propertyName === "toLocaleString" || propertyName === "toLocaleDateString") {
+          if (
+            propertyName === "toLocaleString" ||
+            propertyName === "toLocaleDateString"
+          ) {
             context.report({
               node,
               messageId: "toLocaleStringFormatting",
@@ -149,8 +166,11 @@ export const preferDateFns = createRule({
         if (node.test.type === "BinaryExpression") {
           const test = node.test as TSESTree.BinaryExpression;
           if (
-            (test.operator === "<=" || test.operator === "<" || test.operator === ">=") &&
-            (test.left.type === "Identifier" || test.right.type === "Identifier")
+            (test.operator === "<=" ||
+              test.operator === "<" ||
+              test.operator === ">=") &&
+            (test.left.type === "Identifier" ||
+              test.right.type === "Identifier")
           ) {
             // Check if body contains setUTCDate or similar mutations
             const hasDateMutation = hasDateMutationInBody(node.body);
@@ -225,8 +245,17 @@ function hasDateMutationInBody(body: TSESTree.Statement): boolean {
     visited.add(node);
 
     if (node.type === "CallExpression") {
-      if (node.callee.type === "MemberExpression" && node.callee.property.type === "Identifier") {
-        const methodNames = ["setDate", "setUTCDate", "setUTCHours", "setUTCMinutes", "setUTCSeconds"];
+      if (
+        node.callee.type === "MemberExpression" &&
+        node.callee.property.type === "Identifier"
+      ) {
+        const methodNames = [
+          "setDate",
+          "setUTCDate",
+          "setUTCHours",
+          "setUTCMinutes",
+          "setUTCSeconds",
+        ];
         if (methodNames.includes(node.callee.property.name)) {
           visitor.found = true;
         }
@@ -257,7 +286,9 @@ function hasDateMutationInBody(body: TSESTree.Statement): boolean {
 /**
  * Check if function body contains manual date math (getTime division, if/else for time-ago, etc.)
  */
-function containsManualDateMath(body: TSESTree.BlockStatement | undefined): boolean {
+function containsManualDateMath(
+  body: TSESTree.BlockStatement | undefined,
+): boolean {
   if (!body) return false;
 
   let found = false;
@@ -270,7 +301,10 @@ function containsManualDateMath(body: TSESTree.BlockStatement | undefined): bool
     // Check for getTime() arithmetic patterns
     if (node.type === "BinaryExpression") {
       const binExpr = node as TSESTree.BinaryExpression;
-      if (binExpr.operator === "/" && binExpr.right.type === "BinaryExpression") {
+      if (
+        binExpr.operator === "/" &&
+        binExpr.right.type === "BinaryExpression"
+      ) {
         // Pattern: (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24)
         found = true;
         return;
@@ -280,12 +314,17 @@ function containsManualDateMath(body: TSESTree.BlockStatement | undefined): bool
     // Check for if/else chains checking milliseconds
     if (node.type === "IfStatement") {
       const ifStmt = node as TSESTree.IfStatement;
-      if (ifStmt.test.type === "BinaryExpression" && (ifStmt.test.operator === "<" || ifStmt.test.operator === ">")) {
+      if (
+        ifStmt.test.type === "BinaryExpression" &&
+        (ifStmt.test.operator === "<" || ifStmt.test.operator === ">")
+      ) {
         const test = ifStmt.test as TSESTree.BinaryExpression;
         // Check if comparing to millisecond constants (60000, 3600000, 86400000)
         const hasLiteralMs =
-          (test.left.type === "Literal" && typeof test.left.value === "number") ||
-          (test.right.type === "Literal" && typeof test.right.value === "number");
+          (test.left.type === "Literal" &&
+            typeof test.left.value === "number") ||
+          (test.right.type === "Literal" &&
+            typeof test.right.value === "number");
 
         if (hasLiteralMs) {
           found = true;
@@ -326,10 +365,14 @@ function isTimeAgoPattern(node: TSESTree.IfStatement): boolean {
     branchCount++;
 
     // Check if test is comparing a diff variable to ms constants
-    if (current.test.type === "BinaryExpression" && (current.test.operator === "<" || current.test.operator === ">")) {
+    if (
+      current.test.type === "BinaryExpression" &&
+      (current.test.operator === "<" || current.test.operator === ">")
+    ) {
       const test = current.test as TSESTree.BinaryExpression;
       const isCompareToMs =
-        (test.right.type === "Literal" && typeof test.right.value === "number") ||
+        (test.right.type === "Literal" &&
+          typeof test.right.value === "number") ||
         (test.left.type === "Literal" && typeof test.left.value === "number");
 
       if (!isCompareToMs) {

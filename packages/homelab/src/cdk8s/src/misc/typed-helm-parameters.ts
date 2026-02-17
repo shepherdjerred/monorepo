@@ -9,7 +9,10 @@ export type HelmParameter = { name: string; value: string };
 /**
  * Convert a typed Helm values object to ArgoCD parameters array (dot notation)
  */
-export function valuesToParameters(values: Record<string, unknown>, prefix = ""): HelmParameter[] {
+export function valuesToParameters(
+  values: Record<string, unknown>,
+  prefix = "",
+): HelmParameter[] {
   const parameters: HelmParameter[] = [];
 
   for (const [key, value] of Object.entries(values)) {
@@ -31,7 +34,9 @@ export function valuesToParameters(values: Record<string, unknown>, prefix = "")
       // Convert values to strings with proper handling
       let stringValue: string;
       const arrayParseResult = ArraySchema.safeParse(value);
-      const objectParseResult = z.record(z.string(), z.unknown()).safeParse(value);
+      const objectParseResult = z
+        .record(z.string(), z.unknown())
+        .safeParse(value);
 
       if (arrayParseResult.success) {
         stringValue = JSON.stringify(arrayParseResult.data);
@@ -62,7 +67,9 @@ export function valuesToParameters(values: Record<string, unknown>, prefix = "")
 /**
  * Create typed parameters with validation
  */
-export function createTypedParameters(values: Record<string, unknown>): HelmParameter[] {
+export function createTypedParameters(
+  values: Record<string, unknown>,
+): HelmParameter[] {
   return valuesToParameters(values);
 }
 
@@ -110,4 +117,5 @@ type HelmChartValuesMap = {
   "mc-router": McrouterHelmValues;
 };
 
-export type HelmValuesForChart<TChart extends keyof HelmChartValuesMap> = HelmChartValuesMap[TChart];
+export type HelmValuesForChart<TChart extends keyof HelmChartValuesMap> =
+  HelmChartValuesMap[TChart];

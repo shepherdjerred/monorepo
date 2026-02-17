@@ -1,4 +1,4 @@
-import type { App} from "cdk8s";
+import type { App } from "cdk8s";
 import { Chart, Size } from "cdk8s";
 import { ZfsSataVolume } from "../misc/zfs-sata-volume.ts";
 import { createBazarrDeployment } from "../resources/torrents/bazarr.ts";
@@ -68,11 +68,25 @@ export function createMediaChart(app: App) {
       ingress: [
         // Allow from Tailscale (private access)
         {
-          from: [{ namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": "tailscale" } } }],
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
+              },
+            },
+          ],
         },
         // Allow from Cloudflare tunnel (public access for plex, overseerr)
         {
-          from: [{ namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": "cloudflare-tunnel" } } }],
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "cloudflare-tunnel",
+                },
+              },
+            },
+          ],
         },
         // Allow all intra-namespace communication
         // Media services are highly interconnected: sonarr<->radarr<->prowlarr<->qbittorrent<->bazarr<->plex<->overseerr<->maintainerr
@@ -81,7 +95,13 @@ export function createMediaChart(app: App) {
         },
         // Allow Prometheus scraping from monitoring namespace
         {
-          from: [{ namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": "prometheus" } } }],
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+          ],
         },
       ],
     },

@@ -35,7 +35,9 @@ export async function GET(context: APIContext) {
     description: "My personal blog",
     site: context.site,
     items: [...blog, ...til]
-      .toSorted((left, right) => right.data.date.getTime() - left.data.date.getTime())
+      .toSorted(
+        (left, right) => right.data.date.getTime() - left.data.date.getTime(),
+      )
       .filter((post) => !post.data.isDraft)
       .map((post) => ({
         title: post.data.title,

@@ -13,14 +13,14 @@ export interface Event {
 
 export const handler = async (
   _event: Event,
-  _context: unknown
+  _context: unknown,
 ): Promise<undefined> => {
   const configuration = loadConfigFromEnvironment();
   const serializer = new JsonSerializer<JSON>();
   const previousStorage = new S3Storage<JSON>(
     configuration.awsRegion,
     configuration.s3BucketArn,
-    serializer
+    serializer,
   );
   const currentFetcher = new LiveManifestFetcher();
   const currentStorage = new SiteFetcherStorage(currentFetcher, false);
@@ -28,19 +28,19 @@ export const handler = async (
     configuration.siteMapping.map((mapping) => {
       const discordNotifier = new DiscordNotifier(
         configuration.discordToken,
-        mapping.discordChannel
+        mapping.discordChannel,
       );
       const notifier = new FilteringNotifier(
         mapping.notificationSettings,
-        discordNotifier
+        discordNotifier,
       );
       const processor = new Processor(
         previousStorage,
         currentStorage,
-        notifier
+        notifier,
       );
       return processor.process(mapping.site);
-    })
+    }),
   );
   return Promise.resolve(undefined);
 };

@@ -1,12 +1,47 @@
-import type { Session, SessionHealthReport, ResourceState } from "@clauderon/client";
-import { SessionStatus, CheckStatus, ClaudeWorkingStatus, WorkflowStage, ReviewDecision } from "@clauderon/shared";
+import type {
+  Session,
+  SessionHealthReport,
+  ResourceState,
+} from "@clauderon/client";
+import {
+  SessionStatus,
+  CheckStatus,
+  ClaudeWorkingStatus,
+  WorkflowStage,
+  ReviewDecision,
+} from "@clauderon/shared";
 import type { MergeMethod } from "@clauderon/shared";
 import { formatRelativeTime, cn, getRepoUrlFromPrUrl } from "../lib/utils";
-import { Archive, ArchiveRestore, Trash2, Terminal, CheckCircle2, XCircle, Clock, Loader2, User, Circle, AlertTriangle, Edit, RefreshCw, GitMerge } from "lucide-react";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import {
+  Archive,
+  ArchiveRestore,
+  Trash2,
+  Terminal,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Loader2,
+  User,
+  Circle,
+  AlertTriangle,
+  Edit,
+  RefreshCw,
+  GitMerge,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { AGENT_CAPABILITIES } from "@/lib/agent-features";
 import { ProviderIcon } from "./ProviderIcon";
 import { MergePrDialog } from "./MergePrDialog";
@@ -21,21 +56,39 @@ type SessionCardProps = {
   onUnarchive: (session: Session) => void;
   onRefresh: (session: Session) => void;
   onDelete: (session: Session) => void;
-  onMergePr: (session: Session, method: MergeMethod, deleteBranch: boolean) => void;
-}
+  onMergePr: (
+    session: Session,
+    method: MergeMethod,
+    deleteBranch: boolean,
+  ) => void;
+};
 
 // Helper function to map git status codes to readable labels
 function getStatusLabel(status: string): string {
   // Git status --porcelain format uses 2-char codes
   const code = status.trim();
-  if (code.startsWith('M')) {return 'Modified';}
-  if (code.startsWith('A')) {return 'Added';}
-  if (code.startsWith('D')) {return 'Deleted';}
-  if (code.startsWith('R')) {return 'Renamed';}
-  if (code.startsWith('C')) {return 'Copied';}
-  if (code.startsWith('U')) {return 'Unmerged';}
-  if (code.startsWith('?')) {return 'Untracked';}
-  return 'Changed';
+  if (code.startsWith("M")) {
+    return "Modified";
+  }
+  if (code.startsWith("A")) {
+    return "Added";
+  }
+  if (code.startsWith("D")) {
+    return "Deleted";
+  }
+  if (code.startsWith("R")) {
+    return "Renamed";
+  }
+  if (code.startsWith("C")) {
+    return "Copied";
+  }
+  if (code.startsWith("U")) {
+    return "Unmerged";
+  }
+  if (code.startsWith("?")) {
+    return "Untracked";
+  }
+  return "Changed";
 }
 
 function shouldSpanWide(session: Session): boolean {
@@ -65,7 +118,8 @@ function getWorkflowStage(session: Session): WorkflowStage {
   // Check for blockers
   const ciBlocked = session.pr_check_status === CheckStatus.Failing;
   const conflictBlocked = session.merge_conflict;
-  const changesRequested = session.pr_review_decision === ReviewDecision.ChangesRequested;
+  const changesRequested =
+    session.pr_review_decision === ReviewDecision.ChangesRequested;
 
   if (ciBlocked || conflictBlocked || changesRequested) {
     return WorkflowStage.Blocked;
@@ -126,7 +180,8 @@ function WorkflowProgress({ session }: { session: Session }) {
   // Check for blockers
   const ciBlocked = session.pr_check_status === CheckStatus.Failing;
   const conflictBlocked = session.merge_conflict;
-  const changesRequested = session.pr_review_decision === ReviewDecision.ChangesRequested;
+  const changesRequested =
+    session.pr_review_decision === ReviewDecision.ChangesRequested;
   const hasBlockers = ciBlocked || conflictBlocked || changesRequested;
 
   return (
@@ -138,7 +193,7 @@ function WorkflowProgress({ session }: { session: Session }) {
               variant={stage === s.value ? "default" : "outline"}
               className={cn(
                 "text-xs flex-shrink-0",
-                stage === s.value && getStageColor(s.value)
+                stage === s.value && getStageColor(s.value),
               )}
             >
               {idx + 1}. {s.name}
@@ -152,7 +207,9 @@ function WorkflowProgress({ session }: { session: Session }) {
 
       {stage === WorkflowStage.Blocked && hasBlockers && (
         <div className="mt-2 p-2 bg-red-500/10 border-l-4 border-red-500">
-          <div className="text-sm font-semibold text-red-500 mb-1">Blockers:</div>
+          <div className="text-sm font-semibold text-red-500 mb-1">
+            Blockers:
+          </div>
           <ul className="text-xs space-y-1 ml-4 text-red-600">
             {ciBlocked && <li>• CI checks failing</li>}
             {conflictBlocked && <li>• Merge conflicts with main</li>}
@@ -165,78 +222,92 @@ function WorkflowProgress({ session }: { session: Session }) {
 }
 
 // Helper function to get health display info from ResourceState
-function getHealthDisplay(state: ResourceState): { label: string; className: string; tooltip: string } {
+function getHealthDisplay(state: ResourceState): {
+  label: string;
+  className: string;
+  tooltip: string;
+} {
   switch (state.type) {
     case "Healthy":
       return {
         label: "OK",
         className: "bg-green-500/20 text-green-700 border-green-500/50",
-        tooltip: "Backend is running and healthy"
+        tooltip: "Backend is running and healthy",
       };
     case "Stopped":
       return {
         label: "Stopped",
         className: "bg-yellow-500/20 text-yellow-700 border-yellow-500/50",
-        tooltip: "Container stopped - can be started or recreated"
+        tooltip: "Container stopped - can be started or recreated",
       };
     case "Hibernated":
       return {
         label: "Hibernated",
         className: "bg-blue-500/20 text-blue-700 border-blue-500/50",
-        tooltip: "Sprite is hibernated - can be woken"
+        tooltip: "Sprite is hibernated - can be woken",
       };
     case "Pending":
       return {
         label: "Pending",
         className: "bg-yellow-500/20 text-yellow-700 border-yellow-500/50",
-        tooltip: "Pod is pending - waiting for resources"
+        tooltip: "Pod is pending - waiting for resources",
       };
     case "Missing":
       return {
         label: "Missing",
         className: "bg-orange-500/20 text-orange-700 border-orange-500/50",
-        tooltip: "Backend resource missing - can be recreated"
+        tooltip: "Backend resource missing - can be recreated",
       };
     case "Error":
       return {
         label: "Error",
         className: "bg-red-500/20 text-red-700 border-red-500/50",
-        tooltip: `Backend error: ${state.content.message}`
+        tooltip: `Backend error: ${state.content.message}`,
       };
     case "CrashLoop":
       return {
         label: "Crash Loop",
         className: "bg-red-500/20 text-red-700 border-red-500/50",
-        tooltip: "Pod is in CrashLoopBackOff"
+        tooltip: "Pod is in CrashLoopBackOff",
       };
     case "DeletedExternally":
       return {
         label: "Deleted",
         className: "bg-red-500/20 text-red-700 border-red-500/50",
-        tooltip: "Backend was deleted outside of clauderon"
+        tooltip: "Backend was deleted outside of clauderon",
       };
     case "DataLost":
       return {
         label: "Data Lost",
         className: "bg-red-500/20 text-red-700 border-red-500/50",
-        tooltip: `Data lost: ${state.content.reason}`
+        tooltip: `Data lost: ${state.content.reason}`,
       };
     case "WorktreeMissing":
       return {
         label: "Worktree Missing",
         className: "bg-red-500/20 text-red-700 border-red-500/50",
-        tooltip: "Git worktree was deleted"
+        tooltip: "Git worktree was deleted",
       };
     default:
       return {
         label: "Unknown",
         className: "bg-gray-500/20 text-gray-700 border-gray-500/50",
-        tooltip: "Unknown health state"
+        tooltip: "Unknown health state",
       };
   }
 }
 
-export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive, onUnarchive, onRefresh, onDelete, onMergePr }: SessionCardProps) {
+export function SessionCard({
+  session,
+  healthReport,
+  onAttach,
+  onEdit,
+  onArchive,
+  onUnarchive,
+  onRefresh,
+  onDelete,
+  onMergePr,
+}: SessionCardProps) {
   const [mergePrDialogOpen, setMergePrDialogOpen] = useState(false);
 
   const handleMergePr = (method: MergeMethod, deleteBranch: boolean) => {
@@ -255,23 +326,29 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
   };
 
   const statusColor = statusColors[session.status];
-  const cardSizeClass = shouldSpanWide(session) ? "col-span-1 lg:col-span-2" : "col-span-1";
+  const cardSizeClass = shouldSpanWide(session)
+    ? "col-span-1 lg:col-span-2"
+    : "col-span-1";
 
   return (
-    <Card className={cn(
-      "group border-2 transition-all duration-200",
-      "hover:shadow-[6px_6px_0_hsl(var(--foreground))]",
-      "hover:-translate-x-[2px] hover:-translate-y-[2px]",
-      cardSizeClass
-    )}>
+    <Card
+      className={cn(
+        "group border-2 transition-all duration-200",
+        "hover:shadow-[6px_6px_0_hsl(var(--foreground))]",
+        "hover:-translate-x-[2px] hover:-translate-y-[2px]",
+        cardSizeClass,
+      )}
+    >
       <CardHeader className="pb-3 px-6 pt-6">
         <div className="flex items-start gap-3">
-          <div className={cn(
-            "w-5 h-5 border-2 border-foreground shrink-0 mt-0.5 transition-all duration-300",
-            "group-hover:scale-110",
-            session.status === SessionStatus.Running && "animate-pulse",
-            statusColor
-          )} />
+          <div
+            className={cn(
+              "w-5 h-5 border-2 border-foreground shrink-0 mt-0.5 transition-all duration-300",
+              "group-hover:scale-110",
+              session.status === SessionStatus.Running && "animate-pulse",
+              statusColor,
+            )}
+          />
 
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-xl leading-tight tracking-tight mb-1 truncate">
@@ -285,24 +362,42 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Badge variant="outline" className="border-2 font-mono text-xs cursor-help flex items-center gap-1">
+                    <Badge
+                      variant="outline"
+                      className="border-2 font-mono text-xs cursor-help flex items-center gap-1"
+                    >
                       <ProviderIcon agent={session.agent} />
                       {session.agent}
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent>
                     <div className="text-xs max-w-xs">
-                      <p className="font-semibold mb-1">{AGENT_CAPABILITIES[session.agent].displayName} Capabilities</p>
+                      <p className="font-semibold mb-1">
+                        {AGENT_CAPABILITIES[session.agent].displayName}{" "}
+                        Capabilities
+                      </p>
                       <ul className="space-y-1">
-                        {AGENT_CAPABILITIES[session.agent].features.map((feature, idx) => (
-                          <li key={idx} className="flex items-start gap-1.5">
-                            <span className="flex-shrink-0">{feature.supported ? '✓' : '⚠'}</span>
-                            <span className={feature.supported ? "" : "text-yellow-600"}>
-                              {feature.name}
-                              {feature.note && <span className="text-muted-foreground block text-xs mt-0.5">{feature.note}</span>}
-                            </span>
-                          </li>
-                        ))}
+                        {AGENT_CAPABILITIES[session.agent].features.map(
+                          (feature, idx) => (
+                            <li key={idx} className="flex items-start gap-1.5">
+                              <span className="flex-shrink-0">
+                                {feature.supported ? "✓" : "⚠"}
+                              </span>
+                              <span
+                                className={
+                                  feature.supported ? "" : "text-yellow-600"
+                                }
+                              >
+                                {feature.name}
+                                {feature.note && (
+                                  <span className="text-muted-foreground block text-xs mt-0.5">
+                                    {feature.note}
+                                  </span>
+                                )}
+                              </span>
+                            </li>
+                          ),
+                        )}
                       </ul>
                     </div>
                   </TooltipContent>
@@ -319,7 +414,7 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
                         variant="outline"
                         className={cn(
                           "border font-mono text-xs cursor-help",
-                          getHealthDisplay(healthReport.state).className
+                          getHealthDisplay(healthReport.state).className,
                         )}
                       >
                         {getHealthDisplay(healthReport.state).label}
@@ -330,7 +425,9 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
                         <p className="font-semibold mb-1">Health Status</p>
                         <p>{getHealthDisplay(healthReport.state).tooltip}</p>
                         {healthReport.description && (
-                          <p className="mt-1 text-muted-foreground">{healthReport.description}</p>
+                          <p className="mt-1 text-muted-foreground">
+                            {healthReport.description}
+                          </p>
                         )}
                       </div>
                     </TooltipContent>
@@ -369,16 +466,22 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
             </summary>
             <div className="px-3 py-2 space-y-1 bg-muted/20">
               {session.repositories.map((repo, idx) => (
-                <div key={idx} className="text-xs font-mono flex items-center gap-2">
+                <div
+                  key={idx}
+                  className="text-xs font-mono flex items-center gap-2"
+                >
                   {repo.is_primary && (
                     <span className="text-yellow-600 font-bold">★</span>
                   )}
                   <span className="font-semibold">{repo.mount_name}:</span>
                   <span className="text-muted-foreground truncate">
-                    {repo.repo_path.split('/').pop()}/{repo.subdirectory || '.'}
+                    {repo.repo_path.split("/").pop()}/{repo.subdirectory || "."}
                   </span>
                   <span className="text-xs text-muted-foreground/70">
-                    → {repo.is_primary ? '/workspace' : `/repos/${repo.mount_name}`}
+                    →{" "}
+                    {repo.is_primary
+                      ? "/workspace"
+                      : `/repos/${repo.mount_name}`}
                   </span>
                 </div>
               ))}
@@ -397,13 +500,15 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
                 rel="noopener noreferrer"
                 className="text-sm font-semibold text-accent hover:text-accent/80 font-mono no-underline"
               >
-                PR #{session.pr_url.split('/').pop()}
+                PR #{session.pr_url.split("/").pop()}
               </a>
               {session.pr_check_status && (
-                <span className={cn(
-                  "flex items-center gap-1.5 text-sm font-mono font-semibold",
-                  getCheckStatusColor(session.pr_check_status)
-                )}>
+                <span
+                  className={cn(
+                    "flex items-center gap-1.5 text-sm font-mono font-semibold",
+                    getCheckStatusColor(session.pr_check_status),
+                  )}
+                >
                   {getCheckStatusIcon(session.pr_check_status)}
                   <span>{session.pr_check_status}</span>
                 </span>
@@ -413,13 +518,17 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
 
           {/* Claude Status - when active */}
           {session.claude_status !== ClaudeWorkingStatus.Unknown && (
-            <div className={cn(
-              "flex items-center gap-2 p-2 border-l-4 text-sm font-mono",
-              getClaudeStatusBorderColor(session.claude_status),
-              getClaudeStatusBgColor(session.claude_status)
-            )}>
+            <div
+              className={cn(
+                "flex items-center gap-2 p-2 border-l-4 text-sm font-mono",
+                getClaudeStatusBorderColor(session.claude_status),
+                getClaudeStatusBgColor(session.claude_status),
+              )}
+            >
               {getClaudeStatusIcon(session.claude_status)}
-              <span className="font-semibold">{getClaudeStatusText(session.claude_status)}</span>
+              <span className="font-semibold">
+                {getClaudeStatusText(session.claude_status)}
+              </span>
               {session.claude_status_updated_at && (
                 <span className="text-xs text-muted-foreground">
                   ({formatRelativeTime(session.claude_status_updated_at)})
@@ -443,47 +552,56 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                <div className="flex items-center gap-2 p-2 bg-orange-500/10 border-l-4 border-orange-500 cursor-help">
-                  <Edit className="w-3.5 h-3.5 text-orange-500" />
-                  <span className="text-sm font-mono font-semibold text-orange-500">
-                    Uncommitted changes
-                  </span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-md">
-                {session.worktree_changed_files && session.worktree_changed_files.length > 0 ? (
-                  <div className="space-y-2">
-                    {(() => {
-                      // Group files by status
-                      const grouped = session.worktree_changed_files.reduce<Record<string, string[]>>((acc, file) => {
-                        const statusKey = getStatusLabel(file.status);
-                        acc[statusKey] ??= [];
-                        acc[statusKey].push(file.path);
-                        return acc;
-                      }, {});
-
-                      return Object.entries(grouped).map(([status, files]) => (
-                        <div key={status}>
-                          <div className="font-semibold text-xs mb-1">{status}:</div>
-                          <div className="font-mono text-xs pl-2 space-y-0.5">
-                            {files.slice(0, 5).map((file) => (
-                              <div key={file} className="truncate max-w-xs">{file}</div>
-                            ))}
-                            {files.length > 5 && (
-                              <div className="text-muted-foreground italic">
-                                ...and {files.length - 5} more
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ));
-                    })()}
+                  <div className="flex items-center gap-2 p-2 bg-orange-500/10 border-l-4 border-orange-500 cursor-help">
+                    <Edit className="w-3.5 h-3.5 text-orange-500" />
+                    <span className="text-sm font-mono font-semibold text-orange-500">
+                      Uncommitted changes
+                    </span>
                   </div>
-                ) : (
-                  <div>Files have uncommitted changes</div>
-                )}
-              </TooltipContent>
-            </Tooltip>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-md">
+                  {session.worktree_changed_files &&
+                  session.worktree_changed_files.length > 0 ? (
+                    <div className="space-y-2">
+                      {(() => {
+                        // Group files by status
+                        const grouped = session.worktree_changed_files.reduce<
+                          Record<string, string[]>
+                        >((acc, file) => {
+                          const statusKey = getStatusLabel(file.status);
+                          acc[statusKey] ??= [];
+                          acc[statusKey].push(file.path);
+                          return acc;
+                        }, {});
+
+                        return Object.entries(grouped).map(
+                          ([status, files]) => (
+                            <div key={status}>
+                              <div className="font-semibold text-xs mb-1">
+                                {status}:
+                              </div>
+                              <div className="font-mono text-xs pl-2 space-y-0.5">
+                                {files.slice(0, 5).map((file) => (
+                                  <div key={file} className="truncate max-w-xs">
+                                    {file}
+                                  </div>
+                                ))}
+                                {files.length > 5 && (
+                                  <div className="text-muted-foreground italic">
+                                    ...and {files.length - 5} more
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ),
+                        );
+                      })()}
+                    </div>
+                  ) : (
+                    <div>Files have uncommitted changes</div>
+                  )}
+                </TooltipContent>
+              </Tooltip>
             </TooltipProvider>
           )}
 
@@ -501,8 +619,14 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
                 </TooltipTrigger>
                 <TooltipContent>
                   <div className="max-w-xs text-xs">
-                    <p className="font-semibold mb-1">Limited Status Tracking</p>
-                    <p>This session uses --dangerous-copy-creds, which bypasses the proxy. Agent status updates (working, idle, etc.) are not available.</p>
+                    <p className="font-semibold mb-1">
+                      Limited Status Tracking
+                    </p>
+                    <p>
+                      This session uses --dangerous-copy-creds, which bypasses
+                      the proxy. Agent status updates (working, idle, etc.) are
+                      not available.
+                    </p>
                   </div>
                 </TooltipContent>
               </Tooltip>
@@ -537,7 +661,9 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => { onAttach(session); }}
+                  onClick={() => {
+                    onAttach(session);
+                  }}
                   aria-label="Attach to console"
                   className="cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-md"
                 >
@@ -553,7 +679,9 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => { onEdit(session); }}
+                onClick={() => {
+                  onEdit(session);
+                }}
                 aria-label="Edit session"
                 className="cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-md"
               >
@@ -569,14 +697,18 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => { onRefresh(session); }}
+                  onClick={() => {
+                    onRefresh(session);
+                  }}
                   aria-label="Refresh session"
                   className="cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-md"
                 >
                   <RefreshCw className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Refresh (pull latest image and recreate)</TooltipContent>
+              <TooltipContent>
+                Refresh (pull latest image and recreate)
+              </TooltipContent>
             </Tooltip>
           )}
 
@@ -586,7 +718,9 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => { setMergePrDialogOpen(true); }}
+                  onClick={() => {
+                    setMergePrDialogOpen(true);
+                  }}
                   aria-label="Merge pull request"
                   className="cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-md"
                 >
@@ -603,7 +737,9 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => { onUnarchive(session); }}
+                  onClick={() => {
+                    onUnarchive(session);
+                  }}
                   aria-label="Unarchive session"
                   className="cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-md"
                 >
@@ -618,7 +754,9 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => { onArchive(session); }}
+                  onClick={() => {
+                    onArchive(session);
+                  }}
                   aria-label="Archive session"
                   className="cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-md"
                 >
@@ -634,7 +772,9 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => { onDelete(session); }}
+                onClick={() => {
+                  onDelete(session);
+                }}
                 aria-label="Delete session"
                 className="cursor-pointer text-destructive hover:bg-destructive/10 transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-md"
               >
@@ -648,7 +788,9 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
 
       <MergePrDialog
         isOpen={mergePrDialogOpen}
-        onClose={() => { setMergePrDialogOpen(false); }}
+        onClose={() => {
+          setMergePrDialogOpen(false);
+        }}
         onConfirm={handleMergePr}
         session={session}
       />

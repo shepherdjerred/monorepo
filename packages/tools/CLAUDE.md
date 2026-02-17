@@ -52,11 +52,11 @@ src/
 
 ## Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `PAGERDUTY_API_KEY` | PagerDuty API token |
-| `BUGSINK_URL` | Bugsink instance URL (e.g., `https://bugsink.example.com`) |
-| `BUGSINK_TOKEN` | Bugsink API token |
+| Variable            | Description                                                |
+| ------------------- | ---------------------------------------------------------- |
+| `PAGERDUTY_API_KEY` | PagerDuty API token                                        |
+| `BUGSINK_URL`       | Bugsink instance URL (e.g., `https://bugsink.example.com`) |
+| `BUGSINK_TOKEN`     | Bugsink API token                                          |
 
 ## Adding New Commands
 

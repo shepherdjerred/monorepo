@@ -217,13 +217,14 @@ export type KubeprometheusstackHelmValuesCrdsUpgradeJobServiceAccount = {
   automountServiceAccountToken?: boolean;
 };
 
-export type KubeprometheusstackHelmValuesCrdsUpgradeJobServiceAccountAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesCrdsUpgradeJobServiceAccountAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
 export type KubeprometheusstackHelmValuesCrdsUpgradeJobServiceAccountLabels = {
   /**
@@ -233,24 +234,26 @@ export type KubeprometheusstackHelmValuesCrdsUpgradeJobServiceAccountLabels = {
   [key: string]: unknown;
 };
 
-export type KubeprometheusstackHelmValuesCrdsUpgradeJobContainerSecurityContext = {
-  /**
-   * @default false
-   */
-  allowPrivilegeEscalation?: boolean;
-  /**
-   * @default true
-   */
-  readOnlyRootFilesystem?: boolean;
-  /**
-   * @default {"drop":["ALL"]}
-   */
-  capabilities?: KubeprometheusstackHelmValuesCrdsUpgradeJobContainerSecurityContextCapabilities;
-};
+export type KubeprometheusstackHelmValuesCrdsUpgradeJobContainerSecurityContext =
+  {
+    /**
+     * @default false
+     */
+    allowPrivilegeEscalation?: boolean;
+    /**
+     * @default true
+     */
+    readOnlyRootFilesystem?: boolean;
+    /**
+     * @default {"drop":["ALL"]}
+     */
+    capabilities?: KubeprometheusstackHelmValuesCrdsUpgradeJobContainerSecurityContextCapabilities;
+  };
 
-export type KubeprometheusstackHelmValuesCrdsUpgradeJobContainerSecurityContextCapabilities = {
-  drop?: string[];
-};
+export type KubeprometheusstackHelmValuesCrdsUpgradeJobContainerSecurityContextCapabilities =
+  {
+    drop?: string[];
+  };
 
 export type KubeprometheusstackHelmValuesCrdsUpgradeJobPodSecurityContext = {
   /**
@@ -275,12 +278,13 @@ export type KubeprometheusstackHelmValuesCrdsUpgradeJobPodSecurityContext = {
   seccompProfile?: KubeprometheusstackHelmValuesCrdsUpgradeJobPodSecurityContextSeccompProfile;
 };
 
-export type KubeprometheusstackHelmValuesCrdsUpgradeJobPodSecurityContextSeccompProfile = {
-  /**
-   * @default "RuntimeDefault"
-   */
-  type?: string;
-};
+export type KubeprometheusstackHelmValuesCrdsUpgradeJobPodSecurityContextSeccompProfile =
+  {
+    /**
+     * @default "RuntimeDefault"
+     */
+    type?: string;
+  };
 
 export type KubeprometheusstackHelmValuesCustomRules = object;
 
@@ -523,412 +527,479 @@ export type KubeprometheusstackHelmValuesDefaultRulesAnnotations = {
   [key: string]: unknown;
 };
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleLabels = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleLabels =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleAnnotations = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleAnnotations =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabels = {
-  /**
-   * @default {}
-   */
-  alertmanager?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsAlertmanager;
-  /**
-   * @default {}
-   */
-  etcd?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsEtcd;
-  /**
-   * @default {}
-   */
-  configReloaders?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsConfigReloaders;
-  /**
-   * @default {}
-   */
-  general?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsGeneral;
-  /**
-   * @default {}
-   */
-  k8sContainerCpuUsageSecondsTotal?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sContainerCpuUsageSecondsTotal;
-  /**
-   * @default {}
-   */
-  k8sContainerMemoryCache?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sContainerMemoryCache;
-  /**
-   * @default {}
-   */
-  k8sContainerMemoryRss?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sContainerMemoryRss;
-  /**
-   * @default {}
-   */
-  k8sContainerMemorySwap?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sContainerMemorySwap;
-  /**
-   * @default {}
-   */
-  k8sContainerResource?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sContainerResource;
-  /**
-   * @default {}
-   */
-  k8sPodOwner?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sPodOwner;
-  /**
-   * @default {}
-   */
-  kubeApiserverAvailability?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeApiserverAvailability;
-  /**
-   * @default {}
-   */
-  kubeApiserverBurnrate?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeApiserverBurnrate;
-  /**
-   * @default {}
-   */
-  kubeApiserverHistogram?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeApiserverHistogram;
-  /**
-   * @default {}
-   */
-  kubeApiserverSlos?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeApiserverSlos;
-  /**
-   * @default {}
-   */
-  kubeControllerManager?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeControllerManager;
-  /**
-   * @default {}
-   */
-  kubelet?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubelet;
-  /**
-   * @default {}
-   */
-  kubeProxy?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeProxy;
-  /**
-   * @default {}
-   */
-  kubePrometheusGeneral?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubePrometheusGeneral;
-  /**
-   * @default {}
-   */
-  kubePrometheusNodeRecording?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubePrometheusNodeRecording;
-  /**
-   * @default {}
-   */
-  kubernetesApps?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubernetesApps;
-  /**
-   * @default {}
-   */
-  kubernetesResources?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubernetesResources;
-  /**
-   * @default {}
-   */
-  kubernetesStorage?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubernetesStorage;
-  /**
-   * @default {}
-   */
-  kubernetesSystem?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubernetesSystem;
-  /**
-   * @default {}
-   */
-  kubeSchedulerAlerting?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeSchedulerAlerting;
-  /**
-   * @default {}
-   */
-  kubeSchedulerRecording?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeSchedulerRecording;
-  /**
-   * @default {}
-   */
-  kubeStateMetrics?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeStateMetrics;
-  /**
-   * @default {}
-   */
-  network?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsNetwork;
-  /**
-   * @default {}
-   */
-  node?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsNode;
-  /**
-   * @default {}
-   */
-  nodeExporterAlerting?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsNodeExporterAlerting;
-  /**
-   * @default {}
-   */
-  nodeExporterRecording?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsNodeExporterRecording;
-  /**
-   * @default {}
-   */
-  prometheus?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsPrometheus;
-  /**
-   * @default {}
-   */
-  prometheusOperator?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsPrometheusOperator;
-};
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabels =
+  {
+    /**
+     * @default {}
+     */
+    alertmanager?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsAlertmanager;
+    /**
+     * @default {}
+     */
+    etcd?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsEtcd;
+    /**
+     * @default {}
+     */
+    configReloaders?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsConfigReloaders;
+    /**
+     * @default {}
+     */
+    general?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsGeneral;
+    /**
+     * @default {}
+     */
+    k8sContainerCpuUsageSecondsTotal?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sContainerCpuUsageSecondsTotal;
+    /**
+     * @default {}
+     */
+    k8sContainerMemoryCache?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sContainerMemoryCache;
+    /**
+     * @default {}
+     */
+    k8sContainerMemoryRss?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sContainerMemoryRss;
+    /**
+     * @default {}
+     */
+    k8sContainerMemorySwap?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sContainerMemorySwap;
+    /**
+     * @default {}
+     */
+    k8sContainerResource?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sContainerResource;
+    /**
+     * @default {}
+     */
+    k8sPodOwner?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sPodOwner;
+    /**
+     * @default {}
+     */
+    kubeApiserverAvailability?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeApiserverAvailability;
+    /**
+     * @default {}
+     */
+    kubeApiserverBurnrate?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeApiserverBurnrate;
+    /**
+     * @default {}
+     */
+    kubeApiserverHistogram?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeApiserverHistogram;
+    /**
+     * @default {}
+     */
+    kubeApiserverSlos?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeApiserverSlos;
+    /**
+     * @default {}
+     */
+    kubeControllerManager?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeControllerManager;
+    /**
+     * @default {}
+     */
+    kubelet?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubelet;
+    /**
+     * @default {}
+     */
+    kubeProxy?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeProxy;
+    /**
+     * @default {}
+     */
+    kubePrometheusGeneral?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubePrometheusGeneral;
+    /**
+     * @default {}
+     */
+    kubePrometheusNodeRecording?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubePrometheusNodeRecording;
+    /**
+     * @default {}
+     */
+    kubernetesApps?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubernetesApps;
+    /**
+     * @default {}
+     */
+    kubernetesResources?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubernetesResources;
+    /**
+     * @default {}
+     */
+    kubernetesStorage?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubernetesStorage;
+    /**
+     * @default {}
+     */
+    kubernetesSystem?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubernetesSystem;
+    /**
+     * @default {}
+     */
+    kubeSchedulerAlerting?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeSchedulerAlerting;
+    /**
+     * @default {}
+     */
+    kubeSchedulerRecording?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeSchedulerRecording;
+    /**
+     * @default {}
+     */
+    kubeStateMetrics?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeStateMetrics;
+    /**
+     * @default {}
+     */
+    network?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsNetwork;
+    /**
+     * @default {}
+     */
+    node?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsNode;
+    /**
+     * @default {}
+     */
+    nodeExporterAlerting?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsNodeExporterAlerting;
+    /**
+     * @default {}
+     */
+    nodeExporterRecording?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsNodeExporterRecording;
+    /**
+     * @default {}
+     */
+    prometheus?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsPrometheus;
+    /**
+     * @default {}
+     */
+    prometheusOperator?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsPrometheusOperator;
+  };
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsAlertmanager = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsAlertmanager =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsEtcd = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsEtcd =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsConfigReloaders = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsConfigReloaders =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsGeneral = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsGeneral =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sContainerCpuUsageSecondsTotal = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sContainerCpuUsageSecondsTotal =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sContainerMemoryCache = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sContainerMemoryCache =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sContainerMemoryRss = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sContainerMemoryRss =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sContainerMemorySwap = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sContainerMemorySwap =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sContainerResource = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sContainerResource =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sPodOwner = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsK8sPodOwner =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeApiserverAvailability = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeApiserverAvailability =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeApiserverBurnrate = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeApiserverBurnrate =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeApiserverHistogram = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeApiserverHistogram =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeApiserverSlos = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeApiserverSlos =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeControllerManager = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeControllerManager =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubelet = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubelet =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeProxy = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeProxy =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubePrometheusGeneral = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubePrometheusGeneral =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubePrometheusNodeRecording = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubePrometheusNodeRecording =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubernetesApps = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubernetesApps =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubernetesResources = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubernetesResources =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubernetesStorage = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubernetesStorage =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubernetesSystem = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubernetesSystem =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeSchedulerAlerting = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeSchedulerAlerting =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeSchedulerRecording = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeSchedulerRecording =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeStateMetrics = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsKubeStateMetrics =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsNetwork = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsNetwork =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsNode = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsNode =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsNodeExporterAlerting = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsNodeExporterAlerting =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsNodeExporterRecording = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsNodeExporterRecording =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsPrometheus = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsPrometheus =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsPrometheusOperator = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupLabelsPrometheusOperator =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotations = {
-  /**
-   * @default {}
-   */
-  alertmanager?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsAlertmanager;
-  /**
-   * @default {}
-   */
-  etcd?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsEtcd;
-  /**
-   * @default {}
-   */
-  configReloaders?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsConfigReloaders;
-  /**
-   * @default {}
-   */
-  general?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsGeneral;
-  /**
-   * @default {}
-   */
-  k8sContainerCpuUsageSecondsTotal?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sContainerCpuUsageSecondsTotal;
-  /**
-   * @default {}
-   */
-  k8sContainerMemoryCache?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sContainerMemoryCache;
-  /**
-   * @default {}
-   */
-  k8sContainerMemoryRss?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sContainerMemoryRss;
-  /**
-   * @default {}
-   */
-  k8sContainerMemorySwap?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sContainerMemorySwap;
-  /**
-   * @default {}
-   */
-  k8sContainerResource?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sContainerResource;
-  /**
-   * @default {}
-   */
-  k8sPodOwner?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sPodOwner;
-  /**
-   * @default {}
-   */
-  kubeApiserverAvailability?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeApiserverAvailability;
-  /**
-   * @default {}
-   */
-  kubeApiserverBurnrate?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeApiserverBurnrate;
-  /**
-   * @default {}
-   */
-  kubeApiserverHistogram?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeApiserverHistogram;
-  /**
-   * @default {}
-   */
-  kubeApiserverSlos?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeApiserverSlos;
-  /**
-   * @default {}
-   */
-  kubeControllerManager?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeControllerManager;
-  /**
-   * @default {}
-   */
-  kubelet?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubelet;
-  /**
-   * @default {}
-   */
-  kubeProxy?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeProxy;
-  /**
-   * @default {}
-   */
-  kubePrometheusGeneral?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubePrometheusGeneral;
-  /**
-   * @default {}
-   */
-  kubePrometheusNodeRecording?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubePrometheusNodeRecording;
-  /**
-   * @default {}
-   */
-  kubernetesApps?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubernetesApps;
-  /**
-   * @default {}
-   */
-  kubernetesResources?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubernetesResources;
-  /**
-   * @default {}
-   */
-  kubernetesStorage?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubernetesStorage;
-  /**
-   * @default {}
-   */
-  kubernetesSystem?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubernetesSystem;
-  /**
-   * @default {}
-   */
-  kubeSchedulerAlerting?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeSchedulerAlerting;
-  /**
-   * @default {}
-   */
-  kubeSchedulerRecording?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeSchedulerRecording;
-  /**
-   * @default {}
-   */
-  kubeStateMetrics?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeStateMetrics;
-  /**
-   * @default {}
-   */
-  network?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsNetwork;
-  /**
-   * @default {}
-   */
-  node?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsNode;
-  /**
-   * @default {}
-   */
-  nodeExporterAlerting?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsNodeExporterAlerting;
-  /**
-   * @default {}
-   */
-  nodeExporterRecording?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsNodeExporterRecording;
-  /**
-   * @default {}
-   */
-  prometheus?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsPrometheus;
-  /**
-   * @default {}
-   */
-  prometheusOperator?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsPrometheusOperator;
-};
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotations =
+  {
+    /**
+     * @default {}
+     */
+    alertmanager?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsAlertmanager;
+    /**
+     * @default {}
+     */
+    etcd?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsEtcd;
+    /**
+     * @default {}
+     */
+    configReloaders?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsConfigReloaders;
+    /**
+     * @default {}
+     */
+    general?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsGeneral;
+    /**
+     * @default {}
+     */
+    k8sContainerCpuUsageSecondsTotal?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sContainerCpuUsageSecondsTotal;
+    /**
+     * @default {}
+     */
+    k8sContainerMemoryCache?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sContainerMemoryCache;
+    /**
+     * @default {}
+     */
+    k8sContainerMemoryRss?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sContainerMemoryRss;
+    /**
+     * @default {}
+     */
+    k8sContainerMemorySwap?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sContainerMemorySwap;
+    /**
+     * @default {}
+     */
+    k8sContainerResource?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sContainerResource;
+    /**
+     * @default {}
+     */
+    k8sPodOwner?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sPodOwner;
+    /**
+     * @default {}
+     */
+    kubeApiserverAvailability?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeApiserverAvailability;
+    /**
+     * @default {}
+     */
+    kubeApiserverBurnrate?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeApiserverBurnrate;
+    /**
+     * @default {}
+     */
+    kubeApiserverHistogram?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeApiserverHistogram;
+    /**
+     * @default {}
+     */
+    kubeApiserverSlos?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeApiserverSlos;
+    /**
+     * @default {}
+     */
+    kubeControllerManager?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeControllerManager;
+    /**
+     * @default {}
+     */
+    kubelet?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubelet;
+    /**
+     * @default {}
+     */
+    kubeProxy?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeProxy;
+    /**
+     * @default {}
+     */
+    kubePrometheusGeneral?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubePrometheusGeneral;
+    /**
+     * @default {}
+     */
+    kubePrometheusNodeRecording?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubePrometheusNodeRecording;
+    /**
+     * @default {}
+     */
+    kubernetesApps?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubernetesApps;
+    /**
+     * @default {}
+     */
+    kubernetesResources?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubernetesResources;
+    /**
+     * @default {}
+     */
+    kubernetesStorage?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubernetesStorage;
+    /**
+     * @default {}
+     */
+    kubernetesSystem?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubernetesSystem;
+    /**
+     * @default {}
+     */
+    kubeSchedulerAlerting?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeSchedulerAlerting;
+    /**
+     * @default {}
+     */
+    kubeSchedulerRecording?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeSchedulerRecording;
+    /**
+     * @default {}
+     */
+    kubeStateMetrics?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeStateMetrics;
+    /**
+     * @default {}
+     */
+    network?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsNetwork;
+    /**
+     * @default {}
+     */
+    node?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsNode;
+    /**
+     * @default {}
+     */
+    nodeExporterAlerting?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsNodeExporterAlerting;
+    /**
+     * @default {}
+     */
+    nodeExporterRecording?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsNodeExporterRecording;
+    /**
+     * @default {}
+     */
+    prometheus?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsPrometheus;
+    /**
+     * @default {}
+     */
+    prometheusOperator?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsPrometheusOperator;
+  };
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsAlertmanager = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsAlertmanager =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsEtcd = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsEtcd =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsConfigReloaders = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsConfigReloaders =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsGeneral = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsGeneral =
+  object;
 
 export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sContainerCpuUsageSecondsTotal =
   object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sContainerMemoryCache = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sContainerMemoryCache =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sContainerMemoryRss = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sContainerMemoryRss =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sContainerMemorySwap = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sContainerMemorySwap =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sContainerResource = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sContainerResource =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sPodOwner = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsK8sPodOwner =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeApiserverAvailability = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeApiserverAvailability =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeApiserverBurnrate = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeApiserverBurnrate =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeApiserverHistogram = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeApiserverHistogram =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeApiserverSlos = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeApiserverSlos =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeControllerManager = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeControllerManager =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubelet = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubelet =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeProxy = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeProxy =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubePrometheusGeneral = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubePrometheusGeneral =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubePrometheusNodeRecording = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubePrometheusNodeRecording =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubernetesApps = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubernetesApps =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubernetesResources = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubernetesResources =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubernetesStorage = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubernetesStorage =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubernetesSystem = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubernetesSystem =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeSchedulerAlerting = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeSchedulerAlerting =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeSchedulerRecording = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeSchedulerRecording =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeStateMetrics = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsKubeStateMetrics =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsNetwork = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsNetwork =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsNode = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsNode =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsNodeExporterAlerting = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsNodeExporterAlerting =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsNodeExporterRecording = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsNodeExporterRecording =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsPrometheus = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsPrometheus =
+  object;
 
-export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsPrometheusOperator = object;
+export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsPrometheusOperator =
+  object;
 
 export type KubeprometheusstackHelmValuesDefaultRulesNode = {
   /**
@@ -1011,16 +1082,17 @@ export type KubeprometheusstackHelmValuesPrometheuswindowsexporterPrometheus = {
   monitor?: KubeprometheusstackHelmValuesPrometheuswindowsexporterPrometheusMonitor;
 };
 
-export type KubeprometheusstackHelmValuesPrometheuswindowsexporterPrometheusMonitor = {
-  /**
-   * @default true
-   */
-  enabled?: boolean;
-  /**
-   * @default "jobLabel"
-   */
-  jobLabel?: string;
-};
+export type KubeprometheusstackHelmValuesPrometheuswindowsexporterPrometheusMonitor =
+  {
+    /**
+     * @default true
+     */
+    enabled?: boolean;
+    /**
+     * @default "jobLabel"
+     */
+    jobLabel?: string;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheuswindowsexporterPodLabels = {
   /**
@@ -1259,7 +1331,8 @@ export type KubeprometheusstackHelmValuesAlertmanagerNetworkPolicyGateway = {
   podLabels?: KubeprometheusstackHelmValuesAlertmanagerNetworkPolicyGatewayPodLabels;
 };
 
-export type KubeprometheusstackHelmValuesAlertmanagerNetworkPolicyGatewayPodLabels = object;
+export type KubeprometheusstackHelmValuesAlertmanagerNetworkPolicyGatewayPodLabels =
+  object;
 
 export type KubeprometheusstackHelmValuesAlertmanagerNetworkPolicyEgress = {
   /**
@@ -1271,20 +1344,21 @@ export type KubeprometheusstackHelmValuesAlertmanagerNetworkPolicyEgress = {
   rules?: unknown[];
 };
 
-export type KubeprometheusstackHelmValuesAlertmanagerNetworkPolicyMonitoringRules = {
-  /**
-   * Enable ingress from Prometheus
-   *
-   * @default true
-   */
-  prometheus?: boolean;
-  /**
-   * Enable ingress for config reloader metrics
-   *
-   * @default true
-   */
-  configReloader?: boolean;
-};
+export type KubeprometheusstackHelmValuesAlertmanagerNetworkPolicyMonitoringRules =
+  {
+    /**
+     * Enable ingress from Prometheus
+     *
+     * @default true
+     */
+    prometheus?: boolean;
+    /**
+     * Enable ingress for config reloader metrics
+     *
+     * @default true
+     */
+    configReloader?: boolean;
+  };
 
 export type KubeprometheusstackHelmValuesAlertmanagerServiceAccount = {
   /**
@@ -1305,13 +1379,14 @@ export type KubeprometheusstackHelmValuesAlertmanagerServiceAccount = {
   automountServiceAccountToken?: boolean;
 };
 
-export type KubeprometheusstackHelmValuesAlertmanagerServiceAccountAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesAlertmanagerServiceAccountAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
 export type KubeprometheusstackHelmValuesAlertmanagerPodDisruptionBudget = {
   /**
@@ -1354,11 +1429,12 @@ export type KubeprometheusstackHelmValuesAlertmanagerConfigGlobal = {
   resolve_timeout?: string;
 };
 
-export type KubeprometheusstackHelmValuesAlertmanagerConfigInhibitrulesElement = {
-  source_matchers?: string[];
-  target_matchers?: string[];
-  equal?: string[];
-};
+export type KubeprometheusstackHelmValuesAlertmanagerConfigInhibitrulesElement =
+  {
+    source_matchers?: string[];
+    target_matchers?: string[];
+    equal?: string[];
+  };
 
 export type KubeprometheusstackHelmValuesAlertmanagerConfigRoute = {
   group_by?: string[];
@@ -1381,13 +1457,14 @@ export type KubeprometheusstackHelmValuesAlertmanagerConfigRoute = {
   routes?: KubeprometheusstackHelmValuesAlertmanagerConfigRouteRoutesElement[];
 };
 
-export type KubeprometheusstackHelmValuesAlertmanagerConfigRouteRoutesElement = {
-  /**
-   * @default "null"
-   */
-  receiver?: string;
-  matchers?: string[];
-};
+export type KubeprometheusstackHelmValuesAlertmanagerConfigRouteRoutesElement =
+  {
+    /**
+     * @default "null"
+     */
+    receiver?: string;
+    matchers?: string[];
+  };
 
 export type KubeprometheusstackHelmValuesAlertmanagerConfigReceiversElement = {
   /**
@@ -1591,13 +1668,14 @@ export type KubeprometheusstackHelmValuesAlertmanagerIngressPerReplica = {
   tlsSecretPerReplica?: KubeprometheusstackHelmValuesAlertmanagerIngressPerReplicaTlsSecretPerReplica;
 };
 
-export type KubeprometheusstackHelmValuesAlertmanagerIngressPerReplicaAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesAlertmanagerIngressPerReplicaAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
 export type KubeprometheusstackHelmValuesAlertmanagerIngressPerReplicaLabels = {
   /**
@@ -1607,19 +1685,20 @@ export type KubeprometheusstackHelmValuesAlertmanagerIngressPerReplicaLabels = {
   [key: string]: unknown;
 };
 
-export type KubeprometheusstackHelmValuesAlertmanagerIngressPerReplicaTlsSecretPerReplica = {
-  /**
-   * @default false
-   */
-  enabled?: boolean;
-  /**
-   * Final form of the secret for each per replica ingress is
-   * {{ tlsSecretPerReplica.prefix }}-{{ $replicaNumber }}
-   *
-   * @default "alertmanager"
-   */
-  prefix?: string;
-};
+export type KubeprometheusstackHelmValuesAlertmanagerIngressPerReplicaTlsSecretPerReplica =
+  {
+    /**
+     * @default false
+     */
+    enabled?: boolean;
+    /**
+     * Final form of the secret for each per replica ingress is
+     * {{ tlsSecretPerReplica.prefix }}-{{ $replicaNumber }}
+     *
+     * @default "alertmanager"
+     */
+    prefix?: string;
+  };
 
 export type KubeprometheusstackHelmValuesAlertmanagerService = {
   /**
@@ -1725,19 +1804,21 @@ export type KubeprometheusstackHelmValuesAlertmanagerServiceIpDualStack = {
   ipFamilyPolicy?: string;
 };
 
-export type KubeprometheusstackHelmValuesAlertmanagerServiceSessionAffinityConfig = {
-  /**
-   * @default {"timeoutSeconds":10800}
-   */
-  clientIP?: KubeprometheusstackHelmValuesAlertmanagerServiceSessionAffinityConfigClientIP;
-};
+export type KubeprometheusstackHelmValuesAlertmanagerServiceSessionAffinityConfig =
+  {
+    /**
+     * @default {"timeoutSeconds":10800}
+     */
+    clientIP?: KubeprometheusstackHelmValuesAlertmanagerServiceSessionAffinityConfigClientIP;
+  };
 
-export type KubeprometheusstackHelmValuesAlertmanagerServiceSessionAffinityConfigClientIP = {
-  /**
-   * @default 10800
-   */
-  timeoutSeconds?: number;
-};
+export type KubeprometheusstackHelmValuesAlertmanagerServiceSessionAffinityConfigClientIP =
+  {
+    /**
+     * @default 10800
+     */
+    timeoutSeconds?: number;
+  };
 
 export type KubeprometheusstackHelmValuesAlertmanagerServicePerReplica = {
   /**
@@ -1782,13 +1863,14 @@ export type KubeprometheusstackHelmValuesAlertmanagerServicePerReplica = {
   type?: string;
 };
 
-export type KubeprometheusstackHelmValuesAlertmanagerServicePerReplicaAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesAlertmanagerServicePerReplicaAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
 export type KubeprometheusstackHelmValuesAlertmanagerServiceMonitor = {
   /**
@@ -1865,9 +1947,11 @@ export type KubeprometheusstackHelmValuesAlertmanagerServiceMonitor = {
   additionalEndpoints?: unknown[];
 };
 
-export type KubeprometheusstackHelmValuesAlertmanagerServiceMonitorAdditionalLabels = object;
+export type KubeprometheusstackHelmValuesAlertmanagerServiceMonitorAdditionalLabels =
+  object;
 
-export type KubeprometheusstackHelmValuesAlertmanagerServiceMonitorTlsConfig = object;
+export type KubeprometheusstackHelmValuesAlertmanagerServiceMonitorTlsConfig =
+  object;
 
 export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpec = {
   /**
@@ -2152,9 +2236,11 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpec = {
   additionalConfigString?: string;
 };
 
-export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecPersistentVolumeClaimRetentionPolicy = object;
+export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecPersistentVolumeClaimRetentionPolicy =
+  object;
 
-export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecPodMetadata = object;
+export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecPodMetadata =
+  object;
 
 export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecImage = {
   /**
@@ -2179,15 +2265,20 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecImage = {
   pullPolicy?: string;
 };
 
-export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecWeb = object;
+export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecWeb =
+  object;
 
-export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecAlertmanagerConfigSelector = object;
+export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecAlertmanagerConfigSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecAlertmanagerConfigNamespaceSelector = object;
+export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecAlertmanagerConfigNamespaceSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecAlertmanagerConfiguration = object;
+export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecAlertmanagerConfiguration =
+  object;
 
-export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecAlertmanagerConfigMatcherStrategy = object;
+export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecAlertmanagerConfigMatcherStrategy =
+  object;
 
 export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecStorage = {
   /**
@@ -2197,47 +2288,55 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecStorage = {
   [key: string]: unknown;
 };
 
-export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecTlsConfig = object;
+export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecTlsConfig =
+  object;
 
-export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecNodeSelector = object;
+export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecNodeSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecResources = object;
+export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecResources =
+  object;
 
-export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecAffinity = object;
+export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecAffinity =
+  object;
 
-export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecSecurityContext = {
-  /**
-   * @default 2000
-   */
-  runAsGroup?: number;
-  /**
-   * @default true
-   */
-  runAsNonRoot?: boolean;
-  /**
-   * @default 1000
-   */
-  runAsUser?: number;
-  /**
-   * @default 2000
-   */
-  fsGroup?: number;
-  /**
-   * @default {"type":"RuntimeDefault"}
-   */
-  seccompProfile?: KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecSecurityContextSeccompProfile;
-};
+export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecSecurityContext =
+  {
+    /**
+     * @default 2000
+     */
+    runAsGroup?: number;
+    /**
+     * @default true
+     */
+    runAsNonRoot?: boolean;
+    /**
+     * @default 1000
+     */
+    runAsUser?: number;
+    /**
+     * @default 2000
+     */
+    fsGroup?: number;
+    /**
+     * @default {"type":"RuntimeDefault"}
+     */
+    seccompProfile?: KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecSecurityContextSeccompProfile;
+  };
 
-export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecSecurityContextSeccompProfile = {
-  /**
-   * @default "RuntimeDefault"
-   */
-  type?: string;
-};
+export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecSecurityContextSeccompProfile =
+  {
+    /**
+     * @default "RuntimeDefault"
+     */
+    type?: string;
+  };
 
-export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecDnsConfig = object;
+export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecDnsConfig =
+  object;
 
-export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecAdditionalConfig = object;
+export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecAdditionalConfig =
+  object;
 
 export type KubeprometheusstackHelmValuesAlertmanagerExtraSecret = {
   /**
@@ -2615,45 +2714,48 @@ export type KubeprometheusstackHelmValuesGrafanaSidecarDashboardsAnnotations = {
   [key: string]: unknown;
 };
 
-export type KubeprometheusstackHelmValuesGrafanaSidecarDashboardsMulticluster = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-  /**
-   * @default {"enabled":false}
-   */
-  global?: KubeprometheusstackHelmValuesGrafanaSidecarDashboardsMulticlusterGlobal;
-  /**
-   * @default {"enabled":false}
-   */
-  etcd?: KubeprometheusstackHelmValuesGrafanaSidecarDashboardsMulticlusterEtcd;
-};
+export type KubeprometheusstackHelmValuesGrafanaSidecarDashboardsMulticluster =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+    /**
+     * @default {"enabled":false}
+     */
+    global?: KubeprometheusstackHelmValuesGrafanaSidecarDashboardsMulticlusterGlobal;
+    /**
+     * @default {"enabled":false}
+     */
+    etcd?: KubeprometheusstackHelmValuesGrafanaSidecarDashboardsMulticlusterEtcd;
+  };
 
-export type KubeprometheusstackHelmValuesGrafanaSidecarDashboardsMulticlusterGlobal = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-  /**
-   * @default false
-   */
-  enabled?: boolean;
-};
+export type KubeprometheusstackHelmValuesGrafanaSidecarDashboardsMulticlusterGlobal =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+    /**
+     * @default false
+     */
+    enabled?: boolean;
+  };
 
-export type KubeprometheusstackHelmValuesGrafanaSidecarDashboardsMulticlusterEtcd = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-  /**
-   * @default false
-   */
-  enabled?: boolean;
-};
+export type KubeprometheusstackHelmValuesGrafanaSidecarDashboardsMulticlusterEtcd =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+    /**
+     * @default false
+     */
+    enabled?: boolean;
+  };
 
 export type KubeprometheusstackHelmValuesGrafanaSidecarDashboardsProvider = {
   /**
@@ -2746,49 +2848,52 @@ export type KubeprometheusstackHelmValuesGrafanaSidecarDatasources = {
   alertmanager?: KubeprometheusstackHelmValuesGrafanaSidecarDatasourcesAlertmanager;
 };
 
-export type KubeprometheusstackHelmValuesGrafanaSidecarDatasourcesAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesGrafanaSidecarDatasourcesAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
-export type KubeprometheusstackHelmValuesGrafanaSidecarDatasourcesExemplarTraceIdDestinations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesGrafanaSidecarDatasourcesExemplarTraceIdDestinations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
-export type KubeprometheusstackHelmValuesGrafanaSidecarDatasourcesAlertmanager = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-  /**
-   * @default true
-   */
-  enabled?: boolean;
-  /**
-   * @default "Alertmanager"
-   */
-  name?: string;
-  /**
-   * @default "alertmanager"
-   */
-  uid?: string;
-  /**
-   * @default false
-   */
-  handleGrafanaManagedAlerts?: boolean;
-  /**
-   * @default "prometheus"
-   */
-  implementation?: string;
-};
+export type KubeprometheusstackHelmValuesGrafanaSidecarDatasourcesAlertmanager =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+    /**
+     * @default true
+     */
+    enabled?: boolean;
+    /**
+     * @default "Alertmanager"
+     */
+    name?: string;
+    /**
+     * @default "alertmanager"
+     */
+    uid?: string;
+    /**
+     * @default false
+     */
+    handleGrafanaManagedAlerts?: boolean;
+    /**
+     * @default "prometheus"
+     */
+    implementation?: string;
+  };
 
 export type KubeprometheusstackHelmValuesGrafanaService = {
   /**
@@ -2974,30 +3079,33 @@ export type KubeprometheusstackHelmValuesKubeApiServerServiceMonitorSelector = {
   matchLabels?: KubeprometheusstackHelmValuesKubeApiServerServiceMonitorSelectorMatchLabels;
 };
 
-export type KubeprometheusstackHelmValuesKubeApiServerServiceMonitorSelectorMatchLabels = {
-  /**
-   * @default "apiserver"
-   */
-  component?: string;
-  /**
-   * @default "kubernetes"
-   */
-  provider?: string;
-};
+export type KubeprometheusstackHelmValuesKubeApiServerServiceMonitorSelectorMatchLabels =
+  {
+    /**
+     * @default "apiserver"
+     */
+    component?: string;
+    /**
+     * @default "kubernetes"
+     */
+    provider?: string;
+  };
 
-export type KubeprometheusstackHelmValuesKubeApiServerServiceMonitorMetricRelabelingsElement = {
-  /**
-   * @default "drop"
-   */
-  action?: string;
-  /**
-   * @default "(etcd_request|apiserver_request_slo|apiserver_r..."
-   */
-  regex?: string;
-  sourceLabels?: string[];
-};
+export type KubeprometheusstackHelmValuesKubeApiServerServiceMonitorMetricRelabelingsElement =
+  {
+    /**
+     * @default "drop"
+     */
+    action?: string;
+    /**
+     * @default "(etcd_request|apiserver_request_slo|apiserver_r..."
+     */
+    regex?: string;
+    sourceLabels?: string[];
+  };
 
-export type KubeprometheusstackHelmValuesKubeApiServerServiceMonitorAdditionalLabels = object;
+export type KubeprometheusstackHelmValuesKubeApiServerServiceMonitorAdditionalLabels =
+  object;
 
 export type KubeprometheusstackHelmValuesKubelet = {
   /**
@@ -3177,79 +3285,86 @@ export type KubeprometheusstackHelmValuesKubeletServiceMonitorAttachMetadata = {
   node?: boolean;
 };
 
-export type KubeprometheusstackHelmValuesKubeletServiceMonitorCAdvisorMetricRelabelingsElement = {
-  sourceLabels?: string[];
-  /**
-   * @default "drop"
-   */
-  action?: string;
-  /**
-   * @default "container_cpu_(cfs_throttled_seconds_total|load..."
-   */
-  regex?: string;
-};
+export type KubeprometheusstackHelmValuesKubeletServiceMonitorCAdvisorMetricRelabelingsElement =
+  {
+    sourceLabels?: string[];
+    /**
+     * @default "drop"
+     */
+    action?: string;
+    /**
+     * @default "container_cpu_(cfs_throttled_seconds_total|load..."
+     */
+    regex?: string;
+  };
 
-export type KubeprometheusstackHelmValuesKubeletServiceMonitorCAdvisorRelabelingsElement = {
-  /**
-   * @default "replace"
-   */
-  action?: string;
-  sourceLabels?: string[];
-  /**
-   * @default "metrics_path"
-   */
-  targetLabel?: string;
-};
+export type KubeprometheusstackHelmValuesKubeletServiceMonitorCAdvisorRelabelingsElement =
+  {
+    /**
+     * @default "replace"
+     */
+    action?: string;
+    sourceLabels?: string[];
+    /**
+     * @default "metrics_path"
+     */
+    targetLabel?: string;
+  };
 
-export type KubeprometheusstackHelmValuesKubeletServiceMonitorProbesRelabelingsElement = {
-  /**
-   * @default "replace"
-   */
-  action?: string;
-  sourceLabels?: string[];
-  /**
-   * @default "metrics_path"
-   */
-  targetLabel?: string;
-};
+export type KubeprometheusstackHelmValuesKubeletServiceMonitorProbesRelabelingsElement =
+  {
+    /**
+     * @default "replace"
+     */
+    action?: string;
+    sourceLabels?: string[];
+    /**
+     * @default "metrics_path"
+     */
+    targetLabel?: string;
+  };
 
-export type KubeprometheusstackHelmValuesKubeletServiceMonitorResourceRelabelingsElement = {
-  /**
-   * @default "replace"
-   */
-  action?: string;
-  sourceLabels?: string[];
-  /**
-   * @default "metrics_path"
-   */
-  targetLabel?: string;
-};
+export type KubeprometheusstackHelmValuesKubeletServiceMonitorResourceRelabelingsElement =
+  {
+    /**
+     * @default "replace"
+     */
+    action?: string;
+    sourceLabels?: string[];
+    /**
+     * @default "metrics_path"
+     */
+    targetLabel?: string;
+  };
 
-export type KubeprometheusstackHelmValuesKubeletServiceMonitorMetricRelabelingsElement = {
-  /**
-   * @default "drop"
-   */
-  action?: string;
-  sourceLabels?: string[];
-  /**
-   * @default "(csi_operations|storage_operation_duration)_sec..."
-   */
-  regex?: string;
-};
+export type KubeprometheusstackHelmValuesKubeletServiceMonitorMetricRelabelingsElement =
+  {
+    /**
+     * @default "drop"
+     */
+    action?: string;
+    sourceLabels?: string[];
+    /**
+     * @default "(csi_operations|storage_operation_duration)_sec..."
+     */
+    regex?: string;
+  };
 
-export type KubeprometheusstackHelmValuesKubeletServiceMonitorRelabelingsElement = {
-  /**
-   * @default "replace"
-   */
-  action?: string;
-  sourceLabels?: string[];
-  /**
-   * @default "metrics_path"
-   */
-  targetLabel?: string;
-};
+export type KubeprometheusstackHelmValuesKubeletServiceMonitorRelabelingsElement =
+  {
+    /**
+     * @default "replace"
+     */
+    action?: string;
+    sourceLabels?: string[];
+    /**
+     * @default "metrics_path"
+     */
+    targetLabel?: string;
+  };
 
-export type KubeprometheusstackHelmValuesKubeletServiceMonitorAdditionalLabels = object;
+export type KubeprometheusstackHelmValuesKubeletServiceMonitorAdditionalLabels =
+  object;
 
 export type KubeprometheusstackHelmValuesKubeControllerManager = {
   /**
@@ -3292,17 +3407,18 @@ export type KubeprometheusstackHelmValuesKubeControllerManagerService = {
   ipDualStack?: KubeprometheusstackHelmValuesKubeControllerManagerServiceIpDualStack;
 };
 
-export type KubeprometheusstackHelmValuesKubeControllerManagerServiceIpDualStack = {
-  /**
-   * @default false
-   */
-  enabled?: boolean;
-  ipFamilies?: string[];
-  /**
-   * @default "PreferDualStack"
-   */
-  ipFamilyPolicy?: string;
-};
+export type KubeprometheusstackHelmValuesKubeControllerManagerServiceIpDualStack =
+  {
+    /**
+     * @default false
+     */
+    enabled?: boolean;
+    ipFamilies?: string[];
+    /**
+     * @default "PreferDualStack"
+     */
+    ipFamilyPolicy?: string;
+  };
 
 export type KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitor = {
   /**
@@ -3375,9 +3491,11 @@ export type KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitor = {
   targetLabels?: unknown[];
 };
 
-export type KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitorSelector = object;
+export type KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitorSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitorAdditionalLabels = object;
+export type KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitorAdditionalLabels =
+  object;
 
 export type KubeprometheusstackHelmValuesCoreDns = {
   /**
@@ -3495,7 +3613,8 @@ export type KubeprometheusstackHelmValuesCoreDnsServiceMonitor = {
 
 export type KubeprometheusstackHelmValuesCoreDnsServiceMonitorSelector = object;
 
-export type KubeprometheusstackHelmValuesCoreDnsServiceMonitorAdditionalLabels = object;
+export type KubeprometheusstackHelmValuesCoreDnsServiceMonitorAdditionalLabels =
+  object;
 
 export type KubeprometheusstackHelmValuesKubeDns = {
   /**
@@ -3625,7 +3744,8 @@ export type KubeprometheusstackHelmValuesKubeDnsServiceMonitor = {
 
 export type KubeprometheusstackHelmValuesKubeDnsServiceMonitorSelector = object;
 
-export type KubeprometheusstackHelmValuesKubeDnsServiceMonitorAdditionalLabels = object;
+export type KubeprometheusstackHelmValuesKubeDnsServiceMonitorAdditionalLabels =
+  object;
 
 export type KubeprometheusstackHelmValuesKubeEtcd = {
   /**
@@ -3771,9 +3891,11 @@ export type KubeprometheusstackHelmValuesKubeEtcdServiceMonitor = {
   targetLabels?: unknown[];
 };
 
-export type KubeprometheusstackHelmValuesKubeEtcdServiceMonitorSelector = object;
+export type KubeprometheusstackHelmValuesKubeEtcdServiceMonitorSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesKubeEtcdServiceMonitorAdditionalLabels = object;
+export type KubeprometheusstackHelmValuesKubeEtcdServiceMonitorAdditionalLabels =
+  object;
 
 export type KubeprometheusstackHelmValuesKubeScheduler = {
   /**
@@ -3899,9 +4021,11 @@ export type KubeprometheusstackHelmValuesKubeSchedulerServiceMonitor = {
   targetLabels?: unknown[];
 };
 
-export type KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorSelector = object;
+export type KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorAdditionalLabels = object;
+export type KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorAdditionalLabels =
+  object;
 
 export type KubeprometheusstackHelmValuesKubeProxy = {
   /**
@@ -4036,9 +4160,11 @@ export type KubeprometheusstackHelmValuesKubeProxyServiceMonitor = {
   targetLabels?: unknown[];
 };
 
-export type KubeprometheusstackHelmValuesKubeProxyServiceMonitorSelector = object;
+export type KubeprometheusstackHelmValuesKubeProxyServiceMonitorSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesKubeProxyServiceMonitorAdditionalLabels = object;
+export type KubeprometheusstackHelmValuesKubeProxyServiceMonitorAdditionalLabels =
+  object;
 
 export type KubeprometheusstackHelmValuesKubeStateMetrics = {
   /**
@@ -4096,23 +4222,25 @@ export type KubeprometheusstackHelmValuesKubestatemetricsPrometheusMonitor = {
   metrics?: KubeprometheusstackHelmValuesKubestatemetricsPrometheusMonitorMetrics;
 };
 
-export type KubeprometheusstackHelmValuesKubestatemetricsPrometheusMonitorHttp = {
-  /**
-   * Keep labels from scraped data, overriding server-side labels
-   *
-   * @default true
-   */
-  honorLabels?: boolean;
-};
+export type KubeprometheusstackHelmValuesKubestatemetricsPrometheusMonitorHttp =
+  {
+    /**
+     * Keep labels from scraped data, overriding server-side labels
+     *
+     * @default true
+     */
+    honorLabels?: boolean;
+  };
 
-export type KubeprometheusstackHelmValuesKubestatemetricsPrometheusMonitorMetrics = {
-  /**
-   * Keep labels from scraped data, overriding server-side labels
-   *
-   * @default true
-   */
-  honorLabels?: boolean;
-};
+export type KubeprometheusstackHelmValuesKubestatemetricsPrometheusMonitorMetrics =
+  {
+    /**
+     * Keep labels from scraped data, overriding server-side labels
+     *
+     * @default true
+     */
+    honorLabels?: boolean;
+  };
 
 export type KubeprometheusstackHelmValuesNodeExporter = {
   /**
@@ -4234,22 +4362,23 @@ export type KubeprometheusstackHelmValuesPrometheusnodeexporterService = {
   labels?: KubeprometheusstackHelmValuesPrometheusnodeexporterServiceLabels;
 };
 
-export type KubeprometheusstackHelmValuesPrometheusnodeexporterServiceIpDualStack = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-  /**
-   * @default false
-   */
-  enabled?: boolean;
-  ipFamilies?: string[];
-  /**
-   * @default "PreferDualStack"
-   */
-  ipFamilyPolicy?: string;
-};
+export type KubeprometheusstackHelmValuesPrometheusnodeexporterServiceIpDualStack =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+    /**
+     * @default false
+     */
+    enabled?: boolean;
+    ipFamilies?: string[];
+    /**
+     * @default "PreferDualStack"
+     */
+    ipFamilyPolicy?: string;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheusnodeexporterServiceLabels = {
   /**
@@ -4281,85 +4410,87 @@ export type KubeprometheusstackHelmValuesPrometheusnodeexporterPrometheus = {
   podMonitor?: KubeprometheusstackHelmValuesPrometheusnodeexporterPrometheusPodMonitor;
 };
 
-export type KubeprometheusstackHelmValuesPrometheusnodeexporterPrometheusMonitor = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-  /**
-   * @default true
-   */
-  enabled?: boolean;
-  /**
-   * @default "jobLabel"
-   */
-  jobLabel?: string;
-  /**
-   * Scrape interval. If not set, the Prometheus default scrape interval is used.
-   *
-   * @default ""
-   */
-  interval?: string;
-  /**
-   * SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
-   *
-   * @default 0
-   */
-  sampleLimit?: number;
-  /**
-   * TargetLimit defines a limit on the number of scraped targets that will be accepted.
-   *
-   * @default 0
-   */
-  targetLimit?: number;
-  /**
-   * Per-scrape limit on number of labels that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer.
-   *
-   * @default 0
-   */
-  labelLimit?: number;
-  /**
-   * Per-scrape limit on length of labels name that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer.
-   *
-   * @default 0
-   */
-  labelNameLengthLimit?: number;
-  /**
-   * Per-scrape limit on length of labels value that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer.
-   *
-   * @default 0
-   */
-  labelValueLengthLimit?: number;
-  /**
-   * How long until a scrape request times out. If not set, the Prometheus default scape timeout is used.
-   *
-   * @default ""
-   */
-  scrapeTimeout?: string;
-  /**
-   * @default ""
-   */
-  proxyUrl?: string;
-  metricRelabelings?: unknown[];
-  relabelings?: unknown[];
-};
+export type KubeprometheusstackHelmValuesPrometheusnodeexporterPrometheusMonitor =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+    /**
+     * @default true
+     */
+    enabled?: boolean;
+    /**
+     * @default "jobLabel"
+     */
+    jobLabel?: string;
+    /**
+     * Scrape interval. If not set, the Prometheus default scrape interval is used.
+     *
+     * @default ""
+     */
+    interval?: string;
+    /**
+     * SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+     *
+     * @default 0
+     */
+    sampleLimit?: number;
+    /**
+     * TargetLimit defines a limit on the number of scraped targets that will be accepted.
+     *
+     * @default 0
+     */
+    targetLimit?: number;
+    /**
+     * Per-scrape limit on number of labels that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer.
+     *
+     * @default 0
+     */
+    labelLimit?: number;
+    /**
+     * Per-scrape limit on length of labels name that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer.
+     *
+     * @default 0
+     */
+    labelNameLengthLimit?: number;
+    /**
+     * Per-scrape limit on length of labels value that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer.
+     *
+     * @default 0
+     */
+    labelValueLengthLimit?: number;
+    /**
+     * How long until a scrape request times out. If not set, the Prometheus default scape timeout is used.
+     *
+     * @default ""
+     */
+    scrapeTimeout?: string;
+    /**
+     * @default ""
+     */
+    proxyUrl?: string;
+    metricRelabelings?: unknown[];
+    relabelings?: unknown[];
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusnodeexporterPrometheusPodMonitor = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-  /**
-   * @default false
-   */
-  enabled?: boolean;
-  /**
-   * @default "jobLabel"
-   */
-  jobLabel?: string;
-};
+export type KubeprometheusstackHelmValuesPrometheusnodeexporterPrometheusPodMonitor =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+    /**
+     * @default false
+     */
+    enabled?: boolean;
+    /**
+     * @default "jobLabel"
+     */
+    jobLabel?: string;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheusnodeexporterRbac = {
   /**
@@ -4796,41 +4927,48 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooks = {
   certManager?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCertManager;
 };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksNamespaceSelector = object;
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksNamespaceSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksObjectSelector = object;
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksObjectSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksMatchConditions = object;
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksMatchConditions =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksMutatingWebhookConfiguration = {
-  /**
-   * @default {}
-   */
-  annotations?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksMutatingWebhookConfigurationAnnotations;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksMutatingWebhookConfiguration =
+  {
+    /**
+     * @default {}
+     */
+    annotations?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksMutatingWebhookConfigurationAnnotations;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksMutatingWebhookConfigurationAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksMutatingWebhookConfigurationAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksValidatingWebhookConfiguration = {
-  /**
-   * @default {}
-   */
-  annotations?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksValidatingWebhookConfigurationAnnotations;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksValidatingWebhookConfiguration =
+  {
+    /**
+     * @default {}
+     */
+    annotations?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksValidatingWebhookConfigurationAnnotations;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksValidatingWebhookConfigurationAnnotations =
   {
@@ -4841,693 +4979,735 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksVali
     [key: string]: unknown;
   };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeployment = {
-  /**
-   * @default false
-   */
-  enabled?: boolean;
-  /**
-   * Number of replicas
-   *
-   * @default 1
-   */
-  replicas?: number;
-  /**
-   * Strategy of the deployment
-   *
-   * @default {}
-   */
-  strategy?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentStrategy;
-  /**
-   * Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
-   *
-   * @default {"enabled":false,"minAvailable":1,"unhealthyPodEvictionPolicy":"AlwaysAllow"}
-   */
-  podDisruptionBudget?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentPodDisruptionBudget;
-  /**
-   * Number of old replicasets to retain ##
-   * The default value is 10, 0 will garbage-collect old replicasets ##
-   *
-   * @default 10
-   */
-  revisionHistoryLimit?: number;
-  /**
-   * Prometheus-Operator v0.39.0 and later support TLS natively.
-   *
-   * @default {"enabled":true,"tlsMinVersion":"VersionTLS13","internalPort":10250}
-   */
-  tls?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentTls;
-  /**
-   * Service account for Prometheus Operator Webhook to use.
-   * ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
-   *
-   * @default {...} (4 keys)
-   */
-  serviceAccount?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentServiceAccount;
-  /**
-   * Configuration for Prometheus operator Webhook service
-   *
-   * @default {...} (12 keys)
-   */
-  service?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentService;
-  /**
-   * Labels to add to the operator webhook deployment
-   *
-   * @default {}
-   */
-  labels?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentLabels;
-  /**
-   * Annotations to add to the operator webhook deployment
-   *
-   * @default {}
-   */
-  annotations?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentAnnotations;
-  /**
-   * Labels to add to the operator webhook pod
-   *
-   * @default {}
-   */
-  podLabels?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentPodLabels;
-  /**
-   * Annotations to add to the operator webhook pod
-   *
-   * @default {}
-   */
-  podAnnotations?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentPodAnnotations;
-  /**
-   * Assign a PriorityClassName to pods if set
-   * Define Log Format
-   * Use logfmt (default) or json logging
-   * Decrease log verbosity to errors only
-   * Prometheus-operator webhook image
-   *
-   * @default {...} (5 keys)
-   */
-  image?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentImage;
-  /**
-   * Define Log Format
-   * Use logfmt (default) or json logging
-   * Decrease log verbosity to errors only
-   * Liveness probe
-   *
-   * @default {...} (6 keys)
-   */
-  livenessProbe?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentLivenessProbe;
-  /**
-   * Readiness probe
-   *
-   * @default {...} (6 keys)
-   */
-  readinessProbe?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentReadinessProbe;
-  /**
-   * Resource limits & requests
-   *
-   * @default {}
-   */
-  resources?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentResources;
-  /**
-   * Required for use in managed kubernetes clusters (such as AWS EKS) with custom CNI (such as calico),
-   * because control-plane managed by AWS cannot communicate with pods' IP CIDR and admission webhooks are not working
-   *
-   * @default false
-   */
-  hostNetwork?: boolean;
-  /**
-   * Define which Nodes the Pods are scheduled on.
-   * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
-   *
-   * @default {}
-   */
-  nodeSelector?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentNodeSelector;
-  tolerations?: unknown[];
-  /**
-   * Assign custom affinity rules to the prometheus operator
-   * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
-   *
-   * @default {}
-   */
-  affinity?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentAffinity;
-  /**
-   * @default {}
-   */
-  dnsConfig?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentDnsConfig;
-  /**
-   * @default {...} (5 keys)
-   */
-  securityContext?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentSecurityContext;
-  /**
-   * ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
-   *
-   * @default {"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"capabilities":{"drop":["ALL"]}}
-   */
-  containerSecurityContext?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentContainerSecurityContext;
-  /**
-   * If false then the user will opt out of automounting API credentials.
-   *
-   * @default true
-   */
-  automountServiceAccountToken?: boolean;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeployment =
+  {
+    /**
+     * @default false
+     */
+    enabled?: boolean;
+    /**
+     * Number of replicas
+     *
+     * @default 1
+     */
+    replicas?: number;
+    /**
+     * Strategy of the deployment
+     *
+     * @default {}
+     */
+    strategy?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentStrategy;
+    /**
+     * Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
+     *
+     * @default {"enabled":false,"minAvailable":1,"unhealthyPodEvictionPolicy":"AlwaysAllow"}
+     */
+    podDisruptionBudget?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentPodDisruptionBudget;
+    /**
+     * Number of old replicasets to retain ##
+     * The default value is 10, 0 will garbage-collect old replicasets ##
+     *
+     * @default 10
+     */
+    revisionHistoryLimit?: number;
+    /**
+     * Prometheus-Operator v0.39.0 and later support TLS natively.
+     *
+     * @default {"enabled":true,"tlsMinVersion":"VersionTLS13","internalPort":10250}
+     */
+    tls?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentTls;
+    /**
+     * Service account for Prometheus Operator Webhook to use.
+     * ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+     *
+     * @default {...} (4 keys)
+     */
+    serviceAccount?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentServiceAccount;
+    /**
+     * Configuration for Prometheus operator Webhook service
+     *
+     * @default {...} (12 keys)
+     */
+    service?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentService;
+    /**
+     * Labels to add to the operator webhook deployment
+     *
+     * @default {}
+     */
+    labels?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentLabels;
+    /**
+     * Annotations to add to the operator webhook deployment
+     *
+     * @default {}
+     */
+    annotations?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentAnnotations;
+    /**
+     * Labels to add to the operator webhook pod
+     *
+     * @default {}
+     */
+    podLabels?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentPodLabels;
+    /**
+     * Annotations to add to the operator webhook pod
+     *
+     * @default {}
+     */
+    podAnnotations?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentPodAnnotations;
+    /**
+     * Assign a PriorityClassName to pods if set
+     * Define Log Format
+     * Use logfmt (default) or json logging
+     * Decrease log verbosity to errors only
+     * Prometheus-operator webhook image
+     *
+     * @default {...} (5 keys)
+     */
+    image?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentImage;
+    /**
+     * Define Log Format
+     * Use logfmt (default) or json logging
+     * Decrease log verbosity to errors only
+     * Liveness probe
+     *
+     * @default {...} (6 keys)
+     */
+    livenessProbe?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentLivenessProbe;
+    /**
+     * Readiness probe
+     *
+     * @default {...} (6 keys)
+     */
+    readinessProbe?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentReadinessProbe;
+    /**
+     * Resource limits & requests
+     *
+     * @default {}
+     */
+    resources?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentResources;
+    /**
+     * Required for use in managed kubernetes clusters (such as AWS EKS) with custom CNI (such as calico),
+     * because control-plane managed by AWS cannot communicate with pods' IP CIDR and admission webhooks are not working
+     *
+     * @default false
+     */
+    hostNetwork?: boolean;
+    /**
+     * Define which Nodes the Pods are scheduled on.
+     * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+     *
+     * @default {}
+     */
+    nodeSelector?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentNodeSelector;
+    tolerations?: unknown[];
+    /**
+     * Assign custom affinity rules to the prometheus operator
+     * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+     *
+     * @default {}
+     */
+    affinity?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentAffinity;
+    /**
+     * @default {}
+     */
+    dnsConfig?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentDnsConfig;
+    /**
+     * @default {...} (5 keys)
+     */
+    securityContext?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentSecurityContext;
+    /**
+     * ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+     *
+     * @default {"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"capabilities":{"drop":["ALL"]}}
+     */
+    containerSecurityContext?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentContainerSecurityContext;
+    /**
+     * If false then the user will opt out of automounting API credentials.
+     *
+     * @default true
+     */
+    automountServiceAccountToken?: boolean;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentStrategy = object;
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentStrategy =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentPodDisruptionBudget = {
-  /**
-   * @default false
-   */
-  enabled?: boolean;
-  /**
-   * @default 1
-   */
-  minAvailable?: number;
-  /**
-   * @default "AlwaysAllow"
-   */
-  unhealthyPodEvictionPolicy?: string;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentPodDisruptionBudget =
+  {
+    /**
+     * @default false
+     */
+    enabled?: boolean;
+    /**
+     * @default 1
+     */
+    minAvailable?: number;
+    /**
+     * @default "AlwaysAllow"
+     */
+    unhealthyPodEvictionPolicy?: string;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentTls = {
-  /**
-   * @default true
-   */
-  enabled?: boolean;
-  /**
-   * Value must match version names from https://pkg.go.dev/crypto/tls#pkg-constants
-   *
-   * @default "VersionTLS13"
-   */
-  tlsMinVersion?: string;
-  /**
-   * The default webhook port is 10250 in order to work out-of-the-box in GKE private clusters and avoid adding firewall rules.
-   *
-   * @default 10250
-   */
-  internalPort?: number;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentTls =
+  {
+    /**
+     * @default true
+     */
+    enabled?: boolean;
+    /**
+     * Value must match version names from https://pkg.go.dev/crypto/tls#pkg-constants
+     *
+     * @default "VersionTLS13"
+     */
+    tlsMinVersion?: string;
+    /**
+     * The default webhook port is 10250 in order to work out-of-the-box in GKE private clusters and avoid adding firewall rules.
+     *
+     * @default 10250
+     */
+    internalPort?: number;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentServiceAccount = {
-  /**
-   * @default {}
-   */
-  annotations?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentServiceAccountAnnotations;
-  /**
-   * @default false
-   */
-  automountServiceAccountToken?: boolean;
-  /**
-   * @default true
-   */
-  create?: boolean;
-  /**
-   * @default ""
-   */
-  name?: string;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentServiceAccount =
+  {
+    /**
+     * @default {}
+     */
+    annotations?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentServiceAccountAnnotations;
+    /**
+     * @default false
+     */
+    automountServiceAccountToken?: boolean;
+    /**
+     * @default true
+     */
+    create?: boolean;
+    /**
+     * @default ""
+     */
+    name?: string;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentServiceAccountAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentServiceAccountAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentService = {
-  /**
-   * @default {}
-   */
-  annotations?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentServiceAnnotations;
-  /**
-   * @default {}
-   */
-  labels?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentServiceLabels;
-  /**
-   * @default ""
-   */
-  clusterIP?: string;
-  /**
-   * @default {"enabled":false,"ipFamilies":["IPv6","IPv4"],"ipFamilyPolicy":"PreferDualStack"}
-   */
-  ipDualStack?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentServiceIpDualStack;
-  /**
-   * Port to expose on each node
-   * Only used if service.type is 'NodePort'
-   *
-   * @default 31080
-   */
-  nodePort?: number;
-  /**
-   * @default 31443
-   */
-  nodePortTls?: number;
-  additionalPorts?: unknown[];
-  /**
-   * Loadbalancer IP
-   * Only use if service.type is "LoadBalancer"
-   *
-   * @default ""
-   */
-  loadBalancerIP?: string;
-  loadBalancerSourceRanges?: unknown[];
-  /**
-   * Denotes if this Service desires to route external traffic to node-local or cluster-wide endpoints
-   *
-   * @default "Cluster"
-   */
-  externalTrafficPolicy?: string;
-  /**
-   * Service type
-   * NodePort, ClusterIP, LoadBalancer
-   *
-   * @default "ClusterIP"
-   */
-  type?: string;
-  externalIPs?: unknown[];
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentService =
+  {
+    /**
+     * @default {}
+     */
+    annotations?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentServiceAnnotations;
+    /**
+     * @default {}
+     */
+    labels?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentServiceLabels;
+    /**
+     * @default ""
+     */
+    clusterIP?: string;
+    /**
+     * @default {"enabled":false,"ipFamilies":["IPv6","IPv4"],"ipFamilyPolicy":"PreferDualStack"}
+     */
+    ipDualStack?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentServiceIpDualStack;
+    /**
+     * Port to expose on each node
+     * Only used if service.type is 'NodePort'
+     *
+     * @default 31080
+     */
+    nodePort?: number;
+    /**
+     * @default 31443
+     */
+    nodePortTls?: number;
+    additionalPorts?: unknown[];
+    /**
+     * Loadbalancer IP
+     * Only use if service.type is "LoadBalancer"
+     *
+     * @default ""
+     */
+    loadBalancerIP?: string;
+    loadBalancerSourceRanges?: unknown[];
+    /**
+     * Denotes if this Service desires to route external traffic to node-local or cluster-wide endpoints
+     *
+     * @default "Cluster"
+     */
+    externalTrafficPolicy?: string;
+    /**
+     * Service type
+     * NodePort, ClusterIP, LoadBalancer
+     *
+     * @default "ClusterIP"
+     */
+    type?: string;
+    externalIPs?: unknown[];
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentServiceAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentServiceAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentServiceLabels = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentServiceLabels =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentServiceIpDualStack = {
-  /**
-   * @default false
-   */
-  enabled?: boolean;
-  ipFamilies?: string[];
-  /**
-   * @default "PreferDualStack"
-   */
-  ipFamilyPolicy?: string;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentServiceIpDualStack =
+  {
+    /**
+     * @default false
+     */
+    enabled?: boolean;
+    ipFamilies?: string[];
+    /**
+     * @default "PreferDualStack"
+     */
+    ipFamilyPolicy?: string;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentLabels = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentLabels =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentPodLabels = object;
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentPodLabels =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentPodAnnotations = object;
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentPodAnnotations =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentImage = {
-  /**
-   * @default "quay.io"
-   */
-  registry?: string;
-  /**
-   * @default "prometheus-operator/admission-webhook"
-   */
-  repository?: string;
-  /**
-   * if not set appVersion field from Chart.yaml is used
-   *
-   * @default ""
-   */
-  tag?: string;
-  /**
-   * @default ""
-   */
-  sha?: string;
-  /**
-   * @default "IfNotPresent"
-   */
-  pullPolicy?: string;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentImage =
+  {
+    /**
+     * @default "quay.io"
+     */
+    registry?: string;
+    /**
+     * @default "prometheus-operator/admission-webhook"
+     */
+    repository?: string;
+    /**
+     * if not set appVersion field from Chart.yaml is used
+     *
+     * @default ""
+     */
+    tag?: string;
+    /**
+     * @default ""
+     */
+    sha?: string;
+    /**
+     * @default "IfNotPresent"
+     */
+    pullPolicy?: string;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentLivenessProbe = {
-  /**
-   * @default true
-   */
-  enabled?: boolean;
-  /**
-   * @default 3
-   */
-  failureThreshold?: number;
-  /**
-   * @default 30
-   */
-  initialDelaySeconds?: number;
-  /**
-   * @default 10
-   */
-  periodSeconds?: number;
-  /**
-   * @default 1
-   */
-  successThreshold?: number;
-  /**
-   * @default 1
-   */
-  timeoutSeconds?: number;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentLivenessProbe =
+  {
+    /**
+     * @default true
+     */
+    enabled?: boolean;
+    /**
+     * @default 3
+     */
+    failureThreshold?: number;
+    /**
+     * @default 30
+     */
+    initialDelaySeconds?: number;
+    /**
+     * @default 10
+     */
+    periodSeconds?: number;
+    /**
+     * @default 1
+     */
+    successThreshold?: number;
+    /**
+     * @default 1
+     */
+    timeoutSeconds?: number;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentReadinessProbe = {
-  /**
-   * @default true
-   */
-  enabled?: boolean;
-  /**
-   * @default 3
-   */
-  failureThreshold?: number;
-  /**
-   * @default 5
-   */
-  initialDelaySeconds?: number;
-  /**
-   * @default 10
-   */
-  periodSeconds?: number;
-  /**
-   * @default 1
-   */
-  successThreshold?: number;
-  /**
-   * @default 1
-   */
-  timeoutSeconds?: number;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentReadinessProbe =
+  {
+    /**
+     * @default true
+     */
+    enabled?: boolean;
+    /**
+     * @default 3
+     */
+    failureThreshold?: number;
+    /**
+     * @default 5
+     */
+    initialDelaySeconds?: number;
+    /**
+     * @default 10
+     */
+    periodSeconds?: number;
+    /**
+     * @default 1
+     */
+    successThreshold?: number;
+    /**
+     * @default 1
+     */
+    timeoutSeconds?: number;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentResources = object;
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentResources =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentNodeSelector = object;
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentNodeSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentAffinity = object;
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentAffinity =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentDnsConfig = object;
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentDnsConfig =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentSecurityContext = {
-  /**
-   * @default 65534
-   */
-  fsGroup?: number;
-  /**
-   * @default 65534
-   */
-  runAsGroup?: number;
-  /**
-   * @default true
-   */
-  runAsNonRoot?: boolean;
-  /**
-   * @default 65534
-   */
-  runAsUser?: number;
-  /**
-   * @default {"type":"RuntimeDefault"}
-   */
-  seccompProfile?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentSecurityContextSeccompProfile;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentSecurityContext =
+  {
+    /**
+     * @default 65534
+     */
+    fsGroup?: number;
+    /**
+     * @default 65534
+     */
+    runAsGroup?: number;
+    /**
+     * @default true
+     */
+    runAsNonRoot?: boolean;
+    /**
+     * @default 65534
+     */
+    runAsUser?: number;
+    /**
+     * @default {"type":"RuntimeDefault"}
+     */
+    seccompProfile?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentSecurityContextSeccompProfile;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentSecurityContextSeccompProfile = {
-  /**
-   * @default "RuntimeDefault"
-   */
-  type?: string;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentSecurityContextSeccompProfile =
+  {
+    /**
+     * @default "RuntimeDefault"
+     */
+    type?: string;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentContainerSecurityContext = {
-  /**
-   * @default false
-   */
-  allowPrivilegeEscalation?: boolean;
-  /**
-   * @default true
-   */
-  readOnlyRootFilesystem?: boolean;
-  /**
-   * @default {"drop":["ALL"]}
-   */
-  capabilities?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentContainerSecurityContextCapabilities;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentContainerSecurityContext =
+  {
+    /**
+     * @default false
+     */
+    allowPrivilegeEscalation?: boolean;
+    /**
+     * @default true
+     */
+    readOnlyRootFilesystem?: boolean;
+    /**
+     * @default {"drop":["ALL"]}
+     */
+    capabilities?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentContainerSecurityContextCapabilities;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentContainerSecurityContextCapabilities =
   {
     drop?: string[];
   };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatch = {
-  /**
-   * @default true
-   */
-  enabled?: boolean;
-  /**
-   * @default {...} (5 keys)
-   */
-  image?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchImage;
-  /**
-   * @default {}
-   */
-  resources?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchResources;
-  /**
-   * Provide a priority class name to the webhook patching job
-   *
-   * @default ""
-   */
-  priorityClassName?: string;
-  /**
-   * @default 60
-   */
-  ttlSecondsAfterFinished?: number;
-  /**
-   * @default {}
-   */
-  annotations?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchAnnotations;
-  /**
-   * argocd.argoproj.io/hook: PreSync
-   * argocd.argoproj.io/hook-delete-policy: HookSucceeded
-   *
-   * @default {}
-   */
-  podAnnotations?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchPodAnnotations;
-  /**
-   * @default {}
-   */
-  nodeSelector?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchNodeSelector;
-  /**
-   * @default {}
-   */
-  affinity?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchAffinity;
-  tolerations?: unknown[];
-  /**
-   * SecurityContext holds pod-level security attributes and common container settings.
-   * This defaults to non root user with uid 2000 and gid 2000. *v1.PodSecurityContext  false
-   * ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
-   *
-   * @default {...} (4 keys)
-   */
-  securityContext?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchSecurityContext;
-  /**
-   * Service account for Prometheus Operator Webhook Job Patch to use.
-   * ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
-   *
-   * @default {"create":true,"annotations":{},"automountServiceAccountToken":true}
-   */
-  serviceAccount?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchServiceAccount;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatch =
+  {
+    /**
+     * @default true
+     */
+    enabled?: boolean;
+    /**
+     * @default {...} (5 keys)
+     */
+    image?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchImage;
+    /**
+     * @default {}
+     */
+    resources?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchResources;
+    /**
+     * Provide a priority class name to the webhook patching job
+     *
+     * @default ""
+     */
+    priorityClassName?: string;
+    /**
+     * @default 60
+     */
+    ttlSecondsAfterFinished?: number;
+    /**
+     * @default {}
+     */
+    annotations?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchAnnotations;
+    /**
+     * argocd.argoproj.io/hook: PreSync
+     * argocd.argoproj.io/hook-delete-policy: HookSucceeded
+     *
+     * @default {}
+     */
+    podAnnotations?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchPodAnnotations;
+    /**
+     * @default {}
+     */
+    nodeSelector?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchNodeSelector;
+    /**
+     * @default {}
+     */
+    affinity?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchAffinity;
+    tolerations?: unknown[];
+    /**
+     * SecurityContext holds pod-level security attributes and common container settings.
+     * This defaults to non root user with uid 2000 and gid 2000. *v1.PodSecurityContext  false
+     * ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+     *
+     * @default {...} (4 keys)
+     */
+    securityContext?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchSecurityContext;
+    /**
+     * Service account for Prometheus Operator Webhook Job Patch to use.
+     * ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+     *
+     * @default {"create":true,"annotations":{},"automountServiceAccountToken":true}
+     */
+    serviceAccount?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchServiceAccount;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchImage = {
-  /**
-   * @default "ghcr.io"
-   */
-  registry?: string;
-  /**
-   * @default "jkroepke/kube-webhook-certgen"
-   */
-  repository?: string;
-  /**
-   * @default "1.7.4"
-   */
-  tag?: string;
-  /**
-   * @default ""
-   */
-  sha?: string;
-  /**
-   * @default "IfNotPresent"
-   */
-  pullPolicy?: string;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchImage =
+  {
+    /**
+     * @default "ghcr.io"
+     */
+    registry?: string;
+    /**
+     * @default "jkroepke/kube-webhook-certgen"
+     */
+    repository?: string;
+    /**
+     * @default "1.7.4"
+     */
+    tag?: string;
+    /**
+     * @default ""
+     */
+    sha?: string;
+    /**
+     * @default "IfNotPresent"
+     */
+    pullPolicy?: string;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchResources = object;
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchResources =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchPodAnnotations = object;
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchPodAnnotations =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchNodeSelector = object;
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchNodeSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchAffinity = object;
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchAffinity =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchSecurityContext = {
-  /**
-   * @default 2000
-   */
-  runAsGroup?: number;
-  /**
-   * @default true
-   */
-  runAsNonRoot?: boolean;
-  /**
-   * @default 2000
-   */
-  runAsUser?: number;
-  /**
-   * @default {"type":"RuntimeDefault"}
-   */
-  seccompProfile?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchSecurityContextSeccompProfile;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchSecurityContext =
+  {
+    /**
+     * @default 2000
+     */
+    runAsGroup?: number;
+    /**
+     * @default true
+     */
+    runAsNonRoot?: boolean;
+    /**
+     * @default 2000
+     */
+    runAsUser?: number;
+    /**
+     * @default {"type":"RuntimeDefault"}
+     */
+    seccompProfile?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchSecurityContextSeccompProfile;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchSecurityContextSeccompProfile = {
-  /**
-   * @default "RuntimeDefault"
-   */
-  type?: string;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchSecurityContextSeccompProfile =
+  {
+    /**
+     * @default "RuntimeDefault"
+     */
+    type?: string;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchServiceAccount = {
-  /**
-   * @default true
-   */
-  create?: boolean;
-  /**
-   * @default {}
-   */
-  annotations?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchServiceAccountAnnotations;
-  /**
-   * @default true
-   */
-  automountServiceAccountToken?: boolean;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchServiceAccount =
+  {
+    /**
+     * @default true
+     */
+    create?: boolean;
+    /**
+     * @default {}
+     */
+    annotations?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchServiceAccountAnnotations;
+    /**
+     * @default true
+     */
+    automountServiceAccountToken?: boolean;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchServiceAccountAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchServiceAccountAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCreateSecretJob = {
-  /**
-   * @default {"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"capabilities":{"drop":["ALL"]}}
-   */
-  securityContext?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCreateSecretJobSecurityContext;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCreateSecretJob =
+  {
+    /**
+     * @default {"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"capabilities":{"drop":["ALL"]}}
+     */
+    securityContext?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCreateSecretJobSecurityContext;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCreateSecretJobSecurityContext = {
-  /**
-   * @default false
-   */
-  allowPrivilegeEscalation?: boolean;
-  /**
-   * @default true
-   */
-  readOnlyRootFilesystem?: boolean;
-  /**
-   * @default {"drop":["ALL"]}
-   */
-  capabilities?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCreateSecretJobSecurityContextCapabilities;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCreateSecretJobSecurityContext =
+  {
+    /**
+     * @default false
+     */
+    allowPrivilegeEscalation?: boolean;
+    /**
+     * @default true
+     */
+    readOnlyRootFilesystem?: boolean;
+    /**
+     * @default {"drop":["ALL"]}
+     */
+    capabilities?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCreateSecretJobSecurityContextCapabilities;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCreateSecretJobSecurityContextCapabilities =
   {
     drop?: string[];
   };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchWebhookJob = {
-  /**
-   * @default {"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"capabilities":{"drop":["ALL"]}}
-   */
-  securityContext?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchWebhookJobSecurityContext;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchWebhookJob =
+  {
+    /**
+     * @default {"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"capabilities":{"drop":["ALL"]}}
+     */
+    securityContext?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchWebhookJobSecurityContext;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchWebhookJobSecurityContext = {
-  /**
-   * @default false
-   */
-  allowPrivilegeEscalation?: boolean;
-  /**
-   * @default true
-   */
-  readOnlyRootFilesystem?: boolean;
-  /**
-   * @default {"drop":["ALL"]}
-   */
-  capabilities?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchWebhookJobSecurityContextCapabilities;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchWebhookJobSecurityContext =
+  {
+    /**
+     * @default false
+     */
+    allowPrivilegeEscalation?: boolean;
+    /**
+     * @default true
+     */
+    readOnlyRootFilesystem?: boolean;
+    /**
+     * @default {"drop":["ALL"]}
+     */
+    capabilities?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchWebhookJobSecurityContextCapabilities;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchWebhookJobSecurityContextCapabilities =
   {
     drop?: string[];
   };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCertManager = {
-  /**
-   * @default false
-   */
-  enabled?: boolean;
-  /**
-   * self-signed root certificate
-   *
-   * @default {"duration":"","revisionHistoryLimit":null}
-   */
-  rootCert?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCertManagerRootCert;
-  /**
-   * @default {"duration":"","revisionHistoryLimit":null}
-   */
-  admissionCert?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCertManagerAdmissionCert;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCertManager =
+  {
+    /**
+     * @default false
+     */
+    enabled?: boolean;
+    /**
+     * self-signed root certificate
+     *
+     * @default {"duration":"","revisionHistoryLimit":null}
+     */
+    rootCert?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCertManagerRootCert;
+    /**
+     * @default {"duration":"","revisionHistoryLimit":null}
+     */
+    admissionCert?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCertManagerAdmissionCert;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCertManagerRootCert = {
-  /**
-   * default to be 5y
-   *
-   * @default ""
-   */
-  duration?: string;
-  revisionHistoryLimit?: unknown;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCertManagerRootCert =
+  {
+    /**
+     * default to be 5y
+     *
+     * @default ""
+     */
+    duration?: string;
+    revisionHistoryLimit?: unknown;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCertManagerAdmissionCert = {
-  /**
-   * default to be 1y
-   *
-   * @default ""
-   */
-  duration?: string;
-  revisionHistoryLimit?: unknown;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCertManagerAdmissionCert =
+  {
+    /**
+     * default to be 1y
+     *
+     * @default ""
+     */
+    duration?: string;
+    revisionHistoryLimit?: unknown;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorNamespaces = object;
 
@@ -5568,13 +5748,14 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorServiceAccount = {
   annotations?: KubeprometheusstackHelmValuesPrometheusOperatorServiceAccountAnnotations;
 };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorServiceAccountAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorServiceAccountAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorLifecycle = object;
 
@@ -5631,13 +5812,14 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorService = {
   externalIPs?: unknown[];
 };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorServiceAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorServiceAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorServiceLabels = {
   /**
@@ -5647,17 +5829,18 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorServiceLabels = {
   [key: string]: unknown;
 };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorServiceIpDualStack = {
-  /**
-   * @default false
-   */
-  enabled?: boolean;
-  ipFamilies?: string[];
-  /**
-   * @default "PreferDualStack"
-   */
-  ipFamilyPolicy?: string;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorServiceIpDualStack =
+  {
+    /**
+     * @default false
+     */
+    enabled?: boolean;
+    ipFamilies?: string[];
+    /**
+     * @default "PreferDualStack"
+     */
+    ipFamilyPolicy?: string;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorLabels = {
   /**
@@ -5677,22 +5860,24 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAnnotations = {
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorPodLabels = object;
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorPodAnnotations = object;
+export type KubeprometheusstackHelmValuesPrometheusOperatorPodAnnotations =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorPodDisruptionBudget = {
-  /**
-   * @default false
-   */
-  enabled?: boolean;
-  /**
-   * @default 1
-   */
-  minAvailable?: number;
-  /**
-   * @default "AlwaysAllow"
-   */
-  unhealthyPodEvictionPolicy?: string;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorPodDisruptionBudget =
+  {
+    /**
+     * @default false
+     */
+    enabled?: boolean;
+    /**
+     * @default 1
+     */
+    minAvailable?: number;
+    /**
+     * @default "AlwaysAllow"
+     */
+    unhealthyPodEvictionPolicy?: string;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorKubeletService = {
   /**
@@ -5777,7 +5962,8 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorServiceMonitor = {
   relabelings?: unknown[];
 };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorServiceMonitorAdditionalLabels = object;
+export type KubeprometheusstackHelmValuesPrometheusOperatorServiceMonitorAdditionalLabels =
+  object;
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorResources = object;
 
@@ -5788,7 +5974,8 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorEnv = {
   GOGC?: number;
 };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorNodeSelector = object;
+export type KubeprometheusstackHelmValuesPrometheusOperatorNodeSelector =
+  object;
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorAffinity = object;
 
@@ -5817,71 +6004,78 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorSecurityContext = {
   seccompProfile?: KubeprometheusstackHelmValuesPrometheusOperatorSecurityContextSeccompProfile;
 };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorSecurityContextSeccompProfile = {
-  /**
-   * @default "RuntimeDefault"
-   */
-  type?: string;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorSecurityContextSeccompProfile =
+  {
+    /**
+     * @default "RuntimeDefault"
+     */
+    type?: string;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorContainerSecurityContext = {
-  /**
-   * @default false
-   */
-  allowPrivilegeEscalation?: boolean;
-  /**
-   * @default true
-   */
-  readOnlyRootFilesystem?: boolean;
-  /**
-   * @default {"drop":["ALL"]}
-   */
-  capabilities?: KubeprometheusstackHelmValuesPrometheusOperatorContainerSecurityContextCapabilities;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorContainerSecurityContext =
+  {
+    /**
+     * @default false
+     */
+    allowPrivilegeEscalation?: boolean;
+    /**
+     * @default true
+     */
+    readOnlyRootFilesystem?: boolean;
+    /**
+     * @default {"drop":["ALL"]}
+     */
+    capabilities?: KubeprometheusstackHelmValuesPrometheusOperatorContainerSecurityContextCapabilities;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorContainerSecurityContextCapabilities = {
-  drop?: string[];
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorContainerSecurityContextCapabilities =
+  {
+    drop?: string[];
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorVerticalPodAutoscaler = {
-  /**
-   * @default false
-   */
-  enabled?: boolean;
-  controlledResources?: unknown[];
-  /**
-   * Specifies which resource values should be controlled: RequestsOnly or RequestsAndLimits.
-   * Define the max allowed resources for the pod
-   *
-   * @default {}
-   */
-  maxAllowed?: KubeprometheusstackHelmValuesPrometheusOperatorVerticalPodAutoscalerMaxAllowed;
-  /**
-   * Define the min allowed resources for the pod
-   *
-   * @default {}
-   */
-  minAllowed?: KubeprometheusstackHelmValuesPrometheusOperatorVerticalPodAutoscalerMinAllowed;
-  /**
-   * @default {"updateMode":"Auto"}
-   */
-  updatePolicy?: KubeprometheusstackHelmValuesPrometheusOperatorVerticalPodAutoscalerUpdatePolicy;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorVerticalPodAutoscaler =
+  {
+    /**
+     * @default false
+     */
+    enabled?: boolean;
+    controlledResources?: unknown[];
+    /**
+     * Specifies which resource values should be controlled: RequestsOnly or RequestsAndLimits.
+     * Define the max allowed resources for the pod
+     *
+     * @default {}
+     */
+    maxAllowed?: KubeprometheusstackHelmValuesPrometheusOperatorVerticalPodAutoscalerMaxAllowed;
+    /**
+     * Define the min allowed resources for the pod
+     *
+     * @default {}
+     */
+    minAllowed?: KubeprometheusstackHelmValuesPrometheusOperatorVerticalPodAutoscalerMinAllowed;
+    /**
+     * @default {"updateMode":"Auto"}
+     */
+    updatePolicy?: KubeprometheusstackHelmValuesPrometheusOperatorVerticalPodAutoscalerUpdatePolicy;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorVerticalPodAutoscalerMaxAllowed = object;
+export type KubeprometheusstackHelmValuesPrometheusOperatorVerticalPodAutoscalerMaxAllowed =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorVerticalPodAutoscalerMinAllowed = object;
+export type KubeprometheusstackHelmValuesPrometheusOperatorVerticalPodAutoscalerMinAllowed =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorVerticalPodAutoscalerUpdatePolicy = {
-  /**
-   * Specifies minimal number of replicas which need to be alive for VPA Updater to attempt pod eviction
-   * Specifies whether recommended updates are applied when a Pod is started and whether recommended updates
-   * are applied during the life of a Pod. Possible values are "Off", "Initial", "Recreate", and "Auto".
-   *
-   * @default "Auto"
-   */
-  updateMode?: string;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorVerticalPodAutoscalerUpdatePolicy =
+  {
+    /**
+     * Specifies minimal number of replicas which need to be alive for VPA Updater to attempt pod eviction
+     * Specifies whether recommended updates are applied when a Pod is started and whether recommended updates
+     * are applied during the life of a Pod. Possible values are "Off", "Initial", "Recreate", and "Auto".
+     *
+     * @default "Auto"
+     */
+    updateMode?: string;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorImage = {
   /**
@@ -5908,47 +6102,50 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorImage = {
   pullPolicy?: string;
 };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorPrometheusConfigReloader = {
-  /**
-   * @default {...} (4 keys)
-   */
-  image?: KubeprometheusstackHelmValuesPrometheusOperatorPrometheusConfigReloaderImage;
-  /**
-   * add prometheus config reloader liveness and readiness probe. Default: false
-   *
-   * @default false
-   */
-  enableProbe?: boolean;
-  /**
-   * resource config for prometheusConfigReloader
-   *
-   * @default {}
-   */
-  resources?: KubeprometheusstackHelmValuesPrometheusOperatorPrometheusConfigReloaderResources;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorPrometheusConfigReloader =
+  {
+    /**
+     * @default {...} (4 keys)
+     */
+    image?: KubeprometheusstackHelmValuesPrometheusOperatorPrometheusConfigReloaderImage;
+    /**
+     * add prometheus config reloader liveness and readiness probe. Default: false
+     *
+     * @default false
+     */
+    enableProbe?: boolean;
+    /**
+     * resource config for prometheusConfigReloader
+     *
+     * @default {}
+     */
+    resources?: KubeprometheusstackHelmValuesPrometheusOperatorPrometheusConfigReloaderResources;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorPrometheusConfigReloaderImage = {
-  /**
-   * @default "quay.io"
-   */
-  registry?: string;
-  /**
-   * @default "prometheus-operator/prometheus-config-reloader"
-   */
-  repository?: string;
-  /**
-   * if not set appVersion field from Chart.yaml is used
-   *
-   * @default ""
-   */
-  tag?: string;
-  /**
-   * @default ""
-   */
-  sha?: string;
-};
+export type KubeprometheusstackHelmValuesPrometheusOperatorPrometheusConfigReloaderImage =
+  {
+    /**
+     * @default "quay.io"
+     */
+    registry?: string;
+    /**
+     * @default "prometheus-operator/prometheus-config-reloader"
+     */
+    repository?: string;
+    /**
+     * if not set appVersion field from Chart.yaml is used
+     *
+     * @default ""
+     */
+    tag?: string;
+    /**
+     * @default ""
+     */
+    sha?: string;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorPrometheusConfigReloaderResources = object;
+export type KubeprometheusstackHelmValuesPrometheusOperatorPrometheusConfigReloaderResources =
+  object;
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorThanosImage = {
   /**
@@ -6289,9 +6486,11 @@ export type KubeprometheusstackHelmValuesPrometheusThanosServiceMonitor = {
   relabelings?: unknown[];
 };
 
-export type KubeprometheusstackHelmValuesPrometheusThanosServiceMonitorAdditionalLabels = object;
+export type KubeprometheusstackHelmValuesPrometheusThanosServiceMonitorAdditionalLabels =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusThanosServiceMonitorTlsConfig = object;
+export type KubeprometheusstackHelmValuesPrometheusThanosServiceMonitorTlsConfig =
+  object;
 
 export type KubeprometheusstackHelmValuesPrometheusThanosServiceExternal = {
   /**
@@ -6363,21 +6562,23 @@ export type KubeprometheusstackHelmValuesPrometheusThanosServiceExternal = {
   httpNodePort?: number;
 };
 
-export type KubeprometheusstackHelmValuesPrometheusThanosServiceExternalAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesPrometheusThanosServiceExternalAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusThanosServiceExternalLabels = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesPrometheusThanosServiceExternalLabels =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheusService = {
   /**
@@ -6498,19 +6699,21 @@ export type KubeprometheusstackHelmValuesPrometheusServiceIpDualStack = {
   ipFamilyPolicy?: string;
 };
 
-export type KubeprometheusstackHelmValuesPrometheusServiceSessionAffinityConfig = {
-  /**
-   * @default {"timeoutSeconds":10800}
-   */
-  clientIP?: KubeprometheusstackHelmValuesPrometheusServiceSessionAffinityConfigClientIP;
-};
+export type KubeprometheusstackHelmValuesPrometheusServiceSessionAffinityConfig =
+  {
+    /**
+     * @default {"timeoutSeconds":10800}
+     */
+    clientIP?: KubeprometheusstackHelmValuesPrometheusServiceSessionAffinityConfigClientIP;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusServiceSessionAffinityConfigClientIP = {
-  /**
-   * @default 10800
-   */
-  timeoutSeconds?: number;
-};
+export type KubeprometheusstackHelmValuesPrometheusServiceSessionAffinityConfigClientIP =
+  {
+    /**
+     * @default 10800
+     */
+    timeoutSeconds?: number;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheusServicePerReplica = {
   /**
@@ -6561,25 +6764,27 @@ export type KubeprometheusstackHelmValuesPrometheusServicePerReplica = {
   ipDualStack?: KubeprometheusstackHelmValuesPrometheusServicePerReplicaIpDualStack;
 };
 
-export type KubeprometheusstackHelmValuesPrometheusServicePerReplicaAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesPrometheusServicePerReplicaAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusServicePerReplicaIpDualStack = {
-  /**
-   * @default false
-   */
-  enabled?: boolean;
-  ipFamilies?: string[];
-  /**
-   * @default "PreferDualStack"
-   */
-  ipFamilyPolicy?: string;
-};
+export type KubeprometheusstackHelmValuesPrometheusServicePerReplicaIpDualStack =
+  {
+    /**
+     * @default false
+     */
+    enabled?: boolean;
+    ipFamilies?: string[];
+    /**
+     * @default "PreferDualStack"
+     */
+    ipFamilyPolicy?: string;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheusPodDisruptionBudget = {
   /**
@@ -6847,13 +7052,14 @@ export type KubeprometheusstackHelmValuesPrometheusIngressPerReplica = {
   tlsSecretPerReplica?: KubeprometheusstackHelmValuesPrometheusIngressPerReplicaTlsSecretPerReplica;
 };
 
-export type KubeprometheusstackHelmValuesPrometheusIngressPerReplicaAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesPrometheusIngressPerReplicaAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheusIngressPerReplicaLabels = {
   /**
@@ -6863,19 +7069,20 @@ export type KubeprometheusstackHelmValuesPrometheusIngressPerReplicaLabels = {
   [key: string]: unknown;
 };
 
-export type KubeprometheusstackHelmValuesPrometheusIngressPerReplicaTlsSecretPerReplica = {
-  /**
-   * @default false
-   */
-  enabled?: boolean;
-  /**
-   * Final form of the secret for each per replica ingress is
-   * {{ tlsSecretPerReplica.prefix }}-{{ $replicaNumber }}
-   *
-   * @default "prometheus"
-   */
-  prefix?: string;
-};
+export type KubeprometheusstackHelmValuesPrometheusIngressPerReplicaTlsSecretPerReplica =
+  {
+    /**
+     * @default false
+     */
+    enabled?: boolean;
+    /**
+     * Final form of the secret for each per replica ingress is
+     * {{ tlsSecretPerReplica.prefix }}-{{ $replicaNumber }}
+     *
+     * @default "prometheus"
+     */
+    prefix?: string;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheusServiceMonitor = {
   /**
@@ -6942,9 +7149,11 @@ export type KubeprometheusstackHelmValuesPrometheusServiceMonitor = {
   additionalEndpoints?: unknown[];
 };
 
-export type KubeprometheusstackHelmValuesPrometheusServiceMonitorAdditionalLabels = object;
+export type KubeprometheusstackHelmValuesPrometheusServiceMonitorAdditionalLabels =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusServiceMonitorTlsConfig = object;
+export type KubeprometheusstackHelmValuesPrometheusServiceMonitorTlsConfig =
+  object;
 
 export type KubeprometheusstackHelmValuesPrometheusPrometheusSpec = {
   /**
@@ -7644,13 +7853,16 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpec = {
   scrapeProtocols?: unknown[];
 };
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecPersistentVolumeClaimRetentionPolicy = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecPersistentVolumeClaimRetentionPolicy =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecApiserverConfig = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecApiserverConfig =
+  object;
 
 export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecWeb = object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecExemplars = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecExemplars =
+  object;
 
 export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecOtlp = object;
 
@@ -7677,31 +7889,43 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecImage = {
   pullPolicy?: string;
 };
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecExternalLabels = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecExternalLabels =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecNodeSelector = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecNodeSelector =
+  object;
 
 export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecQuery = object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecRuleNamespaceSelector = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecRuleNamespaceSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecRuleSelector = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecRuleSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecServiceMonitorSelector = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecServiceMonitorSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecServiceMonitorNamespaceSelector = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecServiceMonitorNamespaceSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecPodMonitorSelector = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecPodMonitorSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecPodMonitorNamespaceSelector = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecPodMonitorNamespaceSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecProbeSelector = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecProbeSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecProbeNamespaceSelector = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecProbeNamespaceSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecScrapeConfigSelector = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecScrapeConfigSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecScrapeConfigNamespaceSelector = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecScrapeConfigNamespaceSelector =
+  object;
 
 export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecTsdb = {
   /**
@@ -7710,11 +7934,14 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecTsdb = {
   outOfOrderTimeWindow?: string;
 };
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecPodMetadata = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecPodMetadata =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecAffinity = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecAffinity =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecResources = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecResources =
+  object;
 
 export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecStorageSpec = {
   /**
@@ -7724,51 +7951,61 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecStorageSpec = {
   [key: string]: unknown;
 };
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecAdditionalScrapeConfigsSecret = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecAdditionalScrapeConfigsSecret =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecAdditionalPrometheusSecretsAnnotations = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecAdditionalPrometheusSecretsAnnotations =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecAdditionalAlertManagerConfigsSecret = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecAdditionalAlertManagerConfigsSecret =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecAdditionalAlertRelabelConfigsSecret = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecAdditionalAlertRelabelConfigsSecret =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecSecurityContext = {
-  /**
-   * @default 2000
-   */
-  runAsGroup?: number;
-  /**
-   * @default true
-   */
-  runAsNonRoot?: boolean;
-  /**
-   * @default 1000
-   */
-  runAsUser?: number;
-  /**
-   * @default 2000
-   */
-  fsGroup?: number;
-  /**
-   * @default {"type":"RuntimeDefault"}
-   */
-  seccompProfile?: KubeprometheusstackHelmValuesPrometheusPrometheusSpecSecurityContextSeccompProfile;
-};
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecSecurityContext =
+  {
+    /**
+     * @default 2000
+     */
+    runAsGroup?: number;
+    /**
+     * @default true
+     */
+    runAsNonRoot?: boolean;
+    /**
+     * @default 1000
+     */
+    runAsUser?: number;
+    /**
+     * @default 2000
+     */
+    fsGroup?: number;
+    /**
+     * @default {"type":"RuntimeDefault"}
+     */
+    seccompProfile?: KubeprometheusstackHelmValuesPrometheusPrometheusSpecSecurityContextSeccompProfile;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecSecurityContextSeccompProfile = {
-  /**
-   * @default "RuntimeDefault"
-   */
-  type?: string;
-};
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecSecurityContextSeccompProfile =
+  {
+    /**
+     * @default "RuntimeDefault"
+     */
+    type?: string;
+  };
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecDnsConfig = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecDnsConfig =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecThanos = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecThanos =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecTracingConfig = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecTracingConfig =
+  object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecAdditionalConfig = object;
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecAdditionalConfig =
+  object;
 
 export type KubeprometheusstackHelmValuesThanosRuler = {
   /**
@@ -7861,13 +8098,14 @@ export type KubeprometheusstackHelmValuesThanosRulerServiceAccount = {
   annotations?: KubeprometheusstackHelmValuesThanosRulerServiceAccountAnnotations;
 };
 
-export type KubeprometheusstackHelmValuesThanosRulerServiceAccountAnnotations = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesThanosRulerServiceAccountAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
 export type KubeprometheusstackHelmValuesThanosRulerPodDisruptionBudget = {
   /**
@@ -8164,9 +8402,11 @@ export type KubeprometheusstackHelmValuesThanosRulerServiceMonitor = {
   additionalEndpoints?: unknown[];
 };
 
-export type KubeprometheusstackHelmValuesThanosRulerServiceMonitorAdditionalLabels = object;
+export type KubeprometheusstackHelmValuesThanosRulerServiceMonitorAdditionalLabels =
+  object;
 
-export type KubeprometheusstackHelmValuesThanosRulerServiceMonitorTlsConfig = object;
+export type KubeprometheusstackHelmValuesThanosRulerServiceMonitorTlsConfig =
+  object;
 
 export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpec = {
   /**
@@ -8391,7 +8631,8 @@ export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpec = {
   additionalConfigString?: string;
 };
 
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecPodMetadata = object;
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecPodMetadata =
+  object;
 
 export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecImage = {
   /**
@@ -8412,9 +8653,11 @@ export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecImage = {
   sha?: string;
 };
 
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecRuleNamespaceSelector = object;
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecRuleNamespaceSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecRuleSelector = object;
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecRuleSelector =
+  object;
 
 export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecStorage = {
   /**
@@ -8424,82 +8667,91 @@ export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecStorage = {
   [key: string]: unknown;
 };
 
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAlertmanagersConfig = {
-  /**
-   * use existing secret, if configured, alertmanagersConfig.secret will not be used
-   *
-   * @default {}
-   */
-  existingSecret?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAlertmanagersConfigExistingSecret;
-  /**
-   * will render alertmanagersConfig secret data and configure it to be used by Thanos Ruler custom resource, ignored when alertmanagersConfig.existingSecret is set
-   * https://thanos.io/tip/components/rule.md/#alertmanager
-   *
-   * @default {}
-   */
-  secret?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAlertmanagersConfigSecret;
-};
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAlertmanagersConfig =
+  {
+    /**
+     * use existing secret, if configured, alertmanagersConfig.secret will not be used
+     *
+     * @default {}
+     */
+    existingSecret?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAlertmanagersConfigExistingSecret;
+    /**
+     * will render alertmanagersConfig secret data and configure it to be used by Thanos Ruler custom resource, ignored when alertmanagersConfig.existingSecret is set
+     * https://thanos.io/tip/components/rule.md/#alertmanager
+     *
+     * @default {}
+     */
+    secret?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAlertmanagersConfigSecret;
+  };
 
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAlertmanagersConfigExistingSecret = object;
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAlertmanagersConfigExistingSecret =
+  object;
 
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAlertmanagersConfigSecret = object;
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAlertmanagersConfigSecret =
+  object;
 
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecObjectStorageConfig = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-  /**
-   * use existing secret, if configured, objectStorageConfig.secret will not be used
-   *
-   * @default {}
-   */
-  existingSecret?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecObjectStorageConfigExistingSecret;
-  /**
-   * will render objectStorageConfig secret data and configure it to be used by Thanos Ruler custom resource, ignored when objectStorageConfig.existingSecret is set
-   * https://thanos.io/tip/thanos/storage.md/#s3
-   *
-   * @default {}
-   */
-  secret?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecObjectStorageConfigSecret;
-};
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecObjectStorageConfig =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+    /**
+     * use existing secret, if configured, objectStorageConfig.secret will not be used
+     *
+     * @default {}
+     */
+    existingSecret?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecObjectStorageConfigExistingSecret;
+    /**
+     * will render objectStorageConfig secret data and configure it to be used by Thanos Ruler custom resource, ignored when objectStorageConfig.existingSecret is set
+     * https://thanos.io/tip/thanos/storage.md/#s3
+     *
+     * @default {}
+     */
+    secret?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecObjectStorageConfigSecret;
+  };
 
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecObjectStorageConfigExistingSecret = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecObjectStorageConfigExistingSecret =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecObjectStorageConfigSecret = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecObjectStorageConfigSecret =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecQueryConfig = {
-  /**
-   * use existing secret, if configured, queryConfig.secret will not be used
-   *
-   * @default {}
-   */
-  existingSecret?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecQueryConfigExistingSecret;
-  /**
-   * render queryConfig secret data and configure it to be used by Thanos Ruler custom resource, ignored when queryConfig.existingSecret is set
-   * https://thanos.io/tip/components/rule.md/#query-api
-   *
-   * @default {}
-   */
-  secret?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecQueryConfigSecret;
-};
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecQueryConfig =
+  {
+    /**
+     * use existing secret, if configured, queryConfig.secret will not be used
+     *
+     * @default {}
+     */
+    existingSecret?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecQueryConfigExistingSecret;
+    /**
+     * render queryConfig secret data and configure it to be used by Thanos Ruler custom resource, ignored when queryConfig.existingSecret is set
+     * https://thanos.io/tip/components/rule.md/#query-api
+     *
+     * @default {}
+     */
+    secret?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecQueryConfigSecret;
+  };
 
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecQueryConfigExistingSecret = object;
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecQueryConfigExistingSecret =
+  object;
 
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecQueryConfigSecret = object;
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecQueryConfigSecret =
+  object;
 
 export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecLabels = {
   /**
@@ -8509,45 +8761,51 @@ export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecLabels = {
   [key: string]: unknown;
 };
 
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecNodeSelector = object;
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecNodeSelector =
+  object;
 
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecResources = object;
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecResources =
+  object;
 
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAffinity = object;
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAffinity =
+  object;
 
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecSecurityContext = {
-  /**
-   * @default 2000
-   */
-  runAsGroup?: number;
-  /**
-   * @default true
-   */
-  runAsNonRoot?: boolean;
-  /**
-   * @default 1000
-   */
-  runAsUser?: number;
-  /**
-   * @default 2000
-   */
-  fsGroup?: number;
-  /**
-   * @default {"type":"RuntimeDefault"}
-   */
-  seccompProfile?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecSecurityContextSeccompProfile;
-};
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecSecurityContext =
+  {
+    /**
+     * @default 2000
+     */
+    runAsGroup?: number;
+    /**
+     * @default true
+     */
+    runAsNonRoot?: boolean;
+    /**
+     * @default 1000
+     */
+    runAsUser?: number;
+    /**
+     * @default 2000
+     */
+    fsGroup?: number;
+    /**
+     * @default {"type":"RuntimeDefault"}
+     */
+    seccompProfile?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecSecurityContextSeccompProfile;
+  };
 
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecSecurityContextSeccompProfile = {
-  /**
-   * @default "RuntimeDefault"
-   */
-  type?: string;
-};
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecSecurityContextSeccompProfile =
+  {
+    /**
+     * @default "RuntimeDefault"
+     */
+    type?: string;
+  };
 
 export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecWeb = object;
 
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAdditionalConfig = object;
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAdditionalConfig =
+  object;
 
 export type KubeprometheusstackHelmValuesThanosRulerExtraSecret = {
   /**

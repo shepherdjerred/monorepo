@@ -8,9 +8,7 @@ export const configSchema = z.object({
   server: z.object({
     port: z.coerce.number().int().positive().default(8000),
   }),
-  logLevel: z
-    .enum(["debug", "info", "warn", "error"])
-    .default("info"),
+  logLevel: z.enum(["debug", "info", "warn", "error"]).default("info"),
 });
 
 export type Config = z.infer<typeof configSchema>;

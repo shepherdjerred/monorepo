@@ -172,21 +172,21 @@ keybinds clear-defaults=true {
 
 Zellij has 13 input modes:
 
-| Mode | Description |
-|------|-------------|
-| `normal` | Default mode, typing goes to terminal |
-| `locked` | Disable all Zellij keybindings |
-| `pane` | Pane operations (create, close, move, focus) |
-| `tab` | Tab operations (create, close, switch) |
-| `resize` | Resize focused pane |
-| `move` | Move focused pane |
-| `scroll` | Scroll through pane output |
-| `search` | Search within pane scrollback |
-| `entersearch` | Enter search query |
-| `renametab` | Rename current tab |
-| `renamepane` | Rename current pane |
-| `session` | Session operations (detach, manager) |
-| `tmux` | tmux-compatible keybindings |
+| Mode          | Description                                  |
+| ------------- | -------------------------------------------- |
+| `normal`      | Default mode, typing goes to terminal        |
+| `locked`      | Disable all Zellij keybindings               |
+| `pane`        | Pane operations (create, close, move, focus) |
+| `tab`         | Tab operations (create, close, switch)       |
+| `resize`      | Resize focused pane                          |
+| `move`        | Move focused pane                            |
+| `scroll`      | Scroll through pane output                   |
+| `search`      | Search within pane scrollback                |
+| `entersearch` | Enter search query                           |
+| `renametab`   | Rename current tab                           |
+| `renamepane`  | Rename current pane                          |
+| `session`     | Session operations (detach, manager)         |
+| `tmux`        | tmux-compatible keybindings                  |
 
 ## Plugins
 

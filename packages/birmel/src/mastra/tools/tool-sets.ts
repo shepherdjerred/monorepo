@@ -64,9 +64,7 @@ export const moderationToolSet = [
 /**
  * Music Agent - handles music playback
  */
-export const musicToolSet = [
-  ...allMusicTools,
-];
+export const musicToolSet = [...allMusicTools];
 
 /**
  * Automation Agent - handles automation, external APIs, events, elections, birthdays
@@ -87,7 +85,13 @@ export const editorToolSet = [
   ...messageTools, // Needs message tools for replies
 ];
 
-export type AgentType = "messaging" | "server" | "moderation" | "music" | "automation" | "editor";
+export type AgentType =
+  | "messaging"
+  | "server"
+  | "moderation"
+  | "music"
+  | "automation"
+  | "editor";
 
 /**
  * Get the appropriate tool set for an agent type
@@ -134,15 +138,20 @@ export function getAgentDescription(agentType: AgentType): string {
  * Uses unknown type to avoid strict type checking issues with different tool schemas.
  */
 export function toolsToRecord(tools: { id: string }[]) {
-  return Object.fromEntries(
-    tools.map((tool) => [tool.id, tool]),
-  ) as Record<string, unknown>;
+  return Object.fromEntries(tools.map((tool) => [tool.id, tool])) as Record<
+    string,
+    unknown
+  >;
 }
 
 // Log tool counts on module load (for debugging)
 console.log(`[tool-sets] Messaging: ${String(messagingToolSet.length)} tools`);
 console.log(`[tool-sets] Server: ${String(serverToolSet.length)} tools`);
-console.log(`[tool-sets] Moderation: ${String(moderationToolSet.length)} tools`);
+console.log(
+  `[tool-sets] Moderation: ${String(moderationToolSet.length)} tools`,
+);
 console.log(`[tool-sets] Music: ${String(musicToolSet.length)} tools`);
-console.log(`[tool-sets] Automation: ${String(automationToolSet.length)} tools`);
+console.log(
+  `[tool-sets] Automation: ${String(automationToolSet.length)} tools`,
+);
 console.log(`[tool-sets] Editor: ${String(editorToolSet.length)} tools`);

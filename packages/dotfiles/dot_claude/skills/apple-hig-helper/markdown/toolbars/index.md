@@ -8,7 +8,7 @@
 
 December 16, 2025
 
-Updated guidance for Liquid Glass. 
+Updated guidance for Liquid Glass.
 
 # Toolbars
 
@@ -20,9 +20,9 @@ A toolbar consists of one or more sets of controls arranged horizontally along t
 
 Toolbars act on content in the view, facilitate navigation, and help orient people in the app. They include three types of content:
 
-* The title of the current view
-* Navigation controls, like back and forward, and [search fields](/design/human-interface-guidelines/search-fields)
-* Actions, or bar items, like [buttons](/design/human-interface-guidelines/buttons) and [menus](/design/human-interface-guidelines/menus)
+- The title of the current view
+- Navigation controls, like back and forward, and [search fields](/design/human-interface-guidelines/search-fields)
+- Actions, or bar items, like [buttons](/design/human-interface-guidelines/buttons) and [menus](/design/human-interface-guidelines/menus)
 
 In contrast to a toolbar, a [tab bar](/design/human-interface-guidelines/tab-bars) is specifically for navigating between areas of an app.
 
@@ -36,8 +36,8 @@ The system automatically adds an overflow menu in macOS or iPadOS when items no 
 
 **Add a More menu to contain additional actions.** Prioritize less important actions for inclusion in the More menu. Try to include all actions in the toolbar if possible, and only add this menu if you really need it.
 
-* [Standard](#)
-* [Compact](#)
+- [Standard](#)
+- [Compact](#)
 
 ![A screenshot of the Notes app on Mac, with the window wide enough for the toolbar to include all of the available toolbar items. A More menu button appears on the trailing side of the toolbar, with the menu open beneath it.](https://docs-assets.developer.apple.com/published/38a70b5303c70f442fdf6e60c1caf000/toolbars-notes-app-expanded-icons%402x.png)
 
@@ -71,7 +71,7 @@ As the window narrows, the More menu moves into an overflow menu along with othe
 
 A toolbar with navigation controls appears at the top of a window, helping people move through a hierarchy of content. A toolbar also often contains a [search field](/design/human-interface-guidelines/search-fields) for quick navigation between areas or pieces of content. In iOS, a navigation-specific toolbar is sometimes called a navigation bar.
 
-**Use the standard Back and Close buttons.** People know that the standard Back button lets them retrace their steps through a hierarchy of information, and the standard Close button closes a modal view. Prefer the standard symbols for each, and don’t use a text label that says *Back* or *Close*. If you create a custom version of either, make sure it still looks the same, behaves as people expect, and matches the rest of your interface, and ensure you consistently implement it throughout your app or game. For guidance, see [Icons](/design/human-interface-guidelines/icons).
+**Use the standard Back and Close buttons.** People know that the standard Back button lets them retrace their steps through a hierarchy of information, and the standard Close button closes a modal view. Prefer the standard symbols for each, and don’t use a text label that says _Back_ or _Close_. If you create a custom version of either, make sure it still looks the same, behaves as people expect, and matches the rest of your interface, and ensure you consistently implement it throughout your app or game. For guidance, see [Icons](/design/human-interface-guidelines/icons).
 
 ![An illustration of a capsule-shape Back button that includes the Back symbol on the leading side, grouped with Back in text on the trailing side.](https://docs-assets.developer.apple.com/published/de859b5c4d42c9df2e92c680d48a37b2/toolbars-navigation-action-back-incorrect%402x.png)
 
@@ -85,7 +85,7 @@ A toolbar with navigation controls appears at the top of a window, helping peopl
 
 **Provide actions that support the main tasks people perform.** In general, prioritize the commands that people are most likely to want. These commands are often the ones people use most frequently, but in some apps it might make sense to prioritize commands that map to the highest level or most important objects people work with.
 
-**Make sure the meaning of each control is clear.** Don’t make people guess or experiment to figure out what a toolbar item does. Prefer simple, recognizable symbols for items instead of text, except for actions like *edit* that aren’t well-represented by symbols. For guidance on symbols that represent common actions, see [Standard icons](/design/human-interface-guidelines/icons#Standard-icons).
+**Make sure the meaning of each control is clear.** Don’t make people guess or experiment to figure out what a toolbar item does. Prefer simple, recognizable symbols for items instead of text, except for actions like _edit_ that aren’t well-represented by symbols. For guidance on symbols that represent common actions, see [Standard icons](/design/human-interface-guidelines/icons#Standard-icons).
 
 ![An illustration of an item group with text button labels for Filter, Delete, and New.](https://docs-assets.developer.apple.com/published/e39b41732b2b7cf5a40c682f6ec28448/toolbars-prefer-symbols-incorrect%402x.png)
 
@@ -113,9 +113,9 @@ A toolbar with navigation controls appears at the top of a window, helping peopl
 
 You can position toolbar items in three locations: the leading edge, center area, and trailing edge of the toolbar. These areas provide familiar homes for navigation controls, window or document titles, common actions, and search.
 
-* **Leading edge.** Elements that let people return to the previous document and show or hide a sidebar appear at the far leading edge, followed by the view title. Next to the title, the toolbar can include a document menu that contains standard and app-specific commands that affect the document as a whole, such as Duplicate, Rename, Move, and Export. To ensure that these items are always available, items on the toolbar’s leading edge aren’t customizable.
-* **Center area.** Common, useful controls appear in the center area, and the view title can appear here if it’s not on the leading edge. In macOS and iPadOS, people can add, remove, and rearrange items here if you let them customize the toolbar, and items in this section automatically collapse into the system-managed overflow menu when the window shrinks enough in size.
-* **Trailing edge.** The trailing edge contains important items that need to remain available, buttons that open nearby inspectors, an optional search field, and the More menu that contains additional items and supports toolbar customization. It also includes a primary action like Done when one exists. Items on the trailing edge remain visible at all window sizes.
+- **Leading edge.** Elements that let people return to the previous document and show or hide a sidebar appear at the far leading edge, followed by the view title. Next to the title, the toolbar can include a document menu that contains standard and app-specific commands that affect the document as a whole, such as Duplicate, Rename, Move, and Export. To ensure that these items are always available, items on the toolbar’s leading edge aren’t customizable.
+- **Center area.** Common, useful controls appear in the center area, and the view title can appear here if it’s not on the leading edge. In macOS and iPadOS, people can add, remove, and rearrange items here if you let them customize the toolbar, and items in this section automatically collapse into the system-managed overflow menu when the window shrinks enough in size.
+- **Trailing edge.** The trailing edge contains important items that need to remain available, buttons that open nearby inspectors, an optional search field, and the More menu that contains additional items and supports toolbar customization. It also includes a primary action like Done when one exists. Items on the trailing edge remain visible at all window sizes.
 
 ![A diagram of the top toolbar in the Freeform app on iPad. Callouts indicate the location of item groupings on the leading edge, center area, and trailing edge of the toolbar.](https://docs-assets.developer.apple.com/published/882504f8e992b3ce0e373f47523adf5e/toolbars-ipad-anatomy%402x.png)
 
@@ -149,7 +149,7 @@ To position items in the groupings you want, pin them to the leading edge, cente
 
 ## [Platform considerations](/design/human-interface-guidelines/toolbars#Platform-considerations)
 
-*No additional considerations for tvOS.*
+_No additional considerations for tvOS._
 
 ### [iOS](/design/human-interface-guidelines/toolbars#iOS)
 
@@ -251,9 +251,9 @@ Get to know the new design system](https://developer.apple.com/videos/play/wwdc2
 
 ## [Change log](/design/human-interface-guidelines/toolbars#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| December 16, 2025 | Updated guidance for Liquid Glass. |
-| June 9, 2025 | Added guidance for grouping bar items, updated guidance for using symbols, and incorporated navigation bar guidance. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
-| June 5, 2023 | Updated guidance for using toolbars in watchOS. |
+| Date              | Changes                                                                                                              |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------- |
+| December 16, 2025 | Updated guidance for Liquid Glass.                                                                                   |
+| June 9, 2025      | Added guidance for grouping bar items, updated guidance for using symbols, and incorporated navigation bar guidance. |
+| June 21, 2023     | Updated to include guidance for visionOS.                                                                            |
+| June 5, 2023      | Updated guidance for using toolbars in watchOS.                                                                      |

@@ -14,9 +14,9 @@ A context menu provides access to functionality that’s directly related to an 
 
 Although a context menu provides convenient access to frequently used items, it’s hidden by default, so people might not know it’s there. To reveal a context menu, people generally choose a view or select some content and then perform an action, using the input modes their current configuration supports. For example:
 
-* The system-defined touch or pinch and hold gesture in visionOS, iOS, and iPadOS
-* Pressing the Control key while clicking a pointing device in macOS and iPadOS
-* Using a secondary click on a Magic Trackpad in macOS or iPadOS
+- The system-defined touch or pinch and hold gesture in visionOS, iOS, and iPadOS
+- Pressing the Control key while clicking a pointing device in macOS and iPadOS
+- Using a secondary click on a Magic Trackpad in macOS or iPadOS
 
 ## [Best practices](/design/human-interface-guidelines/context-menus#Best-practices)
 
@@ -50,7 +50,7 @@ A context menu seldom displays a title. In contrast, each item in a context menu
 
 ## [Platform considerations](/design/human-interface-guidelines/context-menus#Platform-considerations)
 
-*No additional considerations for tvOS. Not supported in watchOS.*
+_No additional considerations for tvOS. Not supported in watchOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/context-menus#iOS-iPadOS)
 
@@ -66,7 +66,7 @@ In iOS and iPadOS, a context menu can display a preview of the current content n
 
 ### [macOS](/design/human-interface-guidelines/context-menus#macOS)
 
-On a Mac, a context menu is sometimes called a *contextual* menu.
+On a Mac, a context menu is sometimes called a _contextual_ menu.
 
 ### [visionOS](/design/human-interface-guidelines/context-menus#visionOS)
 
@@ -88,16 +88,16 @@ On a Mac, a context menu is sometimes called a *contextual* menu.
 
 #### [Developer documentation](/design/human-interface-guidelines/context-menus#Developer-documentation)
 
-[`contextMenu(menuItems:)`](/documentation/SwiftUI/View/contextMenu(menuItems:)) — SwiftUI
+[`contextMenu(menuItems:)`](</documentation/SwiftUI/View/contextMenu(menuItems:)>) — SwiftUI
 
 [`UIContextMenuInteraction`](/documentation/UIKit/UIContextMenuInteraction) — UIKit
 
-[`popUpContextMenu(_:with:for:)`](/documentation/AppKit/NSMenu/popUpContextMenu(_:with:for:)) — AppKit
+[`popUpContextMenu(_:with:for:)`](</documentation/AppKit/NSMenu/popUpContextMenu(_:with:for:)>) — AppKit
 
 ## [Change log](/design/human-interface-guidelines/context-menus#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| December 5, 2023 | Added guidance on hiding unavailable menu items. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
+| Date               | Changes                                                                                                                            |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| December 5, 2023   | Added guidance on hiding unavailable menu items.                                                                                   |
+| June 21, 2023      | Updated to include guidance for visionOS.                                                                                          |
 | September 14, 2022 | Refined guidance on including a submenu and added a guideline on using a context menu to support object creation in an iPadOS app. |

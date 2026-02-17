@@ -12,6 +12,7 @@ description: |
 This agent helps develop Dagger CI/CD pipelines using the **TypeScript SDK** with **Bun** runtime. This monorepo uses Dagger for portable, programmable pipelines that run locally and in CI.
 
 **Key Files:**
+
 - `dagger.json` - Module configuration (engine version, SDK source)
 - `.dagger/src/index.ts` - Main pipeline functions
 - `packages/dagger-utils/` - Shared container builders and utilities
@@ -56,18 +57,26 @@ dagger call ci --source=. -w
 
 Dagger provides three caching mechanisms:
 
-| Type | What It Caches | Benefit |
-|------|---------------|---------|
-| **Layer Caching** | Build instructions, API call results | Reuses unchanged build steps |
-| **Volume Caching** | Filesystem data (node_modules, etc.) | Persists across sessions |
-| **Function Call Caching** | Returned values from functions | Skips entire re-execution |
+| Type                      | What It Caches                       | Benefit                      |
+| ------------------------- | ------------------------------------ | ---------------------------- |
+| **Layer Caching**         | Build instructions, API call results | Reuses unchanged build steps |
+| **Volume Caching**        | Filesystem data (node_modules, etc.) | Persists across sessions     |
+| **Function Call Caching** | Returned values from functions       | Skips entire re-execution    |
 
 ## TypeScript Module Structure
 
 Dagger modules use class-based structure with decorators:
 
 ```typescript
-import { dag, Container, Directory, Secret, Service, object, func } from "@dagger.io/dagger";
+import {
+  dag,
+  Container,
+  Directory,
+  Secret,
+  Service,
+  object,
+  func,
+} from "@dagger.io/dagger";
 
 @object()
 class Monorepo {
@@ -78,7 +87,8 @@ class Monorepo {
 
   @func()
   build(source: Directory): Container {
-    return dag.container()
+    return dag
+      .container()
       .from("oven/bun:1.3.4-debian")
       .withDirectory("/app", source)
       .withExec(["bun", "run", "build"]);
@@ -86,13 +96,17 @@ class Monorepo {
 }
 
 // Enum declaration (registered when used by module)
-export enum Status { Active = "Active", Inactive = "Inactive" }
+export enum Status {
+  Active = "Active",
+  Inactive = "Inactive",
+}
 
 // Type object declaration
-export type Message = { content: string }
+export type Message = { content: string };
 ```
 
 **Key Decorators:**
+
 - `@object()` - Marks class as Dagger module
 - `@func()` - Exposes method as callable function
 
@@ -106,18 +120,36 @@ Order operations from least to most frequently changing:
 
 ```typescript
 function getBaseContainer(): Container {
-  return dag.container()
-    .from(`oven/bun:${BUN_VERSION}-debian`)
-    // 1. System packages (rarely change)
-    .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-${BUN_VERSION}`))
-    .withExec(["apt-get", "update"])
-    .withExec(["apt-get", "install", "-y", "python3"])
-    // 2. Tool caches (version-keyed)
-    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
-    .withMountedCache("/root/.cache/ms-playwright", dag.cacheVolume(`playwright-${VERSION}`))
-    // 3. Build caches
-    .withMountedCache("/workspace/.eslintcache", dag.cacheVolume("eslint-cache"))
-    .withMountedCache("/workspace/.tsbuildinfo", dag.cacheVolume("tsbuildinfo-cache"));
+  return (
+    dag
+      .container()
+      .from(`oven/bun:${BUN_VERSION}-debian`)
+      // 1. System packages (rarely change)
+      .withMountedCache(
+        "/var/cache/apt",
+        dag.cacheVolume(`apt-cache-${BUN_VERSION}`),
+      )
+      .withExec(["apt-get", "update"])
+      .withExec(["apt-get", "install", "-y", "python3"])
+      // 2. Tool caches (version-keyed)
+      .withMountedCache(
+        "/root/.bun/install/cache",
+        dag.cacheVolume("bun-cache"),
+      )
+      .withMountedCache(
+        "/root/.cache/ms-playwright",
+        dag.cacheVolume(`playwright-${VERSION}`),
+      )
+      // 3. Build caches
+      .withMountedCache(
+        "/workspace/.eslintcache",
+        dag.cacheVolume("eslint-cache"),
+      )
+      .withMountedCache(
+        "/workspace/.tsbuildinfo",
+        dag.cacheVolume("tsbuildinfo-cache"),
+      )
+  );
 }
 ```
 
@@ -127,19 +159,27 @@ Optimal pattern for Bun workspaces with layer caching:
 
 ```typescript
 function installDeps(base: Container, source: Directory): Container {
-  return base
-    // Phase 1: Mount only dependency files (cached if lockfile unchanged)
-    .withMountedFile("/workspace/package.json", source.file("package.json"))
-    .withMountedFile("/workspace/bun.lock", source.file("bun.lock"))
-    .withMountedFile("/workspace/packages/foo/package.json", source.file("packages/foo/package.json"))
-    .withWorkdir("/workspace")
-    // Phase 2: Install dependencies (cached if deps unchanged)
-    .withExec(["bun", "install", "--frozen-lockfile"])
-    // Phase 3: Mount source code (changes frequently - added AFTER install)
-    .withMountedDirectory("/workspace/packages/foo/src", source.directory("packages/foo/src"))
-    .withMountedFile("/workspace/tsconfig.json", source.file("tsconfig.json"))
-    // Phase 4: Re-run install to recreate workspace symlinks
-    .withExec(["bun", "install", "--frozen-lockfile"]);
+  return (
+    base
+      // Phase 1: Mount only dependency files (cached if lockfile unchanged)
+      .withMountedFile("/workspace/package.json", source.file("package.json"))
+      .withMountedFile("/workspace/bun.lock", source.file("bun.lock"))
+      .withMountedFile(
+        "/workspace/packages/foo/package.json",
+        source.file("packages/foo/package.json"),
+      )
+      .withWorkdir("/workspace")
+      // Phase 2: Install dependencies (cached if deps unchanged)
+      .withExec(["bun", "install", "--frozen-lockfile"])
+      // Phase 3: Mount source code (changes frequently - added AFTER install)
+      .withMountedDirectory(
+        "/workspace/packages/foo/src",
+        source.directory("packages/foo/src"),
+      )
+      .withMountedFile("/workspace/tsconfig.json", source.file("tsconfig.json"))
+      // Phase 4: Re-run install to recreate workspace symlinks
+      .withExec(["bun", "install", "--frozen-lockfile"])
+  );
 }
 ```
 
@@ -157,10 +197,10 @@ await Promise.all([
 
 ### Mount vs Copy
 
-| Operation | Use Case | In Final Image? |
-|-----------|----------|-----------------|
-| `withMountedDirectory()` | CI operations | No |
-| `withDirectory()` | Publishing images | Yes |
+| Operation                | Use Case          | In Final Image? |
+| ------------------------ | ----------------- | --------------- |
+| `withMountedDirectory()` | CI operations     | No              |
+| `withDirectory()`        | Publishing images | Yes             |
 
 ```typescript
 // CI - mount for speed
@@ -174,6 +214,7 @@ await publishContainer.publish("ghcr.io/org/app:latest");
 ### Secrets Management
 
 **5 Secret Sources:**
+
 ```bash
 # Environment variable
 dagger call deploy --token=env:API_TOKEN
@@ -192,6 +233,7 @@ dagger call deploy --token=vault://path/to/secret
 ```
 
 **Usage in Code:**
+
 ```typescript
 @func()
 async deploy(
@@ -228,11 +270,12 @@ build(source: Directory): Container {
 
 ```typescript
 const platforms: Platform[] = ["linux/amd64", "linux/arm64"];
-const variants = platforms.map(p =>
-  dag.container({ platform: p })
+const variants = platforms.map((p) =>
+  dag
+    .container({ platform: p })
     .from("node:20")
     .withDirectory("/app", source)
-    .withExec(["npm", "run", "build"])
+    .withExec(["npm", "run", "build"]),
 );
 ```
 
@@ -251,10 +294,10 @@ Always look past these messages for the actual build/test/lint output to find re
 
 ```typescript
 // Drop into shell at this point
-container.terminal()
+container.terminal();
 
 // Inspect a directory
-dag.directory().withDirectory("/app", source).terminal()
+dag.directory().withDirectory("/app", source).terminal();
 ```
 
 ### On-Failure Debugging
@@ -296,6 +339,7 @@ async integrationTest(source: Directory): Promise<string> {
 ```
 
 **Service Lifecycle:**
+
 - Just-in-time startup
 - Health checks before client connections
 - Automatic deduplication
@@ -321,20 +365,34 @@ Import shared utilities from `@shepherdjerred/dagger-utils`:
 ### Container Builders
 
 ```typescript
-import { getBunContainer, getBunNodeContainer, getNodeContainer } from "@shepherdjerred/dagger-utils";
+import {
+  getBunContainer,
+  getBunNodeContainer,
+  getNodeContainer,
+} from "@shepherdjerred/dagger-utils";
 
 const container = getBunContainer(source);
-const container = getBunNodeContainer(source);  // Bun + Node.js
+const container = getBunNodeContainer(source); // Bun + Node.js
 ```
 
 ### Parallel Execution Utilities
 
 ```typescript
-import { runParallel, runNamedParallel, collectResults } from "@shepherdjerred/dagger-utils";
+import {
+  runParallel,
+  runNamedParallel,
+  collectResults,
+} from "@shepherdjerred/dagger-utils";
 
 const results = await runNamedParallel([
-  { name: "typecheck", operation: container.withExec(["bun", "run", "typecheck"]).sync() },
-  { name: "test", operation: container.withExec(["bun", "run", "test"]).sync() },
+  {
+    name: "typecheck",
+    operation: container.withExec(["bun", "run", "typecheck"]).sync(),
+  },
+  {
+    name: "test",
+    operation: container.withExec(["bun", "run", "test"]).sync(),
+  },
 ]);
 
 const stepResults = collectResults(results);
@@ -348,7 +406,7 @@ import { publishToGhcr, publishToNpm } from "@shepherdjerred/dagger-utils";
 // Publish to GitHub Container Registry
 await publishToGhcr({
   container,
-  imageRef: "ghcr.io/org/app:1.0.0",  // Full ref with tag
+  imageRef: "ghcr.io/org/app:1.0.0", // Full ref with tag
   username,
   password,
 });
@@ -409,29 +467,30 @@ const defaultVersions = {
 ## Container API Quick Reference
 
 ```typescript
-dag.container()
-  .from("image:tag")                    // Base image
-  .withDirectory("/app", source)        // Copy directory
+dag
+  .container()
+  .from("image:tag") // Base image
+  .withDirectory("/app", source) // Copy directory
   .withMountedDirectory("/app", source) // Mount (ephemeral)
-  .withMountedCache("/cache", volume)   // Persistent cache
-  .withFile("/path", file)              // Copy single file
-  .withExec(["cmd", "args"])           // Run command
-  .withEnvVariable("KEY", "value")     // Set env var
-  .withSecretVariable("KEY", secret)   // Inject secret (safe)
-  .withWorkdir("/app")                 // Set working dir
-  .withEntrypoint(["cmd"])             // Set entrypoint
-  .withLabel("key", "value")           // OCI label
-  .withExposedPort(8080)               // Expose port
-  .asService()                         // Convert to service
-  .publish("registry/image:tag")       // Push to registry
-  .file("/path")                       // Extract file
-  .directory("/path")                  // Extract directory
-  .stdout()                            // Get stdout
-  .stderr()                            // Get stderr
-  .sync()                              // Force execution
-  .terminal()                          // Interactive debug
-  .combinedOutput()                    // Get interleaved stdout+stderr (0.19)
-  .exportImage("name")                 // Export to local container runtime (0.19)
+  .withMountedCache("/cache", volume) // Persistent cache
+  .withFile("/path", file) // Copy single file
+  .withExec(["cmd", "args"]) // Run command
+  .withEnvVariable("KEY", "value") // Set env var
+  .withSecretVariable("KEY", secret) // Inject secret (safe)
+  .withWorkdir("/app") // Set working dir
+  .withEntrypoint(["cmd"]) // Set entrypoint
+  .withLabel("key", "value") // OCI label
+  .withExposedPort(8080) // Expose port
+  .asService() // Convert to service
+  .publish("registry/image:tag") // Push to registry
+  .file("/path") // Extract file
+  .directory("/path") // Extract directory
+  .stdout() // Get stdout
+  .stderr() // Get stderr
+  .sync() // Force execution
+  .terminal() // Interactive debug
+  .combinedOutput() // Get interleaved stdout+stderr (0.19)
+  .exportImage("name"); // Export to local container runtime (0.19)
 ```
 
 ## Examples
@@ -496,6 +555,7 @@ async birmelPublish(
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - The target container registry isn't specified (ghcr.io, Docker Hub, etc.)
 - Secret sources are ambiguous (env var, file, 1Password, Vault)
 - Multiple pipeline stages could be organized differently

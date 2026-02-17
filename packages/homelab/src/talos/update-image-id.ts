@@ -29,7 +29,9 @@ async function main() {
 
   // Extract old ID from patches/image.yaml
   const patchContent = readFileSync(patchFile, "utf-8");
-  const oldIdMatch = patchContent.match(/metal-installer-secureboot\/([a-f0-9]+)/);
+  const oldIdMatch = patchContent.match(
+    /metal-installer-secureboot\/([a-f0-9]+)/,
+  );
 
   if (!oldIdMatch) {
     console.error(`Error: Could not find existing image ID in ${patchFile}`);

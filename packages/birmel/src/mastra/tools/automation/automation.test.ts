@@ -189,93 +189,96 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
   });
 });
 
-describe.skipIf(process.env["BROWSER_ENABLED"] === "false")("Phase 3: Browser Tools", () => {
-  test("navigates to a URL", async () => {
-    const result = await (browserAutomationTool as any).execute({
-      action: "navigate",
-      url: "https://example.com",
-      ...testContext,
+describe.skipIf(process.env["BROWSER_ENABLED"] === "false")(
+  "Phase 3: Browser Tools",
+  () => {
+    test("navigates to a URL", async () => {
+      const result = await (browserAutomationTool as any).execute({
+        action: "navigate",
+        url: "https://example.com",
+        ...testContext,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.data?.url).toBe("https://example.com/");
+      expect(result.data?.title).toBeTruthy();
     });
 
-    expect(result.success).toBe(true);
-    expect(result.data?.url).toBe("https://example.com/");
-    expect(result.data?.title).toBeTruthy();
-  });
+    test("gets text content from page", async () => {
+      // Navigate first
+      await (browserAutomationTool as any).execute({
+        action: "navigate",
+        url: "https://example.com",
+        ...testContext,
+      });
 
-  test("gets text content from page", async () => {
-    // Navigate first
-    await (browserAutomationTool as any).execute({
-      action: "navigate",
-      url: "https://example.com",
-      ...testContext,
+      // Get text
+      const result = await (browserAutomationTool as any).execute({
+        action: "get-text",
+        selector: "h1",
+        ...testContext,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.data?.text).toContain("Example Domain");
     });
 
-    // Get text
-    const result = await (browserAutomationTool as any).execute({
-      action: "get-text",
-      selector: "h1",
-      ...testContext,
+    test("captures screenshot", async () => {
+      // Navigate first
+      await (browserAutomationTool as any).execute({
+        action: "navigate",
+        url: "https://example.com",
+        ...testContext,
+      });
+
+      // Take screenshot
+      const result = await (browserAutomationTool as any).execute({
+        action: "screenshot",
+        filename: "test-e2e-screenshot.png",
+        ...testContext,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.data?.filename).toBe("test-e2e-screenshot.png");
+      expect(result.data?.path).toBeTruthy();
+
+      // Verify file exists
+      const fileExists = existsSync(result.data!.path);
+      expect(fileExists).toBe(true);
     });
 
-    expect(result.success).toBe(true);
-    expect(result.data?.text).toContain("Example Domain");
-  });
+    test("types into input field", async () => {
+      // This test would need a page with an input field
+      // For now, just verify the tool doesn't error
+      await (browserAutomationTool as any).execute({
+        action: "navigate",
+        url: "https://example.com",
+        ...testContext,
+      });
 
-  test("captures screenshot", async () => {
-    // Navigate first
-    await (browserAutomationTool as any).execute({
-      action: "navigate",
-      url: "https://example.com",
-      ...testContext,
+      // This will fail to find the selector, but should handle gracefully
+      const result = await (browserAutomationTool as any).execute({
+        action: "type",
+        selector: "input[name='q']",
+        text: "test search",
+        timeout: 1000,
+        ...testContext,
+      });
+
+      // Expect failure since example.com doesn't have a search input
+      expect(result.success).toBe(false);
     });
 
-    // Take screenshot
-    const result = await (browserAutomationTool as any).execute({
-      action: "screenshot",
-      filename: "test-e2e-screenshot.png",
-      ...testContext,
+    test("closes browser session", async () => {
+      const result = await (browserAutomationTool as any).execute({
+        action: "close",
+        ...testContext,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.message).toContain("closed");
     });
-
-    expect(result.success).toBe(true);
-    expect(result.data?.filename).toBe("test-e2e-screenshot.png");
-    expect(result.data?.path).toBeTruthy();
-
-    // Verify file exists
-    const fileExists = existsSync(result.data!.path);
-    expect(fileExists).toBe(true);
-  });
-
-  test("types into input field", async () => {
-    // This test would need a page with an input field
-    // For now, just verify the tool doesn't error
-    await (browserAutomationTool as any).execute({
-      action: "navigate",
-      url: "https://example.com",
-      ...testContext,
-    });
-
-    // This will fail to find the selector, but should handle gracefully
-    const result = await (browserAutomationTool as any).execute({
-      action: "type",
-      selector: "input[name='q']",
-      text: "test search",
-      timeout: 1000,
-      ...testContext,
-    });
-
-    // Expect failure since example.com doesn't have a search input
-    expect(result.success).toBe(false);
-  });
-
-  test("closes browser session", async () => {
-    const result = await (browserAutomationTool as any).execute({
-      action: "close",
-      ...testContext,
-    });
-
-    expect(result.success).toBe(true);
-    expect(result.message).toContain("closed");
-  });
-});
+  },
+);
 
 console.log("✅ All end-to-end tests completed!");

@@ -15,7 +15,9 @@ export function setupPlayerEvents(player: Player): void {
     }
 
     // Record to history
-    const trackDuration = track.durationMS ? Math.floor(track.durationMS / 1000) : undefined;
+    const trackDuration = track.durationMS
+      ? Math.floor(track.durationMS / 1000)
+      : undefined;
     recordTrackPlay({
       guildId: queue.guild.id,
       channelId: channel?.id ?? "",
@@ -41,13 +43,17 @@ export function setupPlayerEvents(player: Player): void {
   player.events.on("emptyQueue", (queue) => {
     const channel = queue.metadata as ChannelMetadata | undefined;
     if (channel?.send) {
-      void channel.send("Queue finished! Add more songs to keep the party going.");
+      void channel.send(
+        "Queue finished! Add more songs to keep the party going.",
+      );
     }
     logger.debug("Queue empty", { guildId: queue.guild.id });
   });
 
   player.events.on("emptyChannel", (queue) => {
-    logger.debug("Voice channel empty, disconnecting", { guildId: queue.guild.id });
+    logger.debug("Voice channel empty, disconnecting", {
+      guildId: queue.guild.id,
+    });
   });
 
   player.events.on("error", (queue, error) => {
@@ -63,6 +69,8 @@ export function setupPlayerEvents(player: Player): void {
   });
 
   player.events.on("disconnect", (queue) => {
-    logger.debug("Disconnected from voice channel", { guildId: queue.guild.id });
+    logger.debug("Disconnected from voice channel", {
+      guildId: queue.guild.id,
+    });
   });
 }

@@ -64,6 +64,7 @@ const UserSchema = z.object({
 ### Prefer Zod Over Type Guards
 
 **❌ Avoid: typeof operator**
+
 ```typescript
 // Don't do this
 function processValue(value: unknown) {
@@ -74,6 +75,7 @@ function processValue(value: unknown) {
 ```
 
 **✅ Prefer: Zod validation**
+
 ```typescript
 import { z } from "zod";
 
@@ -111,6 +113,7 @@ const User = z.object({
 ### safeParse vs parse
 
 **Use `safeParse` for most cases:**
+
 ```typescript
 // ✅ Good - returns result object with .success
 const result = UserSchema.safeParse(data);
@@ -123,6 +126,7 @@ if (result.success) {
 ```
 
 **Use `parse` only when you want to throw:**
+
 ```typescript
 // Use only for config validation or when failure should crash
 const config = ConfigSchema.parse(process.env);
@@ -131,20 +135,22 @@ const config = ConfigSchema.parse(process.env);
 ### Replace Common Type Checks
 
 **Array.isArray() → Zod**
+
 ```typescript
 // ❌ Avoid
 if (Array.isArray(value)) {
-  value.forEach(item => console.log(item));
+  value.forEach((item) => console.log(item));
 }
 
 // ✅ Prefer
 const result = z.array(z.string()).safeParse(value);
 if (result.success) {
-  result.data.forEach(item => console.log(item));
+  result.data.forEach((item) => console.log(item));
 }
 ```
 
 **instanceof → Zod**
+
 ```typescript
 // ❌ Avoid
 if (err instanceof Error) {
@@ -159,6 +165,7 @@ if (result.success) {
 ```
 
 **Number validation → Zod**
+
 ```typescript
 // ❌ Avoid
 if (Number.isInteger(value)) {
@@ -173,6 +180,7 @@ if (result.success) {
 ```
 
 **Type predicates → Zod**
+
 ```typescript
 // ❌ Avoid type guard functions
 function isUser(value: unknown): value is User {
@@ -215,6 +223,7 @@ type Status = (typeof STATUSES)[number];
 ### Why No Type Assertions?
 
 Type assertions are dangerous because:
+
 1. They bypass TypeScript's type checking
 2. They don't perform runtime validation
 3. They can cause runtime crashes with wrong types
@@ -301,10 +310,12 @@ function handleEvent(event: Event) {
 const DateSchema = z.string().transform((str) => new Date(str));
 
 // Add custom validation
-const PasswordSchema = z.string().min(8).refine(
-  (password) => /[A-Z]/.test(password),
-  { message: "Password must contain uppercase letter" }
-);
+const PasswordSchema = z
+  .string()
+  .min(8)
+  .refine((password) => /[A-Z]/.test(password), {
+    message: "Password must contain uppercase letter",
+  });
 
 // Combine both
 const UserInputSchema = z.object({
@@ -349,7 +360,7 @@ const ApiResponseSchema = z.object({
 
 async function fetchUser(id: string) {
   const response = await fetch(`/api/users/${id}`);
-  const json = await response.json() as unknown;
+  const json = (await response.json()) as unknown;
 
   const result = ApiResponseSchema.safeParse(json);
   if (!result.success) {
@@ -363,14 +374,16 @@ async function fetchUser(id: string) {
 ### Form Validation
 
 ```typescript
-const FormDataSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const FormDataSchema = z
+  .object({
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
 type FormData = z.infer<typeof FormDataSchema>;
 
@@ -416,6 +429,7 @@ console.log(env.DATABASE_URL); // string
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - The data structure is complex or ambiguous
 - Validation requirements are unclear
 - Performance is critical (Zod has overhead)

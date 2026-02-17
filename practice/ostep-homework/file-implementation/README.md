@@ -1,4 +1,3 @@
-
 # Overview
 
 Use this tool, `vsfs.py`, to study how file system state changes as various
@@ -11,11 +10,11 @@ The possible operations are:
 - mkdir() - creates a new directory
 - creat() - creates a new (empty) file
 - open(), write(), close() - appends a block to a file
-- link()   - creates a hard link to a file
+- link() - creates a hard link to a file
 - unlink() - unlinks a file (removing it if linkcnt==0)
 
 To understand how this homework functions, you must first understand how the
-on-disk state of this file system is represented.  The state of the file
+on-disk state of this file system is represented. The state of the file
 system is shown by printing the contents of four different data structures:
 
 - inode bitmap: indicates which inodes are allocated
@@ -40,7 +39,7 @@ empty (address field set to -1), and has just one link in the file system:
 ```
 
 If the same file had a block allocated to it (say block 10), it would be shown
-as follows: 
+as follows:
 
 ```sh
   [f a:10 r:1]
@@ -83,10 +82,10 @@ data         [(.,0) (..,0) (y,1) (z,2) (f,3)] [u] [(.,3) (..,0)] [] ...
 ```
 
 This file system has eight inodes and eight data blocks. The root directory
-contains three entries (other than "."  and ".."), to "y", "z", and "f". By
+contains three entries (other than "." and ".."), to "y", "z", and "f". By
 looking up inode 1, we can see that "y" is a regular file (type f), with a
 single data block allocated to it (address 1). In that data block 1 are the
-contents of the file "y": namely, "u".  We can also see that "z" is an empty
+contents of the file "y": namely, "u". We can also see that "z" is an empty
 regular file (address field set to -1), and that "f" (inode number 3) is a
 directory, also empty. You can also see from the bitmaps that the first four
 inode bitmap entries are marked as allocated, as well as the first three data
@@ -101,11 +100,11 @@ Usage: vsfs.py [options]
 Options:
   -h, --help            show this help message and exit
   -s SEED, --seed=SEED  the random seed
-  -i NUMINODES, --numInodes=NUMINODES 
+  -i NUMINODES, --numInodes=NUMINODES
                         number of inodes in file system
-  -d NUMDATA, --numData=NUMDATA 
+  -d NUMDATA, --numData=NUMDATA
                         number of data blocks in file system
-  -n NUMREQUESTS, --numRequests=NUMREQUESTS 
+  -n NUMREQUESTS, --numRequests=NUMREQUESTS
                         number of requests to simulate
   -r, --reverse         instead of printing state, print ops
   -p, --printFinal      print the final set of files/dirs
@@ -239,9 +238,9 @@ prompt> ./vsfs.py -n 6 -s 16 -r
 Initial state
 
 inode bitmap  10000000
-inodes        [d a:0 r:2] [] [] [] [] [] [] [] 
+inodes        [d a:0 r:2] [] [] [] [] [] [] []
 data bitmap   10000000
-data          [(.,0) (..,0)] [] [] [] [] [] [] [] 
+data          [(.,0) (..,0)] [] [] [] [] [] [] []
 
 creat("/y");
 
@@ -271,4 +270,3 @@ mkdir("/f");
 A few other flags control various aspects of the simulation, including the
 number of inodes ("-i"), the number of data blocks ("-d"), and whether to
 print the final list of all directories and files in the file system ("-p").
-

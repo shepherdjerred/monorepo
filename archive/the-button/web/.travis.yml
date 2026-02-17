@@ -1,12 +1,12 @@
 language: node_js
 node_js:
-- node
+  - node
 notifications:
   email: false
 script:
-- npm run build
+  - npm run build
 before_deploy:
-- cd dist
+  - cd dist
 deploy:
   skip_cleanup: true
   provider: s3

@@ -1,4 +1,4 @@
-import type { App} from "cdk8s";
+import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
 import { KubeNetworkPolicy, IntOrString } from "../../generated/imports/k8s.ts";
@@ -24,7 +24,17 @@ export function createRedlibChart(app: App) {
     spec: {
       podSelector: {},
       policyTypes: ["Ingress"],
-      ingress: [{ from: [{ namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": "tailscale" } } }] }],
+      ingress: [
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
+              },
+            },
+          ],
+        },
+      ],
     },
   });
 
@@ -37,7 +47,12 @@ export function createRedlibChart(app: App) {
       egress: [
         // DNS
         {
-          to: [{ namespaceSelector: {}, podSelector: { matchLabels: { "k8s-app": "kube-dns" } } }],
+          to: [
+            {
+              namespaceSelector: {},
+              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
+            },
+          ],
           ports: [
             { port: IntOrString.fromNumber(53), protocol: "UDP" },
             { port: IntOrString.fromNumber(53), protocol: "TCP" },

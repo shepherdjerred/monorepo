@@ -1,6 +1,8 @@
 import type { TSESLint } from "@typescript-eslint/utils";
 
-export const requireTsExtensions: TSESLint.RuleModule<"requireTsExtension" | "noJsExtension"> = {
+export const requireTsExtensions: TSESLint.RuleModule<
+  "requireTsExtension" | "noJsExtension"
+> = {
   meta: {
     type: "problem",
     fixable: "code",
@@ -23,7 +25,10 @@ export const requireTsExtensions: TSESLint.RuleModule<"requireTsExtension" | "no
 
         // Only check relative imports (starting with ./ or ../)
         const relativeImportRegex = /^\.\.?\//u;
-        if (typeof importPath !== "string" || !relativeImportRegex.exec(importPath)) {
+        if (
+          typeof importPath !== "string" ||
+          !relativeImportRegex.exec(importPath)
+        ) {
           return;
         }
 
@@ -32,7 +37,9 @@ export const requireTsExtensions: TSESLint.RuleModule<"requireTsExtension" | "no
 
         // Determine suggested extension based on file type
         const currentFileName = context.filename;
-        const suggestedExtension = currentFileName.endsWith(".tsx") ? ".tsx" : ".ts";
+        const suggestedExtension = currentFileName.endsWith(".tsx")
+          ? ".tsx"
+          : ".ts";
 
         // Check for .js/.jsx extensions and flag them
         const jsExtensionMatch = /\.jsx?$/u.exec(pathWithoutQuery);
@@ -45,11 +52,18 @@ export const requireTsExtensions: TSESLint.RuleModule<"requireTsExtension" | "no
               suggestedExtension,
             },
             fix(fixer) {
-              const newExtension = oldExtension === ".jsx" ? ".tsx" : suggestedExtension;
-              const fixedPath = importPath.replace(/\.jsx?(?=\?|$)/u, newExtension);
+              const newExtension =
+                oldExtension === ".jsx" ? ".tsx" : suggestedExtension;
+              const fixedPath = importPath.replace(
+                /\.jsx?(?=\?|$)/u,
+                newExtension,
+              );
               const sourceText = node.source.raw;
               const quoteChar = sourceText.charAt(0);
-              return fixer.replaceText(node.source, `${quoteChar}${fixedPath}${quoteChar}`);
+              return fixer.replaceText(
+                node.source,
+                `${quoteChar}${fixedPath}${quoteChar}`,
+              );
             },
           });
           return;
@@ -62,7 +76,9 @@ export const requireTsExtensions: TSESLint.RuleModule<"requireTsExtension" | "no
         }
 
         // Skip imports that have other extensions (like .json, .css, .txt, etc.)
-        const hasOtherExtension = /\.[a-z]+(?:\.[a-z]+)?$/iu.exec(pathWithoutQuery);
+        const hasOtherExtension = /\.[a-z]+(?:\.[a-z]+)?$/iu.exec(
+          pathWithoutQuery,
+        );
         if (hasOtherExtension) {
           return;
         }
@@ -79,7 +95,10 @@ export const requireTsExtensions: TSESLint.RuleModule<"requireTsExtension" | "no
             const sourceText = node.source.raw;
             const quoteChar = sourceText.charAt(0);
             const fixedPath = `${importPath}${actualExtension}`;
-            return fixer.replaceText(node.source, `${quoteChar}${fixedPath}${quoteChar}`);
+            return fixer.replaceText(
+              node.source,
+              `${quoteChar}${fixedPath}${quoteChar}`,
+            );
           },
         });
       },

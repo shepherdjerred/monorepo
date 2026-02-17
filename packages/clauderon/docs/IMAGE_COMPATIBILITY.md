@@ -13,6 +13,7 @@ Your image MUST have:
 5. **Standard Unix utilities**: `mkdir`, `chmod`, `cat`, `date`
 
 Strongly recommended:
+
 - **`git`** CLI (for git operations from within sessions)
 
 Everything else (dev tools, shell preferences, package managers) is your choice.
@@ -47,6 +48,7 @@ These are hard requirements - without them, Clauderon sessions won't work.
 **Why**: The hooks system requires bash specifically, not just `/bin/sh`.
 
 **Details**:
+
 - Hooks run via `bash -c '/workspace/.clauderon/hooks/send_status.sh <event>'`
 - The hook script uses bash-isms like `set -euo pipefail` (pipefail is not in POSIX sh)
 - Hook installation uses bash for heredoc file writing
@@ -62,6 +64,7 @@ These are hard requirements - without them, Clauderon sessions won't work.
 **Source**: Environment variables in all backends
 
 **What Clauderon writes**:
+
 - `/workspace/.claude/` - Claude Code config and session history
 - `/workspace/.codex/` - Codex session data
 - `/workspace/.cargo/`, `/workspace/.cache/sccache/` - Rust build caches
@@ -80,6 +83,7 @@ These are hard requirements - without them, Clauderon sessions won't work.
 **Why**: Hook installation and script execution need these.
 
 **Required utilities**:
+
 - `mkdir` - Create directories (hook installation)
 - `chmod` - Make scripts executable (hook installation)
 - `cat` - Write files via heredoc (hook script)
@@ -142,6 +146,7 @@ Clauderon has Rust-specific optimizations built-in, even if you don't use Rust.
 ### If you're building Rust projects
 
 Install these in your image:
+
 - Rust toolchain (rustup, cargo, rustc)
 - `sccache` for faster compilation
 - C/C++ compiler (gcc/clang) for native dependencies
@@ -197,6 +202,7 @@ For more complete examples, see [`examples/`](../examples/).
 **Problem**: Claude CLI not installed or not in PATH.
 
 **Solution**:
+
 1. Verify installation: `docker run --rm your-image:latest which claude`
 2. Ensure claude is in `/usr/local/bin/` or another directory in PATH
 3. Check that the binary is executable: `chmod +x /usr/local/bin/claude`
@@ -206,6 +212,7 @@ For more complete examples, see [`examples/`](../examples/).
 **Problem**: Container user doesn't have write access.
 
 **Solution**: This shouldn't happen - Clauderon uses `--user $(id -u):$(id -g)`. If it does:
+
 1. Verify your image doesn't set a specific USER in the Dockerfile
 2. Check that `/workspace` isn't owned by a specific user in the image
 3. Ensure the parent directory has appropriate permissions
@@ -215,6 +222,7 @@ For more complete examples, see [`examples/`](../examples/).
 **Problem**: Git not installed or parent `.git` directory not accessible.
 
 **Solution**:
+
 1. Install git: `apt-get install git` or `apk add git`
 2. Verify Clauderon mounted the parent `.git` directory correctly
 3. Check git config: `git config --list`
@@ -224,6 +232,7 @@ For more complete examples, see [`examples/`](../examples/).
 **Problem**: Tools don't respect the custom CA certificate.
 
 **Solution**: Clauderon sets these environment variables:
+
 - `SSL_CERT_FILE=/etc/clauderon/proxy-ca.pem`
 - `NODE_EXTRA_CA_CERTS=/etc/clauderon/proxy-ca.pem` (Node.js)
 - `REQUESTS_CA_BUNDLE=/etc/clauderon/proxy-ca.pem` (Python)
@@ -235,6 +244,7 @@ Most tools respect these automatically. If a tool doesn't, configure it manually
 **Problem**: Docker creates named volumes as root:root, causing permission warnings.
 
 **Solution**: This is a Docker limitation. Options:
+
 1. **Accept the warnings** (recommended) - Clauderon will work fine, you'll just see warnings
 2. Add `sudo` to your image and use it for cache writes (not recommended)
 3. Use an init container to fix permissions (Kubernetes only)
@@ -244,6 +254,7 @@ Most tools respect these automatically. If a tool doesn't, configure it manually
 **Impact**: Non-fatal. Rust compilation proceeds without caching (slower builds).
 
 **Solution**:
+
 - If building Rust: Install sccache: `cargo install sccache`
 - If not building Rust: Ignore the warning
 
@@ -375,6 +386,7 @@ Named volumes may be created by Docker as `root:root`. Your image should handle 
 The default Clauderon image is [`ghcr.io/shepherdjerred/dotfiles`](https://github.com/shepherdjerred/dotfiles/blob/main/Dockerfile).
 
 It includes:
+
 - All required dependencies (claude, bash, curl, git)
 - Rust toolchain with sccache
 - Development tools (Node.js, Python, Go via mise)

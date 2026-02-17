@@ -43,18 +43,18 @@ Sessions automatically trust this CA via environment configuration.
 
 ## Supported Credential Types
 
-| Credential | Environment Variable | Secret File |
-|------------|---------------------|-------------|
-| GitHub | `GITHUB_TOKEN` | `github_token` |
+| Credential      | Environment Variable      | Secret File             |
+| --------------- | ------------------------- | ----------------------- |
+| GitHub          | `GITHUB_TOKEN`            | `github_token`          |
 | Anthropic OAuth | `CLAUDE_CODE_OAUTH_TOKEN` | `anthropic_oauth_token` |
-| OpenAI/Codex | `OPENAI_API_KEY` | `openai_api_key` |
-| PagerDuty | `PAGERDUTY_TOKEN` | `pagerduty_token` |
-| Sentry | `SENTRY_AUTH_TOKEN` | `sentry_auth_token` |
-| Grafana | `GRAFANA_API_KEY` | `grafana_api_key` |
-| npm | `NPM_TOKEN` | `npm_token` |
-| Docker Hub | `DOCKER_TOKEN` | `docker_token` |
-| Kubernetes | `K8S_TOKEN` | `k8s_token` |
-| Talos | `TALOS_TOKEN` | `talos_token` |
+| OpenAI/Codex    | `OPENAI_API_KEY`          | `openai_api_key`        |
+| PagerDuty       | `PAGERDUTY_TOKEN`         | `pagerduty_token`       |
+| Sentry          | `SENTRY_AUTH_TOKEN`       | `sentry_auth_token`     |
+| Grafana         | `GRAFANA_API_KEY`         | `grafana_api_key`       |
+| npm             | `NPM_TOKEN`               | `npm_token`             |
+| Docker Hub      | `DOCKER_TOKEN`            | `docker_token`          |
+| Kubernetes      | `K8S_TOKEN`               | `k8s_token`             |
+| Talos           | `TALOS_TOKEN`             | `talos_token`           |
 
 ## Credential Priority
 

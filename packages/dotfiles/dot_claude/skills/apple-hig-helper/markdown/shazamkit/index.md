@@ -14,9 +14,9 @@ ShazamKit supports audio recognition by matching an audio sample against the Sha
 
 You can use ShazamKit to provide features like:
 
-* Enhancing experiences with graphics that correspond with the genre of currently playing music
-* Making media content accessible to people with hearing disabilities by providing closed captions or sign language that syncs with the audio
-* Synchronizing in-app experiences with virtual content in contexts like online learning and retail
+- Enhancing experiences with graphics that correspond with the genre of currently playing music
+- Making media content accessible to people with hearing disabilities by providing closed captions or sign language that syncs with the audio
+- Synchronizing in-app experiences with virtual content in contexts like online learning and retail
 
 If you need the device microphone to get audio samples for your app to recognize, you must request access to it. As with all types of permission requests, it’s important to help people understand why you’re asking for access. For guidance, see [Privacy](/design/human-interface-guidelines/privacy).
 
@@ -32,7 +32,7 @@ After you receive permission to access the microphone for features that use Shaz
 
 ## [Platform considerations](/design/human-interface-guidelines/shazamkit#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/shazamkit#Resources)
 

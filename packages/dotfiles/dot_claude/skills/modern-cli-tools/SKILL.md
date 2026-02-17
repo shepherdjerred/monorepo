@@ -39,22 +39,23 @@ This agent teaches modern alternatives to traditional Unix commands that are fas
 
 ## Tool Comparison
 
-| Traditional | Modern Alternative | Key Benefits |
-|-------------|-------------------|--------------|
-| `find` | `fd` | Faster, simpler syntax, respects `.gitignore` |
-| `grep` | `rg` (ripgrep) | 10-100x faster, better defaults, auto-ignore |
-| `ls` | `eza` | Better formatting, colors, git integration |
-| `cat` | `bat` | Syntax highlighting, line numbers, git integration |
-| `cd` | `zoxide` | Smart directory jumping based on frequency |
-| `sed` | `sd` | Simpler syntax, safer replacements |
-| `top`/`htop` | `btop` | Beautiful TUI, better metrics |
-| `du` | `dust` | Visual tree, faster analysis |
-| `df` | `duf` | Better formatting, clearer output |
-| `ps` | `procs` | Modern output, better filtering |
+| Traditional  | Modern Alternative | Key Benefits                                       |
+| ------------ | ------------------ | -------------------------------------------------- |
+| `find`       | `fd`               | Faster, simpler syntax, respects `.gitignore`      |
+| `grep`       | `rg` (ripgrep)     | 10-100x faster, better defaults, auto-ignore       |
+| `ls`         | `eza`              | Better formatting, colors, git integration         |
+| `cat`        | `bat`              | Syntax highlighting, line numbers, git integration |
+| `cd`         | `zoxide`           | Smart directory jumping based on frequency         |
+| `sed`        | `sd`               | Simpler syntax, safer replacements                 |
+| `top`/`htop` | `btop`             | Beautiful TUI, better metrics                      |
+| `du`         | `dust`             | Visual tree, faster analysis                       |
+| `df`         | `duf`              | Better formatting, clearer output                  |
+| `ps`         | `procs`            | Modern output, better filtering                    |
 
 ## Installation
 
 ### macOS (Homebrew)
+
 ```bash
 # Install all at once
 brew install fd ripgrep eza bat fzf sd zoxide dust duf procs btop
@@ -74,6 +75,7 @@ brew install btop         # top/htop alternative
 ```
 
 ### Linux (cargo - Rust package manager)
+
 ```bash
 # Install Rust first
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -425,6 +427,7 @@ git diff --staged file.js | bat -l diff
 ```
 
 **Benefits of Git Integration:**
+
 - Visual indicators for all changes
 - No need to run `git diff` separately
 - Works automatically with any Git repository
@@ -686,6 +689,7 @@ time eza -T -L 3              # ~0.3 seconds
 ### Memory Usage
 
 Modern tools are generally more memory efficient:
+
 - `rg` uses less memory than `grep -r`
 - `fd` is more memory efficient than `find`
 - `bat` lazy-loads files for better memory usage
@@ -743,6 +747,7 @@ fd -e log | fzf -m --preview 'bat {}' | xargs rm -i
 ### bat Configuration
 
 `~/.config/bat/config`:
+
 ```bash
 --theme="Monokai Extended"
 --style="numbers,grid,changes"
@@ -753,6 +758,7 @@ fd -e log | fzf -m --preview 'bat {}' | xargs rm -i
 ### eza Configuration
 
 Create aliases in shell config:
+
 ```bash
 # ~/.zshrc or ~/.bashrc
 export EZA_COLORS="uu=36:gu=37:sn=32:sb=32:da=34:ur=34:uw=35:ux=36:ue=36:gr=34:gw=35:gx=36:tr=34:tw=35:tx=36"
@@ -761,6 +767,7 @@ export EZA_COLORS="uu=36:gu=37:sn=32:sb=32:da=34:ur=34:uw=35:ux=36:ue=36:gr=34:g
 ### fzf Configuration
 
 `~/.fzf.zsh` or `~/.fzf.bash`:
+
 ```bash
 export FZF_DEFAULT_OPTS='
   --height 40%
@@ -863,6 +870,7 @@ eza -l --sort modified -r | head
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - Unsure which tool is best for their specific use case
 - Need to perform complex regex transformations
 - Working with very large files (>1GB)

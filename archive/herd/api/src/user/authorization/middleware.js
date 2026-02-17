@@ -1,6 +1,6 @@
 // const UserModel = require('../model');
 
-function checkUserIsAuthorized (resource, action) {
+function checkUserIsAuthorized(resource, action) {
   return async function (req, res, next) {
     next();
     // let user = res.locals.auth.user;
@@ -27,5 +27,5 @@ function checkUserIsAuthorized (resource, action) {
 }
 
 module.exports = {
-  checkUserIsAuthorized
+  checkUserIsAuthorized,
 };

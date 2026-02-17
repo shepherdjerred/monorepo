@@ -13,28 +13,28 @@ Complete Sentry operations via `sentry-cli` and REST API. This skill replaces Se
 
 ## MCP Tool Equivalents Reference
 
-| MCP Tool | CLI/API Equivalent |
-|----------|-------------------|
-| `whoami` | `sentry-cli info` or `curl "$API/"` |
-| `find_organizations` | `sentry-cli organizations list` or `curl "$API/organizations/"` |
-| `find_teams` | `curl "$API/organizations/{org}/teams/"` |
-| `find_projects` | `sentry-cli projects list` or `curl "$API/organizations/{org}/projects/"` |
-| `find_releases` | `sentry-cli releases list` or `curl "$API/organizations/{org}/releases/"` |
-| `get_issue_details` | `curl "$API/issues/{id}/"` |
-| `get_trace_details` | `curl "$API/organizations/{org}/events-trace/{trace_id}/"` |
-| `get_event_attachment` | `curl "$API/projects/{org}/{project}/events/{event_id}/attachments/"` |
-| `search_events` | `curl "$API/organizations/{org}/events/"` |
-| `search_issues` | `sentry-cli issues list` or `curl "$API/projects/{org}/{project}/issues/"` |
-| `search_issue_events` | `curl "$API/issues/{id}/events/"` |
-| `find_dsns` | `curl "$API/projects/{org}/{project}/keys/"` |
-| `update_issue` | `curl -X PUT "$API/issues/{id}/"` |
-| `create_team` | `curl -X POST "$API/organizations/{org}/teams/"` |
-| `create_project` | `curl -X POST "$API/teams/{org}/{team}/projects/"` |
-| `update_project` | `curl -X PUT "$API/projects/{org}/{project}/"` |
-| `create_dsn` | `curl -X POST "$API/projects/{org}/{project}/keys/"` |
-| `search_docs` | WebSearch or https://docs.sentry.io |
-| `get_doc` | WebFetch from docs.sentry.io |
-| `analyze_issue_with_seer` | Manual analysis + get_issue_details |
+| MCP Tool                  | CLI/API Equivalent                                                         |
+| ------------------------- | -------------------------------------------------------------------------- |
+| `whoami`                  | `sentry-cli info` or `curl "$API/"`                                        |
+| `find_organizations`      | `sentry-cli organizations list` or `curl "$API/organizations/"`            |
+| `find_teams`              | `curl "$API/organizations/{org}/teams/"`                                   |
+| `find_projects`           | `sentry-cli projects list` or `curl "$API/organizations/{org}/projects/"`  |
+| `find_releases`           | `sentry-cli releases list` or `curl "$API/organizations/{org}/releases/"`  |
+| `get_issue_details`       | `curl "$API/issues/{id}/"`                                                 |
+| `get_trace_details`       | `curl "$API/organizations/{org}/events-trace/{trace_id}/"`                 |
+| `get_event_attachment`    | `curl "$API/projects/{org}/{project}/events/{event_id}/attachments/"`      |
+| `search_events`           | `curl "$API/organizations/{org}/events/"`                                  |
+| `search_issues`           | `sentry-cli issues list` or `curl "$API/projects/{org}/{project}/issues/"` |
+| `search_issue_events`     | `curl "$API/issues/{id}/events/"`                                          |
+| `find_dsns`               | `curl "$API/projects/{org}/{project}/keys/"`                               |
+| `update_issue`            | `curl -X PUT "$API/issues/{id}/"`                                          |
+| `create_team`             | `curl -X POST "$API/organizations/{org}/teams/"`                           |
+| `create_project`          | `curl -X POST "$API/teams/{org}/{team}/projects/"`                         |
+| `update_project`          | `curl -X PUT "$API/projects/{org}/{project}/"`                             |
+| `create_dsn`              | `curl -X POST "$API/projects/{org}/{project}/keys/"`                       |
+| `search_docs`             | WebSearch or https://docs.sentry.io                                        |
+| `get_doc`                 | WebFetch from docs.sentry.io                                               |
+| `analyze_issue_with_seer` | Manual analysis + get_issue_details                                        |
 
 ## Configuration
 
@@ -686,6 +686,7 @@ myTag:value
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - Organization or project slug is not specified
 - Sentry URL format is ambiguous (self-hosted vs SaaS)
 - Release version strategy isn't clear

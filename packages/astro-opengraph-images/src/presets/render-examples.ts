@@ -14,7 +14,10 @@ async function renderExamples() {
   const pathname = "dist/index/";
   const dir = new URL("../../examples/preset", import.meta.url);
 
-  const htmlFile = await getFilePath({ dir: fileURLToPath(dir), page: pathname });
+  const htmlFile = await getFilePath({
+    dir: fileURLToPath(dir),
+    page: pathname,
+  });
   const htmlBuffer = await fs.readFile(htmlFile);
   const html = htmlBuffer.toString();
   const document = new jsdom.JSDOM(sanitizeHtml(html)).window.document;
@@ -38,7 +41,9 @@ async function renderExamples() {
         name: "Roboto",
         weight: 400,
         style: "normal",
-        data: await fs.readFile("node_modules/@fontsource/roboto/files/roboto-latin-400-normal.woff"),
+        data: await fs.readFile(
+          "node_modules/@fontsource/roboto/files/roboto-latin-400-normal.woff",
+        ),
       },
     ],
   };
@@ -46,7 +51,10 @@ async function renderExamples() {
   const promises = Object.entries(presets).map(async ([name, preset]) => {
     const node = await preset(page);
     const svg = await satori(node, options);
-    const resvg = new Resvg(svg, { font: { loadSystemFonts: false }, fitTo: { mode: "width", value: options.width } });
+    const resvg = new Resvg(svg, {
+      font: { loadSystemFonts: false },
+      fitTo: { mode: "width", value: options.width },
+    });
     const target = `assets/presets/${name}.png`;
     await fs.writeFile(target, resvg.render().asPng());
     console.warn(`Wrote ${target}`);

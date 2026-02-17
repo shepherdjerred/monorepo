@@ -1,7 +1,10 @@
 import { useState } from "react";
 import type { DateTimeInputComponent } from "../types";
 import { useSurface } from "../SurfaceManager";
-import { resolveString, resolveActionContext } from "../../hooks/useDataBinding";
+import {
+  resolveString,
+  resolveActionContext,
+} from "../../hooks/useDataBinding";
 import { Input } from "@/components/ui/input";
 
 interface A2UIDateTimeInputProps {
@@ -26,12 +29,16 @@ export function A2UIDateTimeInput({
 
   const handleChange = (newValue: string) => {
     setValue(newValue);
-    const resolvedContext = resolveActionContext(component.action.context, dataModel);
+    const resolvedContext = resolveActionContext(
+      component.action.context,
+      dataModel,
+    );
     resolvedContext.value = newValue;
     dispatchAction(surfaceId, id, component.action.name, resolvedContext);
   };
 
-  const inputType = component.type === "datetime" ? "datetime-local" : component.type;
+  const inputType =
+    component.type === "datetime" ? "datetime-local" : component.type;
 
   return (
     <div className="flex flex-col gap-2">

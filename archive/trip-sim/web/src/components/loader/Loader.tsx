@@ -1,21 +1,16 @@
-import React, {FunctionComponent, Fragment} from "react";
+import React, { FunctionComponent, Fragment } from "react";
 
 type LoaderProps = {
-  isLoading: boolean
-}
+  isLoading: boolean;
+};
 
-export const Loader: FunctionComponent<LoaderProps> = ({isLoading, children}) => {
+export const Loader: FunctionComponent<LoaderProps> = ({
+  isLoading,
+  children,
+}) => {
   if (isLoading) {
-    return (
-        <h1>
-          I'm loading!
-        </h1>
-    )
+    return <h1>I'm loading!</h1>;
   } else {
-    return (
-        <Fragment>
-          {children}
-        </Fragment>
-    )
+    return <Fragment>{children}</Fragment>;
   }
 };

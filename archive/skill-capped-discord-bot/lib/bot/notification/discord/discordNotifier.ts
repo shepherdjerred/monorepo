@@ -15,7 +15,7 @@ export class DiscordNotifier implements Notifier {
   }
 
   async notifyCommentaries(
-    _notification: CommentaryNotification
+    _notification: CommentaryNotification,
   ): Promise<undefined> {
     return Promise.resolve(undefined);
   }
@@ -24,7 +24,7 @@ export class DiscordNotifier implements Notifier {
     const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
     await client.login(this.discordToken);
     const channel = (await client.channels.fetch(
-      this.discordChannel
+      this.discordChannel,
     )) as TextChannel;
     const promises = notifications.groups.map((group) => {
       group.content

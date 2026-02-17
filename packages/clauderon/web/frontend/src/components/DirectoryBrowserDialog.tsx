@@ -8,9 +8,13 @@ type DirectoryBrowserDialogProps = {
   onClose: () => void;
   onSelect: (path: string) => void;
   initialPath?: string;
-}
+};
 
-export function DirectoryBrowserDialog({ onClose, onSelect, initialPath }: DirectoryBrowserDialogProps) {
+export function DirectoryBrowserDialog({
+  onClose,
+  onSelect,
+  initialPath,
+}: DirectoryBrowserDialogProps) {
   const client = useClauderonClient();
   const [currentPath, setCurrentPath] = useState(initialPath ?? "~");
   const [parentPath, setParentPath] = useState<string | null>(null);
@@ -71,7 +75,9 @@ export function DirectoryBrowserDialog({ onClose, onSelect, initialPath }: Direc
     return (
       <div className="flex items-center gap-1 text-sm font-mono overflow-x-auto">
         <button
-          onClick={() => { setCurrentPath("/"); }}
+          onClick={() => {
+            setCurrentPath("/");
+          }}
           className="cursor-pointer px-2 py-1 hover:bg-primary/10 rounded transition-all duration-200"
         >
           /
@@ -82,7 +88,9 @@ export function DirectoryBrowserDialog({ onClose, onSelect, initialPath }: Direc
             <div key={path} className="flex items-center gap-1">
               <span className="text-muted-foreground">/</span>
               <button
-                onClick={() => { setCurrentPath(path); }}
+                onClick={() => {
+                  setCurrentPath(path);
+                }}
                 className="cursor-pointer px-2 py-1 hover:bg-primary/10 rounded transition-all duration-200"
               >
                 {segment}
@@ -97,19 +105,29 @@ export function DirectoryBrowserDialog({ onClose, onSelect, initialPath }: Direc
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-40" style={{
-        backgroundColor: 'hsl(220, 90%, 8%)',
-        opacity: 0.85
-      }} />
+      <div
+        className="fixed inset-0 z-40"
+        style={{
+          backgroundColor: "hsl(220, 90%, 8%)",
+          opacity: 0.85,
+        }}
+      />
 
       {/* Dialog */}
       <div className="fixed inset-0 flex items-center justify-center p-8 z-50">
-        <div className="max-w-3xl w-full flex flex-col border-4 border-primary max-h-[80vh]" style={{
-          backgroundColor: 'hsl(220, 15%, 95%)',
-          boxShadow: '12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)'
-        }}>
+        <div
+          className="max-w-3xl w-full flex flex-col border-4 border-primary max-h-[80vh]"
+          style={{
+            backgroundColor: "hsl(220, 15%, 95%)",
+            boxShadow:
+              "12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)",
+          }}
+        >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b-4 border-primary" style={{ backgroundColor: 'hsl(220, 85%, 25%)' }}>
+          <div
+            className="flex items-center justify-between p-4 border-b-4 border-primary"
+            style={{ backgroundColor: "hsl(220, 85%, 25%)" }}
+          >
             <h2 className="text-2xl font-bold font-mono uppercase tracking-wider text-white">
               Browse Filesystem
             </h2>
@@ -124,10 +142,11 @@ export function DirectoryBrowserDialog({ onClose, onSelect, initialPath }: Direc
           </div>
 
           {/* Breadcrumb & Actions */}
-          <div className="p-4 border-b-2 border-primary/20 flex items-center justify-between gap-4" style={{ backgroundColor: 'hsl(220, 15%, 90%)' }}>
-            <div className="flex-1 min-w-0">
-              {renderBreadcrumb()}
-            </div>
+          <div
+            className="p-4 border-b-2 border-primary/20 flex items-center justify-between gap-4"
+            style={{ backgroundColor: "hsl(220, 15%, 90%)" }}
+          >
+            <div className="flex-1 min-w-0">{renderBreadcrumb()}</div>
             <button
               onClick={handleGoHome}
               className="cursor-pointer p-2 border-2 border-primary hover:bg-primary/10 transition-all duration-200 hover:scale-105"
@@ -140,7 +159,14 @@ export function DirectoryBrowserDialog({ onClose, onSelect, initialPath }: Direc
 
           {/* Error Message */}
           {error && (
-            <div className="m-4 p-4 border-4 font-mono" style={{ backgroundColor: 'hsl(0, 75%, 95%)', color: 'hsl(0, 75%, 40%)', borderColor: 'hsl(0, 75%, 50%)' }}>
+            <div
+              className="m-4 p-4 border-4 font-mono"
+              style={{
+                backgroundColor: "hsl(0, 75%, 95%)",
+                color: "hsl(0, 75%, 40%)",
+                borderColor: "hsl(0, 75%, 50%)",
+              }}
+            >
               <strong className="font-bold">ERROR:</strong> {error}
             </div>
           )}
@@ -173,18 +199,30 @@ export function DirectoryBrowserDialog({ onClose, onSelect, initialPath }: Direc
                   entries.map((entry) => (
                     <button
                       key={entry.path}
-                      onClick={() => { if (entry.is_accessible) {handleNavigateToDirectory(entry.path);} }}
+                      onClick={() => {
+                        if (entry.is_accessible) {
+                          handleNavigateToDirectory(entry.path);
+                        }
+                      }}
                       disabled={!entry.is_accessible}
                       className={`w-full text-left p-3 border-2 font-mono flex items-center gap-2 transition-all duration-200 ${
                         entry.is_accessible
-                          ? 'cursor-pointer border-primary/30 hover:bg-primary/10 hover:border-primary hover:pl-4'
-                          : 'border-muted/30 opacity-50 cursor-not-allowed'
+                          ? "cursor-pointer border-primary/30 hover:bg-primary/10 hover:border-primary hover:pl-4"
+                          : "border-muted/30 opacity-50 cursor-not-allowed"
                       }`}
-                      title={entry.is_accessible ? `Open ${entry.name}` : `Cannot access ${entry.name}`}
+                      title={
+                        entry.is_accessible
+                          ? `Open ${entry.name}`
+                          : `Cannot access ${entry.name}`
+                      }
                     >
                       <Folder className="w-5 h-5 flex-shrink-0" />
                       <span className="truncate">{entry.name}</span>
-                      {!entry.is_accessible && <span className="text-xs text-muted-foreground ml-auto">(no access)</span>}
+                      {!entry.is_accessible && (
+                        <span className="text-xs text-muted-foreground ml-auto">
+                          (no access)
+                        </span>
+                      )}
                     </button>
                   ))
                 )}
@@ -193,8 +231,16 @@ export function DirectoryBrowserDialog({ onClose, onSelect, initialPath }: Direc
           </div>
 
           {/* Footer Actions */}
-          <div className="flex justify-end gap-3 p-4 border-t-4 border-primary" style={{ backgroundColor: 'hsl(220, 15%, 90%)' }}>
-            <Button type="button" variant="outline" onClick={onClose} className="cursor-pointer">
+          <div
+            className="flex justify-end gap-3 p-4 border-t-4 border-primary"
+            style={{ backgroundColor: "hsl(220, 15%, 90%)" }}
+          >
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="cursor-pointer"
+            >
               Cancel
             </Button>
             <Button

@@ -1,7 +1,7 @@
-import { NextFunction, Request, Response } from 'express';
-import { config } from '../../dependencies';
-import { User, UserRole } from './model';
-import { ExpressError } from '../../middleware';
+import { NextFunction, Request, Response } from "express";
+import { config } from "../../dependencies";
+import { User, UserRole } from "./model";
+import { ExpressError } from "../../middleware";
 
 const { STUDENT } = UserRole;
 
@@ -16,13 +16,18 @@ interface CreateUserRequest {
 }
 
 // TODO support adding users in bulk
-export async function createUser (req: Request, res: Response, next: NextFunction) {
-  let { firstName, lastName, username, hNumber, password, role, isRegister } = req.body as CreateUserRequest;
+export async function createUser(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  let { firstName, lastName, username, hNumber, password, role, isRegister } =
+    req.body as CreateUserRequest;
   if (isRegister) {
     if (config.isRegistrationEnabled) {
       role = STUDENT;
     } else {
-      next(new ExpressError('Registration is disabled', 403));
+      next(new ExpressError("Registration is disabled", 403));
       return;
     }
   }
@@ -33,7 +38,7 @@ export async function createUser (req: Request, res: Response, next: NextFunctio
       username,
       hNumber,
       password,
-      role
+      role,
     });
     res.json(user);
   } catch (err) {
@@ -41,12 +46,16 @@ export async function createUser (req: Request, res: Response, next: NextFunctio
   }
 }
 
-export function readUser (req: Request, res: Response, next: NextFunction) {
+export function readUser(req: Request, res: Response, next: NextFunction) {
   let { user } = res.locals;
   res.json(user);
 }
 
-export async function readUsers (req: Request, res: Response, next: NextFunction) {
+export async function readUsers(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
     let users = await User.findAll();
     res.json(users);
@@ -64,9 +73,14 @@ interface UpdateUserRequest {
   role?: UserRole;
 }
 
-export async function updateUser (req: Request, res: Response, next: NextFunction) {
+export async function updateUser(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   let user: User = res.locals.user as User;
-  let { firstName, lastName, username, hNumber, password, role } = req.body as UpdateUserRequest;
+  let { firstName, lastName, username, hNumber, password, role } =
+    req.body as UpdateUserRequest;
   try {
     if (firstName) user.firstName = firstName;
     if (lastName) user.lastName = lastName;
@@ -82,7 +96,11 @@ export async function updateUser (req: Request, res: Response, next: NextFunctio
   }
 }
 
-export async function deleteUser (req: Request, res: Response, next: NextFunction) {
+export async function deleteUser(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   let user: User = res.locals.user;
   try {
     await user.destroy();

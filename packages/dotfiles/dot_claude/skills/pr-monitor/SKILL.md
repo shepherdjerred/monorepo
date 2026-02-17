@@ -60,6 +60,7 @@ When invoked:
 ## Commands Reference
 
 ### Create/Check PR
+
 ```bash
 # Push branch
 git push -u origin $(git branch --show-current)
@@ -72,6 +73,7 @@ gh pr view --json number,url
 ```
 
 ### Monitor CI
+
 ```bash
 # Check all PR checks
 gh pr checks
@@ -85,6 +87,7 @@ gh run view <run-id> --log
 ```
 
 ### Check Reviews
+
 ```bash
 # Get review status
 gh pr view --json reviews,reviewDecision
@@ -97,6 +100,7 @@ gh pr view --json reviewDecision --jq '.reviewDecision'
 ```
 
 ### Handle Merge Conflicts
+
 ```bash
 # Fetch latest main
 git fetch origin main
@@ -114,6 +118,7 @@ git push
 ```
 
 ### Amend and Push
+
 ```bash
 # Stage changes
 git add .

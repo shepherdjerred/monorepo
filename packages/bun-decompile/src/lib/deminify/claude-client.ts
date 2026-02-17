@@ -21,7 +21,7 @@ type TokenBucket = {
   lastRefill: number;
   maxTokens: number;
   refillRate: number; // tokens per second
-}
+};
 
 /** Claude API client with rate limiting and retry */
 export class ClaudeClient {
@@ -111,7 +111,9 @@ export class ClaudeClient {
         if (error instanceof Anthropic.APIError && error.status === 529) {
           const backoff = Math.pow(2, attempt) * 1000;
           if (this.config.verbose) {
-            console.error(`API overloaded, waiting ${String(backoff)}ms before retry...`);
+            console.error(
+              `API overloaded, waiting ${String(backoff)}ms before retry...`,
+            );
           }
           await this.sleep(backoff);
           continue;
@@ -134,7 +136,9 @@ export class ClaudeClient {
     context: DeminifyContext,
   ): DeminifyResult {
     // Extract code from markdown code blocks
-    const codeMatch = /```(?:javascript|js)?\n?([\s\S]*?)```/.exec(responseText);
+    const codeMatch = /```(?:javascript|js)?\n?([\s\S]*?)```/.exec(
+      responseText,
+    );
     if (!codeMatch?.[1]) {
       throw new Error("No code block found in response");
     }
@@ -147,7 +151,8 @@ export class ClaudeClient {
     }
 
     // Try to extract metadata JSON
-    let suggestedName = context.targetFunction.originalName || "anonymousFunction";
+    let suggestedName =
+      context.targetFunction.originalName || "anonymousFunction";
     let confidence = 0.5;
     let parameterNames: Record<string, string> = {};
     let localVariableNames: Record<string, string> = {};
@@ -162,10 +167,18 @@ export class ClaudeClient {
           parameterNames?: Record<string, string>;
           localVariableNames?: Record<string, string>;
         };
-        if (metadata.suggestedName) {suggestedName = metadata.suggestedName;}
-        if (typeof metadata.confidence === "number") {confidence = metadata.confidence;}
-        if (metadata.parameterNames) {parameterNames = metadata.parameterNames;}
-        if (metadata.localVariableNames) {localVariableNames = metadata.localVariableNames;}
+        if (metadata.suggestedName) {
+          suggestedName = metadata.suggestedName;
+        }
+        if (typeof metadata.confidence === "number") {
+          confidence = metadata.confidence;
+        }
+        if (metadata.parameterNames) {
+          parameterNames = metadata.parameterNames;
+        }
+        if (metadata.localVariableNames) {
+          localVariableNames = metadata.localVariableNames;
+        }
       } catch {
         // JSON parsing failed, use defaults
       }
@@ -173,7 +186,10 @@ export class ClaudeClient {
 
     // Try to infer name from the de-minified code if not provided
     if (suggestedName === "anonymousFunction") {
-      const funcNameMatch = /(?:function|const|let|var)\s+([a-zA-Z_$][\w$]*)/.exec(deminifiedSource);
+      const funcNameMatch =
+        /(?:function|const|let|var)\s+([a-zA-Z_$][\w$]*)/.exec(
+          deminifiedSource,
+        );
       if (funcNameMatch?.[1]) {
         suggestedName = funcNameMatch[1];
       }
@@ -268,7 +284,11 @@ export class ClaudeClient {
   }
 
   /** Get usage statistics */
-  getStats(): { requestCount: number; inputTokensUsed: number; outputTokensUsed: number } {
+  getStats(): {
+    requestCount: number;
+    inputTokensUsed: number;
+    outputTokensUsed: number;
+  } {
     return {
       requestCount: this.requestCount,
       inputTokensUsed: this.inputTokensUsed,
@@ -282,8 +302,12 @@ export function formatCostEstimate(estimate: CostEstimate): string {
   const lines: string[] = [];
   lines.push(`Functions to process: ${String(estimate.functionCount)}`);
   lines.push(`Estimated API requests: ${String(estimate.requestCount)}`);
-  lines.push(`Estimated input tokens: ${estimate.inputTokens.toLocaleString()}`);
-  lines.push(`Estimated output tokens: ${estimate.outputTokens.toLocaleString()}`);
+  lines.push(
+    `Estimated input tokens: ${estimate.inputTokens.toLocaleString()}`,
+  );
+  lines.push(
+    `Estimated output tokens: ${estimate.outputTokens.toLocaleString()}`,
+  );
   lines.push(`Estimated cost: $${estimate.estimatedCost.toFixed(2)}`);
   return lines.join("\n");
 }

@@ -20,10 +20,10 @@ In-app purchase and [Apple Pay](/design/human-interface-guidelines/apple-pay) ar
 
 Using in-app purchase, there are four types of content you can offer:
 
-* *Consumable* content like lives or gems in a game. After purchase, consumable content depletes as people use it, and people can purchase it again.
-* *Non-consumable* content like premium features in an app. Purchased non-consumable content doesn’t expire.
-* *Auto-renewable subscriptions* to virtual content, services, and premium features in your app on an ongoing basis. An auto-renewable subscription continues to automatically renew at the end of each subscription period until people choose to cancel it.
-* *Non-renewing subscriptions* to a service or content that lasts for a limited time, like access to an in-game battle pass. People purchase a non-renewing subscription each time they want to extend their access to the service or content.
+- _Consumable_ content like lives or gems in a game. After purchase, consumable content depletes as people use it, and people can purchase it again.
+- _Non-consumable_ content like premium features in an app. Purchased non-consumable content doesn’t expire.
+- _Auto-renewable subscriptions_ to virtual content, services, and premium features in your app on an ongoing basis. An auto-renewable subscription continues to automatically renew at the end of each subscription period until people choose to cancel it.
+- _Non-renewing subscriptions_ to a service or content that lasts for a limited time, like access to an in-game battle pass. People purchase a non-renewing subscription each time they want to extend their access to the service or content.
 
 ![A screenshot of The Coast game’s in-app purchase store on iPad, featuring a row of five boosts that include lighthouse repairs and a power surge, above a row of five in-game maps with names like World Canals, The Great Lakes, and Famous Bays.](https://docs-assets.developer.apple.com/published/842775b676356f64f170bf778ddcac4f/iap-intro%402x.png)
 
@@ -59,7 +59,7 @@ People can use Family Sharing to share access to their purchased content — suc
 
 ### [Providing help with in-app purchases](/design/human-interface-guidelines/in-app-purchase#Providing-help-with-in-app-purchases)
 
-Sometimes, people need help with a purchase or want to request a refund. To help make this experience convenient, you can present custom UI within your app that provides assistance, offers alternative solutions, and helps people initiate the system-provided refund flow. For developer guidance, see [`beginRefundRequest(for:in:)`](/documentation/StoreKit/Transaction/beginRefundRequest(for:in:)-65tph); for related guidance specific to auto-renewable subscriptions, see [Helping people manage their subscriptions](/design/human-interface-guidelines/in-app-purchase#Helping-people-manage-their-subscriptions).
+Sometimes, people need help with a purchase or want to request a refund. To help make this experience convenient, you can present custom UI within your app that provides assistance, offers alternative solutions, and helps people initiate the system-provided refund flow. For developer guidance, see [`beginRefundRequest(for:in:)`](</documentation/StoreKit/Transaction/beginRefundRequest(for:in:)-65tph>); for related guidance specific to auto-renewable subscriptions, see [Helping people manage their subscriptions](/design/human-interface-guidelines/in-app-purchase#Helping-people-manage-their-subscriptions).
 
 **Provide help that customers can view before they request a refund.** In addition to including a link to the system-provided refund flow, your custom purchase-help screen can provide assistance you tailor to your app. For example, your custom screen might help people resolve problems with missing purchases, answer frequently asked questions about the in-app purchases you offer, and give people ways to submit feedback or contact you directly for support.
 
@@ -91,9 +91,9 @@ Sometimes, people need help with a purchase or want to request a refund. To help
 
 **Consider letting people try your content for free before signing up.** Limited free access gives people the opportunity to sample your content and encourages people who already engaged with your content to sign up. For example, you might offer a freemium app, a metered paywall, or a free trial.
 
-* [Freemium app](#)
-* [Metered paywall](#)
-* [Free trial](#)
+- [Freemium app](#)
+- [Metered paywall](#)
+- [Free trial](#)
 
 ![A screenshot of a page titled Upgrade to Pro on a freemium app running on iPhone. The top half of the screen describes pro features and includes a close button in the top right. The bottom half of the screen shows two subscription options: the Annual Plan, which costs $29.99 per year, comes with a 1-week free trial period, and is a savings of 50% over the monthly plan; and a Monthly Plan that costs $4.99 per month. A checkmark appears next to the Annual Plan subscription. The bottom of the screen includes a Try It Free button.](https://docs-assets.developer.apple.com/published/592286b7e427356873de8605db5836f3/freemium-app%402x.png)
 
@@ -117,9 +117,9 @@ A simple and informative sign-up experience makes it easy for people to act on t
 
 **Give people more information in your app’s sign-up screen.** In addition to including links to your Terms of Service and Privacy Policy in your app and App Store metadata, the in-app sign-up screen needs to include:
 
-* The subscription name, duration, and the content or services provided during each subscription period
-* The billing amount, correctly localized for the territories and currencies where the subscription is available for purchase
-* A way for existing subscribers to sign in or restore purchases
+- The subscription name, duration, and the content or services provided during each subscription period
+- The billing amount, correctly localized for the territories and currencies where the subscription is available for purchase
+- A way for existing subscribers to sign in or restore purchases
 
 For example, the Forest Explorer sign-up screen displays billing totals for monthly, biannual, and annual subscriptions in the most prominent positions. In subordinate positions, it shows breakdowns of the biannual and annual prices, so that people can compare the values and make an informed choice. The sign-up screen also contains a button that existing subscribers can use to restore their purchases.
 
@@ -137,8 +137,8 @@ In iOS and iPadOS, subscription offer codes let you use both online and offline 
 
 There are two types of offer codes you can support:
 
-* A *one-time use code* is a unique code you generate in App Store Connect. People can redeem a one-time use code through a [redemption URL](https://developer.apple.com/help/app-store-connect/manage-subscriptions/set-up-offer-codes/#distribute-offer-codes) (a shareable link), within your app (when you support redemption), or by entering it in the App Store, where they’re prompted to install your app if they haven’t already. Consider using one-time use codes when your distribution is small or when you need to restrict access to a code.
-* A *custom code* is a code you create, such as NEWYEAR or SPRINGSALE. People can redeem a custom code through a redemption URL or within your app (when you support redemption). Consider using a custom code when you want to support a large campaign that requires a mass distribution of codes.
+- A _one-time use code_ is a unique code you generate in App Store Connect. People can redeem a one-time use code through a [redemption URL](https://developer.apple.com/help/app-store-connect/manage-subscriptions/set-up-offer-codes/#distribute-offer-codes) (a shareable link), within your app (when you support redemption), or by entering it in the App Store, where they’re prompted to install your app if they haven’t already. Consider using one-time use codes when your distribution is small or when you need to restrict access to a code.
+- A _custom code_ is a code you create, such as NEWYEAR or SPRINGSALE. People can redeem a custom code through a redemption URL or within your app (when you support redemption). Consider using a custom code when you want to support a large campaign that requires a mass distribution of codes.
 
 For developer guidance on implementing offer codes, see [Offer codes](https://developer.apple.com/documentation/storekit/implementing-offer-codes-in-your-app) and [Set up offer codes](https://developer.apple.com/help/app-store-connect/manage-subscriptions/set-up-offer-codes). For guidance on other types of offers, see [Providing subscription offers](https://developer.apple.com/app-store/subscriptions/#providing-subscription-offers).
 
@@ -148,7 +148,7 @@ For developer guidance on implementing offer codes, see [Offer codes](https://de
 
 **Tell people how to redeem a custom code.** Because people can’t redeem a custom code by entering it in their App Store account settings, it’s important to let them know that they can redeem it through a redemption URL or within your app.
 
-**Consider supporting offer redemption within your app.** The system automatically provides screens that present the offer-redemption flow, whether people redeem the offer in your app or in the App Store. When you use StoreKit API to let people redeem offer codes within your app, the only custom UI you need to create is one that initiates the system-provided flow. For developer guidance, see [`presentOfferCodeRedeemSheet(in:)`](/documentation/StoreKit/AppStore/presentOfferCodeRedeemSheet(in:)) and [`offerCodeRedemption(isPresented:onCompletion:)`](/documentation/SwiftUI/View/offerCodeRedemption(isPresented:onCompletion:)). There are several natural places to provide this custom UI. For example, you could add a “Redeem Code” button to your paywall, onboarding screens, or your app’s settings screen.
+**Consider supporting offer redemption within your app.** The system automatically provides screens that present the offer-redemption flow, whether people redeem the offer in your app or in the App Store. When you use StoreKit API to let people redeem offer codes within your app, the only custom UI you need to create is one that initiates the system-provided flow. For developer guidance, see [`presentOfferCodeRedeemSheet(in:)`](</documentation/StoreKit/AppStore/presentOfferCodeRedeemSheet(in:)>) and [`offerCodeRedemption(isPresented:onCompletion:)`](</documentation/SwiftUI/View/offerCodeRedemption(isPresented:onCompletion:)>). There are several natural places to provide this custom UI. For example, you could add a “Redeem Code” button to your paywall, onboarding screens, or your app’s settings screen.
 
 ![A screenshot of the Forest Explorer app’s subscription sign-up page on iPhone. The Redeem Code button is highlighted out of the three subscription buttons.](https://docs-assets.developer.apple.com/published/d9787d1349b4d5b6a524d8a5debc4e44/iphone-custom-redeem%402x.png)
 
@@ -172,7 +172,7 @@ Supporting subscription management means people can upgrade, downgrade, or cance
 
 **Provide summaries of the customer’s subscriptions.** In particular, people appreciate viewing the upcoming renewal date without having to search for it. Consider displaying this information in a settings or account screen, near the subscription-management option. For developer guidance, see [`Product.SubscriptionInfo`](/documentation/StoreKit/Product/SubscriptionInfo).
 
-**Consider using the system-provided subscription-management UI.** Using StoreKit APIs lets you present a consistent experience that helps people manage or cancel their subscriptions without leaving your app. For developer guidance, see [`showManageSubscriptions(in:)`](/documentation/StoreKit/AppStore/showManageSubscriptions(in:)).
+**Consider using the system-provided subscription-management UI.** Using StoreKit APIs lets you present a consistent experience that helps people manage or cancel their subscriptions without leaving your app. For developer guidance, see [`showManageSubscriptions(in:)`](</documentation/StoreKit/AppStore/showManageSubscriptions(in:)>).
 
 ![A screenshot of an app’s subscription management screen on iPhone. It includes the app name, subscription level, price, and next billing date, above a list of subscription options and a Cancel Subscription button.](https://docs-assets.developer.apple.com/published/ea9b497104cc62f2db2bdb539eecca6b/system-cancel-flow-1%402x.png)
 
@@ -188,7 +188,7 @@ Supporting subscription management means people can upgrade, downgrade, or cance
 
 ## [Platform considerations](/design/human-interface-guidelines/in-app-purchase#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, or visionOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, or visionOS._
 
 ### [watchOS](/design/human-interface-guidelines/in-app-purchase#watchOS)
 
@@ -208,8 +208,8 @@ A description that clarifies how the subscription works on Apple Watch in contra
 
 **Make subscription options easy to compare on a small screen.** People need to understand the terms of each subscription option before they can choose one. Aim to display the duration and discount information for each option in a compact way that’s easy to scan and compare. Here are two ways you might present subscription options in your watchOS app:
 
-* Display each option in a separate button. Using one button per payment option lets people start the signup process with one tap. In this design, it’s important to lock up each button with its description so that people can see how these elements are related, especially while scrolling.
-* Display a list of options, followed by a button people tap to start the signup process. Using a list to display one option per row gives you a compact design that minimizes scrolling while making subscription choices easy to scan and understand. In this design, the button’s title can update to reflect the chosen option.
+- Display each option in a separate button. Using one button per payment option lets people start the signup process with one tap. In this design, it’s important to lock up each button with its description so that people can see how these elements are related, especially while scrolling.
+- Display a list of options, followed by a button people tap to start the signup process. Using a list to display one option per row gives you a compact design that minimizes scrolling while making subscription choices easy to scan and understand. In this design, the button’s title can update to reflect the chosen option.
 
 ![A screenshot of an app running on Apple Watch. The screen includes two subscription buttons: $4.99 per month and $29.99 per year. A Close button appears in the top-left corner of the screen.](https://docs-assets.developer.apple.com/published/d1beed8e9dddac07a14bd09ed184a984/lock-up-option-information%402x.png)
 
@@ -241,7 +241,7 @@ What’s new in StoreKit and In-App Purchase](https://developer.apple.com/videos
 
 ## [Change log](/design/human-interface-guidelines/in-app-purchase#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| September 12, 2023 | Updated artwork and guidance for redeeming offer codes. |
-| November 3, 2022 | Added a guideline for displaying the total billing price for every in-app purchase item and consolidated guidance into one page. |
+| Date               | Changes                                                                                                                          |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| September 12, 2023 | Updated artwork and guidance for redeeming offer codes.                                                                          |
+| November 3, 2022   | Added a guideline for displaying the total billing price for every in-app purchase item and consolidated guidance into one page. |

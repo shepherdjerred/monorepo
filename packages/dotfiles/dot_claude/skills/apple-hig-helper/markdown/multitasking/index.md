@@ -24,8 +24,8 @@ A great multitasking experience helps people accomplish tasks in multiple apps b
 
 **Respond smoothly to audio interruptions.** Occasionally, audio from another app or the system itself may interrupt your app’s audio. For example, an incoming phone call or a music playlist initiated by Siri might interrupt your app’s audio. When situations like these occur, people expect your app to respond in the following ways:
 
-* Pause audio indefinitely for primary audio interruptions, such as playing music, podcasts, or audiobooks.
-* Temporarily lower the volume or pause the audio for shorter interruptions, such as GPS directional notifications, and resume the original volume or playback when the interruption ends.
+- Pause audio indefinitely for primary audio interruptions, such as playing music, podcasts, or audiobooks.
+- Temporarily lower the volume or pause the audio for shorter interruptions, such as GPS directional notifications, and resume the original volume or playback when the interruption ends.
 
 For guidance, see [Playing audio](/design/human-interface-guidelines/playing-audio).
 
@@ -35,7 +35,7 @@ For guidance, see [Playing audio](/design/human-interface-guidelines/playing-aud
 
 ## [Platform considerations](/design/human-interface-guidelines/multitasking#Platform-considerations)
 
-*Not supported in watchOS.*
+_Not supported in watchOS._
 
 ### [iOS](/design/human-interface-guidelines/multitasking#iOS)
 
@@ -89,11 +89,11 @@ When an app is the Now Playing app, closing its window automatically pauses audi
 
 **Avoid interfering with the system-provided multitasking behavior.** When people look from one window to another, visionOS applies a feathered mask to the window they look away from to clarify its changed state. To avoid interfering with this visual feedback, don’t change the appearance of a window’s edges.
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/c124d6dd1bde7762a4835b76c15417ba/visionos-multiple-windows%402x.png)](https://docs-assets.developer.apple.com/published/fc19915fadbe5d69561938117336730e/visionos-multiple-windows.mp4) Content description: A recording showing the Notes app and the Settings app in the Shared Space in visionOS. The viewer first repositions the Notes window to slightly overlap the Settings window before activating Settings and then switching back to Notes. Each time an app becomes active, the system applies feathering to the inactive app's window.
 
- [Play](#)
+[Play](#)
 
 **Don’t pause a window’s video playback when people look away from it.** In visionOS, as in macOS, people expect the playback they start in one window to continue while they view or perform a task in another window.
 
@@ -127,8 +127,8 @@ Make your UIKit app more flexible](https://developer.apple.com/videos/play/wwdc2
 
 ## [Change log](/design/human-interface-guidelines/multitasking#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| June 9, 2025 | Reorganized guidance in platform considerations, and added guidance for multitasking with multiple windows in iPadOS. |
-| December 5, 2023 | Added artwork for primary and auxiliary windows in iPadOS. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
+| Date             | Changes                                                                                                               |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------- |
+| June 9, 2025     | Reorganized guidance in platform considerations, and added guidance for multitasking with multiple windows in iPadOS. |
+| December 5, 2023 | Added artwork for primary and auxiliary windows in iPadOS.                                                            |
+| June 21, 2023    | Updated to include guidance for visionOS.                                                                             |

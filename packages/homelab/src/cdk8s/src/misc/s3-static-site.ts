@@ -1,7 +1,18 @@
 import { Chart, JsonPatch } from "cdk8s";
 import { Construct } from "constructs";
-import { ConfigMap, Deployment, DeploymentStrategy, EnvValue, Secret, Service, Volume } from "cdk8s-plus-31";
-import { TunnelBinding, TunnelBindingTunnelRefKind } from "../../generated/imports/networking.cfargotunnel.com.ts";
+import {
+  ConfigMap,
+  Deployment,
+  DeploymentStrategy,
+  EnvValue,
+  Secret,
+  Service,
+  Volume,
+} from "cdk8s-plus-31";
+import {
+  TunnelBinding,
+  TunnelBindingTunnelRefKind,
+} from "../../generated/imports/networking.cfargotunnel.com.ts";
 import { withCommonProps } from "./common.ts";
 import versions from "../versions.ts";
 import { ApiObject } from "cdk8s";
@@ -43,7 +54,9 @@ export function generateCaddyfile(props: CaddyfileGeneratorProps): string {
   for (const site of props.sites) {
     const indexFile = site.indexFile ?? "index.html";
     const notFoundPage = site.notFoundPage ?? "404.html";
-    const address = site.hostname.includes("://") ? site.hostname : `http://${site.hostname}`;
+    const address = site.hostname.includes("://")
+      ? site.hostname
+      : `http://${site.hostname}`;
 
     blocks.push(`${address} {
 	# Redirect directory-style paths to include trailing slash
@@ -92,12 +105,17 @@ export class S3StaticSites extends Construct {
       },
     });
 
-    const caddyfileVolume = Volume.fromConfigMap(this, "caddyfile-volume", configMap, {
-      name: "caddyfile",
-      items: {
-        Caddyfile: { path: "Caddyfile" },
+    const caddyfileVolume = Volume.fromConfigMap(
+      this,
+      "caddyfile-volume",
+      configMap,
+      {
+        name: "caddyfile",
+        items: {
+          Caddyfile: { path: "Caddyfile" },
+        },
       },
-    });
+    );
 
     const deployment = new Deployment(this, "deployment", {
       replicas: 1,
@@ -105,15 +123,24 @@ export class S3StaticSites extends Construct {
       metadata: {
         name: "s3-static-sites",
         annotations: {
-          "ignore-check.kube-linter.io/no-read-only-root-fs": "Caddy requires writable filesystem for runtime data",
+          "ignore-check.kube-linter.io/no-read-only-root-fs":
+            "Caddy requires writable filesystem for runtime data",
         },
       },
     });
 
     const dataVolume = Volume.fromEmptyDir(this, "caddy-data", "caddy-data");
-    const configVolume = Volume.fromEmptyDir(this, "caddy-config", "caddy-config");
+    const configVolume = Volume.fromEmptyDir(
+      this,
+      "caddy-config",
+      "caddy-config",
+    );
 
-    const credentialsSecret = Secret.fromSecretName(chart, "s3-credentials-secret", props.credentialsSecretName);
+    const credentialsSecret = Secret.fromSecretName(
+      chart,
+      "s3-credentials-secret",
+      props.credentialsSecretName,
+    );
 
     const container = deployment.addContainer(
       withCommonProps({
@@ -142,13 +169,16 @@ export class S3StaticSites extends Construct {
     container.mount("/data", dataVolume);
     container.mount("/config", configVolume);
 
-    const envFromPatch = JsonPatch.add("/spec/template/spec/containers/0/envFrom", [
-      {
-        secretRef: {
-          name: props.credentialsSecretName,
+    const envFromPatch = JsonPatch.add(
+      "/spec/template/spec/containers/0/envFrom",
+      [
+        {
+          secretRef: {
+            name: props.credentialsSecretName,
+          },
         },
-      },
-    ]);
+      ],
+    );
     ApiObject.of(deployment).addJsonPatch(envFromPatch);
 
     this.deployment = deployment;
@@ -163,7 +193,7 @@ export class S3StaticSites extends Construct {
 
     for (const site of props.sites) {
       // DNS is managed by OpenTofu — disable cloudflare-operator DNS updates
-      new TunnelBinding(this, `tunnel-${site.hostname.replaceAll('.', "-")}`, {
+      new TunnelBinding(this, `tunnel-${site.hostname.replaceAll(".", "-")}`, {
         metadata: {
           namespace,
         },
@@ -183,9 +213,9 @@ export class S3StaticSites extends Construct {
       });
 
       // Create Probe for HTTP monitoring via blackbox-exporter
-      new Probe(this, `probe-${site.hostname.replaceAll('.', "-")}`, {
+      new Probe(this, `probe-${site.hostname.replaceAll(".", "-")}`, {
         metadata: {
-          name: `static-site-${site.hostname.replaceAll('.', "-")}`,
+          name: `static-site-${site.hostname.replaceAll(".", "-")}`,
           namespace,
           labels: { release: "prometheus" },
         },

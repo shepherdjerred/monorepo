@@ -33,7 +33,7 @@ function getSourceExtension(module: ModuleEntry): string {
 /** Ensure the output path is safe (no path traversal) */
 function sanitizePath(basePath: string, relativePath: string): string {
   // Normalize: remove leading slashes and convert backslashes to forward slashes
-  const normalized = relativePath.replace(/^\/+/, "").replaceAll('\\', "/");
+  const normalized = relativePath.replace(/^\/+/, "").replaceAll("\\", "/");
 
   // Resolve both paths to absolute paths and verify the result stays within basePath
   const resolved = resolve(basePath, normalized);
@@ -41,7 +41,10 @@ function sanitizePath(basePath: string, relativePath: string): string {
 
   // Check that resolved path is within the base directory
   // Must either equal the base or start with base + separator
-  if (!resolved.startsWith(normalizedBase + sep) && resolved !== normalizedBase) {
+  if (
+    !resolved.startsWith(normalizedBase + sep) &&
+    resolved !== normalizedBase
+  ) {
     throw new ExtractionError("Path traversal detected", relativePath);
   }
 
@@ -49,7 +52,10 @@ function sanitizePath(basePath: string, relativePath: string): string {
 }
 
 /** Write a single file, creating directories as needed */
-async function writeFile(filePath: string, contents: Uint8Array): Promise<void> {
+async function writeFile(
+  filePath: string,
+  contents: Uint8Array,
+): Promise<void> {
   const dir = dirname(filePath);
   await mkdir(dir, { recursive: true });
   await Bun.write(filePath, contents);
@@ -136,7 +142,9 @@ export async function extractToDirectory(
     // Determine output filename
     let filename = module.name;
     if (!filename || filename === "/") {
-      filename = module.isEntryPoint ? "index" : `module_${String(result.modules.indexOf(module))}`;
+      filename = module.isEntryPoint
+        ? "index"
+        : `module_${String(result.modules.indexOf(module))}`;
     }
 
     // Add extension if missing
@@ -148,7 +156,9 @@ export async function extractToDirectory(
     if (module.contents.length > 0) {
       const srcPath = sanitizePath(bundledDir, filename);
       const contents = decodeContents(module);
-      await (typeof contents === "string" ? writeFile(srcPath, new TextEncoder().encode(contents)) : writeFile(srcPath, contents));
+      await (typeof contents === "string"
+        ? writeFile(srcPath, new TextEncoder().encode(contents))
+        : writeFile(srcPath, contents));
     }
 
     // Write sourcemap if present
@@ -181,7 +191,9 @@ export function getExtractionSummary(result: DecompileResult): string {
 
   // Original sources from sourcemaps
   if (result.originalSources.length > 0) {
-    lines.push(`Original Sources: ${String(result.originalSources.length)} (recovered from sourcemap)`);
+    lines.push(
+      `Original Sources: ${String(result.originalSources.length)} (recovered from sourcemap)`,
+    );
     for (const source of result.originalSources) {
       lines.push(`  - ${source.name}`);
     }

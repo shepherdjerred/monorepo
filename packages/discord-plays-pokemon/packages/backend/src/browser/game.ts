@@ -1,5 +1,10 @@
 import { By, WebDriver, until } from "selenium-webdriver";
-import { CommandInput, isBurst, isHold, isHoldB } from "../game/command/commandInput.js";
+import {
+  CommandInput,
+  isBurst,
+  isHold,
+  isHoldB,
+} from "../game/command/commandInput.js";
 import { toGameboyAdvanceKeyInput } from "../game/command/keybinds.js";
 import { wait } from "../util.js";
 import { logger } from "../logger.js";
@@ -26,7 +31,10 @@ export async function setupGame(driver: WebDriver) {
   // logger.info("clicked button");
 }
 
-export async function sendGameCommand(driver: WebDriver, command: CommandInput) {
+export async function sendGameCommand(
+  driver: WebDriver,
+  command: CommandInput,
+) {
   await focusContentFrame(driver);
   const element = await driver.findElement(By.css("body"));
   const key = toGameboyAdvanceKeyInput(command.command);
@@ -47,7 +55,10 @@ export async function sendGameCommand(driver: WebDriver, command: CommandInput) 
       .actions()
       .click(element)
       .sendKeys("X", key)
-      .pause(getConfig().game.commands.hold.duration_in_milliseconds * command.quantity)
+      .pause(
+        getConfig().game.commands.hold.duration_in_milliseconds *
+          command.quantity,
+      )
       .keyUp(key)
       .keyUp("X")
       .perform();
@@ -64,7 +75,11 @@ export async function sendGameCommand(driver: WebDriver, command: CommandInput) 
   }
 
   if (isBurst(command.modifier)) {
-    for (let i = 0; i < getConfig().game.commands.burst.quantity * command.quantity; i++) {
+    for (
+      let i = 0;
+      i < getConfig().game.commands.burst.quantity * command.quantity;
+      i++
+    ) {
       await driver
         .actions()
         .click(element)
@@ -106,7 +121,9 @@ export async function fullscreenGame(driver: WebDriver) {
 
   await focusGameFrame(driver);
   logger.info("waiting for fullscreen button");
-  const fullscreenButton = await driver.wait(until.elementLocated(By.css("[data-btn=fullscreen]")));
+  const fullscreenButton = await driver.wait(
+    until.elementLocated(By.css("[data-btn=fullscreen]")),
+  );
 
   logger.info("clicking fullscreen button");
   const actions = driver.actions({ async: true });

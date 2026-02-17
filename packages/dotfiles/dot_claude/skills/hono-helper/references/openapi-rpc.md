@@ -11,14 +11,10 @@ import { z } from "zod";
 
 const app = new Hono()
   .get("/users", (c) => c.json({ users: [] }))
-  .post(
-    "/users",
-    zValidator("json", z.object({ name: z.string() })),
-    (c) => {
-      const { name } = c.req.valid("json");
-      return c.json({ id: 1, name });
-    }
-  )
+  .post("/users", zValidator("json", z.object({ name: z.string() })), (c) => {
+    const { name } = c.req.valid("json");
+    return c.json({ id: 1, name });
+  })
   .get("/users/:id", (c) => {
     const id = c.req.param("id");
     return c.json({ id, name: "John" });

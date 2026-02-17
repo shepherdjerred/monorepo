@@ -8,7 +8,7 @@
 
 December 16, 2025
 
-Updated guidance for Liquid Glass. 
+Updated guidance for Liquid Glass.
 
 # Tab bars
 
@@ -48,7 +48,7 @@ If you’re creating custom tab bar icons, see [Apple Design Resources](https://
 
 ## [Platform considerations](/design/human-interface-guidelines/tab-bars#Platform-considerations)
 
-*No additional considerations for macOS. Not supported in watchOS.*
+_No additional considerations for macOS. Not supported in watchOS._
 
 ### [iOS](/design/human-interface-guidelines/tab-bars#iOS)
 
@@ -70,8 +70,8 @@ A tab bar can include a distinct search item at the trailing end. For guidance, 
 
 The system displays a tab bar near the top of the screen. You can choose to have the tab bar appear as a fixed element, or with a button that converts it to a sidebar. For developer guidance, see [`tabBarOnly`](/documentation/SwiftUI/TabViewStyle/tabBarOnly) and [`sidebarAdaptable`](/documentation/SwiftUI/TabViewStyle/sidebarAdaptable).
 
-* [Tab bar](#)
-* [Sidebar](#)
+- [Tab bar](#)
+- [Sidebar](#)
 
 ![A screenshot showing the Music app on iPad with the tab bar near the top of the screen.](https://docs-assets.developer.apple.com/published/66af6b050f67a05a82c5df2acb99913a/ipad-tab-bar-music-app%402x.png)
 
@@ -89,10 +89,10 @@ To present a sidebar without the option to convert it to a tab bar, use a [navig
 
 A tab bar is highly customizable. For example, you can:
 
-* Specify a tint, color, or image for the tab bar background
-* Choose a font for tab items, including a different font for the selected item
-* Specify tints for selected and unselected items
-* Add button icons, like settings and search
+- Specify a tint, color, or image for the tab bar background
+- Choose a font for tab items, including a different font for the selected item
+- Specify tints for selected and unselected items
+- Add button icons, like settings and search
 
 By default, a tab bar is translucent, and only the selected tab is opaque. When people use the remote to focus on the tab bar, the selected tab includes a drop shadow that emphasizes its selected state. The height of a tab bar is 68 points, and its top edge is 46 points from the top of the screen; you can’t change either of these values.
 
@@ -102,9 +102,9 @@ If there are more items than can fit in the tab bar, the system truncates the ri
 
 **In a live-viewing app, organize tabs in a consistent way.** For the best experience, organize content in live-streaming apps with tabs in the following order:
 
-* Live content
-* Cloud DVR or other recorded content
-* Other content
+- Live content
+- Cloud DVR or other recorded content
+- Other content
 
 For additional guidance, see [Live-viewing apps](/design/human-interface-guidelines/live-viewing-apps).
 
@@ -112,11 +112,11 @@ For additional guidance, see [Live-viewing apps](/design/human-interface-guideli
 
 In visionOS, a tab bar is always vertical, floating in a position that’s fixed relative to the window’s leading side. When people look at a tab bar, it automatically expands; to open a specific tab, people look at the tab and tap. While a tab bar is expanded, it can temporarily obscure the content behind it.
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/787b5ca5e287857dbeeb656d2bba7df4/visionos-tab-bar-expanding-animation%402x.png)](https://docs-assets.developer.apple.com/published/f32ef9dc79663078639886243082e3cd/visionos-tab-bar-expanding-animation.mp4) Content description: A recording showing a closeup of a tab bar along the side of an app's window in visionOS. The tab bar includes only symbols. The currently selected tab receives the hover effect, showing that someone is looking at it, and the bar expands to display both symbols and labels.
 
- [Play](#)
+[Play](#)
 
 **Supply a symbol and a text label for each tab.** A tab’s symbol is always visible in the tab bar. When people look at the tab bar, the system reveals tab labels, too. Even though the tab bar expands, you need to keep tab labels short so people can read them at a glance.
 
@@ -166,10 +166,10 @@ Elevate the design of your iPad app](https://developer.apple.com/videos/play/wwd
 
 ## [Change log](/design/human-interface-guidelines/tab-bars#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| December 16, 2025 | Updated guidance for Liquid Glass. |
-| July 28, 2025 | Added guidance for Liquid Glass. |
-| September 9, 2024 | Added art representing the tab bar in iPadOS 18. |
-| August 6, 2024 | Updated with guidance for the tab bar in iPadOS 18. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
+| Date              | Changes                                             |
+| ----------------- | --------------------------------------------------- |
+| December 16, 2025 | Updated guidance for Liquid Glass.                  |
+| July 28, 2025     | Added guidance for Liquid Glass.                    |
+| September 9, 2024 | Added art representing the tab bar in iPadOS 18.    |
+| August 6, 2024    | Updated with guidance for the tab bar in iPadOS 18. |
+| June 21, 2023     | Updated to include guidance for visionOS.           |

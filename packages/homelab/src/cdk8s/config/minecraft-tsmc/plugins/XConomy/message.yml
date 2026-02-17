@@ -33,9 +33,11 @@ no_permission: "&cYou don't have permission to use this command"
 no_data: NO DATA
 delete_data: "&aYour data is being updated, please login again"
 delete_data_admin: "&cYou delete %player%'s data"
-global_permissions_change: "&aThe global %permission% permissions has been set to
+global_permissions_change:
+  "&aThe global %permission% permissions has been set to
   %value%"
-personal_permissions_change: "&aThe %permission% permission of %player% has been set
+personal_permissions_change:
+  "&aThe %permission% permission of %player% has been set
   to %value%"
 help_title_full: "&6=============== [XConomy] HELP <Page %page%> ==============="
 help1: "&6balance/money  -  Displays your balance"
@@ -45,14 +47,18 @@ help4: "&6balancetop  -  Displays TOP10"
 help5: "&6balance/money give <player> <amount>  -  give <player> <amount>"
 help6: "&6balance/money take <player> <amount>  -  take <amount> from <player>"
 help7: "&6balance/money set <player> <amount>  -  set <player>'s balance to <amount>"
-help8: "&6balance/money give * <all/online> <amount> <reason>  -  give <all/online
+help8:
+  "&6balance/money give * <all/online> <amount> <reason>  -  give <all/online
   player> <amount>"
-help9: "&6balance/money take * <all/online> <amount> <reason>  -  take <amount> from
+help9:
+  "&6balance/money take * <all/online> <amount> <reason>  -  take <amount> from
   <all/online player>"
-help10: "&6balancetop hide/display <player>  -  Hide or display a <player>'s data
+help10:
+  "&6balancetop hide/display <player>  -  Hide or display a <player>'s data
   from TOP10"
 help11: "&6paytoggle  -  Toggle accepting payments"
 help12: "&6paytoggle <player>  -  Toggle <player>'s accepting payments"
-help13: "&6paypermission set <player> True/False  -  Set <player>'s (* represents
+help13:
+  "&6paypermission set <player> True/False  -  Set <player>'s (* represents
   a global) pay permission"
 help14: "&6paypermission remove <player>  -  Set <player>'s pay permission to default"

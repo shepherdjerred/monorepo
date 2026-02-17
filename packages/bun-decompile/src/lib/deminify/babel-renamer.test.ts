@@ -1,12 +1,16 @@
 import { describe, expect, it } from "bun:test";
-import { applyRenames, extractIdentifiers, type RenameMappings } from "./babel-renamer.ts";
+import {
+  applyRenames,
+  extractIdentifiers,
+  type RenameMappings,
+} from "./babel-renamer.ts";
 
 describe("babel-renamer", () => {
   describe("applyRenames", () => {
     it("should rename function parameters", async () => {
       const source = `function a(x, y) { return x + y; }`;
       const mappings: RenameMappings = {
-        "a_0_34": {
+        a_0_34: {
           functionName: "add",
           description: "Adds two numbers",
           renames: { x: "num1", y: "num2" },
@@ -25,7 +29,7 @@ describe("babel-renamer", () => {
     it("should rename arrow function variables", async () => {
       const source = `const b = (x) => x * 2;`;
       const mappings: RenameMappings = {
-        "b_10_22": {
+        b_10_22: {
           functionName: "double",
           renames: { x: "value" },
         },
@@ -47,7 +51,7 @@ function outer(x) {
 }`;
       // Only rename outer's x, not inner's
       const mappings: RenameMappings = {
-        "outer_1_89": {
+        outer_1_89: {
           renames: { x: "outerValue" },
         },
       };
@@ -62,7 +66,7 @@ function outer(x) {
     it("should preserve code functionality", async () => {
       const source = `function add(a, b) { return a + b; }`;
       const mappings: RenameMappings = {
-        "add_0_36": {
+        add_0_36: {
           functionName: "sum",
           renames: { a: "first", b: "second" },
         },
@@ -79,7 +83,7 @@ function outer(x) {
     it("should not modify code when no mappings match", async () => {
       const source = `function foo(x) { return x; }`;
       const mappings: RenameMappings = {
-        "nonexistent_0_0": {
+        nonexistent_0_0: {
           renames: { x: "value" },
         },
       };

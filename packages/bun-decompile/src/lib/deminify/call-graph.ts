@@ -22,19 +22,22 @@ type ImportDeclarationNode = {
     local: { name: string };
     imported?: { name: string };
   }[];
-} & Node
+} & Node;
 
 type ExportNamedDeclarationNode = {
-  declaration?: Node & { id?: { name: string }; declarations?: { id: { name: string } }[] };
+  declaration?: Node & {
+    id?: { name: string };
+    declarations?: { id: { name: string } }[];
+  };
   specifiers: {
     local: { name: string };
     exported: { name: string };
   }[];
-} & Node
+} & Node;
 
 type ExportDefaultDeclarationNode = {
   declaration: Node & { id?: { name: string }; name?: string };
-} & Node
+} & Node;
 
 /** Build a complete call graph from source code */
 export function buildCallGraph(source: string): CallGraph {
@@ -245,7 +248,9 @@ export function getProcessingOrder(graph: CallGraph): string[] {
 
   // Topological sort with cycle detection
   function visit(id: string): void {
-    if (visited.has(id)) {return;}
+    if (visited.has(id)) {
+      return;
+    }
     if (visiting.has(id)) {
       // Cycle detected, just add to order
       if (!visited.has(id)) {
@@ -303,7 +308,9 @@ export function findCycles(graph: CallGraph): string[][] {
     if (func) {
       for (const calleeName of func.callees) {
         const calleeId = graph.nameToId.get(calleeName);
-        if (!calleeId || !graph.functions.has(calleeId)) {continue;}
+        if (!calleeId || !graph.functions.has(calleeId)) {
+          continue;
+        }
 
         if (!visited.has(calleeId)) {
           strongConnect(calleeId);
@@ -349,12 +356,16 @@ export function getFunctionContext(
   const callers: FunctionContext[] = func.callers
     .map((callerId) => {
       const caller = graph.functions.get(callerId);
-      if (!caller) {return null;}
+      if (!caller) {
+        return null;
+      }
       const result = deminifiedResults.get(callerId);
       return {
         id: callerId,
         originalSource: truncateSource(caller.source, 500),
-        deminifiedSource: result ? truncateSource(result.deminifiedSource, 500) : null,
+        deminifiedSource: result
+          ? truncateSource(result.deminifiedSource, 500)
+          : null,
         suggestedName: result?.suggestedName ?? null,
       };
     })
@@ -365,14 +376,20 @@ export function getFunctionContext(
   const callees: FunctionContext[] = func.callees
     .map((calleeName) => {
       const calleeId = graph.nameToId.get(calleeName);
-      if (!calleeId) {return null;}
+      if (!calleeId) {
+        return null;
+      }
       const callee = graph.functions.get(calleeId);
-      if (!callee) {return null;}
+      if (!callee) {
+        return null;
+      }
       const result = deminifiedResults.get(calleeId);
       return {
         id: calleeId,
         originalSource: truncateSource(callee.source, 500),
-        deminifiedSource: result ? truncateSource(result.deminifiedSource, 500) : null,
+        deminifiedSource: result
+          ? truncateSource(result.deminifiedSource, 500)
+          : null,
         suggestedName: result?.suggestedName ?? null,
       };
     })
@@ -431,7 +448,10 @@ export function getGraphStats(graph: CallGraph): {
     functionCount: functions.length,
     topLevelCount: topLevel.length,
     nestedCount: nested.length,
-    avgCallees: callees.length > 0 ? callees.reduce((a, b) => a + b, 0) / callees.length : 0,
+    avgCallees:
+      callees.length > 0
+        ? callees.reduce((a, b) => a + b, 0) / callees.length
+        : 0,
     maxCallees: Math.max(0, ...callees),
     cycleCount: cycles.length,
   };

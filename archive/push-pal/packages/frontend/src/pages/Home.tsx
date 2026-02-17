@@ -3,7 +3,7 @@ import Form from "../components/add/Form";
 import type { Site } from "../types/Site";
 import { signInWithGithub, supabase } from "../supabase";
 
-export default async  function Home() {
+export default async function Home() {
   // TODO: load this data from Supabase
   const sites: Site[] = [
     {

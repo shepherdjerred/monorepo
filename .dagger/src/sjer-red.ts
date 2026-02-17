@@ -21,7 +21,10 @@ function getPlaywrightContainer(): Container {
     .withEnvVariable("PATH", "/root/.bun/bin:$PATH", { expand: true });
 }
 
-function installDeps(baseContainer: Container, pkgSource: Directory): Container {
+function installDeps(
+  baseContainer: Container,
+  pkgSource: Directory,
+): Container {
   return baseContainer
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
     .withDirectory("/workspace", pkgSource)
@@ -62,7 +65,13 @@ export async function checkSjerRed(source: Directory): Promise<string> {
       await installDeps(getPlaywrightContainer(), pkgSource)
         .withDirectory("/workspace/dist", distDir)
         .withEnvVariable("CI", "true")
-        .withExec(["bun", "run", "test", "--project=chromium", "--max-failures=1"])
+        .withExec([
+          "bun",
+          "run",
+          "test",
+          "--project=chromium",
+          "--max-failures=1",
+        ])
         .sync();
     })(),
   ]);

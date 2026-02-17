@@ -4,15 +4,17 @@ export type LogsOptions = {
   repo?: string | undefined;
   failedOnly?: boolean | undefined;
   job?: string | undefined;
-}
+};
 
 export async function logsCommand(
   runId: string,
-  options: LogsOptions = {}
+  options: LogsOptions = {},
 ): Promise<void> {
   if (!runId) {
     console.error("Error: Run ID is required");
-    console.error("Usage: tools pr logs <run-id> [--failed-only] [--job <name>]");
+    console.error(
+      "Usage: tools pr logs <run-id> [--failed-only] [--job <name>]",
+    );
     process.exit(1);
   }
 

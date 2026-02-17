@@ -11,6 +11,7 @@ Before doing ANY work, scan the available skills list for relevant skills and LO
 - **Look deeper** - If CI is failing, a build tool is erroring, or infrastructure has issues, don't just report the surface error. Load the relevant skill and investigate the root cause. The user wants solutions, not descriptions of problems.
 
 Examples of what NOT to do:
+
 - Seeing Dagger CI failures and NOT loading the dagger-helper skill
 - Seeing Kubernetes errors and NOT loading kubectl-helper
 - Seeing TypeScript errors and NOT loading typescript-helper

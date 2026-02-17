@@ -7,9 +7,14 @@ export type ModalProps = {
   children: React.ReactNode;
   onClose: () => void;
   isVisible: boolean;
-}
+};
 
-export function Modal({ children, onClose, isVisible, title }: ModalProps): React.ReactElement {
+export function Modal({
+  children,
+  onClose,
+  isVisible,
+  title,
+}: ModalProps): React.ReactElement {
   const modalClasses: string = classNames({
     modal: true,
     "is-clipped": true,
@@ -21,7 +26,11 @@ export function Modal({ children, onClose, isVisible, title }: ModalProps): Reac
       <div className="modal-card">
         <header className="modal-card-head">
           <p className="modal-card-title">{title}</p>
-          <button className="delete" aria-label="close" onClick={onClose}></button>
+          <button
+            className="delete"
+            aria-label="close"
+            onClick={onClose}
+          ></button>
         </header>
         <section className="modal-card-body">{children}</section>
       </div>

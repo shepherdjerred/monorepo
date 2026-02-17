@@ -38,7 +38,9 @@ export async function buildAndPushDnsAuditImage(
     };
   }
 
-  const result = await container.withRegistryAuth("ghcr.io", ghcrUsername, ghcrPassword).publish(imageName);
+  const result = await container
+    .withRegistryAuth("ghcr.io", ghcrUsername, ghcrPassword)
+    .publish(imageName);
 
   return {
     status: "passed",

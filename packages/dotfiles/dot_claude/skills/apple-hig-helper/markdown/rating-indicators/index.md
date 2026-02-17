@@ -22,7 +22,7 @@ A rating indicator doesn’t display partial symbols; it rounds the value to dis
 
 ## [Platform considerations](/design/human-interface-guidelines/rating-indicators#Platform-considerations)
 
-*No additional considerations for macOS. Not supported in iOS, iPadOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for macOS. Not supported in iOS, iPadOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/rating-indicators#Resources)
 
@@ -36,6 +36,6 @@ A rating indicator doesn’t display partial symbols; it rounds the value to dis
 
 ## [Change log](/design/human-interface-guidelines/rating-indicators#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date               | Changes   |
+| ------------------ | --------- |
 | September 23, 2022 | New page. |

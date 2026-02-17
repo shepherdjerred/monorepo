@@ -232,21 +232,21 @@ docstring-code-format = true
 
 ### Common Rule Categories
 
-| Code | Plugin | Purpose |
-|------|--------|---------|
-| E/W | pycodestyle | Style errors and warnings |
-| F | Pyflakes | Logical errors (unused imports, undefined names) |
-| I | isort | Import sorting |
-| B | flake8-bugbear | Common bugs and design problems |
-| UP | pyupgrade | Modernize syntax for target Python version |
-| N | pep8-naming | Naming conventions |
-| S | flake8-bandit | Security issues |
-| SIM | flake8-simplify | Simplifiable code |
-| RUF | Ruff-specific | Ruff's own rules |
-| PTH | flake8-use-pathlib | Prefer pathlib over os.path |
-| T20 | flake8-print | Detect print() calls |
-| C4 | flake8-comprehensions | Simplify comprehensions |
-| TCH | flake8-type-checking | Move imports to TYPE_CHECKING |
+| Code | Plugin                | Purpose                                          |
+| ---- | --------------------- | ------------------------------------------------ |
+| E/W  | pycodestyle           | Style errors and warnings                        |
+| F    | Pyflakes              | Logical errors (unused imports, undefined names) |
+| I    | isort                 | Import sorting                                   |
+| B    | flake8-bugbear        | Common bugs and design problems                  |
+| UP   | pyupgrade             | Modernize syntax for target Python version       |
+| N    | pep8-naming           | Naming conventions                               |
+| S    | flake8-bandit         | Security issues                                  |
+| SIM  | flake8-simplify       | Simplifiable code                                |
+| RUF  | Ruff-specific         | Ruff's own rules                                 |
+| PTH  | flake8-use-pathlib    | Prefer pathlib over os.path                      |
+| T20  | flake8-print          | Detect print() calls                             |
+| C4   | flake8-comprehensions | Simplify comprehensions                          |
+| TCH  | flake8-type-checking  | Move imports to TYPE_CHECKING                    |
 
 ### Inline Suppressions
 
@@ -431,13 +431,13 @@ select = ["E", "F", "I", "B", "UP"]
 
 ### Build Backends
 
-| Backend | Use Case | Config |
-|---------|----------|--------|
-| **hatchling** | Modern default, fast, extensible | `requires = ["hatchling"]` |
-| **setuptools** | Legacy, most common historically | `requires = ["setuptools>=61.0"]` |
-| **flit-core** | Simple pure-Python packages | `requires = ["flit_core>=3.4"]` |
-| **pdm-backend** | PDM projects | `requires = ["pdm-backend"]` |
-| **maturin** | Rust+Python packages | `requires = ["maturin>=1.0"]` |
+| Backend         | Use Case                         | Config                            |
+| --------------- | -------------------------------- | --------------------------------- |
+| **hatchling**   | Modern default, fast, extensible | `requires = ["hatchling"]`        |
+| **setuptools**  | Legacy, most common historically | `requires = ["setuptools>=61.0"]` |
+| **flit-core**   | Simple pure-Python packages      | `requires = ["flit_core>=3.4"]`   |
+| **pdm-backend** | PDM projects                     | `requires = ["pdm-backend"]`      |
+| **maturin**     | Rust+Python packages             | `requires = ["maturin>=1.0"]`     |
 
 Hatchling is recommended for new projects. Setuptools if you need compatibility with older tooling.
 
@@ -499,16 +499,17 @@ pyright --pythonversion 3.14
 ```json
 // pyrightconfig.json
 {
-    "pythonVersion": "3.14",
-    "typeCheckingMode": "strict",
-    "reportMissingImports": true,
-    "reportMissingTypeStubs": false,
-    "include": ["src"],
-    "exclude": ["**/__pycache__", ".venv"]
+  "pythonVersion": "3.14",
+  "typeCheckingMode": "strict",
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "include": ["src"],
+  "exclude": ["**/__pycache__", ".venv"]
 }
 ```
 
 Or in pyproject.toml:
+
 ```toml
 [tool.pyright]
 pythonVersion = "3.14"
@@ -518,16 +519,16 @@ include = ["src"]
 
 ### Comparison
 
-| Feature | mypy | pyright |
-|---------|------|---------|
-| Speed | Slower (Python) | Faster (Node.js) |
-| VS Code | Via extension | Built into Pylance |
-| Plugins | mypy plugins API | Limited |
-| Protocol support | Good | Excellent |
-| Error messages | Detailed | Detailed |
-| Incremental | Yes | Yes |
-| Daemon mode | mypy daemon (dmypy) | Built-in |
-| Strictness | Configurable | Basic/Standard/Strict |
+| Feature          | mypy                | pyright               |
+| ---------------- | ------------------- | --------------------- |
+| Speed            | Slower (Python)     | Faster (Node.js)      |
+| VS Code          | Via extension       | Built into Pylance    |
+| Plugins          | mypy plugins API    | Limited               |
+| Protocol support | Good                | Excellent             |
+| Error messages   | Detailed            | Detailed              |
+| Incremental      | Yes                 | Yes                   |
+| Daemon mode      | mypy daemon (dmypy) | Built-in              |
+| Strictness       | Configurable        | Basic/Standard/Strict |
 
 Use **pyright** for VS Code integration and speed. Use **mypy** for CI, plugins, or specific features. Both can be used together.
 
@@ -603,6 +604,7 @@ CMD ["python", "main.py"]
 ```
 
 ### .dockerignore
+
 ```
 .venv/
 __pycache__/
@@ -787,6 +789,7 @@ clean:
 ```
 
 Or use `[project.scripts]` in pyproject.toml for project-specific commands:
+
 ```toml
 [project.scripts]
 serve = "my_package.main:serve"
@@ -831,6 +834,7 @@ my_package/
 ```
 
 For third-party packages without types:
+
 ```bash
 # Install type stubs
 uv add --dev types-requests types-pyyaml

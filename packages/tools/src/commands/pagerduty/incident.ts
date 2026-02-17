@@ -27,15 +27,19 @@ function getStatusEmoji(status: PagerDutyIncidentStatus): string {
 function formatIncidentDetails(
   incident: PagerDutyIncident,
   notes: PagerDutyNote[],
-  logEntries: PagerDutyLogEntry[]
+  logEntries: PagerDutyLogEntry[],
 ): string {
   const lines: string[] = [];
 
-  lines.push(`## Incident #${String(incident.incident_number)}: ${incident.title}`);
+  lines.push(
+    `## Incident #${String(incident.incident_number)}: ${incident.title}`,
+  );
   lines.push("");
 
   // Status section
-  lines.push(`### Status: ${getStatusEmoji(incident.status)} ${incident.status.toUpperCase()}`);
+  lines.push(
+    `### Status: ${getStatusEmoji(incident.status)} ${incident.status.toUpperCase()}`,
+  );
   lines.push("");
 
   // Details
@@ -67,8 +71,12 @@ function formatIncidentDetails(
     lines.push(`- **Assigned to:** ${assignees}`);
   }
 
-  lines.push(`- **Created:** ${new Date(incident.created_at).toLocaleString()}`);
-  lines.push(`- **Last Updated:** ${new Date(incident.updated_at).toLocaleString()}`);
+  lines.push(
+    `- **Created:** ${new Date(incident.created_at).toLocaleString()}`,
+  );
+  lines.push(
+    `- **Last Updated:** ${new Date(incident.updated_at).toLocaleString()}`,
+  );
   lines.push(`- **URL:** ${incident.html_url}`);
   lines.push("");
 
@@ -113,7 +121,7 @@ function formatIncidentDetails(
 
 export async function incidentCommand(
   incidentId: string,
-  options: IncidentOptions = {}
+  options: IncidentOptions = {},
 ): Promise<void> {
   try {
     const incident = await getIncident(incidentId);

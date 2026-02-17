@@ -292,7 +292,11 @@ function useLocalStorage<T>(key: string, initialValue: T) {
 // Usage
 function Settings() {
   const [theme, setTheme] = useLocalStorage("theme", "light");
-  return <button onClick={() => setTheme(theme === "light" ? "dark" : "light")}>Toggle</button>;
+  return (
+    <button onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
+      Toggle
+    </button>
+  );
 }
 ```
 

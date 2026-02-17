@@ -8,7 +8,7 @@
 
 December 16, 2025
 
-Clarified guidance on language patterns, and added guidance for possessive pronouns. 
+Clarified guidance on language patterns, and added guidance for possessive pronouns.
 
 # Writing
 
@@ -46,7 +46,7 @@ Compare the tone of these two examples from Apple Watch. In the first, the tone 
 
 **Give clear guidance and use consistent language throughout processes with multiple steps.** If your app has a flow that spans multiple screens, decide how you want to label the actions that take people from one step to the next. Begin with language like “Get Started” to indicate you’re starting a flow. You can use the button label to hint at the next step, or use terms like “Continue” or “Next,” but be consistent with what you choose. Make it clear when a flow is complete by using language like “Done.”
 
-**Use possessive pronouns sparingly.** Possessive pronouns like *my* and *your* are often unnecessary to establish context. For example, “Favorites” conveys the same message as “Your Favorites,” and is more succinct. If you do use possessive pronouns, use them consistently throughout your app, and try not to switch perspectives. Avoid using *we* altogether because it may be unclear who the “we” in question refers to. This is particularly problematic in error messages like “We’re having trouble loading this content.” Something like “Unable to load content” is much clearer.
+**Use possessive pronouns sparingly.** Possessive pronouns like _my_ and _your_ are often unnecessary to establish context. For example, “Favorites” conveys the same message as “Your Favorites,” and is more succinct. If you do use possessive pronouns, use them consistently throughout your app, and try not to switch perspectives. Avoid using _we_ altogether because it may be unclear who the “we” in question refers to. This is particularly problematic in error messages like “We’re having trouble loading this content.” Something like “Unable to load content” is much clearer.
 
 **Write for how people use each device.** People may use your app on several types of devices. While your language needs to be consistent across them, think about where it would be helpful to adjust your text to make it suitable for different devices. Make sure you describe gestures correctly on each device — for example, not saying “click” for a touch device like iPhone or iPad where you mean “tap.”
 
@@ -68,7 +68,7 @@ If you need to direct someone to a setting, provide a direct link or button, rat
 
 ## [Platform considerations](/design/human-interface-guidelines/writing#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/writing#Resources)
 
@@ -96,7 +96,7 @@ Writing for interfaces](https://developer.apple.com/videos/play/wwdc2022/10037)
 
 ## [Change log](/design/human-interface-guidelines/writing#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date              | Changes                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------ |
 | December 16, 2025 | Clarified guidance on language patterns, and added guidance for possessive pronouns. |
-| February 27, 2023 | New page. |
+| February 27, 2023 | New page.                                                                            |

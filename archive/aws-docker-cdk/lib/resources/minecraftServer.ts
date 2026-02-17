@@ -37,22 +37,22 @@ export class MinecraftServer extends Construct {
       securityGroup.addIngressRule(
         Peer.anyIpv4(),
         Port.tcp(minecraftServerPortAsNumber),
-        "Minecraft"
+        "Minecraft",
       );
       securityGroup.addIngressRule(
         Peer.anyIpv4(),
         Port.udp(minecraftServerPortAsNumber),
-        "Minecraft"
+        "Minecraft",
       );
       securityGroup.addIngressRule(
         Peer.anyIpv6(),
         Port.tcp(minecraftServerPortAsNumber),
-        "Minecraft"
+        "Minecraft",
       );
       securityGroup.addIngressRule(
         Peer.anyIpv6(),
         Port.udp(minecraftServerPortAsNumber),
-        "Minecraft"
+        "Minecraft",
       );
 
       return securityGroup;

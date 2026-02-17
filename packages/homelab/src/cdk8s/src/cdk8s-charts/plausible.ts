@@ -1,4 +1,4 @@
-import type { App} from "cdk8s";
+import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
 import { IntOrString, KubeNetworkPolicy } from "../../generated/imports/k8s.ts";
@@ -26,14 +26,28 @@ export function createPlausibleChart(app: App) {
   new KubeNetworkPolicy(chart, "plausible-netpol", {
     metadata: { name: "plausible-netpol" },
     spec: {
-      podSelector: { matchLabels: { "cdk8s.io/metadata.addr": "plausible-plausible-c80d69e0" } },
+      podSelector: {
+        matchLabels: {
+          "cdk8s.io/metadata.addr": "plausible-plausible-c80d69e0",
+        },
+      },
       policyTypes: ["Ingress", "Egress"],
       ingress: [
         {
           // Allow from Tailscale and Cloudflare Tunnel
           from: [
-            { namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": "tailscale" } } },
-            { namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": "cloudflare-tunnel" } } },
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
+              },
+            },
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "cloudflare-tunnel",
+                },
+              },
+            },
           ],
           ports: [{ port: IntOrString.fromNumber(8000), protocol: "TCP" }],
         },
@@ -54,17 +68,37 @@ export function createPlausibleChart(app: App) {
         },
         // Allow PostgreSQL within namespace
         {
-          to: [{ podSelector: { matchLabels: { cluster_name: "plausible-postgresql" } } }],
+          to: [
+            {
+              podSelector: {
+                matchLabels: { cluster_name: "plausible-postgresql" },
+              },
+            },
+          ],
           ports: [{ port: IntOrString.fromNumber(5432), protocol: "TCP" }],
         },
         // Allow ClickHouse within namespace
         {
-          to: [{ podSelector: { matchLabels: { "cdk8s.io/metadata.addr": "plausible-clickhouse-c8e23ab7" } } }],
+          to: [
+            {
+              podSelector: {
+                matchLabels: {
+                  "cdk8s.io/metadata.addr": "plausible-clickhouse-c8e23ab7",
+                },
+              },
+            },
+          ],
           ports: [{ port: IntOrString.fromNumber(8123), protocol: "TCP" }],
         },
         // Allow Postal SMTP
         {
-          to: [{ namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": "postal" } } }],
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "postal" },
+              },
+            },
+          ],
           ports: [{ port: IntOrString.fromNumber(25), protocol: "TCP" }],
         },
       ],
@@ -75,11 +109,23 @@ export function createPlausibleChart(app: App) {
   new KubeNetworkPolicy(chart, "clickhouse-netpol", {
     metadata: { name: "clickhouse-netpol" },
     spec: {
-      podSelector: { matchLabels: { "cdk8s.io/metadata.addr": "plausible-clickhouse-c8e23ab7" } },
+      podSelector: {
+        matchLabels: {
+          "cdk8s.io/metadata.addr": "plausible-clickhouse-c8e23ab7",
+        },
+      },
       policyTypes: ["Ingress"],
       ingress: [
         {
-          from: [{ podSelector: { matchLabels: { "cdk8s.io/metadata.addr": "plausible-plausible-c80d69e0" } } }],
+          from: [
+            {
+              podSelector: {
+                matchLabels: {
+                  "cdk8s.io/metadata.addr": "plausible-plausible-c80d69e0",
+                },
+              },
+            },
+          ],
           ports: [{ port: IntOrString.fromNumber(8123), protocol: "TCP" }],
         },
       ],
@@ -94,7 +140,15 @@ export function createPlausibleChart(app: App) {
       policyTypes: ["Ingress"],
       ingress: [
         {
-          from: [{ podSelector: { matchLabels: { "cdk8s.io/metadata.addr": "plausible-plausible-c80d69e0" } } }],
+          from: [
+            {
+              podSelector: {
+                matchLabels: {
+                  "cdk8s.io/metadata.addr": "plausible-plausible-c80d69e0",
+                },
+              },
+            },
+          ],
           ports: [{ port: IntOrString.fromNumber(5432), protocol: "TCP" }],
         },
       ],

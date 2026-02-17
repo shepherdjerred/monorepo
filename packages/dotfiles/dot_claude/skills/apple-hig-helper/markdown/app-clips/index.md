@@ -24,17 +24,17 @@ On their device, people launch an App Clip from location-based suggestions they 
 
 Consider creating an App Clip if your app provides an in-the-moment experience that helps people perform a task over a finite amount of time. For example:
 
-* A rental bike could come with an App Clip Code that people tap or scan to launch an App Clip that lets them rent the bike.
-* A coffee shop could offer an App Clip for fast advance orders that customers launch from a Smart App Banner or an App Clip card on the shop’s website. Customers could share a link to the website from the Messages app, which recipients then tap to launch the App Clip from within Messages.
-* A food truck could create marketing material (for example, a poster to promote a seasonal dish) that includes an App Clip Code. People can scan the App Clip Code with the Camera app on their device and instantly launch the App Clip to order the seasonal dish.
-* A restaurant could let diners pay for a meal by launching an App Clip from the Maps app or a suggestion from Siri Suggestions, or by holding their device close to an App Clip Code or NFC tag at their table.
-* A museum could have visitors scan App Clip Codes or QR codes on labels next to displayed works to launch an App Clip that reveals augmented reality content or provides audio commentary.
+- A rental bike could come with an App Clip Code that people tap or scan to launch an App Clip that lets them rent the bike.
+- A coffee shop could offer an App Clip for fast advance orders that customers launch from a Smart App Banner or an App Clip card on the shop’s website. Customers could share a link to the website from the Messages app, which recipients then tap to launch the App Clip from within Messages.
+- A food truck could create marketing material (for example, a poster to promote a seasonal dish) that includes an App Clip Code. People can scan the App Clip Code with the Camera app on their device and instantly launch the App Clip to order the seasonal dish.
+- A restaurant could let diners pay for a meal by launching an App Clip from the Maps app or a suggestion from Siri Suggestions, or by holding their device close to an App Clip Code or NFC tag at their table.
+- A museum could have visitors scan App Clip Codes or QR codes on labels next to displayed works to launch an App Clip that reveals augmented reality content or provides audio commentary.
 
 Consider creating an App Clip to let people experience your app or game before committing to a purchase or subscription. Focus on providing people with an opportunity to experience and understand your app or game. For example:
 
-* A game might offer an App Clip that lets people play a demo version of the game, including a tutorial and the first level of the game.
-* A fitness app might offer an App Clip with a free workout and a guided meditation.
-* A text editor might allow people to create and save a document using the demo App Clip.
+- A game might offer an App Clip that lets people play a demo version of the game, including a tutorial and the first level of the game.
+- A fitness app might offer an App Clip with a free workout and a guided meditation.
+- A text editor might allow people to create and save a document using the demo App Clip.
 
 For developer guidance, see [App Clips](/documentation/AppClip).
 
@@ -80,8 +80,8 @@ People don’t manage App Clips themselves, and App Clips don’t appear on the 
 
 Because apps remain the best way to keep people engaged over time, the system helps them discover and install the full app:
 
-* On the App Clip card, people can either launch the App Clip or visit the full app’s page on the App Store.
-* When people first launch the App Clip, the system displays an app banner at the top of the screen. Like the App Clip card, the banner allows people to visit the app’s page on the App Store.
+- On the App Clip card, people can either launch the App Clip or visit the full app’s page on the App Store.
+- When people first launch the App Clip, the system displays an app banner at the top of the screen. Like the App Clip card, the banner allows people to visit the app’s page on the App Store.
 
 In addition, you can display an overlay in your App Clip that allows people to download the full app from within the App Clip.
 
@@ -129,7 +129,7 @@ The system-provided App Clip card is people’s first interaction with your App 
 
 **Use concise copy.** An App Clip card requires both a title and a subtitle. Clearly express the purpose of your App Clip within the available space so people can read and understand it at a glance. Create a title that has no more than 30 characters and a subtitle that has no more than 56 characters.
 
-**Pick a verb for the action button that best fits your App Clip.** Possible verbs are *View*, *Play*, or *Open*. Pick *View* for media, or if your App Clip provides informational or educational content. Pick *Play* for games. Choose *Open* for all other App Clips.
+**Pick a verb for the action button that best fits your App Clip.** Possible verbs are _View_, _Play_, or _Open_. Pick _View_ for media, or if your App Clip provides informational or educational content. Pick _Play_ for games. Choose _Open_ for all other App Clips.
 
 ![A horizontal row of two App Clip cards. The left App Clip card is for a game and uses Play as the verb for the action button. The right App Clip card is for an app and uses Open as the verb for the action button.](https://docs-assets.developer.apple.com/published/d23129c13777717e7b27c9a1e2b2f8b0/app-clips-card%402x.png)
 
@@ -149,15 +149,15 @@ App Clip Codes always use the designs Apple provides and follow size, placement,
 
 ### [Interacting with App Clip Codes](/design/human-interface-guidelines/app-clips#Interacting-with-App-Clip-Codes)
 
-App Clip Codes come in two variants: *scan-only* or with an embedded NFC tag (*NFC-integrated*).
+App Clip Codes come in two variants: _scan-only_ or with an embedded NFC tag (_NFC-integrated_).
 
 ![A scan-only App Clip Code with callouts for the center icon, visual code, and the App Clip logo.](https://docs-assets.developer.apple.com/published/3e01f3350c0634f35ba0cb54c46b4227/scan-only%402x.png)
 
 The scan-only variant uses a camera icon in its center to let people know to use the Camera app or the Code Scanner in Control Center to scan the App Clip Code. The NFC-integrated variant uses an iPhone icon at its center that guides people to hold their device close to the App Clip Code or to scan it using the NFC Tag Reader in Control Center. People can also scan an NFC-integrated App Clip Code with the Camera app or the Code Scanner in Control Center. For example:
 
-* A coffee shop could place an App Clip Code on their menu. A guest could hold their device close to the App Clip Code and instantly launch the shop’s App Clip to order a drink.
-* A gas station could have an NFC-integrated App Clip Code attached to each pump. A traveler could hold their device close to it to launch the gas station’s App Clip and use it to pay for their refill.
-* A video game creator could hand out marketing material at an industry event that includes an App Clip Code. An event attendee could scan the code to launch an App Clip that’s a playable demo of their latest video game.
+- A coffee shop could place an App Clip Code on their menu. A guest could hold their device close to the App Clip Code and instantly launch the shop’s App Clip to order a drink.
+- A gas station could have an NFC-integrated App Clip Code attached to each pump. A traveler could hold their device close to it to launch the gas station’s App Clip and use it to pay for their refill.
+- A video game creator could hand out marketing material at an industry event that includes an App Clip Code. An event attendee could scan the code to launch an App Clip that’s a playable demo of their latest video game.
 
 ![An illustration that shows how a person uses an App Clip Code on a table at a coffee shop. The left side of the illustration shows two people sitting at a table. A placard in the middle of the table contains an App Clip Code. The person on the left is using their camera to scan the App Clip Code. The right side of the illustration shows a zoomed-in version of the person's phone screen and the placard on the table.](https://docs-assets.developer.apple.com/published/331753285f06bb59ab3bae929756a505/interacting-coffee-shop-example%402x.png)
 
@@ -165,17 +165,17 @@ The scan-only variant uses a camera icon in its center to let people know to use
 
 When you start designing your App Clip Codes, choose the variant that works best for the way people use your App Clip. If people can physically access the App Clip Code, use the NFC-integrated variant. For example:
 
-* On a tabletop at a restaurant
-* Near a register at a retail store
-* In a storefront window
-* On signage
-* On a gift card or coupon
+- On a tabletop at a restaurant
+- Near a register at a retail store
+- In a storefront window
+- On signage
+- On a gift card or coupon
 
 If you need to place your App Clip Code in an area that’s physically inaccessible or you need to display it digitally, use a scan-only App Clip Code. For example:
 
-* On posters or printed advertising
-* On signage behind a counter or unreachable in a storefront
-* On digital materials such as digital displays, in emails, or on images you post to social media
+- On posters or printed advertising
+- On signage behind a counter or unreachable in a storefront
+- On digital materials such as digital displays, in emails, or on images you post to social media
 
 No matter which of the two variants you use, it’s important you carefully consider where you place your App Clip Code to ensure a reliable scanning experience.
 
@@ -207,10 +207,10 @@ No matter which of the two variants you use, it’s important you carefully cons
 
 **Don’t create App Clip Codes that are too small.** App Clip Codes must adhere to the following specifications.
 
-| Type | Minimum size |
-| --- | --- |
-| Printed communications | Minimum diameter of 3/4 inch (1.9 cm). |
-| Digital communications | Minimum size of 256×256 px. Use a PNG or SVG file. |
+| Type                         | Minimum size                                                                                                                                                                                                                      |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Printed communications       | Minimum diameter of 3/4 inch (1.9 cm).                                                                                                                                                                                            |
+| Digital communications       | Minimum size of 256×256 px. Use a PNG or SVG file.                                                                                                                                                                                |
 | NFC-integrated App Clip Code | The embedded NFC tag needs to be at least 35 mm in diameter or of equivalent size. For example, if your embedded NFC tag is 35 mm in diameter, your printed App Clip Code needs to be at least 1.37 inches (3.48 cm) in diameter. |
 
 ![An App Clip Code that uses the badge design and has a minimum diameter of 3/4 inch (1.9 cm).](https://docs-assets.developer.apple.com/published/604637e18752ed4948becd174afbc361/sizing-minimum-rectangle%402x.png)
@@ -235,13 +235,13 @@ Add clear messaging that informs people how they can use the App Clip Code to la
 
 For a scan-only App Clip Code, you can use the following call to action:
 
-* Scan to [*describe what people can do with your App Clip*].
-* Scan using the camera on your iPhone or iPad to [describe what people can do with your App Clip].
+- Scan to [*describe what people can do with your App Clip*].
+- Scan using the camera on your iPhone or iPad to [describe what people can do with your App Clip].
 
 For an NFC-integrated App Clip Code, you can use the following call to action:
 
-* Scan to [*describe what people can do with your App Clip*].
-* Hold your iPhone near the [*object name*] to launch an App Clip that [*describe what a person can do with your App Clip*].
+- Scan to [*describe what people can do with your App Clip*].
+- Hold your iPhone near the [*object name*] to launch an App Clip that [*describe what a person can do with your App Clip*].
 
 For more information, see [NFC](/design/human-interface-guidelines/nfc).
 
@@ -321,7 +321,7 @@ For more information about using Apple trademarks, see [Guidelines for Using App
 
 ## [Platform considerations](/design/human-interface-guidelines/app-clips#Platform-considerations)
 
-*No additional considerations for iOS or iPadOS. Not supported in macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS or iPadOS. Not supported in macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/app-clips#Resources)
 
@@ -351,7 +351,7 @@ Build light and fast App Clips](https://developer.apple.com/videos/play/wwdc2021
 
 ## [Change log](/design/human-interface-guidelines/app-clips#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date         | Changes                                     |
+| ------------ | ------------------------------------------- |
 | June 9, 2025 | Updated guidance to include demo App Clips. |
-| May 2, 2023 | Consolidated guidance into one page. |
+| May 2, 2023  | Consolidated guidance into one page.        |

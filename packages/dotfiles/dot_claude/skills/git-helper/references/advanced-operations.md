@@ -21,16 +21,16 @@ git rebase -i --autosquash origin/main
 
 In the interactive editor, each commit is prefixed with a command:
 
-| Command    | Short | Effect |
-|-----------|-------|--------|
-| `pick`    | `p`   | Use commit as-is |
-| `reword`  | `r`   | Use commit but edit message |
-| `edit`    | `e`   | Pause at commit for amending |
-| `squash`  | `s`   | Meld into previous commit, combine messages |
-| `fixup`   | `f`   | Meld into previous commit, discard this message |
-| `drop`    | `d`   | Remove commit entirely |
-| `exec`    | `x`   | Run shell command after commit |
-| `break`   | `b`   | Stop here (continue with `--continue`) |
+| Command  | Short | Effect                                          |
+| -------- | ----- | ----------------------------------------------- |
+| `pick`   | `p`   | Use commit as-is                                |
+| `reword` | `r`   | Use commit but edit message                     |
+| `edit`   | `e`   | Pause at commit for amending                    |
+| `squash` | `s`   | Meld into previous commit, combine messages     |
+| `fixup`  | `f`   | Meld into previous commit, discard this message |
+| `drop`   | `d`   | Remove commit entirely                          |
+| `exec`   | `x`   | Run shell command after commit                  |
+| `break`  | `b`   | Stop here (continue with `--continue`)          |
 
 ### Fixup and Autosquash Workflow
 

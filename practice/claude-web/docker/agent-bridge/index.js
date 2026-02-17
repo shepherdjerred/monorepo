@@ -52,19 +52,31 @@ async function setupRepository() {
     // Add token to URL for cloning
     let cloneUrl = REPO_URL;
     if (GITHUB_TOKEN && REPO_URL.startsWith("https://github.com")) {
-      cloneUrl = REPO_URL.replace("https://github.com", `https://oauth2:${GITHUB_TOKEN}@github.com`);
+      cloneUrl = REPO_URL.replace(
+        "https://github.com",
+        `https://oauth2:${GITHUB_TOKEN}@github.com`,
+      );
     }
 
     try {
       // Clone with the base branch
-      execSync(`git clone -b ${BASE_BRANCH} ${cloneUrl} /workspace`, { stdio: "pipe" });
+      execSync(`git clone -b ${BASE_BRANCH} ${cloneUrl} /workspace`, {
+        stdio: "pipe",
+      });
 
       // Create and checkout the working branch
       if (BRANCH) {
-        execSync(`git checkout -b ${BRANCH}`, { cwd: "/workspace", stdio: "pipe" });
-        console.error(`[agent-bridge] Repository ready on branch: ${BRANCH} (based on ${BASE_BRANCH})`);
+        execSync(`git checkout -b ${BRANCH}`, {
+          cwd: "/workspace",
+          stdio: "pipe",
+        });
+        console.error(
+          `[agent-bridge] Repository ready on branch: ${BRANCH} (based on ${BASE_BRANCH})`,
+        );
       } else {
-        console.error(`[agent-bridge] Repository ready on branch: ${BASE_BRANCH}`);
+        console.error(
+          `[agent-bridge] Repository ready on branch: ${BASE_BRANCH}`,
+        );
       }
     } catch (error) {
       console.error(`[agent-bridge] Failed to clone repository:`, error);
@@ -72,7 +84,6 @@ async function setupRepository() {
     }
   }
 }
-
 
 /**
  * Handle a prompt message from the host
@@ -102,9 +113,15 @@ async function handlePrompt(content) {
 
     for await (const message of queryGenerator) {
       // Capture SDK session ID from init message for conversation resumption
-      if (message.type === "system" && message.subtype === "init" && message.session_id) {
+      if (
+        message.type === "system" &&
+        message.subtype === "init" &&
+        message.session_id
+      ) {
         sdkSessionId = message.session_id;
-        console.error(`[agent-bridge] Captured SDK session ID: ${sdkSessionId}`);
+        console.error(
+          `[agent-bridge] Captured SDK session ID: ${sdkSessionId}`,
+        );
       }
 
       // Send each message as a JSON line to stdout
@@ -118,7 +135,7 @@ async function handlePrompt(content) {
         JSON.stringify({
           type: "error",
           error: error.message,
-        })
+        }),
       );
     }
   } finally {

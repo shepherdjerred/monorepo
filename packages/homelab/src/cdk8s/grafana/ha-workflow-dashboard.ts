@@ -54,7 +54,9 @@ export function createHaWorkflowDashboard() {
       .title(title)
       .description(description)
       .datasource(prometheusDatasource)
-      .withTarget(new prometheus.DataqueryBuilder().expr(query).legendFormat(legend))
+      .withTarget(
+        new prometheus.DataqueryBuilder().expr(query).legendFormat(legend),
+      )
       .unit(unit)
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(graphMode)
@@ -93,11 +95,13 @@ export function createHaWorkflowDashboard() {
       "percent",
       1,
     ).thresholds(
-      new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-        { value: 0, color: "red" },
-        { value: 95, color: "yellow" },
-        { value: 99, color: "green" },
-      ]),
+      new dashboard.ThresholdsConfigBuilder()
+        .mode(dashboard.ThresholdsMode.Absolute)
+        .steps([
+          { value: 0, color: "red" },
+          { value: 95, color: "yellow" },
+          { value: 99, color: "green" },
+        ]),
     ),
   );
 
@@ -113,11 +117,13 @@ export function createHaWorkflowDashboard() {
       undefined,
       common.BigValueGraphMode.None,
     ).thresholds(
-      new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-        { value: 0, color: "green" },
-        { value: 1, color: "yellow" },
-        { value: 5, color: "red" },
-      ]),
+      new dashboard.ThresholdsConfigBuilder()
+        .mode(dashboard.ThresholdsMode.Absolute)
+        .steps([
+          { value: 0, color: "green" },
+          { value: 1, color: "yellow" },
+          { value: 5, color: "red" },
+        ]),
     ),
   );
 
@@ -140,7 +146,9 @@ export function createHaWorkflowDashboard() {
   builder.withPanel(
     new timeseries.PanelBuilder()
       .title("Total Failures per Workflow")
-      .description("Number of failed executions per workflow (1 hour rolling window)")
+      .description(
+        "Number of failed executions per workflow (1 hour rolling window)",
+      )
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
@@ -154,11 +162,13 @@ export function createHaWorkflowDashboard() {
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 1, color: "yellow" },
-          { value: 5, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 1, color: "yellow" },
+            { value: 5, color: "red" },
+          ]),
       )
       .gridPos({ x: 0, y: 9, w: 24, h: 8 }),
   );
@@ -177,11 +187,13 @@ export function createHaWorkflowDashboard() {
       "s",
       0,
     ).thresholds(
-      new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-        { value: 0, color: "green" },
-        { value: 86_400, color: "yellow" }, // 24 hours
-        { value: 172_800, color: "red" }, // 48 hours
-      ]),
+      new dashboard.ThresholdsConfigBuilder()
+        .mode(dashboard.ThresholdsMode.Absolute)
+        .steps([
+          { value: 0, color: "green" },
+          { value: 86_400, color: "yellow" }, // 24 hours
+          { value: 172_800, color: "red" }, // 48 hours
+        ]),
     ),
   );
 
@@ -192,7 +204,9 @@ export function createHaWorkflowDashboard() {
   builder.withPanel(
     new timeseries.PanelBuilder()
       .title("Total Executions by Workflow")
-      .description("Cumulative successful executions since last application restart")
+      .description(
+        "Cumulative successful executions since last application restart",
+      )
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
@@ -205,7 +219,11 @@ export function createHaWorkflowDashboard() {
       .lineWidth(2)
       .fillOpacity(10)
       .gridPos({ x: 0, y: 25, w: 12, h: 8 })
-      .scaleDistribution(new common.ScaleDistributionConfigBuilder().type(common.ScaleDistribution.Log)),
+      .scaleDistribution(
+        new common.ScaleDistributionConfigBuilder().type(
+          common.ScaleDistribution.Log,
+        ),
+      ),
   );
 
   // Workflows Currently In Progress
@@ -219,11 +237,13 @@ export function createHaWorkflowDashboard() {
       "short",
       0,
     ).thresholds(
-      new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-        { value: 0, color: "green" },
-        { value: 1, color: "yellow" },
-        { value: 5, color: "red" },
-      ]),
+      new dashboard.ThresholdsConfigBuilder()
+        .mode(dashboard.ThresholdsMode.Absolute)
+        .steps([
+          { value: 0, color: "green" },
+          { value: 1, color: "yellow" },
+          { value: 5, color: "red" },
+        ]),
     ),
   );
 

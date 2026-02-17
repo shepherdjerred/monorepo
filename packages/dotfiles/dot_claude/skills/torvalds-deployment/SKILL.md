@@ -34,8 +34,18 @@ Create `src/cdk8s/src/resources/{category}/yourservice.ts`:
 
 ```typescript
 import { Chart, Size } from "cdk8s";
-import { Cpu, Deployment, DeploymentStrategy, type PersistentVolumeClaim, Service, Volume } from "cdk8s-plus-31";
-import { LINUXSERVER_GID, withCommonLinuxServerProps } from "../../misc/linux-server.ts";
+import {
+  Cpu,
+  Deployment,
+  DeploymentStrategy,
+  type PersistentVolumeClaim,
+  Service,
+  Volume,
+} from "cdk8s-plus-31";
+import {
+  LINUXSERVER_GID,
+  withCommonLinuxServerProps,
+} from "../../misc/linux-server.ts";
 import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "../../misc/tailscale.ts";
 import versions from "../../versions.ts";
@@ -69,14 +79,22 @@ export function createYourServiceDeployment(
       volumeMounts: [
         {
           path: "/config",
-          volume: Volume.fromPersistentVolumeClaim(chart, "yourservice-config-volume", configVolume.claim),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "yourservice-config-volume",
+            configVolume.claim,
+          ),
         },
         // Add shared volumes if needed
         ...(claims?.downloads
           ? [
               {
                 path: "/downloads",
-                volume: Volume.fromPersistentVolumeClaim(chart, "yourservice-downloads-volume", claims.downloads),
+                volume: Volume.fromPersistentVolumeClaim(
+                  chart,
+                  "yourservice-downloads-volume",
+                  claims.downloads,
+                ),
               },
             ]
           : []),

@@ -2,12 +2,20 @@ import Parser from "rss-parser";
 import sanitizeHtml from "sanitize-html";
 import * as truncateHtml from "truncate-html";
 import { z } from "zod";
-import { type Source, type ResultEntry, FeedEntrySchema, type Configuration } from "./types.js";
+import {
+  type Source,
+  type ResultEntry,
+  FeedEntrySchema,
+  type Configuration,
+} from "./types.js";
 import * as R from "remeda";
 import { asyncMapFilterUndefined } from "./util.js";
 
 // Handle ESM/CommonJS interop - truncate-html exports differently in different environments
-const TruncateFnSchema = z.function().args(z.string(), z.number().optional()).returns(z.string());
+const TruncateFnSchema = z
+  .function()
+  .args(z.string(), z.number().optional())
+  .returns(z.string());
 const TruncateModuleSchema = z.object({ default: TruncateFnSchema });
 
 function truncate(html: string, length?: number): string {
@@ -24,10 +32,15 @@ function truncate(html: string, length?: number): string {
 }
 
 export async function fetchAll(config: Configuration) {
-  return await asyncMapFilterUndefined(config.sources, (source) => fetch(source, config.truncate));
+  return await asyncMapFilterUndefined(config.sources, (source) =>
+    fetch(source, config.truncate),
+  );
 }
 
-export async function fetch(source: Source, length: number): Promise<ResultEntry | undefined> {
+export async function fetch(
+  source: Source,
+  length: number,
+): Promise<ResultEntry | undefined> {
   const parser = new Parser();
 
   try {
@@ -46,7 +59,10 @@ export async function fetch(source: Source, length: number): Promise<ResultEntry
     }
 
     const preview =
-      firstItem.contentSnippet ?? firstItem.content ?? firstItem.description ?? firstItem["content:encoded"];
+      firstItem.contentSnippet ??
+      firstItem.content ??
+      firstItem.description ??
+      firstItem["content:encoded"];
 
     return {
       title: firstItem.title,
@@ -55,7 +71,10 @@ export async function fetch(source: Source, length: number): Promise<ResultEntry
       source,
       preview:
         preview !== undefined && preview !== ""
-          ? truncate(sanitizeHtml(preview, { parseStyleAttributes: false }), length)
+          ? truncate(
+              sanitizeHtml(preview, { parseStyleAttributes: false }),
+              length,
+            )
           : undefined,
     };
   } catch (error) {

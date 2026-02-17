@@ -143,14 +143,14 @@ Resources:
       GroupName: SSH
       GroupDescription: Enable SSH access via port 22
       SecurityGroupIngress:
-      - CidrIpv6: "::/0"
-        FromPort: 22
-        IpProtocol: tcp
-        ToPort: 22
-      - CidrIp: 0.0.0.0/0
-        FromPort: 22
-        IpProtocol: tcp
-        ToPort: 22
+        - CidrIpv6: "::/0"
+          FromPort: 22
+          IpProtocol: tcp
+          ToPort: 22
+        - CidrIp: 0.0.0.0/0
+          FromPort: 22
+          IpProtocol: tcp
+          ToPort: 22
       SecurityGroupEgress:
         - CidrIp: 127.0.0.1/32
           IpProtocol: "-1"
@@ -161,23 +161,23 @@ Resources:
       GroupName: Among Us
       GroupDescription: Among Us
       SecurityGroupIngress:
-      - CidrIpv6: "::/0"
-        FromPort: 22023
-        IpProtocol: udp
-        ToPort: 22023
-      - CidrIp: 0.0.0.0/0
-        FromPort: 22023
-        IpProtocol: udp
-        ToPort: 22023
+        - CidrIpv6: "::/0"
+          FromPort: 22023
+          IpProtocol: udp
+          ToPort: 22023
+        - CidrIp: 0.0.0.0/0
+          FromPort: 22023
+          IpProtocol: udp
+          ToPort: 22023
       SecurityGroupEgress:
-      - CidrIpv6: "::/0"
-        FromPort: 22023
-        IpProtocol: udp
-        ToPort: 22023
-      - CidrIp: 0.0.0.0/0
-        FromPort: 22023
-        IpProtocol: udp
-        ToPort: 22023
+        - CidrIpv6: "::/0"
+          FromPort: 22023
+          IpProtocol: udp
+          ToPort: 22023
+        - CidrIp: 0.0.0.0/0
+          FromPort: 22023
+          IpProtocol: udp
+          ToPort: 22023
   EgressSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:

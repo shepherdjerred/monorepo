@@ -66,6 +66,7 @@ Bun embeds a module graph at the end of compiled executables. The parser:
 ### Sourcemap Recovery
 
 When sourcemaps are embedded (compiled with `--sourcemap`), the tool extracts original source files including:
+
 - TypeScript with full type annotations
 - JSX/TSX templates
 - Original comments and formatting
@@ -99,28 +100,27 @@ bun-decompile --file <js-file> --deminify [options]
 
 ### Options
 
-| Option | Description |
-|--------|-------------|
-| `-o, --output <dir>` | Output directory (default: `./decompiled`) |
-| `-f, --file <path>` | De-minify a JS file directly (skip binary extraction) |
-| `-v, --verbose` | Show detailed information |
-| `-q, --quiet` | Suppress progress display |
-| `-h, --help` | Show help message |
+| Option               | Description                                           |
+| -------------------- | ----------------------------------------------------- |
+| `-o, --output <dir>` | Output directory (default: `./decompiled`)            |
+| `-f, --file <path>`  | De-minify a JS file directly (skip binary extraction) |
+| `-v, --verbose`      | Show detailed information                             |
+| `-q, --quiet`        | Suppress progress display                             |
+| `-h, --help`         | Show help message                                     |
 
 ### De-minification Options
 
-| Option | Description |
-|--------|-------------|
-| `--deminify` | Enable AI de-minification |
-| `--provider <name>` | LLM provider: `openai` or `anthropic` (default: openai) |
-| `--api-key <key>` | API key (or set `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`) |
-| `--model <model>` | Model to use (default: gpt-5-nano) |
-| `--batch` | Use Anthropic batch API (50% cheaper, async) |
-| `--resume <batch-id>` | Resume a pending batch job |
-| `--no-cache` | Disable result caching |
-| `--concurrency <n>` | Parallel API requests (default: 3, max: 20) |
-| `--yes` | Skip cost confirmation prompt |
-
+| Option                | Description                                             |
+| --------------------- | ------------------------------------------------------- |
+| `--deminify`          | Enable AI de-minification                               |
+| `--provider <name>`   | LLM provider: `openai` or `anthropic` (default: openai) |
+| `--api-key <key>`     | API key (or set `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`) |
+| `--model <model>`     | Model to use (default: gpt-5-nano)                      |
+| `--batch`             | Use Anthropic batch API (50% cheaper, async)            |
+| `--resume <batch-id>` | Resume a pending batch job                              |
+| `--no-cache`          | Disable result caching                                  |
+| `--concurrency <n>`   | Parallel API requests (default: 3, max: 20)             |
+| `--yes`               | Skip cost confirmation prompt                           |
 
 ## Programmatic API
 
@@ -149,10 +149,7 @@ await extractToDirectory(result, "./extracted");
 ### De-minification
 
 ```typescript
-import {
-  createConfig,
-  Deminifier,
-} from "@shepherdjerred/bun-decompile";
+import { createConfig, Deminifier } from "@shepherdjerred/bun-decompile";
 
 const config = createConfig(process.env.OPENAI_API_KEY!, "./output", {
   provider: "openai",

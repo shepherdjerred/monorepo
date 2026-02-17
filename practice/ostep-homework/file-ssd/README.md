@@ -1,4 +1,3 @@
-
 # Overview
 
 Welcome to `ssd.py`, yet another wonderful simulator provided to you,
@@ -90,7 +89,7 @@ which really just acts like a memory; if you write to logical page X, this SSD
 will just (magically) write the data to physical page X (indeed, you don't
 even really need the FTL for this; we'll just use the ideal SSD to show how
 much extra work a real SSD does, in terms of erases and data copying, as
-compared to an ideal memory). 
+compared to an ideal memory).
 
 The next lines of output just label the blocks and physical pages of the
 underlying Flash the simulator is modeling:
@@ -173,13 +172,13 @@ State iiiiiiiiii viiiiiiiii iiiiiiiiii
 Data             a
 Live
 
-prompt> 
+prompt>
 ```
 
 Here, you can see the write, read, and trim, and you can also see what each
 command returned: success, the data read, and success, respectively. This will
 be more interesting later, when the simulator generates the operations
-randomly. 
+randomly.
 
 Similarly, the `-F` flag shows the state of the Flash between each operation,
 instead of just at the end. Note the subtle changes at each step:
@@ -219,11 +218,11 @@ State iiiiiiiiii viiiiiiiii iiiiiiiiii
 Data             a
 Live
 
-prompt> 
+prompt>
 ```
 
 Of course, you can use `-C` and `-F` in concert to show everything (an exercise
-left to the reader). 
+left to the reader).
 
 The simulator also lets you generate random workloads, instead of specifying
 operations yourself. Use the "-n" flag for this, with an associated number (we
@@ -236,7 +235,7 @@ prompt> ./ssd.py -T ideal -l 30 -B 3 -p 10 -n 5 -s 10
 If you run this with `-C`, `-F`, or both, you'll see either the exact commands,
 the intermediate states of the Flash, or both. However, you can also use the
 "-q" flag to quiz yourself on what you think the commands are. Thus, run the
-following: 
+following:
 
 ```sh
 prompt> ./ssd.py -T ideal -l 30 -B 3 -p 10 -n 5 -s 10 -q
@@ -261,7 +260,7 @@ as well as write the new data to Flash. Let's run it, show the commands (-C)
 but not the intermediate states (no -F):
 
 ```sh
-prompt> ./ssd.py -T direct -l 30 -B 3 -p 10 -n 5 -s 10 -C 
+prompt> ./ssd.py -T direct -l 30 -B 3 -p 10 -n 5 -s 10 -C
 
 FTL   (empty)
 Block 0          1          2
@@ -285,7 +284,7 @@ State EEEEEEEEEv EEvEEEEEEv iiiiiiiiii
 Data           f   z      9
 Live               +      +
 
-prompt> 
+prompt>
 ```
 
 As you can see from the final state, the FTL contains two live mappings:
@@ -390,7 +389,7 @@ Here you can see the physical erases, writes, and reads per block as well as a
 sum of each, then the number of logical writes, reads, and trims issued to the
 device, and finally the estimated times. You can change the costs of low-level
 operations such as read, program, and erase, with the -R, -W, and -E flags,
-respectively. 
+respectively.
 
 Finally, with the SSD in log-structured mode, there is a garbage collector (GC)
 that can be configured to run periodically. This behavior is controlled by the
@@ -398,7 +397,7 @@ that can be configured to run periodically. This behavior is controlled by the
 the garbage collector should run. Setting the high watermark to a value N
 (i.e., -G N) means that when the GC notices that N blocks are in use, it
 should run. Setting the low watermark to M (i.e., -G M) means that the GC
-should run until only M blocks are in use. 
+should run until only M blocks are in use.
 
 The -J flag is also useful here: it shows which low-level commands the GC
 issues (reads and writes of live data, followed by erases of reclaimed
@@ -447,5 +446,3 @@ Wow, have you gotten this far? You are some impressive person! We suspect you
 will go far in life. Or, we suspect that you typed "cat README" and not "more
 README" or "less README", in which case we suspect you are just learning about
 "more" or "less", more or less.
-
-

@@ -15,15 +15,22 @@
   </head>
   <body>
     <script>
-      document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";
+      document.documentElement.dataset.theme =
+        localStorage.getItem("tsd-theme") || "os";
       document.body.style.display = "none";
-      setTimeout(() => (app ? app.showPage() : document.body.style.removeProperty("display")), 500);
+      setTimeout(
+        () =>
+          app ? app.showPage() : document.body.style.removeProperty("display"),
+        500,
+      );
     </script>
     <header class="tsd-page-toolbar">
       <div class="tsd-toolbar-contents container">
         <div class="table-cell" id="tsd-search" data-base="..">
           <div class="field">
-            <label for="tsd-search-field" class="tsd-widget tsd-toolbar-icon search no-caption"
+            <label
+              for="tsd-search-field"
+              class="tsd-widget tsd-toolbar-icon search no-caption"
               ><svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <use href="../assets/icons.svg#icon-search"></use></svg></label
             ><input type="text" id="tsd-search-field" aria-label="Search" />
@@ -36,7 +43,11 @@
           <a href="../index.html" class="title">webring</a>
         </div>
         <div class="table-cell" id="tsd-widgets">
-          <a href="#" class="tsd-widget tsd-toolbar-icon menu no-caption" data-toggle="menu" aria-label="Menu"
+          <a
+            href="#"
+            class="tsd-widget tsd-toolbar-icon menu no-caption"
+            data-toggle="menu"
+            aria-label="Menu"
             ><svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <use href="../assets/icons.svg#icon-menu"></use></svg
           ></a>
@@ -55,14 +66,20 @@
         <section class="tsd-panel">
           <ul class="tsd-signatures">
             <li class="tsd-signature tsd-anchor-link">
-              <a id="run" class="tsd-anchor"></a><span class="tsd-kind-call-signature">run</span
-              ><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">config</span
-              ><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span
-              ><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span
-              ><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span
+              <a id="run" class="tsd-anchor"></a
+              ><span class="tsd-kind-call-signature">run</span
+              ><span class="tsd-signature-symbol">(</span
+              ><span class="tsd-kind-parameter">config</span
+              ><span class="tsd-signature-symbol">)</span
+              ><span class="tsd-signature-symbol">: </span
+              ><span class="tsd-signature-type">Promise</span
+              ><span class="tsd-signature-symbol">&lt;</span
+              ><span class="tsd-signature-type">any</span
+              ><span class="tsd-signature-symbol">[]</span
               ><span class="tsd-signature-symbol">&gt;</span
               ><a href="#run" aria-label="Permalink" class="tsd-anchor-icon"
-                ><svg viewBox="0 0 24 24"><use href="../assets/icons.svg#icon-anchor"></use></svg
+                ><svg viewBox="0 0 24 24">
+                  <use href="../assets/icons.svg#icon-anchor"></use></svg
               ></a>
             </li>
             <li class="tsd-description">
@@ -71,60 +88,99 @@
                 <ul class="tsd-parameter-list">
                   <li>
                     <span
-                      ><span class="tsd-kind-parameter">config</span>: <span class="tsd-signature-symbol">{ </span
-                      ><br /><span>    </span><span class="tsd-kind-property">cache</span
-                      ><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-symbol">{ </span
-                      ><br /><span>        </span><span class="tsd-kind-property">cache_duration_minutes</span
-                      ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span
-                      ><span class="tsd-signature-symbol">; </span><br /><span>        </span
-                      ><span class="tsd-kind-property">cache_file</span><span class="tsd-signature-symbol">: </span
-                      ><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span
-                      ><br /><span>    </span><span class="tsd-signature-symbol">}</span
-                      ><span class="tsd-signature-symbol">; </span><br /><span>    </span
-                      ><span class="tsd-kind-property">number</span><span class="tsd-signature-symbol">: </span
-                      ><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span
-                      ><br /><span>    </span><span class="tsd-kind-property">sources</span
-                      ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span
-                      ><br /><span>        </span><span class="tsd-kind-property">title</span
-                      ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span
-                      ><span class="tsd-signature-symbol">; </span><br /><span>        </span
-                      ><span class="tsd-kind-property">url</span><span class="tsd-signature-symbol">: </span
-                      ><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span
-                      ><br /><span>    </span><span class="tsd-signature-symbol">}</span
-                      ><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span
-                      ><br /><span>    </span><span class="tsd-kind-property">truncate</span
-                      ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span
-                      ><span class="tsd-signature-symbol">; </span><br /><span class="tsd-signature-symbol"
+                      ><span class="tsd-kind-parameter">config</span>:
+                      <span class="tsd-signature-symbol">{ </span><br /><span
+                        >    </span
+                      ><span class="tsd-kind-property">cache</span
+                      ><span class="tsd-signature-symbol">?: </span
+                      ><span class="tsd-signature-symbol">{ </span><br /><span
+                        >        </span
+                      ><span class="tsd-kind-property"
+                        >cache_duration_minutes</span
+                      ><span class="tsd-signature-symbol">: </span
+                      ><span class="tsd-signature-type">number</span
+                      ><span class="tsd-signature-symbol">; </span><br /><span
+                        >        </span
+                      ><span class="tsd-kind-property">cache_file</span
+                      ><span class="tsd-signature-symbol">: </span
+                      ><span class="tsd-signature-type">string</span
+                      ><span class="tsd-signature-symbol">; </span><br /><span
+                        >    </span
+                      ><span class="tsd-signature-symbol">}</span
+                      ><span class="tsd-signature-symbol">; </span><br /><span
+                        >    </span
+                      ><span class="tsd-kind-property">number</span
+                      ><span class="tsd-signature-symbol">: </span
+                      ><span class="tsd-signature-type">number</span
+                      ><span class="tsd-signature-symbol">; </span><br /><span
+                        >    </span
+                      ><span class="tsd-kind-property">sources</span
+                      ><span class="tsd-signature-symbol">: </span
+                      ><span class="tsd-signature-symbol">{ </span><br /><span
+                        >        </span
+                      ><span class="tsd-kind-property">title</span
+                      ><span class="tsd-signature-symbol">: </span
+                      ><span class="tsd-signature-type">string</span
+                      ><span class="tsd-signature-symbol">; </span><br /><span
+                        >        </span
+                      ><span class="tsd-kind-property">url</span
+                      ><span class="tsd-signature-symbol">: </span
+                      ><span class="tsd-signature-type">string</span
+                      ><span class="tsd-signature-symbol">; </span><br /><span
+                        >    </span
+                      ><span class="tsd-signature-symbol">}</span
+                      ><span class="tsd-signature-symbol">[]</span
+                      ><span class="tsd-signature-symbol">; </span><br /><span
+                        >    </span
+                      ><span class="tsd-kind-property">truncate</span
+                      ><span class="tsd-signature-symbol">: </span
+                      ><span class="tsd-signature-type">number</span
+                      ><span class="tsd-signature-symbol">; </span><br /><span
+                        class="tsd-signature-symbol"
                         >}</span
                       ></span
                     >
                     <ul class="tsd-parameters">
                       <li class="tsd-parameter">
                         <h5>
-                          <code class="tsd-tag">Optional</code><span class="tsd-kind-property">cache</span
-                          ><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-symbol">{ </span
-                          ><br /><span>    </span><span class="tsd-kind-property">cache_duration_minutes</span
-                          ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span
-                          ><span class="tsd-signature-symbol">; </span><br /><span>    </span
-                          ><span class="tsd-kind-property">cache_file</span><span class="tsd-signature-symbol">: </span
-                          ><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span
+                          <code class="tsd-tag">Optional</code
+                          ><span class="tsd-kind-property">cache</span
+                          ><span class="tsd-signature-symbol">?: </span
+                          ><span class="tsd-signature-symbol">{ </span
+                          ><br /><span>    </span
+                          ><span class="tsd-kind-property"
+                            >cache_duration_minutes</span
+                          ><span class="tsd-signature-symbol">: </span
+                          ><span class="tsd-signature-type">number</span
+                          ><span class="tsd-signature-symbol">; </span
+                          ><br /><span>    </span
+                          ><span class="tsd-kind-property">cache_file</span
+                          ><span class="tsd-signature-symbol">: </span
+                          ><span class="tsd-signature-type">string</span
+                          ><span class="tsd-signature-symbol">; </span
                           ><br /><span class="tsd-signature-symbol">}</span>
                         </h5>
-                        <div class="tsd-comment tsd-typography"><p>Configuration for the cache</p></div>
+                        <div class="tsd-comment tsd-typography">
+                          <p>Configuration for the cache</p>
+                        </div>
                         <div class="tsd-comment tsd-typography"></div>
                         <ul class="tsd-parameters">
                           <li class="tsd-parameter">
                             <h5>
-                              <span class="tsd-kind-property">cache_<wbr />duration_<wbr />minutes</span
+                              <span class="tsd-kind-property"
+                                >cache_<wbr />duration_<wbr />minutes</span
                               ><span class="tsd-signature-symbol">: </span
                               ><span class="tsd-signature-type">number</span>
                             </h5>
-                            <div class="tsd-comment tsd-typography"><p>How long to cache a result for</p></div>
+                            <div class="tsd-comment tsd-typography">
+                              <p>How long to cache a result for</p>
+                            </div>
                             <div class="tsd-comment tsd-typography"></div>
                           </li>
                           <li class="tsd-parameter">
                             <h5>
-                              <span class="tsd-kind-property">cache_<wbr />file</span
+                              <span class="tsd-kind-property"
+                                >cache_<wbr />file</span
                               ><span class="tsd-signature-symbol">: </span
                               ><span class="tsd-signature-type">string</span>
                             </h5>
@@ -137,37 +193,51 @@
                       </li>
                       <li class="tsd-parameter">
                         <h5>
-                          <span class="tsd-kind-property">number</span><span class="tsd-signature-symbol">: </span
+                          <span class="tsd-kind-property">number</span
+                          ><span class="tsd-signature-symbol">: </span
                           ><span class="tsd-signature-type">number</span>
                         </h5>
                         <div class="tsd-comment tsd-typography">
-                          <p>Return the n latest updates from the source list.</p>
+                          <p>
+                            Return the n latest updates from the source list.
+                          </p>
                         </div>
                         <div class="tsd-comment tsd-typography"></div>
                       </li>
                       <li class="tsd-parameter">
                         <h5>
-                          <span class="tsd-kind-property">sources</span><span class="tsd-signature-symbol">: </span
-                          ><span class="tsd-signature-symbol">{ </span><br /><span>    </span
-                          ><span class="tsd-kind-property">title</span><span class="tsd-signature-symbol">: </span
-                          ><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span
-                          ><br /><span>    </span><span class="tsd-kind-property">url</span
-                          ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span
-                          ><span class="tsd-signature-symbol">; </span><br /><span class="tsd-signature-symbol">}</span
+                          <span class="tsd-kind-property">sources</span
+                          ><span class="tsd-signature-symbol">: </span
+                          ><span class="tsd-signature-symbol">{ </span
+                          ><br /><span>    </span
+                          ><span class="tsd-kind-property">title</span
+                          ><span class="tsd-signature-symbol">: </span
+                          ><span class="tsd-signature-type">string</span
+                          ><span class="tsd-signature-symbol">; </span
+                          ><br /><span>    </span
+                          ><span class="tsd-kind-property">url</span
+                          ><span class="tsd-signature-symbol">: </span
+                          ><span class="tsd-signature-type">string</span
+                          ><span class="tsd-signature-symbol">; </span
+                          ><br /><span class="tsd-signature-symbol">}</span
                           ><span class="tsd-signature-symbol">[]</span>
                         </h5>
-                        <div class="tsd-comment tsd-typography"><p>A list of sources to fetch</p></div>
+                        <div class="tsd-comment tsd-typography">
+                          <p>A list of sources to fetch</p>
+                        </div>
                         <div class="tsd-comment tsd-typography"></div>
                       </li>
                       <li class="tsd-parameter">
                         <h5>
-                          <span class="tsd-kind-property">truncate</span><span class="tsd-signature-symbol">: </span
+                          <span class="tsd-kind-property">truncate</span
+                          ><span class="tsd-signature-symbol">: </span
                           ><span class="tsd-signature-type">number</span>
                         </h5>
                         <div class="tsd-comment tsd-typography">
                           <p>
-                            How many words the preview field should be truncated to in characters after HTML has been
-                            sanitized and parsed.
+                            How many words the preview field should be truncated
+                            to in characters after HTML has been sanitized and
+                            parsed.
                           </p>
                         </div>
                         <div class="tsd-comment tsd-typography"></div>
@@ -177,8 +247,10 @@
                 </ul>
               </div>
               <h4 class="tsd-returns-title">
-                Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span
-                ><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span
+                Returns <span class="tsd-signature-type">Promise</span
+                ><span class="tsd-signature-symbol">&lt;</span
+                ><span class="tsd-signature-type">any</span
+                ><span class="tsd-signature-symbol">[]</span
                 ><span class="tsd-signature-symbol">&gt;</span>
               </h4>
               <aside class="tsd-sources">
@@ -213,7 +285,11 @@
                   <ul id="tsd-filter-options">
                     <li class="tsd-filter-item">
                       <label class="tsd-filter-input"
-                        ><input type="checkbox" id="tsd-filter-protected" name="protected" /><svg
+                        ><input
+                          type="checkbox"
+                          id="tsd-filter-protected"
+                          name="protected"
+                        /><svg
                           width="32"
                           height="32"
                           viewBox="0 0 32 32"
@@ -241,7 +317,12 @@
                     </li>
                     <li class="tsd-filter-item">
                       <label class="tsd-filter-input"
-                        ><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked /><svg
+                        ><input
+                          type="checkbox"
+                          id="tsd-filter-inherited"
+                          name="inherited"
+                          checked
+                        /><svg
                           width="32"
                           height="32"
                           viewBox="0 0 32 32"
@@ -269,7 +350,11 @@
                     </li>
                     <li class="tsd-filter-item">
                       <label class="tsd-filter-input"
-                        ><input type="checkbox" id="tsd-filter-external" name="external" /><svg
+                        ><input
+                          type="checkbox"
+                          id="tsd-filter-external"
+                          name="external"
+                        /><svg
                           width="32"
                           height="32"
                           viewBox="0 0 32 32"
@@ -312,10 +397,15 @@
         <div class="site-menu">
           <nav class="tsd-navigation">
             <a href="../modules.html"
-              ><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="../assets/icons.svg#icon-1"></use></svg
+              ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                <use href="../assets/icons.svg#icon-1"></use></svg
               ><span>webring</span></a
             >
-            <ul class="tsd-small-nested-navigation" id="tsd-nav-container" data-base="..">
+            <ul
+              class="tsd-small-nested-navigation"
+              id="tsd-nav-container"
+              data-base=".."
+            >
               <li>Loading...</li>
             </ul>
           </nav>
@@ -323,7 +413,10 @@
       </div>
     </div>
     <footer>
-      <p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+      <p class="tsd-generator">
+        Generated using
+        <a href="https://typedoc.org/" target="_blank">TypeDoc</a>
+      </p>
     </footer>
     <div class="overlay"></div>
   </body>

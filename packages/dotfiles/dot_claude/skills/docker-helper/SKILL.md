@@ -25,6 +25,7 @@ Docker provides containerization for applications. Containers are lightweight, i
 ### Auto-Approved Commands
 
 The following `docker` commands are auto-approved and safe to use:
+
 - `docker ps` - List containers
 - `docker images` - List images
 - `docker inspect` - Show detailed info
@@ -794,6 +795,7 @@ docker manifest inspect "$IMAGE:$VERSION"
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - Container names or image tags are ambiguous
 - Destructive operations (rm, prune) need confirmation
 - Port bindings might conflict with existing services

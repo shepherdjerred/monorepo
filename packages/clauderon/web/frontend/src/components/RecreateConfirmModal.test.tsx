@@ -3,7 +3,10 @@ import type { ResourceState, SessionHealthReport } from "@clauderon/client";
 import { BackendType, AvailableAction } from "@clauderon/shared";
 
 // Test helper functions extracted from the component
-function getStateDisplay(state: ResourceState): { label: string; color: string } {
+function getStateDisplay(state: ResourceState): {
+  label: string;
+  color: string;
+} {
   switch (state.type) {
     case "Healthy":
       return { label: "OK", color: "text-green-600" };
@@ -30,7 +33,10 @@ function getStateDisplay(state: ResourceState): { label: string; color: string }
   }
 }
 
-function getActionDetails(action: AvailableAction): { label: string; variant: string } {
+function getActionDetails(action: AvailableAction): {
+  label: string;
+  variant: string;
+} {
   switch (action) {
     case AvailableAction.Start:
       return { label: "Start", variant: "brutalist" };
@@ -50,7 +56,9 @@ function getActionDetails(action: AvailableAction): { label: string; variant: st
 }
 
 // Helper to create mock health reports
-function createMockHealthReport(overrides: Partial<SessionHealthReport> = {}): SessionHealthReport {
+function createMockHealthReport(
+  overrides: Partial<SessionHealthReport> = {},
+): SessionHealthReport {
   return {
     session_id: "session-123",
     session_name: "Test Session",
@@ -91,7 +99,10 @@ describe("RecreateConfirmModal helpers", () => {
     });
 
     test("returns correct display for Error state", () => {
-      const display = getStateDisplay({ type: "Error", message: "Something broke" });
+      const display = getStateDisplay({
+        type: "Error",
+        message: "Something broke",
+      });
       expect(display.label).toBe("Error");
       expect(display.color).toBe("text-red-600");
     });
@@ -103,7 +114,10 @@ describe("RecreateConfirmModal helpers", () => {
     });
 
     test("returns correct display for DataLost state", () => {
-      const display = getStateDisplay({ type: "DataLost", reason: "PVC deleted" });
+      const display = getStateDisplay({
+        type: "DataLost",
+        reason: "PVC deleted",
+      });
       expect(display.label).toBe("Data Lost");
       expect(display.color).toBe("text-red-600");
     });
@@ -180,7 +194,10 @@ describe("RecreateConfirmModal action availability", () => {
   test("data lost offers Cleanup and RecreateFresh", () => {
     const report = createMockHealthReport({
       state: { type: "DataLost", reason: "PVC was deleted" },
-      available_actions: [AvailableAction.Cleanup, AvailableAction.RecreateFresh],
+      available_actions: [
+        AvailableAction.Cleanup,
+        AvailableAction.RecreateFresh,
+      ],
       data_safe: false,
     });
     expect(report.available_actions).toContain(AvailableAction.Cleanup);
@@ -191,7 +208,10 @@ describe("RecreateConfirmModal action availability", () => {
   test("healthy session offers UpdateImage and Recreate for proactive recreate", () => {
     const report = createMockHealthReport({
       state: { type: "Healthy" },
-      available_actions: [AvailableAction.UpdateImage, AvailableAction.Recreate],
+      available_actions: [
+        AvailableAction.UpdateImage,
+        AvailableAction.Recreate,
+      ],
     });
     expect(report.available_actions).toContain(AvailableAction.UpdateImage);
     expect(report.available_actions).toContain(AvailableAction.Recreate);
@@ -214,7 +234,8 @@ describe("RecreateConfirmModal data safety", () => {
       backend_type: BackendType.Docker,
       state: { type: "Missing" },
       data_safe: true,
-      description: "Container not found. Your code is safe (mounted from host).",
+      description:
+        "Container not found. Your code is safe (mounted from host).",
     });
     expect(report.data_safe).toBe(true);
   });
@@ -243,7 +264,8 @@ describe("RecreateConfirmModal data safety", () => {
       backend_type: BackendType.Zellij,
       state: { type: "Missing" },
       data_safe: true,
-      description: "Zellij session not found. Your code is safe (stored locally).",
+      description:
+        "Zellij session not found. Your code is safe (stored locally).",
     });
     expect(report.data_safe).toBe(true);
   });
@@ -253,7 +275,8 @@ describe("RecreateConfirmModal data safety", () => {
       backend_type: BackendType.Sprites,
       state: { type: "Stopped" },
       data_safe: false,
-      description: "Sprite stopped with auto_destroy enabled. Data would be lost.",
+      description:
+        "Sprite stopped with auto_destroy enabled. Data would be lost.",
     });
     expect(report.data_safe).toBe(false);
   });

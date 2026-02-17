@@ -12,7 +12,7 @@ export type ExecuteEditOptions = {
   workingDirectory: string;
   resumeSessionId?: string;
   allowedPaths?: string[];
-}
+};
 
 /**
  * Message types from Claude Code output
@@ -32,7 +32,7 @@ type ClaudeMessage = {
   result?: {
     text?: string;
   };
-}
+};
 
 /**
  * Execute an edit using Claude Code CLI
@@ -55,9 +55,12 @@ export async function executeEdit(
   return new Promise((resolve, reject) => {
     const args = [
       "--print", // Non-interactive mode
-      "--output-format", "stream-json", // Structured output
-      "--permission-mode", "acceptEdits", // Auto-accept file edits
-      "--allowedTools", "Read,Write,Edit,Glob,Grep", // No Bash for security
+      "--output-format",
+      "stream-json", // Structured output
+      "--permission-mode",
+      "acceptEdits", // Auto-accept file edits
+      "--allowedTools",
+      "Read,Write,Edit,Glob,Grep", // No Bash for security
     ];
 
     if (resumeSessionId) {
@@ -87,7 +90,9 @@ export async function executeEdit(
       stdout = lines.pop() ?? ""; // Keep incomplete line
 
       for (const line of lines) {
-        if (!line.trim()) {continue;}
+        if (!line.trim()) {
+          continue;
+        }
         try {
           const msg = JSON.parse(line) as ClaudeMessage;
           processMessage(msg, {
@@ -130,7 +135,11 @@ export async function executeEdit(
           code,
           stderr,
         });
-        reject(new Error(`Claude process exited with code ${String(code)}: ${stderr}`));
+        reject(
+          new Error(
+            `Claude process exited with code ${String(code)}: ${stderr}`,
+          ),
+        );
         return;
       }
 
@@ -163,7 +172,7 @@ type MessageHandlers = {
   addChange: (change: FileChange) => void;
   setSummary: (summary: string) => void;
   trackOriginal: (path: string, content: string) => void;
-}
+};
 
 function processMessage(msg: ClaudeMessage, handlers: MessageHandlers): void {
   // Capture session ID from init message
@@ -184,7 +193,9 @@ function processMessage(msg: ClaudeMessage, handlers: MessageHandlers): void {
   // Capture file writes/edits
   if (msg.type === "tool_use") {
     const input = msg.tool_input;
-    if (!input?.file_path) {return;}
+    if (!input?.file_path) {
+      return;
+    }
 
     if (msg.tool_name === "Write" && input.content !== undefined) {
       handlers.addChange({
@@ -218,7 +229,9 @@ function extractFinalSummary(output: string): string {
   const lines = output.split("\n");
   for (let i = lines.length - 1; i >= 0; i--) {
     const line = lines[i];
-    if (!line?.trim()) {continue;}
+    if (!line?.trim()) {
+      continue;
+    }
     try {
       const msg = JSON.parse(line) as ClaudeMessage;
       if (msg.type === "assistant" && msg.content) {

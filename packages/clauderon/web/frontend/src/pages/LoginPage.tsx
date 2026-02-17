@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { get, type CredentialRequestOptionsJSON, type PublicKeyCredentialWithAssertionJSON } from "@github/webauthn-json";
+import {
+  get,
+  type CredentialRequestOptionsJSON,
+  type PublicKeyCredentialWithAssertionJSON,
+} from "@github/webauthn-json";
 import { useClauderonClient } from "../hooks/useClauderonClient";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -17,10 +21,18 @@ export function LoginPage() {
 
     try {
       // Start login flow
-      const response: { challenge_id: string; options: CredentialRequestOptionsJSON } = await client.loginStart({ username }) as { challenge_id: string; options: CredentialRequestOptionsJSON };
+      const response: {
+        challenge_id: string;
+        options: CredentialRequestOptionsJSON;
+      } = (await client.loginStart({ username })) as {
+        challenge_id: string;
+        options: CredentialRequestOptionsJSON;
+      };
 
       // Trigger passkey authentication
-      const credential: PublicKeyCredentialWithAssertionJSON = await get(response.options);
+      const credential: PublicKeyCredentialWithAssertionJSON = await get(
+        response.options,
+      );
 
       // Finish login flow
       await client.loginFinish({
@@ -33,7 +45,11 @@ export function LoginPage() {
       await refreshAuthStatus();
     } catch (err) {
       console.error("Login error:", err);
-      setError(err instanceof Error ? err.message : "Failed to sign in. Please try again.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to sign in. Please try again.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -47,16 +63,26 @@ export function LoginPage() {
           <p className="text-muted-foreground mt-2">Sign in to Clauderon</p>
         </div>
 
-        <form onSubmit={(e) => { void handleLogin(e); }} className="space-y-4">
+        <form
+          onSubmit={(e) => {
+            void handleLogin(e);
+          }}
+          className="space-y-4"
+        >
           <div>
-            <label htmlFor="username" className="block text-sm font-medium mb-2">
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium mb-2"
+            >
               Username
             </label>
             <input
               id="username"
               type="text"
               value={username}
-              onChange={(e) => { setUsername(e.target.value); }}
+              onChange={(e) => {
+                setUsername(e.target.value);
+              }}
               required
               autoComplete="username webauthn"
               className="w-full px-3 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"

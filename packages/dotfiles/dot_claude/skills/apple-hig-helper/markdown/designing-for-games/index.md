@@ -40,23 +40,23 @@ Loading](/design/human-interface-guidelines/loading)
 
 **Make sure text is always legible.** When game text is hard to read, people can struggle to follow the narrative, understand important instructions and information, and stay engaged in the experience. To keep text comfortably legible on each device, ensure that it contrasts well with the background and uses at least the recommended minimum text size in each platform. For guidance, see [Typography](/design/human-interface-guidelines/typography); for developer guidance, see [Adapting your game interface for smaller screens](/documentation/Metal/adapting-your-game-interface-for-smaller-screens).
 
-| Platform | Default text size | Minimum text size |
-| --- | --- | --- |
-| iOS, iPadOS | 17 pt | 11 pt |
-| macOS | 13 pt | 10 pt |
-| tvOS | 29 pt | 23 pt |
-| visionOS | 17 pt | 12 pt |
-| watchOS | 16 pt | 12 pt |
+| Platform    | Default text size | Minimum text size |
+| ----------- | ----------------- | ----------------- |
+| iOS, iPadOS | 17 pt             | 11 pt             |
+| macOS       | 13 pt             | 10 pt             |
+| tvOS        | 29 pt             | 23 pt             |
+| visionOS    | 17 pt             | 12 pt             |
+| watchOS     | 16 pt             | 12 pt             |
 
 **Make sure buttons are always easy to use.** Buttons that are too small or too close together can frustrate players and make gameplay less fun. Each platform defines a recommended minimum button size based on its default interaction method. For example, buttons in iOS must be at least 44x44 pt to accommodate touch interaction. For guidance, see [Buttons](/design/human-interface-guidelines/buttons).
 
-| Platform | Default button size | Minimum button size |
-| --- | --- | --- |
-| iOS, iPadOS | 44x44 pt | 28x28 pt |
-| macOS | 28x28 pt | 20x20 pt |
-| tvOS | 66x66 pt | 56x56 pt |
-| visionOS | 60x60 pt | 28x28 pt |
-| watchOS | 44x44 pt | 28x28 pt |
+| Platform    | Default button size | Minimum button size |
+| ----------- | ------------------- | ------------------- |
+| iOS, iPadOS | 44x44 pt            | 28x28 pt            |
+| macOS       | 28x28 pt            | 20x20 pt            |
+| tvOS        | 66x66 pt            | 56x56 pt            |
+| visionOS    | 60x60 pt            | 28x28 pt            |
+| watchOS     | 44x44 pt            | 28x28 pt            |
 
 **Prefer resolution-independent textures and graphics.** If creating resolution-independent assets isn’t possible, match the resolution of your game to the resolution of the device. In visionOS, prefer vector-based art that can continue to look good when the system dynamically scales it as people view it from different distances and angles. For guidance, see [Images](/design/human-interface-guidelines/images).
 
@@ -82,14 +82,14 @@ Going full screen](/design/human-interface-guidelines/going-full-screen)
 
 **Support each platform’s default interaction method.** For example, people generally use touch to play games on iPhone; on a Mac, players tend to expect keyboard and mouse or trackpad support; and in a visionOS game, people expect to use their eyes and hands while making indirect and direct gestures. As you work to ensure that your game supports each platform’s default interaction method, pay special attention to control sizing and menu behavior, especially when bringing your game from a pointer-based context to a touch-based one.
 
-| Platform | Default interaction methods | Additional interaction methods |
-| --- | --- | --- |
-| iOS | Touch | Game controller |
-| iPadOS | Touch | Game controller, keyboard, mouse, trackpad, Apple Pencil |
-| macOS | Keyboard, mouse, trackpad | Game controller |
-| tvOS | Remote | Game controller, keyboard, mouse, trackpad |
-| visionOS | Touch | Game controller, keyboard, mouse, trackpad, spatial game controller |
-| watchOS | Touch | – |
+| Platform | Default interaction methods | Additional interaction methods                                      |
+| -------- | --------------------------- | ------------------------------------------------------------------- |
+| iOS      | Touch                       | Game controller                                                     |
+| iPadOS   | Touch                       | Game controller, keyboard, mouse, trackpad, Apple Pencil            |
+| macOS    | Keyboard, mouse, trackpad   | Game controller                                                     |
+| tvOS     | Remote                      | Game controller, keyboard, mouse, trackpad                          |
+| visionOS | Touch                       | Game controller, keyboard, mouse, trackpad, spatial game controller |
+| watchOS  | Touch                       | –                                                                   |
 
 **Support physical game controllers, while also giving people alternatives.** Every platform except watchOS supports physical game controllers. Although the presence of a game controller makes it straightforward to port controls from an existing game and handle complex control mappings, recognize that not every player can use a physical game controller. To make your game available to as many players as possible, also offer alternative ways to interact with your game. For guidance, see [Physical controllers](/design/human-interface-guidelines/game-controls#Physical-controllers).
 
@@ -111,11 +111,11 @@ Pointing devices](/design/human-interface-guidelines/pointing-devices)
 
 **Prioritize perceivability.** Make sure people can perceive your game’s content whether they use sight, hearing, or touch. For example, avoid relying solely on color to convey an important detail, or providing a cutscene that doesn’t include descriptive subtitles or offer other ways to read the content. For specific guidance, see:
 
-* Text sizes
-* Color and effects
-* Motion
-* Interactions
-* Buttons
+- Text sizes
+- Color and effects
+- Motion
+- Interactions
+- Buttons
 
 **Help players personalize their experience.** Players have a variety of preferences and abilities that influence their interactions with your game. Because there’s no universal configuration that suits everyone, give players the ability to customize parameters like type size, game control mapping, motion intensity, and sound balance. You can take advantage of built-in [Apple accessibility technologies](https://developer.apple.com/accessibility/) to support accessibility personalizations, whether you’re using system frameworks or [Unity plug-ins](https://github.com/Apple/UnityPlugins).
 
@@ -181,7 +181,7 @@ Design advanced games for Apple platforms](https://developer.apple.com/videos/pl
 
 ## [Change log](/design/human-interface-guidelines/designing-for-games#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| June 9, 2025 | Updated guidance for touch-based controls and Game Center. |
-| June 10, 2024 | New page. |
+| Date          | Changes                                                    |
+| ------------- | ---------------------------------------------------------- |
+| June 9, 2025  | Updated guidance for touch-based controls and Game Center. |
+| June 10, 2024 | New page.                                                  |

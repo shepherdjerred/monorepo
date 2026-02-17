@@ -29,6 +29,7 @@ Sprites.dev provides managed Linux VMs running in hardware-isolated Firecracker 
 ### Why Use Sprites Backend?
 
 **Advantages:**
+
 - **Zero local infrastructure** - No Docker, Kubernetes, or local containers required
 - **Better for remote teams** - Access from anywhere via HTTPS URLs
 - **Hardware isolation** - True VM-level isolation, not just containerization
@@ -37,6 +38,7 @@ Sprites.dev provides managed Linux VMs running in hardware-isolated Firecracker 
 - **Simple CLI** - Uses the `sprite` CLI for all operations
 
 **Trade-offs:**
+
 - **Higher cost** - Pay-per-use pricing vs free local containers
 - **Repository cloning** - Cannot mount local directories, must clone from git remotes
 - **Network dependency** - Requires internet connectivity
@@ -76,19 +78,20 @@ Local Machine              Sprites Container
 ```
 
 **Requirements:**
+
 - All repositories must have configured git remotes
 - Remotes must be accessible from sprites.dev infrastructure
 - SSH keys or HTTPS credentials must be configured in sprite
 
 ### CLI Commands Used
 
-| Operation | CLI Command |
-|-----------|-------------|
-| Create | `sprite create {name} --no-console` |
-| Check exists | `sprite list` (parse output) |
-| Run command | `sprite run -s {name} -- {cmd}` |
-| Delete | `sprite destroy {name} --yes` |
-| Attach | `sprite console {name}` |
+| Operation    | CLI Command                         |
+| ------------ | ----------------------------------- |
+| Create       | `sprite create {name} --no-console` |
+| Check exists | `sprite list` (parse output)        |
+| Run command  | `sprite run -s {name} -- {cmd}`     |
+| Delete       | `sprite destroy {name} --yes`       |
+| Attach       | `sprite console {name}`             |
 
 ## Setup
 
@@ -142,6 +145,7 @@ auto_checkpoint = true
 ```
 
 **Recommendations:**
+
 - `auto_destroy=true` for one-off tasks (avoids storage costs)
 - `auto_destroy=false` for recurring work (avoids clone/setup time)
 - `auto_checkpoint=true` for frequently accessed sprites (300ms vs 1s cold start)
@@ -159,6 +163,7 @@ shallow_clone = true
 ### Fixed Environment
 
 Sprites use a fixed environment that cannot be customized:
+
 - **OS:** Ubuntu 24.04
 - **CPU:** 8 vCPUs
 - **Memory:** 8GB RAM
@@ -175,6 +180,7 @@ Sprites use a fixed environment that cannot be customized:
 1. **Use public repositories** - If possible, use public repositories for clauderon sessions
 
 2. **Pre-configure SSH keys** - Configure SSH keys in the sprite after creation:
+
    ```bash
    sprite console my-sprite
    # Then inside sprite:
@@ -199,6 +205,7 @@ By default, repositories are cloned with `--depth 1` (shallow clone) for faster 
 - Some CI/CD tools that expect full history
 
 **Solution:** Disable shallow clones in configuration:
+
 ```toml
 [git]
 shallow_clone = false
@@ -215,6 +222,7 @@ shallow_clone = false
 ### Creating a Session
 
 **Via Web UI:**
+
 1. Open clauderon web UI
 2. Click "New Session"
 3. Select "Sprites" as backend
@@ -222,6 +230,7 @@ shallow_clone = false
 5. Click "Create"
 
 **Via TUI:**
+
 1. Run `clauderon tui`
 2. Press `n` for new session
 3. Navigate to "Backend" and select "Sprites"
@@ -231,11 +240,13 @@ shallow_clone = false
 ### Attaching to a Session
 
 **Via sprites CLI:**
+
 ```bash
 sprite console clauderon-<session-name>
 ```
 
 **Via clauderon:**
+
 ```bash
 # Get attach command
 clauderon attach <session-name>
@@ -258,11 +269,13 @@ All repositories must have configured git remotes accessible from sprites.dev.
 ### Monitoring and Logs
 
 **View sprite status:**
+
 ```bash
 sprite list
 ```
 
 **View sprite logs:**
+
 ```bash
 sprite console clauderon-<session-name>
 # Then inside sprite:
@@ -282,6 +295,7 @@ Sprites.dev uses pay-per-use pricing:
 ### Example Cost Calculations
 
 **Short development session (4 hours active):**
+
 ```
 Configuration: 8 vCPUs, 8GB RAM, 10GB storage (fixed)
 - CPU: 4h × 8 × $0.07 = $2.24
@@ -291,6 +305,7 @@ Total: $3.67
 ```
 
 **Full work day (8 hours active):**
+
 ```
 Configuration: 8 vCPUs, 8GB RAM, 20GB storage (fixed)
 - CPU: 8h × 8 × $0.07 = $4.48
@@ -300,6 +315,7 @@ Total: $7.39
 ```
 
 **Persistent sprite (1 week, idle with auto_destroy=false):**
+
 ```
 Configuration: 10GB storage only (idle sprites don't incur CPU/memory costs)
 - Storage: 168h × 10 × $0.00068 = $1.14/week
@@ -315,21 +331,22 @@ Total: $1.14/week (plus active time when resumed)
 
 ## Comparison with Other Backends
 
-| Feature | Sprites | Docker | Kubernetes | Zellij |
-|---------|---------|--------|------------|--------|
-| **Local Infrastructure** | None | Docker Engine | Cluster | Terminal |
-| **Cost** | Pay-per-use | Free | Varies | Free |
-| **Isolation** | Hardware (VM) | Container | Container | Process |
-| **Persistence** | Automatic | Volumes | PVCs | None |
-| **Remote Access** | HTTPS URL | Manual | Ingress | SSH |
-| **Cold Start** | <1s | ~2-5s | ~5-10s | Instant |
-| **Setup Complexity** | Low | Medium | High | Low |
-| **Multi-Repository** | Yes | Yes | Yes | Limited |
-| **Best For** | Remote teams, zero infra | Local dev | Production | Quick local |
+| Feature                  | Sprites                  | Docker        | Kubernetes | Zellij      |
+| ------------------------ | ------------------------ | ------------- | ---------- | ----------- |
+| **Local Infrastructure** | None                     | Docker Engine | Cluster    | Terminal    |
+| **Cost**                 | Pay-per-use              | Free          | Varies     | Free        |
+| **Isolation**            | Hardware (VM)            | Container     | Container  | Process     |
+| **Persistence**          | Automatic                | Volumes       | PVCs       | None        |
+| **Remote Access**        | HTTPS URL                | Manual        | Ingress    | SSH         |
+| **Cold Start**           | <1s                      | ~2-5s         | ~5-10s     | Instant     |
+| **Setup Complexity**     | Low                      | Medium        | High       | Low         |
+| **Multi-Repository**     | Yes                      | Yes           | Yes        | Limited     |
+| **Best For**             | Remote teams, zero infra | Local dev     | Production | Quick local |
 
 ### When to Use Sprites
 
 **Good for:**
+
 - Remote/distributed teams without shared infrastructure
 - Users who don't want to manage Docker/Kubernetes locally
 - Temporary/ephemeral development environments
@@ -337,6 +354,7 @@ Total: $1.14/week (plus active time when resumed)
 - Teams with budget for managed services
 
 **Not ideal for:**
+
 - Cost-sensitive scenarios with heavy usage
 - Air-gapped or fully offline environments
 - Extremely large monorepos (clone time)
@@ -351,6 +369,7 @@ Total: $1.14/week (plus active time when resumed)
 
 **Solution:**
 Install sprites CLI:
+
 ```bash
 curl -fsSL https://sprites.dev/install.sh | sh
 ```
@@ -360,6 +379,7 @@ curl -fsSL https://sprites.dev/install.sh | sh
 **Error:** `Failed to create sprite: unauthorized`
 
 **Solution:**
+
 ```bash
 # Login to sprites.dev
 sprite login
@@ -374,6 +394,7 @@ export SPRITES_TOKEN="sp_your_token_here"
 
 **Solution:**
 Ensure your git worktree has a remote:
+
 ```bash
 cd /path/to/worktree
 git remote -v
@@ -393,11 +414,13 @@ Configure git credentials in sprite (future feature) or use public repositories.
 **Error:** `Timeout waiting for sprite to be ready`
 
 **Possible causes:**
+
 - Sprites.dev API is slow or down
 - Network connectivity issues
 - Resource constraints on sprites.dev infrastructure
 
 **Solution:**
+
 - Check sprites.dev status page
 - Retry after a few minutes
 - Contact sprites.dev support if issue persists
@@ -408,6 +431,7 @@ Configure git credentials in sprite (future feature) or use public repositories.
 
 **Solution:**
 Claude Code should be automatically installed. If it fails, you can install manually:
+
 ```bash
 sprite console clauderon-<session-name>
 # Inside sprite:
@@ -418,6 +442,7 @@ curl -fsSL https://claude.ai/install.sh | sh
 
 **Expected behavior if `auto_destroy = false`:**
 Sprites are kept for reuse by default. To delete:
+
 ```bash
 sprite destroy clauderon-<session-name>
 ```
@@ -427,6 +452,7 @@ Or set `auto_destroy = true` in config to auto-delete on session deletion.
 ## Support
 
 For issues specific to:
+
 - **Sprites backend integration:** [clauderon issues](https://github.com/anthropics/clauderon/issues)
 - **Sprites.dev platform:** [sprites.dev support](https://sprites.dev/support)
 

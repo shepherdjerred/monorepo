@@ -12,7 +12,7 @@ import { ApplicationLoadBalancer } from "aws-cdk-lib/aws-elasticloadbalancingv2"
 export function createCloudFrontResources(
   stack: Stack,
   applicationLoadBalancer: ApplicationLoadBalancer,
-  certificate: Certificate
+  certificate: Certificate,
 ): Distribution {
   return new Distribution(stack, "Distribution", {
     defaultRootObject: "index.html",

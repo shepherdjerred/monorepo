@@ -1,4 +1,4 @@
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Application } from "../../../generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
@@ -23,7 +23,8 @@ export function createSeaweedfsApp(chart: Chart) {
   // 1Password secret for S3 credentials
   new OnePasswordItem(chart, "seaweedfs-credentials-onepassword", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/seaweedfs-s3-credentials",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/seaweedfs-s3-credentials",
     },
     metadata: {
       name: "seaweedfs-s3-credentials",
@@ -32,7 +33,15 @@ export function createSeaweedfsApp(chart: Chart) {
   });
 
   // Tailscale ingress with funnel for S3 API (external access)
-  createIngress(chart, "seaweedfs-s3-ingress", "seaweedfs", "seaweedfs-s3", 8333, ["seaweedfs-s3"], true);
+  createIngress(
+    chart,
+    "seaweedfs-s3-ingress",
+    "seaweedfs",
+    "seaweedfs-s3",
+    8333,
+    ["seaweedfs-s3"],
+    true,
+  );
 
   createCloudflareTunnelBinding(chart, "seaweedfs-s3-cf-tunnel", {
     serviceName: "seaweedfs-s3",
@@ -46,7 +55,8 @@ export function createSeaweedfsApp(chart: Chart) {
       name: "seaweedfs-filer-ui",
       namespace: "seaweedfs",
       annotations: {
-        "ignore-check.kube-linter.io/dangling-service": "Pods are managed by SeaweedFS Helm chart",
+        "ignore-check.kube-linter.io/dangling-service":
+          "Pods are managed by SeaweedFS Helm chart",
       },
     },
     spec: {
@@ -66,7 +76,15 @@ export function createSeaweedfsApp(chart: Chart) {
   });
 
   // Tailscale ingress for Filer web UI (internal only)
-  createIngress(chart, "seaweedfs-filer-ingress", "seaweedfs", "seaweedfs-filer-ui", 8888, ["seaweedfs-filer"], false);
+  createIngress(
+    chart,
+    "seaweedfs-filer-ingress",
+    "seaweedfs",
+    "seaweedfs-filer-ui",
+    8888,
+    ["seaweedfs-filer"],
+    false,
+  );
 
   const seaweedfsValues: HelmValuesForChart<"seaweedfs"> = {
     global: {

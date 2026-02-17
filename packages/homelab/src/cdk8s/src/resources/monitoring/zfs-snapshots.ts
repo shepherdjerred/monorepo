@@ -1,6 +1,12 @@
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Duration } from "cdk8s";
-import { ConfigMap, DaemonSet, Volume, ServiceAccount, Probe } from "cdk8s-plus-31";
+import {
+  ConfigMap,
+  DaemonSet,
+  Volume,
+  ServiceAccount,
+  Probe,
+} from "cdk8s-plus-31";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import versions from "../../versions.ts";
@@ -14,12 +20,16 @@ export async function createZfsSnapshotsMonitoring(chart: Chart) {
   const scriptContent = await Bun.file(scriptPath).text();
 
   // Create ServiceAccount for the DaemonSet
-  const serviceAccount = new ServiceAccount(chart, "zfs-snapshots-service-account", {
-    metadata: {
-      name: "zfs-snapshots-service-account",
-      namespace: "prometheus",
+  const serviceAccount = new ServiceAccount(
+    chart,
+    "zfs-snapshots-service-account",
+    {
+      metadata: {
+        name: "zfs-snapshots-service-account",
+        namespace: "prometheus",
+      },
     },
-  });
+  );
 
   // Create ConfigMap with the zfs_snapshots.py script
   const zfsSnapshotsScript = new ConfigMap(chart, "zfs-snapshots-script", {
@@ -33,27 +43,36 @@ export async function createZfsSnapshotsMonitoring(chart: Chart) {
   });
 
   // Create DaemonSet to run the script on all nodes
-  const zfsSnapshotsDaemonSet = new DaemonSet(chart, "zfs-snapshots-collector", {
-    metadata: {
-      name: "zfs-snapshots-collector",
-      namespace: "prometheus",
-      labels: {
-        app: "zfs-snapshots-collector",
+  const zfsSnapshotsDaemonSet = new DaemonSet(
+    chart,
+    "zfs-snapshots-collector",
+    {
+      metadata: {
+        name: "zfs-snapshots-collector",
+        namespace: "prometheus",
+        labels: {
+          app: "zfs-snapshots-collector",
+        },
+        annotations: {
+          "ignore-check.kube-linter.io/sensitive-host-mounts":
+            "Required for ZFS monitoring via /dev, /proc, /sys",
+          "ignore-check.kube-linter.io/privileged-container":
+            "Required for ZFS device access",
+          "ignore-check.kube-linter.io/privilege-escalation-container":
+            "Required when privileged is true",
+          "ignore-check.kube-linter.io/run-as-non-root":
+            "Required for ZFS access as root",
+          "ignore-check.kube-linter.io/no-read-only-root-fs":
+            "Required to install zfs tools at runtime",
+        },
       },
-      annotations: {
-        "ignore-check.kube-linter.io/sensitive-host-mounts": "Required for ZFS monitoring via /dev, /proc, /sys",
-        "ignore-check.kube-linter.io/privileged-container": "Required for ZFS device access",
-        "ignore-check.kube-linter.io/privilege-escalation-container": "Required when privileged is true",
-        "ignore-check.kube-linter.io/run-as-non-root": "Required for ZFS access as root",
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "Required to install zfs tools at runtime",
+      serviceAccount,
+      securityContext: {
+        ensureNonRoot: false,
+        fsGroup: 0,
       },
     },
-    serviceAccount,
-    securityContext: {
-      ensureNonRoot: false,
-      fsGroup: 0,
-    },
-  });
+  );
 
   // Configure the container
   const container = zfsSnapshotsDaemonSet.addContainer({
@@ -85,7 +104,11 @@ export async function createZfsSnapshotsMonitoring(chart: Chart) {
       `,
     ],
     liveness: Probe.fromCommand(
-      ["sh", "-c", "! grep -q 'collection failed' /host/var/lib/node_exporter/textfile_collector/zfs_snapshots.prom"],
+      [
+        "sh",
+        "-c",
+        "! grep -q 'collection failed' /host/var/lib/node_exporter/textfile_collector/zfs_snapshots.prom",
+      ],
       {
         initialDelaySeconds: Duration.seconds(120),
         periodSeconds: Duration.seconds(900),
@@ -103,28 +126,47 @@ export async function createZfsSnapshotsMonitoring(chart: Chart) {
   });
 
   // Mount the script from ConfigMap
-  const scriptVolume = Volume.fromConfigMap(chart, "zfs-snapshots-script-volume", zfsSnapshotsScript);
+  const scriptVolume = Volume.fromConfigMap(
+    chart,
+    "zfs-snapshots-script-volume",
+    zfsSnapshotsScript,
+  );
   zfsSnapshotsDaemonSet.addVolume(scriptVolume);
   container.mount("/scripts", scriptVolume);
 
   // Mount host /dev directory for ZFS device access
-  const hostDevVolume = Volume.fromHostPath(chart, "zfs-snapshots-host-dev", "zfs-snapshots-host-dev", {
-    path: "/dev",
-  });
+  const hostDevVolume = Volume.fromHostPath(
+    chart,
+    "zfs-snapshots-host-dev",
+    "zfs-snapshots-host-dev",
+    {
+      path: "/dev",
+    },
+  );
   zfsSnapshotsDaemonSet.addVolume(hostDevVolume);
   container.mount("/dev", hostDevVolume);
 
   // Mount host /proc directory for ZFS
-  const hostProcVolume = Volume.fromHostPath(chart, "zfs-snapshots-host-proc", "zfs-snapshots-host-proc", {
-    path: "/proc",
-  });
+  const hostProcVolume = Volume.fromHostPath(
+    chart,
+    "zfs-snapshots-host-proc",
+    "zfs-snapshots-host-proc",
+    {
+      path: "/proc",
+    },
+  );
   zfsSnapshotsDaemonSet.addVolume(hostProcVolume);
   container.mount("/host/proc", hostProcVolume, { readOnly: true });
 
   // Mount host /sys directory for ZFS
-  const hostSysVolume = Volume.fromHostPath(chart, "zfs-snapshots-host-sys", "zfs-snapshots-host-sys", {
-    path: "/sys",
-  });
+  const hostSysVolume = Volume.fromHostPath(
+    chart,
+    "zfs-snapshots-host-sys",
+    "zfs-snapshots-host-sys",
+    {
+      path: "/sys",
+    },
+  );
   zfsSnapshotsDaemonSet.addVolume(hostSysVolume);
   container.mount("/host/sys", hostSysVolume, { readOnly: true });
 
@@ -138,7 +180,10 @@ export async function createZfsSnapshotsMonitoring(chart: Chart) {
     },
   );
   zfsSnapshotsDaemonSet.addVolume(textfileCollectorVolume);
-  container.mount("/host/var/lib/node_exporter/textfile_collector", textfileCollectorVolume);
+  container.mount(
+    "/host/var/lib/node_exporter/textfile_collector",
+    textfileCollectorVolume,
+  );
 
   return { serviceAccount, zfsSnapshotsScript, zfsSnapshotsDaemonSet };
 }

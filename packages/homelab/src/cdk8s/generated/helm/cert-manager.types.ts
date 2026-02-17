@@ -400,13 +400,14 @@ export type CertmanagerHelmValuesPrometheusServicemonitorAnnotations = {
   [key: string]: unknown;
 };
 
-export type CertmanagerHelmValuesPrometheusServicemonitorEndpointAdditionalProperties = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type CertmanagerHelmValuesPrometheusServicemonitorEndpointAdditionalProperties =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
 export type CertmanagerHelmValuesPrometheusPodmonitor = {
   /**
@@ -486,7 +487,8 @@ export type CertmanagerHelmValuesPrometheusPodmonitorAnnotations = {
   [key: string]: unknown;
 };
 
-export type CertmanagerHelmValuesPrometheusPodmonitorEndpointAdditionalProperties = object;
+export type CertmanagerHelmValuesPrometheusPodmonitorEndpointAdditionalProperties =
+  object;
 
 export type CertmanagerHelmValuesWebhook = {
   /**
@@ -777,21 +779,23 @@ export type CertmanagerHelmValuesWebhookValidatingWebhookConfiguration = {
   namespaceSelector?: CertmanagerHelmValuesWebhookValidatingWebhookConfigurationNamespaceSelector;
 };
 
-export type CertmanagerHelmValuesWebhookValidatingWebhookConfigurationNamespaceSelector = {
-  matchExpressions?: CertmanagerHelmValuesWebhookValidatingWebhookConfigurationNamespaceSelectorMatchExpressionsElement[];
-};
+export type CertmanagerHelmValuesWebhookValidatingWebhookConfigurationNamespaceSelector =
+  {
+    matchExpressions?: CertmanagerHelmValuesWebhookValidatingWebhookConfigurationNamespaceSelectorMatchExpressionsElement[];
+  };
 
-export type CertmanagerHelmValuesWebhookValidatingWebhookConfigurationNamespaceSelectorMatchExpressionsElement = {
-  /**
-   * @default "cert-manager.io/disable-validation"
-   */
-  key?: string;
-  /**
-   * @default "NotIn"
-   */
-  operator?: string;
-  values?: boolean[];
-};
+export type CertmanagerHelmValuesWebhookValidatingWebhookConfigurationNamespaceSelectorMatchExpressionsElement =
+  {
+    /**
+     * @default "cert-manager.io/disable-validation"
+     */
+    key?: string;
+    /**
+     * @default "NotIn"
+     */
+    operator?: string;
+    values?: boolean[];
+  };
 
 export type CertmanagerHelmValuesWebhookMutatingWebhookConfiguration = {
   /**
@@ -803,7 +807,8 @@ export type CertmanagerHelmValuesWebhookMutatingWebhookConfiguration = {
   namespaceSelector?: CertmanagerHelmValuesWebhookMutatingWebhookConfigurationNamespaceSelector;
 };
 
-export type CertmanagerHelmValuesWebhookMutatingWebhookConfigurationNamespaceSelector = object;
+export type CertmanagerHelmValuesWebhookMutatingWebhookConfigurationNamespaceSelector =
+  object;
 
 export type CertmanagerHelmValuesWebhookResources = object;
 
@@ -1145,9 +1150,10 @@ export type CertmanagerHelmValuesCainjectorContainerSecurityContext = {
   readOnlyRootFilesystem?: boolean;
 };
 
-export type CertmanagerHelmValuesCainjectorContainerSecurityContextCapabilities = {
-  drop?: string[];
-};
+export type CertmanagerHelmValuesCainjectorContainerSecurityContextCapabilities =
+  {
+    drop?: string[];
+  };
 
 export type CertmanagerHelmValuesCainjectorPodDisruptionBudget = {
   /**
@@ -1367,12 +1373,13 @@ export type CertmanagerHelmValuesStartupapicheckSecurityContext = {
   seccompProfile?: CertmanagerHelmValuesStartupapicheckSecurityContextSeccompProfile;
 };
 
-export type CertmanagerHelmValuesStartupapicheckSecurityContextSeccompProfile = {
-  /**
-   * @default "RuntimeDefault"
-   */
-  type?: string;
-};
+export type CertmanagerHelmValuesStartupapicheckSecurityContextSeccompProfile =
+  {
+    /**
+     * @default "RuntimeDefault"
+     */
+    type?: string;
+  };
 
 export type CertmanagerHelmValuesStartupapicheckContainerSecurityContext = {
   /**
@@ -1389,9 +1396,10 @@ export type CertmanagerHelmValuesStartupapicheckContainerSecurityContext = {
   readOnlyRootFilesystem?: boolean;
 };
 
-export type CertmanagerHelmValuesStartupapicheckContainerSecurityContextCapabilities = {
-  drop?: string[];
-};
+export type CertmanagerHelmValuesStartupapicheckContainerSecurityContextCapabilities =
+  {
+    drop?: string[];
+  };
 
 export type CertmanagerHelmValuesStartupapicheckJobAnnotations = {
   /**

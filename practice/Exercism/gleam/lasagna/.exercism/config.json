@@ -1,24 +1,11 @@
 {
-  "authors": [
-    "lpil"
-  ],
+  "authors": ["lpil"],
   "files": {
-    "solution": [
-      "src/lasagna.gleam"
-    ],
-    "test": [
-      "test/lasagna_test.gleam"
-    ],
-    "exemplar": [
-      ".meta/example.gleam"
-    ],
-    "invalidator": [
-      "gleam.toml",
-      "manifest.toml"
-    ]
+    "solution": ["src/lasagna.gleam"],
+    "test": ["test/lasagna_test.gleam"],
+    "exemplar": [".meta/example.gleam"],
+    "invalidator": ["gleam.toml", "manifest.toml"]
   },
-  "forked_from": [
-    "elixir/lasagna"
-  ],
+  "forked_from": ["elixir/lasagna"],
   "blurb": "Learn about the basics of Gleam by following a lasagna recipe."
 }

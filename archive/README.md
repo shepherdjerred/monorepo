@@ -228,6 +228,7 @@ for dirname, commit_date in subdirs_with_dates:
             cog.outl("*No description available.*")
     cog.outl()
 ]]]-->
+
 ## 41 archived projects
 
 ### [ansible-playbook](https://github.com/shepherdjerred/monorepo/tree/main/archive/ansible-playbook) (2025-12-23)
@@ -320,7 +321,7 @@ This project, "jukebox," is a Rust application designed to control music playbac
 
 ### [kittens](https://github.com/shepherdjerred/monorepo/tree/main/archive/kittens) (2025-12-23)
 
-This project is a Quarto-based documentation or report about kittens, as indicated by the primary content file kittens.qmd. It uses Python dependencies specified in requirements.txt and includes configuration for automated publishing through GitHub Actions (_publish.yml). The project also contains images (img folder) and a README.md for explanation, and it is distributed under the MIT License.
+This project is a Quarto-based documentation or report about kittens, as indicated by the primary content file kittens.qmd. It uses Python dependencies specified in requirements.txt and includes configuration for automated publishing through GitHub Actions (\_publish.yml). The project also contains images (img folder) and a README.md for explanation, and it is distributed under the MIT License.
 
 ### [lambda-sagemaker-endpoint](https://github.com/shepherdjerred/monorepo/tree/main/archive/lambda-sagemaker-endpoint) (2025-12-23)
 

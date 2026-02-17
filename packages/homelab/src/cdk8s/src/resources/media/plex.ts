@@ -9,7 +9,7 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { ApiObject, JsonPatch, Size } from "cdk8s";
 import { withCommonProps } from "../../misc/common.ts";
 import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
@@ -31,7 +31,8 @@ export function createPlexDeployment(
   // OnePassword item for Plex token
   const plexSecrets = new OnePasswordItem(chart, "plex-secrets", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/xov5k65uwjmm3nfhc7udwmvhny",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/xov5k65uwjmm3nfhc7udwmvhny",
     },
   });
 
@@ -43,10 +44,14 @@ export function createPlexDeployment(
     },
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/privileged-container": "Required for Intel GPU transcoding access",
-        "ignore-check.kube-linter.io/privilege-escalation-container": "Required when privileged is true",
-        "ignore-check.kube-linter.io/run-as-non-root": "Plex requires root for media library permissions",
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "Plex requires writable filesystem for transcoding cache",
+        "ignore-check.kube-linter.io/privileged-container":
+          "Required for Intel GPU transcoding access",
+        "ignore-check.kube-linter.io/privilege-escalation-container":
+          "Required when privileged is true",
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "Plex requires root for media library permissions",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "Plex requires writable filesystem for transcoding cache",
       },
     },
   });
@@ -138,21 +143,38 @@ export function createPlexDeployment(
       volumeMounts: [
         {
           path: "/config",
-          volume: Volume.fromPersistentVolumeClaim(chart, "plex-volume", localPathVolume.claim),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "plex-volume",
+            localPathVolume.claim,
+          ),
         },
         {
-          volume: Volume.fromPersistentVolumeClaim(chart, "plex-tv-hdd-volume", claims.tv),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "plex-tv-hdd-volume",
+            claims.tv,
+          ),
           path: "/data/tv",
         },
         {
-          volume: Volume.fromPersistentVolumeClaim(chart, "plex-movies-hdd-volume", claims.movies),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "plex-movies-hdd-volume",
+            claims.movies,
+          ),
           path: "/data/movies",
         },
         {
-          volume: Volume.fromEmptyDir(chart, "plex-shm-mount", "plex-shm-mount", {
-            medium: EmptyDirMedium.MEMORY,
-            sizeLimit: Size.gibibytes(8),
-          }),
+          volume: Volume.fromEmptyDir(
+            chart,
+            "plex-shm-mount",
+            "plex-shm-mount",
+            {
+              medium: EmptyDirMedium.MEMORY,
+              sizeLimit: Size.gibibytes(8),
+            },
+          ),
           path: "/transcode",
         },
       ],

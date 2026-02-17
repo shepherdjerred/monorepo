@@ -28,7 +28,7 @@ Ask people to create an account only if your core functionality requires it; oth
 
 **In general, avoid offering an app-specific setting for opting in to biometric authentication.** People turn on biometric authentication at the system level, so presenting an in-app setting is redundant and could be confusing.
 
-**Avoid using the term *passcode* to refer to account authentication.** People create a passcode to unlock their device or authenticate for Apple services. If you use the term in your interface, people might think you’re asking them to reuse their passcode in your app or game.
+**Avoid using the term _passcode_ to refer to account authentication.** People create a passcode to unlock their device or authenticate for Apple services. If you use the term in your interface, people might think you’re asking them to reuse their passcode in your app or game.
 
 ## [Deleting accounts](/design/human-interface-guidelines/managing-accounts#Deleting-accounts)
 
@@ -52,8 +52,8 @@ If people used [Sign in with Apple](/design/human-interface-guidelines/sign-in-w
 
 **If you support in-app purchases, help people understand how billing and cancellation work when they delete their account.** For example, you might need to help people understand the following scenarios:
 
-* Billing for an auto-renewable subscription continues through Apple until people cancel the subscription, regardless of whether they delete their account.
-* After they delete their account, people need to cancel their subscription or request a refund.
+- Billing for an auto-renewable subscription continues through Apple until people cancel the subscription, regardless of whether they delete their account.
+- After they delete their account, people need to cancel their subscription or request a refund.
 
 In addition to helping people understand these scenarios, provide information that describes how to cancel subscriptions and manage purchases. For guidance, see [Helping people manage their subscriptions](/design/human-interface-guidelines/in-app-purchase#Helping-people-manage-their-subscriptions) and [Providing help with in-app purchases](/design/human-interface-guidelines/in-app-purchase#Providing-help-with-in-app-purchases).
 
@@ -71,7 +71,7 @@ Many popular TV providers let people sign in to their accounts at the system lev
 
 ## [Platform considerations](/design/human-interface-guidelines/managing-accounts#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, or visionOS.*
+_No additional considerations for iOS, iPadOS, macOS, or visionOS._
 
 ### [tvOS](/design/human-interface-guidelines/managing-accounts#tvOS)
 

@@ -57,7 +57,8 @@ type HelmChartValuesMap = {
   // ... other charts
 };
 
-export type HelmValuesForChart<TChart extends keyof HelmChartValuesMap> = HelmChartValuesMap[TChart];
+export type HelmValuesForChart<TChart extends keyof HelmChartValuesMap> =
+  HelmChartValuesMap[TChart];
 ```
 
 ### Step 3: Use in ArgoCD Applications

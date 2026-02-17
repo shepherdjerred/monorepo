@@ -28,7 +28,7 @@ Page controls appear as a series of small indicator dots by default, representin
 
 By default, a page control uses the system-provided dot image for all indicators, but it can also display a unique image to help people identify a specific page. For example, Weather uses the `location.fill` symbol to distinguish the current location’s page.
 
-If it enhances your app or game, you can provide a custom image to use as the default image for all indicators and you can also supply a different image for a specific page. For developer guidance, see [`preferredIndicatorImage`](/documentation/UIKit/UIPageControl/preferredIndicatorImage) and [`setIndicatorImage(_:forPage:)`](/documentation/UIKit/UIPageControl/setIndicatorImage(_:forPage:)).
+If it enhances your app or game, you can provide a custom image to use as the default image for all indicators and you can also supply a different image for a specific page. For developer guidance, see [`preferredIndicatorImage`](/documentation/UIKit/UIPageControl/preferredIndicatorImage) and [`setIndicatorImage(_:forPage:)`](</documentation/UIKit/UIPageControl/setIndicatorImage(_:forPage:)>).
 
 **Make sure custom indicator images are simple and clear.** Avoid complex shapes, and don’t include negative space, text, or inner lines, because these details can make an icon muddy and indecipherable at very small sizes. Consider using simple [SF Symbols](/design/human-interface-guidelines/sf-symbols) as indicators or design your own icons. For guidance, see [Icons](/design/human-interface-guidelines/icons).
 
@@ -52,7 +52,7 @@ Using only two different indicators looks well-organized and provides a consiste
 
 ## [Platform considerations](/design/human-interface-guidelines/page-controls#Platform-considerations)
 
-*Not supported in macOS.*
+_Not supported in macOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/page-controls#iOS-iPadOS)
 
@@ -60,19 +60,19 @@ A page control can adjust the appearance of indicators to provide more informati
 
 ![An illustration of a page control. The page control displays a total of 9 dots. The center 5 dots use the default size; the second and eighth dots are about half the default size and the first and ninth dots are about one quarter the default size. The center dot is filled, indicating the location of the current page in the list.](https://docs-assets.developer.apple.com/published/6413d2970c5a12e6374d83bed419293c/page-controls-many-indicators%402x.png)
 
-People interact with page controls by tapping or scrubbing (to *scrub*, people touch the control and drag left or right). Tapping on the leading or trailing side of the current-page indicator reveals the next or previous page; in iPadOS, people can also use the pointer to target a specific indicator. Scrubbing opens pages in sequence, and scrubbing past the leading or trailing edge of the control helps people quickly reach the first or last page.
+People interact with page controls by tapping or scrubbing (to _scrub_, people touch the control and drag left or right). Tapping on the leading or trailing side of the current-page indicator reveals the next or previous page; in iPadOS, people can also use the pointer to target a specific indicator. Scrubbing opens pages in sequence, and scrubbing past the leading or trailing edge of the control helps people quickly reach the first or last page.
 
 Developer note
 
-In the API, *tapping* is a *discrete interaction*, whereas *scrubbing* is a *continuous interaction*; for developer guidance, see [`UIPageControl.InteractionState`](/documentation/UIKit/UIPageControl/InteractionState-swift.enum).
+In the API, _tapping_ is a _discrete interaction_, whereas _scrubbing_ is a _continuous interaction_; for developer guidance, see [`UIPageControl.InteractionState`](/documentation/UIKit/UIPageControl/InteractionState-swift.enum).
 
 **Avoid animating page transitions during scrubbing.** People can scrub very quickly, and using the scrolling animation for every transition can make your app lag and cause distracting visual flashes. Use the animated scrolling transition only for tapping.
 
 A page control can include a translucent, rounded-rectangle background appearance that provides visual contrast for the indicators. You can choose one of the following background styles:
 
-* Automatic — Displays the background only when people interact with the control. Use this style when the page control isn’t the primary navigational element in the UI.
-* Prominent — Always displays the background. Use this style only when the control is the primary navigational control in the screen.
-* Minimal — Never displays the background. Use this style when you just want to show the position of the current page in the list and you don’t need to provide visual feedback during scrubbing.
+- Automatic — Displays the background only when people interact with the control. Use this style when the page control isn’t the primary navigational element in the UI.
+- Prominent — Always displays the background. Use this style only when the control is the primary navigational control in the screen.
+- Minimal — Never displays the background. Use this style when you just want to show the position of the current page in the list and you don’t need to provide visual feedback during scrubbing.
 
 For developer guidance, see [`backgroundStyle`](/documentation/UIKit/UIPageControl/backgroundStyle-swift.property).
 
@@ -116,7 +116,7 @@ Horizontal page control
 
 ## [Change log](/design/human-interface-guidelines/page-controls#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| June 21, 2023 | Updated to include guidance for visionOS. |
-| June 5, 2023 | Updated guidance for using page controls in watchOS. |
+| Date          | Changes                                              |
+| ------------- | ---------------------------------------------------- |
+| June 21, 2023 | Updated to include guidance for visionOS.            |
+| June 5, 2023  | Updated guidance for using page controls in watchOS. |

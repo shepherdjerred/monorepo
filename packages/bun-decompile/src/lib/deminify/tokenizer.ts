@@ -33,10 +33,10 @@ const MODEL_CONTEXT_LIMITS: Record<string, number> = {
   "gpt-5-nano": 128_000,
 
   // OpenAI o1/o3 reasoning models
-  "o1": 200_000,
+  o1: 200_000,
   "o1-mini": 128_000,
   "o1-preview": 128_000,
-  "o3": 200_000,
+  o3: 200_000,
   "o3-mini": 200_000,
 
   // Anthropic Claude 3.5 series
@@ -73,10 +73,10 @@ const TIKTOKEN_MODEL_MAP: Record<string, TiktokenModel> = {
   "gpt-5-mini": "gpt-4o",
   "gpt-5-nano": "gpt-4o",
   // o1/o3 models
-  "o1": "gpt-4o",
+  o1: "gpt-4o",
   "o1-mini": "gpt-4o",
   "o1-preview": "gpt-4o",
-  "o3": "gpt-4o",
+  o3: "gpt-4o",
   "o3-mini": "gpt-4o",
 };
 
@@ -86,7 +86,9 @@ const encoderCache = new Map<string, ReturnType<typeof encoding_for_model>>();
 /**
  * Get or create a tiktoken encoder for a model.
  */
-function getTiktokenEncoder(model: string): ReturnType<typeof encoding_for_model> {
+function getTiktokenEncoder(
+  model: string,
+): ReturnType<typeof encoding_for_model> {
   const tiktokenModel = TIKTOKEN_MODEL_MAP[model] ?? "gpt-4o";
 
   if (!encoderCache.has(tiktokenModel)) {
@@ -155,7 +157,10 @@ export function getContextLimit(model: string): number {
   // Check partial matches
   const lower = model.toLowerCase();
   for (const [key, limit] of Object.entries(MODEL_CONTEXT_LIMITS)) {
-    if (lower.includes(key.toLowerCase()) || key.toLowerCase().includes(lower)) {
+    if (
+      lower.includes(key.toLowerCase()) ||
+      key.toLowerCase().includes(lower)
+    ) {
       return limit;
     }
   }
@@ -179,7 +184,7 @@ export function getContextLimit(model: string): number {
 export function getTargetBatchTokens(
   model: string,
   utilizationPct = 0.9,
-  reserveForOutput = 16_384
+  reserveForOutput = 16_384,
 ): number {
   const contextLimit = getContextLimit(model);
 
@@ -201,7 +206,10 @@ export function getModelInfo(model: string): {
   return {
     contextLimit: getContextLimit(model),
     targetBatchTokens: getTargetBatchTokens(model),
-    provider: isClaudeModel(model) ? "anthropic" : (isOpenAIModel(model) ? "openai" : "unknown"),
+    provider: isClaudeModel(model)
+      ? "anthropic"
+      : isOpenAIModel(model)
+        ? "openai"
+        : "unknown",
   };
 }
-

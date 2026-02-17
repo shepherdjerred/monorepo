@@ -3,7 +3,7 @@ import { IVolume, UserData, Volume } from "aws-cdk-lib/aws-ec2";
 export function createDockerUserData(
   mountPoint: string,
   volume: IVolume,
-  deviceName: string
+  deviceName: string,
 ): UserData {
   // TODO: setup CloudWatch logs
   const userData = `

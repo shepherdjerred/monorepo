@@ -67,6 +67,7 @@ SQLite database storing session state.
 **Location:** `~/.clauderon/db.sqlite`
 
 **Contains:**
+
 - Session records
 - Session status history
 - Chat history references
@@ -184,8 +185,15 @@ JSON Lines log of all proxied requests.
 **Rotation:** Not automatic; rotate manually if needed
 
 **Example entry:**
+
 ```json
-{"timestamp":"2024-01-15T10:30:00Z","session_id":"abc123","method":"GET","path":"/repos/owner/repo","response_code":200}
+{
+  "timestamp": "2024-01-15T10:30:00Z",
+  "session_id": "abc123",
+  "method": "GET",
+  "path": "/repos/owner/repo",
+  "response_code": 200
+}
 ```
 
 ## Logs
@@ -230,15 +238,15 @@ Temporary files are stored in:
 
 ## Permissions Summary
 
-| Path | Permissions | Reason |
-|------|-------------|--------|
-| `~/.clauderon/` | `0755` | Directory access |
-| `config.toml` | `0644` | Config readable |
-| `proxy.toml` | `0644` | Config readable |
-| `proxy-ca-key.pem` | `0600` | Private key |
-| `secrets/` | `0700` | Credential directory |
-| `secrets/*` | `0600` | Credential files |
-| `db.sqlite` | `0644` | Database |
+| Path               | Permissions | Reason               |
+| ------------------ | ----------- | -------------------- |
+| `~/.clauderon/`    | `0755`      | Directory access     |
+| `config.toml`      | `0644`      | Config readable      |
+| `proxy.toml`       | `0644`      | Config readable      |
+| `proxy-ca-key.pem` | `0600`      | Private key          |
+| `secrets/`         | `0700`      | Credential directory |
+| `secrets/*`        | `0600`      | Credential files     |
+| `db.sqlite`        | `0644`      | Database             |
 
 ## Backup
 
@@ -261,6 +269,7 @@ clauderon daemon
 ```
 
 **Do NOT backup:**
+
 - `proxy-ca-key.pem` (regenerates automatically)
 - `worktrees/` (can be recreated)
 - `logs/` (optional)

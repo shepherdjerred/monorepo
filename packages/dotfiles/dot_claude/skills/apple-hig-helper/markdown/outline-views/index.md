@@ -44,7 +44,7 @@ Outline views work well to display text-based content and often appear in the le
 
 ## [Platform considerations](/design/human-interface-guidelines/outline-views#Platform-considerations)
 
-*Not supported in iOS, iPadOS, tvOS, visionOS, or watchOS.*
+_Not supported in iOS, iPadOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/outline-views#Resources)
 

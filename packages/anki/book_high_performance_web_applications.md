@@ -62,10 +62,10 @@ User datagram protocol
 
 ## Functions of TCP
 
-* Reliable data transfer over an unreliable channel.
-* Retransmission of lost data, * In-order delivery
-* Congestion control
-* Congestion avoidance
+- Reliable data transfer over an unreliable channel.
+- Retransmission of lost data, \* In-order delivery
+- Congestion control
+- Congestion avoidance
 
 ## Three-way handshake
 
@@ -87,9 +87,9 @@ Allows data transfer within the SYN packet. Only works with certain HTTP request
 
 Occurs due to an interaction between TCP and IP when gateways connect two networks with widely different bandwidth. Led to the addition of:
 
-* Flow control
-* Congestion control
-* Congestion avoidance
+- Flow control
+- Congestion control
+- Congestion avoidance
 
 ## Flow control
 

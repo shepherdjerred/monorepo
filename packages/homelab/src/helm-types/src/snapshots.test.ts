@@ -1,5 +1,8 @@
 import { describe, test, expect } from "bun:test";
-import { convertToTypeScriptInterface, generateTypeScriptCode } from "./helm-types";
+import {
+  convertToTypeScriptInterface,
+  generateTypeScriptCode,
+} from "./helm-types";
 
 describe("Snapshot Tests", () => {
   test("should generate consistent output for basic types with comments", () => {
@@ -15,7 +18,12 @@ describe("Snapshot Tests", () => {
       ["image", "Container image to use"],
     ]);
 
-    const tsInterface = convertToTypeScriptInterface(values, "BasicHelmValues", undefined, comments);
+    const tsInterface = convertToTypeScriptInterface(
+      values,
+      "BasicHelmValues",
+      undefined,
+      comments,
+    );
     const code = generateTypeScriptCode(tsInterface, "basic");
 
     expect(code).toMatchSnapshot();
@@ -36,7 +44,12 @@ describe("Snapshot Tests", () => {
       ["ingress.hostname", "Ingress hostname"],
     ]);
 
-    const tsInterface = convertToTypeScriptInterface(values, "DottedKeysHelmValues", undefined, comments);
+    const tsInterface = convertToTypeScriptInterface(
+      values,
+      "DottedKeysHelmValues",
+      undefined,
+      comments,
+    );
     const code = generateTypeScriptCode(tsInterface, "dotted-keys");
 
     expect(code).toMatchSnapshot();
@@ -56,7 +69,12 @@ describe("Snapshot Tests", () => {
       ["rules", "Glob patterns: */*.js, */test/*, and */*/*.ts should match"],
     ]);
 
-    const tsInterface = convertToTypeScriptInterface(values, "EscapedHelmValues", undefined, comments);
+    const tsInterface = convertToTypeScriptInterface(
+      values,
+      "EscapedHelmValues",
+      undefined,
+      comments,
+    );
     const code = generateTypeScriptCode(tsInterface, "escaped");
 
     expect(code).toMatchSnapshot();
@@ -88,7 +106,12 @@ describe("Snapshot Tests", () => {
       ["ingress.hosts", "List of ingress hostnames"],
     ]);
 
-    const tsInterface = convertToTypeScriptInterface(values, "NestedHelmValues", undefined, comments);
+    const tsInterface = convertToTypeScriptInterface(
+      values,
+      "NestedHelmValues",
+      undefined,
+      comments,
+    );
     const code = generateTypeScriptCode(tsInterface, "nested");
 
     expect(code).toMatchSnapshot();
@@ -114,15 +137,26 @@ describe("Snapshot Tests", () => {
         "rbac.policy.default",
         "The name of the default role which Argo CD will falls back to, when authorizing API requests (optional).\nIf omitted or empty, users may be still be able to login, but will see no apps, projects, etc...",
       ],
-      ["rbac.policy.csv", "File containing user-defined policies and role definitions."],
+      [
+        "rbac.policy.csv",
+        "File containing user-defined policies and role definitions.",
+      ],
       [
         "rbac.scopes",
         "Policy rules are in the form:\nRole definitions and bindings are in the form:\nOIDC scopes to examine during rbac enforcement (in addition to `sub` scope).\nThe scope value can be a string, or a list of strings.",
       ],
-      ["rbac.policy.matchMode", "Matcher function for Casbin, `glob` for glob matcher and `regex` for regex matcher."],
+      [
+        "rbac.policy.matchMode",
+        "Matcher function for Casbin, `glob` for glob matcher and `regex` for regex matcher.",
+      ],
     ]);
 
-    const tsInterface = convertToTypeScriptInterface(values, "ArgocdRbacHelmValues", undefined, comments);
+    const tsInterface = convertToTypeScriptInterface(
+      values,
+      "ArgocdRbacHelmValues",
+      undefined,
+      comments,
+    );
     const code = generateTypeScriptCode(tsInterface, "argocd-rbac");
 
     expect(code).toMatchSnapshot();
@@ -155,7 +189,12 @@ describe("Snapshot Tests", () => {
       ["env", "Environment variables"],
     ]);
 
-    const tsInterface = convertToTypeScriptInterface(values, "ComplexTypesHelmValues", undefined, comments);
+    const tsInterface = convertToTypeScriptInterface(
+      values,
+      "ComplexTypesHelmValues",
+      undefined,
+      comments,
+    );
     const code = generateTypeScriptCode(tsInterface, "complex-types");
 
     expect(code).toMatchSnapshot();
@@ -172,10 +211,18 @@ describe("Snapshot Tests", () => {
         "config",
         "Configuration with special chars: `backticks`, (parentheses), [brackets], {braces}, <angles>, \"quotes\", and 'apostrophes'",
       ],
-      ["pattern", "Glob pattern matching files like: **/*.js, src/**/test/*.ts, and */node_modules/*"],
+      [
+        "pattern",
+        "Glob pattern matching files like: **/*.js, src/**/test/*.ts, and */node_modules/*",
+      ],
     ]);
 
-    const tsInterface = convertToTypeScriptInterface(values, "SpecialCharsHelmValues", undefined, comments);
+    const tsInterface = convertToTypeScriptInterface(
+      values,
+      "SpecialCharsHelmValues",
+      undefined,
+      comments,
+    );
     const code = generateTypeScriptCode(tsInterface, "special-chars");
 
     expect(code).toMatchSnapshot();

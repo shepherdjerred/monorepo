@@ -1,11 +1,14 @@
 import { createTool } from "../../../voltagent/tools/create-tool.js";
 import { z } from "zod";
 import { loggers } from "../../../utils/logger.js";
-import { captureException, withToolSpan } from "../../../observability/index.js";
+import {
+  captureException,
+  withToolSpan,
+} from "../../../observability/index.js";
 import {
   scheduleAnnouncement,
   cancelAnnouncement,
-  listPendingAnnouncements
+  listPendingAnnouncements,
 } from "../../../scheduler/jobs/announcements.js";
 import { validateSnowflakes } from "./validation.js";
 
@@ -13,34 +16,58 @@ const logger = loggers.tools.child("discord.scheduling");
 
 export const manageScheduledMessageTool = createTool({
   id: "manage-scheduled-message",
-  description: "Manage scheduled messages: schedule new, list pending, or cancel existing",
+  description:
+    "Manage scheduled messages: schedule new, list pending, or cancel existing",
   inputSchema: z.object({
     guildId: z.string().describe("The ID of the guild"),
-    action: z.enum(["schedule", "list", "cancel"]).describe("The action to perform"),
-    channelId: z.string().optional().describe("The channel ID (required for schedule)"),
-    message: z.string().optional().describe("The message content (required for schedule)"),
-    scheduledAt: z.string().optional().describe("ISO timestamp when to send (required for schedule)"),
-    repeat: z.enum(["none", "daily", "weekly", "monthly"]).optional()
+    action: z
+      .enum(["schedule", "list", "cancel"])
+      .describe("The action to perform"),
+    channelId: z
+      .string()
+      .optional()
+      .describe("The channel ID (required for schedule)"),
+    message: z
+      .string()
+      .optional()
+      .describe("The message content (required for schedule)"),
+    scheduledAt: z
+      .string()
+      .optional()
+      .describe("ISO timestamp when to send (required for schedule)"),
+    repeat: z
+      .enum(["none", "daily", "weekly", "monthly"])
+      .optional()
       .describe("Repeat pattern (for schedule, default: none)"),
-    createdBy: z.string().optional().describe("User ID of creator (required for schedule)"),
-    scheduleId: z.number().optional().describe("The schedule ID (required for cancel)"),
+    createdBy: z
+      .string()
+      .optional()
+      .describe("User ID of creator (required for schedule)"),
+    scheduleId: z
+      .number()
+      .optional()
+      .describe("The schedule ID (required for cancel)"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
     message: z.string(),
-    data: z.union([
-      z.object({
-        scheduleId: z.number(),
-      }),
-      z.object({
-        schedules: z.array(z.object({
-          id: z.number(),
-          channelId: z.string(),
-          message: z.string(),
-          scheduledAt: z.string(),
-        })),
-      }),
-    ]).optional(),
+    data: z
+      .union([
+        z.object({
+          scheduleId: z.number(),
+        }),
+        z.object({
+          schedules: z.array(
+            z.object({
+              id: z.number(),
+              channelId: z.string(),
+              message: z.string(),
+              scheduledAt: z.string(),
+            }),
+          ),
+        }),
+      ])
+      .optional(),
   }),
   execute: async (ctx) => {
     return withToolSpan("manage-scheduled-message", ctx.guildId, async () => {
@@ -51,14 +78,22 @@ export const manageScheduledMessageTool = createTool({
           { value: ctx.channelId, fieldName: "channelId" },
           { value: ctx.createdBy, fieldName: "createdBy" },
         ]);
-        if (idError) {return { success: false, message: idError };}
+        if (idError) {
+          return { success: false, message: idError };
+        }
 
         switch (ctx.action) {
           case "schedule": {
-            if (!ctx.channelId || !ctx.message || !ctx.scheduledAt || !ctx.createdBy) {
+            if (
+              !ctx.channelId ||
+              !ctx.message ||
+              !ctx.scheduledAt ||
+              !ctx.createdBy
+            ) {
               return {
                 success: false,
-                message: "channelId, message, scheduledAt, and createdBy are required for schedule",
+                message:
+                  "channelId, message, scheduledAt, and createdBy are required for schedule",
               };
             }
             const scheduledDate = new Date(ctx.scheduledAt);
@@ -81,10 +116,13 @@ export const manageScheduledMessageTool = createTool({
               ctx.message,
               scheduledDate,
               ctx.createdBy,
-              repeat
+              repeat,
             );
             const repeatText = repeat ? ` (repeating ${repeat})` : "";
-            logger.info("Message scheduled", { scheduleId, guildId: ctx.guildId });
+            logger.info("Message scheduled", {
+              scheduleId,
+              guildId: ctx.guildId,
+            });
             return {
               success: true,
               message: `Message scheduled for ${scheduledDate.toLocaleString()}${repeatText}`,
@@ -94,13 +132,16 @@ export const manageScheduledMessageTool = createTool({
 
           case "list": {
             const pending = await listPendingAnnouncements(ctx.guildId);
-            const schedules = pending.map(p => ({
+            const schedules = pending.map((p) => ({
               id: p.id,
               channelId: p.channelId,
               message: p.message,
               scheduledAt: p.scheduledAt.toISOString(),
             }));
-            logger.info("Scheduled messages listed", { guildId: ctx.guildId, count: schedules.length });
+            logger.info("Scheduled messages listed", {
+              guildId: ctx.guildId,
+              count: schedules.length,
+            });
             return {
               success: true,
               message: `Found ${schedules.length.toString()} pending scheduled messages`,
@@ -115,14 +156,19 @@ export const manageScheduledMessageTool = createTool({
                 message: "scheduleId is required for cancel",
               };
             }
-            const cancelled = await cancelAnnouncement(ctx.scheduleId, ctx.guildId);
+            const cancelled = await cancelAnnouncement(
+              ctx.scheduleId,
+              ctx.guildId,
+            );
             if (!cancelled) {
               return {
                 success: false,
                 message: "Schedule not found or already sent",
               };
             }
-            logger.info("Scheduled message cancelled", { scheduleId: ctx.scheduleId });
+            logger.info("Scheduled message cancelled", {
+              scheduleId: ctx.scheduleId,
+            });
             return {
               success: true,
               message: "Scheduled message cancelled successfully",
@@ -131,7 +177,9 @@ export const manageScheduledMessageTool = createTool({
         }
       } catch (error) {
         logger.error("Failed to manage scheduled message", error);
-        captureException(error as Error, { operation: "tool.manage-scheduled-message" });
+        captureException(error as Error, {
+          operation: "tool.manage-scheduled-message",
+        });
         return {
           success: false,
           message: `Failed to manage scheduled message: ${(error as Error).message}`,

@@ -52,7 +52,7 @@ In the iOS Health app, a segmented control provides a choice of time ranges for 
 
 ## [Platform considerations](/design/human-interface-guidelines/segmented-controls#Platform-considerations)
 
-*Not supported in watchOS.*
+_Not supported in watchOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/segmented-controls#iOS-iPadOS)
 
@@ -96,6 +96,6 @@ When people look at a segmented control that uses icons, the system displays a t
 
 ## [Change log](/design/human-interface-guidelines/segmented-controls#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date          | Changes                                   |
+| ------------- | ----------------------------------------- |
 | June 21, 2023 | Updated to include guidance for visionOS. |

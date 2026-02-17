@@ -86,9 +86,11 @@ export function ChartComponent() {
       const leaderboards = await Promise.all(
         _.map(dates, async (date): Promise<Leaderboard | undefined> => {
           try {
-            const json = await (await fetch(
-              `https://prod.bucket.discord.com/leaderboards/${date}.json`,
-            )).json();
+            const json = await (
+              await fetch(
+                `https://prod.bucket.discord.com/leaderboards/${date}.json`,
+              )
+            ).json();
             const result = LeaderboardSchema.safeParse(json);
             if (result.success) {
               return result.data;

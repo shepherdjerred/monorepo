@@ -1,7 +1,8 @@
 import type { RenderFunctionInput } from "#src/types.js";
 
 export function rauchg({ title }: RenderFunctionInput): React.ReactNode {
-  return <div
+  return (
+    <div
       style={{
         display: "flex",
         height: "100%",
@@ -56,5 +57,6 @@ export function rauchg({ title }: RenderFunctionInput): React.ReactNode {
       >
         {title}
       </div>
-    </div>;
+    </div>
+  );
 }

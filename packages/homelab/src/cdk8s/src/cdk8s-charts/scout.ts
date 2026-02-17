@@ -26,7 +26,17 @@ export function createScoutChart(app: App, stage: Stage) {
     spec: {
       podSelector: {},
       policyTypes: ["Ingress"],
-      ingress: [{ from: [{ namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": "prometheus" } } }] }],
+      ingress: [
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+          ],
+        },
+      ],
     },
   });
 
@@ -39,7 +49,12 @@ export function createScoutChart(app: App, stage: Stage) {
       egress: [
         // DNS
         {
-          to: [{ namespaceSelector: {}, podSelector: { matchLabels: { "k8s-app": "kube-dns" } } }],
+          to: [
+            {
+              namespaceSelector: {},
+              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
+            },
+          ],
           ports: [
             { port: IntOrString.fromNumber(53), protocol: "UDP" },
             { port: IntOrString.fromNumber(53), protocol: "TCP" },
@@ -47,7 +62,13 @@ export function createScoutChart(app: App, stage: Stage) {
         },
         // SeaweedFS S3 (seaweedfs-s3.seaweedfs.svc.cluster.local:8333)
         {
-          to: [{ namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": "seaweedfs" } } }],
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "seaweedfs" },
+              },
+            },
+          ],
           ports: [{ port: IntOrString.fromNumber(8333), protocol: "TCP" }],
         },
         // External HTTPS (Riot API, Discord, Sentry, OpenAI, Gemini, ElevenLabs)

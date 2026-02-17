@@ -4,7 +4,9 @@ import { helpCommand } from "./commands/help.js";
 import { logger } from "../../logger.js";
 import { getConfig } from "../../config/index.js";
 
-const rest = new REST({ version: "10" }).setToken(getConfig().bot.discord_token);
+const rest = new REST({ version: "10" }).setToken(
+  getConfig().bot.discord_token,
+);
 
 export async function registerSlashCommands() {
   logger.info("registering commands");
@@ -16,7 +18,9 @@ export async function registerSlashCommands() {
       commands = [...commands, screenshotCommand.toJSON()];
     }
 
-    await rest.put(Routes.applicationCommands(getConfig().bot.application_id), { body: commands });
+    await rest.put(Routes.applicationCommands(getConfig().bot.application_id), {
+      body: commands,
+    });
   } catch (error) {
     logger.error(error);
   }

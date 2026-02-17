@@ -1,4 +1,4 @@
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Application } from "../../../generated/imports/argoproj.io.ts";
 import versions from "../../versions.ts";
@@ -37,25 +37,35 @@ export async function createPrometheusApp(chart: Chart) {
     false,
   );
 
-  const alertmanagerSecrets = new OnePasswordItem(chart, "alertmanager-secrets-onepassword", {
-    spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/cki3qk5okk5b7xn3jmlpg74yka",
+  const alertmanagerSecrets = new OnePasswordItem(
+    chart,
+    "alertmanager-secrets-onepassword",
+    {
+      spec: {
+        itemPath:
+          "vaults/v64ocnykdqju4ui6j6pua56xw4/items/cki3qk5okk5b7xn3jmlpg74yka",
+      },
+      metadata: {
+        name: "alertmanager-secrets",
+        namespace: "prometheus",
+      },
     },
-    metadata: {
-      name: "alertmanager-secrets",
-      namespace: "prometheus",
-    },
-  });
+  );
 
-  const prometheusSecrets = new OnePasswordItem(chart, "grafana-secret-onepassword", {
-    spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/42fn7x3zaemfenz35en27thw5u",
+  const prometheusSecrets = new OnePasswordItem(
+    chart,
+    "grafana-secret-onepassword",
+    {
+      spec: {
+        itemPath:
+          "vaults/v64ocnykdqju4ui6j6pua56xw4/items/42fn7x3zaemfenz35en27thw5u",
+      },
+      metadata: {
+        name: "prometheus-secrets",
+        namespace: "prometheus",
+      },
     },
-    metadata: {
-      name: "prometheus-secrets",
-      namespace: "prometheus",
-    },
-  });
+  );
 
   createPrometheusMonitoring(chart);
   await createSmartctlMonitoring(chart);
@@ -66,26 +76,27 @@ export async function createPrometheusApp(chart: Chart) {
   createKubernetesEventExporter(chart);
 
   // Type extension for blackbox-exporter subchart (not included in generated types)
-  type PrometheusValuesWithBlackbox = HelmValuesForChart<"kube-prometheus-stack"> & {
-    "prometheus-blackbox-exporter"?: {
-      enabled?: boolean;
-      config?: {
-        modules?: Record<
-          string,
-          {
-            prober: string;
-            timeout?: string;
-            http?: {
-              valid_http_versions?: string[];
-              valid_status_codes?: number[];
-              follow_redirects?: boolean;
-              preferred_ip_protocol?: string;
-            };
-          }
-        >;
+  type PrometheusValuesWithBlackbox =
+    HelmValuesForChart<"kube-prometheus-stack"> & {
+      "prometheus-blackbox-exporter"?: {
+        enabled?: boolean;
+        config?: {
+          modules?: Record<
+            string,
+            {
+              prober: string;
+              timeout?: string;
+              http?: {
+                valid_http_versions?: string[];
+                valid_status_codes?: number[];
+                follow_redirects?: boolean;
+                preferred_ip_protocol?: string;
+              };
+            }
+          >;
+        };
       };
     };
-  };
 
   // Note: Some configurations bypass type checking due to incomplete generated types
   const prometheusValues: PrometheusValuesWithBlackbox = {
@@ -156,7 +167,8 @@ export async function createPrometheusApp(chart: Chart) {
       extraSecretMounts: [
         {
           name: "postgres-secret-mount",
-          secretName: "grafana.grafana-postgresql.credentials.postgresql.acid.zalan.do",
+          secretName:
+            "grafana.grafana-postgresql.credentials.postgresql.acid.zalan.do",
           defaultMode: 0o440,
           mountPath: "/etc/secrets/postgres",
           readOnly: true,
@@ -327,7 +339,10 @@ export async function createPrometheusApp(chart: Chart) {
               // Silence PDB alerts for postgres-operator critical-op PDBs
               // These PDBs only match pods during critical operations, so Total=0 is expected
               receiver: "null",
-              matchers: ['alertname = "KubePdbNotEnoughHealthyPods"', 'poddisruptionbudget =~ ".*-critical-op-pdb"'],
+              matchers: [
+                'alertname = "KubePdbNotEnoughHealthyPods"',
+                'poddisruptionbudget =~ ".*-critical-op-pdb"',
+              ],
             },
             {
               // Route critical and warning alerts to PagerDuty
@@ -342,7 +357,9 @@ export async function createPrometheusApp(chart: Chart) {
     // Collects metrics from: SMART, OS info, NTPD, NVMe, ZFS snapshots, ZFS zpools
 
     "prometheus-node-exporter": {
-      extraArgs: ["--collector.textfile.directory=/host/var/lib/node_exporter/textfile_collector"],
+      extraArgs: [
+        "--collector.textfile.directory=/host/var/lib/node_exporter/textfile_collector",
+      ],
 
       extraHostVolumeMounts: [
         {
@@ -431,7 +448,9 @@ export async function createPrometheusApp(chart: Chart) {
           kind: "StatefulSet",
           name: "prometheus-grafana",
           namespace: "prometheus",
-          jsonPointers: ["/spec/template/metadata/annotations/checksum~1secret"],
+          jsonPointers: [
+            "/spec/template/metadata/annotations/checksum~1secret",
+          ],
         },
       ],
     },

@@ -3,8 +3,11 @@ import React from "react";
 export type BookmarkStatusSelectorProps = {
   onlyShowBookmarked: boolean;
   onlyShowUnbookmarked: boolean;
-  onSelectionChange: (onlyShowBookmarked: boolean, onlyShowUnbookmarked: boolean) => void;
-}
+  onSelectionChange: (
+    onlyShowBookmarked: boolean,
+    onlyShowUnbookmarked: boolean,
+  ) => void;
+};
 
 export default function BookmarkStatusSelector({
   onlyShowBookmarked,

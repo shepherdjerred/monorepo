@@ -145,7 +145,7 @@ export function parseCodexHistoryLines(lines: string[]): Message[] {
         .filter(
           (c): c is CodexContentBlock & { text: string } =>
             (c.type === "input_text" || c.type === "output_text") &&
-            typeof c.text === "string"
+            typeof c.text === "string",
         )
         .map((c) => c.text)
         .join("");
@@ -218,9 +218,7 @@ export function parseCodexHistoryLines(lines: string[]): Message[] {
     if (payload.type === "reasoning") {
       const reasoningPayload = payload as CodexReasoningPayload;
       if (reasoningPayload.summary && reasoningPayload.summary.length > 0) {
-        const text = reasoningPayload.summary
-          .map((s) => s.text)
-          .join("\n");
+        const text = reasoningPayload.summary.map((s) => s.text).join("\n");
 
         if (text.trim()) {
           messages.push({

@@ -28,9 +28,7 @@ export async function buildMessageContent(
     return prompt;
   }
 
-  const content: (TextPart | ImagePart)[] = [
-    { type: "text", text: prompt },
-  ];
+  const content: (TextPart | ImagePart)[] = [{ type: "text", text: prompt }];
 
   // Add up to 5 images (to avoid token limits)
   const imagesToProcess = context.attachments.slice(0, 5);

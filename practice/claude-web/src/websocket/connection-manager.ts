@@ -25,7 +25,10 @@ class ConnectionManager {
     }
 
     this.connections.set(sessionId, ws);
-    logger.info("WebSocket connection added", { sessionId, total: this.connections.size });
+    logger.info("WebSocket connection added", {
+      sessionId,
+      total: this.connections.size,
+    });
   }
 
   /**
@@ -33,7 +36,10 @@ class ConnectionManager {
    */
   remove(sessionId: string): void {
     this.connections.delete(sessionId);
-    logger.info("WebSocket connection removed", { sessionId, total: this.connections.size });
+    logger.info("WebSocket connection removed", {
+      sessionId,
+      total: this.connections.size,
+    });
   }
 
   /**

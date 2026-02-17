@@ -20,7 +20,7 @@ export type BatchState = {
   fileName: string;
   /** Project identifier to prevent cross-project batch resumption */
   projectId: string;
-}
+};
 
 const STATE_FILE_PREFIX = "pending-batch";
 
@@ -79,10 +79,7 @@ export async function clearBatchState(cacheDir: string): Promise<void> {
 }
 
 /** Verify that saved state matches current source and project */
-export function verifyBatchState(
-  state: BatchState,
-  source: string,
-): boolean {
+export function verifyBatchState(state: BatchState, source: string): boolean {
   // Verify both source hash and project ID match
   const projectMatches = state.projectId === getProjectId();
   const sourceMatches = state.sourceHash === hashSource(source);
@@ -93,9 +90,10 @@ export function verifyBatchState(
 export function formatBatchState(state: BatchState): string {
   const age = Date.now() - state.createdAt;
   const ageMinutes = Math.floor(age / 60_000);
-  const ageStr = ageMinutes < 60
-    ? `${String(ageMinutes)}m ago`
-    : `${String(Math.floor(ageMinutes / 60))}h ${String(ageMinutes % 60)}m ago`;
+  const ageStr =
+    ageMinutes < 60
+      ? `${String(ageMinutes)}m ago`
+      : `${String(Math.floor(ageMinutes / 60))}h ${String(ageMinutes % 60)}m ago`;
 
   return [
     `Batch ID: ${state.batchId}`,

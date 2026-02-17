@@ -184,15 +184,15 @@ The web UI is built on the REST and WebSocket APIs. For programmatic access, see
 
 ## Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| `n` | New session |
-| `j` / `k` | Navigate sessions |
-| `Enter` | Open session details |
-| `a` | Archive session |
-| `d` | Delete session |
-| `/` | Focus search |
-| `?` | Show shortcuts |
+| Shortcut  | Action               |
+| --------- | -------------------- |
+| `n`       | New session          |
+| `j` / `k` | Navigate sessions    |
+| `Enter`   | Open session details |
+| `a`       | Archive session      |
+| `d`       | Delete session       |
+| `/`       | Focus search         |
+| `?`       | Show shortcuts       |
 
 ## Development Mode
 

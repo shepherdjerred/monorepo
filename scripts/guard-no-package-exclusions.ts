@@ -12,7 +12,8 @@ const checks: Check[] = [
   {
     file: "package.json",
     pattern: /"!\s*packages\//,
-    message: "Root workspace contains '!packages/...'. All packages must be integrated.",
+    message:
+      "Root workspace contains '!packages/...'. All packages must be integrated.",
   },
   {
     file: ".dagger/src/index.ts",

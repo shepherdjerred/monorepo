@@ -2,7 +2,11 @@ import { spawn } from "bun";
 import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { decompileFile, extractToDirectory, getExtractionSummary } from "./index.ts";
+import {
+  decompileFile,
+  extractToDirectory,
+  getExtractionSummary,
+} from "./index.ts";
 
 const TEST_DIR = "/tmp/bun-decompile-test";
 const SAMPLE_APP_DIR = join(TEST_DIR, "sample-app");
@@ -105,8 +109,12 @@ describe("bun-decompile", () => {
     test("recovered sources match original", async () => {
       const result = await decompileFile(BINARY_PATH);
 
-      const utilsSource = result.originalSources.find((s) => s.name === "utils.ts");
-      const indexSource = result.originalSources.find((s) => s.name === "index.ts");
+      const utilsSource = result.originalSources.find(
+        (s) => s.name === "utils.ts",
+      );
+      const indexSource = result.originalSources.find(
+        (s) => s.name === "index.ts",
+      );
 
       expect(utilsSource?.content).toBe(SAMPLE_UTILS_TS);
       expect(indexSource?.content).toBe(SAMPLE_INDEX_TS);
@@ -125,8 +133,12 @@ describe("bun-decompile", () => {
       expect(metadata.originalSourceCount).toBe(2);
 
       // Check original sources exist
-      const utilsExists = await Bun.file(join(OUTPUT_DIR, "original/utils.ts")).exists();
-      const indexExists = await Bun.file(join(OUTPUT_DIR, "original/index.ts")).exists();
+      const utilsExists = await Bun.file(
+        join(OUTPUT_DIR, "original/utils.ts"),
+      ).exists();
+      const indexExists = await Bun.file(
+        join(OUTPUT_DIR, "original/index.ts"),
+      ).exists();
       expect(utilsExists).toBe(true);
       expect(indexExists).toBe(true);
 
@@ -206,7 +218,9 @@ describe("bun-decompile", () => {
       await extractToDirectory(result, noSourcemapOutput);
 
       // Check metadata
-      const metadata = await Bun.file(join(noSourcemapOutput, "metadata.json")).json();
+      const metadata = await Bun.file(
+        join(noSourcemapOutput, "metadata.json"),
+      ).json();
       expect(metadata.hasOriginalSources).toBe(false);
       expect(metadata.originalSourceCount).toBe(0);
 

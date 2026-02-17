@@ -15,7 +15,7 @@ import type {
 
 export function surfaceUpdate(
   surfaceId: string,
-  components: A2UIComponent[]
+  components: A2UIComponent[],
 ): SurfaceUpdate {
   return {
     surfaceUpdate: {
@@ -28,7 +28,7 @@ export function surfaceUpdate(
 export function dataModelUpdate(
   surfaceId: string,
   contents: DataModelEntry[],
-  path?: string
+  path?: string,
 ): DataModelUpdate {
   const update: DataModelUpdate["dataModelUpdate"] = {
     surfaceId,
@@ -48,7 +48,7 @@ export function beginRendering(
   options?: {
     catalogId?: string;
     styles?: Record<string, unknown>;
-  }
+  },
 ): BeginRendering {
   return {
     beginRendering: {
@@ -71,7 +71,7 @@ export function deleteSurface(surfaceId: string): DeleteSurface {
  * Convert a plain object to DataModelEntry array
  */
 export function toDataModelEntries(
-  obj: Record<string, unknown>
+  obj: Record<string, unknown>,
 ): DataModelEntry[] {
   return Object.entries(obj).map(([key, value]) => {
     if (typeof value === "string") {

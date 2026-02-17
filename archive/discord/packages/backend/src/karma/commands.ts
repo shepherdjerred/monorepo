@@ -29,19 +29,19 @@ const karmaCommand = new SlashCommandBuilder()
         option
           .setName("target")
           .setDescription("The person you'd like to give karma to")
-          .setRequired(true)
+          .setRequired(true),
       )
       .addStringOption((option) =>
         option
           .setName("reason")
           .setDescription("An optional reason about why they deserve karma")
-          .setMaxLength(200)
-      )
+          .setMaxLength(200),
+      ),
   )
   .addSubcommand((subcommand) =>
     subcommand
       .setName("leaderboard")
-      .setDescription("See karma values for everyone on the server")
+      .setDescription("See karma values for everyone on the server"),
   )
   .addSubcommand((subcommand) =>
     subcommand
@@ -51,8 +51,8 @@ const karmaCommand = new SlashCommandBuilder()
         option
           .setName("target")
           .setDescription("The person whose karma history you'd like to view")
-          .setRequired(true)
-      )
+          .setRequired(true),
+      ),
   );
 
 async function getOrCreate(id: string): Promise<Person> {
@@ -115,11 +115,9 @@ async function handleKarmaGive(interaction: CommandInteraction) {
 
   if (receiverUser.bot) {
     await interaction.reply({
-      content: `You can't give karma to ${
-        userMention(
-          receiverUser.id,
-        )
-      } because they're a bot`,
+      content: `You can't give karma to ${userMention(
+        receiverUser.id,
+      )} because they're a bot`,
       ephemeral: true,
     });
     return;
@@ -134,15 +132,11 @@ async function handleKarmaGive(interaction: CommandInteraction) {
     );
     const newKarma = await getKarma(receiverUser.id);
     await interaction.reply({
-      content: `${
-        userMention(
-          giverUser.id,
-        )
-      } tried altering their karma. SMH my head. ${
-        bold(
-          "-1",
-        )
-      } karma. They now have ${bold(newKarma.toString())} karma.`,
+      content: `${userMention(
+        giverUser.id,
+      )} tried altering their karma. SMH my head. ${bold(
+        "-1",
+      )} karma. They now have ${bold(newKarma.toString())} karma.`,
     });
     return;
   }
@@ -154,23 +148,17 @@ async function handleKarmaGive(interaction: CommandInteraction) {
   const newReceiverKarma = await getKarma(receiverUser.id);
   if (reason) {
     await interaction.reply(
-      `${userMention(giverUser.id)} gave karma to ${
-        userMention(
-          receiverUser.id,
-        )
-      } because ${inlineCode(reason)}. They now have ${
-        bold(
-          newReceiverKarma.toString(),
-        )
-      } karma.`,
+      `${userMention(giverUser.id)} gave karma to ${userMention(
+        receiverUser.id,
+      )} because ${inlineCode(reason)}. They now have ${bold(
+        newReceiverKarma.toString(),
+      )} karma.`,
     );
   } else {
     await interaction.reply(
-      `${userMention(giverUser.id)} gave karma to ${
-        userMention(
-          receiverUser.id,
-        )
-      }. They now have ${bold(newReceiverKarma.toString())} karma.`,
+      `${userMention(giverUser.id)} gave karma to ${userMention(
+        receiverUser.id,
+      )}. They now have ${bold(newReceiverKarma.toString())} karma.`,
     );
   }
 }
@@ -228,22 +216,18 @@ async function handleKarmaHistory(interaction: CommandInteraction) {
     .slice(0, 10)
     .map((item) => {
       if (target.id === item.giver.id) {
-        let message = `${time(item.datetime)} Gave ${
-          bold(
-            item.amount.toString(),
-          )
-        } karma to ${userMention(item.receiver.id)}`;
+        let message = `${time(item.datetime)} Gave ${bold(
+          item.amount.toString(),
+        )} karma to ${userMention(item.receiver.id)}`;
         if (item.reason) {
           message += ` for ${inlineCode(item.reason)}`;
         }
         return message;
       }
       if (target.id === item.receiver.id) {
-        let message = `${time(item.datetime)} Received ${
-          bold(
-            item.amount.toString(),
-          )
-        } karma from ${userMention(item.giver.id)}`;
+        let message = `${time(item.datetime)} Received ${bold(
+          item.amount.toString(),
+        )} karma from ${userMention(item.giver.id)}`;
         if (item.reason) {
           message += ` for ${inlineCode(item.reason)}`;
         }

@@ -14,9 +14,9 @@ Organize data in a chart to communicate information with clarity and visual appe
 
 An effective chart highlights a few key pieces of information in a dataset, helping people gain insights and make decisions. For example, people might use a chart to:
 
-* Learn how upcoming weather conditions might affect their plans.
-* Analyze stock prices to understand past performance and discover trends.
-* Review fitness data to monitor their progress and set new goals.
+- Learn how upcoming weather conditions might affect their plans.
+- Analyze stock prices to understand past performance and discover trends.
+- Review fitness data to monitor their progress and set new goals.
 
 To learn about designing charts to enhance your experience, see [Charting data](/design/human-interface-guidelines/charting-data); for developer guidance, see [Creating a chart using Swift Charts](/documentation/Charts/Creating-a-chart-using-Swift-Charts).
 
@@ -26,17 +26,17 @@ A chart comprises several graphical elements that depict the values in a dataset
 
 ![A bar chart with callouts that identify chart components, such as axes, grid lines, marks, ticks, axis value labels, and the overall plot area.](https://docs-assets.developer.apple.com/published/3435cdf95a0a1c5faeeb347ccd4915d4/charts-anatomy%402x.png)
 
-A *mark* is a visual representation of a data value. You create a chart by supplying one or more series of data values, assigning each value to a mark. To specify the style of chart you want to display — such as bar chart, line chart, or scatter plot — you choose a mark type, such as bar, line, or point (for guidance, see [Marks](/design/human-interface-guidelines/charts#Marks)). The general task of depicting individual data values in a chart is called *plotting*, and the area that contains the marks is called the *plot area*.
+A _mark_ is a visual representation of a data value. You create a chart by supplying one or more series of data values, assigning each value to a mark. To specify the style of chart you want to display — such as bar chart, line chart, or scatter plot — you choose a mark type, such as bar, line, or point (for guidance, see [Marks](/design/human-interface-guidelines/charts#Marks)). The general task of depicting individual data values in a chart is called _plotting_, and the area that contains the marks is called the _plot area_.
 
 To depict a value, each type of mark uses visual attributes that are determined by a scale, which maps data values like numbers, dates, or categories to visual characteristics like position, color, or height. For example, a bar mark can use a particular height to represent the magnitude of a value and a particular position to represent the time at which the value occurred.
 
 To give people the context they need to interpret a chart’s visual characteristics, you supply descriptive content that can take a few different forms.
 
-You can use an *axis* to help define a frame of reference for the data represented by a set of marks. Many charts display a pair of axes at the edges of the plot area — one horizontal and one vertical — where each axis represents a variable like time, amount, or category.
+You can use an _axis_ to help define a frame of reference for the data represented by a set of marks. Many charts display a pair of axes at the edges of the plot area — one horizontal and one vertical — where each axis represents a variable like time, amount, or category.
 
-An axis can include *ticks*, which are reference points that help people visually locate the position of important values along the axis, such as a 0, 50%, and 100%. Many charts display *grid lines* that each extend from a tick across the plot area to help people visually estimate a data value when its mark isn’t near an axis.
+An axis can include _ticks_, which are reference points that help people visually locate the position of important values along the axis, such as a 0, 50%, and 100%. Many charts display _grid lines_ that each extend from a tick across the plot area to help people visually estimate a data value when its mark isn’t near an axis.
 
-You also have multiple ways to describe chart elements to help people interpret the data and to highlight the key information you want to communicate. For example, you can supply *labels* that name items like axes, grid lines, ticks, or marks, and *accessibility labels* that describe chart elements for people who use assistive technologies. To provide context and additional details, you can create descriptive titles, subtitles, and annotations. When needed, you can also create a legend, which describes chart properties that aren’t related to a mark’s position, such as the use of color or shape to denote different value categories.
+You also have multiple ways to describe chart elements to help people interpret the data and to highlight the key information you want to communicate. For example, you can supply _labels_ that name items like axes, grid lines, ticks, or marks, and _accessibility labels_ that describe chart elements for people who use assistive technologies. To provide context and additional details, you can create descriptive titles, subtitles, and annotations. When needed, you can also create a legend, which describes chart properties that aren’t related to a mark’s position, such as the use of color or shape to denote different value categories.
 
 Clear, accurate descriptions can help make a chart more approachable and accessible; to learn about additional ways to improve the accessibility of your chart, see [Enhancing the accessibility of a chart](/design/human-interface-guidelines/charts#Enhancing-the-accessibility-of-a-chart).
 
@@ -44,15 +44,15 @@ Clear, accurate descriptions can help make a chart more approachable and accessi
 
 **Choose a mark type based on the information you want to communicate about the data.** Some of the most familiar mark types are bar, line, and point; for developer guidance on these and other mark types, see [Swift Charts](/documentation/Charts).
 
-*Bar* marks work well in charts that help people compare values in different categories or view the relative proportions of various parts in a whole. When used to help people understand data that changes over time, bar charts work especially well when each value can represent a sum, like the total number of steps taken in a day.
+_Bar_ marks work well in charts that help people compare values in different categories or view the relative proportions of various parts in a whole. When used to help people understand data that changes over time, bar charts work especially well when each value can represent a sum, like the total number of steps taken in a day.
 
 ![A bar chart that depicts the number of steps for each day in a month.](https://docs-assets.developer.apple.com/published/69afb0247060876d7c148529bb6770ef/charts-bar-marks%402x.png)
 
-*Line* marks can also show how values change over time. In a line chart, a line connects all data values in one series of data. The slope of the line reveals the magnitude of change between data values and can help people visualize overall trends.
+_Line_ marks can also show how values change over time. In a line chart, a line connects all data values in one series of data. The slope of the line reveals the magnitude of change between data values and can help people visualize overall trends.
 
 ![A line chart that depicts the performance of a stock over a five-year period.](https://docs-assets.developer.apple.com/published/a242ab0dd33e91b2928163ac76839aae/charts-line-marks%402x.png)
 
-*Point* marks help you depict individual data values as visually distinct marks. A set of point marks can show how two different properties of your data relate to each other, helping people inspect individual data values and identify outliers and clusters.
+_Point_ marks help you depict individual data values as visually distinct marks. A set of point marks can show how two different properties of your data relate to each other, helping people inspect individual data values and identify outliers and clusters.
 
 ![A point-mark chart that depicts per-day readings of heartbeats per minute over a 5 1/2-month period.](https://docs-assets.developer.apple.com/published/e425cf9c73689456ffe358c15a2db34c/charts-point-marks%402x.png)
 
@@ -60,7 +60,7 @@ Clear, accurate descriptions can help make a chart more approachable and accessi
 
 ## [Axes](/design/human-interface-guidelines/charts#Axes)
 
-**Use a fixed or dynamic axis range depending on the meaning of your chart.** In a *fixed* range, the upper and lower bounds of the axis never change, whereas in a *dynamic* range, the upper and lower bounds can vary with the current data. Consider using a fixed range when specific minimum and maximum values are meaningful for all possible data values. For example, people expect a chart that shows a battery’s current charge to have a minimum value of 0% (completely empty) and a maximum value of 100% (completely full).
+**Use a fixed or dynamic axis range depending on the meaning of your chart.** In a _fixed_ range, the upper and lower bounds of the axis never change, whereas in a _dynamic_ range, the upper and lower bounds can vary with the current data. Consider using a fixed range when specific minimum and maximum values are meaningful for all possible data values. For example, people expect a chart that shows a battery’s current charge to have a minimum value of 0% (completely empty) and a maximum value of 100% (completely full).
 
 ![An illustration of Battery Settings, which uses a chart to depict battery charge over time, where the charge can vary within a fixed range from 0% to 100%.](https://docs-assets.developer.apple.com/published/77814deac13d3c51e09eb47c57e690fa/charts-fixed-range-axis%402x.png)
 
@@ -100,7 +100,7 @@ Monthly range
 
 **Make it easy for everyone to interact with a chart.** Sometimes, chart marks are too small to target with a finger or a pointer, making your chart hard to use for people with reduced motor control and uncomfortable for everyone. When this is the case, consider expanding the hit target to include the entire plot area, letting people scrub across the area to reveal various values.
 
-**Make an interactive chart easy to navigate when using keyboard commands (including full keyboard access) or Switch Control.** By default, these input types tend to visit individual onscreen elements in a linear sequence, such as the sequence of values in a data file. If you want to provide a custom navigation experience in your chart, here are two main ways to do so. The first way is to use accessibility APIs (such as [`accessibilityRespondsToUserInteraction(_:)`](/documentation/SwiftUI/View/accessibilityRespondsToUserInteraction(_:))) to specify a logical and predictable path through your chart’s information. For example, you might want to let people navigate along the X axis instead of jumping back and forth. The second way — which is particularly useful if you need to present a very large dataset — is to let people move focus among subsets of values instead of navigating through all individual data points. Note that both of these customizations can also enhance the VoiceOver experience, even when your chart isn’t interactive. For guidance, see [Accessibility](/design/human-interface-guidelines/accessibility).
+**Make an interactive chart easy to navigate when using keyboard commands (including full keyboard access) or Switch Control.** By default, these input types tend to visit individual onscreen elements in a linear sequence, such as the sequence of values in a data file. If you want to provide a custom navigation experience in your chart, here are two main ways to do so. The first way is to use accessibility APIs (such as [`accessibilityRespondsToUserInteraction(_:)`](</documentation/SwiftUI/View/accessibilityRespondsToUserInteraction(_:)>)) to specify a logical and predictable path through your chart’s information. For example, you might want to let people navigate along the X axis instead of jumping back and forth. The second way — which is particularly useful if you need to present a very large dataset — is to let people move focus among subsets of values instead of navigating through all individual data points. Note that both of these customizations can also enhance the VoiceOver experience, even when your chart isn’t interactive. For guidance, see [Accessibility](/design/human-interface-guidelines/accessibility).
 
 **Help people notice important changes in a chart.** For example, if people don’t notice when marks or axes change, they can misread a chart. Animating such changes can help people notice them, but you need to highlight the changes in other ways, too, to ensure that VoiceOver users and people who turn off animations know about them. For developer guidance, see [`UIAccessibility.Notification`](/documentation/UIKit/UIAccessibility/Notification) (UIKit) or [`NSAccessibility.Notification`](/documentation/AppKit/NSAccessibility-swift.struct/Notification) (AppKit).
 
@@ -136,17 +136,17 @@ For the focused section of this cycling elevation chart, VoiceOver provides info
 
 The following guidelines can help you write useful accessibility labels for chart elements.
 
-* **Prioritize clarity and comprehensiveness.** In general, it’s rarely enough to merely report a data value unless you also include context that helps people understand it, like the date or location that’s associated with it. Aim to concisely describe the context for a value without repeating information that people can get in other ways, like an axis name that Audio Graphs or your overview provides. Follow context-setting information with a succinct description of the element’s details.
-* **Avoid using subjective terms.** Subjective words — like rapidly, gradually, and almost — communicate your interpretation of the data. To help people form their own interpretations, use actual values in your descriptions.
-* **Maximize clarity in data descriptions by avoiding potentially ambiguous formats and abbreviations.** For example, using “June 6” is clearer than using “6/6”; similarly, spelling out “60 minutes” or “60 meters” is clearer than using the abbreviation “60m.”
-* **Describe what the chart’s details represent, not what they look like.** Consider a chart that uses red and blue colors to help people visually distinguish two different data series. It’s crucial to create accessibility labels that identify what each series represents, but describing the colors that visually represent them can add unnecessary information and be distracting.
-* **Be consistent throughout your app when referring to a specific axis.** For example, if you always mention the X axis first, people can spend less time figuring out which axis is relevant in a description.
+- **Prioritize clarity and comprehensiveness.** In general, it’s rarely enough to merely report a data value unless you also include context that helps people understand it, like the date or location that’s associated with it. Aim to concisely describe the context for a value without repeating information that people can get in other ways, like an axis name that Audio Graphs or your overview provides. Follow context-setting information with a succinct description of the element’s details.
+- **Avoid using subjective terms.** Subjective words — like rapidly, gradually, and almost — communicate your interpretation of the data. To help people form their own interpretations, use actual values in your descriptions.
+- **Maximize clarity in data descriptions by avoiding potentially ambiguous formats and abbreviations.** For example, using “June 6” is clearer than using “6/6”; similarly, spelling out “60 minutes” or “60 meters” is clearer than using the abbreviation “60m.”
+- **Describe what the chart’s details represent, not what they look like.** Consider a chart that uses red and blue colors to help people visually distinguish two different data series. It’s crucial to create accessibility labels that identify what each series represents, but describing the colors that visually represent them can add unnecessary information and be distracting.
+- **Be consistent throughout your app when referring to a specific axis.** For example, if you always mention the X axis first, people can spend less time figuring out which axis is relevant in a description.
 
 **Hide visible text labels for axes and ticks from assistive technologies.** Axis and tick labels help people visually assess trends in a chart and estimate mark values. VoiceOver users can get mark values and trend information through accessibility labels and Audio Graphs, so they don’t generally need the content in the visible labels.
 
 ## [Platform considerations](/design/human-interface-guidelines/charts#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS._
 
 ### [watchOS](/design/human-interface-guidelines/charts#watchOS)
 
@@ -178,6 +178,6 @@ Design an effective chart](https://developer.apple.com/videos/play/wwdc2022/1103
 
 ## [Change log](/design/human-interface-guidelines/charts#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date               | Changes   |
+| ------------------ | --------- |
 | September 23, 2022 | New page. |

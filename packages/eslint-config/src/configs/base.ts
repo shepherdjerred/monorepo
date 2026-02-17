@@ -19,7 +19,9 @@ export type BaseConfigOptions = {
 /**
  * Base configuration with ESLint recommended, TypeScript strict, and core quality rules
  */
-export function baseConfig(options: BaseConfigOptions = {}): TSESLint.FlatConfig.ConfigArray {
+export function baseConfig(
+  options: BaseConfigOptions = {},
+): TSESLint.FlatConfig.ConfigArray {
   const {
     tsconfigRootDir = process.cwd(),
     projectService = true,
@@ -85,8 +87,15 @@ export function baseConfig(options: BaseConfigOptions = {}): TSESLint.FlatConfig
         "eslint-comments/require-description": "error",
         "eslint-comments/no-duplicate-disable": "error",
         "eslint-comments/no-unused-enable": "error",
-        "eslint-comments/no-restricted-disable": ["error", "@typescript-eslint/no-explicit-any", "@typescript-eslint/no-unsafe-assignment"],
-        "eslint-comments/no-use": ["error", { allow: ["eslint-disable-next-line"] }],
+        "eslint-comments/no-restricted-disable": [
+          "error",
+          "@typescript-eslint/no-explicit-any",
+          "@typescript-eslint/no-unsafe-assignment",
+        ],
+        "eslint-comments/no-use": [
+          "error",
+          { allow: ["eslint-disable-next-line"] },
+        ],
       },
     },
     // No secrets plugin
@@ -101,8 +110,14 @@ export function baseConfig(options: BaseConfigOptions = {}): TSESLint.FlatConfig
     {
       rules: {
         // Code quality and complexity limits
-        "max-lines": ["error", { max: 500, skipBlankLines: false, skipComments: false }],
-        "max-lines-per-function": ["error", { max: 400, skipBlankLines: true, skipComments: true }],
+        "max-lines": [
+          "error",
+          { max: 500, skipBlankLines: false, skipComments: false },
+        ],
+        "max-lines-per-function": [
+          "error",
+          { max: 400, skipBlankLines: true, skipComments: true },
+        ],
         complexity: ["error", { max: 20 }],
         "max-depth": ["error", { max: 4 }],
         "max-params": ["error", { max: 4 }],
@@ -129,12 +144,15 @@ export function baseConfig(options: BaseConfigOptions = {}): TSESLint.FlatConfig
           },
         ],
         "@typescript-eslint/no-unnecessary-type-assertion": "error",
-        "@typescript-eslint/ban-ts-comment": ["error", {
-          "ts-ignore": true,
-          "ts-nocheck": true,
-          "ts-expect-error": "allow-with-description",
-          minimumDescriptionLength: 10,
-        }],
+        "@typescript-eslint/ban-ts-comment": [
+          "error",
+          {
+            "ts-ignore": true,
+            "ts-nocheck": true,
+            "ts-expect-error": "allow-with-description",
+            minimumDescriptionLength: 10,
+          },
+        ],
         "@typescript-eslint/switch-exhaustiveness-check": "error",
         "@typescript-eslint/no-redundant-type-constituents": "error",
         "@typescript-eslint/no-duplicate-type-constituents": "error",
@@ -151,16 +169,41 @@ export function baseConfig(options: BaseConfigOptions = {}): TSESLint.FlatConfig
     // Block Node.js module imports in favor of Bun equivalents
     {
       rules: {
-        "no-restricted-imports": ["error", {
-          paths: [
-            { name: "fs", message: "Use Bun.file() / Bun.write() instead of Node fs." },
-            { name: "node:fs", message: "Use Bun.file() / Bun.write() instead of Node fs." },
-            { name: "fs/promises", message: "Use Bun.file() / Bun.write() instead of Node fs/promises." },
-            { name: "child_process", message: "Use Bun.spawn() / Bun.$ instead of Node child_process." },
-            { name: "crypto", message: "Use Bun.CryptoHasher or Web Crypto API instead of Node crypto." },
-            { name: "path", message: "Use Bun.pathToFileURL or import from 'node:path' if needed." },
-          ],
-        }],
+        "no-restricted-imports": [
+          "error",
+          {
+            paths: [
+              {
+                name: "fs",
+                message: "Use Bun.file() / Bun.write() instead of Node fs.",
+              },
+              {
+                name: "node:fs",
+                message: "Use Bun.file() / Bun.write() instead of Node fs.",
+              },
+              {
+                name: "fs/promises",
+                message:
+                  "Use Bun.file() / Bun.write() instead of Node fs/promises.",
+              },
+              {
+                name: "child_process",
+                message:
+                  "Use Bun.spawn() / Bun.$ instead of Node child_process.",
+              },
+              {
+                name: "crypto",
+                message:
+                  "Use Bun.CryptoHasher or Web Crypto API instead of Node crypto.",
+              },
+              {
+                name: "path",
+                message:
+                  "Use Bun.pathToFileURL or import from 'node:path' if needed.",
+              },
+            ],
+          },
+        ],
       },
     },
   ] as TSESLint.FlatConfig.ConfigArray;

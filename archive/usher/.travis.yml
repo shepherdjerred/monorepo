@@ -1,13 +1,13 @@
 language: node_js
 node_js:
-- node
+  - node
 notifications:
   email: false
 cache:
   directories:
-  - node_modules
+    - node_modules
 script:
-- npm run build
+  - npm run build
 deploy:
   skip_cleanup: true
   provider: s3
@@ -16,7 +16,7 @@ deploy:
   secret_access_key:
     secure: JodT12BbCpMMGaZTqgesF8XRPgI2wWrq0+SZlDB7K40Zi9SycmJ1fUgf0pekBD9KY8k6O7S6K6FfRFOKjdrpCPaF0YRZW2QkCS+/ppSbZLOZQPqh3unnUhjbAA4E2x1h7ONdoUi1V5Jsj7YVbrfhhggpkEZtA/HafU7CNcTdJ1pEdsS3yANIUNSqYDsNrkL8+lE5QONBBjIV8WQP0DnxB3EMULcEW1kYyP95tUu5ymQEycU+2lrYHfC+AMMKVXf3BKcIAk+jdrubNAgwJmc6SHRVdbdiQtO/NkNR7PH+eu8ZzxLrZK1PAV3FqAEuL54yoLJA+LXLFa1/0QPNOxNT7b/MK8x2xCGWbrcn+oTqUy5UDhbU067fuh6lmwv5G6kAPUwTKlEEDS37vqIo1FKrauBDk4o3bGPGqjFpWU87/EzfV/L9Cris49xe2hGP0t/ESa/GyUlB8jVGdZKluKMPUlYqohs4hFnuS42ZPA/nlMWhGNoqhSae3ukgc0SEwXIRr1zpZQbAj+13KZ27X9/1lO8DNv6HXUUBJZqlSHQas8NT47tvnw0eUyUiuOvXf18E38YEhNYH1z7AMIYVDV/rouXCk0VONzR5sCuFHxI/B39uFjpodKqlSR4cFls63txpkGaY7yfpWZnCsbwVdLIU4Z0CJV15p2WCIvIwgE041t4=
 before_deploy:
-- cd build
+  - cd build
 env:
   global:
     - CI=false

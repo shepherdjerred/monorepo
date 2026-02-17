@@ -121,7 +121,7 @@ Queue<T> q = new LinkedList<T>();
 
 ## Improving BFS
 
-Alternatives are best first search or A* search
+Alternatives are best first search or A\* search
 
 ## Lattice Graph
 

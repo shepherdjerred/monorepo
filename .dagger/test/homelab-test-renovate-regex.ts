@@ -24,16 +24,22 @@ const RenovateConfigSchema = z.object({
 
 async function getRenovateRegexes(): Promise<RegExp[]> {
   const renovateContent = await Bun.file("renovate.json").text();
-  const renovateConfig = RenovateConfigSchema.parse(JSON.parse(renovateContent));
+  const renovateConfig = RenovateConfigSchema.parse(
+    JSON.parse(renovateContent),
+  );
   const customManagers = renovateConfig.customManagers ?? [];
 
   for (const manager of customManagers) {
     if (manager.description === "Update versions.ts" && manager.matchStrings) {
-      return manager.matchStrings.map((regexString: string) => new RegExp(regexString, "g"));
+      return manager.matchStrings.map(
+        (regexString: string) => new RegExp(regexString, "g"),
+      );
     }
   }
 
-  throw new Error("Could not find versions.ts custom manager regex in renovate.json");
+  throw new Error(
+    "Could not find versions.ts custom manager regex in renovate.json",
+  );
 }
 
 // Pattern that indicates a dependency is intentionally not managed by Renovate
@@ -51,7 +57,10 @@ type VersionEntry = {
   exclusionReason?: string;
 };
 
-async function parseVersionsFile(filePath: string, renovateRegexes: RegExp[]): Promise<VersionEntry[]> {
+async function parseVersionsFile(
+  filePath: string,
+  renovateRegexes: RegExp[],
+): Promise<VersionEntry[]> {
   const content = await Bun.file(filePath).text();
   const lines = content.split("\n");
   const entries: VersionEntry[] = [];
@@ -198,7 +207,9 @@ async function main() {
 
       for (const entry of entries) {
         if (!entry.hasRenovateComment && !entry.isExcluded) {
-          console.log(`❌ ${entry.property} (line ${String(entry.line)}): Missing Renovate comment`);
+          console.log(
+            `❌ ${entry.property} (line ${String(entry.line)}): Missing Renovate comment`,
+          );
           fileErrors++;
         } else if (entry.hasRenovateComment && !entry.matchesRegex) {
           console.log(
@@ -210,7 +221,9 @@ async function main() {
         } else if (entry.hasRenovateComment && entry.matchesRegex) {
           console.log(`✅ ${entry.property}: Properly formatted for Renovate`);
         } else if (entry.isExcluded && !entry.hasRenovateComment) {
-          console.log(`ℹ️  ${entry.property}: Excluded from Renovate management (${entry.exclusionReason ?? ""})`);
+          console.log(
+            `ℹ️  ${entry.property}: Excluded from Renovate management (${entry.exclusionReason ?? ""})`,
+          );
         } else if (entry.isExcluded && entry.hasRenovateComment) {
           console.log(
             `⚠️  ${entry.property}: Has Renovate comment but is marked as excluded (${entry.exclusionReason ?? ""})`,
@@ -225,7 +238,9 @@ async function main() {
 
       // Get actual property names from the TypeScript object
       const actualProperties = getActualProperties(filePath);
-      const detectedProperties = entries.map((e) => e.property.replace(/^"(.*)"$/, "$1")); // Remove quotes from property names
+      const detectedProperties = entries.map((e) =>
+        e.property.replace(/^"(.*)"$/, "$1"),
+      ); // Remove quotes from property names
 
       console.log(`\n📊 ${filePath} Summary:`);
       console.log(`   Total dependencies: ${String(detectedCount)}`);
@@ -233,7 +248,9 @@ async function main() {
       console.log(
         `   Managed by Renovate: ${String(entries.filter((e) => e.hasRenovateComment && e.matchesRegex).length)}`,
       );
-      console.log(`   Excluded from Renovate: ${String(entries.filter((e) => e.isExcluded).length)}`);
+      console.log(
+        `   Excluded from Renovate: ${String(entries.filter((e) => e.isExcluded).length)}`,
+      );
 
       // Check if detected count matches actual count
       if (detectedCount !== actualCount) {
@@ -245,14 +262,20 @@ async function main() {
         );
 
         // Show missing dependencies
-        const missingDeps = actualProperties.filter((prop: string) => !detectedProperties.includes(prop));
-        const extraDeps = detectedProperties.filter((prop: string) => !actualProperties.includes(prop));
+        const missingDeps = actualProperties.filter(
+          (prop: string) => !detectedProperties.includes(prop),
+        );
+        const extraDeps = detectedProperties.filter(
+          (prop: string) => !actualProperties.includes(prop),
+        );
 
         if (missingDeps.length > 0) {
           console.log(`   Missing from detection: [${missingDeps.join(", ")}]`);
         }
         if (extraDeps.length > 0) {
-          console.log(`   Detected but not in TS object: [${extraDeps.join(", ")}]`);
+          console.log(
+            `   Detected but not in TS object: [${extraDeps.join(", ")}]`,
+          );
         }
 
         fileErrors++;
@@ -281,8 +304,12 @@ async function main() {
     console.log(`\n❌ Test failed with ${String(totalErrors)} errors`);
     console.log(`\n💡 To fix errors:`);
     console.log(`   1. Add Renovate comments for dependencies missing them`);
-    console.log(`   3. Follow the pattern: // renovate: datasource=X versioning=Y`);
-    console.log(`   4. Check the regex pattern in renovate.json customManagers`);
+    console.log(
+      `   3. Follow the pattern: // renovate: datasource=X versioning=Y`,
+    );
+    console.log(
+      `   4. Check the regex pattern in renovate.json customManagers`,
+    );
     process.exit(1);
   }
 

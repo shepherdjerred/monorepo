@@ -5,15 +5,19 @@ export type PaginationControlsProps = {
   currentPage: number;
   lastPage: number;
   onPageChange: (newPage: number) => void;
-}
+};
 
 type NumberedPageControlProps = {
   page: number;
   isCurrent?: boolean;
   onClick?: () => void;
-}
+};
 
-function NumberedPageControl({ page, isCurrent, onClick }: NumberedPageControlProps): React.ReactElement {
+function NumberedPageControl({
+  page,
+  isCurrent,
+  onClick,
+}: NumberedPageControlProps): React.ReactElement {
   const cx = classNames.bind({});
   return (
     <li key={page}>
@@ -87,7 +91,11 @@ export default function PaginationControls({
     }
 
     if (currentPage > firstToShow && currentPage < lastPage - lastToShow + 1) {
-      for (let i = currentPage - middleToShow; i <= currentPage + middleToShow; i++) {
+      for (
+        let i = currentPage - middleToShow;
+        i <= currentPage + middleToShow;
+        i++
+      ) {
         if (i <= firstToShow || i >= lastPage - lastToShow + 1) {
           continue;
         }
@@ -103,7 +111,10 @@ export default function PaginationControls({
         );
       }
 
-      if (currentPage > lastPage - lastToShow || currentPage < lastPage - lastToShow) {
+      if (
+        currentPage > lastPage - lastToShow ||
+        currentPage < lastPage - lastToShow
+      ) {
         numberedControls.push(
           <li key={"second"}>
             <span className="pagination-ellipsis">&hellip;</span>
@@ -197,7 +208,11 @@ export default function PaginationControls({
     );
 
   return (
-    <nav className="pagination is-centered" role="navigation" aria-label="pagination">
+    <nav
+      className="pagination is-centered"
+      role="navigation"
+      aria-label="pagination"
+    >
       {previousButton}
       <ul className="pagination-list">{numberedControls}</ul>
       {nextButton}

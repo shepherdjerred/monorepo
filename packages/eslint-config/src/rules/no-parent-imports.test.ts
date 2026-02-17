@@ -28,8 +28,14 @@ ruleTester.run("no-parent-imports", noParentImports, {
       output: `import { x } from "@shepherdjerred/model/something";`,
       errors: [{ messageId: "noParentImports" }],
     },
-    { code: `import { y } from "../../utils";`, errors: [{ messageId: "noParentImports" }] },
-    { code: `import { z } from "../../../deeply/nested/file";`, errors: [{ messageId: "noParentImports" }] },
+    {
+      code: `import { y } from "../../utils";`,
+      errors: [{ messageId: "noParentImports" }],
+    },
+    {
+      code: `import { z } from "../../../deeply/nested/file";`,
+      errors: [{ messageId: "noParentImports" }],
+    },
     {
       code: `import { a } from "./foo/../bar";`,
       output: `import { a } from "@shepherdjerred/eslint-config/bar";`,

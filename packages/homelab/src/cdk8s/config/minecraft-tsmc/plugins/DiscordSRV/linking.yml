@@ -45,7 +45,8 @@ Require linked account to play:
   # Optionally require people to not only be linked but also to have a one of or all specified roles like a Twitch sub role
   Subscriber role:
     Require subscriber role to join: false
-    Subscriber roles: ["00000000000000000", "00000000000000000", "00000000000000000"]
+    Subscriber roles:
+      ["00000000000000000", "00000000000000000", "00000000000000000"]
     Require all of the listed roles: false # when false, only one of the above roles is required
     Kick message: "&cYou must be subscribed on Twitch to be able to play."
 

@@ -16,6 +16,6 @@ export interface CommentaryNotification {
 export interface Notifier {
   notifyVideos: (notifications: VideoNotification) => Promise<undefined>;
   notifyCommentaries: (
-    notifications: CommentaryNotification
+    notifications: CommentaryNotification,
   ) => Promise<undefined>;
 }

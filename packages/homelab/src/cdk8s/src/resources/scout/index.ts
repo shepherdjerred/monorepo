@@ -1,5 +1,14 @@
-import { Deployment, DeploymentStrategy, EnvValue, Probe, Protocol, Secret, Service, Volume } from "cdk8s-plus-31";
-import type { Chart} from "cdk8s";
+import {
+  Deployment,
+  DeploymentStrategy,
+  EnvValue,
+  Probe,
+  Protocol,
+  Secret,
+  Service,
+  Volume,
+} from "cdk8s-plus-31";
+import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
 import { withCommonProps } from "../../misc/common.ts";
 import { createServiceMonitor } from "../../misc/service-monitor.ts";
@@ -15,8 +24,10 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     strategy: DeploymentStrategy.recreate(),
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/run-as-non-root": "Scout requires flexible user permissions",
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "Scout requires writable filesystem for SQLite database",
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "Scout requires flexible user permissions",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "Scout requires writable filesystem for SQLite database",
       },
     },
   });
@@ -53,26 +64,48 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
   const baseEnvVariables = {
     APPLICATION_ID: EnvValue.fromValue(applicationId),
     AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
-      secret: Secret.fromSecretName(chart, "aws-access-key-id", onePasswordItem.name),
+      secret: Secret.fromSecretName(
+        chart,
+        "aws-access-key-id",
+        onePasswordItem.name,
+      ),
       key: "s3-access-key-id",
     }),
     AWS_SECRET_ACCESS_KEY: EnvValue.fromSecretValue({
-      secret: Secret.fromSecretName(chart, "aws-access-key-secret", onePasswordItem.name),
+      secret: Secret.fromSecretName(
+        chart,
+        "aws-access-key-secret",
+        onePasswordItem.name,
+      ),
       key: "s3-secret-access-key",
     }),
-    AWS_ENDPOINT_URL: EnvValue.fromValue("http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333"),
+    AWS_ENDPOINT_URL: EnvValue.fromValue(
+      "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+    ),
     AWS_REGION: EnvValue.fromValue("us-east-1"),
     DISCORD_TOKEN: EnvValue.fromSecretValue({
-      secret: Secret.fromSecretName(chart, "discord-token-secret", onePasswordItem.name),
+      secret: Secret.fromSecretName(
+        chart,
+        "discord-token-secret",
+        onePasswordItem.name,
+      ),
       key: "discord-api-token",
     }),
     RIOT_API_TOKEN: EnvValue.fromSecretValue({
-      secret: Secret.fromSecretName(chart, "riot-api-key-secret", onePasswordItem.name),
+      secret: Secret.fromSecretName(
+        chart,
+        "riot-api-key-secret",
+        onePasswordItem.name,
+      ),
       key: "riot-api-key",
     }),
     S3_BUCKET_NAME: EnvValue.fromValue(s3BucketName),
     SENTRY_DSN: EnvValue.fromSecretValue({
-      secret: Secret.fromSecretName(chart, "sentry-dsn-secret", onePasswordItem.name),
+      secret: Secret.fromSecretName(
+        chart,
+        "sentry-dsn-secret",
+        onePasswordItem.name,
+      ),
       key: "sentry-dsn",
     }),
     ENVIRONMENT: EnvValue.fromValue(stage),
@@ -85,19 +118,35 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       ? {
           ...baseEnvVariables,
           OPENAI_API_KEY: EnvValue.fromSecretValue({
-            secret: Secret.fromSecretName(chart, "openai-api-key-secret", onePasswordItem.name),
+            secret: Secret.fromSecretName(
+              chart,
+              "openai-api-key-secret",
+              onePasswordItem.name,
+            ),
             key: "open-api-key",
           }),
           GEMINI_API_KEY: EnvValue.fromSecretValue({
-            secret: Secret.fromSecretName(chart, "gemini-api-key-secret", onePasswordItem.name),
+            secret: Secret.fromSecretName(
+              chart,
+              "gemini-api-key-secret",
+              onePasswordItem.name,
+            ),
             key: "gemini-api-key",
           }),
           ELEVENLABS_API_KEY: EnvValue.fromSecretValue({
-            secret: Secret.fromSecretName(chart, "elevenlabs-api-key-secret", onePasswordItem.name),
+            secret: Secret.fromSecretName(
+              chart,
+              "elevenlabs-api-key-secret",
+              onePasswordItem.name,
+            ),
             key: "elevenlabs-api-key",
           }),
           ELEVENLABS_VOICE_ID: EnvValue.fromSecretValue({
-            secret: Secret.fromSecretName(chart, "elevenlabs-voice-id-secret", onePasswordItem.name),
+            secret: Secret.fromSecretName(
+              chart,
+              "elevenlabs-voice-id-secret",
+              onePasswordItem.name,
+            ),
             key: "elevenlabs-voice-id",
           }),
         }
@@ -132,7 +181,11 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       volumeMounts: [
         {
           path: "/data",
-          volume: Volume.fromPersistentVolumeClaim(chart, "scout-volume", localPathVolume.claim),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "scout-volume",
+            localPathVolume.claim,
+          ),
         },
       ],
       envVariables,

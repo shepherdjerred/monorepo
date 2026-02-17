@@ -8,7 +8,8 @@ import { getOrComputeKnip } from "./shared/tool-cache.js";
 import { runKnip } from "./shared/tool-runner.js";
 
 const createRule = ESLintUtils.RuleCreator(
-  (name) => `https://github.com/shepherdjerred/share/blob/main/packages/eslint-config/src/rules/${name}.ts`,
+  (name) =>
+    `https://github.com/shepherdjerred/share/blob/main/packages/eslint-config/src/rules/${name}.ts`,
 );
 
 type MessageIds = "unusedFile" | "unusedExport" | "unusedExportNoLoc";
@@ -30,7 +31,8 @@ export const knipUnused = createRule<Options, MessageIds>({
     messages: {
       unusedFile: "File is unused and can be deleted (detected by knip)",
       unusedExport: "Export '{{symbol}}' is unused (detected by knip)",
-      unusedExportNoLoc: "Export '{{symbol}}' is unused - location could not be determined (detected by knip)",
+      unusedExportNoLoc:
+        "Export '{{symbol}}' is unused - location could not be determined (detected by knip)",
     },
     schema: [
       {
@@ -58,7 +60,9 @@ export const knipUnused = createRule<Options, MessageIds>({
   create(context, [options]) {
     const filename = context.filename;
     const projectRoot = context.cwd;
-    const knipResults = getOrComputeKnip(projectRoot, () => runKnip(projectRoot));
+    const knipResults = getOrComputeKnip(projectRoot, () =>
+      runKnip(projectRoot),
+    );
 
     const fileResult = knipResults.get(filename);
     if (!fileResult) {
@@ -67,7 +71,10 @@ export const knipUnused = createRule<Options, MessageIds>({
 
     const reportedExports = new Set<string>();
 
-    function reportUnusedExportAt(node: TSESTree.Node, symbol: string): boolean {
+    function reportUnusedExportAt(
+      node: TSESTree.Node,
+      symbol: string,
+    ): boolean {
       if (reportedExports.has(symbol)) {
         return false;
       }
@@ -176,7 +183,9 @@ export const knipUnused = createRule<Options, MessageIds>({
           for (const spec of node.specifiers) {
             if (spec.type === AST_NODE_TYPES.ExportSpecifier) {
               const exportedName =
-                spec.exported.type === AST_NODE_TYPES.Identifier ? spec.exported.name : spec.exported.value;
+                spec.exported.type === AST_NODE_TYPES.Identifier
+                  ? spec.exported.name
+                  : spec.exported.value;
 
               if (symbolLocations.has(exportedName)) {
                 reportUnusedExportAt(spec, exportedName);

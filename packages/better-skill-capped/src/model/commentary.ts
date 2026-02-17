@@ -11,7 +11,7 @@ export type Commentary = {
   gameLengthInMinutes: number;
   carry: string;
   type: string;
-} & Video
+} & Video;
 
 export function isCommentary(item: unknown): item is Commentary {
   const possibleCommentary = item as Commentary;

@@ -20,7 +20,7 @@ import path = require("path");
 
 export function createLambdaResources(
   stack: Stack,
-  bucket: Bucket
+  bucket: Bucket,
 ): LambdaFunction {
   const policy = new ManagedPolicy(stack, "Policy", {
     statements: [

@@ -17,10 +17,19 @@ export type CourseSearchResultProps = {
   isWatched: (item: Watchable) => boolean;
   onToggleWatchStatus: (item: Watchable) => void;
   isDownloadEnabled: boolean;
-}
+};
 
-export function CourseSearchResult(props: CourseSearchResultProps): React.ReactElement {
-  const { result, isWatched, onToggleWatchStatus, onToggleBookmark, isBookmarked, isDownloadEnabled } = props;
+export function CourseSearchResult(
+  props: CourseSearchResultProps,
+): React.ReactElement {
+  const {
+    result,
+    isWatched,
+    onToggleWatchStatus,
+    onToggleBookmark,
+    isBookmarked,
+    isDownloadEnabled,
+  } = props;
   const { matchedStrings, item: course } = result;
 
   const videos = course.videos.map(({ video }) => {
@@ -45,13 +54,22 @@ export function CourseSearchResult(props: CourseSearchResultProps): React.ReactE
         <div className="columns is-multiline">
           <div className="column is-7">
             <h3 className="title">
-              <Highlighter searchWords={props.result.matchedStrings} textToHighlight={course.title} autoEscape={true} />
+              <Highlighter
+                searchWords={props.result.matchedStrings}
+                textToHighlight={course.title}
+                autoEscape={true}
+              />
             </h3>
             <p>{course.description}</p>
             <div className="tags">
               <span className="tag is-primary">Content Type: Course</span>
-              <span className="tag is-primary is-light">Role: {roleToString(props.result.item.role)}</span>
-              <span className="tag is-primary is-light" title={props.result.item.releaseDate.toLocaleString()}>
+              <span className="tag is-primary is-light">
+                Role: {roleToString(props.result.item.role)}
+              </span>
+              <span
+                className="tag is-primary is-light"
+                title={props.result.item.releaseDate.toLocaleString()}
+              >
                 Released: {props.result.item.releaseDate.toLocaleDateString()}
               </span>
             </div>

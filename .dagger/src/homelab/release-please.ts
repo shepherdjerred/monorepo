@@ -14,11 +14,22 @@ export function getReleasePleaseContainer(): Container {
   return dag
     .container()
     .from(`oven/bun:${versions.bun}-debian`)
-    .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-bun-${versions.bun}-debian`))
-    .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-bun-${versions.bun}-debian`))
+    .withMountedCache(
+      "/var/cache/apt",
+      dag.cacheVolume(`apt-cache-bun-${versions.bun}-debian`),
+    )
+    .withMountedCache(
+      "/var/lib/apt",
+      dag.cacheVolume(`apt-lib-bun-${versions.bun}-debian`),
+    )
     .withExec(["apt-get", "update"])
     .withExec(["apt-get", "install", "-y", "git"])
-    .withExec(["bun", "install", "-g", `release-please@${RELEASE_PLEASE_VERSION}`])
+    .withExec([
+      "bun",
+      "install",
+      "-g",
+      `release-please@${RELEASE_PLEASE_VERSION}`,
+    ])
     .withEnvVariable("CACHEBUSTER", new Date().toISOString())
     .withWorkdir("/workspace");
 }
@@ -32,7 +43,11 @@ export async function runReleasePleaseCommand(
 ): Promise<{ output: string; success: boolean }> {
   // Use file-based output capture to avoid Dagger SDK URLSearchParams.toJSON bug with Bun
   const ctr = await container
-    .withExec(["sh", "-c", `${command} > /tmp/output.txt 2>&1; echo $? > /tmp/exitcode.txt`])
+    .withExec([
+      "sh",
+      "-c",
+      `${command} > /tmp/output.txt 2>&1; echo $? > /tmp/exitcode.txt`,
+    ])
     .sync();
 
   const [output, exitCodeStr] = await Promise.all([
@@ -50,8 +65,13 @@ export async function runReleasePleaseCommand(
 /**
  * Run release-please release-pr command
  */
-export async function runReleasePr(githubToken: Secret): Promise<{ output: string; success: boolean }> {
-  const container = getReleasePleaseContainer().withSecretVariable("GITHUB_TOKEN", githubToken);
+export async function runReleasePr(
+  githubToken: Secret,
+): Promise<{ output: string; success: boolean }> {
+  const container = getReleasePleaseContainer().withSecretVariable(
+    "GITHUB_TOKEN",
+    githubToken,
+  );
 
   return runReleasePleaseCommand(
     container,
@@ -62,8 +82,13 @@ export async function runReleasePr(githubToken: Secret): Promise<{ output: strin
 /**
  * Run release-please github-release command
  */
-export async function runGithubRelease(githubToken: Secret): Promise<{ output: string; success: boolean }> {
-  const container = getReleasePleaseContainer().withSecretVariable("GITHUB_TOKEN", githubToken);
+export async function runGithubRelease(
+  githubToken: Secret,
+): Promise<{ output: string; success: boolean }> {
+  const container = getReleasePleaseContainer().withSecretVariable(
+    "GITHUB_TOKEN",
+    githubToken,
+  );
 
   return runReleasePleaseCommand(
     container,
@@ -74,7 +99,10 @@ export async function runGithubRelease(githubToken: Secret): Promise<{ output: s
 /**
  * Check if a release was created based on the github-release output
  */
-export function wasReleaseCreated(result: { output: string; success: boolean }): boolean {
+export function wasReleaseCreated(result: {
+  output: string;
+  success: boolean;
+}): boolean {
   return (
     result.success &&
     (result.output.includes("github.com") ||
@@ -103,7 +131,9 @@ export async function runReleasePleaseWorkflow(
   releaseOutputs.push(prResult.output);
 
   const releaseResult = await runGithubRelease(githubToken);
-  releaseOutputs.push(`GitHub Release (success=${String(releaseResult.success)}):`);
+  releaseOutputs.push(
+    `GitHub Release (success=${String(releaseResult.success)}):`,
+  );
   releaseOutputs.push(releaseResult.output);
 
   if (wasReleaseCreated(releaseResult)) {
@@ -112,11 +142,18 @@ export async function runReleasePleaseWorkflow(
       .withWorkdir("/workspace")
       .withMountedDirectory("/workspace", source)
       .withExec(["mise", "trust", "--yes"])
-      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache-default"))
+      .withMountedCache(
+        "/root/.bun/install/cache",
+        dag.cacheVolume("bun-cache-default"),
+      )
       .withExec(["bun", "install", "--frozen-lockfile"])
       .withWorkdir("/workspace/src/helm-types")
       .withSecretVariable("NPM_TOKEN", npmToken)
-      .withExec(["sh", "-c", 'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc'])
+      .withExec([
+        "sh",
+        "-c",
+        'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc',
+      ])
       .withExec(["bun", "run", "build"]);
 
     // Use execWithOutput to avoid Dagger SDK URLSearchParams.toJSON bug with Bun
@@ -134,7 +171,8 @@ export async function runReleasePleaseWorkflow(
     if (result.exitCode === 0) {
       releaseOutputs.push("✓ Published @shepherdjerred/helm-types");
     } else {
-      const output = result.stderr.trim() || result.stdout.trim() || "Unknown error";
+      const output =
+        result.stderr.trim() || result.stdout.trim() || "Unknown error";
       releaseOutputs.push(
         `✗ Failed to publish @shepherdjerred/helm-types (exit ${String(result.exitCode)}): ${output}`,
       );

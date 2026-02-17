@@ -272,7 +272,8 @@ exit 0
         // Delete the job after it completes (success or failure)
         "argocd.argoproj.io/hook-delete-policy": "BeforeHookCreation",
         // kube-linter exclusions
-        "ignore-check.kube-linter.io/run-as-non-root": "Containers run as default users for package installation",
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "Containers run as default users for package installation",
         "ignore-check.kube-linter.io/no-read-only-root-fs":
           "Containers require writable filesystem for package installation",
       },

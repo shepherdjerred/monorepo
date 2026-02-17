@@ -1,6 +1,9 @@
-import {connect} from 'react-redux';
-import {updateClub, fetchClubDetails} from '../../../store/features/clubs/actions';
-import LoadingEditClub from './LoadingEditClub';
+import { connect } from "react-redux";
+import {
+  updateClub,
+  fetchClubDetails,
+} from "../../../store/features/clubs/actions";
+import LoadingEditClub from "./LoadingEditClub";
 
 export const mapStateToProps = function (state, props) {
   // TODO this is a little hacky
@@ -11,7 +14,7 @@ export const mapStateToProps = function (state, props) {
       isFetching: state.clubs.read.items[props.id].isFetching,
       error: state.clubs.read.items[props.id].error,
       isEditFetching: state.clubs.update.isFetching,
-      isEditError: state.clubs.update.error
+      isEditError: state.clubs.update.error,
     };
   } else {
     return {
@@ -19,7 +22,7 @@ export const mapStateToProps = function (state, props) {
       isFetching: true,
       error: false,
       isEditFetching: false,
-      isEditError: null
+      isEditError: null,
     };
   }
 };
@@ -31,13 +34,13 @@ const mapDispatchToProps = function (dispatch, props) {
     },
     onSave: (club) => {
       dispatch(updateClub(club));
-    }
+    },
   };
 };
 
 let EditClubContainer = connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
 )(LoadingEditClub);
 
 export default EditClubContainer;

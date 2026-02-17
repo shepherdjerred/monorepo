@@ -7,7 +7,10 @@ import { withSpan, captureException } from "../observability/index.js";
 
 const logger = loggers.scheduler.child("daily-posts");
 
-function getCurrentTimeInTimezone(timezone: string): { hours: number; minutes: number } {
+function getCurrentTimeInTimezone(timezone: string): {
+  hours: number;
+  minutes: number;
+} {
   const now = new Date();
   const formatter = new Intl.DateTimeFormat("en-US", {
     timeZone: timezone,
@@ -17,8 +20,14 @@ function getCurrentTimeInTimezone(timezone: string): { hours: number; minutes: n
   });
 
   const parts = formatter.formatToParts(now);
-  const hours = Number.parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
-  const minutes = Number.parseInt(parts.find((p) => p.type === "minute")?.value ?? "0", 10);
+  const hours = Number.parseInt(
+    parts.find((p) => p.type === "hour")?.value ?? "0",
+    10,
+  );
+  const minutes = Number.parseInt(
+    parts.find((p) => p.type === "minute")?.value ?? "0",
+    10,
+  );
 
   return { hours, minutes };
 }
@@ -52,7 +61,7 @@ function shouldPostNow(config: DailyPostConfig): boolean {
 
 async function getRecentEvents(
   guildId: string,
-  limit: number
+  limit: number,
 ): Promise<{ eventType: string; eventData: Record<string, unknown> }[]> {
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
@@ -107,64 +116,74 @@ async function generateDailyPost(guildId: string): Promise<string> {
 }
 
 async function sendDailyPost(config: DailyPostConfig): Promise<void> {
-  await withSpan("scheduler.sendDailyPost", { guildId: config.guildId }, async (span) => {
-    try {
-      const client = getDiscordClient();
-      const channel = await client.channels.fetch(config.channelId);
+  await withSpan(
+    "scheduler.sendDailyPost",
+    { guildId: config.guildId },
+    async (span) => {
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(config.channelId);
 
-      if (!channel?.isTextBased()) {
-        logger.warn("Daily post channel not found or not text-based", {
-          guildId: config.guildId,
-          channelId: config.channelId,
+        if (!channel?.isTextBased()) {
+          logger.warn("Daily post channel not found or not text-based", {
+            guildId: config.guildId,
+            channelId: config.channelId,
+          });
+          span.setAttribute("channel.valid", false);
+          return;
+        }
+
+        span.setAttribute("channel.valid", true);
+        const message = await generateDailyPost(config.guildId);
+        span.setAttribute("message.length", message.length);
+        await (channel as TextChannel).send(message);
+
+        // Update last post time
+        await prisma.dailyPostConfig.update({
+          where: { guildId: config.guildId },
+          data: { lastPostAt: new Date() },
         });
-        span.setAttribute("channel.valid", false);
-        return;
+
+        logger.info("Sent daily post", { guildId: config.guildId });
+      } catch (error) {
+        logger.error("Failed to send daily post", error, {
+          guildId: config.guildId,
+        });
+        captureException(error as Error, {
+          operation: "scheduler.sendDailyPost",
+          discord: { guildId: config.guildId },
+        });
       }
-
-      span.setAttribute("channel.valid", true);
-      const message = await generateDailyPost(config.guildId);
-      span.setAttribute("message.length", message.length);
-      await (channel as TextChannel).send(message);
-
-      // Update last post time
-      await prisma.dailyPostConfig.update({
-        where: { guildId: config.guildId },
-        data: { lastPostAt: new Date() },
-      });
-
-      logger.info("Sent daily post", { guildId: config.guildId });
-    } catch (error) {
-      logger.error("Failed to send daily post", error, { guildId: config.guildId });
-      captureException(error as Error, {
-        operation: "scheduler.sendDailyPost",
-        discord: { guildId: config.guildId },
-      });
-    }
-  });
+    },
+  );
 }
 
 export async function checkAndSendDailyPosts(): Promise<void> {
-  await withSpan("scheduler.checkDailyPosts", { operation: "scheduler.daily-posts" }, async (span) => {
-    try {
-      const configs = await prisma.dailyPostConfig.findMany({
-        where: { enabled: true },
-      });
+  await withSpan(
+    "scheduler.checkDailyPosts",
+    { operation: "scheduler.daily-posts" },
+    async (span) => {
+      try {
+        const configs = await prisma.dailyPostConfig.findMany({
+          where: { enabled: true },
+        });
 
-      span.setAttribute("config.count", configs.length);
-      logger.debug("Checking daily posts", { configCount: configs.length });
+        span.setAttribute("config.count", configs.length);
+        logger.debug("Checking daily posts", { configCount: configs.length });
 
-      for (const config of configs) {
-        if (shouldPostNow(config)) {
-          await sendDailyPost(config);
+        for (const config of configs) {
+          if (shouldPostNow(config)) {
+            await sendDailyPost(config);
+          }
         }
+      } catch (error) {
+        logger.error("Failed to check daily posts", error);
+        captureException(error as Error, {
+          operation: "scheduler.checkAndSendDailyPosts",
+        });
       }
-    } catch (error) {
-      logger.error("Failed to check daily posts", error);
-      captureException(error as Error, {
-        operation: "scheduler.checkAndSendDailyPosts",
-      });
-    }
-  });
+    },
+  );
 }
 
 export async function configureDailyPost(
@@ -174,7 +193,7 @@ export async function configureDailyPost(
     postTime?: string;
     timezone?: string;
     enabled?: boolean;
-  }
+  },
 ): Promise<void> {
   // Build update data, excluding undefined values
   const updateData: {

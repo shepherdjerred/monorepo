@@ -1,8 +1,15 @@
 #!/usr/bin/env bun
 
 import { parseArgs } from "node:util";
-import { detectCommand, healthCommand, logsCommand } from "./commands/pr/index.ts";
-import { incidentsCommand, incidentCommand } from "./commands/pagerduty/index.ts";
+import {
+  detectCommand,
+  healthCommand,
+  logsCommand,
+} from "./commands/pr/index.ts";
+import {
+  incidentsCommand,
+  incidentCommand,
+} from "./commands/pagerduty/index.ts";
 import { issuesCommand, issueCommand } from "./commands/bugsink/index.ts";
 
 function printUsage(): void {
@@ -71,7 +78,7 @@ async function main(): Promise<void> {
 
 async function handlePrCommand(
   subcommand: string | undefined,
-  args: string[]
+  args: string[],
 ): Promise<void> {
   if (!subcommand || subcommand === "--help" || subcommand === "-h") {
     console.log(`
@@ -109,7 +116,7 @@ Options:
 
 async function handlePagerDutyCommand(
   subcommand: string | undefined,
-  args: string[]
+  args: string[],
 ): Promise<void> {
   if (!subcommand || subcommand === "--help" || subcommand === "-h") {
     console.log(`
@@ -150,7 +157,7 @@ Examples:
 
 async function handleBugsinkCommand(
   subcommand: string | undefined,
-  args: string[]
+  args: string[],
 ): Promise<void> {
   if (!subcommand || subcommand === "--help" || subcommand === "-h") {
     console.log(`
@@ -221,7 +228,9 @@ async function handleLogsCommand(args: string[]): Promise<void> {
   const runId = positionals[0];
   if (!runId) {
     console.error("Error: Run ID is required");
-    console.error("Usage: tools pr logs <run-id> [--failed-only] [--job <name>]");
+    console.error(
+      "Usage: tools pr logs <run-id> [--failed-only] [--job <name>]",
+    );
     process.exit(1);
   }
 

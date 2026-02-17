@@ -1,6 +1,9 @@
 import type { MultipleChoiceComponent } from "../types";
 import { useSurface } from "../SurfaceManager";
-import { resolveString, resolveActionContext } from "../../hooks/useDataBinding";
+import {
+  resolveString,
+  resolveActionContext,
+} from "../../hooks/useDataBinding";
 import {
   Select,
   SelectContent,
@@ -29,7 +32,10 @@ export function A2UIMultipleChoice({
     : undefined;
 
   const handleValueChange = (newValue: string) => {
-    const resolvedContext = resolveActionContext(component.action.context, dataModel);
+    const resolvedContext = resolveActionContext(
+      component.action.context,
+      dataModel,
+    );
     resolvedContext.value = newValue;
     dispatchAction(surfaceId, id, component.action.name, resolvedContext);
   };

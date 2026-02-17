@@ -1,7 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import type { Message, ContentBlock, ToolUseContent, ToolResultContent } from "../types";
+import type {
+  Message,
+  ContentBlock,
+  ToolUseContent,
+  ToolResultContent,
+} from "../types";
 
 interface ChatProps {
   messages: Message[];
@@ -56,7 +61,9 @@ export function Chat({
         await onCommit(message);
         alert("Changes committed successfully!");
       } catch (err) {
-        alert(`Commit failed: ${err instanceof Error ? err.message : "Unknown error"}`);
+        alert(
+          `Commit failed: ${err instanceof Error ? err.message : "Unknown error"}`,
+        );
       }
     }
   };
@@ -66,7 +73,9 @@ export function Chat({
       await onPush();
       alert("Changes pushed successfully!");
     } catch (err) {
-      alert(`Push failed: ${err instanceof Error ? err.message : "Unknown error"}`);
+      alert(
+        `Push failed: ${err instanceof Error ? err.message : "Unknown error"}`,
+      );
     }
   };
 
@@ -79,7 +88,9 @@ export function Chat({
       await onCreatePR(title, body);
       alert("Pull request created!");
     } catch (err) {
-      alert(`PR creation failed: ${err instanceof Error ? err.message : "Unknown error"}`);
+      alert(
+        `PR creation failed: ${err instanceof Error ? err.message : "Unknown error"}`,
+      );
     }
   };
 
@@ -91,7 +102,9 @@ export function Chat({
       if (block.type === "text") {
         return (
           <div key={index} style={styles.textContent}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{block.text}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {block.text}
+            </ReactMarkdown>
           </div>
         );
       }
@@ -137,7 +150,10 @@ export function Chat({
           {connected ? "Connected" : "Disconnected"}
         </div>
         <div style={styles.actions}>
-          <button onClick={() => setShowActions(!showActions)} style={styles.actionsButton}>
+          <button
+            onClick={() => setShowActions(!showActions)}
+            style={styles.actionsButton}
+          >
             Git Actions
           </button>
           {showActions && (
@@ -159,16 +175,16 @@ export function Chat({
       {/* Messages */}
       <div style={styles.messages}>
         {messages.length === 0 ? (
-          <div style={styles.empty}>
-            Start a conversation with Claude
-          </div>
+          <div style={styles.empty}>Start a conversation with Claude</div>
         ) : (
           messages.map((message) => (
             <div
               key={message.id}
               style={{
                 ...styles.message,
-                ...(message.role === "user" ? styles.userMessage : styles.assistantMessage),
+                ...(message.role === "user"
+                  ? styles.userMessage
+                  : styles.assistantMessage),
               }}
             >
               <div style={styles.messageRole}>
@@ -201,7 +217,11 @@ export function Chat({
         />
         <div style={styles.inputActions}>
           {isProcessing && (
-            <button type="button" onClick={onInterrupt} style={styles.interruptButton}>
+            <button
+              type="button"
+              onClick={onInterrupt}
+              style={styles.interruptButton}
+            >
               Stop
             </button>
           )}

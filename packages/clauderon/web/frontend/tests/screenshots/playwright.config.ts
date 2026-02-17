@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Playwright configuration for screenshot generation
@@ -8,15 +8,15 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   // Test files are in current directory (config is at tests/screenshots/)
-  testDir: '.',
+  testDir: ".",
 
   // Output directory for screenshots
-  outputDir: '../../screenshots/web',
+  outputDir: "../../screenshots/web",
 
   // Timeout settings
   timeout: 30000,
   expect: {
-    timeout: 5000
+    timeout: 5000,
   },
 
   // Run tests serially for consistent screenshots
@@ -27,19 +27,16 @@ export default defineConfig({
   retries: 1,
 
   // Reporter configuration
-  reporter: [
-    ['list'],
-    ['html', { outputFolder: 'playwright-report' }]
-  ],
+  reporter: [["list"], ["html", { outputFolder: "playwright-report" }]],
 
   // Shared settings for all projects
   use: {
     // Base URL - assumes dev server is running
-    baseURL: 'http://localhost:5173',
+    baseURL: "http://localhost:5173",
 
     // Screenshot settings - high quality
     screenshot: {
-      mode: 'only-on-failure',
+      mode: "only-on-failure",
       fullPage: false,
     },
 
@@ -53,18 +50,18 @@ export default defineConfig({
   // Projects for different scenarios
   projects: [
     {
-      name: 'chromium-light',
+      name: "chromium-light",
       use: {
-        ...devices['Desktop Chrome'],
-        colorScheme: 'light',
+        ...devices["Desktop Chrome"],
+        colorScheme: "light",
       },
     },
 
     {
-      name: 'chromium-dark',
+      name: "chromium-dark",
       use: {
-        ...devices['Desktop Chrome'],
-        colorScheme: 'dark',
+        ...devices["Desktop Chrome"],
+        colorScheme: "dark",
       },
     },
   ],

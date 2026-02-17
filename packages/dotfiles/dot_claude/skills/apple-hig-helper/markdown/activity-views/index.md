@@ -8,7 +8,7 @@
 
 # Activity views
 
-An activity view — often called a *share sheet* — presents a range of tasks that people can perform in the current context.
+An activity view — often called a _share sheet_ — presents a range of tasks that people can perform in the current context.
 
 ![A stylized representation of an activity view or share sheet. The image is tinted red to subtly reflect the red in the original six-color Apple logo.](https://docs-assets.developer.apple.com/published/74899abd7c2a017fc05523d112743616/components-activity-view-intro%402x.png)
 
@@ -16,7 +16,7 @@ Activity views present sharing activities like messaging and actions like Copy a
 
 You can provide app-specific activities that can appear in a share sheet when people open it within your app or game. For example, Photos provides app-specific actions like Copy Photo, Add to Album, and Adjust Location. By default, the system lists app-specific actions before actions — such as Add to Files or AirPlay — that are available in multiple apps or throughout the system. People can edit the list of actions to ensure that it displays the ones they use most and to add new ones.
 
-You can also create app extensions to provide custom share and action activities that people can use in other apps. (An *app extension* is code you provide that people can install and use outside of your app.) For example, you might create a custom share activity that people can install to help them share a webpage with a specific social media service. Even though macOS doesn’t provide an activity view, you can create share and action app extensions that people can use on a Mac. For guidance, see [Share and action extensions](/design/human-interface-guidelines/activity-views#Share-and-action-extensions).
+You can also create app extensions to provide custom share and action activities that people can use in other apps. (An _app extension_ is code you provide that people can install and use outside of your app.) For example, you might create a custom share activity that people can install to help them share a webpage with a specific social media service. Even though macOS doesn’t provide an activity view, you can create share and action app extensions that people can use on a Mac. For guidance, see [Share and action extensions](/design/human-interface-guidelines/activity-views#Share-and-action-extensions).
 
 ## [Best practices](/design/human-interface-guidelines/activity-views#Best-practices)
 
@@ -40,8 +40,8 @@ Share extensions give people a convenient way to share information from the curr
 
 The system presents share and action extensions differently depending on the platform:
 
-* In iOS and iPadOS, share and action extensions are displayed in the share sheet that appears when people choose an Action button.
-* In macOS, people access share extensions by clicking a Share button in the toolbar or choosing Share in a context menu. People can access an action extension by holding the pointer over certain types of embedded content — like an image they add to a Mail compose window — clicking a toolbar button, or choosing a quick action in a Finder window.
+- In iOS and iPadOS, share and action extensions are displayed in the share sheet that appears when people choose an Action button.
+- In macOS, people access share extensions by clicking a Share button in the toolbar or choosing Share in a context menu. People can access an action extension by holding the pointer over certain types of embedded content — like an image they add to a Mail compose window — clicking a toolbar button, or choosing a quick action in a Finder window.
 
 **If necessary, create a custom interface that feels familiar to people.** For a share extension, prefer the system-provided composition view because it provides a consistent sharing experience that people already know. For an action extension, include your app name. If you need to present an interface, include elements of your app’s interface to help people understand that your extension and your app are related.
 
@@ -55,7 +55,7 @@ The system presents share and action extensions differently depending on the pla
 
 ## [Platform considerations](/design/human-interface-guidelines/activity-views#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, or visionOS. Not supported in macOS, tvOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, or visionOS. Not supported in macOS, tvOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/activity-views#Resources)
 

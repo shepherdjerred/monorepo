@@ -8,7 +8,7 @@
 
 December 16, 2025
 
-Updated guidance for Liquid Glass. 
+Updated guidance for Liquid Glass.
 
 # Buttons
 
@@ -18,9 +18,9 @@ A button initiates an instantaneous action.
 
 Versatile and highly customizable, buttons give people simple, familiar ways to do tasks in your app. In general, a button combines three attributes to clearly communicate its function:
 
-* **Style.** A visual style based on size, color, and shape.
-* **Content.** A symbol (or icon), text label, or both that a button displays to convey its purpose.
-* **Role.** A system-defined role that identifies a button’s semantic meaning and can affect its appearance.
+- **Style.** A visual style based on size, color, and shape.
+- **Content.** A symbol (or icon), text label, or both that a button displays to convey its purpose.
+- **Role.** A system-defined role that identifies a button’s semantic meaning and can affect its appearance.
 
 There are also many button-like components that have distinct appearances and behaviors for specific use cases, like [toggles](/design/human-interface-guidelines/toggles), [pop-up buttons](/design/human-interface-guidelines/pop-up-buttons), and [segmented controls](/design/human-interface-guidelines/segmented-controls).
 
@@ -58,10 +58,10 @@ In macOS and visionOS, the system displays a tooltip after people hover over a b
 
 A system button can have one of the following roles:
 
-* **Normal.** No specific meaning.
-* **Primary.** The button is the default button — the button people are most likely to choose.
-* **Cancel.** The button cancels the current action.
-* **Destructive.** The button performs an action that can result in data destruction.
+- **Normal.** No specific meaning.
+- **Primary.** The button is the default button — the button people are most likely to choose.
+- **Cancel.** The button cancels the current action.
+- **Destructive.** The button performs an action that can result in data destruction.
 
 A button’s role can have additional effects on its appearance. For example, a primary button uses an app’s accent color, whereas a destructive button uses the system red color.
 
@@ -73,7 +73,7 @@ A button’s role can have additional effects on its appearance. For example, a 
 
 ## [Platform considerations](/design/human-interface-guidelines/buttons#Platform-considerations)
 
-*No additional considerations for tvOS.*
+_No additional considerations for tvOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/buttons#iOS-iPadOS)
 
@@ -89,17 +89,17 @@ Several specific button types are unique to macOS.
 
 #### [Push buttons](/design/human-interface-guidelines/buttons#Push-buttons)
 
-The standard button type in macOS is known as a *push button*. You can configure a push button to display text, a symbol, an icon, or an image, or a combination of text and image content. Push buttons can act as the default button in a view and you can tint them.
+The standard button type in macOS is known as a _push button_. You can configure a push button to display text, a symbol, an icon, or an image, or a combination of text and image content. Push buttons can act as the default button in a view and you can tint them.
 
 **Use a flexible-height push button only when you need to display tall or variable height content.** Flexible-height buttons support the same configurations as regular push buttons — and they use the same corner radius and content padding — so they look consistent with other buttons in your interface. If you need to present a button that contains two lines of text or a tall icon, use a flexible-height button; otherwise, use a standard push button. For developer guidance, see [`NSButton.BezelStyle.flexiblePush`](/documentation/AppKit/NSButton/BezelStyle-swift.enum/flexiblePush).
 
 **Append a trailing ellipsis to the title when a push button opens another window, view, or app.** Throughout the system, an ellipsis in a control title signals that people can provide additional input. For example, the Edit buttons in the AutoFill pane of Safari Settings include ellipses because they open other views that let people modify autofill values.
 
-**Consider supporting spring loading.** On systems with a Magic Trackpad, *spring loading* lets people activate a button by dragging selected items over it and force clicking — that is, pressing harder — without dropping the selected items. After force clicking, people can continue dragging the items, possibly to perform additional actions.
+**Consider supporting spring loading.** On systems with a Magic Trackpad, _spring loading_ lets people activate a button by dragging selected items over it and force clicking — that is, pressing harder — without dropping the selected items. After force clicking, people can continue dragging the items, possibly to perform additional actions.
 
 #### [Square buttons](/design/human-interface-guidelines/buttons#Square-buttons)
 
-A *square button* (also known as a *gradient button*) initiates an action related to a view, like adding or removing rows in a table.
+A _square button_ (also known as a _gradient button_) initiates an action related to a view, like adding or removing rows in a table.
 
 Square buttons contain symbols or icons — not text — and you can configure them to behave like push buttons, toggles, or pop-up buttons. The buttons appear in close proximity to their associated view — usually within or beneath it — so people know which view the buttons affect.
 
@@ -113,7 +113,7 @@ For developer guidance, see [`NSButton.BezelStyle.smallSquare`](/documentation/A
 
 #### [Help buttons](/design/human-interface-guidelines/buttons#Help-buttons)
 
-A *help button* appears within a view and opens app-specific help documentation.
+A _help button_ appears within a view and opens app-specific help documentation.
 
 Help buttons are circular, consistently sized buttons that contain a question mark. For guidance on creating help documentation, see [Offering help](/design/human-interface-guidelines/offering-help).
 
@@ -125,11 +125,11 @@ Help buttons are circular, consistently sized buttons that contain a question ma
 
 **Position help buttons where people expect to find them.** Use the following locations for guidance.
 
-| View style | Help button location |
-| --- | --- |
+| View style                                         | Help button location                                                             |
+| -------------------------------------------------- | -------------------------------------------------------------------------------- |
 | Dialog with dismissal buttons (like OK and Cancel) | Lower corner, opposite to the dismissal buttons and vertically aligned with them |
-| Dialog without dismissal buttons | Lower-left or lower-right corner |
-| Settings window or pane | Lower-left or lower-right corner |
+| Dialog without dismissal buttons                   | Lower-left or lower-right corner                                                 |
+| Settings window or pane                            | Lower-left or lower-right corner                                                 |
 
 **Use a help button within a view, not in the window frame.** For example, avoid placing a help button in a toolbar or status bar.
 
@@ -137,7 +137,7 @@ Help buttons are circular, consistently sized buttons that contain a question ma
 
 #### [Image buttons](/design/human-interface-guidelines/buttons#Image-buttons)
 
-An *image button* appears in a view and displays an image, symbol, or icon. You can configure an image button to behave like a push button, toggle, or pop-up button.
+An _image button_ appears in a view and displays an image, symbol, or icon. You can configure an image button to behave like a push button, toggle, or pop-up button.
 
 **Use an image button in a view, not in the window frame.** For example, avoid placing an image button in a toolbar or status bar. If you need to use an image as a button in a toolbar, use a toolbar item. See [Toolbars](/design/human-interface-guidelines/toolbars).
 
@@ -149,11 +149,11 @@ An *image button* appears in a view and displays an image, symbol, or icon. You 
 
 A visionOS button typically includes a visible background that can help people see it, and the button plays sound to provide feedback when people interact with it.
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/ea522b8aff21df20f2f290ec79b7e4ba/visionos-button-styles-animation%402x.png)](https://docs-assets.developer.apple.com/published/903604027461d87db17614a241d220a5/visionos-button-styles-animation.mp4) Content description: A recording showing the top portion of a window in visionOS. The window contains several buttons, including a 'More' button, which receives the hover effect. The button is selected and a menu containing additional options appears.
 
- [Play](#)
+[Play](#)
 
 There are three standard button shapes in visionOS. Typically, an icon-only button uses a [`circle`](/documentation/SwiftUI/ButtonBorderShape/circle) shape, a text-only button uses a [`roundedRectangle`](/documentation/SwiftUI/ButtonBorderShape/roundedRectangle) or [`capsule`](/documentation/SwiftUI/ButtonBorderShape/capsule) shape, and a button that includes both an icon and text uses the capsule shape.
 
@@ -181,25 +181,25 @@ In visionOS, buttons don’t support custom hover effects.
 
 In addition to the four states shown above, a button can also reveal a tooltip when people look at it for a brief time. In general, buttons that contain text don’t need to display a tooltip because the button’s descriptive label communicates what it does.
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/171ed368bc54d1d007e9554dfbc7fb85/visionos-button-dwell-tooltip%402x.png)](https://docs-assets.developer.apple.com/published/a2ca615bed663efa69fa7747a74c2e7f/visionos-button-dwell-tooltip.mp4) Content description: An animation showing a tooltip appearing beneath a visionOS button.
 
- [Play](#)
+[Play](#)
 
 In visionOS, buttons can have the following sizes.
 
-| Shape | Mini (28 pt) | Small (32 pt) | Regular (44 pt) | Large (52 pt) | Extra large (64 pt) |
-| --- | --- | --- | --- | --- | --- |
-| Circular | A checkmark denoting availability. | A checkmark denoting availability. | A checkmark denoting availability. | A checkmark denoting availability. | A checkmark denoting availability. |
-| Capsule (text only) |  | A checkmark denoting availability. | A checkmark denoting availability. | A checkmark denoting availability. |  |
-| Capsule (text and icon) |  |  | A checkmark denoting availability. | A checkmark denoting availability. |  |
-| Rounded rectangle |  | A checkmark denoting availability. | A checkmark denoting availability. | A checkmark denoting availability. |  |
+| Shape                   | Mini (28 pt)                       | Small (32 pt)                      | Regular (44 pt)                    | Large (52 pt)                      | Extra large (64 pt)                |
+| ----------------------- | ---------------------------------- | ---------------------------------- | ---------------------------------- | ---------------------------------- | ---------------------------------- |
+| Circular                | A checkmark denoting availability. | A checkmark denoting availability. | A checkmark denoting availability. | A checkmark denoting availability. | A checkmark denoting availability. |
+| Capsule (text only)     |                                    | A checkmark denoting availability. | A checkmark denoting availability. | A checkmark denoting availability. |                                    |
+| Capsule (text and icon) |                                    |                                    | A checkmark denoting availability. | A checkmark denoting availability. |                                    |
+| Rounded rectangle       |                                    | A checkmark denoting availability. | A checkmark denoting availability. | A checkmark denoting availability. |                                    |
 
 **Prefer buttons that have a discernible background shape and fill.** It tends to be easier for people to see a button when it’s enclosed in a shape that uses a contrasting background fill. The exception is a button in a toolbar, context menu, alert, or [ornament](/design/human-interface-guidelines/ornaments) where the shape and material of the larger component make the button comfortably visible. The following guidelines can help you ensure that a button looks good in different contexts:
 
-* When a button appears on top of a glass [window](/design/human-interface-guidelines/windows#visionOS), use the [`thin`](/documentation/SwiftUI/Material/thin) material as the button’s background.
-* When a button appears floating in space, use the [glass material](/design/human-interface-guidelines/materials#visionOS) for its background.
+- When a button appears on top of a glass [window](/design/human-interface-guidelines/windows#visionOS), use the [`thin`](/documentation/SwiftUI/Material/thin) material as the button’s background.
+- When a button appears floating in space, use the [glass material](/design/human-interface-guidelines/materials#visionOS) for its background.
 
 **Avoid creating a custom button that uses a white background fill and black text or icons.** The system reserves this visual style to convey the toggled state.
 
@@ -251,11 +251,11 @@ watchOS displays all inline buttons using the [`capsule`](/documentation/SwiftUI
 
 ## [Change log](/design/human-interface-guidelines/buttons#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| December 16, 2025 | Updated guidance for Liquid Glass. |
-| June 9, 2025 | Updated guidance for button styles and content. |
-| February 2, 2024 | Noted that visionOS buttons don’t support custom hover effects. |
-| December 5, 2023 | Clarified some terminology and guidance for buttons in visionOS. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
-| June 5, 2023 | Updated guidance for using buttons in watchOS. |
+| Date              | Changes                                                          |
+| ----------------- | ---------------------------------------------------------------- |
+| December 16, 2025 | Updated guidance for Liquid Glass.                               |
+| June 9, 2025      | Updated guidance for button styles and content.                  |
+| February 2, 2024  | Noted that visionOS buttons don’t support custom hover effects.  |
+| December 5, 2023  | Clarified some terminology and guidance for buttons in visionOS. |
+| June 21, 2023     | Updated to include guidance for visionOS.                        |
+| June 5, 2023      | Updated guidance for using buttons in watchOS.                   |

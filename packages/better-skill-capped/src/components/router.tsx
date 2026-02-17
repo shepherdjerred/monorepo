@@ -21,15 +21,23 @@ export type RouterProps = {
   isDownloadEnabled: boolean;
   isTipsModalVisible: boolean;
   onToggleTipsModal: () => void;
-}
+};
 
 export function Router(props: RouterProps): React.ReactElement {
-  const { content, onToggleBookmark, onToggleWatchStatus, isBookmarked, isWatched, isDownloadEnabled } = props;
+  const {
+    content,
+    onToggleBookmark,
+    onToggleWatchStatus,
+    isBookmarked,
+    isWatched,
+    isDownloadEnabled,
+  } = props;
   const courses = content?.courses ?? [];
   const videos = content?.videos ?? [];
   const commentaries = content?.commentaries ?? [];
-  const items: OmniSearchable[] = [...courses, ...videos, ...commentaries]
-    .sort((left, right) => right.releaseDate.getTime() - left.releaseDate.getTime());
+  const items: OmniSearchable[] = [...courses, ...videos, ...commentaries].sort(
+    (left, right) => right.releaseDate.getTime() - left.releaseDate.getTime(),
+  );
 
   return (
     <React.Fragment>
@@ -37,7 +45,13 @@ export function Router(props: RouterProps): React.ReactElement {
         <div className="content-wrapper">
           <BrowserRouter>
             <Sentry.ErrorBoundary
-              fallback={<Hero title="Something went wrong" color={Color.RED} size={Size.FULL} />}
+              fallback={
+                <Hero
+                  title="Something went wrong"
+                  color={Color.RED}
+                  size={Size.FULL}
+                />
+              }
               showDialog={true}
             >
               <div>

@@ -26,7 +26,7 @@ As a slider’s value changes, the portion of track between the minimum value an
 
 ## [Platform considerations](/design/human-interface-guidelines/sliders#Platform-considerations)
 
-*Not supported in tvOS.*
+_Not supported in tvOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/sliders#iOS-iPadOS)
 
@@ -100,6 +100,6 @@ Continuous
 
 ## [Change log](/design/human-interface-guidelines/sliders#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date          | Changes                                   |
+| ------------- | ----------------------------------------- |
 | June 21, 2023 | Updated to include guidance for visionOS. |

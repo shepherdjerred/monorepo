@@ -9,7 +9,7 @@ export class NullNotifier implements Notifier {
     return Promise.resolve(undefined);
   }
   notifyCommentaries(
-    _notifications: CommentaryNotification
+    _notifications: CommentaryNotification,
   ): Promise<undefined> {
     return Promise.resolve(undefined);
   }

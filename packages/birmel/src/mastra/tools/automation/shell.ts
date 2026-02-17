@@ -19,22 +19,37 @@ Examples:
 
 The tool captures stdout, stderr, exit code, and execution time.`,
   inputSchema: z.object({
-    command: z.string().describe("Command to execute (e.g., 'python3', 'node', 'bun', 'ls')"),
+    command: z
+      .string()
+      .describe("Command to execute (e.g., 'python3', 'node', 'bun', 'ls')"),
     args: z.array(z.string()).optional().describe("Command arguments"),
-    timeout: z.number().optional().describe("Timeout in milliseconds (default: from config, max: from config)"),
-    cwd: z.string().optional().describe("Working directory (defaults to current directory)"),
-    env: z.record(z.string(), z.string()).optional().describe("Environment variables to set"),
+    timeout: z
+      .number()
+      .optional()
+      .describe(
+        "Timeout in milliseconds (default: from config, max: from config)",
+      ),
+    cwd: z
+      .string()
+      .optional()
+      .describe("Working directory (defaults to current directory)"),
+    env: z
+      .record(z.string(), z.string())
+      .optional()
+      .describe("Environment variables to set"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
     message: z.string(),
-    data: z.object({
-      stdout: z.string().describe("Standard output"),
-      stderr: z.string().describe("Standard error"),
-      exitCode: z.number().describe("Process exit code"),
-      timedOut: z.boolean().describe("Whether the command timed out"),
-      duration: z.number().describe("Execution time in milliseconds"),
-    }).optional(),
+    data: z
+      .object({
+        stdout: z.string().describe("Standard output"),
+        stderr: z.string().describe("Standard error"),
+        exitCode: z.number().describe("Process exit code"),
+        timedOut: z.boolean().describe("Whether the command timed out"),
+        duration: z.number().describe("Execution time in milliseconds"),
+      })
+      .optional(),
   }),
   execute: async (ctx) => {
     const config = getConfig();
@@ -90,7 +105,7 @@ The tool captures stdout, stderr, exit code, and execution time.`,
 
       try {
         // Wait for process with timeout
-        const result = await Promise.race([
+        const result = (await Promise.race([
           proc.exited,
           new Promise((_, reject) => {
             controller.signal.addEventListener("abort", () => {
@@ -98,7 +113,7 @@ The tool captures stdout, stderr, exit code, and execution time.`,
               reject(new Error("Command timed out"));
             });
           }),
-        ]) as number;
+        ])) as number;
 
         exitCode = result;
 
@@ -141,9 +156,10 @@ The tool captures stdout, stderr, exit code, and execution time.`,
       // Non-zero exit code is still considered a result (not failure)
       return {
         success: true,
-        message: exitCode === 0
-          ? `Command executed successfully in ${String(duration)}ms`
-          : `Command completed with exit code ${String(exitCode)} in ${String(duration)}ms`,
+        message:
+          exitCode === 0
+            ? `Command executed successfully in ${String(duration)}ms`
+            : `Command completed with exit code ${String(exitCode)} in ${String(duration)}ms`,
         data: {
           stdout,
           stderr,

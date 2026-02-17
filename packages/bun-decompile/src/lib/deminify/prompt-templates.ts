@@ -131,18 +131,36 @@ export function getFunctionPrompt(context: DeminifyContext): string {
   const func = context.targetFunction;
   const hints: string[] = [];
 
-  if (func.isAsync) {hints.push("async function");}
-  if (func.isGenerator) {hints.push("generator function");}
-  if (func.type === "arrow-function") {hints.push("arrow function");}
-  if (func.type === "method") {hints.push("class method");}
-  if (func.type === "constructor") {hints.push("constructor");}
-  if (func.type === "getter") {hints.push("getter");}
-  if (func.type === "setter") {hints.push("setter");}
+  if (func.isAsync) {
+    hints.push("async function");
+  }
+  if (func.isGenerator) {
+    hints.push("generator function");
+  }
+  if (func.type === "arrow-function") {
+    hints.push("arrow function");
+  }
+  if (func.type === "method") {
+    hints.push("class method");
+  }
+  if (func.type === "constructor") {
+    hints.push("constructor");
+  }
+  if (func.type === "getter") {
+    hints.push("getter");
+  }
+  if (func.type === "setter") {
+    hints.push("setter");
+  }
   if (func.params.length > 0) {
     const paramHints = func.params.map((p) => {
       let h = p.name || "[destructured]";
-      if (p.isRest) {h = `...${h}`;}
-      if (p.hasDefault) {h = `${h}=default`;}
+      if (p.isRest) {
+        h = `...${h}`;
+      }
+      if (p.hasDefault) {
+        h = `${h}=default`;
+      }
       return h;
     });
     hints.push(`parameters: (${paramHints.join(", ")})`);
@@ -180,7 +198,9 @@ export function getTopLevelPrompt(
     parts.push("");
   }
 
-  parts.push("Apply the known name mappings and format the code for readability.");
+  parts.push(
+    "Apply the known name mappings and format the code for readability.",
+  );
   parts.push("Output only the de-minified code in ```javascript blocks.");
 
   return parts.join("\n");
@@ -264,7 +284,7 @@ export type BatchFunctionInfo = {
   source: string;
   /** List of identifiers available to rename */
   identifiers?: string[];
-}
+};
 
 /** Generate user prompt for a batch of functions */
 export function getBatchFunctionPrompt(
@@ -273,7 +293,9 @@ export function getBatchFunctionPrompt(
 ): string {
   const parts: string[] = [];
 
-  parts.push("Analyze these JavaScript functions and suggest rename mappings.\n");
+  parts.push(
+    "Analyze these JavaScript functions and suggest rename mappings.\n",
+  );
   parts.push("Output ONLY a JSON object with function IDs as keys.\n");
 
   // Known name mappings from previous rounds
@@ -316,7 +338,7 @@ export function getBatchFunctionPrompt(
 export function estimateBatchTokens(
   functions: BatchFunctionInfo[],
   model?: string,
-  knownNames?: Map<string, string>
+  knownNames?: Map<string, string>,
 ): number {
   // Build the actual prompts for accurate estimation
   const systemPrompt = getBatchSystemPrompt();
@@ -332,7 +354,9 @@ export function estimateBatchTokens(
 }
 
 /** Estimate output tokens for a batch of functions */
-export function estimateBatchOutputTokens(functions: BatchFunctionInfo[]): number {
+export function estimateBatchOutputTokens(
+  functions: BatchFunctionInfo[],
+): number {
   let total = 0;
 
   // JSON wrapper overhead

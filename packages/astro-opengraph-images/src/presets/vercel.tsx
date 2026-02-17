@@ -1,7 +1,8 @@
 import type { RenderFunctionInput } from "#src/types.js";
 
 export function vercel({ title }: RenderFunctionInput): React.ReactNode {
-  return <div
+  return (
+    <div
       style={{
         height: "100%",
         width: "100%",
@@ -24,7 +25,12 @@ export function vercel({ title }: RenderFunctionInput): React.ReactNode {
           justifyContent: "center",
         }}
       >
-        <svg height={80} viewBox="0 0 75 65" fill="black" style={{ margin: "0 75px" }}>
+        <svg
+          height={80}
+          viewBox="0 0 75 65"
+          fill="black"
+          style={{ margin: "0 75px" }}
+        >
           <path d="M37.59.25l36.95 64H.64l36.95-64z"></path>
         </svg>
       </div>
@@ -41,5 +47,6 @@ export function vercel({ title }: RenderFunctionInput): React.ReactNode {
       >
         <b>{title}</b>
       </div>
-    </div>;
+    </div>
+  );
 }

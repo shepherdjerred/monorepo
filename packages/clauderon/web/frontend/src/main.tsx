@@ -26,5 +26,5 @@ createRoot(root).render(
     <Sentry.ErrorBoundary fallback={<p>An error occurred.</p>}>
       <App />
     </Sentry.ErrorBoundary>
-  </StrictMode>
+  </StrictMode>,
 );

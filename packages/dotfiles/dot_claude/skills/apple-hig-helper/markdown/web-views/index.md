@@ -22,7 +22,7 @@ For example, Mail uses a web view to show HTML content in messages.
 
 ## [Platform considerations](/design/human-interface-guidelines/web-views#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, or visionOS. Not supported in tvOS or watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, or visionOS. Not supported in tvOS or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/web-views#Resources)
 

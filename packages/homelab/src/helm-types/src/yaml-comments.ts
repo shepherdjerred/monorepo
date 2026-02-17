@@ -41,23 +41,37 @@ export function isSimpleYAMLValue(line: string): boolean {
  * Helper: Check if a line is a section header (short line followed by YAML config)
  * Exported for testing purposes
  */
-export function isSectionHeader(line: string, nextLine: string | undefined): boolean {
-  if (!nextLine) {return false;}
+export function isSectionHeader(
+  line: string,
+  nextLine: string | undefined,
+): boolean {
+  if (!nextLine) {
+    return false;
+  }
 
   const isFollowedByYAMLKey =
-    /^[\w.-]+:\s*\|/.test(nextLine) || /^[\w.-]+:\s*$/.test(nextLine) || /^[\w.-]+:\s+/.test(nextLine);
+    /^[\w.-]+:\s*\|/.test(nextLine) ||
+    /^[\w.-]+:\s*$/.test(nextLine) ||
+    /^[\w.-]+:\s+/.test(nextLine);
 
-  if (!isFollowedByYAMLKey) {return false;}
+  if (!isFollowedByYAMLKey) {
+    return false;
+  }
 
   const wordCount = line.split(/\s+/).length;
-  const hasConfigKeywords = /\b(configuration|config|example|setup|settings?|options?|alternative)\b/i.test(line);
+  const hasConfigKeywords =
+    /\b(configuration|config|example|setup|settings?|options?|alternative)\b/i.test(
+      line,
+    );
   const endsWithPunctuation = /[.!?]$/.test(line);
   const hasURL = line.includes("http://") || line.includes("https://");
   const startsWithArticle = /^(This|The|A|An)\s/i.test(line);
-  const startsWithCommonWord = /^(This|The|A|An|It|For|To|If|When|You|We|Use|Configure)\s/i.test(line);
+  const startsWithCommonWord =
+    /^(This|The|A|An|It|For|To|If|When|You|We|Use|Configure)\s/i.test(line);
 
   return (
-    ((wordCount === 2 && !startsWithCommonWord) || (hasConfigKeywords && !startsWithCommonWord)) &&
+    ((wordCount === 2 && !startsWithCommonWord) ||
+      (hasConfigKeywords && !startsWithCommonWord)) &&
     !endsWithPunctuation &&
     !hasURL &&
     !/^ref:/i.test(line) &&
@@ -72,12 +86,18 @@ export function isSectionHeader(line: string, nextLine: string | undefined): boo
 export function isCodeExample(line: string, wordCount: number): boolean {
   const looksLikeYAMLKey = isYAMLKey(line);
   const looksLikeSimpleYAMLValue = isSimpleYAMLValue(line);
-  const looksLikeYAMLList = line.startsWith("-") && (line.includes(":") || /^-\s+\|/.test(line));
+  const looksLikeYAMLList =
+    line.startsWith("-") && (line.includes(":") || /^-\s+\|/.test(line));
   const looksLikePolicyRule = /^[pg],\s*/.test(line);
   const hasIndentation = /^\s{2,}/.test(line);
-  const looksLikeCommand = /^echo\s+/.test(line) || line.includes("$ARGOCD_") || line.includes("$KUBE_");
+  const looksLikeCommand =
+    /^echo\s+/.test(line) ||
+    line.includes("$ARGOCD_") ||
+    line.includes("$KUBE_");
   const isSeparator =
-    /^-{3,}/.test(line) || /^BEGIN .*(KEY|CERTIFICATE)/.test(line) || /^END .*(KEY|CERTIFICATE)/.test(line);
+    /^-{3,}/.test(line) ||
+    /^BEGIN .*(KEY|CERTIFICATE)/.test(line) ||
+    /^END .*(KEY|CERTIFICATE)/.test(line);
 
   return (
     isSeparator ||
@@ -109,7 +129,11 @@ export function looksLikeProse(line: string, wordCount: number): boolean {
 
   return (
     (startsWithCapital || isReferenceMarker) &&
-    (hasEndPunctuation || hasURL || startsWithArticle || hasMultipleWords || isReferenceMarker) &&
+    (hasEndPunctuation ||
+      hasURL ||
+      startsWithArticle ||
+      hasMultipleWords ||
+      isReferenceMarker) &&
     notYamlKey &&
     reasonableLength
   );
@@ -133,7 +157,9 @@ export function normalizeCommentLine(line: string): string {
  * Removes Helm-specific markers and filters out code examples and section headers
  */
 export function cleanYAMLComment(comment: string): string {
-  if (!comment) {return "";}
+  if (!comment) {
+    return "";
+  }
 
   // Normalize all lines
   const lines = comment.split("\n").map(normalizeCommentLine);
@@ -148,12 +174,16 @@ export function cleanYAMLComment(comment: string): string {
 
     // Empty lines end code blocks (but not examples)
     if (!line) {
-      if (inCodeBlock && !inExample) {inCodeBlock = false;}
+      if (inCodeBlock && !inExample) {
+        inCodeBlock = false;
+      }
       continue;
     }
 
     // Skip @default lines (we'll generate our own)
-    if (line.startsWith("@default")) {continue;}
+    if (line.startsWith("@default")) {
+      continue;
+    }
 
     // Check if this line starts an Example section (preserve these!)
     if (/^Example:?$/i.test(line.trim())) {
@@ -207,14 +237,23 @@ export function cleanYAMLComment(comment: string): string {
  * Helper: Check if a line is part of a commented YAML block
  */
 function isPartOfYAMLBlock(line: string, trimmed: string): boolean {
-  return line.startsWith(" ") || line.startsWith("\t") || trimmed.startsWith("-") || trimmed.startsWith("#");
+  return (
+    line.startsWith(" ") ||
+    line.startsWith("\t") ||
+    trimmed.startsWith("-") ||
+    trimmed.startsWith("#")
+  );
 }
 
 /**
  * Helper: Check if this is a section header followed by a YAML key
  */
-function isSectionHeaderForCommentedBlock(nextLine: string | undefined): boolean {
-  if (!nextLine) {return false;}
+function isSectionHeaderForCommentedBlock(
+  nextLine: string | undefined,
+): boolean {
+  if (!nextLine) {
+    return false;
+  }
   const nextTrimmed = nextLine.trim();
   return /^[\w.-]+:\s*(\||$)/.test(nextTrimmed);
 }
@@ -331,7 +370,12 @@ export function preprocessYAMLComments(yamlContent: string): string {
     }
 
     // Exit example block on blank line or "For more information"
-    if (inExampleBlock && (!trimmed || trimmed.startsWith("For more information") || trimmed.startsWith("Ref:"))) {
+    if (
+      inExampleBlock &&
+      (!trimmed ||
+        trimmed.startsWith("For more information") ||
+        trimmed.startsWith("Ref:"))
+    ) {
       inExampleBlock = false;
     }
 
@@ -347,7 +391,11 @@ export function preprocessYAMLComments(yamlContent: string): string {
 
     // Exit block scalar on non-indented line or blank line
     if (inBlockScalar) {
-      const isIndented = trimmed && (line.startsWith("  ") || line.startsWith("\t") || /^#\s{2,}/.test(line));
+      const isIndented =
+        trimmed &&
+        (line.startsWith("  ") ||
+          line.startsWith("\t") ||
+          /^#\s{2,}/.test(line));
       if (!trimmed || !isIndented) {
         inBlockScalar = false;
       }
@@ -368,7 +416,9 @@ export function preprocessYAMLComments(yamlContent: string): string {
 
     // Check if this is a commented-out YAML key
     // Pattern: one or more # followed by optional whitespace, then key: value
-    const commentedKeyMatch = /^([ \t]*)(#+)\s*([\w.-]+:\s*(?:\S.*)?)$/.exec(line);
+    const commentedKeyMatch = /^([ \t]*)(#+)\s*([\w.-]+:\s*(?:\S.*)?)$/.exec(
+      line,
+    );
 
     if (commentedKeyMatch) {
       const [, indent, , keyValue] = commentedKeyMatch;
@@ -383,10 +433,14 @@ export function preprocessYAMLComments(yamlContent: string): string {
       const isValidKey = /^[\w.-]+$/.test(keyPart);
 
       // Don't uncomment documentation references like "ref: https://..."
-      const isDocReference = /^ref:/i.test(keyValue) && (keyValue.includes("http://") || keyValue.includes("https://"));
+      const isDocReference =
+        /^ref:/i.test(keyValue) &&
+        (keyValue.includes("http://") || keyValue.includes("https://"));
 
       // Don't uncomment URLs (they might be continuation lines in multi-line Ref comments)
-      const isURL = keyValue.trim().startsWith("http://") || keyValue.trim().startsWith("https://");
+      const isURL =
+        keyValue.trim().startsWith("http://") ||
+        keyValue.trim().startsWith("https://");
 
       if (isValidKey && !isDocReference && !isURL) {
         const keyIndent = indent.length;
@@ -397,10 +451,16 @@ export function preprocessYAMLComments(yamlContent: string): string {
         const prevTrimmed = prevLine?.trim() ?? "";
         const prevIsCommentedKey = /^#+\s*[\w.-]+:\s/.test(prevTrimmed);
         const prevIsBlank = !prevTrimmed;
-        const prevIsListItem = prevTrimmed.startsWith("#") && prevTrimmed.slice(1).trim().startsWith("-");
+        const prevIsListItem =
+          prevTrimmed.startsWith("#") &&
+          prevTrimmed.slice(1).trim().startsWith("-");
 
         // If previous line is prose or a list item, this is likely a YAML example
-        const likelyExample = (!prevIsBlank && !prevIsCommentedKey && prevTrimmed.startsWith("#")) || prevIsListItem;
+        const likelyExample =
+          (!prevIsBlank &&
+            !prevIsCommentedKey &&
+            prevTrimmed.startsWith("#")) ||
+          prevIsListItem;
 
         // Also check if we're in a sequence of commented keys (good sign of commented-out config)
         if (prevIsCommentedKey) {
@@ -415,7 +475,9 @@ export function preprocessYAMLComments(yamlContent: string): string {
         // 3. OR we've seen multiple consecutive commented keys (likely a commented-out config block)
         const shouldUncomment =
           !likelyExample &&
-          (lastRealKeyIndent === -1 || Math.abs(keyIndent - lastRealKeyIndent) <= 4 || consecutiveCommentedKeys >= 2);
+          (lastRealKeyIndent === -1 ||
+            Math.abs(keyIndent - lastRealKeyIndent) <= 4 ||
+            consecutiveCommentedKeys >= 2);
 
         if (shouldUncomment) {
           processedLines.push(`${indent}${keyValue}`);
@@ -475,7 +537,9 @@ export function parseBitnamiParams(comment: string): {
  * This handles cases with commented-out YAML keys and inconsistent indentation
  * Returns comments with metadata for debugging
  */
-function parseCommentsWithRegex(yamlContent: string): Map<string, CommentWithMetadata> {
+function parseCommentsWithRegex(
+  yamlContent: string,
+): Map<string, CommentWithMetadata> {
   const comments = new Map<string, CommentWithMetadata>();
   const lines = yamlContent.split("\n");
   let pendingComment: string[] = [];
@@ -491,7 +555,9 @@ function parseCommentsWithRegex(yamlContent: string): Map<string, CommentWithMet
       // Only reset if we had a commented-out key (pendingCommentIndent === -1)
       // This allows multi-line comments for real keys to work
       if (pendingComment.length > 0 && pendingCommentIndent === -1) {
-        pendingDebugInfo.push(`Line ${String(lineNum)}: Blank line after commented-out key, resetting pending`);
+        pendingDebugInfo.push(
+          `Line ${String(lineNum)}: Blank line after commented-out key, resetting pending`,
+        );
         pendingComment = [];
         pendingDebugInfo = [];
       }
@@ -510,7 +576,8 @@ function parseCommentsWithRegex(yamlContent: string): Map<string, CommentWithMet
       // Skip commented-out YAML keys (these are not documentation)
       // Match patterns like "key: value" or "key:" but NOT prose-like text
       // This includes quoted values like: key: "value"
-      const looksLikeYAMLKey = /^[\w.-]+:\s*(\||$|[\w.-]+$|"[^"]*"$|'[^']*'$|[[{])/.test(commentText);
+      const looksLikeYAMLKey =
+        /^[\w.-]+:\s*(\||$|[\w.-]+$|"[^"]*"$|'[^']*'$|[[{])/.test(commentText);
 
       if (looksLikeYAMLKey) {
         // This is a commented-out YAML key, which means the pending comments
@@ -532,7 +599,10 @@ function parseCommentsWithRegex(yamlContent: string): Map<string, CommentWithMet
           pendingDebugInfo = [
             `Line ${String(lineNum)}: Fresh start (indent=${String(commentIndent)}): "${commentText}"`,
           ];
-        } else if (commentIndent === pendingCommentIndent || Math.abs(commentIndent - pendingCommentIndent) <= 2) {
+        } else if (
+          commentIndent === pendingCommentIndent ||
+          Math.abs(commentIndent - pendingCommentIndent) <= 2
+        ) {
           // Same indent level, add to pending
           pendingComment.push(commentText);
           pendingDebugInfo.push(
@@ -545,7 +615,9 @@ function parseCommentsWithRegex(yamlContent: string): Map<string, CommentWithMet
           );
           pendingComment = [commentText];
           pendingCommentIndent = commentIndent;
-          pendingDebugInfo.push(`Line ${String(lineNum)}: New start: "${commentText}"`);
+          pendingDebugInfo.push(
+            `Line ${String(lineNum)}: New start: "${commentText}"`,
+          );
         }
       }
       return;
@@ -561,9 +633,15 @@ function parseCommentsWithRegex(yamlContent: string): Map<string, CommentWithMet
 
         // Only associate comment if indentation matches closely
         // Allow 2 space difference (for comment being indented slightly different)
-        if (pendingCommentIndent === -1 || Math.abs(keyIndent - pendingCommentIndent) <= 2) {
+        if (
+          pendingCommentIndent === -1 ||
+          Math.abs(keyIndent - pendingCommentIndent) <= 2
+        ) {
           const commentText = pendingComment.join("\n");
-          const debugInfo = [...pendingDebugInfo, `Line ${String(lineNum)}: Associating with key "${key}"`].join("\n");
+          const debugInfo = [
+            ...pendingDebugInfo,
+            `Line ${String(lineNum)}: Associating with key "${key}"`,
+          ].join("\n");
 
           comments.set(key, {
             text: commentText,
@@ -588,7 +666,9 @@ function parseCommentsWithRegex(yamlContent: string): Map<string, CommentWithMet
     } else if (!trimmed.startsWith("#")) {
       // Non-comment, non-key line - reset pending comment
       if (pendingComment.length > 0) {
-        pendingDebugInfo.push(`Line ${String(lineNum)}: Non-comment/non-key line, resetting pending`);
+        pendingDebugInfo.push(
+          `Line ${String(lineNum)}: Non-comment/non-key line, resetting pending`,
+        );
       }
       pendingComment = [];
       pendingCommentIndent = -1;
@@ -604,7 +684,9 @@ function parseCommentsWithRegex(yamlContent: string): Map<string, CommentWithMet
  * Returns comments with information about how they were extracted
  * Exported for testing purposes
  */
-export function parseYAMLCommentsWithMetadata(yamlContent: string): Map<string, CommentWithMetadata> {
+export function parseYAMLCommentsWithMetadata(
+  yamlContent: string,
+): Map<string, CommentWithMetadata> {
   const comments = new Map<string, CommentWithMetadata>();
 
   try {
@@ -618,29 +700,48 @@ export function parseYAMLCommentsWithMetadata(yamlContent: string): Map<string, 
     const regexComments = parseCommentsWithRegex(preprocessedYaml);
 
     // Recursively walk the YAML AST and extract comments
-    function visitNode(node: unknown, keyPath: string[] = [], inheritedComment = ""): void {
-      if (!node) {return;}
+    function visitNode(
+      node: unknown,
+      keyPath: string[] = [],
+      inheritedComment = "",
+    ): void {
+      if (!node) {
+        return;
+      }
 
       // Handle map/object nodes - check if node has items array
       const mapNodeCheck = z
-        .object({ items: z.array(z.unknown()), commentBefore: z.unknown().optional() })
+        .object({
+          items: z.array(z.unknown()),
+          commentBefore: z.unknown().optional(),
+        })
         .safeParse(node);
       if (mapNodeCheck.success) {
         // Extract the map's own comment (to be inherited by first child if needed)
         let mapComment = inheritedComment;
-        const mapCommentCheck = z.string().safeParse(mapNodeCheck.data.commentBefore);
+        const mapCommentCheck = z
+          .string()
+          .safeParse(mapNodeCheck.data.commentBefore);
         if (mapCommentCheck.success) {
           mapComment = mapCommentCheck.data;
         }
 
         for (let i = 0; i < mapNodeCheck.data.items.length; i++) {
           const item = mapNodeCheck.data.items[i];
-          const itemCheck = z.object({ key: z.unknown(), value: z.unknown() }).safeParse(item);
-          if (!itemCheck.success) {continue;}
+          const itemCheck = z
+            .object({ key: z.unknown(), value: z.unknown() })
+            .safeParse(item);
+          if (!itemCheck.success) {
+            continue;
+          }
 
           // Get the key - validate it has a value property that's a string
-          const keyNodeCheck = z.object({ value: z.string() }).safeParse(itemCheck.data.key);
-          if (!keyNodeCheck.success) {continue;}
+          const keyNodeCheck = z
+            .object({ value: z.string() })
+            .safeParse(itemCheck.data.key);
+          if (!keyNodeCheck.success) {
+            continue;
+          }
 
           const key = keyNodeCheck.data.value;
           const newPath = [...keyPath, key];
@@ -648,28 +749,44 @@ export function parseYAMLCommentsWithMetadata(yamlContent: string): Map<string, 
 
           // Extract comment from the key's commentBefore
           let comment = "";
-          const keyCommentCheck = z.object({ commentBefore: z.unknown() }).safeParse(itemCheck.data.key);
+          const keyCommentCheck = z
+            .object({ commentBefore: z.unknown() })
+            .safeParse(itemCheck.data.key);
           if (keyCommentCheck.success) {
-            const commentCheck = z.string().safeParse(keyCommentCheck.data.commentBefore);
+            const commentCheck = z
+              .string()
+              .safeParse(keyCommentCheck.data.commentBefore);
             comment = commentCheck.success ? commentCheck.data : "";
           }
 
           // Also check the pair itself for comments
-          const pairCommentCheck = z.object({ commentBefore: z.unknown() }).safeParse(item);
+          const pairCommentCheck = z
+            .object({ commentBefore: z.unknown() })
+            .safeParse(item);
           if (pairCommentCheck.success) {
-            const pairCommentValue = z.string().safeParse(pairCommentCheck.data.commentBefore);
-            const pairComment = pairCommentValue.success ? pairCommentValue.data : "";
+            const pairCommentValue = z
+              .string()
+              .safeParse(pairCommentCheck.data.commentBefore);
+            const pairComment = pairCommentValue.success
+              ? pairCommentValue.data
+              : "";
             if (pairComment) {
               comment = comment ? `${pairComment}\n${comment}` : pairComment;
             }
           }
 
           // Check for inline comments on the value
-          const valueCommentCheck = z.object({ comment: z.unknown() }).safeParse(itemCheck.data.value);
+          const valueCommentCheck = z
+            .object({ comment: z.unknown() })
+            .safeParse(itemCheck.data.value);
           if (valueCommentCheck.success) {
-            const inlineComment = z.string().safeParse(valueCommentCheck.data.comment);
+            const inlineComment = z
+              .string()
+              .safeParse(valueCommentCheck.data.comment);
             if (inlineComment.success && inlineComment.data) {
-              comment = comment ? `${comment}\n${inlineComment.data}` : inlineComment.data;
+              comment = comment
+                ? `${comment}\n${inlineComment.data}`
+                : inlineComment.data;
             }
           }
 
@@ -734,9 +851,13 @@ export function parseYAMLCommentsWithMetadata(yamlContent: string): Map<string, 
 
           // Check if the value has a commentBefore (for nested structures)
           let valueInheritedComment = "";
-          const valueCommentBeforeCheck = z.object({ commentBefore: z.unknown() }).safeParse(itemCheck.data.value);
+          const valueCommentBeforeCheck = z
+            .object({ commentBefore: z.unknown() })
+            .safeParse(itemCheck.data.value);
           if (valueCommentBeforeCheck.success) {
-            const valueCommentBefore = z.string().safeParse(valueCommentBeforeCheck.data.commentBefore);
+            const valueCommentBefore = z
+              .string()
+              .safeParse(valueCommentBeforeCheck.data.commentBefore);
             if (valueCommentBefore.success) {
               valueInheritedComment = valueCommentBefore.data;
             }

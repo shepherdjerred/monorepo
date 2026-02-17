@@ -33,7 +33,7 @@ export type StorageClassInfo = {
   name: string;
   provisioner: string;
   is_default: boolean;
-}
+};
 
 /**
  * Configuration options for ClauderonClient
@@ -49,7 +49,7 @@ export type ClauderonClientConfig = {
    * Custom fetch implementation (useful for testing)
    */
   fetch?: typeof fetch;
-}
+};
 
 /**
  * Get the default base URL based on the current environment.
@@ -79,7 +79,10 @@ export class ClauderonClient {
    * List all sessions
    */
   async listSessions(): Promise<Session[]> {
-    const response = await this.request<{ sessions: Session[] }>("GET", "/api/sessions");
+    const response = await this.request<{ sessions: Session[] }>(
+      "GET",
+      "/api/sessions",
+    );
     return response.sessions;
   }
 
@@ -88,7 +91,10 @@ export class ClauderonClient {
    */
   async getSession(id: string): Promise<Session> {
     try {
-      const response = await this.request<{ session: Session }>("GET", `/api/sessions/${encodeURIComponent(id)}`);
+      const response = await this.request<{ session: Session }>(
+        "GET",
+        `/api/sessions/${encodeURIComponent(id)}`,
+      );
       return response.session;
     } catch (error) {
       if (error instanceof ApiError && error.statusCode === 404) {
@@ -101,11 +107,13 @@ export class ClauderonClient {
   /**
    * Create a new session
    */
-  async createSession(request: CreateSessionRequest): Promise<{ id: string; warnings?: string[] }> {
+  async createSession(
+    request: CreateSessionRequest,
+  ): Promise<{ id: string; warnings?: string[] }> {
     const response = await this.request<{ id: string; warnings?: string[] }>(
       "POST",
       "/api/sessions",
-      request
+      request,
     );
     return response;
   }
@@ -121,28 +129,40 @@ export class ClauderonClient {
    * Archive a session
    */
   async archiveSession(id: string): Promise<void> {
-    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/archive`);
+    await this.request(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/archive`,
+    );
   }
 
   /**
    * Unarchive a session
    */
   async unarchiveSession(id: string): Promise<void> {
-    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/unarchive`);
+    await this.request(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/unarchive`,
+    );
   }
 
   /**
    * Refresh a session (pull latest image and recreate container)
    */
   async refreshSession(id: string): Promise<void> {
-    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/refresh`);
+    await this.request(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/refresh`,
+    );
   }
 
   /**
    * Get health status of all sessions
    */
   async getHealth(): Promise<HealthCheckResult> {
-    const response = await this.request<HealthCheckResult>("GET", "/api/health");
+    const response = await this.request<HealthCheckResult>(
+      "GET",
+      "/api/health",
+    );
     return response;
   }
 
@@ -152,7 +172,7 @@ export class ClauderonClient {
   async getSessionHealth(id: string): Promise<SessionHealthReport> {
     const response = await this.request<SessionHealthReport>(
       "GET",
-      `/api/sessions/${encodeURIComponent(id)}/health`
+      `/api/sessions/${encodeURIComponent(id)}/health`,
     );
     return response;
   }
@@ -179,7 +199,7 @@ export class ClauderonClient {
   async recreateSession(id: string): Promise<RecreateResult> {
     const response = await this.request<RecreateResult>(
       "POST",
-      `/api/sessions/${encodeURIComponent(id)}/recreate`
+      `/api/sessions/${encodeURIComponent(id)}/recreate`,
     );
     return response;
   }
@@ -188,14 +208,20 @@ export class ClauderonClient {
    * Cleanup a session (remove from database when worktree is missing)
    */
   async cleanupSession(id: string): Promise<void> {
-    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/cleanup`);
+    await this.request(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/cleanup`,
+    );
   }
 
   /**
    * Get recent repositories
    */
   async getRecentRepos(): Promise<RecentRepoDto[]> {
-    const response = await this.request<{ repos: RecentRepoDto[] }>("GET", "/api/recent-repos");
+    const response = await this.request<{ repos: RecentRepoDto[] }>(
+      "GET",
+      "/api/recent-repos",
+    );
     return response.repos;
   }
 
@@ -205,7 +231,11 @@ export class ClauderonClient {
    */
   async browseDirectory(path: string): Promise<BrowseDirectoryResponse> {
     const request: BrowseDirectoryRequest = { path };
-    const response = await this.request<BrowseDirectoryResponse>("POST", "/api/browse-directory", request);
+    const response = await this.request<BrowseDirectoryResponse>(
+      "POST",
+      "/api/browse-directory",
+      request,
+    );
     return response;
   }
 
@@ -213,7 +243,11 @@ export class ClauderonClient {
    * Update session access mode
    */
   async updateAccessMode(id: string, mode: AccessMode): Promise<void> {
-    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/access-mode`, { access_mode: mode });
+    await this.request(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/access-mode`,
+      { access_mode: mode },
+    );
   }
 
   /**
@@ -222,12 +256,16 @@ export class ClauderonClient {
   async updateSessionMetadata(
     id: string,
     title?: string,
-    description?: string
+    description?: string,
   ): Promise<void> {
-    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/metadata`, {
-      title,
-      description,
-    });
+    await this.request(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/metadata`,
+      {
+        title,
+        description,
+      },
+    );
   }
 
   /**
@@ -235,7 +273,10 @@ export class ClauderonClient {
    * Returns the updated session with new title and description
    */
   async regenerateMetadata(id: string): Promise<Session> {
-    const response = await this.request<{ session: Session }>("POST", `/api/sessions/${encodeURIComponent(id)}/regenerate-metadata`);
+    const response = await this.request<{ session: Session }>(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/regenerate-metadata`,
+    );
     return response.session;
   }
 
@@ -245,12 +286,20 @@ export class ClauderonClient {
    * @param method Merge method to use (Merge, Squash, or Rebase)
    * @param deleteBranch Whether to delete the branch after merge
    */
-  async mergePr(id: string, method: MergeMethod, deleteBranch: boolean): Promise<void> {
+  async mergePr(
+    id: string,
+    method: MergeMethod,
+    deleteBranch: boolean,
+  ): Promise<void> {
     const request: MergePrRequest = {
       method,
       delete_branch: deleteBranch,
     };
-    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/merge-pr`, request);
+    await this.request(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/merge-pr`,
+      request,
+    );
   }
 
   /**
@@ -265,7 +314,10 @@ export class ClauderonClient {
    * Get feature flags configuration
    */
   async getFeatureFlags(): Promise<FeatureFlagsResponse> {
-    return await this.request<FeatureFlagsResponse>("GET", "/api/feature-flags");
+    return await this.request<FeatureFlagsResponse>(
+      "GET",
+      "/api/feature-flags",
+    );
   }
 
   /**
@@ -285,14 +337,16 @@ export class ClauderonClient {
    */
   async getStorageClasses(): Promise<StorageClassInfo[]> {
     try {
-      const response = await this.request<{ storage_classes: StorageClassInfo[] }>(
-        "GET",
-        "/api/storage-classes"
-      );
+      const response = await this.request<{
+        storage_classes: StorageClassInfo[];
+      }>("GET", "/api/storage-classes");
       return response.storage_classes;
     } catch (error) {
       // If endpoint not available or K8s not configured, return empty array
-      if (error instanceof ApiError && (error.statusCode === 404 || error.statusCode === 501)) {
+      if (
+        error instanceof ApiError &&
+        (error.statusCode === 404 || error.statusCode === 501)
+      ) {
         return [];
       }
       throw error;
@@ -309,7 +363,7 @@ export class ClauderonClient {
   async getSessionHistory(
     id: string,
     sinceLine?: number,
-    limit?: number
+    limit?: number,
   ): Promise<{ lines: string[]; totalLines: number; fileExists: boolean }> {
     const params = new URLSearchParams();
     if (sinceLine !== undefined) {
@@ -348,16 +402,28 @@ export class ClauderonClient {
   /**
    * Start passkey registration
    */
-  async registerStart(request: RegistrationStartRequest): Promise<RegistrationStartResponse> {
-    const response = await this.request<RegistrationStartResponse>("POST", "/api/auth/register/start", request);
+  async registerStart(
+    request: RegistrationStartRequest,
+  ): Promise<RegistrationStartResponse> {
+    const response = await this.request<RegistrationStartResponse>(
+      "POST",
+      "/api/auth/register/start",
+      request,
+    );
     return response;
   }
 
   /**
    * Finish passkey registration
    */
-  async registerFinish(request: RegistrationFinishRequest): Promise<RegistrationFinishResponse> {
-    const response = await this.request<RegistrationFinishResponse>("POST", "/api/auth/register/finish", request);
+  async registerFinish(
+    request: RegistrationFinishRequest,
+  ): Promise<RegistrationFinishResponse> {
+    const response = await this.request<RegistrationFinishResponse>(
+      "POST",
+      "/api/auth/register/finish",
+      request,
+    );
     return response;
   }
 
@@ -365,7 +431,11 @@ export class ClauderonClient {
    * Start passkey login
    */
   async loginStart(request: LoginStartRequest): Promise<LoginStartResponse> {
-    const response = await this.request<LoginStartResponse>("POST", "/api/auth/login/start", request);
+    const response = await this.request<LoginStartResponse>(
+      "POST",
+      "/api/auth/login/start",
+      request,
+    );
     return response;
   }
 
@@ -373,7 +443,11 @@ export class ClauderonClient {
    * Finish passkey login
    */
   async loginFinish(request: LoginFinishRequest): Promise<LoginFinishResponse> {
-    const response = await this.request<LoginFinishResponse>("POST", "/api/auth/login/finish", request);
+    const response = await this.request<LoginFinishResponse>(
+      "POST",
+      "/api/auth/login/finish",
+      request,
+    );
     return response;
   }
 
@@ -391,35 +465,36 @@ export class ClauderonClient {
    */
   async uploadImage(sessionId: string, file: File): Promise<UploadResponse> {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
 
     const url = `${this.baseUrl}/api/sessions/${encodeURIComponent(sessionId)}/upload`;
 
     try {
       const response = await this.fetch(url, {
-        method: 'POST',
+        method: "POST",
         body: formData,
-        credentials: 'include',
+        credentials: "include",
         // Don't set Content-Type header - browser will set it with boundary for multipart
       });
 
       if (!response.ok) {
-        const data = await response.json() as { error?: string };
+        const data = (await response.json()) as { error?: string };
         throw new ApiError(
-          data.error ?? `HTTP ${String(response.status)}: ${response.statusText}`,
+          data.error ??
+            `HTTP ${String(response.status)}: ${response.statusText}`,
           undefined,
-          response.status
+          response.status,
         );
       }
 
-      return await response.json() as UploadResponse;
+      return (await response.json()) as UploadResponse;
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
       }
       throw new NetworkError(
         `Failed to upload image: ${error instanceof Error ? error.message : String(error)}`,
-        error
+        error,
       );
     }
   }
@@ -430,7 +505,7 @@ export class ClauderonClient {
   private async request<T = void>(
     method: string,
     path: string,
-    body?: unknown
+    body?: unknown,
   ): Promise<T> {
     const url = `${this.baseUrl}${path}`;
 
@@ -449,7 +524,10 @@ export class ClauderonClient {
       const response = await this.fetch(url, init);
 
       // Handle empty responses (204 No Content, etc.)
-      if (response.status === 204 || response.headers.get("content-length") === "0") {
+      if (
+        response.status === 204 ||
+        response.headers.get("content-length") === "0"
+      ) {
         return undefined as T;
       }
 
@@ -460,9 +538,10 @@ export class ClauderonClient {
       if (!response.ok) {
         const errorData = data as { error?: string };
         throw new ApiError(
-          errorData.error ?? `HTTP ${String(response.status)}: ${response.statusText}`,
+          errorData.error ??
+            `HTTP ${String(response.status)}: ${response.statusText}`,
           undefined,
-          response.status
+          response.status,
         );
       }
 
@@ -473,7 +552,7 @@ export class ClauderonClient {
       }
       throw new NetworkError(
         `Failed to fetch ${method} ${path}: ${error instanceof Error ? error.message : String(error)}`,
-        error
+        error,
       );
     }
   }

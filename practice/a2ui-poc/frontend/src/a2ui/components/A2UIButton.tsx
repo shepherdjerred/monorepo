@@ -11,14 +11,22 @@ interface A2UIButtonProps {
   dataModel: Record<string, unknown>;
 }
 
-export function A2UIButton({ id, component, surfaceId, dataModel }: A2UIButtonProps) {
+export function A2UIButton({
+  id,
+  component,
+  surfaceId,
+  dataModel,
+}: A2UIButtonProps) {
   const { dispatchAction, surfaces } = useSurface();
   const surface = surfaces.get(surfaceId);
   const hasChild = surface?.components.has(component.child);
   const isLoading = surface?.actionLoading ?? false;
 
   const handleClick = () => {
-    const resolvedContext = resolveActionContext(component.action.context, dataModel);
+    const resolvedContext = resolveActionContext(
+      component.action.context,
+      dataModel,
+    );
     dispatchAction(surfaceId, id, component.action.name, resolvedContext);
   };
 
@@ -36,7 +44,10 @@ export function A2UIButton({ id, component, surfaceId, dataModel }: A2UIButtonPr
     >
       {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
       {hasChild ? (
-        <ComponentRenderer componentId={component.child} surfaceId={surfaceId} />
+        <ComponentRenderer
+          componentId={component.child}
+          surfaceId={surfaceId}
+        />
       ) : (
         "Button"
       )}

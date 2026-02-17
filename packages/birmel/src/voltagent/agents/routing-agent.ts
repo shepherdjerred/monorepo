@@ -2,7 +2,10 @@ import { Agent } from "@voltagent/core";
 import { openai } from "@ai-sdk/openai";
 import { getConfig } from "../../config/index.js";
 import { createMemory } from "../memory/index.js";
-import { SYSTEM_PROMPT, buildSystemPromptWithPersona } from "./system-prompt.js";
+import {
+  SYSTEM_PROMPT,
+  buildSystemPromptWithPersona,
+} from "./system-prompt.js";
 
 import { messagingAgent } from "./specialized/messaging-agent.js";
 import { serverAgent } from "./specialized/server-agent.js";
@@ -51,7 +54,12 @@ export const routingAgent = new Agent({
  * This is useful for dynamic persona injection per-request.
  */
 export function createRoutingAgentWithPersona(
-  personaContext?: { name: string; voice: string; markers: string; samples: string[] } | null
+  personaContext?: {
+    name: string;
+    voice: string;
+    markers: string;
+    samples: string[];
+  } | null,
 ) {
   return new Agent({
     name: "birmel-router",
@@ -79,6 +87,7 @@ export function createRoutingAgentWithPersona(
   });
 }
 
-
-
-export {SYSTEM_PROMPT, buildSystemPromptWithPersona} from "./system-prompt.js";
+export {
+  SYSTEM_PROMPT,
+  buildSystemPromptWithPersona,
+} from "./system-prompt.js";

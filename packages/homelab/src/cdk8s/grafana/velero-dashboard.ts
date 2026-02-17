@@ -29,7 +29,9 @@ export function createVeleroDashboard() {
   // Create namespace variable for storage monitoring
   const namespaceVariable = new dashboard.QueryVariableBuilder("namespace")
     .label("Namespace")
-    .query("label_values(kube_persistentvolumeclaim_resource_requests_storage_bytes, namespace)")
+    .query(
+      "label_values(kube_persistentvolumeclaim_resource_requests_storage_bytes, namespace)",
+    )
     .datasource(prometheusDatasource)
     .multi(true)
     .includeAll(true)
@@ -75,11 +77,15 @@ This usually means that Prometheus is not successfully scraping metrics from the
 
   const overallStatusPanel = new stat.PanelBuilder()
     .title("Overall Backup Status")
-    .description("Overall backup status. 1 = Healthy (no failures in last 24h), 0 = Unhealthy.")
+    .description(
+      "Overall backup status. 1 = Healthy (no failures in last 24h), 0 = Unhealthy.",
+    )
     .datasource(prometheusDatasource)
     .withTarget(
       new prometheus.DataqueryBuilder()
-        .expr(`count(increase(velero_backup_failure_total{schedule!=""}[24h]) > 0) == 0`)
+        .expr(
+          `count(increase(velero_backup_failure_total{schedule!=""}[24h]) > 0) == 0`,
+        )
         .legendFormat("Status"),
     )
     .gridPos({ x: 0, y: 4, w: 24, h: 4 })
@@ -102,7 +108,9 @@ This usually means that Prometheus is not successfully scraping metrics from the
       .title(title)
       .description(description)
       .datasource(prometheusDatasource)
-      .withTarget(new prometheus.DataqueryBuilder().expr(expr).legendFormat(legend))
+      .withTarget(
+        new prometheus.DataqueryBuilder().expr(expr).legendFormat(legend),
+      )
       .gridPos(gridPos);
 
     if (unit) {
@@ -135,11 +143,13 @@ This usually means that Prometheus is not successfully scraping metrics from the
       common.BigValueGraphMode.Area,
       1,
     ).thresholds(
-      new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-        { value: 0, color: "red" },
-        { value: 95, color: "yellow" },
-        { value: 99, color: "green" },
-      ]),
+      new dashboard.ThresholdsConfigBuilder()
+        .mode(dashboard.ThresholdsMode.Absolute)
+        .steps([
+          { value: 0, color: "red" },
+          { value: 95, color: "yellow" },
+          { value: 99, color: "green" },
+        ]),
     ),
   );
 
@@ -174,11 +184,13 @@ This usually means that Prometheus is not successfully scraping metrics from the
       "{{schedule}}",
       { x: 18, y: 9, w: 6, h: 4 },
     ).thresholds(
-      new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-        { value: 0, color: "green" },
-        { value: 1, color: "yellow" },
-        { value: 5, color: "red" },
-      ]),
+      new dashboard.ThresholdsConfigBuilder()
+        .mode(dashboard.ThresholdsMode.Absolute)
+        .steps([
+          { value: 0, color: "green" },
+          { value: 1, color: "yellow" },
+          { value: 5, color: "red" },
+        ]),
     ),
   );
 
@@ -218,11 +230,13 @@ This usually means that Prometheus is not successfully scraping metrics from the
       "{{schedule}}",
       { x: 12, y: 13, w: 6, h: 4 },
     ).thresholds(
-      new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-        { value: 0, color: "green" },
-        { value: 1, color: "yellow" },
-        { value: 5, color: "red" },
-      ]),
+      new dashboard.ThresholdsConfigBuilder()
+        .mode(dashboard.ThresholdsMode.Absolute)
+        .steps([
+          { value: 0, color: "green" },
+          { value: 1, color: "yellow" },
+          { value: 5, color: "red" },
+        ]),
     ),
   );
 
@@ -235,10 +249,12 @@ This usually means that Prometheus is not successfully scraping metrics from the
       "{{schedule}}",
       { x: 18, y: 13, w: 6, h: 4 },
     ).thresholds(
-      new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-        { value: 0, color: "red" },
-        { value: 1, color: "green" },
-      ]),
+      new dashboard.ThresholdsConfigBuilder()
+        .mode(dashboard.ThresholdsMode.Absolute)
+        .steps([
+          { value: 0, color: "red" },
+          { value: 1, color: "green" },
+        ]),
     ),
   );
 
@@ -282,11 +298,13 @@ This usually means that Prometheus is not successfully scraping metrics from the
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "red" },
-          { value: 95, color: "yellow" },
-          { value: 99, color: "green" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "red" },
+            { value: 95, color: "yellow" },
+            { value: 99, color: "green" },
+          ]),
       )
       .gridPos({ x: 12, y: 21, w: 12, h: 8 }),
   );
@@ -299,7 +317,9 @@ This usually means that Prometheus is not successfully scraping metrics from the
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`sum by (schedule) (rate(velero_backup_attempt_total{${buildScheduleFilter()}}[5m])) * 3600`)
+          .expr(
+            `sum by (schedule) (rate(velero_backup_attempt_total{${buildScheduleFilter()}}[5m])) * 3600`,
+          )
           .legendFormat("{{schedule}}"),
       )
       .unit("ops/hr")
@@ -326,11 +346,13 @@ This usually means that Prometheus is not successfully scraping metrics from the
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 1, color: "yellow" },
-          { value: 5, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 1, color: "yellow" },
+            { value: 5, color: "red" },
+          ]),
       )
       .gridPos({ x: 12, y: 29, w: 12, h: 8 }),
   );
@@ -386,11 +408,13 @@ This usually means that Prometheus is not successfully scraping metrics from the
       common.BigValueGraphMode.None,
       1,
     ).thresholds(
-      new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-        { value: 0, color: "red" },
-        { value: 50, color: "yellow" },
-        { value: 80, color: "green" },
-      ]),
+      new dashboard.ThresholdsConfigBuilder()
+        .mode(dashboard.ThresholdsMode.Absolute)
+        .steps([
+          { value: 0, color: "red" },
+          { value: 50, color: "yellow" },
+          { value: 80, color: "green" },
+        ]),
     ),
   );
 
@@ -409,7 +433,9 @@ This usually means that Prometheus is not successfully scraping metrics from the
       )
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{${buildNamespaceFilter()}})`)
+          .expr(
+            `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{${buildNamespaceFilter()}})`,
+          )
           .legendFormat("Total All PVCs"),
       )
       .unit("bytes")
@@ -518,11 +544,13 @@ This usually means that Prometheus is not successfully scraping metrics from the
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "red" },
-          { value: 95, color: "yellow" },
-          { value: 99, color: "green" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "red" },
+            { value: 95, color: "yellow" },
+            { value: 99, color: "green" },
+          ]),
       )
       .gridPos({ x: 0, y: 57, w: 12, h: 8 }),
   );
@@ -531,7 +559,9 @@ This usually means that Prometheus is not successfully scraping metrics from the
   builder.withPanel(
     new timeseries.PanelBuilder()
       .title("Backup Deletion Failures")
-      .description("Rate of backup deletion failures (may cause storage exhaustion)")
+      .description(
+        "Rate of backup deletion failures (may cause storage exhaustion)",
+      )
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
@@ -542,11 +572,13 @@ This usually means that Prometheus is not successfully scraping metrics from the
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 0.01, color: "yellow" },
-          { value: 0.1, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 0.01, color: "yellow" },
+            { value: 0.1, color: "red" },
+          ]),
       )
       .gridPos({ x: 12, y: 57, w: 12, h: 8 }),
   );

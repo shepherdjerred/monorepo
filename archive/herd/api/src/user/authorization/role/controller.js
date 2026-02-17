@@ -1,10 +1,10 @@
-const RoleModel = require('./model');
+const RoleModel = require("./model");
 
-async function addRole (req, res, next) {
+async function addRole(req, res, next) {
   let role = new RoleModel({
     name: req.body.name,
     namespace: req.body.namespace,
-    policies: req.body.policies
+    policies: req.body.policies,
   });
 
   try {
@@ -13,28 +13,28 @@ async function addRole (req, res, next) {
   } catch (err) {
     next({
       status: 500,
-      error: err
+      error: err,
     });
   }
 }
 
-async function getRoles (req, res, next) {
+async function getRoles(req, res, next) {
   try {
     let roles = await RoleModel.find();
     res.json(roles);
   } catch (err) {
     next({
       status: 500,
-      error: err
+      error: err,
     });
   }
 }
 
-async function getRole (req, res, next) {
+async function getRole(req, res, next) {
   res.json(res.locals.role);
 }
 
-async function updateRole (req, res, next) {
+async function updateRole(req, res, next) {
   let role = res.locals.role;
   role.name = req.body.name || role.name;
   role.namespace = req.body.namespace || role.namespace;
@@ -45,19 +45,19 @@ async function updateRole (req, res, next) {
   } catch (err) {
     next({
       status: 500,
-      error: err
+      error: err,
     });
   }
 }
 
-async function deleteRole (req, res, next) {
+async function deleteRole(req, res, next) {
   try {
     let role = await res.locals.role.remove();
     res.json(role);
   } catch (err) {
     next({
       status: 500,
-      error: err
+      error: err,
     });
   }
 }
@@ -67,5 +67,5 @@ module.exports = {
   getRoles,
   getRole,
   updateRole,
-  deleteRole
+  deleteRole,
 };

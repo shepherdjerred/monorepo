@@ -1,6 +1,14 @@
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { ConfigMap, Cpu, Deployment, DeploymentStrategy, EnvValue, Service, Volume } from "cdk8s-plus-31";
+import {
+  ConfigMap,
+  Cpu,
+  Deployment,
+  DeploymentStrategy,
+  EnvValue,
+  Service,
+  Volume,
+} from "cdk8s-plus-31";
 import { withCommonProps } from "../../misc/common.ts";
 import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
 import versions from "../../versions.ts";
@@ -53,7 +61,8 @@ export function createClickHouseDeployment(chart: Chart) {
     },
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "ClickHouse requires writable filesystem for runtime data",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "ClickHouse requires writable filesystem for runtime data",
       },
     },
   });
@@ -82,13 +91,21 @@ export function createClickHouseDeployment(chart: Chart) {
       volumeMounts: [
         {
           path: "/var/lib/clickhouse",
-          volume: Volume.fromPersistentVolumeClaim(chart, "clickhouse-data-volume", dataVolume.claim),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "clickhouse-data-volume",
+            dataVolume.claim,
+          ),
         },
         {
           // Use conf.d instead of config.d to avoid overwriting docker_related_config.xml
           // which contains critical listen_host settings
           path: "/etc/clickhouse-server/conf.d",
-          volume: Volume.fromConfigMap(chart, "clickhouse-config-volume", configMap),
+          volume: Volume.fromConfigMap(
+            chart,
+            "clickhouse-config-volume",
+            configMap,
+          ),
         },
       ],
       resources: {

@@ -30,7 +30,7 @@ You can also configure a watch face to share from within your app, on your websi
 
 ## [Platform considerations](/design/human-interface-guidelines/watch-faces#Platform-considerations)
 
-*Not supported in iOS, iPadOS, macOS, tvOS, or visionOS.*
+_Not supported in iOS, iPadOS, macOS, tvOS, or visionOS._
 
 ## [Resources](/design/human-interface-guidelines/watch-faces#Resources)
 

@@ -76,61 +76,61 @@ type UserOutput = z.output<typeof UserSchema>;
 ### Strings
 
 ```typescript
-z.string()                    // any string
-z.string().min(1)             // non-empty
-z.string().max(100)           // max length
-z.string().length(5)          // exact length
-z.string().email()            // email format
-z.string().url()              // URL format
-z.string().uuid()             // UUID format
-z.string().cuid()             // CUID format
-z.string().cuid2()            // CUID2 format
-z.string().ulid()             // ULID format
-z.string().regex(/^[a-z]+$/)  // custom regex
-z.string().includes("@")      // contains substring
-z.string().startsWith("http") // starts with
-z.string().endsWith(".com")   // ends with
-z.string().datetime()         // ISO datetime
-z.string().date()             // ISO date
-z.string().time()             // ISO time
-z.string().ip()               // IP address
-z.string().trim()             // trim whitespace (transform)
-z.string().toLowerCase()      // lowercase (transform)
-z.string().toUpperCase()      // uppercase (transform)
+z.string(); // any string
+z.string().min(1); // non-empty
+z.string().max(100); // max length
+z.string().length(5); // exact length
+z.string().email(); // email format
+z.string().url(); // URL format
+z.string().uuid(); // UUID format
+z.string().cuid(); // CUID format
+z.string().cuid2(); // CUID2 format
+z.string().ulid(); // ULID format
+z.string().regex(/^[a-z]+$/); // custom regex
+z.string().includes("@"); // contains substring
+z.string().startsWith("http"); // starts with
+z.string().endsWith(".com"); // ends with
+z.string().datetime(); // ISO datetime
+z.string().date(); // ISO date
+z.string().time(); // ISO time
+z.string().ip(); // IP address
+z.string().trim(); // trim whitespace (transform)
+z.string().toLowerCase(); // lowercase (transform)
+z.string().toUpperCase(); // uppercase (transform)
 ```
 
 ### Numbers
 
 ```typescript
-z.number()                    // any number
-z.number().int()              // integer only
-z.number().positive()         // > 0
-z.number().nonnegative()      // >= 0
-z.number().negative()         // < 0
-z.number().nonpositive()      // <= 0
-z.number().min(5)             // >= 5
-z.number().max(100)           // <= 100
-z.number().gt(5)              // > 5
-z.number().gte(5)             // >= 5 (alias for min)
-z.number().lt(100)            // < 100
-z.number().lte(100)           // <= 100 (alias for max)
-z.number().multipleOf(5)      // divisible by 5
-z.number().finite()           // not Infinity
-z.number().safe()             // within safe integer range
+z.number(); // any number
+z.number().int(); // integer only
+z.number().positive(); // > 0
+z.number().nonnegative(); // >= 0
+z.number().negative(); // < 0
+z.number().nonpositive(); // <= 0
+z.number().min(5); // >= 5
+z.number().max(100); // <= 100
+z.number().gt(5); // > 5
+z.number().gte(5); // >= 5 (alias for min)
+z.number().lt(100); // < 100
+z.number().lte(100); // <= 100 (alias for max)
+z.number().multipleOf(5); // divisible by 5
+z.number().finite(); // not Infinity
+z.number().safe(); // within safe integer range
 ```
 
 ### Other Primitives
 
 ```typescript
-z.boolean()                   // true or false
-z.bigint()                    // BigInt values
-z.date()                      // Date objects
-z.undefined()                 // undefined only
-z.null()                      // null only
-z.void()                      // undefined (for function returns)
-z.any()                       // bypass validation
-z.unknown()                   // any, but type-safe usage
-z.never()                     // always fails
+z.boolean(); // true or false
+z.bigint(); // BigInt values
+z.date(); // Date objects
+z.undefined(); // undefined only
+z.null(); // null only
+z.void(); // undefined (for function returns)
+z.any(); // bypass validation
+z.unknown(); // any, but type-safe usage
+z.never(); // always fails
 ```
 
 ## Coercion
@@ -139,11 +139,11 @@ Automatically convert input types before validation:
 
 ```typescript
 // String coercion
-z.coerce.string()   // String(input)
-z.coerce.number()   // Number(input)
-z.coerce.boolean()  // Boolean(input)
-z.coerce.bigint()   // BigInt(input)
-z.coerce.date()     // new Date(input)
+z.coerce.string(); // String(input)
+z.coerce.number(); // Number(input)
+z.coerce.boolean(); // Boolean(input)
+z.coerce.bigint(); // BigInt(input)
+z.coerce.date(); // new Date(input)
 
 // With validation
 const ageSchema = z.coerce.number().int().positive();
@@ -156,7 +156,7 @@ z.coerce.number().parse(""); // 0 (might not be desired)
 // Fix: preprocess to handle empty strings
 const safeNumber = z.preprocess(
   (val) => (val === "" ? undefined : val),
-  z.coerce.number()
+  z.coerce.number(),
 );
 ```
 
@@ -180,13 +180,13 @@ PersonSchema.parse({ name: "Bob", age: 30, extra: "ignored" });
 
 ```typescript
 // Standard - strips unknown keys
-z.object({ name: z.string() })
+z.object({ name: z.string() });
 
 // Loose - passes through unknown keys
-z.looseObject({ name: z.string() })
+z.looseObject({ name: z.string() });
 
 // Strict - rejects unknown keys
-z.strictObject({ name: z.string() })
+z.strictObject({ name: z.string() });
 ```
 
 ### Object Manipulation
@@ -238,10 +238,12 @@ const AddressSchema = z.object({
 const CompanySchema = z.object({
   name: z.string(),
   address: AddressSchema,
-  employees: z.array(z.object({
-    name: z.string(),
-    department: z.string(),
-  })),
+  employees: z.array(
+    z.object({
+      name: z.string(),
+      department: z.string(),
+    }),
+  ),
 });
 ```
 
@@ -250,11 +252,11 @@ const CompanySchema = z.object({
 ### Arrays
 
 ```typescript
-z.array(z.string())              // string[]
-z.array(z.string()).min(1)       // at least 1 element
-z.array(z.string()).max(10)      // at most 10 elements
-z.array(z.string()).length(5)    // exactly 5 elements
-z.array(z.string()).nonempty()   // same as .min(1)
+z.array(z.string()); // string[]
+z.array(z.string()).min(1); // at least 1 element
+z.array(z.string()).max(10); // at most 10 elements
+z.array(z.string()).length(5); // exactly 5 elements
+z.array(z.string()).nonempty(); // same as .min(1)
 
 // Access element schema
 const arr = z.array(z.string());
@@ -277,15 +279,15 @@ const ArgsSchema = z.tuple([z.string(), z.number()]).rest(z.boolean());
 
 ```typescript
 // Record<string, T>
-z.record(z.string(), z.number())     // { [key: string]: number }
-z.record(z.number())                 // shorthand for string keys
+z.record(z.string(), z.number()); // { [key: string]: number }
+z.record(z.number()); // shorthand for string keys
 
 // Map<K, V>
-z.map(z.string(), z.number())        // Map<string, number>
+z.map(z.string(), z.number()); // Map<string, number>
 
 // Set<T>
-z.set(z.string())                    // Set<string>
-z.set(z.number()).min(1).max(10)     // with size constraints
+z.set(z.string()); // Set<string>
+z.set(z.number()).min(1).max(10); // with size constraints
 ```
 
 ## Unions and Enums
@@ -335,47 +337,51 @@ type Status = z.infer<typeof StatusSchema>; // "pending" | "active" | "inactive"
 
 // Access values
 StatusSchema.options; // ["pending", "active", "inactive"]
-StatusSchema.enum;    // { pending: "pending", active: "active", ... }
+StatusSchema.enum; // { pending: "pending", active: "active", ... }
 
 // Extract or exclude values
 StatusSchema.extract(["pending", "active"]); // only these
-StatusSchema.exclude(["inactive"]);          // all except these
+StatusSchema.exclude(["inactive"]); // all except these
 
 // Native enum
-enum NativeStatus { Pending, Active, Inactive }
+enum NativeStatus {
+  Pending,
+  Active,
+  Inactive,
+}
 const NativeStatusSchema = z.nativeEnum(NativeStatus);
 ```
 
 ### Literals
 
 ```typescript
-z.literal("hello")        // exactly "hello"
-z.literal(42)             // exactly 42
-z.literal(true)           // exactly true
-z.null()                  // exactly null
-z.undefined()             // exactly undefined
+z.literal("hello"); // exactly "hello"
+z.literal(42); // exactly 42
+z.literal(true); // exactly true
+z.null(); // exactly null
+z.undefined(); // exactly undefined
 ```
 
 ## Optional, Nullable, Default
 
 ```typescript
 // Optional - allows undefined
-z.string().optional()     // string | undefined
+z.string().optional(); // string | undefined
 
 // Nullable - allows null
-z.string().nullable()     // string | null
+z.string().nullable(); // string | null
 
 // Nullish - allows null or undefined
-z.string().nullish()      // string | null | undefined
+z.string().nullish(); // string | null | undefined
 
 // Default values
-z.string().default("N/A")                    // static default
-z.number().default(() => Math.random())      // dynamic default
-z.date().default(() => new Date())           // current date
+z.string().default("N/A"); // static default
+z.number().default(() => Math.random()); // dynamic default
+z.date().default(() => new Date()); // current date
 
 // Catch - use default on any parse error
-z.number().catch(0)                          // returns 0 on error
-z.string().catch((ctx) => `Error: ${ctx.error.message}`)
+z.number().catch(0); // returns 0 on error
+z.string().catch((ctx) => `Error: ${ctx.error.message}`);
 
 // Unwrap optional/nullable
 const optStr = z.string().optional();
@@ -388,28 +394,22 @@ optStr.unwrap(); // z.string()
 
 ```typescript
 // Basic refine
-const PasswordSchema = z.string()
+const PasswordSchema = z
+  .string()
   .min(8, "Password must be at least 8 characters")
-  .refine(
-    (val) => /[A-Z]/.test(val),
-    "Password must contain uppercase letter"
-  )
-  .refine(
-    (val) => /[0-9]/.test(val),
-    "Password must contain number"
-  );
+  .refine((val) => /[A-Z]/.test(val), "Password must contain uppercase letter")
+  .refine((val) => /[0-9]/.test(val), "Password must contain number");
 
 // With custom error path
-const FormSchema = z.object({
-  password: z.string(),
-  confirmPassword: z.string(),
-}).refine(
-  (data) => data.password === data.confirmPassword,
-  {
+const FormSchema = z
+  .object({
+    password: z.string(),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"], // error appears on this field
-  }
-);
+  });
 ```
 
 ### SuperRefine (Multiple Issues)
@@ -440,16 +440,19 @@ const ComplexSchema = z.string().superRefine((val, ctx) => {
 // Transform output type
 const TrimmedString = z.string().transform((val) => val.trim());
 
-const NumberFromString = z.string()
+const NumberFromString = z
+  .string()
   .transform((val) => parseInt(val, 10))
   .pipe(z.number().int());
 
-const DateFromISO = z.string()
+const DateFromISO = z
+  .string()
   .datetime()
   .transform((val) => new Date(val));
 
 // Transform with validation
-const PositiveFromString = z.string()
+const PositiveFromString = z
+  .string()
   .transform((val, ctx) => {
     const num = parseInt(val, 10);
     if (isNaN(num)) {
@@ -470,13 +473,13 @@ const PositiveFromString = z.string()
 // Transform BEFORE parsing
 const TrimmedEmail = z.preprocess(
   (val) => (typeof val === "string" ? val.trim().toLowerCase() : val),
-  z.string().email()
+  z.string().email(),
 );
 
 // Handle empty strings
 const OptionalNumber = z.preprocess(
   (val) => (val === "" ? undefined : val),
-  z.coerce.number().optional()
+  z.coerce.number().optional(),
 );
 ```
 
@@ -484,12 +487,14 @@ const OptionalNumber = z.preprocess(
 
 ```typescript
 // Chain multiple schemas
-const ParsedInt = z.string()
+const ParsedInt = z
+  .string()
   .transform((val) => parseInt(val, 10))
   .pipe(z.number().int().positive());
 
 // With intermediate validation
-const EmailDomain = z.string()
+const EmailDomain = z
+  .string()
   .email()
   .pipe(z.string().endsWith("@company.com"));
 ```
@@ -506,9 +511,8 @@ z.string().min(5, { message: "Too short" });
 // Schema-level errors
 z.string("Expected a string");
 z.string({
-  error: (issue) => issue.input === undefined
-    ? "Field is required"
-    : "Must be a string",
+  error: (issue) =>
+    issue.input === undefined ? "Field is required" : "Must be a string",
 });
 ```
 
@@ -567,7 +571,9 @@ const PostId = z.string().uuid().brand<"PostId">();
 type UserId = z.infer<typeof UserId>;
 type PostId = z.infer<typeof PostId>;
 
-function getUser(id: UserId) { /* ... */ }
+function getUser(id: UserId) {
+  /* ... */
+}
 
 const userId = UserId.parse("550e8400-e29b-41d4-a716-446655440000");
 const postId = PostId.parse("550e8400-e29b-41d4-a716-446655440000");
@@ -588,7 +594,7 @@ const CategorySchema: z.ZodType<Category> = z.lazy(() =>
   z.object({
     name: z.string(),
     subcategories: z.array(CategorySchema),
-  })
+  }),
 );
 ```
 
@@ -604,16 +610,14 @@ const JsonValue: z.ZodType<unknown> = z.lazy(() =>
     z.null(),
     z.array(JsonValue),
     z.record(JsonValue),
-  ])
+  ]),
 );
 ```
 
 ### Function Schemas
 
 ```typescript
-const FnSchema = z.function()
-  .args(z.string(), z.number())
-  .returns(z.boolean());
+const FnSchema = z.function().args(z.string(), z.number()).returns(z.boolean());
 
 type Fn = z.infer<typeof FnSchema>;
 // (args_0: string, args_1: number) => boolean
@@ -626,15 +630,13 @@ const validated = FnSchema.implement((name, age) => {
 ### Async Validation
 
 ```typescript
-const UniqueEmailSchema = z.string()
+const UniqueEmailSchema = z
+  .string()
   .email()
-  .refine(
-    async (email) => {
-      const exists = await checkEmailExists(email);
-      return !exists;
-    },
-    "Email already taken"
-  );
+  .refine(async (email) => {
+    const exists = await checkEmailExists(email);
+    return !exists;
+  }, "Email already taken");
 
 // Must use async parse
 const result = await UniqueEmailSchema.safeParseAsync("test@example.com");
@@ -679,14 +681,10 @@ const CreateUserSchema = z.object({
   email: z.string().email(),
 });
 
-app.post(
-  "/users",
-  zValidator("json", CreateUserSchema),
-  async (c) => {
-    const data = c.req.valid("json");
-    // data is fully typed
-  }
-);
+app.post("/users", zValidator("json", CreateUserSchema), async (c) => {
+  const data = c.req.valid("json");
+  // data is fully typed
+});
 ```
 
 ### Environment Variables
@@ -695,7 +693,9 @@ app.post(
 const EnvSchema = z.object({
   DATABASE_URL: z.string().url(),
   PORT: z.coerce.number().default(3000),
-  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  NODE_ENV: z
+    .enum(["development", "production", "test"])
+    .default("development"),
   API_KEY: z.string().min(1),
 });
 

@@ -2,7 +2,8 @@ import { AST_NODE_TYPES, ESLintUtils } from "@typescript-eslint/utils";
 import type { TSESTree } from "@typescript-eslint/utils";
 
 const createRule = ESLintUtils.RuleCreator(
-  (name) => `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
+  (name) =>
+    `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
 );
 
 export const noTypeGuards = createRule({
@@ -24,7 +25,9 @@ export const noTypeGuards = createRule({
     /**
      * Check if a return type annotation is a type predicate (e.g., "value is Type")
      */
-    function isTypePredicate(node: TSESTree.TSTypeAnnotation | undefined): boolean {
+    function isTypePredicate(
+      node: TSESTree.TSTypeAnnotation | undefined,
+    ): boolean {
       if (!node) {
         return false;
       }
@@ -40,7 +43,9 @@ export const noTypeGuards = createRule({
     /**
      * Check if a function declaration has a type predicate return type
      */
-    function checkFunctionDeclaration(node: TSESTree.FunctionDeclaration): void {
+    function checkFunctionDeclaration(
+      node: TSESTree.FunctionDeclaration,
+    ): void {
       if (isTypePredicate(node.returnType)) {
         context.report({
           node,
@@ -81,7 +86,9 @@ export const noTypeGuards = createRule({
     /**
      * Check if a method has a type predicate return type
      */
-    function checkMethod(node: TSESTree.MethodDefinition | TSESTree.TSMethodSignature): void {
+    function checkMethod(
+      node: TSESTree.MethodDefinition | TSESTree.TSMethodSignature,
+    ): void {
       // TSMethodSignature has returnType, MethodDefinition has value.returnType
       const returnType =
         node.type === AST_NODE_TYPES.TSMethodSignature

@@ -29,6 +29,7 @@ on_create = "echo 'Created: $SESSION_NAME' >> ~/clauderon-events.log"
 ```
 
 Use cases:
+
 - Logging session creation
 - Sending notifications
 - Creating associated resources
@@ -43,6 +44,7 @@ on_delete = "/usr/local/bin/archive-session.sh $SESSION_NAME"
 ```
 
 Use cases:
+
 - Archiving session data
 - Cleaning up external resources
 - Final logging
@@ -57,6 +59,7 @@ on_start = "curl -X POST https://slack.webhook.url -d '{\"text\": \"Session star
 ```
 
 Use cases:
+
 - Notifications
 - Starting related services
 - Metrics tracking
@@ -71,6 +74,7 @@ on_stop = "curl -X POST https://slack.webhook.url -d '{\"text\": \"Session stopp
 ```
 
 Use cases:
+
 - Notifications
 - Stopping related services
 - Cleanup tasks
@@ -79,15 +83,15 @@ Use cases:
 
 Hooks receive these environment variables:
 
-| Variable | Description |
-|----------|-------------|
-| `SESSION_NAME` | Name of the session |
-| `SESSION_ID` | Unique session ID |
-| `BACKEND` | Backend type (zellij, docker, etc.) |
-| `AGENT` | Agent type (claude, codex, gemini) |
-| `ACCESS_MODE` | Access mode (read-only, read-write) |
-| `REPO_PATH` | Path to the git repository |
-| `WORKTREE_PATH` | Path to the worktree |
+| Variable        | Description                         |
+| --------------- | ----------------------------------- |
+| `SESSION_NAME`  | Name of the session                 |
+| `SESSION_ID`    | Unique session ID                   |
+| `BACKEND`       | Backend type (zellij, docker, etc.) |
+| `AGENT`         | Agent type (claude, codex, gemini)  |
+| `ACCESS_MODE`   | Access mode (read-only, read-write) |
+| `REPO_PATH`     | Path to the git repository          |
+| `WORKTREE_PATH` | Path to the worktree                |
 
 ## Examples
 

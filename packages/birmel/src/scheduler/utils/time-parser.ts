@@ -8,7 +8,7 @@ export type ParsedTime = {
   confidence: "high" | "medium" | "low";
   originalText: string;
   parsedText: string;
-}
+};
 
 /**
  * Parse natural language time expression to a Date
@@ -44,10 +44,13 @@ export function parseNaturalTime(
 
     // If parsed date is in the past, return null
     if (date < now) {
-      logger.debug(`Parsed time is in the past: "${text}" -> ${date.toISOString()}`, {
-        now,
-        date,
-      });
+      logger.debug(
+        `Parsed time is in the past: "${text}" -> ${date.toISOString()}`,
+        {
+          now,
+          date,
+        },
+      );
       return null;
     }
 

@@ -16,11 +16,9 @@ import * as t from "@babel/types";
 
 // Handle ESM/CJS interop for Babel packages
 const traverse =
-  (_traverse as unknown as { default?: typeof _traverse }).default ??
-  _traverse;
+  (_traverse as unknown as { default?: typeof _traverse }).default ?? _traverse;
 const generate =
-  (_generate as unknown as { default?: typeof _generate }).default ??
-  _generate;
+  (_generate as unknown as { default?: typeof _generate }).default ?? _generate;
 
 /** Rename mapping for a single function */
 export type FunctionRenameMapping = {
@@ -30,10 +28,10 @@ export type FunctionRenameMapping = {
   description?: string;
   /** Identifier renames: old name -> new name */
   renames: Record<string, string>;
-}
+};
 
 /** Rename mappings for multiple functions, keyed by function ID */
-export type RenameMappings = Record<string, FunctionRenameMapping>
+export type RenameMappings = Record<string, FunctionRenameMapping>;
 
 /** Options for the renamer */
 export type RenamerOptions = {
@@ -41,7 +39,7 @@ export type RenamerOptions = {
   addComments?: boolean;
   /** Whether to preserve existing comments */
   preserveComments?: boolean;
-}
+};
 
 /**
  * Generate a unique function ID based on position in source.
@@ -72,9 +70,12 @@ function getFunctionId(path: NodePath<t.Function>): string {
     } else if (t.isObjectProperty(parent) && t.isIdentifier(parent.key)) {
       name = parent.key.name;
     }
-  } else if ((t.isObjectMethod(node) || t.isClassMethod(node)) && t.isIdentifier(node.key)) {
-      name = node.key.name;
-    }
+  } else if (
+    (t.isObjectMethod(node) || t.isClassMethod(node)) &&
+    t.isIdentifier(node.key)
+  ) {
+    name = node.key.name;
+  }
 
   return `${name}_${String(start)}_${String(end)}`;
 }
@@ -98,7 +99,9 @@ function handleFunction(
 
   // Apply identifier renames within this function's scope
   for (const [oldName, newName] of Object.entries(mapping.renames)) {
-    if (oldName === newName) {continue;}
+    if (oldName === newName) {
+      continue;
+    }
 
     // Check if this binding exists in this scope
     const binding = path.scope.getBinding(oldName);
@@ -116,13 +119,15 @@ function handleFunction(
         // Rename at the scope where the function is declared
         path.parentPath.scope.rename(oldFuncName, mapping.functionName);
       }
-    } else if (t.isVariableDeclarator(path.parent) && // Arrow function or function expression assigned to variable
-      t.isIdentifier(path.parent.id)) {
-        const oldVarName = path.parent.id.name;
-        if (oldVarName !== mapping.functionName) {
-          path.parentPath.scope.rename(oldVarName, mapping.functionName);
-        }
+    } else if (
+      t.isVariableDeclarator(path.parent) && // Arrow function or function expression assigned to variable
+      t.isIdentifier(path.parent.id)
+    ) {
+      const oldVarName = path.parent.id.name;
+      if (oldVarName !== mapping.functionName) {
+        path.parentPath.scope.rename(oldVarName, mapping.functionName);
       }
+    }
   }
 
   // Add description comment if provided
@@ -169,10 +174,7 @@ export function applyRenames(
   // Parse the source code
   const ast = babel.parseSync(source, {
     sourceType: "module",
-    plugins: [
-      "@babel/plugin-syntax-jsx",
-      "@babel/plugin-syntax-typescript",
-    ],
+    plugins: ["@babel/plugin-syntax-jsx", "@babel/plugin-syntax-typescript"],
     // Preserve comments for output
     ...(preserveComments ? {} : { comments: false }),
   });
@@ -250,13 +252,12 @@ export function extractIdentifiers(source: string): string[] {
   try {
     const ast = babel.parseSync(source, {
       sourceType: "module",
-      plugins: [
-        "@babel/plugin-syntax-jsx",
-        "@babel/plugin-syntax-typescript",
-      ],
+      plugins: ["@babel/plugin-syntax-jsx", "@babel/plugin-syntax-typescript"],
     });
 
-    if (!ast) {return [];}
+    if (!ast) {
+      return [];
+    }
 
     traverse(ast, {
       Identifier(path) {

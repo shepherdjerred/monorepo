@@ -22,6 +22,7 @@ GET /health
 ```
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -38,9 +39,11 @@ GET /api/sessions
 ```
 
 **Query Parameters:**
+
 - `include_archived` - Include archived sessions (default: false)
 
 **Response:**
+
 ```json
 {
   "sessions": [
@@ -69,6 +72,7 @@ GET /api/sessions/:id
 ```
 
 **Response:**
+
 ```json
 {
   "id": "uuid",
@@ -104,6 +108,7 @@ POST /api/sessions
 ```
 
 **Request Body (Single Repository):**
+
 ```json
 {
   "repo_path": "/home/user/project",
@@ -117,6 +122,7 @@ POST /api/sessions
 ```
 
 **Request Body (Multi-Repository):**
+
 ```json
 {
   "name": "multi-repo-session",
@@ -139,29 +145,31 @@ POST /api/sessions
 
 **Parameters:**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `repo_path` | string | Yes* | Path to single repository |
-| `repositories` | array | Yes* | Array of repositories (multi-repo) |
-| `prompt` | string | Yes | Initial prompt for agent |
-| `backend` | string | No | Backend type (default: configured default) |
-| `agent` | string | No | Agent type (default: "claude") |
-| `access_mode` | string | No | Access mode (default: "read-write") |
-| `no_plan_mode` | boolean | No | Disable plan mode (default: false) |
-| `model` | string | No | AI model override (default: "claude-sonnet-4-5") |
-| `name` | string | No | Custom session name |
-| `base_branch` | string | No | Git base branch |
-| `image_paths` | array | No | Paths to images to attach |
+| Field          | Type    | Required | Description                                      |
+| -------------- | ------- | -------- | ------------------------------------------------ |
+| `repo_path`    | string  | Yes\*    | Path to single repository                        |
+| `repositories` | array   | Yes\*    | Array of repositories (multi-repo)               |
+| `prompt`       | string  | Yes      | Initial prompt for agent                         |
+| `backend`      | string  | No       | Backend type (default: configured default)       |
+| `agent`        | string  | No       | Agent type (default: "claude")                   |
+| `access_mode`  | string  | No       | Access mode (default: "read-write")              |
+| `no_plan_mode` | boolean | No       | Disable plan mode (default: false)               |
+| `model`        | string  | No       | AI model override (default: "claude-sonnet-4-5") |
+| `name`         | string  | No       | Custom session name                              |
+| `base_branch`  | string  | No       | Git base branch                                  |
+| `image_paths`  | array   | No       | Paths to images to attach                        |
 
 \* Either `repo_path` or `repositories` required (not both)
 
 **Repository object:**
+
 - `path` - Absolute path to repository
 - `mount_name` - Unique mount name (alphanumeric, hyphens, underscores)
 
 **Model options:**
 
 See [Model Selection Guide](/guides/model-selection/) for full list. Examples:
+
 - `claude-opus-4-5` - Most capable Claude
 - `claude-sonnet-4-5` - Default balanced Claude
 - `claude-haiku-4-5` - Fastest Claude
@@ -169,11 +177,13 @@ See [Model Selection Guide](/guides/model-selection/) for full list. Examples:
 - `gemini-3-pro` - Gemini with 1M context
 
 **Access mode options:**
+
 - `read-only` - Agent can read files only
 - `read-write` - Agent can read and write files
 - `full-access` - Agent has full system access
 
 **Response:**
+
 ```json
 {
   "id": "uuid",
@@ -191,6 +201,7 @@ See [Model Selection Guide](/guides/model-selection/) for full list. Examples:
 ```
 
 **Multi-Repository Limitations:**
+
 - Maximum 5 repositories per session
 - Kubernetes backend not fully supported (TODO)
 - Mount names must be unique
@@ -207,9 +218,11 @@ DELETE /api/sessions/:id
 ```
 
 **Query Parameters:**
+
 - `force` - Force delete without confirmation (default: false)
 
 **Response:**
+
 ```json
 {
   "success": true
@@ -225,6 +238,7 @@ POST /api/sessions/:id/archive
 ```
 
 **Response:**
+
 ```json
 {
   "success": true
@@ -240,6 +254,7 @@ POST /api/sessions/:id/unarchive
 ```
 
 **Response:**
+
 ```json
 {
   "success": true
@@ -255,6 +270,7 @@ PUT /api/sessions/:id/access-mode
 ```
 
 **Request Body:**
+
 ```json
 {
   "access_mode": "read-only"
@@ -262,6 +278,7 @@ PUT /api/sessions/:id/access-mode
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -278,6 +295,7 @@ POST /api/sessions/:id/refresh
 ```
 
 **Response:**
+
 ```json
 {
   "success": true
@@ -293,6 +311,7 @@ POST /api/sessions/:id/start
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -301,6 +320,7 @@ POST /api/sessions/:id/start
 ```
 
 **Use cases:**
+
 - Resume stopped Docker container
 - Restart session after manual stop
 - Wake from non-hibernated stop state
@@ -314,6 +334,7 @@ POST /api/sessions/:id/wake
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -323,6 +344,7 @@ POST /api/sessions/:id/wake
 ```
 
 **Backend support:**
+
 - ✅ Sprites (hibernation/wake)
 - ❌ Other backends (use start instead)
 
@@ -335,6 +357,7 @@ POST /api/sessions/:id/recreate
 ```
 
 **Request Body (optional):**
+
 ```json
 {
   "fresh": false,
@@ -343,6 +366,7 @@ POST /api/sessions/:id/recreate
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -356,11 +380,13 @@ POST /api/sessions/:id/recreate
 ```
 
 **Preserves:**
+
 - Session metadata and chat history
 - Git repository (committed and uncommitted changes)
 - Configuration
 
 **Rebuilds:**
+
 - Container
 - Environment
 - Running processes
@@ -374,6 +400,7 @@ POST /api/sessions/:id/recreate-fresh
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -387,10 +414,12 @@ POST /api/sessions/:id/recreate-fresh
 ```
 
 **Preserves:**
+
 - Session metadata and chat history
 - Configuration
 
 **Rebuilds:**
+
 - Container
 - Git repository (fresh clone, uncommitted changes lost)
 
@@ -403,18 +432,16 @@ POST /api/sessions/:id/cleanup
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
-  "resources_cleaned": [
-    "container",
-    "volumes",
-    "worktree"
-  ]
+  "resources_cleaned": ["container", "volumes", "worktree"]
 }
 ```
 
 **Use cases:**
+
 - Remove orphaned resources
 - Free disk space while keeping metadata
 - Prepare for recreation
@@ -428,6 +455,7 @@ GET /api/sessions/:id/health
 ```
 
 **Response:**
+
 ```json
 {
   "session_id": "uuid",
@@ -438,11 +466,7 @@ GET /api/sessions/:id/health
     "error_message": "OCI runtime error",
     "backend": "docker"
   },
-  "available_actions": [
-    "recreate",
-    "recreate_fresh",
-    "cleanup"
-  ],
+  "available_actions": ["recreate", "recreate_fresh", "cleanup"],
   "data_preservation": {
     "recreate": true,
     "recreate_fresh": false,
@@ -459,6 +483,7 @@ GET /api/sessions/:id/health
 ```
 
 **Health states:**
+
 - `Healthy` - Session running normally
 - `Stopped` - Container stopped
 - `Hibernated` - Session suspended (Sprites)
@@ -478,6 +503,7 @@ POST /api/sessions/:id/metadata
 ```
 
 **Request Body:**
+
 ```json
 {
   "name": "new-session-name",
@@ -487,6 +513,7 @@ POST /api/sessions/:id/metadata
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -507,6 +534,7 @@ POST /api/sessions/:id/regenerate-metadata
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -519,6 +547,7 @@ POST /api/sessions/:id/regenerate-metadata
 ```
 
 **Requirements:**
+
 - AI metadata feature enabled (`ai_metadata = true`)
 - Session has chat history
 - AI API credentials configured
@@ -545,6 +574,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -569,6 +599,7 @@ POST /api/browse-directory
 ```
 
 **Request Body:**
+
 ```json
 {
   "path": "/home/user/projects",
@@ -577,6 +608,7 @@ POST /api/browse-directory
 ```
 
 **Response:**
+
 ```json
 {
   "current_path": "/home/user/projects",
@@ -601,6 +633,7 @@ POST /api/browse-directory
 ```
 
 **Use cases:**
+
 - Directory picker in Web UI
 - Repository selection
 - Git repository discovery
@@ -614,6 +647,7 @@ GET /api/storage-classes
 ```
 
 **Response:**
+
 ```json
 {
   "storage_classes": [
@@ -642,6 +676,7 @@ GET /api/config
 ```
 
 **Response:**
+
 ```json
 {
   "default_backend": "zellij",
@@ -662,6 +697,7 @@ GET /api/credentials
 ```
 
 **Response:**
+
 ```json
 {
   "credentials": {
@@ -714,6 +750,7 @@ All messages are JSON:
 Subscribe to session updates.
 
 **Send:**
+
 ```json
 {
   "type": "subscribe",
@@ -722,6 +759,7 @@ Subscribe to session updates.
 ```
 
 **Receive (acknowledgment):**
+
 ```json
 {
   "type": "subscribed",
@@ -734,6 +772,7 @@ Subscribe to session updates.
 Receive real-time session updates.
 
 **Status Change:**
+
 ```json
 {
   "type": "session_status",
@@ -743,6 +782,7 @@ Receive real-time session updates.
 ```
 
 **Chat Message:**
+
 ```json
 {
   "type": "chat_message",
@@ -755,6 +795,7 @@ Receive real-time session updates.
 ```
 
 **Tool Call:**
+
 ```json
 {
   "type": "tool_call",
@@ -769,6 +810,7 @@ Receive real-time session updates.
 ```
 
 **Tool Result:**
+
 ```json
 {
   "type": "tool_result",
@@ -783,6 +825,7 @@ Receive real-time session updates.
 ### Unsubscribe
 
 **Send:**
+
 ```json
 {
   "type": "unsubscribe",
@@ -795,6 +838,7 @@ Receive real-time session updates.
 Send a message to an active session.
 
 **Send:**
+
 ```json
 {
   "type": "send_message",
@@ -808,6 +852,7 @@ Send a message to an active session.
 Keep the connection alive.
 
 **Send:**
+
 ```json
 {
   "type": "ping"
@@ -815,6 +860,7 @@ Keep the connection alive.
 ```
 
 **Receive:**
+
 ```json
 {
   "type": "pong"
@@ -836,11 +882,13 @@ ws://localhost:3030/ws/console/{sessionId}
 The terminal console uses a binary protocol for terminal data:
 
 **Client to Server (Input):**
+
 ```
 Binary data (user input keystrokes)
 ```
 
 **Server to Client (Output):**
+
 ```
 Binary data (terminal output, escape sequences)
 ```
@@ -850,6 +898,7 @@ Binary data (terminal output, escape sequences)
 Send terminal resize events:
 
 **Send:**
+
 ```json
 {
   "type": "resize",
@@ -867,31 +916,34 @@ ws://localhost:3030/ws/console/{sessionId}?cols=120&rows=40
 ```
 
 **Query parameters:**
+
 - `cols` - Initial terminal columns (default: 80)
 - `rows` - Initial terminal rows (default: 24)
 
 #### Example (JavaScript with xterm.js)
 
 ```javascript
-import { Terminal } from 'xterm';
-import { WebglAddon } from 'xterm-addon-webgl';
-import { FitAddon } from 'xterm-addon-fit';
+import { Terminal } from "xterm";
+import { WebglAddon } from "xterm-addon-webgl";
+import { FitAddon } from "xterm-addon-fit";
 
 const term = new Terminal();
 const fitAddon = new FitAddon();
 term.loadAddon(fitAddon);
-term.open(document.getElementById('terminal'));
+term.open(document.getElementById("terminal"));
 fitAddon.fit();
 
 const ws = new WebSocket(`ws://localhost:3030/ws/console/${sessionId}`);
 
 ws.onopen = () => {
   // Send initial terminal size
-  ws.send(JSON.stringify({
-    type: 'resize',
-    cols: term.cols,
-    rows: term.rows
-  }));
+  ws.send(
+    JSON.stringify({
+      type: "resize",
+      cols: term.cols,
+      rows: term.rows,
+    }),
+  );
 };
 
 // Forward terminal input to WebSocket
@@ -911,13 +963,15 @@ ws.onmessage = (event) => {
 };
 
 // Handle terminal resize
-window.addEventListener('resize', () => {
+window.addEventListener("resize", () => {
   fitAddon.fit();
-  ws.send(JSON.stringify({
-    type: 'resize',
-    cols: term.cols,
-    rows: term.rows
-  }));
+  ws.send(
+    JSON.stringify({
+      type: "resize",
+      cols: term.cols,
+      rows: term.rows,
+    }),
+  );
 });
 ```
 
@@ -930,6 +984,7 @@ window.addEventListener('resize', () => {
    - Server → Client: Terminal output (text, ANSI escape codes)
 
 2. **Resize (JSON)** - Terminal size change
+
    ```json
    {
      "type": "resize",
@@ -975,14 +1030,14 @@ All errors follow this format:
 
 ### Error Codes
 
-| Code | HTTP Status | Description |
-|------|-------------|-------------|
-| `SESSION_NOT_FOUND` | 404 | Session doesn't exist |
-| `BACKEND_ERROR` | 500 | Backend operation failed |
-| `INVALID_REQUEST` | 400 | Invalid request body |
-| `UNAUTHORIZED` | 401 | Authentication required |
-| `FORBIDDEN` | 403 | Operation not allowed |
-| `CONFLICT` | 409 | Resource already exists |
+| Code                | HTTP Status | Description              |
+| ------------------- | ----------- | ------------------------ |
+| `SESSION_NOT_FOUND` | 404         | Session doesn't exist    |
+| `BACKEND_ERROR`     | 500         | Backend operation failed |
+| `INVALID_REQUEST`   | 400         | Invalid request body     |
+| `UNAUTHORIZED`      | 401         | Authentication required  |
+| `FORBIDDEN`         | 403         | Operation not allowed    |
+| `CONFLICT`          | 409         | Resource already exists  |
 
 ## Authentication
 
@@ -1007,6 +1062,7 @@ No rate limiting is applied by default. For production deployments behind a reve
 ## CORS
 
 The API allows requests from:
+
 - Same origin
 - `http://localhost:*`
 - `http://127.0.0.1:*`
@@ -1031,7 +1087,7 @@ curl -X POST http://localhost:3030/api/sessions \
 ### List Sessions (JavaScript)
 
 ```javascript
-const response = await fetch('http://localhost:3030/api/sessions');
+const response = await fetch("http://localhost:3030/api/sessions");
 const data = await response.json();
 console.log(data.sessions);
 ```
@@ -1039,18 +1095,20 @@ console.log(data.sessions);
 ### WebSocket Connection (JavaScript)
 
 ```javascript
-const ws = new WebSocket('ws://localhost:3030/ws');
+const ws = new WebSocket("ws://localhost:3030/ws");
 
 ws.onopen = () => {
-  ws.send(JSON.stringify({
-    type: 'subscribe',
-    session_id: 'uuid'
-  }));
+  ws.send(
+    JSON.stringify({
+      type: "subscribe",
+      session_id: "uuid",
+    }),
+  );
 };
 
 ws.onmessage = (event) => {
   const message = JSON.parse(event.data);
-  console.log('Received:', message);
+  console.log("Received:", message);
 };
 ```
 

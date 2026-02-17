@@ -62,7 +62,10 @@ export function Sessions({
     <div style={styles.container}>
       <div style={styles.header}>
         <h2 style={styles.title}>Sessions</h2>
-        <button onClick={() => setShowNewForm(!showNewForm)} style={styles.newButton}>
+        <button
+          onClick={() => setShowNewForm(!showNewForm)}
+          style={styles.newButton}
+        >
           {showNewForm ? "Cancel" : "+ New"}
         </button>
       </div>
@@ -85,7 +88,11 @@ export function Sessions({
             style={styles.input}
             disabled={creating}
           />
-          <button type="submit" disabled={creating || !repoUrl} style={styles.createButton}>
+          <button
+            type="submit"
+            disabled={creating || !repoUrl}
+            style={styles.createButton}
+          >
             {creating ? "Creating..." : "Create Session"}
           </button>
           {error && <div style={styles.error}>{error}</div>}
@@ -101,7 +108,9 @@ export function Sessions({
           sessions.map((session) => (
             <div
               key={session.id}
-              onClick={() => session.status === "running" && onSelectSession(session.id)}
+              onClick={() =>
+                session.status === "running" && onSelectSession(session.id)
+              }
               style={{
                 ...styles.session,
                 ...(activeSessionId === session.id ? styles.activeSession : {}),
@@ -109,7 +118,9 @@ export function Sessions({
               }}
             >
               <div style={styles.sessionInfo}>
-                <div style={styles.repoName}>{getRepoName(session.repoUrl)}</div>
+                <div style={styles.repoName}>
+                  {getRepoName(session.repoUrl)}
+                </div>
                 <div style={styles.branchName}>{session.branch}</div>
               </div>
               <div style={styles.sessionMeta}>

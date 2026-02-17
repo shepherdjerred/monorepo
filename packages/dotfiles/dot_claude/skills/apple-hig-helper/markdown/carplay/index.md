@@ -49,11 +49,11 @@ In CarPlay, keep in mind that your app coexists with other audio sources, such a
 CarPlay supports a wide range of display resolutions with varying pixel densities and aspect ratios. The system automatically scales app icons and interfaces based on the resolution of the display, so they always appear onscreen at roughly the same size. Some common screen sizes are listed in the table below.
 
 | Dimensions (pixels) | Aspect ratio |
-| --- | --- |
-| 800x480 | 5:3 |
-| 960x540 | 16:9 |
-| 1280x720 | 16:9 |
-| 1920x720 | 8:3 |
+| ------------------- | ------------ |
+| 800x480             | 5:3          |
+| 960x540             | 16:9         |
+| 1280x720            | 16:9         |
+| 1920x720            | 8:3          |
 
 **Provide useful, high-value information in a clean layout that’s easy to scan from the driver’s seat.** Don’t clutter the screen with nonessential details and unnecessary visual embellishments.
 
@@ -88,8 +88,8 @@ CarPlay supports both landscape and portrait displays and both @2x (low resoluti
 Create your CarPlay app icon in the following sizes:
 
 | @2x (pixels) | @3x (pixels) |
-| --- | --- |
-| 120x120 | 180x180 |
+| ------------ | ------------ |
+| 120x120      | 180x180      |
 
 ## [Error handling](/design/human-interface-guidelines/carplay#Error-handling)
 
@@ -99,7 +99,7 @@ A CarPlay app needs to handle errors gracefully and report them to people only w
 
 ## [Platform considerations](/design/human-interface-guidelines/carplay#Platform-considerations)
 
-*No additional considerations for iOS. Not supported in iPadOS, macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS. Not supported in iPadOS, macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/carplay#Resources)
 
@@ -119,6 +119,6 @@ Turbocharge your app for CarPlay](https://developer.apple.com/videos/play/wwdc20
 
 ## [Change log](/design/human-interface-guidelines/carplay#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date        | Changes                              |
+| ----------- | ------------------------------------ |
 | May 2, 2023 | Consolidated guidance into one page. |

@@ -1,8 +1,11 @@
-import type { App} from "cdk8s";
+import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { Namespace, ConfigMap } from "cdk8s-plus-31";
 import { KubeCronJob, Quantity } from "../../generated/imports/k8s.ts";
-import { EMAIL_DOMAINS, NO_EMAIL_DOMAINS } from "../resources/argo-applications/domains.ts";
+import {
+  EMAIL_DOMAINS,
+  NO_EMAIL_DOMAINS,
+} from "../resources/argo-applications/domains.ts";
 import versions from "../versions.ts";
 
 /**
@@ -142,7 +145,8 @@ if __name__ == "__main__":
     metadata: {
       name: "dns-audit",
       annotations: {
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "Container requires writable filesystem",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "Container requires writable filesystem",
       },
     },
     spec: {

@@ -5,7 +5,8 @@ import versions from "../../versions.ts";
 import { CLOUDFLARE_TUNNEL_SECRET_NAME } from "../../misc/cloudflare-tunnel.ts";
 
 // 1Password item path for Cloudflare API token
-const CLOUDFLARE_TUNNEL_1PASSWORD_ITEM_PATH = "vaults/v64ocnykdqju4ui6j6pua56xw4/items/sc5kj6xthlxmdn7k4mesdr2mju";
+const CLOUDFLARE_TUNNEL_1PASSWORD_ITEM_PATH =
+  "vaults/v64ocnykdqju4ui6j6pua56xw4/items/sc5kj6xthlxmdn7k4mesdr2mju";
 
 export function createCloudflareOperatorApp(chart: Chart) {
   // Note: The cloudflare-operator-system namespace is created by the operator's

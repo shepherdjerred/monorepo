@@ -25,7 +25,7 @@ type cases = [
   Expect<Alike<typeof result1, Expected1>>,
   Expect<Alike<typeof result2, Expected2>>,
   // @ts-expect-error -- the question stated that the same key would not be passed twice
-  Expect<Alike<typeof result3, Expected3>>
+  Expect<Alike<typeof result3, Expected3>>,
 ];
 
 type Expected1 = {
@@ -48,7 +48,7 @@ type Expected3 = {
 type Chainable<T extends object = {}> = {
   option<K extends string | symbol | number, V>(
     key: K extends keyof T ? never : K,
-    value: V
+    value: V,
   ): Chainable<K extends keyof T ? T : T & { [Key in K]: V }>;
   get(): T;
 };

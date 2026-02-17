@@ -1,5 +1,9 @@
 import { describe, test, expect } from "bun:test";
-import { retry, isRetryableError, retryWithBackoff } from "../../src/utils/retry.js";
+import {
+  retry,
+  isRetryableError,
+  retryWithBackoff,
+} from "../../src/utils/retry.js";
 
 describe("retry", () => {
   describe("retry", () => {
@@ -18,7 +22,7 @@ describe("retry", () => {
           }
           return "success";
         },
-        { initialDelayMs: 10, maxAttempts: 3 }
+        { initialDelayMs: 10, maxAttempts: 3 },
       );
 
       expect(result).toBe("success");
@@ -34,8 +38,8 @@ describe("retry", () => {
             attempts++;
             throw new Error("always fails");
           },
-          { maxAttempts: 3, initialDelayMs: 10 }
-        )
+          { maxAttempts: 3, initialDelayMs: 10 },
+        ),
       ).rejects.toThrow("always fails");
 
       expect(attempts).toBe(3);
@@ -54,8 +58,8 @@ describe("retry", () => {
             maxAttempts: 5,
             initialDelayMs: 10,
             shouldRetry: () => false,
-          }
-        )
+          },
+        ),
       ).rejects.toThrow("non-retryable");
 
       expect(attempts).toBe(1);
@@ -81,8 +85,8 @@ describe("retry", () => {
             maxAttempts: 4,
             initialDelayMs: 50,
             backoffMultiplier: 2,
-          }
-        )
+          },
+        ),
       ).rejects.toThrow();
 
       // Check that delays increase (with some tolerance)
@@ -117,8 +121,8 @@ describe("retry", () => {
             initialDelayMs: 50,
             maxDelayMs: 100,
             backoffMultiplier: 3,
-          }
-        )
+          },
+        ),
       ).rejects.toThrow();
 
       // All delays should be capped at maxDelayMs (with tolerance)
@@ -141,7 +145,9 @@ describe("retry", () => {
     });
 
     test("returns true for server errors", () => {
-      expect(isRetryableError(new Error("500 Internal Server Error"))).toBe(true);
+      expect(isRetryableError(new Error("500 Internal Server Error"))).toBe(
+        true,
+      );
       expect(isRetryableError(new Error("502 Bad Gateway"))).toBe(true);
       expect(isRetryableError(new Error("503 Service Unavailable"))).toBe(true);
       expect(isRetryableError(new Error("504 Gateway Timeout"))).toBe(true);
@@ -168,7 +174,7 @@ describe("retry", () => {
         retryWithBackoff(async () => {
           attempts++;
           throw new Error("404 Not Found");
-        }, 3)
+        }, 3),
       ).rejects.toThrow("404 Not Found");
 
       // Should not retry because 404 is not retryable
@@ -182,7 +188,7 @@ describe("retry", () => {
         retryWithBackoff(async () => {
           attempts++;
           throw new Error("ECONNRESET");
-        }, 2)
+        }, 2),
       ).rejects.toThrow("ECONNRESET");
 
       expect(attempts).toBe(2);

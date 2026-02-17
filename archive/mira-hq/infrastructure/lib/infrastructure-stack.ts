@@ -97,7 +97,7 @@ export class InfrastructureStack extends Stack {
         principals: [identity.grantPrincipal],
         actions: ["s3:GetObject"],
         resources: [bucket.bucketArn + "/*"],
-      })
+      }),
     );
 
     const domainName = "mira-hq.com";
@@ -277,7 +277,7 @@ export class InfrastructureStack extends Stack {
         effect: Effect.ALLOW,
         resources: [table.tableArn],
         actions: ["dynamodb:*"],
-      })
+      }),
     );
 
     const devPolicy = new ManagedPolicy(this, "DevelopmentPolicy", {

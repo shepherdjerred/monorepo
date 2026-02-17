@@ -11,7 +11,7 @@ export function renderTeam(
   team: Roster,
   side: Team,
   highlight: string,
-  durationInMinutes: number
+  durationInMinutes: number,
 ) {
   const teamKills = _.sumBy(team, (champion) => champion.kills);
   const teamDeaths = _.sumBy(team, (champion) => champion.deaths);
@@ -46,8 +46,8 @@ export function renderTeam(
           champion,
           champion.championName === highlight,
           durationInMinutes,
-          mostDamage
-        )
+          mostDamage,
+        ),
       )}
     </div>
   );

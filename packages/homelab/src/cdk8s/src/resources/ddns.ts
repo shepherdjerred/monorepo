@@ -10,18 +10,24 @@ export function createDdnsDeployment(chart: Chart) {
     strategy: DeploymentStrategy.recreate(),
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/run-as-non-root": "Cloudflare DDNS updater runs as root",
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "Cloudflare DDNS updater runs as root",
       },
     },
   });
 
   const item = new OnePasswordItem(chart, "ddns-config", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/nhyb6lnjpvjsau2gkmb7n42oeq",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/nhyb6lnjpvjsau2gkmb7n42oeq",
     },
   });
 
-  const secret = Secret.fromSecretName(chart, "cloudflare-ddns-secret", item.name);
+  const secret = Secret.fromSecretName(
+    chart,
+    "cloudflare-ddns-secret",
+    item.name,
+  );
 
   deployment.addContainer(
     withCommonProps({

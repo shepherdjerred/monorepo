@@ -1,8 +1,5 @@
-import type {
-  PrometheusRuleSpecGroups} from "../../../../../generated/imports/monitoring.coreos.com";
-import {
-  PrometheusRuleSpecGroupsRulesExpr,
-} from "../../../../../generated/imports/monitoring.coreos.com";
+import type { PrometheusRuleSpecGroups } from "../../../../../generated/imports/monitoring.coreos.com";
+import { PrometheusRuleSpecGroupsRulesExpr } from "../../../../../generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "./shared";
 
 export function getHaWorkflowRuleGroups(): PrometheusRuleSpecGroups[] {
@@ -197,7 +194,8 @@ export function getHaWorkflowRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "HaApplicationDown",
           annotations: {
-            description: "HA automation application is down or not reporting metrics.",
+            description:
+              "HA automation application is down or not reporting metrics.",
             summary: "HA application down",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

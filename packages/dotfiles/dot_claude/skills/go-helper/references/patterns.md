@@ -214,20 +214,20 @@ var _ io.ReadCloser = (*MyType)(nil)
 
 ### Common Standard Library Interfaces
 
-| Interface | Methods | Purpose |
-|-----------|---------|---------|
-| `io.Reader` | `Read([]byte) (int, error)` | Read bytes |
-| `io.Writer` | `Write([]byte) (int, error)` | Write bytes |
-| `io.Closer` | `Close() error` | Release resources |
-| `io.ReadWriter` | `Read` + `Write` | Bidirectional I/O |
-| `io.ReadCloser` | `Read` + `Close` | Readable + closeable |
-| `fmt.Stringer` | `String() string` | String representation |
-| `error` | `Error() string` | Error value |
-| `sort.Interface` | `Len`, `Less`, `Swap` | Sortable collection |
-| `http.Handler` | `ServeHTTP(ResponseWriter, *Request)` | HTTP handler |
-| `context.Context` | `Deadline`, `Done`, `Err`, `Value` | Request scoping |
-| `encoding.TextMarshaler` | `MarshalText() ([]byte, error)` | Text serialization |
-| `json.Marshaler` | `MarshalJSON() ([]byte, error)` | JSON serialization |
+| Interface                | Methods                               | Purpose               |
+| ------------------------ | ------------------------------------- | --------------------- |
+| `io.Reader`              | `Read([]byte) (int, error)`           | Read bytes            |
+| `io.Writer`              | `Write([]byte) (int, error)`          | Write bytes           |
+| `io.Closer`              | `Close() error`                       | Release resources     |
+| `io.ReadWriter`          | `Read` + `Write`                      | Bidirectional I/O     |
+| `io.ReadCloser`          | `Read` + `Close`                      | Readable + closeable  |
+| `fmt.Stringer`           | `String() string`                     | String representation |
+| `error`                  | `Error() string`                      | Error value           |
+| `sort.Interface`         | `Len`, `Less`, `Swap`                 | Sortable collection   |
+| `http.Handler`           | `ServeHTTP(ResponseWriter, *Request)` | HTTP handler          |
+| `context.Context`        | `Deadline`, `Done`, `Err`, `Value`    | Request scoping       |
+| `encoding.TextMarshaler` | `MarshalText() ([]byte, error)`       | Text serialization    |
+| `json.Marshaler`         | `MarshalJSON() ([]byte, error)`       | JSON serialization    |
 
 ### Functional Options Pattern
 
@@ -356,11 +356,13 @@ s["hello"] = struct{}{}
 ### When to Use Generics
 
 Use generics for:
+
 - Container types (sets, stacks, queues, trees)
 - Utility functions operating on slices/maps of any type
 - Reducing boilerplate when the same logic applies to multiple types
 
 Avoid generics when:
+
 - Interfaces already solve the problem cleanly
 - The code only works with one or two types
 - It makes the code harder to read

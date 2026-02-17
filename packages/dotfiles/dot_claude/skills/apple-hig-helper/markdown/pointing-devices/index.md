@@ -28,7 +28,7 @@ People appreciate the precision and flexibility that pointing devices offer. On 
 
 ## [Platform considerations](/design/human-interface-guidelines/pointing-devices#Platform-considerations)
 
-*No additional considerations for iOS. Not supported in tvOS or watchOS.*
+_No additional considerations for iOS. Not supported in tvOS or watchOS._
 
 ### [iPadOS](/design/human-interface-guidelines/pointing-devices#iPadOS)
 
@@ -44,39 +44,39 @@ iPadOS integrates the appearance and behavior of both the pointer and the elemen
 
 By default, the pointer’s shape is a circle, but it can display a system-defined or custom shape when people move it over specific elements or regions. For example, the pointer automatically uses the familiar I-beam shape when people move it over a text-entry area.
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/0a0cf89de15ae16f7e034e78f2089474/text-entry-pointer.png)](https://docs-assets.developer.apple.com/published/dbfc6cc6007bfadc435c90adfef985d6/text-entry-pointer.mp4) Content description: A video snippet showing the bottom half of a new event popover in Calendar. At the beginning of the video, the pointer is within the URL field and it uses the I-beam shape. As the pointer moves between the URL and Notes fields, it briefly reverts to its default circular shape; when the pointer enters the Notes field, it uses the I-beam shape again.
 
- [Play](#)
+[Play](#)
 
-With a *content effect*, the UI element or region beneath the pointer can also change its appearance when people hold the pointer over it. Depending on the type of content effect, the pointer can retain its current shape or transform into a shape that integrates with the element’s new appearance.
+With a _content effect_, the UI element or region beneath the pointer can also change its appearance when people hold the pointer over it. Depending on the type of content effect, the pointer can retain its current shape or transform into a shape that integrates with the element’s new appearance.
 
 iPadOS defines three content effects that bring focus to different types of interactive elements in your app: highlight, lift, and hover.
 
-The *highlight* effect transforms the pointer into a translucent, rounded rectangle that acts as a background for a control and includes a gentle parallax. The subtle highlighting and movement bring focus to the control without distracting people from their task. By default, iPadOS applies the highlight effect to bar buttons, tab bars, segmented controls, and edit menus.
+The _highlight_ effect transforms the pointer into a translucent, rounded rectangle that acts as a background for a control and includes a gentle parallax. The subtle highlighting and movement bring focus to the control without distracting people from their task. By default, iPadOS applies the highlight effect to bar buttons, tab bars, segmented controls, and edit menus.
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/e84d416e052b4554a9803c259d6f0c09/highlight-content-effect.png)](https://docs-assets.developer.apple.com/published/e8d65064cf6933764d896208b933fd6e/highlight-content-effect.mp4) Content description: A video snippet showing a small area at the bottom of a Photos window. Nature photos that show purple flowers, rocks in a stream, and grass are visible just above the tab bar, which shows the Photos and For You tabs. At the beginning of the video, the Photos tab is highlighted. Because bar items receive the highlight effect, the pointer becomes the highlighted rounded rectangle that surrounds the tab’s glyph and title. The highlighted rounded rectangle slides from one tab to the other as the pointer moves.
 
- [Play](#)
+[Play](#)
 
-The *lift* effect combines a subtle parallax with the appearance of elevation to make an element seem like it’s floating above the screen. As the pointer fades out beneath the element, iPadOS creates the illusion of lift by scaling the element up while adding a shadow below it and a soft specular highlight on top of it. By default, iPadOS applies the lift effect to app icons and to buttons in Control Center.
+The _lift_ effect combines a subtle parallax with the appearance of elevation to make an element seem like it’s floating above the screen. As the pointer fades out beneath the element, iPadOS creates the illusion of lift by scaling the element up while adding a shadow below it and a soft specular highlight on top of it. By default, iPadOS applies the lift effect to app icons and to buttons in Control Center.
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/7a31d290b34e74111b9fff74fc2fc222/lift-content-effect-HS.png)](https://docs-assets.developer.apple.com/published/931478e17656db6096029674f6836b45/lift-content-effect-home-screen.mp4) Content description: A video snippet showing the left end of the Dock in front of the Home Screen. From the left, the visible app icons are Messages, Safari, Music, Mail, and Files. As the pointer moves across the first three icons from the left, it disappears beneath each icon in turn, lifting it slightly and letting it return to its original position before moving to the next icon.
 
- [Play](#)
+[Play](#)
 
-*Hover* is a generic effect that lets you apply custom scale, tint, or shadow values to an element as the pointer moves over it. The hover effect combines your custom values to bring focus to an item, but it doesn’t transform the default pointer shape.
+_Hover_ is a generic effect that lets you apply custom scale, tint, or shadow values to an element as the pointer moves over it. The hover effect combines your custom values to bring focus to an item, but it doesn’t transform the default pointer shape.
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/98a56b4f4f0d09e6200288c52d7650e8/hover-content-effect-calendar-popover.png)](https://docs-assets.developer.apple.com/published/bac5c3731ad2051cf84bb38fe228e610/hover-content-effect-calendar-popover.mp4) Content description: A video snippet showing an alert floating above the top half of a new event popover in Calendar. The alert contains text that reads Are you sure you want to discard this new event? and a button titled Discard Changes. As the pointer moves into the alert button, the button background darkens.
 
- [Play](#)
+[Play](#)
 
 #### [Pointer accessories](/design/human-interface-guidelines/pointing-devices#Pointer-accessories)
 
@@ -94,11 +94,11 @@ iPadOS helps people use the pointer to target an element by making the element a
 
 When people move the pointer close to an element, the system starts transforming the pointer’s shape as soon as it reaches the element’s hit region. Because an element’s hit region typically extends beyond its visible boundaries, the pointer begins to transform before it appears to touch the element itself, creating the illusion that the element is pulling the pointer toward it.
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/d2582ba1592f8192b6918f87ce229211/magnetics-clock.png)](https://docs-assets.developer.apple.com/published/865841616e07d5f1cdddb89d8705eeb6/magnetics-clock.mp4) Content description: A video snippet showing an area at the bottom of Clock. The World Clock tab is selected and clock images and information for San Francisco, New York, and London are partially visible in the window. As the pointer moves in the tab bar, its highlighted rounded rectangle appearance seems to show a slight resistance as it slides from the World Clock tab to the Alarm tab and back again.
 
- [Play](#)
+[Play](#)
 
 When people flick the pointer toward an element, iPadOS examines the pointer’s trajectory to discover the element that’s the most likely target. When there’s an element in the pointer’s path, the system uses magnetism to pull the pointer toward the element’s center.
 
@@ -110,9 +110,9 @@ The system also applies magnetism to text-entry areas, where it can help people 
 
 **When possible, support the system-provided content effects.** People quickly become accustomed to the content effects they see throughout the system and generally expect their experience to apply to every app they use. To provide a consistent user experience, align your interactions with the design intent of each effect. Specifically:
 
-* Use highlight for a small element that has a transparent background.
-* Use lift for a small element that has an opaque background.
-* Use hover for large elements and customize the scale, tint, and shadow attributes as needed (for guidance, see [Customizing pointers](/design/human-interface-guidelines/pointing-devices#Customizing-pointers)).
+- Use highlight for a small element that has a transparent background.
+- Use lift for a small element that has an opaque background.
+- Use hover for large elements and customize the scale, tint, and shadow attributes as needed (for guidance, see [Customizing pointers](/design/human-interface-guidelines/pointing-devices#Customizing-pointers)).
 
 **Prefer the system-provided pointer appearances for standard buttons and text-entry areas.** You can help people feel more comfortable with your app when the pointer behaves in ways they expect.
 
@@ -126,7 +126,7 @@ The system also applies magnetism to text-entry areas, where it can help people 
 
 **Create contiguous hit regions for custom bar buttons.** If there’s space between the hit regions of adjacent buttons in a bar, people may experience a distracting motion when the pointer reverts briefly to its default shape as it moves between buttons.
 
-**Specify the corner radius of a nonstandard element that receives the lift effect.** With the system-provided lift effect, the pointer transforms to match the element’s shape as it fades out. By default, the pointer uses the system-defined corner radius to transform into a rounded rectangle. If your element is a different shape — if it’s a circle, for example — you need to provide the radius so the pointer can animate seamlessly into the shape of the element. For developer guidance, see [`UIPointerShape.roundedRect(_:radius:)`](/documentation/UIKit/UIPointerShape-swift.enum/roundedRect(_:radius:)).
+**Specify the corner radius of a nonstandard element that receives the lift effect.** With the system-provided lift effect, the pointer transforms to match the element’s shape as it fades out. By default, the pointer uses the system-defined corner radius to transform into a rounded rectangle. If your element is a different shape — if it’s a circle, for example — you need to provide the radius so the pointer can animate seamlessly into the shape of the element. For developer guidance, see [`UIPointerShape.roundedRect(_:radius:)`](</documentation/UIKit/UIPointerShape-swift.enum/roundedRect(_:radius:)>).
 
 #### [Customizing pointers](/design/human-interface-guidelines/pointing-devices#Customizing-pointers)
 
@@ -150,49 +150,49 @@ The system also applies magnetism to text-entry areas, where it can help people 
 
 macOS supports a wide range of standard mouse and trackpad interactions that people can customize. For example, when a click or gesture isn’t a primary way to interact with content, people can often turn it on or off based on their current workflow. People can also choose specific regions of a mouse or trackpad to invoke secondary clicks, and select specific finger combinations and movements for certain gestures.
 
-| Click or gesture | Expected behavior | Mouse | Trackpad |
-| --- | --- | --- | --- |
-| Primary click | Select or activate an item, such as a file or button. | ● | ● |
-| Secondary click | Reveal contextual menus. | ● | ● |
-| Scrolling | Move content up, down, left, or right within a view. | ● | ● |
-| Smart zoom | Zoom in or out on content, such as a web page or PDF. | ● | ● |
-| Swipe between pages | Navigate forward or backward between individually displayed pages. | ● | ● |
-| Swipe between full-screen apps | Navigate forward or backward between full-screen apps and spaces. | ● | ● |
-| Mission Control (double-tap the mouse with two fingers or swipe up on the trackpad with three or four fingers) | Activate Mission Control. | ● | ● |
-| Lookup and data detectors (force click with one finger or tap with three fingers) | Display a lookup window above selected content. |  | ● |
-| Tap to click | Perform the primary click action using a tap rather than a click. |  | ● |
-| Force click | Click then press firmly to display a Quick Look window or lookup window above selected content. Apply a variable amount of pressure to affect pressure-sensitive controls, such as variable speed media controls. |  | ● |
-| Zoom in or out (pinch with two fingers) | Zoom in or out. |  | ● |
-| Rotate (move two fingers in a circular motion) | Rotate content, such as an image. |  | ● |
-| Notification Center (swipe from the edge of the trackpad) | Display Notification Center. |  | ● |
-| App Exposé (swipe down with three or four fingers) | Display the current app’s windows in Exposé. |  | ● |
-| Launchpad (pinch with thumb and three fingers) | Display the Launchpad. |  | ● |
-| Show Desktop (spread with thumb and three fingers) | Slide all windows out of the way to reveal the desktop. |  | ● |
+| Click or gesture                                                                                               | Expected behavior                                                                                                                                                                                                 | Mouse | Trackpad |
+| -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | -------- |
+| Primary click                                                                                                  | Select or activate an item, such as a file or button.                                                                                                                                                             | ●     | ●        |
+| Secondary click                                                                                                | Reveal contextual menus.                                                                                                                                                                                          | ●     | ●        |
+| Scrolling                                                                                                      | Move content up, down, left, or right within a view.                                                                                                                                                              | ●     | ●        |
+| Smart zoom                                                                                                     | Zoom in or out on content, such as a web page or PDF.                                                                                                                                                             | ●     | ●        |
+| Swipe between pages                                                                                            | Navigate forward or backward between individually displayed pages.                                                                                                                                                | ●     | ●        |
+| Swipe between full-screen apps                                                                                 | Navigate forward or backward between full-screen apps and spaces.                                                                                                                                                 | ●     | ●        |
+| Mission Control (double-tap the mouse with two fingers or swipe up on the trackpad with three or four fingers) | Activate Mission Control.                                                                                                                                                                                         | ●     | ●        |
+| Lookup and data detectors (force click with one finger or tap with three fingers)                              | Display a lookup window above selected content.                                                                                                                                                                   |       | ●        |
+| Tap to click                                                                                                   | Perform the primary click action using a tap rather than a click.                                                                                                                                                 |       | ●        |
+| Force click                                                                                                    | Click then press firmly to display a Quick Look window or lookup window above selected content. Apply a variable amount of pressure to affect pressure-sensitive controls, such as variable speed media controls. |       | ●        |
+| Zoom in or out (pinch with two fingers)                                                                        | Zoom in or out.                                                                                                                                                                                                   |       | ●        |
+| Rotate (move two fingers in a circular motion)                                                                 | Rotate content, such as an image.                                                                                                                                                                                 |       | ●        |
+| Notification Center (swipe from the edge of the trackpad)                                                      | Display Notification Center.                                                                                                                                                                                      |       | ●        |
+| App Exposé (swipe down with three or four fingers)                                                             | Display the current app’s windows in Exposé.                                                                                                                                                                      |       | ●        |
+| Launchpad (pinch with thumb and three fingers)                                                                 | Display the Launchpad.                                                                                                                                                                                            |       | ●        |
+| Show Desktop (spread with thumb and three fingers)                                                             | Slide all windows out of the way to reveal the desktop.                                                                                                                                                           |       | ●        |
 
 #### [Pointers](/design/human-interface-guidelines/pointing-devices#Pointers)
 
 macOS offers a variety of standard pointer styles, which your app can use to communicate the interactive state of an interface element or the result of a drag operation.
 
-| Pointer | Name | Meaning | AppKit API |
-| --- | --- | --- | --- |
-| A pointer that resembles a diagonal arrow pointing up and to the left. | Arrow | Standard pointer for selecting and interacting with content and interface elements. | [`arrow`](/documentation/AppKit/NSCursor/arrow) |
-| A closed, gloved hand. | Closed hand | Dragging to reposition the display of content within a view—for example, dragging a map around in Maps. | [`closedHand`](/documentation/AppKit/NSCursor/closedHand) |
-| A pointer arrow with a small menu-like square to the right of the arrow. | Contextual menu | A contextual menu is available for the content below the pointer. This pointer is generally shown only when the Control key is pressed. | [`contextualMenu`](/documentation/AppKit/NSCursor/contextualMenu) |
-| A plus symbol. | Crosshair | Precise rectangular selection is possible, such as when viewing an image in Preview. | [`crosshair`](/documentation/AppKit/NSCursor/crosshair) |
-| A small pointer arrowhead with a circle underneath; the circle contains an Ex. | Disappearing item | A dragged item will disappear when dropped. If the item references an original item, the original is unaffected. For example, when dragging a mailbox out of the favorites bar in Mail, the original mailbox isn’t removed. | [`disappearingItem`](/documentation/AppKit/NSCursor/disappearingItem) |
-| A small pointer arrowhead with a circle underneath; the circle contains a plus symbol. | Drag copy | Duplicates a dragged—not moved—item when dropped into the destination. Appears when pressing the Option key during a drag operation. | [`dragCopy`](/documentation/AppKit/NSCursor/dragCopy) |
-| A curved arrow, pointing up and to the right. | Drag link | During a drag and drop operation, creates an alias of the selected file when dropped. The alias points to the original file, which remains unmoved. Appears when pressing the Option and Command keys during a drag operation. | [`dragLink`](/documentation/AppKit/NSCursor/dragLink) |
-| Opposing veritcal braces, used to form an insertion marker. | Horizontal I beam | Selection and insertion of text is possible in a horizontal layout, such as a TextEdit or Pages document. | [`iBeam`](/documentation/AppKit/NSCursor/iBeam) |
-| An open, gloved hand. | Open hand | Dragging to reposition content within a view is possible. | [`openHand`](/documentation/AppKit/NSCursor/openHand) |
-| A small pointer arrowhead with a do not enter symbol underneath. | Operation not allowed | A dragged item can’t be dropped in the current location. | [`operationNotAllowed`](/documentation/AppKit/NSCursor/operationNotAllowed) |
-| A gloved hand, with the index finger extended. | Pointing hand | The content beneath the pointer is a URL link to a webpage, document, or other item. | [`pointingHand`](/documentation/AppKit/NSCursor/pointingHand) |
-| A horizontal bar with a downward-pointing arrow at its midpoint. | Resize down | Resize or move a window, view, or element downward. | [`resizeDown`](/documentation/AppKit/NSCursor/resizeDown) |
-| A vertical bar with a left-pointing arrow at its midpoint. | Resize left | Resize or move a window, view, or element to the left. | [`resizeLeft`](/documentation/AppKit/NSCursor/resizeLeft) |
-| A vertical bar with left- and right-pointing arrows extending from its midpoint. | Resize left/right | Resize or move a window, view, or element to the left or right. | [`resizeLeftRight`](/documentation/AppKit/NSCursor/resizeLeftRight) |
-| A vertical bar with a right-pointing arrow at its midpoint. | Resize right | Resize or move a window, view, or element to the right. | [`resizeRight`](/documentation/AppKit/NSCursor/resizeRight) |
-| A horizontal bar with an up-pointing arrow at its midpoint. | Resize up | Resize or move a window, view, or element upward. | [`resizeUp`](/documentation/AppKit/NSCursor/resizeUp) |
-| A horizontal bar with up- and down-pointing arrows extending from its midpoint. | Resize up/down | Resize or move a window, view, or element upward or downward. | [`resizeUpDown`](/documentation/AppKit/NSCursor/resizeUpDown) |
-| Opposing horizontal braces, used to form an insertion marker. | Vertical I beam | Selection and insertion of text is possible in a vertical layout. | [`iBeamCursorForVerticalLayout`](/documentation/AppKit/NSCursor/iBeamCursorForVerticalLayout) |
+| Pointer                                                                                | Name                  | Meaning                                                                                                                                                                                                                        | AppKit API                                                                                    |
+| -------------------------------------------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| A pointer that resembles a diagonal arrow pointing up and to the left.                 | Arrow                 | Standard pointer for selecting and interacting with content and interface elements.                                                                                                                                            | [`arrow`](/documentation/AppKit/NSCursor/arrow)                                               |
+| A closed, gloved hand.                                                                 | Closed hand           | Dragging to reposition the display of content within a view—for example, dragging a map around in Maps.                                                                                                                        | [`closedHand`](/documentation/AppKit/NSCursor/closedHand)                                     |
+| A pointer arrow with a small menu-like square to the right of the arrow.               | Contextual menu       | A contextual menu is available for the content below the pointer. This pointer is generally shown only when the Control key is pressed.                                                                                        | [`contextualMenu`](/documentation/AppKit/NSCursor/contextualMenu)                             |
+| A plus symbol.                                                                         | Crosshair             | Precise rectangular selection is possible, such as when viewing an image in Preview.                                                                                                                                           | [`crosshair`](/documentation/AppKit/NSCursor/crosshair)                                       |
+| A small pointer arrowhead with a circle underneath; the circle contains an Ex.         | Disappearing item     | A dragged item will disappear when dropped. If the item references an original item, the original is unaffected. For example, when dragging a mailbox out of the favorites bar in Mail, the original mailbox isn’t removed.    | [`disappearingItem`](/documentation/AppKit/NSCursor/disappearingItem)                         |
+| A small pointer arrowhead with a circle underneath; the circle contains a plus symbol. | Drag copy             | Duplicates a dragged—not moved—item when dropped into the destination. Appears when pressing the Option key during a drag operation.                                                                                           | [`dragCopy`](/documentation/AppKit/NSCursor/dragCopy)                                         |
+| A curved arrow, pointing up and to the right.                                          | Drag link             | During a drag and drop operation, creates an alias of the selected file when dropped. The alias points to the original file, which remains unmoved. Appears when pressing the Option and Command keys during a drag operation. | [`dragLink`](/documentation/AppKit/NSCursor/dragLink)                                         |
+| Opposing veritcal braces, used to form an insertion marker.                            | Horizontal I beam     | Selection and insertion of text is possible in a horizontal layout, such as a TextEdit or Pages document.                                                                                                                      | [`iBeam`](/documentation/AppKit/NSCursor/iBeam)                                               |
+| An open, gloved hand.                                                                  | Open hand             | Dragging to reposition content within a view is possible.                                                                                                                                                                      | [`openHand`](/documentation/AppKit/NSCursor/openHand)                                         |
+| A small pointer arrowhead with a do not enter symbol underneath.                       | Operation not allowed | A dragged item can’t be dropped in the current location.                                                                                                                                                                       | [`operationNotAllowed`](/documentation/AppKit/NSCursor/operationNotAllowed)                   |
+| A gloved hand, with the index finger extended.                                         | Pointing hand         | The content beneath the pointer is a URL link to a webpage, document, or other item.                                                                                                                                           | [`pointingHand`](/documentation/AppKit/NSCursor/pointingHand)                                 |
+| A horizontal bar with a downward-pointing arrow at its midpoint.                       | Resize down           | Resize or move a window, view, or element downward.                                                                                                                                                                            | [`resizeDown`](/documentation/AppKit/NSCursor/resizeDown)                                     |
+| A vertical bar with a left-pointing arrow at its midpoint.                             | Resize left           | Resize or move a window, view, or element to the left.                                                                                                                                                                         | [`resizeLeft`](/documentation/AppKit/NSCursor/resizeLeft)                                     |
+| A vertical bar with left- and right-pointing arrows extending from its midpoint.       | Resize left/right     | Resize or move a window, view, or element to the left or right.                                                                                                                                                                | [`resizeLeftRight`](/documentation/AppKit/NSCursor/resizeLeftRight)                           |
+| A vertical bar with a right-pointing arrow at its midpoint.                            | Resize right          | Resize or move a window, view, or element to the right.                                                                                                                                                                        | [`resizeRight`](/documentation/AppKit/NSCursor/resizeRight)                                   |
+| A horizontal bar with an up-pointing arrow at its midpoint.                            | Resize up             | Resize or move a window, view, or element upward.                                                                                                                                                                              | [`resizeUp`](/documentation/AppKit/NSCursor/resizeUp)                                         |
+| A horizontal bar with up- and down-pointing arrows extending from its midpoint.        | Resize up/down        | Resize or move a window, view, or element upward or downward.                                                                                                                                                                  | [`resizeUpDown`](/documentation/AppKit/NSCursor/resizeUpDown)                                 |
+| Opposing horizontal braces, used to form an insertion marker.                          | Vertical I beam       | Selection and insertion of text is possible in a vertical layout.                                                                                                                                                              | [`iBeamCursorForVerticalLayout`](/documentation/AppKit/NSCursor/iBeamCursorForVerticalLayout) |
 
 ### [visionOS](/design/human-interface-guidelines/pointing-devices#visionOS)
 
@@ -200,11 +200,11 @@ In visionOS, people can attach an external pointing device or keyboard, and use 
 
 When a pointing device is attached, the area people are looking at determines the pointer’s context. For example, when people shift their eyes from one window to another, the pointer’s context seamlessly transitions to the new window.
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/e65b836b86d40a37e0ca7d91cdddd04d/visionos-trackpad-pointer-input%402x.png)](https://docs-assets.developer.apple.com/published/f42f7711433fee409429468edb60f0b8/visionos-trackpad-pointer-input.mp4) Content description: A recording that shows a pointer moving around, highlighting items, and scrolling content within a Safari window in visionOS. A picture-in-picture window is visible in the bottom left corner of the recording. It shows a person's hand operating a trackpad next to a keyboard outside the field of view. The person's gestures on the trackpad correspond to the pointer movements.
 
- [Play](#)
+[Play](#)
 
 When people use an attached pointing device that supports gestures, like a trackpad or mouse, the pointer hides while people are gesturing, minimizing visual distraction. In this scenario, the pointer remains hidden until people move it, when it reappears in the location they’re looking at.
 
@@ -232,6 +232,6 @@ Design for the iPadOS pointer](https://developer.apple.com/videos/play/wwdc2020/
 
 ## [Change log](/design/human-interface-guidelines/pointing-devices#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date          | Changes                                   |
+| ------------- | ----------------------------------------- |
 | June 21, 2023 | Updated to include guidance for visionOS. |

@@ -44,29 +44,29 @@ const musicCommand = new SlashCommandBuilder()
         option
           .setName("song")
           .setDescription("The song to play")
-          .setRequired(true)
-      )
+          .setRequired(true),
+      ),
   )
   .addSubcommand((subcommand) =>
-    subcommand.setName("pause").setDescription("Pause music")
+    subcommand.setName("pause").setDescription("Pause music"),
   )
   .addSubcommand((subcommand) =>
-    subcommand.setName("resume").setDescription("Resume music")
+    subcommand.setName("resume").setDescription("Resume music"),
   )
   .addSubcommand((subcommand) =>
-    subcommand.setName("stop").setDescription("Stop music")
+    subcommand.setName("stop").setDescription("Stop music"),
   )
   .addSubcommand((subcommand) =>
-    subcommand.setName("skip").setDescription("Skip music")
+    subcommand.setName("skip").setDescription("Skip music"),
   )
   .addSubcommand((subcommand) =>
-    subcommand.setName("queue").setDescription("Show the music queue")
+    subcommand.setName("queue").setDescription("Show the music queue"),
   )
   .addSubcommand((subcommand) =>
-    subcommand.setName("clear").setDescription("Clear the music queue")
+    subcommand.setName("clear").setDescription("Clear the music queue"),
   )
   .addSubcommand((subcommand) =>
-    subcommand.setName("shuffle").setDescription("Shuffle the music queue")
+    subcommand.setName("shuffle").setDescription("Shuffle the music queue"),
   )
   .addSubcommand((subcommand) =>
     subcommand
@@ -78,8 +78,8 @@ const musicCommand = new SlashCommandBuilder()
           .setDescription("The volume to set")
           .setRequired(true)
           .setMinValue(0)
-          .setMaxValue(10)
-      )
+          .setMaxValue(10),
+      ),
   )
   .addSubcommand((subcommand) =>
     subcommand
@@ -89,16 +89,16 @@ const musicCommand = new SlashCommandBuilder()
         option
           .setName("position")
           .setDescription("The position to seek to in seconds")
-          .setRequired(true)
-      )
+          .setRequired(true),
+      ),
   )
   .addSubcommand((subcommand) =>
     subcommand
       .setName("nowplaying")
-      .setDescription("Show the currently playing song")
+      .setDescription("Show the currently playing song"),
   )
   .addSubcommand((subcommand) =>
-    subcommand.setName("reset").setDescription("Reset the music filters")
+    subcommand.setName("reset").setDescription("Reset the music filters"),
   );
 
 async function handleMusic(interaction: ChatInputCommandInteraction) {
@@ -309,8 +309,7 @@ async function handleSeekMusic(interaction: ChatInputCommandInteraction) {
 async function handleNowPlayingMusic(interaction: ChatInputCommandInteraction) {
   if (state.name === "active") {
     await interaction.reply({
-      content:
-        `Now playing: ${state.currentSong.info.title} by ${state.currentSong.info.author} - ${state.currentSong.info.uri}`,
+      content: `Now playing: ${state.currentSong.info.title} by ${state.currentSong.info.author} - ${state.currentSong.info.uri}`,
       ephemeral: true,
     });
   } else {
@@ -392,11 +391,9 @@ async function handlePlayMusic(interaction: ChatInputCommandInteraction) {
   ) {
     await interaction.reply({
       ephemeral: true,
-      content: `Music is already playing in ${
-        channelMention(
-          state.musicChannel.id,
-        )
-      }`,
+      content: `Music is already playing in ${channelMention(
+        state.musicChannel.id,
+      )}`,
     });
     return;
   }

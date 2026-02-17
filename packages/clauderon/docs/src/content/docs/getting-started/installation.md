@@ -143,6 +143,7 @@ clauderon daemon
 ```
 
 The daemon starts:
+
 - HTTP server at http://localhost:3030
 - Credential proxy for token injection
 - Session lifecycle management

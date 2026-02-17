@@ -422,6 +422,7 @@ replace github.com/my/lib => ../my-lib
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - Error handling strategy needs deciding (sentinel vs custom types vs wrapping)
 - Concurrency pattern choice is unclear (channels vs mutex vs errgroup)
 - Interface design decisions are needed
@@ -432,6 +433,7 @@ Ask the user for clarification when:
 ---
 
 See `references/` for detailed guides:
+
 - `patterns.md` - Error handling, interfaces, generics, concurrency, context, iterators, struct embedding, testing patterns
 - `modules-tooling.md` - Go modules, workspaces, dependency management, golangci-lint, go vet, gopls, build tags, cross-compilation, popular packages
 - `testing-debugging.md` - go test, table-driven tests, benchmarks, fuzzing, testify, delve debugger, profiling with pprof, race detector

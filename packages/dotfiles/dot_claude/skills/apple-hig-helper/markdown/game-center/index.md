@@ -14,9 +14,9 @@ Game Center is Apple’s social gaming network, which lets players track their p
 
 Supporting Game Center in your game allows players to:
 
-* Discover new games their friends are playing.
-* Seamlessly invite friends to play.
-* See the latest activity from their games across the system, in the Apple Games app, the App Store, notifications, and more.
+- Discover new games their friends are playing.
+- Seamlessly invite friends to play.
+- See the latest activity from their games across the system, in the Apple Games app, the App Store, notifications, and more.
 
 By enabling the player activities listed above, supporting Game Center also helps surface your game to more players across Apple platforms.
 
@@ -28,7 +28,7 @@ To provide the best Game Center experience for your players, begin by determinin
 
 ### [Integrating the access point](/design/human-interface-guidelines/game-center#Integrating-the-access-point)
 
-The Game Center *access point* is an Apple-designed UI element that lets players view their Game Center profile and information without leaving your game. For developer guidance, see [Adding an access point to your game](/documentation/GameKit/adding-an-access-point-to-your-game).
+The Game Center _access point_ is an Apple-designed UI element that lets players view their Game Center profile and information without leaving your game. For developer guidance, see [Adding an access point to your game](/documentation/GameKit/adding-an-access-point-to-your-game).
 
 ![An iPhone screenshot of the game The Coast, on the title screen. The access point control, a circular button with a diagonal rocket symbol, sits in the upper corner on the leading edge.](https://docs-assets.developer.apple.com/published/9774fc7f07482493ee1559593dc08e53/games-access-point-collapsed%402x.png)
 
@@ -56,14 +56,14 @@ Your game can include custom links into the Game Overlay (in iOS, iPadOS, macOS)
 
 **Use the correct terminology in custom links.** The following table describes how to use Game Center terminology correctly so that you can avoid confusing players in custom UI.
 
-| Term | Incorrect terms | Localization |
-| --- | --- | --- |
-| Game Center | GameKit, GameCenter, game center | Use the system-provided translation of *Game Center* |
-| Game Center Profile | Profile, Account, Player Info | Use the system-provided translation of *Game Center* and localize *Profile* |
-| Achievements | Awards, Trophies, Medals |  |
-| Leaderboards | Rankings, Scores, Leaders |  |
-| Challenges | Competitions |  |
-| Add Friends | Add, Add Profiles, Include Friends |  |
+| Term                | Incorrect terms                    | Localization                                                                |
+| ------------------- | ---------------------------------- | --------------------------------------------------------------------------- |
+| Game Center         | GameKit, GameCenter, game center   | Use the system-provided translation of _Game Center_                        |
+| Game Center Profile | Profile, Account, Player Info      | Use the system-provided translation of _Game Center_ and localize _Profile_ |
+| Achievements        | Awards, Trophies, Medals           |                                                                             |
+| Leaderboards        | Rankings, Scores, Leaders          |                                                                             |
+| Challenges          | Competitions                       |                                                                             |
+| Add Friends         | Add, Add Profiles, Include Friends |                                                                             |
 
 ## [Achievements](/design/human-interface-guidelines/game-center#Achievements)
 
@@ -95,28 +95,28 @@ Achievement detail
 
 **Create artwork in the appropriate size and format.** The system applies a circular mask to your achievement image, so be sure to keep content centered. Use the following specifications to create images.
 
-* [iOS, iPadOS, macOS, visionOS](#)
-* [tvOS](#)
+- [iOS, iPadOS, macOS, visionOS](#)
+- [tvOS](#)
 
 ![A diagram of the layout for an achievement image in iOS, iPadOS, macOS, and visionOS, with callouts indicating the image size and mask diameter.](https://docs-assets.developer.apple.com/published/ba7aed683c8f0f112ce7024ce5a9a34f/ios-achievement-image-layout%402x.png)
 
-| Attribute | Value |
-| --- | --- |
-| Format | PNG, TIF, or JPG |
-| Color space | sRGB or P3 |
-| Resolution | 72 DPI (minimum) |
-| Image size | 512x512 pt (1024x1024 px @2x) |
-| Mask diameter | 512 pt (1024 px @2x) |
+| Attribute     | Value                         |
+| ------------- | ----------------------------- |
+| Format        | PNG, TIF, or JPG              |
+| Color space   | sRGB or P3                    |
+| Resolution    | 72 DPI (minimum)              |
+| Image size    | 512x512 pt (1024x1024 px @2x) |
+| Mask diameter | 512 pt (1024 px @2x)          |
 
 ![A diagram of the layout for an achievement image in tvOS, with callouts indicating the image size and mask diameter.](https://docs-assets.developer.apple.com/published/1e98f3b125dd0babeb08bfbaf4873fed/tvos-achievement-image-layout%402x.png)
 
-| Attribute | Value |
-| --- | --- |
-| Format | PNG, TIF, or JPG |
-| Color space | sRGB or P3 |
-| Resolution | 72 DPI (minimum) |
-| Image size | 320x320 pt (640x640 px @2x) |
-| Mask diameter | 200 pt (400 px @2x) |
+| Attribute     | Value                       |
+| ------------- | --------------------------- |
+| Format        | PNG, TIF, or JPG            |
+| Color space   | sRGB or P3                  |
+| Resolution    | 72 DPI (minimum)            |
+| Image size    | 320x320 pt (640x640 px @2x) |
+| Mask diameter | 200 pt (400 px @2x)         |
 
 ## [Leaderboards](/design/human-interface-guidelines/game-center#Leaderboards)
 
@@ -130,51 +130,50 @@ Leaderboards overview
 
 Leaderboard detail
 
-**Choose a leaderboard type.** Game Center supports two types of leaderboards: *classic* and *recurring*.
+**Choose a leaderboard type.** Game Center supports two types of leaderboards: _classic_ and _recurring_.
 
-* A *classic leaderboard* tracks a player’s best all-time score. Classic leaderboards are always active with no ending. The following are examples of goals you might include in a classic leaderboard:
+- A _classic leaderboard_ tracks a player’s best all-time score. Classic leaderboards are always active with no ending. The following are examples of goals you might include in a classic leaderboard:
+  - Strive for the most perfect score in a rhythm game.
+  - Collect the most coins in a single dungeon run.
+  - Achieve the longest continuous time in an endless runner.
 
-  + Strive for the most perfect score in a rhythm game.
-  + Collect the most coins in a single dungeon run.
-  + Achieve the longest continuous time in an endless runner.
-* A *recurring leaderboard* resets based on a time interval you define, such as every week or every day. Recurring leaderboards can increase engagement by giving players more chances to take the lead. The following are examples of features that work well with recurring leaderboards:
-
-  + Daily rotating puzzles
-  + Seasonal or holiday-themed events
-  + Weekly leaderboards for different battle modes
+- A _recurring leaderboard_ resets based on a time interval you define, such as every week or every day. Recurring leaderboards can increase engagement by giving players more chances to take the lead. The following are examples of features that work well with recurring leaderboards:
+  - Daily rotating puzzles
+  - Seasonal or holiday-themed events
+  - Weekly leaderboards for different battle modes
 
 **Take advantage of leaderboard sets for multiple leaderboards.** Leaderboard sets are an organization system that can make it easier for players to find the board they’re looking for. Consider grouping leaderboard sets by themes or gameplay experiences, such as:
 
-* Difficulty modes (Easy, Standard, Hard)
-* Activity types (Combat, Crafting, Farming)
-* Genres and themes (Disco, Pop, Rock)
+- Difficulty modes (Easy, Standard, Hard)
+- Activity types (Combat, Crafting, Farming)
+- Genres and themes (Disco, Pop, Rock)
 
 **Add leaderboard images.** Leaderboard artwork gives you another opportunity to reinforce your game’s visual aesthetic. Aim to create a unique image for each leaderboard in your game that reflects and showcases the gameplay involved in leaderboard ranking. Leaderboards appear across the system, promoting ways for players to engage and compete with friends, and having compelling images helps attract players and gives them a sense of the experience.
 
 For games that run in iOS, iPadOS, and macOS, use a single image for your leaderboard image. For games that run in tvOS, provide a set of images that animate when the artwork is in focus. To learn more about focus effects, see [Focus and selection](/design/human-interface-guidelines/focus-and-selection). For help creating focusable images, download the tvOS template from [Apple Design Resources](https://developer.apple.com/design/resources/#tvos-apps). Use the following specifications to create leaderboard artwork.
 
-* [iOS, iPadOS, macOS](#)
-* [tvOS](#)
+- [iOS, iPadOS, macOS](#)
+- [tvOS](#)
 
 ![A diagram of the layout for a leaderboard image in iOS, iPadOS, and macOS, with callouts indicating the image size and mask diameter.](https://docs-assets.developer.apple.com/published/a41db2a595bec653175fcfb13b50b9ed/leaderboard-image-layout-general%402x.png)
 
-| Attribute | Value |
-| --- | --- |
-| Format | JPEG, JPG, or PNG |
-| Color space | sRGB or P3 |
-| Resolution | 72 DPI (minimum) |
-| Image size | 512x512 pt (1024x1024 px @2x) |
-| Cropped area | 512x312 pt (1024x624 px @2x) |
+| Attribute    | Value                         |
+| ------------ | ----------------------------- |
+| Format       | JPEG, JPG, or PNG             |
+| Color space  | sRGB or P3                    |
+| Resolution   | 72 DPI (minimum)              |
+| Image size   | 512x512 pt (1024x1024 px @2x) |
+| Cropped area | 512x312 pt (1024x624 px @2x)  |
 
 ![A diagram of the layout for a leaderboard image in tvOS, with callouts indicating the image size, focused size, and unfocused size.](https://docs-assets.developer.apple.com/published/631b5255803637a7084fe167f971810c/tvos-multi-layered-leaderboard-image%402x.png)
 
-| Attribute | Value |
-| --- | --- |
-| Format | PNG, TIF, or JPG |
-| Color space | sRGB or P3 |
-| Resolution | 72 DPI (minimum) |
-| Image size | 659x371 pt (1318x742 px @2x) |
-| Focused size | 618x348 pt (1236x696 px @2x) |
+| Attribute      | Value                        |
+| -------------- | ---------------------------- |
+| Format         | PNG, TIF, or JPG             |
+| Color space    | sRGB or P3                   |
+| Resolution     | 72 DPI (minimum)             |
+| Image size     | 659x371 pt (1318x742 px @2x) |
+| Focused size   | 618x348 pt (1236x696 px @2x) |
 | Unfocused size | 548x309 pt (1096x618 px @2x) |
 
 Note
@@ -195,9 +194,9 @@ Challenge detail
 
 **Create engaging challenges.** Challenges are great for short, skill-based gameplay activities that have a clear way of gauging players’ accomplishments. Create challenges that take 1-5 minutes to play, with gameplay that players can complete individually. Examples of compelling challenges are:
 
-* Complete the fastest lap in a racing level.
-* Defeat the most enemies in a single round.
-* Solve a daily puzzle with the fewest mistakes.
+- Complete the fastest lap in a racing level.
+- Defeat the most enemies in a single round.
+- Solve a daily puzzle with the fewest mistakes.
 
 **Avoid creating challenges that track overall progress or personal best scores.** These can give regular players an unfair advantage. Instead, track players’ most recent score after each attempt at your challenge. This helps keep your challenge motivating by placing all players on a level playing field.
 
@@ -209,13 +208,13 @@ Challenge detail
 
 ![A diagram of the layout for a challenge image, with callouts indicating the image size and cropped area.](https://docs-assets.developer.apple.com/published/3f26192095237c3c95276f37dd349ab6/games-challenge-image-specs%402x.png)
 
-| Attribute | Value |
-| --- | --- |
-| Format | JPEG, JPG, or PNG |
-| Color space | sRGB or P3 |
-| Resolution | 72 DPI (minimum) |
-| Image size | 1920x1080 pt (3840x2160 px @2x) |
-| Cropped area | 1465x767 pt (2930x1534 px @2x) |
+| Attribute    | Value                           |
+| ------------ | ------------------------------- |
+| Format       | JPEG, JPG, or PNG               |
+| Color space  | sRGB or P3                      |
+| Resolution   | 72 DPI (minimum)                |
+| Image size   | 1920x1080 pt (3840x2160 px @2x) |
+| Cropped area | 1465x767 pt (2930x1534 px @2x)  |
 
 ## [Multiplayer activities](/design/human-interface-guidelines/game-center#Multiplayer-activities)
 
@@ -231,9 +230,9 @@ Multiplayer level detail
 
 **Use party codes to invite players to multiplayer activities.** Game Center party codes are a great way to coordinate real-time multiplayer sessions whether you use Game Center matchmaking and networking facilities or provide your own. Game Center generates alpha-numeric party codes that are typically eight characters long, such as “2MP4-9CMF.” When integrating party codes into your multiplayer games, consider the following guidelines for the best player experience:
 
-* Allow players to join gameplay late, leave early, and return later.
-* Provide a way for players to view the current party code in your game.
-* Allow players to enter a party code manually.
+- Allow players to join gameplay late, leave early, and return later.
+- Provide a way for players to view the current party code in your game.
+- Allow players to enter a party code manually.
 
 ![An iPhone screenshot of the game The Coast with the Game Overlay open, showing the in-game UI for setting up or joining a multiplayer activity using a custom code.](https://docs-assets.developer.apple.com/published/21aa655690fc4f5ec113e47e587774ab/games-multiplayer-custom-code%402x.png)
 
@@ -247,17 +246,17 @@ Multiplayer level detail
 
 ![A diagram of the layout for a multiplayer activity image, with callouts indicating the image size and cropped area.](https://docs-assets.developer.apple.com/published/3f26192095237c3c95276f37dd349ab6/games-multiplayer-image-specs%402x.png)
 
-| Attribute | Value |
-| --- | --- |
-| Format | JPEG, JPG, or PNG |
-| Color space | sRGB or P3 |
-| Resolution | 72 DPI (minimum) |
-| Image size | 1920x1080 pt (3840x2160 px @2x) |
-| Cropped area | 1465x767 pt (2930x1534 px @2x) |
+| Attribute    | Value                           |
+| ------------ | ------------------------------- |
+| Format       | JPEG, JPG, or PNG               |
+| Color space  | sRGB or P3                      |
+| Resolution   | 72 DPI (minimum)                |
+| Image size   | 1920x1080 pt (3840x2160 px @2x) |
+| Cropped area | 1465x767 pt (2930x1534 px @2x)  |
 
 ## [Platform considerations](/design/human-interface-guidelines/game-center#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, or visionOS.*
+_No additional considerations for iOS, iPadOS, macOS, or visionOS._
 
 ### [tvOS](/design/human-interface-guidelines/game-center#tvOS)
 
@@ -265,12 +264,12 @@ Multiplayer level detail
 
 ![A diagram of the layout for a tvOS dashboard image, with a callout indicating the image size.](https://docs-assets.developer.apple.com/published/438f3caaa842926ba5a0f54470c64373/tvos-dashboard-image%402x.png)
 
-| Attribute | Value |
-| --- | --- |
-| Image size | 600x180 pt (1200x360 px @2x) |
-| Format | PNG, TIF, or JPG |
-| Color space | sRGB or P3 |
-| Resolution | 72 DPI (minimum) |
+| Attribute   | Value                        |
+| ----------- | ---------------------------- |
+| Image size  | 600x180 pt (1200x360 px @2x) |
+| Format      | PNG, TIF, or JPG             |
+| Color space | sRGB or P3                   |
+| Resolution  | 72 DPI (minimum)             |
 
 ### [watchOS](/design/human-interface-guidelines/game-center#watchOS)
 
@@ -310,9 +309,9 @@ Engage players with the Apple Games app](https://developer.apple.com/videos/play
 
 ## [Change log](/design/human-interface-guidelines/game-center#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| June 9, 2025 | Added guidance for new challenges and multiplayer activities, and considerations for the Apple Games app and Game Overlay. Updated guidance and specifications for activity preview images. |
-| February 2, 2024 | Added links to developer guidance on using the access point and dashboard in a visionOS game. |
-| September 12, 2023 | Added artwork for the iOS achievement layout. |
-| May 2, 2023 | Consolidated guidance into one page. |
+| Date               | Changes                                                                                                                                                                                     |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| June 9, 2025       | Added guidance for new challenges and multiplayer activities, and considerations for the Apple Games app and Game Overlay. Updated guidance and specifications for activity preview images. |
+| February 2, 2024   | Added links to developer guidance on using the access point and dashboard in a visionOS game.                                                                                               |
+| September 12, 2023 | Added artwork for the iOS achievement layout.                                                                                                                                               |
+| May 2, 2023        | Consolidated guidance into one page.                                                                                                                                                        |

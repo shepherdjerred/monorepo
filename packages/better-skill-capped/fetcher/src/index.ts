@@ -1,7 +1,9 @@
 import * as Sentry from "@sentry/node";
 
 Sentry.init({
-  dsn: Bun.env["SENTRY_DSN"] ?? "https://34fcb766ca0f49499b001635c5cc5cb2@bugsink.sjer.red/3",
+  dsn:
+    Bun.env["SENTRY_DSN"] ??
+    "https://34fcb766ca0f49499b001635c5cc5cb2@bugsink.sjer.red/3",
   environment: Bun.env.NODE_ENV ?? "production",
 });
 
@@ -55,7 +57,9 @@ function buildS3Url(config: S3UploadConfig): URL {
     .join("/");
 
   if (config.forcePathStyle) {
-    return new URL(`${endpointUrl.origin}${basePath}/${config.bucket}/${encodedKey}`);
+    return new URL(
+      `${endpointUrl.origin}${basePath}/${config.bucket}/${encodedKey}`,
+    );
   }
 
   const url = new URL(`${endpointUrl.origin}${basePath}/${encodedKey}`);
@@ -81,21 +85,43 @@ async function uploadToS3(config: S3UploadConfig, body: string): Promise<void> {
     headers["x-amz-security-token"] = config.sessionToken;
   }
 
-  const sortedHeaderEntries = Object.entries(headers).sort(([left], [right]) => left.localeCompare(right));
-  const canonicalHeaders = sortedHeaderEntries.map(([key, value]) => `${key}:${value}\n`).join("");
-  const signedHeaders = sortedHeaderEntries.map(([key]) => key).join(";");
-  const canonicalRequest = ["PUT", canonicalUri, canonicalQuery, canonicalHeaders, signedHeaders, payloadHash].join(
-    "\n",
+  const sortedHeaderEntries = Object.entries(headers).sort(([left], [right]) =>
+    left.localeCompare(right),
   );
+  const canonicalHeaders = sortedHeaderEntries
+    .map(([key, value]) => `${key}:${value}\n`)
+    .join("");
+  const signedHeaders = sortedHeaderEntries.map(([key]) => key).join(";");
+  const canonicalRequest = [
+    "PUT",
+    canonicalUri,
+    canonicalQuery,
+    canonicalHeaders,
+    signedHeaders,
+    payloadHash,
+  ].join("\n");
 
   const credentialScope = `${dateStamp}/${config.region}/s3/aws4_request`;
-  const stringToSign = ["AWS4-HMAC-SHA256", amzDate, credentialScope, sha256Hex(canonicalRequest)].join("\n");
+  const stringToSign = [
+    "AWS4-HMAC-SHA256",
+    amzDate,
+    credentialScope,
+    sha256Hex(canonicalRequest),
+  ].join("\n");
 
   const signingKey = hmacSha256(
-    hmacSha256(hmacSha256(hmacSha256(`AWS4${config.secretAccessKey}`, dateStamp), config.region), "s3"),
+    hmacSha256(
+      hmacSha256(
+        hmacSha256(`AWS4${config.secretAccessKey}`, dateStamp),
+        config.region,
+      ),
+      "s3",
+    ),
     "aws4_request",
   );
-  const signature = createHmac("sha256", signingKey).update(stringToSign).digest("hex");
+  const signature = createHmac("sha256", signingKey)
+    .update(stringToSign)
+    .digest("hex");
 
   const authorization = [
     `AWS4-HMAC-SHA256 Credential=${config.accessKeyId}/${credentialScope}`,
@@ -115,7 +141,9 @@ async function uploadToS3(config: S3UploadConfig, body: string): Promise<void> {
 
   if (!response.ok) {
     const responseBody = await response.text();
-    throw new Error(`S3 upload failed (${String(response.status)}): ${responseBody}`);
+    throw new Error(
+      `S3 upload failed (${String(response.status)}): ${responseBody}`,
+    );
   }
 }
 

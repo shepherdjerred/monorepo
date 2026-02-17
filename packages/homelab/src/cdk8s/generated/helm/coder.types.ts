@@ -364,16 +364,17 @@ export type CoderHelmValuesCoderAffinityPodAntiAffinity = {
   preferredDuringSchedulingIgnoredDuringExecution?: CoderHelmValuesCoderAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionElement[];
 };
 
-export type CoderHelmValuesCoderAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionElement = {
-  /**
-   * @default {"labelSelector":{"matchExpressions":[{"key":"app.kubernetes.io/instance","operator":"In","values":["coder"]}]},"topologyKey":"kubernetes.io/hostname"}
-   */
-  podAffinityTerm?: CoderHelmValuesCoderAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm;
-  /**
-   * @default 1
-   */
-  weight?: number;
-};
+export type CoderHelmValuesCoderAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionElement =
+  {
+    /**
+     * @default {"labelSelector":{"matchExpressions":[{"key":"app.kubernetes.io/instance","operator":"In","values":["coder"]}]},"topologyKey":"kubernetes.io/hostname"}
+     */
+    podAffinityTerm?: CoderHelmValuesCoderAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm;
+    /**
+     * @default 1
+     */
+    weight?: number;
+  };
 
 export type CoderHelmValuesCoderAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm =
   {

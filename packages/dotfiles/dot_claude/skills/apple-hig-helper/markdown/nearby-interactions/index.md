@@ -40,7 +40,7 @@ Nearby interactions are available on devices that support Ultra Wideband technol
 
 ## [Platform considerations](/design/human-interface-guidelines/nearby-interactions#Platform-considerations)
 
-*No additional considerations for iPadOS. Not supported in macOS, tvOS, or visionOS.*
+_No additional considerations for iPadOS. Not supported in macOS, tvOS, or visionOS._
 
 ### [iOS](/design/human-interface-guidelines/nearby-interactions#iOS)
 
@@ -72,6 +72,6 @@ Meet Nearby Interaction](https://developer.apple.com/videos/play/wwdc2020/10668)
 
 ## [Change log](/design/human-interface-guidelines/nearby-interactions#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date          | Changes                                       |
+| ------------- | --------------------------------------------- |
 | June 21, 2023 | Changed page title from Spatial interactions. |

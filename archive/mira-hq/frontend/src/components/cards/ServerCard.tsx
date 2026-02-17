@@ -13,14 +13,8 @@ export interface ServerCardProps {
 export default function ServerCard({
   server,
 }: ServerCardProps): React.ReactElement {
-  const {
-    serverName,
-    status,
-    uptime,
-    maxUptime,
-    address,
-    playersOnline,
-  } = server;
+  const { serverName, status, uptime, maxUptime, address, playersOnline } =
+    server;
   const actions: React.ReactNode[] = [];
 
   const isTransientStatus =
@@ -36,7 +30,7 @@ export default function ServerCard({
           key={status}
           onClick={() => console.log("Stopping...")}
         />,
-      ]
+      ],
     );
   } else if (
     status === ServerStatus.Stopped ||
@@ -49,7 +43,7 @@ export default function ServerCard({
         disabled={isTransientStatus}
         key={status}
         onClick={() => console.log("Starting...")}
-      />
+      />,
     );
   }
 
@@ -63,7 +57,7 @@ export default function ServerCard({
           key={status}
           onClick={() => console.log("Terminating...")}
         />,
-      ]
+      ],
     );
   }
 

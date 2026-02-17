@@ -1,4 +1,4 @@
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Application } from "../../../generated/imports/argoproj.io.ts";
 import versions from "../../versions.ts";
@@ -8,7 +8,15 @@ import { createCloudflareTunnelBinding } from "../../misc/cloudflare-tunnel.ts";
 import { SATA_STORAGE_CLASS } from "../../misc/storage-classes.ts";
 import type { HelmValuesForChart } from "../../misc/typed-helm-parameters.ts";
 export function createChartMuseumApp(chart: Chart) {
-  createIngress(chart, "chartmusuem-ingress", "chartmuseum", "chartmuseum", 8080, ["chartmuseum"], true);
+  createIngress(
+    chart,
+    "chartmusuem-ingress",
+    "chartmuseum",
+    "chartmuseum",
+    8080,
+    ["chartmuseum"],
+    true,
+  );
 
   createCloudflareTunnelBinding(chart, "chartmuseum-cf-tunnel", {
     serviceName: "chartmuseum",
@@ -18,7 +26,8 @@ export function createChartMuseumApp(chart: Chart) {
 
   const basicAuth = new OnePasswordItem(chart, "chartmuseum-admin-password", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/wwoism5fsvmbisv4ef47yxqy2i",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/wwoism5fsvmbisv4ef47yxqy2i",
     },
     metadata: {
       name: "chartmuseum-basic-auth",

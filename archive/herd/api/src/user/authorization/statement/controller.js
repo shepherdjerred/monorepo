@@ -1,12 +1,12 @@
-const StatementModel = require('./model');
+const StatementModel = require("./model");
 
-async function addStatement (req, res, next) {
+async function addStatement(req, res, next) {
   let statement = new StatementModel({
     name: req.body.name,
     namespace: req.body.namespace,
     resource: req.body.resource,
     effect: req.body.effect,
-    action: req.body.action
+    action: req.body.action,
   });
 
   try {
@@ -15,28 +15,28 @@ async function addStatement (req, res, next) {
   } catch (err) {
     next({
       status: 500,
-      error: err
+      error: err,
     });
   }
 }
 
-async function getStatements (req, res, next) {
+async function getStatements(req, res, next) {
   try {
     let statements = await StatementModel.find();
     res.json(statements);
   } catch (err) {
     next({
       status: 500,
-      error: err
+      error: err,
     });
   }
 }
 
-async function getStatement (req, res, next) {
+async function getStatement(req, res, next) {
   res.json(res.locals.statement);
 }
 
-async function updateStatement (req, res, next) {
+async function updateStatement(req, res, next) {
   let statement = res.locals.role;
   statement.name = req.body.name || statement.name;
   statement.namespace = req.body.namespace || statement.namespace;
@@ -49,19 +49,19 @@ async function updateStatement (req, res, next) {
   } catch (err) {
     next({
       status: 500,
-      error: err
+      error: err,
     });
   }
 }
 
-async function deleteStatement (req, res, next) {
+async function deleteStatement(req, res, next) {
   try {
     let statement = await res.locals.role.remove();
     res.json(statement);
   } catch (err) {
     next({
       status: 500,
-      error: err
+      error: err,
     });
   }
 }
@@ -71,5 +71,5 @@ module.exports = {
   getStatements,
   getStatement,
   updateStatement,
-  deleteStatement
+  deleteStatement,
 };

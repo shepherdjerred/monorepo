@@ -4,9 +4,12 @@ import type { AgentType } from "@clauderon/shared";
 type ProviderIconProps = {
   agent: AgentType;
   className?: string;
-}
+};
 
-export function ProviderIcon({ agent, className = "w-4 h-4" }: ProviderIconProps) {
+export function ProviderIcon({
+  agent,
+  className = "w-4 h-4",
+}: ProviderIconProps) {
   switch (agent as string) {
     case "ClaudeCode":
       return <Brain className={className} />;

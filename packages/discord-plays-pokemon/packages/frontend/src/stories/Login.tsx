@@ -2,7 +2,11 @@ import { Button } from "./Button";
 import { Card } from "./Card";
 import { SyntheticEvent, useState } from "react";
 
-export function Login({ handleLogin }: { handleLogin: (token: string) => void }) {
+export function Login({
+  handleLogin,
+}: {
+  handleLogin: (token: string) => void;
+}) {
   const [token, setToken] = useState<string>("");
   function handleInput(event: SyntheticEvent<HTMLInputElement>) {
     setToken(event.currentTarget.value);
@@ -10,12 +14,19 @@ export function Login({ handleLogin }: { handleLogin: (token: string) => void })
   return (
     <Card title="Login">
       <p>
-        Run <code className="bg-gray-100 dark:bg-slate-700 p-1.5 rounded">/token</code> in Discord and paste the result
-        here. This will allow us to associate your commands with your Discord account.
+        Run{" "}
+        <code className="bg-gray-100 dark:bg-slate-700 p-1.5 rounded">
+          /token
+        </code>{" "}
+        in Discord and paste the result here. This will allow us to associate
+        your commands with your Discord account.
       </p>
 
       <div className="mt-5">
-        <label htmlFor="token" className="block text-sm font-medium leading-6 text-gray-900">
+        <label
+          htmlFor="token"
+          className="block text-sm font-medium leading-6 text-gray-900"
+        >
           Authentication Token
         </label>
         <div className="sm:flex sm:items-center">

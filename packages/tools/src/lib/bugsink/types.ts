@@ -1,6 +1,11 @@
 export type BugsinkIssueStatus = "unresolved" | "resolved" | "muted";
 
-export type BugsinkIssueLevel = "fatal" | "error" | "warning" | "info" | "debug";
+export type BugsinkIssueLevel =
+  | "fatal"
+  | "error"
+  | "warning"
+  | "info"
+  | "debug";
 
 export type BugsinkProject = {
   id: string;

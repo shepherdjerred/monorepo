@@ -28,7 +28,7 @@ For guidance, see [Text fields](/design/human-interface-guidelines/text-fields) 
 
 ## [Platform considerations](/design/human-interface-guidelines/combo-boxes#Platform-considerations)
 
-*Not supported in iOS, iPadOS, tvOS, visionOS, or watchOS.*
+_Not supported in iOS, iPadOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/combo-boxes#Resources)
 

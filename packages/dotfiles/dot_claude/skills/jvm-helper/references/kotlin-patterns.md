@@ -277,13 +277,13 @@ users.associateBy { it.id }  // Map<Long, User>
 
 ### Data Class vs Record
 
-| Feature | Kotlin data class | Java record |
-|---------|------------------|-------------|
-| Mutability | Can use `var` (mutable) or `val` (immutable) | Always immutable |
-| Inheritance | Can inherit from classes/interfaces | Can implement interfaces only |
-| `copy()` | Generated automatically | Not available |
-| Default values | Supported | Not supported |
-| componentN | Generated | Not available |
+| Feature        | Kotlin data class                            | Java record                   |
+| -------------- | -------------------------------------------- | ----------------------------- |
+| Mutability     | Can use `var` (mutable) or `val` (immutable) | Always immutable              |
+| Inheritance    | Can inherit from classes/interfaces          | Can implement interfaces only |
+| `copy()`       | Generated automatically                      | Not available                 |
+| Default values | Supported                                    | Not supported                 |
+| componentN     | Generated                                    | Not available                 |
 
 ## Sealed Classes and Interfaces
 
@@ -362,13 +362,13 @@ fun String?.orEmpty(): String = this ?: ""
 
 ### Scope Functions Summary
 
-| Function | Context object | Return value | Use case |
-|----------|---------------|--------------|----------|
-| `let`    | `it`          | Lambda result | Null-safe transforms |
-| `run`    | `this`        | Lambda result | Object config + compute |
-| `with`   | `this`        | Lambda result | Grouping calls |
-| `apply`  | `this`        | Context object | Object configuration |
-| `also`   | `it`          | Context object | Side effects, logging |
+| Function | Context object | Return value   | Use case                |
+| -------- | -------------- | -------------- | ----------------------- |
+| `let`    | `it`           | Lambda result  | Null-safe transforms    |
+| `run`    | `this`         | Lambda result  | Object config + compute |
+| `with`   | `this`         | Lambda result  | Grouping calls          |
+| `apply`  | `this`         | Context object | Object configuration    |
+| `also`   | `it`           | Context object | Side effects, logging   |
 
 ```kotlin
 // Chaining scope functions

@@ -1,4 +1,3 @@
-
 # Overview
 
 This section introduces `raid.py`, a simple RAID simulator you can use to shore
@@ -41,7 +40,7 @@ wish to see how a simple striping RAID (RAID-0) with four disks does this
 mapping.
 
 ```sh
-prompt> ./raid.py -n 5 -L 0 -R 20 
+prompt> ./raid.py -n 5 -L 0 -R 20
 ...
 LOGICAL READ from addr:16 size:4096
   Physical reads/writes?
@@ -68,7 +67,7 @@ logical read.
 
 In this case, calculating the answers is easy: in RAID-0, recall that the
 underlying disk and offset that services a request is calculated via modulo
-arithmetic: 
+arithmetic:
 
 ```sh
 disk   = address % number_of_disks
@@ -76,26 +75,26 @@ offset = address / number_of_disks
 ```
 
 Thus, the first request to 16 should be serviced by disk 0, at offset 4. And
-so forth.  You can, as usual see the answers (once you've computed them!), by
+so forth. You can, as usual see the answers (once you've computed them!), by
 using the handy "-c" flag to compute the results.
 
 ```sh
 prompt> ./raid.py -R 20 -n 5 -L 0 -c
 ...
 LOGICAL READ from addr:16 size:4096
-  read  [disk 0, offset 4]   
+  read  [disk 0, offset 4]
 
 LOGICAL READ from addr:8 size:4096
-  read  [disk 0, offset 2]   
+  read  [disk 0, offset 2]
 
 LOGICAL READ from addr:10 size:4096
-  read  [disk 2, offset 2]   
+  read  [disk 2, offset 2]
 
 LOGICAL READ from addr:15 size:4096
-  read  [disk 3, offset 3]   
+  read  [disk 3, offset 3]
 
 LOGICAL READ from addr:9 size:4096
-  read  [disk 1, offset 2]   
+  read  [disk 1, offset 2]
 ```
 
 Because we like to have fun, you can also do this problem in reverse, with the
@@ -107,23 +106,23 @@ been given to the RAID:
 prompt> ./raid.py -R 20 -n 5 -L 0 -r
 ...
 LOGICAL OPERATION is ?
-  read  [disk 0, offset 4]   
+  read  [disk 0, offset 4]
 
 LOGICAL OPERATION is ?
-  read  [disk 0, offset 2]   
+  read  [disk 0, offset 2]
 
 LOGICAL OPERATION is ?
-  read  [disk 2, offset 2]   
+  read  [disk 2, offset 2]
 
 LOGICAL OPERATION is ?
-  read  [disk 3, offset 3]   
+  read  [disk 3, offset 3]
 
 LOGICAL OPERATION is ?
-  read  [disk 1, offset 2]   
+  read  [disk 1, offset 2]
 ```
 
 You can again use -c to show the answers. To get more variety, a
-different random seed (-s) can be given. 
+different random seed (-s) can be given.
 
 Even further variety is available by examining different RAID levels.
 In the simulator, RAID-0 (block striping), RAID-1 (mirroring), RAID-4
@@ -137,26 +136,26 @@ show the answers to save space:
 prompt> ./raid.py -R 20 -n 5 -L 1 -c
 ...
 LOGICAL READ from addr:16 size:4096
-  read  [disk 0, offset 8]   
- 
+  read  [disk 0, offset 8]
+
 LOGICAL READ from addr:8 size:4096
-  read  [disk 0, offset 4]   
+  read  [disk 0, offset 4]
 
 LOGICAL READ from addr:10 size:4096
-  read  [disk 1, offset 5]   
+  read  [disk 1, offset 5]
 
 LOGICAL READ from addr:15 size:4096
-  read  [disk 3, offset 7]   
+  read  [disk 3, offset 7]
 
 LOGICAL READ from addr:9 size:4096
-  read  [disk 2, offset 4]   
+  read  [disk 2, offset 4]
 ```
 
 You might notice a few things about this example. First, the mirrored
 RAID-1 assumes a striped layout (which some might call RAID-10, or
 stripe of mirrors), where logical block 0 is mapped to the 0th block
 of disks 0 and 1, logical block 1 is mapped to the 0th blocks of disks
-2 and 3, and so forth (in this four-disk example).  Second, when
+2 and 3, and so forth (in this four-disk example). Second, when
 reading a single block from a mirrored RAID system, the RAID has a
 choice of which of two blocks to read. In this simulator, we use a
 relatively silly way: for even-numbered logical blocks, the RAID
@@ -172,25 +171,25 @@ when some writes are introduced:
 
 ```sh
 prompt> ./raid.py -R 20 -n 5 -L 1 -w 100 -c
-... 
+...
 LOGICAL WRITE to  addr:16 size:4096
-  write [disk 0, offset 8]     write [disk 1, offset 8]   
+  write [disk 0, offset 8]     write [disk 1, offset 8]
 
 LOGICAL WRITE to  addr:8 size:4096
-  write [disk 0, offset 4]     write [disk 1, offset 4]   
+  write [disk 0, offset 4]     write [disk 1, offset 4]
 
 LOGICAL WRITE to  addr:10 size:4096
-  write [disk 0, offset 5]     write [disk 1, offset 5]   
+  write [disk 0, offset 5]     write [disk 1, offset 5]
 
 LOGICAL WRITE to  addr:15 size:4096
-  write [disk 2, offset 7]     write [disk 3, offset 7]   
+  write [disk 2, offset 7]     write [disk 3, offset 7]
 
 LOGICAL WRITE to  addr:9 size:4096
-  write [disk 2, offset 4]     write [disk 3, offset 4]   
+  write [disk 2, offset 4]     write [disk 3, offset 4]
 ```
 
 With writes, instead of generating just a single low-level disk operation, the
-RAID must of course update both disks, and hence two writes are issued. 
+RAID must of course update both disks, and hence two writes are issued.
 Even more interesting things happen with RAID-4 and RAID-5, as you might
 guess; we'll leave the exploration of such things to you in the questions
 below.
@@ -234,8 +233,7 @@ left-asymmetric; use -5 LS or -5 LA to try those out with RAID-5 (-L 5).
 Finally, in timing mode (-t), the simulator uses an incredibly simple disk
 model to estimate how long a set of requests takes, instead of just focusing
 on mappings. In this mode, a random request takes 10 milliseconds, whereas a
-sequential request takes 0.1 milliseconds.  The disk is assumed to have a tiny
+sequential request takes 0.1 milliseconds. The disk is assumed to have a tiny
 number of blocks per track (100), and a similarly small number of tracks
 (100). You can thus use the simulator to estimate RAID performance under some
 different workloads.
-

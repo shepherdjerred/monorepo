@@ -26,8 +26,8 @@ Controls in the overlay
 
 The Camera Control offers two types of controls for adjusting values or changing between options:
 
-* A *slider* provides a range of values to choose from, such as how much contrast to apply to the content.
-* A *picker* offers discrete options, such as turning a grid on and off in the viewfinder.
+- A _slider_ provides a range of values to choose from, such as how much contrast to apply to the content.
+- A _picker_ offers discrete options, such as turning a grid on and off in the viewfinder.
 
 ![A partial screenshot of the Camera Control overlay displaying a slider control.](https://docs-assets.developer.apple.com/published/3bb2ecfcd292742f087c064e5dfd1ec5/camera-control-slider-control%402x.png)
 
@@ -103,7 +103,7 @@ Avoid showing controls in the viewfinder that people access in the overlay.
 
 ## [Platform considerations](/design/human-interface-guidelines/camera-control#Platform-considerations)
 
-*Not supported in iPadOS, macOS, watchOS, tvOS, or visionOS.*
+_Not supported in iPadOS, macOS, watchOS, tvOS, or visionOS._
 
 ## [Resources](/design/human-interface-guidelines/camera-control#Resources)
 
@@ -123,6 +123,6 @@ Avoid showing controls in the viewfinder that people access in the overlay.
 
 ## [Change log](/design/human-interface-guidelines/camera-control#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date              | Changes   |
+| ----------------- | --------- |
 | September 9, 2024 | New page. |

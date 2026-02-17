@@ -28,7 +28,7 @@ Generally speaking, collections are ideal for showing image-based content.
 
 ## [Platform considerations](/design/human-interface-guidelines/collections#Platform-considerations)
 
-*No additional considerations for macOS, tvOS, or visionOS. Not supported in watchOS.*
+_No additional considerations for macOS, tvOS, or visionOS. Not supported in watchOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/collections#iOS-iPadOS)
 

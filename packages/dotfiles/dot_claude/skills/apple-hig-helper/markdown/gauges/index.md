@@ -32,7 +32,7 @@ In addition to gauges, macOS also supports level indicators, some of which have 
 
 ## [Platform considerations](/design/human-interface-guidelines/gauges#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, visionOS, or watchOS. Not supported in tvOS.*
+_No additional considerations for iOS, iPadOS, visionOS, or watchOS. Not supported in tvOS._
 
 ### [macOS](/design/human-interface-guidelines/gauges#macOS)
 
@@ -74,6 +74,6 @@ Although rarely used, the relevance style can communicate relevancy using a shad
 
 ## [Change log](/design/human-interface-guidelines/gauges#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date               | Changes   |
+| ------------------ | --------- |
 | September 23, 2022 | New page. |

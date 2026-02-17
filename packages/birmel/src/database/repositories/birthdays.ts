@@ -11,14 +11,14 @@ export type CreateBirthdayInput = {
   birthDay: number; // 1-31
   birthYear?: number; // Optional for age calculation
   timezone?: string;
-}
+};
 
 export type UpdateBirthdayInput = {
   birthMonth?: number;
   birthDay?: number;
   birthYear?: number;
   timezone?: string;
-}
+};
 
 export type UpcomingBirthday = {
   userId: string;
@@ -26,13 +26,18 @@ export type UpcomingBirthday = {
   birthDay: number;
   birthYear?: number;
   daysUntil: number;
-}
+};
 
 /**
  * Create a new birthday entry for a user
  */
-export async function createBirthday(input: CreateBirthdayInput): Promise<Birthday> {
-  logger.debug("Creating birthday", { userId: input.userId, guildId: input.guildId });
+export async function createBirthday(
+  input: CreateBirthdayInput,
+): Promise<Birthday> {
+  logger.debug("Creating birthday", {
+    userId: input.userId,
+    guildId: input.guildId,
+  });
 
   // Validate month and day
   if (input.birthMonth < 1 || input.birthMonth > 12) {
@@ -67,7 +72,7 @@ export async function createBirthday(input: CreateBirthdayInput): Promise<Birthd
  */
 export async function getBirthday(
   userId: string,
-  guildId: string
+  guildId: string,
 ): Promise<Birthday | null> {
   return prisma.birthday.findUnique({
     where: {
@@ -85,15 +90,21 @@ export async function getBirthday(
 export async function updateBirthday(
   userId: string,
   guildId: string,
-  data: UpdateBirthdayInput
+  data: UpdateBirthdayInput,
 ): Promise<Birthday> {
   logger.debug("Updating birthday", { userId, guildId });
 
   // Validate if provided
-  if (data.birthMonth !== undefined && (data.birthMonth < 1 || data.birthMonth > 12)) {
+  if (
+    data.birthMonth !== undefined &&
+    (data.birthMonth < 1 || data.birthMonth > 12)
+  ) {
     throw new Error("Birth month must be between 1 and 12");
   }
-  if (data.birthDay !== undefined && (data.birthDay < 1 || data.birthDay > 31)) {
+  if (
+    data.birthDay !== undefined &&
+    (data.birthDay < 1 || data.birthDay > 31)
+  ) {
     throw new Error("Birth day must be between 1 and 31");
   }
 
@@ -117,7 +128,7 @@ export async function updateBirthday(
  */
 export async function deleteBirthday(
   userId: string,
-  guildId: string
+  guildId: string,
 ): Promise<boolean> {
   try {
     await prisma.birthday.delete({
@@ -158,7 +169,7 @@ export async function getBirthdaysToday(guildId: string): Promise<Birthday[]> {
  */
 export async function getUpcomingBirthdays(
   guildId: string,
-  daysAhead = 7
+  daysAhead = 7,
 ): Promise<UpcomingBirthday[]> {
   const birthdays = await prisma.birthday.findMany({
     where: { guildId },
@@ -177,15 +188,23 @@ export async function getUpcomingBirthdays(
     const thisYear = now.getFullYear();
 
     // Calculate next occurrence of this birthday
-    let nextBirthday = new Date(thisYear, birthday.birthMonth - 1, birthday.birthDay);
+    let nextBirthday = new Date(
+      thisYear,
+      birthday.birthMonth - 1,
+      birthday.birthDay,
+    );
 
     // If birthday already passed this year, check next year
     if (nextBirthday < now) {
-      nextBirthday = new Date(thisYear + 1, birthday.birthMonth - 1, birthday.birthDay);
+      nextBirthday = new Date(
+        thisYear + 1,
+        birthday.birthMonth - 1,
+        birthday.birthDay,
+      );
     }
 
     const daysUntil = Math.floor(
-      (nextBirthday.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      (nextBirthday.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
     );
 
     if (daysUntil >= 0 && daysUntil <= daysAhead) {
@@ -213,7 +232,7 @@ export async function getUpcomingBirthdays(
  */
 export async function getBirthdaysByMonth(
   guildId: string,
-  month: number
+  month: number,
 ): Promise<Birthday[]> {
   if (month < 1 || month > 12) {
     throw new Error("Month must be between 1 and 12");

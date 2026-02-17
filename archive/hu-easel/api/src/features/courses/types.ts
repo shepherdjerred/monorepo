@@ -1,4 +1,4 @@
-import { Course } from './model';
+import { Course } from "./model";
 
 export interface CourseResponseLocals {
   courseParam?: Course;

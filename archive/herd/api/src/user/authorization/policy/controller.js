@@ -1,9 +1,9 @@
-const PolicyModel = require('./model');
+const PolicyModel = require("./model");
 
-async function addPolicy (req, res, next) {
+async function addPolicy(req, res, next) {
   let policy = new PolicyModel({
     name: req.body.name,
-    statements: req.body.statements
+    statements: req.body.statements,
   });
 
   try {
@@ -12,28 +12,28 @@ async function addPolicy (req, res, next) {
   } catch (err) {
     next({
       status: 500,
-      error: err
+      error: err,
     });
   }
 }
 
-async function getPolicies (req, res, next) {
+async function getPolicies(req, res, next) {
   try {
     let policies = await PolicyModel.find();
     res.json(policies);
   } catch (err) {
     next({
       status: 500,
-      error: err
+      error: err,
     });
   }
 }
 
-async function getPolicy (req, res, next) {
+async function getPolicy(req, res, next) {
   res.json(res.locals.policy);
 }
 
-async function updatePolicy (req, res, next) {
+async function updatePolicy(req, res, next) {
   let policy = res.locals.policy;
   policy.name = req.body.name || policy.name;
   policy.statements = req.body.statement || policy.statements;
@@ -43,19 +43,19 @@ async function updatePolicy (req, res, next) {
   } catch (err) {
     next({
       status: 500,
-      error: err
+      error: err,
     });
   }
 }
 
-async function deletePolicy (req, res, next) {
+async function deletePolicy(req, res, next) {
   try {
     let policy = await res.locals.policy.remove();
     res.json(policy);
   } catch (err) {
     next({
       status: 500,
-      error: err
+      error: err,
     });
   }
 }
@@ -65,5 +65,5 @@ module.exports = {
   getPolicies,
   getPolicy,
   updatePolicy,
-  deletePolicy
+  deletePolicy,
 };

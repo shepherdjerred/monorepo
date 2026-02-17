@@ -28,7 +28,7 @@ As with all menus, you need to label Dock menu items succinctly and organize the
 
 ## [Platform considerations](/design/human-interface-guidelines/dock-menus#Platform-considerations)
 
-*Not supported in iOS, iPadOS, tvOS, visionOS, or watchOS.*
+_Not supported in iOS, iPadOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/dock-menus#Resources)
 
@@ -40,4 +40,4 @@ As with all menus, you need to label Dock menu items succinctly and organize the
 
 #### [Developer documentation](/design/human-interface-guidelines/dock-menus#Developer-documentation)
 
-[`applicationDockMenu(_:)`](/documentation/AppKit/NSApplicationDelegate/applicationDockMenu(_:)) — AppKit
+[`applicationDockMenu(_:)`](</documentation/AppKit/NSApplicationDelegate/applicationDockMenu(_:)>) — AppKit

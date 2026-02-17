@@ -94,11 +94,11 @@ Secondary label in the dark appearance
 
 ## [Platform considerations](/design/human-interface-guidelines/dark-mode#Platform-considerations)
 
-*No additional considerations for tvOS. Dark Mode isn’t supported in visionOS or watchOS.*
+_No additional considerations for tvOS. Dark Mode isn’t supported in visionOS or watchOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/dark-mode#iOS-iPadOS)
 
-In Dark Mode, the system uses two sets of background colors — called *base* and *elevated* — to enhance the perception of depth when one dark interface is layered above another. The base colors are dimmer, making background interfaces appear to recede, and the elevated colors are brighter, making foreground interfaces appear to advance.
+In Dark Mode, the system uses two sets of background colors — called _base_ and _elevated_ — to enhance the perception of depth when one dark interface is layered above another. The base colors are dimmer, making background interfaces appear to recede, and the elevated colors are brighter, making foreground interfaces appear to advance.
 
 ![A diagram that shows a stack of 4 terms on top of a black background. The term at the top shows the most contrast with the background and the term at the bottom shows the least.](https://docs-assets.developer.apple.com/published/0d71ac9f5186541dce35b5f702311bd0/base-with-four-semantic-colors%402x.png)
 
@@ -116,7 +116,7 @@ Light
 
 ### [macOS](/design/human-interface-guidelines/dark-mode#macOS)
 
-When people choose the graphite accent color in General settings, macOS causes window backgrounds to pick up color from the current desktop picture. The result — called *desktop tinting* — is a subtle effect that helps windows blend more harmoniously with their surrounding content.
+When people choose the graphite accent color in General settings, macOS causes window backgrounds to pick up color from the current desktop picture. The result — called _desktop tinting_ — is a subtle effect that helps windows blend more harmoniously with their surrounding content.
 
 **Include some transparency in custom component backgrounds when appropriate.** Transparency lets your components pick up color from the window background when desktop tinting is active, creating a visual harmony that can persist even when the desktop picture changes. To help achieve this harmony, add transparency only to a custom component that has a visible background or bezel, and only when the component is in a neutral state, such as state that doesn’t use color. You don’t want to add transparency when the component is in a state that uses color, because doing so can cause the component’s color to fluctuate when the window background adjusts to a different location on the desktop or when the desktop picture changes.
 
@@ -142,6 +142,6 @@ Implementing Dark Mode on iOS](https://developer.apple.com/videos/play/wwdc2019/
 
 ## [Change log](/design/human-interface-guidelines/dark-mode#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date           | Changes                                               |
+| -------------- | ----------------------------------------------------- |
 | August 6, 2024 | Added art contrasting the light and dark appearances. |

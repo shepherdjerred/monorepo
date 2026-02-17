@@ -12,16 +12,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 90% 10%;
 
-    --primary: 220 85% 25%;          /* Rich navy blue */
+    --primary: 220 85% 25%; /* Rich navy blue */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 15% 92%;        /* Cool gray */
+    --secondary: 220 15% 92%; /* Cool gray */
     --secondary-foreground: 220 90% 10%;
 
     --muted: 220 15% 95%;
     --muted-foreground: 220 20% 45%;
 
-    --accent: 215 100% 45%;          /* Brighter blue for interaction */
+    --accent: 215 100% 45%; /* Brighter blue for interaction */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 75% 50%;
@@ -31,15 +31,15 @@
     --input: 220 20% 80%;
     --ring: 220 85% 25%;
 
-    --radius: 0.25rem;               /* Minimal radius (brutalist) */
+    --radius: 0.25rem; /* Minimal radius (brutalist) */
 
     /* Status indicator colors */
-    --status-creating: 220 85% 55%;  /* Blue */
-    --status-running: 142 71% 45%;   /* Green */
-    --status-idle: 45 93% 47%;       /* Yellow/Orange */
+    --status-creating: 220 85% 55%; /* Blue */
+    --status-running: 142 71% 45%; /* Green */
+    --status-idle: 45 93% 47%; /* Yellow/Orange */
     --status-completed: 220 13% 55%; /* Gray */
-    --status-failed: 0 72% 51%;      /* Red */
-    --status-archived: 220 13% 69%;  /* Light Gray */
+    --status-failed: 0 72% 51%; /* Red */
+    --status-archived: 220 13% 69%; /* Light Gray */
   }
 
   .dark {
@@ -52,7 +52,7 @@
     --popover: 220 85% 10%;
     --popover-foreground: 220 10% 95%;
 
-    --primary: 215 100% 60%;         /* Bright blue in dark */
+    --primary: 215 100% 60%; /* Bright blue in dark */
     --primary-foreground: 220 90% 10%;
 
     --secondary: 220 50% 18%;
@@ -72,12 +72,12 @@
     --ring: 215 100% 60%;
 
     /* Status indicator colors (dark mode) */
-    --status-creating: 220 85% 65%;  /* Brighter blue */
-    --status-running: 142 71% 55%;   /* Brighter green */
-    --status-idle: 45 93% 57%;       /* Brighter yellow/orange */
+    --status-creating: 220 85% 65%; /* Brighter blue */
+    --status-running: 142 71% 55%; /* Brighter green */
+    --status-idle: 45 93% 57%; /* Brighter yellow/orange */
     --status-completed: 220 13% 65%; /* Lighter gray */
-    --status-failed: 0 72% 61%;      /* Brighter red */
-    --status-archived: 220 13% 50%;  /* Mid gray */
+    --status-failed: 0 72% 61%; /* Brighter red */
+    --status-archived: 220 13% 50%; /* Mid gray */
   }
 }
 
@@ -93,7 +93,10 @@
   }
 
   /* Brutalist borders - chunky and visible */
-  button, input, select, textarea {
+  button,
+  input,
+  select,
+  textarea {
     border-width: 2px;
   }
 
@@ -103,7 +106,9 @@
     text-decoration-thickness: 2px;
     text-underline-offset: 4px;
     text-decoration-color: hsl(var(--primary));
-    transition: color 200ms, text-decoration-color 200ms;
+    transition:
+      color 200ms,
+      text-decoration-color 200ms;
   }
 
   a:hover {
@@ -112,14 +117,18 @@
   }
 
   /* Retro monospace accents */
-  code, kbd, pre {
-    font-family: 'Berkeley Mono', 'Menlo', 'Monaco', monospace;
+  code,
+  kbd,
+  pre {
+    font-family: "Berkeley Mono", "Menlo", "Monaco", monospace;
   }
 
   /* Chunky focus rings (brutalist affordance) */
   :focus-visible {
     outline: none;
-    box-shadow: 0 0 0 4px hsl(var(--ring)), 0 0 0 6px hsl(var(--background));
+    box-shadow:
+      0 0 0 4px hsl(var(--ring)),
+      0 0 0 6px hsl(var(--background));
   }
 
   /* Remove canvas margins/padding for terminal */
@@ -134,7 +143,7 @@
 @layer components {
   .terminal-retro {
     background: hsl(var(--card));
-    font-family: 'Berkeley Mono', 'Courier New', monospace;
+    font-family: "Berkeley Mono", "Courier New", monospace;
     border: 4px solid hsl(var(--primary));
     box-shadow:
       0 0 10px hsla(var(--primary) / 0.3),

@@ -1,21 +1,21 @@
-import React, { Component } from 'react';
-import { SOAP_URL } from '../../config';
-import * as soap from 'soap';
-import NarrowLayout from '../fragments/layout/NarrowLayout';
+import React, { Component } from "react";
+import { SOAP_URL } from "../../config";
+import * as soap from "soap";
+import NarrowLayout from "../fragments/layout/NarrowLayout";
 
 export default class CheckForSeat extends Component {
-  constructor () {
+  constructor() {
     super();
     this.state = {
       form: {
-        pidm: '',
-        term: ''
+        pidm: "",
+        term: "",
       },
       status: {
         isLoading: false,
         error: undefined,
-        result: undefined
-      }
+        result: undefined,
+      },
     };
 
     this.onTermChange = this.onTermChange.bind(this);
@@ -23,100 +23,132 @@ export default class CheckForSeat extends Component {
     this.onSubmit = this.onSubmit.bind(this);
   }
 
-  onTermChange (event) {
+  onTermChange(event) {
     this.setState({
       form: {
         ...this.state.form,
-        term: event.target.value
-      }
+        term: event.target.value,
+      },
     });
   }
 
-  onPidmChange (event) {
+  onPidmChange(event) {
     this.setState({
       form: {
         ...this.state.form,
-        pidm: event.target.value
-      }
+        pidm: event.target.value,
+      },
     });
   }
 
-  onSubmit (event) {
+  onSubmit(event) {
     event.preventDefault();
     if (!this.state.status.isLoading) {
       this.setState({
         status: {
           isLoading: true,
           error: undefined,
-          result: undefined
-        }
+          result: undefined,
+        },
       });
       soap.createClient(SOAP_URL, (err, client) => {
         if (err) {
           this.setState({
             status: {
               ...this.state.status,
-              error: err
-            }
+              error: err,
+            },
           });
           console.log(err);
         } else {
-          client.CheckForSeat({
-            Pidm: this.state.form.pidm,
-            Term: this.state.form.term
-          }, (err, result) => {
-            if (err) {
-              this.setState({
-                status: {
-                  ...this.state.status,
-                  isLoading: false,
-                  error: err
-                }
-              });
-              console.log(err);
-            } else {
-              this.setState({
-                status: {
-                  ...this.state.status,
-                  isLoading: false,
-                  result: result
-                }
-              });
-              console.log(result);
-            }
-          });
+          client.CheckForSeat(
+            {
+              Pidm: this.state.form.pidm,
+              Term: this.state.form.term,
+            },
+            (err, result) => {
+              if (err) {
+                this.setState({
+                  status: {
+                    ...this.state.status,
+                    isLoading: false,
+                    error: err,
+                  },
+                });
+                console.log(err);
+              } else {
+                this.setState({
+                  status: {
+                    ...this.state.status,
+                    isLoading: false,
+                    result: result,
+                  },
+                });
+                console.log(result);
+              }
+            },
+          );
         }
       });
     }
   }
 
-  render () {
+  render() {
     return (
       <div>
-        <section className='hero is-primary'>
-          <div className='hero-body'>
-            <div className='container'>
-              <h1 className='title'>
-                Check For Seat
-              </h1>
+        <section className="hero is-primary">
+          <div className="hero-body">
+            <div className="container">
+              <h1 className="title">Check For Seat</h1>
             </div>
           </div>
         </section>
         <NarrowLayout>
-          {this.state.status.error && (<div className='notification is-danger'>{JSON.stringify(this.state.status.error)}</div>)}
-          {this.state.status.result && (<div className='notification'>{this.state.status.result.CheckForSeatResult}</div>)}
+          {this.state.status.error && (
+            <div className="notification is-danger">
+              {JSON.stringify(this.state.status.error)}
+            </div>
+          )}
+          {this.state.status.result && (
+            <div className="notification">
+              {this.state.status.result.CheckForSeatResult}
+            </div>
+          )}
           <form onSubmit={this.onSubmit}>
-            <label className='label'>
+            <label className="label">
               Pidm
-              <input type='text' className='input' placeholder='0123456' value={this.state.form.pidm} onChange={this.onPidmChange} />
+              <input
+                type="text"
+                className="input"
+                placeholder="0123456"
+                value={this.state.form.pidm}
+                onChange={this.onPidmChange}
+              />
             </label>
-            <label className='label'>
+            <label className="label">
               Term
-              <input type='text' className='input' placeholder='201990' value={this.state.form.term} onChange={this.onTermChange} />
+              <input
+                type="text"
+                className="input"
+                placeholder="201990"
+                value={this.state.form.term}
+                onChange={this.onTermChange}
+              />
             </label>
-            {this.state.status.isLoading
-              ? <input type='submit' value='Loading' className='button is-primary' disabled />
-              : <input type='submit' value='Submit' className='button is-primary' />}
+            {this.state.status.isLoading ? (
+              <input
+                type="submit"
+                value="Loading"
+                className="button is-primary"
+                disabled
+              />
+            ) : (
+              <input
+                type="submit"
+                value="Submit"
+                className="button is-primary"
+              />
+            )}
           </form>
         </NarrowLayout>
       </div>

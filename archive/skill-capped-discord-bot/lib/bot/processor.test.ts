@@ -57,34 +57,34 @@ describe("processor", () => {
       const currentStorage = new SiteFetcherStorage(currentFetcher, true);
       const discordCommentaryNotifier = new DiscordNotifier(
         "OTUwMTM1MTc5MzE2NDQ5Mjgw.YiUgVw.o-UrcIbNDbw4734w6JIuXNGLxhM",
-        "970449461191000124"
+        "970449461191000124",
       );
       const commentaryNotifier = new FilteringNotifier(
         {
           sendVideos: false,
           sendCommentaries: true,
         },
-        discordCommentaryNotifier
+        discordCommentaryNotifier,
       );
       const commentaryProcessor = new Processor(
         previousStorage,
         currentStorage,
-        commentaryNotifier
+        commentaryNotifier,
       );
       await commentaryProcessor.process(Site.LEAGUE_OF_LEGENDS);
 
       const discordVideoNotifier = new DiscordNotifier(
         "OTUwMTM1MTc5MzE2NDQ5Mjgw.YiUgVw.o-UrcIbNDbw4734w6JIuXNGLxhM",
-        "970441366637264927"
+        "970441366637264927",
       );
       const videoNotifier = new FilteringNotifier(
         { sendVideos: true, sendCommentaries: false },
-        discordVideoNotifier
+        discordVideoNotifier,
       );
       const videoProcessor = new Processor(
         previousStorage,
         currentStorage,
-        videoNotifier
+        videoNotifier,
       );
       await videoProcessor.process(Site.LEAGUE_OF_LEGENDS);
     });
@@ -96,19 +96,19 @@ describe("processor", () => {
       const currentStorage = new SiteFetcherStorage(currentFetcher, true);
       const discordNotifier = new DiscordNotifier(
         "OTUwMTM1MTc5MzE2NDQ5Mjgw.YiUgVw.o-UrcIbNDbw4734w6JIuXNGLxhM",
-        "970441349742624782"
+        "970441349742624782",
       );
       const notifier = new FilteringNotifier(
         {
           sendVideos: false,
           sendCommentaries: true,
         },
-        discordNotifier
+        discordNotifier,
       );
       const processor = new Processor(
         previousStorage,
         currentStorage,
-        notifier
+        notifier,
       );
       await processor.process(Site.WORLD_OF_WARCRAFT);
     });
@@ -120,19 +120,19 @@ describe("processor", () => {
       const currentStorage = new SiteFetcherStorage(currentFetcher, true);
       const discordNotifier = new DiscordNotifier(
         "OTUwMTM1MTc5MzE2NDQ5Mjgw.YiUgVw.o-UrcIbNDbw4734w6JIuXNGLxhM",
-        "970441319094845541"
+        "970441319094845541",
       );
       const notifier = new FilteringNotifier(
         {
           sendVideos: false,
           sendCommentaries: true,
         },
-        discordNotifier
+        discordNotifier,
       );
       const processor = new Processor(
         previousStorage,
         currentStorage,
-        notifier
+        notifier,
       );
       await processor.process(Site.VALORANT);
     });

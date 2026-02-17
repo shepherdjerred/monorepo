@@ -1,5 +1,10 @@
 import type { AstroIntegration } from "astro";
-import type { AstroBuildDoneHookInput, IntegrationDefaults, IntegrationInput, IntegrationOptions } from "./types.js";
+import type {
+  AstroBuildDoneHookInput,
+  IntegrationDefaults,
+  IntegrationInput,
+  IntegrationOptions,
+} from "./types.js";
 import { buildDoneHook } from "./hook.js";
 
 const defaults: IntegrationDefaults = {
@@ -8,7 +13,10 @@ const defaults: IntegrationDefaults = {
   verbose: false,
 };
 
-export function astroOpenGraphImages({ options, render }: IntegrationInput): AstroIntegration {
+export function astroOpenGraphImages({
+  options,
+  render,
+}: IntegrationInput): AstroIntegration {
   const optionsWithDefaults: IntegrationOptions = { ...defaults, ...options };
 
   return {

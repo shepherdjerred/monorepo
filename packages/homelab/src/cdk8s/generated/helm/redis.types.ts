@@ -996,7 +996,8 @@ export type RedisHelmValuesMasterContainerSecurityContext = {
   capabilities?: RedisHelmValuesMasterContainerSecurityContextCapabilities;
 };
 
-export type RedisHelmValuesMasterContainerSecurityContextSeLinuxOptions = object;
+export type RedisHelmValuesMasterContainerSecurityContextSeLinuxOptions =
+  object;
 
 export type RedisHelmValuesMasterContainerSecurityContextSeccompProfile = {
   /**
@@ -2197,7 +2198,8 @@ export type RedisHelmValuesReplicaContainerSecurityContext = {
   capabilities?: RedisHelmValuesReplicaContainerSecurityContextCapabilities;
 };
 
-export type RedisHelmValuesReplicaContainerSecurityContextSeLinuxOptions = object;
+export type RedisHelmValuesReplicaContainerSecurityContextSeLinuxOptions =
+  object;
 
 export type RedisHelmValuesReplicaContainerSecurityContextSeccompProfile = {
   /**
@@ -3409,7 +3411,8 @@ export type RedisHelmValuesSentinelContainerSecurityContext = {
   capabilities?: RedisHelmValuesSentinelContainerSecurityContextCapabilities;
 };
 
-export type RedisHelmValuesSentinelContainerSecurityContextSeLinuxOptions = object;
+export type RedisHelmValuesSentinelContainerSecurityContextSeLinuxOptions =
+  object;
 
 export type RedisHelmValuesSentinelContainerSecurityContextSeccompProfile = {
   /**
@@ -4531,7 +4534,8 @@ export type RedisHelmValuesMetricsContainerSecurityContext = {
   capabilities?: RedisHelmValuesMetricsContainerSecurityContextCapabilities;
 };
 
-export type RedisHelmValuesMetricsContainerSecurityContextSeLinuxOptions = object;
+export type RedisHelmValuesMetricsContainerSecurityContextSeLinuxOptions =
+  object;
 
 export type RedisHelmValuesMetricsContainerSecurityContextSeccompProfile = {
   /**
@@ -5079,7 +5083,8 @@ export type RedisHelmValuesVolumePermissionsContainerSecurityContext = {
   runAsUser?: number;
 };
 
-export type RedisHelmValuesVolumePermissionsContainerSecurityContextSeLinuxOptions = object;
+export type RedisHelmValuesVolumePermissionsContainerSecurityContextSeLinuxOptions =
+  object;
 
 export type RedisHelmValuesKubectl = {
   /**
@@ -5231,7 +5236,8 @@ export type RedisHelmValuesKubectlContainerSecurityContext = {
   capabilities?: RedisHelmValuesKubectlContainerSecurityContextCapabilities;
 };
 
-export type RedisHelmValuesKubectlContainerSecurityContextSeLinuxOptions = object;
+export type RedisHelmValuesKubectlContainerSecurityContextSeLinuxOptions =
+  object;
 
 export type RedisHelmValuesKubectlContainerSecurityContextSeccompProfile = {
   /**

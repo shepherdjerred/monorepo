@@ -11,7 +11,7 @@ export type GetIssuesOptions = {
 };
 
 export async function getIssues(
-  options: GetIssuesOptions = {}
+  options: GetIssuesOptions = {},
 ): Promise<BugsinkIssue[]> {
   const params: Record<string, string> = {};
 
@@ -25,7 +25,7 @@ export async function getIssues(
 
   const result = await bugsinkRequest<BugsinkPaginatedResponse<BugsinkIssue>>(
     "/issues/",
-    params
+    params,
   );
 
   if (!result.success || !result.data) {
@@ -50,11 +50,11 @@ export async function getIssue(issueId: string): Promise<BugsinkIssue | null> {
 
 export async function getIssueEvents(
   issueId: string,
-  limit = 10
+  limit = 10,
 ): Promise<BugsinkEvent[]> {
   const result = await bugsinkRequest<BugsinkPaginatedResponse<BugsinkEvent>>(
     `/issues/${issueId}/events/`,
-    { limit: String(limit) }
+    { limit: String(limit) },
   );
 
   if (!result.success || !result.data) {
@@ -65,7 +65,7 @@ export async function getIssueEvents(
 }
 
 export async function getLatestEvent(
-  issueId: string
+  issueId: string,
 ): Promise<BugsinkEvent | null> {
   const events = await getIssueEvents(issueId, 1);
   return events[0] ?? null;

@@ -22,7 +22,7 @@ function getAuthToken(): string {
 
 export async function bugsinkRequest<T>(
   endpoint: string,
-  params?: Record<string, string>
+  params?: Record<string, string>,
 ): Promise<BugsinkClientResult<T>> {
   try {
     const baseUrl = getBaseUrl();

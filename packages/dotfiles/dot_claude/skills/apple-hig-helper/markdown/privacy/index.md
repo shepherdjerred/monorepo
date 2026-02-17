@@ -34,12 +34,12 @@ An app’s App Store product page helps people understand the app’s privacy pr
 
 Here are several examples of the things you must request permission to access:
 
-* Personal data, including location, health, financial, contact, and other personally identifying information
-* User-generated content like emails, messages, calendar data, contacts, gameplay information, Apple Music activity, HomeKit data, and audio, video, and photo content
-* Protected resources like Bluetooth peripherals, home automation features, Wi-Fi connections, and local networks
-* Device capabilities like camera and microphone
-* In a visionOS app running in a Full Space, ARKit data, such as hand tracking, plane estimation, image anchoring, and world tracking
-* The device’s advertising identifier, which supports app tracking
+- Personal data, including location, health, financial, contact, and other personally identifying information
+- User-generated content like emails, messages, calendar data, contacts, gameplay information, Apple Music activity, HomeKit data, and audio, video, and photo content
+- Protected resources like Bluetooth peripherals, home automation features, Wi-Fi connections, and local networks
+- Device capabilities like camera and microphone
+- In a visionOS app running in a Full Space, ARKit data, such as hand tracking, plane estimation, image anchoring, and world tracking
+- The device’s advertising identifier, which supports app tracking
 
 The system provides a standard alert that lets people view each request you make. You supply copy that describes why your app needs access, and the system displays your description in the alert. People can also view the description — and update their choice — in Settings > Privacy.
 
@@ -47,19 +47,19 @@ The system provides a standard alert that lets people view each request you make
 
 **Avoid requesting permission at launch unless the data or resource is required for your app to function.** People are less likely to be bothered by a launch-time request when it’s obvious why you’re making it. For example, people understand that a navigation app needs access to their location before they can benefit from it. Similarly, before people can play a visionOS game that lets them bounce virtual objects off walls in their surroundings, they need to permit the game to access information about their surroundings.
 
-**Write copy that clearly describes how your app uses the ability, data, or resource you’re requesting.** The standard alert displays your copy (called a *purpose string* or *usage description string*) after your app name and before the buttons people use to grant or deny their permission. Aim for a brief, complete sentence that’s straightforward, specific, and easy to understand. Use sentence case, avoid passive voice, and include a period at the end. For developer guidance, see [Requesting access to protected resources](/documentation/UIKit/requesting-access-to-protected-resources) and [App Tracking Transparency](/documentation/AppTrackingTransparency).
+**Write copy that clearly describes how your app uses the ability, data, or resource you’re requesting.** The standard alert displays your copy (called a _purpose string_ or _usage description string_) after your app name and before the buttons people use to grant or deny their permission. Aim for a brief, complete sentence that’s straightforward, specific, and easy to understand. Use sentence case, avoid passive voice, and include a period at the end. For developer guidance, see [Requesting access to protected resources](/documentation/UIKit/requesting-access-to-protected-resources) and [App Tracking Transparency](/documentation/AppTrackingTransparency).
 
-|  | Example purpose string | Notes |
-| --- | --- | --- |
+|                                                        | Example purpose string                                     | Notes                                                                            |
+| ------------------------------------------------------ | ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | A checkmark in a circle to indicate a correct example. | The app records during the night to detect snoring sounds. | An active sentence that clearly describes how and why the app collects the data. |
-| An X in a circle to indicate an incorrect example. | Microphone access is needed for a better experience. | A passive sentence that provides a vague, undefined justification. |
-| An X in a circle to indicate an incorrect example. | Turn on microphone access. | An imperative sentence that doesn’t provide any justification. |
+| An X in a circle to indicate an incorrect example.     | Microphone access is needed for a better experience.       | A passive sentence that provides a vague, undefined justification.               |
+| An X in a circle to indicate an incorrect example.     | Turn on microphone access.                                 | An imperative sentence that doesn’t provide any justification.                   |
 
 Here are several examples of the standard system alert:
 
-* [Example 1](#)
-* [Example 2](#)
-* [Example 3](#)
+- [Example 1](#)
+- [Example 2](#)
+- [Example 3](#)
 
 ![A screenshot of a permission alert for a social media app displaying a purpose string that reads Allow Social Media to access your location? Turning on location  will allow us to show you nearby post locations. Below the string is a small map image containing the Precise On notice and below the map are three buttons in a stack. From the top, the buttons are titled Allow Once, Allow While Using App, and Don’t Allow.](https://docs-assets.developer.apple.com/published/cc8f1498cf0906c5cbba7b0a71fff511/privacy-social-media-post-location-alert%402x.png)
 
@@ -99,10 +99,10 @@ App tracking is a sensitive issue. In some cases, it might make sense to display
 
 There are several prohibited custom-screen designs that will cause rejection. Some examples are offering incentives, displaying a screen or window that looks like a request, displaying an image of the alert, and annotating the screen behind the alert (as shown below). To learn more, see [App Review Guidelines: 5.1.1 (iv)](https://developer.apple.com/app-store/review/guidelines/#data-collection-and-storage).
 
-* [Incentive](#)
-* [Imitation request](#)
-* [Alert image](#)
-* [Alert annotation](#)
+- [Incentive](#)
+- [Imitation request](#)
+- [Alert image](#)
+- [Alert annotation](#)
 
 ![A screenshot of an app’s pre-tracking message that reads Allow tracking and get a $100 credit toward your next purchase. Below the text is an image of a dollar sign inside a circle. Below the image is a button titled Get $100 credit.](https://docs-assets.developer.apple.com/published/6000f4e89c244b12c8438aec034f7d1b/privacy-custom-messaging-prohibited-incentive%402x.png)
 
@@ -142,16 +142,16 @@ After people confirm their understanding of the button’s action, simply tappin
 
 Note
 
-If your app has no authorization status, tapping the location button has the same effect as when a person chooses *Allow Once* in the standard alert. If people previously chose *While Using the App*, tapping the location button doesn’t change your app’s status. For developer guidance, see [`LocationButton`](/documentation/CoreLocationUI/LocationButton) (SwiftUI) and [`CLLocationButton`](/documentation/CoreLocationUI/CLLocationButton) (Swift).
+If your app has no authorization status, tapping the location button has the same effect as when a person chooses _Allow Once_ in the standard alert. If people previously chose _While Using the App_, tapping the location button doesn’t change your app’s status. For developer guidance, see [`LocationButton`](/documentation/CoreLocationUI/LocationButton) (SwiftUI) and [`CLLocationButton`](/documentation/CoreLocationUI/CLLocationButton) (Swift).
 
-**Consider using the location button to give people a lightweight way to share their location for specific app features.** For example, your app might help people attach their location to a message or post, find a store, or identify a building, plant, or animal they’ve encountered in their location. If you know that people often grant your app *Allow Once* permission, consider using the location button to help them benefit from sharing their location without having to repeatedly interact with the alert.
+**Consider using the location button to give people a lightweight way to share their location for specific app features.** For example, your app might help people attach their location to a message or post, find a store, or identify a building, plant, or animal they’ve encountered in their location. If you know that people often grant your app _Allow Once_ permission, consider using the location button to help them benefit from sharing their location without having to repeatedly interact with the alert.
 
 **Consider customizing the location button to harmonize with your UI.** Specifically, you can:
 
-* Choose the system-provided title that works best with your feature, such as “Current Location” or “Share My Current Location.”
-* Choose the filled or outlined location glyph.
-* Select a background color and a color for the title and glyph.
-* Adjust the button’s corner radius.
+- Choose the system-provided title that works best with your feature, such as “Current Location” or “Share My Current Location.”
+- Choose the filled or outlined location glyph.
+- Select a background color and a color for the title and glyph.
+- Adjust the button’s corner radius.
 
 To help people recognize and trust location buttons, you can’t customize the button’s other visual attributes. The system also ensures a location button remains legible by warning you about problems like low-contrast color combinations or too much translucency. In addition to fixing such problems, you’re responsible for making sure the text fits in the button — for example, button text needs to fit without truncation at all accessibility text sizes and when translated into other languages.
 
@@ -175,7 +175,7 @@ Here are some high-level guidelines.
 
 ## [Platform considerations](/design/human-interface-guidelines/privacy#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, tvOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, tvOS, or watchOS._
 
 ### [macOS](/design/human-interface-guidelines/privacy#macOS)
 
@@ -229,6 +229,6 @@ What’s new in privacy](https://developer.apple.com/videos/play/wwdc2024/10123)
 
 ## [Change log](/design/human-interface-guidelines/privacy#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date          | Changes                                                       |
+| ------------- | ------------------------------------------------------------- |
 | June 21, 2023 | Consolidated guidance into new page and updated for visionOS. |

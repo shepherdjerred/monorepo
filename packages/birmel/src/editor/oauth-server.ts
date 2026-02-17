@@ -2,7 +2,10 @@ import { Hono } from "hono";
 import { loggers } from "../utils/index.js";
 import { getConfig } from "../config/index.js";
 import { createOAuthRoutes } from "./oauth-routes.js";
-import { checkClaudePrerequisites, checkGhPrerequisites } from "./claude-client.js";
+import {
+  checkClaudePrerequisites,
+  checkGhPrerequisites,
+} from "./claude-client.js";
 
 const logger = loggers.editor.child("oauth-server");
 
@@ -27,12 +30,17 @@ export async function startOAuthServer(): Promise<void> {
   if (claudeCheck.installed) {
     logger.info("Claude Code CLI found", { version: claudeCheck.version });
     if (!claudeCheck.hasApiKey) {
-      logger.warn("ANTHROPIC_API_KEY not set - run 'claude login' or set the env var");
+      logger.warn(
+        "ANTHROPIC_API_KEY not set - run 'claude login' or set the env var",
+      );
     }
   } else {
-    logger.warn("Claude Code CLI not installed - editor feature will not work", {
-      installCmd: "curl -fsSL https://claude.ai/install.sh | bash",
-    });
+    logger.warn(
+      "Claude Code CLI not installed - editor feature will not work",
+      {
+        installCmd: "curl -fsSL https://claude.ai/install.sh | bash",
+      },
+    );
   }
 
   const ghCheck = await checkGhPrerequisites();

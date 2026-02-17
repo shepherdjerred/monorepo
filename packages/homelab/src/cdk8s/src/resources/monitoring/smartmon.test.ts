@@ -47,12 +47,24 @@ ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_
     await proc.stdin.end();
     const result = await new Response(proc.stdout).text();
 
-    expect(result).toContain('temperature_celsius_value{disk="/dev/nvme0",type="nvme",smart_id="194"} 46');
-    expect(result).toContain('percentage_used_raw_value{disk="/dev/nvme0",type="nvme",smart_id="N/A"} 10');
-    expect(result).toContain('power_cycle_count_raw_value{disk="/dev/nvme0",type="nvme",smart_id="12"} 67');
-    expect(result).toContain('power_on_hours_raw_value{disk="/dev/nvme0",type="nvme",smart_id="9"} 9888');
-    expect(result).toContain('unsafe_shutdown_count_raw_value{disk="/dev/nvme0",type="nvme",smart_id="174"} 35');
-    expect(result).toContain('offline_uncorrectable_raw_value{disk="/dev/nvme0",type="nvme",smart_id="198"} 0');
+    expect(result).toContain(
+      'temperature_celsius_value{disk="/dev/nvme0",type="nvme",smart_id="194"} 46',
+    );
+    expect(result).toContain(
+      'percentage_used_raw_value{disk="/dev/nvme0",type="nvme",smart_id="N/A"} 10',
+    );
+    expect(result).toContain(
+      'power_cycle_count_raw_value{disk="/dev/nvme0",type="nvme",smart_id="12"} 67',
+    );
+    expect(result).toContain(
+      'power_on_hours_raw_value{disk="/dev/nvme0",type="nvme",smart_id="9"} 9888',
+    );
+    expect(result).toContain(
+      'unsafe_shutdown_count_raw_value{disk="/dev/nvme0",type="nvme",smart_id="174"} 35',
+    );
+    expect(result).toContain(
+      'offline_uncorrectable_raw_value{disk="/dev/nvme0",type="nvme",smart_id="198"} 0',
+    );
   });
 
   it("should correctly parse SATA drive attributes", async () => {
@@ -65,9 +77,17 @@ ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_
     await proc.stdin.end();
     const result = await new Response(proc.stdout).text();
 
-    expect(result).toContain('raw_read_error_rate_raw_value{disk="/dev/sda",type="sat",smart_id="1"} 6.416638e+07');
-    expect(result).toContain('power_on_hours_raw_value{disk="/dev/sda",type="sat",smart_id="9"} 6.129000e+04');
-    expect(result).toContain('power_cycle_count_raw_value{disk="/dev/sda",type="sat",smart_id="12"} 3.760000e+02');
-    expect(result).toContain('temperature_celsius_raw_value{disk="/dev/sda",type="sat",smart_id="194"} 3.800000e+01');
+    expect(result).toContain(
+      'raw_read_error_rate_raw_value{disk="/dev/sda",type="sat",smart_id="1"} 6.416638e+07',
+    );
+    expect(result).toContain(
+      'power_on_hours_raw_value{disk="/dev/sda",type="sat",smart_id="9"} 6.129000e+04',
+    );
+    expect(result).toContain(
+      'power_cycle_count_raw_value{disk="/dev/sda",type="sat",smart_id="12"} 3.760000e+02',
+    );
+    expect(result).toContain(
+      'temperature_celsius_raw_value{disk="/dev/sda",type="sat",smart_id="194"} 3.800000e+01',
+    );
   });
 });

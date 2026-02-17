@@ -44,7 +44,7 @@ Ideally, people can understand your app or game simply by experiencing it, but i
 
 ## [Platform considerations](/design/human-interface-guidelines/onboarding#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/onboarding#Resources)
 
@@ -72,7 +72,7 @@ Love at First Launch](https://developer.apple.com/videos/play/wwdc2017/816)
 
 ## [Change log](/design/human-interface-guidelines/onboarding#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date          | Changes                                                                                           |
+| ------------- | ------------------------------------------------------------------------------------------------- |
 | June 10, 2024 | Clarified different approaches to onboarding and added a guideline on displaying a splash screen. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
+| June 21, 2023 | Updated to include guidance for visionOS.                                                         |

@@ -1,4 +1,4 @@
-import { compare, hash, hashSync } from 'bcryptjs';
+import { compare, hash, hashSync } from "bcryptjs";
 import {
   AllowNull,
   Column,
@@ -11,15 +11,15 @@ import {
   NotEmpty,
   PrimaryKey,
   Table,
-  Unique
-} from 'sequelize-typescript';
+  Unique,
+} from "sequelize-typescript";
 
 const SALT_ROUNDS = 10;
 
 export enum UserRole {
-  STUDENT = 'STUDENT',
-  PROFESSOR = 'PROFESSOR',
-  ADMIN = 'ADMIN'
+  STUDENT = "STUDENT",
+  PROFESSOR = "PROFESSOR",
+  ADMIN = "ADMIN",
 }
 
 export interface PublicUserAttributes {
@@ -32,7 +32,6 @@ export interface PublicUserAttributes {
 
 @Table
 export class User extends Model<User> {
-
   @PrimaryKey
   @IsUUID(4)
   @Default(DataType.UUIDV4)
@@ -72,34 +71,34 @@ export class User extends Model<User> {
   @NotEmpty
   @AllowNull(false)
   @Column(DataType.STRING.BINARY)
-  get password (): string {
-    return this.getDataValue('password');
+  get password(): string {
+    return this.getDataValue("password");
   }
 
-  set password (password: string) {
+  set password(password: string) {
     password = User.hashPasswordSync(password);
-    this.setDataValue('password', password);
+    this.setDataValue("password", password);
   }
 
-  static hashPasswordSync (password: string): string {
+  static hashPasswordSync(password: string): string {
     return hashSync(password, SALT_ROUNDS);
   }
 
-  static hashPassword (password: string): Promise<string> {
+  static hashPassword(password: string): Promise<string> {
     return hash(password, SALT_ROUNDS);
   }
 
-  validatePassword (candidate: string): Promise<boolean> {
+  validatePassword(candidate: string): Promise<boolean> {
     return compare(candidate, this.password);
   }
 
-  toJSON (): PublicUserAttributes {
+  toJSON(): PublicUserAttributes {
     return {
       uuid: this.uuid,
       username: this.username,
       firstName: this.firstName,
       lastName: this.lastName,
-      role: this.role
+      role: this.role,
     };
   }
 }

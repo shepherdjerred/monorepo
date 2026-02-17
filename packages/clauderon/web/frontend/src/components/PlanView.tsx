@@ -16,7 +16,9 @@ export function PlanView({ message }: PlanViewProps) {
           <FileText className="w-5 h-5" />
         </div>
         <div>
-          <h3 className="font-bold font-mono uppercase text-lg tracking-wide">Implementation Plan</h3>
+          <h3 className="font-bold font-mono uppercase text-lg tracking-wide">
+            Implementation Plan
+          </h3>
           <p className="text-xs font-mono text-muted-foreground">
             Review and approve before implementation
           </p>
@@ -46,7 +48,12 @@ export function PlanView({ message }: PlanViewProps) {
             ),
             // Style checkboxes
             li: ({ children, ...props }) => {
-              const childText = typeof children === 'string' ? children : (Array.isArray(children) ? children.join('') : '');
+              const childText =
+                typeof children === "string"
+                  ? children
+                  : Array.isArray(children)
+                    ? children.join("")
+                    : "";
               if (childText.includes("[ ]") || childText.includes("[x]")) {
                 const isChecked = childText.includes("[x]");
                 return (
@@ -76,7 +83,7 @@ export function PlanView({ message }: PlanViewProps) {
  */
 export function isPlan(message: Message): boolean {
   // Check for ExitPlanMode tool use
-  if (message.toolUses?.some(tool => tool.name === "ExitPlanMode")) {
+  if (message.toolUses?.some((tool) => tool.name === "ExitPlanMode")) {
     return true;
   }
 

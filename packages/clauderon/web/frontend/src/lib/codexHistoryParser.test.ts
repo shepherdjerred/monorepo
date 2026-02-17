@@ -1,8 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-  isCodexFormat,
-  parseCodexHistoryLines,
-} from "./codexHistoryParser";
+import { isCodexFormat, parseCodexHistoryLines } from "./codexHistoryParser";
 import { parseHistoryLinesAuto } from "./historyParser";
 
 describe("isCodexFormat", () => {
@@ -132,7 +129,9 @@ describe("parseCodexHistoryLines", () => {
     expect(messages[0]?.content).toBe("Using tool: read_file");
     expect(messages[0]?.toolUses).toHaveLength(1);
     expect(messages[0]?.toolUses?.[0]?.name).toBe("read_file");
-    expect(messages[0]?.toolUses?.[0]?.input).toEqual({ path: "/test/file.ts" });
+    expect(messages[0]?.toolUses?.[0]?.input).toEqual({
+      path: "/test/file.ts",
+    });
   });
 
   test("matches function call output to function call", () => {

@@ -4,7 +4,9 @@ import { Database } from "bun:sqlite";
 import { readFileSync } from "fs";
 
 // Get CSV filename from command line or use default
-const csvFile = process.argv[2] || "transactions-191354292262351396-191354292241042981-6c5d15e8-b516-4281-b1cb-b205c10d420e.csv";
+const csvFile =
+  process.argv[2] ||
+  "transactions-191354292262351396-191354292241042981-6c5d15e8-b516-4281-b1cb-b205c10d420e.csv";
 const dbFile = process.argv[3] || "transactions.db";
 
 console.log(`Converting ${csvFile} to ${dbFile}...`);
@@ -40,7 +42,7 @@ function parseCSV(content: string): string[][] {
       // Record separator
       if (currentField || currentRecord.length > 0) {
         currentRecord.push(currentField);
-        if (currentRecord.some(f => f.trim())) {
+        if (currentRecord.some((f) => f.trim())) {
           records.push(currentRecord);
         }
         currentRecord = [];
@@ -57,7 +59,7 @@ function parseCSV(content: string): string[][] {
 
   if (currentField || currentRecord.length > 0) {
     currentRecord.push(currentField);
-    if (currentRecord.some(f => f.trim())) {
+    if (currentRecord.some((f) => f.trim())) {
       records.push(currentRecord);
     }
   }
@@ -107,7 +109,7 @@ const insertMany = db.transaction((rows: string[][]) => {
       row[5], // notes
       row[6] ? parseFloat(row[6]) : null, // amount
       row[7], // tags
-      row[8]  // owner
+      row[8], // owner
     );
   }
 });
@@ -116,17 +118,23 @@ const insertMany = db.transaction((rows: string[][]) => {
 insertMany(dataRows);
 
 // Show summary
-const count = db.query("SELECT COUNT(*) as count FROM transactions").get() as { count: number };
+const count = db.query("SELECT COUNT(*) as count FROM transactions").get() as {
+  count: number;
+};
 console.log(`✓ Imported ${count.count} transactions`);
 
 // Show sample query
 console.log("\nSample query - Top 5 transactions by amount:");
-const topTransactions = db.query(`
+const topTransactions = db
+  .query(
+    `
   SELECT date, merchant, amount, category
   FROM transactions
   ORDER BY amount DESC
   LIMIT 5
-`).all();
+`,
+  )
+  .all();
 
 console.table(topTransactions);
 

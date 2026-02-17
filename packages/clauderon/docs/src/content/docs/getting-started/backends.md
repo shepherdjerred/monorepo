@@ -7,29 +7,31 @@ clauderon supports multiple backends for running AI agent sessions. Each backend
 
 ## Backend Comparison
 
-| Feature | Zellij | Docker | Kubernetes | Sprites | Apple |
-|---------|--------|--------|------------|---------|-------|
-| Isolation | Process | Container | Pod | Container | Container |
-| Startup | ~100ms | ~2-5s | ~10-30s | ~5-10s | ~1s |
-| Host tools | Full | Limited | None | None | Limited |
-| Custom image | No | Yes | Yes | Yes | No |
-| Resource limits | No | Yes | Yes | Yes | Yes |
-| Cloud native | No | No | Yes | Yes | No |
-| Platform | Any | Any | Any | Any | macOS 26+ |
-| Network isolation | No | Yes | Yes | Yes | Yes |
-| Persistent storage | Host FS | Volumes | PVCs | Volumes | Volumes |
+| Feature            | Zellij  | Docker    | Kubernetes | Sprites   | Apple     |
+| ------------------ | ------- | --------- | ---------- | --------- | --------- |
+| Isolation          | Process | Container | Pod        | Container | Container |
+| Startup            | ~100ms  | ~2-5s     | ~10-30s    | ~5-10s    | ~1s       |
+| Host tools         | Full    | Limited   | None       | None      | Limited   |
+| Custom image       | No      | Yes       | Yes        | Yes       | No        |
+| Resource limits    | No      | Yes       | Yes        | Yes       | Yes       |
+| Cloud native       | No      | No        | Yes        | Yes       | No        |
+| Platform           | Any     | Any       | Any        | Any       | macOS 26+ |
+| Network isolation  | No      | Yes       | Yes        | Yes       | Yes       |
+| Persistent storage | Host FS | Volumes   | PVCs       | Volumes   | Volumes   |
 
 ## Zellij (Default)
 
 Lightweight terminal multiplexer sessions running directly on your host.
 
 **Best for:**
+
 - Fast iteration during development
 - Projects that need host tools
 - Local development workflows
 - Debugging and exploration
 
 **Limitations:**
+
 - No isolation from host system
 - No resource limits
 - No custom runtime environment
@@ -45,12 +47,14 @@ clauderon create --repo ~/project --prompt "Explore the codebase"
 Full container isolation with configurable images and resource limits.
 
 **Best for:**
+
 - Isolated development environments
 - Reproducible builds
 - Projects with specific runtime requirements
 - Untrusted code exploration
 
 **Limitations:**
+
 - Slower startup than Zellij
 - Limited host tool access
 - Requires Docker installed
@@ -66,12 +70,14 @@ clauderon create --backend docker --repo ~/project --prompt "Build the project"
 Cloud-native pod-based sessions for scalable, isolated environments.
 
 **Best for:**
+
 - Team environments
 - Cloud deployments
 - Scalable AI agent farms
 - Enterprise security requirements
 
 **Limitations:**
+
 - Requires Kubernetes cluster
 - Slowest startup time
 - More complex setup
@@ -90,12 +96,14 @@ clauderon create --backend kubernetes --repo ~/project --prompt "Deploy to stagi
 Managed cloud containers via sprites.dev for zero-ops deployment.
 
 **Best for:**
+
 - No-maintenance cloud sessions
 - Remote development
 - Team collaboration
 - Situations where you can't run Docker locally
 
 **Limitations:**
+
 - Requires sprites.dev account
 - Network latency
 - Usage costs
@@ -111,12 +119,14 @@ clauderon create --backend sprites --repo ~/project --prompt "Work on feature"
 Native macOS containerization using Apple's container framework.
 
 **Best for:**
+
 - macOS-native isolation
 - Apple Silicon optimization
 - Swift/iOS development
 - macOS-specific tooling
 
 **Limitations:**
+
 - macOS 26+ required
 - Apple Silicon recommended
 - Limited to macOS
@@ -131,21 +141,21 @@ clauderon create --backend apple --repo ~/project --prompt "Build iOS app"
 
 ### For Local Development
 
-| Scenario | Recommended Backend |
-|----------|-------------------|
-| Quick tasks, exploration | Zellij |
-| Need specific tools/versions | Docker |
-| Untrusted code | Docker |
-| macOS with isolation needs | Apple or Docker |
+| Scenario                     | Recommended Backend |
+| ---------------------------- | ------------------- |
+| Quick tasks, exploration     | Zellij              |
+| Need specific tools/versions | Docker              |
+| Untrusted code               | Docker              |
+| macOS with isolation needs   | Apple or Docker     |
 
 ### For Teams/Production
 
-| Scenario | Recommended Backend |
-|----------|-------------------|
-| Cloud deployment | Kubernetes |
-| Zero-ops requirement | Sprites |
-| On-premise with isolation | Kubernetes |
-| Mixed local/cloud | Docker + Sprites |
+| Scenario                  | Recommended Backend |
+| ------------------------- | ------------------- |
+| Cloud deployment          | Kubernetes          |
+| Zero-ops requirement      | Sprites             |
+| On-premise with isolation | Kubernetes          |
+| Mixed local/cloud         | Docker + Sprites    |
 
 ### Decision Tree
 

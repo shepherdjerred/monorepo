@@ -16,14 +16,14 @@ Feature flags can be set in multiple places. Priority order (highest to lowest):
 
 ## Available Flags
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `enable_webauthn_auth` | `false` | WebAuthn passwordless authentication |
-| `enable_ai_metadata` | `true` | AI-generated session titles |
-| `enable_auto_reconcile` | `true` | Auto-sync database with backends on startup |
-| `enable_proxy_port_reuse` | `false` | Reuse proxy ports across sessions |
-| `enable_usage_tracking` | `false` | Track Claude API usage per session |
-| `enable_kubernetes_backend` | `false` | Enable Kubernetes backend |
+| Flag                        | Default | Description                                 |
+| --------------------------- | ------- | ------------------------------------------- |
+| `enable_webauthn_auth`      | `false` | WebAuthn passwordless authentication        |
+| `enable_ai_metadata`        | `true`  | AI-generated session titles                 |
+| `enable_auto_reconcile`     | `true`  | Auto-sync database with backends on startup |
+| `enable_proxy_port_reuse`   | `false` | Reuse proxy ports across sessions           |
+| `enable_usage_tracking`     | `false` | Track Claude API usage per session          |
+| `enable_kubernetes_backend` | `false` | Enable Kubernetes backend                   |
 
 ## Flag Details
 
@@ -46,6 +46,7 @@ enable_webauthn_auth = true
 ```
 
 **Requirements:**
+
 - HTTPS or localhost (WebAuthn security requirement)
 - `CLAUDERON_ORIGIN` set for non-localhost deployments
 
@@ -66,6 +67,7 @@ export CLAUDERON_FEATURE_ENABLE_AI_METADATA=0
 ```
 
 **Requirements:**
+
 - Valid Anthropic API credentials
 
 ---
@@ -75,6 +77,7 @@ export CLAUDERON_FEATURE_ENABLE_AI_METADATA=0
 **Default:** `true`
 
 Automatically reconciles the database with actual backend state on daemon startup. This detects:
+
 - Orphaned worktrees (database entry exists but worktree deleted)
 - Missing backends (database says running but container/pod gone)
 - Stale sessions stuck in transitional states
@@ -121,12 +124,14 @@ clauderon daemon --enable-kubernetes-backend
 ```
 
 **Requirements:**
+
 - Kubernetes cluster (1.24+)
 - kubectl configured with cluster access
 - Namespace for clauderon pods (default: `clauderon`)
 - Storage class for persistent volumes
 
 **Usage:**
+
 ```bash
 # Start daemon with K8s backend enabled
 clauderon daemon --enable-kubernetes-backend
@@ -160,6 +165,7 @@ CLAUDERON_FEATURE_<FLAG_NAME_UPPERCASE>=<value>
 ```
 
 Accepted values for boolean flags:
+
 - **True:** `true`, `1`, `yes`, `on`
 - **False:** `false`, `0`, `no`, `off`
 

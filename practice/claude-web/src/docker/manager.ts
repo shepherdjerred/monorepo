@@ -3,7 +3,11 @@ import type { Container } from "dockerode";
 import * as net from "net";
 import { getConfig } from "../config/index.js";
 import { logger } from "../utils/index.js";
-import type { ContainerConfig, ContainerInfo, ContainerStatus } from "./types.js";
+import type {
+  ContainerConfig,
+  ContainerInfo,
+  ContainerStatus,
+} from "./types.js";
 
 const SANDBOX_IMAGE = "claude-sandbox:latest";
 const CONTAINER_PREFIX = "claude-session-";
@@ -36,7 +40,9 @@ export class ContainerManager {
     });
 
     // Parse memory limit (e.g., "2g" -> 2GB in bytes)
-    const memoryLimit = this.parseMemoryLimit(containerConfig.CONTAINER_MEMORY_LIMIT);
+    const memoryLimit = this.parseMemoryLimit(
+      containerConfig.CONTAINER_MEMORY_LIMIT,
+    );
 
     const container = await this.docker.createContainer({
       Image: SANDBOX_IMAGE,
@@ -69,12 +75,17 @@ export class ContainerManager {
 
     await container.start();
 
-    logger.info("Container started, attaching via raw socket...", { id: container.id });
+    logger.info("Container started, attaching via raw socket...", {
+      id: container.id,
+    });
 
     // Use raw Docker socket for attach (works with Bun)
     const stream = await this.attachRawSocket(container.id);
 
-    logger.info("Sandbox container ready", { id: container.id, name: containerName });
+    logger.info("Sandbox container ready", {
+      id: container.id,
+      name: containerName,
+    });
 
     return { container, stream };
   }
@@ -83,7 +94,9 @@ export class ContainerManager {
    * Attach to a running container's stdin/stdout
    * Note: This only works reliably if you attach before starting the container
    */
-  async attachToContainer(containerId: string): Promise<NodeJS.ReadWriteStream> {
+  async attachToContainer(
+    containerId: string,
+  ): Promise<NodeJS.ReadWriteStream> {
     const container = this.docker.getContainer(containerId);
 
     const stream = await container.attach({
@@ -376,7 +389,9 @@ export class ContainerManager {
 
         if (headerEnd !== -1) {
           const headers = buffer.slice(0, headerEnd).toString();
-          logger.debug("Docker attach response headers", { headers: headers.substring(0, 200) });
+          logger.debug("Docker attach response headers", {
+            headers: headers.substring(0, 200),
+          });
 
           // Check for successful upgrade
           if (headers.includes("101") || headers.includes("200")) {

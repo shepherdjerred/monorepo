@@ -1,4 +1,9 @@
-import { dag, type Container, type Directory, type Platform } from "@dagger.io/dagger";
+import {
+  dag,
+  type Container,
+  type Directory,
+  type Platform,
+} from "@dagger.io/dagger";
 import versions from "../versions";
 
 /**
@@ -66,8 +71,10 @@ export function getNodeContainerWithCache(
   platform?: Platform,
   customVersion?: string,
 ): Container {
-  return getNodeContainer(source, platform, customVersion)
-    .withMountedCache("/root/.npm", dag.cacheVolume("npm-cache"));
+  return getNodeContainer(source, platform, customVersion).withMountedCache(
+    "/root/.npm",
+    dag.cacheVolume("npm-cache"),
+  );
 }
 
 export type NodeCacheOptions = {
@@ -93,7 +100,10 @@ export type NodeCacheOptions = {
  * );
  * ```
  */
-export function withNpmCache(container: Container, options: NodeCacheOptions = {}): Container {
+export function withNpmCache(
+  container: Container,
+  options: NodeCacheOptions = {},
+): Container {
   const { cacheKey = "npm-cache", cachePath = "/root/.npm" } = options;
   return container.withMountedCache(cachePath, dag.cacheVolume(cacheKey));
 }

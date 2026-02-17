@@ -15,7 +15,10 @@ function buildDependencySummaryContainer(source: Directory): Container {
   const depsEmailSource = source.directory("src/deps-email");
 
   // Get helm binary from official image
-  const helmBinary = dag.container().from(`alpine/helm:${versions["alpine/helm"]}`).file("/usr/bin/helm");
+  const helmBinary = dag
+    .container()
+    .from(`alpine/helm:${versions["alpine/helm"]}`)
+    .file("/usr/bin/helm");
 
   // Build the container with optimized layer caching
   return (
@@ -30,13 +33,24 @@ function buildDependencySummaryContainer(source: Directory): Container {
       // Copy patches directory for bun patch support
       .withDirectory("patches", source.directory("patches"))
       // Copy full workspace directories for bun workspace resolution
-      .withDirectory("src/deps-email", depsEmailSource, { exclude: ["node_modules"] })
-      .withDirectory("src/cdk8s", source.directory("src/cdk8s"), { exclude: ["node_modules"] })
-      .withDirectory("src/helm-types", source.directory("src/helm-types"), { exclude: ["node_modules"] })
-      .withDirectory("src/ha", source.directory("src/ha"), { exclude: ["node_modules"] })
+      .withDirectory("src/deps-email", depsEmailSource, {
+        exclude: ["node_modules"],
+      })
+      .withDirectory("src/cdk8s", source.directory("src/cdk8s"), {
+        exclude: ["node_modules"],
+      })
+      .withDirectory("src/helm-types", source.directory("src/helm-types"), {
+        exclude: ["node_modules"],
+      })
+      .withDirectory("src/ha", source.directory("src/ha"), {
+        exclude: ["node_modules"],
+      })
       .withFile(".dagger/package.json", source.file(".dagger/package.json"))
       // Install dependencies (cached unless dependency files change)
-      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache-default-dep-summary"))
+      .withMountedCache(
+        "/root/.bun/install/cache",
+        dag.cacheVolume("bun-cache-default-dep-summary"),
+      )
       .withExec(["bun", "install", "--frozen-lockfile"])
       // Set working directory to the deps-email workspace
       .withWorkdir("/app/src/deps-email")
@@ -75,7 +89,9 @@ export async function buildAndPushDependencySummaryImage(
   }
 
   // Publish the image
-  const result = await container.withRegistryAuth("ghcr.io", ghcrUsername, ghcrPassword).publish(imageName);
+  const result = await container
+    .withRegistryAuth("ghcr.io", ghcrUsername, ghcrPassword)
+    .publish(imageName);
 
   return {
     status: "passed",

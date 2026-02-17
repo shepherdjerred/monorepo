@@ -14,11 +14,11 @@ A label is a static piece of text that people can read and often copy, but not e
 
 Labels display text throughout the interface, in buttons, menu items, and views, helping people understand the current context and what they can do next.
 
-The term *label* refers to uneditable text that can appear in various places. For example:
+The term _label_ refers to uneditable text that can appear in various places. For example:
 
-* Within a button, a label generally conveys what the button does, such as Edit, Cancel, or Send.
-* Within many lists, a label can describe each item, often accompanied by a symbol or an image.
-* Within a view, a label might provide additional context by introducing a control or describing a common action or task that people can perform in the view.
+- Within a button, a label generally conveys what the button does, such as Edit, Cancel, or Send.
+- Within many lists, a label can describe each item, often accompanied by a symbol or an image.
+- Within a view, a label might provide additional context by introducing a control or describing a common action or task that people can perform in the view.
 
 Developer note
 
@@ -34,18 +34,18 @@ The guidance below can help you use a label to display text. In some cases, guid
 
 **Use system-provided label colors to communicate relative importance.** The system defines four label colors that vary in appearance to help you give text different levels of visual importance. For additional guidance, see [Color](/design/human-interface-guidelines/color).
 
-| System color | Example usage | iOS, iPadOS, tvOS, visionOS | macOS |
-| --- | --- | --- | --- |
-| Label | Primary information | [`label`](/documentation/UIKit/UIColor/label) | [`labelColor`](/documentation/AppKit/NSColor/labelColor) |
-| Secondary label | A subheading or supplemental text | [`secondaryLabel`](/documentation/UIKit/UIColor/secondaryLabel) | [`secondaryLabelColor`](/documentation/AppKit/NSColor/secondaryLabelColor) |
-| Tertiary label | Text that describes an unavailable item or behavior | [`tertiaryLabel`](/documentation/UIKit/UIColor/tertiaryLabel) | [`tertiaryLabelColor`](/documentation/AppKit/NSColor/tertiaryLabelColor) |
-| Quaternary label | Watermark text | [`quaternaryLabel`](/documentation/UIKit/UIColor/quaternaryLabel) | [`quaternaryLabelColor`](/documentation/AppKit/NSColor/quaternaryLabelColor) |
+| System color     | Example usage                                       | iOS, iPadOS, tvOS, visionOS                                       | macOS                                                                        |
+| ---------------- | --------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Label            | Primary information                                 | [`label`](/documentation/UIKit/UIColor/label)                     | [`labelColor`](/documentation/AppKit/NSColor/labelColor)                     |
+| Secondary label  | A subheading or supplemental text                   | [`secondaryLabel`](/documentation/UIKit/UIColor/secondaryLabel)   | [`secondaryLabelColor`](/documentation/AppKit/NSColor/secondaryLabelColor)   |
+| Tertiary label   | Text that describes an unavailable item or behavior | [`tertiaryLabel`](/documentation/UIKit/UIColor/tertiaryLabel)     | [`tertiaryLabelColor`](/documentation/AppKit/NSColor/tertiaryLabelColor)     |
+| Quaternary label | Watermark text                                      | [`quaternaryLabel`](/documentation/UIKit/UIColor/quaternaryLabel) | [`quaternaryLabelColor`](/documentation/AppKit/NSColor/quaternaryLabelColor) |
 
 **Make useful label text selectable.** If a label contains useful information — like an error message, a location, or an IP address — consider letting people select and copy it for pasting elsewhere.
 
 ## [Platform considerations](/design/human-interface-guidelines/labels#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, tvOS, or visionOS.*
+_No additional considerations for iOS, iPadOS, tvOS, or visionOS._
 
 ### [macOS](/design/human-interface-guidelines/labels#macOS)
 
@@ -89,6 +89,6 @@ Consider using date and timer components in complications. For design guidance, 
 
 ## [Change log](/design/human-interface-guidelines/labels#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date         | Changes                                            |
+| ------------ | -------------------------------------------------- |
 | June 5, 2023 | Updated guidance to reflect changes in watchOS 10. |

@@ -17,7 +17,7 @@ export type GetIncidentsOptions = {
 };
 
 export async function getIncidents(
-  options: GetIncidentsOptions = {}
+  options: GetIncidentsOptions = {},
 ): Promise<PagerDutyIncident[]> {
   const params: Record<string, string | string[]> = {};
 
@@ -38,7 +38,7 @@ export async function getIncidents(
 
   const result = await pagerDutyRequest<PagerDutyIncidentsResponse>(
     "/incidents",
-    params
+    params,
   );
 
   if (!result.success || !result.data) {
@@ -49,10 +49,10 @@ export async function getIncidents(
 }
 
 export async function getIncident(
-  incidentId: string
+  incidentId: string,
 ): Promise<PagerDutyIncident | null> {
   const result = await pagerDutyRequest<PagerDutyIncidentResponse>(
-    `/incidents/${incidentId}`
+    `/incidents/${incidentId}`,
   );
 
   if (!result.success) {
@@ -66,10 +66,10 @@ export async function getIncident(
 }
 
 export async function getIncidentNotes(
-  incidentId: string
+  incidentId: string,
 ): Promise<PagerDutyNote[]> {
   const result = await pagerDutyRequest<PagerDutyNotesResponse>(
-    `/incidents/${incidentId}/notes`
+    `/incidents/${incidentId}/notes`,
   );
 
   if (!result.success || !result.data) {
@@ -81,11 +81,11 @@ export async function getIncidentNotes(
 
 export async function getIncidentLogEntries(
   incidentId: string,
-  limit = 25
+  limit = 25,
 ): Promise<PagerDutyLogEntry[]> {
   const result = await pagerDutyRequest<PagerDutyLogEntriesResponse>(
     `/incidents/${incidentId}/log_entries`,
-    { limit: String(limit) }
+    { limit: String(limit) },
   );
 
   if (!result.success || !result.data) {

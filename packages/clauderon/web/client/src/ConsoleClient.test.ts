@@ -72,14 +72,18 @@ describe("ConsoleClient", () => {
     });
 
     test("uses provided baseUrl", () => {
-      const client = new ConsoleClient({ baseUrl: "ws://custom:8080/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://custom:8080/ws/console",
+      });
       expect(client).toBeDefined();
     });
   });
 
   describe("connect", () => {
     test("emits connected event on successful connection", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onConnected = mock(() => {});
 
       client.onConnected(onConnected);
@@ -92,7 +96,9 @@ describe("ConsoleClient", () => {
     });
 
     test("disconnects existing connection before connecting", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onDisconnected = mock(() => {});
 
       client.onDisconnected(onDisconnected);
@@ -108,7 +114,9 @@ describe("ConsoleClient", () => {
     });
 
     test("encodes session id in URL", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       client.connect("session/with/special");
 
       // The URL should be encoded
@@ -118,7 +126,9 @@ describe("ConsoleClient", () => {
 
   describe("disconnect", () => {
     test("emits disconnected event", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onDisconnected = mock(() => {});
 
       client.onDisconnected(onDisconnected);
@@ -135,18 +145,24 @@ describe("ConsoleClient", () => {
 
     test("handles disconnect when not connected", () => {
       const client = new ConsoleClient();
-      expect(() => { client.disconnect(); }).not.toThrow();
+      expect(() => {
+        client.disconnect();
+      }).not.toThrow();
     });
   });
 
   describe("write", () => {
     test("throws when not connected", () => {
       const client = new ConsoleClient();
-      expect(() => { client.write("test"); }).toThrow(WebSocketError);
+      expect(() => {
+        client.write("test");
+      }).toThrow(WebSocketError);
     });
 
     test("sends base64-encoded input message", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       client.connect("session1");
 
       // Wait for connection
@@ -168,11 +184,15 @@ describe("ConsoleClient", () => {
   describe("resize", () => {
     test("throws when not connected", () => {
       const client = new ConsoleClient();
-      expect(() => { client.resize(24, 80); }).toThrow(WebSocketError);
+      expect(() => {
+        client.resize(24, 80);
+      }).toThrow(WebSocketError);
     });
 
     test("sends resize message", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       client.connect("session1");
 
       // Wait for connection
@@ -185,7 +205,11 @@ describe("ConsoleClient", () => {
       const messages = ws.getSentMessages();
 
       expect(messages).toHaveLength(1);
-      const parsed = JSON.parse(messages[0]!) as { type: string; rows: number; cols: number };
+      const parsed = JSON.parse(messages[0]!) as {
+        type: string;
+        rows: number;
+        cols: number;
+      };
       expect(parsed.type).toBe("resize");
       expect(parsed.rows).toBe(24);
       expect(parsed.cols).toBe(80);
@@ -194,7 +218,9 @@ describe("ConsoleClient", () => {
 
   describe("onData", () => {
     test("emits decoded data from output messages", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onData = mock((_data: string) => {});
 
       client.onData(onData);
@@ -207,14 +233,19 @@ describe("ConsoleClient", () => {
       const ws = client.ws as MockWebSocket;
 
       // Simulate server sending output
-      const message = JSON.stringify({ type: "output", data: btoa("Hello, World!") });
+      const message = JSON.stringify({
+        type: "output",
+        data: btoa("Hello, World!"),
+      });
       ws.simulateMessage(message);
 
       expect(onData).toHaveBeenCalledWith("Hello, World!");
     });
 
     test("emits error for invalid base64", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onError = mock((_error: Error) => {});
 
       client.onError(onError);
@@ -227,7 +258,10 @@ describe("ConsoleClient", () => {
       const ws = client.ws as MockWebSocket;
 
       // Simulate server sending invalid base64
-      const message = JSON.stringify({ type: "output", data: "!!!invalid-base64!!!" });
+      const message = JSON.stringify({
+        type: "output",
+        data: "!!!invalid-base64!!!",
+      });
       ws.simulateMessage(message);
 
       expect(onError).toHaveBeenCalledTimes(1);
@@ -235,7 +269,9 @@ describe("ConsoleClient", () => {
     });
 
     test("emits error for invalid JSON", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onError = mock((_error: Error) => {});
 
       client.onError(onError);
@@ -256,7 +292,9 @@ describe("ConsoleClient", () => {
 
   describe("UTF-8 streaming edge cases", () => {
     test("handles multi-byte UTF-8 characters split across chunks", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onData = mock((_data: string) => {});
 
       client.onData(onData);
@@ -273,26 +311,38 @@ describe("ConsoleClient", () => {
 
       // Send first part (incomplete sequence)
       const chunk1 = bytes.slice(0, 2);
-      const binaryString1 = Array.from(chunk1, (byte) => String.fromCharCode(byte)).join('');
-      const message1 = JSON.stringify({ type: "output", data: btoa(binaryString1) });
+      const binaryString1 = Array.from(chunk1, (byte) =>
+        String.fromCharCode(byte),
+      ).join("");
+      const message1 = JSON.stringify({
+        type: "output",
+        data: btoa(binaryString1),
+      });
       ws.simulateMessage(message1);
 
       // Send second part (completes the sequence)
       const chunk2 = bytes.slice(2);
-      const binaryString2 = Array.from(chunk2, (byte) => String.fromCharCode(byte)).join('');
-      const message2 = JSON.stringify({ type: "output", data: btoa(binaryString2) });
+      const binaryString2 = Array.from(chunk2, (byte) =>
+        String.fromCharCode(byte),
+      ).join("");
+      const message2 = JSON.stringify({
+        type: "output",
+        data: btoa(binaryString2),
+      });
       ws.simulateMessage(message2);
 
       // Should have received the complete emoji across two chunks
       expect(onData).toHaveBeenCalledTimes(2);
       // First call may be empty (incomplete sequence buffered)
       // Second call should have the emoji
-      const calls = onData.mock.calls.map(call => call[0]).join('');
+      const calls = onData.mock.calls.map((call) => call[0]).join("");
       expect(calls).toBe(emoji);
     });
 
     test("handles ANSI escape sequences correctly", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onData = mock((_data: string) => {});
 
       client.onData(onData);
@@ -311,7 +361,9 @@ describe("ConsoleClient", () => {
     });
 
     test("replaces truly invalid UTF-8 with replacement character", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onData = mock((_data: string) => {});
       const onError = mock((_error: Error) => {});
 
@@ -324,9 +376,16 @@ describe("ConsoleClient", () => {
       const ws = client.ws as MockWebSocket;
 
       // Create invalid UTF-8: 0xFF is never valid in UTF-8
-      const invalidBytes = new Uint8Array([0x48, 0x65, 0x6C, 0x6C, 0x6F, 0xFF, 0x21]); // "Hello�!"
-      const binaryString = Array.from(invalidBytes, (byte) => String.fromCharCode(byte)).join('');
-      const message = JSON.stringify({ type: "output", data: btoa(binaryString) });
+      const invalidBytes = new Uint8Array([
+        0x48, 0x65, 0x6c, 0x6c, 0x6f, 0xff, 0x21,
+      ]); // "Hello�!"
+      const binaryString = Array.from(invalidBytes, (byte) =>
+        String.fromCharCode(byte),
+      ).join("");
+      const message = JSON.stringify({
+        type: "output",
+        data: btoa(binaryString),
+      });
       ws.simulateMessage(message);
 
       // Should replace invalid byte with U+FFFD instead of throwing
@@ -337,7 +396,9 @@ describe("ConsoleClient", () => {
     });
 
     test("handles mixed ASCII, UTF-8, and ANSI in single chunk", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onData = mock((_data: string) => {});
 
       client.onData(onData);
@@ -351,15 +412,22 @@ describe("ConsoleClient", () => {
       const mixedText = "\x1b[32m✓\x1b[0m Test passed 🎉";
       // Encode properly: string → UTF-8 bytes → binary string → base64
       const bytes = new TextEncoder().encode(mixedText);
-      const binaryString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
-      const message = JSON.stringify({ type: "output", data: btoa(binaryString) });
+      const binaryString = Array.from(bytes, (byte) =>
+        String.fromCharCode(byte),
+      ).join("");
+      const message = JSON.stringify({
+        type: "output",
+        data: btoa(binaryString),
+      });
       ws.simulateMessage(message);
 
       expect(onData).toHaveBeenCalledWith(mixedText);
     });
 
     test("decoder state resets on disconnect", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       client.connect("session1");
       await new Promise((resolve) => setTimeout(resolve, 10));
 
@@ -375,7 +443,9 @@ describe("ConsoleClient", () => {
 
   describe("listener management", () => {
     test("unsubscribe removes listener", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onConnected = mock(() => {});
 
       const unsubscribe = client.onConnected(onConnected);
@@ -395,7 +465,9 @@ describe("ConsoleClient", () => {
     });
 
     test("returns true when connected", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       client.connect("session1");
 
       await new Promise((resolve) => setTimeout(resolve, 10));
@@ -406,7 +478,9 @@ describe("ConsoleClient", () => {
 
   describe("base64 validation and error handling", () => {
     test("rejects empty base64 data gracefully", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onData = mock((_data: string) => {});
       const onError = mock((_error: Error) => {});
 
@@ -428,7 +502,9 @@ describe("ConsoleClient", () => {
     });
 
     test("rejects malformed base64 with proper error", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onError = mock((_error: Error) => {});
 
       client.onError(onError);
@@ -443,11 +519,15 @@ describe("ConsoleClient", () => {
       ws.simulateMessage(message);
 
       expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError.mock.calls[0]![0].message).toContain("Invalid base64 format");
+      expect(onError.mock.calls[0]![0].message).toContain(
+        "Invalid base64 format",
+      );
     });
 
     test("rejects null data field gracefully", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onData = mock((_data: string) => {});
       const onError = mock((_error: Error) => {});
 
@@ -469,7 +549,9 @@ describe("ConsoleClient", () => {
     });
 
     test("throttles rapid error emissions", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onError = mock((_error: Error) => {});
 
       client.onError(onError);
@@ -490,7 +572,9 @@ describe("ConsoleClient", () => {
     });
 
     test("rejects oversized messages", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onError = mock((_error: Error) => {});
 
       client.onError(onError);
@@ -510,7 +594,9 @@ describe("ConsoleClient", () => {
     });
 
     test("error tracking resets on disconnect", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onError = mock((_error: Error) => {});
 
       client.onError(onError);
@@ -546,7 +632,9 @@ describe("ConsoleClient", () => {
 
   describe("DecodeError with rich context", () => {
     test("validation stage error includes context", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onError = mock((_error: Error) => {});
 
       client.onError(onError);
@@ -569,7 +657,9 @@ describe("ConsoleClient", () => {
     });
 
     test("base64 stage error includes context", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onError = mock((_error: Error) => {});
 
       client.onError(onError);
@@ -583,7 +673,10 @@ describe("ConsoleClient", () => {
       // This is tricky because atob usually accepts anything that looks like base64
       // For this test, we'll use a string that passes our regex but might be problematic
       const problematicBase64 = "AAAA"; // Valid base64 format
-      const message = JSON.stringify({ type: "output", data: problematicBase64 });
+      const message = JSON.stringify({
+        type: "output",
+        data: problematicBase64,
+      });
       ws.simulateMessage(message);
 
       // If atob succeeds (it likely will for this simple case), no error should occur
@@ -598,7 +691,9 @@ describe("ConsoleClient", () => {
     });
 
     test("error context includes data sample for debugging", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onError = mock((_error: Error) => {});
 
       client.onError(onError);
@@ -610,7 +705,10 @@ describe("ConsoleClient", () => {
 
       // Create a long invalid base64 string to test sample truncation
       const longInvalidBase64 = "!" + "A".repeat(200); // Invalid char at start, then 200 A's
-      const message = JSON.stringify({ type: "output", data: longInvalidBase64 });
+      const message = JSON.stringify({
+        type: "output",
+        data: longInvalidBase64,
+      });
       ws.simulateMessage(message);
 
       expect(onError).toHaveBeenCalledTimes(1);
@@ -620,7 +718,9 @@ describe("ConsoleClient", () => {
     });
 
     test("production error scenario: 1368 character base64", async () => {
-      const client = new ConsoleClient({ baseUrl: "ws://localhost:3030/ws/console" });
+      const client = new ConsoleClient({
+        baseUrl: "ws://localhost:3030/ws/console",
+      });
       const onError = mock((_error: Error) => {});
       const onData = mock((_data: string) => {});
 
@@ -644,7 +744,9 @@ describe("ConsoleClient", () => {
       // This should succeed in our test environment
       // But in production, certain byte patterns at this length cause atob errors
       // If it succeeds, data should be emitted
-      expect(onData.mock.calls.length + onError.mock.calls.length).toBeGreaterThan(0);
+      expect(
+        onData.mock.calls.length + onError.mock.calls.length,
+      ).toBeGreaterThan(0);
 
       // If an error occurred, verify it has proper context
       if (onError.mock.calls.length > 0) {

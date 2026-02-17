@@ -1,4 +1,3 @@
-
 # Overview
 
 This simulator, paging-policy.py, allows you to play around with different
@@ -12,7 +11,7 @@ series of page references with a cache of size 3:
 To do so, run the simulator as follows:
 
 ```sh
-prompt> ./paging-policy.py --addresses=0,1,2,0,1,3,0,3,1,2,1 
+prompt> ./paging-policy.py --addresses=0,1,2,0,1,3,0,3,1,2,1
                            --policy=LRU --cachesize=3 -c
 
 And what you would see is:
@@ -38,11 +37,11 @@ Access: 1 HIT  LRU->[br 0, 3, 1]<-MRU Replace:2 [br Hits:5 Misses:4]
 Access: 2 MISS LRU->[br 3, 1, 2]<-MRU Replace:0 [br Hits:5 Misses:5]
 Access: 1 HIT  LRU->[br 3, 2, 1]<-MRU Replace:0 [br Hits:6 Misses:5]
 ```
-  
+
 The complete set of possible arguments for paging-policy is listed on the
 following page, and includes a number of options for varying the policy, how
 addresses are specified/generated, and other important parameters such as the
-size of the cache. 
+size of the cache.
 
 ```sh
 prompt> ./paging-policy.py --help
@@ -51,28 +50,28 @@ Usage: paging-policy.py [options]
 Options:
 -h, --help      show this help message and exit
 -a ADDRESSES, --addresses=ADDRESSES
-                a set of comma-separated pages to access; 
+                a set of comma-separated pages to access;
                 -1 means randomly generate
 -f ADDRESSFILE, --addressfile=ADDRESSFILE
                 a file with a bunch of addresses in it
 -n NUMADDRS, --numaddrs=NUMADDRS
-                if -a (--addresses) is -1, this is the 
+                if -a (--addresses) is -1, this is the
                 number of addrs to generate
 -p POLICY, --policy=POLICY
-                replacement policy: FIFO, LRU, LFU, OPT, 
+                replacement policy: FIFO, LRU, LFU, OPT,
                                     UNOPT, RAND, CLOCK
 -b CLOCKBITS, --clockbits=CLOCKBITS
                 for CLOCK policy, how many clock bits to use
 -C CACHESIZE, --cachesize=CACHESIZE
                 size of the page cache, in pages
 -m MAXPAGE, --maxpage=MAXPAGE
-                if randomly generating page accesses, 
+                if randomly generating page accesses,
                 this is the max page number
 -s SEED, --seed=SEED  random number seed
 -N, --notrace   do not print out a detailed trace
 -c, --compute   compute answers for me
 ```
-  
+
 As usual, "-c" is used to solve a particular problem, whereas without it, the
 accesses are just listed (and the program does not tell you whether or not a
 particular access is a hit or miss).
@@ -88,12 +87,12 @@ prompt> ./paging-policy.py -s 10 -n 3
 Assuming a replacement policy of FIFO, and a cache of size 3 pages,
 figure out whether each of the following page references hit or miss
 in the page cache.
-  
+
 Access: 5  Hit/Miss?  State of Memory?
 Access: 4  Hit/Miss?  State of Memory?
 Access: 5  Hit/Miss?  State of Memory?
 ```
-  
+
 As you can see, in this example, we specify "-n 3" which means the program
 should generate 3 random page references, which it does: 5, 7, and 5. The
 random seed is also specified (10), which is what gets us those particular
@@ -130,7 +129,9 @@ One last piece of fun: why are these two examples interesting?
 ```sh
 ./paging-policy.py -C 3 -a 1,2,3,4,1,2,5,1,2,3,4,5
 ```
+
 and
+
 ```sh
 ./paging-policy.py -C 4 -a 1,2,3,4,1,2,5,1,2,3,4,5
 ```

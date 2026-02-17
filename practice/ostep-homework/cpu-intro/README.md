@@ -1,8 +1,7 @@
-
 # Overview
 
 This program, called process-run.py, allows you to see how the state of a
-process state changes as it runs on a CPU. As described in the chapter, 
+process state changes as it runs on a CPU. As described in the chapter,
 processes can be in a few different states:
 
 ```sh
@@ -59,8 +58,9 @@ Options:
 The most important option to understand is the PROCESS_LIST (as specified by
 the -l or --processlist flags) which specifies exactly what each running
 program (or 'process') will do. A process consists of instructions, and each
-instruction can just do one of two things: 
-- use the CPU 
+instruction can just do one of two things:
+
+- use the CPU
 - issue an IO (and wait for it to complete)
 
 When a process uses the CPU (and does no IO at all), it should simply
@@ -69,7 +69,7 @@ is a simple run that just has one program being run, and that program only
 uses the CPU (it does no IO).
 
 ```sh
-prompt> ./process-run.py -l 5:100 
+prompt> ./process-run.py -l 5:100
 Produce a trace of what would happen when you run these processes:
 Process 0
   cpu
@@ -82,12 +82,12 @@ Important behaviors:
   System will switch when the current process is FINISHED or ISSUES AN IO
   After IOs, the process issuing the IO will run LATER (when it is its turn)
 
-prompt> 
+prompt>
 ```
 
 Here, the process we specified is "5:100" which means it should consist of 5
 instructions, and the chances that each instruction is a CPU instruction are
-100%. 
+100%.
 
 You can see what happens to the process by using the -c flag, which computes the
 answers for you:
@@ -210,7 +210,7 @@ that a single instruction to handle I/O initiation and completion is not
 particularly realistic, but just used here for simplicity.
 
 Let's print some stats (run the same command as above, but with the -p flag)
-to see some overall behaviors: 
+to see some overall behaviors:
 
 ```sh
 Stats: Total Time 21
@@ -224,8 +224,9 @@ quite busy. In general, we'd like to keep all the devices busy, as
 that is a better use of resources.
 
 There are a few other important flags:
+
 ```sh
-  -s SEED, --seed=SEED  the random seed  
+  -s SEED, --seed=SEED  the random seed
     this gives you way to create a bunch of different jobs randomly
 
   -L IO_LENGTH, --iolength=IO_LENGTH
@@ -235,18 +236,14 @@ There are a few other important flags:
                         when to switch between processes: SWITCH_ON_IO, SWITCH_ON_END
     this determines when we switch to another process:
     - SWITCH_ON_IO, the system will switch when a process issues an IO
-    - SWITCH_ON_END, the system will only switch when the current process is done 
+    - SWITCH_ON_END, the system will only switch when the current process is done
 
   -I IO_DONE_BEHAVIOR, --iodone=IO_DONE_BEHAVIOR
                         type of behavior when IO ends: IO_RUN_LATER, IO_RUN_IMMEDIATE
     this determines when a process runs after it issues an IO:
     - IO_RUN_IMMEDIATE: switch to this process right now
-    - IO_RUN_LATER: switch to this process when it is natural to 
+    - IO_RUN_LATER: switch to this process when it is natural to
       (e.g., depending on process-switching behavior)
 ```
 
 Now go answer the questions at the back of the chapter to learn more, please.
-
-
-
-

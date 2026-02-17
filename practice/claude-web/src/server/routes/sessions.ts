@@ -68,7 +68,10 @@ sessions.post("/", async (c) => {
 
   const parsed = createSessionSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json({ error: "Invalid request", details: parsed.error.issues }, 400);
+    return c.json(
+      { error: "Invalid request", details: parsed.error.issues },
+      400,
+    );
   }
 
   const { repoUrl, baseBranch } = parsed.data;
@@ -96,7 +99,12 @@ sessions.post("/", async (c) => {
     },
   });
 
-  logger.info("Creating new session", { sessionId: session.id, repoUrl, baseBranch, branch });
+  logger.info("Creating new session", {
+    sessionId: session.id,
+    repoUrl,
+    baseBranch,
+    branch,
+  });
 
   try {
     // Decrypt GitHub token
@@ -134,7 +142,10 @@ sessions.post("/", async (c) => {
       data: { status: "error" },
     });
 
-    logger.error("Failed to create container", { sessionId: session.id, error });
+    logger.error("Failed to create container", {
+      sessionId: session.id,
+      error,
+    });
     return c.json({ error: "Failed to start session" }, 500);
   }
 });
@@ -158,7 +169,9 @@ sessions.get("/:id", async (c) => {
   // Get container status if running
   let containerInfo = null;
   if (session.containerId) {
-    containerInfo = await containerManager.getContainerInfo(session.containerId);
+    containerInfo = await containerManager.getContainerInfo(
+      session.containerId,
+    );
   }
 
   return c.json({ session, container: containerInfo });
@@ -207,7 +220,10 @@ sessions.post("/:id/commit", async (c) => {
 
   const parsed = commitSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json({ error: "Invalid request", details: parsed.error.issues }, 400);
+    return c.json(
+      { error: "Invalid request", details: parsed.error.issues },
+      400,
+    );
   }
 
   const session = await db.session.findFirst({
@@ -220,7 +236,11 @@ sessions.post("/:id/commit", async (c) => {
 
   try {
     // Stage all changes
-    await containerManager.execInContainer(session.containerId, ["git", "add", "-A"]);
+    await containerManager.execInContainer(session.containerId, [
+      "git",
+      "add",
+      "-A",
+    ]);
 
     // Commit
     const output = await containerManager.execInContainer(session.containerId, [
@@ -287,7 +307,10 @@ sessions.post("/:id/pr", async (c) => {
 
   const parsed = prSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json({ error: "Invalid request", details: parsed.error.issues }, 400);
+    return c.json(
+      { error: "Invalid request", details: parsed.error.issues },
+      400,
+    );
   }
 
   const session = await db.session.findFirst({
@@ -314,25 +337,31 @@ sessions.post("/:id/pr", async (c) => {
     const githubToken = decryptToken(session.user.accessToken);
 
     // Create PR via GitHub API
-    const response = await fetch(`https://api.github.com/repos/${owner}/${repoName}/pulls`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${githubToken}`,
-        Accept: "application/vnd.github.v3+json",
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `https://api.github.com/repos/${owner}/${repoName}/pulls`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${githubToken}`,
+          Accept: "application/vnd.github.v3+json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: parsed.data.title,
+          body: parsed.data.body,
+          head: session.branch,
+          base: session.baseBranch,
+        }),
       },
-      body: JSON.stringify({
-        title: parsed.data.title,
-        body: parsed.data.body,
-        head: session.branch,
-        base: session.baseBranch,
-      }),
-    });
+    );
 
     if (!response.ok) {
       const error = await response.json();
       logger.error("GitHub PR creation failed", { sessionId, error });
-      return c.json({ error: "Failed to create pull request", details: error }, 500);
+      return c.json(
+        { error: "Failed to create pull request", details: error },
+        500,
+      );
     }
 
     const pr = (await response.json()) as { html_url: string; number: number };
@@ -377,12 +406,14 @@ sessions.get("/:id/status", async (c) => {
       "--show-current",
     ]);
 
-    const ahead = await containerManager.execInContainer(session.containerId, [
-      "git",
-      "rev-list",
-      "--count",
-      `origin/${session.branch}..HEAD`,
-    ]).catch(() => "0");
+    const ahead = await containerManager
+      .execInContainer(session.containerId, [
+        "git",
+        "rev-list",
+        "--count",
+        `origin/${session.branch}..HEAD`,
+      ])
+      .catch(() => "0");
 
     return c.json({
       branch: branch.trim(),

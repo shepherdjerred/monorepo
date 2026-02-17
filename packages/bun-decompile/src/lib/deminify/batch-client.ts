@@ -19,14 +19,14 @@ export type BatchStatus = {
   succeeded: number;
   errored: number;
   processing: number;
-}
+};
 
 /** Batch processing callbacks */
 export type BatchCallbacks = {
   onStatusUpdate?: (status: BatchStatus) => void;
   onComplete?: (results: Map<string, DeminifyResult>) => void;
   onError?: (error: Error) => void;
-}
+};
 
 /** Client for batch de-minification using Anthropic's Message Batches API */
 export class BatchDeminifyClient {
@@ -41,9 +41,7 @@ export class BatchDeminifyClient {
   }
 
   /** Create a batch request for all function contexts */
-  async createBatch(
-    contexts: Map<string, DeminifyContext>,
-  ): Promise<string> {
+  async createBatch(contexts: Map<string, DeminifyContext>): Promise<string> {
     const requests: Anthropic.Beta.Messages.BatchCreateParams.Request[] = [];
     const systemPrompt = getSystemPrompt();
 
@@ -129,7 +127,8 @@ export class BatchDeminifyClient {
     contexts: Map<string, DeminifyContext>,
   ): Promise<Map<string, DeminifyResult>> {
     const results = new Map<string, DeminifyResult>();
-    const resultStream = await this.client.beta.messages.batches.results(batchId);
+    const resultStream =
+      await this.client.beta.messages.batches.results(batchId);
 
     for await (const entry of resultStream) {
       const funcId = entry.custom_id;
@@ -148,12 +147,16 @@ export class BatchDeminifyClient {
           results.set(funcId, result);
         } catch (error) {
           if (this.config.verbose) {
-            console.error(`Failed to parse result for ${funcId}: ${(error as Error).message}`);
+            console.error(
+              `Failed to parse result for ${funcId}: ${(error as Error).message}`,
+            );
           }
         }
       } else if (entry.result.type === "errored" && this.config.verbose) {
-          console.error(`Batch error for ${funcId}: ${JSON.stringify(entry.result.error)}`);
-        }
+        console.error(
+          `Batch error for ${funcId}: ${JSON.stringify(entry.result.error)}`,
+        );
+      }
     }
 
     return results;
@@ -191,7 +194,9 @@ export class BatchDeminifyClient {
     const responseText = content.text;
 
     // Extract code from markdown code blocks
-    const codeMatch = /```(?:javascript|js)?\n?([\s\S]*?)```/.exec(responseText);
+    const codeMatch = /```(?:javascript|js)?\n?([\s\S]*?)```/.exec(
+      responseText,
+    );
     if (!codeMatch?.[1]) {
       throw new Error("No code block found in response");
     }
@@ -204,7 +209,8 @@ export class BatchDeminifyClient {
     }
 
     // Try to extract metadata JSON
-    let suggestedName = context.targetFunction.originalName || "anonymousFunction";
+    let suggestedName =
+      context.targetFunction.originalName || "anonymousFunction";
     let confidence = 0.5;
     let parameterNames: Record<string, string> = {};
     let localVariableNames: Record<string, string> = {};
@@ -219,10 +225,18 @@ export class BatchDeminifyClient {
           parameterNames?: Record<string, string>;
           localVariableNames?: Record<string, string>;
         };
-        if (metadata.suggestedName) {suggestedName = metadata.suggestedName;}
-        if (typeof metadata.confidence === "number") {confidence = metadata.confidence;}
-        if (metadata.parameterNames) {parameterNames = metadata.parameterNames;}
-        if (metadata.localVariableNames) {localVariableNames = metadata.localVariableNames;}
+        if (metadata.suggestedName) {
+          suggestedName = metadata.suggestedName;
+        }
+        if (typeof metadata.confidence === "number") {
+          confidence = metadata.confidence;
+        }
+        if (metadata.parameterNames) {
+          parameterNames = metadata.parameterNames;
+        }
+        if (metadata.localVariableNames) {
+          localVariableNames = metadata.localVariableNames;
+        }
       } catch {
         // JSON parsing failed, use defaults
       }
@@ -230,7 +244,10 @@ export class BatchDeminifyClient {
 
     // Try to infer name from the de-minified code if not provided
     if (suggestedName === "anonymousFunction") {
-      const funcNameMatch = /(?:function|const|let|var)\s+([a-zA-Z_$][\w$]*)/.exec(deminifiedSource);
+      const funcNameMatch =
+        /(?:function|const|let|var)\s+([a-zA-Z_$][\w$]*)/.exec(
+          deminifiedSource,
+        );
       if (funcNameMatch?.[1]) {
         suggestedName = funcNameMatch[1];
       }

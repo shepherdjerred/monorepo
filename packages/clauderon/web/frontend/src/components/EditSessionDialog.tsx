@@ -9,9 +9,12 @@ import { toast } from "sonner";
 type EditSessionDialogProps = {
   session: Session;
   onClose: () => void;
-}
+};
 
-export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) {
+export function EditSessionDialog({
+  session,
+  onClose,
+}: EditSessionDialogProps) {
   const { updateSession, regenerateMetadata } = useSessionContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,11 +38,7 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
     setError(null);
 
     try {
-      await updateSession(
-        session.id,
-        formData.title,
-        formData.description
-      );
+      await updateSession(session.id, formData.title, formData.description);
       toast.success("Session updated successfully");
       onClose();
     } catch (err) {
@@ -72,19 +71,29 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-40" style={{
-        backgroundColor: 'hsl(220, 90%, 8%)',
-        opacity: 0.85
-      }} />
+      <div
+        className="fixed inset-0 z-40"
+        style={{
+          backgroundColor: "hsl(220, 90%, 8%)",
+          opacity: 0.85,
+        }}
+      />
 
       {/* Dialog */}
       <div className="fixed inset-0 flex items-center justify-center p-8 z-50">
-        <div className="max-w-2xl w-full flex flex-col border-4 border-primary" style={{
-          backgroundColor: 'hsl(220, 15%, 95%)',
-          boxShadow: '12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)'
-        }}>
+        <div
+          className="max-w-2xl w-full flex flex-col border-4 border-primary"
+          style={{
+            backgroundColor: "hsl(220, 15%, 95%)",
+            boxShadow:
+              "12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)",
+          }}
+        >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b-4 border-primary" style={{ backgroundColor: 'hsl(220, 85%, 25%)' }}>
+          <div
+            className="flex items-center justify-between p-4 border-b-4 border-primary"
+            style={{ backgroundColor: "hsl(220, 85%, 25%)" }}
+          >
             <h2 className="text-2xl font-bold font-mono uppercase tracking-wider text-white">
               Edit Session
             </h2>
@@ -99,20 +108,37 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
           </div>
 
           {/* Form */}
-          <form onSubmit={(e) => { void handleSubmit(e); }} className="p-6 space-y-6" style={{ backgroundColor: 'hsl(220, 15%, 95%)' }}>
+          <form
+            onSubmit={(e) => {
+              void handleSubmit(e);
+            }}
+            className="p-6 space-y-6"
+            style={{ backgroundColor: "hsl(220, 15%, 95%)" }}
+          >
             {error && (
-              <div className="p-4 border-4 font-mono" style={{ backgroundColor: 'hsl(0, 75%, 95%)', color: 'hsl(0, 75%, 40%)', borderColor: 'hsl(0, 75%, 50%)' }}>
+              <div
+                className="p-4 border-4 font-mono"
+                style={{
+                  backgroundColor: "hsl(0, 75%, 95%)",
+                  color: "hsl(0, 75%, 40%)",
+                  borderColor: "hsl(0, 75%, 50%)",
+                }}
+              >
                 <strong className="font-bold">ERROR:</strong> {error}
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="title" className="font-semibold">Title</Label>
+              <Label htmlFor="title" className="font-semibold">
+                Title
+              </Label>
               <input
                 id="title"
                 type="text"
                 value={formData.title}
-                onChange={(e) => { setFormData({ ...formData, title: e.target.value }); }}
+                onChange={(e) => {
+                  setFormData({ ...formData, title: e.target.value });
+                }}
                 className="flex w-full rounded-md border-2 border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                 placeholder="Enter session title"
                 required
@@ -120,11 +146,15 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description" className="font-semibold">Description</Label>
+              <Label htmlFor="description" className="font-semibold">
+                Description
+              </Label>
               <textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => { setFormData({ ...formData, description: e.target.value }); }}
+                onChange={(e) => {
+                  setFormData({ ...formData, description: e.target.value });
+                }}
                 className="flex w-full rounded-md border-2 border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm min-h-[100px]"
                 placeholder="Enter session description"
               />
@@ -136,13 +166,16 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
               <div className="flex items-center gap-3 p-4 border-2 border-input rounded-md bg-muted/50">
                 <div className="flex-1">
                   <p className="text-sm text-muted-foreground">
-                    Regenerate title and description using AI based on the initial prompt.
+                    Regenerate title and description using AI based on the
+                    initial prompt.
                   </p>
                 </div>
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => { handleRegenerate(); }}
+                  onClick={() => {
+                    handleRegenerate();
+                  }}
                   disabled={isSubmitting}
                   className="flex items-center gap-2"
                 >

@@ -64,7 +64,10 @@ async ci(
 ```typescript
 if (env === Stage.Prod) {
   updatedSource = this.updateHaVersion(source, chartVersion);
-  updatedSource = this.updateDependencySummaryVersion(updatedSource, chartVersion);
+  updatedSource = this.updateDependencySummaryVersion(
+    updatedSource,
+    chartVersion,
+  );
   updatedSource = this.updateClaudeCodeUIVersion(updatedSource, chartVersion);
 }
 ```
@@ -251,7 +254,8 @@ export async function sync(
   await container.withExec([
     "sh",
     "-c",
-    `curl -X POST ${argocdServer}/api/v1/applications/${appName}/sync ` + '-H "Authorization: Bearer $ARGOCD_TOKEN"',
+    `curl -X POST ${argocdServer}/api/v1/applications/${appName}/sync ` +
+      '-H "Authorization: Bearer $ARGOCD_TOKEN"',
   ]);
 }
 ```

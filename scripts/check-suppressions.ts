@@ -40,7 +40,8 @@ async function main(): Promise<void> {
   console.log("Checking for new code quality suppressions...\n");
 
   // Get the diff of staged files (bypass external diff tools)
-  const diffResult = await $`git diff --cached --unified=0 --no-ext-diff`.quiet();
+  const diffResult =
+    await $`git diff --cached --unified=0 --no-ext-diff`.quiet();
   const diff = diffResult.text();
 
   if (!diff) {

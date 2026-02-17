@@ -1,25 +1,11 @@
 {
-  "authors": [
-    "lpil"
-  ],
-  "contributors": [
-    "ggpasqualino",
-    "itsgreggreg"
-  ],
+  "authors": ["lpil"],
+  "contributors": ["ggpasqualino", "itsgreggreg"],
   "files": {
-    "solution": [
-      "src/hello_world.gleam"
-    ],
-    "test": [
-      "test/hello_world_test.gleam"
-    ],
-    "example": [
-      ".meta/example.gleam"
-    ],
-    "invalidator": [
-      "gleam.toml",
-      "manifest.toml"
-    ]
+    "solution": ["src/hello_world.gleam"],
+    "test": ["test/hello_world_test.gleam"],
+    "example": [".meta/example.gleam"],
+    "invalidator": ["gleam.toml", "manifest.toml"]
   },
   "blurb": "The classical introductory exercise. Just say \"Hello, World!\".",
   "source": "This is an exercise to introduce users to using Exercism",

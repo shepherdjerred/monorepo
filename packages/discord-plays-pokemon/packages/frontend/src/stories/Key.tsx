@@ -14,7 +14,9 @@ export function Key({
     onKeyDown();
   }
   return (
-    <kbd className={`${`p-3 bg-slate-600 block text-center m-1`} ${isPressed ? `bg-slate-400` : ``}`}>
+    <kbd
+      className={`${`p-3 bg-slate-600 block text-center m-1`} ${isPressed ? `bg-slate-400` : ``}`}
+    >
       {display} ({api})
     </kbd>
   );

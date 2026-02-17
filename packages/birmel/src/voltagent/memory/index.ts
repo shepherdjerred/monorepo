@@ -91,7 +91,10 @@ export function getGlobalResourceId(guildId: string): string {
  * Tied to the current elected owner. Switches when ownership changes.
  * Uses conversationId-based storage.
  */
-export function getOwnerConversationId(guildId: string, ownerPersona: string): string {
+export function getOwnerConversationId(
+  guildId: string,
+  ownerPersona: string,
+): string {
   return `guild:${guildId}:owner:${ownerPersona}`;
 }
 
@@ -163,7 +166,9 @@ export function getMemoryIds(ctx: MemoryContext) {
 /**
  * Get server working memory for a guild.
  */
-export async function getServerWorkingMemory(guildId: string): Promise<string | null> {
+export async function getServerWorkingMemory(
+  guildId: string,
+): Promise<string | null> {
   try {
     const memory = getMemory();
     const conversationId = getServerConversationId(guildId);
@@ -182,7 +187,10 @@ export async function getServerWorkingMemory(guildId: string): Promise<string | 
 /**
  * Update server working memory for a guild.
  */
-export async function updateServerWorkingMemory(guildId: string, content: string): Promise<void> {
+export async function updateServerWorkingMemory(
+  guildId: string,
+  content: string,
+): Promise<void> {
   const memory = getMemory();
   const conversationId = getServerConversationId(guildId);
 
@@ -196,7 +204,10 @@ export async function updateServerWorkingMemory(guildId: string, content: string
 /**
  * Get owner working memory for a guild.
  */
-export async function getOwnerWorkingMemory(guildId: string, persona: string): Promise<string | null> {
+export async function getOwnerWorkingMemory(
+  guildId: string,
+  persona: string,
+): Promise<string | null> {
   try {
     const memory = getMemory();
     const conversationId = getOwnerConversationId(guildId, persona);
@@ -215,7 +226,11 @@ export async function getOwnerWorkingMemory(guildId: string, persona: string): P
 /**
  * Update owner working memory for a guild.
  */
-export async function updateOwnerWorkingMemory(guildId: string, persona: string, content: string): Promise<void> {
+export async function updateOwnerWorkingMemory(
+  guildId: string,
+  persona: string,
+  content: string,
+): Promise<void> {
   const memory = getMemory();
   const conversationId = getOwnerConversationId(guildId, persona);
 

@@ -7,7 +7,7 @@ export type ChannelMessage = {
   isBot: boolean;
   content: string;
   createdAt: Date;
-}
+};
 
 /**
  * Get recent messages from a channel, excluding the triggering message.
@@ -15,7 +15,7 @@ export type ChannelMessage = {
  */
 export async function getRecentChannelMessages(
   message: Message,
-  limit = 10
+  limit = 10,
 ): Promise<ChannelMessage[]> {
   try {
     // Fetch messages before the current one
@@ -48,7 +48,7 @@ export async function getRecentChannelMessages(
  */
 export function formatMessagesForClassifier(
   messages: ChannelMessage[],
-  newMessage: Message
+  newMessage: Message,
 ): string {
   const lines: string[] = [];
 

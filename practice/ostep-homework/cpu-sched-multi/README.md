@@ -1,4 +1,3 @@
-
 # Overview
 
 Welcome to multi.py, a rudimentary multi-CPU scheduling simulator. This
@@ -11,10 +10,10 @@ To run the simulator, all you have to do is type:
 prompt> ./multi.py
 ```
 
-This will then run the simulator with some random jobs. 
+This will then run the simulator with some random jobs.
 
 Before we get into any such details, let's first examine the basics of such a
-simulation. 
+simulation.
 
 In the default mode, there are one or more CPUs in the system (as specified
 with the -n flag). Thus, to run with 4 CPUs in your simulation, type:
@@ -35,7 +34,7 @@ To run a simulation, you need some jobs to schedule. There are two ways to do
 this. The first is to let the system create some jobs with random
 characteristics for you (this is the default, i.e., if you specify nothing,
 you get this); there are also some controls to control (somewhat) the nature
-of randomly-generated jobs, described further below.  The second is to specify
+of randomly-generated jobs, described further below. The second is to specify
 a list of jobs for the system to schedule precisely; this is also described in
 more detail below.
 
@@ -44,7 +43,7 @@ units it will run for). The second is its 'working set size' (how much cache
 space it needs to run efficiently). If you are generating jobs randomly, you
 can control the range of these values by using the -R (maximum run-time flag)
 and -W (maximum working-set-size flag); the random generator will then
-generate values that are not bigger than those. 
+generate values that are not bigger than those.
 
 If you are specifying jobs by hand, you set each of these explicitly, using
 the -L flag. For example, if you want to run two jobs, each with run-time of
@@ -57,7 +56,7 @@ prompt> ./multi.py -n 4 -M 100 -L 1:100:50,2:100:150
 
 Note that you assigned each job a name, '1' for the first job, and '2' for the
 second. When jobs are auto-generated, names are assigned automatically (just
-using numbers). 
+using numbers).
 
 How effectively a job runs on a particular CPU depends on whether the cache of
 that CPU currently holds the working set of the given job. If it doesn't, the
@@ -90,8 +89,8 @@ load balancing. How often this is done is set by a 'peek' interval (set by the
 -P flag).
 
 With this basic understanding in place, you should now be able to do the
-homework, and study different approaches to scheduling.  To see a full list of
-options for this simulator, just type: 
+homework, and study different approaches to scheduling. To see a full list of
+options for this simulator, just type:
 
 ```sh
 prompt> ./multi.py -h
@@ -143,11 +142,3 @@ Options:
 Probably the best to learn about are some of the tracing options (like -t, -T,
 -C, and -S). Play around with these to see better what the scheduler and
 system are doing.
-
-
-
-
-
-
-
-

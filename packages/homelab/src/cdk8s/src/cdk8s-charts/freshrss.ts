@@ -1,4 +1,4 @@
-import type { App} from "cdk8s";
+import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { KubeNetworkPolicy, IntOrString } from "../../generated/imports/k8s.ts";
 import { createFreshRssDeployment } from "../resources/freshrss.ts";
@@ -18,8 +18,26 @@ export function createFreshRssChart(app: App) {
       podSelector: {},
       policyTypes: ["Ingress"],
       ingress: [
-        { from: [{ namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": "tailscale" } } }] },
-        { from: [{ namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": "cloudflare-tunnel" } } }] },
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
+              },
+            },
+          ],
+        },
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "cloudflare-tunnel",
+                },
+              },
+            },
+          ],
+        },
       ],
     },
   });
@@ -33,7 +51,12 @@ export function createFreshRssChart(app: App) {
       egress: [
         // DNS
         {
-          to: [{ namespaceSelector: {}, podSelector: { matchLabels: { "k8s-app": "kube-dns" } } }],
+          to: [
+            {
+              namespaceSelector: {},
+              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
+            },
+          ],
           ports: [
             { port: IntOrString.fromNumber(53), protocol: "UDP" },
             { port: IntOrString.fromNumber(53), protocol: "TCP" },

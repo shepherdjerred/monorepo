@@ -24,17 +24,17 @@ In iOS, iPadOS, and macOS, Spotlight helps people find content across all apps i
 
 **Aim to make your app’s content searchable through a single location.** People appreciate having one clearly identified location they can use to find anything in your app that they are looking for. For apps with clearly distinct sections, it may still be useful to offer a local search. For example, search acts as a filter on the current view when searching your Recents and Contacts in the iOS Phone app.
 
-**Use placeholder text to indicate what content is searchable.** For example, the Apple TV app includes the placeholder text *Shows, Movies, and More*.
+**Use placeholder text to indicate what content is searchable.** For example, the Apple TV app includes the placeholder text _Shows, Movies, and More_.
 
 **Clearly display the current scope of a search.** Use a descriptive placeholder text, a [scope control](/design/human-interface-guidelines/search-fields#Scope-controls-and-tokens), or a title to help reinforce what someone is currently searching. For example, in the Mail app there is always a clear reference to the mailbox someone is searching.
 
-**Provide suggestions to make searching easier.** When you display a personʼs recent searches or offer search suggestions both before and while they’re typing, you can help people search faster and type less. For developer guidance, see [`searchSuggestions(_:)`](/documentation/SwiftUI/View/searchSuggestions(_:)).
+**Provide suggestions to make searching easier.** When you display a personʼs recent searches or offer search suggestions both before and while they’re typing, you can help people search faster and type less. For developer guidance, see [`searchSuggestions(_:)`](</documentation/SwiftUI/View/searchSuggestions(_:)>).
 
 **Take privacy into consideration before displaying search history.** People might not appreciate having their search history appear where others might see it. Depending on the context, consider providing other ways to narrow the search instead. If you do show search history, provide a way for people to clear it if they want.
 
 ## [Systemwide search](/design/human-interface-guidelines/searching#Systemwide-search)
 
-**Make your app’s content searchable in Spotlight.** You can share content with Spotlight by making it indexable and specifying descriptive attributes known as *metadata*. Spotlight extracts, stores, and organizes this information to allow for fast, comprehensive searches.
+**Make your app’s content searchable in Spotlight.** You can share content with Spotlight by making it indexable and specifying descriptive attributes known as _metadata_. Spotlight extracts, stores, and organizes this information to allow for fast, comprehensive searches.
 
 **Define metadata for custom file types you handle.** Supply a Spotlight File Importer plug-in that describes the types of metadata your file format contains. For developer guidance, see [`CSImportExtension`](/documentation/CoreSpotlight/CSImportExtension).
 
@@ -46,7 +46,7 @@ In iOS, iPadOS, and macOS, Spotlight helps people find content across all apps i
 
 ## [Platform considerations](/design/human-interface-guidelines/searching#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/searching#Resources)
 
@@ -74,6 +74,6 @@ Craft search experiences in SwiftUI](https://developer.apple.com/videos/play/wwd
 
 ## [Change log](/design/human-interface-guidelines/searching#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date         | Changes                                                                                                          |
+| ------------ | ---------------------------------------------------------------------------------------------------------------- |
 | June 9, 2025 | Updated best practices with general guidance from Search fields, and reorganized guidance for systemwide search. |

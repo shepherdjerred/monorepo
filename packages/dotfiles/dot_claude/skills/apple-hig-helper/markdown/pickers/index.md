@@ -28,31 +28,31 @@ Pickers help people enter information by letting them choose single or multipart
 
 ## [Platform considerations](/design/human-interface-guidelines/pickers#Platform-considerations)
 
-*No additional considerations for visionOS.*
+_No additional considerations for visionOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/pickers#iOS-iPadOS)
 
 A date picker is an efficient interface for selecting a specific date, time, or both, using touch, a keyboard, or a pointing device. You can display a date picker in one of the following styles:
 
-* Compact — A button that displays editable date and time content in a modal view.
-* Inline — For time only, a button that displays wheels of values; for dates and times, an inline calendar view.
-* Wheels — A set of scrolling wheels that also supports data entry through built-in or external keyboards.
-* Automatic — A system-determined style based on the current platform and date picker mode.
+- Compact — A button that displays editable date and time content in a modal view.
+- Inline — For time only, a button that displays wheels of values; for dates and times, an inline calendar view.
+- Wheels — A set of scrolling wheels that also supports data entry through built-in or external keyboards.
+- Automatic — A system-determined style based on the current platform and date picker mode.
 
 A date picker has four modes, each of which presents a different set of selectable values.
 
-* Date — Displays months, days of the month, and years.
-* Time — Displays hours, minutes, and (optionally) an AM/PM designation.
-* Date and time — Displays dates, hours, minutes, and (optionally) an AM/PM designation.
-* Countdown timer — Displays hours and minutes, up to a maximum of 23 hours and 59 minutes. This mode isn’t available in the inline or compact styles.
+- Date — Displays months, days of the month, and years.
+- Time — Displays hours, minutes, and (optionally) an AM/PM designation.
+- Date and time — Displays dates, hours, minutes, and (optionally) an AM/PM designation.
+- Countdown timer — Displays hours and minutes, up to a maximum of 23 hours and 59 minutes. This mode isn’t available in the inline or compact styles.
 
 The exact values shown in a date picker, and their order, depend on the device location.
 
 Here are several examples of date pickers showing different combinations of style and mode.
 
-* [Compact](#)
-* [Inline](#)
-* [Wheels](#)
+- [Compact](#)
+- [Inline](#)
+- [Wheels](#)
 
 ![An illustration of a compact date picker, with a single inline row showing the currently selected date. The picker opens as a popover extending down from the row, and includes a full calendar month for choosing the date.](https://docs-assets.developer.apple.com/published/65d6693bf614da95dde6a82006037c86/pickers-date-picker-compact-expanded%402x.png)
 
@@ -118,6 +118,6 @@ For longer lists, the navigation link displays the picker as a button. When some
 
 ## [Change log](/design/human-interface-guidelines/pickers#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date         | Changes                                        |
+| ------------ | ---------------------------------------------- |
 | June 5, 2023 | Updated guidance for using pickers in watchOS. |

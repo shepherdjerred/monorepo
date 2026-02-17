@@ -1,4 +1,3 @@
-
 # Overview
 
 This homework lets you explore some real code that uses locks and condition
@@ -8,26 +7,28 @@ configurations, and use it to learn about what works and what doesn't, as well
 as other intricacies.
 
 The different versions of the code correspond to different ways to "solve"
-the producer/consumer problem. Most are incorrect; one is correct.  Read the
+the producer/consumer problem. Most are incorrect; one is correct. Read the
 chapter to learn more about what the producer/consumer problem is, and what
 the code generally does.
 
 The first step is to download the code and type make to build all the
 variants. You should see four:
+
 - `main-one-cv-while.c`: The producer/consumer problem solved with a
-single condition variable.
+  single condition variable.
 - `main-two-cvs-if.c`: Same but with two condition variables and using
-an if to check whether to sleep.
+  an if to check whether to sleep.
 - `main-two-cvs-while.c`: Same but with two condition variables and while to
-check whether to sleep. This is the correct version.
+  check whether to sleep. This is the correct version.
 - `main-two-cvs-while-extra-unlock.c`: Same but releasing the lock and
-then reacquiring it around the fill and get routines.
+  then reacquiring it around the fill and get routines.
 
 It's also useful to look at `pc-header.h` which contains common code for
 all of these different main programs, and the Makefile so as to build the
 code properly.
 
-Each program takes the following flags: 
+Each program takes the following flags:
+
 - `-l <number of items each producer produces>`
 - `-m <size of the shared producer/consumer buffer>`
 - `-p <number of producers>`
@@ -50,7 +51,7 @@ to play with each solution and perhaps pinpoint specific problems or study
 other facets of the producer/consumer problem.
 
 The string is specified as follows. If there are three producers, for example,
-the string should specify sleep times for each producer separately, with a 
+the string should specify sleep times for each producer separately, with a
 colon separator. The sleep string for these three producers would look
 something like this:
 
@@ -93,9 +94,9 @@ producer should sleep at each point p0, p1, ..., p6. For example, the string
 `1,0,0,0,0,0,0` specifies that the producer should sleep for 1 second at marker
 p0 (before grabbing the lock), and then not at all each time through the loop.
 
-Now let's show the output of running one of these programs.  To begin, let's
+Now let's show the output of running one of these programs. To begin, let's
 assume that the user runs with just one producer and one consumer. Let's not
-add any sleeping at all (this is the default behavior). The buffer 
+add any sleeping at all (this is the default behavior). The buffer
 size, in this example, is set to 2 (-m 2).
 
 First, let's build the code:
@@ -185,7 +186,7 @@ producer/consumer solution works with a single producer and consumer.
 
 Now let's add some pauses to change the behavior of the trace. In this case,
 let's say we want to make the producer sleep so that the consumer can run
-first. We can accomplish this as follows: 
+first. We can accomplish this as follows:
 
 ```sh
 prompt> ./main-two-cvs-while -l 1 -m 2 -p 1 -c 1 -P 1,0,0,0,0,0,0 -C 0 -v
@@ -224,5 +225,3 @@ consumer. Thus, if you create two producers and three consumers (with
 or `-C 0,1,2:0:3,3,3,1,1,1`). Sleep strings can be shorter than the
 number of sleep points in the code; the remaining sleep slots are
 initialized to be zero.
-
-

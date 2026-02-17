@@ -1,7 +1,10 @@
 import { createTool } from "../../../voltagent/tools/create-tool.js";
 import { z } from "zod";
 import { loggers } from "../../../utils/logger.js";
-import { withToolSpan, captureException } from "../../../observability/index.js";
+import {
+  withToolSpan,
+  captureException,
+} from "../../../observability/index.js";
 import { getRequestContext } from "../request-context.js";
 import {
   isEditorEnabled,
@@ -24,7 +27,9 @@ export const approveChangesTool = createTool({
     Requires a session ID with pending changes.
     Will fail if GitHub authentication is not set up or changes have already been approved.`,
   inputSchema: z.object({
-    sessionId: z.string().describe("The session ID with pending changes to approve"),
+    sessionId: z
+      .string()
+      .describe("The session ID with pending changes to approve"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
@@ -119,7 +124,9 @@ export const approveChangesTool = createTool({
         await updateSessionState(session.id, SessionState.APPROVED);
 
         // Create PR
-        const title = generatePRTitle(session.summary ?? "Changes from Discord");
+        const title = generatePRTitle(
+          session.summary ?? "Changes from Discord",
+        );
         const body = generatePRBody(
           session.summary ?? "Changes made via Discord bot",
           pendingChanges.changes,

@@ -34,13 +34,13 @@ A popover is a transient view that appears above other content when people click
 
 **Provide a smooth transition when changing the size of a popover.** Some popovers provide both condensed and expanded views of the same information. If you adjust the size of a popover, animate the change to avoid giving the impression that a new popover replaced the old one.
 
-**Avoid using the word *popover* in help documentation.** Instead, refer to a specific task or selection. For example, instead of “Select the Show button at the bottom of the popover,” you might write “Select the Show button.”
+**Avoid using the word _popover_ in help documentation.** Instead, refer to a specific task or selection. For example, instead of “Select the Show button at the bottom of the popover,” you might write “Select the Show button.”
 
 **Avoid using a popover to show a warning.** People can miss a popover or accidentally close it. If you need to warn people, use an [alert](/design/human-interface-guidelines/alerts) instead.
 
 ## [Platform considerations](/design/human-interface-guidelines/popovers#Platform-considerations)
 
-*No additional considerations for visionOS. Not supported in tvOS or watchOS.*
+_No additional considerations for visionOS. Not supported in tvOS or watchOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/popovers#iOS-iPadOS)
 
@@ -50,8 +50,8 @@ A popover is a transient view that appears above other content when people click
 
 You can make a popover detachable in macOS, which becomes a separate panel when people drag it. The panel remains visible onscreen while people interact with other content.
 
-* [Attached popover](#)
-* [Detached popover](#)
+- [Attached popover](#)
+- [Detached popover](#)
 
 ![An illustration of an event in Calendar with the attached version of the event's popover next to and pointing to it.](https://docs-assets.developer.apple.com/published/ef05d3cb071e4c11209cce39b596ca99/attached-popover%402x.png)
 
@@ -75,7 +75,7 @@ You can make a popover detachable in macOS, which becomes a separate panel when 
 
 #### [Developer documentation](/design/human-interface-guidelines/popovers#Developer-documentation)
 
-[`popover(isPresented:attachmentAnchor:arrowEdge:content:)`](/documentation/SwiftUI/View/popover(isPresented:attachmentAnchor:arrowEdge:content:)) — SwiftUI
+[`popover(isPresented:attachmentAnchor:arrowEdge:content:)`](</documentation/SwiftUI/View/popover(isPresented:attachmentAnchor:arrowEdge:content:)>) — SwiftUI
 
 [`UIPopoverPresentationController`](/documentation/UIKit/UIPopoverPresentationController) — UIKit
 

@@ -80,7 +80,7 @@ function KnowledgeExplorer() {
 
   // Get sorted surfaces for display
   const surfaceEntries = Array.from(surfaces.entries()).filter(
-    ([, surface]) => surface.isRendering && surface.rootId
+    ([, surface]) => surface.isRendering && surface.rootId,
   );
 
   return (
@@ -177,7 +177,8 @@ function KnowledgeExplorer() {
             </h2>
             <p className="text-gray-600 max-w-md mx-auto">
               Enter a topic above to generate interactive content. Try
-              &quot;Quantum Computing&quot;, &quot;Machine Learning&quot;, or &quot;Ancient Egypt&quot;.
+              &quot;Quantum Computing&quot;, &quot;Machine Learning&quot;, or
+              &quot;Ancient Egypt&quot;.
             </p>
           </div>
         )}

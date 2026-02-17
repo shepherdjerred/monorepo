@@ -95,17 +95,17 @@ op read "op://Private/GitHub/token"
 
 ## Supported Credentials
 
-| Credential | Config Key | Example Reference |
-|------------|-----------|-------------------|
-| GitHub | `github_token` | `op://Private/GitHub/token` |
+| Credential      | Config Key              | Example Reference                 |
+| --------------- | ----------------------- | --------------------------------- |
+| GitHub          | `github_token`          | `op://Private/GitHub/token`       |
 | Anthropic OAuth | `anthropic_oauth_token` | `op://Private/Claude/oauth-token` |
-| OpenAI | `openai_api_key` | `op://Work/OpenAI/api-key` |
-| PagerDuty | `pagerduty_token` | `op://Work/PagerDuty/api-key` |
-| Sentry | `sentry_auth_token` | `op://Work/Sentry/auth-token` |
-| Grafana | `grafana_api_key` | `op://Work/Grafana/api-key` |
-| npm | `npm_token` | `op://Private/npm/token` |
-| Docker Hub | `docker_token` | `op://Private/Docker/token` |
-| Sprites | `sprites_api_key` | `op://Work/Sprites/api-key` |
+| OpenAI          | `openai_api_key`        | `op://Work/OpenAI/api-key`        |
+| PagerDuty       | `pagerduty_token`       | `op://Work/PagerDuty/api-key`     |
+| Sentry          | `sentry_auth_token`     | `op://Work/Sentry/auth-token`     |
+| Grafana         | `grafana_api_key`       | `op://Work/Grafana/api-key`       |
+| npm             | `npm_token`             | `op://Private/npm/token`          |
+| Docker Hub      | `docker_token`          | `op://Private/Docker/token`       |
+| Sprites         | `sprites_api_key`       | `op://Work/Sprites/api-key`       |
 
 ## Credential Priority
 
@@ -116,6 +116,7 @@ When multiple sources define the same credential:
 3. **Secret files** in `~/.clauderon/secrets/` (lowest priority)
 
 This allows you to:
+
 - Override 1Password credentials with environment variables for testing
 - Fall back to file-based credentials if 1Password is unavailable
 
@@ -126,6 +127,7 @@ For servers without interactive login:
 ### 1. Create Service Account
 
 In 1Password:
+
 1. Go to Settings > Service Accounts
 2. Create a new service account
 3. Grant access to required vaults

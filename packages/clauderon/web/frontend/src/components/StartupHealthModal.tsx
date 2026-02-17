@@ -10,7 +10,7 @@ type StartupHealthModalProps = {
   onOpenChange: (open: boolean) => void;
   unhealthySessions: SessionHealthReport[];
   onViewSessions: () => void;
-}
+};
 
 function getHealthLabel(state: ResourceState): string {
   switch (state.type) {
@@ -65,19 +65,23 @@ export function StartupHealthModal({
   // Handle ESC key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onOpenChange(false);
       }
     };
 
     if (open) {
-      document.addEventListener('keydown', handleEscape);
-      return () => { document.removeEventListener('keydown', handleEscape); };
+      document.addEventListener("keydown", handleEscape);
+      return () => {
+        document.removeEventListener("keydown", handleEscape);
+      };
     }
     return;
   }, [open, onOpenChange]);
 
-  if (!open || unhealthySessions.length === 0) {return null;}
+  if (!open || unhealthySessions.length === 0) {
+    return null;
+  }
 
   return (
     <>
@@ -85,10 +89,12 @@ export function StartupHealthModal({
       <div
         className="fixed inset-0 z-40"
         style={{
-          backgroundColor: 'hsl(220, 90%, 8%)',
-          opacity: 0.85
+          backgroundColor: "hsl(220, 90%, 8%)",
+          opacity: 0.85,
         }}
-        onClick={() => { onOpenChange(false); }}
+        onClick={() => {
+          onOpenChange(false);
+        }}
         aria-hidden="true"
       />
 
@@ -97,15 +103,18 @@ export function StartupHealthModal({
         <div
           className="max-w-lg w-full flex flex-col border-4 border-primary"
           style={{
-            backgroundColor: 'hsl(220, 15%, 95%)',
-            boxShadow: '12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)'
+            backgroundColor: "hsl(220, 15%, 95%)",
+            boxShadow:
+              "12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)",
           }}
-          onClick={(e) => { e.stopPropagation(); }}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
         >
           {/* Header */}
           <div
             className="flex items-center justify-between p-4 border-b-4 border-primary"
-            style={{ backgroundColor: 'hsl(30, 85%, 50%)' }}
+            style={{ backgroundColor: "hsl(30, 85%, 50%)" }}
           >
             <div className="flex items-center gap-3">
               <AlertCircle className="w-6 h-6 text-white" />
@@ -114,7 +123,9 @@ export function StartupHealthModal({
               </h2>
             </div>
             <button
-              onClick={() => { onOpenChange(false); }}
+              onClick={() => {
+                onOpenChange(false);
+              }}
               className="cursor-pointer p-2 border-2 border-white bg-white/10 hover:bg-red-600 hover:text-white transition-all duration-200 font-bold text-white"
               title="Close dialog"
               aria-label="Close dialog"
@@ -124,7 +135,10 @@ export function StartupHealthModal({
           </div>
 
           {/* Content */}
-          <div className="p-6 space-y-4" style={{ backgroundColor: 'hsl(220, 15%, 95%)' }}>
+          <div
+            className="p-6 space-y-4"
+            style={{ backgroundColor: "hsl(220, 15%, 95%)" }}
+          >
             <p className="text-sm text-foreground">
               Some sessions have missing or unhealthy backend resources:
             </p>
@@ -148,7 +162,7 @@ export function StartupHealthModal({
                     variant="outline"
                     className={cn(
                       "ml-2 shrink-0 border font-mono text-xs",
-                      getHealthColor(report.state)
+                      getHealthColor(report.state),
                     )}
                   >
                     {getHealthLabel(report.state)}
@@ -163,7 +177,12 @@ export function StartupHealthModal({
 
             {/* Footer */}
             <div className="flex gap-3 pt-4 border-t-2 justify-end">
-              <Button variant="outline" onClick={() => { onOpenChange(false); }}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  onOpenChange(false);
+                }}
+              >
                 Dismiss
               </Button>
               <Button

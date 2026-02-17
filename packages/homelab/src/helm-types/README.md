@@ -78,7 +78,11 @@ npx @shepherdjerred/helm-types \
 ## Programmatic API
 
 ```typescript
-import { fetchHelmChart, convertToTypeScriptInterface, generateTypeScriptCode } from "@shepherdjerred/helm-types";
+import {
+  fetchHelmChart,
+  convertToTypeScriptInterface,
+  generateTypeScriptCode,
+} from "@shepherdjerred/helm-types";
 
 // 1. Define your chart
 const chart = {
@@ -90,7 +94,12 @@ const chart = {
 
 // 2. Fetch and generate types
 const { values, schema, yamlComments } = await fetchHelmChart(chart);
-const tsInterface = convertToTypeScriptInterface(values, "ArgocdHelmValues", schema, yamlComments);
+const tsInterface = convertToTypeScriptInterface(
+  values,
+  "ArgocdHelmValues",
+  schema,
+  yamlComments,
+);
 const code = generateTypeScriptCode(tsInterface, chart.name);
 
 // 3. Write output

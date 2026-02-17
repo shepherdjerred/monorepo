@@ -58,6 +58,7 @@ Terraform and OpenTofu are infrastructure as code (IaC) tools that use HashiCorp
 ### Auto-Approved Commands (Safe / Read-Only)
 
 The following commands are safe to run without user confirmation:
+
 - `terraform plan` / `tofu plan` - Preview changes without applying
 - `terraform validate` / `tofu validate` - Check configuration syntax and consistency
 - `terraform fmt` / `tofu fmt` - Format HCL files to canonical style
@@ -75,6 +76,7 @@ The following commands are safe to run without user confirmation:
 ### Commands Requiring Confirmation
 
 These commands modify infrastructure or state and need user approval:
+
 - `terraform apply` / `tofu apply` - Create or update infrastructure
 - `terraform destroy` / `tofu destroy` - Destroy managed infrastructure
 - `terraform import` / `tofu import` - Import existing resources into state
@@ -277,17 +279,17 @@ resource "aws_instance" "west_server" {
 
 ## OpenTofu Differences from Terraform
 
-| Feature | Terraform | OpenTofu |
-|---------|-----------|----------|
-| License | BSL 1.1 | MPL 2.0 (open source) |
-| State Encryption | Not supported natively | Built-in AES-GCM with PBKDF2/KMS |
-| Provider `for_each` | Not supported | Supported since 1.9 |
-| `.tofu` Files | Not recognized | Override `.tf` for OpenTofu-specific code |
-| Early Evaluation | Not supported | Variables/locals in backends and module sources |
-| Provider Mocking | Not supported | Built-in test mocking since 1.8 |
-| Ephemeral Values | Since 1.10 | Not yet (tracking Terraform) |
-| Registry | registry.terraform.io | registry.opentofu.org (mirrors public) |
-| CLI Binary | `terraform` | `tofu` |
+| Feature             | Terraform              | OpenTofu                                        |
+| ------------------- | ---------------------- | ----------------------------------------------- |
+| License             | BSL 1.1                | MPL 2.0 (open source)                           |
+| State Encryption    | Not supported natively | Built-in AES-GCM with PBKDF2/KMS                |
+| Provider `for_each` | Not supported          | Supported since 1.9                             |
+| `.tofu` Files       | Not recognized         | Override `.tf` for OpenTofu-specific code       |
+| Early Evaluation    | Not supported          | Variables/locals in backends and module sources |
+| Provider Mocking    | Not supported          | Built-in test mocking since 1.8                 |
+| Ephemeral Values    | Since 1.10             | Not yet (tracking Terraform)                    |
+| Registry            | registry.terraform.io  | registry.opentofu.org (mirrors public)          |
+| CLI Binary          | `terraform`            | `tofu`                                          |
 
 ### OpenTofu State Encryption Example
 
@@ -335,6 +337,7 @@ tflint --format json
 ```
 
 Configuration (`.tflint.hcl`):
+
 ```hcl
 plugin "aws" {
   enabled = true
@@ -420,6 +423,7 @@ terraform-docs -c .terraform-docs.yml .
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - The target cloud provider or region is ambiguous
 - State backend configuration details are missing
 - Destructive operations (destroy, state rm, force-unlock) need confirmation

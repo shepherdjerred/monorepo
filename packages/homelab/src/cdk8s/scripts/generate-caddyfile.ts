@@ -4,7 +4,10 @@
  * Used for CI validation with caddy validate.
  */
 import { generateCaddyfile } from "../src/misc/s3-static-site.ts";
-import { staticSites, S3_ENDPOINT } from "../src/resources/s3-static-sites/sites.ts";
+import {
+  staticSites,
+  S3_ENDPOINT,
+} from "../src/resources/s3-static-sites/sites.ts";
 
 const caddyfile = generateCaddyfile({
   sites: staticSites,

@@ -25,7 +25,11 @@ export function useSessions() {
         const data = await response.json();
         setState({ sessions: data.sessions, loading: false, error: null });
       } else {
-        setState({ sessions: [], loading: false, error: "Failed to fetch sessions" });
+        setState({
+          sessions: [],
+          loading: false,
+          error: "Failed to fetch sessions",
+        });
       }
     } catch (error) {
       setState({
@@ -40,30 +44,33 @@ export function useSessions() {
     fetchSessions();
   }, [fetchSessions]);
 
-  const createSession = useCallback(async (repoUrl: string, baseBranch: string) => {
-    try {
-      const response = await fetch("/api/sessions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ repoUrl, baseBranch }),
-      });
+  const createSession = useCallback(
+    async (repoUrl: string, baseBranch: string) => {
+      try {
+        const response = await fetch("/api/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ repoUrl, baseBranch }),
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        setState((s) => ({
-          ...s,
-          sessions: [data.session, ...s.sessions],
-        }));
-        return data.session as Session;
-      } else {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create session");
+        if (response.ok) {
+          const data = await response.json();
+          setState((s) => ({
+            ...s,
+            sessions: [data.session, ...s.sessions],
+          }));
+          return data.session as Session;
+        } else {
+          const error = await response.json();
+          throw new Error(error.error || "Failed to create session");
+        }
+      } catch (error) {
+        throw error;
       }
-    } catch (error) {
-      throw error;
-    }
-  }, []);
+    },
+    [],
+  );
 
   const stopSession = useCallback(async (sessionId: string) => {
     try {
@@ -76,7 +83,9 @@ export function useSessions() {
         setState((s) => ({
           ...s,
           sessions: s.sessions.map((session) =>
-            session.id === sessionId ? { ...session, status: "stopped" as const } : session
+            session.id === sessionId
+              ? { ...session, status: "stopped" as const }
+              : session,
           ),
         }));
       } else {
@@ -87,21 +96,24 @@ export function useSessions() {
     }
   }, []);
 
-  const commitChanges = useCallback(async (sessionId: string, message: string) => {
-    const response = await fetch(`/api/sessions/${sessionId}/commit`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ message }),
-    });
+  const commitChanges = useCallback(
+    async (sessionId: string, message: string) => {
+      const response = await fetch(`/api/sessions/${sessionId}/commit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ message }),
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to commit");
-    }
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to commit");
+      }
 
-    return response.json();
-  }, []);
+      return response.json();
+    },
+    [],
+  );
 
   const pushChanges = useCallback(async (sessionId: string) => {
     const response = await fetch(`/api/sessions/${sessionId}/push`, {
@@ -133,7 +145,7 @@ export function useSessions() {
 
       return response.json();
     },
-    []
+    [],
   );
 
   return {

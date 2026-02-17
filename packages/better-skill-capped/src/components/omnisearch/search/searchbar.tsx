@@ -8,11 +8,11 @@ import { Container } from "#src/components/container";
 export type FilterBarProps = {
   onValueUpdate: (newValue: string) => void;
   placeholder: string;
-}
+};
 
 export type FilterBarState = {
   value: string;
-}
+};
 
 export class Searchbar extends React.Component<FilterBarProps, FilterBarState> {
   constructor(props: FilterBarProps) {

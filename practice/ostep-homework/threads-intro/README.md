@@ -1,4 +1,3 @@
-
 # Overview
 
 Welcome to this simulator! The idea is to gain familiarity with threads by
@@ -7,11 +6,11 @@ gaining this understanding.
 
 The simulator mimicks the execution of short assembly sequences by multiple
 threads. Note that the OS code that would run (for example, to perform a
-context switch) is *not* shown; thus, all you see is the interleaving of the
+context switch) is _not_ shown; thus, all you see is the interleaving of the
 user code.
 
-The assembly code that is run is based on x86, but somewhat simplified. 
-In this instruction set, there are four general-purpose registers 
+The assembly code that is run is based on x86, but somewhat simplified.
+In this instruction set, there are four general-purpose registers
 (%ax, %bx, %cx, %dx), a program counter (PC), and a small set of instructions
 which will be enough for our purposes.
 
@@ -54,7 +53,7 @@ Let's run the simulator and see how this all works! Assume the above code
 sequence is in the file `simple-race.s`.
 
 ```sh
-prompt> ./x86.py -p simple-race.s -t 1 
+prompt> ./x86.py -p simple-race.s -t 1
 
        Thread 0
 1000 mov 2000, %ax
@@ -62,7 +61,7 @@ prompt> ./x86.py -p simple-race.s -t 1
 1002 mov %ax, 2000
 1003 halt
 
-prompt> 
+prompt>
 ```
 
 The arguments used here specify the program (`-p`), the number of
@@ -75,7 +74,7 @@ The output is easy to read: the simulator prints the program counter (here
 shown from 1000 to 1003) and the instruction that gets executed. Note that we
 assume (unrealistically) that all instructions just take up a single byte in
 memory; in x86, instructions are variable-sized and would take up from one to
-a small number of bytes. 
+a small number of bytes.
 
 We can use more detailed tracing to get a better sense of how machine state
 changes during the execution:
@@ -120,8 +119,8 @@ now. Here is a code snippet of a loop:
 .main
 .top
 sub  $1,%dx
-test $0,%dx     
-jgte .top         
+test $0,%dx
+jgte .top
 halt
 ```
 
@@ -136,7 +135,7 @@ instruction jumps if the second value is greater than or equal to the first
 in the test.
 
 One last point: to really make this code work, `dx` must be initialized to 1 or
-greater. 
+greater.
 
 Thus, we run the program like this:
 
@@ -162,7 +161,7 @@ prompt> ./x86.py -p loop.s -t 1 -a dx=3 -R dx -C -c
 
 The `-R dx` flag traces the value of %dx; the `-C` flag traces the values of
 the condition codes that get set by a test instruction. Finally, the `-a dx=3`
-flag sets the `%dx` register to the value 3 to start with. 
+flag sets the `%dx` register to the value 3 to start with.
 
 As you can see from the trace, the `sub` instruction slowly lowers the value
 of %dx. The first few times `test` is called, only the ">=", ">", and "!="
@@ -189,8 +188,8 @@ jgt .top
 halt
 ```
 
-The code has a critical section which loads the value of a variable 
-(at address 2000), then adds 1 to the value, then stores it back. 
+The code has a critical section which loads the value of a variable
+(at address 2000), then adds 1 to the value, then stores it back.
 
 The code after just decrements a loop counter (in %bx), tests if it
 is greater than or equal to zero, and if so, jumps back to the top
@@ -260,7 +259,7 @@ via the `-i 2` flag. What is the value of memory[2000] throughout this run?
 What should it have been?
 
 Now let's give a little more information on what can be simulated
-with this program. The full set of registers: %ax, %bx, %cx, %dx, and the PC. 
+with this program. The full set of registers: %ax, %bx, %cx, %dx, and the PC.
 In this version, there is no support for a "stack", nor are there call
 and return instructions.
 
@@ -289,7 +288,7 @@ jlte                        #               ... less than or equal
 jgt                         #            ... is greater than
 jgte                        #               ... greater than or equal
 
-xchg register, memory       # atomic exchange: 
+xchg register, memory       # atomic exchange:
                             #   put value of register into memory
                             #   return old contents of memory into reg
                             # do both things atomically
@@ -297,12 +296,13 @@ xchg register, memory       # atomic exchange:
 nop                         # no op
 ```
 
-Notes: 
+Notes:
+
 - 'immediate' is something of the form $number
 - 'memory' is of the form 'number' or '(reg)' or 'number(reg)' or 'number(reg,reg)' (as described above)
 - 'register' is one of %ax, %bx, %cx, %dx
 
-Finally, here are the full set of options to the simulator are available with the `-h` flag: 
+Finally, here are the full set of options to the simulator are available with the `-h` flag:
 
 ```sh
 Usage: x86.py [options]
@@ -348,4 +348,3 @@ homework problems.
 
 Now you have the basics in place; read the questions at the end of the chapter
 to study this race condition and related issues in more depth.
-

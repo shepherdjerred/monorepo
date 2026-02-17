@@ -3,7 +3,13 @@ import cors from "cors";
 import { assertPathExists } from "../util.js";
 import { logger } from "../logger.js";
 
-export function createExpressApp({ isCorsEnabled, webAssetsPath }: { isCorsEnabled: boolean; webAssetsPath: string }) {
+export function createExpressApp({
+  isCorsEnabled,
+  webAssetsPath,
+}: {
+  isCorsEnabled: boolean;
+  webAssetsPath: string;
+}) {
   logger.info("creating express app");
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

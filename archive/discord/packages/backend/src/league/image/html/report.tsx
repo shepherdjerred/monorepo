@@ -16,7 +16,7 @@ export function Report({ match }: { match: CompletedMatch }) {
 
   if (!match.teams.red || !match.teams.blue) {
     throw new Error(
-      `Match must have both teams: ${JSON.stringify(match.teams)}`
+      `Match must have both teams: ${JSON.stringify(match.teams)}`,
     );
   }
 
@@ -86,8 +86,8 @@ export function Report({ match }: { match: CompletedMatch }) {
                 {lpDiffToString(
                   leaguePointsDelta(
                     match.player.rankBeforeMatch,
-                    match.player.rankAfterMatch
-                  )
+                    match.player.rankAfterMatch,
+                  ),
                 )}
               </span>
               <span>Wins: {match.player.wins}</span>
@@ -111,13 +111,13 @@ export function Report({ match }: { match: CompletedMatch }) {
             match.teams.blue,
             "blue",
             match.player.champion.championName,
-            match.durationInSeconds / 60
+            match.durationInSeconds / 60,
           )}
           {renderTeam(
             match.teams.red,
             "red",
             match.player.champion.championName,
-            match.durationInSeconds / 60
+            match.durationInSeconds / 60,
           )}
         </div>
       </div>

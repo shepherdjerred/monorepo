@@ -10,12 +10,14 @@ description: |
 ## What's New (2024-2025)
 
 ### Vite
+
 - **Rolldown preview**: Rust-based bundler for faster builds
 - **Environment API**: Unified dev/build environment handling
 - **Text-based lockfile**: Better dependency tracking
 - **Node.js 20.19+** required
 
 ### React 19
+
 - **React Compiler**: Automatic memoization (experimental)
 - **`use()` hook**: Read promises and context in render
 - **Actions**: Simplified async mutations
@@ -40,12 +42,12 @@ npm run dev
 
 ### Templates Available
 
-| Template | Description |
-|----------|-------------|
-| `react` | React with JavaScript |
-| `react-ts` | React with TypeScript |
-| `react-swc` | React + SWC (faster builds) |
-| `react-swc-ts` | React + SWC + TypeScript |
+| Template       | Description                 |
+| -------------- | --------------------------- |
+| `react`        | React with JavaScript       |
+| `react-ts`     | React with TypeScript       |
+| `react-swc`    | React + SWC (faster builds) |
+| `react-swc-ts` | React + SWC + TypeScript    |
 
 ## Vite Configuration
 
@@ -85,9 +87,7 @@ export default defineConfig({
 
       // Babel plugins for features like decorators
       babel: {
-        plugins: [
-          ["@babel/plugin-proposal-decorators", { legacy: true }],
-        ],
+        plugins: [["@babel/plugin-proposal-decorators", { legacy: true }]],
       },
 
       // File patterns to include
@@ -583,7 +583,11 @@ function useLocalStorage<T>(key: string, initialValue: T) {
 // Usage
 function Settings() {
   const [theme, setTheme] = useLocalStorage("theme", "light");
-  return <button onClick={() => setTheme(theme === "light" ? "dark" : "light")}>Toggle</button>;
+  return (
+    <button onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
+      Toggle
+    </button>
+  );
 }
 ```
 
@@ -631,8 +635,8 @@ export default defineConfig({
         manualChunks: {
           // Vendor chunks
           "react-vendor": ["react", "react-dom"],
-          "router": ["react-router-dom"],
-          "ui": ["@radix-ui/react-dialog", "@radix-ui/react-dropdown-menu"],
+          router: ["react-router-dom"],
+          ui: ["@radix-ui/react-dialog", "@radix-ui/react-dropdown-menu"],
         },
       },
     },

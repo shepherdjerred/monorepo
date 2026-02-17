@@ -94,7 +94,9 @@ export class TailscaleIngress extends Construct {
     const ingress = new Ingress(scope, `${id}-ingress`, merge({}, base, props));
 
     // Set ingress class to Tailscale
-    ApiObject.of(ingress).addJsonPatch(JsonPatch.add("/spec/ingressClassName", "tailscale"));
+    ApiObject.of(ingress).addJsonPatch(
+      JsonPatch.add("/spec/ingressClassName", "tailscale"),
+    );
   }
 }
 ```

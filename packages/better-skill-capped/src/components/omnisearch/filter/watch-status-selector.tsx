@@ -3,8 +3,11 @@ import React from "react";
 export type WatchStatusSelectorProps = {
   onlyShowUnwatched: boolean;
   onlyShowWatched: boolean;
-  onSelectionChange: (onlyShowUnwatched: boolean, onlyShowWatched: boolean) => void;
-}
+  onSelectionChange: (
+    onlyShowUnwatched: boolean,
+    onlyShowWatched: boolean,
+  ) => void;
+};
 
 export default function WatchStatusSelector({
   onlyShowUnwatched,

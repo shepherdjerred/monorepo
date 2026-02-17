@@ -33,7 +33,10 @@ export default [
       "no-console": "off",
       "no-restricted-imports": "off",
       "max-depth": ["error", { max: 6 }],
-      "max-lines": ["error", { max: 1000, skipBlankLines: false, skipComments: false }],
+      "max-lines": [
+        "error",
+        { max: 1000, skipBlankLines: false, skipComments: false },
+      ],
       "max-params": ["error", { max: 7 }],
       complexity: ["warn", { max: 25 }],
       "unicorn/import-style": "off",

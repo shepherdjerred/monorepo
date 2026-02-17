@@ -25,6 +25,7 @@ Helm is the package manager for Kubernetes. Charts are packages containing Kuber
 ### Auto-Approved Commands
 
 The following `helm` commands are auto-approved and safe to use:
+
 - `helm list` - List releases
 - `helm get` - Download release information
 - `helm status` - Display release status
@@ -79,6 +80,7 @@ helm install my-release oci://registry.example.com/charts/nginx --version 1.0.0
 ```
 
 **Upgrade patterns**:
+
 ```bash
 # Upgrade existing release
 helm upgrade my-release bitnami/nginx -f values.yaml
@@ -296,7 +298,7 @@ name: mychart
 version: 1.0.0
 appVersion: "1.16.0"
 description: My Helm chart
-type: application  # or "library"
+type: application # or "library"
 keywords:
   - nginx
   - web
@@ -322,8 +324,8 @@ dependencies:
     "image": {
       "type": "object",
       "properties": {
-        "repository": {"type": "string"},
-        "tag": {"type": "string"}
+        "repository": { "type": "string" },
+        "tag": { "type": "string" }
       }
     }
   }
@@ -356,22 +358,26 @@ Hook types: `pre-install`, `post-install`, `pre-delete`, `post-delete`, `pre-upg
 ## Best Practices
 
 1. **Always use `--atomic` for production** - Automatic rollback on failure
+
    ```bash
    helm upgrade --install my-release chart --atomic
    ```
 
 2. **Pin chart versions** - Never use floating versions
+
    ```bash
    helm install my-release bitnami/nginx --version 15.0.0
    ```
 
 3. **Use helm diff before upgrades**
+
    ```bash
    helm plugin install https://github.com/databus23/helm-diff
    helm diff upgrade my-release chart -f values.yaml
    ```
 
 4. **Structure values files by environment**
+
    ```
    values.yaml          # defaults
    values-dev.yaml      # development overrides
@@ -380,6 +386,7 @@ Hook types: `pre-install`, `post-install`, `pre-delete`, `post-delete`, `pre-upg
    ```
 
 5. **Use library charts for shared components**
+
    ```yaml
    # Chart.yaml
    dependencies:
@@ -539,6 +546,7 @@ helm install my-platform . -f values.yaml
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - The target namespace or cluster context is ambiguous
 - Values file paths or chart locations are unclear
 - Destructive operations (uninstall, rollback) need confirmation

@@ -126,7 +126,9 @@ export type AnalyzePrComplexityOptions = {
  * @param options - Analysis options
  * @returns PR analysis result
  */
-export async function analyzePrComplexity(options: AnalyzePrComplexityOptions): Promise<PrAnalysis> {
+export async function analyzePrComplexity(
+  options: AnalyzePrComplexityOptions,
+): Promise<PrAnalysis> {
   const { source, githubToken, prNumber, baseBranch, headSha } = options;
 
   // Build the analysis script - all debug output goes to stderr, only JSON to stdout
@@ -273,14 +275,19 @@ jq -n \\
   const exitCode = await container.exitCode();
   if (exitCode !== 0) {
     const stderr = await container.stderr();
-    throw new Error(`PR analysis script failed (exit ${String(exitCode)}): ${stderr.slice(0, 1000)}`);
+    throw new Error(
+      `PR analysis script failed (exit ${String(exitCode)}): ${stderr.slice(0, 1000)}`,
+    );
   }
 
   const result = await container.stdout();
 
   // Parse JSON output
   const analysis = JSON.parse(result) as PrAnalysis;
-  if (typeof analysis.shouldSkip !== "boolean" || typeof analysis.maxTurns !== "number") {
+  if (
+    typeof analysis.shouldSkip !== "boolean" ||
+    typeof analysis.maxTurns !== "number"
+  ) {
     throw new Error(`Invalid PR analysis output: ${result.slice(0, 500)}`);
   }
   return analysis;
@@ -311,7 +318,14 @@ export type ReviewPrOptions = {
  * @returns Review result message
  */
 export async function reviewPr(options: ReviewPrOptions): Promise<string> {
-  const { source, githubToken, claudeOauthToken, prNumber, baseBranch, headSha } = options;
+  const {
+    source,
+    githubToken,
+    claudeOauthToken,
+    prNumber,
+    baseBranch,
+    headSha,
+  } = options;
 
   // Step 1: Analyze PR complexity
   const analysis = await analyzePrComplexity({
@@ -392,14 +406,17 @@ Please check the workflow logs for details.`,
     } catch (notifyError) {
       console.error(
         "Failed to post error comment:",
-        notifyError instanceof Error ? notifyError.message : String(notifyError),
+        notifyError instanceof Error
+          ? notifyError.message
+          : String(notifyError),
       );
     }
     return `Review failed for PR #${String(prNumber)}: ${errorMessage}`;
   }
 
   if (execResult.exitCode !== 0) {
-    const errorDetail = execResult.stderr || execResult.stdout || "Unknown error";
+    const errorDetail =
+      execResult.stderr || execResult.stdout || "Unknown error";
     try {
       await postComment({
         githubToken,
@@ -418,7 +435,9 @@ Please check the workflow logs for details.`,
     } catch (notifyError) {
       console.error(
         "Failed to post error comment:",
-        notifyError instanceof Error ? notifyError.message : String(notifyError),
+        notifyError instanceof Error
+          ? notifyError.message
+          : String(notifyError),
       );
     }
     return `Review failed for PR #${String(prNumber)}: Claude exited with code ${String(execResult.exitCode)}`;
@@ -476,7 +495,9 @@ ${stdout.slice(0, 500)}
     } catch (notifyError) {
       console.error(
         "Failed to post error comment:",
-        notifyError instanceof Error ? notifyError.message : String(notifyError),
+        notifyError instanceof Error
+          ? notifyError.message
+          : String(notifyError),
       );
     }
     return `Review output parsing failed for PR #${String(prNumber)}: ${errorMessage}`;
@@ -537,7 +558,9 @@ ${verdict.reasoning}${nitpickNote}${inlineNote}`,
       } catch (notifyError) {
         console.error(
           "Failed to post fallback comment:",
-          notifyError instanceof Error ? notifyError.message : String(notifyError),
+          notifyError instanceof Error
+            ? notifyError.message
+            : String(notifyError),
         );
       }
       return `Review posting failed for PR #${String(prNumber)}: ${msg}`;
@@ -586,7 +609,9 @@ Please review the inline comments and address the issues.${inlineNote}`,
       } catch (notifyError) {
         console.error(
           "Failed to post fallback comment:",
-          notifyError instanceof Error ? notifyError.message : String(notifyError),
+          notifyError instanceof Error
+            ? notifyError.message
+            : String(notifyError),
         );
       }
       return `Review posting failed for PR #${String(prNumber)}: ${msg}`;
@@ -634,8 +659,17 @@ export type HandleInteractiveOptions = {
  * @param options - Interactive options
  * @returns Response message
  */
-export async function handleInteractive(options: HandleInteractiveOptions): Promise<string> {
-  const { source, githubToken, claudeOauthToken, prNumber, commentBody, eventContext } = options;
+export async function handleInteractive(
+  options: HandleInteractiveOptions,
+): Promise<string> {
+  const {
+    source,
+    githubToken,
+    claudeOauthToken,
+    prNumber,
+    commentBody,
+    eventContext,
+  } = options;
 
   // Step 1: Post acknowledgment
   try {
@@ -666,7 +700,8 @@ export async function handleInteractive(options: HandleInteractiveOptions): Prom
     prompt += "\n";
   }
 
-  prompt += "\nRead CLAUDE.md and relevant code for context. Be direct and concise.";
+  prompt +=
+    "\nRead CLAUDE.md and relevant code for context. Be direct and concise.";
 
   // Step 3: Run Claude
   let container = getClaudeContainer();
@@ -687,7 +722,8 @@ export async function handleInteractive(options: HandleInteractiveOptions): Prom
     const execResult = await executeClaudeRun(container);
 
     if (execResult.exitCode !== 0) {
-      const errorDetail = execResult.stderr || execResult.stdout || "Unknown error";
+      const errorDetail =
+        execResult.stderr || execResult.stdout || "Unknown error";
       try {
         await postComment({
           githubToken,
@@ -698,7 +734,9 @@ export async function handleInteractive(options: HandleInteractiveOptions): Prom
       } catch (notifyError) {
         console.error(
           "Failed to post error comment:",
-          notifyError instanceof Error ? notifyError.message : String(notifyError),
+          notifyError instanceof Error
+            ? notifyError.message
+            : String(notifyError),
         );
       }
       return `Interactive request failed for PR #${String(prNumber)}: Claude exited with code ${String(execResult.exitCode)}`;
@@ -721,7 +759,9 @@ ${errorMessage.slice(0, 1000)}
     } catch (notifyError) {
       console.error(
         "Failed to post error comment:",
-        notifyError instanceof Error ? notifyError.message : String(notifyError),
+        notifyError instanceof Error
+          ? notifyError.message
+          : String(notifyError),
       );
     }
     return `Interactive request failed for PR #${String(prNumber)}: ${errorMessage}`;

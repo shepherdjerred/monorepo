@@ -10,16 +10,22 @@ interface RestoreStatus {
   completedTime?: string;
 }
 
-async function getRestoreStatus(restoreName: string): Promise<RestoreStatus | null> {
+async function getRestoreStatus(
+  restoreName: string,
+): Promise<RestoreStatus | null> {
   try {
-    const result = await $`kubectl get restore ${restoreName} -n velero -o json`.quiet();
+    const result =
+      await $`kubectl get restore ${restoreName} -n velero -o json`.quiet();
     const restore = JSON.parse(result.text());
 
     return {
       phase: restore.status?.phase || "Unknown",
       itemsRestored: restore.status?.progress?.itemsRestored || 0,
       totalItems: restore.status?.progress?.totalItems || 0,
-      startTime: restore.status?.startTimestamp || restore.metadata?.creationTimestamp || "",
+      startTime:
+        restore.status?.startTimestamp ||
+        restore.metadata?.creationTimestamp ||
+        "",
       completedTime: restore.status?.completionTimestamp,
     };
   } catch (error) {
@@ -45,7 +51,11 @@ function formatDuration(startTime: string, endTime?: string): string {
   }
 }
 
-function drawProgressBar(current: number, total: number, width: number = 40): string {
+function drawProgressBar(
+  current: number,
+  total: number,
+  width: number = 40,
+): string {
   if (total === 0) return "[" + " ".repeat(width) + "] 0%";
 
   const percentage = Math.min(100, Math.floor((current / total) * 100));
@@ -85,7 +95,10 @@ async function monitorRestore(restoreName: string) {
     }
 
     const duration = formatDuration(status.startTime, status.completedTime);
-    const progressBar = drawProgressBar(status.itemsRestored, status.totalItems);
+    const progressBar = drawProgressBar(
+      status.itemsRestored,
+      status.totalItems,
+    );
 
     // Show status
     const phaseEmoji =
@@ -101,7 +114,9 @@ async function monitorRestore(restoreName: string) {
       console.log(`\n${phaseEmoji} Phase: ${status.phase}`);
     }
 
-    console.log(`${progressBar} ${status.itemsRestored}/${status.totalItems} items | Duration: ${duration}`);
+    console.log(
+      `${progressBar} ${status.itemsRestored}/${status.totalItems} items | Duration: ${duration}`,
+    );
 
     previousPhase = status.phase;
     previousItems = status.itemsRestored;
@@ -111,7 +126,10 @@ async function monitorRestore(restoreName: string) {
       console.log("\n✅ Restore completed successfully!");
       await showLogs(restoreName);
       break;
-    } else if (status.phase === "Failed" || status.phase === "FailedValidation") {
+    } else if (
+      status.phase === "Failed" ||
+      status.phase === "FailedValidation"
+    ) {
       console.log("\n❌ Restore failed!");
       await showLogs(restoreName);
       process.exit(1);
@@ -128,21 +146,28 @@ const args = process.argv.slice(2);
 if (args.length === 0) {
   // Try to find the most recent restore
   try {
-    const result = await $`kubectl get restores -n velero --sort-by=.metadata.creationTimestamp -o json`.quiet();
+    const result =
+      await $`kubectl get restores -n velero --sort-by=.metadata.creationTimestamp -o json`.quiet();
     const restores = JSON.parse(result.text());
 
     if (restores.items && restores.items.length > 0) {
       const latestRestore = restores.items[restores.items.length - 1];
-      console.log(`No restore name provided, using latest: ${latestRestore.metadata.name}\n`);
+      console.log(
+        `No restore name provided, using latest: ${latestRestore.metadata.name}\n`,
+      );
       await monitorRestore(latestRestore.metadata.name);
     } else {
       console.log("❌ No restores found");
-      console.log("\nUsage: bun run scripts/velero/monitor-restore.ts <restore-name>");
+      console.log(
+        "\nUsage: bun run scripts/velero/monitor-restore.ts <restore-name>",
+      );
       process.exit(1);
     }
   } catch (error) {
     console.log("❌ Error finding restores");
-    console.log("\nUsage: bun run scripts/velero/monitor-restore.ts <restore-name>");
+    console.log(
+      "\nUsage: bun run scripts/velero/monitor-restore.ts <restore-name>",
+    );
     process.exit(1);
   }
 } else {

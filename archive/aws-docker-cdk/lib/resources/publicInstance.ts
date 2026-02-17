@@ -74,12 +74,12 @@ export class PublicInstance extends Construct {
     sshSecurityGroup.addIngressRule(
       Peer.anyIpv4(),
       Port.tcp(sshPort),
-      "Allow SSH"
+      "Allow SSH",
     );
     sshSecurityGroup.addIngressRule(
       Peer.anyIpv6(),
       Port.tcp(sshPort),
-      "Allow SSH"
+      "Allow SSH",
     );
 
     const moshSecurityGroup = new SecurityGroup(this, "MoshSecurityGroup", {
@@ -92,12 +92,12 @@ export class PublicInstance extends Construct {
     moshSecurityGroup.addIngressRule(
       Peer.anyIpv4(),
       Port.udpRange(60001, 60999),
-      "Allow mosh"
+      "Allow mosh",
     );
     moshSecurityGroup.addIngressRule(
       Peer.anyIpv6(),
       Port.udpRange(60001, 60999),
-      "Allow mosh"
+      "Allow mosh",
     );
 
     const role = new Role(this, "Role", {
@@ -166,7 +166,7 @@ blkid --match-token TYPE=xfs ${ebsDeviceName} || mkfs -t xfs ${ebsDeviceName}
 echo "${ebsDeviceName} ${mountPoint} xfs defaults,nofail 0 2" | tee -a /etc/fstab
 mount -a
       `,
-      ...userData
+      ...userData,
     );
 
     const elasticIp = new CfnEIP(this, "ElasticIp", {});

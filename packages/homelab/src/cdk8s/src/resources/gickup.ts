@@ -1,6 +1,13 @@
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { ConfigMap, Deployment, DeploymentStrategy, Secret, Service, Volume } from "cdk8s-plus-31";
+import {
+  ConfigMap,
+  Deployment,
+  DeploymentStrategy,
+  Secret,
+  Service,
+  Volume,
+} from "cdk8s-plus-31";
 import { withCommonProps } from "../misc/common.ts";
 import { ZfsSataVolume } from "../misc/zfs-sata-volume.ts";
 import { createServiceMonitor } from "../misc/service-monitor.ts";
@@ -47,7 +54,8 @@ export async function createGickupDeployment(chart: Chart) {
   // The token needs: repo, read:org, read:user permissions
   const githubToken = new OnePasswordItem(chart, "gickup-github-token", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/zshiow4egtiuec5n7stcskyxmm",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/zshiow4egtiuec5n7stcskyxmm",
     },
     metadata: {
       name: "gickup-github-token",
@@ -65,18 +73,30 @@ export async function createGickupDeployment(chart: Chart) {
       volumeMounts: [
         {
           path: "/backup",
-          volume: Volume.fromPersistentVolumeClaim(chart, "gickup-backup-volume", backupVolume.claim),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "gickup-backup-volume",
+            backupVolume.claim,
+          ),
         },
         {
           path: "/etc/gickup",
-          volume: Volume.fromConfigMap(chart, "gickup-config-volume", gickupConfig),
+          volume: Volume.fromConfigMap(
+            chart,
+            "gickup-config-volume",
+            gickupConfig,
+          ),
         },
         {
           path: "/secrets",
           volume: Volume.fromSecret(
             chart,
             "gickup-secrets-volume",
-            Secret.fromSecretName(chart, "gickup-github-secret", githubToken.name),
+            Secret.fromSecretName(
+              chart,
+              "gickup-github-secret",
+              githubToken.name,
+            ),
           ),
         },
       ],

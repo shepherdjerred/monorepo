@@ -1,32 +1,32 @@
-import jwtDecode from 'jwt-decode';
-import {REMOVE_JWT, loginActionTypes} from './actions';
+import jwtDecode from "jwt-decode";
+import { REMOVE_JWT, loginActionTypes } from "./actions";
 
-const {begin, success, error} = loginActionTypes;
+const { begin, success, error } = loginActionTypes;
 
 const initialState = {
   isFetching: false,
   error: false,
   token: {
     jwt: null,
-    decodedJwt: null
-  }
+    decodedJwt: null,
+  },
 };
 
-export function authenticationReducer (state = initialState, action) {
+export function authenticationReducer(state = initialState, action) {
   switch (action.type) {
     case REMOVE_JWT:
       return {
         ...state,
-        token: initialState.token
+        token: initialState.token,
       };
     case begin:
       return {
         ...state,
         isFetching: true,
-        error: false
+        error: false,
       };
     case success:
-      const {token} = action.payload;
+      const { token } = action.payload;
       const decodedJwt = jwtDecode(token);
       return {
         ...state,
@@ -34,14 +34,14 @@ export function authenticationReducer (state = initialState, action) {
         error: false,
         token: {
           jwt: token,
-          decodedJwt
-        }
+          decodedJwt,
+        },
       };
     case error:
       return {
         ...state,
         isFetching: false,
-        error: action.payload
+        error: action.payload,
       };
     default:
       return state;

@@ -34,7 +34,7 @@ export function maxPayment(...calculators: ((card: CreditCard) => number)[]): (c
 
 export function interestPlusPercentOfCurrentBalanceOrFloorPayment(
   percent: number,
-  floor: number
+  floor: number,
 ): (card: CreditCard) => number {
   return maxPayment(addPayments(percentOfCurrentBalancePayment(percent), interestPayment()), constantPayment(floor));
 }

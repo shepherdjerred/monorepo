@@ -18,7 +18,9 @@ describe("YAML Comment Parsing - Real Helm Chart Examples", () => {
     const comments = parseYAMLComments(yaml);
 
     // tty should only get its own comment, not the comments from the deeper nested properties
-    expect(comments.get("tty")).toBe("set this to false to not have colorized logs");
+    expect(comments.get("tty")).toBe(
+      "set this to false to not have colorized logs",
+    );
     expect(comments.get("tty")).not.toContain("loadBalancerSourceRanges");
     expect(comments.get("tty")).not.toContain("externalTrafficPolicy");
   });
@@ -103,7 +105,9 @@ level1:
     expect(comments.get("level1")).toBe("Level 1 comment");
     expect(comments.get("level1.level2")).toBe("Level 2 comment");
     expect(comments.get("level1.level2.level3")).toBe("Level 3 comment");
-    expect(comments.get("level1.level2.another3")).toBe("Another level 3 comment");
+    expect(comments.get("level1.level2.another3")).toBe(
+      "Another level 3 comment",
+    );
     expect(comments.get("level1.level2b")).toBe("Back to level 2");
   });
 
@@ -144,7 +148,9 @@ scopes: "[groups]"`;
     // All comments between policy.csv and scopes get associated with scopes
     // This includes both the policy rules explanation AND the OIDC prose
     expect(comments.get("scopes")).toContain("Policy rules are in the form:");
-    expect(comments.get("scopes")).toContain("Role definitions and bindings are in the form:");
+    expect(comments.get("scopes")).toContain(
+      "Role definitions and bindings are in the form:",
+    );
     expect(comments.get("scopes")).toContain("OIDC scopes to examine");
     expect(comments.get("scopes")).toContain("The scope value can be a string");
 
@@ -196,7 +202,9 @@ service:
     // Should get the OIDC description
     expect(comments.get("rbac.scopes")).toBeDefined();
     expect(comments.get("rbac.scopes")).toContain("OIDC scopes to examine");
-    expect(comments.get("rbac.scopes")).toContain("The scope value can be a string");
+    expect(comments.get("rbac.scopes")).toContain(
+      "The scope value can be a string",
+    );
   });
 
   test("should handle keys with dots in their names", () => {
@@ -211,7 +219,9 @@ policy.matchMode: "glob"`;
 
     expect(comments.get("policy.default")).toBe("Comment for policy.default");
     expect(comments.get("policy.csv")).toBe("Comment for policy.csv");
-    expect(comments.get("policy.matchMode")).toBe("Comment for policy.matchMode");
+    expect(comments.get("policy.matchMode")).toBe(
+      "Comment for policy.matchMode",
+    );
   });
 
   test("should handle nested keys with dots in names", () => {
@@ -223,8 +233,12 @@ policy.matchMode: "glob"`;
 
     const comments = parseYAMLComments(yaml);
 
-    expect(comments.get("parent.child.with.dots")).toBe("Comment for child.with.dots");
-    expect(comments.get("parent.another.dotted.key")).toBe("Comment for another.dotted.key");
+    expect(comments.get("parent.child.with.dots")).toBe(
+      "Comment for child.with.dots",
+    );
+    expect(comments.get("parent.another.dotted.key")).toBe(
+      "Comment for another.dotted.key",
+    );
   });
 
   test("should properly resume prose detection after code blocks with backticks and parentheses", () => {
@@ -239,7 +253,9 @@ key: value`;
     const comments = parseYAMLComments(yaml);
 
     expect(comments.get("key")).toContain("First line of prose");
-    expect(comments.get("key")).toContain("This is prose with `backticks` and (parentheses)");
+    expect(comments.get("key")).toContain(
+      "This is prose with `backticks` and (parentheses)",
+    );
     expect(comments.get("key")).toContain("Another line with special chars");
   });
 
@@ -258,8 +274,12 @@ key: value`;
     const comments = parseYAMLComments(yaml);
 
     expect(comments.get("key")).toContain("Initial documentation");
-    expect(comments.get("key")).toContain("Middle documentation explaining something important");
-    expect(comments.get("key")).toContain("Final documentation that wraps it all up");
+    expect(comments.get("key")).toContain(
+      "Middle documentation explaining something important",
+    );
+    expect(comments.get("key")).toContain(
+      "Final documentation that wraps it all up",
+    );
     expect(comments.get("key")).not.toContain("p, rule1");
     expect(comments.get("key")).not.toContain("g, group1");
   });
@@ -320,17 +340,25 @@ image: repository`;
     const comments = parseYAMLComments(yaml);
 
     // The property should get its actual documentation
-    expect(comments.get("resource.customizations.ignoreResourceUpdates.all")).toContain(
-      "Default configuration for ignoreResourceUpdates",
-    );
-    expect(comments.get("resource.customizations.ignoreResourceUpdates.all")).toContain(
-      "Ignoring status for all resources",
-    );
+    expect(
+      comments.get("resource.customizations.ignoreResourceUpdates.all"),
+    ).toContain("Default configuration for ignoreResourceUpdates");
+    expect(
+      comments.get("resource.customizations.ignoreResourceUpdates.all"),
+    ).toContain("Ignoring status for all resources");
 
     // BUT it should NOT include the section headers from commented-out configs
-    expect(comments.get("resource.customizations.ignoreResourceUpdates.all")).not.toContain("Dex configuration");
-    expect(comments.get("resource.customizations.ignoreResourceUpdates.all")).not.toContain("GitHub example");
-    expect(comments.get("resource.customizations.ignoreResourceUpdates.all")).not.toContain("OIDC configuration");
-    expect(comments.get("resource.customizations.ignoreResourceUpdates.all")).not.toContain("Extension Configuration");
+    expect(
+      comments.get("resource.customizations.ignoreResourceUpdates.all"),
+    ).not.toContain("Dex configuration");
+    expect(
+      comments.get("resource.customizations.ignoreResourceUpdates.all"),
+    ).not.toContain("GitHub example");
+    expect(
+      comments.get("resource.customizations.ignoreResourceUpdates.all"),
+    ).not.toContain("OIDC configuration");
+    expect(
+      comments.get("resource.customizations.ignoreResourceUpdates.all"),
+    ).not.toContain("Extension Configuration");
   });
 });

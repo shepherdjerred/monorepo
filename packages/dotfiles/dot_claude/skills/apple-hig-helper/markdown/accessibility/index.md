@@ -14,9 +14,9 @@ Accessible user interfaces empower everyone to have a great experience with your
 
 When you design for accessibility, you reach a larger audience and create a more inclusive experience. An accessible interface allows people to experience your app or game regardless of their capabilities or how they use their devices. Accessibility makes information and interactions available to everyone. An accessible interface is:
 
-* **Intuitive.** Your interface uses familiar and consistent interactions that make tasks straightforward to perform.
-* **Perceivable.** Your interface doesn’t rely on any single method to convey information. People can access and interact with your content, whether they use sight, hearing, speech, or touch.
-* **Adaptable.** Your interface adapts to how people want to use their device, whether by supporting system accessibility features or letting people personalize settings.
+- **Intuitive.** Your interface uses familiar and consistent interactions that make tasks straightforward to perform.
+- **Perceivable.** Your interface doesn’t rely on any single method to convey information. People can access and interact with your content, whether they use sight, hearing, speech, or touch.
+- **Adaptable.** Your interface adapts to how people want to use their device, whether by supporting system accessibility features or letting people personalize settings.
 
 As you design your app, audit the accessibility of your interface. Use [Accessibility Inspector](/documentation/Accessibility/accessibility-inspector) to highlight accessibility issues with your interface and to understand how your app represents itself to people using system accessibility features. You can also communicate how accessible your app is on the App Store using Accessibility Nutrition Labels. To learn more about how to evaluate and indicate accessibility feature support, see [Accessibility Nutrition Labels](https://developer.apple.com/help/app-store-connect/manage-app-accessibility/overview-of-accessibility-nutrition-labels) in App Store Connect help.
 
@@ -30,13 +30,13 @@ The people who use your interface may be blind, color blind, or have low vision 
 
 **Use recommended defaults for custom type sizes.** Each platform has different default and minimum sizes for system-defined type styles to promote readability. If you’re using custom type styles, follow the recommended defaults.
 
-| Platform | Default size | Minimum size |
-| --- | --- | --- |
-| iOS, iPadOS | 17 pt | 11 pt |
-| macOS | 13 pt | 10 pt |
-| tvOS | 29 pt | 23 pt |
-| visionOS | 17 pt | 12 pt |
-| watchOS | 16 pt | 12 pt |
+| Platform    | Default size | Minimum size |
+| ----------- | ------------ | ------------ |
+| iOS, iPadOS | 17 pt        | 11 pt        |
+| macOS       | 13 pt        | 10 pt        |
+| tvOS        | 29 pt        | 23 pt        |
+| visionOS    | 17 pt        | 12 pt        |
+| watchOS     | 16 pt        | 12 pt        |
 
 **Bear in mind that font weight can also impact how easy text is to read.** If you’re using a custom font with a thin weight, aim for larger than the recommended sizes to increase legibility. For more guidance, see [Typography](/design/human-interface-guidelines/typography).
 
@@ -50,11 +50,11 @@ Consider increasing the font size when using a thin weight.
 
 **Strive to meet color contrast minimum standards.** To ensure all information in your app is legible, it’s important that there’s enough contrast between foreground text and icons and background colors. Two popular standards of measure for color contrast are the [Web Content Accessibility Guidelines (WCAG)](https://www.w3.org/TR/WCAG/) and the Accessible Perceptual Contrast Algorithm (APCA). Use standard contrast calculators to ensure your UI meets acceptable levels. [Accessibility Inspector](/documentation/Accessibility/accessibility-inspector) uses the following values from WCAG Level AA as guidance in determining whether your app’s colors have an acceptable contrast.
 
-| Text size | Text weight | Minimum contrast ratio |
-| --- | --- | --- |
-| Up to 17 pts | All | 4.5:1 |
-| 18 pts | All | 3:1 |
-| All | Bold | 3:1 |
+| Text size    | Text weight | Minimum contrast ratio |
+| ------------ | ----------- | ---------------------- |
+| Up to 17 pts | All         | 4.5:1                  |
+| 18 pts       | All         | 3:1                    |
+| All          | Bold        | 3:1                    |
 
 If your app doesn’t provide this minimum contrast by default, ensure it at least provides a higher contrast color scheme when the system setting Increase Contrast is turned on. If your app supports [Dark Mode](/design/human-interface-guidelines/dark-mode), make sure to check the minimum contrast in both light and dark appearances.
 
@@ -104,10 +104,10 @@ The people who use your interface may be deaf or hard of hearing. They may also 
 
 **Support text-based ways to enjoy audio and video.** It’s important that dialogue and crucial information about your app or game isn’t communicated through audio alone. Depending on the context, give people different text-based ways to experience their media, and allow people to customize the visual presentation of that text:
 
-* **Captions** give people the textual equivalent of audible information in video or audio-only content. Captions are great for scenarios like game cutscenes and video clips where text synchronizes live with the media.
-* **Subtitles** allow people to read live onscreen dialogue in their preferred language. Subtitles are great for TV shows and movies.
-* **Audio descriptions** are interspersed between natural pauses in the main audio of a video and supply spoken narration of important information that’s presented only visually.
-* **Transcripts** provide a complete textual description of a video, covering both audible and visual information. Transcripts are great for longer-form media like podcasts and audiobooks where people may want to review content as a whole or highlight the transcript as media is playing.
+- **Captions** give people the textual equivalent of audible information in video or audio-only content. Captions are great for scenarios like game cutscenes and video clips where text synchronizes live with the media.
+- **Subtitles** allow people to read live onscreen dialogue in their preferred language. Subtitles are great for TV shows and movies.
+- **Audio descriptions** are interspersed between natural pauses in the main audio of a video and supply spoken narration of important information that’s presented only visually.
+- **Transcripts** provide a complete textual description of a video, covering both audible and visual information. Transcripts are great for longer-form media like podcasts and audiobooks where people may want to review content as a whole or highlight the transcript as media is playing.
 
 For developer guidance, see [Selecting subtitles and alternative audio tracks](/documentation/AVFoundation/selecting-subtitles-and-alternative-audio-tracks).
 
@@ -125,13 +125,13 @@ Ensure your interface offers a comfortable experience for people with limited de
 
 **Offer sufficiently sized controls.** Controls that are too small are hard for many people to interact with and select. Strive to meet the recommended minimum control size for each platform to ensure controls and menus are comfortable for all when tapping and clicking.
 
-| Platform | Default control size | Minimum control size |
-| --- | --- | --- |
-| iOS, iPadOS | 44x44 pt | 28x28 pt |
-| macOS | 28x28 pt | 20x20 pt |
-| tvOS | 66x66 pt | 56x56 pt |
-| visionOS | 60x60 pt | 28x28 pt |
-| watchOS | 44x44 pt | 28x28 pt |
+| Platform    | Default control size | Minimum control size |
+| ----------- | -------------------- | -------------------- |
+| iOS, iPadOS | 44x44 pt             | 28x28 pt             |
+| macOS       | 28x28 pt             | 20x20 pt             |
+| tvOS        | 66x66 pt             | 56x56 pt             |
+| visionOS    | 60x60 pt             | 28x28 pt             |
+| watchOS     | 44x44 pt             | 28x28 pt             |
 
 **Consider spacing between controls as important as size.** Include enough padding between elements to reduce the chance that someone taps the wrong control. In general, it works well to add about 12 points of padding around elements that include a bezel. For elements without a bezel, about 24 points of padding works well around the element’s visible edges.
 
@@ -193,11 +193,11 @@ When you minimize complexity in your app or game, all people benefit.
 
 **Be cautious with fast-moving and blinking animations.** When you use these effects in excess, it can be distracting, cause dizziness, and in some cases even result in epileptic episodes. People who are prone to these effects can turn on the Reduce Motion accessibility setting. When this setting is active, ensure your app or game responds by reducing automatic and repetitive animations, including zooming, scaling, and peripheral motion. Other best practices for reducing motion include:
 
-* Tightening animation springs to reduce bounce effects
-* Tracking animations directly with people’s gestures
-* Avoiding animating depth changes in z-axis layers
-* Replacing transitions in x-, y-, and z-axes with fades to avoid motion
-* Avoiding animating into and out of blurs
+- Tightening animation springs to reduce bounce effects
+- Tracking animations directly with people’s gestures
+- Avoiding animating depth changes in z-axis layers
+- Replacing transitions in x-, y-, and z-axes with fades to avoid motion
+- Avoiding animating into and out of blurs
 
 **Optimize your app’s UI for Assistive Access.** Assistive Access is an accessibility feature in iOS and iPadOS that allows people with cognitive disabilities to use a streamlined version of your app. Assistive Access sets a default layout and control presentation for apps that reduces cognitive load, such as the following layout of the Camera app.
 
@@ -207,45 +207,45 @@ When you minimize complexity in your app or game, all people benefit.
 
 To optimize your app for this mode, use the following guidelines when Assistive Access is turned on:
 
-* Identify the core functionality of your app and consider removing noncritical workflows and UI elements.
-* Break up multistep workflows so people can focus on a single interaction per screen.
-* Always ask for confirmation twice whenever people perform an action that’s difficult to recover from, such a deleting a file.
+- Identify the core functionality of your app and consider removing noncritical workflows and UI elements.
+- Break up multistep workflows so people can focus on a single interaction per screen.
+- Always ask for confirmation twice whenever people perform an action that’s difficult to recover from, such a deleting a file.
 
 For developer guidance, see [Assistive Access](/documentation/Accessibility/assistive-access).
 
 ## [Platform considerations](/design/human-interface-guidelines/accessibility#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, or watchOS._
 
 ### [visionOS](/design/human-interface-guidelines/accessibility#visionOS)
 
 visionOS offers a variety of accessibility features people can use to interact with their surroundings in ways that are comfortable and work best for them, including head and hand Pointer Control, and a Zoom feature.
 
-* [Pointer Control (hand)](#)
-* [Pointer Control (head)](#)
-* [Zoom](#)
+- [Pointer Control (hand)](#)
+- [Pointer Control (head)](#)
+- [Zoom](#)
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/382d5edf5b1d78a920dc394361525b2a/visionos-accessibility-hand-pointer%402x.png)](https://docs-assets.developer.apple.com/published/38c5f49298efd567cc38b223eeb720c7/visionos-accessibility-hand-pointer.mp4) Content description: A recording of a person's hand using Pointer Control to interact with content in an app's visionOS window. A line with a pointer at the end extends from the person's hand. It changes position within the field of view as the person moves their hand.
 
- [Play](#)
+[Play](#)
 
-Video with custom controls. 
+Video with custom controls.
 
 [![](https://docs-assets.developer.apple.com/published/6bcc707f6aabd47ce8cabfee64ec7271/visionos-accessibility-head-pointer%402x.png)](https://docs-assets.developer.apple.com/published/561b82e82dab260d9c82143c84480af9/visionos-accessibility-head-pointer.mp4) Content description: A recording of someone using Pointer Control to interact with content in an app's visionOS window. The person isn't visible in the recording. Only the pointer is visible. It's centered in the field of view, and the person uses their head movement to position content beneath the pointer.
 
- [Play](#)
+[Play](#)
 
 ![A screenshot of an app's window in visionOS. A zoom lens is visible above a portion of the window, and displays a zoomed-in version of the content beneath the lens.](https://docs-assets.developer.apple.com/published/087dd22d68c54c95cd70008020f6dc1e/visionos-accessibility-zoom-lens%402x.png)
 
 **Prioritize comfort.** The immersive nature of visionOS means that interfaces, animations, and interactions have a greater chance of causing motion sickness, and visual and ergonomic discomfort for people. To ensure the most comfortable experience, consider these tips:
 
-* Keep interface elements within a person’s field of view. Prefer horizontal layouts to vertical ones that might cause neck strain, and avoid demanding the viewer’s attention in different locations in quick succession.
-* Reduce the speed and intensity of animated objects, particularly in someone’s peripheral vision.
-* Be gentle with camera and video motion, and avoid situations where someone may feel like the world around them is moving without their control.
-* Avoid anchoring content to the wearer’s head, which may make them feel stuck and confined, and also prevent them from using assistive technologies like Pointer Control.
-* Minimize the need for large and repetitive gestures, as these can become tiresome and may be difficult depending on a person’s surroundings.
+- Keep interface elements within a person’s field of view. Prefer horizontal layouts to vertical ones that might cause neck strain, and avoid demanding the viewer’s attention in different locations in quick succession.
+- Reduce the speed and intensity of animated objects, particularly in someone’s peripheral vision.
+- Be gentle with camera and video motion, and avoid situations where someone may feel like the world around them is moving without their control.
+- Avoid anchoring content to the wearer’s head, which may make them feel stuck and confined, and also prevent them from using assistive technologies like Pointer Control.
+- Minimize the need for large and repetitive gestures, as these can become tiresome and may be difficult depending on a person’s surroundings.
 
 For additional guidance, see [Create accessible spatial experiences](https://developer.apple.com/videos/play/wwdc2023/10034) and [Design considerations for vision and motion](https://developer.apple.com/videos/play/wwdc2023/10078).
 
@@ -283,10 +283,10 @@ Catch up on accessibility in SwiftUI](https://developer.apple.com/videos/play/ww
 
 ## [Change log](/design/human-interface-guidelines/accessibility#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| June 9, 2025 | Added guidance and links for Assistive Access, Switch Control, and Accessibility Nutrition Labels. |
-| March 7, 2025 | Expanded and refined all guidance. Moved Dynamic Type guidance to the Typography page, and moved VoiceOver guidance to a new VoiceOver page. |
-| June 10, 2024 | Added a link to Apple’s Unity plug-ins for supporting Dynamic Type. |
-| December 5, 2023 | Updated visionOS Zoom lens artwork. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
+| Date             | Changes                                                                                                                                      |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| June 9, 2025     | Added guidance and links for Assistive Access, Switch Control, and Accessibility Nutrition Labels.                                           |
+| March 7, 2025    | Expanded and refined all guidance. Moved Dynamic Type guidance to the Typography page, and moved VoiceOver guidance to a new VoiceOver page. |
+| June 10, 2024    | Added a link to Apple’s Unity plug-ins for supporting Dynamic Type.                                                                          |
+| December 5, 2023 | Updated visionOS Zoom lens artwork.                                                                                                          |
+| June 21, 2023    | Updated to include guidance for visionOS.                                                                                                    |

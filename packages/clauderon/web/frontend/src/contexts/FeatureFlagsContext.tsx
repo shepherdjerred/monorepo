@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  type ReactNode,
+} from "react";
 import type { FeatureFlags } from "@clauderon/shared";
 import { useClauderonClient } from "../hooks/useClauderonClient";
 
@@ -6,9 +12,11 @@ type FeatureFlagsContextValue = {
   flags: FeatureFlags | null;
   isLoading: boolean;
   error: Error | null;
-}
+};
 
-const FeatureFlagsContext = createContext<FeatureFlagsContextValue | null>(null);
+const FeatureFlagsContext = createContext<FeatureFlagsContextValue | null>(
+  null,
+);
 
 export function FeatureFlagsProvider({ children }: { children: ReactNode }) {
   const client = useClauderonClient();

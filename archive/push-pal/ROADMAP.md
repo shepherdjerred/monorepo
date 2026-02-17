@@ -2,7 +2,7 @@
 
 ## Backlog
 
-* Init project
+- Init project
 
 ## In Progress
 

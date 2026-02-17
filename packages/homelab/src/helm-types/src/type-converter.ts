@@ -1,4 +1,8 @@
-import type { JSONSchemaProperty, TypeScriptInterface, TypeProperty } from "./types.js";
+import type {
+  JSONSchemaProperty,
+  TypeScriptInterface,
+  TypeProperty,
+} from "./types.js";
 import type { HelmValue } from "./schemas.js";
 import {
   StringSchema,
@@ -11,7 +15,11 @@ import {
   HelmValueSchema,
 } from "./schemas.js";
 import { shouldAllowArbitraryProps, isK8sResourceSpec } from "./config.js";
-import { sanitizePropertyName, sanitizeTypeName, capitalizeFirst } from "./utils.js";
+import {
+  sanitizePropertyName,
+  sanitizeTypeName,
+  capitalizeFirst,
+} from "./utils.js";
 
 /**
  * Augment a Kubernetes resource spec interface with both requests and limits.
@@ -99,7 +107,11 @@ export function jsonSchemaToTypeScript(schema: JSONSchemaProperty): string {
 
   // Handle enum
   if (schema.enum) {
-    return schema.enum.map((v) => (StringSchema.safeParse(v).success ? `"${String(v)}"` : String(v))).join(" | ");
+    return schema.enum
+      .map((v) =>
+        StringSchema.safeParse(v).success ? `"${String(v)}"` : String(v),
+      )
+      .join(" | ");
   }
 
   // Handle array type
@@ -135,7 +147,9 @@ export function jsonSchemaToTypeScript(schema: JSONSchemaProperty): string {
   if (arrayTypeCheck.success) {
     return arrayTypeCheck.data
       .map((t: unknown) => {
-        if (!StringSchema.safeParse(t).success) {return "unknown";}
+        if (!StringSchema.safeParse(t).success) {
+          return "unknown";
+        }
         const typeStr = String(t);
         switch (typeStr) {
           case "string":
@@ -166,7 +180,10 @@ export function jsonSchemaToTypeScript(schema: JSONSchemaProperty): string {
  */
 export function inferTypeFromValue(value: unknown): string | null {
   // Check null/undefined
-  if (NullSchema.safeParse(value).success || UndefinedSchema.safeParse(value).success) {
+  if (
+    NullSchema.safeParse(value).success ||
+    UndefinedSchema.safeParse(value).success
+  ) {
     return null;
   }
 
@@ -189,7 +206,11 @@ export function inferTypeFromValue(value: unknown): string | null {
   const stringCheck = StringSchema.safeParse(value);
   if (stringCheck.success) {
     const trimmed = stringCheck.data.trim();
-    if (trimmed !== "" && !Number.isNaN(Number(trimmed)) && Number.isFinite(Number(trimmed))) {
+    if (
+      trimmed !== "" &&
+      !Number.isNaN(Number(trimmed)) &&
+      Number.isFinite(Number(trimmed))
+    ) {
       return "number";
     }
   }
@@ -215,7 +236,10 @@ export function inferTypeFromValue(value: unknown): string | null {
 /**
  * Check if inferred type is compatible with schema type
  */
-export function typesAreCompatible(inferredType: string, schemaType: string): boolean {
+export function typesAreCompatible(
+  inferredType: string,
+  schemaType: string,
+): boolean {
   // Exact match
   if (inferredType === schemaType) {
     return true;
@@ -223,7 +247,9 @@ export function typesAreCompatible(inferredType: string, schemaType: string): bo
 
   // Check if the inferred type is part of a union in the schema
   // For example: schemaType might be "number | \"default\"" and inferredType is "string"
-  const schemaTypes = schemaType.split("|").map((t) => t.trim().replaceAll(/^["']|["']$/g, ""));
+  const schemaTypes = schemaType
+    .split("|")
+    .map((t) => t.trim().replaceAll(/^["']|["']$/g, ""));
 
   // If schema is a union, check if inferred type is compatible with any part
   if (schemaTypes.length > 1) {
@@ -295,7 +321,12 @@ export function convertToTypeScriptInterface(
 
   // Check if this interface should allow arbitrary properties
   const allowArbitraryProps = chartName
-    ? shouldAllowArbitraryProps(keyPrefix, chartName, keyPrefix.split(".").pop() ?? "", yamlComments?.get(keyPrefix))
+    ? shouldAllowArbitraryProps(
+        keyPrefix,
+        chartName,
+        keyPrefix.split(".").pop() ?? "",
+        yamlComments?.get(keyPrefix),
+      )
     : false;
 
   return {
@@ -392,7 +423,10 @@ function convertValueToProperty(
   // IMPORTANT: Check for complex types (arrays, objects) BEFORE primitive types with coercion
 
   // Check for null/undefined first
-  if (NullSchema.safeParse(value).success || UndefinedSchema.safeParse(value).success) {
+  if (
+    NullSchema.safeParse(value).success ||
+    UndefinedSchema.safeParse(value).success
+  ) {
     return { type: "unknown", optional: true };
   }
 
@@ -429,7 +463,12 @@ function convertValueToProperty(
           // Array elements inherit extensibility from their parent array
           const allowArbitraryProps =
             chartName && fullKey
-              ? shouldAllowArbitraryProps(fullKey, chartName, propertyName ?? "", yamlComment)
+              ? shouldAllowArbitraryProps(
+                  fullKey,
+                  chartName,
+                  propertyName ?? "",
+                  yamlComment,
+                )
               : false;
 
           const arrayElementInterface: TypeScriptInterface = {
@@ -454,7 +493,10 @@ function convertValueToProperty(
 
     // If mixed types, use union type for common cases
     const types = [...elementTypes].sort();
-    if (types.length <= 3 && types.every((t) => ["string", "number", "boolean"].includes(t))) {
+    if (
+      types.length <= 3 &&
+      types.every((t) => ["string", "number", "boolean"].includes(t))
+    ) {
       return {
         type: `(${types.join(" | ")})[]`,
         optional: true,
@@ -496,17 +538,32 @@ function convertValueToProperty(
 
   // Check for actual runtime boolean (true/false)
   if (ActualBooleanSchema.safeParse(value).success) {
-    return { type: "boolean", optional: true, description: yamlComment, default: value };
+    return {
+      type: "boolean",
+      optional: true,
+      description: yamlComment,
+      default: value,
+    };
   }
 
   // Check for actual runtime number
   if (ActualNumberSchema.safeParse(value).success) {
-    return { type: "number", optional: true, description: yamlComment, default: value };
+    return {
+      type: "number",
+      optional: true,
+      description: yamlComment,
+      default: value,
+    };
   }
 
   // Check if it's a string that represents a boolean ("true", "FALSE", etc.)
   if (StringBooleanSchema.safeParse(value).success) {
-    return { type: "boolean", optional: true, description: yamlComment, default: value };
+    return {
+      type: "boolean",
+      optional: true,
+      description: yamlComment,
+      default: value,
+    };
   }
 
   // Check if it's a string that represents a number ("15", "0", etc.)
@@ -515,8 +572,17 @@ function convertValueToProperty(
   if (stringCheckForNumber.success) {
     const trimmed = stringCheckForNumber.data.trim();
     // Don't treat empty strings or purely whitespace as numbers
-    if (trimmed !== "" && !Number.isNaN(Number(trimmed)) && Number.isFinite(Number(trimmed))) {
-      return { type: "number", optional: true, description: yamlComment, default: value };
+    if (
+      trimmed !== "" &&
+      !Number.isNaN(Number(trimmed)) &&
+      Number.isFinite(Number(trimmed))
+    ) {
+      return {
+        type: "number",
+        optional: true,
+        description: yamlComment,
+        default: value,
+      };
     }
   }
 
@@ -526,12 +592,24 @@ function convertValueToProperty(
     // Special case: "default" is often used as a sentinel value in Helm charts
     // that can be overridden with actual typed values (numbers, booleans, etc.)
     if (stringCheckForPlain.data === "default") {
-      return { type: "string | number | boolean", optional: true, description: yamlComment, default: value };
+      return {
+        type: "string | number | boolean",
+        optional: true,
+        description: yamlComment,
+        default: value,
+      };
     }
-    return { type: "string", optional: true, description: yamlComment, default: value };
+    return {
+      type: "string",
+      optional: true,
+      description: yamlComment,
+      default: value,
+    };
   }
 
   // Fallback for any unrecognized type
-  console.warn(`Unrecognized value type for: ${String(value)}, using 'unknown'`);
+  console.warn(
+    `Unrecognized value type for: ${String(value)}, using 'unknown'`,
+  );
   return { type: "unknown", optional: true, description: yamlComment };
 }

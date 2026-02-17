@@ -1,31 +1,58 @@
 import { createTool } from "../../../voltagent/tools/create-tool.js";
 import { z } from "zod";
-import { AutoModerationRuleTriggerType, AutoModerationActionType } from "discord.js";
+import {
+  AutoModerationRuleTriggerType,
+  AutoModerationActionType,
+} from "discord.js";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/index.js";
 import { validateSnowflakes, validateSnowflakeArray } from "./validation.js";
 
 export const manageAutomodRuleTool = createTool({
   id: "manage-automod-rule",
-  description: "Manage auto-moderation rules: list all, get details, create, modify, delete, or toggle enabled state",
+  description:
+    "Manage auto-moderation rules: list all, get details, create, modify, delete, or toggle enabled state",
   inputSchema: z.object({
     guildId: z.string().describe("The ID of the guild"),
-    action: z.enum(["list", "get", "create", "modify", "delete", "toggle"]).describe("The action to perform"),
-    ruleId: z.string().optional().describe("The ID of the rule (required for get/modify/delete/toggle)"),
-    name: z.string().optional().describe("Name of the rule (required for create, optional for modify)"),
+    action: z
+      .enum(["list", "get", "create", "modify", "delete", "toggle"])
+      .describe("The action to perform"),
+    ruleId: z
+      .string()
+      .optional()
+      .describe("The ID of the rule (required for get/modify/delete/toggle)"),
+    name: z
+      .string()
+      .optional()
+      .describe("Name of the rule (required for create, optional for modify)"),
     triggerType: z
       .enum(["KEYWORD", "SPAM", "KEYWORD_PRESET", "MENTION_SPAM"])
       .optional()
       .describe("Type of trigger (required for create)"),
-    keywords: z.array(z.string()).optional().describe("Keywords to match (for KEYWORD trigger)"),
+    keywords: z
+      .array(z.string())
+      .optional()
+      .describe("Keywords to match (for KEYWORD trigger)"),
     keywordPresets: z
       .array(z.enum(["PROFANITY", "SEXUAL_CONTENT", "SLURS"]))
       .optional()
       .describe("Preset filters (for KEYWORD_PRESET trigger)"),
-    mentionLimit: z.number().optional().describe("Max mentions allowed (for MENTION_SPAM trigger)"),
-    exemptRoles: z.array(z.string()).optional().describe("Role IDs to exempt from this rule"),
-    exemptChannels: z.array(z.string()).optional().describe("Channel IDs to exempt from this rule"),
-    enabled: z.boolean().optional().describe("Whether the rule is enabled (for create/toggle)"),
+    mentionLimit: z
+      .number()
+      .optional()
+      .describe("Max mentions allowed (for MENTION_SPAM trigger)"),
+    exemptRoles: z
+      .array(z.string())
+      .optional()
+      .describe("Role IDs to exempt from this rule"),
+    exemptChannels: z
+      .array(z.string())
+      .optional()
+      .describe("Channel IDs to exempt from this rule"),
+    enabled: z
+      .boolean()
+      .optional()
+      .describe("Whether the rule is enabled (for create/toggle)"),
     reason: z.string().optional().describe("Reason for the action"),
   }),
   outputSchema: z.object({
@@ -63,13 +90,22 @@ export const manageAutomodRuleTool = createTool({
         { value: ctx.guildId, fieldName: "guildId" },
         { value: ctx.ruleId, fieldName: "ruleId" },
       ]);
-      if (idError) {return { success: false, message: idError };}
+      if (idError) {
+        return { success: false, message: idError };
+      }
 
       const rolesError = validateSnowflakeArray(ctx.exemptRoles, "exemptRoles");
-      if (rolesError) {return { success: false, message: rolesError };}
+      if (rolesError) {
+        return { success: false, message: rolesError };
+      }
 
-      const channelsError = validateSnowflakeArray(ctx.exemptChannels, "exemptChannels");
-      if (channelsError) {return { success: false, message: channelsError };}
+      const channelsError = validateSnowflakeArray(
+        ctx.exemptChannels,
+        "exemptChannels",
+      );
+      if (channelsError) {
+        return { success: false, message: channelsError };
+      }
 
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
@@ -172,7 +208,9 @@ export const manageAutomodRuleTool = createTool({
           }
           const rule = await guild.autoModerationRules.fetch(ctx.ruleId);
           const editOptions: Parameters<typeof rule.edit>[0] = {};
-          if (ctx.name !== undefined) {editOptions.name = ctx.name;}
+          if (ctx.name !== undefined) {
+            editOptions.name = ctx.name;
+          }
           if (ctx.keywords !== undefined) {
             editOptions.triggerMetadata = { keywordFilter: ctx.keywords };
           }
@@ -182,9 +220,15 @@ export const manageAutomodRuleTool = createTool({
               mentionTotalLimit: ctx.mentionLimit,
             };
           }
-          if (ctx.exemptRoles !== undefined) {editOptions.exemptRoles = ctx.exemptRoles;}
-          if (ctx.exemptChannels !== undefined) {editOptions.exemptChannels = ctx.exemptChannels;}
-          if (ctx.reason !== undefined) {editOptions.reason = ctx.reason;}
+          if (ctx.exemptRoles !== undefined) {
+            editOptions.exemptRoles = ctx.exemptRoles;
+          }
+          if (ctx.exemptChannels !== undefined) {
+            editOptions.exemptChannels = ctx.exemptChannels;
+          }
+          if (ctx.reason !== undefined) {
+            editOptions.reason = ctx.reason;
+          }
           const hasChanges =
             ctx.name !== undefined ||
             ctx.keywords !== undefined ||

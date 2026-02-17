@@ -1,19 +1,23 @@
-import PropTypes from 'prop-types';
-import React, {Component} from 'react';
-import WithLoading from '../../common/WithLoading';
-import EditClub from './EditClub';
+import PropTypes from "prop-types";
+import React, { Component } from "react";
+import WithLoading from "../../common/WithLoading";
+import EditClub from "./EditClub";
 
 const EditWithLoading = WithLoading(EditClub);
 
 class LoadingEditClub extends Component {
-  componentDidMount () {
+  componentDidMount() {
     this.props.onFetchClub();
   }
 
-  render () {
+  render() {
     return (
-      <EditWithLoading isFetching={this.props.isFetching} error={this.props.isEditError} club={this.props.club}
-        onSave={this.props.onSave} />
+      <EditWithLoading
+        isFetching={this.props.isFetching}
+        error={this.props.isEditError}
+        club={this.props.club}
+        onSave={this.props.onSave}
+      />
     );
   }
 }
@@ -25,10 +29,8 @@ LoadingEditClub.propTypes = {
   onFetchClub: PropTypes.func.isRequired,
   onSave: PropTypes.func.isRequired,
   // isEditFetching: PropTypes.bool,
-  isEditError: PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.bool
-  ]).isRequired
+  isEditError: PropTypes.oneOfType([PropTypes.object, PropTypes.bool])
+    .isRequired,
 };
 
 export default LoadingEditClub;

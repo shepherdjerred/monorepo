@@ -2,7 +2,8 @@ import { AST_NODE_TYPES, ESLintUtils } from "@typescript-eslint/utils";
 import type { TSESTree } from "@typescript-eslint/utils";
 
 const createRule = ESLintUtils.RuleCreator(
-  (name) => `https://github.com/shepherdjerred/share/blob/main/packages/eslint-config/src/rules/${name}.ts`,
+  (name) =>
+    `https://github.com/shepherdjerred/share/blob/main/packages/eslint-config/src/rules/${name}.ts`,
 );
 
 /**
@@ -13,7 +14,8 @@ export const noDtoNaming = createRule({
   meta: {
     type: "suggestion",
     docs: {
-      description: "Enforce Raw* prefix instead of *Dto suffix for external/unvalidated data type names",
+      description:
+        "Enforce Raw* prefix instead of *Dto suffix for external/unvalidated data type names",
     },
     messages: {
       useDtoSuffix:
@@ -61,7 +63,10 @@ export const noDtoNaming = createRule({
         checkName(node.id.name, node.id);
       },
       VariableDeclarator(node) {
-        if (node.id.type === AST_NODE_TYPES.Identifier && node.parent.kind === "const") {
+        if (
+          node.id.type === AST_NODE_TYPES.Identifier &&
+          node.parent.kind === "const"
+        ) {
           checkName(node.id.name, node.id);
         }
       },

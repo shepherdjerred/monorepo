@@ -208,54 +208,54 @@ zellij action start-or-reload-plugin file:~/.config/zellij/plugins/my-plugin.was
 
 ### Pane Operations
 
-| Action | Description |
-|--------|-------------|
-| `new-pane` | Create new pane |
-| `close-pane` | Close current pane |
-| `move-pane` | Move pane in direction |
-| `resize` | Resize pane |
-| `toggle-fullscreen` | Fullscreen current pane |
-| `toggle-floating-panes` | Show/hide floating panes |
+| Action                          | Description                       |
+| ------------------------------- | --------------------------------- |
+| `new-pane`                      | Create new pane                   |
+| `close-pane`                    | Close current pane                |
+| `move-pane`                     | Move pane in direction            |
+| `resize`                        | Resize pane                       |
+| `toggle-fullscreen`             | Fullscreen current pane           |
+| `toggle-floating-panes`         | Show/hide floating panes          |
 | `toggle-pane-embed-or-floating` | Convert between embedded/floating |
-| `toggle-pane-frames` | Show/hide pane borders |
-| `toggle-pane-pinned` | Pin floating pane on top |
-| `stack-panes` | Stack panes in direction |
+| `toggle-pane-frames`            | Show/hide pane borders            |
+| `toggle-pane-pinned`            | Pin floating pane on top          |
+| `stack-panes`                   | Stack panes in direction          |
 
 ### Tab Operations
 
-| Action | Description |
-|--------|-------------|
-| `new-tab` | Create new tab |
-| `close-tab` | Close current tab |
-| `go-to-tab` | Go to tab by index |
-| `go-to-tab-name` | Go to tab by name |
-| `go-to-next-tab` | Next tab |
-| `go-to-previous-tab` | Previous tab |
-| `rename-tab` | Rename current tab |
-| `toggle-tab` | Toggle to previous tab |
-| `break-pane` | Move pane to new tab |
-| `break-pane-left` | Move pane to new tab on left |
-| `break-pane-right` | Move pane to new tab on right |
+| Action               | Description                   |
+| -------------------- | ----------------------------- |
+| `new-tab`            | Create new tab                |
+| `close-tab`          | Close current tab             |
+| `go-to-tab`          | Go to tab by index            |
+| `go-to-tab-name`     | Go to tab by name             |
+| `go-to-next-tab`     | Next tab                      |
+| `go-to-previous-tab` | Previous tab                  |
+| `rename-tab`         | Rename current tab            |
+| `toggle-tab`         | Toggle to previous tab        |
+| `break-pane`         | Move pane to new tab          |
+| `break-pane-left`    | Move pane to new tab on left  |
+| `break-pane-right`   | Move pane to new tab on right |
 
 ### Navigation
 
-| Action | Description |
-|--------|-------------|
-| `focus-next-pane` | Focus next pane |
-| `focus-previous-pane` | Focus previous pane |
-| `move-focus` | Focus pane in direction |
-| `move-focus-or-tab` | Focus pane or switch tab |
-| `clear` | Clear terminal screen |
+| Action                | Description              |
+| --------------------- | ------------------------ |
+| `focus-next-pane`     | Focus next pane          |
+| `focus-previous-pane` | Focus previous pane      |
+| `move-focus`          | Focus pane in direction  |
+| `move-focus-or-tab`   | Focus pane or switch tab |
+| `clear`               | Clear terminal screen    |
 
 ### Session & Mode
 
-| Action | Description |
-|--------|-------------|
-| `detach` | Detach from session |
-| `quit` | Exit Zellij |
-| `switch-mode` | Change input mode |
-| `previous-swap-layout` | Previous layout |
-| `next-swap-layout` | Next layout |
+| Action                 | Description         |
+| ---------------------- | ------------------- |
+| `detach`               | Detach from session |
+| `quit`                 | Exit Zellij         |
+| `switch-mode`          | Change input mode   |
+| `previous-swap-layout` | Previous layout     |
+| `next-swap-layout`     | Next layout         |
 
 ## Layouts
 
@@ -546,21 +546,21 @@ keybinds clear-defaults=true {
 
 Zellij has 13 input modes:
 
-| Mode | Description |
-|------|-------------|
-| `normal` | Default mode, typing goes to terminal |
-| `locked` | Disable all Zellij keybindings |
-| `pane` | Pane operations (create, close, move, focus) |
-| `tab` | Tab operations (create, close, switch) |
-| `resize` | Resize focused pane |
-| `move` | Move focused pane |
-| `scroll` | Scroll through pane output |
-| `search` | Search within pane scrollback |
-| `entersearch` | Enter search query |
-| `renametab` | Rename current tab |
-| `renamepane` | Rename current pane |
-| `session` | Session operations (detach, manager) |
-| `tmux` | tmux-compatible keybindings |
+| Mode          | Description                                  |
+| ------------- | -------------------------------------------- |
+| `normal`      | Default mode, typing goes to terminal        |
+| `locked`      | Disable all Zellij keybindings               |
+| `pane`        | Pane operations (create, close, move, focus) |
+| `tab`         | Tab operations (create, close, switch)       |
+| `resize`      | Resize focused pane                          |
+| `move`        | Move focused pane                            |
+| `scroll`      | Scroll through pane output                   |
+| `search`      | Search within pane scrollback                |
+| `entersearch` | Enter search query                           |
+| `renametab`   | Rename current tab                           |
+| `renamepane`  | Rename current pane                          |
+| `session`     | Session operations (detach, manager)         |
+| `tmux`        | tmux-compatible keybindings                  |
 
 ## Plugins
 
@@ -930,6 +930,7 @@ session_serialization false
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - Session name is ambiguous or conflicts with existing
 - Layout file location or format is unclear
 - Keybinding customization needs specifics

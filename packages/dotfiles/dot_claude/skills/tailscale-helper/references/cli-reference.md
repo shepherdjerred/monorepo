@@ -11,6 +11,7 @@ tailscale up [flags]
 ```
 
 **Flags:**
+
 - `--auth-key=<key>` - Auth key for non-interactive login
 - `--accept-routes` - Accept subnet routes from other nodes
 - `--accept-dns` - Accept DNS configuration from admin console (default: true)
@@ -28,6 +29,7 @@ tailscale up [flags]
 - `--timeout=<duration>` - Maximum wait time for login (default: 0, wait forever)
 
 **Examples:**
+
 ```bash
 # Basic connection
 tailscale up
@@ -54,6 +56,7 @@ tailscale down [flags]
 ```
 
 **Flags:**
+
 - `--accept-risk=<risk>` - Accept risk of disconnection (for scripting)
 - `--reason=<description>` - Record reason for disconnection
 
@@ -66,11 +69,13 @@ tailscale set [flags]
 ```
 
 **Flags (same as `up` plus):**
+
 - `--auto-update` - Enable automatic updates
 - `--advertise-connector` - Advertise as app connector
 - `--webclient` - Enable web client interface
 
 **Examples:**
+
 ```bash
 # Enable SSH server
 tailscale set --ssh
@@ -115,6 +120,7 @@ tailscale status [flags]
 ```
 
 **Flags:**
+
 - `--json` - Output full status as JSON
 - `--web` - Start a web server displaying status
 - `--active` - Show only active connections
@@ -124,6 +130,7 @@ tailscale status [flags]
 **Output columns:** IP address, hostname, OS, connection type (direct/relay), idle time, transfer stats.
 
 **Example JSON parsing:**
+
 ```bash
 # List all peer hostnames
 tailscale status --json | jq -r '.Peer[] | .HostName'
@@ -144,11 +151,13 @@ tailscale ip [flags] [peer]
 ```
 
 **Flags:**
+
 - `--4` - Show only IPv4 address
 - `--6` - Show only IPv6 address
 - `--1` - Show single address, preferring IPv4
 
 **Examples:**
+
 ```bash
 tailscale ip              # Show own IPs
 tailscale ip --4          # IPv4 only
@@ -164,6 +173,7 @@ tailscale ping [flags] <hostname|ip>
 ```
 
 **Flags:**
+
 - `--c=<count>` - Number of pings (default: 10)
 - `--timeout=<duration>` - Timeout per ping (default: 5s)
 - `--icmp` - Use ICMP instead of TSMP
@@ -172,6 +182,7 @@ tailscale ping [flags] <hostname|ip>
 - `--verbose` - Verbose output
 
 **Examples:**
+
 ```bash
 tailscale ping myserver
 tailscale ping --c=3 --icmp 100.64.0.5
@@ -197,6 +208,7 @@ tailscale netcheck [flags]
 ```
 
 **Flags:**
+
 - `--every=<duration>` - Repeat at interval
 - `--format=<json|text>` - Output format
 - `--verbose` - Include extra details
@@ -212,6 +224,7 @@ tailscale serve [flags] <target>
 ```
 
 **Flags:**
+
 - `--https=<port>` - HTTPS port (default: 443)
 - `--http=<port>` - HTTP port
 - `--tcp=<port>` - Raw TCP port
@@ -221,17 +234,20 @@ tailscale serve [flags] <target>
 - `-bg` - Run in background (persists across reboots)
 
 **Target types:**
+
 - `localhost:3000` - Reverse proxy to local HTTP service
 - `/path/to/dir` - Serve files from directory
 - `text:"Hello"` - Serve static text response
 
 **Subcommands:**
+
 - `status [--json]` - Show active serve configuration
 - `reset` - Clear all serve configuration
 - `get-config <file>` - Export config to file
 - `set-config <file>` - Import config from file
 
 **Examples:**
+
 ```bash
 # Proxy local dev server
 tailscale serve --https=443 localhost:3000
@@ -269,6 +285,7 @@ Accepts the same flags as `tailscale serve`. Limited to ports 443, 8443, and 100
 **Subcommands:** `status`, `reset` (same as serve)
 
 **Examples:**
+
 ```bash
 # Expose local web server to internet
 tailscale funnel 3000
@@ -288,27 +305,32 @@ tailscale funnel status
 Transfer files between tailnet devices.
 
 ### tailscale file cp
+
 ```bash
 tailscale file cp [flags] <file...> <target>:
 ```
 
 **Flags:**
+
 - `--name=<name>` - Override filename
 - `--targets` - List available targets
 - `--verbose` - Verbose output
 
 ### tailscale file get
+
 ```bash
 tailscale file get [flags] <download-dir>
 ```
 
 **Flags:**
+
 - `--conflict=<skip|overwrite|rename>` - File conflict behavior
 - `--loop` - Keep receiving files
 - `--wait` - Wait for files if none available
 - `--verbose` - Verbose output
 
 **Examples:**
+
 ```bash
 # Send file to peer
 tailscale file cp report.pdf myserver:
@@ -343,12 +365,14 @@ tailscale cert [flags] <domain>
 ```
 
 **Flags:**
+
 - `--cert-file=<path>` - Certificate output path (default: `<domain>.crt`)
 - `--key-file=<path>` - Key output path (default: `<domain>.key`)
 - `--min-validity=<duration>` - Minimum remaining validity before renewal
 - `--serve-demo` - Start demo HTTPS server
 
 **Examples:**
+
 ```bash
 # Generate cert for this device
 tailscale cert myserver.tailnet-name.ts.net
@@ -436,6 +460,7 @@ tailscale bugreport [flags]
 ```
 
 **Flags:**
+
 - `--diagnose` - Include extended diagnostics
 - `--record` - Record network activity
 
@@ -448,6 +473,7 @@ tailscale update [flags]
 ```
 
 **Flags:**
+
 - `--dry-run` - Check for updates without installing
 - `--track=<stable|unstable>` - Release track
 - `--version=<version>` - Install specific version
@@ -483,6 +509,7 @@ tailscale web [flags]
 ```
 
 **Flags:**
+
 - `--listen=<addr>` - Listen address (default: localhost:8088)
 - `--cgi` - Run in CGI mode
 - `--readonly` - Disable write operations
@@ -499,6 +526,7 @@ tailscale completion powershell  # PowerShell completion
 ```
 
 **Flags:**
+
 - `--flags` - Include flag completions (default: true)
 - `--descs` - Include descriptions (default: true)
 
@@ -511,6 +539,7 @@ tailscale version [flags]
 ```
 
 **Flags:**
+
 - `--daemon` - Show daemon version
 - `--json` - JSON output
 - `--upstream` - Check latest upstream version
@@ -532,6 +561,7 @@ tailscale appc-routes [flags]
 ```
 
 **Flags:**
+
 - `--all` - Show all routes including inactive
 - `--map` - Show route mapping table
 - `--n` - Numeric output (skip DNS resolution)
@@ -656,6 +686,7 @@ tailscale switch personal-tailnet-id
 The Tailscale daemon process. Runs as a system service on most platforms.
 
 **Linux:**
+
 ```bash
 # Start/restart
 sudo systemctl restart tailscaled
@@ -689,6 +720,7 @@ log stream --predicate 'process=="tailscaled"'
 
 **Windows:**
 Runs as a Windows service. Manage via Services console or PowerShell:
+
 ```powershell
 # Restart service
 Restart-Service Tailscale
@@ -701,6 +733,7 @@ Get-WinEvent -LogName Application | Where-Object {$_.ProviderName -eq "Tailscale
 ```
 
 **Key daemon flags:**
+
 - `--port=<port>` - WireGuard listen port (default: 0/random, 41641 if available)
 - `--state=<path>` - State file location
 - `--statedir=<path>` - State directory for multi-file state
@@ -713,11 +746,11 @@ Get-WinEvent -LogName Application | Where-Object {$_.ProviderName -eq "Tailscale
 
 These environment variables affect `tailscale` and `tailscaled` behavior:
 
-| Variable | Purpose |
-|----------|---------|
-| `TS_DEBUG_FIREWALL_MODE` | Override firewall mode detection |
-| `TS_DEBUG_MTU` | Override WireGuard MTU |
-| `TS_LOGS_DIR` | Override log directory |
-| `HTTPS_PROXY` | HTTP proxy for coordination server communication |
-| `NO_PROXY` | Bypass proxy for specific hosts |
-| `SSL_CERT_FILE` | Custom CA certificate for TLS verification |
+| Variable                 | Purpose                                          |
+| ------------------------ | ------------------------------------------------ |
+| `TS_DEBUG_FIREWALL_MODE` | Override firewall mode detection                 |
+| `TS_DEBUG_MTU`           | Override WireGuard MTU                           |
+| `TS_LOGS_DIR`            | Override log directory                           |
+| `HTTPS_PROXY`            | HTTP proxy for coordination server communication |
+| `NO_PROXY`               | Bypass proxy for specific hosts                  |
+| `SSL_CERT_FILE`          | Custom CA certificate for TLS verification       |

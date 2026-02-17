@@ -16,7 +16,7 @@ function getApiKey(): string {
 
 export async function pagerDutyRequest<T>(
   endpoint: string,
-  params?: Record<string, string | string[]>
+  params?: Record<string, string | string[]>,
 ): Promise<PagerDutyClientResult<T>> {
   try {
     const apiKey = getApiKey();

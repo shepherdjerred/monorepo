@@ -1,7 +1,9 @@
 import * as Sentry from "@sentry/node";
 
 Sentry.init({
-  dsn: process.env.SENTRY_DSN ?? "https://9c905c2bb5924e55b4dea32e2a95f0d1@bugsink.sjer.red/8",
+  dsn:
+    process.env.SENTRY_DSN ??
+    "https://9c905c2bb5924e55b4dea32e2a95f0d1@bugsink.sjer.red/8",
   environment: process.env.NODE_ENV ?? "development",
 });
 
@@ -20,7 +22,11 @@ import { logger } from "./logger.js";
 import { disconnect, joinVoiceChat, shareScreen } from "./browser/discord.js";
 import { handleChannelUpdate } from "./discord/channelHandler.js";
 import { match } from "ts-pattern";
-import { LoginResponse, StatusResponse, ScreenshotResponse } from "@discord-plays-pokemon/common";
+import {
+  LoginResponse,
+  StatusResponse,
+  ScreenshotResponse,
+} from "@discord-plays-pokemon/common";
 import { getConfig } from "./config/index.js";
 
 let gameDriver: WebDriver | undefined;
@@ -45,7 +51,10 @@ if (getConfig().web.enabled) {
           logger.info("handling command request", event.request);
           if (gameDriver !== undefined) {
             try {
-              void sendGameCommand(gameDriver, { command: event.request.value, quantity: 1 });
+              void sendGameCommand(gameDriver, {
+                command: event.request.value,
+                quantity: 1,
+              });
             } catch (e) {
               logger.error(e);
             }
@@ -104,8 +113,14 @@ if (getConfig().stream.enabled || getConfig().game.enabled) {
     options.setPreference(key, value);
   });
 
-  gameDriver = await new Builder().forBrowser(Browser.FIREFOX).setFirefoxOptions(options).build();
-  streamDriver = await new Builder().forBrowser(Browser.FIREFOX).setFirefoxOptions(options).build();
+  gameDriver = await new Builder()
+    .forBrowser(Browser.FIREFOX)
+    .setFirefoxOptions(options)
+    .build();
+  streamDriver = await new Builder()
+    .forBrowser(Browser.FIREFOX)
+    .setFirefoxOptions(options)
+    .build();
 
   try {
     await start(gameDriver, streamDriver);
@@ -149,12 +164,16 @@ if (getConfig().stream.dynamic_streaming) {
         try {
           await joinVoiceChat(streamDriver);
           await shareScreen(streamDriver);
-          await streamDriver.switchTo().window((await streamDriver.getAllWindowHandles())[1]);
+          await streamDriver
+            .switchTo()
+            .window((await streamDriver.getAllWindowHandles())[1]);
         } catch (e) {
           logger.error(e);
         }
       } else {
-        logger.info("stop sharing screen since there are no longer participants");
+        logger.info(
+          "stop sharing screen since there are no longer participants",
+        );
         try {
           await disconnect(streamDriver);
         } catch (e) {

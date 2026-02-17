@@ -9,7 +9,7 @@ export type RecordMessageActivityInput = {
   channelId: string;
   messageId: string;
   characterCount?: number;
-}
+};
 
 export type RecordReactionActivityInput = {
   guildId: string;
@@ -17,20 +17,20 @@ export type RecordReactionActivityInput = {
   channelId: string;
   messageId: string;
   emoji: string;
-}
+};
 
 export type ActivityStats = {
   messageCount: number;
   reactionCount: number;
   totalActivity: number;
   rank: number;
-}
+};
 
 export type TopUser = {
   userId: string;
   activityCount: number;
   rank: number;
-}
+};
 
 /**
  * Record a message activity (fire-and-forget pattern)
@@ -62,7 +62,9 @@ export function recordMessageActivity(input: RecordMessageActivityInput): void {
 /**
  * Record a reaction activity (fire-and-forget pattern)
  */
-export function recordReactionActivity(input: RecordReactionActivityInput): void {
+export function recordReactionActivity(
+  input: RecordReactionActivityInput,
+): void {
   void prisma.userActivity
     .create({
       data: {
@@ -90,7 +92,7 @@ export function recordReactionActivity(input: RecordReactionActivityInput): void
 export async function getUserActivityStats(
   guildId: string,
   userId: string,
-  dateRange?: { start: Date; end: Date }
+  dateRange?: { start: Date; end: Date },
 ): Promise<ActivityStats> {
   const where = {
     guildId,
@@ -148,7 +150,7 @@ export async function getTopActiveUsers(
     limit?: number;
     activityType?: "message" | "reaction" | "all";
     dateRange?: { start: Date; end: Date };
-  }
+  },
 ): Promise<TopUser[]> {
   const limit = options?.limit ?? 10;
   const activityType = options?.activityType ?? "all";

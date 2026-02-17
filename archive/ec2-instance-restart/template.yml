@@ -1,5 +1,5 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Transform: 'AWS::Serverless-2016-10-31'
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
 Description: An AWS Serverless Specification template describing your function.
 Parameters:
   Subdomain:
@@ -8,7 +8,7 @@ Parameters:
     Type: String
 Resources:
   StopEc2InstanceLambda:
-    Type: 'AWS::Serverless::Function'
+    Type: "AWS::Serverless::Function"
     Properties:
       FunctionName: StopEc2Instance
       CodeUri: src/
@@ -29,7 +29,7 @@ Resources:
           WEBHOOK_URL:
             Ref: DiscordWebhookUrl
   StartEc2InstanceLambda:
-    Type: 'AWS::Serverless::Function'
+    Type: "AWS::Serverless::Function"
     Properties:
       FunctionName: StartEc2Instance
       CodeUri: src/
@@ -50,7 +50,7 @@ Resources:
           WEBHOOK_URL:
             Ref: DiscordWebhookUrl
   GetEc2InstanceStatusLambda:
-    Type: 'AWS::Serverless::Function'
+    Type: "AWS::Serverless::Function"
     Properties:
       FunctionName: GetEc2InstanceStatus
       CodeUri: src/

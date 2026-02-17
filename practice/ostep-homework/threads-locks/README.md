@@ -1,4 +1,3 @@
-
 # Overview
 
 Welcome to this simulator! The idea is to gain familiarity with threads by
@@ -11,7 +10,7 @@ context switch) is not shown; thus, all you see is the interleaving of the
 user code.
 
 The assembly code that is run is based on x86, but somewhat
-simplified.  In this instruction set, there are four general-purpose
+simplified. In this instruction set, there are four general-purpose
 registers (`%ax, %bx, %cx, %dx`), a program counter (PC), and a small
 set of instructions which will be enough for our purposes. We've also
 added a few extra GP registers (`%ex, %fx`) which don't quite match
@@ -35,7 +34,7 @@ Addresses, in this subset of x86, can take some of the following forms:
 - `(%cx)`: contents of register (in parentheses) forms the address
 - `1000(%dx)`: the number + contents of the register form the address
 - `10(%ax,%bx)`: the number + reg1 + reg2 form the address
-- `10(%ax,%bx,4)`: -> the number + reg1 + (reg2*scaling) form the address
+- `10(%ax,%bx,4)`: -> the number + reg1 + (reg2\*scaling) form the address
 
 To store a value, the same `mov` instruction is used, but this time with the
 arguments reversed, e.g.:
@@ -57,7 +56,7 @@ Let's run the simulator and see how this all works! Assume the above code
 sequence is in the file `simple-race.s`.
 
 ```sh
-prompt> ./x86.py -p simple-race.s -t 1 
+prompt> ./x86.py -p simple-race.s -t 1
 
        Thread 0
 1000 mov 2000, %ax
@@ -120,12 +119,12 @@ now also incremented.
 There are a few more instructions you'll need to know, so let's get to them
 now. Here is a code snippet of a loop:
 
-```
+````
 .main
 .top
 sub  $1,%dx
-test $0,%dx     
-jgte .top         
+test $0,%dx
+jgte .top
 halt
 ```sh
 
@@ -140,7 +139,7 @@ instruction jumps if the second value is greater than or equal to the first
 in the test.
 
 One last point: to really make this code work, dx must be initialized to 1 or
-greater. 
+greater.
 
 Thus, we run the program like this:
 
@@ -159,11 +158,11 @@ prompt> ./x86.py -p loop.s -t 1 -a dx=3 -R dx -C -c
     0   1  0  1  0  0  1  1001 test $0,%dx
     0   1  0  1  0  0  1  1002 jgte .top
     0   1  0  1  0  0  1  1003 halt
-```
+````
 
 The `-R dx` flag traces the value of %dx; the `-C` flag traces the values of
 the condition codes that get set by a test instruction. Finally, the `-a dx=3`
-flag sets the `%dx` register to the value 3 to start with. 
+flag sets the `%dx` register to the value 3 to start with.
 
 As you can see from the trace, the `sub` instruction slowly lowers the value
 of %dx. The first few times `test` is called, only the ">=", ">", and "!="
@@ -190,8 +189,8 @@ jgt .top
 halt
 ```
 
-The code has a critical section which loads the value of a variable 
-(at address 2000), then adds 1 to the value, then stores it back. 
+The code has a critical section which loads the value of a variable
+(at address 2000), then adds 1 to the value, then stores it back.
 
 The code after just decrements a loop counter (in `%bx`), tests if it
 is greater than or equal to zero, and if so, jumps back to the top
@@ -262,7 +261,7 @@ What should it have been?
 
 Now let's give a little more information on what can be simulated
 with this program. The full set of registers: `%ax, %bx, %cx, %dx, %ex, %fx`
-and the PC and a stack pointer `%sp`.    
+and the PC and a stack pointer `%sp`.
 
 The full set of instructions simulated are:
 
@@ -296,7 +295,7 @@ push memory or register     # push value in memory or from reg onto stack
 pop [register]              # pop value off stack (into optional register)
 call label                  # call function at label
 
-xchg register, memory       # atomic exchange: 
+xchg register, memory       # atomic exchange:
                             #   put value of register into memory
                             #   return old contents of memory into reg
                             # do both things atomically
@@ -306,14 +305,15 @@ yield                       # switch to the next thread in the runqueue
 nop                         # no op
 ```
 
-Notes: 
+Notes:
+
 - 'immediate' is something of the form `$number`
-- 'memory' is of the form 'number' or '(reg)' or 'number(reg)' or 
-   'number(reg,reg)' or 'number(reg,reg,scale)' (as described above)
+- 'memory' is of the form 'number' or '(reg)' or 'number(reg)' or
+  'number(reg,reg)' or 'number(reg,reg,scale)' (as described above)
 - 'register' is one of %ax, %bx, %cx, %dx, %ex, %fx, %sp
 
 Finally, here are the full set of options to the simulator are available with
-the `-h` flag: 
+the `-h` flag:
 
 ```sh
 prompt> ./x86.py -h
@@ -366,4 +366,3 @@ as specified by `-i`), which can make for more fun during homework problems.
 
 Now you have the basics in place; read the questions at the end of the chapter
 to study this race condition and related issues in more depth.
-

@@ -32,7 +32,9 @@ export function getGitckupRuleGroups(): PrometheusRuleSpecGroups[] {
               "Gitckup backup job has not completed successfully in the last 25 hours. Expected to run daily at 2 AM.",
             ),
           },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString("sum(increase(gickup_jobs_complete[25h])) == 0"),
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "sum(increase(gickup_jobs_complete[25h])) == 0",
+          ),
           for: "30m",
           labels: {
             severity: "critical",
@@ -46,7 +48,9 @@ export function getGitckupRuleGroups(): PrometheusRuleSpecGroups[] {
               "Gitckup failed to discover repositories. Check GitHub token and permissions.",
             ),
           },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString("gickup_repos_discovered == 0"),
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "gickup_repos_discovered == 0",
+          ),
           for: "10m",
           labels: {
             severity: "warning",
@@ -60,7 +64,9 @@ export function getGitckupRuleGroups(): PrometheusRuleSpecGroups[] {
               "Gitckup sources backup is incomplete. {{ $value }} sources failed to complete backup.",
             ),
           },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString("gickup_sources - gickup_sources_complete > 0"),
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "gickup_sources - gickup_sources_complete > 0",
+          ),
           for: "5m",
           labels: {
             severity: "warning",
@@ -74,7 +80,9 @@ export function getGitckupRuleGroups(): PrometheusRuleSpecGroups[] {
               "Gitckup destinations backup is incomplete. {{ $value }} destinations failed to complete backup.",
             ),
           },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString("gickup_destinations - gickup_destinations_complete > 0"),
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "gickup_destinations - gickup_destinations_complete > 0",
+          ),
           for: "5m",
           labels: {
             severity: "warning",

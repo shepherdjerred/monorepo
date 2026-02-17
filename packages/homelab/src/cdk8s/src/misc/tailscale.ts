@@ -26,7 +26,7 @@ export class TailscaleIngress extends Construct {
 
     let base: IngressProps = {
       // unsafe cast, but we know that Ingress only needs the name and port
-       
+
       defaultBackend: IngressBackend.fromService(props.service as Service),
       tls: [
         {
@@ -48,7 +48,9 @@ export class TailscaleIngress extends Construct {
 
     const ingress = new Ingress(scope, `${id}-ingress`, merge({}, base, props));
 
-    ApiObject.of(ingress).addJsonPatch(JsonPatch.add("/spec/ingressClassName", "tailscale"));
+    ApiObject.of(ingress).addJsonPatch(
+      JsonPatch.add("/spec/ingressClassName", "tailscale"),
+    );
   }
 }
 

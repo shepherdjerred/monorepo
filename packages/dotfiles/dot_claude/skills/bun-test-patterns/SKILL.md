@@ -47,6 +47,7 @@ bun test src/utils
 ### File Discovery
 
 Bun automatically finds test files matching:
+
 - `*.test.{js|jsx|ts|tsx}`
 - `*_test.{js|jsx|ts|tsx}`
 - `*.spec.{js|jsx|ts|tsx}`
@@ -159,10 +160,10 @@ test("slow operation", async () => {
 ### Equality
 
 ```typescript
-expect(value).toBe(expected);           // === comparison
-expect(value).toEqual(expected);        // deep equality
-expect(value).toStrictEqual(expected);  // strict deep equality
-expect(value).not.toBe(other);          // negation
+expect(value).toBe(expected); // === comparison
+expect(value).toEqual(expected); // deep equality
+expect(value).toStrictEqual(expected); // strict deep equality
+expect(value).not.toBe(other); // negation
 ```
 
 ### Truthiness
@@ -183,7 +184,7 @@ expect(num).toBeGreaterThan(5);
 expect(num).toBeGreaterThanOrEqual(5);
 expect(num).toBeLessThan(10);
 expect(num).toBeLessThanOrEqual(10);
-expect(num).toBeCloseTo(0.3, 5);  // floating point
+expect(num).toBeCloseTo(0.3, 5); // floating point
 expect(num).toBePositive();
 expect(num).toBeNegative();
 expect(num).toBeInteger();
@@ -243,7 +244,7 @@ await expect(asyncFn()).resolves.toBe(value);
 
 ```typescript
 test("multiple assertions", () => {
-  expect.assertions(3);  // Must have exactly 3 assertions
+  expect.assertions(3); // Must have exactly 3 assertions
 
   expect(a).toBe(1);
   expect(b).toBe(2);
@@ -251,7 +252,7 @@ test("multiple assertions", () => {
 });
 
 test("at least one", async () => {
-  expect.hasAssertions();  // Must have at least one assertion
+  expect.hasAssertions(); // Must have at least one assertion
 
   const data = await fetchData();
   expect(data).toBeDefined();
@@ -411,7 +412,7 @@ test("spy on method", () => {
 
   expect(spy).toHaveBeenCalledWith(2, 3);
   expect(spy).toHaveBeenCalledTimes(1);
-  expect(result).toBe(5);  // Original still works
+  expect(result).toBe(5); // Original still works
   expect(spy.mock.calls).toEqual([[2, 3]]);
 });
 
@@ -467,9 +468,9 @@ afterEach(() => {
 
 // Or restore individually
 const mockFn = mock(() => 42);
-mockFn.mockClear();    // Clear call history
-mockFn.mockReset();    // Clear history + implementation
-mockFn.mockRestore();  // Restore original (for spies)
+mockFn.mockClear(); // Clear call history
+mockFn.mockReset(); // Clear history + implementation
+mockFn.mockRestore(); // Restore original (for spies)
 ```
 
 ### Vitest Compatibility
@@ -689,7 +690,14 @@ test("type inference", () => {
 ### Database Testing
 
 ```typescript
-import { beforeAll, afterAll, afterEach, describe, test, expect } from "bun:test";
+import {
+  beforeAll,
+  afterAll,
+  afterEach,
+  describe,
+  test,
+  expect,
+} from "bun:test";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -730,7 +738,7 @@ let server: ReturnType<typeof Bun.serve>;
 beforeAll(() => {
   server = Bun.serve({
     fetch: app.fetch,
-    port: 0,  // Random available port
+    port: 0, // Random available port
   });
 });
 

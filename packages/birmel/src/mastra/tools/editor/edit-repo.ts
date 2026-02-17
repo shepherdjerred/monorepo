@@ -4,12 +4,16 @@ import type { ButtonBuilder as ButtonBuilderType } from "discord.js";
 
 // Lazy-load discord.js components to avoid module resolution issues in test environments
 async function getDiscordComponents() {
-  const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = await import("discord.js");
+  const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } =
+    await import("discord.js");
   return { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder };
 }
 import { getDiscordClient } from "../../../discord/index.js";
 import { loggers } from "../../../utils/logger.js";
-import { withToolSpan, captureException } from "../../../observability/index.js";
+import {
+  withToolSpan,
+  captureException,
+} from "../../../observability/index.js";
 import { getRequestContext } from "../request-context.js";
 import {
   isEditorEnabled,
@@ -79,13 +83,15 @@ export const editRepoTool = createTool({
         if (!claudeCheck.installed) {
           return {
             success: false,
-            message: "Claude Code CLI is not installed. Run `claude install` first.",
+            message:
+              "Claude Code CLI is not installed. Run `claude install` first.",
           };
         }
         if (!claudeCheck.hasApiKey) {
           return {
             success: false,
-            message: "ANTHROPIC_API_KEY is not set. Set the environment variable or run `claude login`.",
+            message:
+              "ANTHROPIC_API_KEY is not set. Set the environment variable or run `claude login`.",
           };
         }
 
@@ -101,7 +107,8 @@ export const editRepoTool = createTool({
         if (!isGitHubConfigured()) {
           return {
             success: false,
-            message: "GitHub OAuth is not configured. Contact the bot administrator.",
+            message:
+              "GitHub OAuth is not configured. Contact the bot administrator.",
           };
         }
 
@@ -110,7 +117,11 @@ export const editRepoTool = createTool({
         if (!hasAuth) {
           const config = getGitHubConfig();
           // Derive OAuth start URL from callback URL (remove /callback suffix)
-          const authUrl = config?.callbackUrl.replace("/callback", `?user=${reqCtx.userId}`) ?? "";
+          const authUrl =
+            config?.callbackUrl.replace(
+              "/callback",
+              `?user=${reqCtx.userId}`,
+            ) ?? "";
           return {
             success: false,
             message: `You need to connect your GitHub account before editing. Click here to authenticate: ${authUrl}`,
@@ -178,7 +189,9 @@ export const editRepoTool = createTool({
         const result = await executeEdit({
           prompt: instruction,
           workingDirectory,
-          ...(session.sdkSessionId && { resumeSessionId: session.sdkSessionId }),
+          ...(session.sdkSessionId && {
+            resumeSessionId: session.sdkSessionId,
+          }),
           allowedPaths: repoConfig.allowedPaths,
         });
 
@@ -224,7 +237,8 @@ export const editRepoTool = createTool({
         const channel = await client.channels.fetch(reqCtx.sourceChannelId);
 
         if (channel && "send" in channel) {
-          const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = await getDiscordComponents();
+          const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } =
+            await getDiscordComponents();
           const embed = new EmbedBuilder()
             .setTitle("File Changes Ready for Review")
             .setDescription(result.summary)
@@ -234,23 +248,24 @@ export const editRepoTool = createTool({
               { name: "Files", value: filesList || "None" },
               { name: "Diff Preview", value: diffPreview.slice(0, 1000) },
             )
-            .setColor(0x58_65_F2)
+            .setColor(0x58_65_f2)
             .setFooter({ text: `Session: ${session.id.slice(0, 8)}` });
 
-          const buttons = new ActionRowBuilder<ButtonBuilderType>().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`editor:approve:${session.id}`)
-              .setLabel("Approve & Create PR")
-              .setStyle(ButtonStyle.Success),
-            new ButtonBuilder()
-              .setCustomId(`editor:continue:${session.id}`)
-              .setLabel("Continue Editing")
-              .setStyle(ButtonStyle.Primary),
-            new ButtonBuilder()
-              .setCustomId(`editor:reject:${session.id}`)
-              .setLabel("Reject")
-              .setStyle(ButtonStyle.Danger),
-          );
+          const buttons =
+            new ActionRowBuilder<ButtonBuilderType>().addComponents(
+              new ButtonBuilder()
+                .setCustomId(`editor:approve:${session.id}`)
+                .setLabel("Approve & Create PR")
+                .setStyle(ButtonStyle.Success),
+              new ButtonBuilder()
+                .setCustomId(`editor:continue:${session.id}`)
+                .setLabel("Continue Editing")
+                .setStyle(ButtonStyle.Primary),
+              new ButtonBuilder()
+                .setCustomId(`editor:reject:${session.id}`)
+                .setLabel("Reject")
+                .setStyle(ButtonStyle.Danger),
+            );
 
           const message = await channel.send({
             embeds: [embed],

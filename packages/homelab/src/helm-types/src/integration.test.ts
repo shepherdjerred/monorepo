@@ -1,5 +1,9 @@
 import { describe, test, expect } from "bun:test";
-import { parseYAMLComments, convertToTypeScriptInterface, generateTypeScriptCode } from "./helm-types";
+import {
+  parseYAMLComments,
+  convertToTypeScriptInterface,
+  generateTypeScriptCode,
+} from "./helm-types";
 
 describe("Integration Tests - Full Workflow", () => {
   test("should handle argo-cd rbac config end-to-end with */ escaping and prose extraction", () => {
@@ -52,7 +56,12 @@ describe("Integration Tests - Full Workflow", () => {
     const comments = parseYAMLComments(yaml);
 
     // Step 3: Convert to TypeScript interface with comments
-    const tsInterface = convertToTypeScriptInterface(values, "TestHelmValues", undefined, comments);
+    const tsInterface = convertToTypeScriptInterface(
+      values,
+      "TestHelmValues",
+      undefined,
+      comments,
+    );
 
     // Step 4: Generate TypeScript code
     const code = generateTypeScriptCode(tsInterface, "test");
@@ -70,7 +79,9 @@ describe("Integration Tests - Full Workflow", () => {
     expect(comments.get("configs.rbac.scopes")).toContain("OIDC scopes");
 
     // Verify policy rules were filtered out (*/*)
-    expect(comments.get("configs.rbac.scopes")).not.toContain("p, role:org-admin, applications");
+    expect(comments.get("configs.rbac.scopes")).not.toContain(
+      "p, role:org-admin, applications",
+    );
 
     // Verify that if there were */ in comments, they would be escaped
     // In this case, the policy rules with */ were filtered out, so we test the escaping separately
@@ -125,7 +136,12 @@ describe("Integration Tests - Full Workflow", () => {
     };
 
     const comments = parseYAMLComments(yaml);
-    const tsInterface = convertToTypeScriptInterface(values, "TestValues", undefined, comments);
+    const tsInterface = convertToTypeScriptInterface(
+      values,
+      "TestValues",
+      undefined,
+      comments,
+    );
     const code = generateTypeScriptCode(tsInterface, "test");
 
     // Verify dotted keys are handled
@@ -133,8 +149,12 @@ describe("Integration Tests - Full Workflow", () => {
     expect(code).toContain('"tls.enabled"?: boolean;');
 
     // Verify comments are associated correctly
-    expect(comments.get("server.ingress.ingress.hostname")).toContain("Comment for hostname");
-    expect(comments.get("server.ingress.tls.enabled")).toContain("Comment for tls.enabled");
+    expect(comments.get("server.ingress.ingress.hostname")).toContain(
+      "Comment for hostname",
+    );
+    expect(comments.get("server.ingress.tls.enabled")).toContain(
+      "Comment for tls.enabled",
+    );
   });
 
   test("should handle complex real-world Kubernetes manifests", () => {
@@ -192,7 +212,12 @@ describe("Integration Tests - Full Workflow", () => {
     };
 
     const comments = parseYAMLComments(yaml);
-    const tsInterface = convertToTypeScriptInterface(values, "K8sManifestValues", undefined, comments);
+    const tsInterface = convertToTypeScriptInterface(
+      values,
+      "K8sManifestValues",
+      undefined,
+      comments,
+    );
     const code = generateTypeScriptCode(tsInterface, "k8s-manifest");
 
     // Verify structure
@@ -202,7 +227,9 @@ describe("Integration Tests - Full Workflow", () => {
     // Verify comments
     expect(comments.get("deployment.replicas")).toContain("Number of replicas");
     expect(comments.get("deployment.image")).toContain("Container image");
-    expect(comments.get("deployment.resources.limits")).toContain("CPU and memory limits");
+    expect(comments.get("deployment.resources.limits")).toContain(
+      "CPU and memory limits",
+    );
 
     // Verify array types
     expect(code).toContain("env?:");
@@ -233,7 +260,12 @@ describe("Integration Tests - Full Workflow", () => {
     };
 
     const comments = parseYAMLComments(yaml);
-    const tsInterface = convertToTypeScriptInterface(values, "DocValues", undefined, comments);
+    const tsInterface = convertToTypeScriptInterface(
+      values,
+      "DocValues",
+      undefined,
+      comments,
+    );
     const code = generateTypeScriptCode(tsInterface, "docs");
 
     // Verify multi-paragraph structure is preserved

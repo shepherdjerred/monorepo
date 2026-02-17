@@ -10,7 +10,9 @@ export function getQBitTorrentRuleGroups(): PrometheusRuleSpecGroups[] {
       rules: [
         {
           alert: "QBitTorrentFirewalled",
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString("qbittorrent_firewalled == 1"),
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "qbittorrent_firewalled == 1",
+          ),
           for: "5m",
           labels: {
             severity: "warning",

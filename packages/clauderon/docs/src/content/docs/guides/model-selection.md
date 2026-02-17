@@ -21,17 +21,18 @@ Different models offer different trade-offs:
 
 7 Claude models available, powered by Anthropic's latest technology:
 
-| Model | Capability | Speed | Context | Use Cases |
-|-------|-----------|-------|---------|-----------|
-| **Claude Opus 4.5** | Highest | Moderate | 200K | Complex refactoring, architecture design |
-| **Claude Sonnet 4.5** | High | Fast | 200K | **Default** - balanced for most tasks |
-| **Claude Haiku 4.5** | Moderate | Fastest | 200K | Quick edits, simple tasks, iterations |
-| **Claude Opus 4.1** | High (Agentic) | Moderate | 200K | Multi-step reasoning, planning |
-| **Claude Opus 4** | High | Moderate | 200K | Previous generation, still capable |
-| **Claude Sonnet 4** | Moderate | Fast | 200K | Previous generation, fast |
-| **Claude Haiku 4** | Lower | Fastest | 200K | Previous generation, simple tasks |
+| Model                 | Capability     | Speed    | Context | Use Cases                                |
+| --------------------- | -------------- | -------- | ------- | ---------------------------------------- |
+| **Claude Opus 4.5**   | Highest        | Moderate | 200K    | Complex refactoring, architecture design |
+| **Claude Sonnet 4.5** | High           | Fast     | 200K    | **Default** - balanced for most tasks    |
+| **Claude Haiku 4.5**  | Moderate       | Fastest  | 200K    | Quick edits, simple tasks, iterations    |
+| **Claude Opus 4.1**   | High (Agentic) | Moderate | 200K    | Multi-step reasoning, planning           |
+| **Claude Opus 4**     | High           | Moderate | 200K    | Previous generation, still capable       |
+| **Claude Sonnet 4**   | Moderate       | Fast     | 200K    | Previous generation, fast                |
+| **Claude Haiku 4**    | Lower          | Fastest  | 200K    | Previous generation, simple tasks        |
 
 **Model IDs:**
+
 - `claude-opus-4-5` or `claude-opus-4-5-20251101`
 - `claude-sonnet-4-5` or `claude-sonnet-4-5-20250929` (default)
 - `claude-haiku-4-5` or `claude-haiku-4-5-20250701`
@@ -41,6 +42,7 @@ Different models offer different trade-offs:
 - `claude-haiku-4` or `claude-haiku-4-20240307`
 
 **Features:**
+
 - ✅ Plan mode supported (all models)
 - ✅ Tool use (function calling)
 - ✅ Multi-modal (image understanding)
@@ -48,26 +50,28 @@ Different models offer different trade-offs:
 - ✅ Code generation optimized
 
 **Authentication:**
+
 - Requires Anthropic API key or OAuth
 
 ### GPT/Codex Models (OpenAI)
 
 10 GPT models available, including specialized Codex variants:
 
-| Model | Capability | Speed | Context | Use Cases |
-|-------|-----------|-------|---------|-----------|
-| **GPT-5.2-Codex** | Highest (Code) | Moderate | 128K | **Default GPT** - optimized for code |
-| **GPT-5.2** | Highest | Moderate | 128K | General tasks, reasoning |
-| **GPT-5.2-Instant** | High | Fastest | 128K | Quick responses, iterations |
-| **GPT-5.2-Thinking** | Highest | Slowest | 128K | Complex reasoning, deep analysis |
-| **GPT-5.2-Pro** | Highest+ | Slow | 128K | Most capable, expensive |
-| **GPT-5.1** | High | Fast | 128K | Previous generation, balanced |
-| **GPT-5.1-Instant** | Moderate | Fastest | 128K | Previous generation, fast |
-| **GPT-5.1-Thinking** | High | Slow | 128K | Previous generation, reasoning |
-| **GPT-4.1** | Moderate | Fast | 8K | Older generation, lower cost |
-| **o3-mini** | High (Reasoning) | Moderate | 128K | Specialized reasoning model |
+| Model                | Capability       | Speed    | Context | Use Cases                            |
+| -------------------- | ---------------- | -------- | ------- | ------------------------------------ |
+| **GPT-5.2-Codex**    | Highest (Code)   | Moderate | 128K    | **Default GPT** - optimized for code |
+| **GPT-5.2**          | Highest          | Moderate | 128K    | General tasks, reasoning             |
+| **GPT-5.2-Instant**  | High             | Fastest  | 128K    | Quick responses, iterations          |
+| **GPT-5.2-Thinking** | Highest          | Slowest  | 128K    | Complex reasoning, deep analysis     |
+| **GPT-5.2-Pro**      | Highest+         | Slow     | 128K    | Most capable, expensive              |
+| **GPT-5.1**          | High             | Fast     | 128K    | Previous generation, balanced        |
+| **GPT-5.1-Instant**  | Moderate         | Fastest  | 128K    | Previous generation, fast            |
+| **GPT-5.1-Thinking** | High             | Slow     | 128K    | Previous generation, reasoning       |
+| **GPT-4.1**          | Moderate         | Fast     | 8K      | Older generation, lower cost         |
+| **o3-mini**          | High (Reasoning) | Moderate | 128K    | Specialized reasoning model          |
 
 **Model IDs:**
+
 - `gpt-5.2-codex` (default for GPT)
 - `gpt-5.2`
 - `gpt-5.2-instant`
@@ -80,6 +84,7 @@ Different models offer different trade-offs:
 - `o3-mini`
 
 **Features:**
+
 - ✅ Tool use (function calling)
 - ✅ Code generation (especially Codex variants)
 - ⚠️ Plan mode (limited support)
@@ -87,21 +92,23 @@ Different models offer different trade-offs:
 - ✅ Thinking mode (Thinking variants)
 
 **Authentication:**
+
 - Requires OpenAI API key
 
 ### Gemini Models (Google)
 
 5 Gemini models available, featuring very large context windows:
 
-| Model | Capability | Speed | Context | Use Cases |
-|-------|-----------|-------|---------|-----------|
-| **Gemini 3 Pro** | Highest | Moderate | 1M | Huge codebases, large context |
-| **Gemini 3 Flash** | High | Fastest | 1M | Fast iterations with large context |
-| **Gemini 2.5 Pro** | High | Moderate | 1M | Previous generation, still capable |
-| **Gemini 2.0 Flash** | Moderate | Fastest | 1M | Previous generation, fast |
-| **Gemini 2.0 Flash-Thinking** | High | Slow | 1M | Reasoning with large context |
+| Model                         | Capability | Speed    | Context | Use Cases                          |
+| ----------------------------- | ---------- | -------- | ------- | ---------------------------------- |
+| **Gemini 3 Pro**              | Highest    | Moderate | 1M      | Huge codebases, large context      |
+| **Gemini 3 Flash**            | High       | Fastest  | 1M      | Fast iterations with large context |
+| **Gemini 2.5 Pro**            | High       | Moderate | 1M      | Previous generation, still capable |
+| **Gemini 2.0 Flash**          | Moderate   | Fastest  | 1M      | Previous generation, fast          |
+| **Gemini 2.0 Flash-Thinking** | High       | Slow     | 1M      | Reasoning with large context       |
 
 **Model IDs:**
+
 - `gemini-3-pro`
 - `gemini-3-flash` (default for Gemini)
 - `gemini-2.5-pro`
@@ -109,6 +116,7 @@ Different models offer different trade-offs:
 - `gemini-2.0-flash-thinking`
 
 **Features:**
+
 - ✅ Very large context (1M tokens)
 - ✅ Tool use
 - ✅ Multi-modal
@@ -116,6 +124,7 @@ Different models offer different trade-offs:
 - ✅ Flash models for speed
 
 **Authentication:**
+
 - Requires Google AI API key
 
 ## Selecting Models
@@ -158,6 +167,7 @@ curl -X POST http://localhost:3030/api/sessions \
 ```
 
 **Model parameter:**
+
 - Optional (defaults to `claude-sonnet-4-5`)
 - Must be valid model ID
 - Case-sensitive
@@ -169,6 +179,7 @@ curl -X POST http://localhost:3030/api/sessions \
 The CLI currently does not support model selection. Model defaults to Claude Sonnet 4.5.
 
 **Workaround:**
+
 - Create session via Web UI or API with desired model
 - Attach to session from CLI:
   ```bash
@@ -182,6 +193,7 @@ The CLI currently does not support model selection. Model defaults to Claude Son
 The TUI currently does not support model selection during session creation.
 
 **Workaround:**
+
 - Create session via Web UI or API with desired model
 - Attach to session from TUI:
   ```bash
@@ -195,21 +207,21 @@ The TUI currently does not support model selection during session creation.
 
 Plan mode allows the agent to create an implementation plan before executing:
 
-| Provider | Plan Mode Support |
-|----------|-------------------|
-| Claude | ✅ Full support (all models) |
-| GPT | ⚠️ Limited support (best with Thinking models) |
-| Gemini | ⚠️ Limited support |
+| Provider | Plan Mode Support                              |
+| -------- | ---------------------------------------------- |
+| Claude   | ✅ Full support (all models)                   |
+| GPT      | ⚠️ Limited support (best with Thinking models) |
+| Gemini   | ⚠️ Limited support                             |
 
 **Best for plan mode:** Claude Opus 4.5, Claude Sonnet 4.5
 
 ### Context Window Sizes
 
-| Provider | Context Window |
-|----------|---------------|
-| Claude | 200K tokens |
-| GPT | 128K tokens (most), 8K (GPT-4.1) |
-| Gemini | 1M tokens |
+| Provider | Context Window                   |
+| -------- | -------------------------------- |
+| Claude   | 200K tokens                      |
+| GPT      | 128K tokens (most), 8K (GPT-4.1) |
+| Gemini   | 1M tokens                        |
 
 **Best for large codebases:** Gemini 3 Pro, Gemini 3 Flash
 
@@ -263,16 +275,19 @@ Model selection is independent of backend choice.
 Most models require API keys:
 
 **Claude models:**
+
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."
 ```
 
 **GPT models:**
+
 ```bash
 export OPENAI_API_KEY="sk-..."
 ```
 
 **Gemini models:**
+
 ```bash
 export GOOGLE_API_KEY="AIza..."
 ```
@@ -399,6 +414,7 @@ Use different models at different stages:
 Models cannot be changed mid-session. To switch models:
 
 1. **Recreate session** with new model:
+
    ```bash
    # Via Web UI: Session → Recreate → Choose new model
    # Or create new session
@@ -444,11 +460,13 @@ clauderon create --model claude-haiku-4-5 fixes
 **Error:** `Model 'xyz' not found`
 
 **Causes:**
+
 - Typo in model ID
 - Model not supported by Clauderon
 - Model deprecated or renamed
 
 **Solution:**
+
 - Check model ID spelling (case-sensitive)
 - Refer to model list above
 - Use default model if unsure
@@ -458,11 +476,13 @@ clauderon create --model claude-haiku-4-5 fixes
 **Error:** `Authentication failed for model`
 
 **Causes:**
+
 - API key not set
 - API key invalid or expired
 - Wrong provider for model (e.g., OpenAI key for Claude model)
 
 **Solution:**
+
 ```bash
 # Check environment variables
 echo $ANTHROPIC_API_KEY
@@ -481,11 +501,13 @@ clauderon auth login
 **Error:** `Rate limit exceeded`
 
 **Causes:**
+
 - Too many requests to provider API
 - Account limits reached
 - Concurrent session limit
 
 **Solutions:**
+
 - Wait and retry
 - Upgrade API tier with provider
 - Use different model/provider
@@ -496,6 +518,7 @@ clauderon auth login
 **Problem:** Model produces low-quality code or explanations
 
 **Solutions:**
+
 - Try a more capable model (e.g., Opus instead of Haiku)
 - Use Codex variant for code tasks
 - Enable plan mode for complex tasks
@@ -507,6 +530,7 @@ clauderon auth login
 **Problem:** Model takes too long to respond
 
 **Solutions:**
+
 - Use faster model (Haiku, Instant, Flash)
 - Reduce context size (smaller prompts)
 - Use streaming (enabled by default)
@@ -517,11 +541,13 @@ clauderon auth login
 **Error:** `Context window exceeded`
 
 **Causes:**
+
 - Codebase too large for model's context
 - Too much chat history
 - Large file attachments
 
 **Solutions:**
+
 - Use Gemini models (1M context)
 - Archive old sessions (clear history)
 - Work with smaller portions of codebase

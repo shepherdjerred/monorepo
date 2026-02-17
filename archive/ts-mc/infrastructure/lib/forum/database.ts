@@ -22,7 +22,7 @@ export function createDatabaseInstance(
   stack: Stack,
   vpc: Vpc,
   applicationSecurityGroup: SecurityGroup,
-  availabilityZone: string
+  availabilityZone: string,
 ): void {
   const databaseSecurityGroup = new SecurityGroup(
     stack,
@@ -32,14 +32,14 @@ export function createDatabaseInstance(
       description:
         "Allows the Forums instance to communicate with the database",
       vpc,
-    }
+    },
   );
 
   databaseSecurityGroup.addIngressRule(
     applicationSecurityGroup,
     Port.tcp(3306),
     "MariaDB/MySQL",
-    false
+    false,
   );
 
   const sharedProps = {

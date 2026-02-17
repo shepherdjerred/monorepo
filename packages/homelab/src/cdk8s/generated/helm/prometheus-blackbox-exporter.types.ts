@@ -408,17 +408,20 @@ export type PrometheusblackboxexporterHelmValuesServiceMonitorSelfMonitor = {
   scrapeTimeout?: string;
 };
 
-export type PrometheusblackboxexporterHelmValuesServiceMonitorSelfMonitorAdditionalMetricsRelabels = object;
+export type PrometheusblackboxexporterHelmValuesServiceMonitorSelfMonitorAdditionalMetricsRelabels =
+  object;
 
-export type PrometheusblackboxexporterHelmValuesServiceMonitorSelfMonitorLabels = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type PrometheusblackboxexporterHelmValuesServiceMonitorSelfMonitorLabels =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
-export type PrometheusblackboxexporterHelmValuesServiceMonitorSelfMonitorTlsConfig = object;
+export type PrometheusblackboxexporterHelmValuesServiceMonitorSelfMonitorTlsConfig =
+  object;
 
 export type PrometheusblackboxexporterHelmValuesServiceMonitorDefaults = {
   /**
@@ -448,7 +451,8 @@ export type PrometheusblackboxexporterHelmValuesServiceMonitorDefaults = {
   module?: string;
 };
 
-export type PrometheusblackboxexporterHelmValuesServiceMonitorDefaultsAdditionalMetricsRelabels = object;
+export type PrometheusblackboxexporterHelmValuesServiceMonitorDefaultsAdditionalMetricsRelabels =
+  object;
 
 export type PrometheusblackboxexporterHelmValuesServiceMonitorDefaultsLabels = {
   /**
@@ -458,7 +462,8 @@ export type PrometheusblackboxexporterHelmValuesServiceMonitorDefaultsLabels = {
   [key: string]: unknown;
 };
 
-export type PrometheusblackboxexporterHelmValuesServiceMonitorTlsConfig = object;
+export type PrometheusblackboxexporterHelmValuesServiceMonitorTlsConfig =
+  object;
 
 export type PrometheusblackboxexporterHelmValuesPrometheusRule = {
   /**
@@ -476,7 +481,8 @@ export type PrometheusblackboxexporterHelmValuesPrometheusRule = {
   rules?: unknown[];
 };
 
-export type PrometheusblackboxexporterHelmValuesPrometheusRuleAdditionalLabels = object;
+export type PrometheusblackboxexporterHelmValuesPrometheusRuleAdditionalLabels =
+  object;
 
 export type PrometheusblackboxexporterHelmValuesPodMonitoring = {
   /**
@@ -544,15 +550,17 @@ export type PrometheusblackboxexporterHelmValuesPodMonitoringSelfMonitor = {
   scrapeTimeout?: string;
 };
 
-export type PrometheusblackboxexporterHelmValuesPodMonitoringSelfMonitorAdditionalMetricsRelabels = object;
+export type PrometheusblackboxexporterHelmValuesPodMonitoringSelfMonitorAdditionalMetricsRelabels =
+  object;
 
-export type PrometheusblackboxexporterHelmValuesPodMonitoringSelfMonitorLabels = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
+export type PrometheusblackboxexporterHelmValuesPodMonitoringSelfMonitorLabels =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
 export type PrometheusblackboxexporterHelmValuesPodMonitoringDefaults = {
   /**
@@ -577,7 +585,8 @@ export type PrometheusblackboxexporterHelmValuesPodMonitoringDefaults = {
   module?: string;
 };
 
-export type PrometheusblackboxexporterHelmValuesPodMonitoringDefaultsAdditionalMetricsRelabels = object;
+export type PrometheusblackboxexporterHelmValuesPodMonitoringDefaultsAdditionalMetricsRelabels =
+  object;
 
 export type PrometheusblackboxexporterHelmValuesPodMonitoringDefaultsLabels = {
   /**
@@ -639,20 +648,23 @@ export type PrometheusblackboxexporterHelmValuesVerticalPodAutoscaler = {
   updatePolicy?: PrometheusblackboxexporterHelmValuesVerticalPodAutoscalerUpdatePolicy;
 };
 
-export type PrometheusblackboxexporterHelmValuesVerticalPodAutoscalerMaxAllowed = object;
+export type PrometheusblackboxexporterHelmValuesVerticalPodAutoscalerMaxAllowed =
+  object;
 
-export type PrometheusblackboxexporterHelmValuesVerticalPodAutoscalerMinAllowed = object;
+export type PrometheusblackboxexporterHelmValuesVerticalPodAutoscalerMinAllowed =
+  object;
 
-export type PrometheusblackboxexporterHelmValuesVerticalPodAutoscalerUpdatePolicy = {
-  /**
-   * Specifies minimal number of replicas which need to be alive for VPA Updater to attempt pod eviction
-   * Specifies whether recommended updates are applied when a Pod is started and whether recommended updates
-   * are applied during the life of a Pod. Possible values are "Off", "Initial", "Recreate", and "Auto".
-   *
-   * @default "Auto"
-   */
-  updateMode?: string;
-};
+export type PrometheusblackboxexporterHelmValuesVerticalPodAutoscalerUpdatePolicy =
+  {
+    /**
+     * Specifies minimal number of replicas which need to be alive for VPA Updater to attempt pod eviction
+     * Specifies whether recommended updates are applied when a Pod is started and whether recommended updates
+     * are applied during the life of a Pod. Possible values are "Off", "Initial", "Recreate", and "Auto".
+     *
+     * @default "Auto"
+     */
+    updateMode?: string;
+  };
 
 export type PrometheusblackboxexporterHelmValuesConfigReloader = {
   /**
@@ -740,36 +752,38 @@ export type PrometheusblackboxexporterHelmValuesConfigReloaderImage = {
   digest?: string;
 };
 
-export type PrometheusblackboxexporterHelmValuesConfigReloaderSecurityContext = {
-  /**
-   * @default 1000
-   */
-  runAsUser?: number;
-  /**
-   * @default 1000
-   */
-  runAsGroup?: number;
-  /**
-   * @default true
-   */
-  readOnlyRootFilesystem?: boolean;
-  /**
-   * @default true
-   */
-  runAsNonRoot?: boolean;
-  /**
-   * @default false
-   */
-  allowPrivilegeEscalation?: boolean;
-  /**
-   * @default {"drop":["ALL"]}
-   */
-  capabilities?: PrometheusblackboxexporterHelmValuesConfigReloaderSecurityContextCapabilities;
-};
+export type PrometheusblackboxexporterHelmValuesConfigReloaderSecurityContext =
+  {
+    /**
+     * @default 1000
+     */
+    runAsUser?: number;
+    /**
+     * @default 1000
+     */
+    runAsGroup?: number;
+    /**
+     * @default true
+     */
+    readOnlyRootFilesystem?: boolean;
+    /**
+     * @default true
+     */
+    runAsNonRoot?: boolean;
+    /**
+     * @default false
+     */
+    allowPrivilegeEscalation?: boolean;
+    /**
+     * @default {"drop":["ALL"]}
+     */
+    capabilities?: PrometheusblackboxexporterHelmValuesConfigReloaderSecurityContextCapabilities;
+  };
 
-export type PrometheusblackboxexporterHelmValuesConfigReloaderSecurityContextCapabilities = {
-  drop?: string[];
-};
+export type PrometheusblackboxexporterHelmValuesConfigReloaderSecurityContextCapabilities =
+  {
+    drop?: string[];
+  };
 
 export type PrometheusblackboxexporterHelmValuesConfigReloaderResources = {
   /**
@@ -782,23 +796,25 @@ export type PrometheusblackboxexporterHelmValuesConfigReloaderResources = {
   requests?: PrometheusblackboxexporterHelmValuesConfigReloaderResourcesRequests;
 };
 
-export type PrometheusblackboxexporterHelmValuesConfigReloaderResourcesLimits = {
-  /**
-   * @default "50Mi"
-   */
-  memory?: string;
-};
+export type PrometheusblackboxexporterHelmValuesConfigReloaderResourcesLimits =
+  {
+    /**
+     * @default "50Mi"
+     */
+    memory?: string;
+  };
 
-export type PrometheusblackboxexporterHelmValuesConfigReloaderResourcesRequests = {
-  /**
-   * @default "10m"
-   */
-  cpu?: string;
-  /**
-   * @default "20Mi"
-   */
-  memory?: string;
-};
+export type PrometheusblackboxexporterHelmValuesConfigReloaderResourcesRequests =
+  {
+    /**
+     * @default "10m"
+     */
+    cpu?: string;
+    /**
+     * @default "20Mi"
+     */
+    memory?: string;
+  };
 
 export type PrometheusblackboxexporterHelmValuesConfigReloaderLivenessProbe = {
   /**
@@ -807,20 +823,21 @@ export type PrometheusblackboxexporterHelmValuesConfigReloaderLivenessProbe = {
   httpGet?: PrometheusblackboxexporterHelmValuesConfigReloaderLivenessProbeHttpGet;
 };
 
-export type PrometheusblackboxexporterHelmValuesConfigReloaderLivenessProbeHttpGet = {
-  /**
-   * @default "/healthz"
-   */
-  path?: string;
-  /**
-   * @default "reloader-web"
-   */
-  port?: string;
-  /**
-   * @default "HTTP"
-   */
-  scheme?: string;
-};
+export type PrometheusblackboxexporterHelmValuesConfigReloaderLivenessProbeHttpGet =
+  {
+    /**
+     * @default "/healthz"
+     */
+    path?: string;
+    /**
+     * @default "reloader-web"
+     */
+    port?: string;
+    /**
+     * @default "HTTP"
+     */
+    scheme?: string;
+  };
 
 export type PrometheusblackboxexporterHelmValuesConfigReloaderReadinessProbe = {
   /**
@@ -829,20 +846,21 @@ export type PrometheusblackboxexporterHelmValuesConfigReloaderReadinessProbe = {
   httpGet?: PrometheusblackboxexporterHelmValuesConfigReloaderReadinessProbeHttpGet;
 };
 
-export type PrometheusblackboxexporterHelmValuesConfigReloaderReadinessProbeHttpGet = {
-  /**
-   * @default "/healthz"
-   */
-  path?: string;
-  /**
-   * @default "reloader-web"
-   */
-  port?: string;
-  /**
-   * @default "HTTP"
-   */
-  scheme?: string;
-};
+export type PrometheusblackboxexporterHelmValuesConfigReloaderReadinessProbeHttpGet =
+  {
+    /**
+     * @default "/healthz"
+     */
+    path?: string;
+    /**
+     * @default "reloader-web"
+     */
+    port?: string;
+    /**
+     * @default "HTTP"
+     */
+    scheme?: string;
+  };
 
 export type PrometheusblackboxexporterHelmValuesConfigReloaderService = {
   /**
@@ -858,38 +876,40 @@ export type PrometheusblackboxexporterHelmValuesConfigReloaderServiceMonitor = {
   selfMonitor?: PrometheusblackboxexporterHelmValuesConfigReloaderServiceMonitorSelfMonitor;
 };
 
-export type PrometheusblackboxexporterHelmValuesConfigReloaderServiceMonitorSelfMonitor = {
-  /**
-   * @default {}
-   */
-  additionalMetricsRelabels?: PrometheusblackboxexporterHelmValuesConfigReloaderServiceMonitorSelfMonitorAdditionalMetricsRelabels;
-  additionalRelabeling?: unknown[];
-  /**
-   * @default "/metrics"
-   */
-  path?: string;
-  /**
-   * @default "http"
-   */
-  scheme?: string;
-  /**
-   * @default {}
-   */
-  tlsConfig?: PrometheusblackboxexporterHelmValuesConfigReloaderServiceMonitorSelfMonitorTlsConfig;
-  /**
-   * @default "30s"
-   */
-  interval?: string;
-  /**
-   * @default "30s"
-   */
-  scrapeTimeout?: string;
-};
+export type PrometheusblackboxexporterHelmValuesConfigReloaderServiceMonitorSelfMonitor =
+  {
+    /**
+     * @default {}
+     */
+    additionalMetricsRelabels?: PrometheusblackboxexporterHelmValuesConfigReloaderServiceMonitorSelfMonitorAdditionalMetricsRelabels;
+    additionalRelabeling?: unknown[];
+    /**
+     * @default "/metrics"
+     */
+    path?: string;
+    /**
+     * @default "http"
+     */
+    scheme?: string;
+    /**
+     * @default {}
+     */
+    tlsConfig?: PrometheusblackboxexporterHelmValuesConfigReloaderServiceMonitorSelfMonitorTlsConfig;
+    /**
+     * @default "30s"
+     */
+    interval?: string;
+    /**
+     * @default "30s"
+     */
+    scrapeTimeout?: string;
+  };
 
 export type PrometheusblackboxexporterHelmValuesConfigReloaderServiceMonitorSelfMonitorAdditionalMetricsRelabels =
   object;
 
-export type PrometheusblackboxexporterHelmValuesConfigReloaderServiceMonitorSelfMonitorTlsConfig = object;
+export type PrometheusblackboxexporterHelmValuesConfigReloaderServiceMonitorSelfMonitorTlsConfig =
+  object;
 
 export type PrometheusblackboxexporterHelmValues = {
   /**

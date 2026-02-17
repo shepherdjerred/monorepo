@@ -22,7 +22,10 @@ class StreamRegistry {
     const stream = this.streams.get(sessionId);
     if (stream) {
       this.streams.delete(sessionId);
-      logger.info("Stream taken from registry", { sessionId, total: this.streams.size });
+      logger.info("Stream taken from registry", {
+        sessionId,
+        total: this.streams.size,
+      });
       return stream;
     }
     return null;
@@ -47,7 +50,10 @@ class StreamRegistry {
         // Ignore errors
       }
       this.streams.delete(sessionId);
-      logger.info("Stream removed from registry", { sessionId, total: this.streams.size });
+      logger.info("Stream removed from registry", {
+        sessionId,
+        total: this.streams.size,
+      });
     }
   }
 

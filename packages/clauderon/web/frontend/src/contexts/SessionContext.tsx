@@ -1,5 +1,17 @@
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
-import type { Session, CreateSessionRequest, AccessMode, SessionHealthReport } from "@clauderon/client";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  type ReactNode,
+} from "react";
+import type {
+  Session,
+  CreateSessionRequest,
+  AccessMode,
+  SessionHealthReport,
+} from "@clauderon/client";
 import type { MergeMethod } from "@clauderon/shared";
 import { useClauderonClient } from "../hooks/useClauderonClient";
 import { useSessionEvents } from "../hooks/useSessionEvents";
@@ -16,9 +28,17 @@ type SessionContextValue = {
   unarchiveSession: (id: string) => Promise<void>;
   refreshSession: (id: string) => Promise<void>;
   updateAccessMode: (id: string, mode: AccessMode) => Promise<void>;
-  updateSession: (id: string, title?: string, description?: string) => Promise<void>;
+  updateSession: (
+    id: string,
+    title?: string,
+    description?: string,
+  ) => Promise<void>;
   regenerateMetadata: (id: string) => Promise<void>;
-  mergePr: (id: string, method: MergeMethod, deleteBranch: boolean) => Promise<void>;
+  mergePr: (
+    id: string,
+    method: MergeMethod,
+    deleteBranch: boolean,
+  ) => Promise<void>;
   client: ClauderonClient;
   // Health state
   healthReports: Map<string, SessionHealthReport>;
@@ -29,40 +49,47 @@ type SessionContextValue = {
   wakeSession: (id: string) => Promise<void>;
   recreateSession: (id: string) => Promise<void>;
   cleanupSession: (id: string) => Promise<void>;
-}
+};
 
-const SessionContext = createContext<SessionContextValue | undefined>(undefined);
+const SessionContext = createContext<SessionContextValue | undefined>(
+  undefined,
+);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const client = useClauderonClient();
   const [sessions, setSessions] = useState<Map<string, Session>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [healthReports, setHealthReports] = useState<Map<string, SessionHealthReport>>(new Map());
+  const [healthReports, setHealthReports] = useState<
+    Map<string, SessionHealthReport>
+  >(new Map());
 
-  const refreshSessions = useCallback(async (showLoading = true) => {
-    try {
-      if (showLoading) {
-        setIsLoading(true);
+  const refreshSessions = useCallback(
+    async (showLoading = true) => {
+      try {
+        if (showLoading) {
+          setIsLoading(true);
+        }
+        setError(null);
+        const sessionsList = await client.listSessions();
+        const newSessions = new Map(sessionsList.map((s) => [s.id, s]));
+        setSessions(newSessions);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error(String(err)));
+      } finally {
+        if (showLoading) {
+          setIsLoading(false);
+        }
       }
-      setError(null);
-      const sessionsList = await client.listSessions();
-      const newSessions = new Map(sessionsList.map((s) => [s.id, s]));
-      setSessions(newSessions);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
-    } finally {
-      if (showLoading) {
-        setIsLoading(false);
-      }
-    }
-  }, [client]);
+    },
+    [client],
+  );
 
   const refreshHealth = useCallback(async () => {
     try {
       const health = await client.getHealth();
       const newHealthReports = new Map(
-        health.sessions.map((report) => [report.session_id, report])
+        health.sessions.map((report) => [report.session_id, report]),
       );
       setHealthReports(newHealthReports);
     } catch (err) {
@@ -74,7 +101,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     (sessionId: string): SessionHealthReport | undefined => {
       return healthReports.get(sessionId);
     },
-    [healthReports]
+    [healthReports],
   );
 
   const createSession = useCallback(
@@ -83,7 +110,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       // WebSocket events will update the session list automatically
       return result.id;
     },
-    [client]
+    [client],
   );
 
   const deleteSession = useCallback(
@@ -95,7 +122,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         return newSessions;
       });
     },
-    [client]
+    [client],
   );
 
   const archiveSession = useCallback(
@@ -103,7 +130,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       await client.archiveSession(id);
       await refreshSessions();
     },
-    [client, refreshSessions]
+    [client, refreshSessions],
   );
 
   const unarchiveSession = useCallback(
@@ -111,7 +138,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       await client.unarchiveSession(id);
       await refreshSessions();
     },
-    [client, refreshSessions]
+    [client, refreshSessions],
   );
 
   const refreshSession = useCallback(
@@ -119,7 +146,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       await client.refreshSession(id);
       await refreshSessions();
     },
-    [client, refreshSessions]
+    [client, refreshSessions],
   );
 
   const updateAccessMode = useCallback(
@@ -127,7 +154,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       await client.updateAccessMode(id, mode);
       await refreshSessions();
     },
-    [client, refreshSessions]
+    [client, refreshSessions],
   );
 
   const updateSession = useCallback(
@@ -135,7 +162,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       await client.updateSessionMetadata(id, title, description);
       // WebSocket event will update state
     },
-    [client]
+    [client],
   );
 
   const regenerateMetadata = useCallback(
@@ -143,7 +170,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       await client.regenerateMetadata(id);
       await refreshSessions();
     },
-    [client, refreshSessions]
+    [client, refreshSessions],
   );
 
   const startSession = useCallback(
@@ -151,7 +178,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       await client.startSession(id);
       await Promise.all([refreshSessions(), refreshHealth()]);
     },
-    [client, refreshSessions, refreshHealth]
+    [client, refreshSessions, refreshHealth],
   );
 
   const wakeSession = useCallback(
@@ -159,7 +186,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       await client.wakeSession(id);
       await Promise.all([refreshSessions(), refreshHealth()]);
     },
-    [client, refreshSessions, refreshHealth]
+    [client, refreshSessions, refreshHealth],
   );
 
   const recreateSession = useCallback(
@@ -167,7 +194,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       await client.recreateSession(id);
       await Promise.all([refreshSessions(), refreshHealth()]);
     },
-    [client, refreshSessions, refreshHealth]
+    [client, refreshSessions, refreshHealth],
   );
 
   const cleanupSession = useCallback(
@@ -175,7 +202,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       await client.cleanupSession(id);
       await Promise.all([refreshSessions(), refreshHealth()]);
     },
-    [client, refreshSessions, refreshHealth]
+    [client, refreshSessions, refreshHealth],
   );
 
   const mergePr = useCallback(
@@ -183,37 +210,40 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       await client.mergePr(id, method, deleteBranch);
       await refreshSessions();
     },
-    [client, refreshSessions]
+    [client, refreshSessions],
   );
 
   // Handle real-time events
-  const handleEvent = useCallback((event: { type: string; payload?: Session | { id: string } }) => {
-    switch (event.type) {
-      case "SessionCreated":
-      case "SessionUpdated": {
-        // Event payload contains the full session object
-        const session = event.payload as Session;
-        setSessions((prev) => {
-          const newSessions = new Map(prev);
-          newSessions.set(session.id, session);
-          return newSessions;
-        });
-        break;
-      }
-      case "SessionDeleted": {
-        // Event payload contains { id: string }
-        const payload = event.payload as { id: string };
-        if (payload.id) {
+  const handleEvent = useCallback(
+    (event: { type: string; payload?: Session | { id: string } }) => {
+      switch (event.type) {
+        case "SessionCreated":
+        case "SessionUpdated": {
+          // Event payload contains the full session object
+          const session = event.payload as Session;
           setSessions((prev) => {
             const newSessions = new Map(prev);
-            newSessions.delete(payload.id);
+            newSessions.set(session.id, session);
             return newSessions;
           });
+          break;
         }
-        break;
+        case "SessionDeleted": {
+          // Event payload contains { id: string }
+          const payload = event.payload as { id: string };
+          if (payload.id) {
+            setSessions((prev) => {
+              const newSessions = new Map(prev);
+              newSessions.delete(payload.id);
+              return newSessions;
+            });
+          }
+          break;
+        }
       }
-    }
-  }, []);
+    },
+    [],
+  );
 
   useSessionEvents(handleEvent);
 

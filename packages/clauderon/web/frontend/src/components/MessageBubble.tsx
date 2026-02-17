@@ -9,7 +9,7 @@ import { QuestionView, isQuestion } from "./QuestionView";
 
 type MessageBubbleProps = {
   message: Message;
-}
+};
 
 export function MessageBubble({ message }: MessageBubbleProps) {
   // Don't render if there's no displayable content
@@ -62,11 +62,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
   return (
     <div
       className={`flex gap-4 p-4 border-b-2 ${
-        isUser
-          ? "bg-primary/5"
-          : isSystem
-            ? "bg-secondary/50"
-            : "bg-card"
+        isUser ? "bg-primary/5" : isSystem ? "bg-secondary/50" : "bg-card"
       }`}
     >
       {/* Square Avatar (brutalist) */}

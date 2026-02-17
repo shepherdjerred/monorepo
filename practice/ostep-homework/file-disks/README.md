@@ -1,12 +1,11 @@
-
 # Overview
 
 This homework uses `disk.py` to familiarize you with how a modern hard
 drive works. It has a lot of different options, and unlike most of the other
 simulations, has a graphical animator to show you exactly what happens when
-the disk is in action. 
+the disk is in action.
 
-Note: there is also an experimental program, `disk-precise.py`.  This
+Note: there is also an experimental program, `disk-precise.py`. This
 version of the simulator uses the python Decimal package for precise
 floating point computation, thus giving slightly better answers in
 some corner cases than `disk.py`. However, it has not been very
@@ -34,7 +33,6 @@ For the requests above, compute the seek, rotate, and transfer times.
 Use -c or the graphical mode (-G) to see the answers.
 ```
 
-
 To be able to compute the seek, rotation, and transfer times for this request,
 you'll have to know a little more information about the layout of sectors, the
 starting position of the disk head, and so forth. To see much of this
@@ -44,7 +42,7 @@ information, run the simulator in graphical mode (-G):
 prompt> ./disk.py -a 10 -G
 ```
 
-At this point, a window should appear with our simple disk on it. 
+At this point, a window should appear with our simple disk on it.
 The disk head is positioned on the outside track, halfway through sector 6.
 As you can see, sector 10 (our example sector) is on the same track, about a
 third of the way around. The direction of rotation is counter-clockwise.
@@ -60,7 +58,7 @@ know a few details about the disk. First, the rotational speed is by default
 set to 1 degree per time unit. Thus, to make a complete revolution, it takes
 360 time units. Second, transfer begins and ends at the halfway point between
 sectors. Thus, to read sector 10, the transfer begins halfway between 9 and 10,
-and ends halfway between 10 and 11.  Finally, in the default disk, there are
+and ends halfway between 10 and 11. Finally, in the default disk, there are
 12 sectors per track, meaning that each sector takes up 30 degrees of the
 rotational space. Thus, to read a sector, it takes 30 time units (given our
 default speed of rotation).
@@ -104,7 +102,7 @@ prompt> disk.py -a 10,18 -G
 To compute how long this will take, you need to know how long a seek will
 take. The distance between each track is by default 40 distance units, and the
 default rate of seeking is 1 distance unit per unit time. Thus, a seek from
-the outer track to the middle track takes 40 time units. 
+the outer track to the middle track takes 40 time units.
 
 You'd also have to know the scheduling policy. The default is FIFO, though, so
 for now you can just compute the request times assuming the processing order
@@ -142,4 +140,3 @@ TOTALS       Seek: 40  Rotate:275  Transfer: 60  Total: 375
 You should now have a basic idea of how the simulator works. The questions
 below will explore some of the different options, to better help you build a
 model of how a disk really works.
-

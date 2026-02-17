@@ -1,8 +1,5 @@
-import type {
-  PrometheusRuleSpecGroups} from "../../../../../generated/imports/monitoring.coreos.com";
-import {
-  PrometheusRuleSpecGroupsRulesExpr,
-} from "../../../../../generated/imports/monitoring.coreos.com";
+import type { PrometheusRuleSpecGroups } from "../../../../../generated/imports/monitoring.coreos.com";
+import { PrometheusRuleSpecGroupsRulesExpr } from "../../../../../generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "./shared";
 
 export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
@@ -192,7 +189,8 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
             description: escapePrometheusTemplate(
               "Device {{ $labels.device }} on {{ $labels.instance }} wrote {{ $value | humanize }} bytes in the last 24 hours (SSD wear concern)",
             ),
-            summary: "Sustained disk write activity detected - SSD wear concern",
+            summary:
+              "Sustained disk write activity detected - SSD wear concern",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'increase(max by (instance, device) (node_disk_written_bytes_total)[24h:5m]) > 1024^4 and on (instance, device) node_disk_info{rotational="0"}', // > 1 TiB/day, SSD only
@@ -208,7 +206,9 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
             summary: "High disk IO utilization",
           },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString("rate(node_disk_io_time_seconds_total[5m]) > 0.8"),
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "rate(node_disk_io_time_seconds_total[5m]) > 0.8",
+          ),
           for: "15m",
           labels: { severity: "warning" },
         },
@@ -220,7 +220,9 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
             summary: "Disk read errors detected",
           },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString("increase(node_disk_read_errors_total[1h]) > 0"),
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "increase(node_disk_read_errors_total[1h]) > 0",
+          ),
           for: "5m",
           labels: { severity: "critical" },
         },
@@ -232,7 +234,9 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
             summary: "Disk write errors detected",
           },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString("increase(node_disk_write_errors_total[1h]) > 0"),
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "increase(node_disk_write_errors_total[1h]) > 0",
+          ),
           for: "5m",
           labels: { severity: "critical" },
         },
@@ -251,7 +255,9 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
             summary: "High CPU temperature detected",
           },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString('node_hwmon_temp_celsius{chip=~".*coretemp.*"} > 80'),
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'node_hwmon_temp_celsius{chip=~".*coretemp.*"} > 80',
+          ),
           for: "10m",
           labels: { severity: "warning" },
         },
@@ -263,7 +269,9 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
             summary: "Critical CPU temperature detected",
           },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString('node_hwmon_temp_celsius{chip=~".*coretemp.*"} > 90'),
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'node_hwmon_temp_celsius{chip=~".*coretemp.*"} > 90',
+          ),
           for: "5m",
           labels: { severity: "critical" },
         },
@@ -276,7 +284,9 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
             summary: "High system temperature detected",
           },
           // Raised threshold from 75°C to 85°C to reduce noise - 75°C is normal for many components under load
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString("node_hwmon_temp_celsius > 85"),
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "node_hwmon_temp_celsius > 85",
+          ),
           for: "15m",
           labels: { severity: "warning" },
         },
@@ -309,7 +319,9 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
             summary: "High context switches detected",
           },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString("rate(node_context_switches_total[5m]) > 500000"), // Increased from 100k - Kubernetes hosts normally have high context switches
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "rate(node_context_switches_total[5m]) > 500000",
+          ), // Increased from 100k - Kubernetes hosts normally have high context switches
           for: "30m",
           labels: { severity: "warning" },
         },
@@ -321,7 +333,9 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
             summary: "Unusual file descriptor usage",
           },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString("node_filefd_allocated > 0.8 * node_filefd_maximum"),
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "node_filefd_allocated > 0.8 * node_filefd_maximum",
+          ),
           for: "10m",
           labels: { severity: "warning" },
         },
@@ -382,7 +396,9 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
             summary: "Node exporter down",
           },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString('up{job="node-exporter"} == 0'),
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'up{job="node-exporter"} == 0',
+          ),
           for: "5m",
           labels: { severity: "critical" },
         },

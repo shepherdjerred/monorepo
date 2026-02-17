@@ -1,4 +1,10 @@
-import { Directory, dag, type Secret, Container, type File } from "@dagger.io/dagger";
+import {
+  Directory,
+  dag,
+  type Secret,
+  Container,
+  type File,
+} from "@dagger.io/dagger";
 import { getWorkspaceContainer, getMiseRuntimeContainer } from "./base";
 import { execOrThrow } from "./errors";
 import type { StepResult } from ".";
@@ -46,7 +52,9 @@ export async function prepareHaContainer(
 }
 
 export function buildHa(source: Directory): Directory {
-  return getWorkspaceContainer(source, "src/ha").withExec(["bun", "run", "build"]).directory("/workspace/src/ha");
+  return getWorkspaceContainer(source, "src/ha")
+    .withExec(["bun", "run", "build"])
+    .directory("/workspace/src/ha");
 }
 
 /**
@@ -54,10 +62,16 @@ export function buildHa(source: Directory): Directory {
  * Use this when you already have a prepared container from prepareHaContainer().
  */
 export function buildHaWithContainer(container: Container): Directory {
-  return container.withExec(["bun", "run", "build"]).directory("/workspace/src/ha");
+  return container
+    .withExec(["bun", "run", "build"])
+    .directory("/workspace/src/ha");
 }
 
-export async function typeCheckHa(source: Directory, hassBaseUrl?: Secret, hassToken?: Secret): Promise<string> {
+export async function typeCheckHa(
+  source: Directory,
+  hassBaseUrl?: Secret,
+  hassToken?: Secret,
+): Promise<string> {
   const container = await prepareHaContainer(source, hassBaseUrl, hassToken);
   return execOrThrow(container, ["bun", "run", "typecheck"]);
 }
@@ -65,11 +79,17 @@ export async function typeCheckHa(source: Directory, hassBaseUrl?: Secret, hassT
 /**
  * Runs type check using a pre-prepared container.
  */
-export function typeCheckHaWithContainer(container: Container): Promise<string> {
+export function typeCheckHaWithContainer(
+  container: Container,
+): Promise<string> {
   return execOrThrow(container, ["bun", "run", "typecheck"]);
 }
 
-export async function lintHa(source: Directory, hassBaseUrl?: Secret, hassToken?: Secret): Promise<string> {
+export async function lintHa(
+  source: Directory,
+  hassBaseUrl?: Secret,
+  hassToken?: Secret,
+): Promise<string> {
   const container = await prepareHaContainer(source, hassBaseUrl, hassToken);
   return execOrThrow(container, ["bun", "run", "lint"]);
 }
@@ -106,18 +126,34 @@ function buildHaContainer(source: Directory): Container {
       .withDirectory("patches", source.directory("patches"))
       // Copy full workspace directories for bun workspace resolution
       .withDirectory("src/ha", haSource, { exclude: ["node_modules"] })
-      .withDirectory("src/cdk8s", source.directory("src/cdk8s"), { exclude: ["node_modules"] })
-      .withDirectory("src/helm-types", source.directory("src/helm-types"), { exclude: ["node_modules"] })
-      .withDirectory("src/deps-email", source.directory("src/deps-email"), { exclude: ["node_modules"] })
+      .withDirectory("src/cdk8s", source.directory("src/cdk8s"), {
+        exclude: ["node_modules"],
+      })
+      .withDirectory("src/helm-types", source.directory("src/helm-types"), {
+        exclude: ["node_modules"],
+      })
+      .withDirectory("src/deps-email", source.directory("src/deps-email"), {
+        exclude: ["node_modules"],
+      })
       .withFile(".dagger/package.json", source.file(".dagger/package.json"))
       // Install dependencies (cached unless dependency files change)
-      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache-default-ha"))
+      .withMountedCache(
+        "/root/.bun/install/cache",
+        dag.cacheVolume("bun-cache-default-ha"),
+      )
       .withExec(["bun", "install", "--frozen-lockfile"])
       // Set working directory to the ha workspace
       .withWorkdir("/app/src/ha")
       // Expose metrics port
       .withExposedPort(9090)
-      .withDefaultArgs(["mise", "exec", `bun@${versions.bun}`, "--", "bun", "src/main.ts"])
+      .withDefaultArgs([
+        "mise",
+        "exec",
+        `bun@${versions.bun}`,
+        "--",
+        "bun",
+        "src/main.ts",
+      ])
   );
 }
 
@@ -163,7 +199,9 @@ export async function buildAndPushHaImage(
     };
   }
   // Publish the image
-  const result = await container.withRegistryAuth("ghcr.io", ghcrUsername, ghcrPassword).publish(imageName);
+  const result = await container
+    .withRegistryAuth("ghcr.io", ghcrUsername, ghcrPassword)
+    .publish(imageName);
 
   return {
     status: "passed",

@@ -16,9 +16,11 @@ START_PAGE:
   REMOVE_LORE: §fRemove this button from the start page.
   ENTER_NAME: Enter a new name for the button.
   ENTER_LORE: Enter a new description for the button.
-  ENTER_ICON: Enter the name of the item to be used as the icon for the button. (English,
+  ENTER_ICON:
+    Enter the name of the item to be used as the icon for the button. (English,
     case insensitive)
-  ENTER_ACTION: Enter the command without '/'. This command is executed when the button
+  ENTER_ACTION:
+    Enter the command without '/'. This command is executed when the button
     is pressed.
   ENTER_COLOR: Enter a color for the decorative button. (English)
   SHOP_LIST_TITLE: §3Shop List
@@ -94,7 +96,8 @@ SHOP_SETTING:
   SHOP_SETTINGS_LORE: "§eRMB: Shop Settings"
   SIGN_SHOP_LORE: §fOnly accessible via sign.
   LOCAL_SHOP_LORE: §fMust visit actual store locations.
-  DELIVERY_CHARGE_LORE: "§fYou can pay for delivery without \n§fhaving to go to the\
+  DELIVERY_CHARGE_LORE:
+    "§fYou can pay for delivery without \n§fhaving to go to the\
     \ shop location to transact."
   SELECTED: §2Selected
   CURRENCY: "§fCurrency Type: "
@@ -256,7 +259,8 @@ PAGE_EDITOR:
   NEXT: §f>>
   PAGE_SWAP_SUCCESS: §fThe page has been replaced.
   PAGE_SWAP_FAIL: §fPage replacement failed.
-  PAGE_SWAP_SELECTED: §fPage has been selected. Right-click on the other pages to
+  PAGE_SWAP_SELECTED:
+    §fPage has been selected. Right-click on the other pages to
     be replaced.
   PAGE_LORE_PREMIUM: |-
     §eLMB: Open page
@@ -360,7 +364,8 @@ TIME:
   CLOSE_LORE: §fSet closing time
   SHOPHOURS: §fOpening hours
   OPEN24: Open 24 hours
-  SHOP_IS_CLOSED: §fThe shop is closed. It opens at {time} o'clock. {curTime} o'clock
+  SHOP_IS_CLOSED:
+    §fThe shop is closed. It opens at {time} o'clock. {curTime} o'clock
     now.
   SET_SHOPHOURS: Set business hours
   CUR: "§fCurrent time: {time}h"
@@ -393,10 +398,12 @@ MESSAGE:
   SELL_SUCCESS: "§fSold {item} x{amount} for {price}. Balance: {bal}"
   BUY_SUCCESS_EXP: "§fBought {item} x{amount} for {price}Exp Points. Balance: {bal}"
   SELL_SUCCESS_EXP: "§fSold {item} x{amount} for {price}Exp Points. Balance: {bal}"
-  BUY_SUCCESS_JP: "§fBought {item} x{amount} for {price}points. Remaining points:
+  BUY_SUCCESS_JP:
+    "§fBought {item} x{amount} for {price}points. Remaining points:
     {bal}"
   SELL_SUCCESS_JP: "§fSold {item} x{amount} for {price}points. Remaining points: {bal}"
-  BUY_SUCCESS_PP: "§fBought {item} x{amount} for {price}points. Remaining points:
+  BUY_SUCCESS_PP:
+    "§fBought {item} x{amount} for {price}points. Remaining points:
     {bal}"
   SELL_SUCCESS_PP: "§fSold {item} x{amount} for {price}points. Remaining points: {bal}"
   QSELL_NA: §fThere is no shop that handles this item.
@@ -415,22 +422,28 @@ MESSAGE:
   ITEM_DELETED: Item deleted!
   CHANGES_APPLIED: "Changes applied. New values:"
   CHANGES_APPLIED_2: Changes applied
-  RECOMMEND_APPLIED: Recommended value applied. It is based on {playerNum}players.
+  RECOMMEND_APPLIED:
+    Recommended value applied. It is based on {playerNum}players.
     You can change this value in the config file.
   TRANSFER_SUCCESS: Remittance completed
-  PURCHASE_REJECTED: There are too many of these items in the shop. Can't sell it
+  PURCHASE_REJECTED:
+    There are too many of these items in the shop. Can't sell it
     now.
   CLICK_YOUR_ITEM_START_PAGE: |-
     Click on an item in your inventory to find the shop with the best deal.
     LMB: Buy   RMB: Sell
-  MOVE_TO_BEST_SHOP_BUY: Moved to the shop where you can buy {item} at the lowest
+  MOVE_TO_BEST_SHOP_BUY:
+    Moved to the shop where you can buy {item} at the lowest
     price.
-  MOVE_TO_BEST_SHOP_SELL: Moved to the shop where you can sell {item} at the highest
+  MOVE_TO_BEST_SHOP_SELL:
+    Moved to the shop where you can sell {item} at the highest
     price.
   SHOP_IS_CLOSED_BY_ADMIN: This shop is currently closed by the server administrator.
-  SHOP_DISABLED: This shop is currently disabled. Non-admin users cannot use it. You
+  SHOP_DISABLED:
+    This shop is currently disabled. Non-admin users cannot use it. You
     can enable it in the shop settings.
-  ROTATION_SHARED_DATA_MISSING: §e[ ! ]§fThe required data could not be found in '{0}/SharedData.yml'
+  ROTATION_SHARED_DATA_MISSING:
+    §e[ ! ]§fThe required data could not be found in '{0}/SharedData.yml'
     for {1} items. These items have been added as decoration.
   ENTER_COMMAND: Enter the command without '/'.
   ENTER_COMMAND_2: Enter in the form of 'index/command'.
@@ -492,7 +505,8 @@ ERR:
   SIGN_SHOP_REMOTE_ACCESS: The shop is only accessible via sign.
   LOCAL_SHOP_REMOTE_ACCESS: The shop can only be used by visiting it in person.
   MAX_LOWER_THAN_MIN: The maximum price must be greater than the minimum price.
-  DEFAULT_VALUE_OUT_OF_RANGE: The base price must be between the minimum price and
+  DEFAULT_VALUE_OUT_OF_RANGE:
+    The base price must be between the minimum price and
     the maximum price.
   NO_RECOMMEND_DATA: There is no information for this item in the Worth.yml file.
   JOBS_REBORN_NOT_FOUND: Could not find 'Jobs reborn'.
@@ -505,14 +519,17 @@ ERR:
   NESTED_STRUCTURE: It is forbidden to build hierarchies. (ex. aa-bb, bb-cc)
   CREATIVE: §eYou cannot use this command in Creative mode. You do not have permission.
   FILE_CREATE_FAIL: §eFile creation failed
-  INVALID_TRANSACTION: This transaction is no longer valid. If this problem recurs,
+  INVALID_TRANSACTION:
+    This transaction is no longer valid. If this problem recurs,
     contact your server administrator
   SIGN_WALL: Sign must be placed on wall.
   SHOP_NULL: §eShop name cannot be null.
   ITEMINFO_HAND_EMPTY: You need to hold an item.
-  SIGN_ITEM_INVALID: Invalid item. Use /ds iteminfo to find the name of the item on
+  SIGN_ITEM_INVALID:
+    Invalid item. Use /ds iteminfo to find the name of the item on
     the sign.
-  SIGN_ITEM_NOT_FOR_SALE: First you must add the item in the shop and then use it
+  SIGN_ITEM_NOT_FOR_SALE:
+    First you must add the item in the shop and then use it
     on the sign.
 "ON": "ON"
 "OFF": "OFF"

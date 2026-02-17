@@ -64,7 +64,7 @@ For developer guidance, see [`TVPosterView`](/documentation/TVUIKit/TVPosterView
 
 ## [Platform considerations](/design/human-interface-guidelines/lockups#Platform-considerations)
 
-*Not supported in iOS, iPadOS, macOS, visionOS, or watchOS.*
+_Not supported in iOS, iPadOS, macOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/lockups#Resources)
 

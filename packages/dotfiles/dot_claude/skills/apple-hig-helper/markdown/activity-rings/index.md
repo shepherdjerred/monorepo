@@ -26,17 +26,17 @@ In watchOS, the Activity ring element always contains three rings, whose colors 
 
 **Always keep the visual appearance of Activity rings the same, regardless of where you display them.** Follow these guidelines to provide a consistent experience:
 
-* Never change the colors of the rings; for example, don’t use filters or modify opacity.
-* Always display Activity rings on a black background.
-* Prefer enclosing the rings and background within a circle. To do this, adjust the corner radius of the enclosing view rather than applying a circular mask.
-* Ensure that the black background remains visible around the outermost ring. If necessary, add a thin, black stroke around the outer edge of the ring, and avoid including a gradient, shadow, or any other visual effect.
-* Always scale the rings appropriately so they don’t seem disconnected or out of place.
-* When necessary, design the surrounding interface to blend with the rings; never change the rings to blend with the surrounding interface.
+- Never change the colors of the rings; for example, don’t use filters or modify opacity.
+- Always display Activity rings on a black background.
+- Prefer enclosing the rings and background within a circle. To do this, adjust the corner radius of the enclosing view rather than applying a circular mask.
+- Ensure that the black background remains visible around the outermost ring. If necessary, add a thin, black stroke around the outer edge of the ring, and avoid including a gradient, shadow, or any other visual effect.
+- Always scale the rings appropriately so they don’t seem disconnected or out of place.
+- When necessary, design the surrounding interface to blend with the rings; never change the rings to blend with the surrounding interface.
 
-**To display a label or value that’s directly associated with an Activity ring, use the colors that match it.** To display the ring-specific labels *Move*, *Exercise*, and *Stand*, or to display a person’s current and goal values for each ring, use the following colors, specified as RGB values.
+**To display a label or value that’s directly associated with an Activity ring, use the colors that match it.** To display the ring-specific labels _Move_, _Exercise_, and _Stand_, or to display a person’s current and goal values for each ring, use the following colors, specified as RGB values.
 
-| Move | Exercise | Stand |
-| --- | --- | --- |
+| Move            | Exercise        | Stand           |
+| --------------- | --------------- | --------------- |
 | R-250,G-17,B-79 | R-166,G-255,B-0 | R-0,G-255,B-246 |
 
 **Maintain Activity ring margins.** An Activity ring element must include a minimum outer margin of no less than the distance between rings. Never allow other elements to crop, obstruct, or encroach upon this margin or the rings themselves.
@@ -51,14 +51,14 @@ In watchOS, the Activity ring element always contains three rings, whose colors 
 
 ## [Platform considerations](/design/human-interface-guidelines/activity-rings#Platform-considerations)
 
-*No additional considerations for iPadOS or watchOS. Not supported in macOS, tvOS, or visionOS.*
+_No additional considerations for iPadOS or watchOS. Not supported in macOS, tvOS, or visionOS._
 
 ### [iOS](/design/human-interface-guidelines/activity-rings#iOS)
 
 Activity rings are available in iOS with [`HKActivityRingView`](/documentation/HealthKitUI/HKActivityRingView). The appearance of the Activity ring element changes automatically depending on whether an Apple Watch is paired:
 
-* With an Apple Watch paired, iOS shows all three Activity rings.
-* Without an Apple Watch paired, iOS shows the Move ring only, which represents an approximation of a person’s activity based on their steps and workout information from other apps.
+- With an Apple Watch paired, iOS shows all three Activity rings.
+- Without an Apple Watch paired, iOS shows the Move ring only, which represents an approximation of a person’s activity based on their steps and workout information from other apps.
 
 ![A screenshot of the Activity summary in the iOS Fitness app with Apple Watch paired. All three Activity rings are displayed.](https://docs-assets.developer.apple.com/published/eab44acde68216f8cbace4a59594b7b6/activity-rings-watch-paired%402x.png)
 
@@ -96,7 +96,7 @@ Build custom workouts with WorkoutKit](https://developer.apple.com/videos/play/w
 
 ## [Change log](/design/human-interface-guidelines/activity-rings#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| March 29, 2024 | Enhanced guidance for displaying Activity rings and listed specific colors for displaying related content. |
-| December 5, 2023 | Added artwork representing Activity rings in iOS. |
+| Date             | Changes                                                                                                    |
+| ---------------- | ---------------------------------------------------------------------------------------------------------- |
+| March 29, 2024   | Enhanced guidance for displaying Activity rings and listed specific colors for displaying related content. |
+| December 5, 2023 | Added artwork representing Activity rings in iOS.                                                          |

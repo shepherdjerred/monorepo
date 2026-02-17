@@ -49,14 +49,23 @@ export async function planDir(
   container = container.withExec(["tofu", "init"]);
 
   // Run plan with -detailed-exitcode: 0=no changes, 1=error, 2=drift
-  const result = await execWithOutput(container, ["tofu", "plan", "-detailed-exitcode", "-no-color"]);
+  const result = await execWithOutput(container, [
+    "tofu",
+    "plan",
+    "-detailed-exitcode",
+    "-no-color",
+  ]);
 
   if (result.exitCode === 1) {
-    const output = [result.stdout.trim(), result.stderr.trim()].filter(Boolean).join("\n") || "No output";
+    const output =
+      [result.stdout.trim(), result.stderr.trim()].filter(Boolean).join("\n") ||
+      "No output";
     throw new Error(`tofu plan failed for ${dir}:\n${output}`);
   }
 
-  const output = [result.stdout.trim(), result.stderr.trim()].filter(Boolean).join("\n");
+  const output = [result.stdout.trim(), result.stderr.trim()]
+    .filter(Boolean)
+    .join("\n");
   return { dir, hasDrift: result.exitCode === 2, output };
 }
 
@@ -74,7 +83,15 @@ export async function planAll(
 ): Promise<string> {
   const results = await Promise.allSettled(
     TOFU_DIRS.map((dir) =>
-      planDir(source, dir, cloudflareApiToken, cloudflareAccountId, awsAccessKeyId, awsSecretAccessKey, githubToken),
+      planDir(
+        source,
+        dir,
+        cloudflareApiToken,
+        cloudflareAccountId,
+        awsAccessKeyId,
+        awsSecretAccessKey,
+        githubToken,
+      ),
     ),
   );
 
@@ -83,7 +100,9 @@ export async function planAll(
       const dir = TOFU_DIRS[i] ?? "unknown";
       if (result.status === "fulfilled") {
         const { hasDrift, output } = result.value;
-        return hasDrift ? `${dir}: DRIFT DETECTED\n${output}` : `${dir}: No changes`;
+        return hasDrift
+          ? `${dir}: DRIFT DETECTED\n${output}`
+          : `${dir}: No changes`;
       }
       return `${dir}: FAILED\n${String(result.reason)}`;
     })

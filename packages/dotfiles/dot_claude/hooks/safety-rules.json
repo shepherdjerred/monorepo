@@ -1,8 +1,19 @@
 {
   "safe_rm_targets": [
-    "node_modules", "dist", "build", "out", ".next", ".output",
-    ".cache", ".vite", ".turbo", "target", "coverage",
-    "__pycache__", ".pytest_cache", ".mypy_cache"
+    "node_modules",
+    "dist",
+    "build",
+    "out",
+    ".next",
+    ".output",
+    ".cache",
+    ".vite",
+    ".turbo",
+    "target",
+    "coverage",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache"
   ],
   "deny": [
     {
@@ -44,11 +55,15 @@
       "reason": "Kubernetes namespace/node/PV deletion",
       "regex": "kubectl\\s+delete\\s+(namespace|ns|node|pv |pvc |persistentvolume)",
       "globs": [
-        "kubectl delete namespace *", "kubectl delete ns *",
+        "kubectl delete namespace *",
+        "kubectl delete ns *",
         "kubectl delete node*",
-        "kubectl delete pv *", "kubectl delete pv/*",
-        "kubectl delete pvc *", "kubectl delete pvc/*",
-        "kubectl delete persistentvolume*", "kubectl delete persistentvolumeclaim*"
+        "kubectl delete pv *",
+        "kubectl delete pv/*",
+        "kubectl delete pvc *",
+        "kubectl delete pvc/*",
+        "kubectl delete persistentvolume*",
+        "kubectl delete persistentvolumeclaim*"
       ]
     },
     {
@@ -89,7 +104,11 @@
     {
       "reason": "Docker data destruction",
       "regex": "docker\\s+(system\\s+prune|volume\\s+(prune|rm))",
-      "globs": ["docker system prune*", "docker volume prune*", "docker volume rm*"]
+      "globs": [
+        "docker system prune*",
+        "docker volume prune*",
+        "docker volume rm*"
+      ]
     },
     {
       "reason": "Velero backup deletion",
@@ -107,42 +126,104 @@
     { "reason": "Destructive git reset", "globs": ["git reset --hard*"] },
     { "reason": "Git clean", "globs": ["git clean -f*"] },
     { "reason": "Force delete branch", "globs": ["git branch -D*"] },
-    { "reason": "Drop git stash", "globs": ["git stash drop*", "git stash clear*"] },
+    {
+      "reason": "Drop git stash",
+      "globs": ["git stash drop*", "git stash clear*"]
+    },
     { "reason": "Package publish", "globs": ["npm publish*", "bun publish*"] },
     { "reason": "Docker image push", "globs": ["docker push*"] },
-    { "reason": "Homebrew install/uninstall", "globs": ["brew install*", "brew uninstall*"] },
-    { "reason": "Global package install", "globs": ["npm install -g*", "bun install -g*"] },
+    {
+      "reason": "Homebrew install/uninstall",
+      "globs": ["brew install*", "brew uninstall*"]
+    },
+    {
+      "reason": "Global package install",
+      "globs": ["npm install -g*", "bun install -g*"]
+    },
     {
       "reason": "Kubernetes resource mutation",
       "globs": [
-        "kubectl delete *", "kubectl apply *", "kubectl scale *",
-        "kubectl edit *", "kubectl rollout *", "kubectl cordon *",
-        "kubectl uncordon *", "kubectl patch *", "kubectl label *",
-        "kubectl annotate *", "kubectl taint *"
+        "kubectl delete *",
+        "kubectl apply *",
+        "kubectl scale *",
+        "kubectl edit *",
+        "kubectl rollout *",
+        "kubectl cordon *",
+        "kubectl uncordon *",
+        "kubectl patch *",
+        "kubectl label *",
+        "kubectl annotate *",
+        "kubectl taint *"
       ]
     },
-    { "reason": "Talos config change", "globs": ["talosctl apply-config*", "talosctl upgrade*"] },
-    { "reason": "Helm deployment", "globs": ["helm install*", "helm upgrade*", "helm rollback*"] },
+    {
+      "reason": "Talos config change",
+      "globs": ["talosctl apply-config*", "talosctl upgrade*"]
+    },
+    {
+      "reason": "Helm deployment",
+      "globs": ["helm install*", "helm upgrade*", "helm rollback*"]
+    },
     {
       "reason": "ArgoCD app mutation",
-      "globs": ["argocd app delete*", "argocd app sync*", "argocd app set*", "argocd app create*"]
+      "globs": [
+        "argocd app delete*",
+        "argocd app sync*",
+        "argocd app set*",
+        "argocd app create*"
+      ]
     },
     {
       "reason": "GitHub PR/issue/release mutation",
-      "globs": ["gh pr merge*", "gh pr close*", "gh issue close*", "gh release create*", "gh release delete*"]
+      "globs": [
+        "gh pr merge*",
+        "gh pr close*",
+        "gh issue close*",
+        "gh release create*",
+        "gh release delete*"
+      ]
     },
-    { "reason": "1Password item mutation", "globs": ["op item delete*", "op item edit*", "op item create*"] },
-    { "reason": "Docker container lifecycle", "globs": ["docker rm *", "docker stop *", "docker kill *", "docker compose down*"] },
-    { "reason": "Velero operations", "globs": ["velero restore*", "velero schedule*"] },
-    { "reason": "AWS S3 mutations", "globs": ["aws s3 rm*", "aws s3 cp*", "aws s3 mv*", "aws s3 sync*"] },
-    { "reason": "Coder workspace operations", "globs": ["coder create*", "coder stop*"] },
+    {
+      "reason": "1Password item mutation",
+      "globs": ["op item delete*", "op item edit*", "op item create*"]
+    },
+    {
+      "reason": "Docker container lifecycle",
+      "globs": [
+        "docker rm *",
+        "docker stop *",
+        "docker kill *",
+        "docker compose down*"
+      ]
+    },
+    {
+      "reason": "Velero operations",
+      "globs": ["velero restore*", "velero schedule*"]
+    },
+    {
+      "reason": "AWS S3 mutations",
+      "globs": ["aws s3 rm*", "aws s3 cp*", "aws s3 mv*", "aws s3 sync*"]
+    },
+    {
+      "reason": "Coder workspace operations",
+      "globs": ["coder create*", "coder stop*"]
+    },
     { "reason": "Tailscale disconnect", "globs": ["tailscale down*"] }
   ],
   "warn_commands": [
-    { "regex": "op\\s+(item\\s+get|read\\s)", "message": "Reading 1Password secret — be mindful of where this data ends up" },
-    { "regex": "kubectl\\s+get\\s+secret", "message": "Reading Kubernetes secret" },
+    {
+      "regex": "op\\s+(item\\s+get|read\\s)",
+      "message": "Reading 1Password secret — be mindful of where this data ends up"
+    },
+    {
+      "regex": "kubectl\\s+get\\s+secret",
+      "message": "Reading Kubernetes secret"
+    },
     { "regex": "kubectl\\s+exec\\s", "message": "Entering container shell" },
-    { "regex": "aws\\s+(secretsmanager\\s+get|ssm\\s+get-parameter)", "message": "Reading AWS secret" }
+    {
+      "regex": "aws\\s+(secretsmanager\\s+get|ssm\\s+get-parameter)",
+      "message": "Reading AWS secret"
+    }
   ],
   "warn_files": [
     { "pattern": "\\.ssh/", "message": "Accessing SSH key" },

@@ -1,7 +1,9 @@
 import configuration from "#src/configuration.ts";
 import path from "node:path";
 
-console.warn(`[Server] Starting HTTP server on port ${configuration.port.toString()}...`);
+console.warn(
+  `[Server] Starting HTTP server on port ${configuration.port.toString()}...`,
+);
 
 Bun.serve({
   port: configuration.port,
@@ -37,4 +39,6 @@ Bun.serve({
   },
 });
 
-console.warn(`[Server] HTTP server listening on http://localhost:${configuration.port.toString()}`);
+console.warn(
+  `[Server] HTTP server listening on http://localhost:${configuration.port.toString()}`,
+);

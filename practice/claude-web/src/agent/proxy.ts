@@ -13,7 +13,7 @@ export class AgentProxy {
   constructor(
     private stream: NodeJS.ReadWriteStream,
     private ws: ServerWebSocket<WSData>,
-    private sessionId: string
+    private sessionId: string,
   ) {}
 
   /**
@@ -21,7 +21,9 @@ export class AgentProxy {
    */
   start(): void {
     if (this.isAttached) {
-      logger.warn("Already attached to container stream", { sessionId: this.sessionId });
+      logger.warn("Already attached to container stream", {
+        sessionId: this.sessionId,
+      });
       return;
     }
 
@@ -35,13 +37,23 @@ export class AgentProxy {
 
     this.stream.on("end", () => {
       logger.info("Container stream ended", { sessionId: this.sessionId });
-      this.sendToClient({ type: "result", subtype: "success", result: "Session ended" });
+      this.sendToClient({
+        type: "result",
+        subtype: "success",
+        result: "Session ended",
+      });
       this.stop();
     });
 
     this.stream.on("error", (error) => {
-      logger.error("Container stream error", { sessionId: this.sessionId, error });
-      this.sendToClient({ type: "error", message: "Container connection error" });
+      logger.error("Container stream error", {
+        sessionId: this.sessionId,
+        error,
+      });
+      this.sendToClient({
+        type: "error",
+        message: "Container connection error",
+      });
       this.stop();
     });
   }
@@ -71,11 +83,16 @@ export class AgentProxy {
 
       try {
         const message = JSON.parse(line);
-        logger.debug("Container message", { sessionId: this.sessionId, type: message.type });
+        logger.debug("Container message", {
+          sessionId: this.sessionId,
+          type: message.type,
+        });
         this.sendToClient(message);
       } catch {
         // Not JSON - might be stderr output
-        logger.debug("Non-JSON output from container", { line: line.substring(0, 100) });
+        logger.debug("Non-JSON output from container", {
+          line: line.substring(0, 100),
+        });
       }
     }
   }
@@ -87,7 +104,10 @@ export class AgentProxy {
     try {
       this.ws.send(JSON.stringify(message));
     } catch (error) {
-      logger.error("Failed to send to WebSocket", { sessionId: this.sessionId, error });
+      logger.error("Failed to send to WebSocket", {
+        sessionId: this.sessionId,
+        error,
+      });
     }
   }
 
@@ -96,16 +116,24 @@ export class AgentProxy {
    */
   sendToContainer(message: ClientMessage): void {
     if (!this.isAttached) {
-      logger.warn("Cannot send to container - not attached", { sessionId: this.sessionId });
+      logger.warn("Cannot send to container - not attached", {
+        sessionId: this.sessionId,
+      });
       return;
     }
 
     try {
       const line = JSON.stringify(message) + "\n";
-      logger.info("Sending to container", { sessionId: this.sessionId, type: message.type });
+      logger.info("Sending to container", {
+        sessionId: this.sessionId,
+        type: message.type,
+      });
       this.stream.write(line);
     } catch (error) {
-      logger.error("Failed to send to container", { sessionId: this.sessionId, error });
+      logger.error("Failed to send to container", {
+        sessionId: this.sessionId,
+        error,
+      });
     }
   }
 
@@ -130,7 +158,9 @@ export class AgentProxy {
           break;
 
         default:
-          logger.warn("Unknown client message type", { type: (message as { type: string }).type });
+          logger.warn("Unknown client message type", {
+            type: (message as { type: string }).type,
+          });
       }
     } catch (error) {
       logger.error("Failed to parse client message", { data, error });

@@ -4,18 +4,24 @@ function parseBoolean(
   value: string | undefined,
   defaultValue: boolean,
 ): boolean {
-  if (value === undefined) {return defaultValue;}
+  if (value === undefined) {
+    return defaultValue;
+  }
   return value.toLowerCase() === "true";
 }
 
 function parseNumber(value: string | undefined, defaultValue: number): number {
-  if (value === undefined) {return defaultValue;}
+  if (value === undefined) {
+    return defaultValue;
+  }
   const parsed = Number(value);
   return Number.isNaN(parsed) ? defaultValue : parsed;
 }
 
 function parseJSON<T>(value: string | undefined, defaultValue: T): T {
-  if (value === undefined) {return defaultValue;}
+  if (value === undefined) {
+    return defaultValue;
+  }
   try {
     return JSON.parse(value) as T;
   } catch {
@@ -71,7 +77,10 @@ function loadConfigFromEnv(): Config {
       environment: process.env["SENTRY_ENVIRONMENT"] ?? "development",
       release: process.env["SENTRY_RELEASE"] ?? process.env["GIT_SHA"],
       sampleRate: parseNumber(process.env["SENTRY_SAMPLE_RATE"], 1),
-      tracesSampleRate: parseNumber(process.env["SENTRY_TRACES_SAMPLE_RATE"], 0.1),
+      tracesSampleRate: parseNumber(
+        process.env["SENTRY_TRACES_SAMPLE_RATE"],
+        0.1,
+      ),
     },
     persona: {
       enabled: parseBoolean(process.env["PERSONA_ENABLED"], true),
@@ -85,8 +94,14 @@ function loadConfigFromEnv(): Config {
     },
     scheduler: {
       enabled: parseBoolean(process.env["SCHEDULER_ENABLED"], true),
-      maxTasksPerGuild: parseNumber(process.env["SCHEDULER_MAX_TASKS_PER_GUILD"], 100),
-      maxRecurringTasks: parseNumber(process.env["SCHEDULER_MAX_RECURRING_TASKS"], 50),
+      maxTasksPerGuild: parseNumber(
+        process.env["SCHEDULER_MAX_TASKS_PER_GUILD"],
+        100,
+      ),
+      maxRecurringTasks: parseNumber(
+        process.env["SCHEDULER_MAX_RECURRING_TASKS"],
+        50,
+      ),
     },
     browser: {
       enabled: parseBoolean(process.env["BROWSER_ENABLED"], true),
@@ -94,7 +109,10 @@ function loadConfigFromEnv(): Config {
       viewportWidth: parseNumber(process.env["BROWSER_VIEWPORT_WIDTH"], 1280),
       viewportHeight: parseNumber(process.env["BROWSER_VIEWPORT_HEIGHT"], 720),
       maxSessions: parseNumber(process.env["BROWSER_MAX_SESSIONS"], 5),
-      sessionTimeoutMs: parseNumber(process.env["BROWSER_SESSION_TIMEOUT_MS"], 300_000),
+      sessionTimeoutMs: parseNumber(
+        process.env["BROWSER_SESSION_TIMEOUT_MS"],
+        300_000,
+      ),
       userAgent: process.env["BROWSER_USER_AGENT"],
     },
     birthdays: {
@@ -120,7 +138,12 @@ function loadConfigFromEnv(): Config {
     editor: {
       enabled: parseBoolean(process.env["EDITOR_ENABLED"], false),
       allowedRepos: parseJSON<
-        { name: string; repo: string; allowedPaths?: string[]; branch?: string }[]
+        {
+          name: string;
+          repo: string;
+          allowedPaths?: string[];
+          branch?: string;
+        }[]
       >(process.env["EDITOR_ALLOWED_REPOS"], []),
       maxSessionDurationMs: parseNumber(
         process.env["EDITOR_MAX_SESSION_DURATION_MS"],

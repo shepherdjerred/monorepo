@@ -6,7 +6,15 @@ import { createCloudflareTunnelBinding } from "../../misc/cloudflare-tunnel.ts";
 import type { HelmValuesForChart } from "../../misc/typed-helm-parameters.ts";
 
 export function createArgoCdApp(chart: Chart) {
-  createIngress(chart, "argocd-ingress", "argocd", "argocd-server", 443, ["argocd"], true);
+  createIngress(
+    chart,
+    "argocd-ingress",
+    "argocd",
+    "argocd-server",
+    443,
+    ["argocd"],
+    true,
+  );
 
   createCloudflareTunnelBinding(chart, "argocd-cf-tunnel", {
     serviceName: "argocd-server",

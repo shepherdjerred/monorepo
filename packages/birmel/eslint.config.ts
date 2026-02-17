@@ -32,7 +32,10 @@ export default [
       "no-console": "off",
       "no-restricted-imports": "off",
       "max-depth": ["warn", { max: 6 }],
-      "max-lines": ["error", { max: 800, skipBlankLines: false, skipComments: false }],
+      "max-lines": [
+        "error",
+        { max: 800, skipBlankLines: false, skipComments: false },
+      ],
       "max-params": ["error", { max: 6 }],
       complexity: ["warn", { max: 30 }],
       "unicorn/prefer-number-properties": "off",
@@ -48,7 +51,10 @@ export default [
       "@typescript-eslint/no-empty-function": "warn",
       "@typescript-eslint/require-await": "warn",
       "@typescript-eslint/prefer-readonly": "warn",
-      "max-lines-per-function": ["warn", { max: 300, skipBlankLines: true, skipComments: true }],
+      "max-lines-per-function": [
+        "warn",
+        { max: 300, skipBlankLines: true, skipComments: true },
+      ],
       "eslint-comments/require-description": "warn",
       "eslint-comments/no-restricted-disable": "warn",
     },

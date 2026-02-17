@@ -4,21 +4,26 @@ import { Modal } from "./modal";
 export type TipsModalProps = {
   onClose: () => void;
   isVisible: boolean;
-}
+};
 
-export function TipsModal({ onClose, isVisible }: TipsModalProps): React.ReactElement {
+export function TipsModal({
+  onClose,
+  isVisible,
+}: TipsModalProps): React.ReactElement {
   return (
     <Modal title="Search Tips" onClose={onClose} isVisible={isVisible}>
       <div>
         <p>
-          Better Skill Capped uses a technique called fuzzy searching to display search results. Fuzzy searching shows
-          not only exact matches, but also results that are somewhat similar to your query. This lets you not worry
-          about making typos when searching, or having to know the exact thing you&apos;re looking for.
+          Better Skill Capped uses a technique called fuzzy searching to display
+          search results. Fuzzy searching shows not only exact matches, but also
+          results that are somewhat similar to your query. This lets you not
+          worry about making typos when searching, or having to know the exact
+          thing you&apos;re looking for.
         </p>
         <br />
         <p>
-          Below is a list of search operators that advanced users can employ to more powerfully search Skill
-          Capped&apos;s videos.
+          Below is a list of search operators that advanced users can employ to
+          more powerfully search Skill Capped&apos;s videos.
         </p>
         <br />
         <table className="table">
@@ -72,16 +77,19 @@ export function TipsModal({ onClose, isVisible }: TipsModalProps): React.ReactEl
             </tr>
           </tbody>
         </table>
-        <p>White space acts as an AND operator, while a pipe character, i.e. |, acts as an OR operator.</p>
-        <br />
         <p>
-          Example: &apos;Tryndamere Strategy&apos; will search for results that contain both &apos;Tryndamere&apos; AND
-          &apos;Strategy&apos;
+          White space acts as an AND operator, while a pipe character, i.e. |,
+          acts as an OR operator.
         </p>
         <br />
         <p>
-          Example: &apos;Item|Guide&apos; will search for results that contain either &apos;Item&apos; OR
-          &apos;Guide&apos; or both words.
+          Example: &apos;Tryndamere Strategy&apos; will search for results that
+          contain both &apos;Tryndamere&apos; AND &apos;Strategy&apos;
+        </p>
+        <br />
+        <p>
+          Example: &apos;Item|Guide&apos; will search for results that contain
+          either &apos;Item&apos; OR &apos;Guide&apos; or both words.
         </p>
       </div>
     </Modal>

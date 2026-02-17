@@ -171,6 +171,7 @@ async = ["tokio/full"]
 ```
 
 Use features in code:
+
 ```rust
 #[cfg(feature = "json")]
 pub mod json {
@@ -306,14 +307,14 @@ cargo check --workspace
 
 ### Serialization
 
-| Crate | Purpose | Usage |
-|-------|---------|-------|
-| `serde` | Serialization framework | `#[derive(Serialize, Deserialize)]` |
-| `serde_json` | JSON support | `serde_json::to_string(&val)?` |
-| `serde_yaml` | YAML support | `serde_yaml::from_str(s)?` |
-| `toml` | TOML support | `toml::from_str(s)?` |
-| `bincode` | Binary encoding | Fast, compact binary format |
-| `csv` | CSV parsing | Streaming CSV read/write |
+| Crate        | Purpose                 | Usage                               |
+| ------------ | ----------------------- | ----------------------------------- |
+| `serde`      | Serialization framework | `#[derive(Serialize, Deserialize)]` |
+| `serde_json` | JSON support            | `serde_json::to_string(&val)?`      |
+| `serde_yaml` | YAML support            | `serde_yaml::from_str(s)?`          |
+| `toml`       | TOML support            | `toml::from_str(s)?`                |
+| `bincode`    | Binary encoding         | Fast, compact binary format         |
+| `csv`        | CSV parsing             | Streaming CSV read/write            |
 
 ```rust
 use serde::{Deserialize, Serialize};
@@ -333,14 +334,14 @@ struct Config {
 
 ### Async Runtime and Networking
 
-| Crate | Purpose |
-|-------|---------|
-| `tokio` | Async runtime (de facto standard) |
-| `reqwest` | HTTP client (async-first) |
-| `axum` | Web framework (tokio ecosystem) |
-| `tonic` | gRPC framework |
-| `tower` | Service abstraction / middleware |
-| `hyper` | Low-level HTTP |
+| Crate     | Purpose                           |
+| --------- | --------------------------------- |
+| `tokio`   | Async runtime (de facto standard) |
+| `reqwest` | HTTP client (async-first)         |
+| `axum`    | Web framework (tokio ecosystem)   |
+| `tonic`   | gRPC framework                    |
+| `tower`   | Service abstraction / middleware  |
+| `hyper`   | Low-level HTTP                    |
 
 ```rust
 // Axum web server example
@@ -367,13 +368,13 @@ async fn list_users() -> Json<Vec<User>> {
 
 ### CLI Tools
 
-| Crate | Purpose |
-|-------|---------|
-| `clap` | Argument parsing (derive or builder) |
-| `dialoguer` | Interactive prompts |
-| `indicatif` | Progress bars |
-| `console` | Terminal colors and formatting |
-| `colored` | Simple terminal coloring |
+| Crate       | Purpose                              |
+| ----------- | ------------------------------------ |
+| `clap`      | Argument parsing (derive or builder) |
+| `dialoguer` | Interactive prompts                  |
+| `indicatif` | Progress bars                        |
+| `console`   | Terminal colors and formatting       |
+| `colored`   | Simple terminal coloring             |
 
 ```rust
 use clap::Parser;
@@ -405,30 +406,30 @@ fn main() {
 
 ### Database
 
-| Crate | Purpose |
-|-------|---------|
-| `sqlx` | Async SQL (compile-time checked queries) |
-| `sea-orm` | ORM built on sqlx |
-| `diesel` | Sync ORM with compile-time query checking |
-| `rusqlite` | SQLite bindings |
+| Crate      | Purpose                                   |
+| ---------- | ----------------------------------------- |
+| `sqlx`     | Async SQL (compile-time checked queries)  |
+| `sea-orm`  | ORM built on sqlx                         |
+| `diesel`   | Sync ORM with compile-time query checking |
+| `rusqlite` | SQLite bindings                           |
 
 ### Error Handling
 
-| Crate | Purpose | Use When |
-|-------|---------|----------|
-| `thiserror` | Derive custom error types | Library code |
-| `anyhow` | Flexible error aggregation | Application code |
-| `eyre` | Enhanced error reporting (like anyhow) | Alternative to anyhow |
-| `miette` | Fancy diagnostic errors | CLI tools |
+| Crate       | Purpose                                | Use When              |
+| ----------- | -------------------------------------- | --------------------- |
+| `thiserror` | Derive custom error types              | Library code          |
+| `anyhow`    | Flexible error aggregation             | Application code      |
+| `eyre`      | Enhanced error reporting (like anyhow) | Alternative to anyhow |
+| `miette`    | Fancy diagnostic errors                | CLI tools             |
 
 ### Logging and Tracing
 
-| Crate | Purpose |
-|-------|---------|
-| `tracing` | Structured, async-aware logging |
-| `tracing-subscriber` | Configure tracing output |
-| `log` | Simple logging facade |
-| `env_logger` | Configure log via `RUST_LOG` env |
+| Crate                | Purpose                          |
+| -------------------- | -------------------------------- |
+| `tracing`            | Structured, async-aware logging  |
+| `tracing-subscriber` | Configure tracing output         |
+| `log`                | Simple logging facade            |
+| `env_logger`         | Configure log via `RUST_LOG` env |
 
 ```rust
 use tracing::{info, warn, error, instrument};
@@ -449,32 +450,32 @@ async fn login(username: &str, password: &str) -> Result<User, Error> {
 
 ### Testing and Development
 
-| Crate | Purpose |
-|-------|---------|
-| `criterion` | Benchmarking framework |
-| `proptest` | Property-based testing |
-| `mockall` | Mock generation |
-| `wiremock` | HTTP mocking |
-| `tempfile` | Temporary files for tests |
-| `insta` | Snapshot testing |
-| `assert_cmd` | CLI integration testing |
-| `predicates` | Assertion helpers |
+| Crate        | Purpose                   |
+| ------------ | ------------------------- |
+| `criterion`  | Benchmarking framework    |
+| `proptest`   | Property-based testing    |
+| `mockall`    | Mock generation           |
+| `wiremock`   | HTTP mocking              |
+| `tempfile`   | Temporary files for tests |
+| `insta`      | Snapshot testing          |
+| `assert_cmd` | CLI integration testing   |
+| `predicates` | Assertion helpers         |
 
 ### Other Essential Crates
 
-| Crate | Purpose |
-|-------|---------|
-| `regex` | Regular expressions |
-| `chrono` | Date and time |
-| `uuid` | UUID generation |
-| `rand` | Random number generation |
-| `rayon` | Data parallelism (parallel iterators) |
-| `crossbeam` | Concurrent data structures |
-| `dashmap` | Concurrent HashMap |
-| `bytes` | Efficient byte buffer |
+| Crate       | Purpose                                 |
+| ----------- | --------------------------------------- |
+| `regex`     | Regular expressions                     |
+| `chrono`    | Date and time                           |
+| `uuid`      | UUID generation                         |
+| `rand`      | Random number generation                |
+| `rayon`     | Data parallelism (parallel iterators)   |
+| `crossbeam` | Concurrent data structures              |
+| `dashmap`   | Concurrent HashMap                      |
+| `bytes`     | Efficient byte buffer                   |
 | `once_cell` | Lazy initialization (now partly in std) |
-| `itertools` | Extended iterator methods |
-| `strum` | Enum string conversions |
+| `itertools` | Extended iterator methods               |
+| `strum`     | Enum string conversions                 |
 
 ## Build Scripts
 
@@ -546,15 +547,15 @@ r = "run"
 
 ## Environment Variables
 
-| Variable | Purpose |
-|----------|---------|
-| `CARGO_HOME` | Cargo installation directory (~/.cargo) |
-| `RUSTC_WRAPPER` | Compiler wrapper (e.g., sccache) |
-| `RUST_LOG` | Log level for env_logger/tracing |
-| `RUST_BACKTRACE` | Enable backtraces (`1` or `full`) |
-| `RUSTFLAGS` | Additional compiler flags |
-| `CARGO_TARGET_DIR` | Override target directory |
-| `CARGO_INCREMENTAL` | Enable/disable incremental compilation |
+| Variable            | Purpose                                 |
+| ------------------- | --------------------------------------- |
+| `CARGO_HOME`        | Cargo installation directory (~/.cargo) |
+| `RUSTC_WRAPPER`     | Compiler wrapper (e.g., sccache)        |
+| `RUST_LOG`          | Log level for env_logger/tracing        |
+| `RUST_BACKTRACE`    | Enable backtraces (`1` or `full`)       |
+| `RUSTFLAGS`         | Additional compiler flags               |
+| `CARGO_TARGET_DIR`  | Override target directory               |
+| `CARGO_INCREMENTAL` | Enable/disable incremental compilation  |
 
 ```bash
 # Common development environment

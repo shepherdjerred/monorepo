@@ -22,9 +22,9 @@ After people choose an item from a pop-up button’s menu, the menu closes, and 
 
 **Use a pop-up button to present a flat list of mutually exclusive options or states.** A pop-up button helps people make a choice that affects their content or the surrounding view. Use a [pull-down button](https://developer.apple.com/design/human-interface-guidelines/pull-down-buttons) instead if you need to:
 
-* Offer a list of actions
-* Let people select multiple items
-* Include a submenu
+- Offer a list of actions
+- Let people select multiple items
+- Include a submenu
 
 **Provide a useful default selection.** A pop-up button can update its content to identify the current selection, but if people haven’t made a selection yet, it shows the default item you specify. When possible, make the default selection an item that most people are likely to want.
 
@@ -36,7 +36,7 @@ After people choose an item from a pop-up button’s menu, the menu closes, and 
 
 ## [Platform considerations](/design/human-interface-guidelines/pop-up-buttons#Platform-considerations)
 
-*No additional considerations for iOS, macOS, or visionOS. Not supported in tvOS or watchOS.*
+_No additional considerations for iOS, macOS, or visionOS. Not supported in tvOS or watchOS._
 
 ### [iPadOS](/design/human-interface-guidelines/pop-up-buttons#iPadOS)
 
@@ -62,7 +62,7 @@ After people choose an item from a pop-up button’s menu, the menu closes, and 
 
 ## [Change log](/design/human-interface-guidelines/pop-up-buttons#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| October 24, 2023 | Added artwork. |
+| Date               | Changes                                                                          |
+| ------------------ | -------------------------------------------------------------------------------- |
+| October 24, 2023   | Added artwork.                                                                   |
 | September 14, 2022 | Added a guideline on using a pop-up button in a popover or modal view in iPadOS. |

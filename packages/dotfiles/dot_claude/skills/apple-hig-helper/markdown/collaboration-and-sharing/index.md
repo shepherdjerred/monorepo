@@ -50,7 +50,7 @@ In addition to helping people share and collaborate on documents, visionOS suppo
 
 ## [Platform considerations](/design/human-interface-guidelines/collaboration-and-sharing#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, or macOS. Not available in tvOS.*
+_No additional considerations for iOS, iPadOS, or macOS. Not available in tvOS._
 
 ### [visionOS](/design/human-interface-guidelines/collaboration-and-sharing#visionOS)
 
@@ -88,8 +88,8 @@ Integrate your custom collaboration app with Messages](https://developer.apple.c
 
 ## [Change log](/design/human-interface-guidelines/collaboration-and-sharing#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| December 5, 2023 | Added artwork illustrating button placement and various types of collaboration permissions. |
-| June 21, 2023 | Updated to include guidance for visionOS. |
-| September 14, 2022 | New page. |
+| Date               | Changes                                                                                     |
+| ------------------ | ------------------------------------------------------------------------------------------- |
+| December 5, 2023   | Added artwork illustrating button placement and various types of collaboration permissions. |
+| June 21, 2023      | Updated to include guidance for visionOS.                                                   |
+| September 14, 2022 | New page.                                                                                   |

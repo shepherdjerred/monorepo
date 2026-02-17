@@ -1,7 +1,6 @@
-
 # Overview
 
-This homework involves a simulator of the log-structured file system, LFS. 
+This homework involves a simulator of the log-structured file system, LFS.
 The simulator simplifies the book chapter's LFS a bit, but hopefully leaves
 enough in place in order to illustrate some of the important properties of
 such a file system.
@@ -58,7 +57,7 @@ checkpoint: 3 -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 ```
 
 This means that the first chunk of the inode map resides at disk address=3,
-and that the rest of the inode map pieces have yet to be allocated (and 
+and that the rest of the inode map pieces have yet to be allocated (and
 hence are marked "--").
 
 Let's now look at that chunk of the inode map ("imap" from now on). The
@@ -86,13 +85,13 @@ We also now know that each chunk of the imap is responsible for a contiguous
 group of inodes, and we know which ones depending on which entry in the CR
 points to this chunk. Specifically, entry 0 of the CR points to a chunk of
 the imap that has information about inode numbers 0...15; entry 1 of the CR
-points to an imap chunk for inode numbers 16...31. 
+points to an imap chunk for inode numbers 16...31.
 
 In this specific example, we know the 0th entry of the CR points to block=3,
 and in there, the 0th entry has a '2' in it. In our simulator, the root inode
-is inode number=0, and thus this is the inode of the root directory of the 
+is inode number=0, and thus this is the inode of the root directory of the
 file system. From the imap, we now know the location of inode number=0's
-address is block=2. So let's look at block 2! We see: 
+address is block=2. So let's look at block 2! We see:
 
 ```sh
 type:dir size:1 refs:2 ptrs: 1 -- -- -- -- -- -- --
@@ -101,9 +100,9 @@ type:dir size:1 refs:2 ptrs: 1 -- -- -- -- -- -- --
 This file metadata is a simplified inode, with file type (a directory), size
 (1 block), reference count (how many directories it refers to, if this is a
 directory), and some number of pointers to data blocks (in this case, one,
-which points to block address=1). 
+which points to block address=1).
 
-This finally leads us to the last bit of initial state, which is the contents 
+This finally leads us to the last bit of initial state, which is the contents
 of the directory. This directory only has one block in it (at address 1),
 which has contents:
 
@@ -118,7 +117,7 @@ understood the entire contents of the initial state of the file system.
 
 What happens next in the default mode of the simulation is that one or more
 operations are run against the file system, thus changing its state. In this
-case, we know what the command because we had the simulator tell us via the 
+case, we know what the command because we had the simulator tell us via the
 "-o" flag (which shows each operation as it is run). That operation is:
 
 ```sh
@@ -138,16 +137,17 @@ chunk(imap): 5 6 -- -- -- -- -- -- -- -- -- -- -- -- -- --
 ```
 
 These updates reflect how this version of LFS writes to the disk to create a
-file: 
+file:
+
 - A directory block update to include "ku3" and its inode number (1) in the root directory
 - An updated root inode which now refers to block 4 where the latest contents of this directory are found
-- A new inode for the newly created file (note the type) 
+- A new inode for the newly created file (note the type)
 - A new version of the first imap chunk which now tells us where both inode 0 and inode 1 are located
 
 However, this does not (quite) reflect all that must change. Because the inode
 map itself has changed, the checkpoint region must also reflect where the
 latest chunk of the first piece of the inode map resides. Thus, the CR is also
-updated: 
+updated:
 
 ```sh
 checkpoint: 7 -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -159,7 +159,7 @@ that says "live" for each entry, and in the final output there is a "?"
 instead. This "?" is there so you can determine, for yourself, whether each
 block is live or not. Start with the checkpoint region and see if you can
 determine which group of blocks can be reached (and hence are live); all the
-rest are thus dead and could be used again. 
+rest are thus dead and could be used again.
 
 To see if you are right, run again with `-c`:
 
@@ -176,7 +176,7 @@ in this simplified version of LFS.
 
 You now have all the information you need to understand this version of LFS.
 
-The other options, which let you play with various aspects of the simulator, include: 
+The other options, which let you play with various aspects of the simulator, include:
 
 ```sh
 prompt> ./lfs.py -h
@@ -210,9 +210,3 @@ Options:
                         l:link, s:syncformat: c,filepath d,dirpath r,filepath
                         w,filepath,offset,numblks l,srcpath,dstpath s
 ```
-
-
-
-
-
-

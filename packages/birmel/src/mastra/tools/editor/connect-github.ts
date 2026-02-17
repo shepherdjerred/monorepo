@@ -18,7 +18,9 @@ export const connectGitHubTool = createTool({
     - Check their GitHub connection status
     - Disconnect/unlink their GitHub account`,
   inputSchema: z.object({
-    action: z.enum(["connect", "status", "disconnect"]).default("connect")
+    action: z
+      .enum(["connect", "status", "disconnect"])
+      .default("connect")
       .describe("Action to perform: connect, status, or disconnect"),
   }),
   outputSchema: z.object({
@@ -30,7 +32,10 @@ export const connectGitHubTool = createTool({
   execute: async ({ action }) => {
     const reqCtx = getRequestContext();
     if (!reqCtx) {
-      return { success: false, message: "Could not determine request context." };
+      return {
+        success: false,
+        message: "Could not determine request context.",
+      };
     }
 
     const config = getGitHubConfig();
@@ -54,7 +59,11 @@ export const connectGitHubTool = createTool({
         return { success: false, message: "No GitHub account is connected." };
       }
       await deleteAuth(reqCtx.userId);
-      return { success: true, message: "GitHub account disconnected.", isConnected: false };
+      return {
+        success: true,
+        message: "GitHub account disconnected.",
+        isConnected: false,
+      };
     }
 
     // action === "connect"
@@ -67,19 +76,25 @@ export const connectGitHubTool = createTool({
     }
 
     // Generate OAuth URL - derive from callback URL
-    const authUrl = config.callbackUrl.replace("/callback", `?user=${reqCtx.userId}`);
+    const authUrl = config.callbackUrl.replace(
+      "/callback",
+      `?user=${reqCtx.userId}`,
+    );
 
     // Send embed with button to Discord
     const client = getDiscordClient();
     const channel = await client.channels.fetch(reqCtx.sourceChannelId);
 
     if (channel && "send" in channel) {
-      const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = await import("discord.js");
+      const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } =
+        await import("discord.js");
 
       const embed = new EmbedBuilder()
         .setTitle("Connect GitHub Account")
-        .setDescription("Click the button below to connect your GitHub account. This allows the bot to create pull requests on your behalf.")
-        .setColor(0x58_65_F2);
+        .setDescription(
+          "Click the button below to connect your GitHub account. This allows the bot to create pull requests on your behalf.",
+        )
+        .setColor(0x58_65_f2);
 
       const row = new ActionRowBuilder<ButtonBuilderType>().addComponents(
         new ButtonBuilder()

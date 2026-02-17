@@ -28,7 +28,8 @@ join-interrupted-by-damage: Join aborted due to taking damage.
 join-interrupted-by-movement: Join aborted due to movement.
 join-player-joined: You joined the arena. Have fun!
 leave-not-playing: You are not in the arena.
-leave-not-ready: You did not ready up in time! Next time, ready up by clicking an
+leave-not-ready:
+  You did not ready up in time! Next time, ready up by clicking an
   iron block.
 leave-player-left: You left the arena. Thanks for playing!
 player-died: "&c%&r died!"

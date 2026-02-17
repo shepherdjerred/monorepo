@@ -72,7 +72,9 @@ export function getDiscordSrvExtraVolumes(name: string): object[] {
  * - discord-console-channel-id -> CFG_DISCORD_CONSOLE_CHANNEL_ID
  * - discord-invite-link -> CFG_DISCORD_INVITE_LINK
  */
-export function getDiscordSrvExtraEnv(secretName: string): Record<string, object | string> {
+export function getDiscordSrvExtraEnv(
+  secretName: string,
+): Record<string, object | string> {
   return {
     // Enable itzg's environment variable substitution for ${CFG_*} placeholders
     REPLACE_ENV_VARIABLES: "TRUE",

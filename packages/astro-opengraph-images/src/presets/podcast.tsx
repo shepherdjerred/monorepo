@@ -3,9 +3,15 @@ const { twj } = await import("tw-to-css");
 
 // from https://fullstackheroes.com/resources/vercel-og-templates/podcast/
 export function podcast({ title }: RenderFunctionInput): React.ReactNode {
-  const image = "https://static.wikia.nocookie.net/arresteddevelopment/images/4/42/5x15_-_Michael_Bluth_01.jpg";
+  const image =
+    "https://static.wikia.nocookie.net/arresteddevelopment/images/4/42/5x15_-_Michael_Bluth_01.jpg";
 
-  return <div style={twj("h-full w-full flex items-start justify-start bg-yellow-100 p-20")}>
+  return (
+    <div
+      style={twj(
+        "h-full w-full flex items-start justify-start bg-yellow-100 p-20",
+      )}
+    >
       <div style={twj("flex h-full items-center w-full")}>
         <div style={twj("flex-1 flex flex-col mr-20")}>
           <h1 style={twj("text-6xl")}>{title}</h1>
@@ -28,12 +34,15 @@ export function podcast({ title }: RenderFunctionInput): React.ReactNode {
           </svg>
           <img
             style={{
-              ...twj("mx-auto border-8 border-red-500 w-[300px] h-[300px] rounded-full"),
-               objectFit: "cover" ,
+              ...twj(
+                "mx-auto border-8 border-red-500 w-[300px] h-[300px] rounded-full",
+              ),
+              objectFit: "cover",
             }}
             src={image}
           />
         </div>
       </div>
-    </div>;
+    </div>
+  );
 }

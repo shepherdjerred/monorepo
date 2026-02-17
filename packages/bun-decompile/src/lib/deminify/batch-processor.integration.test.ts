@@ -57,11 +57,15 @@ describe("BatchProcessor integration", () => {
     const graph = buildCallGraph(sampleSource);
 
     // Access private method via type assertion for testing
-    const sortByDepth = (processor as unknown as { sortByDepth: (g: typeof graph) => unknown[] }).sortByDepth;
+    const sortByDepth = (
+      processor as unknown as { sortByDepth: (g: typeof graph) => unknown[] }
+    ).sortByDepth;
     const sorted = sortByDepth.call(processor, graph);
 
     // Verify that leaf functions (add, multiply) come before their callers (calculate, main)
-    const names = (sorted as { originalName: string }[]).map(f => f.originalName);
+    const names = (sorted as { originalName: string }[]).map(
+      (f) => f.originalName,
+    );
 
     // add and multiply should come before calculate
     const addIndex = names.indexOf("add");
@@ -80,12 +84,16 @@ describe("BatchProcessor integration", () => {
     expect(graph.functions.size).toBeGreaterThanOrEqual(4);
 
     // Find functions by name
-    const calculate = [...graph.functions.values()].find(f => f.originalName === "calculate");
+    const calculate = [...graph.functions.values()].find(
+      (f) => f.originalName === "calculate",
+    );
     expect(calculate).toBeDefined();
     expect(calculate?.callees).toContain("add");
     expect(calculate?.callees).toContain("multiply");
 
-    const main = [...graph.functions.values()].find(f => f.originalName === "main");
+    const main = [...graph.functions.values()].find(
+      (f) => f.originalName === "main",
+    );
     expect(main).toBeDefined();
     expect(main?.callees).toContain("calculate");
   });
@@ -113,16 +121,32 @@ describe("BatchProcessor integration", () => {
     const functions = [...graph.functions.values()];
 
     // Access private method for testing
-    const createBatches = (processor as unknown as {
-      createBatches: (funcs: typeof functions, maxTokens: number, source: string) => unknown[][]
-    }).createBatches;
+    const createBatches = (
+      processor as unknown as {
+        createBatches: (
+          funcs: typeof functions,
+          maxTokens: number,
+          source: string,
+        ) => unknown[][];
+      }
+    ).createBatches;
 
     // With a very small token budget, each function should be in its own batch
-    const smallBatches = createBatches.call(processor, functions, 100, sampleSource);
+    const smallBatches = createBatches.call(
+      processor,
+      functions,
+      100,
+      sampleSource,
+    );
     expect(smallBatches.length).toBeGreaterThanOrEqual(1);
 
     // With a large token budget, all functions should fit in one batch
-    const largeBatches = createBatches.call(processor, functions, 100_000, sampleSource);
+    const largeBatches = createBatches.call(
+      processor,
+      functions,
+      100_000,
+      sampleSource,
+    );
     expect(largeBatches.length).toBe(1);
   });
 });

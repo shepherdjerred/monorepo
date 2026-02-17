@@ -8,7 +8,7 @@ type TypingChannel = TextChannel | DMChannel | NewsChannel;
  */
 export async function withTyping<T>(
   message: Message,
-  asyncFn: () => Promise<T>
+  asyncFn: () => Promise<T>,
 ): Promise<T> {
   const channel = message.channel;
 

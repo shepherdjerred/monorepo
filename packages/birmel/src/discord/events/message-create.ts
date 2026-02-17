@@ -34,8 +34,6 @@ function markMessageProcessed(messageId: string): boolean {
   return true; // Successfully marked as processing
 }
 
-
-
 export type MessageContext = {
   message: Message;
   content: string;
@@ -83,10 +81,12 @@ const ALLOWED_USER_IDS = new Set([
 async function shouldRespond(
   message: Message,
   clientId: string,
-  guildId: string
+  guildId: string,
 ): Promise<boolean> {
   // Ignore messages from bots
-  if (message.author.bot) {return false;}
+  if (message.author.bot) {
+    return false;
+  }
 
   // Only respond to messages from allowed users
   if (!ALLOWED_USER_IDS.has(message.author.id)) {
@@ -110,7 +110,10 @@ async function shouldRespond(
   const wakeWordPattern = new RegExp(String.raw`\b${wakeWord}\b`, "i");
 
   if (wakeWordPattern.test(message.content)) {
-    logger.debug("Responding: dynamic wake word", { wakeWord, owner: guildOwner.currentOwner });
+    logger.debug("Responding: dynamic wake word", {
+      wakeWord,
+      owner: guildOwner.currentOwner,
+    });
     return true;
   }
 
@@ -166,7 +169,9 @@ export function setupMessageCreateHandler(client: Client): void {
           // Deduplicate: prevent responding to the same message twice
           // This can happen during Discord gateway reconnections or network issues
           if (!markMessageProcessed(message.id)) {
-            logger.debug("Skipping duplicate message", { messageId: message.id });
+            logger.debug("Skipping duplicate message", {
+              messageId: message.id,
+            });
             span.setAttribute("duplicate", true);
             return;
           }
@@ -215,4 +220,4 @@ export function setupMessageCreateHandler(client: Client): void {
   });
 }
 
-export {type ImageAttachment} from "../../utils/image.js";
+export { type ImageAttachment } from "../../utils/image.js";

@@ -29,6 +29,7 @@ A comprehensive design system and style guide for Clauderon's cross-platform int
 18. [Contributing](#18-contributing)
 
 **Appendices:**
+
 - [Appendix A: File Reference Index](#appendix-a-file-reference-index)
 - [Appendix B: Color Conversion Table](#appendix-b-color-conversion-table)
 - [Appendix C: Component Parity Matrix](#appendix-c-component-parity-matrix)
@@ -45,6 +46,7 @@ This style guide establishes design consistency across Clauderon's three distinc
 ### Scope
 
 This guide covers:
+
 - **Web Frontend**: React + Tailwind CSS + shadcn/ui
 - **Mobile App**: React Native (iOS, Android, macOS, Windows)
 - **TUI**: Rust + Ratatui (Terminal User Interface)
@@ -90,6 +92,7 @@ Every visual element serves a purpose. Borders aren't decorative—they define b
 #### 2. Visible Affordances
 
 Interactive elements are immediately recognizable:
+
 - Buttons have chunky borders and hard shadows that "press" when clicked
 - Links are underlined (2px thickness)
 - Focus states have prominent 4px rings
@@ -98,6 +101,7 @@ Interactive elements are immediately recognizable:
 #### 3. Information Density Without Clutter
 
 Clauderon displays complex technical information (sessions, PRs, CI status, Claude state) in compact layouts without feeling cramped. Achieved through:
+
 - Consistent spacing scales
 - Monospace fonts for predictable character width
 - Adaptive column widths in TUI
@@ -106,6 +110,7 @@ Clauderon displays complex technical information (sessions, PRs, CI status, Clau
 #### 4. Platform-Appropriate Implementation
 
 While maintaining consistent design language, each platform implements patterns appropriate to its environment:
+
 - **Web**: Hover states, modal overlays, pointer interactions
 - **Mobile**: Touch targets, pull-to-refresh, keyboard handling
 - **TUI**: Keyboard navigation, color-coded text, character-based layouts
@@ -113,6 +118,7 @@ While maintaining consistent design language, each platform implements patterns 
 ### Visual Examples
 
 **Reference Screenshots:**
+
 - Web brutalist design: `assets/web session list.png`
 - Mobile card-based layout: `assets/ios session list.jpeg`
 - TUI color-coded table: `assets/tui session list.png`
@@ -124,6 +130,7 @@ While maintaining consistent design language, each platform implements patterns 
 ### 3.1 Color Philosophy
 
 Clauderon's color system prioritizes:
+
 - **High Contrast**: All text meets WCAG AA standards
 - **Status Clarity**: Consistent color-coded states across platforms
 - **Dark Mode Support**: Full dark mode on web and mobile
@@ -137,51 +144,51 @@ Clauderon uses HSL color space in CSS variables for easy manipulation and dark m
 
 #### Light Mode Palette
 
-| Token | HSL Value | Hex Equivalent | Usage |
-|-------|-----------|----------------|-------|
-| `--background` | `0 0% 100%` | `#ffffff` | Page background |
-| `--foreground` | `220 90% 10%` | `#0a1929` | Primary text, icon color |
-| `--primary` | `220 85% 25%` | `#0c2d5e` | Primary actions, links |
-| `--primary-foreground` | `0 0% 100%` | `#ffffff` | Text on primary background |
-| `--secondary` | `220 15% 92%` | `#e8eaed` | Secondary backgrounds |
-| `--secondary-foreground` | `220 90% 10%` | `#0a1929` | Text on secondary background |
-| `--accent` | `215 100% 45%` | `#0066e6` | Interactive highlights |
-| `--accent-foreground` | `0 0% 100%` | `#ffffff` | Text on accent background |
-| `--destructive` | `0 75% 50%` | `#df2020` | Danger actions |
-| `--destructive-foreground` | `0 0% 100%` | `#ffffff` | Text on destructive background |
-| `--border` | `220 20% 80%` | `#c7cdd6` | Default borders |
-| `--input` | `220 20% 80%` | `#c7cdd6` | Input field borders |
-| `--ring` | `220 85% 25%` | `#0c2d5e` | Focus ring color |
-| `--card` | `0 0% 98%` | `#fafafa` | Card backgrounds |
-| `--muted` | `220 15% 95%` | `#f2f3f5` | Muted backgrounds |
-| `--muted-foreground` | `220 20% 45%` | `#5a6b82` | Muted text |
-| `--radius` | `0.25rem` | `4px` | Border radius |
+| Token                      | HSL Value      | Hex Equivalent | Usage                          |
+| -------------------------- | -------------- | -------------- | ------------------------------ |
+| `--background`             | `0 0% 100%`    | `#ffffff`      | Page background                |
+| `--foreground`             | `220 90% 10%`  | `#0a1929`      | Primary text, icon color       |
+| `--primary`                | `220 85% 25%`  | `#0c2d5e`      | Primary actions, links         |
+| `--primary-foreground`     | `0 0% 100%`    | `#ffffff`      | Text on primary background     |
+| `--secondary`              | `220 15% 92%`  | `#e8eaed`      | Secondary backgrounds          |
+| `--secondary-foreground`   | `220 90% 10%`  | `#0a1929`      | Text on secondary background   |
+| `--accent`                 | `215 100% 45%` | `#0066e6`      | Interactive highlights         |
+| `--accent-foreground`      | `0 0% 100%`    | `#ffffff`      | Text on accent background      |
+| `--destructive`            | `0 75% 50%`    | `#df2020`      | Danger actions                 |
+| `--destructive-foreground` | `0 0% 100%`    | `#ffffff`      | Text on destructive background |
+| `--border`                 | `220 20% 80%`  | `#c7cdd6`      | Default borders                |
+| `--input`                  | `220 20% 80%`  | `#c7cdd6`      | Input field borders            |
+| `--ring`                   | `220 85% 25%`  | `#0c2d5e`      | Focus ring color               |
+| `--card`                   | `0 0% 98%`     | `#fafafa`      | Card backgrounds               |
+| `--muted`                  | `220 15% 95%`  | `#f2f3f5`      | Muted backgrounds              |
+| `--muted-foreground`       | `220 20% 45%`  | `#5a6b82`      | Muted text                     |
+| `--radius`                 | `0.25rem`      | `4px`          | Border radius                  |
 
 #### Dark Mode Palette
 
-| Token | HSL Value | Hex Equivalent | Usage |
-|-------|-----------|----------------|-------|
-| `--background` | `220 90% 8%` | `#030b16` | Page background |
-| `--foreground` | `220 10% 95%` | `#eff1f3` | Primary text |
-| `--primary` | `215 100% 60%` | `#3399ff` | Primary actions |
-| `--primary-foreground` | `220 90% 10%` | `#0a1929` | Text on primary |
-| `--secondary` | `220 50% 18%` | `#172a3d` | Secondary backgrounds |
-| `--accent` | `215 100% 55%` | `#1a8cff` | Interactive highlights |
-| `--border` | `220 50% 25%` | `#203651` | Default borders |
-| `--ring` | `215 100% 60%` | `#3399ff` | Focus ring |
+| Token                  | HSL Value      | Hex Equivalent | Usage                  |
+| ---------------------- | -------------- | -------------- | ---------------------- |
+| `--background`         | `220 90% 8%`   | `#030b16`      | Page background        |
+| `--foreground`         | `220 10% 95%`  | `#eff1f3`      | Primary text           |
+| `--primary`            | `215 100% 60%` | `#3399ff`      | Primary actions        |
+| `--primary-foreground` | `220 90% 10%`  | `#0a1929`      | Text on primary        |
+| `--secondary`          | `220 50% 18%`  | `#172a3d`      | Secondary backgrounds  |
+| `--accent`             | `215 100% 55%` | `#1a8cff`      | Interactive highlights |
+| `--border`             | `220 50% 25%`  | `#203651`      | Default borders        |
+| `--ring`               | `215 100% 60%` | `#3399ff`      | Focus ring             |
 
 #### Status Colors
 
 **Light Mode:**
 
-| Token | HSL Value | Hex | Status | Usage |
-|-------|-----------|-----|--------|-------|
-| `--status-creating` | `220 85% 55%` | `#1966d2` | Creating/Deleting | <span style="display:inline-block;width:16px;height:16px;background:#1966d2;border:1px solid black;vertical-align:middle"></span> Session startup |
-| `--status-running` | `142 71% 45%` | `#22c55e` | Running | <span style="display:inline-block;width:16px;height:16px;background:#22c55e;border:1px solid black;vertical-align:middle"></span> Active session |
-| `--status-idle` | `45 93% 47%` | `#f59e0b` | Idle | <span style="display:inline-block;width:16px;height:16px;background:#f59e0b;border:1px solid black;vertical-align:middle"></span> Paused/waiting |
-| `--status-completed` | `220 13% 55%` | `#7c8491` | Completed | <span style="display:inline-block;width:16px;height:16px;background:#7c8491;border:1px solid black;vertical-align:middle"></span> Finished session |
-| `--status-failed` | `0 72% 51%` | `#dc2626` | Failed | <span style="display:inline-block;width:16px;height:16px;background:#dc2626;border:1px solid black;vertical-align:middle"></span> Error state |
-| `--status-archived` | `220 13% 69%` | `#9ba3b0` | Archived | <span style="display:inline-block;width:16px;height:16px;background:#9ba3b0;border:1px solid black;vertical-align:middle"></span> Archived session |
+| Token                | HSL Value     | Hex       | Status            | Usage                                                                                                                                              |
+| -------------------- | ------------- | --------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--status-creating`  | `220 85% 55%` | `#1966d2` | Creating/Deleting | <span style="display:inline-block;width:16px;height:16px;background:#1966d2;border:1px solid black;vertical-align:middle"></span> Session startup  |
+| `--status-running`   | `142 71% 45%` | `#22c55e` | Running           | <span style="display:inline-block;width:16px;height:16px;background:#22c55e;border:1px solid black;vertical-align:middle"></span> Active session   |
+| `--status-idle`      | `45 93% 47%`  | `#f59e0b` | Idle              | <span style="display:inline-block;width:16px;height:16px;background:#f59e0b;border:1px solid black;vertical-align:middle"></span> Paused/waiting   |
+| `--status-completed` | `220 13% 55%` | `#7c8491` | Completed         | <span style="display:inline-block;width:16px;height:16px;background:#7c8491;border:1px solid black;vertical-align:middle"></span> Finished session |
+| `--status-failed`    | `0 72% 51%`   | `#dc2626` | Failed            | <span style="display:inline-block;width:16px;height:16px;background:#dc2626;border:1px solid black;vertical-align:middle"></span> Error state      |
+| `--status-archived`  | `220 13% 69%` | `#9ba3b0` | Archived          | <span style="display:inline-block;width:16px;height:16px;background:#9ba3b0;border:1px solid black;vertical-align:middle"></span> Archived session |
 
 **Dark Mode:** Status colors are increased in lightness by 10% for better visibility against dark backgrounds.
 
@@ -223,48 +230,48 @@ Mobile uses hex colors for React Native StyleSheet compatibility.
 ```typescript
 export const colors = {
   // Primary colors
-  primary: "#1e40af",        // Blue 800 → maps to --primary (light)
-  primaryDark: "#1e3a8a",    // Blue 900
-  primaryLight: "#3b82f6",   // Blue 500
+  primary: "#1e40af", // Blue 800 → maps to --primary (light)
+  primaryDark: "#1e3a8a", // Blue 900
+  primaryLight: "#3b82f6", // Blue 500
 
   // Background colors
-  background: "#f5f5f5",     // Gray 100 → maps to lighter variant
+  background: "#f5f5f5", // Gray 100 → maps to lighter variant
   backgroundDark: "#0a0f1e", // Very dark blue → maps to --background (dark)
-  surface: "#ffffff",        // White
-  surfaceDark: "#1e293b",    // Slate 800
+  surface: "#ffffff", // White
+  surfaceDark: "#1e293b", // Slate 800
 
   // Text colors
-  text: "#1f2937",           // Gray 800
-  textLight: "#6b7280",      // Gray 500
-  textDark: "#111827",       // Gray 900
+  text: "#1f2937", // Gray 800
+  textLight: "#6b7280", // Gray 500
+  textDark: "#111827", // Gray 900
   textWhite: "#ffffff",
 
   // Border colors (brutalist)
-  border: "#000000",         // Pure black for maximum contrast
-  borderLight: "#e5e7eb",    // Gray 200
+  border: "#000000", // Pure black for maximum contrast
+  borderLight: "#e5e7eb", // Gray 200
 
   // Status colors
-  success: "#22c55e",        // Green 500
-  error: "#ef4444",          // Red 500
-  warning: "#f59e0b",        // Amber 500
-  info: "#3b82f6",           // Blue 500
+  success: "#22c55e", // Green 500
+  error: "#ef4444", // Red 500
+  warning: "#f59e0b", // Amber 500
+  info: "#3b82f6", // Blue 500
 
   // Session status colors
-  running: "#22c55e",        // Maps to --status-running
-  idle: "#f59e0b",           // Maps to --status-idle
-  completed: "#3b82f6",      // Maps to --status-completed
-  failed: "#ef4444",         // Maps to --status-failed
-  archived: "#6b7280",       // Maps to --status-archived
+  running: "#22c55e", // Maps to --status-running
+  idle: "#f59e0b", // Maps to --status-idle
+  completed: "#3b82f6", // Maps to --status-completed
+  failed: "#ef4444", // Maps to --status-failed
+  archived: "#6b7280", // Maps to --status-archived
 };
 ```
 
 **Color Conversion:**
 
-| Web Variable | Mobile Export | RGB | Notes |
-|--------------|---------------|-----|-------|
-| `--primary` (light) | `primary` | `rgb(30, 64, 175)` | Exact match |
-| `--status-running` | `running` | `rgb(34, 197, 94)` | Exact match |
-| `--border` | `border` | `rgb(0, 0, 0)` | Pure black (brutalist choice) |
+| Web Variable        | Mobile Export | RGB                | Notes                         |
+| ------------------- | ------------- | ------------------ | ----------------------------- |
+| `--primary` (light) | `primary`     | `rgb(30, 64, 175)` | Exact match                   |
+| `--status-running`  | `running`     | `rgb(34, 197, 94)` | Exact match                   |
+| `--border`          | `border`      | `rgb(0, 0, 0)`     | Pure black (brutalist choice) |
 
 ### 3.4 TUI Colors (Ratatui)
 
@@ -288,28 +295,28 @@ match session.status {
 
 **TUI Color Palette:**
 
-| Ratatui Color | Approximate Hex | Usage Context |
-|---------------|-----------------|---------------|
-| `Color::Cyan` | `#00ffff` | Primary borders, help text, completed status |
-| `Color::Green` | `#00ff00` | Running status, attached mode indicator, success |
-| `Color::Yellow` | `#ffff00` | Creating/Idle status, warnings, scroll indicators |
-| `Color::Blue` | `#0000ff` | Idle status alternative |
-| `Color::Red` | `#ff0000` | Failed status, errors, delete confirmations |
-| `Color::DarkGray` | `#808080` | Archived status, muted text, inactive borders |
-| `Color::Black` | `#000000` | Scroll indicator background |
+| Ratatui Color     | Approximate Hex | Usage Context                                     |
+| ----------------- | --------------- | ------------------------------------------------- |
+| `Color::Cyan`     | `#00ffff`       | Primary borders, help text, completed status      |
+| `Color::Green`    | `#00ff00`       | Running status, attached mode indicator, success  |
+| `Color::Yellow`   | `#ffff00`       | Creating/Idle status, warnings, scroll indicators |
+| `Color::Blue`     | `#0000ff`       | Idle status alternative                           |
+| `Color::Red`      | `#ff0000`       | Failed status, errors, delete confirmations       |
+| `Color::DarkGray` | `#808080`       | Archived status, muted text, inactive borders     |
+| `Color::Black`    | `#000000`       | Scroll indicator background                       |
 
 **Note:** Actual rendering depends on terminal color scheme. These are standard terminal colors.
 
 ### 3.5 Status Color Cross-Platform Mapping
 
-| Status | Web (Light) | Web (Dark) | Mobile | TUI | Semantic Meaning |
-|--------|-------------|------------|--------|-----|------------------|
-| **Creating** | `hsl(220 85% 55%)` Blue | `hsl(220 85% 65%)` | `#3b82f6` Info Blue | `Color::Yellow` | Session is being created |
-| **Running** | `hsl(142 71% 45%)` Green | `hsl(142 71% 55%)` | `#22c55e` Green | `Color::Green` | Active, healthy state |
-| **Idle** | `hsl(45 93% 47%)` Amber | `hsl(45 93% 57%)` | `#f59e0b` Amber | `Color::Blue` | Waiting, not active |
-| **Completed** | `hsl(220 13% 55%)` Gray | `hsl(220 13% 65%)` | `#3b82f6` Blue | `Color::Cyan` | Successfully finished |
-| **Failed** | `hsl(0 72% 51%)` Red | `hsl(0 72% 61%)` | `#ef4444` Red | `Color::Red` | Error or failure state |
-| **Archived** | `hsl(220 13% 69%)` Light Gray | `hsl(220 13% 50%)` | `#6b7280` Gray | `Color::DarkGray` | Inactive, stored |
+| Status        | Web (Light)                   | Web (Dark)         | Mobile              | TUI               | Semantic Meaning         |
+| ------------- | ----------------------------- | ------------------ | ------------------- | ----------------- | ------------------------ |
+| **Creating**  | `hsl(220 85% 55%)` Blue       | `hsl(220 85% 65%)` | `#3b82f6` Info Blue | `Color::Yellow`   | Session is being created |
+| **Running**   | `hsl(142 71% 45%)` Green      | `hsl(142 71% 55%)` | `#22c55e` Green     | `Color::Green`    | Active, healthy state    |
+| **Idle**      | `hsl(45 93% 47%)` Amber       | `hsl(45 93% 57%)`  | `#f59e0b` Amber     | `Color::Blue`     | Waiting, not active      |
+| **Completed** | `hsl(220 13% 55%)` Gray       | `hsl(220 13% 65%)` | `#3b82f6` Blue      | `Color::Cyan`     | Successfully finished    |
+| **Failed**    | `hsl(0 72% 51%)` Red          | `hsl(0 72% 61%)`   | `#ef4444` Red       | `Color::Red`      | Error or failure state   |
+| **Archived**  | `hsl(220 13% 69%)` Light Gray | `hsl(220 13% 50%)` | `#6b7280` Gray      | `Color::DarkGray` | Inactive, stored         |
 
 **Note:** TUI differs slightly due to terminal color limitations. Yellow is used for Creating (more attention-grabbing than blue in terminals).
 
@@ -331,6 +338,7 @@ fontFamily: {
 ```
 
 **Berkeley Mono** is the signature monospace font, loaded from OpenType files:
+
 - **Location:** `web/frontend/src/assets/fonts/BerkeleyMono-*.otf`
 - **Weights:** 400 (Regular), 500 (Medium), 600 (SemiBold), 700 (Bold)
 - **Usage:** Code blocks, file paths, session names, technical identifiers
@@ -357,6 +365,7 @@ fontFamily: {
 ```
 
 Platform-native fonts ensure optimal rendering:
+
 - **iOS**: San Francisco (System) + Menlo
 - **Android**: Roboto + Android Monospace
 
@@ -368,16 +377,16 @@ TUI uses the terminal's default monospace font. No custom font loading is possib
 
 #### Web Type Scale (Tailwind)
 
-| Level | Class | Font Size | Line Height | Usage |
-|-------|-------|-----------|-------------|-------|
-| **Display** | `text-4xl` | 36px (2.25rem) | 40px (2.5rem) | Large headings |
-| **H1** | `text-3xl` | 30px (1.875rem) | 36px (2.25rem) | Page titles |
-| **H2** | `text-2xl` | 24px (1.5rem) | 32px (2rem) | Section headers |
-| **H3** | `text-xl` | 20px (1.25rem) | 28px (1.75rem) | Subsection headers |
-| **Large** | `text-lg` | 18px (1.125rem) | 28px (1.75rem) | Emphasized body |
-| **Body** | `text-base` | 16px (1rem) | 24px (1.5rem) | Default text |
-| **Small** | `text-sm` | 14px (0.875rem) | 20px (1.25rem) | Secondary text |
-| **Tiny** | `text-xs` | 12px (0.75rem) | 16px (1rem) | Labels, captions |
+| Level       | Class       | Font Size       | Line Height    | Usage              |
+| ----------- | ----------- | --------------- | -------------- | ------------------ |
+| **Display** | `text-4xl`  | 36px (2.25rem)  | 40px (2.5rem)  | Large headings     |
+| **H1**      | `text-3xl`  | 30px (1.875rem) | 36px (2.25rem) | Page titles        |
+| **H2**      | `text-2xl`  | 24px (1.5rem)   | 32px (2rem)    | Section headers    |
+| **H3**      | `text-xl`   | 20px (1.25rem)  | 28px (1.75rem) | Subsection headers |
+| **Large**   | `text-lg`   | 18px (1.125rem) | 28px (1.75rem) | Emphasized body    |
+| **Body**    | `text-base` | 16px (1rem)     | 24px (1.5rem)  | Default text       |
+| **Small**   | `text-sm`   | 14px (0.875rem) | 20px (1.25rem) | Secondary text     |
+| **Tiny**    | `text-xs`   | 12px (0.75rem)  | 16px (1rem)    | Labels, captions   |
 
 **Monospace Text:** Use `.font-mono` class with size classes: `text-sm font-mono`
 
@@ -413,6 +422,7 @@ fontWeight: {
 #### TUI Typography
 
 TUI has a single font size (terminal default, typically 12-14px equivalent). Emphasis achieved through:
+
 - **Bold**: `Modifier::BOLD`
 - **Underline**: `Modifier::UNDERLINED`
 - **Color**: Foreground color changes
@@ -529,14 +539,13 @@ monoText: {
 **Usage:**
 
 ```tsx
-<Text style={commonStyles.monoText}>
-  /path/to/repository
-</Text>
+<Text style={commonStyles.monoText}>/path/to/repository</Text>
 ```
 
 ### 4.4 Typography Do's and Don'ts
 
 **DO:**
+
 - ✅ Use **uppercase** for H1 and H2 headings with increased letter-spacing
 - ✅ Use **sentence case** for body text and H3+ headings
 - ✅ Use **monospace** for code, file paths, URLs, session IDs, backend types
@@ -544,6 +553,7 @@ monoText: {
 - ✅ Use consistent **line height** (1.5x for body, 1.25x for headings)
 
 **DON'T:**
+
 - ❌ Mix case styles in headings (no "Title Case" in H1/H2)
 - ❌ Use monospace for prose or paragraph text
 - ❌ Use ultra-thin weights (100-300) — minimum is 400 (normal)
@@ -562,15 +572,15 @@ Clauderon uses a consistent **4px base unit** spacing system across platforms.
 
 Tailwind's default spacing scale (0.25rem = 4px base):
 
-| Class | Value | Pixels | Usage |
-|-------|-------|--------|-------|
-| `space-1` | 0.25rem | 4px | Tight spacing |
-| `space-2` | 0.5rem | 8px | Small gaps |
-| `space-3` | 0.75rem | 12px | Medium gaps |
-| `space-4` | 1rem | 16px | Standard spacing (default) |
-| `space-6` | 1.5rem | 24px | Large spacing |
-| `space-8` | 2rem | 32px | Section spacing |
-| `space-12` | 3rem | 48px | Major section breaks |
+| Class      | Value   | Pixels | Usage                      |
+| ---------- | ------- | ------ | -------------------------- |
+| `space-1`  | 0.25rem | 4px    | Tight spacing              |
+| `space-2`  | 0.5rem  | 8px    | Small gaps                 |
+| `space-3`  | 0.75rem | 12px   | Medium gaps                |
+| `space-4`  | 1rem    | 16px   | Standard spacing (default) |
+| `space-6`  | 1.5rem  | 24px   | Large spacing              |
+| `space-8`  | 2rem    | 32px   | Section spacing            |
+| `space-12` | 3rem    | 48px   | Major section breaks       |
 
 **Common patterns:**
 
@@ -693,13 +703,12 @@ ColumnWidths::calculate(sessions, available_width)
   <CardContent>
     {/* Body: description, status indicators, metadata */}
   </CardContent>
-  <CardFooter>
-    {/* Actions: icon buttons */}
-  </CardFooter>
+  <CardFooter>{/* Actions: icon buttons */}</CardFooter>
 </Card>
 ```
 
 **Spacing:**
+
 - `CardHeader`: `pb-3` (12px bottom padding)
 - Default card padding: 24px (from shadcn/ui)
 - Gap between elements: 8-12px
@@ -783,7 +792,7 @@ The Button component uses `class-variance-authority` for variant management.
 const buttonVariants = cva(
   "cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border-2",
   // ...
-)
+);
 ```
 
 **Variants:**
@@ -912,6 +921,7 @@ List::new(items)
 #### Button Do's and Don'ts
 
 **DO:**
+
 - ✅ Use `brutalist` variant for primary CTAs on web (Create, Submit, Confirm)
 - ✅ Include clear text labels; avoid icon-only buttons without tooltips
 - ✅ Apply uppercase transform to button text
@@ -919,6 +929,7 @@ List::new(items)
 - ✅ Ensure minimum 44×44 point touch target on mobile
 
 **DON'T:**
+
 - ❌ Mix button variants within the same action group (use consistent style)
 - ❌ Use gradient backgrounds (anti-brutalist)
 - ❌ Create buttons smaller than 44×44 points on mobile
@@ -971,6 +982,7 @@ Cards display session information in a structured, scannable format.
 ```
 
 **Key Features:**
+
 - **Status Dot**: 4×4 pixel square with 2px border, filled with status color
 - **Hover Effect**: `shadow-[4px_4px_0_hsl(var(--foreground))]` on hover
 - **Border**: Always 2px solid
@@ -1013,13 +1025,12 @@ Cards display session information in a structured, scannable format.
   </View>
 
   {/* Timestamp */}
-  <Text style={styles.timestamp}>
-    {formatRelativeTime(session.created_at)}
-  </Text>
+  <Text style={styles.timestamp}>{formatRelativeTime(session.created_at)}</Text>
 </TouchableOpacity>
 ```
 
 **Key Features:**
+
 - **Entire card touchable**: Single tap to open chat
 - **Status badge**: Colored background with white text (unlike web's colored dot)
 - **3px border**: Thicker than web for mobile emphasis
@@ -1039,6 +1050,7 @@ Cards display session information in a structured, scannable format.
 ```
 
 **Columns:**
+
 1. **Prefix** (4ch): Spinner or selection arrow
 2. **Name** (15-40ch): Session name, truncated with ellipsis
 3. **Repository** (12-30ch): Repo directory name
@@ -1052,6 +1064,7 @@ Cards display session information in a structured, scannable format.
 **Adaptive Width:** Columns shrink proportionally if terminal is narrow, respecting minimum widths.
 
 **Key Features:**
+
 - **Unicode-aware truncation**: `truncate_with_ellipsis` handles multi-byte characters
 - **Animated spinner**: `⠋⠙⠹⠸` rotates for active operations
 - **Color-coded status**: Text color matches status (Green/Yellow/Red/etc.)
@@ -1075,6 +1088,7 @@ Badges display small pieces of metadata (backend type, status, etc.).
 ```
 
 **Variants:**
+
 - `default`: Filled with primary color
 - `secondary`: Filled with secondary color
 - `destructive`: Filled with destructive color
@@ -1140,7 +1154,10 @@ Span::styled(
 
 ```css
 /* index.css:96-98 */
-button, input, select, textarea {
+button,
+input,
+select,
+textarea {
   border-width: 2px;
 }
 ```
@@ -1148,14 +1165,11 @@ button, input, select, textarea {
 **Usage:**
 
 ```tsx
-<Input
-  type="text"
-  placeholder="Session name"
-  className="border-2"
-/>
+<Input type="text" placeholder="Session name" className="border-2" />
 ```
 
 **Styles:**
+
 - Border: 2px solid `hsl(var(--input))`
 - Background: White (light) / Dark gray (dark)
 - Focus: 4px ring `hsl(var(--ring))`
@@ -1191,6 +1205,7 @@ input: {
 **Location:** `src/tui/text_input.rs`
 
 Custom TextInput component with:
+
 - Cursor rendering
 - Visual selection highlight
 - Character-by-character editing
@@ -1226,6 +1241,7 @@ Status indicators show session state, PR checks, CI status, and Claude activity.
 ```
 
 **Icons:**
+
 - `<CheckCircle2 />` (green): Passing/Mergeable/Merged
 - `<XCircle />` (red): Failing
 - `<Clock />` (yellow): Pending
@@ -1235,12 +1251,15 @@ Status indicators show session state, PR checks, CI status, and Claude activity.
 ```tsx
 <div className={getClaudeStatusColor(session.claude_status)}>
   {getClaudeStatusIcon(session.claude_status)}
-  <span className="font-mono">{getClaudeStatusText(session.claude_status)}</span>
+  <span className="font-mono">
+    {getClaudeStatusText(session.claude_status)}
+  </span>
   <span className="text-muted-foreground">({timeAgo})</span>
 </div>
 ```
 
 **Icons:**
+
 - `<Loader2 className="animate-spin" />` (blue): Working
 - `<User />` (purple): WaitingApproval
 - `<Circle />` (gray): Idle
@@ -1272,6 +1291,7 @@ Status indicators show session state, PR checks, CI status, and Claude activity.
 ```
 
 **Symbols:**
+
 - `✓` (green): Passing/Mergeable
 - `✗` (red): Failing
 - `⏱` (yellow): Pending
@@ -1337,6 +1357,7 @@ if session.merge_conflict {
 ```
 
 **Indicators:**
+
 - `⠋⠙⠹⠸` (spinning, green): Claude Working
 - `⏸` (yellow): Waiting for approval
 - `⌨` (cyan): Waiting for input
@@ -1368,6 +1389,7 @@ active:translate-y-1
 ```
 
 **Effect:**
+
 1. **Default**: 4px offset shadow to the right and down
 2. **Hover**: Shadow reduces to 2px (button "raises" slightly)
 3. **Active**: Shadow disappears, button translates 1px right and down (button "presses")
@@ -1391,7 +1413,8 @@ active:translate-y-1
 **Location:** `web/frontend/src/components/SessionCard.tsx:32`
 
 ```tsx
-className="border-2 hover:shadow-[4px_4px_0_hsl(var(--foreground))] transition-all"
+className =
+  "border-2 hover:shadow-[4px_4px_0_hsl(var(--foreground))] transition-all";
 ```
 
 **Effect:** Shadow appears on hover (0 → 4px offset).
@@ -1401,7 +1424,7 @@ className="border-2 hover:shadow-[4px_4px_0_hsl(var(--foreground))] transition-a
 **Location:** `web/frontend/src/components/ChatInterface.tsx:74`
 
 ```typescript
-boxShadow: '12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)'
+boxShadow: "12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)";
 ```
 
 **Effect:** Large double-layer shadow for prominent modal overlay.
@@ -1409,6 +1432,7 @@ boxShadow: '12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)'
 ### 7.2 Mobile Shadows
 
 **Platform Differences:**
+
 - **iOS**: Custom shadowOffset/shadowOpacity (hard shadow with shadowRadius: 0)
 - **Android**: Material elevation (soft shadow)
 
@@ -1465,6 +1489,7 @@ button: {
 ### 7.3 TUI "Shadows"
 
 TUI cannot render true shadows. Instead, use:
+
 - **Bold text** for emphasis
 - **Background colors** for elevation (e.g., DarkGray background on selected items)
 - **Border styles** (single, double, thick)
@@ -1481,6 +1506,7 @@ TUI cannot render true shadows. Instead, use:
 ### 7.4 Shadow Do's and Don'ts
 
 **DO:**
+
 - ✅ Use **hard shadows** (no blur) on web
 - ✅ Use **black** shadows (`hsl(var(--foreground))` or `colors.border`)
 - ✅ Use **consistent offsets** (4px for cards, 3px for buttons)
@@ -1488,6 +1514,7 @@ TUI cannot render true shadows. Instead, use:
 - ✅ Use **shadowRadius: 0** on iOS for hard effect
 
 **DON'T:**
+
 - ❌ Use soft shadows (blur radius > 0) on web or iOS
 - ❌ Use colored shadows (unless dark mode adjustments)
 - ❌ Mix shadow styles within the same component
@@ -1506,7 +1533,9 @@ TUI cannot render true shadows. Instead, use:
 ```css
 :focus-visible {
   outline: none;
-  box-shadow: 0 0 0 4px hsl(var(--ring)), 0 0 0 6px hsl(var(--background));
+  box-shadow:
+    0 0 0 4px hsl(var(--ring)),
+    0 0 0 6px hsl(var(--background));
 }
 ```
 
@@ -1545,7 +1574,9 @@ a {
   text-decoration-thickness: 2px;
   text-underline-offset: 4px;
   text-decoration-color: hsl(var(--primary));
-  transition: color 200ms, text-decoration-color 200ms;
+  transition:
+    color 200ms,
+    text-decoration-color 200ms;
 }
 
 a:hover {
@@ -1579,7 +1610,7 @@ active:translate-y-1
 **Regular Buttons:**
 
 ```tsx
-active:scale-95  // Slight shrink on press
+active: scale - 95; // Slight shrink on press
 ```
 
 #### Disabled State
@@ -1629,6 +1660,7 @@ disabled:pointer-events-none disabled:opacity-50
 ```
 
 **Effect:**
+
 - Dark gray background
 - Bold text
 - Arrow prefix (`▶`)
@@ -1671,7 +1703,7 @@ Clauderon uses **minimal, functional animations** that enhance usability without
 **Standard Transition:**
 
 ```tsx
-className="transition-all duration-200"
+className = "transition-all duration-200";
 ```
 
 **Effect:** Smooth 200ms transition for all properties (color, shadow, transform).
@@ -1679,7 +1711,9 @@ className="transition-all duration-200"
 **Specific Properties:**
 
 ```css
-transition: color 200ms, text-decoration-color 200ms;
+transition:
+  color 200ms,
+  text-decoration-color 200ms;
 ```
 
 #### Spinners
@@ -1689,7 +1723,7 @@ transition: color 200ms, text-decoration-color 200ms;
 ```tsx
 import { Loader2 } from "lucide-react";
 
-<Loader2 className="w-4 h-4 animate-spin" />
+<Loader2 className="w-4 h-4 animate-spin" />;
 ```
 
 **Effect:** Icon rotates continuously via Tailwind's `animate-spin` class.
@@ -1707,7 +1741,7 @@ active:translate-x-1 active:translate-y-1
 **Icon Hover:**
 
 ```tsx
-hover:scale-110
+hover: scale - 110;
 ```
 
 ### 9.2 Mobile Animations
@@ -1753,12 +1787,14 @@ TUI re-renders on timer events (typically 60-100ms) to update spinners and times
 ### 9.4 Animation Do's and Don'ts
 
 **DO:**
+
 - ✅ Use animations for **hover/press feedback** (immediate user response)
 - ✅ Use animations for **loading indicators** (spinners)
 - ✅ Keep durations **under 300ms** (200ms recommended)
 - ✅ Use `transition-all` sparingly (prefer specific properties)
 
 **DON'T:**
+
 - ❌ Use gratuitous motion (no bounces, slides, or reveals without purpose)
 - ❌ Animate layout shifts (jarring for user)
 - ❌ Use durations over 500ms (feels sluggish)
@@ -1800,21 +1836,21 @@ import {
 } from "lucide-react";
 ```
 
-| Icon | Usage | Context |
-|------|-------|---------|
-| `Terminal` | Session attachment | Open terminal/console |
-| `Edit` | Edit session | Modify session details |
-| `Archive` | Archive action | Move to archive |
-| `Trash2` | Delete action | Permanent deletion |
-| `CheckCircle2` | Success/passing | CI passing, PR mergeable |
-| `XCircle` | Error/failing | CI failing |
-| `Clock` | Pending/waiting | CI pending |
-| `Loader2` | Loading/working | Claude working (animated) |
-| `User` | User interaction | Waiting for approval |
-| `AlertTriangle` | Warning | Merge conflict |
-| `Send` | Send message | Chat input |
-| `Paperclip` | Attach file | File attachment |
-| `Circle` | Idle/neutral | Claude idle |
+| Icon            | Usage              | Context                   |
+| --------------- | ------------------ | ------------------------- |
+| `Terminal`      | Session attachment | Open terminal/console     |
+| `Edit`          | Edit session       | Modify session details    |
+| `Archive`       | Archive action     | Move to archive           |
+| `Trash2`        | Delete action      | Permanent deletion        |
+| `CheckCircle2`  | Success/passing    | CI passing, PR mergeable  |
+| `XCircle`       | Error/failing      | CI failing                |
+| `Clock`         | Pending/waiting    | CI pending                |
+| `Loader2`       | Loading/working    | Claude working (animated) |
+| `User`          | User interaction   | Waiting for approval      |
+| `AlertTriangle` | Warning            | Merge conflict            |
+| `Send`          | Send message       | Chat input                |
+| `Paperclip`     | Attach file        | File attachment           |
+| `Circle`        | Idle/neutral       | Claude idle               |
 
 #### Icon Sizing
 
@@ -1857,11 +1893,11 @@ function getCheckStatusSymbol(status: CheckStatus): string {
     case CheckStatus.Passing:
     case CheckStatus.Mergeable:
     case CheckStatus.Merged:
-      return "✓";  // Check mark
+      return "✓"; // Check mark
     case CheckStatus.Failing:
-      return "✗";  // X mark
+      return "✗"; // X mark
     case CheckStatus.Pending:
-      return "⏱";  // Timer
+      return "⏱"; // Timer
   }
 }
 ```
@@ -1872,27 +1908,29 @@ function getCheckStatusSymbol(status: CheckStatus): string {
 
 **Unicode Symbols:**
 
-| Symbol | Unicode | Usage |
-|--------|---------|-------|
-| `▶` | U+25B6 | Selection arrow |
-| `⠋⠙⠹⠸` | U+280B, U+2819, U+2839, U+2838 | Braille spinner |
-| `⏸` | U+23F8 | Pause |
-| `⌨` | U+2328 | Keyboard |
-| `○` | U+25CB | Hollow circle (idle) |
-| `●` | U+25CF | Filled circle (active) |
-| `◎` | U+25CE | Double circle (Claude indicator) |
-| `✓` | U+2713 | Check mark |
-| `⚠` | U+26A0 | Warning |
+| Symbol | Unicode                        | Usage                            |
+| ------ | ------------------------------ | -------------------------------- |
+| `▶`    | U+25B6                         | Selection arrow                  |
+| `⠋⠙⠹⠸` | U+280B, U+2819, U+2839, U+2838 | Braille spinner                  |
+| `⏸`    | U+23F8                         | Pause                            |
+| `⌨`    | U+2328                         | Keyboard                         |
+| `○`    | U+25CB                         | Hollow circle (idle)             |
+| `●`    | U+25CF                         | Filled circle (active)           |
+| `◎`    | U+25CE                         | Double circle (Claude indicator) |
+| `✓`    | U+2713                         | Check mark                       |
+| `⚠`    | U+26A0                         | Warning                          |
 
 ### 10.4 Icon Do's and Don'ts
 
 **DO:**
+
 - ✅ Use consistent icon library (Lucide for web)
 - ✅ Use consistent sizing (4×4 for standard, 3×3 for small)
 - ✅ Provide tooltips for icon-only buttons
 - ✅ Use semantic icons (Terminal for terminal, Archive for archive)
 
 **DON'T:**
+
 - ❌ Mix icon libraries (e.g., mixing Lucide with FontAwesome)
 - ❌ Use overly decorative icons
 - ❌ Create icon-only buttons without hover text on web
@@ -1911,7 +1949,10 @@ function getCheckStatusSymbol(status: CheckStatus): string {
 **Location:** `web/frontend/src/index.css:96-98`
 
 ```css
-button, input, select, textarea {
+button,
+input,
+select,
+textarea {
   border-width: 2px;
 }
 ```
@@ -1959,6 +2000,7 @@ Block::default().borders(Borders::ALL).border_style(border_style)
 ```
 
 **Border Types:**
+
 - Single-line: `│ ─ ┌ ┐ └ ┘`
 - Double-line: `║ ═ ╔ ╗ ╚ ╝`
 - Thick: `┃ ━ ┏ ┓ ┗ ┛`
@@ -2015,7 +2057,7 @@ let border_style = if is_active {
 **Location:** `web/frontend/src/index.css:34`
 
 ```css
---radius: 0.25rem;  /* 4px - minimal brutalist radius */
+--radius: 0.25rem; /* 4px - minimal brutalist radius */
 ```
 
 **Usage:**
@@ -2044,6 +2086,7 @@ Not applicable (terminal uses box-drawing characters).
 ### 11.4 Border Do's and Don'ts
 
 **DO:**
+
 - ✅ Use **2px borders** as standard on web
 - ✅ Use **3px borders** for emphasis on mobile
 - ✅ Use **black borders** (`colors.border`) on mobile for brutalist look
@@ -2051,6 +2094,7 @@ Not applicable (terminal uses box-drawing characters).
 - ✅ Use consistent border styles within a component
 
 **DON'T:**
+
 - ❌ Use borders thinner than 2px (hard to see)
 - ❌ Use large border radius (>8px) — anti-brutalist
 - ❌ Mix border widths within the same component group
@@ -2068,13 +2112,13 @@ Not applicable (terminal uses box-drawing characters).
 
 #### Color Changes in Dark Mode
 
-| Token | Light | Dark | Change |
-|-------|-------|------|--------|
-| `--background` | `0 0% 100%` (white) | `220 90% 8%` (very dark blue) | Background darkens |
-| `--foreground` | `220 90% 10%` (dark blue) | `220 10% 95%` (near white) | Text lightens |
-| `--primary` | `220 85% 25%` (navy) | `215 100% 60%` (bright blue) | Primary brightens |
-| `--border` | `220 20% 80%` (light gray) | `220 50% 25%` (dark gray) | Border darkens |
-| Status colors | Base lightness | +10% lightness | More visible on dark background |
+| Token          | Light                      | Dark                          | Change                          |
+| -------------- | -------------------------- | ----------------------------- | ------------------------------- |
+| `--background` | `0 0% 100%` (white)        | `220 90% 8%` (very dark blue) | Background darkens              |
+| `--foreground` | `220 90% 10%` (dark blue)  | `220 10% 95%` (near white)    | Text lightens                   |
+| `--primary`    | `220 85% 25%` (navy)       | `215 100% 60%` (bright blue)  | Primary brightens               |
+| `--border`     | `220 20% 80%` (light gray) | `220 50% 25%` (dark gray)     | Border darkens                  |
+| Status colors  | Base lightness             | +10% lightness                | More visible on dark background |
 
 #### Toggle Implementation
 
@@ -2083,7 +2127,7 @@ Not applicable (terminal uses box-drawing characters).
 ```tsx
 // Toggle between light and dark
 const toggleTheme = () => {
-  document.documentElement.classList.toggle('dark');
+  document.documentElement.classList.toggle("dark");
   // Persist to localStorage
 };
 ```
@@ -2091,12 +2135,14 @@ const toggleTheme = () => {
 #### Dark Mode Best Practices
 
 **DO:**
+
 - ✅ Increase lightness of status colors in dark mode (better visibility)
 - ✅ Test all components in both modes
 - ✅ Use semantic color tokens (not hard-coded colors)
 - ✅ Maintain contrast ratios (WCAG AA minimum)
 
 **DON'T:**
+
 - ❌ Use pure black (`#000000`) as dark mode background (harsh on eyes)
 - ❌ Forget to adjust shadow colors (should use lighter colors in dark mode)
 - ❌ Hard-code colors instead of using CSS variables
@@ -2117,6 +2163,7 @@ const theme = useColorScheme() === 'dark' ? darkTheme : lightTheme;
 ```
 
 **Required:**
+
 - Use `Appearance` API to detect system preference
 - Theme context provider
 - Update all `colors.*` references to `theme.*`
@@ -2143,9 +2190,7 @@ const theme = useColorScheme() === 'dark' ? darkTheme : lightTheme;
 
 ```tsx
 // Navigate to chat modal
-<Button onClick={() => openChat(session.id)}>
-  Open Chat
-</Button>
+<Button onClick={() => openChat(session.id)}>Open Chat</Button>
 ```
 
 **Links:** Fully underlined (2px) with color change on hover.
@@ -2184,11 +2229,13 @@ a {
 **Keyboard-Driven:** Modal-based UI with keyboard shortcuts.
 
 **Modes:**
+
 - **Session List Mode**: Arrow keys to select, Enter to attach
 - **Attached Mode**: Terminal interaction (all keys forwarded)
 - **Copy Mode**: Vi-style navigation for scrolling terminal history
 
 **Mode Switching:**
+
 - `c`: Create session
 - `d`: Delete session
 - `q`: Quit
@@ -2210,7 +2257,9 @@ a {
   <Label htmlFor="repo">Repository</Label>
   <Input id="repo" type="text" />
 
-  <Button type="submit" variant="brutalist">Create</Button>
+  <Button type="submit" variant="brutalist">
+    Create
+  </Button>
 </form>
 ```
 
@@ -2271,6 +2320,7 @@ a {
 ```
 
 **Features:**
+
 - Full terminal emulation (ANSI colors, cursor control)
 - Resizable container
 - WebSocket for I/O
@@ -2296,6 +2346,7 @@ tokio::spawn(async move {
 ```
 
 **Features:**
+
 - Full terminal emulation via vt100 parser
 - Scroll mode (vi-style navigation)
 - Copy mode for selecting text
@@ -2309,18 +2360,22 @@ tokio::spawn(async move {
 **Requirement:** All text meets WCAG AA standards (4.5:1 for normal text, 3:1 for large text).
 
 **Web:**
+
 - `--foreground` on `--background`: High contrast in both light and dark modes
 - Status colors: Tested against both backgrounds
 
 **Mobile:**
+
 - `colors.text` on `colors.background`: Verified contrast
 - `colors.textLight`: Use sparingly, only for non-critical text
 
 **TUI:**
+
 - High contrast terminal colors
 - User terminal color schemes may vary (out of our control)
 
 **Testing:**
+
 - Use browser DevTools contrast checker
 - Test with tools like [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/)
 
@@ -2349,7 +2404,9 @@ button: {
 ```css
 :focus-visible {
   outline: none;
-  box-shadow: 0 0 0 4px hsl(var(--ring)), 0 0 0 6px hsl(var(--background));
+  box-shadow:
+    0 0 0 4px hsl(var(--ring)),
+    0 0 0 6px hsl(var(--background));
 }
 ```
 
@@ -2358,6 +2415,7 @@ button: {
 **TUI:**
 
 Selected item has:
+
 - Dark gray background
 - Bold text
 - `▶` arrow prefix
@@ -2425,16 +2483,19 @@ Screen readers for terminal emulators are limited. Focus on clear text content a
 #### Web (TypeScript/React)
 
 **Files:**
+
 - React components: `PascalCase.tsx` (e.g., `SessionCard.tsx`)
 - Utilities: `camelCase.ts` (e.g., `utils.ts`)
 - Styles: `kebab-case.css` (e.g., `index.css`)
 
 **Variables:**
+
 - Components: `PascalCase` (`function SessionCard() {}`)
 - Functions: `camelCase` (`const formatDate = () => {}`)
 - Constants: `SCREAMING_SNAKE_CASE` (`const API_URL = "..."`)
 
 **CSS:**
+
 - Classes: `kebab-case` (Tailwind utilities)
 - Variables: `--kebab-case` (CSS custom properties)
 
@@ -2460,7 +2521,7 @@ const styles = StyleSheet.create({
 
 ```typescript
 export const colors = {
-  primary: "#1e40af",      // camelCase
+  primary: "#1e40af", // camelCase
   primaryDark: "#1e3a8a",
 };
 ```
@@ -2468,9 +2529,11 @@ export const colors = {
 #### TUI (Rust)
 
 **Files:**
+
 - Modules: `snake_case.rs` (e.g., `session_list.rs`)
 
 **Identifiers:**
+
 - Structs: `PascalCase` (`struct SessionList {}`)
 - Enums: `PascalCase` with `PascalCase` variants (`enum SessionStatus { Running, Idle }`)
 - Functions: `snake_case` (`fn render_session_list() {}`)
@@ -2544,7 +2607,7 @@ src/tui/
 import { cva } from "class-variance-authority";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center border-2",  // Base
+  "inline-flex items-center justify-center border-2", // Base
   {
     variants: {
       variant: {
@@ -2560,7 +2623,7 @@ const buttonVariants = cva(
       variant: "default",
       size: "default",
     },
-  }
+  },
 );
 ```
 
@@ -2607,7 +2670,12 @@ Span::styled(text, status_style)
 
 ```tsx
 // SessionCard.tsx
-import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -2624,7 +2692,9 @@ export function SessionCard({ session, onAttach }: SessionCardProps) {
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           {/* Status dot */}
-          <div className={`w-4 h-4 border-2 border-foreground ${statusColors[session.status]}`} />
+          <div
+            className={`w-4 h-4 border-2 border-foreground ${statusColors[session.status]}`}
+          />
 
           {/* Title */}
           <h3 className="font-bold text-lg flex-1">{session.name}</h3>
@@ -2645,7 +2715,7 @@ export function SessionCard({ session, onAttach }: SessionCardProps) {
         {session.pr_url && (
           <div className="flex items-center gap-2 text-xs">
             <a href={session.pr_url} className="text-blue-500 font-mono">
-              PR #{session.pr_url.split('/').pop()}
+              PR #{session.pr_url.split("/").pop()}
             </a>
           </div>
         )}
@@ -2792,7 +2862,7 @@ const statusColors: Record<SessionStatus, string> = {
   [SessionStatus.Archived]: "bg-status-archived",
 };
 
-<div className={`w-4 h-4 ${statusColors[session.status]}`} />
+<div className={`w-4 h-4 ${statusColors[session.status]}`} />;
 ```
 
 #### Mobile
@@ -2844,12 +2914,14 @@ Span::styled(status_text, status_style)
 **Reference Screenshots:** Use screenshots in `assets/` as visual baseline.
 
 **Process:**
+
 1. Make design changes
 2. Take new screenshots
 3. Compare side-by-side with reference images
 4. Verify consistency across platforms
 
 **Key Screenshots:**
+
 - Web session list
 - Mobile session list
 - TUI session list
@@ -2878,6 +2950,7 @@ Span::styled(status_text, status_style)
 - [ ] **Keyboard navigation** functional (Tab, Enter, Escape)
 
 **Tools:**
+
 - Chrome DevTools Lighthouse (accessibility audit)
 - [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/)
 - Screen readers: VoiceOver (macOS/iOS), TalkBack (Android), NVDA (Windows)
@@ -2885,16 +2958,19 @@ Span::styled(status_text, status_style)
 ### 17.4 Browser/Device Testing
 
 **Web Browsers:**
+
 - Chrome (latest)
 - Firefox (latest)
 - Safari (latest)
 - Edge (latest)
 
 **Mobile Devices:**
+
 - iOS 16+ (iPhone)
 - Android 12+ (various manufacturers)
 
 **Terminal Emulators:**
+
 - iTerm2 (macOS)
 - Alacritty (cross-platform)
 - GNOME Terminal (Linux)
@@ -2907,6 +2983,7 @@ Span::styled(status_text, status_style)
 ### 18.1 When to Update This Guide
 
 Update the style guide when:
+
 - **Adding new components** (document structure, variants, usage)
 - **Changing color tokens** (update all three platform tables)
 - **Introducing new patterns** (spacing, shadows, animations)
@@ -2933,11 +3010,11 @@ Update the style guide when:
 
 4. **Do's and Don'ts**
    - Practical guidance with ✅ and ❌ markers
-   - Explain *why*, not just *what*
+   - Explain _why_, not just _what_
 
 **Example:**
 
-```markdown
+````markdown
 ### Component Name
 
 **Location:** `path/to/file.tsx:10-50`
@@ -2949,6 +3026,7 @@ Update the style guide when:
 ```tsx
 <Component prop="value" />
 ```
+````
 
 **Usage:**
 
@@ -2961,6 +3039,7 @@ Update the style guide when:
 ```
 
 **Visual Reference:** `assets/screenshot.png`
+
 ```
 
 ### 18.3 Review Process
@@ -3135,3 +3214,4 @@ This style guide is a living document. As Clauderon evolves, update this guide t
 ---
 
 **End of Style Guide**
+```

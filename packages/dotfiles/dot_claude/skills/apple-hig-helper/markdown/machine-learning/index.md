@@ -18,7 +18,7 @@ For related guidance on how to use machine learning models to enable intelligent
 
 ## [Planning your design](/design/human-interface-guidelines/machine-learning#Planning-your-design)
 
-Machine learning apps use *models* to perform tasks like recognizing images or finding relationships among numerical data. A great machine learning app depends on well-designed models as much as it depends on a well-designed UI and user experience. For insight into the process of designing models, see [Create ML](/documentation/CreateML).
+Machine learning apps use _models_ to perform tasks like recognizing images or finding relationships among numerical data. A great machine learning app depends on well-designed models as much as it depends on a well-designed UI and user experience. For insight into the process of designing models, see [Create ML](/documentation/CreateML).
 
 As you design your models, keep the intended experience of your app in mind. It can take a long time to adjust the behavior of models, so be prepared to change the way you use data and metrics if the app experience needs to change.
 
@@ -26,7 +26,7 @@ Designing the UI and user experience of a machine learning app can be uniquely c
 
 To help you meet this challenge, first consider the role that machine learning plays in your app. Defining the [role](/design/human-interface-guidelines/machine-learning#The-role-of-machine-learning-in-your-app) of machine learning in your app can help you discover areas in which you can explore the ways machine learning can affect the experience your app provides.
 
-Use the machine learning role you identify to help you define ways your app can receive and display data. There are several patterns — grouped into *inputs* and *outputs* — that provide guidance in areas such as getting feedback, displaying data, handling mistakes, and supporting corrections. Use the guidance in these patterns to help you integrate machine learning into your app in ways that people appreciate.
+Use the machine learning role you identify to help you define ways your app can receive and display data. There are several patterns — grouped into _inputs_ and _outputs_ — that provide guidance in areas such as getting feedback, displaying data, handling mistakes, and supporting corrections. Use the guidance in these patterns to help you integrate machine learning into your app in ways that people appreciate.
 
 ## [The role of machine learning in your app](/design/human-interface-guidelines/machine-learning#The-role-of-machine-learning-in-your-app)
 
@@ -36,8 +36,8 @@ Machine learning systems vary widely, and the ways an app can use machine learni
 
 If an app can still work without the feature that machine learning supports, machine learning is complementary to the app; otherwise, it’s a critical dependency. For example:
 
-* The keyboard uses machine learning to provide QuickType suggestions. Because the keyboard still works without these suggestions, machine learning plays a complementary role in the app.
-* Face ID relies on machine learning to perform accurate face recognition. Without machine learning, Face ID would not work.
+- The keyboard uses machine learning to provide QuickType suggestions. Because the keyboard still works without these suggestions, machine learning plays a complementary role in the app.
+- Face ID relies on machine learning to perform accurate face recognition. Without machine learning, Face ID would not work.
 
 In general, the more critical an app feature is, the more people need accurate and reliable results. On the other hand, if a complementary feature delivers results that aren’t always of the highest quality, people might be more forgiving.
 
@@ -45,17 +45,17 @@ In general, the more critical an app feature is, the more people need accurate a
 
 Machine learning results depend on data. To make good design decisions, you need to know as much as possible about the types of data your app feature needs. In general, the more sensitive the data, the more serious the consequences of inaccurate or unreliable results. For example:
 
-* If a health app misinterprets data and incorrectly recommends a visit to the doctor, people are likely to experience anxiety and may lose trust in the app.
-* If a music app misinterprets data and recommends an artist that people don’t like, they’re likely to view the result as an inconsequential mistake.
+- If a health app misinterprets data and incorrectly recommends a visit to the doctor, people are likely to experience anxiety and may lose trust in the app.
+- If a music app misinterprets data and recommends an artist that people don’t like, they’re likely to view the result as an inconsequential mistake.
 
 As with critical app features, features that use sensitive data must prioritize accuracy and reliability. Regardless of the sensitivity of the data, all apps must protect user privacy at all times.
 
 ### [Proactive or reactive](/design/human-interface-guidelines/machine-learning#Proactive-or-reactive)
 
-A *proactive* app feature provides results without people requesting it to do so. Proactive features can prompt new tasks and interactions by providing unexpected, sometimes serendipitous results. In contrast, a *reactive* app feature provides results when people ask for them or when they take certain actions. Reactive features typically help people as they perform their current task. For example:
+A _proactive_ app feature provides results without people requesting it to do so. Proactive features can prompt new tasks and interactions by providing unexpected, sometimes serendipitous results. In contrast, a _reactive_ app feature provides results when people ask for them or when they take certain actions. Reactive features typically help people as they perform their current task. For example:
 
-* QuickType suggests words in reaction to what people type.
-* Siri Suggestions can proactively suggest a shortcut based on people’s recent routines.
+- QuickType suggests words in reaction to what people type.
+- Siri Suggestions can proactively suggest a shortcut based on people’s recent routines.
 
 Because people don’t ask for the results that a proactive feature provides, they may have less tolerance for low-quality information. To reduce the possibility that people will find proactive results intrusive or irrelevant, you may need to use additional data for the feature.
 
@@ -71,8 +71,8 @@ People’s impression of the reliability of results can differ depending on whet
 
 All machine learning models can improve, but some improve dynamically, as people interact with the app feature, and others improve offline and affect the feature only when the app updates. For example:
 
-* Face ID improves dynamically as people’s faces gradually change over time.
-* Photos improves its object recognition capabilities with every new iOS release.
+- Face ID improves dynamically as people’s faces gradually change over time.
+- Photos improves its object recognition capabilities with every new iOS release.
 
 In addition to the frequency of app updates, static or dynamic improvements can affect other parts of the user experience, too. For example, dynamic features often incorporate forms of [calibration](/design/human-interface-guidelines/machine-learning#Calibration) and feedback (either [implicit](/design/human-interface-guidelines/machine-learning#Implicit-feedback) or [explicit](/design/human-interface-guidelines/machine-learning#Explicit-feedback)), whereas static features might not.
 
@@ -82,17 +82,17 @@ Explicit feedback provides actionable information your app can use to improve th
 
 ![An illustration of a menu above a screen representing presented content on iPhone. The menu includes a variety of options for interacting with the content on screen, including an option to 'Love' the presented content, and an option to 'Suggest Less Like This.'](https://docs-assets.developer.apple.com/published/0e334bc6d525d9f3f7c67feda7a7d6a3/machine-learning-explicit-feedback%402x.png)
 
-*Favoriting* — marking an item for quick access in the future — and *social feedback* — expressing emotions towards others — are common user interactions that seem like mechanisms that supply explicit feedback. However, these tools actually provide implicit feedback because they don’t support app-specific requests. People use favoriting and social feedback to accomplish their own goals and apps can gather implicit feedback from these interactions.
+_Favoriting_ — marking an item for quick access in the future — and _social feedback_ — expressing emotions towards others — are common user interactions that seem like mechanisms that supply explicit feedback. However, these tools actually provide implicit feedback because they don’t support app-specific requests. People use favoriting and social feedback to accomplish their own goals and apps can gather implicit feedback from these interactions.
 
 **Request explicit feedback only when necessary.** People must take action to provide explicit feedback, so it’s best to avoid requesting it if possible. Instead, consider using implicit feedback to learn how people interact with your app without asking them to do extra work.
 
 **Always make providing explicit feedback a voluntary task.** You want to communicate that explicit feedback can help improve the experience without making people feel that providing it is mandatory.
 
-**Use simple, direct language to describe each explicit feedback option and its consequences.** Avoid using imprecise terms such as *dislike* because such terms don’t convey consequences and can be hard to translate. Instead, describe each option in a way that helps people understand what happens when they choose the option, such as:
+**Use simple, direct language to describe each explicit feedback option and its consequences.** Avoid using imprecise terms such as _dislike_ because such terms don’t convey consequences and can be hard to translate. Instead, describe each option in a way that helps people understand what happens when they choose the option, such as:
 
-* Suggest less pop music
-* Suggest more thrillers
-* Mute politics for a week
+- Suggest less pop music
+- Suggest more thrillers
+- Mute politics for a week
 
 **Add icons to an option description if it helps people understand it.** Icons can help clarify or emphasize part of an option description. Avoid using an icon by itself, because it might not be clear enough to communicate granularity or consequences.
 
@@ -144,9 +144,9 @@ In general, only use calibration when your feature can’t function without that
 
 **Make calibration quick and easy.** Even a brief calibration experience takes time and requires effort from people. An ideal calibration experience makes it easy for people to respond, without compromising the quality of the information they provide. The following guidelines can help you create a streamlined calibration experience.
 
-* Prioritize getting a few pieces of important information and infer the rest from other sources or by getting people’s feedback.
-* Avoid asking for information that most people would have to look up.
-* Avoid asking people to perform actions that might be difficult.
+- Prioritize getting a few pieces of important information and infer the rest from other sources or by getting people’s feedback.
+- Avoid asking for information that most people would have to look up.
+- Avoid asking people to perform actions that might be difficult.
 
 **Make sure people know how to perform calibration successfully.** After people decide to participate in calibration, give them an explicit goal and show their progress towards it. For example, Face ID calibration briefly describes what people need to do and changes the appearance of the tick marks encircling the face as people progress through scanning.
 
@@ -182,17 +182,17 @@ People use corrections to fix mistakes that apps make. For example, if a photo a
 
 It’s inevitable that your app will make mistakes. Although people may not expect perfection, mistakes can damage their experience and decrease their trust in your app. To help you avoid negative consequences, it’s crucial to:
 
-* Anticipate mistakes. As much as possible, design ways to avoid mistakes and mitigate them when they happen.
-* Help people handle mistakes. Mistakes can have a wide range of consequences, so the tools you provide to handle a mistake must be able to address those consequences.
-* Learn from mistakes when doing so improves your app. In some cases, learning from a mistake might have undesirable effects, such as causing unpredictability in the user experience. When it makes sense, use each mistake as a data point that can refine your machine learning models and improve your app.
+- Anticipate mistakes. As much as possible, design ways to avoid mistakes and mitigate them when they happen.
+- Help people handle mistakes. Mistakes can have a wide range of consequences, so the tools you provide to handle a mistake must be able to address those consequences.
+- Learn from mistakes when doing so improves your app. In some cases, learning from a mistake might have undesirable effects, such as causing unpredictability in the user experience. When it makes sense, use each mistake as a data point that can refine your machine learning models and improve your app.
 
 There are several machine learning patterns that can help you address mistakes:
 
-* [Limitations](/design/human-interface-guidelines/machine-learning#Limitations) help you set people’s expectations about the accuracy of your suggestions.
-* [Corrections](/design/human-interface-guidelines/machine-learning#Corrections) give people a way to be successful even when your results are wrong.
-* [Attribution](/design/human-interface-guidelines/machine-learning#Attribution) gives people insight into where suggestions come from, which can help them understand mistakes.
-* [Confidence](/design/human-interface-guidelines/machine-learning#Confidence) helps you gauge the quality of your results, which can impact how you present them.
-* Feedback — both [explicit](/design/human-interface-guidelines/machine-learning#Explicit-feedback) and [implicit](/design/human-interface-guidelines/machine-learning#Implicit-feedback) — lets people tell you about mistakes that you might not be aware of.
+- [Limitations](/design/human-interface-guidelines/machine-learning#Limitations) help you set people’s expectations about the accuracy of your suggestions.
+- [Corrections](/design/human-interface-guidelines/machine-learning#Corrections) give people a way to be successful even when your results are wrong.
+- [Attribution](/design/human-interface-guidelines/machine-learning#Attribution) gives people insight into where suggestions come from, which can help them understand mistakes.
+- [Confidence](/design/human-interface-guidelines/machine-learning#Confidence) helps you gauge the quality of your results, which can impact how you present them.
+- Feedback — both [explicit](/design/human-interface-guidelines/machine-learning#Explicit-feedback) and [implicit](/design/human-interface-guidelines/machine-learning#Implicit-feedback) — lets people tell you about mistakes that you might not be aware of.
 
 **Understand the significance of a mistake’s consequences.** For example, incorrect keyboard suggestions might annoy people, but suggesting a travel route that results in a missed flight is a serious inconvenience. Show empathy by providing corrective actions or tools that match the seriousness of the mistake.
 
@@ -214,9 +214,9 @@ Depending on the design of your feature, it might work best to present a single 
 
 You might present multiple options to people in the following contexts:
 
-* Suggested options, a proactive feature that suggests content to people based on the their past interactions. For example, For You recommendations from Apple Music.
-* Requested options, a reactive feature that suggests potential next steps to people based on their recent actions. For example, Quick Type suggestions.
-* Corrections, which are actions people take to fix mistakes your app has made when it’s acting on their behalf. For example, the Photos Auto-Crop feature.
+- Suggested options, a proactive feature that suggests content to people based on the their past interactions. For example, For You recommendations from Apple Music.
+- Requested options, a reactive feature that suggests potential next steps to people based on their recent actions. For example, Quick Type suggestions.
+- Corrections, which are actions people take to fix mistakes your app has made when it’s acting on their behalf. For example, the Photos Auto-Crop feature.
 
 **Prefer diverse options.** When possible, balance the accuracy of a response with the diversity of multiple options. For example, Apple Maps generally suggests more than one route to a destination, such as a route without tolls, a scenic route, or a route that uses highways. Providing different types of options helps people choose the one that they prefer and can also suggest new items that might interest them.
 
@@ -258,10 +258,10 @@ An attribution expresses the underlying basis or rationale for a result, without
 
 To help you decide whether to include attributions in your app, consider how you want them to affect people. For example, you might want attributions to:
 
-* Encourage people to change what they do in your app
-* Minimize the impact of [mistakes](/design/human-interface-guidelines/machine-learning#Mistakes)
-* Help people build a mental model of your feature
-* Promote trust in your app over time
+- Encourage people to change what they do in your app
+- Minimize the impact of [mistakes](/design/human-interface-guidelines/machine-learning#Mistakes)
+- Help people build a mental model of your feature
+- Promote trust in your app over time
 
 **Consider using attributions to help people distinguish among results.** For example, if you present a set of results as [multiple options](/design/human-interface-guidelines/machine-learning#Multiple-options), including attributions can help people choose an option based on their understanding of the premise that led to it, such as “New books by authors you’ve read.”
 
@@ -275,15 +275,15 @@ To help you decide whether to include attributions in your app, consider how you
 
 Every feature — whether it’s based on machine learning or not — has certain limitations to what it can deliver. In general, there are two types of limitations: things a feature can’t do well and things a feature can’t do at all. When there’s a mismatch between people’s expectations about a feature and what the feature can actually accomplish, a limitation can seem like a defect. For example, people might expect:
 
-* Photos to perform a search that covers every category they can imagine
-* Siri to respond to queries that aren’t well defined, like “What is the meaning of life?”
-* FaceID to work from every angle
+- Photos to perform a search that covers every category they can imagine
+- Siri to respond to queries that aren’t well defined, like “What is the meaning of life?”
+- FaceID to work from every angle
 
 An important part of the design process is to identify the scenarios where limitations impact the user experience and design ways to help people work with them. For example:
 
-* Set people’s expectations before they use the feature.
-* Show people how to get the best results while they’re using the feature.
-* When inferior results occur, explain why so that people can understand the feature better.
+- Set people’s expectations before they use the feature.
+- Show people how to get the best results while they’re using the feature.
+- When inferior results occur, explain why so that people can understand the feature better.
 
 ![A screenshot of the Memoji recording sheet on iPhone. The app shows a person's Memoji, above a message that reads 'Low light', which helps convey that additional light is required for a high-quality recording.](https://docs-assets.developer.apple.com/published/fca31a41168248b160fde791dc573041/machine-learning-limitations%402x.png)
 
@@ -291,9 +291,9 @@ An important part of the design process is to identify the scenarios where limit
 
 **Demonstrate how to get the best results.** If you don’t provide guidance for using a feature, people may assume it’ll do everything they want. When you proactively show people how to get good results, you help them benefit from the feature and establish a more accurate mental model of the feature’s capabilities. There are many ways to show people the best ways to use a feature, such as:
 
-* Use placeholder text to suggest input. In Photos, the search bar displays the text “Photos, People, Places…” to help people understand what they can search for before they begin typing. Photos also displays a description of how it scans the photo library to offer search suggestions.
-* As people interact with the feature, provide feedback on their actions to guide them towards a result without overwhelming them. For example, while people are interacting with Animoji, the feature responds to current conditions and suggests how people can improve their results by adjusting the lighting or moving closer to the camera.
-* Suggest alternative ways to accomplish the goal instead of showing no results. To do this successfully, you need to understand the goal well enough to suggest alternatives that make sense. For example, if people ask Siri to set a timer on a Mac, Siri suggests setting a reminder instead, because timers aren’t available in macOS. This suggestion makes sense because people’s goal is to receive an alert at a certain time.
+- Use placeholder text to suggest input. In Photos, the search bar displays the text “Photos, People, Places…” to help people understand what they can search for before they begin typing. Photos also displays a description of how it scans the photo library to offer search suggestions.
+- As people interact with the feature, provide feedback on their actions to guide them towards a result without overwhelming them. For example, while people are interacting with Animoji, the feature responds to current conditions and suggests how people can improve their results by adjusting the lighting or moving closer to the camera.
+- Suggest alternative ways to accomplish the goal instead of showing no results. To do this successfully, you need to understand the goal well enough to suggest alternatives that make sense. For example, if people ask Siri to set a timer on a Mac, Siri suggests setting a reminder instead, because timers aren’t available in macOS. This suggestion makes sense because people’s goal is to receive an alert at a certain time.
 
 **Explain how limitations can cause unsatisfactory results.** People can get frustrated when it seems that your feature works intermittently. Ideally, your feature can recognize and describe the reasons for poor results to make people aware of the limitations and help them to adjust their expectations. For example, Animoji tells people that it doesn’t work well in the dark.
 
@@ -301,7 +301,7 @@ An important part of the design process is to identify the scenarios where limit
 
 ## [Platform considerations](/design/human-interface-guidelines/machine-learning#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/machine-learning#Resources)
 
@@ -331,7 +331,7 @@ Discover machine learning & AI frameworks on Apple platforms](https://developer.
 
 ## [Change log](/design/human-interface-guidelines/machine-learning#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| October 24, 2023 | Added art to Corrections section. |
-| May 2, 2023 | Consolidated guidance into one page. |
+| Date             | Changes                              |
+| ---------------- | ------------------------------------ |
+| October 24, 2023 | Added art to Corrections section.    |
+| May 2, 2023      | Consolidated guidance into one page. |

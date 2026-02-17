@@ -10,7 +10,7 @@ export type ProgressDisplayOptions = {
   showStats: boolean;
   /** Terminal width (auto-detected if not specified) */
   width: number | undefined;
-}
+};
 
 /** ANSI escape codes for terminal control */
 const ANSI = {
@@ -71,7 +71,9 @@ export class ProgressDisplay {
 
   /** Update the progress display */
   update(progress: ExtendedProgress): void {
-    if (this.options.quiet) {return;}
+    if (this.options.quiet) {
+      return;
+    }
 
     const now = Date.now();
     const elapsed = now - this.startTime;
@@ -225,7 +227,10 @@ export class ProgressDisplay {
 
   /** Render simple non-TTY output */
   private renderSimple(progress: ExtendedProgress): void {
-    const percent = progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0;
+    const percent =
+      progress.total > 0
+        ? Math.round((progress.current / progress.total) * 100)
+        : 0;
     const line = `[${String(percent)}%] ${progress.phase}: ${String(progress.current)}/${String(progress.total)} - ${progress.currentItem ?? ""}`;
     console.log(line);
   }
@@ -249,7 +254,9 @@ export class ProgressDisplay {
 
   /** Clear the progress display and show cursor */
   clear(): void {
-    if (this.options.quiet) {return;}
+    if (this.options.quiet) {
+      return;
+    }
 
     if (this.isTTY) {
       // Show cursor again
@@ -270,7 +277,9 @@ export class ProgressDisplay {
 
   /** Finalize and print final stats */
   finish(progress: ExtendedProgress): void {
-    if (this.options.quiet) {return;}
+    if (this.options.quiet) {
+      return;
+    }
 
     this.clear();
 
@@ -286,9 +295,13 @@ export class ProgressDisplay {
     console.log(
       `  Tokens: ${this.formatNumber(progress.inputTokens)} in, ${this.formatNumber(progress.outputTokens)} out`,
     );
-    console.log(`  Time: ${this.formatDuration(elapsed)} (${speed.toFixed(1)} fn/s)`);
+    console.log(
+      `  Time: ${this.formatDuration(elapsed)} (${speed.toFixed(1)} fn/s)`,
+    );
     if (progress.errors > 0) {
-      console.log(`  ${ANSI.yellow}Errors: ${String(progress.errors)}${ANSI.reset}`);
+      console.log(
+        `  ${ANSI.yellow}Errors: ${String(progress.errors)}${ANSI.reset}`,
+      );
     }
 
     // Show cursor
@@ -302,5 +315,7 @@ export class ProgressDisplay {
 export function createProgressCallback(
   display: ProgressDisplay,
 ): (progress: ExtendedProgress) => void {
-  return (progress) => { display.update(progress); };
+  return (progress) => {
+    display.update(progress);
+  };
 }

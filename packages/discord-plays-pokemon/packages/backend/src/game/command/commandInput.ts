@@ -33,7 +33,9 @@ export interface CommandInput {
 }
 
 export function parseCommandInput(input: string): CommandInput | undefined {
-  let split = input.split(/([0-9]*)([-_]*)([a-zA-Z]+)/).filter((group) => group !== "");
+  let split = input
+    .split(/([0-9]*)([-_]*)([a-zA-Z]+)/)
+    .filter((group) => group !== "");
 
   let quantity: Quantity = 1;
   if (split.length > 0 && !Number.isNaN(Number.parseInt(split[0]))) {

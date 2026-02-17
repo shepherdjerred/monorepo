@@ -21,7 +21,7 @@ export type ConsoleClientConfig = {
    * Defaults to deriving from window.location in browser context
    */
   baseUrl?: string;
-}
+};
 
 /**
  * Get the default WebSocket base URL based on the current environment.
@@ -113,7 +113,7 @@ export class ConsoleClient {
       this.ws = new WebSocket(url);
 
       // Create decoder instance with fatal=false for graceful error handling
-      this.decoder = new TextDecoder('utf-8', { fatal: false });
+      this.decoder = new TextDecoder("utf-8", { fatal: false });
 
       this.ws.onopen = () => {
         this.emit("connected");
@@ -124,7 +124,10 @@ export class ConsoleClient {
       };
 
       this.ws.onerror = (event) => {
-        this.emit("error", new WebSocketError("WebSocket error occurred", event));
+        this.emit(
+          "error",
+          new WebSocketError("WebSocket error occurred", event),
+        );
       };
 
       this.ws.onmessage = (event: MessageEvent<string>) => {
@@ -136,14 +139,16 @@ export class ConsoleClient {
             if (typeof message.data !== "string") {
               console.warn(
                 `[ConsoleClient] Invalid output message for session ${String(this.sessionId)}: ` +
-                `data field is ${typeof message.data}, expected string`
+                  `data field is ${typeof message.data}, expected string`,
               );
               return;
             }
 
             // Check for empty data
             if (message.data.length === 0) {
-              console.debug(`[ConsoleClient] Received empty output data for session ${String(this.sessionId)}`);
+              console.debug(
+                `[ConsoleClient] Received empty output data for session ${String(this.sessionId)}`,
+              );
               // Empty data is valid - just emit empty string
               this.emit("data", "");
               return;
@@ -154,20 +159,20 @@ export class ConsoleClient {
               if (this.shouldEmitError()) {
                 console.error(
                   `[ConsoleClient] Invalid base64 format (stage: validation) for session ${String(this.sessionId)}. ` +
-                  `Length: ${String(message.data.length)}, ` +
-                  `First 50 chars: ${message.data.substring(0, 50)}`
+                    `Length: ${String(message.data.length)}, ` +
+                    `First 50 chars: ${message.data.substring(0, 50)}`,
                 );
                 this.emit(
                   "error",
                   new DecodeError(
                     `Invalid base64 format received from server`,
-                    'validation',
+                    "validation",
                     {
                       sessionId: this.sessionId,
                       dataLength: message.data.length,
                       dataSample: message.data.substring(0, 100),
-                    }
-                  )
+                    },
+                  ),
                 );
               }
               return;
@@ -178,14 +183,14 @@ export class ConsoleClient {
               if (this.shouldEmitError()) {
                 console.error(
                   `[ConsoleClient] Message size exceeded limit for session ${String(this.sessionId)}. ` +
-                  `Size: ${String(message.data.length)} bytes, Max: ${String(MAX_MESSAGE_SIZE)} bytes`
+                    `Size: ${String(message.data.length)} bytes, Max: ${String(MAX_MESSAGE_SIZE)} bytes`,
                 );
                 this.emit(
                   "error",
                   new WebSocketError(
                     `Received message exceeds size limit (${(message.data.length / 1024).toFixed(0)}KB). ` +
-                    `Large outputs may be truncated.`
-                  )
+                      `Large outputs may be truncated.`,
+                  ),
                 );
               }
               return;
@@ -194,8 +199,8 @@ export class ConsoleClient {
             // Log raw message for debugging
             console.debug(
               `[ConsoleClient] Processing output message for session ${String(this.sessionId)}. ` +
-              `Data length: ${String(message.data.length)}, ` +
-              `First 50 chars: ${message.data.substring(0, 50)}`
+                `Data length: ${String(message.data.length)}, ` +
+                `First 50 chars: ${message.data.substring(0, 50)}`,
             );
 
             // Decode base64 data with staged error handling for better debugging
@@ -203,34 +208,41 @@ export class ConsoleClient {
             let bytes: Uint8Array;
             try {
               const binaryString = atob(message.data);
-              bytes = Uint8Array.from(binaryString, (char) => char.charCodeAt(0));
+              bytes = Uint8Array.from(binaryString, (char) =>
+                char.charCodeAt(0),
+              );
 
               // Log decoded bytes for debugging
               console.debug(
                 `[ConsoleClient] Base64 decoded for session ${String(this.sessionId)}. ` +
-                `Bytes length: ${String(bytes.length)}, ` +
-                `First 32 bytes: ${Array.from(bytes.slice(0, 32)).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' ')}`
+                  `Bytes length: ${String(bytes.length)}, ` +
+                  `First 32 bytes: ${Array.from(bytes.slice(0, 32))
+                    .map((b) => "0x" + b.toString(16).padStart(2, "0"))
+                    .join(" ")}`,
               );
             } catch (atobError) {
               if (this.shouldEmitError()) {
-                const errorMsg = atobError instanceof Error ? atobError.message : String(atobError);
+                const errorMsg =
+                  atobError instanceof Error
+                    ? atobError.message
+                    : String(atobError);
                 console.error(
                   `[ConsoleClient] Base64 decode error (stage: atob) for session ${String(this.sessionId)}: ${errorMsg}. ` +
-                  `Data length: ${String(message.data.length)}, ` +
-                  `Sample: ${message.data.substring(0, 100)}`
+                    `Data length: ${String(message.data.length)}, ` +
+                    `Sample: ${message.data.substring(0, 100)}`,
                 );
                 this.emit(
                   "error",
                   new DecodeError(
                     `Failed to decode base64: ${errorMsg}`,
-                    'base64',
+                    "base64",
                     {
                       sessionId: this.sessionId,
                       dataLength: message.data.length,
                       dataSample: message.data.substring(0, 100),
                     },
-                    atobError
-                  )
+                    atobError,
+                  ),
                 );
               }
               return;
@@ -248,31 +260,34 @@ export class ConsoleClient {
               this.emit("data", decoded);
             } catch (utf8Error) {
               if (this.shouldEmitError()) {
-                const errorMsg = utf8Error instanceof Error ? utf8Error.message : String(utf8Error);
+                const errorMsg =
+                  utf8Error instanceof Error
+                    ? utf8Error.message
+                    : String(utf8Error);
                 // Include hex dump of first 32 bytes for debugging
                 const hexSample = Array.from(bytes.slice(0, 32))
-                  .map(b => '0x' + b.toString(16).padStart(2, '0'))
-                  .join(' ');
+                  .map((b) => "0x" + b.toString(16).padStart(2, "0"))
+                  .join(" ");
                 console.error(
                   `[ConsoleClient] UTF-8 decode error (stage: utf8) for session ${String(this.sessionId)}: ${errorMsg}. ` +
-                  `Bytes length: ${String(bytes.length)}, ` +
-                  `Hex sample: ${hexSample}, ` +
-                  `Decoder state: ${this.decoder ? 'initialized' : 'null'}, ` +
-                  `Original base64 length: ${String(message.data.length)}, ` +
-                  `Original base64 sample: ${message.data.substring(0, 100)}`
+                    `Bytes length: ${String(bytes.length)}, ` +
+                    `Hex sample: ${hexSample}, ` +
+                    `Decoder state: ${this.decoder ? "initialized" : "null"}, ` +
+                    `Original base64 length: ${String(message.data.length)}, ` +
+                    `Original base64 sample: ${message.data.substring(0, 100)}`,
                 );
                 this.emit(
                   "error",
                   new DecodeError(
                     `Failed to decode UTF-8: ${errorMsg}`,
-                    'utf8',
+                    "utf8",
                     {
                       sessionId: this.sessionId,
                       dataLength: bytes.length,
                       dataSample: hexSample,
                     },
-                    utf8Error
-                  )
+                    utf8Error,
+                  ),
                 );
               }
               return;
@@ -280,15 +295,14 @@ export class ConsoleClient {
           }
         } catch (error) {
           if (this.shouldEmitError()) {
-            const errorMsg = error instanceof Error ? error.message : String(error);
+            const errorMsg =
+              error instanceof Error ? error.message : String(error);
             console.error(
-              `[ConsoleClient] Message parse error for session ${String(this.sessionId)}: ${errorMsg}`
+              `[ConsoleClient] Message parse error for session ${String(this.sessionId)}: ${errorMsg}`,
             );
             this.emit(
               "error",
-              new WebSocketError(
-                `Failed to parse message: ${errorMsg}`
-              )
+              new WebSocketError(`Failed to parse message: ${errorMsg}`),
             );
           }
         }
@@ -298,8 +312,8 @@ export class ConsoleClient {
         "error",
         new WebSocketError(
           `Failed to connect: ${error instanceof Error ? error.message : String(error)}`,
-          error
-        )
+          error,
+        ),
       );
     }
   }
@@ -332,7 +346,9 @@ export class ConsoleClient {
     // Encode UTF-8 string to bytes, then to base64
     const encoder = new TextEncoder();
     const bytes = encoder.encode(data);
-    const binaryString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
+    const binaryString = Array.from(bytes, (byte) =>
+      String.fromCharCode(byte),
+    ).join("");
     const encoded = btoa(binaryString);
 
     const message = {
@@ -366,7 +382,9 @@ export class ConsoleClient {
   onConnected(callback: () => void): () => void {
     this.listeners.connected.push(callback);
     return () => {
-      this.listeners.connected = this.listeners.connected.filter((cb) => cb !== callback);
+      this.listeners.connected = this.listeners.connected.filter(
+        (cb) => cb !== callback,
+      );
     };
   }
 
@@ -376,7 +394,9 @@ export class ConsoleClient {
   onDisconnected(callback: () => void): () => void {
     this.listeners.disconnected.push(callback);
     return () => {
-      this.listeners.disconnected = this.listeners.disconnected.filter((cb) => cb !== callback);
+      this.listeners.disconnected = this.listeners.disconnected.filter(
+        (cb) => cb !== callback,
+      );
     };
   }
 
@@ -396,7 +416,9 @@ export class ConsoleClient {
   onError(callback: (error: Error) => void): () => void {
     this.listeners.error.push(callback);
     return () => {
-      this.listeners.error = this.listeners.error.filter((cb) => cb !== callback);
+      this.listeners.error = this.listeners.error.filter(
+        (cb) => cb !== callback,
+      );
     };
   }
 
@@ -417,10 +439,7 @@ export class ConsoleClient {
   private emit(event: "connected" | "disconnected"): void;
   private emit(event: "data", data: string): void;
   private emit(event: "error", error: Error): void;
-  private emit(
-    event: keyof typeof this.listeners,
-    arg?: string | Error
-  ): void {
+  private emit(event: keyof typeof this.listeners, arg?: string | Error): void {
     if (event === "connected" || event === "disconnected") {
       for (const listener of this.listeners[event]) {
         listener();
@@ -458,7 +477,7 @@ export class ConsoleClient {
         this.isErrorThrottled = true;
         console.error(
           `[ConsoleClient] Error rate exceeded for session ${String(this.sessionId)}. ` +
-          `Throttling errors to prevent UI freeze. Check server logs.`
+            `Throttling errors to prevent UI freeze. Check server logs.`,
         );
       }
       return false;

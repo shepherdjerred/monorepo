@@ -1,51 +1,72 @@
-import React, {Component} from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import React, { Component } from "react";
+import { Link, NavLink } from "react-router-dom";
 
 export default class Navbar extends Component {
-  constructor (props) {
+  constructor(props) {
     super(props);
     this.state = {
-      isNavbarMenuActive: false
+      isNavbarMenuActive: false,
     };
   }
 
-  toggleNavbarMenuActive () {
-    this.setState(previousState => {
+  toggleNavbarMenuActive() {
+    this.setState((previousState) => {
       return {
-        isNavbarMenuActive: !previousState.isNavbarMenuActive
+        isNavbarMenuActive: !previousState.isNavbarMenuActive,
       };
     });
   }
 
-  isNavbarMenuActive () {
+  isNavbarMenuActive() {
     return this.state.isNavbarMenuActive;
   }
 
-  render () {
+  render() {
     return (
-      <nav className='navbar is-light' role='navigation' aria-label='main navigation'>
-        <div className='navbar-brand'>
-          <NavLink className='navbar-item' to='/' activeClassName='is-active' exact>
+      <nav
+        className="navbar is-light"
+        role="navigation"
+        aria-label="main navigation"
+      >
+        <div className="navbar-brand">
+          <NavLink
+            className="navbar-item"
+            to="/"
+            activeClassName="is-active"
+            exact
+          >
             Usher
           </NavLink>
-          <a role='button' className={'navbar-burger ' + (this.isNavbarMenuActive() ? 'is-active' : '')}
-            aria-label='menu' aria-expanded='false' onClick={event => this.toggleNavbarMenuActive(event)}>
-            <span aria-hidden='true' />
-            <span aria-hidden='true' />
-            <span aria-hidden='true' />
+          <a
+            role="button"
+            className={
+              "navbar-burger " + (this.isNavbarMenuActive() ? "is-active" : "")
+            }
+            aria-label="menu"
+            aria-expanded="false"
+            onClick={(event) => this.toggleNavbarMenuActive(event)}
+          >
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
           </a>
         </div>
-        <div className={'navbar-end navbar-menu' + (this.isNavbarMenuActive() ? 'is-active' : '')}>
-          <Link to='/checkForSeat' className='navbar-item'>
+        <div
+          className={
+            "navbar-end navbar-menu" +
+            (this.isNavbarMenuActive() ? "is-active" : "")
+          }
+        >
+          <Link to="/checkForSeat" className="navbar-item">
             Check For Seat
           </Link>
-          <Link to='getSeats' className='navbar-item'>
+          <Link to="getSeats" className="navbar-item">
             Get Seats
           </Link>
-          <Link to='pickSeat' className='navbar-item'>
+          <Link to="pickSeat" className="navbar-item">
             Pick Seat
           </Link>
-          <Link to='releaseSeat' className='navbar-item'>
+          <Link to="releaseSeat" className="navbar-item">
             Release Seat
           </Link>
         </div>

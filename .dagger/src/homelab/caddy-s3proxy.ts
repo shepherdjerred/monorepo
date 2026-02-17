@@ -13,13 +13,21 @@ function buildCaddyS3ProxyContainer() {
   const builder = dag
     .container()
     .from(`caddy:${caddyVersionOnly}-builder-alpine`)
-    .withExec(["xcaddy", "build", "--with", "github.com/lindenlab/caddy-s3-proxy"]);
+    .withExec([
+      "xcaddy",
+      "build",
+      "--with",
+      "github.com/lindenlab/caddy-s3-proxy",
+    ]);
 
   // Get the built caddy binary
   const caddyBinary = builder.file("caddy");
 
   // Runtime stage: minimal caddy alpine image with our custom binary
-  return dag.container().from(`caddy:${caddyVersionOnly}-alpine`).withFile("/usr/bin/caddy", caddyBinary);
+  return dag
+    .container()
+    .from(`caddy:${caddyVersionOnly}-alpine`)
+    .withFile("/usr/bin/caddy", caddyBinary);
 }
 
 /**
@@ -47,7 +55,9 @@ export async function buildAndPushCaddyS3ProxyImage(
     };
   }
 
-  const result = await container.withRegistryAuth("ghcr.io", ghcrUsername, ghcrPassword).publish(imageName);
+  const result = await container
+    .withRegistryAuth("ghcr.io", ghcrUsername, ghcrPassword)
+    .publish(imageName);
 
   return {
     status: "passed",

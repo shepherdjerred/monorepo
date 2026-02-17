@@ -18,7 +18,7 @@ export function renderChampion(
   champion: Champion,
   highlight: boolean,
   durationInMinutes: number,
-  damageMax: number
+  damageMax: number,
 ) {
   const items = renderItems(champion.items, champion.visionScore);
 

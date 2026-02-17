@@ -7,7 +7,8 @@ import { getOrComputeJscpd } from "./shared/tool-cache.js";
 import { runJscpd } from "./shared/tool-runner.js";
 
 const createRule = ESLintUtils.RuleCreator(
-  (name) => `https://github.com/shepherdjerred/share/blob/main/packages/eslint-config/src/rules/${name}.ts`,
+  (name) =>
+    `https://github.com/shepherdjerred/share/blob/main/packages/eslint-config/src/rules/${name}.ts`,
 );
 
 type MessageIds = "codeDuplication";
@@ -53,7 +54,9 @@ export const noCodeDuplication = createRule<Options, MessageIds>({
     const projectRoot = context.cwd;
     const minLines = options.minLines ?? 5;
 
-    const jscpdResults = getOrComputeJscpd(projectRoot, () => runJscpd(projectRoot));
+    const jscpdResults = getOrComputeJscpd(projectRoot, () =>
+      runJscpd(projectRoot),
+    );
     const fileDuplications = jscpdResults.get(filename);
     if (!fileDuplications || fileDuplications.length === 0) {
       return {};

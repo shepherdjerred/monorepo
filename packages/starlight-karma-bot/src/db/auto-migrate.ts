@@ -23,7 +23,9 @@ export async function autoMigrateLegacyKarma(): Promise<void> {
     return;
   }
 
-  console.warn(`[Migration] Found ${legacyCount.toString()} legacy karma record(s) without a guildId`);
+  console.warn(
+    `[Migration] Found ${legacyCount.toString()} legacy karma record(s) without a guildId`,
+  );
 
   // Determine which guild to assign legacy karma to
   const targetGuildId = "208425771172102144";
@@ -34,7 +36,9 @@ export async function autoMigrateLegacyKarma(): Promise<void> {
 
   // Perform the migration
   try {
-    console.warn(`[Migration] Migrating ${legacyCount.toString()} legacy karma record(s) to guild ${targetGuildId}...`);
+    console.warn(
+      `[Migration] Migrating ${legacyCount.toString()} legacy karma record(s) to guild ${targetGuildId}...`,
+    );
 
     const result = await dataSource
       .getRepository(Karma)
@@ -44,7 +48,9 @@ export async function autoMigrateLegacyKarma(): Promise<void> {
       .where("guildId IS NULL")
       .execute();
 
-    console.warn(`[Migration] Successfully migrated ${String(result.affected)} karma record(s)`);
+    console.warn(
+      `[Migration] Successfully migrated ${String(result.affected)} karma record(s)`,
+    );
   } catch (error: unknown) {
     console.error("[Migration] Failed to migrate legacy karma:", error);
     // Don't throw - allow bot to continue starting up

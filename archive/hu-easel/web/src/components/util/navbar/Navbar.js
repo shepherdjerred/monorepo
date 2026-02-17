@@ -1,12 +1,12 @@
-import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
-import PropTypes from 'prop-types';
+import React, { Component } from "react";
+import { Link } from "react-router-dom";
+import PropTypes from "prop-types";
 
 export default class Navbar extends Component {
   static propTypes = {
     isLoggedIn: PropTypes.bool.isRequired,
     username: PropTypes.string.isRequired,
-    onLogout: PropTypes.func.isRequired
+    onLogout: PropTypes.func.isRequired,
   };
 
   renderAccountLink = () => {
@@ -14,43 +14,45 @@ export default class Navbar extends Component {
     if (isLoggedIn) {
       return (
         <li>
-          <Link to='/login' onClick={onLogout}>Log out of {username}</Link>
+          <Link to="/login" onClick={onLogout}>
+            Log out of {username}
+          </Link>
         </li>
       );
     } else {
       return (
         <li>
-          <Link to='/login'>Login</Link>
+          <Link to="/login">Login</Link>
         </li>
       );
     }
   };
 
-  render () {
+  render() {
     return (
       <div>
         <h1>EASEL</h1>
         <ul>
           <li>
-            <Link to='/'>Home</Link>
+            <Link to="/">Home</Link>
           </li>
-          { this.renderAccountLink() }
+          {this.renderAccountLink()}
           <li>
-            <Link to='/users'>Users</Link>
+            <Link to="/users">Users</Link>
           </li>
           <li>
-            <Link to='/courses'>Courses</Link>
+            <Link to="/courses">Courses</Link>
             <ul>
               <li>
-                <Link to='/courses/contents'>Contents</Link>
+                <Link to="/courses/contents">Contents</Link>
               </li>
               <li>
-                <Link to='/courses/listings'>Listings</Link>
+                <Link to="/courses/listings">Listings</Link>
               </li>
             </ul>
           </li>
           <li>
-            <Link to='/terms'>Terms</Link>
+            <Link to="/terms">Terms</Link>
           </li>
         </ul>
       </div>

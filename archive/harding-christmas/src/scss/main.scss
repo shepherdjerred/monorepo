@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Open+Sans|Roboto+Slab');
+@import url("https://fonts.googleapis.com/css?family=Open+Sans|Roboto+Slab");
 
 .countdownBackground {
   min-height: 100vh;
@@ -16,11 +16,11 @@
 }
 
 .countdownEntry {
-  font-family: 'Open Sans', sans-serif;
+  font-family: "Open Sans", sans-serif;
   color: #fff;
   text-align: center;
   border: 1px solid #fff;
-  background: rgba(255, 255, 255, .15);
+  background: rgba(255, 255, 255, 0.15);
   width: 15%;
   height: 15vw;
   display: flex;

@@ -1,11 +1,11 @@
-import api from '../../../api';
-import {setJwt} from '../jwt/actions';
+import api from "../../../api";
+import { setJwt } from "../jwt/actions";
 
-export const REQUEST_LOGIN_BEGIN = 'REQUEST_LOGIN_BEGIN';
-export const REQUEST_LOGIN_SUCCESS = 'REQUEST_LOGIN_SUCCESS';
-export const REQUEST_LOGIN_ERROR = 'REQUEST_LOGIN_ERROR';
+export const REQUEST_LOGIN_BEGIN = "REQUEST_LOGIN_BEGIN";
+export const REQUEST_LOGIN_SUCCESS = "REQUEST_LOGIN_SUCCESS";
+export const REQUEST_LOGIN_ERROR = "REQUEST_LOGIN_ERROR";
 
-export function login (username, password) {
+export function login(username, password) {
   return function (dispatch) {
     (async function () {
       dispatch(loginBegin());
@@ -21,21 +21,21 @@ export function login (username, password) {
   };
 }
 
-export function loginBegin () {
+export function loginBegin() {
   return {
-    type: REQUEST_LOGIN_BEGIN
+    type: REQUEST_LOGIN_BEGIN,
   };
 }
 
-export function loginSuccess () {
+export function loginSuccess() {
   return {
-    type: REQUEST_LOGIN_SUCCESS
+    type: REQUEST_LOGIN_SUCCESS,
   };
 }
 
-export function loginError (error) {
+export function loginError(error) {
   return {
     type: REQUEST_LOGIN_ERROR,
-    error
+    error,
   };
 }

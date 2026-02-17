@@ -7,7 +7,7 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
-import type { Chart} from "cdk8s";
+import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { withCommonLinuxServerProps } from "../../misc/linux-server.ts";
 import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
@@ -26,8 +26,10 @@ export function createBazarrDeployment(
     strategy: DeploymentStrategy.recreate(),
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/run-as-non-root": "LinuxServer.io images run as root internally",
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "LinuxServer.io images require writable filesystem",
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "LinuxServer.io images run as root internally",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "LinuxServer.io images require writable filesystem",
       },
     },
   });
@@ -46,14 +48,26 @@ export function createBazarrDeployment(
       volumeMounts: [
         {
           path: "/config",
-          volume: Volume.fromPersistentVolumeClaim(chart, "bazarr-volume", localPathVolume.claim),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "bazarr-volume",
+            localPathVolume.claim,
+          ),
         },
         {
-          volume: Volume.fromPersistentVolumeClaim(chart, "bazarr-movies-hdd-volume", claims.movies),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "bazarr-movies-hdd-volume",
+            claims.movies,
+          ),
           path: "/movies",
         },
         {
-          volume: Volume.fromPersistentVolumeClaim(chart, "bazarr-tv-hdd-volume", claims.tv),
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "bazarr-tv-hdd-volume",
+            claims.tv,
+          ),
           path: "/tv",
         },
       ],

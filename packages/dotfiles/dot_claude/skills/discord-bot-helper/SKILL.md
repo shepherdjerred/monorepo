@@ -29,13 +29,13 @@ bun add discord.js
 ### Main File (index.js)
 
 ```typescript
-import { Client, Events, GatewayIntentBits } from 'discord.js';
+import { Client, Events, GatewayIntentBits } from "discord.js";
 
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,  // Privileged intent
+    GatewayIntentBits.MessageContent, // Privileged intent
   ],
 });
 
@@ -46,8 +46,8 @@ client.once(Events.ClientReady, (readyClient) => {
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
-  if (interaction.commandName === 'ping') {
-    await interaction.reply('Pong!');
+  if (interaction.commandName === "ping") {
+    await interaction.reply("Pong!");
   }
 });
 
@@ -60,19 +60,20 @@ Intents control which events your bot receives:
 
 ### Common Intents
 
-| Intent | Events Received |
-|--------|-----------------|
-| `Guilds` | Guild create/update/delete, channels, roles |
-| `GuildMembers` | Member join/leave/update (privileged) |
-| `GuildMessages` | Message events in guilds |
-| `MessageContent` | Message content, attachments, embeds (privileged) |
-| `GuildVoiceStates` | Voice channel activity |
-| `GuildPresences` | Member presence updates (privileged) |
-| `DirectMessages` | DM message events |
+| Intent             | Events Received                                   |
+| ------------------ | ------------------------------------------------- |
+| `Guilds`           | Guild create/update/delete, channels, roles       |
+| `GuildMembers`     | Member join/leave/update (privileged)             |
+| `GuildMessages`    | Message events in guilds                          |
+| `MessageContent`   | Message content, attachments, embeds (privileged) |
+| `GuildVoiceStates` | Voice channel activity                            |
+| `GuildPresences`   | Member presence updates (privileged)              |
+| `DirectMessages`   | DM message events                                 |
 
 ### Privileged Intents
 
 Require manual enabling in Discord Developer Portal:
+
 - `GuildMembers`
 - `GuildPresences`
 - `MessageContent`
@@ -81,9 +82,9 @@ Require manual enabling in Discord Developer Portal:
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers,      // Privileged
-    GatewayIntentBits.GuildPresences,    // Privileged
-    GatewayIntentBits.MessageContent,    // Privileged
+    GatewayIntentBits.GuildMembers, // Privileged
+    GatewayIntentBits.GuildPresences, // Privileged
+    GatewayIntentBits.MessageContent, // Privileged
   ],
 });
 ```
@@ -94,48 +95,46 @@ const client = new Client({
 
 ```typescript
 // commands/ping.js
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder } from "discord.js";
 
 export const data = new SlashCommandBuilder()
-  .setName('ping')
-  .setDescription('Replies with Pong!');
+  .setName("ping")
+  .setDescription("Replies with Pong!");
 
 export async function execute(interaction) {
-  await interaction.reply('Pong!');
+  await interaction.reply("Pong!");
 }
 ```
 
 ### Command with Options
 
 ```typescript
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder } from "discord.js";
 
 export const data = new SlashCommandBuilder()
-  .setName('echo')
-  .setDescription('Replies with your input')
-  .addStringOption(option =>
+  .setName("echo")
+  .setDescription("Replies with your input")
+  .addStringOption((option) =>
     option
-      .setName('message')
-      .setDescription('The message to echo')
-      .setRequired(true)
+      .setName("message")
+      .setDescription("The message to echo")
+      .setRequired(true),
   )
-  .addUserOption(option =>
-    option
-      .setName('target')
-      .setDescription('User to mention')
+  .addUserOption((option) =>
+    option.setName("target").setDescription("User to mention"),
   )
-  .addIntegerOption(option =>
+  .addIntegerOption((option) =>
     option
-      .setName('count')
-      .setDescription('Number of times')
+      .setName("count")
+      .setDescription("Number of times")
       .setMinValue(1)
-      .setMaxValue(10)
+      .setMaxValue(10),
   );
 
 export async function execute(interaction) {
-  const message = interaction.options.getString('message');
-  const target = interaction.options.getUser('target');
-  const count = interaction.options.getInteger('count') ?? 1;
+  const message = interaction.options.getString("message");
+  const target = interaction.options.getUser("target");
+  const count = interaction.options.getInteger("count") ?? 1;
 
   const reply = target
     ? `${target}, ${message.repeat(count)}`
@@ -149,18 +148,18 @@ export async function execute(interaction) {
 
 ```typescript
 export const data = new SlashCommandBuilder()
-  .setName('gif')
-  .setDescription('Sends a gif')
-  .addStringOption(option =>
+  .setName("gif")
+  .setDescription("Sends a gif")
+  .addStringOption((option) =>
     option
-      .setName('category')
-      .setDescription('The gif category')
+      .setName("category")
+      .setDescription("The gif category")
       .setRequired(true)
       .addChoices(
-        { name: 'Funny', value: 'gif_funny' },
-        { name: 'Meme', value: 'gif_meme' },
-        { name: 'Cute', value: 'gif_cute' },
-      )
+        { name: "Funny", value: "gif_funny" },
+        { name: "Meme", value: "gif_meme" },
+        { name: "Cute", value: "gif_cute" },
+      ),
   );
 ```
 
@@ -168,32 +167,32 @@ export const data = new SlashCommandBuilder()
 
 ```typescript
 export const data = new SlashCommandBuilder()
-  .setName('user')
-  .setDescription('User commands')
-  .addSubcommand(subcommand =>
+  .setName("user")
+  .setDescription("User commands")
+  .addSubcommand((subcommand) =>
     subcommand
-      .setName('info')
-      .setDescription('Get user info')
-      .addUserOption(option =>
-        option.setName('target').setDescription('The user')
-      )
+      .setName("info")
+      .setDescription("Get user info")
+      .addUserOption((option) =>
+        option.setName("target").setDescription("The user"),
+      ),
   )
-  .addSubcommand(subcommand =>
+  .addSubcommand((subcommand) =>
     subcommand
-      .setName('avatar')
-      .setDescription('Get user avatar')
-      .addUserOption(option =>
-        option.setName('target').setDescription('The user')
-      )
+      .setName("avatar")
+      .setDescription("Get user avatar")
+      .addUserOption((option) =>
+        option.setName("target").setDescription("The user"),
+      ),
   );
 
 export async function execute(interaction) {
   const subcommand = interaction.options.getSubcommand();
-  const target = interaction.options.getUser('target') ?? interaction.user;
+  const target = interaction.options.getUser("target") ?? interaction.user;
 
-  if (subcommand === 'info') {
+  if (subcommand === "info") {
     await interaction.reply(`User: ${target.tag}\nID: ${target.id}`);
-  } else if (subcommand === 'avatar') {
+  } else if (subcommand === "avatar") {
     await interaction.reply(target.displayAvatarURL({ size: 256 }));
   }
 }
@@ -203,50 +202,48 @@ export async function execute(interaction) {
 
 ```typescript
 // deploy-commands.js
-import { REST, Routes } from 'discord.js';
-import { commands } from './commands/index.js';
+import { REST, Routes } from "discord.js";
+import { commands } from "./commands/index.js";
 
 const rest = new REST().setToken(process.env.DISCORD_TOKEN);
 
 // Guild commands (instant, for development)
-await rest.put(
-  Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
-  { body: commands.map(c => c.data.toJSON()) }
-);
+await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), {
+  body: commands.map((c) => c.data.toJSON()),
+});
 
 // Global commands (takes up to 1 hour to propagate)
-await rest.put(
-  Routes.applicationCommands(CLIENT_ID),
-  { body: commands.map(c => c.data.toJSON()) }
-);
+await rest.put(Routes.applicationCommands(CLIENT_ID), {
+  body: commands.map((c) => c.data.toJSON()),
+});
 ```
 
 ### Autocomplete
 
 ```typescript
 export const data = new SlashCommandBuilder()
-  .setName('search')
-  .setDescription('Search something')
-  .addStringOption(option =>
+  .setName("search")
+  .setDescription("Search something")
+  .addStringOption((option) =>
     option
-      .setName('query')
-      .setDescription('Search query')
-      .setAutocomplete(true)
+      .setName("query")
+      .setDescription("Search query")
+      .setAutocomplete(true),
   );
 
 export async function autocomplete(interaction) {
   const focusedValue = interaction.options.getFocused();
 
-  const choices = ['apple', 'banana', 'cherry', 'date', 'elderberry'];
-  const filtered = choices.filter(c => c.startsWith(focusedValue));
+  const choices = ["apple", "banana", "cherry", "date", "elderberry"];
+  const filtered = choices.filter((c) => c.startsWith(focusedValue));
 
   await interaction.respond(
-    filtered.slice(0, 25).map(choice => ({ name: choice, value: choice }))
+    filtered.slice(0, 25).map((choice) => ({ name: choice, value: choice })),
   );
 }
 
 export async function execute(interaction) {
-  const query = interaction.options.getString('query');
+  const query = interaction.options.getString("query");
   await interaction.reply(`You searched for: ${query}`);
 }
 ```
@@ -257,20 +254,20 @@ export async function execute(interaction) {
 
 ```typescript
 // Simple reply
-await interaction.reply('Hello!');
+await interaction.reply("Hello!");
 
 // Ephemeral reply (only visible to user)
-await interaction.reply({ content: 'Secret!', ephemeral: true });
+await interaction.reply({ content: "Secret!", ephemeral: true });
 
 // Deferred reply (for long operations)
 await interaction.deferReply();
 // ... do work ...
-await interaction.editReply('Done!');
+await interaction.editReply("Done!");
 
 // Follow-up messages
-await interaction.reply('First message');
-await interaction.followUp('Second message');
-await interaction.followUp({ content: 'Ephemeral followup', ephemeral: true });
+await interaction.reply("First message");
+await interaction.followUp("Second message");
+await interaction.followUp({ content: "Ephemeral followup", ephemeral: true });
 ```
 
 ### Fetching the Reply
@@ -285,27 +282,30 @@ console.log(reply.id);
 ### Creating Embeds
 
 ```typescript
-import { EmbedBuilder } from 'discord.js';
+import { EmbedBuilder } from "discord.js";
 
 const embed = new EmbedBuilder()
-  .setColor(0x0099FF)
-  .setTitle('Embed Title')
-  .setURL('https://discord.js.org/')
+  .setColor(0x0099ff)
+  .setTitle("Embed Title")
+  .setURL("https://discord.js.org/")
   .setAuthor({
-    name: 'Author Name',
-    iconURL: 'https://example.com/icon.png',
-    url: 'https://example.com'
+    name: "Author Name",
+    iconURL: "https://example.com/icon.png",
+    url: "https://example.com",
   })
-  .setDescription('This is the main description')
-  .setThumbnail('https://example.com/thumbnail.png')
+  .setDescription("This is the main description")
+  .setThumbnail("https://example.com/thumbnail.png")
   .addFields(
-    { name: 'Field 1', value: 'Value 1', inline: true },
-    { name: 'Field 2', value: 'Value 2', inline: true },
-    { name: 'Field 3', value: 'Value 3' },
+    { name: "Field 1", value: "Value 1", inline: true },
+    { name: "Field 2", value: "Value 2", inline: true },
+    { name: "Field 3", value: "Value 3" },
   )
-  .setImage('https://example.com/image.png')
+  .setImage("https://example.com/image.png")
   .setTimestamp()
-  .setFooter({ text: 'Footer text', iconURL: 'https://example.com/footer.png' });
+  .setFooter({
+    text: "Footer text",
+    iconURL: "https://example.com/footer.png",
+  });
 
 await interaction.reply({ embeds: [embed] });
 ```
@@ -313,8 +313,8 @@ await interaction.reply({ embeds: [embed] });
 ### Multiple Embeds
 
 ```typescript
-const embed1 = new EmbedBuilder().setTitle('Embed 1').setColor(0xFF0000);
-const embed2 = new EmbedBuilder().setTitle('Embed 2').setColor(0x00FF00);
+const embed1 = new EmbedBuilder().setTitle("Embed 1").setColor(0xff0000);
+const embed2 = new EmbedBuilder().setTitle("Embed 2").setColor(0x00ff00);
 
 await interaction.reply({ embeds: [embed1, embed2] });
 ```
@@ -324,33 +324,32 @@ await interaction.reply({ embeds: [embed1, embed2] });
 ### Creating Buttons
 
 ```typescript
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 
-const row = new ActionRowBuilder()
-  .addComponents(
-    new ButtonBuilder()
-      .setCustomId('primary')
-      .setLabel('Primary')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setCustomId('secondary')
-      .setLabel('Secondary')
-      .setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder()
-      .setCustomId('success')
-      .setLabel('Success')
-      .setStyle(ButtonStyle.Success),
-    new ButtonBuilder()
-      .setCustomId('danger')
-      .setLabel('Danger')
-      .setStyle(ButtonStyle.Danger),
-    new ButtonBuilder()
-      .setLabel('Link')
-      .setURL('https://discord.js.org')
-      .setStyle(ButtonStyle.Link),
-  );
+const row = new ActionRowBuilder().addComponents(
+  new ButtonBuilder()
+    .setCustomId("primary")
+    .setLabel("Primary")
+    .setStyle(ButtonStyle.Primary),
+  new ButtonBuilder()
+    .setCustomId("secondary")
+    .setLabel("Secondary")
+    .setStyle(ButtonStyle.Secondary),
+  new ButtonBuilder()
+    .setCustomId("success")
+    .setLabel("Success")
+    .setStyle(ButtonStyle.Success),
+  new ButtonBuilder()
+    .setCustomId("danger")
+    .setLabel("Danger")
+    .setStyle(ButtonStyle.Danger),
+  new ButtonBuilder()
+    .setLabel("Link")
+    .setURL("https://discord.js.org")
+    .setStyle(ButtonStyle.Link),
+);
 
-await interaction.reply({ content: 'Click a button!', components: [row] });
+await interaction.reply({ content: "Click a button!", components: [row] });
 ```
 
 ### Handling Button Clicks
@@ -359,8 +358,8 @@ await interaction.reply({ content: 'Click a button!', components: [row] });
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isButton()) return;
 
-  if (interaction.customId === 'primary') {
-    await interaction.reply('You clicked the primary button!');
+  if (interaction.customId === "primary") {
+    await interaction.reply("You clicked the primary button!");
   }
 });
 ```
@@ -369,7 +368,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 ```typescript
 const row = ActionRowBuilder.from(interaction.message.components[0]);
-row.components.forEach(button => button.setDisabled(true));
+row.components.forEach((button) => button.setDisabled(true));
 
 await interaction.update({ components: [row] });
 ```
@@ -379,21 +378,20 @@ await interaction.update({ components: [row] });
 ### String Select Menu
 
 ```typescript
-import { ActionRowBuilder, StringSelectMenuBuilder } from 'discord.js';
+import { ActionRowBuilder, StringSelectMenuBuilder } from "discord.js";
 
-const row = new ActionRowBuilder()
-  .addComponents(
-    new StringSelectMenuBuilder()
-      .setCustomId('select')
-      .setPlaceholder('Nothing selected')
-      .addOptions(
-        { label: 'Option 1', description: 'Description 1', value: 'first' },
-        { label: 'Option 2', description: 'Description 2', value: 'second' },
-        { label: 'Option 3', description: 'Description 3', value: 'third' },
-      )
-  );
+const row = new ActionRowBuilder().addComponents(
+  new StringSelectMenuBuilder()
+    .setCustomId("select")
+    .setPlaceholder("Nothing selected")
+    .addOptions(
+      { label: "Option 1", description: "Description 1", value: "first" },
+      { label: "Option 2", description: "Description 2", value: "second" },
+      { label: "Option 3", description: "Description 3", value: "third" },
+    ),
+);
 
-await interaction.reply({ content: 'Select an option!', components: [row] });
+await interaction.reply({ content: "Select an option!", components: [row] });
 ```
 
 ### Handling Selection
@@ -402,7 +400,7 @@ await interaction.reply({ content: 'Select an option!', components: [row] });
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isStringSelectMenu()) return;
 
-  if (interaction.customId === 'select') {
+  if (interaction.customId === "select") {
     const selected = interaction.values[0];
     await interaction.reply(`You selected: ${selected}`);
   }
@@ -412,21 +410,25 @@ client.on(Events.InteractionCreate, async (interaction) => {
 ### User/Role/Channel Select Menus
 
 ```typescript
-import { UserSelectMenuBuilder, RoleSelectMenuBuilder, ChannelSelectMenuBuilder } from 'discord.js';
+import {
+  UserSelectMenuBuilder,
+  RoleSelectMenuBuilder,
+  ChannelSelectMenuBuilder,
+} from "discord.js";
 
 const userSelect = new UserSelectMenuBuilder()
-  .setCustomId('user-select')
-  .setPlaceholder('Select a user')
+  .setCustomId("user-select")
+  .setPlaceholder("Select a user")
   .setMinValues(1)
   .setMaxValues(3);
 
 const roleSelect = new RoleSelectMenuBuilder()
-  .setCustomId('role-select')
-  .setPlaceholder('Select a role');
+  .setCustomId("role-select")
+  .setPlaceholder("Select a role");
 
 const channelSelect = new ChannelSelectMenuBuilder()
-  .setCustomId('channel-select')
-  .setPlaceholder('Select a channel');
+  .setCustomId("channel-select")
+  .setPlaceholder("Select a channel");
 ```
 
 ## Modals (Forms)
@@ -434,32 +436,37 @@ const channelSelect = new ChannelSelectMenuBuilder()
 ### Creating a Modal
 
 ```typescript
-import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } from 'discord.js';
+import {
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  ActionRowBuilder,
+} from "discord.js";
 
 const modal = new ModalBuilder()
-  .setCustomId('feedback-modal')
-  .setTitle('Feedback Form');
+  .setCustomId("feedback-modal")
+  .setTitle("Feedback Form");
 
 const titleInput = new TextInputBuilder()
-  .setCustomId('title')
-  .setLabel('Title')
+  .setCustomId("title")
+  .setLabel("Title")
   .setStyle(TextInputStyle.Short)
-  .setPlaceholder('Enter a title')
+  .setPlaceholder("Enter a title")
   .setRequired(true)
   .setMaxLength(100);
 
 const descriptionInput = new TextInputBuilder()
-  .setCustomId('description')
-  .setLabel('Description')
+  .setCustomId("description")
+  .setLabel("Description")
   .setStyle(TextInputStyle.Paragraph)
-  .setPlaceholder('Enter your feedback')
+  .setPlaceholder("Enter your feedback")
   .setRequired(true)
   .setMinLength(10)
   .setMaxLength(1000);
 
 modal.addComponents(
   new ActionRowBuilder().addComponents(titleInput),
-  new ActionRowBuilder().addComponents(descriptionInput)
+  new ActionRowBuilder().addComponents(descriptionInput),
 );
 
 // Show modal (must be first response)
@@ -472,11 +479,13 @@ await interaction.showModal(modal);
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isModalSubmit()) return;
 
-  if (interaction.customId === 'feedback-modal') {
-    const title = interaction.fields.getTextInputValue('title');
-    const description = interaction.fields.getTextInputValue('description');
+  if (interaction.customId === "feedback-modal") {
+    const title = interaction.fields.getTextInputValue("title");
+    const description = interaction.fields.getTextInputValue("description");
 
-    await interaction.reply(`Feedback received!\nTitle: ${title}\nDescription: ${description}`);
+    await interaction.reply(
+      `Feedback received!\nTitle: ${title}\nDescription: ${description}`,
+    );
   }
 });
 ```
@@ -486,7 +495,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 ### Checking Permissions
 
 ```typescript
-import { PermissionFlagsBits } from 'discord.js';
+import { PermissionFlagsBits } from "discord.js";
 
 // Check if member has permission
 if (interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
@@ -494,17 +503,24 @@ if (interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
 }
 
 // Check multiple permissions
-if (interaction.member.permissions.has([
-  PermissionFlagsBits.BanMembers,
-  PermissionFlagsBits.KickMembers,
-])) {
+if (
+  interaction.member.permissions.has([
+    PermissionFlagsBits.BanMembers,
+    PermissionFlagsBits.KickMembers,
+  ])
+) {
   // Has both
 }
 
 // Check bot permissions in channel
-const botPermissions = interaction.channel.permissionsFor(interaction.client.user);
+const botPermissions = interaction.channel.permissionsFor(
+  interaction.client.user,
+);
 if (!botPermissions.has(PermissionFlagsBits.SendMessages)) {
-  return interaction.reply({ content: 'I cannot send messages here!', ephemeral: true });
+  return interaction.reply({
+    content: "I cannot send messages here!",
+    ephemeral: true,
+  });
 }
 ```
 
@@ -512,27 +528,27 @@ if (!botPermissions.has(PermissionFlagsBits.SendMessages)) {
 
 ```typescript
 export const data = new SlashCommandBuilder()
-  .setName('ban')
-  .setDescription('Ban a user')
+  .setName("ban")
+  .setDescription("Ban a user")
   .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
-  .setDMPermission(false);  // Disable in DMs
+  .setDMPermission(false); // Disable in DMs
 ```
 
 ### Common Permission Flags
 
-| Flag | Description |
-|------|-------------|
-| `Administrator` | All permissions |
-| `ManageGuild` | Manage server settings |
-| `ManageChannels` | Create/delete/modify channels |
-| `ManageRoles` | Manage roles below bot's role |
-| `ManageMessages` | Delete messages, pin, etc. |
-| `KickMembers` | Kick members |
-| `BanMembers` | Ban members |
-| `SendMessages` | Send messages in channels |
-| `EmbedLinks` | Embed links in messages |
-| `AttachFiles` | Upload files |
-| `MentionEveryone` | Mention @everyone/@here |
+| Flag              | Description                   |
+| ----------------- | ----------------------------- |
+| `Administrator`   | All permissions               |
+| `ManageGuild`     | Manage server settings        |
+| `ManageChannels`  | Create/delete/modify channels |
+| `ManageRoles`     | Manage roles below bot's role |
+| `ManageMessages`  | Delete messages, pin, etc.    |
+| `KickMembers`     | Kick members                  |
+| `BanMembers`      | Ban members                   |
+| `SendMessages`    | Send messages in channels     |
+| `EmbedLinks`      | Embed links in messages       |
+| `AttachFiles`     | Upload files                  |
+| `MentionEveryone` | Mention @everyone/@here       |
 
 ## Event Handling
 
@@ -540,7 +556,7 @@ export const data = new SlashCommandBuilder()
 
 ```typescript
 // events/ready.js
-import { Events } from 'discord.js';
+import { Events } from "discord.js";
 
 export const name = Events.ClientReady;
 export const once = true;
@@ -552,7 +568,7 @@ export function execute(client) {
 
 ```typescript
 // events/interactionCreate.js
-import { Events } from 'discord.js';
+import { Events } from "discord.js";
 
 export const name = Events.InteractionCreate;
 
@@ -566,7 +582,7 @@ export async function execute(interaction) {
     await command.execute(interaction);
   } catch (error) {
     console.error(error);
-    const reply = { content: 'There was an error!', ephemeral: true };
+    const reply = { content: "There was an error!", ephemeral: true };
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp(reply);
     } else {
@@ -579,11 +595,11 @@ export async function execute(interaction) {
 ### Loading Events Dynamically
 
 ```typescript
-import { readdirSync } from 'fs';
-import { join } from 'path';
+import { readdirSync } from "fs";
+import { join } from "path";
 
-const eventsPath = join(__dirname, 'events');
-const eventFiles = readdirSync(eventsPath).filter(f => f.endsWith('.js'));
+const eventsPath = join(__dirname, "events");
+const eventFiles = readdirSync(eventsPath).filter((f) => f.endsWith(".js"));
 
 for (const file of eventFiles) {
   const event = await import(join(eventsPath, file));
@@ -602,14 +618,14 @@ for (const file of eventFiles) {
 
 ```typescript
 // shard.js (entry point)
-import { ShardingManager } from 'discord.js';
+import { ShardingManager } from "discord.js";
 
-const manager = new ShardingManager('./bot.js', {
+const manager = new ShardingManager("./bot.js", {
   token: process.env.DISCORD_TOKEN,
-  totalShards: 'auto',  // Let Discord determine shard count
+  totalShards: "auto", // Let Discord determine shard count
 });
 
-manager.on('shardCreate', (shard) => {
+manager.on("shardCreate", (shard) => {
   console.log(`Launched shard ${shard.id}`);
 });
 
@@ -620,7 +636,7 @@ manager.spawn();
 
 ```typescript
 // Get guild count across all shards
-const results = await client.shard.fetchClientValues('guilds.cache.size');
+const results = await client.shard.fetchClientValues("guilds.cache.size");
 const totalGuilds = results.reduce((acc, count) => acc + count, 0);
 ```
 

@@ -95,7 +95,7 @@ pub fn setup() -> TestContext {
 
 ### Doc Tests
 
-```rust
+````rust
 /// Adds two numbers together.
 ///
 /// # Examples
@@ -116,7 +116,7 @@ pub fn setup() -> TestContext {
 pub fn add(a: i32, b: i32) -> i32 {
     a + b
 }
-```
+````
 
 ### Test Fixtures and Setup
 
@@ -279,17 +279,17 @@ bacon doc
 
 ### Keyboard Shortcuts
 
-| Key | Action |
-|-----|--------|
-| `c` | Switch to clippy job |
-| `t` | Switch to test job |
-| `d` | Switch to doc job |
-| `r` | Rerun current job |
-| `f` | Focus on failing test |
-| `w` | Toggle wrapping |
-| `s` | Toggle summary mode |
+| Key   | Action                         |
+| ----- | ------------------------------ |
+| `c`   | Switch to clippy job           |
+| `t`   | Switch to test job             |
+| `d`   | Switch to doc job              |
+| `r`   | Rerun current job              |
+| `f`   | Focus on failing test          |
+| `w`   | Toggle wrapping                |
+| `s`   | Toggle summary mode            |
 | `Esc` | Back to all tests / quit focus |
-| `q` | Quit bacon |
+| `q`   | Quit bacon                     |
 
 ### Configuration
 
@@ -428,37 +428,37 @@ Install the CodeLLDB extension. Add `.vscode/launch.json`:
 
 ```json
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug binary",
-            "cargo": {
-                "args": ["build", "--bin=my-binary"],
-                "filter": {
-                    "name": "my-binary",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests",
-            "cargo": {
-                "args": ["test", "--no-run", "--lib"],
-                "filter": {
-                    "name": "my-crate",
-                    "kind": "lib"
-                }
-            },
-            "args": ["--test-threads=1"],
-            "cwd": "${workspaceFolder}"
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug binary",
+      "cargo": {
+        "args": ["build", "--bin=my-binary"],
+        "filter": {
+          "name": "my-binary",
+          "kind": "bin"
         }
-    ]
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests",
+      "cargo": {
+        "args": ["test", "--no-run", "--lib"],
+        "filter": {
+          "name": "my-crate",
+          "kind": "lib"
+        }
+      },
+      "args": ["--test-threads=1"],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
 }
 ```
 
@@ -589,13 +589,13 @@ MIRIFLAGS="-Zmiri-symbolic-alignment-check" cargo +nightly miri test
 
 ### Common Miri Flags
 
-| Flag | Purpose |
-|------|---------|
-| `-Zmiri-disable-isolation` | Allow system calls (file I/O, env vars) |
-| `-Zmiri-symbolic-alignment-check` | Stricter alignment checking |
-| `-Zmiri-tree-borrows` | Use Tree Borrows model (experimental) |
-| `-Zmiri-seed=N` | Set random seed for reproducibility |
-| `-Zmiri-ignore-leaks` | Do not report memory leaks |
+| Flag                              | Purpose                                 |
+| --------------------------------- | --------------------------------------- |
+| `-Zmiri-disable-isolation`        | Allow system calls (file I/O, env vars) |
+| `-Zmiri-symbolic-alignment-check` | Stricter alignment checking             |
+| `-Zmiri-tree-borrows`             | Use Tree Borrows model (experimental)   |
+| `-Zmiri-seed=N`                   | Set random seed for reproducibility     |
+| `-Zmiri-ignore-leaks`             | Do not report memory leaks              |
 
 ### Miri Limitations
 
@@ -608,6 +608,7 @@ MIRIFLAGS="-Zmiri-symbolic-alignment-check" cargo +nightly miri test
 ### When to Use Miri
 
 Run miri on code that:
+
 - Uses `unsafe` blocks
 - Performs raw pointer manipulation
 - Implements data structures with manual memory management

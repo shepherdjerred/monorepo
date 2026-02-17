@@ -59,7 +59,7 @@ export type Logger = {
     meta?: Record<string, unknown>,
   ) => void;
   child: (module: string) => Logger;
-}
+};
 
 function createLogger(moduleName?: string): Logger {
   return {
@@ -96,11 +96,16 @@ function createLogger(moduleName?: string): Logger {
                   stack: error.stack,
                 },
               }
-            : (error === undefined
+            : error === undefined
               ? {}
-              : { error });
+              : { error };
         console.error(
-          formatLogEntry("error", message, { ...meta, ...errorMeta }, moduleName),
+          formatLogEntry(
+            "error",
+            message,
+            { ...meta, ...errorMeta },
+            moduleName,
+          ),
         );
       }
     },

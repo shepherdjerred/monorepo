@@ -61,7 +61,10 @@ describe("Helm Compatibility Tests", () => {
         const parsed = parseYaml(doc) as unknown;
         const result = K8sResourceSchema.safeParse(parsed);
         if (result.success) {
-          allResources.push({ file: "manifests.k8s.yaml", resource: result.data });
+          allResources.push({
+            file: "manifests.k8s.yaml",
+            resource: result.data,
+          });
         }
       } catch {
         // Skip invalid YAML documents
@@ -199,7 +202,9 @@ describe("Helm Compatibility Tests", () => {
       const fileName = "manifests.k8s.yaml";
 
       for (const [i, line] of lines.entries()) {
-        if (!line) {continue;}
+        if (!line) {
+          continue;
+        }
 
         // Skip comments
         if (line.trim().startsWith("#")) {
@@ -215,7 +220,9 @@ describe("Helm Compatibility Tests", () => {
         const hasTemplateStart = line.includes("{{");
         const hasTemplateEnd = line.includes("}}");
 
-        if (hasTemplateStart && hasTemplateEnd && // If we have {{ }} but it's not the escaped form, it's a violation
+        if (
+          hasTemplateStart &&
+          hasTemplateEnd && // If we have {{ }} but it's not the escaped form, it's a violation
           // We need to check for unescaped patterns like:
           // - {{ .Values.something }}
           // - {{ template "name" }}
@@ -225,35 +232,34 @@ describe("Helm Compatibility Tests", () => {
 
           // Simple heuristic: if line contains {{ but NOT {{ " then it might be unescaped
           // This catches {{ .Values and {{ template but allows {{ "{{" }}
-          (
-            /\{\{(?!\s*"[{"}]")/.test(line) || // Matches {{ not followed by "{{" or "}}"
-            /[^"]\}\}/.test(line.replaceAll('}}" }}', "")) // Matches }} not part of }}" }}
-          )) {
-            // Additional check: the escaped pattern should have the quotes
-            // If we see {{ something }} where something is not a string literal with {{ or }}
-            // then it's likely unescaped
-            const suspiciousPatterns = [
-              /\{\{\s*\.\w+/, // {{ .Values, {{ .Release, etc.
-              /\{\{\s*template\s+/, // {{ template
-              /\{\{\s*include\s+/, // {{ include
-              /\{\{\s*range\s+/, // {{ range
-              /\{\{\s*if\s+/, // {{ if
-              /\{\{\s*with\s+/, // {{ with
-              /\{\{\s*define\s+/, // {{ define
-            ];
+          (/\{\{(?!\s*"[{"}]")/.test(line) || // Matches {{ not followed by "{{" or "}}"
+            /[^"]\}\}/.test(line.replaceAll('}}" }}', ""))) // Matches }} not part of }}" }}
+        ) {
+          // Additional check: the escaped pattern should have the quotes
+          // If we see {{ something }} where something is not a string literal with {{ or }}
+          // then it's likely unescaped
+          const suspiciousPatterns = [
+            /\{\{\s*\.\w+/, // {{ .Values, {{ .Release, etc.
+            /\{\{\s*template\s+/, // {{ template
+            /\{\{\s*include\s+/, // {{ include
+            /\{\{\s*range\s+/, // {{ range
+            /\{\{\s*if\s+/, // {{ if
+            /\{\{\s*with\s+/, // {{ with
+            /\{\{\s*define\s+/, // {{ define
+          ];
 
-            for (const pattern of suspiciousPatterns) {
-              if (pattern.test(line)) {
-                violations.push({
-                  file: fileName,
-                  lineNumber: i + 1,
-                  line: line.trim(),
-                  reason: "Contains unescaped Helm template syntax",
-                });
-                break;
-              }
+          for (const pattern of suspiciousPatterns) {
+            if (pattern.test(line)) {
+              violations.push({
+                file: fileName,
+                lineNumber: i + 1,
+                line: line.trim(),
+                reason: "Contains unescaped Helm template syntax",
+              });
+              break;
             }
           }
+        }
       }
 
       expect(violations).toEqual([]);
@@ -264,8 +270,10 @@ describe("Helm Compatibility Tests", () => {
       // Prometheus uses Go templates with {{ }}, which must be escaped in Helm charts
       // Count properly escaped template syntax
       // {{ "{{" }} is the correct way to output a literal {{ in Helm
-      const escapedStartCount = (yamlContent.match(/\{\{ "\{\{" \}\}/g) ?? []).length;
-      const escapedEndCount = (yamlContent.match(/\{\{ "\}\}" \}\}/g) ?? []).length;
+      const escapedStartCount = (yamlContent.match(/\{\{ "\{\{" \}\}/g) ?? [])
+        .length;
+      const escapedEndCount = (yamlContent.match(/\{\{ "\}\}" \}\}/g) ?? [])
+        .length;
       const escapedCount = escapedStartCount + escapedEndCount;
 
       // This is informational - we expect to see proper escaping in files with Prometheus rules
@@ -328,7 +336,9 @@ describe("Helm Compatibility Tests", () => {
           parseYaml(document);
         } catch (error) {
           const errorCheck = z.instanceof(Error).safeParse(error);
-          const errorMessage = errorCheck.success ? errorCheck.data.message : String(error);
+          const errorMessage = errorCheck.success
+            ? errorCheck.data.message
+            : String(error);
           violations.push({
             file: `manifests.k8s.yaml (document ${String(index + 1)})`,
             error: errorMessage,
@@ -406,7 +416,9 @@ describe("Helm Compatibility Tests", () => {
         console.warn(
           [
             "⚠️  Found potentially deprecated Kubernetes annotations:",
-            ...violations.map((v) => `  - ${v.file}: ${v.resource} uses "${v.annotation}"`),
+            ...violations.map(
+              (v) => `  - ${v.file}: ${v.resource} uses "${v.annotation}"`,
+            ),
             "",
             "Consider using newer alternatives if available.",
           ].join("\n"),

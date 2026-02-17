@@ -5,11 +5,9 @@
 </template>
 
 <script>
-  export default {
-    name: 'User-Easel'
-  }
+export default {
+  name: "User-Easel",
+};
 </script>
 
-<style lang="scss" scoped>
-
-</style>
+<style lang="scss" scoped></style>

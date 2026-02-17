@@ -121,7 +121,13 @@ export interface ImageComponent {
   Image: {
     url: BoundString;
     fit?: "contain" | "cover" | "fill" | "none" | "scale-down";
-    usageHint?: "icon" | "avatar" | "smallFeature" | "mediumFeature" | "largeFeature" | "header";
+    usageHint?:
+      | "icon"
+      | "avatar"
+      | "smallFeature"
+      | "mediumFeature"
+      | "largeFeature"
+      | "header";
   };
 }
 

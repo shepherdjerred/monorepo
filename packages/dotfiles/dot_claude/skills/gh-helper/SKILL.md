@@ -13,38 +13,39 @@ Complete GitHub operations via `gh` CLI and GitHub API. This skill replaces GitH
 
 ## MCP Tool Equivalents Reference
 
-| MCP Tool | CLI/API Equivalent |
-|----------|-------------------|
-| `create_or_update_file` | `gh api -X PUT /repos/{owner}/{repo}/contents/{path}` |
-| `search_repositories` | `gh search repos <query>` |
-| `create_repository` | `gh repo create <name>` |
-| `get_file_contents` | `gh api /repos/{owner}/{repo}/contents/{path}` |
-| `push_files` | `git add && git commit && git push` |
-| `create_issue` | `gh issue create` |
-| `create_pull_request` | `gh pr create` |
-| `fork_repository` | `gh repo fork` |
-| `create_branch` | `gh api -X POST /repos/{owner}/{repo}/git/refs` |
-| `list_commits` | `gh api /repos/{owner}/{repo}/commits` |
-| `list_issues` | `gh issue list` |
-| `update_issue` | `gh issue edit` |
-| `add_issue_comment` | `gh issue comment` |
-| `search_code` | `gh search code <query>` |
-| `search_issues` | `gh search issues <query>` |
-| `search_users` | `gh api /search/users?q=<query>` |
-| `get_issue` | `gh issue view <number>` |
-| `get_pull_request` | `gh pr view <number>` |
-| `list_pull_requests` | `gh pr list` |
-| `create_pull_request_review` | `gh pr review` |
-| `merge_pull_request` | `gh pr merge` |
-| `get_pull_request_files` | `gh api /repos/{owner}/{repo}/pulls/{number}/files` |
-| `get_pull_request_status` | `gh pr checks` |
+| MCP Tool                     | CLI/API Equivalent                                                 |
+| ---------------------------- | ------------------------------------------------------------------ |
+| `create_or_update_file`      | `gh api -X PUT /repos/{owner}/{repo}/contents/{path}`              |
+| `search_repositories`        | `gh search repos <query>`                                          |
+| `create_repository`          | `gh repo create <name>`                                            |
+| `get_file_contents`          | `gh api /repos/{owner}/{repo}/contents/{path}`                     |
+| `push_files`                 | `git add && git commit && git push`                                |
+| `create_issue`               | `gh issue create`                                                  |
+| `create_pull_request`        | `gh pr create`                                                     |
+| `fork_repository`            | `gh repo fork`                                                     |
+| `create_branch`              | `gh api -X POST /repos/{owner}/{repo}/git/refs`                    |
+| `list_commits`               | `gh api /repos/{owner}/{repo}/commits`                             |
+| `list_issues`                | `gh issue list`                                                    |
+| `update_issue`               | `gh issue edit`                                                    |
+| `add_issue_comment`          | `gh issue comment`                                                 |
+| `search_code`                | `gh search code <query>`                                           |
+| `search_issues`              | `gh search issues <query>`                                         |
+| `search_users`               | `gh api /search/users?q=<query>`                                   |
+| `get_issue`                  | `gh issue view <number>`                                           |
+| `get_pull_request`           | `gh pr view <number>`                                              |
+| `list_pull_requests`         | `gh pr list`                                                       |
+| `create_pull_request_review` | `gh pr review`                                                     |
+| `merge_pull_request`         | `gh pr merge`                                                      |
+| `get_pull_request_files`     | `gh api /repos/{owner}/{repo}/pulls/{number}/files`                |
+| `get_pull_request_status`    | `gh pr checks`                                                     |
 | `update_pull_request_branch` | `gh api -X PUT /repos/{owner}/{repo}/pulls/{number}/update-branch` |
-| `get_pull_request_comments` | `gh api /repos/{owner}/{repo}/pulls/{number}/comments` |
-| `get_pull_request_reviews` | `gh api /repos/{owner}/{repo}/pulls/{number}/reviews` |
+| `get_pull_request_comments`  | `gh api /repos/{owner}/{repo}/pulls/{number}/comments`             |
+| `get_pull_request_reviews`   | `gh api /repos/{owner}/{repo}/pulls/{number}/reviews`              |
 
 ## Auto-Approved Commands
 
 Safe read-only commands:
+
 - `gh repo view`, `gh repo list`
 - `gh issue list`, `gh issue view`
 - `gh pr list`, `gh pr view`, `gh pr diff`, `gh pr checks`
@@ -758,6 +759,7 @@ gh release upload v1.0.0 ./dist/*.tar.gz
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - Repository owner/name is ambiguous
 - Multiple PRs or issues match criteria
 - Authentication or permissions issues arise

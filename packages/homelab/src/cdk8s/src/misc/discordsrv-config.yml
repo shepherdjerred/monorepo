@@ -44,7 +44,8 @@ MinecraftPlayerAchievementMessagesEnabled: true
 DiscordConsoleChannelLogRefreshRateInSeconds: 5
 DiscordConsoleChannelUsageEnabled: true
 DiscordConsoleChannelBlacklistActsAsWhitelist: false
-DiscordConsoleChannelBlacklistedCommands: ["?", "op", "deop", "ban", "pardon", "ban-ip", "pardon-ip"]
+DiscordConsoleChannelBlacklistedCommands:
+  ["?", "op", "deop", "ban", "pardon", "ban-ip", "pardon-ip"]
 
 # Experiment: use webhooks for chat messages (shows player heads as avatars)
 Experiment_WebhookChatMessageDelivery: false

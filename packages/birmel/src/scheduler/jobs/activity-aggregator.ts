@@ -36,7 +36,7 @@ export async function aggregateActivityMetrics(): Promise<void> {
 
           logger.debug("Processing activity roles for guild", {
             guildId,
-            tierCount: roleTiers.length
+            tierCount: roleTiers.length,
           });
 
           // Get all members in the guild
@@ -57,14 +57,16 @@ export async function aggregateActivityMetrics(): Promise<void> {
                   guildId,
                   userId,
                   createdAt: {
-                    gte: thirtyDaysAgo
-                  }
-                }
+                    gte: thirtyDaysAgo,
+                  },
+                },
               });
 
               // Determine which tier the user qualifies for
               let qualifiedTier = null;
-              for (const tier of roleTiers.sort((a, b) => b.minimumActivity - a.minimumActivity)) {
+              for (const tier of roleTiers.sort(
+                (a, b) => b.minimumActivity - a.minimumActivity,
+              )) {
                 if (activityCount >= tier.minimumActivity) {
                   qualifiedTier = tier;
                   break;
@@ -72,8 +74,8 @@ export async function aggregateActivityMetrics(): Promise<void> {
               }
 
               // Get current activity roles the user has
-              const currentActivityRoles = member.roles.cache.filter(role =>
-                roleTiers.some(tier => tier.roleId === role.id)
+              const currentActivityRoles = member.roles.cache.filter((role) =>
+                roleTiers.some((tier) => tier.roleId === role.id),
               );
 
               if (qualifiedTier) {
@@ -87,7 +89,7 @@ export async function aggregateActivityMetrics(): Promise<void> {
                     guildId,
                     userId,
                     roleId: shouldHaveRole,
-                    activityCount
+                    activityCount,
                   });
                 }
 
@@ -98,7 +100,7 @@ export async function aggregateActivityMetrics(): Promise<void> {
                     logger.info("Removed old activity role", {
                       guildId,
                       userId,
-                      roleId
+                      roleId,
                     });
                   }
                 }
@@ -110,23 +112,31 @@ export async function aggregateActivityMetrics(): Promise<void> {
                     guildId,
                     userId,
                     roleId,
-                    activityCount
+                    activityCount,
                   });
                 }
               }
             } catch (error) {
-              logger.error("Failed to process activity for member", error as Error, {
-                guildId,
-                userId
-              });
+              logger.error(
+                "Failed to process activity for member",
+                error as Error,
+                {
+                  guildId,
+                  userId,
+                },
+              );
             }
           }
 
           logger.info("Activity aggregation completed for guild", { guildId });
         } catch (error) {
-          logger.error("Failed to aggregate activity for guild", error as Error, {
-            guildId
-          });
+          logger.error(
+            "Failed to aggregate activity for guild",
+            error as Error,
+            {
+              guildId,
+            },
+          );
         }
       }
 
@@ -137,13 +147,13 @@ export async function aggregateActivityMetrics(): Promise<void> {
       const deleted = await prisma.userActivity.deleteMany({
         where: {
           createdAt: {
-            lt: ninetyDaysAgo
-          }
-        }
+            lt: ninetyDaysAgo,
+          },
+        },
       });
 
       logger.info("Activity aggregation completed", {
-        cleanedRecords: deleted.count
+        cleanedRecords: deleted.count,
       });
     } catch (error) {
       logger.error("Activity aggregator job failed", error as Error);

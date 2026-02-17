@@ -26,23 +26,31 @@ if (!process.env["DATABASE_PATH"]) {
 }
 
 // Create screenshots directory
-const screenshotsDir = process.env["BIRMEL_SCREENSHOTS_DIR"] ?? join(process.cwd(), "data", "screenshots");
+const screenshotsDir =
+  process.env["BIRMEL_SCREENSHOTS_DIR"] ??
+  join(process.cwd(), "data", "screenshots");
 mkdirSync(screenshotsDir, { recursive: true });
 process.env["BIRMEL_SCREENSHOTS_DIR"] ??= screenshotsDir;
 
 // Ensure database directory exists if it's a file-based database
 const dbPath = process.env["DATABASE_PATH"] ?? "";
-const normalizedDbPath = dbPath.startsWith("file:") ? dbPath.replace("file:", "") : dbPath;
+const normalizedDbPath = dbPath.startsWith("file:")
+  ? dbPath.replace("file:", "")
+  : dbPath;
 if (normalizedDbPath) {
   mkdirSync(dirname(normalizedDbPath), { recursive: true });
 }
 
 // Push database schema (creates tables if they don't exist)
 // Uses spawnSync with explicit args to avoid shell injection
-spawnSync("bunx", ["prisma", "db", "push", "--skip-generate", "--accept-data-loss"], {
-  stdio: "pipe",
-  env: {
-    ...process.env,
-    DATABASE_URL: dbPath.startsWith("file:") ? dbPath : `file:${dbPath}`,
+spawnSync(
+  "bunx",
+  ["prisma", "db", "push", "--skip-generate", "--accept-data-loss"],
+  {
+    stdio: "pipe",
+    env: {
+      ...process.env,
+      DATABASE_URL: dbPath.startsWith("file:") ? dbPath : `file:${dbPath}`,
+    },
   },
-});
+);

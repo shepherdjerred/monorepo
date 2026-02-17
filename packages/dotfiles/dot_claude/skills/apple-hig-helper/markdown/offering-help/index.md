@@ -70,11 +70,11 @@ If the feature is represented by an image that the tip connects to directly, avo
 
 ## [Platform considerations](/design/human-interface-guidelines/offering-help#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, tvOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, tvOS, or watchOS._
 
 ### [macOS, visionOS](/design/human-interface-guidelines/offering-help#macOS-visionOS)
 
-A *tooltip* (called a *help tag* in user documentation) displays a small, transient view that briefly describes how to use a component in the interface. In apps that run on a Mac — including iPhone and iPad apps — tooltips can appear when a person holds the pointer over an element; in visionOS apps, a tooltip can appear when a person looks at an element or holds the pointer over it. For developer guidance, see [`help(_:)`](/documentation/SwiftUI/View/help(_:)-6oiyb).
+A _tooltip_ (called a _help tag_ in user documentation) displays a small, transient view that briefly describes how to use a component in the interface. In apps that run on a Mac — including iPhone and iPad apps — tooltips can appear when a person holds the pointer over an element; in visionOS apps, a tooltip can appear when a person looks at an element or holds the pointer over it. For developer guidance, see [`help(_:)`](</documentation/SwiftUI/View/help(_:)-6oiyb>).
 
 ![An illustration of a toolbar in macOS Finder with the pointer over the Back button. A tooltip with the title See folders you viewed previously appears beneath the pointer.](https://docs-assets.developer.apple.com/published/a5dc5c63ac62773df2b4aea95ad85f39/offering-help-macos-tooltip-help-tag%402x.png)
 
@@ -116,7 +116,7 @@ Make features discoverable with TipKit](https://developer.apple.com/videos/play/
 
 ## [Change log](/design/human-interface-guidelines/offering-help#Change-log)
 
-| Date | Changes |
-| --- | --- |
-| December 5, 2023 | Included visionOS in guidance for creating tooltips. |
-| September 12, 2023 | Added guidance for creating tips. |
+| Date               | Changes                                              |
+| ------------------ | ---------------------------------------------------- |
+| December 5, 2023   | Included visionOS in guidance for creating tooltips. |
+| September 12, 2023 | Added guidance for creating tips.                    |

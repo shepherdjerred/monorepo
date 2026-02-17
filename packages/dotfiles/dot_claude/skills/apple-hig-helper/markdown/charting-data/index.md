@@ -16,9 +16,9 @@ Charts provide efficient ways to communicate complex information without requiri
 
 A chart can range from a simple graphic that provides glanceable information to a rich, interactive experience that can form the centerpiece of your app and encourage people to explore the data from various perspectives. Whether simple or complex, you can use charts to help people perform data-driven tasks that are important to them, such as:
 
-* Analyzing trends based on historical or predicted values
-* Visualizing the current state of a process, system, or quantity that changes over time
-* Evaluating different items — or the same item at different times — by comparing data across multiple categories
+- Analyzing trends based on historical or predicted values
+- Visualizing the current state of a process, system, or quantity that changes over time
+- Evaluating different items — or the same item at different times — by comparing data across multiple categories
 
 Not every collection of data needs to be displayed in a chart. If you simply need to provide data — and you don’t need to convey information about it or help people analyze it — consider offering the data in other ways, such as in a list or table that people can scroll, search, and sort.
 
@@ -52,7 +52,7 @@ Not every collection of data needs to be displayed in a chart. If you simply nee
 
 ## [Platform considerations](/design/human-interface-guidelines/charting-data#Platform-considerations)
 
-*No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS.*
+_No additional considerations for iOS, iPadOS, macOS, tvOS, visionOS, or watchOS._
 
 ## [Resources](/design/human-interface-guidelines/charting-data#Resources)
 
@@ -80,6 +80,6 @@ Design an effective chart](https://developer.apple.com/videos/play/wwdc2022/1103
 
 ## [Change log](/design/human-interface-guidelines/charting-data#Change-log)
 
-| Date | Changes |
-| --- | --- |
+| Date               | Changes   |
+| ------------------ | --------- |
 | September 23, 2022 | New page. |

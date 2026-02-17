@@ -8,4 +8,4 @@ export type WatchStatus = {
   item: Watchable;
   isWatched: boolean;
   lastUpdate: Date;
-}
+};

@@ -22,7 +22,9 @@ export type ReleasePleaseContainerOptions = {
  *   .withExec(["release-please", "release-pr", "--repo-url=owner/repo"]);
  * ```
  */
-export function getReleasePleaseContainer(options: ReleasePleaseContainerOptions = {}): Container {
+export function getReleasePleaseContainer(
+  options: ReleasePleaseContainerOptions = {},
+): Container {
   const nodeVersion = options.nodeVersion ?? versions.node;
   const rpVersion = options.releasePleaseVersion ?? "latest";
 
@@ -109,7 +111,9 @@ export type GitHubReleaseOptions = {
  * }
  * ```
  */
-export async function githubRelease(options: GitHubReleaseOptions): Promise<string> {
+export async function githubRelease(
+  options: GitHubReleaseOptions,
+): Promise<string> {
   const { releaseType = "node" } = options;
 
   const container = getReleasePleaseContainer(options.container)
@@ -189,7 +193,9 @@ export type ManifestReleaseOptions = {
  * });
  * ```
  */
-export async function manifestRelease(options: ManifestReleaseOptions): Promise<string> {
+export async function manifestRelease(
+  options: ManifestReleaseOptions,
+): Promise<string> {
   const container = getReleasePleaseContainer(options.container)
     .withSecretVariable("GITHUB_TOKEN", options.ghToken)
     .withEnvVariable("CACHE_BUST", Date.now().toString())

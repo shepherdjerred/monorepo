@@ -36,7 +36,7 @@ When you use SwiftUI, you can offer action sheet functionality in all platforms 
 
 ## [Platform considerations](/design/human-interface-guidelines/action-sheets#Platform-considerations)
 
-*No additional considerations for macOS or tvOS. Not supported in visionOS.*
+_No additional considerations for macOS or tvOS. Not supported in visionOS._
 
 ### [iOS, iPadOS](/design/human-interface-guidelines/action-sheets#iOS-iPadOS)
 
@@ -52,11 +52,11 @@ The system-defined style for action sheets includes a title, an optional message
 
 Each button has an associated style that conveys information about the button’s effect. There are three system-defined button styles:
 
-| Style | Meaning |
-| --- | --- |
-| Default | The button has no special meaning. |
+| Style       | Meaning                                                                    |
+| ----------- | -------------------------------------------------------------------------- |
+| Default     | The button has no special meaning.                                         |
 | Destructive | The button destroys user data or performs a destructive action in the app. |
-| Cancel | The button dismisses the view without taking any action. |
+| Cancel      | The button dismisses the view without taking any action.                   |
 
 **Avoid displaying more than four buttons in an action sheet, including the Cancel button.** When there are fewer buttons onscreen, it’s easier for people to view all their options at once. Because the Cancel button is required, aim to provide no more than three additional choices.
 
@@ -72,6 +72,6 @@ Each button has an associated style that conveys information about the button’
 
 #### [Developer documentation](/design/human-interface-guidelines/action-sheets#Developer-documentation)
 
-[`confirmationDialog(_:isPresented:titleVisibility:actions:)`](/documentation/SwiftUI/View/confirmationDialog(_:isPresented:titleVisibility:actions:)-46zbb) — SwiftUI
+[`confirmationDialog(_:isPresented:titleVisibility:actions:)`](</documentation/SwiftUI/View/confirmationDialog(_:isPresented:titleVisibility:actions:)-46zbb>) — SwiftUI
 
 [`UIAlertController.Style.actionSheet`](/documentation/UIKit/UIAlertController/Style/actionSheet) — UIKit

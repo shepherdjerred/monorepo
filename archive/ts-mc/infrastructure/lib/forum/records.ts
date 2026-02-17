@@ -10,7 +10,7 @@ import {
 export function createRecords(
   stack: Stack,
   hostedZone: IHostedZone,
-  applicationLoadBalancer: ApplicationLoadBalancer
+  applicationLoadBalancer: ApplicationLoadBalancer,
 ) {
   // new ARecord(stack, "ForumsARecord", {
   //   zone: hostedZone,
@@ -31,7 +31,7 @@ export function createRecords(
     recordName: "ts-mc.net",
     ttl: Duration.minutes(1),
     target: RecordTarget.fromAlias(
-      new LoadBalancerTarget(applicationLoadBalancer)
+      new LoadBalancerTarget(applicationLoadBalancer),
     ),
   });
 
@@ -40,7 +40,7 @@ export function createRecords(
     recordName: "www.ts-mc.net",
     ttl: Duration.minutes(1),
     target: RecordTarget.fromAlias(
-      new LoadBalancerTarget(applicationLoadBalancer)
+      new LoadBalancerTarget(applicationLoadBalancer),
     ),
   });
 }

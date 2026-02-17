@@ -1,6 +1,10 @@
 import type { CheckBoxComponent } from "../types";
 import { useSurface } from "../SurfaceManager";
-import { resolveString, resolveBoolean, resolveActionContext } from "../../hooks/useDataBinding";
+import {
+  resolveString,
+  resolveBoolean,
+  resolveActionContext,
+} from "../../hooks/useDataBinding";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface A2UICheckBoxProps {
@@ -21,7 +25,10 @@ export function A2UICheckBox({
   const checked = resolveBoolean(component.value, dataModel);
 
   const handleCheckedChange = (newChecked: boolean) => {
-    const resolvedContext = resolveActionContext(component.action.context, dataModel);
+    const resolvedContext = resolveActionContext(
+      component.action.context,
+      dataModel,
+    );
     resolvedContext.value = newChecked;
     dispatchAction(surfaceId, id, component.action.name, resolvedContext);
   };

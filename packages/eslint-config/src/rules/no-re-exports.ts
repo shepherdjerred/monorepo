@@ -2,7 +2,8 @@ import { AST_NODE_TYPES, ESLintUtils } from "@typescript-eslint/utils";
 import type { TSESTree } from "@typescript-eslint/utils";
 
 const createRule = ESLintUtils.RuleCreator(
-  (name) => `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
+  (name) =>
+    `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
 );
 
 export const noReExports = createRule({
@@ -135,7 +136,10 @@ export const noReExports = createRule({
           const localName = exportSpecifier.local.name;
 
           // Flag if it's imported but not locally declared (i.e., it's a re-export)
-          if (importedIdentifiers.has(localName) && !localDeclarations.has(localName)) {
+          if (
+            importedIdentifiers.has(localName) &&
+            !localDeclarations.has(localName)
+          ) {
             context.report({
               node: exportSpecifier,
               messageId: "noReExportImported",

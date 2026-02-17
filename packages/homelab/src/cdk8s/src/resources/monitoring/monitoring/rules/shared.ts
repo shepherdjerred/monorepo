@@ -11,9 +11,15 @@ export function escapeGoTemplate(template: string): string {
 // Uses smart replacements for common Prometheus patterns, falls back to generic escaping
 export function escapePrometheusTemplate(template: string): string {
   return template
-    .replaceAll(/\{\{\s*\$value\s*\|\s*(\w+)\s*\}\}/g, '{{ "{{" }} $value | $1 {{ "}}" }}') // Handle {{ $value | filter }}
+    .replaceAll(
+      /\{\{\s*\$value\s*\|\s*(\w+)\s*\}\}/g,
+      '{{ "{{" }} $value | $1 {{ "}}" }}',
+    ) // Handle {{ $value | filter }}
     .replaceAll(/\{\{\s*\$value\s*\}\}/g, '{{ "{{" }} $value {{ "}}" }}') // Handle {{ $value }}
-    .replaceAll(/\{\{\s*\$labels\.(\w+)\s*\}\}/g, '{{ "{{" }} $labels.$1 {{ "}}" }}'); // Handle {{ $labels.entity }}
+    .replaceAll(
+      /\{\{\s*\$labels\.(\w+)\s*\}\}/g,
+      '{{ "{{" }} $labels.$1 {{ "}}" }}',
+    ); // Handle {{ $labels.entity }}
 }
 
 // Alias for clarity when used in Alertmanager contexts
@@ -36,7 +42,9 @@ export function createSensorAlert(
       description: escapePrometheusTemplate(description),
       summary,
     },
-    expr: PrometheusRuleSpecGroupsRulesExpr.fromString(`${entity} ${condition} ${String(threshold)}`),
+    expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+      `${entity} ${condition} ${String(threshold)}`,
+    ),
     for: duration,
     labels: { severity },
   };

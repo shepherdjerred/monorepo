@@ -27,7 +27,9 @@ export function getAuthorizationUrl(state: string): string {
 /**
  * Exchange an authorization code for an access token
  */
-export async function exchangeCodeForToken(code: string): Promise<GitHubTokenResponse> {
+export async function exchangeCodeForToken(
+  code: string,
+): Promise<GitHubTokenResponse> {
   const config = getConfig();
 
   const response = await fetch(GITHUB_TOKEN_URL, {
@@ -47,7 +49,9 @@ export async function exchangeCodeForToken(code: string): Promise<GitHubTokenRes
     throw new Error(`GitHub token exchange failed: ${response.status}`);
   }
 
-  const data = (await response.json()) as GitHubTokenResponse & { error?: string };
+  const data = (await response.json()) as GitHubTokenResponse & {
+    error?: string;
+  };
 
   if (data.error) {
     throw new Error(`GitHub OAuth error: ${data.error}`);
@@ -59,7 +63,9 @@ export async function exchangeCodeForToken(code: string): Promise<GitHubTokenRes
 /**
  * Fetch the authenticated user's profile from GitHub
  */
-export async function fetchGitHubUser(accessToken: string): Promise<GitHubUser> {
+export async function fetchGitHubUser(
+  accessToken: string,
+): Promise<GitHubUser> {
   const response = await fetch(`${GITHUB_API_URL}/user`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -77,7 +83,9 @@ export async function fetchGitHubUser(accessToken: string): Promise<GitHubUser> 
 /**
  * Fetch the user's primary email if not included in profile
  */
-export async function fetchGitHubEmail(accessToken: string): Promise<string | null> {
+export async function fetchGitHubEmail(
+  accessToken: string,
+): Promise<string | null> {
   const response = await fetch(`${GITHUB_API_URL}/user/emails`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,

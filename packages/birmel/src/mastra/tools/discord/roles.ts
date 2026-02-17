@@ -8,15 +8,30 @@ import { isDiscordAPIError, formatDiscordAPIError } from "./error-utils.js";
 
 export const manageRoleTool = createTool({
   id: "manage-role",
-  description: "Manage roles in the server: list all, get details, create, modify, delete, or reorder",
+  description:
+    "Manage roles in the server: list all, get details, create, modify, delete, or reorder",
   inputSchema: z.object({
     guildId: z.string().describe("The ID of the guild"),
-    action: z.enum(["list", "get", "create", "modify", "delete", "reorder"]).describe("The action to perform"),
-    roleId: z.string().optional().describe("The ID of the role (required for get/modify/delete)"),
-    name: z.string().optional().describe("Name of the role (required for create, optional for modify)"),
+    action: z
+      .enum(["list", "get", "create", "modify", "delete", "reorder"])
+      .describe("The action to perform"),
+    roleId: z
+      .string()
+      .optional()
+      .describe("The ID of the role (required for get/modify/delete)"),
+    name: z
+      .string()
+      .optional()
+      .describe("Name of the role (required for create, optional for modify)"),
     color: z.string().optional().describe("Hex color code (e.g., #FF0000)"),
-    hoist: z.boolean().optional().describe("Whether to display separately in member list"),
-    mentionable: z.boolean().optional().describe("Whether the role can be mentioned"),
+    hoist: z
+      .boolean()
+      .optional()
+      .describe("Whether to display separately in member list"),
+    mentionable: z
+      .boolean()
+      .optional()
+      .describe("Whether the role can be mentioned"),
     positions: z
       .array(
         z.object({
@@ -25,7 +40,9 @@ export const manageRoleTool = createTool({
         }),
       )
       .optional()
-      .describe("Array of role IDs and their new positions (required for reorder)"),
+      .describe(
+        "Array of role IDs and their new positions (required for reorder)",
+      ),
     reason: z.string().optional().describe("Reason for the action"),
   }),
   outputSchema: z.object({
@@ -65,13 +82,19 @@ export const manageRoleTool = createTool({
         { value: ctx.guildId, fieldName: "guildId" },
         { value: ctx.roleId, fieldName: "roleId" },
       ]);
-      if (idError) {return { success: false, message: idError };}
+      if (idError) {
+        return { success: false, message: idError };
+      }
 
       // Validate role IDs in positions array
       if (ctx.positions) {
         for (const pos of ctx.positions) {
-          const posError = validateSnowflakes([{ value: pos.roleId, fieldName: "positions.roleId" }]);
-          if (posError) {return { success: false, message: posError };}
+          const posError = validateSnowflakes([
+            { value: pos.roleId, fieldName: "positions.roleId" },
+          ]);
+          if (posError) {
+            return { success: false, message: posError };
+          }
         }
       }
 
@@ -144,9 +167,13 @@ export const manageRoleTool = createTool({
           }
           const role = await guild.roles.create({
             name: ctx.name,
-            ...(ctx.color !== undefined && { color: ctx.color as ColorResolvable }),
+            ...(ctx.color !== undefined && {
+              color: ctx.color as ColorResolvable,
+            }),
             ...(ctx.hoist !== undefined && { hoist: ctx.hoist }),
-            ...(ctx.mentionable !== undefined && { mentionable: ctx.mentionable }),
+            ...(ctx.mentionable !== undefined && {
+              mentionable: ctx.mentionable,
+            }),
           });
           return {
             success: true,
@@ -182,9 +209,13 @@ export const manageRoleTool = createTool({
           }
           await role.edit({
             ...(ctx.name !== undefined && { name: ctx.name }),
-            ...(ctx.color !== undefined && { color: ctx.color as ColorResolvable }),
+            ...(ctx.color !== undefined && {
+              color: ctx.color as ColorResolvable,
+            }),
             ...(ctx.hoist !== undefined && { hoist: ctx.hoist }),
-            ...(ctx.mentionable !== undefined && { mentionable: ctx.mentionable }),
+            ...(ctx.mentionable !== undefined && {
+              mentionable: ctx.mentionable,
+            }),
           });
           return {
             success: true,

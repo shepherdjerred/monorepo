@@ -11,18 +11,19 @@ description: |
 
 Recent chezmoi releases (latest: v2.69.3):
 
-| Version | Key Changes |
-|---------|-------------|
+| Version     | Key Changes                                                                                                                      |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | **v2.69.x** | transcrypt/git-crypt encryption, Proton Pass support, TOML 1.1, `--pq` flag for age-keygen, `--include`/`--exclude` on unmanaged |
-| **v2.68.x** | `--new` flag on add, `--re-encrypt` on re-add, new `edit-encrypted` command, sourceFile variable fix |
-| **v2.67.x** | `re-add` manages exact_ entries, fromIni/toIni round-trip fix, non-UTF-8 template warnings |
-| **v2.66.x** | `--override-data-file`/`--override-data` flags, `--less-interactive` mode, `exec` template function, grouped help output |
+| **v2.68.x** | `--new` flag on add, `--re-encrypt` on re-add, new `edit-encrypted` command, sourceFile variable fix                             |
+| **v2.67.x** | `re-add` manages exact\_ entries, fromIni/toIni round-trip fix, non-UTF-8 template warnings                                      |
+| **v2.66.x** | `--override-data-file`/`--override-data` flags, `--less-interactive` mode, `exec` template function, grouped help output         |
 
 ## Overview
 
 Chezmoi manages dotfiles across multiple machines from a single source of truth. The source directory (default: `~/.local/share/chezmoi`) contains the declarative desired state. Run `chezmoi apply` to update the destination directory (`~`) to match.
 
 **Core workflow:**
+
 1. Add files: `chezmoi add ~/.gitconfig`
 2. Edit source: `chezmoi edit ~/.gitconfig`
 3. Preview changes: `chezmoi diff`
@@ -39,37 +40,37 @@ Chezmoi maps source filenames to target filenames using prefix/suffix attributes
 
 ### File Prefixes (applied in order)
 
-| Source Prefix | Effect | Example |
-|---------------|--------|---------|
-| `create_` | Only create if target missing | `create_dot_bashrc` -> `.bashrc` |
-| `modify_` | Modify script (stdin=existing, stdout=new) | `modify_dot_gitconfig` |
-| `remove_` | Remove target | `remove_dot_old_config` |
-| `encrypted_` | Decrypt on apply | `encrypted_private_dot_ssh/id_rsa` |
-| `private_` | Set permissions 0o600/0o700 | `private_dot_ssh` |
-| `readonly_` | Remove write bits | `readonly_dot_config` |
-| `empty_` | Keep file even if empty | `empty_dot_placeholder` |
-| `executable_` | Set executable bit | `executable_dot_local/bin/myscript` |
-| `symlink_` | Create symlink (contents = target) | `symlink_dot_vimrc` |
-| `dot_` | Replace with leading `.` | `dot_gitconfig` -> `.gitconfig` |
-| `.tmpl` | Process as Go template | `dot_bashrc.tmpl` |
+| Source Prefix | Effect                                     | Example                             |
+| ------------- | ------------------------------------------ | ----------------------------------- |
+| `create_`     | Only create if target missing              | `create_dot_bashrc` -> `.bashrc`    |
+| `modify_`     | Modify script (stdin=existing, stdout=new) | `modify_dot_gitconfig`              |
+| `remove_`     | Remove target                              | `remove_dot_old_config`             |
+| `encrypted_`  | Decrypt on apply                           | `encrypted_private_dot_ssh/id_rsa`  |
+| `private_`    | Set permissions 0o600/0o700                | `private_dot_ssh`                   |
+| `readonly_`   | Remove write bits                          | `readonly_dot_config`               |
+| `empty_`      | Keep file even if empty                    | `empty_dot_placeholder`             |
+| `executable_` | Set executable bit                         | `executable_dot_local/bin/myscript` |
+| `symlink_`    | Create symlink (contents = target)         | `symlink_dot_vimrc`                 |
+| `dot_`        | Replace with leading `.`                   | `dot_gitconfig` -> `.gitconfig`     |
+| `.tmpl`       | Process as Go template                     | `dot_bashrc.tmpl`                   |
 
 ### Directory Prefixes
 
-| Source Prefix | Effect |
-|---------------|--------|
-| `exact_` | Remove entries not in source |
-| `private_` | Set 0o700 permissions |
-| `readonly_` | Remove write bits |
+| Source Prefix | Effect                       |
+| ------------- | ---------------------------- |
+| `exact_`      | Remove entries not in source |
+| `private_`    | Set 0o700 permissions        |
+| `readonly_`   | Remove write bits            |
 
 ### Script Prefixes
 
-| Source Prefix | Execution |
-|---------------|-----------|
-| `run_` | Every `chezmoi apply` |
-| `run_once_` | Once per unique content hash |
-| `run_onchange_` | When content changes |
-| `before_` | Before file operations |
-| `after_` | After file operations |
+| Source Prefix   | Execution                    |
+| --------------- | ---------------------------- |
+| `run_`          | Every `chezmoi apply`        |
+| `run_once_`     | Once per unique content hash |
+| `run_onchange_` | When content changes         |
+| `before_`       | Before file operations       |
+| `after_`        | After file operations        |
 
 ### Combined Prefix Examples
 
@@ -166,6 +167,7 @@ Chezmoi uses Go `text/template` syntax with sprig functions. Files ending in `.t
 ### Reusable Templates
 
 Place shared templates in `.chezmoitemplates/` and include with:
+
 ```
 {{ template "shared-config.tmpl" . }}
 ```
@@ -188,16 +190,16 @@ This repository demonstrates several chezmoi patterns:
 
 ## Special Files and Directories
 
-| Path | Purpose |
-|------|---------|
-| `.chezmoidata.yaml` (or .toml/.json) | Custom template data |
-| `.chezmoiignore` | Patterns to ignore (supports templates) |
-| `.chezmoitemplates/` | Reusable template fragments |
-| `.chezmoiexternal.toml` | External file/archive sources |
-| `.chezmoiroot` | Marks a subdirectory as the source root |
-| `.chezmoiremove` | Patterns for targets to remove |
-| `.chezmoiversion` | Minimum chezmoi version required |
-| `.chezmoi.toml.tmpl` | Config file template (for `chezmoi init`) |
+| Path                                 | Purpose                                   |
+| ------------------------------------ | ----------------------------------------- |
+| `.chezmoidata.yaml` (or .toml/.json) | Custom template data                      |
+| `.chezmoiignore`                     | Patterns to ignore (supports templates)   |
+| `.chezmoitemplates/`                 | Reusable template fragments               |
+| `.chezmoiexternal.toml`              | External file/archive sources             |
+| `.chezmoiroot`                       | Marks a subdirectory as the source root   |
+| `.chezmoiremove`                     | Patterns for targets to remove            |
+| `.chezmoiversion`                    | Minimum chezmoi version required          |
+| `.chezmoi.toml.tmpl`                 | Config file template (for `chezmoi init`) |
 
 ## Reference Files
 
@@ -208,6 +210,7 @@ This repository demonstrates several chezmoi patterns:
 ## When to Ask for Help
 
 Ask the user for clarification when:
+
 - Target machine OS or architecture is ambiguous for template conditionals
 - Encryption method (age vs gpg) is not specified
 - Password manager choice or vault/item paths are unclear

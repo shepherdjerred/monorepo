@@ -55,7 +55,9 @@ auth.get("/github/callback", async (c) => {
   // Handle OAuth errors
   if (error) {
     logger.error("GitHub OAuth error", { error });
-    return c.redirect(`${config.FRONTEND_URL}/login?error=${encodeURIComponent(error)}`);
+    return c.redirect(
+      `${config.FRONTEND_URL}/login?error=${encodeURIComponent(error)}`,
+    );
   }
 
   // Validate state for CSRF protection
@@ -105,7 +107,10 @@ auth.get("/github/callback", async (c) => {
       },
     });
 
-    logger.info("User authenticated", { userId: user.id, username: user.username });
+    logger.info("User authenticated", {
+      userId: user.id,
+      username: user.username,
+    });
 
     // Create JWT session token
     const sessionToken = await signToken({

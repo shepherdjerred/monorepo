@@ -3,7 +3,7 @@ import type { CheckRun, WorkflowRun } from "./types.ts";
 
 export async function getCheckRuns(
   prNumber: number | string,
-  repo?: string
+  repo?: string,
 ): Promise<CheckRun[]> {
   const result = await runGhCommand<CheckRun[]>(
     [
@@ -13,7 +13,7 @@ export async function getCheckRuns(
       "--json",
       "name,status,conclusion,detailsUrl,workflowName",
     ],
-    repo
+    repo,
   );
 
   if (!result.success || !result.data) {
@@ -25,12 +25,12 @@ export async function getCheckRuns(
 
 export async function getWorkflowRuns(
   prNumber: number | string,
-  repo?: string
+  repo?: string,
 ): Promise<WorkflowRun[]> {
   // Get the PR's head branch first
   const prResult = await runGhCommand<{ headRefName: string }>(
     ["pr", "view", String(prNumber), "--json", "headRefName"],
-    repo
+    repo,
   );
 
   if (!prResult.success || !prResult.data) {
@@ -50,7 +50,7 @@ export async function getWorkflowRuns(
       "--json",
       "databaseId,name,status,conclusion,url,createdAt",
     ],
-    repo
+    repo,
   );
 
   if (!result.success || !result.data) {
@@ -63,7 +63,7 @@ export async function getWorkflowRuns(
 export async function getRunLogs(
   runId: number | string,
   repo?: string,
-  options?: { failedOnly?: boolean | undefined; jobName?: string | undefined }
+  options?: { failedOnly?: boolean | undefined; jobName?: string | undefined },
 ): Promise<string> {
   const args = ["run", "view", String(runId), "--log"];
 
@@ -86,7 +86,7 @@ export async function getRunLogs(
 
 export async function getFailedJobs(
   prNumber: number | string,
-  repo?: string
+  repo?: string,
 ): Promise<{ name: string; runId: number }[]> {
   const checks = await getCheckRuns(prNumber, repo);
   const runs = await getWorkflowRuns(prNumber, repo);

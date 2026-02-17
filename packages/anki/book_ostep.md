@@ -81,9 +81,9 @@ Manage the stack for function parameters, local variables, and return addresses
 
 ## Process States
 
-* Running
-* Ready
-* Blocked
+- Running
+- Ready
+- Blocked
 
 ## Process State: Running
 

@@ -1,5 +1,8 @@
 {
-  "extends": ["@tsconfig/strictest/tsconfig.json", "@tsconfig/node24/tsconfig.json"],
+  "extends": [
+    "@tsconfig/strictest/tsconfig.json",
+    "@tsconfig/node24/tsconfig.json"
+  ],
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
@@ -7,7 +10,15 @@
     "declarationMap": true,
     "sourceMap": true,
     "jsx": "react-jsx",
-    "lib": ["es2024", "ESNext.Array", "ESNext.Collection", "ESNext.Error", "ESNext.Iterator", "ESNext.Promise", "DOM"],
+    "lib": [
+      "es2024",
+      "ESNext.Array",
+      "ESNext.Collection",
+      "ESNext.Error",
+      "ESNext.Iterator",
+      "ESNext.Promise",
+      "DOM"
+    ],
     "paths": {
       "#src/*": ["./src/*"]
     }

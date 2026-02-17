@@ -13,7 +13,9 @@ import { fetch } from "./fetch.js";
 import { asyncMapFilterUndefined } from "./util.js";
 import * as fs from "node:fs/promises";
 
-async function loadCache({ cache_file: cacheFilePath }: CacheConfiguration): Promise<Cache> {
+async function loadCache({
+  cache_file: cacheFilePath,
+}: CacheConfiguration): Promise<Cache> {
   try {
     await fs.access(cacheFilePath);
     const cacheFileContent = await fs.readFile(cacheFilePath);
@@ -23,10 +25,15 @@ async function loadCache({ cache_file: cacheFilePath }: CacheConfiguration): Pro
   }
 }
 
-async function saveCache({ cache_file: cacheFilePath }: CacheConfiguration, cache: Cache) {
+async function saveCache(
+  { cache_file: cacheFilePath }: CacheConfiguration,
+  cache: Cache,
+) {
   const dir = cacheFilePath.split("/").slice(0, -1).join("/");
   if (dir !== "") {
-    await fs.mkdir(cacheFilePath.split("/").slice(0, -1).join("/"), { recursive: true });
+    await fs.mkdir(cacheFilePath.split("/").slice(0, -1).join("/"), {
+      recursive: true,
+    });
   }
   await fs.writeFile(cacheFilePath, JSON.stringify(cache));
 }
@@ -43,16 +50,23 @@ function toCache(results: ResultEntry[], now: Date): Cache {
   );
 }
 
-function updateCache(results: ResultEntry[], config: CachedConfiguration): Promise<void> {
+function updateCache(
+  results: ResultEntry[],
+  config: CachedConfiguration,
+): Promise<void> {
   const now = new Date();
   const updatedCache = toCache(results, now);
   return saveCache(config.cache, updatedCache);
 }
 
-export async function fetchAllCached(config: CachedConfiguration): Promise<Result> {
+export async function fetchAllCached(
+  config: CachedConfiguration,
+): Promise<Result> {
   const cache = await loadCache(config.cache);
 
-  const results = await asyncMapFilterUndefined(config.sources, (source) => fetchWithCache(source, cache, config));
+  const results = await asyncMapFilterUndefined(config.sources, (source) =>
+    fetchWithCache(source, cache, config),
+  );
 
   await updateCache(results, config);
 
@@ -67,7 +81,10 @@ export async function fetchWithCache(
   const cacheEntry = cache[source.url];
   if (cacheEntry) {
     const now = new Date();
-    if (now.getTime() - cacheEntry.timestamp.getTime() < config.cache.cache_duration_minutes * 60 * 1000) {
+    if (
+      now.getTime() - cacheEntry.timestamp.getTime() <
+      config.cache.cache_duration_minutes * 60 * 1000
+    ) {
       console.warn(`Cache entry found for ${source.url}.`);
       return cacheEntry.data;
     } else {

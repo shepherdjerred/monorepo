@@ -1,4 +1,7 @@
-import { recommended, accessibilityConfig } from "../../../eslint-config/local.ts";
+import {
+  recommended,
+  accessibilityConfig,
+} from "../../../eslint-config/local.ts";
 
 export default [
   ...recommended({
@@ -80,8 +83,14 @@ export default [
       "unicorn/prefer-at": "off",
       "regexp/no-unused-capturing-group": "warn",
       "eslint-comments/require-description": "warn",
-      "max-lines": ["warn", { max: 700, skipBlankLines: false, skipComments: false }],
-      "max-lines-per-function": ["warn", { max: 500, skipBlankLines: true, skipComments: true }],
+      "max-lines": [
+        "warn",
+        { max: 700, skipBlankLines: false, skipComments: false },
+      ],
+      "max-lines-per-function": [
+        "warn",
+        { max: 500, skipBlankLines: true, skipComments: true },
+      ],
       "max-depth": ["warn", { max: 5 }],
       complexity: ["warn", { max: 25 }],
     },

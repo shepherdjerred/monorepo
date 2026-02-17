@@ -7,7 +7,6 @@ export function toString(e: expr.Expression): string {
 }
 
 var toStringVisitor: ExpressionVisitor<Tree<string>> = {
-
   visitUndefined(u: expr.Undefined): Tree<string> {
     return "undefined";
   },
@@ -34,34 +33,22 @@ var toStringVisitor: ExpressionVisitor<Tree<string>> = {
 
   visitProperty(
     this: ExpressionVisitor<Tree<string>>,
-    p: expr.Property
+    p: expr.Property,
   ): Tree<string> {
-
-    return [
-      visit(this, p.object),
-      ".",
-      visit(this, p.property)
-    ];
+    return [visit(this, p.object), ".", visit(this, p.property)];
   },
 
   visitIndex(
-      this: ExpressionVisitor<Tree<string>>,
-      i: expr.Index
-    ): Tree<string> {
-
-    return [
-      visit(this, i.object),
-      "[",
-      visit(this, i.index),
-      "]"
-    ];
+    this: ExpressionVisitor<Tree<string>>,
+    i: expr.Index,
+  ): Tree<string> {
+    return [visit(this, i.object), "[", visit(this, i.index), "]"];
   },
 
   visitApplication(
     this: ExpressionVisitor<Tree<string>>,
-    a: expr.Application
+    a: expr.Application,
   ): Tree<string> {
-
     let arglist: Tree<string> = [];
     if (a.args.length > 0) {
       arglist.push(visit(this, a.args[0]));
@@ -71,55 +58,38 @@ var toStringVisitor: ExpressionVisitor<Tree<string>> = {
       }
     }
 
-    return [
-      visit(this, a.fn),
-      "(",
-      arglist,
-      ")"
-    ];
+    return [visit(this, a.fn), "(", arglist, ")"];
   },
 
   visitUnaryOperation(
     this: ExpressionVisitor<Tree<string>>,
-    u: expr.UnaryOperation
+    u: expr.UnaryOperation,
   ): Tree<string> {
-
-    return [
-      u.op,
-      visit(this, u.right)
-    ];
+    return [u.op, visit(this, u.right)];
   },
 
   visitBinaryOperation(
     this: ExpressionVisitor<Tree<string>>,
-    b: expr.BinaryOperation
+    b: expr.BinaryOperation,
   ): Tree<string> {
-
-    return [
-      visit(this, b.left),
-      b.op,
-      visit(this, b.right)
-    ];
+    return [visit(this, b.left), b.op, visit(this, b.right)];
   },
 
   visitArrayConstruction(
     this: ExpressionVisitor<Tree<string>>,
-    a: expr.ArrayConstruction
+    a: expr.ArrayConstruction,
   ): Tree<string> {
-
-    return JSON.stringify(a.value.map(e => visit(this, e)));
+    return JSON.stringify(a.value.map((e) => visit(this, e)));
   },
 
   visitObjectConstruction(
     this: ExpressionVisitor<Tree<string>>,
-    o: expr.ObjectConstruction
+    o: expr.ObjectConstruction,
   ): Tree<string> {
-
-    let elemdict: Dictionary<Tree<string>> = { };
+    let elemdict: Dictionary<Tree<string>> = {};
     for (let key in o) {
       elemdict[key] = visit(this, o.value[key]);
     }
     return JSON.stringify(elemdict);
-  }
-
-}
+  },
+};

@@ -1,4 +1,4 @@
 {
-    "git.enabled": false,
-    "shfmt.executablePath": "/home/linuxbrew/.linuxbrew/bin/shfmt"
+  "git.enabled": false,
+  "shfmt.executablePath": "/home/linuxbrew/.linuxbrew/bin/shfmt"
 }

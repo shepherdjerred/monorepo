@@ -128,6 +128,7 @@ kubectl get configmap argocd-rbac-cm -n argocd -o yaml
 ## Common Error Messages
 
 **"ComparisonError"**:
+
 ```bash
 # Usually a manifest generation issue
 kubectl logs -n argocd -l app.kubernetes.io/name=argocd-repo-server | grep -i error
@@ -136,6 +137,7 @@ argocd app manifests my-app --source live
 ```
 
 **"Unable to create application"**:
+
 ```bash
 # Check project source/destination restrictions
 argocd proj get my-project
@@ -144,6 +146,7 @@ argocd proj add-destination my-project https://kubernetes.default.svc my-namespa
 ```
 
 **"Sync failed: failed to sync cluster"**:
+
 ```bash
 # Check cluster connectivity
 argocd cluster get https://my-cluster
@@ -153,6 +156,7 @@ kubectl --context my-cluster auth can-i create deployments -n my-namespace
 ```
 
 **"Unknown revision"**:
+
 ```bash
 # Force refresh repository cache
 argocd app get my-app --hard-refresh

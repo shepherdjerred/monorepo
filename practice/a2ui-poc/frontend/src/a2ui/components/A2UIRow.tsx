@@ -23,13 +23,17 @@ const distributionClasses: Record<string, string> = {
 };
 
 export function A2UIRow({ component, surfaceId }: A2UIRowProps) {
-  const alignment = alignmentClasses[component.alignment || "center"] || "items-center";
-  const distribution = distributionClasses[component.distribution || "start"] || "justify-start";
+  const alignment =
+    alignmentClasses[component.alignment || "center"] || "items-center";
+  const distribution =
+    distributionClasses[component.distribution || "start"] || "justify-start";
 
   // Handle explicit list children
   if ("explicitList" in component.children) {
     return (
-      <div className={`flex flex-row flex-wrap gap-3 ${alignment} ${distribution}`}>
+      <div
+        className={`flex flex-row flex-wrap gap-3 ${alignment} ${distribution}`}
+      >
         {component.children.explicitList.map((childId) => (
           <ComponentRenderer
             key={childId}

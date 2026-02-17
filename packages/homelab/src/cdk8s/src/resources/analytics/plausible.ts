@@ -1,5 +1,13 @@
-import { Cpu, Deployment, DeploymentStrategy, EnvValue, Secret, Service, Volume } from "cdk8s-plus-31";
-import type { Chart} from "cdk8s";
+import {
+  Cpu,
+  Deployment,
+  DeploymentStrategy,
+  EnvValue,
+  Secret,
+  Service,
+  Volume,
+} from "cdk8s-plus-31";
+import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { withCommonProps } from "../../misc/common.ts";
 import { TailscaleIngress } from "../../misc/tailscale.ts";
@@ -12,7 +20,10 @@ export type CreatePlausibleDeploymentProps = {
   clickhouseService: ServiceType;
 };
 
-export function createPlausibleDeployment(chart: Chart, props: CreatePlausibleDeploymentProps) {
+export function createPlausibleDeployment(
+  chart: Chart,
+  props: CreatePlausibleDeploymentProps,
+) {
   const UID = 1000;
   const GID = 1000;
 
@@ -21,13 +32,19 @@ export function createPlausibleDeployment(chart: Chart, props: CreatePlausibleDe
   // - totp_vault_key: Random 32 character string for TOTP encryption (use: openssl rand -base64 32)
   const plausibleSecrets = new OnePasswordItem(chart, "plausible-secrets", {
     spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/grbpijpjbt2ocw3vmrue2yoelq",
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/grbpijpjbt2ocw3vmrue2yoelq",
     },
   });
-  const secretRef = Secret.fromSecretName(chart, "plausible-secrets-ref", plausibleSecrets.name);
+  const secretRef = Secret.fromSecretName(
+    chart,
+    "plausible-secrets-ref",
+    plausibleSecrets.name,
+  );
 
   // PostgreSQL credentials from postgres-operator
-  const postgresSecretName = "plausible.plausible-postgresql.credentials.postgresql.acid.zalan.do";
+  const postgresSecretName =
+    "plausible.plausible-postgresql.credentials.postgresql.acid.zalan.do";
 
   const deployment = new Deployment(chart, "plausible", {
     replicas: 1,
@@ -37,7 +54,8 @@ export function createPlausibleDeployment(chart: Chart, props: CreatePlausibleDe
     },
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/no-read-only-root-fs": "Plausible requires writable filesystem for Elixir runtime",
+        "ignore-check.kube-linter.io/no-read-only-root-fs":
+          "Plausible requires writable filesystem for Elixir runtime",
       },
     },
   });
@@ -51,7 +69,11 @@ export function createPlausibleDeployment(chart: Chart, props: CreatePlausibleDe
       name: "pg-secret", // Explicit name to avoid dots from postgres-operator secret name
     },
   );
-  const dbUrlVolume = Volume.fromEmptyDir(chart, "plausible-db-url-volume", "plausible-db-url");
+  const dbUrlVolume = Volume.fromEmptyDir(
+    chart,
+    "plausible-db-url-volume",
+    "plausible-db-url",
+  );
 
   // Init container to build DATABASE_URL from postgres-operator secret
   deployment.addInitContainer(

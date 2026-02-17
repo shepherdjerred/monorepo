@@ -4,7 +4,12 @@ import * as timeseries from "@grafana/grafana-foundation-sdk/timeseries";
 import * as stat from "@grafana/grafana-foundation-sdk/stat";
 import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
 import { exportDashboardWithHelmEscaping } from "./dashboard-export.ts";
-import { addL2arcPanels, addMemoryPanels, addPerformancePanels, addBufferAndAdvancedPanels } from "./zfs-dashboard-panels.ts";
+import {
+  addL2arcPanels,
+  addMemoryPanels,
+  addPerformancePanels,
+  addBufferAndAdvancedPanels,
+} from "./zfs-dashboard-panels.ts";
 
 // TODO: grafana is not creating this one
 
@@ -64,11 +69,13 @@ export function createZfsDashboard() {
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "red" },
-          { value: 70, color: "yellow" },
-          { value: 85, color: "green" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "red" },
+            { value: 70, color: "yellow" },
+            { value: 85, color: "green" },
+          ]),
       )
       .gridPos({ x: 0, y: 1, w: 6, h: 4 }),
   );
@@ -79,9 +86,15 @@ export function createZfsDashboard() {
       .title("ARC Size")
       .description("Current ARC size vs maximum")
       .datasource(prometheusDatasource)
-      .withTarget(new prometheus.DataqueryBuilder().expr(`node_zfs_arc_c{${buildFilter()}}`).legendFormat("Current"))
       .withTarget(
-        new prometheus.DataqueryBuilder().expr(`node_zfs_arc_c_max{${buildFilter()}}`).legendFormat("Maximum"),
+        new prometheus.DataqueryBuilder()
+          .expr(`node_zfs_arc_c{${buildFilter()}}`)
+          .legendFormat("Current"),
+      )
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(`node_zfs_arc_c_max{${buildFilter()}}`)
+          .legendFormat("Maximum"),
       )
       .unit("bytes")
       .colorMode(common.BigValueColorMode.Value)
@@ -97,7 +110,9 @@ export function createZfsDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`(node_zfs_arc_c{${buildFilter()}} / node_zfs_arc_c_max{${buildFilter()}}) * 100`)
+          .expr(
+            `(node_zfs_arc_c{${buildFilter()}} / node_zfs_arc_c_max{${buildFilter()}}) * 100`,
+          )
           .legendFormat("{{instance}}"),
       )
       .unit("percent")
@@ -105,11 +120,13 @@ export function createZfsDashboard() {
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 95, color: "yellow" },
-          { value: 100, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 95, color: "yellow" },
+            { value: 100, color: "red" },
+          ]),
       )
       .gridPos({ x: 12, y: 1, w: 6, h: 4 }),
   );
@@ -122,7 +139,9 @@ export function createZfsDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`(node_zfs_arc_arc_meta_used{${buildFilter()}} / node_zfs_arc_c{${buildFilter()}}) * 100`)
+          .expr(
+            `(node_zfs_arc_arc_meta_used{${buildFilter()}} / node_zfs_arc_c{${buildFilter()}}) * 100`,
+          )
           .legendFormat("{{instance}}"),
       )
       .unit("percent")
@@ -130,11 +149,13 @@ export function createZfsDashboard() {
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 75, color: "yellow" },
-          { value: 100, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 75, color: "yellow" },
+            { value: 100, color: "red" },
+          ]),
       )
       .gridPos({ x: 18, y: 1, w: 6, h: 4 }),
   );
@@ -160,11 +181,13 @@ export function createZfsDashboard() {
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "red" },
-          { value: 70, color: "yellow" },
-          { value: 85, color: "green" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "red" },
+            { value: 70, color: "yellow" },
+            { value: 85, color: "green" },
+          ]),
       )
       .gridPos({ x: 0, y: 5, w: 12, h: 8 }),
   );
@@ -175,12 +198,20 @@ export function createZfsDashboard() {
       .title("ARC Size Over Time")
       .description("ARC size vs maximum")
       .datasource(prometheusDatasource)
-      .withTarget(new prometheus.DataqueryBuilder().expr(`node_zfs_arc_c{${buildFilter()}}`).legendFormat("Current"))
       .withTarget(
-        new prometheus.DataqueryBuilder().expr(`node_zfs_arc_c_max{${buildFilter()}}`).legendFormat("Maximum"),
+        new prometheus.DataqueryBuilder()
+          .expr(`node_zfs_arc_c{${buildFilter()}}`)
+          .legendFormat("Current"),
       )
       .withTarget(
-        new prometheus.DataqueryBuilder().expr(`node_zfs_arc_c_min{${buildFilter()}}`).legendFormat("Minimum"),
+        new prometheus.DataqueryBuilder()
+          .expr(`node_zfs_arc_c_max{${buildFilter()}}`)
+          .legendFormat("Maximum"),
+      )
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(`node_zfs_arc_c_min{${buildFilter()}}`)
+          .legendFormat("Minimum"),
       )
       .unit("bytes")
       .lineWidth(2)
@@ -195,7 +226,9 @@ export function createZfsDashboard() {
       .description("Rate of ARC hits and misses")
       .datasource(prometheusDatasource)
       .withTarget(
-        new prometheus.DataqueryBuilder().expr(`rate(node_zfs_arc_hits{${buildFilter()}}[5m])`).legendFormat("Hits"),
+        new prometheus.DataqueryBuilder()
+          .expr(`rate(node_zfs_arc_hits{${buildFilter()}}[5m])`)
+          .legendFormat("Hits"),
       )
       .withTarget(
         new prometheus.DataqueryBuilder()
@@ -225,11 +258,13 @@ export function createZfsDashboard() {
       .lineWidth(2)
       .fillOpacity(10)
       .thresholds(
-        new dashboard.ThresholdsConfigBuilder().mode(dashboard.ThresholdsMode.Absolute).steps([
-          { value: 0, color: "green" },
-          { value: 1000, color: "yellow" },
-          { value: 5000, color: "red" },
-        ]),
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 1000, color: "yellow" },
+            { value: 5000, color: "red" },
+          ]),
       )
       .gridPos({ x: 12, y: 13, w: 12, h: 8 }),
   );

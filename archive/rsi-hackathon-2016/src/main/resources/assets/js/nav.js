@@ -1,7 +1,7 @@
-document.addEventListener("DOMContentLoaded", function() {
-    document.getElementById("navTitle").addEventListener("click", toggleNav);
+document.addEventListener("DOMContentLoaded", function () {
+  document.getElementById("navTitle").addEventListener("click", toggleNav);
 
-    function toggleNav() {
-        document.getElementById("navbar").classList.toggle("collapsed");
-    }
+  function toggleNav() {
+    document.getElementById("navbar").classList.toggle("collapsed");
+  }
 });

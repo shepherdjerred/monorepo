@@ -4,7 +4,9 @@ import { dag } from "@dagger.io/dagger";
 /**
  * Check astro-opengraph-images: lint, build, test
  */
-export async function checkAstroOpengraphImages(source: Directory): Promise<string> {
+export async function checkAstroOpengraphImages(
+  source: Directory,
+): Promise<string> {
   const pkgSource = source.directory("packages/astro-opengraph-images");
 
   const container = dag

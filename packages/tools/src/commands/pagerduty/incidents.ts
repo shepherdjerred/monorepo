@@ -33,7 +33,7 @@ function formatIncident(incident: PagerDutyIncident): string {
   const statusEmoji = getStatusEmoji(incident.status);
 
   lines.push(
-    `- ${statusEmoji} **${String(incident.incident_number)}**: ${incident.title}${urgencyEmoji ? ` ${urgencyEmoji}` : ""}`
+    `- ${statusEmoji} **${String(incident.incident_number)}**: ${incident.title}${urgencyEmoji ? ` ${urgencyEmoji}` : ""}`,
   );
   lines.push(`  - Service: ${incident.service.summary}`);
   lines.push(`  - Status: ${incident.status}`);
@@ -76,7 +76,9 @@ function formatIncidentsMarkdown(incidents: PagerDutyIncident[]): string {
   }
 
   if (acknowledged.length > 0) {
-    lines.push(`### \uD83D\uDFE1 Acknowledged (${String(acknowledged.length)})`);
+    lines.push(
+      `### \uD83D\uDFE1 Acknowledged (${String(acknowledged.length)})`,
+    );
     lines.push("");
     for (const incident of acknowledged) {
       lines.push(formatIncident(incident));
@@ -95,7 +97,7 @@ function formatIncidentsMarkdown(incidents: PagerDutyIncident[]): string {
 }
 
 export async function incidentsCommand(
-  options: IncidentsOptions = {}
+  options: IncidentsOptions = {},
 ): Promise<void> {
   try {
     const incidents = await getIncidents({
