@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import type { Configuration } from "./types.js";
-import { run } from "./index.js";
+import type { Configuration } from "./types.ts";
+import { run } from "./index.ts";
 import { tmpdir } from "node:os";
 import { mkdtemp } from "node:fs/promises";
 import path from "node:path";
