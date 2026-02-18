@@ -4,9 +4,6 @@ import { CourseSearchResult } from "./course-search-result.tsx";
 import type { Watchable } from "#src/model/watch-status";
 import { VideoSearchResult } from "./video-search-result.tsx";
 import type OmniSearchable from "./omni-searchable.tsx";
-import { isCourse } from "#src/model/course";
-import { isVideo } from "#src/model/video";
-import { isCommentary } from "#src/model/commentary";
 import { CommentarySearchResult } from "./commentary-search-result.tsx";
 
 export type OmniSearchResultProps = {
@@ -28,7 +25,7 @@ export function OmniSearchResult({
   matchedStrings,
   isDownloadEnabled,
 }: OmniSearchResultProps): React.ReactElement {
-  if (isCourse(item)) {
+  if ("videos" in item) {
     const result = {
       item,
       matchedStrings: matchedStrings,
@@ -49,7 +46,7 @@ export function OmniSearchResult({
         isDownloadEnabled={isDownloadEnabled}
       />
     );
-  } else if (isCommentary(item)) {
+  } else if ("matchLink" in item) {
     const commentary = item;
     return (
       <CommentarySearchResult
@@ -63,7 +60,7 @@ export function OmniSearchResult({
         isDownloadEnabled={isDownloadEnabled}
       />
     );
-  } else if (isVideo(item)) {
+  } else {
     const video = item;
     return (
       <VideoSearchResult
@@ -78,6 +75,4 @@ export function OmniSearchResult({
       />
     );
   }
-
-  return <></>;
 }

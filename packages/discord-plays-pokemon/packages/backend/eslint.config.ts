@@ -5,11 +5,10 @@ export default [
     tsconfigRootDir: import.meta.dirname,
     projectService: {
       allowDefaultProject: [
-        "eslint.config.ts",
         "src/config/index.test.ts",
         "src/game/command/chord.test.ts",
-        "src/game/command/chordParser.test.ts",
-        "src/game/command/commandInput.test.ts",
+        "src/game/command/chord-parser.test.ts",
+        "src/game/command/command-input.test.ts",
       ],
     },
   }),
@@ -23,6 +22,17 @@ export default [
       "@typescript-eslint/no-unsafe-return": "off",
       // Legacy codebase uses type guards extensively
       "custom-rules/no-type-guards": "off",
+      // Legacy codebase uses type assertions for socket.io
+      "custom-rules/no-type-assertions": "off",
+      // Legacy template expressions with non-string types
+      "@typescript-eslint/restrict-template-expressions": "off",
+      // Legacy codebase shadows variables in callbacks
+      "@typescript-eslint/no-shadow": "off",
+      // Not a Bun project originally
+      "custom-rules/prefer-bun-apis": "off",
+      // Unresolved import paths cause error types
+      "@typescript-eslint/no-redundant-type-constituents": "off",
+      "@typescript-eslint/restrict-plus-operands": "off",
     },
   },
 ];

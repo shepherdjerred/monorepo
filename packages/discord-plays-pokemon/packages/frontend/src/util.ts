@@ -2,7 +2,7 @@ import lodash from "lodash";
 
 export function wait(wait: number) {
   return new Promise((resolve) => {
-    setTimeout(() => resolve(undefined), wait);
+    setTimeout(() => { resolve(); }, wait);
   });
 }
 
@@ -17,6 +17,6 @@ export function downloadScreenshot(data: string) {
   a.href = url;
   a.download = "dscrdplyspkmn-screenshot.png";
   a.click();
-  window.URL.revokeObjectURL(url);
+  globalThis.URL.revokeObjectURL(url);
   a.remove();
 }

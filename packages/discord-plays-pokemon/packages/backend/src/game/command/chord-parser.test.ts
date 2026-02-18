@@ -1,7 +1,7 @@
 import {
   commandToGameboyAdvanceKeyInput,
   parseGameboyAdvanceKeyInput,
-} from "./keybinds.js";
+} from "./keybinds.ts";
 
 describe("keybinds", () => {
   describe("parseGameboyAdvanceKeyInput", () => {

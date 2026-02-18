@@ -1,4 +1,4 @@
-import { Card } from "./Card";
+import { Card } from "./card.tsx";
 
 export function Controls() {
   return (

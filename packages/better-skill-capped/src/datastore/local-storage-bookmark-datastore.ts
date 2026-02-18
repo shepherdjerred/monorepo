@@ -9,7 +9,7 @@ import { isCourse } from "#src/model/course";
 const IDENTIFIER = "bookmarks";
 
 const StoredBookmarkSchema = z.object({
-  item: z.object({ uuid: z.string() }).passthrough(),
+  item: z.object({ uuid: z.string() }).catchall(z.unknown()),
   date: z.string(),
 });
 const StoredBookmarksSchema = z.array(StoredBookmarkSchema);

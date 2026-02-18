@@ -25,8 +25,7 @@ export class TailscaleIngress extends Construct {
     super(scope, id);
 
     let base: IngressProps = {
-      // unsafe cast, but we know that Ingress only needs the name and port
-
+      // eslint-disable-next-line custom-rules/no-type-assertions -- CDK8s Ingress API requires Service type but we accept a broader interface
       defaultBackend: IngressBackend.fromService(props.service as Service),
       tls: [
         {

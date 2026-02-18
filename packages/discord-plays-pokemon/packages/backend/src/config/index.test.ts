@@ -1,4 +1,4 @@
-import { getConfig } from "./index.js";
+import { getConfig } from "./index.ts";
 
 describe("config", () => {
   it("should not load the default configuration", () => {

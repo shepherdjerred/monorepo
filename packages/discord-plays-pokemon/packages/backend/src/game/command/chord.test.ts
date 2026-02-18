@@ -1,4 +1,4 @@
-import { parseChord } from "./chord.js";
+import { parseChord } from "./chord.ts";
 
 describe("chord", () => {
   describe("parseChord", () => {

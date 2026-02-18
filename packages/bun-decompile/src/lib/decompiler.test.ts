@@ -1,6 +1,6 @@
 import { spawn } from "bun";
 import { mkdir, rm } from "node:fs/promises";
-import { join } from "node:path";
+import path from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import {
   decompileFile,
@@ -9,9 +9,9 @@ import {
 } from "./index.ts";
 
 const TEST_DIR = "/tmp/bun-decompile-test";
-const SAMPLE_APP_DIR = join(TEST_DIR, "sample-app");
-const BINARY_PATH = join(TEST_DIR, "test-binary");
-const OUTPUT_DIR = join(TEST_DIR, "output");
+const SAMPLE_APP_DIR = path.join(TEST_DIR, "sample-app");
+const BINARY_PATH = path.join(TEST_DIR, "test-binary");
+const OUTPUT_DIR = path.join(TEST_DIR, "output");
 
 // Sample source files
 const SAMPLE_INDEX_TS = `// Main entry point
@@ -39,8 +39,8 @@ describe("bun-decompile", () => {
     await mkdir(SAMPLE_APP_DIR, { recursive: true });
 
     // Write sample source files
-    await Bun.write(join(SAMPLE_APP_DIR, "index.ts"), SAMPLE_INDEX_TS);
-    await Bun.write(join(SAMPLE_APP_DIR, "utils.ts"), SAMPLE_UTILS_TS);
+    await Bun.write(path.join(SAMPLE_APP_DIR, "index.ts"), SAMPLE_INDEX_TS);
+    await Bun.write(path.join(SAMPLE_APP_DIR, "utils.ts"), SAMPLE_UTILS_TS);
   });
 
   afterAll(async () => {
@@ -57,7 +57,7 @@ describe("bun-decompile", () => {
           "build",
           "--compile",
           "--sourcemap",
-          join(SAMPLE_APP_DIR, "index.ts"),
+          path.join(SAMPLE_APP_DIR, "index.ts"),
           "--outfile",
           BINARY_PATH,
         ],
@@ -127,17 +127,17 @@ describe("bun-decompile", () => {
       await extractToDirectory(result, OUTPUT_DIR);
 
       // Check metadata.json
-      const metadata = await Bun.file(join(OUTPUT_DIR, "metadata.json")).json();
+      const metadata = await Bun.file(path.join(OUTPUT_DIR, "metadata.json")).json();
       expect(metadata.bunVersion).toMatch(/^\d+\.\d+\.\d+/);
       expect(metadata.hasOriginalSources).toBe(true);
       expect(metadata.originalSourceCount).toBe(2);
 
       // Check original sources exist
       const utilsExists = await Bun.file(
-        join(OUTPUT_DIR, "original/utils.ts"),
+        path.join(OUTPUT_DIR, "original/utils.ts"),
       ).exists();
       const indexExists = await Bun.file(
-        join(OUTPUT_DIR, "original/index.ts"),
+        path.join(OUTPUT_DIR, "original/index.ts"),
       ).exists();
       expect(utilsExists).toBe(true);
       expect(indexExists).toBe(true);
@@ -160,7 +160,7 @@ describe("bun-decompile", () => {
   });
 
   describe("without sourcemap", () => {
-    const NO_SOURCEMAP_BINARY = join(TEST_DIR, "test-binary-no-sourcemap");
+    const NO_SOURCEMAP_BINARY = path.join(TEST_DIR, "test-binary-no-sourcemap");
 
     beforeAll(async () => {
       // Compile without sourcemap
@@ -169,7 +169,7 @@ describe("bun-decompile", () => {
           "bun",
           "build",
           "--compile",
-          join(SAMPLE_APP_DIR, "index.ts"),
+          path.join(SAMPLE_APP_DIR, "index.ts"),
           "--outfile",
           NO_SOURCEMAP_BINARY,
         ],
@@ -211,7 +211,7 @@ describe("bun-decompile", () => {
     });
 
     test("extracts to directory without original sources", async () => {
-      const noSourcemapOutput = join(TEST_DIR, "output-no-sourcemap");
+      const noSourcemapOutput = path.join(TEST_DIR, "output-no-sourcemap");
       await rm(noSourcemapOutput, { recursive: true, force: true });
 
       const result = await decompileFile(NO_SOURCEMAP_BINARY);
@@ -219,19 +219,19 @@ describe("bun-decompile", () => {
 
       // Check metadata
       const metadata = await Bun.file(
-        join(noSourcemapOutput, "metadata.json"),
+        path.join(noSourcemapOutput, "metadata.json"),
       ).json();
       expect(metadata.hasOriginalSources).toBe(false);
       expect(metadata.originalSourceCount).toBe(0);
 
       // Original directory should not have files (or not exist)
       const originalDirExists = await Bun.file(
-        join(noSourcemapOutput, "original"),
+        path.join(noSourcemapOutput, "original"),
       ).exists();
       // Either doesn't exist or is empty
       if (originalDirExists) {
         const originalFiles = await Array.fromAsync(
-          new Bun.Glob("*").scan(join(noSourcemapOutput, "original")),
+          new Bun.Glob("*").scan(path.join(noSourcemapOutput, "original")),
         );
         expect(originalFiles.length).toBe(0);
       }

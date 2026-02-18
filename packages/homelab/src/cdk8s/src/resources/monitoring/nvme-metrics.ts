@@ -8,15 +8,15 @@ import {
   Probe,
 } from "cdk8s-plus-31";
 import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import path from "node:path";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);
-const CURRENT_DIRNAME = dirname(CURRENT_FILENAME);
+const CURRENT_DIRNAME = path.dirname(CURRENT_FILENAME);
 
 export async function createNvmeMetricsMonitoring(chart: Chart) {
   // Load the script content from file
-  const scriptPath = join(CURRENT_DIRNAME, "scripts", "nvme_metrics.py");
+  const scriptPath = path.join(CURRENT_DIRNAME, "scripts", "nvme_metrics.py");
   const scriptContent = await Bun.file(scriptPath).text();
 
   // Create ServiceAccount for the DaemonSet

@@ -8,20 +8,20 @@ Sentry.init({
 });
 
 import { sendGameCommand } from "./browser/game.ts";
-import { handleMessages } from "./discord/messageHandler.ts";
+import { handleMessages } from "./discord/message-handler.ts";
 import type { WebDriver } from "selenium-webdriver";
 import { Browser, Builder } from "selenium-webdriver";
 import { writeFile } from "node:fs/promises";
 import { Options } from "selenium-webdriver/firefox.js";
 import { handleSlashCommands } from "./discord/slashCommands/index.ts";
-import type { CommandInput } from "./game/command/commandInput.ts";
+import type { CommandInput } from "./game/command/command-input.ts";
 import { createWebServer } from "./webserver/index.ts";
 import { start } from "./browser/index.ts";
 import lodash from "lodash";
 import { registerSlashCommands } from "./discord/slashCommands/rest.ts";
 import { logger } from "./logger.ts";
 import { disconnect, joinVoiceChat, shareScreen } from "./browser/discord.ts";
-import { handleChannelUpdate } from "./discord/channelHandler.ts";
+import { handleChannelUpdate } from "./discord/channel-handler.ts";
 import { match } from "ts-pattern";
 import type {
   LoginResponse,
@@ -165,9 +165,10 @@ if (getConfig().stream.dynamic_streaming) {
         try {
           await joinVoiceChat(streamDriver);
           await shareScreen(streamDriver);
+          const handles = await streamDriver.getAllWindowHandles();
           await streamDriver
             .switchTo()
-            .window((await streamDriver.getAllWindowHandles())[1]);
+            .window(handles[1]);
         } catch (error) {
           logger.error(error);
         }

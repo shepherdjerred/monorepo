@@ -1,4 +1,4 @@
-import { Login } from "../stories/Login";
+import { Login } from "@shepherdjerred/discord-plays-pokemon/packages/frontend/src/stories/Login";
 
 export function LoginPage({
   handleLogin,

@@ -17,7 +17,7 @@ import {
   start,
   up,
 } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/command.js";
-import { burst, hold, hold_b } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/commandInput.js";
+import { burst, hold, holdB } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/commandInput.js";
 import { getConfig } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/config/index.js";
 
 export const helpCommand = new SlashCommandBuilder()
@@ -28,7 +28,7 @@ export async function help(interaction: CommandInteraction) {
   const modifiers = [
     `Hold a button down: ${hold.join(", ")}`,
     `Burst/rapid-press a button: ${burst.join("\n")}`,
-    `Hold the B button while pressing another button: ${hold_b.join("\n")}`,
+    `Hold the B button while pressing another button: ${holdB.join("\n")}`,
   ];
   const modifiersString = modifiers
     .map((modifier) => {

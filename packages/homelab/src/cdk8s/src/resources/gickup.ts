@@ -14,17 +14,17 @@ import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/ser
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import path from "node:path";
 
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);
-const CURRENT_DIRNAME = dirname(CURRENT_FILENAME);
+const CURRENT_DIRNAME = path.dirname(CURRENT_FILENAME);
 
 export async function createGickupDeployment(chart: Chart) {
   const UID = 65_532;
   const GID = 65_532;
 
   // Load the gickup configuration from file
-  const configPath = join(CURRENT_DIRNAME, "configs", "gickup.yml");
+  const configPath = path.join(CURRENT_DIRNAME, "configs", "gickup.yml");
   const configContent = await Bun.file(configPath).text();
 
   // Create ConfigMap for gickup configuration

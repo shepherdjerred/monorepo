@@ -1,10 +1,9 @@
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import path from "node:path";
 import { logger } from "./logger.ts";
 
 export function wait(milliseconds: number): Promise<void> {
-  return new Promise(function (resolve) {
-    setTimeout(resolve, milliseconds);
+  return new Promise(function (waitResolve) {
+    setTimeout(waitResolve, milliseconds);
   });
 }
 
@@ -13,14 +12,14 @@ export function addErrorLinks(s: string) {
 }
 
 export function assertPathExists(s: string, pathName: string) {
-  const path = resolve(s);
+  const resolved = path.resolve(s);
 
-  if (!existsSync(path)) {
+  if (Bun.file(resolved).size === 0) {
     logger.error(
       addErrorLinks(
-        `The ${pathName} do not exist at expected path, which is ${path}`,
+        `The ${pathName} do not exist at expected path, which is ${resolved}`,
       ),
     );
-    throw new Error(`${path} does not exist`);
+    throw new Error(`${resolved} does not exist`);
   }
 }

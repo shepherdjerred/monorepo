@@ -1,5 +1,5 @@
 import { mkdir, readFile, writeFile, unlink } from "node:fs/promises";
-import { join, dirname } from "node:path";
+import path from "node:path";
 import { hashSource } from "./cache.ts";
 
 /** Persisted batch state for resume support */
@@ -42,7 +42,7 @@ export { getProjectId };
 /** Get the path to the state file (includes project ID for isolation) */
 function getStatePath(cacheDir: string): string {
   const projectId = getProjectId();
-  return join(cacheDir, `${STATE_FILE_PREFIX}-${projectId}.json`);
+  return path.join(cacheDir, `${STATE_FILE_PREFIX}-${projectId}.json`);
 }
 
 /** Save batch state to disk */
@@ -51,7 +51,7 @@ export async function saveBatchState(
   cacheDir: string,
 ): Promise<void> {
   const statePath = getStatePath(cacheDir);
-  await mkdir(dirname(statePath), { recursive: true });
+  await mkdir(path.dirname(statePath), { recursive: true });
   await writeFile(statePath, JSON.stringify(state, null, 2));
 }
 
@@ -61,7 +61,7 @@ export async function loadBatchState(
 ): Promise<BatchState | null> {
   try {
     const statePath = getStatePath(cacheDir);
-    const content = await readFile(statePath, "utf-8");
+    const content = await readFile(statePath, "utf8");
     return JSON.parse(content) as BatchState;
   } catch {
     return null;

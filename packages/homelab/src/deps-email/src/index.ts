@@ -1,5 +1,3 @@
-/* eslint-disable custom-rules/no-re-exports -- barrel file for deps-email package */
-
 // Types
 export type {
   ChartYaml,

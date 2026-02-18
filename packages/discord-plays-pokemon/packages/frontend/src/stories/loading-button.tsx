@@ -1,5 +1,5 @@
-import { Button } from "./Button";
-import { LoadingSpinner } from "./LoadingSpinner";
+import { Button } from "./button.tsx";
+import { LoadingSpinner } from "./loading-spinner.tsx";
 
 export function LoadingButton() {
   return (

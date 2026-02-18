@@ -254,6 +254,6 @@ export function createHaWorkflowDashboard() {
  * Exports the dashboard as JSON string for use in ConfigMaps or API calls
  */
 export function exportHaWorkflowDashboardJson(): string {
-  const dashboard = createHaWorkflowDashboard();
-  return exportDashboardWithHelmEscaping(dashboard);
+  const dashboardModel = createHaWorkflowDashboard();
+  return exportDashboardWithHelmEscaping(dashboardModel);
 }

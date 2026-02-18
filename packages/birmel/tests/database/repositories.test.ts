@@ -6,6 +6,7 @@ import "../setup.js";
 // Create an in-memory database for testing
 let testDb: Database;
 
+// eslint-disable-next-line max-lines-per-function -- comprehensive test suite
 describe("database repositories", () => {
   beforeEach(() => {
     // Create a fresh in-memory database for each test

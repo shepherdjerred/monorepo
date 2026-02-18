@@ -1,4 +1,4 @@
-import { parseCommandInput } from "./commandInput.js";
+import { parseCommandInput } from "./command-input.ts";
 
 describe("commandInput", () => {
   describe("parseCommandInput", () => {
@@ -28,7 +28,7 @@ describe("commandInput", () => {
     test("can parse absurd strings", () => {
       expect(parseCommandInput("20000000d")).toEqual({
         command: "d",
-        quantity: 20000000,
+        quantity: 20_000_000,
       });
 
       // no command

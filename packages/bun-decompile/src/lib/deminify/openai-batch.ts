@@ -143,7 +143,7 @@ export class OpenAIBatchClient {
 
     // Create JSONL content
     const jsonlContent = requests.map((r) => JSON.stringify(r)).join("\n");
-    const jsonlBuffer = Buffer.from(jsonlContent, "utf-8");
+    const jsonlBuffer = Buffer.from(jsonlContent, "utf8");
 
     // Upload file
     const file = await this.client.files.create({

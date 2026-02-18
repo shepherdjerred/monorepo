@@ -1,5 +1,3 @@
-/* eslint-disable custom-rules/no-re-exports -- barrel file that re-exports all helm-types functionality */
-
 // Core types
 export type {
   ChartInfo,

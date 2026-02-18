@@ -590,6 +590,6 @@ This usually means that Prometheus is not successfully scraping metrics from the
  * Exports the dashboard as JSON string for use in ConfigMaps or API calls
  */
 export function exportVeleroDashboardJson(): string {
-  const dashboard = createVeleroDashboard();
-  return exportDashboardWithHelmEscaping(dashboard);
+  const dashboardModel = createVeleroDashboard();
+  return exportDashboardWithHelmEscaping(dashboardModel);
 }

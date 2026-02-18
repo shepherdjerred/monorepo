@@ -1,6 +1,6 @@
 import lodash from "lodash";
-import { Notification } from "../model/Notification";
-import { Notification as NotificationElement } from "./Notification";
+import type { Notification } from "@shepherdjerred/discord-plays-pokemon/packages/frontend/src/model/Notification";
+import { Notification as NotificationElement } from "./notification.tsx";
 
 export function Notifications({
   notifications,
@@ -16,7 +16,7 @@ export function Notifications({
           title={notification.title}
           message={notification.message}
           level={notification.level}
-          onClose={() => onClose(notification.id)}
+          onClose={() => { onClose(notification.id); }}
         />
       </div>
     );

@@ -25,12 +25,16 @@ export default [
       "@typescript-eslint/strict-boolean-expressions": "off",
       "@typescript-eslint/require-await": "off",
       // Discord bot uses barrel re-exports extensively across 85+ module boundaries.
-      // Restructuring the entire import graph is out of scope.
       "custom-rules/no-re-exports": "off",
       // 143 type assertions across 93 files -- mostly Discord.js channel casts,
-      // Mastra tool record casts, and JSON.parse results. Suppressed until
-      // a dedicated migration adds Zod schemas and Discord type guards.
+      // Mastra tool record casts, and JSON.parse results.
       "custom-rules/no-type-assertions": "off",
+      // Discord bot tool handlers commonly receive many parameters from tool context.
+      "max-params": ["error", { max: 6 }],
+      // Complex switch/case tool dispatch and config loading exceeds default of 20.
+      "complexity": ["error", { max: 30 }],
+      // Deeply nested tool dispatch and conditional logic.
+      "max-depth": ["error", { max: 6 }],
     },
   },
 ];

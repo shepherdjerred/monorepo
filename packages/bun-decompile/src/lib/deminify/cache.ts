@@ -10,7 +10,7 @@
  */
 
 import { mkdir } from "node:fs/promises";
-import { join } from "node:path";
+import path from "node:path";
 import type { CacheEntry, DeminifyResult, ExtractedFunction } from "./types.ts";
 
 /** File-based cache for de-minification results */
@@ -108,7 +108,7 @@ export class DeminifyCache {
 
   /** Get file path for a cache key */
   private getCacheFilePath(key: string): string {
-    return join(this.cacheDir, `${key}.json`);
+    return path.join(this.cacheDir, `${key}.json`);
   }
 
   /** Clear expired entries */
@@ -121,7 +121,7 @@ export class DeminifyCache {
     try {
       const glob = new Bun.Glob("*.json");
       for await (const file of glob.scan(this.cacheDir)) {
-        const filePath = join(this.cacheDir, file);
+        const filePath = path.join(this.cacheDir, file);
         try {
           const content = await Bun.file(filePath).text();
           const entry = JSON.parse(content) as CacheEntry;
@@ -157,7 +157,7 @@ export class DeminifyCache {
     try {
       const glob = new Bun.Glob("*.json");
       for await (const file of glob.scan(this.cacheDir)) {
-        const filePath = join(this.cacheDir, file);
+        const filePath = path.join(this.cacheDir, file);
         try {
           await Bun.write(filePath, ""); // Clear file
         } catch {
@@ -182,7 +182,7 @@ export class DeminifyCache {
     try {
       const glob = new Bun.Glob("*.json");
       for await (const file of glob.scan(this.cacheDir)) {
-        const filePath = join(this.cacheDir, file);
+        const filePath = path.join(this.cacheDir, file);
         try {
           const stat = Bun.file(filePath).size;
           if (stat > 0) {

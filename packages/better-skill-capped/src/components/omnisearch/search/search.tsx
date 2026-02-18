@@ -14,8 +14,9 @@ import type { Bookmarkable } from "#src/model/bookmark";
 import Banner, { BannerType } from "#src/components/banner";
 import Type, { getType } from "#src/model/type";
 import { Role } from "#src/model/role";
+import type OmniSearchable from "#src/components/omnisearch/omni-searchable.ts";
 
-export type SearchProps<T> = {
+export type SearchProps<T extends OmniSearchable> = {
   items: T[];
   fuseOptions: IFuseOptions<T>;
   render: (items: FuseSearchResult<T>) => React.ReactNode;
@@ -30,7 +31,7 @@ type SearchState = {
   filters: Filters;
 };
 
-export default class Search<T> extends React.PureComponent<
+export default class Search<T extends OmniSearchable> extends React.PureComponent<
   SearchProps<T>,
   SearchState
 > {
@@ -89,17 +90,12 @@ export default class Search<T> extends React.PureComponent<
     } = this.props;
     const { query, filters } = this.state;
 
-    // TODO this is very hacky. fix it.
     const filteredItems = items
       .filter((item) => {
         if (!(isVideo(item) || isCourse(item) || isCommentary(item))) {
           return false;
         }
-        if (typeof item !== "object" || item === null || !("role" in item)) {
-          return false;
-        }
-        // eslint-disable-next-line custom-rules/no-type-assertions -- role validated by runtime checks above
-        return filters.roles.includes(item.role as Role);
+        return filters.roles.includes(item.role);
       })
       .filter((item) => {
         if (filters.onlyBookmarked) {

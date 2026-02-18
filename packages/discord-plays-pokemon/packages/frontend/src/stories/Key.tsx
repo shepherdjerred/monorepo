@@ -1,4 +1,4 @@
-import { KeyboardKey } from "@discord-plays-pokemon/common";
+import type { KeyboardKey } from "@discord-plays-pokemon/common";
 import useKeyboardJs from "react-use/lib/useKeyboardJs";
 
 export function Key({
@@ -15,7 +15,7 @@ export function Key({
   }
   return (
     <kbd
-      className={`${`p-3 bg-slate-600 block text-center m-1`} ${isPressed ? `bg-slate-400` : ``}`}
+      className={`p-3 bg-slate-600 block text-center m-1 ${isPressed ? `bg-slate-400` : ``}`}
     >
       {display} ({api})
     </kbd>

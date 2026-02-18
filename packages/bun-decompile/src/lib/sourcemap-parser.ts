@@ -1,5 +1,5 @@
 import { spawn } from "bun";
-import { basename } from "node:path";
+import path from "node:path";
 import type { StringPointer } from "./types.ts";
 
 /** Parsed source file from a sourcemap */
@@ -147,7 +147,7 @@ export async function parseSourceMap(
       );
       // Normalize paths with .. to just the basename
       if (name.includes("..")) {
-        name = basename(name);
+        name = path.basename(name);
       }
 
       // Decompress ZSTD content
