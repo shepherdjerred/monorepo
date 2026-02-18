@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bun
 
 import { z } from "zod";
-import cdk8sVersions from "../../src/cdk8s/src/versions";
-import daggerVersions from "../src/versions";
+import cdk8sVersions from "../../packages/homelab/src/cdk8s/src/versions";
+import daggerVersions from "../src/lib/versions";
 
 /**
  * Test script to validate that versions.ts files have properly formatted

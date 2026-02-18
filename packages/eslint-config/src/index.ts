@@ -56,22 +56,10 @@ export type RecommendedOptions = BaseConfigOptions &
     react?: boolean;
     /** Include accessibility (jsx-a11y) rules */
     accessibility?: boolean;
-    /** Include naming convention rules */
-    naming?: boolean;
     /** Custom rules configuration */
     customRules?: {
-      /** Enable Zod-related rules */
-      zod?: boolean;
-      /** Enable Bun-specific rules */
-      bun?: boolean;
       /** Enable React-specific rules (no-use-effect) */
       reactRules?: boolean;
-      /** Enable code organization rules (no-re-exports, no-parent-imports) */
-      codeOrganization?: boolean;
-      /** Enable type safety rules (no-type-assertions, no-type-guards, no-function-overloads) */
-      typeSafety?: boolean;
-      /** Enable async/await style enforcement */
-      promiseStyle?: boolean;
       /** Enable Raw* naming rule (no *Dto suffix) */
       noDtoNaming?: boolean;
       /** Enable structured logging rule */
@@ -107,14 +95,8 @@ export function recommended(
   const {
     react = false,
     accessibility = false,
-    naming = true,
     customRules = {
-      zod: true,
-      bun: true,
       reactRules: true,
-      codeOrganization: true,
-      typeSafety: true,
-      promiseStyle: true,
       noDtoNaming: false,
       structuredLogging: false,
       noShadcnThemeTokens: false,
@@ -136,62 +118,38 @@ export function recommended(
     configs.push(...accessibilityConfig());
   }
 
-  if (naming) {
-    configs.push(...namingConfig());
-  }
+  // Always include naming conventions
+  configs.push(...namingConfig());
 
-  // Add custom rules plugin
+  // Custom rules — always-on core rules + opt-in specialized rules
   const customRulesConfig: TSESLint.FlatConfig.Config = {
     plugins: {
       "custom-rules": customRulesPlugin,
     },
-    rules: {},
-  };
-
-  if (customRules.zod) {
-    customRulesConfig.rules = {
-      ...customRulesConfig.rules,
+    rules: {
+      // Always on — type safety
+      "custom-rules/no-type-assertions": "error",
+      "custom-rules/no-type-guards": "error",
+      "custom-rules/no-function-overloads": "error",
+      // Always on — code organization
+      "custom-rules/no-re-exports": "error",
+      "custom-rules/no-parent-imports": "error",
+      // Always on — async style
+      "custom-rules/prefer-async-await": "error",
+      // Always on — Bun
+      "custom-rules/prefer-bun-apis": "error",
+      "custom-rules/require-ts-extensions": "error",
+      // Always on — Zod
       "custom-rules/zod-schema-naming": "error",
       "custom-rules/no-redundant-zod-parse": "error",
       "custom-rules/prefer-zod-validation": "error",
-    };
-  }
-
-  if (customRules.bun) {
-    customRulesConfig.rules = {
-      ...customRulesConfig.rules,
-      "custom-rules/prefer-bun-apis": "error",
-    };
-  }
+    },
+  };
 
   if (customRules.reactRules && react) {
     customRulesConfig.rules = {
       ...customRulesConfig.rules,
       "custom-rules/no-use-effect": "warn",
-    };
-  }
-
-  if (customRules.codeOrganization) {
-    customRulesConfig.rules = {
-      ...customRulesConfig.rules,
-      "custom-rules/no-re-exports": "error",
-      "custom-rules/no-parent-imports": "error",
-    };
-  }
-
-  if (customRules.typeSafety) {
-    customRulesConfig.rules = {
-      ...customRulesConfig.rules,
-      "custom-rules/no-type-assertions": "error",
-      "custom-rules/no-type-guards": "error",
-      "custom-rules/no-function-overloads": "error",
-    };
-  }
-
-  if (customRules.promiseStyle !== false) {
-    customRulesConfig.rules = {
-      ...customRulesConfig.rules,
-      "custom-rules/prefer-async-await": "error",
     };
   }
 
@@ -254,10 +212,8 @@ export function recommended(
       "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/no-unnecessary-condition": "off",
       "@typescript-eslint/strict-boolean-expressions": "off",
-      // Still catch chained assertions in tests (when typeSafety is enabled)
-      ...(customRules.typeSafety
-        ? { "custom-rules/no-type-assertions": "error" }
-        : {}),
+      // Still catch chained assertions in tests
+      "custom-rules/no-type-assertions": "error",
       // Too many false positives in tests
       "custom-rules/prefer-zod-validation": "off",
     },

@@ -1,14 +1,10 @@
-import {
-  recommended,
-  accessibilityConfig,
-} from "../../../eslint-config/local.ts";
+import { recommended } from "../../../eslint-config/local.ts";
 
 export default [
   ...recommended({
     tsconfigRootDir: import.meta.dirname,
     react: true,
-    accessibility: false,
-    naming: false,
+    accessibility: true,
     projectService: {
       allowDefaultProject: [
         "eslint.config.ts",
@@ -21,78 +17,10 @@ export default [
       ],
     },
     ignores: [
-      "**/generated/**/*",
-      "**/dist/**/*",
-      "**/build/**/*",
-      "**/.cache/**/*",
-      "**/node_modules/**/*",
-      "**/.astro/**/*",
-      "**/*.md",
-      "**/*.mdx",
-      "**/*.mjs",
-      "**/*.js",
-      "**/*.cjs",
-      "tests/",
-      "postcss.config.js",
-      "tailwind.config.js",
-      "vite.config.ts",
+      "**/generated/**/*", "**/dist/**/*", "**/build/**/*",
+      "**/.cache/**/*", "**/node_modules/**/*", "**/.astro/**/*",
+      "**/*.md", "**/*.mdx", "**/*.mjs", "**/*.js", "**/*.cjs",
+      "tests/", "postcss.config.js", "tailwind.config.js", "vite.config.ts",
     ],
-    customRules: {
-      zod: false,
-      bun: true,
-      codeOrganization: false,
-      typeSafety: false,
-      promiseStyle: false,
-    },
   }),
-  ...accessibilityConfig(),
-  {
-    files: ["**/*.tsx", "**/*.jsx", "**/*.astro"],
-    rules: {
-      "jsx-a11y/no-static-element-interactions": "warn",
-      "jsx-a11y/label-has-associated-control": "warn",
-    },
-  },
-  {
-    files: ["**/*.tsx", "**/*.jsx"],
-    rules: {
-      "react/no-unescaped-entities": "warn",
-    },
-  },
-  {
-    rules: {
-      "unicorn/filename-case": "off",
-      "unicorn/catch-error-name": "off",
-      "unicorn/prefer-global-this": "off",
-      "unicorn/no-nested-ternary": "off",
-      "unicorn/consistent-function-scoping": "warn",
-      "unicorn/prefer-math-trunc": "off",
-      "@typescript-eslint/ban-ts-comment": "warn",
-      "@typescript-eslint/no-empty-function": "warn",
-      "@typescript-eslint/switch-exhaustiveness-check": "warn",
-      "@typescript-eslint/no-shadow": "warn",
-      "@typescript-eslint/no-unsafe-assignment": "warn",
-      "@typescript-eslint/no-unsafe-member-access": "warn",
-      "@typescript-eslint/no-unsafe-call": "warn",
-      "@typescript-eslint/no-unsafe-return": "warn",
-      "@typescript-eslint/no-unsafe-argument": "warn",
-      "@typescript-eslint/no-dynamic-delete": "warn",
-      "@typescript-eslint/no-redundant-type-constituents": "off",
-      "no-control-regex": "off",
-      "unicorn/prefer-string-replace-all": "off",
-      "unicorn/prefer-at": "off",
-      "regexp/no-unused-capturing-group": "warn",
-      "eslint-comments/require-description": "warn",
-      "max-lines": [
-        "warn",
-        { max: 700, skipBlankLines: false, skipComments: false },
-      ],
-      "max-lines-per-function": [
-        "warn",
-        { max: 500, skipBlankLines: true, skipComments: true },
-      ],
-      "max-depth": ["warn", { max: 5 }],
-      complexity: ["warn", { max: 25 }],
-    },
-  },
 ];

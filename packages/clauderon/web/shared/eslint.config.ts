@@ -6,10 +6,6 @@ export default [
     projectService: {
       allowDefaultProject: ["eslint.config.ts"],
     },
-    codeOrganization: false,
-    customRules: {
-      codeOrganization: false,
-    },
     ignores: [
       "**/generated/**/*",
       "**/dist/**/*",
