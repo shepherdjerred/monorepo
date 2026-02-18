@@ -1,5 +1,5 @@
 import React from "react";
-import { ToggleButton } from "./toggle-button";
+import { ToggleButton } from "./toggle-button.tsx";
 import type { Watchable } from "#src/model/watch-status";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";

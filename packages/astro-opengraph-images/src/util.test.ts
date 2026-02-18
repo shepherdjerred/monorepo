@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { getFilePath } from "./util.js";
+import { getFilePath } from "./util.ts";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { mkdir, mkdtemp, writeFile } from "node:fs/promises";

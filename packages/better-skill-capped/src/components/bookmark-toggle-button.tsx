@@ -1,6 +1,6 @@
 import type { Bookmarkable } from "#src/model/bookmark";
 import React from "react";
-import { ToggleButton } from "./toggle-button";
+import { ToggleButton } from "./toggle-button.tsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBookmark } from "@fortawesome/free-solid-svg-icons";
 

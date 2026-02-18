@@ -1,6 +1,6 @@
 import { describe, expect, test, mock, beforeEach, afterEach } from "bun:test";
-import { EventsClient } from "./EventsClient";
-import type { SessionEvent } from "./EventsClient";
+import { EventsClient } from "./EventsClient.ts";
+import type { SessionEvent } from "./EventsClient.ts";
 
 // Reusable noop functions for mock callbacks
 function noop(): void {

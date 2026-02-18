@@ -1,4 +1,4 @@
-import type { BookmarkDatastore } from "./bookmark-datastore";
+import type { BookmarkDatastore } from "./bookmark-datastore.ts";
 import type { Bookmark, Bookmarkable } from "#src/model/bookmark";
 import type { Content } from "#src/model/content";
 import { isCommentary } from "#src/model/commentary";

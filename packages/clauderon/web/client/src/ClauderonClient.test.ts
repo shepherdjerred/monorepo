@@ -1,6 +1,6 @@
 import { describe, expect, test, mock } from "bun:test";
-import { ClauderonClient } from "./ClauderonClient";
-import { ApiError, NetworkError, SessionNotFoundError } from "./errors";
+import { ClauderonClient } from "./ClauderonClient.ts";
+import { ApiError, NetworkError, SessionNotFoundError } from "./errors.ts";
 import {
   SessionStatus,
   AccessMode,

@@ -1,4 +1,4 @@
-import { WebSocketError, DecodeError } from "./errors.js";
+import { WebSocketError, DecodeError } from "./errors.ts";
 
 /**
  * Message received from the console WebSocket
@@ -115,13 +115,13 @@ export class ConsoleClient {
       // Create decoder instance with fatal=false for graceful error handling
       this.decoder = new TextDecoder("utf-8", { fatal: false });
 
-      this.ws.onopen = () => {
+      this.ws.addEventListener('open', () => {
         this.emit("connected");
-      };
+      });
 
-      this.ws.onclose = () => {
+      this.ws.addEventListener('close', () => {
         this.emit("disconnected");
-      };
+      });
 
       this.ws.onerror = (event) => {
         this.emit(

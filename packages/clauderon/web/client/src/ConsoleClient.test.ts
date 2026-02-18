@@ -1,7 +1,7 @@
 import { describe, expect, test, mock, beforeEach, afterEach } from "bun:test";
-import { ConsoleClient } from "./ConsoleClient";
-import { WebSocketError } from "./errors";
-import type { DecodeError } from "./errors";
+import { ConsoleClient } from "./ConsoleClient.ts";
+import { WebSocketError } from "./errors.ts";
+import type { DecodeError } from "./errors.ts";
 
 // Reusable noop functions for mock callbacks
 function noop(): void {

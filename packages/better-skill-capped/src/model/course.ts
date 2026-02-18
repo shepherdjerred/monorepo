@@ -1,5 +1,5 @@
-import type { Role } from "./role";
-import type { CourseVideo } from "./course-video";
+import type { Role } from "./role.ts";
+import type { CourseVideo } from "./course-video.ts";
 
 export type Course = {
   title: string;

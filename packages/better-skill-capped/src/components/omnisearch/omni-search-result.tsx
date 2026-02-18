@@ -1,13 +1,13 @@
 import React from "react";
 import type { Bookmarkable } from "#src/model/bookmark";
-import { CourseSearchResult } from "./course-search-result";
+import { CourseSearchResult } from "./course-search-result.tsx";
 import type { Watchable } from "#src/model/watch-status";
-import { VideoSearchResult } from "./video-search-result";
-import type OmniSearchable from "./omni-searchable";
+import { VideoSearchResult } from "./video-search-result.tsx";
+import type OmniSearchable from "./omni-searchable.tsx";
 import { isCourse } from "#src/model/course";
 import { isVideo } from "#src/model/video";
 import { isCommentary } from "#src/model/commentary";
-import { CommentarySearchResult } from "./commentary-search-result";
+import { CommentarySearchResult } from "./commentary-search-result.tsx";
 
 export type OmniSearchResultProps = {
   item: OmniSearchable;

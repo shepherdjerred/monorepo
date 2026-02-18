@@ -5,11 +5,11 @@ import type {
   IntegrationOptions,
   Page,
   RenderFunction,
-} from "./types.js";
+} from "./types.ts";
 import * as fs from "node:fs/promises";
 import type { AstroIntegrationLogger } from "astro";
-import { extract, sanitizeHtml } from "./extract.js";
-import { getFilePath } from "./util.js";
+import { extract, sanitizeHtml } from "./extract.ts";
+import { getFilePath } from "./util.ts";
 import { fileURLToPath } from "node:url";
 import * as jsdom from "jsdom";
 import path from "node:path";

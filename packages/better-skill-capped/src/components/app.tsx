@@ -1,6 +1,6 @@
 import React from "react";
 import type { Content } from "#src/model/content";
-import { Router } from "./router";
+import { Router } from "./router.tsx";
 import type { Bookmark, Bookmarkable } from "#src/model/bookmark";
 import { LocalStorageBookmarkDatastore } from "#src/datastore/local-storage-bookmark-datastore";
 import type { BookmarkDatastore } from "#src/datastore/bookmark-datastore";
@@ -8,7 +8,7 @@ import type { WatchStatusDatastore } from "#src/datastore/watch-status-datastore
 import type { Watchable, WatchStatus } from "#src/model/watch-status";
 import { LocalStorageWatchStatusDatastore } from "#src/datastore/local-storage-watch-status-datastore";
 import * as Sentry from "@sentry/react";
-import { Color, Hero, Size } from "./hero";
+import { Color, Hero, Size } from "./hero.tsx";
 import { ManifestLoader } from "#src/manifest-loader";
 import { Parser } from "#src/parser/parser";
 
