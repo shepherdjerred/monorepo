@@ -1,5 +1,5 @@
-export { getDiscordClient, destroyDiscordClient } from "./client.js";
-export { GATEWAY_INTENTS, PARTIALS } from "./intents.js";
+export { getDiscordClient, destroyDiscordClient } from "./client.ts";
+export { GATEWAY_INTENTS, PARTIALS } from "./intents.ts";
 export {
   hasPermission,
   validateToolPermission,
@@ -12,10 +12,10 @@ export {
   canBanMembers,
   canModerateMembers,
   type PermissionCheckResult,
-} from "./permissions.js";
+} from "./permissions.ts";
 export {
   registerEventHandlers,
   setMessageHandler,
   type MessageContext,
   type MessageHandler,
-} from "./events/index.js";
+} from "./events/index.ts";

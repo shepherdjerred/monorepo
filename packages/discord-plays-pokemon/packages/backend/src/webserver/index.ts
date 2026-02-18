@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { logger } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/logger.js";
+import { logger } from "#src/logger.ts";
 import { createExpressApp } from "./express.ts";
 import { createSocket } from "./socket.ts";
 

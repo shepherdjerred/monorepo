@@ -1,11 +1,11 @@
-import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.js";
+import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
-import { prisma } from "@shepherdjerred/birmel/database/index.js";
-import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
+import { prisma } from "@shepherdjerred/birmel/database/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import {
   captureException,
   withToolSpan,
-} from "@shepherdjerred/birmel/observability/index.js";
+} from "@shepherdjerred/birmel/observability/index.ts";
 
 const logger = loggers.tools.child("database.sqlite");
 

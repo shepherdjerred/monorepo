@@ -1,7 +1,7 @@
-import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.js";
+import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.js";
-import { logger } from "@shepherdjerred/birmel/utils/index.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { logger } from "@shepherdjerred/birmel/utils/index.ts";
 import { validateSnowflakes, validateSnowflakeArray } from "./validation.ts";
 import {
   handleListRules,

@@ -26,7 +26,7 @@ export function renderChampion(
   const summs = map(champion.spells, (spell) => {
     const name = first(
       keys(
-        pickBy(summoner.data, (summoner) => summoner.key === spell.toString()),
+        pickBy(summoner.data, (summonerSpell) => summonerSpell.key === spell.toString()),
       ),
     );
 

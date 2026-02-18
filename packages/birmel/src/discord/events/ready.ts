@@ -1,6 +1,6 @@
 import type { Client } from "discord.js";
-import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
-import { BOT_NAME } from "@shepherdjerred/birmel/config/constants.js";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+import { BOT_NAME } from "@shepherdjerred/birmel/config/constants.ts";
 
 const logger = loggers.discord.child("ready");
 

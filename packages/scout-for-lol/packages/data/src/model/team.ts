@@ -17,5 +17,6 @@ export function parseTeam(input: number) {
     .returnType<Team | undefined>()
     .with(100, () => "blue")
     .with(200, () => "red")
+    // eslint-disable-next-line unicorn/no-useless-undefined -- ts-pattern otherwise requires explicit undefined for Optional return type
     .otherwise(() => undefined);
 }

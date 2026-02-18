@@ -3,6 +3,6 @@ export {
   buildPersonaPrompt,
   type StyleContext,
   type StyleCard,
-} from "./style-transform.js";
+} from "./style-transform.ts";
 
-export { getGuildPersona } from "./guild-persona.js";
+export { getGuildPersona } from "./guild-persona.ts";

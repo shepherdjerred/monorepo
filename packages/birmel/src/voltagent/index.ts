@@ -12,7 +12,7 @@ export {
   musicAgent,
   automationAgent,
   editorAgent,
-} from "./agents/index.js";
+} from "./agents/index.ts";
 
 // Memory system
 export {
@@ -31,7 +31,7 @@ export {
   getGlobalThreadId,
   getServerThreadId,
   getOwnerThreadId,
-} from "./memory/index.js";
+} from "./memory/index.ts";
 
 // Tool adapter
-export { createTool } from "./tools/create-tool.js";
+export { createTool } from "./tools/create-tool.ts";

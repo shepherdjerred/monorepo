@@ -1,5 +1,5 @@
-import { getConfig } from "@shepherdjerred/birmel/config/index.js";
-import { loggers } from "@shepherdjerred/birmel/utils/index.js";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
 import { checkAndSendDailyPosts } from "./daily-posts.ts";
 
 const logger = loggers.scheduler;
@@ -61,17 +61,17 @@ export {
   configureDailyPost,
   disableDailyPost,
   checkAndSendDailyPosts,
-} from "./daily-posts.js";
-export { runServerSummaryJob } from "./jobs/server-summary.js";
+} from "./daily-posts.ts";
+export { runServerSummaryJob } from "./jobs/server-summary.ts";
 export {
   scheduleAnnouncement,
   cancelAnnouncement,
   listPendingAnnouncements,
   runAnnouncementsJob,
-} from "./jobs/announcements.js";
-export { checkAndPostBirthdays } from "./jobs/birthday-checker.js";
-export { aggregateActivityMetrics } from "./jobs/activity-aggregator.js";
+} from "./jobs/announcements.ts";
+export { checkAndPostBirthdays } from "./jobs/birthday-checker.ts";
+export { aggregateActivityMetrics } from "./jobs/activity-aggregator.ts";
 
-export {checkAndStartElections} from "./jobs/elections.js";
+export {checkAndStartElections} from "./jobs/elections.ts";
 export {checkAndEndElections, processElectionResults} from "./jobs/elections.ts";
 export {runScheduledTasksJob} from "./jobs/scheduled-tasks.ts";

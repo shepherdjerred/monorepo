@@ -1,5 +1,5 @@
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.js";
-import { loggers } from "@shepherdjerred/birmel/utils/index.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
 
 const logger = loggers.scheduler.child("elections").child("nickname");
 

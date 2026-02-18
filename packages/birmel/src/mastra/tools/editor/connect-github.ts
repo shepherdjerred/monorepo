@@ -1,13 +1,13 @@
-import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.js";
+import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
 import type { ButtonBuilder as ButtonBuilderType } from "discord.js";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.js";
-import { getRequestContext } from "@shepherdjerred/birmel/mastra/tools/request-context.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { getRequestContext } from "@shepherdjerred/birmel/mastra/tools/request-context.ts";
 import {
   hasValidAuth,
   getGitHubConfig,
   deleteAuth,
-} from "@shepherdjerred/birmel/editor/index.js";
+} from "@shepherdjerred/birmel/editor/index.ts";
 
 export const connectGitHubTool = createTool({
   id: "connect-github",

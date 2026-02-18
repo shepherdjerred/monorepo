@@ -1,6 +1,6 @@
 import type { Socket } from "socket.io";
 import { Server } from "socket.io";
-import { logger } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/logger.js";
+import { logger } from "#src/logger.ts";
 import type http from "node:http";
 import { Observable, fromEvent } from "rxjs";
 import type { Request} from "@discord-plays-pokemon/common";

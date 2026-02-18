@@ -17,6 +17,7 @@ export function parseDivision(input: string): Division | undefined {
     .with("III", () => 3)
     .with("II", () => 2)
     .with("I", () => 1)
+    // eslint-disable-next-line unicorn/no-useless-undefined -- ts-pattern otherwise requires explicit undefined for Optional return type
     .otherwise(() => undefined);
 }
 

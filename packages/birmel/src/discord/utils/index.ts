@@ -1,4 +1,4 @@
 export {
   getRecentChannelMessages,
   type ChannelMessage,
-} from "./channel-history.js";
+} from "./channel-history.ts";

@@ -1,7 +1,7 @@
 import { Agent } from "@voltagent/core";
 import { openai } from "@ai-sdk/openai";
-import { getConfig } from "@shepherdjerred/birmel/config/index.js";
-import { createMemory } from "@shepherdjerred/birmel/voltagent/memory/index.js";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
+import { createMemory } from "@shepherdjerred/birmel/voltagent/memory/index.ts";
 import {
   SYSTEM_PROMPT,
   buildSystemPromptWithPersona,
@@ -90,4 +90,4 @@ export function createRoutingAgentWithPersona(
 export {
   SYSTEM_PROMPT,
   buildSystemPromptWithPersona,
-} from "./system-prompt.js";
+} from "./system-prompt.ts";

@@ -167,7 +167,7 @@ async function processMatch(
           `[processMatch] ✅ Sent notification to channel ${channel}`,
         );
       } catch (error) {
-        if (error instanceof ChannelSendError && error.isPermissionError) {
+        if (error instanceof ChannelSendError && error.permissionError) {
           logger.warn(
             `[processMatch] ⚠️  Permission error sending to channel ${channel}: ${error.message}`,
           );

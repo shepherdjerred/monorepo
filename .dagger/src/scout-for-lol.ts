@@ -1,12 +1,10 @@
 import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
-import {
-  syncToS3,
-  publishToGhcrMultiple,
-  getGitHubContainer,
-} from "./lib/containers/index.ts";
-import { logWithTimestamp, withTiming } from "./lib/index.ts";
-import versions from "./lib/versions.ts";
+import { syncToS3 } from "./lib-s3.ts";
+import { publishToGhcrMultiple } from "./lib-ghcr.ts";
+import { getGitHubContainer } from "./lib-github.ts";
+import { logWithTimestamp, withTiming } from "./lib-timing.ts";
+import versions from "./lib-versions.ts";
 
 const BUN_VERSION = versions.bun;
 

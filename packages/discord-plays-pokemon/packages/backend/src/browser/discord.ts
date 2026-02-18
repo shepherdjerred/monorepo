@@ -1,8 +1,8 @@
 import type { WebDriver} from "selenium-webdriver";
 import { By, until } from "selenium-webdriver";
-import { wait } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/util.js";
-import { logger } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/logger.js";
-import { getConfig } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/config/index.js";
+import { wait } from "#src/util.ts";
+import { logger } from "#src/logger.ts";
+import { getConfig } from "#src/config/index.ts";
 
 export async function setupDiscord(driver: WebDriver) {
   if (await isLoggedIn(driver)) {
@@ -22,15 +22,15 @@ export async function setupDiscord(driver: WebDriver) {
   await shareScreen(driver);
 }
 
-async function isLoggedIn(driver: WebDriver): Promise<boolean> {
+async function isLoggedIn(webDriver: WebDriver): Promise<boolean> {
   logger.info("going to main app page");
   const appPage = "https://discord.com/app";
-  await driver.get(appPage);
+  await webDriver.get(appPage);
   logger.info("waiting for redirect");
-  await driver.wait(async (driver) => {
-    return (await driver.getCurrentUrl()) != appPage;
+  await webDriver.wait(async (waitDriver) => {
+    return (await waitDriver.getCurrentUrl()) !== appPage;
   });
-  const url = await driver.getCurrentUrl();
+  const url = await webDriver.getCurrentUrl();
   if (url.startsWith("https://discord.com/login")) {
     logger.info("not logged in");
     return false;
@@ -82,7 +82,7 @@ async function navigateToTextChannel(driver: WebDriver) {
     ),
   );
   const delay = 5000;
-  logger.info(`waiting ${delay}ms for text channel to become clickable`);
+  logger.info(`waiting ${String(delay)}ms for text channel to become clickable`);
   await wait(delay);
   await textChat.click();
   logger.info("navigated to text channel");

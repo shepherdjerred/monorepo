@@ -31,9 +31,8 @@ export async function recordPermissionError(
     },
   });
 
-  if (existing) {
-    // Update existing record - increment error count
-    await prisma.guildPermissionError.update({
+  await (existing
+    ? prisma.guildPermissionError.update({
       where: {
         serverId_channelId: {
           serverId,
@@ -46,10 +45,8 @@ export async function recordPermissionError(
         errorType,
         errorReason: errorReason ?? existing.errorReason,
       },
-    });
-  } else {
-    // Create new error record
-    await prisma.guildPermissionError.create({
+    })
+    : prisma.guildPermissionError.create({
       data: {
         serverId,
         channelId,
@@ -59,8 +56,7 @@ export async function recordPermissionError(
         lastOccurrence: now,
         consecutiveErrorCount: 1,
       },
-    });
-  }
+    }));
 }
 
 /**
@@ -83,9 +79,8 @@ export async function recordSuccessfulSend(
     },
   });
 
-  if (existing) {
-    // Reset the error count and update last successful send
-    await prisma.guildPermissionError.update({
+  await (existing
+    ? prisma.guildPermissionError.update({
       where: {
         serverId_channelId: {
           serverId,
@@ -96,10 +91,8 @@ export async function recordSuccessfulSend(
         consecutiveErrorCount: 0,
         lastSuccessfulSend: now,
       },
-    });
-  } else {
-    // Create a record with successful send
-    await prisma.guildPermissionError.create({
+    })
+    : prisma.guildPermissionError.create({
       data: {
         serverId,
         channelId,
@@ -109,8 +102,7 @@ export async function recordSuccessfulSend(
         consecutiveErrorCount: 0,
         lastSuccessfulSend: now,
       },
-    });
-  }
+    }));
 }
 
 /**

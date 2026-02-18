@@ -30,7 +30,7 @@ export class ChannelSendError extends Error {
   constructor(
     message: string,
     public readonly channelId: string,
-    public readonly isPermissionError: boolean,
+    public readonly permissionError: boolean,
     public readonly originalError?: unknown,
   ) {
     super(message);

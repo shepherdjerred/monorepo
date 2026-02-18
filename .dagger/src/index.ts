@@ -1,14 +1,14 @@
 import type { Secret, Directory, Container, File } from "@dagger.io/dagger";
 import { dag, object, func } from "@dagger.io/dagger";
+import { commitVersionsBack } from "./lib-homelab.ts";
+import { syncToS3 } from "./lib-s3.ts";
+import { getReleasePleaseContainer as getLibReleasePleaseContainer } from "./lib-release-please.ts";
 import {
-  commitVersionsBack,
-  syncToS3,
-  getReleasePleaseContainer as getLibReleasePleaseContainer,
   getBaseBunDebianContainer,
   installMonorepoWorkspaceDeps,
-} from "./lib/containers/index.ts";
-import type { WorkspaceEntry } from "./lib/containers/index.ts";
-import versions from "./lib/versions.ts";
+} from "./lib-monorepo-workspace.ts";
+import type { WorkspaceEntry } from "./lib-monorepo-workspace.ts";
+import versions from "./lib-versions.ts";
 import {
   checkBirmel,
   buildBirmelImage,
@@ -42,8 +42,8 @@ import {
   homelabTestHelm as homelabTestHelmFn,
   homelabTestRenovateRegex as homelabTestRenovateRegexFn,
   homelabSync as homelabSyncFn,
-  Stage as HomelabStage,
-} from "./homelab/index.ts";
+} from "./homelab-index.ts";
+import { Stage as HomelabStage } from "./lib-types.ts";
 
 const PACKAGES = [
   "bun-decompile",

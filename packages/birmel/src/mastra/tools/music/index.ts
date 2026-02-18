@@ -1,5 +1,5 @@
-export { playbackTools } from "./playback.js";
-export { queueTools } from "./queue.js";
+export { playbackTools } from "./playback.ts";
+export { queueTools } from "./queue.ts";
 
 import { playbackTools } from "./playback.ts";
 import { queueTools } from "./queue.ts";

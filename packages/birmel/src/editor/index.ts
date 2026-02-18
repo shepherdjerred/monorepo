@@ -1,5 +1,5 @@
 // Types
-export * from "./types.js";
+export * from "./types.ts";
 
 // Config helpers
 export {
@@ -11,7 +11,7 @@ export {
   getMaxSessionsPerUser,
   getGitHubConfig,
   isGitHubConfigured,
-} from "./config.js";
+} from "./config.ts";
 
 // Session management
 export {
@@ -32,10 +32,10 @@ export {
   deleteSession,
   extendSession,
   cleanupSessionClone,
-} from "./session-manager.js";
+} from "./session-manager.ts";
 
 // Repo cloning
-export { cloneRepo, cleanupClone } from "./repo-clone.js";
+export { cloneRepo, cleanupClone } from "./repo-clone.ts";
 
 // Claude Code client
 export {
@@ -43,7 +43,7 @@ export {
   isClaudeAvailable,
   checkClaudePrerequisites,
   checkGhPrerequisites,
-} from "./claude-client.js";
+} from "./claude-client.ts";
 
 // Diff formatting
 export {
@@ -51,7 +51,7 @@ export {
   formatChangeSummary,
   formatChangedFilesList,
   willFitInEmbed,
-} from "./diff-formatter.js";
+} from "./diff-formatter.ts";
 
 // GitHub OAuth
 export {
@@ -62,7 +62,7 @@ export {
   hasValidAuth,
   deleteAuth,
   isOAuthAvailable,
-} from "./github-oauth.js";
+} from "./github-oauth.ts";
 
 // GitHub PR creation
 export {
@@ -70,10 +70,10 @@ export {
   generateBranchName,
   generatePRTitle,
   generatePRBody,
-} from "./github-pr.js";
+} from "./github-pr.ts";
 
 // OAuth server
-export { startOAuthServer, stopOAuthServer } from "./oauth-server.js";
+export { startOAuthServer, stopOAuthServer } from "./oauth-server.ts";
 
 // OAuth routes (for custom integration)
-export { createOAuthRoutes } from "./oauth-routes.js";
+export { createOAuthRoutes } from "./oauth-routes.ts";

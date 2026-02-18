@@ -1,9 +1,9 @@
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.js";
-import { getBirthdaysToday } from "@shepherdjerred/birmel/database/repositories/birthdays.js";
-import { withSpan } from "@shepherdjerred/birmel/observability/index.js";
-import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { getBirthdaysToday } from "@shepherdjerred/birmel/database/repositories/birthdays.ts";
+import { withSpan } from "@shepherdjerred/birmel/observability/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import type { TextChannel, Guild, GuildMember } from "discord.js";
-import { getConfig } from "@shepherdjerred/birmel/config/index.js";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 
 const logger = loggers.scheduler.child("birthday-checker");
 

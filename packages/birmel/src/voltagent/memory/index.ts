@@ -1,7 +1,7 @@
 import { Memory } from "@voltagent/core";
 import { LibSQLMemoryAdapter, LibSQLVectorAdapter } from "@voltagent/libsql";
 import { openai } from "@ai-sdk/openai";
-import { getConfig } from "@shepherdjerred/birmel/config/index.js";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 
 let memoryInstance: Memory | null = null;
 

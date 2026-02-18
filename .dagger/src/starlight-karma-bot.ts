@@ -1,5 +1,5 @@
 import type { Directory, Secret } from "@dagger.io/dagger";
-import { publishToGhcrMultiple } from "./lib/containers/index.ts";
+import { publishToGhcrMultiple } from "./lib-ghcr.ts";
 
 /**
  * Check starlight-karma-bot: Docker build validation

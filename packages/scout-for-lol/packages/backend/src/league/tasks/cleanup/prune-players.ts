@@ -292,7 +292,7 @@ export async function pruneOrphanedPlayers(
           ),
         }));
 
-        const accountsDeleted = players.reduce(
+        const serverAccountsDeleted = players.reduce(
           (sum, p) => sum + p.accounts.length,
           0,
         );
@@ -300,7 +300,7 @@ export async function pruneOrphanedPlayers(
         return {
           serverId,
           playersPruned: players.length,
-          accountsDeleted,
+          accountsDeleted: serverAccountsDeleted,
           playerDetails,
         };
       },

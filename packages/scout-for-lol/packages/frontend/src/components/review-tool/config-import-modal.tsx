@@ -76,35 +76,25 @@ export function ConfigImportModal({
     })();
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
       return;
     }
 
-    const reader = new FileReader();
-    reader.addEventListener('load', (e) => {
-      const stringResult = z.string().safeParse(e.target?.result);
-      if (!stringResult.success) {
-        setParseError("Failed to read file");
-        return;
-      }
-      const content = stringResult.data;
-      setJsonInput(content);
-      // Auto-parse when file is loaded
-      try {
-        const bundle = importAllConfigFromJSON(content);
-        setParsedBundle(bundle);
-        setParseError(null);
-      } catch (error) {
-        const errorResult = ErrorSchema.safeParse(error);
-        setParseError(
-          errorResult.success ? errorResult.data.message : String(error),
-        );
-        setParsedBundle(null);
-      }
-    });
-    reader.readAsText(file);
+    const content = await file.text();
+    setJsonInput(content);
+    try {
+      const bundle = importAllConfigFromJSON(content);
+      setParsedBundle(bundle);
+      setParseError(null);
+    } catch (error) {
+      const errorResult = ErrorSchema.safeParse(error);
+      setParseError(
+        errorResult.success ? errorResult.data.message : String(error),
+      );
+      setParsedBundle(null);
+    }
   };
 
   const handleClose = () => {

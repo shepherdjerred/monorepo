@@ -2,23 +2,20 @@
 import {
   initializeObservability,
   shutdownObservability,
-  captureException,
 } from "./observability/index.ts";
 initializeObservability();
 
+import { captureException } from "./observability/sentry.ts";
 import { getConfig } from "./config/index.ts";
-import {
-  getDiscordClient,
-  destroyDiscordClient,
-  registerEventHandlers,
-  setMessageHandler,
-} from "./discord/index.ts";
+import { getDiscordClient, destroyDiscordClient } from "./discord/client.ts";
+import { registerEventHandlers } from "./discord/events/index.ts";
+import { setMessageHandler } from "./discord/events/message-create.ts";
 import { disconnectPrisma } from "./database/index.ts";
 import { handleMessageWithStreaming } from "./voltagent/message-handler.ts";
-import { initializeMusicPlayer, destroyMusicPlayer } from "./music/index.ts";
+import { initializeMusicPlayer, destroyMusicPlayer } from "./music/player.ts";
 import { startScheduler, stopScheduler } from "./scheduler/index.ts";
-import { startOAuthServer, stopOAuthServer } from "./editor/index.ts";
-import { logger } from "./utils/index.ts";
+import { startOAuthServer, stopOAuthServer } from "./editor/oauth-server.ts";
+import { logger } from "./utils/logger.ts";
 
 async function shutdown(): Promise<void> {
   logger.info("Shutting down Birmel...");

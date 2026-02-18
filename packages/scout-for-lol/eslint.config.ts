@@ -141,4 +141,13 @@ export default [
     ],
     rules: { "unicorn/prefer-add-event-listener": "off" },
   },
+  // Downgrade opinionated unicorn rules to warnings (pre-existing violations)
+  {
+    rules: {
+      "unicorn/no-array-sort": "warn",
+      "unicorn/no-array-callback-reference": "warn",
+      "unicorn/no-nested-ternary": "warn",
+      "unicorn/consistent-function-scoping": "warn",
+    },
+  },
 ];

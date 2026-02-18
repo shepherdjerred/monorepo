@@ -1,12 +1,12 @@
-import type { Message, VoiceChannel} from "discord.js";
-import { Events, channelMention } from "discord.js";
-import { parseChord, type Chord } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/chord.js";
+import type { Message } from "discord.js";
+import { Events, channelMention, ChannelType } from "discord.js";
+import { parseChord, type Chord } from "#src/game/command/chord.ts";
 import client from "./client.ts";
 import { execute } from "./chord-executor.ts";
 import { isValid } from "./chord-validator.ts";
-import type { CommandInput } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/commandInput.js";
-import { logger } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/logger.js";
-import { getConfig } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/config/index.js";
+import type { CommandInput } from "#src/game/command/command-input.ts";
+import { logger } from "#src/logger.ts";
+import { getConfig } from "#src/config/index.ts";
 
 export let lastCommand = new Date();
 
@@ -14,10 +14,10 @@ export function handleMessages(
   fn: (commandInput: CommandInput) => Promise<void>,
 ) {
   logger.info("ready to handle commands");
-  client.on(Events.MessageCreate, (event) => {
+  client.on(Events.MessageCreate, (messageEvent) => {
     void (async () => {
       try {
-        await handleMessage(event, fn); return;
+        await handleMessage(messageEvent, fn); return;
       } catch (error) {
         logger.info(error);
       }
@@ -38,7 +38,7 @@ async function handleMessage(
   }
 
   const channel = client.channels.cache.get(getConfig().stream.channel_id);
-  if (!channel) {
+  if (channel === undefined) {
     await event.react("💀");
     return;
   }
@@ -52,13 +52,19 @@ async function handleMessage(
     return;
   }
 
-  const memberCount = (channel as VoiceChannel).members.filter((member) => {
+  if (channel.type !== ChannelType.GuildVoice) {
+    await event.react("💀");
+    return;
+  }
+
+  const memberCount = channel.members.filter((member) => {
     return !member.user.bot;
   }).size;
   if (memberCount < getConfig().stream.minimum_in_channel) {
+    const minInChannel = getConfig().stream.minimum_in_channel;
     await event.reply(
-      `You can't play unless there are at least ${getConfig().stream.minimum_in_channel} ${
-        getConfig().stream.minimum_in_channel === 1 ? "person" : "people"
+      `You can't play unless there are at least ${String(minInChannel)} ${
+        minInChannel === 1 ? "person" : "people"
       } in ${channelMention(getConfig().stream.channel_id)} 😕`,
     );
     return;
@@ -72,7 +78,7 @@ async function handleMessage(
     return;
   }
 
-  if (!chord) {
+  if (chord === undefined) {
     logger.error(chord);
     await event.react("❓");
     return;

@@ -1,30 +1,38 @@
-import type { Command} from "./command.ts";
-import { isCommand } from "./command.ts";
+import { command } from "./command.ts";
+import type { Command } from "./command.ts";
 
 export type Quantity = number;
 
-export const burst = ["-"];
+export const burst = ["-"] as const;
 type Burst = (typeof burst)[number];
-export function isBurst(input: string): input is Burst {
-  return burst.includes(input);
+export function isBurst(input: string): boolean {
+  return (burst as readonly string[]).includes(input);
 }
 
-export const hold = ["_"];
+export const hold = ["_"] as const;
 type Hold = (typeof hold)[number];
-export function isHold(input: string): input is Hold {
-  return hold.includes(input);
+export function isHold(input: string): boolean {
+  return (hold as readonly string[]).includes(input);
 }
 
-export const holdB = ["^"];
+export const holdB = ["^"] as const;
 type HoldB = (typeof holdB)[number];
-export function isHoldB(input: string): input is HoldB {
-  return holdB.includes(input);
+export function isHoldB(input: string): boolean {
+  return (holdB as readonly string[]).includes(input);
 }
 
-const modifier = [...burst, ...hold, ...holdB];
-export type Modifier = (typeof modifier)[number];
-export function isModifier(input: string): input is Modifier {
-  return modifier.includes(input.toLowerCase());
+const modifierValues = [...burst, ...hold, ...holdB] as const;
+export type Modifier = Burst | Hold | HoldB;
+function isModifier(input: string): boolean {
+  return (modifierValues as readonly string[]).includes(input.toLowerCase());
+}
+
+function findModifier(input: string): Modifier | undefined {
+  return modifierValues.find((m) => m === input.toLowerCase());
+}
+
+function findCommand(input: string): Command | undefined {
+  return command.find((c) => c === input.toLowerCase());
 }
 
 export type CommandInput = {
@@ -44,23 +52,25 @@ export function parseCommandInput(input: string): CommandInput | undefined {
     [, ...split] = split;
   }
 
-  let modifier: Modifier | undefined;
+  let parsedModifier: Modifier | undefined;
   if (split.length > 0 && isModifier(split[0])) {
-    modifier = split[0];
+    parsedModifier = findModifier(split[0]);
     [, ...split] = split;
   }
 
-  let command: string | undefined;
-  if (split.length > 0 && isCommand(split[0])) {
-    command = split[0].toLowerCase();
-    [, ...split] = split;
+  let parsedCommand: Command | undefined;
+  if (split.length > 0) {
+    parsedCommand = findCommand(split[0]);
+    if (parsedCommand !== undefined) {
+      [, ...split] = split;
+    }
   }
 
-  if (split.length === 0 && command !== undefined) {
+  if (split.length === 0 && parsedCommand !== undefined) {
     return {
-      command,
+      command: parsedCommand,
       quantity,
-      modifier,
+      modifier: parsedModifier,
     };
   }
 

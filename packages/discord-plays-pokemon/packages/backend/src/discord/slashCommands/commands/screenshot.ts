@@ -1,6 +1,5 @@
 import type {
-  CommandInteraction,
-  TextChannel} from "discord.js";
+  CommandInteraction} from "discord.js";
 import {
   SlashCommandBuilder,
   AttachmentBuilder,
@@ -8,20 +7,21 @@ import {
   channelMention,
   userMention,
   time,
+  ChannelType,
 } from "discord.js";
 import type { WebDriver } from "selenium-webdriver";
 import { Buffer } from "node:buffer";
-import client from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/discord/client.js";
-import { getConfig } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/config/index.js";
+import client from "#src/discord/client.ts";
+import { getConfig } from "#src/config/index.ts";
 
 export const screenshotCommand = new SlashCommandBuilder()
   .setName("screenshot")
   .setDescription("Take a screenshot and upload it to the chat");
 
 export function makeScreenshot(driver: WebDriver) {
-  return async function screenshot(interaction: CommandInteraction) {
-    const screenshot = await driver.takeScreenshot();
-    const buffer = Buffer.from(screenshot, "base64");
+  return async function handleScreenshotCommand(interaction: CommandInteraction) {
+    const screenshotData = await driver.takeScreenshot();
+    const buffer = Buffer.from(screenshotData, "base64");
     const date = new Date();
     const attachment = new AttachmentBuilder(buffer, {
       name: "screenshot.png",
@@ -38,13 +38,17 @@ export function makeScreenshot(driver: WebDriver) {
     const channel = client.channels.cache.get(
       getConfig().bot.notifications.channel_id,
     );
-    await (channel ? (channel as TextChannel).send({
+    if (channel !== undefined && channel.type === ChannelType.GuildText) {
+      await channel.send({
         content: `Screenshot taken by ${userMention(interaction.user.id)} at ${time(date)}`,
         embeds: [embed],
         files: [attachment],
-      }) : interaction.reply({
+      });
+    } else {
+      await interaction.reply({
         ephemeral: true,
         content: "There was an error",
-      }));
+      });
+    }
   };
 }

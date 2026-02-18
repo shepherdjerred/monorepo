@@ -16,9 +16,9 @@ import {
   select,
   start,
   up,
-} from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/command.js";
-import { burst, hold, holdB } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/commandInput.js";
-import { getConfig } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/config/index.js";
+} from "#src/game/command/command.ts";
+import { burst, hold, holdB } from "#src/game/command/command-input.ts";
+import { getConfig } from "#src/config/index.ts";
 
 export const helpCommand = new SlashCommandBuilder()
   .setName("help")
@@ -50,37 +50,39 @@ export async function help(interaction: CommandInteraction) {
       return `* ${command}`;
     })
     .join("\n");
+  const config = getConfig();
+  const maxQuantity = String(config.game.commands.max_quantity_per_action);
+  const maxCommands = String(config.game.commands.chord.max_commands);
+  const maxTotal = String(config.game.commands.chord.max_total);
+  const burstQuantity = String(config.game.commands.burst.quantity);
+  const holdDuration = String(config.game.commands.hold.duration_in_milliseconds);
+  const burstTimesTwo = String(config.game.commands.burst.quantity * 2);
+  const holdTimesTwo = String(config.game.commands.hold.duration_in_milliseconds * 2);
   const lines = [
     bold("Pokébot Help"),
     `The Pokébot is available when ${userMention(
-      getConfig().stream.userbot.id,
-    )} is online and streaming in the ${channelMention(getConfig().stream.channel_id)} channel.`,
+      config.stream.userbot.id,
+    )} is online and streaming in the ${channelMention(config.stream.channel_id)} channel.`,
     `When the bot is online, you can send commands in the ${channelMention(
-      getConfig().game.commands.channel_id,
+      config.game.commands.channel_id,
     )} channel.`,
-    `Notifications will be posted in ${channelMention(getConfig().bot.notifications.channel_id)}.`,
+    `Notifications will be posted in ${channelMention(config.bot.notifications.channel_id)}.`,
     ``,
     bold("Commands"),
     `Commands are messages sent to the ${channelMention(
-      getConfig().game.commands.channel_id,
-    )}. The command format is ${inlineCode("[QUANTITY][MODIFIER][ACTION]")}. Quantity is a number from 0-${
-      getConfig().game.commands.max_quantity_per_action
-    }. You can perform multiple commands in the same message by putting a space between each command; for example, sending the message ${inlineCode(
+      config.game.commands.channel_id,
+    )}. The command format is ${inlineCode("[QUANTITY][MODIFIER][ACTION]")}. Quantity is a number from 0-${maxQuantity}. You can perform multiple commands in the same message by putting a space between each command; for example, sending the message ${inlineCode(
       "a b",
     )} will send both ${inlineCode("a")} and ${inlineCode("b")}. This is referred to as a chord.`,
-    `Each chord can perform up to ${getConfig().game.commands.chord.max_commands} commands.`,
-    `You can perform a maximum of ${
-      getConfig().game.commands.chord.max_total
-    } actions in a single message. For example, the message ${inlineCode("2a 2b")} results in a total of four actions.`,
+    `Each chord can perform up to ${maxCommands} commands.`,
+    `You can perform a maximum of ${maxTotal} actions in a single message. For example, the message ${inlineCode("2a 2b")} results in a total of four actions.`,
     ``,
     bold("Modifiers"),
     `You can add modifiers to commands to change how the button presses occur.`,
-    `The burst modifier will rapidly press a button ${getConfig().game.commands.burst.quantity} times.`,
-    `The hold modifier will hold a button for ${getConfig().game.commands.hold.duration_in_milliseconds} milliseconds`,
+    `The burst modifier will rapidly press a button ${burstQuantity} times.`,
+    `The hold modifier will hold a button for ${holdDuration} milliseconds`,
     `Modifiers can be combined with the mechanisms described above.`,
-    `For example ${inlineCode("2-a 2_b")} will cause A to be pressed ${
-      getConfig().game.commands.burst.quantity * 2
-    } times and B to be held for ${getConfig().game.commands.hold.duration_in_milliseconds * 2} milliseconds.`,
+    `For example ${inlineCode("2-a 2_b")} will cause A to be pressed ${burstTimesTwo} times and B to be held for ${holdTimesTwo} milliseconds.`,
     ``,
     bold("Action List:"),
     `You can perform the listed action by providing any of the words listed. For example, to press Up you can send ${inlineCode(
@@ -93,11 +95,11 @@ export async function help(interaction: CommandInteraction) {
     modifiersString,
     ``,
     bold("Extras:"),
-    getConfig().bot.commands.screenshot.enabled
+    config.bot.commands.screenshot.enabled
       ? `The ${inlineCode(
           "/screenshot",
         )} command can be used to take a screenshot and upload it to the ${channelMention(
-          getConfig().bot.notifications.channel_id,
+          config.bot.notifications.channel_id,
         )} channel.`
       : "",
   ];

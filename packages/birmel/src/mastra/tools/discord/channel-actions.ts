@@ -4,7 +4,7 @@ import {
   type Client,
   type GuildChannelEditOptions,
 } from "discord.js";
-import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 
 const logger = loggers.tools.child("discord.channels");
 

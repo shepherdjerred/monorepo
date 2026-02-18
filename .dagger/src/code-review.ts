@@ -8,11 +8,11 @@ import {
   postReview,
   postBatchedReview,
   postComment,
-  getGitHubContainer,
   REVIEW_VERDICT_SCHEMA,
   type ReviewVerdict,
-} from "./lib/containers/index.ts";
-import type { ExecResult } from "./lib/index.ts";
+} from "./lib-claude.ts";
+import { getGitHubContainer } from "./lib-github.ts";
+import type { ExecResult } from "./lib-errors.ts";
 
 const REPO = "shepherdjerred/monorepo";
 

@@ -1,12 +1,12 @@
-export { allDiscordTools } from "./discord/index.js";
-export { allMusicTools } from "./music/index.js";
-export { allExternalTools } from "./external/index.js";
-export { memoryTools } from "./memory/index.js";
-export { sqliteTools } from "./database/sqlite-query.js";
-export { electionTools } from "./elections/elections.js";
-export { allAutomationTools } from "./automation/index.js";
-export { birthdayTools } from "./birthdays/index.js";
-export type { ToolResult, ToolContext } from "./types.js";
+export { allDiscordTools } from "./discord/index.ts";
+export { allMusicTools } from "./music/index.ts";
+export { allExternalTools } from "./external/index.ts";
+export { memoryTools } from "./memory/index.ts";
+export { sqliteTools } from "./database/sqlite-query.ts";
+export { electionTools } from "./elections/elections.ts";
+export { allAutomationTools } from "./automation/index.ts";
+export { birthdayTools } from "./birthdays/index.ts";
+export type { ToolResult, ToolContext } from "./types.ts";
 
 import { allDiscordTools } from "./discord/index.ts";
 import { allMusicTools } from "./music/index.ts";

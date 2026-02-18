@@ -1,17 +1,17 @@
-import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.js";
+import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
-import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import {
   captureException,
   withToolSpan,
-} from "@shepherdjerred/birmel/observability/index.js";
+} from "@shepherdjerred/birmel/observability/index.ts";
 import {
   recordMessageActivity,
   recordReactionActivity,
   getUserActivityStats,
   getTopActiveUsers,
-} from "@shepherdjerred/birmel/database/repositories/activity.js";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.js";
+} from "@shepherdjerred/birmel/database/repositories/activity.ts";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
 
 const logger = loggers.tools.child("discord.activity");
 

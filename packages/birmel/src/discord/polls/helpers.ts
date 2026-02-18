@@ -1,7 +1,7 @@
 import type { Message, Poll } from "discord.js";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.js";
-import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
-import { prisma } from "@shepherdjerred/birmel/database/index.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 
 const logger = loggers.discord.child("polls");
 

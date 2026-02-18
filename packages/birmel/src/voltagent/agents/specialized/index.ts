@@ -1,6 +1,6 @@
-export { messagingAgent } from "./messaging-agent.js";
-export { serverAgent } from "./server-agent.js";
-export { moderationAgent } from "./moderation-agent.js";
-export { musicAgent } from "./music-agent.js";
-export { automationAgent } from "./automation-agent.js";
-export { editorAgent } from "./editor-agent.js";
+export { messagingAgent } from "./messaging-agent.ts";
+export { serverAgent } from "./server-agent.ts";
+export { moderationAgent } from "./moderation-agent.ts";
+export { musicAgent } from "./music-agent.ts";
+export { automationAgent } from "./automation-agent.ts";
+export { editorAgent } from "./editor-agent.ts";

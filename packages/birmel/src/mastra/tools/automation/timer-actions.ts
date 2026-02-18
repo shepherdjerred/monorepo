@@ -1,16 +1,16 @@
-import { prisma } from "@shepherdjerred/birmel/database/index.js";
-import { loggers } from "@shepherdjerred/birmel/utils/index.js";
+import { prisma } from "@shepherdjerred/birmel/database/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
 import {
   parseFlexibleTime,
   parseNaturalTime,
   formatScheduleTime,
   detectRecurringPattern,
-} from "@shepherdjerred/birmel/scheduler/utils/time-parser.js";
+} from "@shepherdjerred/birmel/scheduler/utils/time-parser.ts";
 import {
   isValidCron,
   getNextCronRun,
   describeCron,
-} from "@shepherdjerred/birmel/scheduler/utils/cron.js";
+} from "@shepherdjerred/birmel/scheduler/utils/cron.ts";
 
 const logger = loggers.automation;
 

@@ -338,7 +338,7 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
           .safeParse(error);
         if (
           channelSendError.success &&
-          channelSendError.data.isPermissionError
+          channelSendError.data.permissionError
         ) {
           logger.warn(
             `[DailyLeaderboard] ⚠️  Cannot update competition ${competition.id.toString()} - missing permissions in channel ${competition.channelId}. Server owner has been notified.`,
