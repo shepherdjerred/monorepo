@@ -26,6 +26,10 @@ export default [
       "@typescript-eslint/no-shadow": "off",
       // ES2020 target - replaceAll not available
       "unicorn/prefer-string-replace-all": "off",
+      // React components define handler functions that reference outer scope
+      "unicorn/consistent-function-scoping": "off",
+      // Legacy debug logging
+      "no-console": "off",
     },
   },
 ];

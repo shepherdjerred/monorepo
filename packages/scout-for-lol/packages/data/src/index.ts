@@ -1,4 +1,3 @@
-/* eslint-disable custom-rules/no-re-exports -- data package is a library, so re-exports are intentional */
 export * from "./model/index.ts";
 export * from "./seasons.ts";
 export * from "./review/art-styles.ts";

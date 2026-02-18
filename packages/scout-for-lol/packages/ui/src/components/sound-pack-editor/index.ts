@@ -2,8 +2,6 @@
  * Sound Pack Editor Components
  */
 
-/* eslint-disable custom-rules/no-re-exports -- This is an index file */
-
 export { SoundPackEditor } from "./sound-pack-editor.tsx";
 export { VolumeSlider } from "./volume-slider.tsx";
 export { SoundEntryCard } from "./sound-entry-card.tsx";

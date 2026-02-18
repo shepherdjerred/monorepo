@@ -1,4 +1,3 @@
-/* eslint-disable max-lines -- batch processor with multiple processing strategies */
 /**
  * Batch processor for bottom-up de-minification.
  *
@@ -165,6 +164,7 @@ export class BatchProcessor {
    * @param options - Processing options
    * @returns The de-minified source code
    */
+  // eslint-disable-next-line complexity -- inherent complexity in processing logic
   async processAll(
     source: string,
     graph: CallGraph,
@@ -253,6 +253,7 @@ export class BatchProcessor {
           // this prevents AST corruption which would be far worse.
           if (mapping.functionName != null && mapping.functionName.length > 0) {
             const fn = functions.find((f) => f.id === id);
+            // eslint-disable-next-line max-depth -- nested control flow required for logic
             if (fn?.originalName != null && fn.originalName.length > 0) {
               knownNames.set(fn.originalName, mapping.functionName);
             }
@@ -750,6 +751,7 @@ export class BatchProcessor {
     }
 
     try {
+      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
       const raw = JSON.parse(jsonStr) as Record<string, unknown>;
       const parsed: RenameMappings = {};
 
@@ -759,11 +761,13 @@ export class BatchProcessor {
           continue;
         }
 
+        // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
         const m = mapping as Record<string, unknown>;
 
         // Ensure renames is an object
         const renames =
           typeof m["renames"] === "object" && m["renames"] !== null
+            // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
             ? (m["renames"] as Record<string, string>)
             : {};
 

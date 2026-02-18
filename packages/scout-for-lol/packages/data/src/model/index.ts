@@ -1,5 +1,3 @@
-/* eslint-disable custom-rules/no-re-exports -- data package is a library, so re-exports are intentional */
-
 export * from "./arena/index.ts";
 export * from "./champion.ts";
 export * from "./competition.ts";

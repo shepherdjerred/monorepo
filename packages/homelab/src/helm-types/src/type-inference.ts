@@ -280,12 +280,9 @@ function convertValueToProperty(
     // Merge description from schema and YAML comments
     let description = schema.description;
     if (yamlComment) {
-      if (description) {
-        // If both exist, combine them
-        description = `${yamlComment}\n\n${description}`;
-      } else {
-        description = yamlComment;
-      }
+      description = description
+        ? `${yamlComment}\n\n${description}`
+        : yamlComment;
     }
     const defaultValue = schema.default === undefined ? value : schema.default;
 
@@ -393,7 +390,7 @@ function convertValueToProperty(
     }
 
     // If mixed types, use union type for common cases
-    const types = [...elementTypes].sort();
+    const types = [...elementTypes].toSorted();
     if (
       types.length <= 3 &&
       types.every((t) => ["string", "number", "boolean"].includes(t))

@@ -113,6 +113,7 @@ function extractImportsExports(source: string): {
 
   walk.simple(ast, {
     ImportDeclaration(node: Node) {
+      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
       const importNode = node as ImportDeclarationNode;
       imports.push({
         source: importNode.source.value,
@@ -130,6 +131,7 @@ function extractImportsExports(source: string): {
       });
     },
     ExportNamedDeclaration(node: Node) {
+      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
       const exportNode = node as ExportNamedDeclarationNode;
       if (exportNode.declaration) {
         const decl = exportNode.declaration;
@@ -161,6 +163,7 @@ function extractImportsExports(source: string): {
       }
     },
     ExportDefaultDeclaration(node: Node) {
+      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
       const exportNode = node as ExportDefaultDeclarationNode;
       const name =
         exportNode.declaration.id?.name ??
@@ -327,6 +330,7 @@ export function findCycles(graph: CallGraph): string[][] {
           const cycleStart = stack.indexOf(calleeId);
           if (cycleStart !== -1) {
             const cycle = stack.slice(cycleStart);
+            // eslint-disable-next-line max-depth -- nested control flow required for logic
             if (cycle.length > 1) {
               cycles.push(cycle);
             }
@@ -377,6 +381,7 @@ export function getFunctionContext(
         suggestedName: result?.suggestedName ?? null,
       };
     })
+    // eslint-disable-next-line custom-rules/no-type-guards -- type predicate needed for array filter narrowing
     .filter((c): c is FunctionContext => c !== null)
     .slice(0, 3); // Limit to 3 callers
 
@@ -401,6 +406,7 @@ export function getFunctionContext(
         suggestedName: result?.suggestedName ?? null,
       };
     })
+    // eslint-disable-next-line custom-rules/no-type-guards -- type predicate needed for array filter narrowing
     .filter((c): c is FunctionContext => c !== null)
     .slice(0, 5); // Limit to 5 callees
 

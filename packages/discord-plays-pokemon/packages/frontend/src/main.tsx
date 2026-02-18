@@ -12,6 +12,7 @@ Sentry.init({
 
 const queryClient = new QueryClient();
 
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- root element always exists in index.html
 ReactDOM.createRoot(document.querySelector("#root")!).render(
   <React.StrictMode>
     <Sentry.ErrorBoundary fallback={<p>An error occurred</p>}>

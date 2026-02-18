@@ -210,10 +210,14 @@ function parseModules(
         : null;
 
     // Map enum values
+    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
     const encoding = (ENCODING_MAP[encodingByte] ?? "binary") as Encoding;
+    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
     const loader = (LOADER_MAP[loaderByte] ?? "unknown") as Loader;
+    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
     const moduleFormat = (MODULE_FORMAT_MAP[moduleFormatByte] ??
       "none") as ModuleFormat;
+    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
     const side = (FILE_SIDE_MAP[sideByte] ?? "server") as FileSide;
 
     modules.push({

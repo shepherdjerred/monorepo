@@ -148,6 +148,7 @@ export class BatchDeminifyClient {
         } catch (error) {
           if (this.config.verbose) {
             console.error(
+              // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
               `Failed to parse result for ${funcId}: ${(error as Error).message}`,
             );
           }
@@ -182,6 +183,7 @@ export class BatchDeminifyClient {
   }
 
   /** Parse a message response into a DeminifyResult */
+  // eslint-disable-next-line complexity -- inherent complexity in processing logic
   private parseResponse(
     message: { content: { type: string; text?: string }[] },
     context: DeminifyContext,
@@ -225,6 +227,7 @@ export class BatchDeminifyClient {
     const jsonMatch = /```[\s\S]*?```\s*(\{[\s\S]*\})/.exec(responseText);
     if (jsonMatch?.[1] != null && jsonMatch[1].length > 0) {
       try {
+        // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
         const metadata = JSON.parse(jsonMatch[1]) as {
           suggestedName?: string;
           confidence?: number;

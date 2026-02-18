@@ -316,7 +316,7 @@ export function withClaudeRun(
 ): Container {
   const args = ["claude", "--print", "--dangerously-skip-permissions"];
 
-  if (options.model) {
+  if (options.model !== undefined) {
     args.push("--model", options.model);
   }
 
@@ -324,7 +324,7 @@ export function withClaudeRun(
     args.push("--max-turns", options.maxTurns.toString());
   }
 
-  if (options.jsonSchema) {
+  if (options.jsonSchema !== undefined) {
     args.push("--json-schema", options.jsonSchema);
   }
 

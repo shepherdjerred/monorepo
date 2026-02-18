@@ -15,7 +15,7 @@ export function handleChannelUpdate(
 
       if (newChannel === channelId || oldChannel === channelId) {
         const channel = await client.channels.fetch(channelId);
-        if (channel?.isVoiceBased()) {
+        if (channel?.isVoiceBased() === true) {
           logger.info("calling updateFn");
           logger.info(JSON.stringify(channel.members));
           // it seems that the library has an incorrect type here

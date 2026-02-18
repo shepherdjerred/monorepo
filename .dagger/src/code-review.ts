@@ -525,9 +525,9 @@ ${stdout.slice(0, 500)}
     }
   }
 
-  const inlineNote = inlineCommentError
-    ? `\n\n⚠️ Failed to post ${String(verdict.inline_comments.length)} inline comment(s): ${inlineCommentError.slice(0, 200)}`
-    : "";
+  const inlineNote = inlineCommentError === undefined
+    ? ""
+    : `\n\n⚠️ Failed to post ${String(verdict.inline_comments.length)} inline comment(s): ${inlineCommentError.slice(0, 200)}`;
 
   // Step 7: Post approve/request-changes
   if (verdict.should_approve) {
@@ -691,12 +691,12 @@ export async function handleInteractive(
   // Step 2: Build prompt with context
   let prompt = `Respond to this comment:\n\n${commentBody}\n\n`;
 
-  if (eventContext?.path) {
+  if (eventContext?.path !== undefined) {
     prompt += `\nContext: This comment is on file \`${eventContext.path}\``;
-    if (eventContext.line) {
+    if (eventContext.line !== undefined && eventContext.line !== 0) {
       prompt += ` at line ${String(eventContext.line)}`;
     }
-    if (eventContext.diffHunk) {
+    if (eventContext.diffHunk !== undefined) {
       prompt += `\n\nDiff context:\n\`\`\`diff\n${eventContext.diffHunk}\n\`\`\``;
     }
     prompt += "\n";

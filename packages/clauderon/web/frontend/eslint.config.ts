@@ -25,45 +25,37 @@ export default [
   }),
   {
     rules: {
-      // TypeShare-generated types cause cascading unsafe-* errors throughout the frontend
-      "@typescript-eslint/no-unsafe-assignment": "warn",
-      "@typescript-eslint/no-unsafe-member-access": "warn",
-      "@typescript-eslint/no-unsafe-call": "warn",
-      "@typescript-eslint/no-unsafe-return": "warn",
-      "@typescript-eslint/no-unsafe-argument": "warn",
-      // File naming migration is too large for this changeset
+      // TypeShare-generated types (MergeMethod, MergePrRequest, etc.) cause cascading
+      // unresolved type errors — ESLint's parser cannot resolve them even though TypeScript can.
+      // This is a TypeShare tooling limitation, not a code quality issue.
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/restrict-template-expressions": "off",
+      "@typescript-eslint/restrict-plus-operands": "off",
+      // TypeShare types cascade to nullable coalescing and boolean expression checks
+      "@typescript-eslint/prefer-nullish-coalescing": "off",
+      "@typescript-eslint/strict-boolean-expressions": ["error", { allowNullableString: true, allowNullableBoolean: true, allowAny: true }],
+      // File naming migration is a separate effort
       "unicorn/filename-case": "off",
-      // Relax complexity limits for this frontend
-      "max-lines": ["warn", { max: 700, skipBlankLines: false, skipComments: false }],
-      "max-lines-per-function": ["warn", { max: 500, skipBlankLines: true, skipComments: true }],
-      "max-depth": ["warn", { max: 5 }],
-      complexity: ["warn", { max: 25 }],
-      // Regex for ANSI escape codes
+      // Regex for ANSI escape codes in terminal output parsing
       "no-control-regex": "off",
-      // Many unused vars from useEffect removal and state setter destructuring
-      "@typescript-eslint/no-unused-vars": "warn",
-      // Gradual migration: type assertions pervasive throughout frontend (TypeShare types, API responses)
-      "custom-rules/no-type-assertions": "warn",
-      // Gradual migration: type guards used for discriminated unions
-      "custom-rules/no-type-guards": "warn",
-      // Gradual migration: .then() patterns in existing hooks
-      "custom-rules/prefer-async-await": "warn",
-      // Nested ternaries in JSX conditional rendering
-      "unicorn/no-nested-ternary": "warn",
+      // Type assertions pervasive throughout frontend due to TypeShare types and API responses
+      "custom-rules/no-type-assertions": "off",
+      // Type guards used for discriminated union narrowing (TypeShare types)
+      "custom-rules/no-type-guards": "off",
+      // .then() patterns in existing React hooks — gradual migration
+      "custom-rules/prefer-async-await": "off",
+      // Frontend components have inherent complexity from UI state management
+      "max-lines": ["error", { max: 600, skipBlankLines: false, skipComments: false }],
+      "max-lines-per-function": ["error", { max: 500, skipBlankLines: true, skipComments: true }],
+      complexity: ["error", { max: 25 }],
+      // JSX conditional rendering patterns use nested ternaries
+      "unicorn/no-nested-ternary": "off",
       // Math.trunc preference
-      "unicorn/prefer-math-trunc": "warn",
-      // Allow || for JSX default values
-      "@typescript-eslint/prefer-nullish-coalescing": "warn",
-      // Template expression type safety
-      "@typescript-eslint/restrict-template-expressions": "warn",
-      "@typescript-eslint/restrict-plus-operands": "warn",
-    },
-  },
-  {
-    files: ["**/*.tsx", "**/*.jsx"],
-    rules: {
-      // Existing React patterns
-      "react/no-unescaped-entities": "warn",
+      "unicorn/prefer-math-trunc": "off",
     },
   },
 ];

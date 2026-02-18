@@ -117,7 +117,7 @@ This usually means that Prometheus is not successfully scraping metrics from the
       panel.unit(unit);
     }
 
-    if (graphMode) {
+    if (graphMode !== undefined) {
       panel.graphMode(graphMode);
     }
 
