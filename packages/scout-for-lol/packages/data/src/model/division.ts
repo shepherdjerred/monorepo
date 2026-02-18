@@ -17,7 +17,7 @@ export function parseDivision(input: string): Division | undefined {
     .with("III", () => 3)
     .with("II", () => 2)
     .with("I", () => 1)
-    .otherwise(() => {});
+    .otherwise(() => undefined);
 }
 
 export function divisionToString(division: Division): string {

@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
-import { codeToHtml } from "shiki";
+import { useRef, useState, useCallback } from "react";
 
 type CodeBlockProps = {
   code: string;

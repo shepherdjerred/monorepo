@@ -193,7 +193,7 @@ async function saveFinalImage(params: {
   const binaryString = atob(imageBase64);
   const bytes = new Uint8Array(binaryString.length);
   for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
+    bytes[i] = binaryString.codePointAt(i) ?? 0;
   }
 
   return saveToS3({

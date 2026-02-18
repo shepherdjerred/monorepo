@@ -30,6 +30,7 @@ export function convertRawMatchToInternalFormat(
 
   // Get base example match structure
   let baseMatch: CompletedMatch | ArenaMatch;
+  // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check -- unhandled queue types fall through to default (unranked)
   switch (queueType) {
   case "arena": {
     baseMatch = getExampleMatch("arena");

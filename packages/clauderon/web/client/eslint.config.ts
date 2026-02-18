@@ -19,13 +19,4 @@ export default [
       "custom-rules/no-re-exports": "off",
     },
   },
-  {
-    files: ["**/*.test.ts"],
-    rules: {
-      // Test files create mock WebSocket objects and parse mock responses
-      "custom-rules/no-type-assertions": "off",
-      // Test suites can be long
-      "max-lines-per-function": "off",
-    },
-  },
 ];

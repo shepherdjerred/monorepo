@@ -251,7 +251,7 @@ export async function executeCompetitionCreate(
       // Try parsing as number first (from autocomplete), then try as name
       let championId: number;
       const championIdFromString = Number.parseInt(narrowedArgs.champion, 10);
-      if (isNaN(championIdFromString)) {
+      if (Number.isNaN(championIdFromString)) {
         // Try looking up by name
         const idFromName = getChampionId(narrowedArgs.champion);
         if (!idFromName) {

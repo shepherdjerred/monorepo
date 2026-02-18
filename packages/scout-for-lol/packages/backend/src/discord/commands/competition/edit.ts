@@ -277,7 +277,7 @@ function buildUpdateInput(
             narrowedCriteria.champion,
             10,
           );
-          if (isNaN(championIdFromString)) {
+          if (Number.isNaN(championIdFromString)) {
             const idFromName = getChampionId(narrowedCriteria.champion);
             if (!idFromName) {
               throw new Error(
