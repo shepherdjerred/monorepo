@@ -5,7 +5,7 @@ import type {
   ManifestCourseChapters,
   Manifest,
   ManifestVideo,
-} from "./manifest";
+} from "./manifest.ts";
 import type { Video } from "#src/model/video";
 import type { Course } from "#src/model/course";
 import type { Commentary } from "#src/model/commentary";

@@ -1,10 +1,10 @@
 import React from "react";
-import RoleSelector from "./role-selector";
-import type { Filters } from "./filters";
+import RoleSelector from "./role-selector.tsx";
+import type { Filters } from "./filters.tsx";
 import type { Role } from "#src/model/role";
-import WatchStatusSelector from "./watch-status-selector";
-import BookmarkStatusSelector from "./bookmark-status-selector";
-import TypeSelector from "./type-selector";
+import WatchStatusSelector from "./watch-status-selector.tsx";
+import BookmarkStatusSelector from "./bookmark-status-selector.tsx";
+import TypeSelector from "./type-selector.tsx";
 import type Type from "#src/model/type";
 
 export type FilterSelectorProps = {

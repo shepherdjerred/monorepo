@@ -1,8 +1,8 @@
 import React from "react";
-import { Searchbar } from "./searchbar";
-import PaginatedFuseSearch from "./paginated-fuse-search";
+import { Searchbar } from "./searchbar.tsx";
+import PaginatedFuseSearch from "./paginated-fuse-search.tsx";
 import type { IFuseOptions } from "fuse.js";
-import type { FuseSearchResult } from "./fuse-search";
+import type { FuseSearchResult } from "./fuse-search.tsx";
 import { Container } from "#src/components/container";
 import FilterSelector from "#src/components/omnisearch/filter/filter-selector";
 import type { Filters } from "#src/components/omnisearch/filter/filters";

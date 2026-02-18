@@ -1,14 +1,14 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import React from "react";
-import { Footer } from "./footer";
+import { Footer } from "./footer.tsx";
 import "./Wrapper.css";
-import { Color, Hero, Size } from "./hero";
+import { Color, Hero, Size } from "./hero.tsx";
 import type { Bookmark, Bookmarkable } from "#src/model/bookmark";
 import type { Watchable, WatchStatus } from "#src/model/watch-status";
 import * as Sentry from "@sentry/react";
 import type { Content } from "#src/model/content";
-import { OmniSearch } from "./omnisearch/omni-search";
-import type OmniSearchable from "./omnisearch/omni-searchable";
+import { OmniSearch } from "./omnisearch/omni-search.tsx";
+import type OmniSearchable from "./omnisearch/omni-searchable.tsx";
 
 export type RouterProps = {
   content?: Content;

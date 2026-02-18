@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Modal } from "./modal";
+import { Modal } from "./modal.tsx";
 
 export type TipsModalProps = {
   onClose: () => void;

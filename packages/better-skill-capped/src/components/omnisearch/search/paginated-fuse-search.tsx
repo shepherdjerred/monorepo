@@ -1,7 +1,7 @@
 import React from "react";
-import PaginationControls from "./pagination-controls";
-import type { FuseSearchResult } from "./fuse-search";
-import { FuseSearch } from "./fuse-search";
+import PaginationControls from "./pagination-controls.tsx";
+import type { FuseSearchResult } from "./fuse-search.tsx";
+import { FuseSearch } from "./fuse-search.tsx";
 import type { IFuseOptions } from "fuse.js";
 
 export type PaginatedFuseSearchProps<T> = {

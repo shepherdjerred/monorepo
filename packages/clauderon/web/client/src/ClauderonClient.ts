@@ -24,12 +24,12 @@ import type {
   MergeMethod,
   MergePrRequest,
 } from "@clauderon/shared";
-import { ApiError, NetworkError, SessionNotFoundError } from "./errors.js";
+import { ApiError, NetworkError, SessionNotFoundError } from "./errors.ts";
 import {
   type ClauderonClientConfig,
   type StorageClassInfo,
   getDefaultBaseUrl,
-} from "./client-types.js";
+} from "./client-types.ts";
 
 /**
  * Type-safe HTTP client for the Clauderon API

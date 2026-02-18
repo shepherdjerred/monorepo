@@ -8,9 +8,9 @@ const BROWSE_URL = BASE_URL + "browse";
 export function rawTitleToUrlTitle(rawTitle: string): string {
   return rawTitle
     .toLowerCase()
-    .replace(/ /g, "-")
-    .replace(/\$/g, "")
-    .replace(/[!:.'%,[\]]/g, "");
+    .replaceAll(' ', "-")
+    .replaceAll('$', "")
+    .replaceAll(/[!:.'%,[\]]/g, "");
 }
 
 export function getVideoUrl(video: Video): string {

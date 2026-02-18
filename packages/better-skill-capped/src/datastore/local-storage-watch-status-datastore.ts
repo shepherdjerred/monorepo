@@ -1,4 +1,4 @@
-import type { WatchStatusDatastore } from "./watch-status-datastore";
+import type { WatchStatusDatastore } from "./watch-status-datastore.ts";
 import type { WatchStatus } from "#src/model/watch-status";
 
 const IDENTIFIER = "watchStatus";

@@ -1,5 +1,5 @@
 import type { Event as WsEvent } from "@clauderon/shared";
-import { WebSocketError } from "./errors.js";
+import { WebSocketError } from "./errors.ts";
 
 /**
  * Event types emitted by the events WebSocket
@@ -94,18 +94,18 @@ export class EventsClient {
     try {
       this.ws = new WebSocket(this.url);
 
-      this.ws.onopen = () => {
+      this.ws.addEventListener('open', () => {
         this.emit("connected");
-      };
+      });
 
-      this.ws.onclose = () => {
+      this.ws.addEventListener('close', () => {
         this.emit("disconnected");
 
         // Auto-reconnect if not intentionally closed
         if (this.autoReconnect && !this.intentionallyClosed) {
           this.scheduleReconnect();
         }
-      };
+      });
 
       this.ws.onerror = (event) => {
         this.emit(

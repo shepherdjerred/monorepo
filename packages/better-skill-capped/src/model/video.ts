@@ -1,5 +1,5 @@
-import type { Role } from "./role";
-import { isCommentary } from "./commentary";
+import type { Role } from "./role.ts";
+import { isCommentary } from "./commentary.ts";
 
 export type Video = {
   role: Role;
