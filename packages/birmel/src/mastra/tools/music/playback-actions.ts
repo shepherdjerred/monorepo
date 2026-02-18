@@ -1,8 +1,8 @@
 import { QueryType, QueueRepeatMode } from "discord-player";
 import type { VoiceChannel } from "discord.js";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.js";
-import { getMusicPlayer } from "@shepherdjerred/birmel/music/index.js";
-import { logger } from "@shepherdjerred/birmel/utils/index.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { getMusicPlayer } from "@shepherdjerred/birmel/music/index.ts";
+import { logger } from "@shepherdjerred/birmel/utils/index.ts";
 
 type PlaybackResult = {
   success: boolean;

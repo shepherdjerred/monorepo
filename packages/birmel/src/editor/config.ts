@@ -1,4 +1,5 @@
-import { getConfig, type EditorRepoConfig } from "@shepherdjerred/birmel/config/index.js";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
+import type { EditorRepoConfig } from "@shepherdjerred/birmel/config/schema.ts";
 
 /**
  * Check if the editor feature is enabled

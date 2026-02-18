@@ -1,49 +1,49 @@
-export const left = ["left", "l"];
+export const left = ["left", "l"] as const;
 type Left = (typeof left)[number];
-export function isLeft(input: string): input is Left {
-  return left.includes(input);
+export function isLeft(input: string): boolean {
+  return (left as readonly string[]).includes(input);
 }
 
-export const right = ["right", "r"];
+export const right = ["right", "r"] as const;
 type Right = (typeof right)[number];
-export function isRight(input: string): input is Right {
-  return right.includes(input);
+export function isRight(input: string): boolean {
+  return (right as readonly string[]).includes(input);
 }
 
-export const up = ["up", "u"];
+export const up = ["up", "u"] as const;
 type Up = (typeof up)[number];
-export function isUp(input: string): input is Up {
-  return up.includes(input);
+export function isUp(input: string): boolean {
+  return (up as readonly string[]).includes(input);
 }
 
-export const down = ["down", "d"];
+export const down = ["down", "d"] as const;
 type Down = (typeof down)[number];
-export function isDown(input: string): input is Down {
-  return down.includes(input);
+export function isDown(input: string): boolean {
+  return (down as readonly string[]).includes(input);
 }
 
-export const a = ["a"];
+export const a = ["a"] as const;
 type A = (typeof a)[number];
-export function isA(input: string): input is A {
-  return a.includes(input);
+export function isA(input: string): boolean {
+  return (a as readonly string[]).includes(input);
 }
 
-export const b = ["b"];
+export const b = ["b"] as const;
 type B = (typeof b)[number];
-export function isB(input: string): input is B {
-  return b.includes(input);
+export function isB(input: string): boolean {
+  return (b as readonly string[]).includes(input);
 }
 
-export const select = ["select", "se", "sel"];
+export const select = ["select", "se", "sel"] as const;
 type Select = (typeof select)[number];
-export function isSelect(input: string): input is Select {
-  return select.includes(input);
+export function isSelect(input: string): boolean {
+  return (select as readonly string[]).includes(input);
 }
 
-export const start = ["start", "st"];
+export const start = ["start", "st"] as const;
 type Start = (typeof start)[number];
-export function isStart(input: string): input is Start {
-  return start.includes(input);
+export function isStart(input: string): boolean {
+  return (start as readonly string[]).includes(input);
 }
 
 export const command = [
@@ -55,8 +55,8 @@ export const command = [
   ...b,
   ...select,
   ...start,
-];
-export type Command = (typeof command)[number];
-export function isCommand(input: string): input is Command {
-  return command.includes(input.toLowerCase());
+] as const;
+export type Command = Left | Right | Up | Down | A | B | Select | Start;
+export function isCommand(input: string): boolean {
+  return (command as readonly string[]).includes(input.toLowerCase());
 }

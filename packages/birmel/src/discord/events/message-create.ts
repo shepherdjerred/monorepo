@@ -1,18 +1,18 @@
 import type { Client, Message } from "discord.js";
-import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import {
   withSpan,
   setSentryContext,
   clearSentryContext,
   captureException,
-} from "@shepherdjerred/birmel/observability/index.js";
+} from "@shepherdjerred/birmel/observability/index.ts";
 import {
   extractImageAttachments,
   type ImageAttachment,
-} from "@shepherdjerred/birmel/utils/image.js";
-import { recordMessageActivity } from "@shepherdjerred/birmel/database/repositories/activity.js";
-import { getOrCreateGuildOwner } from "@shepherdjerred/birmel/database/repositories/guild-owner.js";
-import { generateWakeWord } from "@shepherdjerred/birmel/config/constants.js";
+} from "@shepherdjerred/birmel/utils/image.ts";
+import { recordMessageActivity } from "@shepherdjerred/birmel/database/repositories/activity.ts";
+import { getOrCreateGuildOwner } from "@shepherdjerred/birmel/database/repositories/guild-owner.ts";
+import { generateWakeWord } from "@shepherdjerred/birmel/config/constants.ts";
 
 const logger = loggers.discord.child("message-create");
 
@@ -220,4 +220,4 @@ export function setupMessageCreateHandler(client: Client): void {
   });
 }
 
-export { type ImageAttachment } from "../../utils/image.js";
+export { type ImageAttachment } from "../../utils/image.ts";

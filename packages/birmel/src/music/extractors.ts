@@ -1,6 +1,6 @@
 import type { Player } from "discord-player";
 import { YoutubeiExtractor } from "discord-player-youtubei";
-import { logger } from "@shepherdjerred/birmel/utils/index.js";
+import { logger } from "@shepherdjerred/birmel/utils/index.ts";
 
 export async function registerExtractors(player: Player): Promise<void> {
   try {

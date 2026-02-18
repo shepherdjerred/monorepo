@@ -1,8 +1,8 @@
 // eslint-disable-next-line no-restricted-imports -- readFileSync/existsSync have no sync Bun equivalents
 import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
-import { getConfig } from "@shepherdjerred/birmel/config/index.js";
-import { logger } from "@shepherdjerred/birmel/utils/index.js";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
+import { logger } from "@shepherdjerred/birmel/utils/index.ts";
 
 export type StyleCard = {
   author: string;

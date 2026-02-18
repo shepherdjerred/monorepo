@@ -1,5 +1,5 @@
-import { prisma } from "@shepherdjerred/birmel/database/index.js";
-import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
+import { prisma } from "@shepherdjerred/birmel/database/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 
 const logger = loggers.database.child("activity");
 

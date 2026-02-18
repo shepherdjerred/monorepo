@@ -1,9 +1,9 @@
 import type { GuildMember } from "discord.js";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.js";
-import { withSpan } from "@shepherdjerred/birmel/observability/index.js";
-import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
-import { getConfig } from "@shepherdjerred/birmel/config/index.js";
-import { prisma } from "@shepherdjerred/birmel/database/index.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { withSpan } from "@shepherdjerred/birmel/observability/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
+import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 
 const logger = loggers.scheduler.child("activity-aggregator");
 

@@ -3,6 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "imports": {
+    "#src/*": "./src/*"
+  },
   "scripts": {
     "typecheck": "bunx tsc --noEmit",
     "build": "bunx tsc",

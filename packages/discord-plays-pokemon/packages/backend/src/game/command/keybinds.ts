@@ -1,5 +1,4 @@
-import type {
-  Command} from "./command.ts";
+import type { Command } from "./command.ts";
 import {
   isLeft,
   isRight,

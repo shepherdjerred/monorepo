@@ -1,8 +1,6 @@
 import type { Directory, Container, Secret } from "@dagger.io/dagger";
-import {
-  getSystemContainer,
-  publishToGhcrMultiple,
-} from "./lib/containers/index.ts";
+import { getSystemContainer } from "./lib-system.ts";
+import { publishToGhcrMultiple } from "./lib-ghcr.ts";
 
 // Default configuration
 const DEFAULT_ARCHITECTURES = "aarch64,x86_64";

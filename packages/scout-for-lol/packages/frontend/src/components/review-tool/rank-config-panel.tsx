@@ -28,10 +28,10 @@ const TIERS: Tier[] = [
 const DIVISIONS: Division[] = [1, 2, 3, 4];
 
 // Tiers that don't have divisions (only LP matters)
-const APEX_TIERS: Tier[] = ["master", "grandmaster", "challenger"];
+const APEX_TIERS = new Set<Tier>(["master", "grandmaster", "challenger"]);
 
 function isApexTier(tier: Tier): boolean {
-  return APEX_TIERS.includes(tier);
+  return APEX_TIERS.has(tier);
 }
 
 function tierDisplayName(tier: Tier): string {

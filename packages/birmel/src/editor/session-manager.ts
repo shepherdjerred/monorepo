@@ -1,5 +1,5 @@
-import { prisma } from "@shepherdjerred/birmel/database/index.js";
-import { loggers } from "@shepherdjerred/birmel/utils/index.js";
+import { prisma } from "@shepherdjerred/birmel/database/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
 import { getMaxSessionDuration, getMaxSessionsPerUser } from "./config.ts";
 import { cleanupClone } from "./repo-clone.ts";
 import {

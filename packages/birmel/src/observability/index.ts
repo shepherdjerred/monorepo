@@ -8,7 +8,7 @@ export {
   captureMessage,
   flushSentry,
   type DiscordContext,
-} from "./sentry.js";
+} from "./sentry.ts";
 
 export {
   initializeTracing,
@@ -19,7 +19,7 @@ export {
   withToolSpan,
   withAgentSpan,
   type DiscordSpanAttributes,
-} from "./tracing.js";
+} from "./tracing.ts";
 
 import { initializeSentry, flushSentry } from "./sentry.ts";
 import { initializeTracing, shutdownTracing } from "./tracing.ts";

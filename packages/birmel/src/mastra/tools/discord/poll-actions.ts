@@ -4,8 +4,8 @@ import type {
   MessageCreateOptions,
   TextBasedChannel,
 } from "discord.js";
-import { prisma } from "@shepherdjerred/birmel/database/index.js";
-import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
+import { prisma } from "@shepherdjerred/birmel/database/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 
 type SendableChannel = TextBasedChannel & {
   send: (options: MessageCreateOptions) => Promise<Message>;

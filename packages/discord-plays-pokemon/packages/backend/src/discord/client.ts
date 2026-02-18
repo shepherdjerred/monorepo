@@ -1,6 +1,6 @@
 import { Client, GatewayIntentBits } from "discord.js";
-import { logger } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/logger.js";
-import { getConfig } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/config/index.js";
+import { logger } from "#src/logger.ts";
+import { getConfig } from "#src/config/index.ts";
 
 const client = new Client({
   intents: [

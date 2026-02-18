@@ -1,8 +1,8 @@
-import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.js";
+import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
 import type { TextChannel } from "discord.js";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.js";
-import { logger } from "@shepherdjerred/birmel/utils/logger.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 import { validateSnowflakes } from "./validation.ts";
 
 export const manageInviteTool = createTool({

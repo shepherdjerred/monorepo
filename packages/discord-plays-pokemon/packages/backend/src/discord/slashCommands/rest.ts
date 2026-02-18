@@ -1,8 +1,8 @@
 import { REST, Routes } from "discord.js";
 import { screenshotCommand } from "./commands/screenshot.ts";
 import { helpCommand } from "./commands/help.ts";
-import { logger } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/logger.js";
-import { getConfig } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/config/index.js";
+import { logger } from "#src/logger.ts";
+import { getConfig } from "#src/config/index.ts";
 
 const rest = new REST({ version: "10" }).setToken(
   getConfig().bot.discord_token,

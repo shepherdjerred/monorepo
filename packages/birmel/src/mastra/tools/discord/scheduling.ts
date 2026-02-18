@@ -1,15 +1,15 @@
-import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.js";
+import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
-import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import {
   captureException,
   withToolSpan,
-} from "@shepherdjerred/birmel/observability/index.js";
+} from "@shepherdjerred/birmel/observability/index.ts";
 import {
   scheduleAnnouncement,
   cancelAnnouncement,
   listPendingAnnouncements,
-} from "@shepherdjerred/birmel/scheduler/jobs/announcements.js";
+} from "@shepherdjerred/birmel/scheduler/jobs/announcements.ts";
 import { validateSnowflakes } from "./validation.ts";
 
 const logger = loggers.tools.child("discord.scheduling");

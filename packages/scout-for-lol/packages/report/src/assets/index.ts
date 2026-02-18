@@ -26,13 +26,13 @@ function generateFonts(
 ): (Omit<Font, "data"> & { src: string })[] {
   return configs.flatMap((config) =>
     config.variants.map((variant) => {
-      const font: Omit<Font, "data"> & { src: string } = {
+      const fontDef: Omit<Font, "data"> & { src: string } = {
         name: fontName,
         src: `${fontPath}/${fontFamily}/${variant.filename}`,
       };
-      font.weight = config.weight;
-      font.style = variant.style;
-      return font;
+      fontDef.weight = config.weight;
+      fontDef.style = variant.style;
+      return fontDef;
     }),
   );
 }
@@ -117,9 +117,9 @@ const baseSpiegelFonts = generateFonts(
 export const bunBeaufortFonts: () => Promise<Font[]> = () =>
   Promise.all(
     baseBeaufortFonts.map(
-      async (font): Promise<Font> => ({
-        ...font,
-        data: await Bun.file(new URL(font.src, import.meta.url)).arrayBuffer(),
+      async (baseFont): Promise<Font> => ({
+        ...baseFont,
+        data: await Bun.file(new URL(baseFont.src, import.meta.url)).arrayBuffer(),
       }),
     ),
   );
@@ -127,9 +127,9 @@ export const bunBeaufortFonts: () => Promise<Font[]> = () =>
 export const bunSpiegelFonts: () => Promise<Font[]> = () =>
   Promise.all(
     baseSpiegelFonts.map(
-      async (font): Promise<Font> => ({
-        ...font,
-        data: await Bun.file(new URL(font.src, import.meta.url)).arrayBuffer(),
+      async (baseFont): Promise<Font> => ({
+        ...baseFont,
+        data: await Bun.file(new URL(baseFont.src, import.meta.url)).arrayBuffer(),
       }),
     ),
   );

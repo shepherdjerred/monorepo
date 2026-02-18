@@ -99,12 +99,10 @@ export function selectRandomBehaviors(
     let cumulative = 0;
     let selectedIndex = 0;
     for (const [j, behavior] of remaining.entries()) {
-      if (behavior) {
-        cumulative += behavior.weight;
-        if (roll < cumulative) {
-          selectedIndex = j;
-          break;
-        }
+      cumulative += behavior.weight;
+      if (roll < cumulative) {
+        selectedIndex = j;
+        break;
       }
     }
 

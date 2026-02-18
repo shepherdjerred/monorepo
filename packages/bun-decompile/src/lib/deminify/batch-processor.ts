@@ -16,22 +16,13 @@
  * @see Plan: /Users/jerred/.claude/plans/dazzling-popping-firefly.md
  */
 
-import OpenAI from "openai";
-import Anthropic from "@anthropic-ai/sdk";
-import { appendFile, mkdir } from "node:fs/promises";
-import path from "node:path";
 import {
   applyRenames,
   extractIdentifiers,
   type RenameMappings,
 } from "./babel-renamer.ts";
 import type { FunctionCache } from "./function-cache.ts";
-import {
-  getBatchSystemPrompt,
-  getBatchFunctionPrompt,
-  estimateBatchTokens,
-  type BatchFunctionInfo,
-} from "./prompt-templates.ts";
+import { estimateBatchTokens, type BatchFunctionInfo } from "./prompt-templates.ts";
 import { getTargetBatchTokens, getModelInfo } from "./tokenizer.ts";
 import type {
   DeminifyConfig,
@@ -39,16 +30,7 @@ import type {
   CallGraph,
   ExtendedProgress,
 } from "./types.ts";
-
-/** Result from API call with raw data */
-type LLMCallResult = {
-  mappings: RenameMappings;
-  rawResponse: string;
-  inputTokens: number;
-  outputTokens: number;
-  requestBody: unknown;
-  responseBody: unknown;
-};
+import { LLMCaller } from "./llm-caller.ts";
 
 /** Result from processing a batch */
 export type BatchResult = {
@@ -85,14 +67,9 @@ export type BatchProcessorOptions = {
 export class BatchProcessor {
   private readonly config: DeminifyConfig;
   private readonly cache: FunctionCache;
-  private readonly openai: OpenAI | null = null;
-  private readonly anthropic: Anthropic | null = null;
-  private logFile: string | null = null;
-  private requestCount = 0;
+  private readonly llmCaller: LLMCaller;
 
   // Stats
-  private inputTokensUsed = 0;
-  private outputTokensUsed = 0;
   private cacheHits = 0;
   private cacheMisses = 0;
   private errors = 0;
@@ -101,55 +78,14 @@ export class BatchProcessor {
   constructor(config: DeminifyConfig, cache: FunctionCache) {
     this.config = config;
     this.cache = cache;
-
-    // Initialize the appropriate client
-    if (config.provider === "openai") {
-      this.openai = new OpenAI({ apiKey: config.apiKey });
-    } else {
-      this.anthropic = new Anthropic({ apiKey: config.apiKey });
-    }
+    this.llmCaller = new LLMCaller(config);
   }
 
   /**
    * Set log file path for raw request/response logging.
    */
   setLogFile(logPath: string): void {
-    this.logFile = logPath;
-  }
-
-  /**
-   * Log raw request/response to file.
-   */
-  private async logToFile(entry: {
-    timestamp: string;
-    type: "request" | "response";
-    requestId: number;
-    provider: string;
-    model: string;
-    systemPrompt?: string;
-    userPrompt?: string;
-    requestBody?: unknown;
-    rawResponse?: string;
-    responseBody?: unknown;
-    parsedResponse?: RenameMappings;
-    inputTokens?: number;
-    outputTokens?: number;
-    error?: string;
-  }): Promise<void> {
-    if (this.logFile == null || this.logFile.length === 0) {
-      return;
-    }
-
-    try {
-      const logDir = path.join(this.logFile, "..");
-      await mkdir(logDir, { recursive: true });
-
-      const separator = "\n" + "=".repeat(80) + "\n";
-      const content = separator + JSON.stringify(entry, null, 2) + "\n";
-      await appendFile(this.logFile, content);
-    } catch (error) {
-      console.error("Failed to write to log file:", error);
-    }
+    this.llmCaller.setLogFile(logPath);
   }
 
   /**
@@ -243,14 +179,6 @@ export class BatchProcessor {
           allMappings[id] = mapping;
 
           // Track function name for context in subsequent rounds.
-          // NOTE: knownNames contains "planned" renames, not "applied" renames.
-          // The LLM sees what names we've *decided* on for earlier functions,
-          // but the actual source modifications happen once at the end to avoid
-          // position-shift bugs that would corrupt AST node positions.
-          //
-          // Trade-off: For circular dependencies, the LLM context is slightly
-          // inconsistent (it sees planned names but reads original source), but
-          // this prevents AST corruption which would be far worse.
           if (mapping.functionName != null && mapping.functionName.length > 0) {
             const fn = functions.find((f) => f.id === id);
             // eslint-disable-next-line max-depth -- nested control flow required for logic
@@ -274,8 +202,8 @@ export class BatchProcessor {
             currentItem: batch[0]?.originalName ?? "batch",
             cacheHits: this.cacheHits,
             cacheMisses: this.cacheMisses,
-            inputTokens: this.inputTokensUsed,
-            outputTokens: this.outputTokensUsed,
+            inputTokens: this.llmCaller.inputTokensUsed,
+            outputTokens: this.llmCaller.outputTokensUsed,
             errors: this.errors,
             avgConfidence: 0.8, // Placeholder
             startTime: this.startTime,
@@ -283,10 +211,6 @@ export class BatchProcessor {
           });
         }
       }
-
-      // NOTE: We do NOT apply renames between rounds anymore.
-      // Instead, we pass knownNames to the LLM so it knows what we've renamed.
-      // All renames are applied once at the end to avoid position shifts.
     }
 
     // Apply ALL renames at once to the original source
@@ -462,7 +386,6 @@ export class BatchProcessor {
     const relevantRenames: string[] = [];
     for (const [original, renamed] of knownNames) {
       // Validate that original and renamed are safe identifiers (alphanumeric + underscore)
-      // This prevents injection if source contains crafted strings
       if (!/^[a-z_$][\w$]*$/i.test(original)) {
         continue;
       }
@@ -471,10 +394,9 @@ export class BatchProcessor {
       }
 
       // Check if this identifier is called in the source (as a function call)
-      // Match patterns like: original(, original), original.
       const callPattern = new RegExp(String.raw`\b${original}\s*\(`);
       if (callPattern.test(source)) {
-        relevantRenames.push(`${original}→${renamed}`);
+        relevantRenames.push(`${original}\u2192${renamed}`);
       }
     }
 
@@ -526,7 +448,11 @@ export class BatchProcessor {
 
     // Call LLM
     try {
-      const response = await this.callLLM(batchInfo, knownNames, verbose);
+      const response = await this.llmCaller.callLLM(
+        batchInfo,
+        knownNames,
+        verbose,
+      );
       this.cacheMisses += uncached.length;
 
       // Parse response and cache results
@@ -559,239 +485,6 @@ export class BatchProcessor {
   }
 
   /**
-   * Call the LLM API to get rename mappings.
-   */
-  private async callLLM(
-    functions: BatchFunctionInfo[],
-    knownNames: Map<string, string>,
-    verbose?: boolean,
-  ): Promise<RenameMappings> {
-    const systemPrompt = getBatchSystemPrompt();
-    const userPrompt = getBatchFunctionPrompt(functions, knownNames);
-    const requestId = ++this.requestCount;
-    const timestamp = new Date().toISOString();
-
-    if (verbose === true) {
-      console.log("\n--- LLM Request ---");
-      console.log(`Functions in batch: ${String(functions.length)}`);
-      console.log(`Function IDs: ${functions.map((f) => f.id).join(", ")}`);
-      console.log(`System prompt length: ${String(systemPrompt.length)} chars`);
-      console.log(`User prompt length: ${String(userPrompt.length)} chars`);
-      console.log("User prompt preview:");
-      console.log(
-        userPrompt.slice(0, 500) + (userPrompt.length > 500 ? "..." : ""),
-      );
-    }
-
-    // Log request
-    await this.logToFile({
-      timestamp,
-      type: "request",
-      requestId,
-      provider: this.config.provider,
-      model: this.config.model,
-      systemPrompt,
-      userPrompt,
-    });
-
-    let result: RenameMappings;
-    let llmResult: LLMCallResult;
-
-    try {
-      if (this.openai) {
-        llmResult = await this.callOpenAIWithRaw(systemPrompt, userPrompt);
-      } else if (this.anthropic) {
-        llmResult = await this.callAnthropicWithRaw(systemPrompt, userPrompt);
-      } else {
-        throw new Error("No LLM client configured");
-      }
-
-      result = llmResult.mappings;
-
-      // Log response with full request/response bodies
-      await this.logToFile({
-        timestamp: new Date().toISOString(),
-        type: "response",
-        requestId,
-        provider: this.config.provider,
-        model: this.config.model,
-        requestBody: llmResult.requestBody,
-        rawResponse: llmResult.rawResponse,
-        responseBody: llmResult.responseBody,
-        parsedResponse: result,
-        inputTokens: llmResult.inputTokens,
-        outputTokens: llmResult.outputTokens,
-      });
-    } catch (error) {
-      // Log error
-      await this.logToFile({
-        timestamp: new Date().toISOString(),
-        type: "response",
-        requestId,
-        provider: this.config.provider,
-        model: this.config.model,
-        error: String(error),
-      });
-      throw error;
-    }
-
-    if (verbose === true) {
-      console.log("\n--- LLM Response ---");
-      console.log(`Mappings received: ${String(Object.keys(result).length)}`);
-      for (const [id, mapping] of Object.entries(result)) {
-        const renameCount = Object.keys(mapping.renames).length;
-        console.log(
-          `  ${id}: ${mapping.functionName ?? "(no name)"} - ${String(renameCount)} renames`,
-        );
-        if (mapping.description != null && mapping.description.length > 0) {
-          console.log(`    "${mapping.description}"`);
-        }
-      }
-    }
-
-    return result;
-  }
-
-  /**
-   * Call OpenAI API with raw response capture.
-   */
-  private async callOpenAIWithRaw(
-    systemPrompt: string,
-    userPrompt: string,
-  ): Promise<LLMCallResult> {
-    const requestBody = {
-      model: this.config.model,
-      max_completion_tokens: this.config.maxTokens,
-      messages: [
-        { role: "system" as const, content: systemPrompt },
-        { role: "user" as const, content: userPrompt },
-      ],
-      response_format: { type: "json_object" as const },
-    };
-
-    if (!this.openai) {
-      throw new Error("OpenAI client not initialized");
-    }
-
-    const response = await this.openai.chat.completions.create(requestBody);
-
-    // Track token usage
-    const inputTokens = response.usage?.prompt_tokens ?? 0;
-    const outputTokens = response.usage?.completion_tokens ?? 0;
-    this.inputTokensUsed += inputTokens;
-    this.outputTokensUsed += outputTokens;
-
-    const content = response.choices[0]?.message.content;
-    if (content == null || content.length === 0) {
-      throw new Error("Empty response from OpenAI");
-    }
-
-    return {
-      mappings: this.parseResponse(content),
-      rawResponse: content,
-      inputTokens,
-      outputTokens,
-      requestBody,
-      responseBody: response,
-    };
-  }
-
-  /**
-   * Call Anthropic API with raw response capture.
-   */
-  private async callAnthropicWithRaw(
-    systemPrompt: string,
-    userPrompt: string,
-  ): Promise<LLMCallResult> {
-    const requestBody = {
-      model: this.config.model,
-      max_tokens: this.config.maxTokens,
-      system: systemPrompt,
-      messages: [{ role: "user" as const, content: userPrompt }],
-    };
-
-    if (!this.anthropic) {
-      throw new Error("Anthropic client not initialized");
-    }
-
-    const response = await this.anthropic.messages.create(requestBody);
-
-    // Track token usage
-    const inputTokens = response.usage.input_tokens;
-    const outputTokens = response.usage.output_tokens;
-    this.inputTokensUsed += inputTokens;
-    this.outputTokensUsed += outputTokens;
-
-    const content = response.content[0];
-    if (content?.type !== "text") {
-      throw new Error("Unexpected response type from Anthropic");
-    }
-
-    return {
-      mappings: this.parseResponse(content.text),
-      rawResponse: content.text,
-      inputTokens,
-      outputTokens,
-      requestBody,
-      responseBody: response,
-    };
-  }
-
-  /**
-   * Parse LLM response into rename mappings.
-   */
-  private parseResponse(content: string): RenameMappings {
-    // Try to extract JSON from the response
-    let jsonStr = content.trim();
-
-    // If wrapped in markdown code blocks, extract
-    const jsonMatch = /```(?:json)?\n?([\s\S]*?)```/.exec(jsonStr);
-    if (jsonMatch?.[1] != null && jsonMatch[1].length > 0) {
-      jsonStr = jsonMatch[1].trim();
-    }
-
-    try {
-      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-      const raw = JSON.parse(jsonStr) as Record<string, unknown>;
-      const parsed: RenameMappings = {};
-
-      // Validate structure
-      for (const [id, mapping] of Object.entries(raw)) {
-        if (typeof mapping !== "object" || mapping === null) {
-          continue;
-        }
-
-        // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-        const m = mapping as Record<string, unknown>;
-
-        // Ensure renames is an object
-        const renames =
-          typeof m["renames"] === "object" && m["renames"] !== null
-            // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-            ? (m["renames"] as Record<string, string>)
-            : {};
-
-        const entry: RenameMappings[string] = { renames };
-        if (typeof m["functionName"] === "string") {
-          entry.functionName = m["functionName"];
-        }
-        if (typeof m["description"] === "string") {
-          entry.description = m["description"];
-        }
-        parsed[id] = entry;
-      }
-
-      return parsed;
-    } catch {
-      console.error(
-        "Failed to parse LLM response as JSON:",
-        content.slice(0, 200),
-      );
-      return {};
-    }
-  }
-
-  /**
    * Get processing statistics.
    */
   getStats(): BatchResult {
@@ -800,8 +493,8 @@ export class BatchProcessor {
       cacheHits: this.cacheHits,
       cacheMisses: this.cacheMisses,
       errors: this.errors,
-      inputTokens: this.inputTokensUsed,
-      outputTokens: this.outputTokensUsed,
+      inputTokens: this.llmCaller.inputTokensUsed,
+      outputTokens: this.llmCaller.outputTokensUsed,
     };
   }
 }

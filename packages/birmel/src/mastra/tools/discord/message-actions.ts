@@ -1,10 +1,10 @@
 import type { TextChannel, Client } from "discord.js";
-import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import {
   getRequestContext,
   hasReplySent,
   markReplySent,
-} from "@shepherdjerred/birmel/mastra/tools/request-context.js";
+} from "@shepherdjerred/birmel/mastra/tools/request-context.ts";
 
 const logger = loggers.tools.child("discord.messages");
 

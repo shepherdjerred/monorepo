@@ -1,7 +1,8 @@
 import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
-import { syncToS3, publishToGhcrMultiple } from "./lib/containers/index.ts";
-import versions from "./lib/versions.ts";
+import { syncToS3 } from "./lib-s3.ts";
+import { publishToGhcrMultiple } from "./lib-ghcr.ts";
+import versions from "./lib-versions.ts";
 
 const BUN_VERSION = versions.bun;
 

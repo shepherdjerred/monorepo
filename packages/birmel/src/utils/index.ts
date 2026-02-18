@@ -1,4 +1,4 @@
-export { logger, loggers } from "./logger.js";
+export { logger, loggers } from "./logger.ts";
 export {
   checkRateLimit,
   getRateLimitRemaining,
@@ -6,10 +6,10 @@ export {
   clearRateLimit,
   clearAllRateLimits,
   cleanupExpiredLimits,
-} from "./rate-limiter.js";
+} from "./rate-limiter.ts";
 export {
   retry,
   retryWithBackoff,
   isRetryableError,
   type RetryOptions,
-} from "./retry.js";
+} from "./retry.ts";

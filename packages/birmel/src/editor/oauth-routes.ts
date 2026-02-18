@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { loggers } from "@shepherdjerred/birmel/utils/index.js";
+import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
 import { getGitHubConfig, isGitHubConfigured } from "./config.ts";
 import { exchangeCodeForToken, storeAuth } from "./github-oauth.ts";
 

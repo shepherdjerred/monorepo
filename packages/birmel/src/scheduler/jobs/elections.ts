@@ -1,24 +1,24 @@
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import {
   createPoll,
   getPollResults,
   endPoll,
-} from "@shepherdjerred/birmel/discord/polls/helpers.js";
+} from "@shepherdjerred/birmel/discord/polls/helpers.ts";
 import {
   createElectionPoll,
   updateElectionStatus,
-} from "@shepherdjerred/birmel/database/repositories/elections.js";
-import { setGuildOwner } from "@shepherdjerred/birmel/database/repositories/guild-owner.js";
+} from "@shepherdjerred/birmel/database/repositories/elections.ts";
+import { setGuildOwner } from "@shepherdjerred/birmel/database/repositories/guild-owner.ts";
 import {
   selectRandomCandidates,
   createElectionAnswers,
-} from "@shepherdjerred/birmel/elections/candidates.js";
-import { determineWinner, generateNickname } from "@shepherdjerred/birmel/elections/winner.js";
-import { updateBotNickname } from "@shepherdjerred/birmel/elections/bot-nickname.js";
-import { updateBotProfile } from "@shepherdjerred/birmel/elections/bot-profile.js";
-import { loggers } from "@shepherdjerred/birmel/utils/index.js";
-import { prisma } from "@shepherdjerred/birmel/database/index.js";
-import { getConfig } from "@shepherdjerred/birmel/config/index.js";
+} from "@shepherdjerred/birmel/elections/candidates.ts";
+import { determineWinner, generateNickname } from "@shepherdjerred/birmel/elections/winner.ts";
+import { updateBotNickname } from "@shepherdjerred/birmel/elections/bot-nickname.ts";
+import { updateBotProfile } from "@shepherdjerred/birmel/elections/bot-profile.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
+import { prisma } from "@shepherdjerred/birmel/database/index.ts";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 
 const logger = loggers.scheduler.child("elections");
 

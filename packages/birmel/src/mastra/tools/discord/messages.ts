@@ -1,11 +1,11 @@
-import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.js";
+import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.js";
-import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import {
   withToolSpan,
   captureException,
-} from "@shepherdjerred/birmel/observability/index.js";
+} from "@shepherdjerred/birmel/observability/index.ts";
 import { validateSnowflakes, validateSnowflakeArray } from "./validation.ts";
 import { parseDiscordAPIError, formatDiscordAPIError } from "./error-utils.ts";
 import {

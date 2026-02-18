@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { loggers } from "@shepherdjerred/birmel/utils/index.js";
+import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
 import type { EditResult, FileChange } from "./types.ts";
 
 const logger = loggers.editor.child("claude-client");

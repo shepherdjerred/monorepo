@@ -5,8 +5,8 @@ import type {
   User,
   PartialUser,
 } from "discord.js";
-import { recordReactionActivity } from "@shepherdjerred/birmel/database/repositories/activity.js";
-import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
+import { recordReactionActivity } from "@shepherdjerred/birmel/database/repositories/activity.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 
 const logger = loggers.events.child("reaction-add");
 

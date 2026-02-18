@@ -1,7 +1,7 @@
-import { wait } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/util.js";
-import type { Chord } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/chord.js";
-import type { CommandInput } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/commandInput.js";
-import { getConfig } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/config/index.js";
+import { wait } from "#src/util.ts";
+import type { Chord } from "#src/game/command/chord.ts";
+import type { CommandInput } from "#src/game/command/command-input.ts";
+import { getConfig } from "#src/config/index.ts";
 
 export async function execute(
   chord: Chord,

@@ -1,9 +1,9 @@
 import type { TextChannel } from "discord.js";
 import type { DailyPostConfig } from "@prisma/client";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.js";
-import { prisma } from "@shepherdjerred/birmel/database/index.js";
-import { loggers } from "@shepherdjerred/birmel/utils/index.js";
-import { withSpan, captureException } from "@shepherdjerred/birmel/observability/index.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { prisma } from "@shepherdjerred/birmel/database/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
+import { withSpan, captureException } from "@shepherdjerred/birmel/observability/index.ts";
 
 const logger = loggers.scheduler.child("daily-posts");
 

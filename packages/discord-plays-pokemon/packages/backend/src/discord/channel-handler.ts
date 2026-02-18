@@ -1,7 +1,7 @@
 import { Events } from "discord.js";
 import client from "./client.ts";
-import { getConfig } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/config/index.js";
-import { logger } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/logger.js";
+import { getConfig } from "#src/config/index.ts";
+import { logger } from "#src/logger.ts";
 
 export function handleChannelUpdate(
   updateFn: (participants: number) => Promise<void>,

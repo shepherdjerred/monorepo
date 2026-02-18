@@ -62,7 +62,7 @@ Good luck! 🍀`;
   } catch (error) {
     // Handle permission errors gracefully - they're expected in some cases
     const channelSendError = z.instanceof(ChannelSendError).safeParse(error);
-    if (channelSendError.success && channelSendError.data.isPermissionError) {
+    if (channelSendError.success && channelSendError.data.permissionError) {
       logger.warn(
         `[CompetitionLifecycle] ⚠️  Cannot post start notification for competition ${competition.id.toString()} - missing permissions in channel ${competition.channelId}. Server owner has been notified.`,
       );
@@ -171,7 +171,7 @@ async function postFinalLeaderboard(
   } catch (error) {
     // Handle permission errors gracefully - they're expected in some cases
     const channelSendError = z.instanceof(ChannelSendError).safeParse(error);
-    if (channelSendError.success && channelSendError.data.isPermissionError) {
+    if (channelSendError.success && channelSendError.data.permissionError) {
       logger.warn(
         `[CompetitionLifecycle] ⚠️  Cannot post final leaderboard for competition ${competition.id.toString()} - missing permissions in channel ${competition.channelId}. Server owner has been notified.`,
       );

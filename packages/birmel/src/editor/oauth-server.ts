@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { loggers } from "@shepherdjerred/birmel/utils/index.js";
-import { getConfig } from "@shepherdjerred/birmel/config/index.js";
+import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { createOAuthRoutes } from "./oauth-routes.ts";
 import {
   checkClaudePrerequisites,

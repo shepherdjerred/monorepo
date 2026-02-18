@@ -71,8 +71,8 @@ export function SoundPackEditorProvider({
       try {
         const result = await adapter.getChampions();
         setChampions(result);
-      } catch (error) {
-        console.error(error);
+      } catch (loadError) {
+        console.error(loadError);
       }
     };
     void loadChampions();
@@ -102,8 +102,8 @@ export function SoundPackEditorProvider({
           if (pack) {
             setSoundPack(pack);
           }
-        } catch (error) {
-          console.error(error);
+        } catch (loadError) {
+          console.error(loadError);
         }
       };
       void loadPack();

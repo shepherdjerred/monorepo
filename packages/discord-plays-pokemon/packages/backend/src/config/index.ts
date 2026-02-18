@@ -1,9 +1,14 @@
 import { ztomlSync } from "@d6v/zconf";
 import { ConfigSchema } from "./schema.ts";
 import path from "node:path";
-import { addErrorLinks, assertPathExists } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/util.js";
-import type { ZodError } from "zod";
-import { logger } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/logger.js";
+import { addErrorLinks, assertPathExists } from "#src/util.ts";
+import { z } from "zod";
+import { logger } from "#src/logger.ts";
+
+const ZodErrorArraySchema = z.array(z.object({
+  code: z.string(),
+  message: z.string(),
+}).passthrough());
 
 export function getConfig(file = "config.toml") {
   const configPath = path.resolve(file);
@@ -21,7 +26,8 @@ export function getConfig(file = "config.toml") {
         throw new Error("Invalid TOML configuration");
       }
       if (error.name === "ZodError") {
-        const errors = JSON.parse(error.message) as ZodError[];
+        const parsed = ZodErrorArraySchema.safeParse(JSON.parse(error.message));
+        const errors = parsed.success ? parsed.data : [];
         logger.error(
           `Your configuration at ${configPath} _is_ valid TOML, but it is not a valid configuration for this application.\nThe following problems were found:\n\n`,
           errors,

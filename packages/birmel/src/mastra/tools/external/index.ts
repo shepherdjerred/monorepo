@@ -1,4 +1,4 @@
-export { webTools, externalServiceTool } from "./web.js";
+export { webTools, externalServiceTool } from "./web.ts";
 
 import { webTools } from "./web.ts";
 

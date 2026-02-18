@@ -1,7 +1,7 @@
 import {
   getMemory,
   getChannelConversationId,
-} from "@shepherdjerred/birmel/voltagent/memory/index.js";
+} from "@shepherdjerred/birmel/voltagent/memory/index.ts";
 import { logger } from "./logger.ts";
 
 /**

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { ConfigSchema, type Config } from "./schema.ts";
 
 function parseBoolean(
@@ -18,19 +19,24 @@ function parseNumber(value: string | undefined, defaultValue: number): number {
   return Number.isNaN(parsed) ? defaultValue : parsed;
 }
 
-function parseJSON<T>(value: string | undefined, defaultValue: T): T {
+function parseJSON<T>(
+  value: string | undefined,
+  defaultValue: T,
+  schema: z.ZodType<T>,
+): T {
   if (value === undefined) {
     return defaultValue;
   }
   try {
-    return JSON.parse(value) as T;
+    const parsed: unknown = JSON.parse(value);
+    return schema.parse(parsed);
   } catch {
     return defaultValue;
   }
 }
 
-function loadConfigFromEnv(): Config {
-  const rawConfig = {
+function loadCoreConfig() {
+  return {
     discord: {
       token: Bun.env["DISCORD_TOKEN"] ?? "",
       clientId: Bun.env["DISCORD_CLIENT_ID"] ?? "",
@@ -71,6 +77,11 @@ function loadConfigFromEnv(): Config {
     logging: {
       level: Bun.env["LOG_LEVEL"] ?? "info",
     },
+  };
+}
+
+function loadFeatureConfig() {
+  return {
     sentry: {
       enabled: parseBoolean(Bun.env["SENTRY_ENABLED"], false),
       dsn: Bun.env["SENTRY_DSN"],
@@ -123,9 +134,10 @@ function loadConfigFromEnv(): Config {
     },
     activityTracking: {
       enabled: parseBoolean(Bun.env["ACTIVITY_TRACKING_ENABLED"], true),
-      roleTiers: parseJSON<{ minimumActivity: number; roleId: string }[]>(
+      roleTiers: parseJSON(
         Bun.env["ACTIVITY_ROLE_TIERS"],
         [],
+        z.array(z.object({ minimumActivity: z.number(), roleId: z.string() })),
       ),
     },
     elections: {
@@ -135,39 +147,54 @@ function loadConfigFromEnv(): Config {
       timezone: Bun.env["ELECTION_TIMEZONE"] ?? "America/Los_Angeles",
       channelId: Bun.env["ELECTION_CHANNEL_ID"],
     },
-    editor: {
-      enabled: parseBoolean(Bun.env["EDITOR_ENABLED"], false),
-      allowedRepos: parseJSON<
-        {
-          name: string;
-          repo: string;
-          allowedPaths?: string[];
-          branch?: string;
-        }[]
-      >(Bun.env["EDITOR_ALLOWED_REPOS"], []),
-      maxSessionDurationMs: parseNumber(
-        Bun.env["EDITOR_MAX_SESSION_DURATION_MS"],
-        1_800_000,
-      ),
-      maxSessionsPerUser: parseNumber(
-        Bun.env["EDITOR_MAX_SESSIONS_PER_USER"],
-        1,
-      ),
-      oauthPort: parseNumber(Bun.env["EDITOR_OAUTH_PORT"], 4112),
-      oauthHost: Bun.env["EDITOR_OAUTH_HOST"] ?? "0.0.0.0",
-      github:
-        Bun.env["EDITOR_GITHUB_CLIENT_ID"] != null &&
-        Bun.env["EDITOR_GITHUB_CLIENT_ID"].length > 0
-          ? {
-              clientId: Bun.env["EDITOR_GITHUB_CLIENT_ID"] ?? "",
-              clientSecret: Bun.env["EDITOR_GITHUB_CLIENT_SECRET"] ?? "",
-              callbackUrl: Bun.env["EDITOR_GITHUB_CALLBACK_URL"] ?? "",
-            }
-          : undefined,
-    },
+    editor: loadEditorConfig(),
   };
+}
 
-  return ConfigSchema.parse(rawConfig);
+function loadGithubConfig() {
+  const clientId = Bun.env["EDITOR_GITHUB_CLIENT_ID"];
+  if (clientId == null || clientId.length === 0) {
+    return undefined;
+  }
+  return {
+    clientId,
+    clientSecret: Bun.env["EDITOR_GITHUB_CLIENT_SECRET"] ?? "",
+    callbackUrl: Bun.env["EDITOR_GITHUB_CALLBACK_URL"] ?? "",
+  };
+}
+
+function loadEditorConfig() {
+  return {
+    enabled: parseBoolean(Bun.env["EDITOR_ENABLED"], false),
+    allowedRepos: parseJSON(
+      Bun.env["EDITOR_ALLOWED_REPOS"],
+      [],
+      z.array(z.object({
+        name: z.string(),
+        repo: z.string(),
+        allowedPaths: z.array(z.string()).optional(),
+        branch: z.string().optional(),
+      })),
+    ),
+    maxSessionDurationMs: parseNumber(
+      Bun.env["EDITOR_MAX_SESSION_DURATION_MS"],
+      1_800_000,
+    ),
+    maxSessionsPerUser: parseNumber(
+      Bun.env["EDITOR_MAX_SESSIONS_PER_USER"],
+      1,
+    ),
+    oauthPort: parseNumber(Bun.env["EDITOR_OAUTH_PORT"], 4112),
+    oauthHost: Bun.env["EDITOR_OAUTH_HOST"] ?? "0.0.0.0",
+    github: loadGithubConfig(),
+  };
+}
+
+function loadConfigFromEnv(): Config {
+  return ConfigSchema.parse({
+    ...loadCoreConfig(),
+    ...loadFeatureConfig(),
+  });
 }
 
 let cachedConfig: Config | null = null;
@@ -181,5 +208,3 @@ export function resetConfig(): void {
   cachedConfig = null;
 }
 
-export * from "./schema.js";
-export * from "./constants.js";

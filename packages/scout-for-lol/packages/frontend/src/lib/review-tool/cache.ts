@@ -167,12 +167,12 @@ export async function getCachedDataAsync(
           const validationResult = KeyedEntrySchema.safeParse(result);
           if (validationResult.success) {
             const { key: _key, ...rest } = validationResult.data;
-            const entry: CacheEntry = {
+            const cacheEntry: CacheEntry = {
               data: rest.data,
               timestamp: rest.timestamp,
               ttl: rest.ttl,
             };
-            resolve(entry);
+            resolve(cacheEntry);
           } else {
             resolve(null);
           }

@@ -7,21 +7,12 @@ export default [
   }),
   {
     rules: {
-      // Dagger CI code uses console for build output
       "no-console": "off",
-      // Dagger modules use re-exports for API surface
-      "custom-rules/no-re-exports": "off",
-      // Dagger code imports from parent lib/ directory
-      "custom-rules/no-parent-imports": "off",
-      // Dagger @func() parameters become CLI flags - many are required
-      "max-params": "off",
-      // CI orchestration files are inherently large
-      "max-lines": "off",
-      "max-lines-per-function": "off",
-      // CI orchestration has complex conditional logic
-      "complexity": "off",
-      // Dagger uses .then().catch() for parallel task execution
-      "custom-rules/prefer-async-await": "off",
     },
+  },
+  // Dagger @func() parameters become CLI flags - many are required
+  {
+    files: ["src/index.ts"],
+    rules: { "max-params": "off" },
   },
 ];

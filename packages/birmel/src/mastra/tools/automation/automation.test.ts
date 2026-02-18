@@ -13,7 +13,7 @@ import {
   manageTaskTool,
   browserAutomationTool,
 } from "./index.ts";
-import { prisma } from "@shepherdjerred/birmel/database/index.js";
+import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 // eslint-disable-next-line no-restricted-imports -- existsSync has no sync Bun equivalent
 import { existsSync } from "node:fs";
 

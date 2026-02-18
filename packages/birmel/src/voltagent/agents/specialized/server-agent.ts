@@ -1,7 +1,7 @@
 import { Agent } from "@voltagent/core";
 import { openai } from "@ai-sdk/openai";
-import { getConfig } from "@shepherdjerred/birmel/config/index.js";
-import { serverToolSet } from "@shepherdjerred/birmel/mastra/tools/tool-sets.js";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
+import { serverToolSet } from "@shepherdjerred/birmel/mastra/tools/tool-sets.ts";
 
 const config = getConfig();
 

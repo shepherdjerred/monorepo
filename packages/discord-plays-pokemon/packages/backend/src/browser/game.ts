@@ -1,16 +1,16 @@
 import type { WebDriver} from "selenium-webdriver";
 import { By, until } from "selenium-webdriver";
 import type {
-  CommandInput} from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/commandInput.js";
+  CommandInput} from "#src/game/command/command-input.ts";
 import {
   isBurst,
   isHold,
   isHoldB,
-} from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/commandInput.js";
-import { toGameboyAdvanceKeyInput } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/keybinds.js";
-import { wait } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/util.js";
-import { logger } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/logger.js";
-import { getConfig } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/config/index.js";
+} from "#src/game/command/command-input.ts";
+import { toGameboyAdvanceKeyInput } from "#src/game/command/keybinds.ts";
+import { wait } from "#src/util.ts";
+import { logger } from "#src/logger.ts";
+import { getConfig } from "#src/config/index.ts";
 
 export async function setupGame(driver: WebDriver) {
   logger.info("navigating to emulator page");

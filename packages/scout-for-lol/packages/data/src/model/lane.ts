@@ -12,6 +12,7 @@ export function parseLane(input: string): Lane | undefined {
     .with("jungle", () => "jungle")
     .with("bottom", () => "adc")
     .with("utility", () => "support")
+    // eslint-disable-next-line unicorn/no-useless-undefined -- ts-pattern otherwise requires explicit undefined for Optional return type
     .otherwise(() => undefined);
 }
 

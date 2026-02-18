@@ -19,4 +19,4 @@ export {
   setMessageHandler,
   type MessageContext,
   type MessageHandler,
-} from "./message-create.js";
+} from "./message-create.ts";

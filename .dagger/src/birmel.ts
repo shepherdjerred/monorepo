@@ -2,8 +2,8 @@ import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import {
   getBaseBunDebianContainer,
   installMonorepoWorkspaceDeps,
-} from "./lib/containers/index.ts";
-import type { WorkspaceEntry } from "./lib/containers/index.ts";
+} from "./lib-monorepo-workspace.ts";
+import type { WorkspaceEntry } from "./lib-monorepo-workspace.ts";
 
 /**
  * Birmel-specific base container with voice/build dependencies.

@@ -2,13 +2,13 @@
 export {
   routingAgent,
   createRoutingAgentWithPersona,
-} from "./routing-agent.js";
+} from "./routing-agent.ts";
 
 // System prompt
 export {
   SYSTEM_PROMPT,
   buildSystemPromptWithPersona,
-} from "./system-prompt.js";
+} from "./system-prompt.ts";
 
 // Specialized sub-agents
 export {
@@ -18,4 +18,4 @@ export {
   musicAgent,
   automationAgent,
   editorAgent,
-} from "./specialized/index.js";
+} from "./specialized/index.ts";
