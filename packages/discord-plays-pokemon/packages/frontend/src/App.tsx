@@ -1,22 +1,23 @@
-import { Notifications } from "./stories/Notifications";
-import { Notification } from "./model/Notification";
+import { Notifications } from "./stories/notifications.tsx";
+import type { Notification } from "./model/notification.tsx";
 import lodash from "lodash";
 import { useCallback, useEffect, useState } from "react";
-import { Container } from "./stories/Container";
+import { Container } from "./stories/container.tsx";
 import { P, match } from "ts-pattern";
-import { GamePage } from "./pages/GamePage";
-import { LoginPage } from "./pages/LoginPage";
+import { GamePage } from "./pages/game-page.tsx";
+import { LoginPage } from "./pages/login-page.tsx";
 import { useInterval } from "react-use";
-import { randomId, downloadScreenshot } from "./util";
-import { Connection } from "./model/Connection";
-import { socket } from "./socket";
-import {
+import { randomId, downloadScreenshot } from "./util.tsx";
+import type { Connection } from "./model/connection.tsx";
+import { socket } from "./socket.tsx";
+import type {
   CommandRequest,
   LoginRequest,
   Player,
-  ResponseSchema,
   ScreenshotRequest,
-  Status,
+  Status} from "@discord-plays-pokemon/common";
+import {
+  ResponseSchema
 } from "@discord-plays-pokemon/common";
 
 export function App() {
@@ -34,56 +35,7 @@ export function App() {
     setNotifications((prev) => [...prev, notification]);
   }, []);
 
-  useEffect(() => {
-    socket.on("connect", () => {
-      addNotification({
-        id: randomId(),
-        level: "Info",
-        title: "Connected",
-        message: "Connection established",
-      });
-      setConnection((prev) => ({
-        ...prev,
-        status: "connected",
-      }));
-    });
-
-    socket.on("disconnect", () => {
-      addNotification({
-        id: randomId(),
-        level: "Error",
-        title: "Disconnected",
-        message: "Connection lost",
-      });
-      setConnection((prev) => ({
-        ...prev,
-        status: "disconnected",
-      }));
-    });
-
-    socket.on("response", (payload) => {
-      const response = ResponseSchema.safeParse(payload);
-      if (response.success) {
-        match(response.data)
-          .with({ kind: "login" }, (response) => {
-            setPlayer(response.value);
-          })
-          .with({ kind: "status" }, (response) => {
-            setStatus(response.value);
-          })
-          .with({ kind: "screenshot" }, (response) => {
-            downloadScreenshot(response.value);
-          })
-          .exhaustive();
-      }
-    });
-
-    return () => {
-      socket.off("connect");
-      socket.off("disconnect");
-      socket.off("response");
-    };
-  }, [addNotification]);
+  ;
 
   useInterval(() => {
     const start = Date.now();

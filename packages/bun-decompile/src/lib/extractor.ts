@@ -1,5 +1,5 @@
 import { mkdir } from "node:fs/promises";
-import { basename, dirname, join, resolve, sep } from "node:path";
+import path from "node:path";
 import { ExtractionError } from "./errors.ts";
 import type {
   DecompileMetadata,
@@ -41,13 +41,13 @@ function sanitizePath(basePath: string, relativePath: string): string {
   const normalized = relativePath.replace(/^\/+/, "").replaceAll("\\", "/");
 
   // Resolve both paths to absolute paths and verify the result stays within basePath
-  const resolved = resolve(basePath, normalized);
-  const normalizedBase = resolve(basePath);
+  const resolved = path.resolve(basePath, normalized);
+  const normalizedBase = path.resolve(basePath);
 
   // Check that resolved path is within the base directory
   // Must either equal the base or start with base + separator
   if (
-    !resolved.startsWith(normalizedBase + sep) &&
+    !resolved.startsWith(normalizedBase + path.sep) &&
     resolved !== normalizedBase
   ) {
     throw new ExtractionError("Path traversal detected", relativePath);
@@ -61,7 +61,7 @@ async function writeFile(
   filePath: string,
   contents: Uint8Array,
 ): Promise<void> {
-  const dir = dirname(filePath);
+  const dir = path.dirname(filePath);
   await mkdir(dir, { recursive: true });
   await Bun.write(filePath, contents);
 }
@@ -81,7 +81,7 @@ function decodeContents(module: ModuleEntry): string | Uint8Array {
 function normalizeSourceName(name: string): string {
   // If the path contains .., just use the basename
   if (name.includes("..")) {
-    return basename(name);
+    return path.basename(name);
   }
   // Remove leading slashes
   return name.replace(/^\/+/, "");
@@ -104,9 +104,9 @@ export async function extractToDirectory(
   result: DecompileResult,
   outputDir: string,
 ): Promise<void> {
-  const bundledDir = join(outputDir, "bundled");
-  const originalDir = join(outputDir, "original");
-  const bytecodeDir = join(outputDir, "bytecode");
+  const bundledDir = path.join(outputDir, "bundled");
+  const originalDir = path.join(outputDir, "original");
+  const bytecodeDir = path.join(outputDir, "bytecode");
 
   // Find entry point
   const entryPoint = result.modules.find((m) => m.isEntryPoint);
@@ -128,7 +128,7 @@ export async function extractToDirectory(
 
   await mkdir(outputDir, { recursive: true });
   await Bun.write(
-    join(outputDir, "metadata.json"),
+    path.join(outputDir, "metadata.json"),
     JSON.stringify(metadata, null, 2),
   );
 

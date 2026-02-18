@@ -117,7 +117,7 @@ function updateReferences(
   }));
 
   // Sort names by length (longest first) to avoid partial replacements
-  const sortedNames = [...nameMap.entries()].sort(
+  const sortedNames = [...nameMap.entries()].toSorted(
     (a, b) => b[0].length - a[0].length,
   );
 
@@ -283,7 +283,7 @@ export function createChangeSummary(
     lines.push("## Function Renames");
     lines.push("| Original | Suggested | Confidence |");
     lines.push("|----------|-----------|------------|");
-    for (const change of nameChanges.sort(
+    for (const change of nameChanges.toSorted(
       (a, b) => b.confidence - a.confidence,
     )) {
       lines.push(

@@ -282,6 +282,6 @@ export function createZfsDashboard() {
  * Exports the dashboard as JSON string for use in ConfigMaps or API calls
  */
 export function exportZfsDashboardJson(): string {
-  const dashboard = createZfsDashboard();
-  return exportDashboardWithHelmEscaping(dashboard);
+  const dashboardModel = createZfsDashboard();
+  return exportDashboardWithHelmEscaping(dashboardModel);
 }

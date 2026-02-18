@@ -155,7 +155,8 @@ export async function stopShareScreen(driver: WebDriver) {
 
 export async function disconnect(driver: WebDriver) {
   logger.info("trying to disconnect");
-  await driver.switchTo().window((await driver.getAllWindowHandles())[0]);
+  const windowHandles = await driver.getAllWindowHandles();
+  await driver.switchTo().window(windowHandles[0]);
   const disconnectSelector = 'button[aria-label="Disconnect"]';
   const disconnectButton = await driver.wait(
     until.elementLocated(By.css(disconnectSelector)),

@@ -11,7 +11,7 @@ import {
   isStart,
 } from "./command.ts";
 import { parseChord } from "./chord.ts";
-import type { CommandInput } from "./commandInput.ts";
+import type { CommandInput } from "./command-input.ts";
 import { Key } from "selenium-webdriver";
 
 export type KeyInput = string;
@@ -41,5 +41,5 @@ export function commandToGameboyAdvanceKeyInput(
 export function parseGameboyAdvanceKeyInput(
   input: string,
 ): KeyInput[] | undefined {
-  return parseChord(input)?.flatMap(commandToGameboyAdvanceKeyInput);
+  return parseChord(input)?.flatMap((cmd) => commandToGameboyAdvanceKeyInput(cmd));
 }

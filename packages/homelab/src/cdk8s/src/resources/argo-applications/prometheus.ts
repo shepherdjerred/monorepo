@@ -76,8 +76,8 @@ export async function createPrometheusApp(chart: Chart) {
   createKubernetesEventExporter(chart);
 
   // Type extension for blackbox-exporter subchart (not included in generated types)
-  type PrometheusValuesWithBlackbox =
-    HelmValuesForChart<"kube-prometheus-stack"> & {
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents -- HelmValuesForChart resolves to error type from generated code
+  type PrometheusValuesWithBlackbox = HelmValuesForChart<"kube-prometheus-stack"> & {
       "prometheus-blackbox-exporter"?: {
         enabled?: boolean;
         config?: {

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { Video } from "./video.ts";
 
 export type Commentary = {
@@ -13,7 +14,8 @@ export type Commentary = {
   type: string;
 } & Video;
 
+const CommentaryDiscriminantSchema = z.object({ matchLink: z.unknown() });
+
 export function isCommentary(item: unknown): boolean {
-  // eslint-disable-next-line custom-rules/prefer-zod-validation -- simple discriminant check for stored bookmark type
-  return typeof item === "object" && item !== null && "matchLink" in item;
+  return CommentaryDiscriminantSchema.safeParse(item).success;
 }

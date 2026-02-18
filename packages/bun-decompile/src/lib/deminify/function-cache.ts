@@ -5,7 +5,7 @@
 
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile, readdir } from "node:fs/promises";
-import { join } from "node:path";
+import path from "node:path";
 import type { FunctionRenameMapping } from "./babel-renamer.ts";
 
 /** Cached rename result */
@@ -56,7 +56,7 @@ export class FunctionCache {
 
   /** Get cache file path for a hash */
   private getCachePath(hash: string): string {
-    return join(this.cacheDir, `${hash}.json`);
+    return path.join(this.cacheDir, `${hash}.json`);
   }
 
   /** Check if a result is cached (in memory or on disk) */
@@ -68,8 +68,8 @@ export class FunctionCache {
 
     // Check disk cache
     try {
-      const path = this.getCachePath(hash);
-      await readFile(path);
+      const cachePath = this.getCachePath(hash);
+      await readFile(cachePath);
       return true;
     } catch {
       return false;
@@ -86,8 +86,9 @@ export class FunctionCache {
 
     // Check disk cache
     try {
-      const path = this.getCachePath(hash);
-      const content = await readFile(path, "utf-8");
+      const cachePath = this.getCachePath(hash);
+      const content = await readFile(cachePath, "utf8");
+      // eslint-disable-next-line custom-rules/no-type-assertions -- JSON.parse returns unknown, CachedRenameResult is trusted
       const result = JSON.parse(content) as CachedRenameResult;
 
       // Cache in memory for faster subsequent access
@@ -113,8 +114,8 @@ export class FunctionCache {
 
     // Store on disk
     await this.init();
-    const path = this.getCachePath(hash);
-    await writeFile(path, JSON.stringify(result, null, 2));
+    const cachePath = this.getCachePath(hash);
+    await writeFile(cachePath, JSON.stringify(result, null, 2));
   }
 
   /** Get multiple cached results at once */

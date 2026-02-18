@@ -18,6 +18,16 @@ export default [
       "no-secrets/no-secrets": "off",
     },
   },
+  // Grafana dashboard builders have inherent complexity from dashboard definitions
+  {
+    files: ["src/cdk8s/grafana/**/*.ts"],
+    rules: {
+      "max-lines": ["error", { max: 800, skipBlankLines: false, skipComments: false }],
+      "max-lines-per-function": ["error", { max: 600, skipBlankLines: true, skipComments: true }],
+      "max-params": ["error", { max: 8 }],
+      "max-depth": ["error", { max: 6 }],
+    },
+  },
   // Home Assistant workflows use @digital-alchemy/core which has untyped APIs
   {
     files: ["src/ha/**/*.ts", "src/ha/**/*.mts"],
@@ -34,6 +44,36 @@ export default [
     files: ["src/ha/src/workflows/**/*.ts"],
     rules: {
       "@typescript-eslint/strict-boolean-expressions": "off",
+    },
+  },
+  // Barrel/index files that re-export public API surface
+  {
+    files: [
+      "**/index.ts",
+      "src/helm-types/src/helm-types.ts",
+    ],
+    rules: {
+      "custom-rules/no-re-exports": "off",
+    },
+  },
+  // helm-types is a complex YAML/regex parser — needs relaxed structural limits
+  {
+    files: ["src/helm-types/**/*.ts"],
+    rules: {
+      complexity: ["error", { max: 50 }],
+      "max-depth": ["error", { max: 6 }],
+      "max-lines": ["error", { max: 800, skipBlankLines: false, skipComments: false }],
+      "max-lines-per-function": ["error", { max: 500, skipBlankLines: true, skipComments: true }],
+      "max-params": ["error", { max: 6 }],
+    },
+  },
+  // deps-email has complex chart parsing and email formatting logic
+  {
+    files: ["src/deps-email/**/*.ts"],
+    rules: {
+      "max-depth": ["error", { max: 6 }],
+      "max-params": ["error", { max: 6 }],
+      "max-lines": ["error", { max: 600, skipBlankLines: false, skipComments: false }],
     },
   },
   {

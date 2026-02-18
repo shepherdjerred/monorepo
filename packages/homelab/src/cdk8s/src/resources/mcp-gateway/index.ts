@@ -12,21 +12,21 @@ import {
   Volume,
 } from "cdk8s-plus-31";
 import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import path from "node:path";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);
-const CURRENT_DIRNAME = dirname(CURRENT_FILENAME);
+const CURRENT_DIRNAME = path.dirname(CURRENT_FILENAME);
 
 export async function createMcpGatewayDeployment(chart: Chart) {
   const UID = 65_534;
   const GID = 65_534;
 
   // Load the mcp-proxy configuration from file
-  const configPath = join(CURRENT_DIRNAME, "config.json");
+  const configPath = path.join(CURRENT_DIRNAME, "config.json");
   const configContent = await Bun.file(configPath).text();
 
   // Create ConfigMap for mcp-proxy configuration

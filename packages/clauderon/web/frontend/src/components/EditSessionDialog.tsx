@@ -36,8 +36,8 @@ export function EditSessionDialog({
       await updateSession(session.id, formData.title, formData.description);
       toast.success("Session updated successfully");
       onClose();
-    } catch (error_) {
-      const errorMsg = error_ instanceof Error ? error_.message : String(error_);
+    } catch (caughtError) {
+      const errorMsg = caughtError instanceof Error ? caughtError.message : String(caughtError);
       setError(errorMsg);
       toast.error(`Failed to update session: ${errorMsg}`);
     } finally {
@@ -57,8 +57,8 @@ export function EditSessionDialog({
       .then(() => {
         toast.success("Session metadata regenerated");
       })
-      .catch((error_: unknown) => {
-        const errorMsg = error_ instanceof Error ? error_.message : String(error_);
+      .catch((caughtError: unknown) => {
+        const errorMsg = caughtError instanceof Error ? caughtError.message : String(caughtError);
         toast.error(`Failed to regenerate metadata: ${errorMsg}`);
       });
   };

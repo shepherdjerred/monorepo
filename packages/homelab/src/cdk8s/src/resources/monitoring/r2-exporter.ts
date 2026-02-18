@@ -10,17 +10,17 @@ import {
   Volume,
 } from "cdk8s-plus-31";
 import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import path from "node:path";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);
-const CURRENT_DIRNAME = dirname(CURRENT_FILENAME);
+const CURRENT_DIRNAME = path.dirname(CURRENT_FILENAME);
 
 export async function createR2ExporterMonitoring(chart: Chart) {
   // Load the exporter script content from file
-  const scriptPath = join(CURRENT_DIRNAME, "scripts", "r2_exporter.py");
+  const scriptPath = path.join(CURRENT_DIRNAME, "scripts", "r2_exporter.py");
   let scriptContent = await Bun.file(scriptPath).text();
 
   // Escape double curly braces for Helm compatibility

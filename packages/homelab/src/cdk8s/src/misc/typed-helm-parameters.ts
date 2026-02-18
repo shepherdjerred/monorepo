@@ -34,25 +34,22 @@ export function valuesToParameters(
       // Convert values to strings with proper handling
       let stringValue: string;
       const arrayParseResult = ArraySchema.safeParse(value);
-      const objectParseResult = z
+      const nestedObjectResult = z
         .record(z.string(), z.unknown())
         .safeParse(value);
 
       if (arrayParseResult.success) {
         stringValue = JSON.stringify(arrayParseResult.data);
-      } else if (objectParseResult.success) {
-        stringValue = JSON.stringify(objectParseResult.data);
+      } else if (nestedObjectResult.success) {
+        stringValue = JSON.stringify(nestedObjectResult.data);
       } else {
         // Handle primitive values - at this point it should be string, number, boolean
         const PrimitiveSchema = z.union([z.string(), z.number(), z.boolean()]);
         const primitiveResult = PrimitiveSchema.safeParse(value);
 
-        if (primitiveResult.success) {
-          stringValue = String(primitiveResult.data);
-        } else {
-          // Fallback for any other types (should be rare)
-          stringValue = JSON.stringify(value);
-        }
+        stringValue = primitiveResult.success
+          ? String(primitiveResult.data)
+          : JSON.stringify(value);
       }
       parameters.push({
         name: fullKey,

@@ -8,7 +8,7 @@ import { FunctionCache } from "./function-cache.ts";
 import { buildCallGraph } from "./call-graph.ts";
 import type { DeminifyConfig } from "./types.ts";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import path from "node:path";
 
 // Sample minified code with call dependencies
 const sampleSource = `
@@ -42,7 +42,7 @@ describe("BatchProcessor integration", () => {
       model: "claude-sonnet-4-20250514",
       maxTokens: 4096,
       cacheEnabled: true,
-      cacheDir: join(tmpdir(), `bun-decompile-test-${String(Date.now())}`),
+      cacheDir: path.join(tmpdir(), `bun-decompile-test-${String(Date.now())}`),
       concurrency: 1,
       rateLimit: 10,
       verbose: false,
@@ -105,7 +105,7 @@ describe("BatchProcessor integration", () => {
       model: "claude-sonnet-4-20250514",
       maxTokens: 4096,
       cacheEnabled: true,
-      cacheDir: join(tmpdir(), `bun-decompile-test-${String(Date.now())}`),
+      cacheDir: path.join(tmpdir(), `bun-decompile-test-${String(Date.now())}`),
       concurrency: 1,
       rateLimit: 10,
       verbose: false,

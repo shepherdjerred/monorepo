@@ -2,8 +2,8 @@ import type { Message, VoiceChannel} from "discord.js";
 import { Events, channelMention } from "discord.js";
 import { parseChord, type Chord } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/chord.js";
 import client from "./client.ts";
-import { execute } from "./chordExecutor.ts";
-import { isValid } from "./chordValidator.ts";
+import { execute } from "./chord-executor.ts";
+import { isValid } from "./chord-validator.ts";
 import type { CommandInput } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/commandInput.js";
 import { logger } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/logger.js";
 import { getConfig } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/config/index.js";
@@ -17,7 +17,7 @@ export function handleMessages(
   client.on(Events.MessageCreate, (event) => {
     void (async () => {
       try {
-        return handleMessage(event, fn);
+        await handleMessage(event, fn); return;
       } catch (error) {
         logger.info(error);
       }

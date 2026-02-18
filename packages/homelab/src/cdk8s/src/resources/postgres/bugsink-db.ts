@@ -65,7 +65,7 @@ export function createBugsinkPostgreSQLDatabase(chart: Chart) {
       },
       patroni: {
         initdb: {
-          encoding: "UTF8",
+          encoding: "utf8",
           locale: "en_US.utf8",
           "data-checksums": "true",
         },

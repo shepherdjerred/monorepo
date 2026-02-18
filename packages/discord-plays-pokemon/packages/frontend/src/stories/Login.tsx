@@ -1,6 +1,7 @@
-import { Button } from "./Button";
-import { Card } from "./Card";
-import { SyntheticEvent, useState } from "react";
+import { Button } from "./button.tsx";
+import { Card } from "./card.tsx";
+import type { SyntheticEvent} from "react";
+import { useState } from "react";
 
 export function Login({
   handleLogin,
@@ -41,7 +42,7 @@ export function Login({
               onInput={handleInput}
             />
           </div>
-          <Button onClick={() => handleLogin(token)}>Login</Button>
+          <Button onClick={() => { handleLogin(token); }}>Login</Button>
         </div>
       </div>
     </Card>

@@ -75,16 +75,19 @@ export async function handleCreatePoll(options: {
     message.poll != null &&
     client.user != null
   ) {
+    const guildId = message.guildId;
+    const pollId = message.poll.question.text ?? "";
+    const createdBy = client.user.id;
     void (async () => {
       try {
         await prisma.pollRecord.create({
           data: {
-            guildId: message.guildId,
+            guildId,
             channelId,
             messageId: message.id,
-            pollId: message.poll.question.text ?? "",
+            pollId,
             question,
-            createdBy: client.user.id,
+            createdBy,
             expiresAt,
           },
         });

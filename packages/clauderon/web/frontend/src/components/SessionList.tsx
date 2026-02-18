@@ -178,9 +178,9 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
       .then(() => {
         toast.success(`Pull request for "${session.name}" merged successfully`);
       })
-      .catch((error_: unknown) => {
+      .catch((caughtError: unknown) => {
         toast.error(
-          `Failed to merge PR: ${error_ instanceof Error ? error_.message : String(error_)}`,
+          `Failed to merge PR: ${caughtError instanceof Error ? caughtError.message : String(caughtError)}`,
         );
       });
   };
@@ -196,9 +196,9 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
           .then(() => {
             toast.success(`Session "${confirmDialog.session.name}" archived`);
           })
-          .catch((error_: unknown) => {
+          .catch((caughtError: unknown) => {
             toast.error(
-              `Failed to archive: ${error_ instanceof Error ? error_.message : String(error_)}`,
+              `Failed to archive: ${caughtError instanceof Error ? caughtError.message : String(caughtError)}`,
             );
           });
 
@@ -211,9 +211,9 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
               `Session "${confirmDialog.session.name}" restored from archive`,
             );
           })
-          .catch((error_: unknown) => {
+          .catch((caughtError: unknown) => {
             toast.error(
-              `Failed to unarchive: ${error_ instanceof Error ? error_.message : String(error_)}`,
+              `Failed to unarchive: ${caughtError instanceof Error ? caughtError.message : String(caughtError)}`,
             );
           });
 
@@ -226,9 +226,9 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
               `Session "${confirmDialog.session.name}" is being refreshed`,
             );
           })
-          .catch((error_: unknown) => {
+          .catch((caughtError: unknown) => {
             toast.error(
-              `Failed to refresh: ${error_ instanceof Error ? error_.message : String(error_)}`,
+              `Failed to refresh: ${caughtError instanceof Error ? caughtError.message : String(caughtError)}`,
             );
           });
 
@@ -239,9 +239,9 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
           .then(() => {
             toast.info(`Deleting session "${confirmDialog.session.name}"...`);
           })
-          .catch((error_: unknown) => {
+          .catch((caughtError: unknown) => {
             toast.error(
-              `Failed to delete: ${error_ instanceof Error ? error_.message : String(error_)}`,
+              `Failed to delete: ${caughtError instanceof Error ? caughtError.message : String(caughtError)}`,
             );
           });
       }

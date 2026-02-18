@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- deminification orchestrator with multiple processing modes */
 import { DeminifyCache, shouldCache, hashSource } from "./cache.ts";
 import {
   buildCallGraph,

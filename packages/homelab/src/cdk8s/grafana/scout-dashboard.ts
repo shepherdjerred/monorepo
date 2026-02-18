@@ -387,6 +387,6 @@ export function createScoutDashboard() {
  * Uses Helm-escaped Grafana template variables for compatibility
  */
 export function exportScoutDashboardJson(): string {
-  const dashboard = createScoutDashboard();
-  return exportDashboardWithHelmEscaping(dashboard);
+  const dashboardModel = createScoutDashboard();
+  return exportDashboardWithHelmEscaping(dashboardModel);
 }

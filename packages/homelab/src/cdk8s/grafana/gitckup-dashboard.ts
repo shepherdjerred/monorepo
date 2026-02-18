@@ -461,6 +461,6 @@ export function createGitckupDashboard() {
  * Exports the dashboard as JSON string for use in ConfigMaps or API calls
  */
 export function exportGitckupDashboardJson(): string {
-  const dashboard = createGitckupDashboard();
-  return exportDashboardWithHelmEscaping(dashboard);
+  const dashboardModel = createGitckupDashboard();
+  return exportDashboardWithHelmEscaping(dashboardModel);
 }

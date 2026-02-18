@@ -527,6 +527,6 @@ export function createSmartctlDashboard() {
  * Exports the dashboard as JSON string for use in ConfigMaps or API calls
  */
 export function exportSmartctlDashboardJson(): string {
-  const dashboard = createSmartctlDashboard();
-  return exportDashboardWithHelmEscaping(dashboard);
+  const dashboardModel = createSmartctlDashboard();
+  return exportDashboardWithHelmEscaping(dashboardModel);
 }

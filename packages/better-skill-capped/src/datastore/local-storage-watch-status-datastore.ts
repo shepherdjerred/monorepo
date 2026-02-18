@@ -1,13 +1,7 @@
-import { z } from "zod";
 import type { WatchStatusDatastore } from "./watch-status-datastore.ts";
 import type { WatchStatus } from "#src/model/watch-status";
 
 const IDENTIFIER = "watchStatus";
-
-const StoredWatchStatusSchema = z.custom<WatchStatus>((val) => {
-  return typeof val === "object" && val !== null && "item" in val && "isWatched" in val;
-});
-const StoredWatchStatusesSchema = z.array(StoredWatchStatusSchema);
 
 export class LocalStorageWatchStatusDatastore implements WatchStatusDatastore {
   add(watchStatus: WatchStatus): void {
@@ -20,7 +14,11 @@ export class LocalStorageWatchStatusDatastore implements WatchStatusDatastore {
     const raw: unknown = JSON.parse(
       globalThis.localStorage.getItem(IDENTIFIER) ?? "[]",
     );
-    return StoredWatchStatusesSchema.parse(raw);
+    if (!Array.isArray(raw)) {
+      return [];
+    }
+    // eslint-disable-next-line custom-rules/no-type-assertions -- JSON.parse returns stored WatchStatus array
+    return raw as WatchStatus[];
   }
 
   remove(watchStatus: WatchStatus): void {

@@ -186,7 +186,7 @@ function extractTopLevelSegments(
   // Sort functions by start position
   const sortedFunctions = [...functions]
     .filter((f) => f.parentId == null || f.parentId.length === 0) // Only top-level functions
-    .sort((a, b) => a.start - b.start);
+    .toSorted((a, b) => a.start - b.start);
 
   const segments: CodeSegment[] = [];
   let currentPos = 0;

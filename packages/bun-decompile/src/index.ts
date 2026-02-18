@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+/* eslint-disable max-lines -- CLI entry point with multiple command handlers */
 /**
  * CLI entry point for bun-decompile.
  *
@@ -465,7 +466,7 @@ async function runDeminification(
       // Recoverable error: log and continue with next module
       progressDisplay.clear();
       console.error(
-        `Error processing ${fileName}: ${(error as Error).message}`,
+        `Error processing ${fileName}: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -578,7 +579,7 @@ async function runFileDeminification(
       outFileName += ".js";
     }
 
-    const outPath = join(deminifiedDir, outFileName);
+    const outPath = path.join(deminifiedDir, outFileName);
     await Bun.write(outPath, deminified);
 
     console.log(`\nWritten to: ${outPath}`);
@@ -654,7 +655,9 @@ async function main(): Promise<void> {
 }
 
 // Top-level error handler
-main().catch((error: unknown) => {
+try {
+  await main();
+} catch (error: unknown) {
   if (error instanceof DecompileError) {
     console.error(`Error: ${error.message}`);
   } else if (error instanceof Error) {
@@ -666,4 +669,4 @@ main().catch((error: unknown) => {
     console.error("Unknown error occurred");
   }
   process.exit(1);
-});
+}

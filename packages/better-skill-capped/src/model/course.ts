@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { Role } from "./role.ts";
 import type { CourseVideo } from "./course-video.ts";
 
@@ -11,7 +12,8 @@ export type Course = {
   videos: CourseVideo[];
 };
 
+const CourseDiscriminantSchema = z.object({ videos: z.unknown() });
+
 export function isCourse(item: unknown): boolean {
-  // eslint-disable-next-line custom-rules/prefer-zod-validation -- simple discriminant check for stored bookmark type
-  return typeof item === "object" && item !== null && "videos" in item;
+  return CourseDiscriminantSchema.safeParse(item).success;
 }

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { Role } from "./role.ts";
 import { isCommentary } from "./commentary.ts";
 
@@ -12,7 +13,8 @@ export type Video = {
   skillCappedUrl: string;
 };
 
+const VideoDiscriminantSchema = z.object({ skillCappedUrl: z.unknown() });
+
 export function isVideo(item: unknown): boolean {
-  // eslint-disable-next-line custom-rules/prefer-zod-validation -- simple discriminant check for stored bookmark type
-  return typeof item === "object" && item !== null && "skillCappedUrl" in item && !isCommentary(item);
+  return VideoDiscriminantSchema.safeParse(item).success && !isCommentary(item);
 }

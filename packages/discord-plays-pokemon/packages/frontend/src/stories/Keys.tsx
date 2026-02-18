@@ -1,6 +1,6 @@
-import { KeyboardKey } from "@discord-plays-pokemon/common";
-import { Card } from "./Card";
-import { Key } from "./Key";
+import type { KeyboardKey } from "@discord-plays-pokemon/common";
+import { Card } from "./card.tsx";
+import { Key } from "./key.tsx";
 import lodash from "lodash";
 
 export function Keys({ onKeyDown }: { onKeyDown: (key: string) => void }) {
@@ -17,7 +17,7 @@ export function Keys({ onKeyDown }: { onKeyDown: (key: string) => void }) {
   const keyElements = lodash.map(keys, (key) => {
     return (
       <div key={key.key}>
-        <Key keyboardKey={key} onKeyDown={() => onKeyDown(key.api)} />
+        <Key keyboardKey={key} onKeyDown={() => { onKeyDown(key.api); }} />
       </div>
     );
   });

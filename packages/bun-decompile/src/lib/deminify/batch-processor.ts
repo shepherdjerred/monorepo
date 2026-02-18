@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- batch processor with multiple processing strategies */
 /**
  * Batch processor for bottom-up de-minification.
  *
@@ -19,7 +20,7 @@
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { appendFile, mkdir } from "node:fs/promises";
-import { join } from "node:path";
+import path from "node:path";
 import {
   applyRenames,
   extractIdentifiers,
@@ -113,8 +114,8 @@ export class BatchProcessor {
   /**
    * Set log file path for raw request/response logging.
    */
-  setLogFile(path: string): void {
-    this.logFile = path;
+  setLogFile(logPath: string): void {
+    this.logFile = logPath;
   }
 
   /**
@@ -141,7 +142,7 @@ export class BatchProcessor {
     }
 
     try {
-      const logDir = join(this.logFile, "..");
+      const logDir = path.join(this.logFile, "..");
       await mkdir(logDir, { recursive: true });
 
       const separator = "\n" + "=".repeat(80) + "\n";
@@ -350,7 +351,7 @@ export class BatchProcessor {
     }
 
     // Sort by depth (ascending = leaves first)
-    return functions.sort((a, b) => {
+    return functions.toSorted((a, b) => {
       const depthA = depths.get(a.id) ?? 0;
       const depthB = depths.get(b.id) ?? 0;
       return depthA - depthB;
