@@ -104,4 +104,4 @@ export {
 } from "./types";
 
 // Version management
-export { versions, type Versions } from "./versions";
+export { versions, caddyVersionOnly, type Versions } from "./versions";

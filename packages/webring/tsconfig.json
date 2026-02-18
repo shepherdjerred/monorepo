@@ -9,5 +9,5 @@
     "declarationMap": true,
     "sourceMap": true
   },
-  "include": ["src", "vitest.config.mts", "eslint.config.ts"]
+  "include": ["src", "vitest.config.mts"]
 }

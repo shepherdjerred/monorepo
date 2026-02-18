@@ -4,7 +4,13 @@
  * Uses ESLint JSON output to find exact locations, then applies ts-morph fixes.
  * Also fixes no-unnecessary-condition from optional chains after null checks.
  */
-import { Project, Node, SyntaxKind, type Type, type SourceFile } from "ts-morph";
+import {
+  Project,
+  Node,
+  SyntaxKind,
+  type Type,
+  type SourceFile,
+} from "ts-morph";
 import * as path from "node:path";
 import { $ } from "bun";
 
@@ -25,8 +31,10 @@ type EslintResult = {
 function isNullableString(type: Type): boolean {
   if (type.isUnion()) {
     const types = type.getUnionTypes();
-    return types.some(t => t.isString() || t.isStringLiteral()) &&
-           types.some(t => t.isNull() || t.isUndefined());
+    return (
+      types.some((t) => t.isString() || t.isStringLiteral()) &&
+      types.some((t) => t.isNull() || t.isUndefined())
+    );
   }
   return false;
 }
@@ -34,8 +42,10 @@ function isNullableString(type: Type): boolean {
 function isNullableBoolean(type: Type): boolean {
   if (type.isUnion()) {
     const types = type.getUnionTypes();
-    return types.some(t => t.isBoolean() || t.isBooleanLiteral()) &&
-           types.some(t => t.isNull() || t.isUndefined());
+    return (
+      types.some((t) => t.isBoolean() || t.isBooleanLiteral()) &&
+      types.some((t) => t.isNull() || t.isUndefined())
+    );
   }
   return false;
 }
@@ -43,15 +53,17 @@ function isNullableBoolean(type: Type): boolean {
 function isNullableNumber(type: Type): boolean {
   if (type.isUnion()) {
     const types = type.getUnionTypes();
-    return types.some(t => t.isNumber() || t.isNumberLiteral()) &&
-           types.some(t => t.isNull() || t.isUndefined());
+    return (
+      types.some((t) => t.isNumber() || t.isNumberLiteral()) &&
+      types.some((t) => t.isNull() || t.isUndefined())
+    );
   }
   return false;
 }
 
 function isNullable(type: Type): boolean {
   if (type.isUnion()) {
-    return type.getUnionTypes().some(t => t.isNull() || t.isUndefined());
+    return type.getUnionTypes().some((t) => t.isNull() || t.isUndefined());
   }
   return false;
 }
@@ -61,7 +73,14 @@ function fixExpression(node: Node, negated: boolean): boolean {
   const text = node.getText();
 
   // Skip if already a comparison
-  if (text.includes("!=") || text.includes("==") || text.includes("===") || text.includes("!==") || text.includes(" > ") || text.includes(" < ")) {
+  if (
+    text.includes("!=") ||
+    text.includes("==") ||
+    text.includes("===") ||
+    text.includes("!==") ||
+    text.includes(" > ") ||
+    text.includes(" < ")
+  ) {
     return false;
   }
 
@@ -104,12 +123,24 @@ function fixExpression(node: Node, negated: boolean): boolean {
   return false;
 }
 
-function findNodeAtPosition(sourceFile: SourceFile, line: number, col: number): Node | undefined {
-  const pos = sourceFile.compilerNode.getPositionOfLineAndCharacter(line - 1, col - 1);
+function findNodeAtPosition(
+  sourceFile: SourceFile,
+  line: number,
+  col: number,
+): Node | undefined {
+  const pos = sourceFile.compilerNode.getPositionOfLineAndCharacter(
+    line - 1,
+    col - 1,
+  );
   return sourceFile.getDescendantAtPos(pos);
 }
 
-function fixStrictBooleanAtLocation(sourceFile: SourceFile, line: number, col: number, message: string): boolean {
+function fixStrictBooleanAtLocation(
+  sourceFile: SourceFile,
+  line: number,
+  col: number,
+  message: string,
+): boolean {
   const node = findNodeAtPosition(sourceFile, line, col);
   if (!node) return false;
 
@@ -118,7 +149,11 @@ function fixStrictBooleanAtLocation(sourceFile: SourceFile, line: number, col: n
 
   // If we're in a PrefixUnaryExpression (! operator), handle negation
   const parent = expr.getParent();
-  if (parent && Node.isPrefixUnaryExpression(parent) && parent.getOperatorToken() === SyntaxKind.ExclamationToken) {
+  if (
+    parent &&
+    Node.isPrefixUnaryExpression(parent) &&
+    parent.getOperatorToken() === SyntaxKind.ExclamationToken
+  ) {
     // The negated operand is the expression to fix
     return fixExpression(expr, true);
   }
@@ -126,13 +161,22 @@ function fixStrictBooleanAtLocation(sourceFile: SourceFile, line: number, col: n
   return fixExpression(expr, false);
 }
 
-function fixUnnecessaryOptionalChain(sourceFile: SourceFile, line: number, col: number): boolean {
+function fixUnnecessaryOptionalChain(
+  sourceFile: SourceFile,
+  line: number,
+  col: number,
+): boolean {
   const node = findNodeAtPosition(sourceFile, line, col);
   if (!node) return false;
 
   // Find the parent optional chain expression
   let current: Node | undefined = node;
-  while (current && !Node.isPropertyAccessExpression(current) && !Node.isElementAccessExpression(current) && !Node.isCallExpression(current)) {
+  while (
+    current &&
+    !Node.isPropertyAccessExpression(current) &&
+    !Node.isElementAccessExpression(current) &&
+    !Node.isCallExpression(current)
+  ) {
     current = current.getParent();
   }
 
@@ -153,15 +197,19 @@ async function processPackage(pkgPath: string): Promise<number> {
   console.log(`\nProcessing ${pkgPath}...`);
 
   // Get ESLint output
-  const result = await $`cd ${path.join(ROOT, pkgPath)} && bunx eslint . --format json`.quiet().nothrow();
+  const result =
+    await $`cd ${path.join(ROOT, pkgPath)} && bunx eslint . --format json`
+      .quiet()
+      .nothrow();
   const eslintOutput = JSON.parse(result.stdout.toString()) as EslintResult[];
 
   // Collect issues by file
   const issuesByFile = new Map<string, EslintMessage[]>();
   for (const file of eslintOutput) {
-    const relevant = file.messages.filter(m =>
-      m.ruleId === "@typescript-eslint/strict-boolean-expressions" ||
-      m.ruleId === "@typescript-eslint/no-unnecessary-condition"
+    const relevant = file.messages.filter(
+      (m) =>
+        m.ruleId === "@typescript-eslint/strict-boolean-expressions" ||
+        m.ruleId === "@typescript-eslint/no-unnecessary-condition",
     );
     if (relevant.length > 0) {
       issuesByFile.set(file.filePath, relevant);
@@ -173,7 +221,9 @@ async function processPackage(pkgPath: string): Promise<number> {
     return 0;
   }
 
-  console.log(`  Found ${Array.from(issuesByFile.values()).reduce((sum, msgs) => sum + msgs.length, 0)} issues in ${issuesByFile.size} files`);
+  console.log(
+    `  Found ${Array.from(issuesByFile.values()).reduce((sum, msgs) => sum + msgs.length, 0)} issues in ${issuesByFile.size} files`,
+  );
 
   const tsconfigPath = path.join(ROOT, pkgPath, "tsconfig.json");
   const project = new Project({
@@ -191,13 +241,20 @@ async function processPackage(pkgPath: string): Promise<number> {
     }
 
     // Process in reverse order (bottom to top) to avoid position invalidation
-    const sortedMessages = [...messages].sort((a, b) => b.line - a.line || b.column - a.column);
+    const sortedMessages = [...messages].sort(
+      (a, b) => b.line - a.line || b.column - a.column,
+    );
 
     let fileFixes = 0;
     for (const msg of sortedMessages) {
       let fixed = false;
       if (msg.ruleId === "@typescript-eslint/strict-boolean-expressions") {
-        fixed = fixStrictBooleanAtLocation(sourceFile, msg.line, msg.column, msg.message);
+        fixed = fixStrictBooleanAtLocation(
+          sourceFile,
+          msg.line,
+          msg.column,
+          msg.message,
+        );
       } else if (msg.ruleId === "@typescript-eslint/no-unnecessary-condition") {
         fixed = fixUnnecessaryOptionalChain(sourceFile, msg.line, msg.column);
       }

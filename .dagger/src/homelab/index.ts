@@ -26,7 +26,7 @@ import { sync as argocdSync } from "./argocd.js";
 import { buildAndPushDependencySummaryImage } from "./dependency-summary.js";
 import { buildAndPushDnsAuditImage } from "./dns-audit.js";
 import { buildAndPushCaddyS3ProxyImage } from "./caddy-s3proxy.js";
-import { buildAllCharts, HELM_CHARTS, publishAllCharts } from "./helm.js";
+import { buildAllCharts, HELM_CHARTS } from "./helm.js";
 import { Stage } from "./stage.js";
 import versions from "./versions.js";
 import { planAll } from "./tofu.js";

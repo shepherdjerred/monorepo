@@ -1,6 +1,11 @@
 import type { Secret, Directory, Container, File } from "@dagger.io/dagger";
 import { dag, object, func } from "@dagger.io/dagger";
-import { commitVersionsBack, syncToS3 } from "./lib/containers/index.js";
+import {
+  commitVersionsBack,
+  syncToS3,
+  getReleasePleaseContainer as getLibReleasePleaseContainer,
+} from "./lib/containers/index.js";
+import versions from "./lib/versions.js";
 import {
   checkBirmel,
   buildBirmelImage,
@@ -21,10 +26,7 @@ import {
 } from "./better-skill-capped.js";
 import { checkSjerRed, deploySjerRed } from "./sjer-red.js";
 import { checkCastleCasters } from "./castle-casters.js";
-import {
-  checkMacosCrossCompiler,
-  deployMacosCrossCompiler,
-} from "./macos-cross-compiler.js";
+import { checkMacosCrossCompiler } from "./macos-cross-compiler.js";
 import {
   checkDiscordPlaysPokemon,
   deployDiscordPlaysPokemon,
@@ -47,16 +49,13 @@ const PACKAGES = [
 ] as const;
 const REPO_URL = "shepherdjerred/monorepo";
 
-const BUN_VERSION = "1.3.6";
-const PLAYWRIGHT_VERSION = "1.57.0";
-// Pin release-please version for reproducible builds
-const RELEASE_PLEASE_VERSION = "17.1.3";
-// Rust version for clauderon
-const RUST_VERSION = "1.85";
+const BUN_VERSION = versions.bun;
+const PLAYWRIGHT_VERSION = versions.playwright;
+const RELEASE_PLEASE_VERSION = versions["release-please"];
+const RUST_VERSION = versions.rust;
+const SCCACHE_VERSION = versions.sccache;
 // LaTeX image for resume builds
 const LATEX_IMAGE = "blang/latex:ubuntu";
-// sccache version for Rust compilation caching
-const SCCACHE_VERSION = "0.9.1";
 
 // Cross-compilation targets for clauderon binary
 const CLAUDERON_TARGETS = [
@@ -500,41 +499,6 @@ function getCrossCompileContainer(
 }
 
 /**
- * Build clauderon binary for a specific target
- */
-async function _buildMuxBinary(
-  container: Container,
-  target: string,
-  os: string,
-  arch: string,
-): Promise<{ file: string; content: string }> {
-  // Configure linker for cross-compilation
-  let buildContainer = container;
-  if (target === "aarch64-unknown-linux-gnu") {
-    buildContainer = container.withEnvVariable(
-      "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER",
-      "aarch64-linux-gnu-gcc",
-    );
-  }
-
-  // Build the release binary
-  buildContainer = buildContainer.withExec([
-    "cargo",
-    "build",
-    "--release",
-    "--target",
-    target,
-  ]);
-
-  // Get the binary
-  const binaryPath = `/workspace/target-cross/${target}/release/clauderon`;
-  const binary = await buildContainer.file(binaryPath).contents();
-
-  const filename = `clauderon-${os}-${arch}`;
-  return { file: filename, content: binary };
-}
-
-/**
  * Upload release assets to a GitHub release using proper binary file handling
  * @param githubToken GitHub token for authentication
  * @param version The release version (without 'v' prefix)
@@ -611,29 +575,13 @@ async function uploadReleaseAssets(
 }
 
 /**
- * Get a container with release-please CLI installed (using Bun)
+ * Get a container with release-please CLI installed.
+ * Uses the shared lib implementation with pinned version.
  */
 function getReleasePleaseContainer(): Container {
-  return dag
-    .container()
-    .from(`oven/bun:${BUN_VERSION}-debian`)
-    .withMountedCache(
-      "/var/cache/apt",
-      dag.cacheVolume(`apt-cache-bun-${BUN_VERSION}-debian`),
-    )
-    .withMountedCache(
-      "/var/lib/apt",
-      dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`),
-    )
-    .withExec(["apt-get", "update"])
-    .withExec(["apt-get", "install", "-y", "git"])
-    .withExec([
-      "bun",
-      "install",
-      "-g",
-      `release-please@${RELEASE_PLEASE_VERSION}`,
-    ])
-    .withWorkdir("/workspace");
+  return getLibReleasePleaseContainer({
+    releasePleaseVersion: RELEASE_PLEASE_VERSION,
+  });
 }
 
 /**
@@ -755,10 +703,10 @@ RUST_PAT='${rustPat}'
 PRETTIER_PAT="${prettierPat}"
 
 # Read baseline
-BASELINE_ESLINT=$(grep -o "\\"\$ESLINT_PAT\\": [0-9]*" /workspace/.quality-baseline.json | grep -o '[0-9]*')
+BASELINE_ESLINT=$(grep -o "\\"$ESLINT_PAT\\": [0-9]*" /workspace/.quality-baseline.json | grep -o '[0-9]*')
 BASELINE_TS=$(grep -o '"ts-suppressions": [0-9]*' /workspace/.quality-baseline.json | grep -o '[0-9]*')
 BASELINE_RUST=$(grep -o '"rust-allow": [0-9]*' /workspace/.quality-baseline.json | grep -o '[0-9]*')
-BASELINE_PRETTIER=$(grep -o "\\"\$PRETTIER_PAT\\": [0-9]*" /workspace/.quality-baseline.json | grep -o '[0-9]*')
+BASELINE_PRETTIER=$(grep -o "\\"$PRETTIER_PAT\\": [0-9]*" /workspace/.quality-baseline.json | grep -o '[0-9]*')
 
 # Count current suppressions across full monorepo package tree.
 CURRENT_ESLINT=$(grep -r "$ESLINT_PAT" /workspace/packages/ /workspace/.dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | wc -l | tr -d ' ')
@@ -1416,21 +1364,24 @@ export class Monorepo {
         chartMuseumUsername &&
         chartMuseumPassword &&
         cloudflareApiToken &&
-        cloudflareAccountId
+        cloudflareAccountId &&
+        registryPassword &&
+        s3AccessKeyId &&
+        s3SecretAccessKey
       ) {
         outputs.push("\n--- Homelab Release ---");
         try {
           const homelabSecrets = {
             argocdToken,
             ghcrUsername: registryUsername ?? "",
-            ghcrPassword: registryPassword!,
+            ghcrPassword: registryPassword,
             chartVersion: version ?? "dev",
             chartMuseumUsername,
             chartMuseumPassword,
             cloudflareApiToken,
             cloudflareAccountId,
-            awsAccessKeyId: s3AccessKeyId!,
-            awsSecretAccessKey: s3SecretAccessKey!,
+            awsAccessKeyId: s3AccessKeyId,
+            awsSecretAccessKey: s3SecretAccessKey,
             ...(hassBaseUrl ? { hassBaseUrl } : {}),
             ...(hassToken ? { hassToken } : {}),
             ...(tofuGithubToken ? { tofuGithubToken } : {}),

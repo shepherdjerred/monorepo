@@ -67,7 +67,11 @@ export function parseHistoryEntry(line: string): Message | null {
       textContent = entry.message.content;
     } else if (Array.isArray(entry.message.content)) {
       for (const block of entry.message.content) {
-        if (block.type === "text" && block.text != null && block.text.length > 0) {
+        if (
+          block.type === "text" &&
+          block.text != null &&
+          block.text.length > 0
+        ) {
           textContent += block.text;
         } else if (block.type === "tool_use") {
           toolUses.push({
@@ -144,7 +148,11 @@ function matchToolResults(
     }
 
     for (const block of entry.message.content) {
-      if (block.type !== "tool_result" || block.tool_use_id == null || block.tool_use_id.length === 0) {
+      if (
+        block.type !== "tool_result" ||
+        block.tool_use_id == null ||
+        block.tool_use_id.length === 0
+      ) {
         continue;
       }
 

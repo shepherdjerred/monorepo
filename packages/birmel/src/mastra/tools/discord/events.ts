@@ -1,12 +1,15 @@
 import { createTool } from "../../../voltagent/tools/create-tool.js";
 import { z } from "zod";
-import {
-  GuildScheduledEventPrivacyLevel,
-  GuildScheduledEventEntityType,
-} from "discord.js";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/logger.js";
 import { validateSnowflakes } from "./validation.js";
+import {
+  handleListEvents,
+  handleCreateEvent,
+  handleModifyEvent,
+  handleDeleteEvent,
+  handleGetEventUsers,
+} from "./event-actions.js";
 
 export const manageScheduledEventTool = createTool({
   id: "manage-scheduled-event",
@@ -88,145 +91,42 @@ export const manageScheduledEventTool = createTool({
       const guild = await client.guilds.fetch(ctx.guildId);
 
       switch (ctx.action) {
-        case "list": {
-          const events = await guild.scheduledEvents.fetch();
-          const eventList = events.map((event) => ({
-            id: event.id,
-            name: event.name,
-            description: event.description,
-            scheduledStartTime: event.scheduledStartAt?.toISOString() ?? "",
-            scheduledEndTime: event.scheduledEndAt?.toISOString() ?? null,
-            status: event.status.toString(),
-            userCount: event.userCount,
-          }));
-          return {
-            success: true,
-            message: `Found ${String(eventList.length)} scheduled events`,
-            data: eventList,
-          };
-        }
-
-        case "create": {
-          if ((ctx.name == null || ctx.name.length === 0) || (ctx.scheduledStartTime == null || ctx.scheduledStartTime.length === 0)) {
-            return {
-              success: false,
-              message:
-                "name and scheduledStartTime are required for creating an event",
-            };
-          }
-          const entityType = ctx.channelId != null && ctx.channelId.length > 0
-            ? GuildScheduledEventEntityType.Voice
-            : GuildScheduledEventEntityType.External;
-          const createOptions: Parameters<
-            typeof guild.scheduledEvents.create
-          >[0] = {
-            name: ctx.name,
-            scheduledStartTime: new Date(ctx.scheduledStartTime),
-            privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
-            entityType,
-          };
-          if (ctx.description !== undefined) {
-            createOptions.description = ctx.description;
-          }
-          if (ctx.scheduledEndTime !== undefined) {
-            createOptions.scheduledEndTime = new Date(ctx.scheduledEndTime);
-          }
-          if (ctx.channelId !== undefined) {
-            createOptions.channel = ctx.channelId;
-          }
-          if (ctx.location !== undefined && (ctx.channelId == null || ctx.channelId.length === 0)) {
-            createOptions.entityMetadata = { location: ctx.location };
-          }
-          const event = await guild.scheduledEvents.create(createOptions);
-          return {
-            success: true,
-            message: `Created event "${event.name}"`,
-            data: { eventId: event.id },
-          };
-        }
-
-        case "modify": {
-          if (ctx.eventId == null || ctx.eventId.length === 0) {
-            return {
-              success: false,
-              message: "eventId is required for modifying an event",
-            };
-          }
-          const event = await guild.scheduledEvents.fetch(ctx.eventId);
-          const editOptions: Parameters<typeof event.edit>[0] = {};
-          if (ctx.name !== undefined) {
-            editOptions.name = ctx.name;
-          }
-          if (ctx.description !== undefined) {
-            editOptions.description = ctx.description;
-          }
-          if (ctx.scheduledStartTime !== undefined) {
-            editOptions.scheduledStartTime = new Date(ctx.scheduledStartTime);
-          }
-          if (ctx.scheduledEndTime !== undefined) {
-            editOptions.scheduledEndTime = new Date(ctx.scheduledEndTime);
-          }
-          if (ctx.location !== undefined) {
-            editOptions.entityMetadata = { location: ctx.location };
-          }
-          const hasChanges =
-            ctx.name !== undefined ||
-            ctx.description !== undefined ||
-            ctx.scheduledStartTime !== undefined ||
-            ctx.scheduledEndTime !== undefined ||
-            ctx.location !== undefined;
-          if (!hasChanges) {
-            return {
-              success: false,
-              message: "No changes specified",
-            };
-          }
-          await event.edit(editOptions);
-          return {
-            success: true,
-            message: `Updated event "${event.name}"`,
-          };
-        }
-
-        case "delete": {
-          if (ctx.eventId == null || ctx.eventId.length === 0) {
-            return {
-              success: false,
-              message: "eventId is required for deleting an event",
-            };
-          }
-          const event = await guild.scheduledEvents.fetch(ctx.eventId);
-          const eventName = event.name;
-          await event.delete();
-          return {
-            success: true,
-            message: `Deleted event "${eventName}"`,
-          };
-        }
-
-        case "get-users": {
-          if (ctx.eventId == null || ctx.eventId.length === 0) {
-            return {
-              success: false,
-              message: "eventId is required for getting event users",
-            };
-          }
-          const event = await guild.scheduledEvents.fetch(ctx.eventId);
-          const subscribers = await event.fetchSubscribers({
-            limit: ctx.limit ?? 100,
-          });
-          const userList = subscribers.map(
-            (sub: { user: { id: string; username: string } }) => ({
-              userId: sub.user.id,
-              username: sub.user.username,
+        case "list":
+          return await handleListEvents(guild);
+        case "create":
+          return await handleCreateEvent(guild, {
+            ...(ctx.name !== undefined && { name: ctx.name }),
+            ...(ctx.scheduledStartTime !== undefined && {
+              scheduledStartTime: ctx.scheduledStartTime,
             }),
-          );
-          return {
-            success: true,
-            message: `Found ${String(userList.length)} interested users`,
-            data: userList,
-          };
-        }
+            ...(ctx.scheduledEndTime !== undefined && {
+              scheduledEndTime: ctx.scheduledEndTime,
+            }),
+            ...(ctx.description !== undefined && {
+              description: ctx.description,
+            }),
+            ...(ctx.channelId !== undefined && { channelId: ctx.channelId }),
+            ...(ctx.location !== undefined && { location: ctx.location }),
+          });
+        case "modify":
+          return await handleModifyEvent(guild, {
+            ...(ctx.eventId !== undefined && { eventId: ctx.eventId }),
+            ...(ctx.name !== undefined && { name: ctx.name }),
+            ...(ctx.description !== undefined && {
+              description: ctx.description,
+            }),
+            ...(ctx.scheduledStartTime !== undefined && {
+              scheduledStartTime: ctx.scheduledStartTime,
+            }),
+            ...(ctx.scheduledEndTime !== undefined && {
+              scheduledEndTime: ctx.scheduledEndTime,
+            }),
+            ...(ctx.location !== undefined && { location: ctx.location }),
+          });
+        case "delete":
+          return await handleDeleteEvent(guild, ctx.eventId);
+        case "get-users":
+          return await handleGetEventUsers(guild, ctx.eventId, ctx.limit);
       }
     } catch (error) {
       logger.error("Failed to manage scheduled event", error);

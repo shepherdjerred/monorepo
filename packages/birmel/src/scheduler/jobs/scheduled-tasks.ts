@@ -53,16 +53,22 @@ async function executeScheduledTask(task: ScheduledTask): Promise<void> {
     }
 
     // Execute the tool using its execute method
-    const executableTool = tool as { execute: (input: Record<string, unknown>, context: Record<string, string>) => Promise<Record<string, unknown>> };
+    const executableTool = tool as unknown as {
+      execute: (
+        input: Record<string, unknown>,
+        context: Record<string, string>,
+      ) => Promise<Record<string, unknown>>;
+    };
     const result = await executableTool.execute(toolInput, {
       runId: `scheduled-task-${String(task.id)}`,
       agentId: "birmel",
     });
 
+    const success = "success" in result ? Boolean(result["success"]) : true;
     logger.info("Scheduled task executed successfully", {
       id: task.id,
       toolId: task.toolId,
-      success: result.success === undefined ? true : Boolean(result.success),
+      success,
     });
 
     // Mark as executed

@@ -6,8 +6,9 @@ import {
   getGitHubContainer,
 } from "./lib/containers/index.js";
 import { logWithTimestamp, withTiming } from "./lib/index.js";
+import versions from "./lib/versions.js";
 
-const BUN_VERSION = "1.3.9";
+const BUN_VERSION = versions.bun;
 
 // ============================================================
 // Base container helpers (from base.ts)
@@ -619,7 +620,9 @@ function checkDesktopParallel(
       ])
       .withExec(["cargo", "test", "--verbose"])
       .sync(),
-  ]).then(() => {});
+  ]).then(() => {
+    /* sync all promises */
+  });
 }
 
 function buildDesktopWindowsGnu(

@@ -164,7 +164,10 @@ export const getActivityStatsTool = createTool({
     return withToolSpan("get-activity-stats", ctx.guildId, async () => {
       try {
         const dateRange =
-          ctx.startDate != null && ctx.startDate.length > 0 && ctx.endDate != null && ctx.endDate.length > 0
+          ctx.startDate != null &&
+          ctx.startDate.length > 0 &&
+          ctx.endDate != null &&
+          ctx.endDate.length > 0
             ? {
                 start: new Date(ctx.startDate),
                 end: new Date(ctx.endDate),

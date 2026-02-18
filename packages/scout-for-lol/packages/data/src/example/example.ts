@@ -10,6 +10,44 @@ type MatchType = "ranked" | "unranked" | "aram" | "arena";
 
 export type AnyMatch = CompletedMatch | ArenaMatch;
 
+/** Shared Aatrox stats used in both the player champion and the blue team roster */
+function getAatroxStats() {
+  return {
+    championName: "Aatrox",
+    kills: 8,
+    deaths: 9,
+    assists: 4,
+    items: [1031, 0, 3047, 3814, 6691, 6694, 3364],
+    spells: [4, 12],
+    runes: [],
+    lane: "top" as const,
+    creepScore: 180,
+    visionScore: 19,
+    damage: 18645,
+    gold: 12053,
+    level: 16,
+  };
+}
+
+/** Shared Garen stats used in both the lane opponent and the red team roster */
+function getGarenStats() {
+  return {
+    championName: "Garen",
+    kills: 16,
+    deaths: 7,
+    assists: 1,
+    items: [3078, 3181, 3046, 3071, 3035, 3006, 3340],
+    spells: [14, 4],
+    runes: [],
+    lane: "top" as const,
+    creepScore: 219,
+    visionScore: 25,
+    damage: 29663,
+    gold: 17426,
+    level: 18,
+  };
+}
+
 function getBaseMatch(): CompletedMatch {
   return {
     queueType: "solo",
@@ -47,38 +85,14 @@ function getBaseMatch(): CompletedMatch {
         losses: 20,
         champion: {
           riotIdGameName: "zombie villager",
-          championName: "Aatrox",
-          kills: 8,
-          deaths: 9,
-          assists: 4,
-          items: [1031, 0, 3047, 3814, 6691, 6694, 3364],
-          spells: [4, 12],
-          runes: [],
-          lane: "top",
-          creepScore: 180,
-          visionScore: 19,
-          damage: 18645,
-          gold: 12053,
-          level: 16,
+          ...getAatroxStats(),
         },
         outcome: "Defeat",
         team: "blue",
         lane: "top",
         laneOpponent: {
           riotIdGameName: "CPHS WARRIOR",
-          championName: "Garen",
-          kills: 16,
-          deaths: 7,
-          assists: 1,
-          items: [3078, 3181, 3046, 3071, 3035, 3006, 3340],
-          spells: [14, 4],
-          runes: [],
-          lane: "top",
-          creepScore: 219,
-          visionScore: 25,
-          damage: 29663,
-          gold: 17426,
-          level: 18,
+          ...getGarenStats(),
         },
       },
     ],
@@ -87,19 +101,7 @@ function getBaseMatch(): CompletedMatch {
       blue: [
         {
           riotIdGameName: "Mr Spaghetti",
-          championName: "Aatrox",
-          kills: 8,
-          deaths: 9,
-          assists: 4,
-          items: [1031, 0, 3047, 3814, 6691, 6694, 3364],
-          spells: [4, 12],
-          runes: [],
-          lane: "top",
-          creepScore: 180,
-          visionScore: 19,
-          damage: 18645,
-          gold: 12053,
-          level: 16,
+          ...getAatroxStats(),
         },
         {
           riotIdGameName: "zainji",
@@ -169,19 +171,7 @@ function getBaseMatch(): CompletedMatch {
       red: [
         {
           riotIdGameName: "how2smo",
-          championName: "Garen",
-          kills: 16,
-          deaths: 7,
-          assists: 1,
-          items: [3078, 3181, 3046, 3071, 3035, 3006, 3340],
-          spells: [14, 4],
-          runes: [],
-          lane: "top",
-          creepScore: 219,
-          visionScore: 25,
-          damage: 29663,
-          gold: 17426,
-          level: 18,
+          ...getGarenStats(),
         },
         {
           riotIdGameName: "Oroulerd",

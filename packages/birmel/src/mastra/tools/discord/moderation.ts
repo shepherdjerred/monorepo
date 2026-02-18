@@ -1,9 +1,83 @@
+import type { Guild } from "discord.js";
 import { createTool } from "../../../voltagent/tools/create-tool.js";
 import { z } from "zod";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/logger.js";
 import { validateSnowflakes } from "./validation.js";
 import { isDiscordAPIError, formatDiscordAPIError } from "./error-utils.js";
+
+type ModerationResult = {
+  success: boolean;
+  message: string;
+  data?:
+    | { id: string; username: string; reason: string | null }[]
+    | { pruneCount: number };
+};
+
+async function handleKick(
+  guild: Guild,
+  memberId: string | undefined,
+  reason: string | undefined,
+): Promise<ModerationResult> {
+  if (memberId == null || memberId.length === 0) {
+    return { success: false, message: "memberId is required for kick" };
+  }
+  const member = await guild.members.fetch(memberId);
+  await member.kick(reason);
+  return { success: true, message: `Kicked ${member.user.username}` };
+}
+
+async function handleBan(
+  guild: Guild,
+  memberId: string | undefined,
+  reason: string | undefined,
+  deleteMessageSeconds: number | undefined,
+): Promise<ModerationResult> {
+  if (memberId == null || memberId.length === 0) {
+    return { success: false, message: "memberId is required for ban" };
+  }
+  const banOpts: { reason?: string; deleteMessageSeconds?: number } = {};
+  if (reason !== undefined) {
+    banOpts.reason = reason;
+  }
+  if (deleteMessageSeconds !== undefined) {
+    banOpts.deleteMessageSeconds = deleteMessageSeconds;
+  }
+  await guild.members.ban(memberId, banOpts);
+  return { success: true, message: `Banned user ${memberId}` };
+}
+
+async function handlePrune(
+  guild: Guild,
+  days: number | undefined,
+  reason: string | undefined,
+  dryRun: boolean,
+): Promise<ModerationResult> {
+  if (days == null) {
+    return {
+      success: false,
+      message: `days is required for ${dryRun ? "prune-count" : "prune"}`,
+    };
+  }
+  if (dryRun) {
+    const count = await guild.members.prune({ days, dry: true });
+    return {
+      success: true,
+      message: `${String(count)} members would be pruned`,
+      data: { pruneCount: count },
+    };
+  }
+  const pruneOpts: { days: number; reason?: string } = { days };
+  if (reason != null && reason.length > 0) {
+    pruneOpts.reason = reason;
+  }
+  const pruned = await guild.members.prune(pruneOpts);
+  return {
+    success: true,
+    message: `Pruned ${String(pruned)} members`,
+    data: { pruneCount: pruned },
+  };
+}
 
 export const moderateMemberTool = createTool({
   id: "moderate-member",
@@ -77,31 +151,15 @@ export const moderateMemberTool = createTool({
       const guild = await client.guilds.fetch(ctx.guildId);
 
       switch (ctx.action) {
-        case "kick": {
-          if (ctx.memberId == null || ctx.memberId.length === 0) {
-            return { success: false, message: "memberId is required for kick" };
-          }
-          const member = await guild.members.fetch(ctx.memberId);
-          await member.kick(ctx.reason);
-          return { success: true, message: `Kicked ${member.user.username}` };
-        }
-
-        case "ban": {
-          if (ctx.memberId == null || ctx.memberId.length === 0) {
-            return { success: false, message: "memberId is required for ban" };
-          }
-          const banOpts: { reason?: string; deleteMessageSeconds?: number } =
-            {};
-          if (ctx.reason !== undefined) {
-            banOpts.reason = ctx.reason;
-          }
-          if (ctx.deleteMessageSeconds !== undefined) {
-            banOpts.deleteMessageSeconds = ctx.deleteMessageSeconds;
-          }
-          await guild.members.ban(ctx.memberId, banOpts);
-          return { success: true, message: `Banned user ${ctx.memberId}` };
-        }
-
+        case "kick":
+          return await handleKick(guild, ctx.memberId, ctx.reason);
+        case "ban":
+          return await handleBan(
+            guild,
+            ctx.memberId,
+            ctx.reason,
+            ctx.deleteMessageSeconds,
+          );
         case "unban": {
           if (ctx.memberId == null || ctx.memberId.length === 0) {
             return {
@@ -112,9 +170,12 @@ export const moderateMemberTool = createTool({
           await guild.members.unban(ctx.memberId, ctx.reason);
           return { success: true, message: `Unbanned user ${ctx.memberId}` };
         }
-
         case "timeout": {
-          if ((ctx.memberId == null || ctx.memberId.length === 0) || ctx.durationMinutes == null) {
+          if (
+            ctx.memberId == null ||
+            ctx.memberId.length === 0 ||
+            ctx.durationMinutes == null
+          ) {
             return {
               success: false,
               message: "memberId and durationMinutes are required for timeout",
@@ -127,7 +188,6 @@ export const moderateMemberTool = createTool({
             message: `Timed out ${member.user.username} for ${String(ctx.durationMinutes)} minutes`,
           };
         }
-
         case "remove-timeout": {
           if (ctx.memberId == null || ctx.memberId.length === 0) {
             return {
@@ -142,7 +202,6 @@ export const moderateMemberTool = createTool({
             message: `Removed timeout from ${member.user.username}`,
           };
         }
-
         case "list-bans": {
           const bans = await guild.bans.fetch({ limit: ctx.limit ?? 100 });
           const list = bans.map((b) => ({
@@ -156,42 +215,10 @@ export const moderateMemberTool = createTool({
             data: list,
           };
         }
-
-        case "prune": {
-          if (ctx.days == null) {
-            return { success: false, message: "days is required for prune" };
-          }
-          const pruneOpts: { days: number; reason?: string } = {
-            days: ctx.days,
-          };
-          if (ctx.reason != null && ctx.reason.length > 0) {
-            pruneOpts.reason = ctx.reason;
-          }
-          const pruned = await guild.members.prune(pruneOpts);
-          return {
-            success: true,
-            message: `Pruned ${String(pruned)} members`,
-            data: { pruneCount: pruned },
-          };
-        }
-
-        case "prune-count": {
-          if (ctx.days == null) {
-            return {
-              success: false,
-              message: "days is required for prune-count",
-            };
-          }
-          const count = await guild.members.prune({
-            days: ctx.days,
-            dry: true,
-          });
-          return {
-            success: true,
-            message: `${String(count)} members would be pruned`,
-            data: { pruneCount: count },
-          };
-        }
+        case "prune":
+          return await handlePrune(guild, ctx.days, ctx.reason, false);
+        case "prune-count":
+          return await handlePrune(guild, ctx.days, ctx.reason, true);
       }
     } catch (error) {
       if (isDiscordAPIError(error)) {

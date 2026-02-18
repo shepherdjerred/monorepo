@@ -1,10 +1,17 @@
 import { createTool } from "../../../voltagent/tools/create-tool.js";
 import { z } from "zod";
-import type { ColorResolvable } from "discord.js";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/logger.js";
 import { validateSnowflakes } from "./validation.js";
 import { isDiscordAPIError, formatDiscordAPIError } from "./error-utils.js";
+import {
+  handleListRoles,
+  handleGetRole,
+  handleCreateRole,
+  handleModifyRole,
+  handleDeleteRole,
+  handleReorderRoles,
+} from "./role-actions.js";
 
 export const manageRoleTool = createTool({
   id: "manage-role",
@@ -102,167 +109,31 @@ export const manageRoleTool = createTool({
       const guild = await client.guilds.fetch(ctx.guildId);
 
       switch (ctx.action) {
-        case "list": {
-          const roles = await guild.roles.fetch();
-          const roleList = roles
-            .map((role) => ({
-              id: role.id,
-              name: role.name,
-              color: role.hexColor,
-              position: role.position,
-              memberCount: role.members.size,
-            }))
-            .sort((a, b) => b.position - a.position);
-          return {
-            success: true,
-            message: `Found ${String(roleList.length)} roles`,
-            data: roleList,
-          };
-        }
-
-        case "get": {
-          if (ctx.roleId == null || ctx.roleId.length === 0) {
-            return {
-              success: false,
-              message: "roleId is required for getting role details",
-            };
-          }
-          const role = await guild.roles.fetch(ctx.roleId);
-          if (role == null) {
-            return {
-              success: false,
-              message: "Role not found",
-            };
-          }
-          return {
-            success: true,
-            message: `Found role @${role.name}`,
-            data: {
-              id: role.id,
-              name: role.name,
-              color: role.hexColor,
-              position: role.position,
-              hoist: role.hoist,
-              mentionable: role.mentionable,
-              memberCount: role.members.size,
-              permissions: role.permissions.toArray(),
-            },
-          };
-        }
-
-        case "create": {
-          if (ctx.name == null || ctx.name.length === 0) {
-            return {
-              success: false,
-              message: "name is required for creating a role",
-            };
-          }
-          // Safety: limit role creation to avoid hitting Discord's 250 role limit
-          const existingRoles = await guild.roles.fetch();
-          if (existingRoles.size >= 240) {
-            return {
-              success: false,
-              message: `Server has too many roles (${String(existingRoles.size)}/250). Delete some roles before creating new ones.`,
-            };
-          }
-          const role = await guild.roles.create({
-            name: ctx.name,
-            ...(ctx.color !== undefined && {
-              color: ctx.color as ColorResolvable,
-            }),
-            ...(ctx.hoist !== undefined && { hoist: ctx.hoist }),
-            ...(ctx.mentionable !== undefined && {
-              mentionable: ctx.mentionable,
-            }),
-          });
-          return {
-            success: true,
-            message: `Created role @${role.name}`,
-            data: { roleId: role.id },
-          };
-        }
-
-        case "modify": {
-          if (ctx.roleId == null || ctx.roleId.length === 0) {
-            return {
-              success: false,
-              message: "roleId is required for modifying a role",
-            };
-          }
-          const role = await guild.roles.fetch(ctx.roleId);
-          if (role == null) {
-            return {
-              success: false,
-              message: "Role not found",
-            };
-          }
-          const hasChanges =
-            ctx.name !== undefined ||
-            ctx.color !== undefined ||
-            ctx.hoist !== undefined ||
-            ctx.mentionable !== undefined;
-          if (!hasChanges) {
-            return {
-              success: false,
-              message: "No changes specified",
-            };
-          }
-          await role.edit({
-            ...(ctx.name !== undefined && { name: ctx.name }),
-            ...(ctx.color !== undefined && {
-              color: ctx.color as ColorResolvable,
-            }),
-            ...(ctx.hoist !== undefined && { hoist: ctx.hoist }),
-            ...(ctx.mentionable !== undefined && {
-              mentionable: ctx.mentionable,
-            }),
-          });
-          return {
-            success: true,
-            message: `Updated role @${role.name}`,
-          };
-        }
-
-        case "delete": {
-          if (ctx.roleId == null || ctx.roleId.length === 0) {
-            return {
-              success: false,
-              message: "roleId is required for deleting a role",
-            };
-          }
-          const role = await guild.roles.fetch(ctx.roleId);
-          if (role == null) {
-            return {
-              success: false,
-              message: "Role not found",
-            };
-          }
-          const roleName = role.name;
-          await role.delete(ctx.reason);
-          return {
-            success: true,
-            message: `Deleted role @${roleName}`,
-          };
-        }
-
-        case "reorder": {
-          if (!ctx.positions || ctx.positions.length === 0) {
-            return {
-              success: false,
-              message: "positions array is required for reordering roles",
-            };
-          }
-          await guild.roles.setPositions(
-            ctx.positions.map((p: { roleId: string; position: number }) => ({
-              role: p.roleId,
-              position: p.position,
-            })),
+        case "list":
+          return await handleListRoles(guild);
+        case "get":
+          return await handleGetRole(guild, ctx.roleId);
+        case "create":
+          return await handleCreateRole(
+            guild,
+            ctx.name,
+            ctx.color,
+            ctx.hoist,
+            ctx.mentionable,
           );
-          return {
-            success: true,
-            message: `Reordered ${String(ctx.positions.length)} roles`,
-          };
-        }
+        case "modify":
+          return await handleModifyRole(
+            guild,
+            ctx.roleId,
+            ctx.name,
+            ctx.color,
+            ctx.hoist,
+            ctx.mentionable,
+          );
+        case "delete":
+          return await handleDeleteRole(guild, ctx.roleId, ctx.reason);
+        case "reorder":
+          return await handleReorderRoles(guild, ctx.positions);
       }
     } catch (error) {
       if (isDiscordAPIError(error)) {

@@ -76,7 +76,11 @@ export async function downloadImage(url: string): Promise<Buffer> {
     }
 
     const contentLength = response.headers.get("content-length");
-    if (contentLength != null && contentLength.length > 0 && Number.parseInt(contentLength) > MAX_IMAGE_SIZE) {
+    if (
+      contentLength != null &&
+      contentLength.length > 0 &&
+      Number.parseInt(contentLength) > MAX_IMAGE_SIZE
+    ) {
       throw new Error(
         `Image too large: ${String(Number.parseInt(contentLength))} bytes (max ${String(MAX_IMAGE_SIZE)})`,
       );

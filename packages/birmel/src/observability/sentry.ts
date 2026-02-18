@@ -6,7 +6,11 @@ let sentryInitialized = false;
 export function initializeSentry(): void {
   const config = getConfig();
 
-  if (!config.sentry.enabled || (config.sentry.dsn == null || config.sentry.dsn.length === 0)) {
+  if (
+    !config.sentry.enabled ||
+    config.sentry.dsn == null ||
+    config.sentry.dsn.length === 0
+  ) {
     console.log(
       JSON.stringify({
         timestamp: new Date().toISOString(),
@@ -21,7 +25,9 @@ export function initializeSentry(): void {
   Sentry.init({
     dsn: config.sentry.dsn,
     environment: config.sentry.environment,
-    ...(config.sentry.release != null && config.sentry.release.length > 0 ? { release: config.sentry.release } : {}),
+    ...(config.sentry.release != null && config.sentry.release.length > 0
+      ? { release: config.sentry.release }
+      : {}),
     sampleRate: config.sentry.sampleRate,
     tracesSampleRate: config.sentry.tracesSampleRate,
   });
@@ -64,7 +70,9 @@ export function setSentryContext(context: DiscordContext): void {
   if (context.userId != null && context.userId.length > 0) {
     Sentry.setUser({
       id: context.userId,
-      ...(context.username != null && context.username.length > 0 ? { username: context.username } : {}),
+      ...(context.username != null && context.username.length > 0
+        ? { username: context.username }
+        : {}),
     });
   }
 }

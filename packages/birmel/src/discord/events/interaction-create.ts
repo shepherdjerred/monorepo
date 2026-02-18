@@ -70,7 +70,12 @@ async function handleEditorButton(
 ): Promise<void> {
   const [, action, sessionId] = interaction.customId.split(":");
 
-  if ((action == null || action.length === 0) || (sessionId == null || sessionId.length === 0)) {
+  if (
+    action == null ||
+    action.length === 0 ||
+    sessionId == null ||
+    sessionId.length === 0
+  ) {
     await interaction.reply({
       content: "Invalid button interaction.",
       flags: 64,
@@ -215,7 +220,7 @@ async function handleApprove(
         { name: "Status", value: "PR Created", inline: true },
         { name: "PR URL", value: result.prUrl ?? "N/A" },
       )
-      .setColor(0x57_F2_87)
+      .setColor(5_763_719)
       .setFooter({ text: `Approved by ${interaction.user.username}` });
 
     await message.edit({
@@ -249,7 +254,7 @@ async function handleReject(
     const embed = new EmbedBuilder()
       .setTitle("Changes Rejected")
       .setDescription(existingEmbed?.description ?? "Changes were rejected")
-      .setColor(0xED_42_45)
+      .setColor(15_548_997)
       .setFooter({ text: `Rejected by ${interaction.user.username}` });
 
     await message.edit({

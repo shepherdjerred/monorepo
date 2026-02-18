@@ -8,7 +8,7 @@ import {
 describe("retry", () => {
   describe("retry", () => {
     test("returns result on success", async () => {
-      const result = await retry(() => "success");
+      const result = await retry(() => Promise.resolve("success"));
       expect(result).toBe("success");
     });
 
@@ -20,7 +20,7 @@ describe("retry", () => {
           if (attempts < 3) {
             throw new Error("fail");
           }
-          return "success";
+          return Promise.resolve("success");
         },
         { initialDelayMs: 10, maxAttempts: 3 },
       );

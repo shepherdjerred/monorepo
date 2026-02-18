@@ -50,7 +50,7 @@ export function buildCallGraph(source: string): CallGraph {
 
   for (const func of functions) {
     functionsMap.set(func.id, func);
-    if (func.originalName) {
+    if (func.originalName.length > 0) {
       nameToId.set(func.originalName, func.id);
     }
   }
@@ -82,9 +82,9 @@ function resolveCallers(
   for (const [_id, func] of functions) {
     for (const calleeName of func.callees) {
       const calleeId = nameToId.get(calleeName);
-      if (calleeId) {
+      if (calleeId != null && calleeId.length > 0) {
         const callee = functions.get(calleeId);
-        if (callee && !callee.callers.includes(func.id)) {
+        if (callee != null && !callee.callers.includes(func.id)) {
           callee.callers.push(func.id);
         }
       }
@@ -185,7 +185,7 @@ function extractTopLevelSegments(
 ): CodeSegment[] {
   // Sort functions by start position
   const sortedFunctions = [...functions]
-    .filter((f) => !f.parentId) // Only top-level functions
+    .filter((f) => f.parentId == null || f.parentId.length === 0) // Only top-level functions
     .sort((a, b) => a.start - b.start);
 
   const segments: CodeSegment[] = [];
@@ -266,7 +266,11 @@ export function getProcessingOrder(graph: CallGraph): string[] {
       // Visit callees first (dependencies)
       for (const calleeName of func.callees) {
         const calleeId = graph.nameToId.get(calleeName);
-        if (calleeId && graph.functions.has(calleeId)) {
+        if (
+          calleeId != null &&
+          calleeId.length > 0 &&
+          graph.functions.has(calleeId)
+        ) {
           visit(calleeId);
         }
       }
@@ -308,7 +312,11 @@ export function findCycles(graph: CallGraph): string[][] {
     if (func) {
       for (const calleeName of func.callees) {
         const calleeId = graph.nameToId.get(calleeName);
-        if (!calleeId || !graph.functions.has(calleeId)) {
+        if (
+          calleeId == null ||
+          calleeId.length === 0 ||
+          !graph.functions.has(calleeId)
+        ) {
           continue;
         }
 
@@ -376,7 +384,7 @@ export function getFunctionContext(
   const callees: FunctionContext[] = func.callees
     .map((calleeName) => {
       const calleeId = graph.nameToId.get(calleeName);
-      if (!calleeId) {
+      if (calleeId == null || calleeId.length === 0) {
         return null;
       }
       const callee = graph.functions.get(calleeId);
@@ -400,7 +408,11 @@ export function getFunctionContext(
   const knownNames = new Map<string, string>();
   for (const [id, result] of deminifiedResults) {
     const graphFunc = graph.functions.get(id);
-    if (graphFunc?.originalName && result.suggestedName) {
+    if (
+      graphFunc?.originalName != null &&
+      graphFunc.originalName.length > 0 &&
+      result.suggestedName.length > 0
+    ) {
       knownNames.set(graphFunc.originalName, result.suggestedName);
     }
     // Add parameter and variable mappings
@@ -439,8 +451,12 @@ export function getGraphStats(graph: CallGraph): {
   cycleCount: number;
 } {
   const functions = [...graph.functions.values()];
-  const topLevel = functions.filter((f) => !f.parentId);
-  const nested = functions.filter((f) => f.parentId);
+  const topLevel = functions.filter(
+    (f) => f.parentId == null || f.parentId.length === 0,
+  );
+  const nested = functions.filter(
+    (f) => f.parentId != null && f.parentId.length > 0,
+  );
   const callees = functions.map((f) => f.callees.length);
   const cycles = findCycles(graph);
 

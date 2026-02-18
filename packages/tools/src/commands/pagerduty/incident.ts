@@ -5,24 +5,13 @@ import {
   type PagerDutyIncident,
   type PagerDutyNote,
   type PagerDutyLogEntry,
-  type PagerDutyIncidentStatus,
 } from "../../lib/pagerduty/index.ts";
+import { getStatusEmoji } from "../../lib/pagerduty/format.ts";
 import { formatJson } from "../../lib/output/index.ts";
 
 export type IncidentOptions = {
   json?: boolean | undefined;
 };
-
-function getStatusEmoji(status: PagerDutyIncidentStatus): string {
-  switch (status) {
-    case "triggered":
-      return "\uD83D\uDD34";
-    case "acknowledged":
-      return "\uD83D\uDFE1";
-    case "resolved":
-      return "\uD83D\uDFE2";
-  }
-}
 
 function formatIncidentDetails(
   incident: PagerDutyIncident,

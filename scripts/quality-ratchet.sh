@@ -6,10 +6,10 @@ BASELINE_TS=$(grep -o '"ts-suppressions": [0-9]*' .quality-baseline.json | grep 
 BASELINE_RUST=$(grep -o '"rust-allow": [0-9]*' .quality-baseline.json | grep -o '[0-9]*')
 BASELINE_PRETTIER=$(grep -o '"prettier-ignore": [0-9]*' .quality-baseline.json | grep -o '[0-9]*')
 
-CURRENT_ESLINT=$(grep -r "eslint-disable" packages/ .dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | wc -l | tr -d " ")
-CURRENT_TS=$(grep -r "@ts-expect-error\|@ts-ignore\|@ts-nocheck" packages/ .dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | wc -l | tr -d " ")
-CURRENT_RUST=$(grep -r '#\[allow(' packages/clauderon/src/ --include="*.rs" 2>/dev/null | wc -l | tr -d " ")
-CURRENT_PRETTIER=$(grep -r "prettier-ignore" packages/ .dagger/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.css" --include="*.json" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | wc -l | tr -d " ")
+CURRENT_ESLINT=$(grep -r "eslint-disable" packages/ .dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | awk 'END {print NR}')
+CURRENT_TS=$(grep -r "@ts-expect-error\|@ts-ignore\|@ts-nocheck" packages/ .dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | awk 'END {print NR}')
+CURRENT_RUST=$(grep -r '#\[allow(' packages/clauderon/src/ --include="*.rs" 2>/dev/null | awk 'END {print NR}')
+CURRENT_PRETTIER=$(grep -r "prettier-ignore" packages/ .dagger/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.css" --include="*.json" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | awk 'END {print NR}')
 
 echo "Suppression counts (current / baseline):"
 echo "  eslint-disable: $CURRENT_ESLINT / $BASELINE_ESLINT"

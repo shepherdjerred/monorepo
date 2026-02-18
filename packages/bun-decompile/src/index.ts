@@ -223,7 +223,7 @@ async function validateInput(
   const outputPath = resolve(options.output);
 
   // File-only mode: de-minify a JS file directly
-  if (options.file) {
+  if (options.file != null && options.file.length > 0) {
     const filePath = resolve(options.file);
 
     // Check if file exists
@@ -243,7 +243,7 @@ async function validateInput(
   }
 
   // Binary mode: decompile a Bun executable
-  if (!binary) {
+  if (binary == null || binary.length === 0) {
     console.log(USAGE);
     process.exit(1);
   }
@@ -268,7 +268,7 @@ function validateApiKey(
   apiKey: string | undefined,
   provider: "openai" | "anthropic",
 ): string {
-  if (!apiKey) {
+  if (apiKey == null || apiKey.length === 0) {
     const envKey =
       provider === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
     console.error(`\nError: De-minification requires an API key.`);
@@ -420,7 +420,7 @@ async function runDeminification(
       };
 
       // Only add optional properties when defined
-      if (options.resume) {
+      if (options.resume != null && options.resume.length > 0) {
         deminifyOptions.resumeBatchId = options.resume;
       }
 
@@ -555,7 +555,7 @@ async function runFileDeminification(
       outputPath: deminifiedDir,
     };
 
-    if (options.resume) {
+    if (options.resume != null && options.resume.length > 0) {
       deminifyOptions.resumeBatchId = options.resume;
     }
 
@@ -626,14 +626,14 @@ async function main(): Promise<void> {
   );
 
   // File-only mode: de-minify a JS file directly
-  if (filePath) {
+  if (filePath != null && filePath.length > 0) {
     await runFileDeminification(filePath, outputPath, options);
     console.log("\nDone!");
     return;
   }
 
   // Binary mode: decompile and optionally de-minify
-  if (!binaryPath) {
+  if (binaryPath == null || binaryPath.length === 0) {
     console.error("Error: No input file specified");
     process.exit(1);
   }
@@ -662,7 +662,7 @@ main().catch((error: unknown) => {
     console.error(`Error: ${error.message}`);
   } else if (error instanceof Error) {
     console.error(`Unexpected error: ${error.message}`);
-    if (Bun.env["DEBUG"]) {
+    if (Bun.env["DEBUG"] != null && Bun.env["DEBUG"].length > 0) {
       console.error(error.stack);
     }
   } else {

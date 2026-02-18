@@ -1,8 +1,9 @@
 import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
+import versions from "./lib/versions.js";
 
-const BUN_VERSION = "1.3.6";
-const PLAYWRIGHT_VERSION = "1.57.0";
+const BUN_VERSION = versions.bun;
+const PLAYWRIGHT_VERSION = versions.playwright;
 
 /**
  * Get a base Bun container with system dependencies and caching.
@@ -476,32 +477,6 @@ export async function smokeTestBirmelImageWithContainer(
   return `⚠️ Smoke test unclear: Container ran but output was unexpected.\nOutput:\n${output}`;
 }
 
-/**
- * Smoke test the birmel Docker image (builds then tests)
- * @param workspaceSource The full workspace source directory
- * @param version The version tag
- * @param gitSha The git SHA
- * @returns Test result with logs
- */
-export async function smokeTestBirmelImage(
-  workspaceSource: Directory,
-  version: string,
-  gitSha: string,
-): Promise<string> {
-  const image = buildBirmelImage(workspaceSource, version, gitSha);
-  return smokeTestBirmelImageWithContainer(image);
-}
-
-type PublishBirmelImageOptions = {
-  workspaceSource: Directory;
-  version: string;
-  gitSha: string;
-  registryAuth?: {
-    username: string;
-    password: Secret;
-  };
-};
-
 type PublishBirmelImageWithContainerOptions = {
   image: Container;
   version: string;
@@ -513,27 +488,6 @@ type PublishBirmelImageWithContainerOptions = {
       }
     | undefined;
 };
-
-/**
- * Publish the birmel Docker image
- * @param options Publishing options including workspace source, version, git SHA, and optional registry auth
- * @returns The published image references
- */
-export async function publishBirmelImage(
-  options: PublishBirmelImageOptions,
-): Promise<string[]> {
-  const image = buildBirmelImage(
-    options.workspaceSource,
-    options.version,
-    options.gitSha,
-  );
-  return publishBirmelImageWithContainer({
-    image,
-    version: options.version,
-    gitSha: options.gitSha,
-    registryAuth: options.registryAuth,
-  });
-}
 
 /**
  * Publish a pre-built birmel Docker image (avoids rebuilding)
@@ -560,9 +514,7 @@ export async function publishBirmelImageWithContainer(
   const shaRef = await image.publish(
     `ghcr.io/shepherdjerred/birmel:${options.gitSha}`,
   );
-  const latestRef = await image.publish(
-    "ghcr.io/shepherdjerred/birmel:latest",
-  );
+  const latestRef = await image.publish("ghcr.io/shepherdjerred/birmel:latest");
 
   return [versionRef, shaRef, latestRef];
 }

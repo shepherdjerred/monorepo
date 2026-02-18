@@ -1,5 +1,5 @@
-// Stage enum for controlling production vs. development behavior in pipelines.
-export enum Stage {
-  Prod = "prod",
-  Dev = "dev",
-}
+/**
+ * @deprecated Import from "../lib/types" instead.
+ * This file re-exports from the centralized types for backwards compatibility.
+ */
+export { Stage } from "../lib/types";

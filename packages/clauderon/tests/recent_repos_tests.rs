@@ -32,11 +32,13 @@ fn init_git_repo(path: &Path) {
             git init -q &&
             git config user.email "test@test.com" &&
             git config user.name "Test User" &&
+            git config commit.gpgsign false &&
             echo "# Test Repo" > README.md &&
             git add -A &&
             git commit -q -m "Initial commit"
             "##,
         ])
+        .env("GIT_CONFIG_NOSYSTEM", "1")
         .current_dir(path)
         .output()
         .expect("Failed to init git repo");

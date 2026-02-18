@@ -1,11 +1,12 @@
 import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 import { syncToS3 } from "./lib/containers/index.js";
+import versions from "./lib/versions.js";
 
 function getWebringContainer(pkgSource: Directory): Container {
   return dag
     .container()
-    .from("oven/bun:latest")
+    .from(`oven/bun:${versions["oven/bun"]}`)
     .withWorkdir("/workspace")
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
     .withDirectory("/workspace", pkgSource, {

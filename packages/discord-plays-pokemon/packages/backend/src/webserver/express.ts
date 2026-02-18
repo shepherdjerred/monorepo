@@ -12,12 +12,11 @@ export function createExpressApp({
 }) {
   logger.info("creating express app");
 
-   
   const app = express();
 
   if (isCorsEnabled) {
     logger.info("enabling cors for the express app");
-     
+
     app.use(cors());
   } else {
     logger.info("not enabling cors for the express app");
@@ -26,9 +25,8 @@ export function createExpressApp({
   assertPathExists(webAssetsPath, "web assets");
 
   logger.info(`serving static web assets from ${webAssetsPath}`);
-   
+
   app.use(express.static(webAssetsPath));
 
-   
   return app;
 }

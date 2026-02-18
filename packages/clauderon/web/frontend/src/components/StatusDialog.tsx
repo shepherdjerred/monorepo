@@ -76,7 +76,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
 
   const handleSaveCredential = async (serviceId: string) => {
     const value = credentialInputs.get(serviceId);
-    if ((value == null || value.length === 0) || value.trim() === "") {
+    if (value == null || value.length === 0 || value.trim() === "") {
       const newErrors = new Map(saveErrors);
       newErrors.set(serviceId, "Credential value cannot be empty");
       setSaveErrors(newErrors);
@@ -100,10 +100,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
       await fetchStatus();
     } catch (err) {
       const errorMap = new Map(saveErrors);
-      errorMap.set(
-        serviceId,
-        err instanceof Error ? err.message : String(err),
-      );
+      errorMap.set(serviceId, err instanceof Error ? err.message : String(err));
       setSaveErrors(errorMap);
       // Refresh to show actual state even on error
       await fetchStatus();
@@ -201,7 +198,8 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                                   </div>
                                 )}
                                 {cred.available &&
-                                  (cred.source != null && cred.source.length > 0) &&
+                                  cred.source != null &&
+                                  cred.source.length > 0 &&
                                   !cred.readonly && (
                                     <span className="text-xs text-muted-foreground bg-background px-2 py-0.5 rounded">
                                       {cred.source}
@@ -209,11 +207,13 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                                   )}
                               </div>
 
-                              {cred.available && (cred.masked_value != null && cred.masked_value.length > 0) && (
-                                <div className="mt-1 font-mono text-sm text-muted-foreground">
-                                  {cred.masked_value}
-                                </div>
-                              )}
+                              {cred.available &&
+                                cred.masked_value != null &&
+                                cred.masked_value.length > 0 && (
+                                  <div className="mt-1 font-mono text-sm text-muted-foreground">
+                                    {cred.masked_value}
+                                  </div>
+                                )}
 
                               {cred.readonly && cred.available && (
                                 <div className="mt-2 text-sm text-muted-foreground">
@@ -229,7 +229,9 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                                     <div className="relative flex-1">
                                       <input
                                         type={
-                                          showCredentials.get(cred.service_id) === true
+                                          showCredentials.get(
+                                            cred.service_id,
+                                          ) === true
                                             ? "text"
                                             : "password"
                                         }
@@ -262,8 +264,8 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                                         }
                                       >
                                         {showCredentials.get(
-                                                                                                      cred.service_id,
-                                                                                                    ) === true ? (
+                                          cred.service_id,
+                                        ) === true ? (
                                           <EyeOff className="w-4 h-4" />
                                         ) : (
                                           <Eye className="w-4 h-4" />
@@ -291,11 +293,17 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                                       )}
                                     </button>
                                   </div>
-                                  {saveErrors.get(cred.service_id) != null && saveErrors.get(cred.service_id).length > 0 && (
-                                    <div className="text-sm text-destructive">
-                                      {saveErrors.get(cred.service_id)}
-                                    </div>
-                                  )}
+                                  {(() => {
+                                    const errMsg = saveErrors.get(
+                                      cred.service_id,
+                                    );
+                                    return errMsg != null &&
+                                      errMsg.length > 0 ? (
+                                      <div className="text-sm text-destructive">
+                                        {errMsg}
+                                      </div>
+                                    ) : null;
+                                  })()}
                                 </div>
                               )}
                             </div>
@@ -412,24 +420,27 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                               </strong>{" "}
                               {status.claude_usage.error.message}
                             </div>
-                            {status.claude_usage.error.details != null && status.claude_usage.error.details.length > 0 && (
-                              <details className="text-sm opacity-80">
-                                <summary className="cursor-pointer">
-                                  Technical details
-                                </summary>
-                                <pre className="mt-2 p-2 bg-black/10 dark:bg-white/10 rounded text-xs whitespace-pre-wrap">
-                                  {status.claude_usage.error.details}
-                                </pre>
-                              </details>
-                            )}
-                            {status.claude_usage.error.suggestion != null && status.claude_usage.error.suggestion.length > 0 && (
-                              <div className="mt-3 p-3 bg-white/50 dark:bg-black/20 rounded border-2 border-red-300 dark:border-red-700">
-                                <strong>💡 How to fix:</strong>
-                                <div className="mt-1">
-                                  {status.claude_usage.error.suggestion}
+                            {status.claude_usage.error.details != null &&
+                              status.claude_usage.error.details.length > 0 && (
+                                <details className="text-sm opacity-80">
+                                  <summary className="cursor-pointer">
+                                    Technical details
+                                  </summary>
+                                  <pre className="mt-2 p-2 bg-black/10 dark:bg-white/10 rounded text-xs whitespace-pre-wrap">
+                                    {status.claude_usage.error.details}
+                                  </pre>
+                                </details>
+                              )}
+                            {status.claude_usage.error.suggestion != null &&
+                              status.claude_usage.error.suggestion.length >
+                                0 && (
+                                <div className="mt-3 p-3 bg-white/50 dark:bg-black/20 rounded border-2 border-red-300 dark:border-red-700">
+                                  <strong>💡 How to fix:</strong>
+                                  <div className="mt-1">
+                                    {status.claude_usage.error.suggestion}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
                           </div>
                         </div>
                       </div>

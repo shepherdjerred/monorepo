@@ -2,8 +2,9 @@ import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 import { syncToS3, publishToGhcrMultiple } from "./lib/containers/index.js";
 import { logWithTimestamp, withTiming } from "./lib/index.js";
+import versions from "./lib/versions.js";
 
-const BUN_VERSION = "1.3.4";
+const BUN_VERSION = versions.bun;
 
 // --- Base container helpers ---
 
@@ -73,9 +74,7 @@ function packCommon(workspaceSource: Directory): Container {
   return buildCommon(workspaceSource).withExec(["bun", "pm", "pack"]);
 }
 
-async function getCommonPackage(
-  workspaceSource: Directory,
-): Promise<Directory> {
+function getCommonPackage(workspaceSource: Directory): Directory {
   return packCommon(workspaceSource).directory("/workspace/packages/common");
 }
 
@@ -85,10 +84,8 @@ async function getCommonPackage(
  * Install dependencies for the backend package.
  * Builds and packs common first, then mounts all workspace packages.
  */
-async function installBackendDeps(
-  workspaceSource: Directory,
-): Promise<Container> {
-  const commonDir = await getCommonPackage(workspaceSource);
+function installBackendDeps(workspaceSource: Directory): Container {
+  const commonDir = getCommonPackage(workspaceSource);
 
   return getBaseBunContainer()
     .withFile("/workspace/package.json", workspaceSource.file("package.json"))
@@ -106,28 +103,26 @@ async function installBackendDeps(
     .withExec(["bun", "install", "--frozen-lockfile"]);
 }
 
-async function lintBackend(workspaceSource: Directory): Promise<Container> {
-  return (await installBackendDeps(workspaceSource))
+function lintBackend(workspaceSource: Directory): Container {
+  return installBackendDeps(workspaceSource)
     .withWorkdir("/workspace/packages/backend")
     .withExec(["bun", "run", "lint:check"]);
 }
 
-async function buildBackend(workspaceSource: Directory): Promise<Container> {
-  return (await installBackendDeps(workspaceSource))
+function buildBackend(workspaceSource: Directory): Container {
+  return installBackendDeps(workspaceSource)
     .withWorkdir("/workspace/packages/backend")
     .withExec(["bun", "run", "build"]);
 }
 
-async function testBackend(workspaceSource: Directory): Promise<Container> {
-  return (await installBackendDeps(workspaceSource))
+function testBackend(workspaceSource: Directory): Container {
+  return installBackendDeps(workspaceSource)
     .withWorkdir("/workspace/packages/backend")
     .withExec(["bun", "run", "test"]);
 }
 
-async function getBackendWithDeps(
-  workspaceSource: Directory,
-): Promise<Directory> {
-  return (await installBackendDeps(workspaceSource)).directory(
+function getBackendWithDeps(workspaceSource: Directory): Directory {
+  return installBackendDeps(workspaceSource).directory(
     "/workspace/packages/backend",
   );
 }
@@ -138,10 +133,8 @@ async function getBackendWithDeps(
  * Install dependencies for the frontend package.
  * Builds and packs common first, then mounts all workspace packages.
  */
-async function installFrontendDeps(
-  workspaceSource: Directory,
-): Promise<Container> {
-  const commonDir = await getCommonPackage(workspaceSource);
+function installFrontendDeps(workspaceSource: Directory): Container {
+  const commonDir = getCommonPackage(workspaceSource);
 
   return getBaseBunContainer()
     .withFile("/workspace/package.json", workspaceSource.file("package.json"))
@@ -159,28 +152,26 @@ async function installFrontendDeps(
     .withExec(["bun", "install", "--frozen-lockfile"]);
 }
 
-async function lintFrontend(workspaceSource: Directory): Promise<Container> {
-  return (await installFrontendDeps(workspaceSource))
+function lintFrontend(workspaceSource: Directory): Container {
+  return installFrontendDeps(workspaceSource)
     .withWorkdir("/workspace/packages/frontend")
     .withExec(["bun", "run", "lint:check"]);
 }
 
-async function buildFrontend(workspaceSource: Directory): Promise<Container> {
-  return (await installFrontendDeps(workspaceSource))
+function buildFrontend(workspaceSource: Directory): Container {
+  return installFrontendDeps(workspaceSource)
     .withWorkdir("/workspace/packages/frontend")
     .withExec(["bun", "run", "build"]);
 }
 
-async function testFrontend(workspaceSource: Directory): Promise<Container> {
-  return (await installFrontendDeps(workspaceSource))
+function testFrontend(workspaceSource: Directory): Container {
+  return installFrontendDeps(workspaceSource)
     .withWorkdir("/workspace/packages/frontend")
     .withExec(["bun", "run", "test"]);
 }
 
-async function getFrontendBuild(
-  workspaceSource: Directory,
-): Promise<Directory> {
-  return (await buildFrontend(workspaceSource)).directory(
+function getFrontendBuild(workspaceSource: Directory): Directory {
+  return buildFrontend(workspaceSource).directory(
     "/workspace/packages/frontend/dist",
   );
 }
@@ -191,13 +182,13 @@ async function getFrontendBuild(
  * Build the Discord Plays Pokemon Docker image.
  * Uses a GPU-enabled desktop base image with Bun runtime.
  */
-async function buildDockerImage(
+function buildDockerImage(
   workspaceSource: Directory,
   version: string,
   gitSha: string,
-): Promise<Container> {
-  const backendDir = await getBackendWithDeps(workspaceSource);
-  const frontendDist = await getFrontendBuild(workspaceSource);
+): Container {
+  const backendDir = getBackendWithDeps(workspaceSource);
+  const frontendDist = getFrontendBuild(workspaceSource);
 
   const standardPath =
     "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
@@ -316,27 +307,27 @@ export async function checkDiscordPlaysPokemon(
     }),
     // Backend lint
     withTiming("Backend lint", async () => {
-      await (await lintBackend(pkgSource)).sync();
+      await lintBackend(pkgSource).sync();
     }),
     // Backend test
     withTiming("Backend test", async () => {
-      await (await testBackend(pkgSource)).sync();
+      await testBackend(pkgSource).sync();
     }),
     // Backend build
     withTiming("Backend build", async () => {
-      await (await buildBackend(pkgSource)).sync();
+      await buildBackend(pkgSource).sync();
     }),
     // Frontend lint
     withTiming("Frontend lint", async () => {
-      await (await lintFrontend(pkgSource)).sync();
+      await lintFrontend(pkgSource).sync();
     }),
     // Frontend test
     withTiming("Frontend test", async () => {
-      await (await testFrontend(pkgSource)).sync();
+      await testFrontend(pkgSource).sync();
     }),
     // Frontend build
     withTiming("Frontend build", async () => {
-      await (await buildFrontend(pkgSource)).sync();
+      await buildFrontend(pkgSource).sync();
     }),
     // Prettier
     withTiming("Prettier check", async () => {
@@ -389,9 +380,9 @@ export async function deployDiscordPlaysPokemon(
   );
 
   // Build and publish Docker image to GHCR
-  const image = await withTiming("Docker image build", async () => {
-    return await buildDockerImage(pkgSource, version, gitSha);
-  });
+  const image = await withTiming("Docker image build", () =>
+    Promise.resolve(buildDockerImage(pkgSource, version, gitSha)),
+  );
 
   const ghcrImage = "ghcr.io/shepherdjerred/discord-plays-pokemon";
   const refs = await withTiming("Docker image publish", async () => {

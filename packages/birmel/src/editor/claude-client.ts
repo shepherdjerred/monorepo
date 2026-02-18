@@ -176,7 +176,12 @@ type MessageHandlers = {
 
 function processMessage(msg: ClaudeMessage, handlers: MessageHandlers): void {
   // Capture session ID from init message
-  if (msg.type === "system" && msg.subtype === "init" && msg.session_id != null && msg.session_id.length > 0) {
+  if (
+    msg.type === "system" &&
+    msg.subtype === "init" &&
+    msg.session_id != null &&
+    msg.session_id.length > 0
+  ) {
     handlers.setSessionId(msg.session_id);
   }
 
@@ -184,7 +189,8 @@ function processMessage(msg: ClaudeMessage, handlers: MessageHandlers): void {
   if (
     msg.type === "tool_result" &&
     msg.tool_name === "Read" &&
-    msg.result?.text != null && msg.result.text.length > 0
+    msg.result?.text != null &&
+    msg.result.text.length > 0
   ) {
     // The tool input should have the file path - this is a simplified version
     // In practice, we'd need to correlate with the tool_use message
@@ -206,7 +212,13 @@ function processMessage(msg: ClaudeMessage, handlers: MessageHandlers): void {
       });
     }
 
-    if (msg.tool_name === "Edit" && input.old_string != null && input.old_string.length > 0 && input.new_string != null && input.new_string.length > 0) {
+    if (
+      msg.tool_name === "Edit" &&
+      input.old_string != null &&
+      input.old_string.length > 0 &&
+      input.new_string != null &&
+      input.new_string.length > 0
+    ) {
       // For edits, we track partial changes
       // In a full implementation, we'd need to reconstruct the full file
       handlers.addChange({
@@ -219,7 +231,11 @@ function processMessage(msg: ClaudeMessage, handlers: MessageHandlers): void {
   }
 
   // Capture assistant summary
-  if (msg.type === "assistant" && msg.content != null && msg.content.length > 0) {
+  if (
+    msg.type === "assistant" &&
+    msg.content != null &&
+    msg.content.length > 0
+  ) {
     handlers.setSummary(msg.content);
   }
 }
@@ -234,7 +250,11 @@ function extractFinalSummary(output: string): string {
     }
     try {
       const msg = JSON.parse(line) as ClaudeMessage;
-      if (msg.type === "assistant" && msg.content != null && msg.content.length > 0) {
+      if (
+        msg.type === "assistant" &&
+        msg.content != null &&
+        msg.content.length > 0
+      ) {
         return msg.content;
       }
     } catch {
@@ -271,7 +291,9 @@ export async function checkClaudePrerequisites(): Promise<{
   version?: string;
   hasApiKey: boolean;
 }> {
-  const hasApiKey = process.env["ANTHROPIC_API_KEY"] != null && process.env["ANTHROPIC_API_KEY"].length > 0;
+  const hasApiKey =
+    process.env["ANTHROPIC_API_KEY"] != null &&
+    process.env["ANTHROPIC_API_KEY"].length > 0;
 
   return new Promise((resolve) => {
     const proc = spawn("claude", ["--version"], {

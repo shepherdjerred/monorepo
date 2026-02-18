@@ -6,7 +6,10 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import { RawMatchSchema } from "@scout-for-lol/data/league/raw-match.schema";
+import {
+  RawMatchSchema,
+  type RawMatch,
+} from "@scout-for-lol/data/league/raw-match.schema";
 
 // Use Bun's path joining to find test data files relative to this test file
 // This works both locally and in CI containers
@@ -17,6 +20,23 @@ const REAL_MATCH_FILES = [
   `${baseTestDataPath}/matches_2025_09_19_NA1_5370969615.json`,
   `${baseTestDataPath}/matches_2025_09_19_NA1_5370986469.json`,
 ];
+
+/**
+ * Load and parse the first test match file, returning the validated data.
+ */
+async function loadFirstTestMatch(): Promise<RawMatch> {
+  const filePath = REAL_MATCH_FILES[0];
+  if (!filePath) {
+    throw new Error("No test file path");
+  }
+  const data = JSON.parse(await Bun.file(filePath).text());
+  const result = RawMatchSchema.safeParse(data);
+  expect(result.success).toBe(true);
+  if (!result.success) {
+    throw new Error("Schema validation failed");
+  }
+  return result.data;
+}
 
 describe("RawMatch Schema Validation", () => {
   test("validates real Arena match data from Riot API", async () => {
@@ -43,85 +63,67 @@ describe("RawMatch Schema Validation", () => {
   });
 
   test("schema matches real API data structure", async () => {
-    const filePath = REAL_MATCH_FILES[0];
-    if (!filePath) {
-      throw new Error("No test file path");
+    const matchData = await loadFirstTestMatch();
+
+    // Fields that are MISSING in real API but REQUIRED in twisted types
+    const firstParticipant = matchData.info.participants[0];
+    if (firstParticipant) {
+      expect(firstParticipant.baitPings).toBeUndefined(); // Missing in real API
+      expect(firstParticipant.bountyLevel).toBeUndefined(); // Missing in real API
+
+      // Fields that ARE present in real API
+      expect(firstParticipant.assists).toBeNumber();
+      expect(firstParticipant.basicPings).toBeNumber();
+      expect(firstParticipant.challenges).toBeDefined();
     }
-    const data = JSON.parse(await Bun.file(filePath).text());
-    const result = RawMatchSchema.safeParse(data);
 
-    expect(result.success).toBe(true);
-
-    if (result.success) {
-      // Fields that are MISSING in real API but REQUIRED in twisted types
-      const firstParticipant = result.data.info.participants[0];
-      if (firstParticipant) {
-        expect(firstParticipant.baitPings).toBeUndefined(); // Missing in real API
-        expect(firstParticipant.bountyLevel).toBeUndefined(); // Missing in real API
-
-        // Fields that ARE present in real API
-        expect(firstParticipant.assists).toBeNumber();
-        expect(firstParticipant.basicPings).toBeNumber();
-        expect(firstParticipant.challenges).toBeDefined();
-      }
-
-      // Verify endOfGameResult and tournamentCode are present
-      expect(result.data.info.endOfGameResult).toBe("GameComplete");
-      expect(result.data.info.tournamentCode).toBe(""); // Empty string in non-tournament matches
-    }
+    // Verify endOfGameResult and tournamentCode are present
+    expect(matchData.info.endOfGameResult).toBe("GameComplete");
+    expect(matchData.info.tournamentCode).toBe(""); // Empty string in non-tournament matches
   });
 
   test("challenge fields optionality matches real API", async () => {
-    const filePath = REAL_MATCH_FILES[0];
-    if (!filePath) {
-      throw new Error("No test file path");
+    const matchData = await loadFirstTestMatch();
+
+    const firstParticipant = matchData.info.participants[0];
+    if (!firstParticipant) {
+      throw new Error("No participants found");
     }
-    const data = JSON.parse(await Bun.file(filePath).text());
-    const result = RawMatchSchema.safeParse(data);
-
-    expect(result.success).toBe(true);
-
-    if (result.success) {
-      const firstParticipant = result.data.info.participants[0];
-      if (!firstParticipant) {
-        throw new Error("No participants found");
-      }
-      const challenges = firstParticipant.challenges;
-      if (!challenges) {
-        throw new Error("Challenges data is missing");
-      }
-
-      // Fields that ARE present in real API
-      expect(challenges.abilityUses).toBeNumber();
-      expect(challenges.goldPerMinute).toBeNumber();
-      expect(challenges.kda).toBeNumber();
-
-      // Fields that are MISSING in real API Arena matches (should be optional)
-      // These fields are not consistently present across all participants:
-      expect(challenges.earliestElderDragon).toBeUndefined();
-      expect(challenges.fasterSupportQuestCompletion).toBeUndefined();
-      expect(challenges.fastestLegendary).toBeUndefined();
-      expect(challenges.hadAfkTeammate).toBeUndefined();
-      expect(challenges.highestChampionDamage).toBeUndefined();
-      expect(challenges.highestCrowdControlScore).toBeUndefined();
-      expect(challenges.highestWardKills).toBeUndefined();
-      expect(challenges.junglerKillsEarlyJungle).toBeUndefined();
-      expect(challenges.killsOnLanersEarlyJungleAsJungler).toBeUndefined();
-      expect(challenges.laningPhaseGoldExpAdvantage).toBeUndefined();
-      expect(challenges.maxCsAdvantageOnLaneOpponent).toBeUndefined();
-      expect(challenges.maxLevelLeadLaneOpponent).toBeUndefined();
-      expect(challenges.mythicItemUsed).toBeUndefined();
-      expect(challenges.playedChampSelectPosition).toBeUndefined();
-      expect(challenges.soloTurretsLategame).toBeUndefined();
-      expect(challenges.threeWardsOneSweeperCount).toBeUndefined();
-      expect(challenges.visionScoreAdvantageLaneOpponent).toBeUndefined();
-
-      // shortestTimeToAceFromFirstTakedown may be present or undefined depending on participant
-      // (present for participant 0, absent for many others)
-      expect(
-        challenges.shortestTimeToAceFromFirstTakedown === undefined ||
-          challenges.shortestTimeToAceFromFirstTakedown > -1,
-      ).toBe(true);
+    const challenges = firstParticipant.challenges;
+    if (!challenges) {
+      throw new Error("Challenges data is missing");
     }
+
+    // Fields that ARE present in real API
+    expect(challenges.abilityUses).toBeNumber();
+    expect(challenges.goldPerMinute).toBeNumber();
+    expect(challenges.kda).toBeNumber();
+
+    // Fields that are MISSING in real API Arena matches (should be optional)
+    // These fields are not consistently present across all participants:
+    expect(challenges.earliestElderDragon).toBeUndefined();
+    expect(challenges.fasterSupportQuestCompletion).toBeUndefined();
+    expect(challenges.fastestLegendary).toBeUndefined();
+    expect(challenges.hadAfkTeammate).toBeUndefined();
+    expect(challenges.highestChampionDamage).toBeUndefined();
+    expect(challenges.highestCrowdControlScore).toBeUndefined();
+    expect(challenges.highestWardKills).toBeUndefined();
+    expect(challenges.junglerKillsEarlyJungle).toBeUndefined();
+    expect(challenges.killsOnLanersEarlyJungleAsJungler).toBeUndefined();
+    expect(challenges.laningPhaseGoldExpAdvantage).toBeUndefined();
+    expect(challenges.maxCsAdvantageOnLaneOpponent).toBeUndefined();
+    expect(challenges.maxLevelLeadLaneOpponent).toBeUndefined();
+    expect(challenges.mythicItemUsed).toBeUndefined();
+    expect(challenges.playedChampSelectPosition).toBeUndefined();
+    expect(challenges.soloTurretsLategame).toBeUndefined();
+    expect(challenges.threeWardsOneSweeperCount).toBeUndefined();
+    expect(challenges.visionScoreAdvantageLaneOpponent).toBeUndefined();
+
+    // shortestTimeToAceFromFirstTakedown may be present or undefined depending on participant
+    // (present for participant 0, absent for many others)
+    expect(
+      challenges.shortestTimeToAceFromFirstTakedown === undefined ||
+        challenges.shortestTimeToAceFromFirstTakedown > -1,
+    ).toBe(true);
   });
 });

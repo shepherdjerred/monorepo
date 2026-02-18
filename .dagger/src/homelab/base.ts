@@ -1,46 +1,24 @@
-import { dag, Container, Directory, type Platform } from "@dagger.io/dagger";
-import versions from "./versions";
-
 /**
- * Returns a base system container with OS packages installed (rarely changes).
- * This layer is cached independently and only rebuilds when system dependencies change.
+ * Homelab container builders.
+ *
+ * Simple containers re-export from lib. Homelab-specific containers
+ * (getWorkspaceContainer, getUbuntuBaseContainer) wrap lib with
+ * homelab-specific workspace configuration.
  */
-export function getSystemContainer(platform?: Platform): Container {
-  return (
-    dag
-      .container(platform ? { platform } : {})
-      .from(`ubuntu:${versions.ubuntu}`)
-      // Cache APT packages
-      .withMountedCache(
-        "/var/cache/apt",
-        dag.cacheVolume(`apt-cache-${platform ?? "default"}`),
-      )
-      .withMountedCache(
-        "/var/lib/apt",
-        dag.cacheVolume(`apt-lib-${platform ?? "default"}`),
-      )
-      .withExec(["apt-get", "update"])
-      .withExec([
-        "apt-get",
-        "install",
-        "-y",
-        "gpg",
-        "wget",
-        "curl",
-        "git",
-        "build-essential",
-        "python3",
-      ])
-  );
-}
+import type { Container, Directory } from "@dagger.io/dagger";
+import { dag, type Platform } from "@dagger.io/dagger";
 
-/**
- * Returns a container with mise development tools installed (bun, node, python).
- * This provides a consistent runtime environment with all necessary tools.
- */
-export function getMiseRuntimeContainer(platform?: Platform): Container {
-  return withMiseTools(getSystemContainer(platform));
-}
+// Re-export simple containers from lib
+export {
+  getSystemContainer,
+  getMiseRuntimeContainer,
+  getCurlContainer,
+  getKubectlContainer,
+  withMiseTools,
+} from "../lib/containers/index";
+
+import { getSystemContainer } from "../lib/containers/index";
+import { getMiseRuntimeContainer } from "../lib/containers/index";
 
 /**
  * Creates a workspace-specific container with dependencies installed.
@@ -117,56 +95,4 @@ export function getUbuntuBaseContainer(
   return getSystemContainer(platform)
     .withWorkdir("/workspace")
     .withMountedDirectory("/workspace", source);
-}
-
-/**
- * Returns a cached curl container optimized for HTTP operations.
- * @returns A configured Container with curl and caching ready.
- */
-export function getCurlContainer(): Container {
-  return dag.container().from(`curlimages/curl:${versions["curlimages/curl"]}`);
-}
-
-/**
- * Returns a cached kubectl container optimized for Kubernetes operations.
- * @returns A configured Container with kubectl and caching ready.
- */
-export function getKubectlContainer(): Container {
-  return dag.container().from(`alpine/kubectl:${versions["alpine/kubectl"]}`);
-}
-
-/**
- * Returns a container with mise (development tools) installed and cached.
- * Optimized for maximum caching efficiency.
- * @param baseContainer The base container to build upon.
- * @returns A configured Container with mise and tools ready.
- */
-export function withMiseTools(baseContainer: Container): Container {
-  return (
-    baseContainer
-      // Install mise via apt (combine operations for fewer layers)
-      .withExec(["install", "-dm", "755", "/etc/apt/keyrings"])
-      .withExec([
-        "sh",
-        "-c",
-        "wget -qO - https://mise.jdx.dev/gpg-key.pub | gpg --dearmor > /etc/apt/keyrings/mise-archive-keyring.gpg && " +
-          "echo 'deb [signed-by=/etc/apt/keyrings/mise-archive-keyring.gpg] https://mise.jdx.dev/deb stable main' > /etc/apt/sources.list.d/mise.list && " +
-          "apt-get update && apt-get install -y mise",
-      ])
-      // Set PATH so mise shims are available
-      .withEnvVariable(
-        "PATH",
-        "/root/.local/share/mise/shims:/root/.local/bin:${PATH}",
-        {
-          expand: true,
-        },
-      )
-      // Install tools directly (no cache mount - tools must be in the final image)
-      // Note: This runs every build but ensures tools are baked into the image
-      .withExec([
-        "sh",
-        "-c",
-        `mise trust --yes && mise install bun@${versions.bun} python@${versions.python} node@${versions.node} && mise use -g bun@${versions.bun} python@${versions.python} node@${versions.node} && mise reshim`,
-      ])
-  );
 }

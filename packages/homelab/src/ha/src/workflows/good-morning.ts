@@ -1,5 +1,6 @@
 import type { TServiceParams } from "@digital-alchemy/core";
 import {
+  isAnyoneHome,
   openCoversWithDelay,
   runParallel,
   runSequential,
@@ -29,12 +30,10 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
   const personJerred = hass.refBy.id("person.jerred");
   const personShuxin = hass.refBy.id("person.shuxin");
 
-  function isAnyoneHome() {
-    const jerredHome = personJerred.state === "home";
-    const shuxinHome = personShuxin.state === "home";
-    const anyoneHome = jerredHome || shuxinHome;
+  function isAnyoneHomeWithLogging() {
+    const anyoneHome = isAnyoneHome(hass);
     logger.info(
-      `isAnyoneHome check: jerred=${personJerred.state} (home=${String(jerredHome)}), shuxin=${personShuxin.state} (home=${String(shuxinHome)}), result=${String(anyoneHome)}`,
+      `isAnyoneHome check: jerred=${personJerred.state}, shuxin=${personShuxin.state}, result=${String(anyoneHome)}`,
     );
     return anyoneHome;
   }
@@ -76,7 +75,7 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
   async function runEarly() {
     logger.info("good_morning_early triggered");
     await withTimeout(
-      runIf(isAnyoneHome(), () =>
+      runIf(isAnyoneHomeWithLogging(), () =>
         hass.call.climate.set_temperature({
           entity_id: bedroomHeater.entity_id,
           hvac_mode: "heat",
@@ -110,7 +109,7 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
         //   }
         // },
         () =>
-          runIf(isAnyoneHome(), () =>
+          runIf(isAnyoneHomeWithLogging(), () =>
             runParallel([
               () =>
                 hass.call.notify.notify({
@@ -257,7 +256,7 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
   async function runGetUp() {
     logger.info("good_morning_get_up triggered");
     await withTimeout(
-      runIf(isAnyoneHome(), () =>
+      runIf(isAnyoneHomeWithLogging(), () =>
         runParallel([
           () =>
             runIf(personShuxin.state === "not_home", () =>

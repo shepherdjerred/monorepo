@@ -84,7 +84,7 @@ export async function execOrThrow(
     }
     const output = parts.join("\n") || "No output";
     throw new Error(
-      `Command failed (exit code ${result.exitCode}):\n${output}`,
+      `Command failed (exit code ${String(result.exitCode)}):\n${output}`,
     );
   }
 

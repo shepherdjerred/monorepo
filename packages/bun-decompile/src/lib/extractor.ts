@@ -205,14 +205,14 @@ export function getExtractionSummary(result: DecompileResult): string {
   }
 
   const withSourcemaps = result.modules.filter(
-    (m) => m.sourcemap && m.sourcemap.length > 0,
+    (m) => m.sourcemap != null && m.sourcemap.length > 0,
   ).length;
   if (withSourcemaps > 0) {
     lines.push(`With Sourcemaps: ${String(withSourcemaps)}`);
   }
 
   const withBytecode = result.modules.filter(
-    (m) => m.bytecode && m.bytecode.length > 0,
+    (m) => m.bytecode != null && m.bytecode.length > 0,
   ).length;
   if (withBytecode > 0) {
     lines.push(`With Bytecode: ${String(withBytecode)}`);

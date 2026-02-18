@@ -127,7 +127,7 @@ export class ProgressDisplay {
     const lines: string[] = [];
 
     // Header line
-    if (progress.currentItem) {
+    if (progress.currentItem != null && progress.currentItem.length > 0) {
       lines.push(
         `${ANSI.clearLine}${ANSI.bold}De-minifying:${ANSI.reset} ${progress.currentItem}`,
       );

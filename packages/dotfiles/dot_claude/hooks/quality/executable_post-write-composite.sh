@@ -4,6 +4,7 @@
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=./executable_lib.sh
 source "${SCRIPT_DIR}/lib.sh"
 
 INPUT="$(cat)"

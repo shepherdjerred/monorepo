@@ -2,6 +2,13 @@
 set -eu
 
 ERRORS=0
+
+# Guardrail: all packages in monorepo must remain integrated.
+if grep -q '"!packages/' package.json; then
+  echo 'FAIL: package.json contains excluded workspaces (!packages/...)'
+  ERRORS=$((ERRORS+1))
+fi
+
 for dir in packages/*/; do
   PKG=$(basename "$dir")
 

@@ -24,10 +24,18 @@ const mockMatchMedia = (matches: boolean) => {
     matches,
     media: "(prefers-color-scheme: dark)",
     onchange: null,
-    addListener: () => { /* noop */ },
-    removeListener: () => { /* noop */ },
-    addEventListener: () => { /* noop */ },
-    removeEventListener: () => { /* noop */ },
+    addListener: () => {
+      /* noop */
+    },
+    removeListener: () => {
+      /* noop */
+    },
+    addEventListener: () => {
+      /* noop */
+    },
+    removeEventListener: () => {
+      /* noop */
+    },
     dispatchEvent: () => true,
   });
 };
@@ -154,8 +162,12 @@ describe("ThemeToggle edge cases", () => {
       setItem: () => {
         throw new Error("Storage access denied");
       },
-      removeItem: () => { /* noop */ },
-      clear: () => { /* noop */ },
+      removeItem: () => {
+        /* noop */
+      },
+      clear: () => {
+        /* noop */
+      },
     };
 
     // @ts-expect-error - mocking global localStorage with broken implementation

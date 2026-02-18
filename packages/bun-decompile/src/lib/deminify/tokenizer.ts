@@ -150,7 +150,10 @@ export function countTokens(text: string, model: string): number {
  */
 export function getContextLimit(model: string): number {
   // Check exact match first
-  if (MODEL_CONTEXT_LIMITS[model]) {
+  if (
+    MODEL_CONTEXT_LIMITS[model] != null &&
+    MODEL_CONTEXT_LIMITS[model] !== 0
+  ) {
     return MODEL_CONTEXT_LIMITS[model];
   }
 
@@ -195,6 +198,18 @@ export function getTargetBatchTokens(
   return Math.floor(availableForInput * utilizationPct);
 }
 
+function getProvider(model: string): "openai" | "anthropic" | "unknown" {
+  if (isClaudeModel(model)) {
+    return "anthropic";
+  }
+
+  if (isOpenAIModel(model)) {
+    return "openai";
+  }
+
+  return "unknown";
+}
+
 /**
  * Get model information for display/logging.
  */
@@ -206,10 +221,6 @@ export function getModelInfo(model: string): {
   return {
     contextLimit: getContextLimit(model),
     targetBatchTokens: getTargetBatchTokens(model),
-    provider: isClaudeModel(model)
-      ? "anthropic"
-      : (isOpenAIModel(model)
-        ? "openai"
-        : "unknown"),
+    provider: getProvider(model),
   };
 }

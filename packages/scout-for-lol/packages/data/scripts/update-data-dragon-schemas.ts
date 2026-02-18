@@ -1,45 +1,6 @@
 import { z } from "zod";
-
-// Schemas for validation
-export const SummonerSchema = z.object({
-  type: z.string(),
-  version: z.string(),
-  data: z.record(
-    z.string(),
-    z.object({
-      id: z.string(),
-      name: z.string(),
-      description: z.string(),
-      tooltip: z.string(),
-      maxrank: z.number(),
-      cooldown: z.array(z.number()),
-      cooldownBurn: z.string(),
-      cost: z.array(z.number()),
-      costBurn: z.string(),
-      datavalues: z.object({}),
-      effect: z.array(z.union([z.null(), z.array(z.number())])),
-      effectBurn: z.array(z.union([z.null(), z.string()])),
-      vars: z.array(z.unknown()),
-      key: z.string(),
-      summonerLevel: z.number(),
-      modes: z.array(z.string()),
-      costType: z.string(),
-      maxammo: z.string(),
-      range: z.array(z.number()),
-      rangeBurn: z.string(),
-      image: z.object({
-        full: z.string(),
-        sprite: z.string(),
-        group: z.string(),
-        x: z.number(),
-        y: z.number(),
-        w: z.number(),
-        h: z.number(),
-      }),
-      resource: z.string(),
-    }),
-  ),
-});
+import type { SummonerSchema } from "@scout-for-lol/data/data-dragon/summoner.ts";
+import type { RuneTreeSchema } from "@scout-for-lol/data/data-dragon/runes.ts";
 
 export type SummonerData = z.infer<typeof SummonerSchema>;
 
@@ -56,29 +17,6 @@ export const ItemSchema = z.object({
 });
 
 export type ItemData = z.infer<typeof ItemSchema>;
-
-export const RuneTreeSchema = z.array(
-  z.object({
-    id: z.number(),
-    key: z.string(),
-    icon: z.string(),
-    name: z.string(),
-    slots: z.array(
-      z.object({
-        runes: z.array(
-          z.object({
-            id: z.number(),
-            key: z.string(),
-            icon: z.string(),
-            name: z.string(),
-            shortDesc: z.string(),
-            longDesc: z.string(),
-          }),
-        ),
-      }),
-    ),
-  }),
-);
 
 export type RuneTreeData = z.infer<typeof RuneTreeSchema>;
 

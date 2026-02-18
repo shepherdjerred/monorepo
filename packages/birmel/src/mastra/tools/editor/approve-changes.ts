@@ -107,7 +107,10 @@ export const approveChangesTool = createTool({
         }
 
         // Verify cloned repo path exists
-        if (session.clonedRepoPath == null || session.clonedRepoPath.length === 0) {
+        if (
+          session.clonedRepoPath == null ||
+          session.clonedRepoPath.length === 0
+        ) {
           return {
             success: false,
             message: "No cloned repository found for this session.",

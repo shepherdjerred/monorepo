@@ -55,17 +55,6 @@ export function withTimeout<T>(
   ]);
 }
 
-/**
- * Wrap a promise factory with a timeout. Useful for lazy evaluation.
- */
-export function withTimeoutFactory<T>(
-  promiseFactory: () => Promise<T>,
-  timeout: Time,
-  operationName?: string,
-): () => Promise<T> {
-  return () => withTimeout(promiseFactory(), timeout, operationName);
-}
-
 type DscCheckBase = {
   entityId: string;
   workflowName: string;
@@ -295,4 +284,13 @@ export function repeat(
     factories.push(promiseFactory);
   }
   return factories;
+}
+
+/**
+ * Check if anyone is home by checking person entity states.
+ */
+export function isAnyoneHome(hass: TServiceParams["hass"]): boolean {
+  const personJerred = hass.refBy.id("person.jerred");
+  const personShuxin = hass.refBy.id("person.shuxin");
+  return personJerred.state === "home" || personShuxin.state === "home";
 }

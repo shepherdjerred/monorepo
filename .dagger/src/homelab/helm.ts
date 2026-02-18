@@ -1,4 +1,5 @@
-import { dag, Directory, Secret, Container } from "@dagger.io/dagger";
+import type { Directory, Secret, Container } from "@dagger.io/dagger";
+import { dag } from "@dagger.io/dagger";
 import { buildK8sManifests } from "./cdk8s";
 import versions from "./versions";
 

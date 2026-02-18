@@ -62,7 +62,8 @@ export async function createPoll(
         },
         answers: params.answers.map((answer) => ({
           text: answer.text,
-          ...(answer.emoji != null && answer.emoji.length > 0 && { emoji: answer.emoji }),
+          ...(answer.emoji != null &&
+            answer.emoji.length > 0 && { emoji: answer.emoji }),
         })),
         duration,
         allowMultiselect: params.allowMultiselect ?? false,
@@ -70,7 +71,12 @@ export async function createPoll(
     });
 
     // Store poll metadata in database
-    if (message.guildId != null && message.guildId.length > 0 && message.poll != null && client.user != null) {
+    if (
+      message.guildId != null &&
+      message.guildId.length > 0 &&
+      message.poll != null &&
+      client.user != null
+    ) {
       void prisma.pollRecord
         .create({
           data: {
@@ -142,7 +148,9 @@ function extractPollResults(poll: Poll): GetPollResultsData {
     answers,
     totalVotes,
     isFinalized: poll.resultsFinalized,
-    ...(poll.expiresAt == null ? {} : { expiresAt: poll.expiresAt.toISOString() }),
+    ...(poll.expiresAt == null
+      ? {}
+      : { expiresAt: poll.expiresAt.toISOString() }),
   };
 }
 

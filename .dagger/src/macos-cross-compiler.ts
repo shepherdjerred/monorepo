@@ -1,5 +1,4 @@
 import type { Directory, Container, Secret } from "@dagger.io/dagger";
-import { dag } from "@dagger.io/dagger";
 import {
   getSystemContainer,
   publishToGhcrMultiple,
@@ -41,11 +40,11 @@ function installBaseDeps(): Container {
 /**
  * Build xar library
  */
-async function buildXar(
+function buildXar(
   container: Container,
   targetSdkVersion: string,
   cores: number,
-): Promise<Directory> {
+): Directory {
   const xarContainer = container
     .withExec([
       "apt",
@@ -79,11 +78,11 @@ async function buildXar(
 /**
  * Build libdispatch library
  */
-async function buildLibdispatch(
+function buildLibdispatch(
   container: Container,
   targetSdkVersion: string,
   cores: number,
-): Promise<Directory> {
+): Directory {
   const libdispatchContainer = container
     .withExec(["apt", "install", "-y", "clang"])
     .withExec([
@@ -116,10 +115,10 @@ async function buildLibdispatch(
 /**
  * Build libtapi library
  */
-async function buildLibtapi(
+function buildLibtapi(
   container: Container,
   targetSdkVersion: string,
-): Promise<Directory> {
+): Directory {
   const libtapiContainer = container
     .withExec(["apt", "install", "-y", "python3"])
     .withExec([
@@ -142,7 +141,7 @@ async function buildLibtapi(
 /**
  * Build cctools for a specific architecture
  */
-async function buildCctools(
+function buildCctools(
   container: Container,
   architecture: string,
   kernelVersion: string,
@@ -151,7 +150,7 @@ async function buildCctools(
   xar: Directory,
   libtapi: Directory,
   libdispatch: Directory,
-): Promise<Directory> {
+): Directory {
   // autoconf does not recognize aarch64 -- use arm instead
   const triple =
     architecture === "aarch64"
@@ -222,13 +221,13 @@ async function buildCctools(
 /**
  * Build wrapper for clang
  */
-async function buildClangWrappers(
+function buildClangWrappers(
   container: Container,
   sdkVersion: string,
   kernelVersion: string,
   targetSdkVersion: string,
   cores: number,
-): Promise<Directory> {
+): Directory {
   const wrapperContainer = container
     .withExec([
       "git",
@@ -267,13 +266,13 @@ async function buildClangWrappers(
 /**
  * Build wrapper for GCC
  */
-async function buildGccWrappers(
+function buildGccWrappers(
   container: Container,
   sdkVersion: string,
   kernelVersion: string,
   targetSdkVersion: string,
   cores: number,
-): Promise<Directory> {
+): Directory {
   const wrapperContainer = container
     .withExec([
       "git",
@@ -312,10 +311,7 @@ async function buildGccWrappers(
 /**
  * Get or download macOS SDK
  */
-async function getSdk(
-  container: Container,
-  version: string,
-): Promise<Directory> {
+function getSdk(container: Container, version: string): Directory {
   const sdkContainer = container
     .withExec(["apt", "update"])
     .withExec(["apt", "install", "-y", "wget"])
@@ -332,10 +328,7 @@ async function getSdk(
 /**
  * Build Zig compiler
  */
-async function buildZig(
-  container: Container,
-  targetArch: string = "x86_64",
-): Promise<Directory> {
+function buildZig(container: Container, targetArch = "x86_64"): Directory {
   let archSuffix: string;
   if (targetArch === "aarch64" || targetArch === "arm64") {
     archSuffix = "aarch64";
@@ -363,7 +356,7 @@ async function buildZig(
 /**
  * Build GCC compiler for cross-compilation
  */
-async function buildGcc(
+function buildGcc(
   container: Container,
   architecture: string,
   sdkVersion: string,
@@ -376,7 +369,7 @@ async function buildGcc(
   xar: Directory,
   libtapi: Directory,
   libdispatch: Directory,
-): Promise<Directory> {
+): Directory {
   const triple = `${architecture}-apple-darwin${kernelVersion}`;
 
   const gccContainer = container
@@ -489,37 +482,27 @@ async function buildGcc(
  * @param cores - Number of CPU cores for compilation (default: 16)
  * @returns The fully built cross-compiler container
  */
-async function buildImage(
+function buildImage(
   source: Directory,
   architectures: string = DEFAULT_ARCHITECTURES,
   sdkVersion: string = DEFAULT_SDK_VERSION,
   kernelVersion: string = DEFAULT_KERNEL_VERSION,
   targetSdkVersion: string = DEFAULT_TARGET_SDK_VERSION,
   cores: number = DEFAULT_CORES,
-): Promise<Container> {
-  // Start with base Ubuntu container
-  let container = dag
-    .container()
-    .from("ubuntu:noble")
-    .withWorkdir("/workspace");
-
+): Container {
   // Install base dependencies
-  container = installBaseDeps();
+  let container = installBaseDeps();
 
   // Build components in dependency order
-  const xar = await buildXar(container, targetSdkVersion, cores);
-  const libdispatch = await buildLibdispatch(
-    container,
-    targetSdkVersion,
-    cores,
-  );
-  const libtapi = await buildLibtapi(container, targetSdkVersion);
+  const xar = buildXar(container, targetSdkVersion, cores);
+  const libdispatch = buildLibdispatch(container, targetSdkVersion, cores);
+  const libtapi = buildLibtapi(container, targetSdkVersion);
 
   // Get or download SDK
-  const sdk = await getSdk(container, sdkVersion);
+  const sdk = getSdk(container, sdkVersion);
 
   // Build Zig compiler
-  const zig = await buildZig(container);
+  const zig = buildZig(container);
 
   // Set up SDK in container
   container = container
@@ -559,7 +542,7 @@ async function buildImage(
 
   for (const architecture of archList) {
     // Build cctools for this architecture
-    const cctools = await buildCctools(
+    const cctools = buildCctools(
       container,
       architecture,
       kernelVersion,
@@ -571,7 +554,7 @@ async function buildImage(
     );
 
     // Build wrappers
-    const clangWrappers = await buildClangWrappers(
+    const clangWrappers = buildClangWrappers(
       container,
       sdkVersion,
       kernelVersion,
@@ -579,7 +562,7 @@ async function buildImage(
       cores,
     );
 
-    const gccWrappers = await buildGccWrappers(
+    const gccWrappers = buildGccWrappers(
       container,
       sdkVersion,
       kernelVersion,
@@ -588,7 +571,7 @@ async function buildImage(
     );
 
     // Build GCC for this architecture
-    const gcc = await buildGcc(
+    const gcc = buildGcc(
       container,
       architecture,
       sdkVersion,
@@ -782,7 +765,7 @@ export async function checkMacosCrossCompiler(
 ): Promise<string> {
   const crossCompilerSource = source.directory("packages/macos-cross-compiler");
 
-  const image = await buildImage(crossCompilerSource);
+  const image = buildImage(crossCompilerSource);
   await testImage(crossCompilerSource, image);
 
   return "macOS cross-compiler check passed: image built and tests verified successfully.";
@@ -809,7 +792,7 @@ export async function deployMacosCrossCompiler(
 ): Promise<string> {
   const crossCompilerSource = source.directory("packages/macos-cross-compiler");
 
-  const image = await buildImage(crossCompilerSource);
+  const image = buildImage(crossCompilerSource);
 
   // Push with both latest and version tags in parallel
   const refs = await publishToGhcrMultiple({

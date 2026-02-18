@@ -1,12 +1,5 @@
 export const BOT_NAME = "Birmel";
 
-export const TRIGGER_PATTERNS = [
-  /\bbirmel\b/i,
-  /\bhey birmel\b/i,
-  /\byo birmel\b/i,
-  /\bok birmel\b/i,
-] as const;
-
 /**
  * Generate a dynamic wake word based on the current guild owner's name.
  * Replaces the first letter with 'b' (e.g., "virmel" -> "birmel", "aaron" -> "baron").

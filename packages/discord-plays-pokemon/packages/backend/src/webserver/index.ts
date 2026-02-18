@@ -16,9 +16,8 @@ export function createWebServer({
 }) {
   logger.info("creating web server");
 
-   
   const app = createExpressApp({ isCorsEnabled, webAssetsPath });
-   
+
   const server = createServer(app);
 
   let socket;
@@ -33,11 +32,9 @@ export function createWebServer({
     }
   });
 
-   
   return {
     server,
     socket,
     app,
   };
-   
 }

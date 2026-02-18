@@ -1,5 +1,6 @@
 #!/usr/bin/env -S bun
-import { Container, Directory, dag } from "@dagger.io/dagger";
+import type { Container, Directory } from "@dagger.io/dagger";
+import { dag } from "@dagger.io/dagger";
 import { getWorkspaceContainer } from "./base";
 import { execOrThrow } from "./errors";
 import { caddyVersionOnly } from "./versions";

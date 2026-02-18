@@ -28,6 +28,26 @@ export type TimelineEnrichment = {
 };
 
 /**
+ * Build a participant lookup table from raw match data.
+ *
+ * Maps participant IDs to human-readable champion names and
+ * team names ("Blue"/"Red" instead of 100/200).
+ */
+export function buildParticipantLookup(
+  rawMatch: RawMatch,
+): ParticipantLookup[] {
+  return rawMatch.info.participants.map((p, index) => ({
+    participantId: index + 1,
+    championName: p.championName,
+    team: p.teamId === 100 ? "Blue" : "Red",
+    summonerName:
+      p.riotIdGameName != null && p.riotIdGameName.length > 0
+        ? p.riotIdGameName
+        : p.summonerName,
+  }));
+}
+
+/**
  * Build enrichment context for a timeline
  *
  * This creates a lookup table that maps participant IDs to human-readable
@@ -36,18 +56,8 @@ export type TimelineEnrichment = {
 export function buildTimelineEnrichment(
   rawMatch: RawMatch,
 ): TimelineEnrichment {
-  const participants: ParticipantLookup[] = rawMatch.info.participants.map(
-    (p, index) => ({
-      participantId: index + 1,
-      championName: p.championName,
-      team: p.teamId === 100 ? "Blue" : "Red",
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- riotIdGameName is optional
-      summonerName: p.riotIdGameName ?? p.summonerName ?? "Unknown",
-    }),
-  );
-
   return {
-    participants,
+    participants: buildParticipantLookup(rawMatch),
     gameDurationSeconds: rawMatch.info.gameDuration,
   };
 }

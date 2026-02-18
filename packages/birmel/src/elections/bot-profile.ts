@@ -11,7 +11,11 @@ const logger = loggers.scheduler.child("elections").child("profile");
  */
 export async function updateBotProfile(personaName: string): Promise<void> {
   const discordId = getDiscordIdForPersona(personaName);
-  if ((discordId == null || discordId.length === 0) || discordId.startsWith("TODO_")) {
+  if (
+    discordId == null ||
+    discordId.length === 0 ||
+    discordId.startsWith("TODO_")
+  ) {
     logger.warn(
       "No Discord ID configured for persona, skipping profile update",
       {

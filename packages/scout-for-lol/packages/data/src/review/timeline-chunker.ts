@@ -11,7 +11,10 @@ import type {
   RawTimelineEvent,
 } from "@scout-for-lol/data/league/raw-timeline.schema";
 import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema";
-import type { ParticipantLookup } from "./timeline-enricher.ts";
+import {
+  type ParticipantLookup,
+  buildParticipantLookup,
+} from "./timeline-enricher.ts";
 
 /** Duration of each chunk in milliseconds (10 minutes) */
 export const CHUNK_DURATION_MS = 10 * 60 * 1000;
@@ -137,19 +140,9 @@ export function enrichTimelineChunk(
   chunk: TimelineChunk,
   rawMatch: RawMatch,
 ): EnrichedTimelineChunk {
-  const participants: ParticipantLookup[] = rawMatch.info.participants.map(
-    (p, index) => ({
-      participantId: index + 1,
-      championName: p.championName,
-      team: p.teamId === 100 ? "Blue" : "Red",
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- riotIdGameName is optional
-      summonerName: p.riotIdGameName ?? p.summonerName ?? "Unknown",
-    }),
-  );
-
   return {
     chunk,
-    participants,
+    participants: buildParticipantLookup(rawMatch),
     gameDurationSeconds: rawMatch.info.gameDuration,
   };
 }

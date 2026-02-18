@@ -1,7 +1,6 @@
 export {
   buildStyleContext,
   buildPersonaPrompt,
-  stylizeResponse,
   type StyleContext,
   type StyleCard,
 } from "./style-transform.js";

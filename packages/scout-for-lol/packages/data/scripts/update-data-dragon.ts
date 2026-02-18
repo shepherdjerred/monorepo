@@ -2,10 +2,10 @@
 import { z } from "zod";
 import { first } from "remeda";
 import { $ } from "bun";
+import { SummonerSchema } from "@scout-for-lol/data/data-dragon/summoner.ts";
+import { RuneTreeSchema } from "@scout-for-lol/data/data-dragon/runes.ts";
 import {
-  SummonerSchema,
   ItemSchema,
-  RuneTreeSchema,
   ChampionListSchema,
   ArenaAugmentsApiResponseSchema,
   rarityNumberToString,

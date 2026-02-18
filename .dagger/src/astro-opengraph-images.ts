@@ -1,5 +1,6 @@
-import type { Directory, Container } from "@dagger.io/dagger";
+import type { Directory } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
+import versions from "./lib/versions.js";
 
 /**
  * Check astro-opengraph-images: lint, build, test
@@ -11,7 +12,7 @@ export async function checkAstroOpengraphImages(
 
   const container = dag
     .container()
-    .from("oven/bun:latest")
+    .from(`oven/bun:${versions["oven/bun"]}`)
     .withWorkdir("/workspace")
     .withEnvVariable("CI", "true")
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))

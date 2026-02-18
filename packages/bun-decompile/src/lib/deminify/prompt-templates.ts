@@ -45,6 +45,69 @@ function filterArrayByPredicate(items, predicate) {
 {"suggestedName":"filterArrayByPredicate","confidence":0.9,"parameterNames":{"R":"items","A":"predicate"},"localVariableNames":{"_":"results","B":"index"}}`;
 }
 
+/** Render a function context block (caller or callee) as prompt lines */
+function renderFunctionContextBlock(ctx: {
+  suggestedName: string | null;
+  id: string;
+  deminifiedSource: string | null;
+  originalSource: string;
+}): string[] {
+  const lines: string[] = [];
+  const name = ctx.suggestedName ?? ctx.id;
+  lines.push(`### ${name}`);
+  const source =
+    ctx.deminifiedSource != null && ctx.deminifiedSource.length > 0
+      ? ctx.deminifiedSource
+      : ctx.originalSource;
+  lines.push("```javascript");
+  lines.push(source);
+  lines.push("```");
+  lines.push("");
+  return lines;
+}
+
+/** Collect function metadata hints */
+function collectFunctionHints(
+  func: DeminifyContext["targetFunction"],
+): string[] {
+  const hints: string[] = [];
+
+  if (func.isAsync) {
+    hints.push("async function");
+  }
+  if (func.isGenerator) {
+    hints.push("generator function");
+  }
+
+  const typeHints: Record<string, string> = {
+    "arrow-function": "arrow function",
+    method: "class method",
+    constructor: "constructor",
+    getter: "getter",
+    setter: "setter",
+  };
+  const typeHint = typeHints[func.type];
+  if (typeHint != null) {
+    hints.push(typeHint);
+  }
+
+  if (func.params.length > 0) {
+    const paramHints = func.params.map((p) => {
+      let h = p.name.length > 0 ? p.name : "[destructured]";
+      if (p.isRest) {
+        h = `...${h}`;
+      }
+      if (p.hasDefault) {
+        h = `${h}=default`;
+      }
+      return h;
+    });
+    hints.push(`parameters: (${paramHints.join(", ")})`);
+  }
+
+  return hints;
+}
+
 /** Generate the user prompt for a specific function */
 export function getFunctionPrompt(context: DeminifyContext): string {
   const parts: string[] = [];
@@ -61,18 +124,7 @@ export function getFunctionPrompt(context: DeminifyContext): string {
   if (context.callers.length > 0) {
     parts.push("## Context: Functions that call this function\n");
     for (const caller of context.callers) {
-      const name = caller.suggestedName ?? caller.id;
-      parts.push(`### ${name}`);
-      if (caller.deminifiedSource) {
-        parts.push("```javascript");
-        parts.push(caller.deminifiedSource);
-        parts.push("```");
-      } else {
-        parts.push("```javascript");
-        parts.push(caller.originalSource);
-        parts.push("```");
-      }
-      parts.push("");
+      parts.push(...renderFunctionContextBlock(caller));
     }
   }
 
@@ -80,18 +132,7 @@ export function getFunctionPrompt(context: DeminifyContext): string {
   if (context.callees.length > 0) {
     parts.push("## Context: Functions this function calls\n");
     for (const callee of context.callees) {
-      const name = callee.suggestedName ?? callee.id;
-      parts.push(`### ${name}`);
-      if (callee.deminifiedSource) {
-        parts.push("```javascript");
-        parts.push(callee.deminifiedSource);
-        parts.push("```");
-      } else {
-        parts.push("```javascript");
-        parts.push(callee.originalSource);
-        parts.push("```");
-      }
-      parts.push("");
+      parts.push(...renderFunctionContextBlock(callee));
     }
   }
 
@@ -128,43 +169,7 @@ export function getFunctionPrompt(context: DeminifyContext): string {
   }
 
   // Function metadata hints
-  const func = context.targetFunction;
-  const hints: string[] = [];
-
-  if (func.isAsync) {
-    hints.push("async function");
-  }
-  if (func.isGenerator) {
-    hints.push("generator function");
-  }
-  if (func.type === "arrow-function") {
-    hints.push("arrow function");
-  }
-  if (func.type === "method") {
-    hints.push("class method");
-  }
-  if (func.type === "constructor") {
-    hints.push("constructor");
-  }
-  if (func.type === "getter") {
-    hints.push("getter");
-  }
-  if (func.type === "setter") {
-    hints.push("setter");
-  }
-  if (func.params.length > 0) {
-    const paramHints = func.params.map((p) => {
-      let h = p.name || "[destructured]";
-      if (p.isRest) {
-        h = `...${h}`;
-      }
-      if (p.hasDefault) {
-        h = `${h}=default`;
-      }
-      return h;
-    });
-    hints.push(`parameters: (${paramHints.join(", ")})`);
-  }
+  const hints = collectFunctionHints(context.targetFunction);
 
   if (hints.length > 0) {
     parts.push("## Function metadata");
@@ -225,7 +230,7 @@ Output only the de-minified code in \`\`\`javascript blocks, followed by a JSON 
  * @returns The estimated token count
  */
 export function estimatePromptTokens(prompt: string, model?: string): number {
-  if (model) {
+  if (model != null && model.length > 0) {
     return countTokens(prompt, model);
   }
   // Fallback: rough approximation (~4 characters per token for code)
@@ -345,7 +350,7 @@ export function estimateBatchTokens(
   const userPrompt = getBatchFunctionPrompt(functions, knownNames);
   const fullPrompt = systemPrompt + "\n" + userPrompt;
 
-  if (model) {
+  if (model != null && model.length > 0) {
     return countTokens(fullPrompt, model);
   }
 

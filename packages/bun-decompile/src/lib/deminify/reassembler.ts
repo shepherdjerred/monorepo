@@ -27,7 +27,7 @@ export function reassemble(
 
     // Only replace top-level functions (not nested)
     // Nested functions are already included in their parent's de-minified output
-    if (func.parentId) {
+    if (func.parentId != null && func.parentId.length > 0) {
       continue;
     }
 

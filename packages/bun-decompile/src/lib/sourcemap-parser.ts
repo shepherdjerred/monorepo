@@ -157,12 +157,13 @@ export async function parseSourceMap(
       );
 
       // Verify ZSTD magic (0x28 0xB5 0x2F 0xFD)
+      const ZSTD_MAGIC = [40, 181, 47, 253] as const;
       if (
         compressed.length < 4 ||
-        compressed[0] !== 0x28 ||
-        compressed[1] !== 0xB5 ||
-        compressed[2] !== 0x2F ||
-        compressed[3] !== 0xFD
+        compressed[0] !== ZSTD_MAGIC[0] ||
+        compressed[1] !== ZSTD_MAGIC[1] ||
+        compressed[2] !== ZSTD_MAGIC[2] ||
+        compressed[3] !== ZSTD_MAGIC[3]
       ) {
         // Not ZSTD compressed, try as plain text
         sources.push({

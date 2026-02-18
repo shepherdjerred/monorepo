@@ -41,28 +41,3 @@ export async function getRecentChannelMessages(
     return [];
   }
 }
-
-/**
- * Format messages for the classifier agent.
- * Returns a string representation of recent channel activity.
- */
-export function formatMessagesForClassifier(
-  messages: ChannelMessage[],
-  newMessage: Message,
-): string {
-  const lines: string[] = [];
-
-  lines.push("=== Recent Channel Messages ===");
-  for (const msg of messages) {
-    const botTag = msg.isBot ? " [BOT]" : "";
-    lines.push(`${msg.authorName}${botTag}: ${msg.content}`);
-  }
-
-  lines.push("");
-  lines.push("=== New Message to Classify ===");
-  const newAuthorName =
-    newMessage.author.displayName || newMessage.author.username;
-  lines.push(`${newAuthorName}: ${newMessage.content}`);
-
-  return lines.join("\n");
-}

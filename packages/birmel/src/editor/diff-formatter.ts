@@ -64,7 +64,10 @@ function formatEditDiff(
   oldContent: string | null,
   newContent: string | null,
 ): string {
-  if ((oldContent == null || oldContent.length === 0) && (newContent == null || newContent.length === 0)) {
+  if (
+    (oldContent == null || oldContent.length === 0) &&
+    (newContent == null || newContent.length === 0)
+  ) {
     return "```\n(no content)\n```";
   }
 

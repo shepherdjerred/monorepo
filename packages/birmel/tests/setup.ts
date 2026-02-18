@@ -79,9 +79,15 @@ void mock.module("discord.js", () => ({
     channels = { fetch: () => Promise.resolve({}) };
     users = { fetch: () => Promise.resolve({}) };
     login = () => Promise.resolve("logged-in");
-    destroy() { /* noop */ }
-    on() { /* noop */ }
-    once() { /* noop */ }
+    destroy() {
+      /* noop */
+    }
+    on() {
+      /* noop */
+    }
+    once() {
+      /* noop */
+    }
   },
   GatewayIntentBits: {
     Guilds: 1,
@@ -171,17 +177,29 @@ void mock.module("discord-player", () => ({
       register: () => Promise.resolve(),
     };
     events = {
-      on() { /* noop */ },
+      on() {
+        /* noop */
+      },
     };
     nodes = {
       create: () => ({
         play: () => Promise.resolve(),
         node: {
-          pause() { /* noop */ },
-          resume() { /* noop */ },
-          skip() { /* noop */ },
-          stop() { /* noop */ },
-          setVolume() { /* noop */ },
+          pause() {
+            /* noop */
+          },
+          resume() {
+            /* noop */
+          },
+          skip() {
+            /* noop */
+          },
+          stop() {
+            /* noop */
+          },
+          setVolume() {
+            /* noop */
+          },
         },
         tracks: [],
         currentTrack: null,

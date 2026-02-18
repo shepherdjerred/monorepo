@@ -1,5 +1,4 @@
-import { Directory } from "@dagger.io/dagger";
-import { buildK8sManifests } from "./cdk8s";
+import type { Directory } from "@dagger.io/dagger";
 import { getKubectlContainer } from "./base";
 
 /**
@@ -23,14 +22,4 @@ export async function applyK8sConfig(
       "kubectl apply -f . --dry-run=client > /tmp/result.txt 2>&1",
     ]); // Remove --dry-run=client for real apply
   return container.file("/tmp/result.txt").contents();
-}
-
-/**
- * Builds manifests with CDK8s and applies them to the cluster using kubectl.
- * @param source The repository root directory.
- * @returns The stdout from the kubectl apply command.
- */
-export async function buildAndApplyCdk8s(source: Directory): Promise<string> {
-  const manifestsDir = buildK8sManifests(source);
-  return applyK8sConfig(manifestsDir, ".");
 }

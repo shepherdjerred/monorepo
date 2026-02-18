@@ -1,4 +1,5 @@
-import { dag, Container, Directory, Secret } from "@dagger.io/dagger";
+import type { Container, Directory, Secret } from "@dagger.io/dagger";
+import { dag } from "@dagger.io/dagger";
 import versions from "./versions";
 import { execWithOutput } from "./errors";
 

@@ -189,9 +189,10 @@ export const editRepoTool = createTool({
         const result = await executeEdit({
           prompt: instruction,
           workingDirectory,
-          ...(session.sdkSessionId != null && session.sdkSessionId.length > 0 && {
-            resumeSessionId: session.sdkSessionId,
-          }),
+          ...(session.sdkSessionId != null &&
+            session.sdkSessionId.length > 0 && {
+              resumeSessionId: session.sdkSessionId,
+            }),
           allowedPaths: repoConfig.allowedPaths,
         });
 
@@ -248,7 +249,7 @@ export const editRepoTool = createTool({
               { name: "Files", value: filesList || "None" },
               { name: "Diff Preview", value: diffPreview.slice(0, 1000) },
             )
-            .setColor(0x58_65_F2)
+            .setColor(5_793_266)
             .setFooter({ text: `Session: ${session.id.slice(0, 8)}` });
 
           const buttons =

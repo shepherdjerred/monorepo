@@ -136,7 +136,7 @@ export class BatchProcessor {
     outputTokens?: number;
     error?: string;
   }): Promise<void> {
-    if (!this.logFile) {
+    if (this.logFile == null || this.logFile.length === 0) {
       return;
     }
 
@@ -177,7 +177,7 @@ export class BatchProcessor {
     const maxBatchTokens =
       options.maxBatchTokens ?? getTargetBatchTokens(this.config.model);
 
-    if (verbose) {
+    if (verbose === true) {
       console.log(
         `Model: ${this.config.model} | Context: ${modelInfo.contextLimit.toLocaleString()} | Batch budget: ${maxBatchTokens.toLocaleString()} tokens`,
       );
@@ -189,7 +189,7 @@ export class BatchProcessor {
     const functions = this.sortByDepth(graph);
     const totalFunctions = functions.length;
 
-    if (verbose) {
+    if (verbose === true) {
       console.log(
         `Processing ${String(totalFunctions)} functions bottom-up...`,
       );
@@ -220,7 +220,7 @@ export class BatchProcessor {
         }
       }
 
-      if (verbose) {
+      if (verbose === true) {
         console.log(
           `Round ${String(round)}: ${String(ready.length)} functions ready`,
         );
@@ -229,7 +229,7 @@ export class BatchProcessor {
       // Create batches using ORIGINAL source (positions don't change)
       const batches = this.createBatches(ready, maxBatchTokens, source);
 
-      if (verbose) {
+      if (verbose === true) {
         console.log(`  Split into ${String(batches.length)} batches`);
       }
 
@@ -250,9 +250,9 @@ export class BatchProcessor {
           // Trade-off: For circular dependencies, the LLM context is slightly
           // inconsistent (it sees planned names but reads original source), but
           // this prevents AST corruption which would be far worse.
-          if (mapping.functionName) {
+          if (mapping.functionName != null && mapping.functionName.length > 0) {
             const fn = functions.find((f) => f.id === id);
-            if (fn?.originalName) {
+            if (fn?.originalName != null && fn.originalName.length > 0) {
               knownNames.set(fn.originalName, mapping.functionName);
             }
           }
@@ -288,7 +288,7 @@ export class BatchProcessor {
     }
 
     // Apply ALL renames at once to the original source
-    if (verbose) {
+    if (verbose === true) {
       console.log(
         `Applying ${String(Object.keys(allMappings).length)} rename mappings...`,
       );
@@ -297,7 +297,7 @@ export class BatchProcessor {
     try {
       return applyRenames(source, allMappings);
     } catch (error) {
-      if (verbose) {
+      if (verbose === true) {
         console.error("Error applying renames:", error);
       }
       this.errors++;
@@ -332,7 +332,7 @@ export class BatchProcessor {
       let maxCalleeDepth = 0;
       for (const calleeName of fn.callees) {
         const calleeId = graph.nameToId.get(calleeName);
-        if (calleeId && calleeId !== id) {
+        if (calleeId != null && calleeId.length > 0 && calleeId !== id) {
           maxCalleeDepth = Math.max(
             maxCalleeDepth,
             getDepth(calleeId, visited) + 1,
@@ -373,7 +373,11 @@ export class BatchProcessor {
       // Check if all callees are processed
       for (const calleeName of fn.callees) {
         const calleeId = graph.nameToId.get(calleeName);
-        if (calleeId && !processed.has(calleeId)) {
+        if (
+          calleeId != null &&
+          calleeId.length > 0 &&
+          !processed.has(calleeId)
+        ) {
           return false;
         }
       }
@@ -538,7 +542,7 @@ export class BatchProcessor {
         }
       }
     } catch (error) {
-      if (verbose) {
+      if (verbose === true) {
         console.error("Error calling LLM:", error);
       }
       this.errors++;
@@ -565,7 +569,7 @@ export class BatchProcessor {
     const requestId = ++this.requestCount;
     const timestamp = new Date().toISOString();
 
-    if (verbose) {
+    if (verbose === true) {
       console.log("\n--- LLM Request ---");
       console.log(`Functions in batch: ${String(functions.length)}`);
       console.log(`Function IDs: ${functions.map((f) => f.id).join(", ")}`);
@@ -629,7 +633,7 @@ export class BatchProcessor {
       throw error;
     }
 
-    if (verbose) {
+    if (verbose === true) {
       console.log("\n--- LLM Response ---");
       console.log(`Mappings received: ${String(Object.keys(result).length)}`);
       for (const [id, mapping] of Object.entries(result)) {
@@ -637,7 +641,7 @@ export class BatchProcessor {
         console.log(
           `  ${id}: ${mapping.functionName ?? "(no name)"} - ${String(renameCount)} renames`,
         );
-        if (mapping.description) {
+        if (mapping.description != null && mapping.description.length > 0) {
           console.log(`    "${mapping.description}"`);
         }
       }
@@ -676,7 +680,7 @@ export class BatchProcessor {
     this.outputTokensUsed += outputTokens;
 
     const content = response.choices[0]?.message.content;
-    if (!content) {
+    if (content == null || content.length === 0) {
       throw new Error("Empty response from OpenAI");
     }
 
@@ -740,7 +744,7 @@ export class BatchProcessor {
 
     // If wrapped in markdown code blocks, extract
     const jsonMatch = /```(?:json)?\n?([\s\S]*?)```/.exec(jsonStr);
-    if (jsonMatch?.[1]) {
+    if (jsonMatch?.[1] != null && jsonMatch[1].length > 0) {
       jsonStr = jsonMatch[1].trim();
     }
 
