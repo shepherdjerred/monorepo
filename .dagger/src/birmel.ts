@@ -1,342 +1,84 @@
 import type { Directory, Container, Secret } from "@dagger.io/dagger";
-import { dag } from "@dagger.io/dagger";
-import versions from "./lib/versions.js";
-
-const BUN_VERSION = versions.bun;
-const PLAYWRIGHT_VERSION = versions.playwright;
+import {
+  getBaseBunDebianContainer,
+  installMonorepoWorkspaceDeps,
+} from "./lib/containers/index.js";
+import type { WorkspaceEntry } from "./lib/containers/index.js";
 
 /**
- * Get a base Bun container with system dependencies and caching.
- * LAYER ORDERING: System deps and caches are set up BEFORE any source files.
+ * Birmel-specific base container with voice/build dependencies.
+ * Adds ffmpeg, build tools, GitHub CLI, and Claude CLI on top of the shared base.
  */
-function getBaseVoiceContainer(): Container {
-  return (
-    dag
-      .container()
-      .from(`oven/bun:${BUN_VERSION}-debian`)
-      // Cache APT packages (version in key for invalidation on upgrade)
-      .withMountedCache(
-        "/var/cache/apt",
-        dag.cacheVolume(`apt-cache-bun-${BUN_VERSION}-debian`),
-      )
-      .withMountedCache(
-        "/var/lib/apt",
-        dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`),
-      )
-      .withExec(["apt-get", "update"])
-      .withExec([
-        "apt-get",
-        "install",
-        "-y",
-        "ffmpeg",
-        "python3",
-        "make",
-        "g++",
-        "libtool-bin",
-        "curl",
-        "git",
-      ])
-      // Install GitHub CLI for PR creation
-      .withExec([
-        "sh",
-        "-c",
-        "curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg && echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main' | tee /etc/apt/sources.list.d/github-cli.list > /dev/null && apt-get update && apt-get install -y gh",
-      ])
-      // Install Claude Code CLI for editor feature
-      // The install script puts claude in ~/.local/bin, so we symlink to /usr/local/bin for PATH access
-      .withExec([
-        "sh",
-        "-c",
-        "curl -fsSL https://claude.ai/install.sh | bash && ln -sf /root/.local/bin/claude /usr/local/bin/claude",
-      ])
-      // Cache Bun packages
-      .withMountedCache(
-        "/root/.bun/install/cache",
-        dag.cacheVolume("bun-cache"),
-      )
-      // Cache Playwright browsers (version in key for invalidation)
-      .withMountedCache(
-        "/root/.cache/ms-playwright",
-        dag.cacheVolume(`playwright-browsers-${PLAYWRIGHT_VERSION}`),
-      )
-      // Install Playwright Chromium and dependencies for browser automation
-      .withExec(["bunx", "playwright", "install", "--with-deps", "chromium"])
-      // Cache ESLint (incremental linting)
-      .withMountedCache(
-        "/workspace/.eslintcache",
-        dag.cacheVolume("eslint-cache"),
-      )
-      // Cache TypeScript incremental build
-      .withMountedCache(
-        "/workspace/.tsbuildinfo",
-        dag.cacheVolume("tsbuildinfo-cache"),
-      )
-  );
+function getBirmelBaseContainer(): Container {
+  return getBaseBunDebianContainer({
+    extraAptPackages: ["ffmpeg", "make", "g++", "libtool-bin", "curl", "git"],
+    postAptSetup: (container) =>
+      container
+        // Install GitHub CLI for PR creation
+        .withExec([
+          "sh",
+          "-c",
+          "curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg && echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main' | tee /etc/apt/sources.list.d/github-cli.list > /dev/null && apt-get update && apt-get install -y gh",
+        ])
+        // Install Claude Code CLI for editor feature
+        .withExec([
+          "sh",
+          "-c",
+          "curl -fsSL https://claude.ai/install.sh | bash && ln -sf /root/.local/bin/claude /usr/local/bin/claude",
+        ]),
+  });
 }
 
 /**
- * Install workspace dependencies with optimal layer ordering.
- * PHASE 1: Copy only dependency files (package.json, bun.lock)
- * PHASE 2: Run bun install (cached if lockfile unchanged)
- * PHASE 3: Copy source files (changes frequently)
- *
+ * Workspace entries for birmel CI/build.
+ * Subset of the full monorepo — only packages needed by birmel.
+ */
+const BIRMEL_WORKSPACES: WorkspaceEntry[] = [
+  "packages/birmel",
+  "packages/bun-decompile",
+  "packages/eslint-config",
+  { path: "packages/resume", depsOnly: true },
+  "packages/tools",
+  // Clauderon web: deps-only (birmel doesn't need clauderon web source)
+  {
+    path: "packages/clauderon/web",
+    depsOnly: true,
+    extraFiles: ["packages/clauderon/web/bun.lock"],
+    subPackages: [
+      "packages/clauderon/web/shared",
+      "packages/clauderon/web/client",
+      "packages/clauderon/web/frontend",
+    ],
+  },
+  { path: "packages/clauderon/web/shared", depsOnly: true },
+  { path: "packages/clauderon/web/client", depsOnly: true },
+  { path: "packages/clauderon/web/frontend", depsOnly: true },
+  // Clauderon docs: full directory in PHASE 1 (workspace validation)
+  { path: "packages/clauderon/docs", fullDirPhase1: true },
+  "packages/astro-opengraph-images",
+  "packages/better-skill-capped",
+  "packages/sjer.red",
+  "packages/webring",
+  "packages/starlight-karma-bot",
+];
+
+/**
+ * Install birmel workspace dependencies.
  * @param workspaceSource The full workspace source directory
- * @param useMounts If true, use mounted directories (for CI checks). If false, copy files (for image publishing).
+ * @param useMounts If true, use mounted directories (for CI). If false, copy files (for image publishing).
  * @returns Container with deps installed
  */
 function installWorkspaceDeps(
   workspaceSource: Directory,
   useMounts: boolean,
 ): Container {
-  let container = getBaseVoiceContainer().withWorkdir("/workspace");
-
-  // PHASE 1: Dependency files only (cached if lockfile unchanged)
-  if (useMounts) {
-    container = container
-      .withMountedFile(
-        "/workspace/package.json",
-        workspaceSource.file("package.json"),
-      )
-      .withMountedFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
-      // Each workspace's package.json (bun needs these for workspace resolution)
-      .withMountedFile(
-        "/workspace/packages/birmel/package.json",
-        workspaceSource.file("packages/birmel/package.json"),
-      )
-      .withMountedFile(
-        "/workspace/packages/bun-decompile/package.json",
-        workspaceSource.file("packages/bun-decompile/package.json"),
-      )
-      .withMountedFile(
-        "/workspace/packages/eslint-config/package.json",
-        workspaceSource.file("packages/eslint-config/package.json"),
-      )
-      .withMountedFile(
-        "/workspace/packages/resume/package.json",
-        workspaceSource.file("packages/resume/package.json"),
-      )
-      .withMountedFile(
-        "/workspace/packages/tools/package.json",
-        workspaceSource.file("packages/tools/package.json"),
-      )
-      // Clauderon web packages (nested workspace with own lockfile)
-      .withMountedFile(
-        "/workspace/packages/clauderon/web/package.json",
-        workspaceSource.file("packages/clauderon/web/package.json"),
-      )
-      .withMountedFile(
-        "/workspace/packages/clauderon/web/bun.lock",
-        workspaceSource.file("packages/clauderon/web/bun.lock"),
-      )
-      .withMountedFile(
-        "/workspace/packages/clauderon/web/shared/package.json",
-        workspaceSource.file("packages/clauderon/web/shared/package.json"),
-      )
-      .withMountedFile(
-        "/workspace/packages/clauderon/web/client/package.json",
-        workspaceSource.file("packages/clauderon/web/client/package.json"),
-      )
-      .withMountedFile(
-        "/workspace/packages/clauderon/web/frontend/package.json",
-        workspaceSource.file("packages/clauderon/web/frontend/package.json"),
-      )
-      // Clauderon docs package (mount full directory in PHASE 1 for workspace validation)
-      .withExec(["mkdir", "-p", "/workspace/packages/clauderon/docs"])
-      .withMountedDirectory(
-        "/workspace/packages/clauderon/docs",
-        workspaceSource.directory("packages/clauderon/docs"),
-      )
-      // New workspace members
-      .withMountedFile(
-        "/workspace/packages/astro-opengraph-images/package.json",
-        workspaceSource.file("packages/astro-opengraph-images/package.json"),
-      )
-      .withMountedFile(
-        "/workspace/packages/better-skill-capped/package.json",
-        workspaceSource.file("packages/better-skill-capped/package.json"),
-      )
-      .withMountedFile(
-        "/workspace/packages/sjer.red/package.json",
-        workspaceSource.file("packages/sjer.red/package.json"),
-      )
-      .withMountedFile(
-        "/workspace/packages/webring/package.json",
-        workspaceSource.file("packages/webring/package.json"),
-      )
-      .withMountedFile(
-        "/workspace/packages/starlight-karma-bot/package.json",
-        workspaceSource.file("packages/starlight-karma-bot/package.json"),
-      );
-  } else {
-    container = container
-      .withFile("/workspace/package.json", workspaceSource.file("package.json"))
-      .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
-      .withFile(
-        "/workspace/packages/birmel/package.json",
-        workspaceSource.file("packages/birmel/package.json"),
-      )
-      .withFile(
-        "/workspace/packages/bun-decompile/package.json",
-        workspaceSource.file("packages/bun-decompile/package.json"),
-      )
-      .withFile(
-        "/workspace/packages/eslint-config/package.json",
-        workspaceSource.file("packages/eslint-config/package.json"),
-      )
-      .withFile(
-        "/workspace/packages/resume/package.json",
-        workspaceSource.file("packages/resume/package.json"),
-      )
-      .withFile(
-        "/workspace/packages/tools/package.json",
-        workspaceSource.file("packages/tools/package.json"),
-      )
-      // Clauderon web packages (nested workspace with own lockfile)
-      .withFile(
-        "/workspace/packages/clauderon/web/package.json",
-        workspaceSource.file("packages/clauderon/web/package.json"),
-      )
-      .withFile(
-        "/workspace/packages/clauderon/web/bun.lock",
-        workspaceSource.file("packages/clauderon/web/bun.lock"),
-      )
-      .withFile(
-        "/workspace/packages/clauderon/web/shared/package.json",
-        workspaceSource.file("packages/clauderon/web/shared/package.json"),
-      )
-      .withFile(
-        "/workspace/packages/clauderon/web/client/package.json",
-        workspaceSource.file("packages/clauderon/web/client/package.json"),
-      )
-      .withFile(
-        "/workspace/packages/clauderon/web/frontend/package.json",
-        workspaceSource.file("packages/clauderon/web/frontend/package.json"),
-      )
-      // Clauderon docs package (copy full directory in PHASE 1 for workspace validation)
-      .withDirectory(
-        "/workspace/packages/clauderon/docs",
-        workspaceSource.directory("packages/clauderon/docs"),
-      )
-      // New workspace members
-      .withFile(
-        "/workspace/packages/astro-opengraph-images/package.json",
-        workspaceSource.file("packages/astro-opengraph-images/package.json"),
-      )
-      .withFile(
-        "/workspace/packages/better-skill-capped/package.json",
-        workspaceSource.file("packages/better-skill-capped/package.json"),
-      )
-      .withFile(
-        "/workspace/packages/sjer.red/package.json",
-        workspaceSource.file("packages/sjer.red/package.json"),
-      )
-      .withFile(
-        "/workspace/packages/webring/package.json",
-        workspaceSource.file("packages/webring/package.json"),
-      )
-      .withFile(
-        "/workspace/packages/starlight-karma-bot/package.json",
-        workspaceSource.file("packages/starlight-karma-bot/package.json"),
-      );
-  }
-
-  // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
-  container = container.withExec(["bun", "install", "--frozen-lockfile"]);
-
-  // PHASE 3: Config files and source code (changes frequently, added AFTER install)
-  if (useMounts) {
-    container = container
-      .withMountedFile(
-        "/workspace/tsconfig.base.json",
-        workspaceSource.file("tsconfig.base.json"),
-      )
-      .withMountedDirectory(
-        "/workspace/packages/birmel",
-        workspaceSource.directory("packages/birmel"),
-      )
-      .withMountedDirectory(
-        "/workspace/packages/bun-decompile",
-        workspaceSource.directory("packages/bun-decompile"),
-      )
-      .withMountedDirectory(
-        "/workspace/packages/eslint-config",
-        workspaceSource.directory("packages/eslint-config"),
-      )
-      .withMountedDirectory(
-        "/workspace/packages/tools",
-        workspaceSource.directory("packages/tools"),
-      )
-      // New workspace members
-      .withMountedDirectory(
-        "/workspace/packages/astro-opengraph-images",
-        workspaceSource.directory("packages/astro-opengraph-images"),
-      )
-      .withMountedDirectory(
-        "/workspace/packages/better-skill-capped",
-        workspaceSource.directory("packages/better-skill-capped"),
-      )
-      .withMountedDirectory(
-        "/workspace/packages/sjer.red",
-        workspaceSource.directory("packages/sjer.red"),
-      )
-      .withMountedDirectory(
-        "/workspace/packages/webring",
-        workspaceSource.directory("packages/webring"),
-      )
-      .withMountedDirectory(
-        "/workspace/packages/starlight-karma-bot",
-        workspaceSource.directory("packages/starlight-karma-bot"),
-      );
-  } else {
-    container = container
-      .withFile(
-        "/workspace/tsconfig.base.json",
-        workspaceSource.file("tsconfig.base.json"),
-      )
-      .withDirectory(
-        "/workspace/packages/birmel",
-        workspaceSource.directory("packages/birmel"),
-      )
-      .withDirectory(
-        "/workspace/packages/bun-decompile",
-        workspaceSource.directory("packages/bun-decompile"),
-      )
-      .withDirectory(
-        "/workspace/packages/eslint-config",
-        workspaceSource.directory("packages/eslint-config"),
-      )
-      .withDirectory(
-        "/workspace/packages/tools",
-        workspaceSource.directory("packages/tools"),
-      )
-      // New workspace members
-      .withDirectory(
-        "/workspace/packages/astro-opengraph-images",
-        workspaceSource.directory("packages/astro-opengraph-images"),
-      )
-      .withDirectory(
-        "/workspace/packages/better-skill-capped",
-        workspaceSource.directory("packages/better-skill-capped"),
-      )
-      .withDirectory(
-        "/workspace/packages/sjer.red",
-        workspaceSource.directory("packages/sjer.red"),
-      )
-      .withDirectory(
-        "/workspace/packages/webring",
-        workspaceSource.directory("packages/webring"),
-      )
-      .withDirectory(
-        "/workspace/packages/starlight-karma-bot",
-        workspaceSource.directory("packages/starlight-karma-bot"),
-      );
-  }
-
-  // PHASE 4: Re-run bun install to recreate workspace node_modules symlinks
-  // (Source mounts/copies in Phase 3 replace the symlinks that Phase 2 created)
-  container = container.withExec(["bun", "install", "--frozen-lockfile"]);
-
-  return container;
+  return installMonorepoWorkspaceDeps({
+    baseContainer: getBirmelBaseContainer(),
+    source: workspaceSource,
+    useMounts,
+    workspaces: BIRMEL_WORKSPACES,
+    rootConfigFiles: ["tsconfig.base.json"],
+  });
 }
 
 /**
