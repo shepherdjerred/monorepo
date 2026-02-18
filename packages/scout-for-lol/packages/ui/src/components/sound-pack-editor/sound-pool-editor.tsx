@@ -75,7 +75,7 @@ export function SoundPoolEditor({
 
   const handleAddFile = async () => {
     const path = await onSelectFile();
-    if (path) {
+    if (path !== undefined && path.length > 0) {
       onAddSound({
         source: { type: "file", path },
         volume: 1,
@@ -89,7 +89,7 @@ export function SoundPoolEditor({
     <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
-        {title && (
+        {title !== undefined && title.length > 0 && (
           <h4 className="text-sm font-medium text-gray-700">{title}</h4>
         )}
         <div className="flex items-center gap-2">

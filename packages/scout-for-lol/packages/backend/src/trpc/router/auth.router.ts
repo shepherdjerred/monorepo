@@ -65,7 +65,7 @@ export const authRouter = router({
         scope: scopes,
       });
 
-      if (input.state) {
+      if (input.state !== undefined && input.state.length > 0) {
         params.set("state", input.state);
       }
 
@@ -213,7 +213,7 @@ export const authRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { token, hash } = generateApiToken();
 
-      const expiresAt = input.expiresInDays
+      const expiresAt = input.expiresInDays !== undefined
         ? new Date(Date.now() + input.expiresInDays * 24 * 60 * 60 * 1000)
         : null;
 

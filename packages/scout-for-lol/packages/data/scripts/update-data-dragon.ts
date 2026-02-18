@@ -30,7 +30,7 @@ async function getLatestVersion(): Promise<string> {
   const data: unknown = await response.json();
   const versions = z.array(z.string()).parse(data);
   const latestVersion = first(versions);
-  if (!latestVersion) {
+  if (latestVersion === undefined) {
     throw new Error("No versions available");
   }
   return latestVersion;

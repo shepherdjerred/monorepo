@@ -40,7 +40,7 @@ export function createCronJob(config: CronJobConfig): CronJob {
       const startTime = Date.now();
       logger.info(logMessage);
 
-      if (logTrigger) {
+      if (logTrigger !== undefined && logTrigger.length > 0) {
         logCronTrigger(jobName, logTrigger);
       }
 

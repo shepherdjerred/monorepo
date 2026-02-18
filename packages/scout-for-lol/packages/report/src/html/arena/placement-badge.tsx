@@ -1,17 +1,23 @@
 import { type ArenaPlacement, formatArenaPlacement } from "@scout-for-lol/data";
 
+function getPlacementBackground(placement: ArenaPlacement): string {
+  if (placement === 1) {
+    return "linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)";
+  }
+  if (placement === 2) {
+    return "linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%)";
+  }
+  if (placement === 3) {
+    return "linear-gradient(135deg, #cd7f32 0%, #deb887 100%)";
+  }
+  return "#6b7280";
+}
+
 export function PlacementBadge({ placement }: { placement: ArenaPlacement }) {
   return (
     <div
       style={{
-        background:
-          placement === 1
-            ? "linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)"
-            : placement === 2
-              ? "linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%)"
-              : placement === 3
-                ? "linear-gradient(135deg, #cd7f32 0%, #deb887 100%)"
-                : "#6b7280",
+        background: getPlacementBackground(placement),
         color: placement <= 3 ? "#000" : "#fff",
         borderRadius: "50%",
         width: 52,

@@ -279,7 +279,7 @@ function buildUpdateInput(
           );
           if (Number.isNaN(championIdFromString)) {
             const idFromName = getChampionId(narrowedCriteria.champion);
-            if (!idFromName) {
+            if (idFromName === undefined) {
               throw new Error(
                 `Invalid champion: "${narrowedCriteria.champion}". Please select a champion from the autocomplete list.`,
               );

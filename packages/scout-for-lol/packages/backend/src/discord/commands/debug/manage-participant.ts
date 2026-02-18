@@ -58,7 +58,7 @@ export async function executeDebugManageParticipant(
   }
 
   const { action, competitionId } = optionsResult.data;
-  const serverId = interaction.guildId
+  const serverId = interaction.guildId !== undefined && interaction.guildId.length > 0
     ? DiscordGuildIdSchema.parse(interaction.guildId)
     : null;
 

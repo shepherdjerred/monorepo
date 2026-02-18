@@ -109,7 +109,7 @@ export function searchChampions(
   });
 
   // Sort by relevance: exact matches first, then starts-with, then contains
-  matches.sort((a, b) => {
+  const sortedMatches = matches.toSorted((a, b) => {
     const aExact = a.searchName === normalizedQuery ? 1 : 0;
     const bExact = b.searchName === normalizedQuery ? 1 : 0;
     if (aExact !== bExact) {
@@ -126,7 +126,7 @@ export function searchChampions(
     return a.name.localeCompare(b.name);
   });
 
-  return matches.slice(0, limit);
+  return sortedMatches.slice(0, limit);
 }
 
 /**
@@ -140,5 +140,5 @@ export function getAllChampions(): { name: string; id: number }[] {
       name: getChampionDisplayName(id),
       id,
     }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .toSorted((a, b) => a.name.localeCompare(b.name));
 }

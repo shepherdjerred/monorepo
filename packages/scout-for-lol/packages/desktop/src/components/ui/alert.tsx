@@ -68,7 +68,7 @@ function Alert({
         className={cn("h-5 w-5 shrink-0 mt-0.5", isLoading && "animate-spin")}
       />
       <div className="flex-1 min-w-0">
-        {title && <p className="font-medium mb-2">{title}</p>}
+        {title !== undefined && title.length > 0 && <p className="font-medium mb-2">{title}</p>}
         <p className="text-sm opacity-90">{children}</p>
       </div>
       {onDismiss && (

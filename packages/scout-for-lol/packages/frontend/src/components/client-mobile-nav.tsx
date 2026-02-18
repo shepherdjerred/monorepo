@@ -47,8 +47,8 @@ export function ClientMobileNav({ items, activePage, discordLink }: Props) {
             <a
               key={item.href}
               href={item.href}
-              target={item.external ? "_blank" : undefined}
-              rel={item.external ? "noopener noreferrer" : undefined}
+              target={item.external === true ? "_blank" : undefined}
+              rel={item.external === true ? "noopener noreferrer" : undefined}
               className={
                 activePage === item.currentPage
                   ? "block rounded-md px-3 py-2 text-base font-medium bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"

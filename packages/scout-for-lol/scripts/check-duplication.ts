@@ -161,9 +161,9 @@ async function main(): Promise<void> {
     );
 
     // Sort by percentage descending
-    failedFiles.sort((a, b) => b.percentage - a.percentage);
+    const sortedFailedFiles = failedFiles.toSorted((a, b) => b.percentage - a.percentage);
 
-    for (const failure of failedFiles) {
+    for (const failure of sortedFailedFiles) {
       const relPath = relativePath(WORKSPACE_ROOT, failure.file);
       const stats = fileStats.get(failure.file);
 
@@ -186,7 +186,7 @@ async function main(): Promise<void> {
     console.log(`🔍 Largest duplicate blocks:\n`);
 
     const sortedDuplicates = [...duplicates]
-      .sort((a, b) => b.lines - a.lines);
+      .toSorted((a, b) => b.lines - a.lines);
 
     for (const duplicate of sortedDuplicates.slice(0, 5)) {
       const file1 = relativePath(WORKSPACE_ROOT, duplicate.firstFile.name);

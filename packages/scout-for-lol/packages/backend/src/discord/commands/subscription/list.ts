@@ -6,7 +6,7 @@ import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/mes
 export async function executeSubscriptionList(
   interaction: ChatInputCommandInteraction,
 ) {
-  if (!interaction.guildId) {
+  if (interaction.guildId === undefined) {
     await interaction.reply({
       content: truncateDiscordMessage(
         "This command can only be used in a server",

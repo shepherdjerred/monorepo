@@ -378,7 +378,7 @@ describe.serial("pruneOrphanedPlayers", () => {
 
     // Verify the correct players remain
     const remainingPlayers = await prisma.player.findMany();
-    const remainingAliases = remainingPlayers.map((p) => p.alias).sort();
+    const remainingAliases = remainingPlayers.map((p) => p.alias).toSorted();
     expect(remainingAliases).toEqual(["competing", "subscribed"]);
   });
 });

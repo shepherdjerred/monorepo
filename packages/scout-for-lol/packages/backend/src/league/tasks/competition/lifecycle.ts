@@ -85,14 +85,21 @@ Good luck! 🍀`;
  * Format a leaderboard entry for display
  */
 function formatLeaderboardEntry(entry: RankedLeaderboardEntry): string {
-  const rankEmoji =
-    entry.rank === 1
-      ? "🥇"
-      : entry.rank === 2
-        ? "🥈"
-        : entry.rank === 3
-          ? "🥉"
-          : `${entry.rank.toString()}.`;
+  let rankEmoji: string;
+  switch (entry.rank) {
+    case 1:
+      rankEmoji = "🥇";
+      break;
+    case 2:
+      rankEmoji = "🥈";
+      break;
+    case 3:
+      rankEmoji = "🥉";
+      break;
+    default:
+      rankEmoji = `${entry.rank.toString()}.`;
+      break;
+  }
 
   let scoreDisplay: string;
 
@@ -144,7 +151,7 @@ async function postFinalLeaderboard(
   if (topEntries.length === 0) {
     message += "\nNo participants completed the competition.";
   } else {
-    message += "\n" + topEntries.map(formatLeaderboardEntry).join("\n");
+    message += "\n" + topEntries.map((entry) => formatLeaderboardEntry(entry)).join("\n");
 
     if (leaderboard.length > 10) {
       message += `\n\n_...and ${(leaderboard.length - 10).toString()} more participants_`;
@@ -220,7 +227,7 @@ async function handleCompetitionStarts(
 
   // Parse to get client-side dates from seasonId, then filter by date
   const competitionsToStart = unprocessedCompetitions
-    .map(parseCompetition)
+    .map((item) => parseCompetition(item))
     .filter((comp) => comp.startDate !== null && comp.startDate <= now);
 
   if (competitionsToStart.length === 0) {
@@ -303,7 +310,7 @@ async function handleCompetitionEnds(
 
   // Parse to get client-side dates from seasonId, then filter by date
   const competitionsToEnd = unendedCompetitions
-    .map(parseCompetition)
+    .map((item) => parseCompetition(item))
     .filter((comp) => comp.endDate !== null && comp.endDate <= now);
 
   if (competitionsToEnd.length === 0) {

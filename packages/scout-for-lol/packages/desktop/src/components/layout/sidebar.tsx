@@ -40,7 +40,7 @@ function NavItem({
         active
           ? "bg-discord-blurple/15 text-white"
           : "text-gray-400 hover:bg-gray-800/50 hover:text-gray-200",
-        disabled && "cursor-not-allowed opacity-50",
+        disabled === true && "cursor-not-allowed opacity-50",
       )}
     >
       <span

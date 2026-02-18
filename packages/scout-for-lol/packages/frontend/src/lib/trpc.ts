@@ -19,7 +19,7 @@ export function createApiClient(sessionToken?: string) {
       httpBatchLink({
         url: `${BACKEND_URL}/trpc`,
         headers() {
-          if (sessionToken) {
+          if (sessionToken !== undefined && sessionToken.length > 0) {
             return {
               Authorization: `Bearer ${sessionToken}`,
             };

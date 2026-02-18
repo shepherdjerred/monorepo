@@ -93,7 +93,7 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
         <CardHeader className="flex items-start justify-between">
           <div>
             <CardTitle>{title}</CardTitle>
-            {description && (
+            {description !== undefined && description.length > 0 && (
               <p className="mt-1 text-xs text-surface-600">{description}</p>
             )}
           </div>
@@ -117,7 +117,7 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
           />
 
           {/* System Prompt Editor */}
-          {defaults.system && (
+          {defaults.system !== undefined && defaults.system.length > 0 && (
             <div className="flex items-center justify-between rounded-md border border-surface-200 px-3 py-2">
               <div>
                 <Label className="text-xs text-surface-600">
@@ -141,7 +141,7 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
           )}
 
           {/* User Prompt Editor */}
-          {defaults.user && (
+          {defaults.user !== undefined && defaults.user.length > 0 && (
             <div className="flex items-center justify-between rounded-md border border-surface-200 px-3 py-2">
               <div>
                 <Label className="text-xs text-surface-600">
@@ -175,7 +175,7 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
       <CardHeader className="flex items-start justify-between">
         <div>
           <CardTitle>{title}</CardTitle>
-          {description && (
+          {description !== undefined && description.length > 0 && (
             <p className="mt-1 text-xs text-surface-600">{description}</p>
           )}
         </div>
@@ -189,7 +189,7 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
         />
 
         {/* System Prompt Editor */}
-        {defaults.system && (
+        {defaults.system !== undefined && defaults.system.length > 0 && (
           <div className="flex items-center justify-between rounded-md border border-surface-200 px-3 py-2">
             <div>
               <Label className="text-xs text-surface-600">System prompt</Label>
@@ -211,7 +211,7 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
         )}
 
         {/* User Prompt Editor */}
-        {defaults.user && (
+        {defaults.user !== undefined && defaults.user.length > 0 && (
           <div className="flex items-center justify-between rounded-md border border-surface-200 px-3 py-2">
             <div>
               <Label className="text-xs text-surface-600">

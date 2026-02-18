@@ -67,7 +67,7 @@ export async function getLatestRankBefore(
   }
 
   const record = records[0];
-  return record?.rankAfter
+  return record?.rankAfter !== undefined && record?.rankAfter.length > 0
     ? RankSchema.parse(JSON.parse(record.rankAfter))
     : undefined;
 }

@@ -156,12 +156,12 @@ function conditionMatches(
         c.field === "killer" ? context.killerIsLocal : context.victimIsLocal;
 
       // Check if local player matches
-      if (c.includeLocalPlayer && isLocal) {
+      if (c.includeLocalPlayer === true && isLocal) {
         return true;
       }
 
       // Check if name is in the list
-      if (!targetName) {
+      if (targetName === undefined) {
         return false;
       }
       return c.players.some(
@@ -173,7 +173,7 @@ function conditionMatches(
         c.field === "killerChampion"
           ? context.killerChampion
           : context.victimChampion;
-      if (!targetChampion) {
+      if (targetChampion === undefined) {
         return false;
       }
       return c.champions.some(

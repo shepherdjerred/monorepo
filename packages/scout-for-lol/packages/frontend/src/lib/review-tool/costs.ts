@@ -163,7 +163,7 @@ export class CostTracker {
   private async loadFromStorage(): Promise<void> {
     try {
       const stored = await getItem(STORES.COSTS, "costs");
-      if (stored) {
+      if (stored !== undefined && stored !== null) {
         const ArraySchema = CostBreakdownSchema.array();
         const result = ArraySchema.safeParse(stored);
         if (result.success) {

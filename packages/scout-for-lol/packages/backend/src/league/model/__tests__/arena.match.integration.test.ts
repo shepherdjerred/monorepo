@@ -98,8 +98,9 @@ function makeParticipant(
   } satisfies Partial<RawParticipant> as unknown as RawParticipant;
 }
 
+const longPuuid = (label: string) => (label + "-".repeat(80)).slice(0, 78);
+
 function makeArenaMatchDto(): RawMatch {
-  const longPuuid = (label: string) => (label + "-".repeat(80)).slice(0, 78);
   const participants: RawParticipant[] = [];
   for (let sub = 1; sub <= 8; sub++) {
     participants.push(
@@ -149,7 +150,7 @@ describe("arena match integration", () => {
     const dto = makeArenaMatchDto();
     const subteams = await toArenaSubteams(dto.info.participants);
     const players = await Promise.all(
-      dto.info.participants.map(participantToArenaChampion),
+      dto.info.participants.map((p) => participantToArenaChampion(p)),
     );
 
     // Validate subteams against schema and basic expectations

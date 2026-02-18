@@ -22,7 +22,7 @@ export default defineConfig({
     host: host ?? false,
     port: 5173,
     strictPort: true,
-    ...(host
+    ...(host !== undefined && host.length > 0
       ? {
           hmr: {
             protocol: "ws",

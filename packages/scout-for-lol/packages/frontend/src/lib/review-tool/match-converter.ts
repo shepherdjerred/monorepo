@@ -55,10 +55,10 @@ export function convertRawMatchToInternalFormat(
 
   // Reorder participants so selected player is first
   let reorderedParticipants = [...rawMatch.info.participants];
-  if (selectedPlayerName) {
+  if (selectedPlayerName !== undefined && selectedPlayerName.length > 0) {
     const selectedIndex = reorderedParticipants.findIndex((p) => {
       const riotId =
-        p.riotIdGameName && p.riotIdTagline
+        p.riotIdGameName !== undefined && p.riotIdGameName.length > 0 && p.riotIdTagline
           ? `${p.riotIdGameName}#${p.riotIdTagline}`
           : "Unknown";
       return riotId === selectedPlayerName;
@@ -80,10 +80,10 @@ export function convertRawMatchToInternalFormat(
   const teams = {
     blue: rawMatch.info.participants
       .filter((p) => p.teamId === 100)
-      .map(participantToChampion),
+      .map((p) => participantToChampion(p)),
     red: rawMatch.info.participants
       .filter((p) => p.teamId === 200)
-      .map(participantToChampion),
+      .map((p) => participantToChampion(p)),
   };
 
   // Update players with real data from the match - split by queue type for proper typing
@@ -94,7 +94,7 @@ export function convertRawMatchToInternalFormat(
       if (participant) {
         // Build Riot ID (GameName#Tagline)
         const riotId =
-          participant.riotIdGameName && participant.riotIdTagline
+          participant.riotIdGameName !== undefined && participant.riotIdGameName.length > 0 && participant.riotIdTagline
             ? `${participant.riotIdGameName}#${participant.riotIdTagline}`
             : player.playerConfig.alias;
 
@@ -131,7 +131,7 @@ export function convertRawMatchToInternalFormat(
     if (participant) {
       // Build Riot ID (GameName#Tagline)
       const riotId =
-        participant.riotIdGameName && participant.riotIdTagline
+        participant.riotIdGameName !== undefined && participant.riotIdGameName.length > 0 && participant.riotIdTagline
           ? `${participant.riotIdGameName}#${participant.riotIdTagline}`
           : player.playerConfig.alias;
 
@@ -201,7 +201,7 @@ export function extractMatchMetadataFromRawMatch(
   return rawMatch.info.participants.map((participant) => {
     // Build Riot ID (GameName#Tagline)
     const riotId =
-      participant.riotIdGameName && participant.riotIdTagline
+      participant.riotIdGameName !== undefined && participant.riotIdGameName.length > 0 && participant.riotIdTagline
         ? `${participant.riotIdGameName}#${participant.riotIdTagline}`
         : "Unknown";
 

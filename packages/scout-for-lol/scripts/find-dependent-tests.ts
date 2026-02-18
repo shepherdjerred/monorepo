@@ -90,6 +90,48 @@ console.error(
   `Building dependency graph for ${String(sourceFiles.length)} files...`,
 );
 
+function addResolvedImportTo(
+  moduleSpecifier: ts.Expression | undefined,
+  targetFilePath: string,
+  targetImports: Set<string>,
+) {
+  if (moduleSpecifier !== undefined && ts.isStringLiteral(moduleSpecifier)) {
+    const resolved = resolveImport(targetFilePath, moduleSpecifier.text);
+    if (resolved !== null) {
+      targetImports.add(resolved);
+    }
+  }
+}
+
+function visitNode(
+  node: ts.Node,
+  targetFilePath: string,
+  targetImports: Set<string>,
+) {
+  // Handle import declarations
+  if (ts.isImportDeclaration(node)) {
+    addResolvedImportTo(node.moduleSpecifier, targetFilePath, targetImports);
+  }
+
+  // Handle export declarations
+  if (ts.isExportDeclaration(node)) {
+    addResolvedImportTo(node.moduleSpecifier, targetFilePath, targetImports);
+  }
+
+  // Handle dynamic imports: import('...')
+  if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+      const arg = node.arguments[0];
+      if (arg !== undefined && ts.isStringLiteral(arg)) {
+        const resolved = resolveImport(targetFilePath, arg.text);
+        if (resolved !== null) {
+          targetImports.add(resolved);
+        }
+      }
+    }
+
+  ts.forEachChild(node, (child) => { visitNode(child, targetFilePath, targetImports); });
+}
+
 // Build dependency graph using TypeScript's module resolution
 for (const sourceFile of sourceFiles) {
   const filePath = sourceFile.fileName;
@@ -97,41 +139,7 @@ for (const sourceFile of sourceFiles) {
   // Get all import declarations
   const imports = new Set<string>();
 
-  function addResolvedImport(moduleSpecifier: ts.Expression | undefined) {
-    if (moduleSpecifier && ts.isStringLiteral(moduleSpecifier)) {
-      const resolved = resolveImport(filePath, moduleSpecifier.text);
-      if (resolved !== null) {
-        imports.add(resolved);
-      }
-    }
-  }
-
-  function visit(node: ts.Node) {
-    // Handle import declarations
-    if (ts.isImportDeclaration(node)) {
-      addResolvedImport(node.moduleSpecifier);
-    }
-
-    // Handle export declarations
-    if (ts.isExportDeclaration(node)) {
-      addResolvedImport(node.moduleSpecifier);
-    }
-
-    // Handle dynamic imports: import('...')
-    if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
-        const arg = node.arguments[0];
-        if (arg && ts.isStringLiteral(arg)) {
-          const resolved = resolveImport(filePath, arg.text);
-          if (resolved !== null) {
-            imports.add(resolved);
-          }
-        }
-      }
-
-    ts.forEachChild(node, visit);
-  }
-
-  visit(sourceFile);
+  visitNode(sourceFile, filePath, imports);
 
   // Add to reverse dependency map
   for (const importedFile of imports) {

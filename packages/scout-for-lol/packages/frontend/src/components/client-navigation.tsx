@@ -26,8 +26,8 @@ export function ClientNavigation({ items }: Props) {
             <NavigationMenuLink
               href={item.href}
               className={navigationMenuTriggerStyle()}
-              target={item.external ? "_blank" : undefined}
-              rel={item.external ? "noopener noreferrer" : undefined}
+              target={item.external === true ? "_blank" : undefined}
+              rel={item.external === true ? "noopener noreferrer" : undefined}
             >
               {item.label}
             </NavigationMenuLink>

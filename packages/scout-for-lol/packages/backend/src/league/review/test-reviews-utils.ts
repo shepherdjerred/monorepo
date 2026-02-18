@@ -64,7 +64,7 @@ export function parseArgs(): TestOptions {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (!arg) {
+    if (arg === undefined) {
       continue;
     }
 
@@ -72,7 +72,7 @@ export function parseArgs(): TestOptions {
       case "--type":
       case "-t": {
         const nextArg = args[i + 1];
-        if (nextArg) {
+        if (nextArg !== undefined && nextArg.length > 0) {
           const matchedType = MATCH_TYPES.find((t) => t === nextArg);
           if (matchedType) {
             options.matchType = matchedType;

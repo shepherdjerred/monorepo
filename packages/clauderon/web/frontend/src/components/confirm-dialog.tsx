@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import { useEffect } from "react";
 
 type ConfirmDialogProps = {
   open: boolean;

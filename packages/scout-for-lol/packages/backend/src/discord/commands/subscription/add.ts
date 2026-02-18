@@ -88,7 +88,7 @@ export async function executeSubscriptionAdd(
 
   // Resolve Riot ID to PUUID
   const puuid = await resolveRiotIdToPuuid(interaction, riotId, region);
-  if (!puuid) {
+  if (puuid === undefined) {
     return;
   }
 

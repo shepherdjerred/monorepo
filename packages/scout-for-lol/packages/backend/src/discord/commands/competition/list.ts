@@ -35,7 +35,7 @@ export async function executeCompetitionList(
   // Step 1: Validate server context
   // ============================================================================
 
-  if (!interaction.guildId) {
+  if (interaction.guildId === undefined) {
     await interaction.reply({
       content: truncateDiscordMessage(
         "❌ This command can only be used in a server.",

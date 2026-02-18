@@ -257,7 +257,7 @@ export const eventRouter = router({
         });
       }
 
-      if (!client.voiceChannelId || !client.guildId) {
+      if (client.voiceChannelId === undefined || client.guildId === undefined) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "Voice channel not configured for desktop client",
@@ -376,7 +376,7 @@ export const eventRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       // Verify sound pack access if provided
-      if (input.soundPackId) {
+      if (input.soundPackId !== undefined) {
         // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation
         const soundPackId = input.soundPackId as SoundPackId;
         const pack = await prisma.soundPack.findFirst({

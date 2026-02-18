@@ -94,7 +94,7 @@ export function RulesTab() {
       ) : (
         <div className="space-y-3">
           {editor.soundPack.rules
-            .sort((a, b) => b.priority - a.priority)
+            .toSorted((a, b) => b.priority - a.priority)
             .map((rule) => (
               <RuleEditor
                 key={rule.id}

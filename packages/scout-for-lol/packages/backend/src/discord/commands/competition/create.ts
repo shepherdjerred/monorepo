@@ -154,7 +154,7 @@ async function checkPermissionsForCreate(
 
     const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
 
-    if (args.addAllMembers && !isAdmin) {
+    if (args.addAllMembers === true && !isAdmin) {
       logger.warn(
         `⚠️  Non-admin ${username} attempted to use add-all-members option`,
       );
@@ -254,7 +254,7 @@ export async function executeCompetitionCreate(
       if (Number.isNaN(championIdFromString)) {
         // Try looking up by name
         const idFromName = getChampionId(narrowedArgs.champion);
-        if (!idFromName) {
+        if (idFromName === undefined) {
           throw new Error(
             `Invalid champion: "${narrowedArgs.champion}". Please select a champion from the autocomplete list.`,
           );
@@ -295,7 +295,7 @@ export async function executeCompetitionCreate(
       }))
       .with({ dateType: "SEASON" }, (narrowedArgs) => {
         // Validate season hasn't ended yet
-        if (hasSeasonEnded(narrowedArgs.season)) {
+        if (hasSeasonEnded(narrowedArgs.season) === true) {
           throw new Error(
             `Cannot create competition for season ${narrowedArgs.season} - this season has already ended`,
           );
@@ -381,7 +381,7 @@ export async function executeCompetitionCreate(
     // ============================================================================
 
     let addedMembersCount = 0;
-    if (args.addAllMembers) {
+    if (args.addAllMembers === true) {
       logger.info(
         `🔄 Adding all server members to competition ${competition.id.toString()}...`,
       );
@@ -466,13 +466,13 @@ ${competition.description}
 **Visibility:** ${competition.visibility}
 **Max Participants:** ${competition.maxParticipants.toString()}`;
 
-    if (args.addAllMembers && addedMembersCount > 0) {
+    if (args.addAllMembers === true && addedMembersCount > 0) {
       successMessage += `\n**Members Added:** ${addedMembersCount.toString()} server members automatically joined`;
     }
 
     successMessage += `\n\n${dateInfo}`;
 
-    if (!args.addAllMembers) {
+    if (!args.addAllMembers === true) {
       successMessage += `\n\nUsers can join with:
 \`/competition join competition-id:${competition.id.toString()}\``;
     }

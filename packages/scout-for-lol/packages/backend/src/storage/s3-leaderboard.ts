@@ -63,7 +63,7 @@ export async function saveCachedLeaderboard(
 ): Promise<void> {
   const bucket = configuration.s3BucketName;
 
-  if (!bucket) {
+  if (bucket === undefined) {
     logger.warn(
       `[S3Leaderboard] ⚠️  S3_BUCKET_NAME not configured, skipping cache for competition: ${leaderboard.competitionId.toString()}`,
     );
@@ -164,7 +164,7 @@ export async function loadCachedLeaderboard(
 ): Promise<CachedLeaderboard | null> {
   const bucket = configuration.s3BucketName;
 
-  if (!bucket) {
+  if (bucket === undefined) {
     logger.warn(
       `[S3Leaderboard] ⚠️  S3_BUCKET_NAME not configured, cannot load cache for competition: ${competitionId.toString()}`,
     );

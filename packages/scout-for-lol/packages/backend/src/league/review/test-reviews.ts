@@ -45,7 +45,7 @@ const logger = createLogger("review-test-reviews");
 async function fetchMatchKeysFromS3(daysBack: number): Promise<string[]> {
   const bucket = configuration.s3BucketName;
 
-  if (!bucket) {
+  if (bucket === undefined) {
     throw new Error("S3_BUCKET_NAME not configured");
   }
 
@@ -73,7 +73,7 @@ async function fetchMatchKeysFromS3(daysBack: number): Promise<string[]> {
 
       if (response.Contents) {
         const keys = response.Contents.flatMap((obj) =>
-          obj.Key ? [obj.Key] : [],
+          obj.Key !== undefined && obj.Key.length > 0 ? [obj.Key] : [],
         );
         allKeys.push(...keys);
         logger.info(`  Found ${String(keys.length)} match(es) in ${prefix}`);
@@ -93,7 +93,7 @@ async function fetchMatchKeysFromS3(daysBack: number): Promise<string[]> {
 async function fetchMatchFromS3(key: string): Promise<RawMatch | null> {
   const bucket = configuration.s3BucketName;
 
-  if (!bucket) {
+  if (bucket === undefined) {
     throw new Error("S3_BUCKET_NAME not configured");
   }
 
@@ -154,7 +154,7 @@ function convertRawMatchToInternalFormat(
   }
 
   const playerName =
-    firstParticipant.riotIdGameName && firstParticipant.riotIdTagline
+    firstParticipant.riotIdGameName !== undefined && firstParticipant.riotIdGameName.length > 0 && firstParticipant.riotIdTagline
       ? `${firstParticipant.riotIdGameName}#${firstParticipant.riotIdTagline}`
       : "Unknown";
 
@@ -214,7 +214,7 @@ async function getRandomMatchFromS3(
   }
 
   // Shuffle and try matches until we find one of the right type
-  const shuffled = keys.sort(() => Math.random() - 0.5);
+  const shuffled = keys.toSorted(() => Math.random() - 0.5);
 
   for (const key of shuffled) {
     const rawMatch = await fetchMatchFromS3(key);

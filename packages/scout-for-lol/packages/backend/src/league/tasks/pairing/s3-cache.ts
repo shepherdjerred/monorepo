@@ -80,7 +80,7 @@ export async function loadCachedPairingStats(
 ): Promise<WeeklyPairingCache | null> {
   const bucket = configuration.s3BucketName;
 
-  if (!bucket) {
+  if (bucket === undefined) {
     logger.warn(
       "[PairingCache] S3_BUCKET_NAME not configured, skipping cache read",
     );
@@ -145,7 +145,7 @@ export async function saveCachedPairingStats(
 ): Promise<boolean> {
   const bucket = configuration.s3BucketName;
 
-  if (!bucket) {
+  if (bucket === undefined) {
     logger.warn(
       "[PairingCache] S3_BUCKET_NAME not configured, skipping cache write",
     );

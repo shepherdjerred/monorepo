@@ -45,7 +45,7 @@ export function Button({
       disabled={isDisabled}
       {...props}
     >
-      {icon && <span className="mr-2 flex items-center">{icon}</span>}
+      {Boolean(icon) && <span className="mr-2 flex items-center">{icon}</span>}
       {children}
     </button>
   );

@@ -182,7 +182,7 @@ export async function send(
               serverId,
               channelId,
               errorType: "api_error",
-              ...(permissionReason ? { errorReason: permissionReason } : {}),
+              ...(permissionReason !== undefined && permissionReason.length > 0 ? { errorReason: permissionReason } : {}),
             });
           } catch (dbError) {
             logger.error(

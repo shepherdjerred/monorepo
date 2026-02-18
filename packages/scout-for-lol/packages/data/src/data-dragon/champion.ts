@@ -71,7 +71,7 @@ export async function getChampionList(): Promise<
     // Convert to array and sort by name
     championListCache = Object.values(data.data)
       .map((c) => ({ id: c.id, name: c.name }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .toSorted((a, b) => a.name.localeCompare(b.name));
 
     return championListCache;
   } catch {

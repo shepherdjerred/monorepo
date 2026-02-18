@@ -178,7 +178,7 @@ export function SoundPackEditor() {
       </div>
 
       {/* Error display */}
-      {editor.error && (
+      {editor.error !== undefined && editor.error.length > 0 && (
         <div className="px-4 py-2 bg-red-50 border-b border-red-200 text-red-700 text-sm flex items-center justify-between">
           <span>{editor.error}</span>
           <button

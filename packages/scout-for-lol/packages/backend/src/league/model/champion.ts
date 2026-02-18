@@ -34,7 +34,7 @@ function extractAugments(dto: RawParticipant): Augment[] {
     dto.playerAugment6,
   ];
   for (const augment of augmentFields) {
-    if (augment && augment !== 0) {
+    if (augment !== undefined && augment !== 0) {
       ids.push(augment);
     }
   }

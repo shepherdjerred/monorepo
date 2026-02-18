@@ -201,13 +201,13 @@ async function migrateSingleItem(
   key?: string,
 ): Promise<void> {
   const stored = localStorage.getItem(localStorageKey);
-  if (!stored) {
+  if (stored === undefined) {
     return;
   }
 
   const parsed = JSON.parse(stored);
 
-  if (isArray) {
+  if (isArray === true) {
     // For array data, store each item individually
     const ArraySchema = z.array(z.unknown());
     const result = ArraySchema.safeParse(parsed);
@@ -216,7 +216,7 @@ async function migrateSingleItem(
         await putItem(store, item);
       }
     }
-  } else if (key) {
+  } else if (key !== undefined && key.length > 0) {
     // For single value data, store with specified key
     await setItem(store, key, parsed);
   }

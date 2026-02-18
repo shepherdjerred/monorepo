@@ -259,7 +259,7 @@ async function processStandardMatch(
 
   // Combine completion message with review text if available (always include text, even with image)
   let messageContent = completionMessage;
-  if (reviewText) {
+  if (reviewText !== undefined && reviewText.length > 0) {
     messageContent = `${completionMessage}\n\n${reviewText}`;
   }
 

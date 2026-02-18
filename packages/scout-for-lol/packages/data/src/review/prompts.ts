@@ -135,7 +135,7 @@ export function selectRandomImagePrompts(
   const count = Math.min(imagePrompts.length, Math.random() < 0.5 ? 2 : 3);
 
   // Shuffle and take the first `count` items
-  const shuffled = [...imagePrompts].sort(() => Math.random() - 0.5);
+  const shuffled = [...imagePrompts].toSorted(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
 }
 

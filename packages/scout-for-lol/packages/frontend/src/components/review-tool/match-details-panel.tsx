@@ -190,7 +190,7 @@ export function MatchDetailsPanel({
             </h4>
             <div className="space-y-1 max-h-40 overflow-y-auto">
               {[...match.teams]
-                .sort((a, b) => a.placement - b.placement)
+                .toSorted((a, b) => a.placement - b.placement)
                 .map((team) => (
                   <div
                     key={team.teamId}

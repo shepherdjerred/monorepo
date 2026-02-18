@@ -47,7 +47,7 @@ export function buildSuccessResponse(
   message: string,
   details?: string,
 ): InteractionReplyOptions {
-  const content = details ? `${message}\n\n${details}` : message;
+  const content = details !== undefined && details.length > 0 ? `${message}\n\n${details}` : message;
   return {
     content,
     ephemeral: true,

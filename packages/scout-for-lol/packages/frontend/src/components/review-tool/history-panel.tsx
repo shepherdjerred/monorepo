@@ -27,12 +27,13 @@ type HistoryPanelProps = {
 let historyData: HistoryEntry[] = [];
 const historyListeners = new Set<() => void>();
 
+function handleHistoryUpdate() {
+  void loadHistoryData();
+}
+
 function subscribeToHistory(callback: () => void) {
   historyListeners.add(callback);
   // Also listen for history-update events
-  const handleHistoryUpdate = () => {
-    void loadHistoryData();
-  };
   globalThis.addEventListener("history-update", handleHistoryUpdate);
   return () => {
     historyListeners.delete(callback);
@@ -60,6 +61,39 @@ function loadHistoryData() {
 // Start loading immediately
 void loadHistoryData();
 
+async function refreshHistory() {
+  console.log("[History] Refreshing history");
+  await loadHistoryData();
+  console.log("[History] Loaded entries:", historyData.length, historyData);
+}
+
+function formatTimestamp(date: Date) {
+  const now = new Date();
+  const minutes = differenceInMinutes(now, date);
+  const hours = differenceInHours(now, date);
+  const days = differenceInDays(now, date);
+
+  if (minutes < 1) {
+    return "Just now";
+  }
+  if (minutes < 60) {
+    return `${minutes.toString()}m ago`;
+  }
+  if (hours < 24) {
+    return `${hours.toString()}h ago`;
+  }
+  if (days < 7) {
+    return `${days.toString()}d ago`;
+  }
+  return format(date, "MMM d");
+}
+
+async function handleDelete(id: string, event: React.MouseEvent) {
+  event.stopPropagation();
+  await deleteHistoryEntry(id);
+  await refreshHistory();
+}
+
 export function HistoryPanel({
   onSelectEntry,
   selectedEntryId,
@@ -74,18 +108,6 @@ export function HistoryPanel({
   );
   const [showConfirmClear, setShowConfirmClear] = useState(false);
 
-  const refreshHistory = async () => {
-    console.log("[History] Refreshing history");
-    await loadHistoryData();
-    console.log("[History] Loaded entries:", historyData.length, historyData);
-  };
-
-  const handleDelete = async (id: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    await deleteHistoryEntry(id);
-    await refreshHistory();
-  };
-
   const handleCancelPending = (id: string, event: React.MouseEvent) => {
     event.stopPropagation();
     if (onCancelPending) {
@@ -99,28 +121,6 @@ export function HistoryPanel({
     await clearHistory();
     await refreshHistory();
     setShowConfirmClear(false);
-  };
-
-  const formatTimestamp = (date: Date) => {
-    const now = new Date();
-    const minutes = differenceInMinutes(now, date);
-    const hours = differenceInHours(now, date);
-    const days = differenceInDays(now, date);
-
-    if (minutes < 1) {
-      return "Just now";
-    }
-    if (minutes < 60) {
-      return `${minutes.toString()}m ago`;
-    }
-    if (hours < 24) {
-      return `${hours.toString()}h ago`;
-    }
-    if (days < 7) {
-      return `${days.toString()}d ago`;
-    }
-
-    return format(date, "MMM d, yyyy");
   };
 
   return (
@@ -194,15 +194,18 @@ export function HistoryPanel({
                 }}
                 role="button"
                 tabIndex={0}
-                className={`w-full text-left p-3 rounded border transition-colors cursor-pointer ${
-                  isSelected
-                    ? "border-brand-500 bg-brand-50"
-                    : isPending
-                      ? "border-victory-200 bg-victory-50 hover:bg-victory-100"
-                      : hasError
-                        ? "border-defeat-200 bg-defeat-50 hover:bg-defeat-100"
-                        : "border-surface-200 hover:bg-surface-50"
-                }`}
+                className={`w-full text-left p-3 rounded border transition-colors cursor-pointer ${(() => {
+                  if (isSelected) {
+                    return "border-brand-500 bg-brand-50";
+                  }
+                  if (isPending) {
+                    return "border-victory-200 bg-victory-50 hover:bg-victory-100";
+                  }
+                  if (hasError) {
+                    return "border-defeat-200 bg-defeat-50 hover:bg-defeat-100";
+                  }
+                  return "border-surface-200 hover:bg-surface-50";
+                })()}`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
@@ -228,7 +231,7 @@ export function HistoryPanel({
                       </span>
                     </div>
                     <div className="text-xs text-surface-700 space-y-0.5">
-                      {entry.configSnapshot.personality && (
+                      {entry.configSnapshot.personality !== undefined && entry.configSnapshot.personality.length > 0 && (
                         <div className="truncate">
                           🎭 {entry.configSnapshot.personality}
                         </div>
@@ -236,7 +239,7 @@ export function HistoryPanel({
                       {!isPending && !hasError && (
                         <div className="flex items-center gap-2 text-surface-500">
                           <span>{entry.result.text.length} chars</span>
-                          {entry.result.image && <span>🖼️</span>}
+                          {entry.result.image !== undefined && entry.result.image.length > 0 && <span>🖼️</span>}
                         </div>
                       )}
                       {entry.rating && (

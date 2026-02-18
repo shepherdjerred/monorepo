@@ -161,7 +161,7 @@ describe("queryMatchesByDateRange - single day", () => {
     const results = await queryMatchesByDateRange(date, date, [puuid1, puuid2]);
 
     expect(results.length).toBe(3);
-    expect(results.map((m) => m.metadata.matchId).sort()).toEqual([
+    expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
       "TEST_1001",
       "TEST_1002",
       "TEST_1003",
@@ -216,7 +216,7 @@ describe("queryMatchesByDateRange - single day", () => {
     const results = await queryMatchesByDateRange(date, date, [targetPuuid]);
 
     expect(results.length).toBe(2);
-    expect(results.map((m) => m.metadata.matchId).sort()).toEqual([
+    expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
       "TEST_2001",
       "TEST_2003",
     ]);
@@ -281,7 +281,7 @@ describe("queryMatchesByDateRange - date range", () => {
     const results = await queryMatchesByDateRange(date1, date3, [puuid]);
 
     expect(results.length).toBe(3);
-    expect(results.map((m) => m.metadata.matchId).sort()).toEqual([
+    expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
       "TEST_3001",
       "TEST_3002",
       "TEST_3003",
@@ -319,7 +319,7 @@ describe("queryMatchesByDateRange - date range", () => {
     const results = await queryMatchesByDateRange(date2, date3, [puuid]);
 
     expect(results.length).toBe(2);
-    expect(results.map((m) => m.metadata.matchId).sort()).toEqual([
+    expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
       "TEST_4002",
       "TEST_4003",
     ]);
@@ -363,7 +363,7 @@ describe("queryMatchesByDateRange - date range", () => {
     const results = await queryMatchesByDateRange(date1, date3, [puuid]);
 
     expect(results.length).toBe(3);
-    expect(results.map((m) => m.metadata.matchId).sort()).toEqual([
+    expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
       "TEST_5001",
       "TEST_5002",
       "TEST_5003",
@@ -467,7 +467,7 @@ describe("queryMatchesByDateRange - edge cases", () => {
     const results = await queryMatchesByDateRange(date, date, [puuid1, puuid2]);
 
     expect(results.length).toBe(3); // All matches contain at least one of the PUUIDs
-    expect(results.map((m) => m.metadata.matchId).sort()).toEqual([
+    expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
       "TEST_7001",
       "TEST_7002",
       "TEST_7003",

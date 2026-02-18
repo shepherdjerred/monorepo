@@ -26,10 +26,10 @@ function getOptionalEnvVar(
   defaultValue?: string,
 ): string | undefined {
   const value = env.get(name).asString();
-  if (value) {
+  if (value !== undefined && value.length > 0) {
     logger.info(`✅ ${name}: configured`);
     return value;
-  } else if (defaultValue) {
+  } else if (defaultValue !== undefined && defaultValue.length > 0) {
     logger.info(`⚠️  ${name}: using default value (${defaultValue})`);
     return defaultValue;
   } else {

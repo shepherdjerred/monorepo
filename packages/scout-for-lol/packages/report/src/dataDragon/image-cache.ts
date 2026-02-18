@@ -54,7 +54,7 @@ if (typeof Bun !== "undefined") {
 // Get champion image from cache (must be pre-loaded via preloadChampionImages)
 export function getChampionImage(championName: string): string {
   const cached = championImageCache.get(championName);
-  if (cached) {
+  if (cached !== undefined && cached.length > 0) {
     return cached;
   }
   throw new Error(
@@ -65,7 +65,7 @@ export function getChampionImage(championName: string): string {
 // Get item image from cache
 export function getItemImage(itemId: number): string {
   const cached = itemImageCache.get(itemId);
-  if (cached) {
+  if (cached !== undefined && cached.length > 0) {
     return cached;
   }
   // Return empty for missing items (item ID 0 means empty slot)
@@ -78,7 +78,7 @@ export function getItemImage(itemId: number): string {
 // Get spell image from cache
 export function getSpellImage(spellImageName: string): string {
   const cached = spellImageCache.get(spellImageName);
-  if (cached) {
+  if (cached !== undefined && cached.length > 0) {
     return cached;
   }
   throw new Error(`Spell image ${spellImageName} not found in cache.`);
@@ -87,7 +87,7 @@ export function getSpellImage(spellImageName: string): string {
 // Get augment icon from cache (must be pre-loaded via preloadAugmentIcons)
 export function getAugmentIcon(augmentIconPath: string): string {
   const cached = augmentIconCache.get(augmentIconPath);
-  if (cached) {
+  if (cached !== undefined && cached.length > 0) {
     return cached;
   }
   throw new Error(

@@ -72,7 +72,7 @@ function getAllCombinations<T>(arr: T[]): T[][] {
  * Create a canonical key for a pairing (sorted aliases joined by comma)
  */
 function createPairingKey(aliases: string[]): string {
-  return [...aliases].sort().join(",");
+  return [...aliases].toSorted().join(",");
 }
 
 /**
@@ -187,7 +187,7 @@ export async function calculatePairingStats(
   }
 
   // Log top/bottom pairings for debugging
-  const sortedPairings = [...pairings].sort((a, b) => b.winRate - a.winRate);
+  const sortedPairings = [...pairings].toSorted((a, b) => b.winRate - a.winRate);
   const top = sortedPairings[0];
   const bottom = sortedPairings.at(-1);
   if (top !== undefined && bottom !== undefined) {
@@ -200,7 +200,7 @@ export async function calculatePairingStats(
   }
 
   // Log individual surrender stats
-  const sortedBySurrenders = [...individualStats].sort(
+  const sortedBySurrenders = [...individualStats].toSorted(
     (a, b) => b.surrenders - a.surrenders,
   );
   const topSurrenderer = sortedBySurrenders[0];
@@ -258,7 +258,7 @@ function processMatch(
 
   for (const puuid of match.metadata.participants) {
     const alias = puuidToAlias.get(puuid);
-    if (alias) {
+    if (alias !== undefined && alias.length > 0) {
       const participant = findParticipant(puuid, match.info.participants);
       if (participant) {
         trackedPlayersInMatch.push({

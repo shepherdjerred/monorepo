@@ -18,10 +18,10 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className="empty-state animate-fade-in">
-      {icon && <div className="empty-state-icon">{icon}</div>}
+      {Boolean(icon) && <div className="empty-state-icon">{icon}</div>}
       <h3 className="empty-state-title">{title}</h3>
-      {description && <p className="empty-state-description">{description}</p>}
-      {action && <div className="mt-6">{action}</div>}
+      {description !== undefined && description.length > 0 && <p className="empty-state-description">{description}</p>}
+      {Boolean(action) && <div className="mt-6">{action}</div>}
     </div>
   );
 }

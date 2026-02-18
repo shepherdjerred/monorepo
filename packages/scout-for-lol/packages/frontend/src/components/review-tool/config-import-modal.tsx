@@ -178,7 +178,7 @@ export function ConfigImportModal({
                 id="upload-config-file"
                 type="file"
                 accept=".json"
-                onChange={handleFileUpload}
+                onChange={(e) => void handleFileUpload(e)}
                 className="block w-full text-sm text-surface-500
                   file:mr-4 file:py-2 file:px-4
                   file:rounded-lg file:border-0
@@ -216,7 +216,7 @@ export function ConfigImportModal({
             </div>
 
             {/* Parse Error */}
-            {parseError && (
+            {parseError !== undefined && parseError.length > 0 && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="text-sm text-red-800 font-medium">
                   Failed to parse JSON:

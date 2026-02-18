@@ -143,10 +143,9 @@ describe("generateDatePrefixes", () => {
 // matchIncludesParticipant Tests
 // ============================================================================
 
-describe("matchIncludesParticipant", () => {
-  // Create a mock match factory
-  function createMockMatch(participantPuuids: string[]): RawMatch {
-    return {
+// Create a mock match factory
+function createMockMatch(participantPuuids: string[]): RawMatch {
+  return {
       metadata: {
         dataVersion: "2",
         matchId: "TEST_MATCH",
@@ -171,8 +170,9 @@ describe("matchIncludesParticipant", () => {
         tournamentCode: "",
       },
     };
-  }
+}
 
+describe("matchIncludesParticipant", () => {
   test("includes match when participant PUUID is in list", () => {
     const match = createMockMatch(["PUUID-1", "PUUID-2", "PUUID-3"]);
     const puuids = ["PUUID-2"];

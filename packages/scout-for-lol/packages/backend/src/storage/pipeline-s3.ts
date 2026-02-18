@@ -353,7 +353,7 @@ export async function savePipelineTracesToS3(
   );
 
   const imageBase64 = review.imageBase64;
-  if (imageBase64) {
+  if (imageBase64 !== undefined && imageBase64.length > 0) {
     savePromises.push(
       safeSave(
         () =>

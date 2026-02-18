@@ -292,7 +292,7 @@ export function handleWelcomeMatch(params: {
         region: RegionSchema.parse(region),
       },
     },
-    ...(user && { discordAccount: { id: DiscordAccountIdSchema.parse(user) } }),
+    ...(user !== undefined && user.length > 0 && { discordAccount: { id: DiscordAccountIdSchema.parse(user) } }),
   };
 
   // Fire off async task to send welcome match

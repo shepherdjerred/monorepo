@@ -133,7 +133,7 @@ export function getPermissionErrorMessage(
 ): string {
   const baseMessage = `Unable to send message to channel <#${channelId}>`;
 
-  if (reason) {
+  if (reason !== undefined && reason.length > 0) {
     return `${baseMessage}: ${reason}`;
   }
 
@@ -148,7 +148,7 @@ export function formatPermissionErrorForLog(
   error: unknown,
   reason?: string,
 ): string {
-  const permissionCheck = reason ? ` (${reason})` : "";
+  const permissionCheck = reason !== undefined && reason.length > 0 ? ` (${reason})` : "";
   const errorDetail = isPermissionError(error)
     ? " [Discord Permission Error]"
     : ` - ${String(error)}`;
@@ -176,7 +176,7 @@ export async function notifyServerOwnerAboutPermissionError(
   // Track permission error occurrence
   discordPermissionErrorsTotal.inc({
     guild_id: serverId,
-    error_type: reason ? "explicit" : "generic",
+    error_type: reason !== undefined && reason.length > 0 ? "explicit" : "generic",
   });
 
   try {
@@ -187,7 +187,7 @@ export async function notifyServerOwnerAboutPermissionError(
     const owner = await guild.fetchOwner();
 
     // Construct the DM message
-    const reasonText = reason ? `\n\n**Reason:** ${reason}` : "";
+    const reasonText = reason !== undefined && reason.length > 0 ? `\n\n**Reason:** ${reason}` : "";
     const message = `⚠️ **Bot Permission Issue**
 
 Hello! I'm having trouble posting messages in your server **${guild.name}**.

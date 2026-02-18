@@ -209,7 +209,7 @@ export function getPersonalityById(id: string): Personality | undefined {
  * Get lane context
  */
 export function getLaneContext(lane: string | undefined): string {
-  if (!lane) {
+  if (lane === undefined) {
     return genericLane;
   }
 
@@ -218,7 +218,7 @@ export function getLaneContext(lane: string | undefined): string {
   const validLanes: Record<string, string> = LANE_CONTEXTS;
   if (lowerLane in validLanes) {
     const laneValue = validLanes[lowerLane];
-    if (laneValue) {
+    if (laneValue !== undefined && laneValue.length > 0) {
       return laneValue;
     }
   }

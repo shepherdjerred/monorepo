@@ -315,7 +315,7 @@ function ContextDisplay({ metadata }: { metadata: GenerationMetadata }) {
         Context
       </h3>
       <div className="space-y-2 text-sm">
-        {metadata.selectedPersonality && (
+        {metadata.selectedPersonality !== undefined && metadata.selectedPersonality.length > 0 && (
           <div className="flex justify-between">
             <span className="text-surface-600 dark:text-surface-400">
               Personality:

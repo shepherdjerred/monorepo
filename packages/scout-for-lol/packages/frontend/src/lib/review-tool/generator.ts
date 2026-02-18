@@ -268,7 +268,7 @@ export async function generateMatchReview(
 
   try {
     // Validate OpenAI API key
-    if (!config.api.openaiApiKey) {
+    if (config.api.openaiApiKey === undefined) {
       throw new Error("OpenAI API key is required");
     }
 
@@ -298,7 +298,7 @@ export async function generateMatchReview(
 
     // Initialize Gemini client if API key provided
     let geminiClient: GoogleGenerativeAI | undefined;
-    if (config.api.geminiApiKey) {
+    if (config.api.geminiApiKey !== undefined && config.api.geminiApiKey.length > 0) {
       geminiClient = new GoogleGenerativeAI(config.api.geminiApiKey);
     }
 

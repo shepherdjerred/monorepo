@@ -234,7 +234,7 @@ export async function queryMatchesByDateRange(
 ): Promise<RawMatch[]> {
   const bucket = configuration.s3BucketName;
 
-  if (!bucket) {
+  if (bucket === undefined) {
     logger.warn(
       "[S3Query] S3_BUCKET_NAME not configured, returning empty results",
     );
@@ -293,7 +293,7 @@ export async function queryMatchesByDateRange(
 
         // Filter for only match.json files (games/{date}/{matchId}/match.json)
         const matchJsonKeys = response.Contents.flatMap((obj) =>
-          obj.Key?.endsWith("/match.json") ? [obj.Key] : [],
+          obj.Key?.endsWith("/match.json") === true ? [obj.Key] : [],
         ).slice(0, 1000); // Limit to prevent memory issues
 
         logger.info(

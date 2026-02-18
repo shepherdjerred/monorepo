@@ -37,6 +37,11 @@ import {
   type ActiveGeneration,
 } from "./results-panel-timer.ts";
 
+function handleCancelPending(id: string) {
+  // Pending entries are not persisted, so nothing to cancel
+  console.log("[History] Cancel requested for pending entry:", id);
+}
+
 type ResultsPanelProps = {
   config: ReviewConfig;
   match?: CompletedMatch | ArenaMatch | undefined;
@@ -142,11 +147,11 @@ export function ResultsPanel(props: ResultsPanelProps) {
       }
 
       // Update config snapshot with actual selected values
-      if (generatedResult.metadata.selectedPersonality) {
+      if (generatedResult.metadata.selectedPersonality !== undefined && generatedResult.metadata.selectedPersonality.length > 0) {
         configSnapshot.personality =
           generatedResult.metadata.selectedPersonality;
       }
-      if (generatedResult.metadata.imageDescription) {
+      if (generatedResult.metadata.imageDescription !== undefined && generatedResult.metadata.imageDescription.length > 0) {
         configSnapshot.imageDescription =
           generatedResult.metadata.imageDescription;
       }
@@ -157,7 +162,7 @@ export function ResultsPanel(props: ResultsPanelProps) {
       console.log("[History] Saved, triggering refresh");
 
       // Calculate and track cost
-      if (!generatedResult.error) {
+      if (generatedResult.error === undefined) {
         const cost = calculateCost(
           generatedResult.metadata,
           config.textGeneration.model,
@@ -219,7 +224,7 @@ export function ResultsPanel(props: ResultsPanelProps) {
   };
 
   const handleRatingChange = async (newRating: 1 | 2 | 3 | 4) => {
-    if (!selectedHistoryId) {
+    if (selectedHistoryId === undefined) {
       return;
     }
     setRating(newRating);
@@ -227,18 +232,13 @@ export function ResultsPanel(props: ResultsPanelProps) {
   };
 
   const handleNotesChange = async (newNotes: string) => {
-    if (!selectedHistoryId) {
+    if (selectedHistoryId === undefined) {
       return;
     }
     setNotes(newNotes);
     if (rating) {
       await updateHistoryRating(selectedHistoryId, rating, newNotes);
     }
-  };
-
-  const handleCancelPending = (id: string) => {
-    // Pending entries are not persisted, so nothing to cancel
-    console.log("[History] Cancel requested for pending entry:", id);
   };
 
   const cost = result?.metadata
@@ -249,11 +249,11 @@ export function ResultsPanel(props: ResultsPanelProps) {
       )
     : null;
 
-  const selectedGen = selectedHistoryId
+  const selectedGen = selectedHistoryId !== undefined && selectedHistoryId.length > 0
     ? activeGenerations.get(selectedHistoryId)
     : undefined;
   const isViewingActiveGeneration = selectedGen !== undefined;
-  const elapsedMs = selectedHistoryId
+  const elapsedMs = selectedHistoryId !== undefined && selectedHistoryId.length > 0
     ? (activeGenerationTimers.get(selectedHistoryId) ?? 0)
     : 0;
 
@@ -370,7 +370,7 @@ export function ResultsPanel(props: ResultsPanelProps) {
         )}
 
         {/* Validation Error Display */}
-        {validationError && (
+        {validationError !== undefined && validationError.length > 0 && (
           <div className="mb-4 p-4 rounded-xl bg-defeat-50 border border-defeat-200 animate-fade-in">
             <div className="flex items-start gap-3">
               <svg
@@ -426,7 +426,7 @@ export function ResultsPanel(props: ResultsPanelProps) {
         )}
 
         {/* Error Display */}
-        {result?.error && (
+        {result?.error !== undefined && result?.error.length > 0 && (
           <div className="mb-4 p-4 rounded-xl bg-defeat-50 border border-defeat-200 animate-fade-in">
             <div className="flex items-start gap-3">
               <svg
@@ -451,12 +451,12 @@ export function ResultsPanel(props: ResultsPanelProps) {
         )}
 
         {/* Result Display */}
-        {result && !result.error && (
+        {result && result.error === undefined && (
           <>
             <ResultDisplay result={result} />
 
             {/* Rating Component */}
-            {selectedHistoryId && result.image && viewingHistory && (
+            {selectedHistoryId !== undefined && selectedHistoryId.length > 0 && result.image !== undefined && result.image.length > 0 && viewingHistory && (
               <ResultRating
                 rating={rating}
                 notes={notes}
