@@ -60,7 +60,7 @@ export async function saveToS3(
   } = config;
   const bucket = configuration.s3BucketName;
 
-  if (!bucket) {
+  if (bucket === undefined) {
     logger.warn(
       `[S3Storage] ⚠️  S3_BUCKET_NAME not configured, skipping ${errorContext} save for match: ${matchId}`,
     );
@@ -109,7 +109,7 @@ export async function saveToS3(
     );
     logger.info(`[S3Storage] 🔗 S3 location: ${s3Url}`);
 
-    return returnUrl ? s3Url : undefined;
+    return returnUrl === true ? s3Url : undefined;
   } catch (error) {
     logger.error(
       `[S3Storage] ❌ Failed to save ${errorContext} ${matchId} to S3:`,
@@ -151,7 +151,7 @@ export async function saveFailedPayloadToS3(
   const { matchId, assetType, rawPayload, validationError } = config;
   const bucket = configuration.s3BucketName;
 
-  if (!bucket) {
+  if (bucket === undefined) {
     logger.warn(
       `[S3Storage] ⚠️  S3_BUCKET_NAME not configured, skipping failed payload save for match: ${matchId}`,
     );

@@ -103,7 +103,7 @@ function main() {
   if (BRANDED_TYPES_TO_IMPORT.size > 0) {
     sourceFile.insertImportDeclaration(0, {
       moduleSpecifier: "@scout-for-lol/data",
-      namedImports: [...BRANDED_TYPES_TO_IMPORT].sort(),
+      namedImports: [...BRANDED_TYPES_TO_IMPORT].toSorted(),
     });
   }
 
@@ -138,16 +138,16 @@ function transformFieldTypeInContent(
 
   while (match !== null) {
     const fieldName = match[1];
-    if (!fieldName) {
+    if (fieldName === undefined) {
       match = fieldPattern.exec(content);
       continue;
     }
 
-    const isNullable = !!match[2];
+    const isNullable = !match[2] === undefined;
     const originalType = `${baseType}${match[2] ?? ""}`;
 
     const brandedType = getBrandedType(fieldName, modelName);
-    if (brandedType) {
+    if (brandedType !== undefined && brandedType.length > 0) {
       const newType = isNullable ? `${brandedType} | null` : brandedType;
       const fieldReplacePattern = new RegExp(
         String.raw`${fieldName}:\s*${baseType}(\s*\|\s*null)?`,
@@ -214,7 +214,7 @@ function transformPayloadType(typeAlias: TypeAliasDeclaration): number {
     }
 
     const objectContent = extractScalarsContent(prop);
-    if (!objectContent) {
+    if (objectContent === undefined) {
       continue;
     }
 
@@ -294,14 +294,14 @@ function transformPropertyType(
   }
 
   const brandedType = getBrandedType(propName, modelName);
-  if (!brandedType) {
+  if (brandedType === undefined) {
     return false;
   }
 
   const fullText = prop.getText();
   const newText = transformFn(fullText, brandedType, propName);
 
-  if (newText) {
+  if (newText !== undefined && newText.length > 0) {
     prop.replaceWithText(newText);
     BRANDED_TYPES_TO_IMPORT.add(brandedType);
     return true;
@@ -353,7 +353,7 @@ function transformSimpleObjectType(
         // Match union patterns: number | SomeOtherType OR string | SomeOtherType
         const unionPattern = new RegExp(String.raw`${propName}\??:\s*([^\n]+)`);
         const unionMatch = unionPattern.exec(fullText);
-        if (unionMatch?.[1]) {
+        if (unionMatch?.[1] !== undefined && unionMatch?.[1].length > 0) {
           const typeExpression = unionMatch[1];
           if (typeExpression.includes("number")) {
             return fullText.replace(/\bnumber\b/, brandedType);

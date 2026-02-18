@@ -86,7 +86,7 @@ export function logNotification(
     CRON_TRIGGER: "⏰",
   }[type];
 
-  const competitionInfo = entry.competitionId
+  const competitionInfo = entry.competitionId !== undefined
     ? ` [Competition ${entry.competitionId.toString()}: ${entry.competitionTitle ?? "Unknown"}]`
     : "";
 
@@ -113,7 +113,7 @@ export function logCronTrigger(jobName: string, details?: string): void {
   logNotification(
     "CRON_TRIGGER",
     `cron:${jobName}`,
-    details ? { message: details } : {},
+    details !== undefined && details.length > 0 ? { message: details } : {},
   );
 }
 

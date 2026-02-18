@@ -102,16 +102,16 @@ export function useMatchBrowser(
 
   const s3Config = useMemo<S3Config | null>(() => {
     if (
-      apiSettings.s3BucketName &&
-      apiSettings.awsAccessKeyId &&
-      apiSettings.awsSecretAccessKey
+      apiSettings.s3BucketName !== undefined && apiSettings.s3BucketName.length > 0 &&
+      apiSettings.awsAccessKeyId !== undefined && apiSettings.awsAccessKeyId.length > 0 &&
+      apiSettings.awsSecretAccessKey !== undefined && apiSettings.awsSecretAccessKey.length > 0
     ) {
       return {
         bucketName: apiSettings.s3BucketName,
         accessKeyId: apiSettings.awsAccessKeyId,
         secretAccessKey: apiSettings.awsSecretAccessKey,
         region: apiSettings.awsRegion,
-        ...(apiSettings.s3Endpoint ? { endpoint: apiSettings.s3Endpoint } : {}),
+        ...(apiSettings.s3Endpoint !== undefined && apiSettings.s3Endpoint.length > 0 ? { endpoint: apiSettings.s3Endpoint } : {}),
       };
     }
     return null;
@@ -150,7 +150,7 @@ export function useMatchBrowser(
         } else {
           console.log(`[Cache MISS] Need to fetch matches`, {
             forceRefresh,
-            hasCachedData: !!cached,
+            hasCachedData: !!cached !== undefined && cached !== null,
           });
         }
       }

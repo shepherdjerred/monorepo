@@ -1,0 +1,448 @@
+import type { Directory, Container } from "@dagger.io/dagger";
+import { getSystemContainer } from "./lib-system.ts";
+
+const XAR_COMMIT = "5fa4675419cfec60ac19a9c7f7c2d0e7c831a497";
+const LIBDISPATCH_COMMIT = "fdf3fc85a9557635668c78801d79f10161d83f12";
+const LIBTAPI_VERSION = "1300.6.5";
+const CCTOOLS_VERSION = "1010.6";
+export const LINKER_VERSION = "951.9";
+const OSXCROSS_COMMIT = "29fe6dd35522073c9df5800f8cd1feb4b9a993a8";
+const ZIG_VERSION = "0.13.0";
+
+/**
+ * Install base dependencies.
+ */
+export function installBaseDeps(): Container {
+  return getSystemContainer().withExec([
+    "apt-get",
+    "install",
+    "-y",
+    "build-essential",
+    "cmake",
+    "clang",
+    "git",
+  ]);
+}
+
+/**
+ * Build xar library
+ */
+export function buildXar(
+  container: Container,
+  targetSdkVersion: string,
+  cores: number,
+): Directory {
+  const xarContainer = container
+    .withExec([
+      "apt",
+      "install",
+      "-y",
+      "libxml2-dev",
+      "libssl-dev",
+      "zlib1g-dev",
+      "autoconf",
+      "automake",
+      "libtool",
+    ])
+    .withExec([
+      "git",
+      "clone",
+      "https://github.com/tpoechtrager/xar",
+      "/tmp/xar-repo",
+    ])
+    .withWorkdir("/tmp/xar-repo")
+    .withExec(["git", "checkout", XAR_COMMIT])
+    .withWorkdir("/tmp/xar-repo/xar")
+    .withExec(["./autogen.sh", "--noconfigure"])
+    .withEnvVariable("MACOSX_DEPLOYMENT_TARGET", targetSdkVersion)
+    .withExec(["./configure", "--prefix=/xar"])
+    .withExec(["make", "-j" + cores.toString()])
+    .withExec(["make", "install"]);
+
+  return xarContainer.directory("/xar");
+}
+
+/**
+ * Build libdispatch library
+ */
+export function buildLibdispatch(
+  container: Container,
+  targetSdkVersion: string,
+  cores: number,
+): Directory {
+  const libdispatchContainer = container
+    .withExec(["apt", "install", "-y", "clang"])
+    .withExec([
+      "git",
+      "clone",
+      "https://github.com/tpoechtrager/apple-libdispatch",
+      "/tmp/libdispatch-src",
+    ])
+    .withWorkdir("/tmp/libdispatch-src")
+    .withExec(["git", "checkout", LIBDISPATCH_COMMIT])
+    .withEnvVariable("MACOSX_DEPLOYMENT_TARGET", targetSdkVersion)
+    .withEnvVariable("TARGETDIR", "/libdispatch")
+    .withEnvVariable("CC", "clang")
+    .withEnvVariable("CXX", "clang++")
+    .withExec(["mkdir", "-p", "build"])
+    .withWorkdir("build")
+    .withExec([
+      "cmake",
+      "..",
+      "-DCMAKE_BUILD_TYPE=RELEASE",
+      "-DCMAKE_INSTALL_PREFIX=/libdispatch",
+      "-DCMAKE_C_COMPILER=clang",
+      "-DCMAKE_CXX_COMPILER=clang++",
+    ])
+    .withExec(["make", "install", "-j" + cores.toString()]);
+
+  return libdispatchContainer.directory("/libdispatch");
+}
+
+/**
+ * Build libtapi library
+ */
+export function buildLibtapi(
+  container: Container,
+  targetSdkVersion: string,
+): Directory {
+  const libtapiContainer = container
+    .withExec(["apt", "install", "-y", "python3"])
+    .withExec([
+      "git",
+      "clone",
+      "--branch",
+      LIBTAPI_VERSION,
+      "https://github.com/tpoechtrager/apple-libtapi",
+      "/tmp/libtapi-src",
+    ])
+    .withWorkdir("/tmp/libtapi-src")
+    .withEnvVariable("MACOSX_DEPLOYMENT_TARGET", targetSdkVersion)
+    .withEnvVariable("INSTALLPREFIX", "/libtapi")
+    .withExec(["./build.sh"])
+    .withExec(["./install.sh"]);
+
+  return libtapiContainer.directory("/libtapi");
+}
+
+export type BuildCctoolsOptions = {
+  container: Container;
+  architecture: string;
+  kernelVersion: string;
+  targetSdkVersion: string;
+  cores: number;
+  xar: Directory;
+  libtapi: Directory;
+  libdispatch: Directory;
+};
+
+/**
+ * Build cctools for a specific architecture
+ */
+export function buildCctools(opts: BuildCctoolsOptions): Directory {
+  const { container, architecture, kernelVersion, targetSdkVersion, cores, xar, libtapi, libdispatch } = opts;
+  const triple =
+    architecture === "aarch64"
+      ? `arm-apple-darwin${kernelVersion}`
+      : `${architecture}-apple-darwin${kernelVersion}`;
+
+  const cctoolsContainer = container
+    .withExec([
+      "apt",
+      "install",
+      "-y",
+      "llvm-dev",
+      "uuid-dev",
+      "rename",
+      "zlib1g-dev",
+      "libssl-dev",
+    ])
+    .withExec([
+      "git",
+      "clone",
+      "--branch",
+      `${CCTOOLS_VERSION}-ld64-${LINKER_VERSION}`,
+      "https://github.com/tpoechtrager/cctools-port",
+      "/tmp/cctools-src",
+    ])
+    .withWorkdir("/tmp/cctools-src")
+    .withDirectory("/xar", xar)
+    .withDirectory("/libtapi", libtapi)
+    .withDirectory("/libdispatch", libdispatch)
+    .withWorkdir("/tmp/cctools-src/cctools")
+    .withEnvVariable("MACOSX_DEPLOYMENT_TARGET", targetSdkVersion)
+    .withExec([
+      "./configure",
+      "--prefix=/cctools",
+      "--with-libtapi=/libtapi",
+      "--with-libxar=/xar",
+      "--with-libdispatch=/libdispatch",
+      "--with-libblocksruntime=/libdispatch",
+      "--target=" + triple,
+    ]);
+
+  let buildContainer = cctoolsContainer;
+  if (architecture === "aarch64") {
+    buildContainer = buildContainer.withExec([
+      "bash",
+      "-c",
+      `find . -name Makefile -print0 | xargs -0 sed -i 's/arm-apple-darwin${kernelVersion}/arm64-apple-darwin${kernelVersion}/g'`,
+    ]);
+  }
+
+  let finalContainer = buildContainer
+    .withExec(["make", "-j" + cores.toString()])
+    .withExec(["make", "install"]);
+
+  if (architecture === "aarch64") {
+    finalContainer = finalContainer.withExec([
+      "bash",
+      "-c",
+      "cd /cctools/bin && for file in *arm64*; do ln -s $file ${file/arm64/aarch64}; done",
+    ]);
+  }
+
+  return finalContainer.directory("/cctools");
+}
+
+export type BuildWrapperOptions = {
+  container: Container;
+  sdkVersion: string;
+  kernelVersion: string;
+  targetSdkVersion: string;
+  cores: number;
+};
+
+/**
+ * Build wrapper for clang
+ */
+export function buildClangWrappers(opts: BuildWrapperOptions): Directory {
+  const { container, sdkVersion, kernelVersion, targetSdkVersion, cores } = opts;
+  const wrapperContainer = container
+    .withExec([
+      "git",
+      "clone",
+      "https://github.com/tpoechtrager/osxcross",
+      "/tmp/osxcross-src",
+    ])
+    .withWorkdir("/tmp/osxcross-src")
+    .withExec(["git", "checkout", OSXCROSS_COMMIT])
+    .withWorkdir("/tmp/osxcross-src/wrapper")
+    .withEnvVariable("VERSION", "1.5")
+    .withEnvVariable("SDK_VERSION", sdkVersion)
+    .withEnvVariable("TARGET", "darwin" + kernelVersion)
+    .withEnvVariable("LINKER_VERSION", LINKER_VERSION)
+    .withEnvVariable("X86_64H_SUPPORTED", "0")
+    .withEnvVariable("I386_SUPPORTED", "0")
+    .withEnvVariable("ARM_SUPPORTED", "1")
+    .withEnvVariable("MACOSX_DEPLOYMENT_TARGET", targetSdkVersion)
+    .withExec(["make", "wrapper", "-j" + cores.toString()]);
+
+  const compilers = ["clang", "clang++"];
+  let finalContainer = wrapperContainer.withEnvVariable("TARGET_DIR", "/osxcross");
+
+  for (const compiler of compilers) {
+    finalContainer = finalContainer
+      .withEnvVariable("TARGETCOMPILER", compiler)
+      .withExec(["./build_wrapper.sh"]);
+  }
+
+  return finalContainer.directory("/osxcross");
+}
+
+/**
+ * Build wrapper for GCC
+ */
+export function buildGccWrappers(opts: BuildWrapperOptions): Directory {
+  const { container, sdkVersion, kernelVersion, targetSdkVersion, cores } = opts;
+  const wrapperContainer = container
+    .withExec([
+      "git",
+      "clone",
+      "https://github.com/tpoechtrager/osxcross",
+      "/tmp/osxcross-gcc-src",
+    ])
+    .withWorkdir("/tmp/osxcross-gcc-src")
+    .withExec(["git", "checkout", OSXCROSS_COMMIT])
+    .withWorkdir("/tmp/osxcross-gcc-src/wrapper")
+    .withEnvVariable("VERSION", "1.5")
+    .withEnvVariable("SDK_VERSION", sdkVersion)
+    .withEnvVariable("TARGET", "darwin" + kernelVersion)
+    .withEnvVariable("LINKER_VERSION", LINKER_VERSION)
+    .withEnvVariable("X86_64H_SUPPORTED", "0")
+    .withEnvVariable("I386_SUPPORTED", "0")
+    .withEnvVariable("ARM_SUPPORTED", "1")
+    .withEnvVariable("MACOSX_DEPLOYMENT_TARGET", targetSdkVersion)
+    .withExec(["make", "wrapper", "-j" + cores.toString()]);
+
+  const compilers = ["gcc", "g++", "gfortran"];
+  let finalContainer = wrapperContainer.withEnvVariable("TARGET_DIR", "/osxcross");
+
+  for (const compiler of compilers) {
+    finalContainer = finalContainer
+      .withEnvVariable("TARGETCOMPILER", compiler)
+      .withExec(["./build_wrapper.sh"]);
+  }
+
+  return finalContainer.directory("/osxcross");
+}
+
+/**
+ * Get or download macOS SDK
+ */
+export function getSdk(container: Container, version: string): Directory {
+  const sdkContainer = container
+    .withExec(["apt", "update"])
+    .withExec(["apt", "install", "-y", "wget"])
+    .withExec([
+      "wget",
+      `https://github.com/joseluisq/macosx-sdks/releases/download/${version}/MacOSX${version}.sdk.tar.xz`,
+    ])
+    .withExec(["tar", "-xf", `MacOSX${version}.sdk.tar.xz`])
+    .withExec(["bash", "-c", `mv MacOSX*.sdk MacOSX${version}.sdk || true`]);
+
+  return sdkContainer.directory(`MacOSX${version}.sdk`);
+}
+
+/**
+ * Build Zig compiler
+ */
+export function buildZig(container: Container, targetArch = "x86_64"): Directory {
+  let archSuffix: string;
+  if (targetArch === "aarch64" || targetArch === "arm64") {
+    archSuffix = "aarch64";
+  } else if (targetArch === "x86_64" || targetArch === "amd64") {
+    archSuffix = "x86_64";
+  } else {
+    throw new Error(`Unsupported architecture: ${targetArch}`);
+  }
+
+  const zigContainer = container
+    .withExec(["apt", "install", "-y", "wget", "xz-utils"])
+    .withExec([
+      "wget",
+      "-O",
+      "zig.tar.xz",
+      `https://ziglang.org/download/${ZIG_VERSION}/zig-linux-${archSuffix}-${ZIG_VERSION}.tar.xz`,
+    ])
+    .withExec(["tar", "-xf", "zig.tar.xz"])
+    .withExec(["rm", "zig.tar.xz"])
+    .withExec(["bash", "-c", "mv zig* zig"]);
+
+  return zigContainer.directory("zig");
+}
+
+export type BuildGccOptions = {
+  container: Container;
+  architecture: string;
+  sdkVersion: string;
+  kernelVersion: string;
+  targetSdkVersion: string;
+  cores: number;
+  clangWrappers: Directory;
+  cctools: Directory;
+  sdk: Directory;
+  xar: Directory;
+  libtapi: Directory;
+  libdispatch: Directory;
+};
+
+/**
+ * Build GCC compiler for cross-compilation
+ */
+export function buildGcc(opts: BuildGccOptions): Directory {
+  const { container, architecture, sdkVersion, kernelVersion, targetSdkVersion, cores, clangWrappers, cctools, sdk, xar, libtapi, libdispatch } = opts;
+  const triple = `${architecture}-apple-darwin${kernelVersion}`;
+
+  const gccContainer = container
+    .withExec([
+      "apt",
+      "install",
+      "-y",
+      "gcc",
+      "g++",
+      "zlib1g-dev",
+      "libmpc-dev",
+      "libmpfr-dev",
+      "libgmp-dev",
+      "flex",
+      "file",
+    ])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "--force-yes",
+      "llvm-dev",
+      "libxml2-dev",
+      "uuid-dev",
+      "libssl-dev",
+      "bash",
+      "patch",
+      "make",
+      "tar",
+      "xz-utils",
+      "bzip2",
+      "gzip",
+      "sed",
+      "cpio",
+      "libbz2-dev",
+      "zlib1g-dev",
+    ])
+    .withExec([
+      "git",
+      "clone",
+      "--branch=gcc-14-2-darwin",
+      "https://github.com/iains/gcc-14-branch",
+      "/tmp/gcc-src",
+    ])
+    .withDirectory("/osxcross", clangWrappers)
+    .withDirectory("/cctools", cctools)
+    .withDirectory("/sdk", sdk)
+    .withDirectory("/tmp/xar", xar)
+    .withDirectory("/tmp/libtapi", libtapi)
+    .withDirectory("/tmp/libdispatch", libdispatch)
+    .withExec(["bash", "-c", "cp -r /tmp/xar/* /sdk/usr/ || true"])
+    .withExec(["bash", "-c", "cp -r /tmp/libtapi/* /sdk/usr/ || true"])
+    .withExec(["bash", "-c", "cp -r /tmp/libdispatch/* /sdk/usr/ || true"])
+    .withExec(["bash", "-c", "cp -r /tmp/xar/lib/* /usr/local/lib/ || true"])
+    .withExec([
+      "bash",
+      "-c",
+      "cp -r /tmp/libtapi/lib/* /usr/local/lib/ || true",
+    ])
+    .withExec([
+      "bash",
+      "-c",
+      "cp -r /tmp/libdispatch/lib/* /usr/local/lib/ || true",
+    ])
+    .withExec(["ldconfig"])
+    .withExec(["mkdir", "-p", "/osxcross/SDK"])
+    .withExec(["ln", "-s", "/sdk", `/osxcross/SDK/MacOSX${sdkVersion}.sdk`])
+    .withEnvVariable("PATH", "$PATH:/osxcross/bin:/cctools/bin", {
+      expand: true,
+    })
+    .withEnvVariable("MACOSX_DEPLOYMENT_TARGET", targetSdkVersion)
+    .withExec(["mkdir", "-p", "/tmp/gcc-build"])
+    .withWorkdir("/tmp/gcc-build")
+    .withExec([
+      "/tmp/gcc-src/configure",
+      "--target=" + triple,
+      "--with-sysroot=/sdk",
+      "--disable-nls",
+      "--enable-languages=c,c++,fortran,objc,obj-c++",
+      "--without-headers",
+      "--enable-lto",
+      "--enable-checking=release",
+      "--disable-libstdcxx-pch",
+      "--prefix=/gcc",
+      "--with-system-zlib",
+      "--disable-multilib",
+      "--with-ld=/cctools/bin/" + triple + "-ld",
+      "--with-as=/cctools/bin/" + triple + "-as",
+    ])
+    .withExec(["make", "-j" + cores.toString()])
+    .withExec(["make", "install"]);
+
+  return gccContainer.directory("/gcc");
+}

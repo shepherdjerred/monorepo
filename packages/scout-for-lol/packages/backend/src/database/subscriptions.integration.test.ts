@@ -204,7 +204,7 @@ describe("getChannelsSubscribedToPlayers - Deduplication Fix", () => {
 
     // Should return 3 unique channels
     expect(channels).toHaveLength(3);
-    const channelIds = channels.map((c) => c.channel).sort();
+    const channelIds = channels.map((c) => c.channel).toSorted();
     expect(channelIds).toEqual([
       DiscordChannelIdSchema.parse(channel1),
       DiscordChannelIdSchema.parse(channel2),
@@ -338,7 +338,7 @@ describe("getChannelsSubscribedToPlayers - Edge Cases", () => {
 
     // Should return 3 unique channels (A, B, C) not 4
     expect(channels).toHaveLength(3);
-    const channelIds = channels.map((c) => c.channel).sort();
+    const channelIds = channels.map((c) => c.channel).toSorted();
     expect(channelIds).toEqual([
       DiscordChannelIdSchema.parse(channelA),
       DiscordChannelIdSchema.parse(channelB),
@@ -380,7 +380,7 @@ describe("getChannelsSubscribedToPlayers - Edge Cases", () => {
 
     // Should return both channels
     expect(channels).toHaveLength(2);
-    const channelIds = channels.map((c) => c.channel).sort();
+    const channelIds = channels.map((c) => c.channel).toSorted();
     expect(channelIds).toEqual([
       DiscordChannelIdSchema.parse(channelGeneral),
       DiscordChannelIdSchema.parse(channelLol),

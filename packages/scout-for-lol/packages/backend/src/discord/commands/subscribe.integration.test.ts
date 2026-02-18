@@ -168,7 +168,7 @@ describe("Subscribe Command - Account Creation", () => {
     });
 
     expect(playerWithAccounts?.accounts).toHaveLength(2);
-    expect(playerWithAccounts?.accounts.map((a) => a.puuid).sort()).toEqual([
+    expect(playerWithAccounts?.accounts.map((a) => a.puuid).toSorted()).toEqual([
       testPuuid("euw"),
       testPuuid("na1"),
     ]);

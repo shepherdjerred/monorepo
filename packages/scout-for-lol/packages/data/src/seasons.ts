@@ -75,7 +75,7 @@ export function getSeasonById(seasonId: string): SeasonData | undefined {
  * @returns Array of all season data
  */
 export function getAllSeasons(): SeasonData[] {
-  return Object.values(SEASONS).sort(
+  return Object.values(SEASONS).toSorted(
     (a, b) => b.startDate.getTime() - a.startDate.getTime(),
   );
 }

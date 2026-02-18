@@ -10,7 +10,7 @@ logger.info(`🔧 Environment: ${configuration.environment}`);
 logger.info(`🌐 Git SHA: ${configuration.gitSha}`);
 logger.info(`🔌 Port: ${configuration.port.toString()}`);
 
-if (configuration.sentryDsn) {
+if (configuration.sentryDsn !== undefined && configuration.sentryDsn.length > 0) {
   logger.info("🔍 Initializing Sentry error tracking");
   Sentry.init({
     dsn: configuration.sentryDsn,

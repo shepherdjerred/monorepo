@@ -60,7 +60,7 @@ function extractRunes(p: RawParticipant): Rune[] {
  */
 export function participantToChampion(p: RawParticipant): Champion {
   const riotIdGameName =
-    p.riotIdGameName && p.riotIdTagline ? p.riotIdGameName : "Unknown";
+    p.riotIdGameName !== undefined && p.riotIdGameName.length > 0 && p.riotIdTagline ? p.riotIdGameName : "Unknown";
 
   return {
     riotIdGameName,

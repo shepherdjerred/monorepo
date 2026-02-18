@@ -46,9 +46,9 @@ function Badge({
 }: BadgeProps) {
   return (
     <span className={cn(badgeVariants({ variant }), className)} {...props}>
-      {dot && (
+      {dot === true && (
         <span className="relative flex h-2 w-2">
-          {pulse && (
+          {pulse === true && (
             <span
               className={cn(
                 "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",

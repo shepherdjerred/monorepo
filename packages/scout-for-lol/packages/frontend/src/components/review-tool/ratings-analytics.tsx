@@ -8,12 +8,13 @@ import { loadHistory } from "@scout-for-lol/frontend/lib/review-tool/history-man
 let historyData: Awaited<ReturnType<typeof loadHistory>> = [];
 const historyListeners = new Set<() => void>();
 
+function handleHistoryUpdate() {
+  void loadHistoryData();
+}
+
 function subscribeToHistory(callback: () => void) {
   historyListeners.add(callback);
   // Also listen for history-update events
-  const handleHistoryUpdate = () => {
-    void loadHistoryData();
-  };
   globalThis.addEventListener("history-update", handleHistoryUpdate);
   return () => {
     historyListeners.delete(callback);
@@ -52,7 +53,7 @@ export function RatingsAnalytics() {
 
   const statistics = useMemo(() => {
     const ratedEntries = history.filter(
-      (entry) => entry.rating && entry.status === "complete",
+      (entry) => entry.rating !== undefined && entry.status === "complete",
     );
 
     // Overall stats
@@ -66,7 +67,7 @@ export function RatingsAnalytics() {
     // Rating distribution
     const ratingCounts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0 };
     for (const entry of ratedEntries) {
-      if (entry.rating) {
+      if (entry.rating !== undefined) {
         ratingCounts[entry.rating] = (ratingCounts[entry.rating] ?? 0) + 1;
       }
     }
@@ -75,7 +76,7 @@ export function RatingsAnalytics() {
     const personalityMap = new Map<string, { total: number; sum: number }>();
     for (const entry of ratedEntries) {
       const personality = entry.configSnapshot.personality;
-      if (personality && entry.rating) {
+      if (personality !== undefined && personality.length > 0 && entry.rating !== undefined) {
         const existing = personalityMap.get(personality);
         if (existing) {
           existing.total += 1;
@@ -92,7 +93,7 @@ export function RatingsAnalytics() {
         average: data.sum / data.total,
         count: data.total,
       }))
-      .sort((a, b) => b.average - a.average);
+      .toSorted((a, b) => b.average - a.average);
 
     return {
       totalRated,

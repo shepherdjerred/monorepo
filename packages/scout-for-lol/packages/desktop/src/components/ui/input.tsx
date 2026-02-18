@@ -38,9 +38,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <div className="space-y-2.5">
-        {label && <Label htmlFor={inputId}>{label}</Label>}
+        {label !== undefined && label.length > 0 && <Label htmlFor={inputId}>{label}</Label>}
         <div className="relative">
-          {icon && (
+          {Boolean(icon) && (
             <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
               {icon}
             </div>
@@ -54,8 +54,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               "file:border-0 file:bg-transparent file:text-sm file:font-medium",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900",
               "disabled:cursor-not-allowed disabled:opacity-50",
-              icon && "pl-10",
-              error
+              Boolean(icon) && "pl-10",
+              error !== undefined && error.length > 0
                 ? "border-discord-red focus-visible:ring-discord-red"
                 : "border-gray-700 hover:border-gray-600 focus-visible:border-discord-blurple focus-visible:ring-discord-blurple",
               className,
@@ -63,11 +63,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
         </div>
-        {(helperText ?? error) && (
+        {(helperText !== undefined && helperText.length > 0 ?? error) && (
           <p
             className={cn(
               "text-xs",
-              error ? "text-discord-red" : "text-gray-500",
+              error !== undefined && error.length > 0 ? "text-discord-red" : "text-gray-500",
             )}
           >
             {error ?? helperText}
@@ -92,7 +92,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
 
     return (
       <div className="space-y-2.5">
-        {label && <Label htmlFor={selectId}>{label}</Label>}
+        {label !== undefined && label.length > 0 && <Label htmlFor={selectId}>{label}</Label>}
         <select
           ref={ref}
           id={selectId}
@@ -108,7 +108,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
         >
           {children}
         </select>
-        {helperText && <p className="text-xs text-gray-500">{helperText}</p>}
+        {helperText !== undefined && helperText.length > 0 && <p className="text-xs text-gray-500">{helperText}</p>}
       </div>
     );
   },

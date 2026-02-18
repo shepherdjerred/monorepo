@@ -29,7 +29,7 @@ export function Dialog({
         )}
       >
         <div className="flex items-center justify-between border-b border-surface-200 px-4 py-3">
-          {title && (
+          {title !== undefined && title.length > 0 && (
             <h3 className="text-sm font-semibold text-surface-900">{title}</h3>
           )}
           <button

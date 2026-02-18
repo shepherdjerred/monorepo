@@ -49,7 +49,7 @@ async function main(): Promise<void> {
       // Extract filename (handles both "b/" and "i/" prefixes)
       const match = /^\+\+\+ [a-z]\/(.*)/.exec(line);
       const matchedFile = match?.[1];
-      if (matchedFile) {
+      if (matchedFile !== undefined && matchedFile.length > 0) {
         currentFile = matchedFile;
         // Skip checking the suppression checker script itself
         if (currentFile === "scripts/check-suppressions.ts") {
@@ -68,7 +68,7 @@ async function main(): Promise<void> {
     if (line.startsWith("@@")) {
       const hunkMatch = /\+(\d+)/.exec(line);
       const lineStr = hunkMatch?.[1];
-      if (lineStr) {
+      if (lineStr !== undefined && lineStr.length > 0) {
         currentLineNumber = Number.parseInt(lineStr);
       }
       continue;

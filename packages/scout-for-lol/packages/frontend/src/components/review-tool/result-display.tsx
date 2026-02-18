@@ -27,7 +27,7 @@ export function ResultDisplay({ result }: ResultDisplayProps) {
         </div>
       </div>
 
-      {result.image && (
+      {result.image !== undefined && result.image.length > 0 && (
         <div>
           <h3 className="text-sm font-semibold text-surface-700 mb-2">
             Generated Image

@@ -76,7 +76,7 @@ export class VoiceManager {
     }
 
     const channel = await this.client.channels.fetch(channelId);
-    if (!channel?.isVoiceBased()) {
+    if (!channel?.isVoiceBased() === true) {
       throw new Error(`Channel ${channelId} is not a voice channel`);
     }
 

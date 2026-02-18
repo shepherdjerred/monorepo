@@ -109,7 +109,7 @@ function generateCacheKey(
   params: Record<string, unknown>,
 ): string {
   const sortedParams = Object.keys(params)
-    .sort()
+    .toSorted()
     .reduce<Record<string, unknown>>((acc, key) => {
       acc[key] = params[key];
       return acc;
@@ -156,7 +156,7 @@ export async function getCachedDataAsync(
 
       request.onsuccess = () => {
         const result: unknown = request.result;
-        if (result) {
+        if (result !== undefined && result !== null) {
           // Validate the structure matches what we expect with the key
           const KeyedEntrySchema = z.object({
             key: z.string(),
@@ -259,7 +259,7 @@ async function evictOldCacheEntries(
     });
 
     // Sort: expired first, then by oldest timestamp
-    entries.sort((a, b) => {
+    const sortedEntries = entries.toSorted((a, b) => {
       if (a.expired !== b.expired) {
         return a.expired ? -1 : 1;
       }
@@ -268,7 +268,7 @@ async function evictOldCacheEntries(
 
     // Remove entries until we've freed enough space
     let freedBytes = 0;
-    for (const entry of entries) {
+    for (const entry of sortedEntries) {
       if (freedBytes >= targetBytesToFree) {
         break;
       }

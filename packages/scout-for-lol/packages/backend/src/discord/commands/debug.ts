@@ -219,7 +219,7 @@ export async function executeDebugPolling(
     }
 
     // Build summary
-    const sortedIntervals = [...intervalCounts.entries()].sort(
+    const sortedIntervals = [...intervalCounts.entries()].toSorted(
       (a, b) => a[0] - b[0],
     );
     const intervalSummary = sortedIntervals

@@ -106,7 +106,7 @@ export function MatchBrowser({
       />
 
       {/* Error state */}
-      {browser.error && (
+      {browser.error !== undefined && browser.error.length > 0 && (
         <div className="p-4 rounded-xl bg-defeat-50 border border-defeat-200 text-sm text-defeat-700 mb-4 animate-fade-in">
           <div className="flex items-start gap-3">
             <svg
@@ -188,7 +188,7 @@ export function MatchBrowser({
       )}
 
       {/* Empty state - no matches */}
-      {browser.matches.length === 0 && !browser.loading && !browser.error && (
+      {browser.matches.length === 0 && !browser.loading && browser.error === undefined && (
         <EmptyState
           icon={<SearchIcon className="w-12 h-12" />}
           title="No Matches Found"

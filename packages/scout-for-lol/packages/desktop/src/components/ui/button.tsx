@@ -72,7 +72,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {loading ? (
           <Loader2 className="animate-spin" />
         ) : (
-          icon && <span className="shrink-0">{icon}</span>
+          Boolean(icon) && <span className="shrink-0">{icon}</span>
         )}
         {children}
       </Component>

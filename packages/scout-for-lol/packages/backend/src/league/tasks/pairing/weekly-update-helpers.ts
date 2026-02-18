@@ -25,7 +25,7 @@ export function findSurrenderLeaders(
       ...p,
       surrenderRate: p.surrenders / p.totalGames,
     }))
-    .sort((a, b) => {
+    .toSorted((a, b) => {
       if (b.surrenderRate !== a.surrenderRate) {
         return b.surrenderRate - a.surrenderRate;
       }
@@ -39,7 +39,7 @@ export function findSurrenderLeaders(
   const topRate = playersWithSurrenders[0]?.surrenderRate ?? 0;
   const leaders = playersWithSurrenders
     .filter((p) => Math.abs(p.surrenderRate - topRate) < 0.001)
-    .sort((a, b) => a.alias.localeCompare(b.alias));
+    .toSorted((a, b) => a.alias.localeCompare(b.alias));
 
   return leaders;
 }

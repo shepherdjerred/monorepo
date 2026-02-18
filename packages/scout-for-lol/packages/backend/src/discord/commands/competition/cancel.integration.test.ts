@@ -18,6 +18,29 @@ import {
   deleteIfExists,
 } from "@scout-for-lol/backend/testing/test-database.ts";
 
+function getCompetitionStatus(competition: {
+  isCancelled: boolean;
+  startDate: Date | null;
+  endDate: Date | null;
+}): string {
+  const now = new Date();
+  if (competition.isCancelled) {
+    return "CANCELLED";
+  }
+  if (competition.startDate !== null && now < competition.startDate) {
+    return "PENDING";
+  }
+  if (
+    competition.startDate !== null &&
+    competition.endDate !== null &&
+    now >= competition.startDate &&
+    now <= competition.endDate
+  ) {
+    return "ACTIVE";
+  }
+  return "ENDED";
+}
+
 // Create a test database for integration tests
 const { prisma } = createTestDatabase("competition-cancel-test");
 
@@ -232,17 +255,7 @@ describe("Status with cancellation", () => {
 
     if (competition) {
       // Status calculation: isCancelled takes precedence
-      const now = new Date();
-      const status = competition.isCancelled
-        ? "CANCELLED"
-        : competition.startDate && now < competition.startDate
-          ? "PENDING"
-          : competition.startDate &&
-              competition.endDate &&
-              now >= competition.startDate &&
-              now <= competition.endDate
-            ? "ACTIVE"
-            : "ENDED";
+      const status = getCompetitionStatus(competition);
 
       expect(status).toBe("CANCELLED");
     }
@@ -284,17 +297,7 @@ describe("Status with cancellation", () => {
     const before = await getCompetitionById(prisma, competitionId);
     expect(before).not.toBeNull();
     if (before) {
-      const now = new Date();
-      const statusBefore = before.isCancelled
-        ? "CANCELLED"
-        : before.startDate && now < before.startDate
-          ? "PENDING"
-          : before.startDate &&
-              before.endDate &&
-              now >= before.startDate &&
-              now <= before.endDate
-            ? "ACTIVE"
-            : "ENDED";
+      const statusBefore = getCompetitionStatus(before);
       expect(statusBefore).toBe("ACTIVE");
     }
 
@@ -308,17 +311,7 @@ describe("Status with cancellation", () => {
     const after = await getCompetitionById(prisma, competitionId);
     expect(after).not.toBeNull();
     if (after) {
-      const now = new Date();
-      const statusAfter = after.isCancelled
-        ? "CANCELLED"
-        : after.startDate && now < after.startDate
-          ? "PENDING"
-          : after.startDate &&
-              after.endDate &&
-              now >= after.startDate &&
-              now <= after.endDate
-            ? "ACTIVE"
-            : "ENDED";
+      const statusAfter = getCompetitionStatus(after);
       expect(statusAfter).toBe("CANCELLED");
     }
   });

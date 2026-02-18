@@ -134,7 +134,7 @@ function validateAndTransformEntry(
 async function migrateFromLocalStorage(): Promise<void> {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
+    if (stored === undefined) {
       return;
     } // Nothing to migrate
 
@@ -243,7 +243,7 @@ export async function saveCompletedEntry(
     timestamp: new Date(),
     result, // Keep images! IndexedDB can handle them
     configSnapshot,
-    status: result.error ? "error" : "complete",
+    status: result.error !== undefined && result.error.length > 0 ? "error" : "complete",
   };
 
   try {

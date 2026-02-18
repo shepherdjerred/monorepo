@@ -26,7 +26,7 @@ if (typeof Bun !== "undefined") {
 
 export function getRuneIconUrl(iconPath: string): string {
   const cached = runeIconCache.get(iconPath);
-  if (cached) {
+  if (cached !== undefined && cached.length > 0) {
     return cached;
   }
   throw new Error(

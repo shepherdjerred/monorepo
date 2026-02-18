@@ -84,7 +84,7 @@ export async function callOpenAI(params: {
   const messages: { role: "system" | "user" | "assistant"; content: string }[] =
     [];
 
-  if (systemPrompt) {
+  if (systemPrompt !== undefined && systemPrompt.length > 0) {
     messages.push({ role: "system", content: systemPrompt });
   }
   messages.push({ role: "user", content: userPrompt });
@@ -111,14 +111,14 @@ export async function callOpenAI(params: {
   const durationMs = Date.now() - startTime;
 
   const content = response.choices[0]?.message.content;
-  if (!content || content.trim().length === 0) {
+  if (content === undefined || content.trim().length === 0) {
     const refusal = response.choices[0]?.message.refusal;
     const finishReason = response.choices[0]?.finish_reason;
     const details: string[] = [];
-    if (refusal) {
+    if (refusal !== undefined && refusal.length > 0) {
       details.push(`refusal: ${refusal}`);
     }
-    if (finishReason) {
+    if (finishReason !== undefined && finishReason.length > 0) {
       details.push(`finish_reason: ${finishReason}`);
     }
     const detailStr = details.length > 0 ? ` (${details.join(", ")})` : "";
@@ -136,7 +136,7 @@ export async function callOpenAI(params: {
     durationMs,
   };
 
-  if (systemPrompt) {
+  if (systemPrompt !== undefined && systemPrompt.length > 0) {
     trace.request.systemPrompt = systemPrompt;
   }
   if (response.usage?.prompt_tokens !== undefined) {

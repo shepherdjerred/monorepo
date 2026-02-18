@@ -71,7 +71,7 @@ function getQualifiedPairings(
     .filter(
       (p) => p.totalGames >= MIN_GAMES_FOR_RANKING && p.players.length >= 2,
     )
-    .sort((a, b) => b.winRate - a.winRate);
+    .toSorted((a, b) => b.winRate - a.winRate);
 }
 
 type FormatTop3EntryOptions = {
@@ -106,10 +106,10 @@ function formatPairing(
   aliasToDiscordId: Map<string, string>,
   useMentions = true,
 ): string {
-  const formattedPlayers = [...entry.players].sort().map((alias) => {
+  const formattedPlayers = [...entry.players].toSorted().map((alias) => {
     if (useMentions) {
       const discordId = aliasToDiscordId.get(alias);
-      if (discordId) {
+      if (discordId !== undefined && discordId.length > 0) {
         return `<@${discordId}>`;
       }
     }
@@ -167,7 +167,7 @@ function generateRankedSection(
   // Most Games Together (top 3)
   lines.push("### Most Games Together");
   const mostGamesPairings = [...qualifiedPairings]
-    .sort((a, b) => b.totalGames - a.totalGames)
+    .toSorted((a, b) => b.totalGames - a.totalGames)
     .slice(0, 3);
   mostGamesPairings.forEach((entry, index) => {
     const rank = index + 1;
@@ -408,7 +408,7 @@ export async function runWeeklyPairingUpdate(): Promise<{
       .filter(
         (p) => p.totalGames >= MIN_GAMES_FOR_RANKING && p.players.length >= 2,
       )
-      .sort((a, b) => b.winRate - a.winRate);
+      .toSorted((a, b) => b.winRate - a.winRate);
 
     logger.info(
       `[WeeklyPairing] Full ranked pairings list (${qualifiedPairings.length.toString()} total):`,
@@ -433,7 +433,7 @@ export async function runWeeklyPairingUpdate(): Promise<{
     // Send each chunk sequentially to maintain order
     for (let i = 0; i < messageChunks.length; i++) {
       const chunk = messageChunks[i];
-      if (chunk) {
+      if (chunk !== undefined && chunk.length > 0) {
         logger.info(
           `[WeeklyPairing] Sending chunk ${(i + 1).toString()}/${messageChunks.length.toString()}`,
         );

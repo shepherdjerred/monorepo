@@ -140,7 +140,7 @@ export async function getCompetitionsByServer(
     where: {
       serverId,
       ...(options?.ownerId && { ownerId: options.ownerId }),
-      ...(options?.activeOnly && {
+      ...(options?.activeOnly === true && {
         isCancelled: false,
         OR: [
           { endDate: null }, // Season-based, no end date
@@ -154,7 +154,7 @@ export async function getCompetitionsByServer(
   });
 
   // parseCompetition transparently populates dates from seasonId
-  return raw.map(parseCompetition);
+  return raw.map((item) => parseCompetition(item));
 }
 
 /**
@@ -183,7 +183,7 @@ export async function getActiveCompetitions(
   });
 
   // parseCompetition transparently populates dates from seasonId
-  return raw.map(parseCompetition);
+  return raw.map((item) => parseCompetition(item));
 }
 
 // ============================================================================
@@ -309,7 +309,7 @@ export async function getCompetitionsByChannelId(
     },
   });
 
-  return raw.map(parseCompetition);
+  return raw.map((item) => parseCompetition(item));
 }
 
 /**

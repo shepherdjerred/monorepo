@@ -87,9 +87,9 @@ export function generateLeaderboardEmbed(
           entry.metadata,
         );
         const isViewingUser =
-          viewingUserId && entry.discordId === viewingUserId;
+          viewingUserId !== undefined && viewingUserId.length > 0 && entry.discordId === viewingUserId;
         const baseText = `${medal} **${entry.rank.toString()}.** ${entry.playerName} - ${score}`;
-        return isViewingUser ? `${baseText} 👤` : baseText;
+        return Boolean(isViewingUser) ? `${baseText} 👤` : baseText;
       })
       .join("\n");
 
@@ -109,7 +109,7 @@ export function generateLeaderboardEmbed(
   }
 
   // Add viewing user's position if they're outside top 10
-  if (viewingUserId) {
+  if (viewingUserId !== undefined && viewingUserId.length > 0) {
     const userEntry = leaderboard.find(
       (entry) => entry.discordId === viewingUserId,
     );

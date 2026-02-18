@@ -164,12 +164,12 @@ function buildFriendsContext(
     return `${alias} (playing ${champion}${lane})`;
   });
 
-  if (friends.length === 1 && friendDescriptions[0]) {
+  if (friends.length === 1 && friendDescriptions[0] !== undefined && friendDescriptions[0].length > 0) {
     return `Their friend ${friendDescriptions[0]} was also in this match.`;
   }
 
   const lastFriend = friendDescriptions.pop();
-  if (!lastFriend) {
+  if (lastFriend === undefined) {
     return "";
   }
   return `Their friends ${friendDescriptions.join(", ")} and ${lastFriend} were also in this match.`;
@@ -189,7 +189,7 @@ function buildFlexQueueContext(
   const friendDescriptions = friends.map((friend) => {
     const alias = friend.playerConfig.alias;
     const champion = friend.champion.championName;
-    const lane = "lane" in friend && friend.lane ? ` in ${friend.lane}` : "";
+    const lane = "lane" in friend && friend.lane !== undefined && friend.lane.length > 0 ? ` in ${friend.lane}` : "";
     return `${alias} (playing ${champion}${lane})`;
   });
 
@@ -201,7 +201,7 @@ function buildFlexQueueContext(
   // Full premade team (5 players)
   if (totalTrackedPlayers === 5) {
     const lastFriend = friendDescriptions.pop();
-    if (!lastFriend) {
+    if (lastFriend === undefined) {
       return "";
     }
     if (friendDescriptions.length === 0) {
@@ -213,7 +213,7 @@ function buildFlexQueueContext(
   // 4 friends (likely 4-stack with 1 random)
   if (totalTrackedPlayers === 4) {
     const lastFriend = friendDescriptions.pop();
-    if (!lastFriend) {
+    if (lastFriend === undefined) {
       return "";
     }
     if (friendDescriptions.length === 0) {
@@ -227,12 +227,12 @@ function buildFlexQueueContext(
     return "";
   }
 
-  if (friends.length === 1 && friendDescriptions[0]) {
+  if (friends.length === 1 && friendDescriptions[0] !== undefined && friendDescriptions[0].length > 0) {
     return `Their friend ${friendDescriptions[0]} was also in this flex queue match.`;
   }
 
   const lastFriend = friendDescriptions.pop();
-  if (!lastFriend) {
+  if (lastFriend === undefined) {
     return "";
   }
   return `Their friends ${friendDescriptions.join(", ")} and ${lastFriend} were also in this flex queue match.`;
@@ -355,7 +355,7 @@ export function buildPromptVariables(params: {
     timelineSummary,
   } = params;
   const playerName = matchData["playerName"];
-  if (!playerName) {
+  if (playerName === undefined) {
     throw new Error("No player name found");
   }
 
@@ -376,11 +376,11 @@ export function buildPromptVariables(params: {
     personality.metadata.randomBehaviors,
   );
   const matchAnalysisText =
-    matchAnalysis && matchAnalysis.trim().length > 0
+    matchAnalysis !== undefined && matchAnalysis.length > 0 && matchAnalysis.trim().length > 0
       ? matchAnalysis.trim()
       : "No AI match analysis was generated for this match.";
   const timelineSummaryText =
-    timelineSummary && timelineSummary.trim().length > 0
+    timelineSummary !== undefined && timelineSummary.length > 0 && timelineSummary.trim().length > 0
       ? timelineSummary.trim()
       : "No timeline summary available for this match.";
 

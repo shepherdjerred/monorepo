@@ -66,7 +66,7 @@ export function PromptEditor({
               <span className="text-xs font-medium text-surface-700">
                 Prompt template
               </span>
-              {defaultPrompt && (
+              {defaultPrompt !== undefined && defaultPrompt.length > 0 && (
                 <Button
                   variant="ghost"
                   size="sm"

@@ -72,6 +72,15 @@ function loadCustomData() {
 // Start loading immediately
 void loadCustomData();
 
+async function refreshCustomData() {
+  customDataState = {
+    personalities: await loadCustomPersonalities(),
+  };
+  customDataListeners.forEach((listener) => {
+    listener();
+  });
+}
+
 function getStagesOrDefault(config: TabConfig) {
   return config.stages ?? createDefaultPipelineStages();
 }
@@ -120,15 +129,6 @@ export function SettingsPanel({ config, onChange }: SettingsPanelProps) {
       setEditingPersonality(personality);
     }
     setShowPersonalityEditor(true);
-  };
-
-  const refreshCustomData = async () => {
-    customDataState = {
-      personalities: await loadCustomPersonalities(),
-    };
-    customDataListeners.forEach((listener) => {
-      listener();
-    });
   };
 
   const handleSavePersonality = async (personality: Personality) => {

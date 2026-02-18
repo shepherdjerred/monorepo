@@ -43,7 +43,7 @@ function CardHeader({
       {...props}
     >
       <div className="flex flex-col gap-2">{children}</div>
-      {action && <div>{action}</div>}
+      {Boolean(action) && <div>{action}</div>}
     </div>
   );
 }
@@ -61,7 +61,7 @@ function CardTitle({ className, icon, children, ...props }: CardTitleProps) {
       )}
       {...props}
     >
-      {icon && <span className="text-discord-blurple">{icon}</span>}
+      {Boolean(icon) && <span className="text-discord-blurple">{icon}</span>}
       {children}
     </h3>
   );

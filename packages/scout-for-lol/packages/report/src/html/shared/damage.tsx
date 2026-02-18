@@ -50,7 +50,7 @@ export function Damage({
         flexDirection: "column",
         alignItems: "center",
         gap: containerGap,
-        ...(containerWidth ? { width: containerWidth } : {}),
+        ...(containerWidth !== undefined && containerWidth.length > 0 ? { width: containerWidth } : {}),
         ...(containerMinWidth === undefined
           ? {}
           : { minWidth: containerMinWidth }),
@@ -62,7 +62,7 @@ export function Damage({
             display: "flex",
             gap: textGap,
             fontWeight: textFontWeight,
-            ...(textColor ? { color: textColor } : {}),
+            ...(textColor !== undefined && textColor.length > 0 ? { color: textColor } : {}),
           }}
         >
           {value.toLocaleString()} dmg
@@ -74,7 +74,7 @@ export function Damage({
             gap: textGap,
             ...(textFontSize === undefined ? {} : { fontSize: textFontSize }),
             fontWeight: textFontWeight,
-            ...(textColor ? { color: textColor } : {}),
+            ...(textColor !== undefined && textColor.length > 0 ? { color: textColor } : {}),
           }}
         >
           <span>{value.toLocaleString()}</span>
@@ -89,7 +89,7 @@ export function Damage({
           ...(barBorderRadius === undefined
             ? {}
             : { borderRadius: barBorderRadius }),
-          ...(barOverflow ? { overflow: barOverflow } : {}),
+          ...(barOverflow !== undefined && barOverflow.length > 0 ? { overflow: barOverflow } : {}),
         }}
       >
         <span

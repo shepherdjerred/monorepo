@@ -27,7 +27,7 @@ export function checkRateLimit(serverId: string, userId: string): boolean {
   const key = `${serverId}:${userId}`;
   const lastCreation = rateLimitStore[key];
 
-  if (!lastCreation) {
+  if (lastCreation === undefined) {
     return true; // No previous creation
   }
 
@@ -59,7 +59,7 @@ export function getTimeRemaining(serverId: string, userId: string): number {
   const key = `${serverId}:${userId}`;
   const lastCreation = rateLimitStore[key];
 
-  if (!lastCreation) {
+  if (lastCreation === undefined) {
     return 0;
   }
 

@@ -131,7 +131,7 @@ function urlToS3Key(url: string): string {
  * Check if a YouTube URL is cached in S3
  */
 async function isInS3Cache(key: string): Promise<boolean> {
-  if (!configuration.s3BucketName) {
+  if (configuration.s3BucketName === undefined) {
     return false;
   }
 
@@ -153,7 +153,7 @@ async function isInS3Cache(key: string): Promise<boolean> {
  * Get audio stream from S3 cache
  */
 async function getFromS3Cache(key: string): Promise<Readable> {
-  if (!configuration.s3BucketName) {
+  if (configuration.s3BucketName === undefined) {
     throw new Error("S3 bucket not configured");
   }
 
@@ -233,7 +233,7 @@ async function downloadYouTubeAudio(url: string, s3Key: string): Promise<void> {
     }
 
     // Upload to S3
-    if (configuration.s3BucketName) {
+    if (configuration.s3BucketName !== undefined && configuration.s3BucketName.length > 0) {
       const file = Bun.file(tempFile);
       const fileBuffer = await file.arrayBuffer();
       const s3Client = createS3Client();

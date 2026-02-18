@@ -88,7 +88,7 @@ export function App() {
       const { fetchMatchFromRiot } = await import("../../lib/report-ui/api");
       const result = await fetchMatchFromRiot(matchId, region, apiToken);
 
-      if (result.error) {
+      if (result.error !== undefined && result.error.length > 0) {
         setError(result.error);
       } else {
         // result.match is always null for now
@@ -302,7 +302,7 @@ export function App() {
             {isLoading ? "Loading..." : "Fetch Match"}
           </button>
 
-          {error && (
+          {error !== undefined && error.length > 0 && (
             <div
               style={{ marginTop: "10px", color: "#d32f2f", fontSize: "14px" }}
             >

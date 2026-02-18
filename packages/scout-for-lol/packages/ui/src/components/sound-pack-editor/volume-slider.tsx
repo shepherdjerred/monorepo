@@ -28,7 +28,7 @@ export function VolumeSlider({
 
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
-      {label && (
+      {label !== undefined && label.length > 0 && (
         <label className="text-sm font-medium text-gray-700">{label}</label>
       )}
       <div className="flex items-center gap-3">

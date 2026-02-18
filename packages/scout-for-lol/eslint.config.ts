@@ -107,13 +107,10 @@ export default [
     ],
     rules: { "custom-rules/no-re-exports": "off" },
   },
-  // Large test/component files
+  // Large test file (1673 lines, test files have 1500 line limit)
   {
-    files: [
-      "packages/data/src/model/competition.test.ts",
-      "packages/ui/src/components/sound-pack-editor/condition-builder.tsx",
-    ],
-    rules: { "max-lines": "off" },
+    files: ["packages/data/src/model/competition.test.ts"],
+    rules: { "max-lines": ["error", { max: 1700 }] },
   },
   // Test fixtures contain long hash-like strings (PUUIDs, match IDs)
   {
@@ -141,7 +138,7 @@ export default [
     ],
     rules: { "unicorn/prefer-add-event-listener": "off" },
   },
-  // Downgrade opinionated unicorn rules to warnings (pre-existing violations)
+  // Downgrade opinionated unicorn rules to warnings for pre-existing violations
   {
     rules: {
       "unicorn/no-array-sort": "warn",

@@ -127,7 +127,7 @@ export const userRouter = router({
       const events = await prisma.gameEventLog.findMany({
         where: {
           userId: ctx.user.discordId,
-          ...(input.clientId ? { clientId: input.clientId } : {}),
+          ...(input.clientId !== undefined && input.clientId.length > 0 ? { clientId: input.clientId } : {}),
         },
         orderBy: { timestamp: "desc" },
         take: input.limit,

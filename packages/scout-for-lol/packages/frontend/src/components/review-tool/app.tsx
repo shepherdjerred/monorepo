@@ -74,6 +74,16 @@ function getAppInitSnapshot() {
   return appInitState;
 }
 
+// Wrapper to save global config when it changes
+function updateGlobalConfig(newGlobalConfig: GlobalConfig) {
+  appInitState = { ...appInitState, globalConfig: newGlobalConfig };
+  appInitListeners.forEach((listener) => {
+    listener();
+  });
+  // Save config when it changes
+  void saveGlobalConfig(newGlobalConfig);
+}
+
 // Module-level initialization - runs once per app load
 let appInitPromise: Promise<void> | null = null;
 
@@ -160,16 +170,6 @@ export default function App() {
       </div>
     );
   }
-
-  // Wrapper to save global config when it changes
-  const updateGlobalConfig = (newGlobalConfig: GlobalConfig) => {
-    appInitState = { ...appInitState, globalConfig: newGlobalConfig };
-    appInitListeners.forEach((listener) => {
-      listener();
-    });
-    // Save config when it changes
-    void saveGlobalConfig(newGlobalConfig);
-  };
 
   const updateConfig = (newConfig: TabConfig) => {
     appInitState = { ...appInitState, config: newConfig };

@@ -101,7 +101,7 @@ async function loadPersonality(basename: string): Promise<Personality> {
     }
   }
 
-  if (!styleCard) {
+  if (styleCard === undefined) {
     throw new Error(
       `Missing required style card for personality "${basename}". Expected one of: ${styleCardCandidates.map((c) => `${c}_style.json`).join(", ")}`,
     );
@@ -231,9 +231,9 @@ export function getLaneContext(lane: string | undefined): {
   let filename = "lanes/generic.txt";
   let content = genericLane;
 
-  if (lowerLane && lowerLane in LANE_CONTEXTS) {
+  if (lowerLane !== undefined && lowerLane.length > 0 && lowerLane in LANE_CONTEXTS) {
     const laneContent = LANE_CONTEXTS[lowerLane];
-    if (laneContent) {
+    if (laneContent !== undefined && laneContent.length > 0) {
       content = laneContent;
       filename = `lanes/${lowerLane}.txt`;
     }

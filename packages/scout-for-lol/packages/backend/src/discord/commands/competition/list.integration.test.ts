@@ -128,7 +128,7 @@ describe("Competition List Query", () => {
 
     const competitions = await getCompetitionsByServer(prisma, serverId);
     expect(competitions).toHaveLength(3);
-    expect(competitions.map((c) => c.title).sort()).toEqual([
+    expect(competitions.map((c) => c.title).toSorted()).toEqual([
       "Competition 1",
       "Competition 2",
       "Competition 3",

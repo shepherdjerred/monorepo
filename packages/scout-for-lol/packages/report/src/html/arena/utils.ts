@@ -10,24 +10,36 @@ export function filterDisplayAugments(augs: Augment[]) {
   return augs.filter((a) => (a.type === "full" ? true : a.id > 0));
 }
 
+function getMedalBorder(placement: ArenaPlacement): string {
+  if (placement === 1) {
+    return "2px solid rgba(255, 215, 0, 0.3)";
+  }
+  if (placement === 2) {
+    return "2px solid rgba(192, 192, 192, 0.3)";
+  }
+  if (placement === 3) {
+    return "2px solid rgba(205, 127, 50, 0.3)";
+  }
+  return "2px solid #374151";
+}
+
+function getMedalBoxShadow(placement: ArenaPlacement): string {
+  if (placement === 1) {
+    return "0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 215, 0, 0.1)";
+  }
+  if (placement === 2) {
+    return "0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(192, 192, 192, 0.1)";
+  }
+  if (placement === 3) {
+    return "0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(205, 127, 50, 0.1)";
+  }
+  return "0 4px 16px rgba(0, 0, 0, 0.3)";
+}
+
 export function getTeamStyling(placement: ArenaPlacement, hasTracked: boolean) {
   const medalAccent = {
-    border:
-      placement <= 3
-        ? placement === 1
-          ? "2px solid rgba(255, 215, 0, 0.3)"
-          : placement === 2
-            ? "2px solid rgba(192, 192, 192, 0.3)"
-            : "2px solid rgba(205, 127, 50, 0.3)"
-        : "2px solid #374151",
-    boxShadow:
-      placement <= 3
-        ? placement === 1
-          ? "0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 215, 0, 0.1)"
-          : placement === 2
-            ? "0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(192, 192, 192, 0.1)"
-            : "0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(205, 127, 50, 0.1)"
-        : "0 4px 16px rgba(0, 0, 0, 0.3)",
+    border: getMedalBorder(placement),
+    boxShadow: getMedalBoxShadow(placement),
   };
 
   if (hasTracked) {

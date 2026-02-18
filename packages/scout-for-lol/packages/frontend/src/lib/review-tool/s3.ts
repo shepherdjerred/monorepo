@@ -43,7 +43,7 @@ async function fetchAllS3Objects(
       Bucket: bucketName,
       Prefix: prefix,
       MaxKeys: 1000,
-      ...(nextToken ? { ContinuationToken: nextToken } : {}),
+      ...(nextToken !== undefined && nextToken.length > 0 ? { ContinuationToken: nextToken } : {}),
     });
 
     const response: ListObjectsV2CommandOutput = await client.send(command);
@@ -54,7 +54,7 @@ async function fetchAllS3Objects(
 
     nextToken = response.NextContinuationToken;
     iterations++;
-  } while (nextToken && iterations < maxIterations);
+  } while (nextToken !== undefined && nextToken.length > 0 && iterations < maxIterations);
 
   // Validate S3 objects have required Key field using Zod
   const S3ObjectWithKeySchema = z.object({
@@ -121,7 +121,7 @@ export async function listMatchesFromS3(
   // Create S3 client
   const client = new S3Client({
     region: config.region,
-    ...(config.endpoint ? { endpoint: config.endpoint } : {}),
+    ...(config.endpoint !== undefined && config.endpoint.length > 0 ? { endpoint: config.endpoint } : {}),
     credentials: {
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,
@@ -174,7 +174,7 @@ export async function listMatchesFromS3(
             (obj): { key: string; lastModified: Date | undefined } => {
               const match: { key: string; lastModified: Date | undefined } = {
                 key: obj.key,
-                lastModified: obj.lastModified
+                lastModified: obj.lastModified !== undefined && obj.lastModified.length > 0
                   ? new Date(obj.lastModified)
                   : undefined,
               };
@@ -236,7 +236,7 @@ export async function fetchMatchFromS3(
     // Create S3 client
     const client = new S3Client({
       region: config.region,
-      ...(config.endpoint ? { endpoint: config.endpoint } : {}),
+      ...(config.endpoint !== undefined && config.endpoint.length > 0 ? { endpoint: config.endpoint } : {}),
       credentials: {
         accessKeyId: config.accessKeyId,
         secretAccessKey: config.secretAccessKey,
@@ -319,7 +319,7 @@ export async function fetchTimelineFromS3(
     // Create S3 client
     const client = new S3Client({
       region: config.region,
-      ...(config.endpoint ? { endpoint: config.endpoint } : {}),
+      ...(config.endpoint !== undefined && config.endpoint.length > 0 ? { endpoint: config.endpoint } : {}),
       credentials: {
         accessKeyId: config.accessKeyId,
         secretAccessKey: config.secretAccessKey,

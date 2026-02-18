@@ -77,7 +77,7 @@ export async function sendWelcomeMatch(
 
     // Get target guild ID for feature flag checks
     const guildId = interaction.guildId;
-    if (!guildId) {
+    if (guildId === undefined) {
       logger.warn(`[WelcomeMatch] ⚠️  No guild ID available for interaction`);
       await interaction.followUp({
         content: `Welcome to Scout! Unable to determine server context. You'll see reports here when they play their next match.`,

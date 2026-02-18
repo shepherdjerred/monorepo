@@ -54,7 +54,7 @@ function CollapsibleSection({
             {title}
           </span>
         </div>
-        {badge && <span className="text-xs text-surface-500">{badge}</span>}
+        {badge !== undefined && badge.length > 0 && <span className="text-xs text-surface-500">{badge}</span>}
       </button>
       {isOpen && <div className="p-2">{children}</div>}
     </div>
@@ -68,7 +68,7 @@ type TraceCardProps = {
 };
 
 function TraceCard({ label, trace, text }: TraceCardProps) {
-  if (!trace && !text) {
+  if (!trace && text === undefined) {
     return null;
   }
 
@@ -104,7 +104,7 @@ function TraceCard({ label, trace, text }: TraceCardProps) {
         )}
       </CardHeader>
       <CardContent className="space-y-2">
-        {systemPrompt && (
+        {systemPrompt !== undefined && systemPrompt.length > 0 && (
           <CollapsibleSection
             title="System prompt"
             badge={`${systemPromptLength.toLocaleString()} chars`}
@@ -114,7 +114,7 @@ function TraceCard({ label, trace, text }: TraceCardProps) {
             </pre>
           </CollapsibleSection>
         )}
-        {userPrompt && (
+        {userPrompt !== undefined && userPrompt.length > 0 && (
           <CollapsibleSection
             title="User prompt"
             badge={`${userPromptLength.toLocaleString()} chars`}
@@ -124,7 +124,7 @@ function TraceCard({ label, trace, text }: TraceCardProps) {
             </pre>
           </CollapsibleSection>
         )}
-        {responseText && (
+        {responseText !== undefined && responseText.length > 0 && (
           <CollapsibleSection
             title="Response"
             defaultOpen={true}
@@ -211,7 +211,7 @@ function ChunkTracesCard({ chunks, chunkSummaries }: ChunkTracesCardProps) {
                       </div>
                     )}
                   </div>
-                  {summary && (
+                  {summary !== undefined && summary.length > 0 && (
                     <CollapsibleSection title="Summary" defaultOpen={true}>
                       <pre className="whitespace-pre-wrap rounded-md bg-surface-50 p-2 text-xs text-surface-800 max-h-64 overflow-auto">
                         {summary}
@@ -278,7 +278,7 @@ function ImageSettingsCard({
     (intermediate?.selectedImagePrompts?.length ?? 0) > 0 ||
     intermediate?.selectedArtStyle;
 
-  if (!hasSettings) {
+  if (!Boolean(hasSettings)) {
     return null;
   }
 
@@ -288,7 +288,7 @@ function ImageSettingsCard({
         <CardTitle>Image Generation Settings</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 text-xs text-surface-800">
-        {intermediate?.selectedArtStyle && (
+        {intermediate?.selectedArtStyle !== undefined && intermediate?.selectedArtStyle.length > 0 && (
           <div>
             <p className="text-surface-600 mb-1">Art style:</p>
             <p className="text-surface-700 bg-surface-50 rounded-md p-2">
@@ -346,7 +346,7 @@ function ImageGenerationCard({
         </CollapsibleSection>
         <div className="text-surface-700">
           Generated: {trace.response.imageGenerated ? "yes" : "no"}{" "}
-          {trace.response.imageSizeBytes
+          {trace.response.imageSizeBytes !== undefined
             ? `(${trace.response.imageSizeBytes.toLocaleString()} bytes)`
             : ""}
         </div>
