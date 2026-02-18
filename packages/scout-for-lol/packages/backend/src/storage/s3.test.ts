@@ -294,6 +294,6 @@ describe("S3 URL Format", () => {
     expect(url).toStartWith("s3://");
     const parts = url.replace("s3://", "").split("/");
     expect(parts[0]).toBe("my-bucket");
-    expect(parts[parts.length - 1]).toBe("report.png");
+    expect(parts.at(-1)).toBe("report.png");
   });
 });

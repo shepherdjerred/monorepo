@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { parseYAMLComments } from "./yaml-comments.js";
+import { parseYAMLComments } from "./yaml-comments.ts";
 
 describe("YAML Comment Parsing - Real Helm Chart Examples", () => {
   test("should correctly associate comments with properties at different indent levels (minecraft tty bug)", () => {

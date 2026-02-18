@@ -1,18 +1,18 @@
 import type { App } from "cdk8s";
 import { Chart, Size } from "cdk8s";
-import { ZfsSataVolume } from "../misc/zfs-sata-volume.ts";
-import { createBazarrDeployment } from "../resources/torrents/bazarr.ts";
-import { createTautulliDeployment } from "../resources/media/tautulli.ts";
-import { createPlexDeployment } from "../resources/media/plex.ts";
-import { createRadarrDeployment } from "../resources/torrents/radarr.ts";
-import { createOverseerrDeployment } from "../resources/torrents/overseerr.ts";
-import { createQBitTorrentDeployment } from "../resources/torrents/qbittorrent.ts";
-import { createSonarrDeployment } from "../resources/torrents/sonarr.ts";
-import { createProwlarrDeployment } from "../resources/torrents/prowlarr.ts";
-import { createMaintainerrDeployment } from "../resources/torrents/maintainerr.ts";
-import { createRecyclarrDeployment } from "../resources/torrents/recyclarr.ts";
-import { createWhisperbridgeDeployment } from "../resources/torrents/whisperbridge.ts";
-import { KubeNetworkPolicy } from "../../generated/imports/k8s.ts";
+import { ZfsSataVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-sata-volume.ts";
+import { createBazarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/bazarr.ts";
+import { createTautulliDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/media/tautulli.ts";
+import { createPlexDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/media/plex.ts";
+import { createRadarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/radarr.ts";
+import { createOverseerrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/overseerr.ts";
+import { createQBitTorrentDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/qbittorrent.ts";
+import { createSonarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/sonarr.ts";
+import { createProwlarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/prowlarr.ts";
+import { createMaintainerrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/maintainerr.ts";
+import { createRecyclarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/recyclarr.ts";
+import { createWhisperbridgeDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/whisperbridge.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 
 export function createMediaChart(app: App) {
   const chart = new Chart(app, "media", {

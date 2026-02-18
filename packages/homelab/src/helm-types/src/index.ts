@@ -12,4 +12,5 @@
  * This is a general-purpose library that can be used with any Helm chart.
  * Application-specific logic should be kept in your application code.
  */
+// eslint-disable-next-line custom-rules/no-re-exports -- barrel file for helm-types package
 export * from "./helm-types.ts";

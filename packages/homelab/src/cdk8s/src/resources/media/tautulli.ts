@@ -1,10 +1,10 @@
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Deployment, DeploymentStrategy, Service, Volume } from "cdk8s-plus-31";
-import { withCommonLinuxServerProps } from "../../misc/linux-server.ts";
-import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
-import { TailscaleIngress } from "../../misc/tailscale.ts";
-import versions from "../../versions.ts";
+import { withCommonLinuxServerProps } from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
+import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
+import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export function createTautulliDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "tautulli", {

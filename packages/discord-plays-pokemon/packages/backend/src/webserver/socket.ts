@@ -1,8 +1,10 @@
-import { Server, Socket } from "socket.io";
-import { logger } from "../logger.js";
-import http from "http";
+import type { Socket } from "socket.io";
+import { Server } from "socket.io";
+import { logger } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/logger.js";
+import type http from "node:http";
 import { Observable, fromEvent } from "rxjs";
-import { Request, RequestSchema } from "@discord-plays-pokemon/common";
+import type { Request} from "@discord-plays-pokemon/common";
+import { RequestSchema } from "@discord-plays-pokemon/common";
 import lodash from "lodash";
 
 export function createSocket({

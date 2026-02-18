@@ -31,7 +31,7 @@ export async function sendDM(
     return true;
   } catch (error) {
     // Check for specific Discord API error codes
-    if (error instanceof DiscordAPIError && error.code === 50007) {
+    if (error instanceof DiscordAPIError && error.code === 50_007) {
       // 50007 = Cannot send messages to this user
       logger.info(
         `[DM] User ${userId} has DMs disabled or has blocked the bot`,

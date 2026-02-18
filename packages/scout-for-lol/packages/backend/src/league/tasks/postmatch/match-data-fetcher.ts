@@ -79,17 +79,17 @@ export async function fetchMatchData(
 
       return undefined;
     }
-  } catch (e) {
+  } catch (error) {
     riotApiRequestsTotal.inc({
       source: "match-data",
       status:
-        e instanceof Error && e.message.includes("timed out")
+        error instanceof Error && error.message.includes("timed out")
           ? "timeout"
           : "error",
     });
     updateRiotApiHealth(false);
 
-    const result = z.object({ status: z.number() }).safeParse(e);
+    const result = z.object({ status: z.number() }).safeParse(error);
     if (result.success) {
       const status = result.data.status;
       if (status === 404) {
@@ -102,7 +102,7 @@ export async function fetchMatchData(
         `[fetchMatchData] ❌ HTTP Error ${status.toString()} for match ${matchId}`,
       );
       trackApiError("match-data-fetch", status.toString());
-      Sentry.captureException(e, {
+      Sentry.captureException(error, {
         tags: {
           source: "match-data-fetch",
           matchId,
@@ -111,7 +111,7 @@ export async function fetchMatchData(
         },
       });
     } else {
-      logger.error(`[fetchMatchData] ❌ Error fetching match ${matchId}:`, e);
+      logger.error(`[fetchMatchData] ❌ Error fetching match ${matchId}:`, error);
       trackApiError("match-data-fetch", "unknown");
     }
     return undefined;
@@ -183,17 +183,17 @@ export async function fetchMatchTimeline(
 
       return undefined;
     }
-  } catch (e) {
+  } catch (error) {
     riotApiRequestsTotal.inc({
       source: "match-timeline",
       status:
-        e instanceof Error && e.message.includes("timed out")
+        error instanceof Error && error.message.includes("timed out")
           ? "timeout"
           : "error",
     });
     updateRiotApiHealth(false);
 
-    const result = z.object({ status: z.number() }).safeParse(e);
+    const result = z.object({ status: z.number() }).safeParse(error);
     if (result.success) {
       const status = result.data.status;
       if (status === 404) {
@@ -206,7 +206,7 @@ export async function fetchMatchTimeline(
         `[fetchMatchTimeline] ❌ HTTP Error ${status.toString()} for timeline ${matchId}`,
       );
       trackApiError("timeline-data-fetch", status.toString());
-      Sentry.captureException(e, {
+      Sentry.captureException(error, {
         tags: {
           source: "timeline-data-fetch",
           matchId,
@@ -217,7 +217,7 @@ export async function fetchMatchTimeline(
     } else {
       logger.error(
         `[fetchMatchTimeline] ❌ Error fetching timeline ${matchId}:`,
-        e,
+        error,
       );
       trackApiError("timeline-data-fetch", "unknown");
     }

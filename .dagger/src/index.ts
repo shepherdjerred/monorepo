@@ -6,35 +6,35 @@ import {
   getReleasePleaseContainer as getLibReleasePleaseContainer,
   getBaseBunDebianContainer,
   installMonorepoWorkspaceDeps,
-} from "./lib/containers/index.js";
-import type { WorkspaceEntry } from "./lib/containers/index.js";
-import versions from "./lib/versions.js";
+} from "./lib/containers/index.ts";
+import type { WorkspaceEntry } from "./lib/containers/index.ts";
+import versions from "./lib/versions.ts";
 import {
   checkBirmel,
   buildBirmelImage,
   smokeTestBirmelImageWithContainer,
   publishBirmelImageWithContainer,
-} from "./birmel.js";
-import { reviewPr, handleInteractive } from "./code-review.js";
-import { updateReadmes as updateReadmesFn } from "./update-readme.js";
-import { checkAstroOpengraphImages } from "./astro-opengraph-images.js";
-import { checkWebring, deployWebringDocs } from "./webring.js";
+} from "./birmel.ts";
+import { reviewPr, handleInteractive } from "./code-review.ts";
+import { updateReadmes as updateReadmesFn } from "./update-readme.ts";
+import { checkAstroOpengraphImages } from "./astro-opengraph-images.ts";
+import { checkWebring, deployWebringDocs } from "./webring.ts";
 import {
   checkStarlightKarmaBot,
   deployStarlightKarmaBot,
-} from "./starlight-karma-bot.js";
+} from "./starlight-karma-bot.ts";
 import {
   checkBetterSkillCapped,
   deployBetterSkillCapped,
-} from "./better-skill-capped.js";
-import { checkSjerRed, deploySjerRed } from "./sjer-red.js";
-import { checkCastleCasters } from "./castle-casters.js";
-import { checkMacosCrossCompiler } from "./macos-cross-compiler.js";
+} from "./better-skill-capped.ts";
+import { checkSjerRed, deploySjerRed } from "./sjer-red.ts";
+import { checkCastleCasters } from "./castle-casters.ts";
+import { checkMacosCrossCompiler } from "./macos-cross-compiler.ts";
 import {
   checkDiscordPlaysPokemon,
   deployDiscordPlaysPokemon,
-} from "./discord-plays-pokemon.js";
-import { checkScoutForLol, deployScoutForLol } from "./scout-for-lol.js";
+} from "./discord-plays-pokemon.ts";
+import { checkScoutForLol, deployScoutForLol } from "./scout-for-lol.ts";
 import {
   checkHomelab,
   ciHomelab,
@@ -43,7 +43,7 @@ import {
   homelabTestRenovateRegex as homelabTestRenovateRegexFn,
   homelabSync as homelabSyncFn,
   Stage as HomelabStage,
-} from "./homelab/index.js";
+} from "./homelab/index.ts";
 
 const PACKAGES = [
   "bun-decompile",
@@ -404,9 +404,9 @@ async function runReleasePleaseCommand(
     .stdout();
 
   const lines = result.trim().split("\n");
-  const lastLine = lines[lines.length - 1] ?? "";
+  const lastLine = lines.at(-1) ?? "";
   const exitCodeMatch = /EXIT_CODE:(\d+)/.exec(lastLine);
-  const exitCode = exitCodeMatch ? parseInt(exitCodeMatch[1] ?? "1", 10) : 1;
+  const exitCode = exitCodeMatch ? Number.parseInt(exitCodeMatch[1] ?? "1", 10) : 1;
   const output = lines.slice(0, -1).join("\n");
 
   return {
@@ -440,11 +440,11 @@ function qualityRatchet(source: Directory): Container {
     "@ts" + "-ignore",
     "@ts" + "-nocheck",
   ];
-  const tsGrepPat = tsPat.join("\\\\|");
-  const rustPat = "#\\\\[allow(";
+  const tsGrepPat = tsPat.join(String.raw`\\|`);
+  const rustPat = String.raw`#\\[allow(`;
   const prettierPat = "prettier" + "-ignore";
 
-  const script = `#!/bin/sh
+  const script = String.raw`#!/bin/sh
 set -e
 
 # Search patterns
@@ -454,10 +454,10 @@ RUST_PAT='${rustPat}'
 PRETTIER_PAT="${prettierPat}"
 
 # Read baseline
-BASELINE_ESLINT=$(grep -o "\\"$ESLINT_PAT\\": [0-9]*" /workspace/.quality-baseline.json | grep -o '[0-9]*')
+BASELINE_ESLINT=$(grep -o "\"$ESLINT_PAT\": [0-9]*" /workspace/.quality-baseline.json | grep -o '[0-9]*')
 BASELINE_TS=$(grep -o '"ts-suppressions": [0-9]*' /workspace/.quality-baseline.json | grep -o '[0-9]*')
 BASELINE_RUST=$(grep -o '"rust-allow": [0-9]*' /workspace/.quality-baseline.json | grep -o '[0-9]*')
-BASELINE_PRETTIER=$(grep -o "\\"$PRETTIER_PAT\\": [0-9]*" /workspace/.quality-baseline.json | grep -o '[0-9]*')
+BASELINE_PRETTIER=$(grep -o "\"$PRETTIER_PAT\": [0-9]*" /workspace/.quality-baseline.json | grep -o '[0-9]*')
 
 # Count current suppressions across full monorepo package tree.
 CURRENT_ESLINT=$(grep -r "$ESLINT_PAT" /workspace/packages/ /workspace/.dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | wc -l | tr -d ' ')

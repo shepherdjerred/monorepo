@@ -4,9 +4,9 @@ import {
   type Secret,
   ReturnType,
 } from "@dagger.io/dagger";
-import versions from "../versions";
-import type { ExecResult } from "../utils/errors";
-import { getGitHubContainer } from "./github";
+import versions from "../versions.ts";
+import type { ExecResult } from "../utils/errors.ts";
+import { getGitHubContainer } from "./github.ts";
 
 // Pin Claude Code CLI version for reproducible builds
 const CLAUDE_CODE_VERSION = "1.0.33";

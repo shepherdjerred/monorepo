@@ -1,7 +1,7 @@
 import type { Directory, Secret, Container } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
-import { buildK8sManifests } from "./cdk8s";
-import versions from "./versions";
+import { buildK8sManifests } from "./cdk8s.ts";
+import versions from "./versions.ts";
 
 /**
  * List of all Helm charts to build and publish.
@@ -184,7 +184,7 @@ export async function publishChart(
     container.file("/tmp/result.txt").contents(),
     container.file("/tmp/exitcode.txt").contents(),
   ]);
-  const exitCode = parseInt(exitCodeStr.trim(), 10);
+  const exitCode = Number.parseInt(exitCodeStr.trim(), 10);
 
   if (exitCode === 0) {
     return result.trim() || "Chart published successfully";

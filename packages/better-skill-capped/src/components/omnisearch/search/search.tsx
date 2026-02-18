@@ -92,9 +92,14 @@ export default class Search<T> extends React.PureComponent<
     // TODO this is very hacky. fix it.
     const filteredItems = items
       .filter((item) => {
-        return isVideo(item) || isCourse(item) || isCommentary(item)
-          ? filters.roles.includes(item.role)
-          : false;
+        if (!(isVideo(item) || isCourse(item) || isCommentary(item))) {
+          return false;
+        }
+        if (typeof item !== "object" || item === null || !("role" in item)) {
+          return false;
+        }
+        // eslint-disable-next-line custom-rules/no-type-assertions -- role validated by runtime checks above
+        return filters.roles.includes(item.role as Role);
       })
       .filter((item) => {
         if (filters.onlyBookmarked) {

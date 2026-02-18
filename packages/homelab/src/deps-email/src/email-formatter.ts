@@ -1,5 +1,5 @@
-import type { FullDependencyDiff } from "./index.js";
-import { createPostalClientFromEnv } from "./postal-client.js";
+import type { FullDependencyDiff } from "./index.ts";
+import { createPostalClientFromEnv } from "./postal-client.ts";
 
 type DependencyInfo = {
   name: string;

@@ -9,11 +9,11 @@ import {
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { withCommonProps } from "../../misc/common.ts";
-import { TailscaleIngress } from "../../misc/tailscale.ts";
-import { createCloudflareTunnelBinding } from "../../misc/cloudflare-tunnel.ts";
-import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
-import versions from "../../versions.ts";
+import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Service as ServiceType } from "cdk8s-plus-31";
 
 export type CreatePlausibleDeploymentProps = {

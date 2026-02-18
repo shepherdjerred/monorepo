@@ -14,8 +14,8 @@
 import { Glob } from "bun";
 import path from "node:path";
 import { type Construct } from "constructs";
-import { KubeConfigMap } from "../../generated/imports/k8s.ts";
-import versions from "../versions.ts";
+import { KubeConfigMap } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 // Cache loaded configs per server to avoid re-reading
 const configCache = new Map<string, Record<string, string>>();

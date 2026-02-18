@@ -185,8 +185,7 @@ async function main(): Promise<void> {
   if (duplicates.length > 0) {
     console.log(`🔍 Largest duplicate blocks:\n`);
 
-    const sortedDuplicates = duplicates
-      .slice()
+    const sortedDuplicates = [...duplicates]
       .sort((a, b) => b.lines - a.lines);
 
     for (const duplicate of sortedDuplicates.slice(0, 5)) {

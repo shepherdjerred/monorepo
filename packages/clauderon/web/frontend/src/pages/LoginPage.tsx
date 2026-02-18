@@ -4,8 +4,8 @@ import {
   type CredentialRequestOptionsJSON,
   type PublicKeyCredentialWithAssertionJSON,
 } from "@github/webauthn-json";
-import { useClauderonClient } from "../hooks/useClauderonClient";
-import { useAuth } from "../contexts/AuthContext";
+import { useClauderonClient } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useClauderonClient";
+import { useAuth } from "@shepherdjerred/clauderon/web/frontend/src/contexts/AuthContext";
 
 export function LoginPage() {
   const client = useClauderonClient();
@@ -43,11 +43,11 @@ export function LoginPage() {
 
       // Refresh auth status
       await refreshAuthStatus();
-    } catch (err) {
-      console.error("Login error:", err);
+    } catch (error_) {
+      console.error("Login error:", error_);
       setError(
-        err instanceof Error
-          ? err.message
+        error_ instanceof Error
+          ? error_.message
           : "Failed to sign in. Please try again.",
       );
     } finally {

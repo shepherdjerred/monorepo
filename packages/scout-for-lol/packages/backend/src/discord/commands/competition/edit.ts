@@ -165,8 +165,8 @@ async function parseEditArguments(
     // Build args object with dates and criteria if present
     const args: EditCommandArgs = {
       ...baseArgs,
-      ...(datesResult.dates !== undefined ? { dates: datesResult.dates } : {}),
-      ...(criteria !== undefined ? { criteria } : {}),
+      ...(datesResult.dates === undefined ? {} : { dates: datesResult.dates }),
+      ...(criteria === undefined ? {} : { criteria }),
     };
 
     // Check if DRAFT-only fields are provided when not in DRAFT
@@ -277,9 +277,7 @@ function buildUpdateInput(
             narrowedCriteria.champion,
             10,
           );
-          if (!isNaN(championIdFromString)) {
-            championId = championIdFromString;
-          } else {
+          if (isNaN(championIdFromString)) {
             const idFromName = getChampionId(narrowedCriteria.champion);
             if (!idFromName) {
               throw new Error(
@@ -287,6 +285,8 @@ function buildUpdateInput(
               );
             }
             championId = idFromName;
+          } else {
+            championId = championIdFromString;
           }
 
           return {

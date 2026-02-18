@@ -1,10 +1,10 @@
 import type { Guild } from "discord.js";
-import { createTool } from "../../../voltagent/tools/create-tool.js";
+import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.js";
 import { z } from "zod";
-import { getDiscordClient } from "../../../discord/index.js";
-import { logger } from "../../../utils/logger.js";
-import { validateSnowflakes } from "./validation.js";
-import { isDiscordAPIError, formatDiscordAPIError } from "./error-utils.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.js";
+import { logger } from "@shepherdjerred/birmel/utils/logger.js";
+import { validateSnowflakes } from "./validation.ts";
+import { parseDiscordAPIError, formatDiscordAPIError } from "./error-utils.ts";
 
 type ModerationResult = {
   success: boolean;
@@ -221,18 +221,19 @@ export const moderateMemberTool = createTool({
           return await handlePrune(guild, ctx.days, ctx.reason, true);
       }
     } catch (error) {
-      if (isDiscordAPIError(error)) {
+      const apiError = parseDiscordAPIError(error);
+      if (apiError != null) {
         logger.error("Discord API error in moderate-member", {
-          code: error.code,
-          status: error.status,
-          message: error.message,
-          method: error.method,
-          url: error.url,
+          code: apiError.code,
+          status: apiError.status,
+          message: apiError.message,
+          method: apiError.method,
+          url: apiError.url,
           ctx,
         });
         return {
           success: false,
-          message: formatDiscordAPIError(error),
+          message: formatDiscordAPIError(apiError),
         };
       }
       logger.error("Failed to moderate member", error);

@@ -31,7 +31,7 @@ export type Message = {
  * Strip ANSI escape codes from terminal output
  */
 export function stripAnsi(text: string): string {
-  return text.replace(/\u001B\[[0-9;]*[a-z]/gi, "");
+  return text.replaceAll(/\u001B\[[0-9;]*[a-z]/gi, "");
 }
 
 /**

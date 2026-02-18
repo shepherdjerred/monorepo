@@ -2,8 +2,8 @@
  * Parallel execution utilities for CI/CD pipelines
  */
 
-import type { StepResult } from "../types";
-import { failedResult, passedResult } from "../types";
+import type { StepResult } from "../types.ts";
+import { failedResult, passedResult } from "../types.ts";
 
 /**
  * Result of running multiple operations in parallel

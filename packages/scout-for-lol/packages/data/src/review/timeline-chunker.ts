@@ -80,7 +80,7 @@ export function splitTimelineIntoChunks(
   }
 
   // Find the last frame's timestamp to determine game duration
-  const lastFrame = frames[frames.length - 1];
+  const lastFrame = frames.at(-1);
   if (!lastFrame) {
     return [];
   }

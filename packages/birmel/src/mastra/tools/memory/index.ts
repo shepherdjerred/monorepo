@@ -1,12 +1,12 @@
-import { createTool } from "../../../voltagent/tools/create-tool.js";
+import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.js";
 import { z } from "zod";
-import { logger } from "../../../utils/logger.js";
+import { logger } from "@shepherdjerred/birmel/utils/logger.js";
 import {
   handleGetMemory,
   handleUpdateMemory,
   handleAppendMemory,
   handleClearMemory,
-} from "./memory-actions.js";
+} from "./memory-actions.ts";
 
 export const manageMemoryTool = createTool({
   id: "manage-memory",

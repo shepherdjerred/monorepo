@@ -168,11 +168,7 @@ function convertRawMatchToInternalFormat(
     ranks: {},
   };
 
-  if (queueType === "arena") {
-    return toArenaMatch([player], rawMatch);
-  } else {
-    return toMatch([player], rawMatch, new Map());
-  }
+  return queueType === "arena" ? toArenaMatch([player], rawMatch) : toMatch([player], rawMatch, new Map());
 }
 
 type S3MatchResult = {

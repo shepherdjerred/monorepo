@@ -41,7 +41,7 @@ describe("CompetitionId branded type", () => {
   });
 
   test("accepts large positive integers", () => {
-    const result = CompetitionIdSchema.safeParse(999999);
+    const result = CompetitionIdSchema.safeParse(999_999);
     expect(result.success).toBe(true);
   });
 
@@ -256,8 +256,8 @@ describe("getCompetitionStatus - CANCELLED", () => {
     const now = new Date();
     const competition: Competition = {
       isCancelled: true,
-      startDate: new Date(now.getTime() - 86400000), // Yesterday
-      endDate: new Date(now.getTime() + 86400000), // Tomorrow
+      startDate: new Date(now.getTime() - 86_400_000), // Yesterday
+      endDate: new Date(now.getTime() + 86_400_000), // Tomorrow
       seasonId: null,
       startProcessedAt: null,
       endProcessedAt: null,
@@ -309,8 +309,8 @@ describe("getCompetitionStatus - DRAFT", () => {
     const now = new Date();
     const competition: Competition = {
       isCancelled: false,
-      startDate: new Date(now.getTime() + 86400000), // Tomorrow
-      endDate: new Date(now.getTime() + 86400000 * 7), // Next week
+      startDate: new Date(now.getTime() + 86_400_000), // Tomorrow
+      endDate: new Date(now.getTime() + 86_400_000 * 7), // Next week
       seasonId: null,
       startProcessedAt: null,
       endProcessedAt: null,
@@ -361,7 +361,7 @@ describe("getCompetitionStatus - DRAFT", () => {
     const competition: Competition = {
       isCancelled: false,
       startDate: new Date(now.getTime() + 1000), // 1 second in future
-      endDate: new Date(now.getTime() + 86400000),
+      endDate: new Date(now.getTime() + 86_400_000),
       seasonId: null,
       startProcessedAt: null,
       endProcessedAt: null,
@@ -388,8 +388,8 @@ describe("getCompetitionStatus - ACTIVE", () => {
     const now = new Date();
     const competition: Competition = {
       isCancelled: false,
-      startDate: new Date(now.getTime() - 86400000), // Yesterday
-      endDate: new Date(now.getTime() + 86400000), // Tomorrow
+      startDate: new Date(now.getTime() - 86_400_000), // Yesterday
+      endDate: new Date(now.getTime() + 86_400_000), // Tomorrow
       seasonId: null,
       startProcessedAt: null,
       endProcessedAt: null,
@@ -415,7 +415,7 @@ describe("getCompetitionStatus - ACTIVE", () => {
     const competition: Competition = {
       isCancelled: false,
       startDate: new Date(now.getTime() - 1000), // 1 second ago
-      endDate: new Date(now.getTime() + 86400000),
+      endDate: new Date(now.getTime() + 86_400_000),
       seasonId: null,
       startProcessedAt: null,
       endProcessedAt: null,
@@ -442,8 +442,8 @@ describe("getCompetitionStatus - ENDED", () => {
     const now = new Date();
     const competition: Competition = {
       isCancelled: false,
-      startDate: new Date(now.getTime() - 86400000 * 7), // Last week
-      endDate: new Date(now.getTime() - 86400000), // Yesterday
+      startDate: new Date(now.getTime() - 86_400_000 * 7), // Last week
+      endDate: new Date(now.getTime() - 86_400_000), // Yesterday
       seasonId: null,
       startProcessedAt: null,
       endProcessedAt: null,
@@ -468,7 +468,7 @@ describe("getCompetitionStatus - ENDED", () => {
     const now = new Date();
     const competition: Competition = {
       isCancelled: false,
-      startDate: new Date(now.getTime() - 86400000 * 7),
+      startDate: new Date(now.getTime() - 86_400_000 * 7),
       endDate: new Date(now.getTime() - 1000), // 1 second ago
       seasonId: null,
       startProcessedAt: null,
@@ -494,7 +494,7 @@ describe("getCompetitionStatus - ENDED", () => {
     const now = new Date();
     const competition: Competition = {
       isCancelled: false,
-      startDate: new Date(now.getTime() - 86400000),
+      startDate: new Date(now.getTime() - 86_400_000),
       endDate: now,
       seasonId: null,
       startProcessedAt: null,

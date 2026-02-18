@@ -379,7 +379,7 @@ export function RankConfigPanel({ config, onChange }: RankConfigPanelProps) {
       </div>
 
       <div
-        className={`p-4 space-y-4 ${!config.enabled ? "opacity-50 pointer-events-none" : ""}`}
+        className={`p-4 space-y-4 ${config.enabled ? "" : "opacity-50 pointer-events-none"}`}
       >
         {/* Quick presets */}
         <div>

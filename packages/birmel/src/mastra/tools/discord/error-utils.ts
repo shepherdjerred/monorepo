@@ -1,35 +1,39 @@
 /**
  * Discord API error utilities.
- * We use duck-typing to detect Discord API errors since the class is from @discordjs/rest
+ * We use Zod validation to detect Discord API errors since the class is from @discordjs/rest
  * which may not be directly importable in all contexts.
  */
 
-export type DiscordAPIErrorLike = {
-  code: number;
-  status: number;
-  message: string;
-  method: string;
-  url: string;
-  name?: string;
-};
+import { z } from "zod";
+
+const DiscordAPIErrorSchema = z.object({
+  code: z.number(),
+  status: z.number(),
+  message: z.string(),
+  method: z.string(),
+  url: z.string(),
+  name: z.string().optional(),
+});
+
+export type DiscordAPIErrorLike = z.infer<typeof DiscordAPIErrorSchema>;
 
 /**
  * Check if an error looks like a DiscordAPIError based on its properties.
  */
 export function isDiscordAPIError(
   error: unknown,
-): error is DiscordAPIErrorLike {
-  if (error == null || typeof error !== "object") {
-    return false;
-  }
-  const e = error as Record<string, unknown>;
-  return (
-    typeof e["code"] === "number" &&
-    typeof e["status"] === "number" &&
-    typeof e["message"] === "string" &&
-    typeof e["method"] === "string" &&
-    typeof e["url"] === "string"
-  );
+): boolean {
+  return DiscordAPIErrorSchema.safeParse(error).success;
+}
+
+/**
+ * Parse an error as a DiscordAPIError, returning null if it doesn't match.
+ */
+export function parseDiscordAPIError(
+  error: unknown,
+): DiscordAPIErrorLike | null {
+  const result = DiscordAPIErrorSchema.safeParse(error);
+  return result.success ? result.data : null;
 }
 
 /**

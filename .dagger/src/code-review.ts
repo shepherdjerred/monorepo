@@ -11,8 +11,8 @@ import {
   getGitHubContainer,
   REVIEW_VERDICT_SCHEMA,
   type ReviewVerdict,
-} from "./lib/containers/index.js";
-import type { ExecResult } from "./lib/index.js";
+} from "./lib/containers/index.ts";
+import type { ExecResult } from "./lib/index.ts";
 
 const REPO = "shepherdjerred/monorepo";
 
@@ -282,13 +282,14 @@ jq -n \\
 
   const result = await container.stdout();
 
-  // Parse JSON output
+  // Parse JSON output — manually validated below
+  // eslint-disable-next-line custom-rules/no-type-assertions -- validated with runtime checks immediately after
   const analysis = JSON.parse(result) as PrAnalysis;
   if (
     typeof analysis.shouldSkip !== "boolean" ||
     typeof analysis.maxTurns !== "number"
   ) {
-    throw new Error(`Invalid PR analysis output: ${result.slice(0, 500)}`);
+    throw new TypeError(`Invalid PR analysis output: ${result.slice(0, 500)}`);
   }
   return analysis;
 }
@@ -453,20 +454,21 @@ Please check the workflow logs for details.`,
     if (!jsonMatch) {
       throw new Error("No valid JSON found in Claude output");
     }
+    // eslint-disable-next-line custom-rules/no-type-assertions -- validated with runtime checks immediately after
     verdict = JSON.parse(jsonMatch[0]) as ReviewVerdict;
 
     // Validate required fields
     if (typeof verdict.should_approve !== "boolean") {
-      throw new Error("Missing or invalid should_approve field");
+      throw new TypeError("Missing or invalid should_approve field");
     }
     if (typeof verdict.confidence !== "number") {
-      throw new Error("Missing or invalid confidence field");
+      throw new TypeError("Missing or invalid confidence field");
     }
     if (typeof verdict.issue_count.critical !== "number") {
-      throw new Error("Missing or invalid issue_count field");
+      throw new TypeError("Missing or invalid issue_count field");
     }
     if (typeof verdict.reasoning !== "string") {
-      throw new Error("Missing or invalid reasoning field");
+      throw new TypeError("Missing or invalid reasoning field");
     }
     // inline_comments is optional but should be an array if present
     if (!Array.isArray(verdict.inline_comments)) {
@@ -768,7 +770,7 @@ ${errorMessage.slice(0, 1000)}
   }
 
   // Step 4: Truncate if needed (GitHub comment limit is ~65536 chars)
-  const maxLength = 64000;
+  const maxLength = 64_000;
   if (output.length > maxLength) {
     output = output.slice(0, maxLength) + "\n\n... (output truncated)";
   }

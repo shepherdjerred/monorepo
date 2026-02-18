@@ -1,14 +1,14 @@
-import { prisma } from "../database/index.js";
-import { loggers } from "../utils/index.js";
-import { getMaxSessionDuration, getMaxSessionsPerUser } from "./config.js";
-import { cleanupClone } from "./repo-clone.js";
+import { prisma } from "@shepherdjerred/birmel/database/index.js";
+import { loggers } from "@shepherdjerred/birmel/utils/index.js";
+import { getMaxSessionDuration, getMaxSessionsPerUser } from "./config.ts";
+import { cleanupClone } from "./repo-clone.ts";
 import {
   SessionState,
   type CreateSessionParams,
   type EditorSession,
   type FileChange,
   type PendingChanges,
-} from "./types.js";
+} from "./types.ts";
 
 const logger = loggers.editor.child("session-manager");
 

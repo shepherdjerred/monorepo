@@ -8,9 +8,9 @@ import {
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { withCommonProps, ROOT_UID, ROOT_GID } from "../../misc/common.ts";
-import versions from "../../versions.ts";
-import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
+import { withCommonProps, ROOT_UID, ROOT_GID } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 
 export function createWhisperbridgeDeployment(chart: Chart) {
   // OnePassword item for Groq API key

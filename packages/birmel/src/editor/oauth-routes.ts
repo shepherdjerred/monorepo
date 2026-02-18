@@ -1,7 +1,7 @@
 import { Hono } from "hono";
-import { loggers } from "../utils/index.js";
-import { getGitHubConfig, isGitHubConfigured } from "./config.js";
-import { exchangeCodeForToken, storeAuth } from "./github-oauth.js";
+import { loggers } from "@shepherdjerred/birmel/utils/index.js";
+import { getGitHubConfig, isGitHubConfigured } from "./config.ts";
+import { exchangeCodeForToken, storeAuth } from "./github-oauth.ts";
 
 const logger = loggers.editor.child("oauth-routes");
 

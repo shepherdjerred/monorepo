@@ -8,7 +8,7 @@ Sentry.init({
   dsn: "https://337945d2208840dca4a573be311a1bbb@bugsink.sjer.red/1",
 });
 
-const root = document.getElementById("root");
+const root = document.querySelector("#root");
 
 if (!root) {
   throw new Error("Root element not found");

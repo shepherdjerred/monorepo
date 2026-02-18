@@ -16,7 +16,7 @@ test("throws error when champion image doesn't exist", async () => {
 });
 
 test("throws error when item image doesn't exist", async () => {
-  await expect(validateItemImage(99999)).rejects.toThrow(
+  await expect(validateItemImage(99_999)).rejects.toThrow(
     /Item image for item 99999 not found.*Run 'bun run update-data-dragon'/,
   );
 });

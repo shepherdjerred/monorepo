@@ -118,8 +118,7 @@ for (const sourceFile of sourceFiles) {
     }
 
     // Handle dynamic imports: import('...')
-    if (ts.isCallExpression(node)) {
-      if (node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+    if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
         const arg = node.arguments[0];
         if (arg && ts.isStringLiteral(arg)) {
           const resolved = resolveImport(filePath, arg.text);
@@ -128,7 +127,6 @@ for (const sourceFile of sourceFiles) {
           }
         }
       }
-    }
 
     ts.forEachChild(node, visit);
   }

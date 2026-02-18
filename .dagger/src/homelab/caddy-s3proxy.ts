@@ -1,6 +1,6 @@
 import { dag, type Secret } from "@dagger.io/dagger";
 import type { StepResult } from ".";
-import { caddyVersionOnly } from "./versions";
+import { caddyVersionOnly } from "./versions.ts";
 
 /**
  * Builds a Caddy container with the s3proxy plugin.

@@ -1,5 +1,5 @@
-import { getPullRequestForBranch } from "../../lib/github/pr.ts";
-import { getCurrentBranch } from "../../lib/git/repo.ts";
+import { getPullRequestForBranch } from "@shepherdjerred/tools/lib/github/pr.ts";
+import { getCurrentBranch } from "@shepherdjerred/tools/lib/git/repo.ts";
 
 export type DetectOptions = {
   repo?: string | undefined;

@@ -200,25 +200,25 @@ export function ConfigModal({
                       {preview.configs > 0 && (
                         <li>
                           {preview.configs} saved configuration
-                          {preview.configs !== 1 ? "s" : ""}
+                          {preview.configs === 1 ? "" : "s"}
                         </li>
                       )}
                       {preview.historyEntries > 0 && (
                         <li>
                           {preview.historyEntries} history entr
-                          {preview.historyEntries !== 1 ? "ies" : "y"}
+                          {preview.historyEntries === 1 ? "y" : "ies"}
                         </li>
                       )}
                       {preview.customPersonalities > 0 && (
                         <li>
                           {preview.customPersonalities} custom personalit
-                          {preview.customPersonalities !== 1 ? "ies" : "y"}
+                          {preview.customPersonalities === 1 ? "y" : "ies"}
                         </li>
                       )}
                       {preview.customArtStyles > 0 && (
                         <li>
                           {preview.customArtStyles} custom art style
-                          {preview.customArtStyles !== 1 ? "s" : ""}
+                          {preview.customArtStyles === 1 ? "" : "s"}
                         </li>
                       )}
 

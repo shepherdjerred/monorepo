@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
-import { loggers } from "../utils/index.js";
-import type { EditResult, FileChange } from "./types.js";
+import { loggers } from "@shepherdjerred/birmel/utils/index.js";
+import type { EditResult, FileChange } from "./types.ts";
 
 const logger = loggers.editor.child("claude-client");
 
@@ -72,7 +72,7 @@ export async function executeEdit(
 
     const proc = spawn("claude", args, {
       cwd: workingDirectory,
-      env: { ...process.env },
+      env: { ...Bun.env },
       stdio: ["pipe", "pipe", "pipe"],
     });
 
@@ -292,8 +292,8 @@ export async function checkClaudePrerequisites(): Promise<{
   hasApiKey: boolean;
 }> {
   const hasApiKey =
-    process.env["ANTHROPIC_API_KEY"] != null &&
-    process.env["ANTHROPIC_API_KEY"].length > 0;
+    Bun.env["ANTHROPIC_API_KEY"] != null &&
+    Bun.env["ANTHROPIC_API_KEY"].length > 0;
 
   return new Promise((resolve) => {
     const proc = spawn("claude", ["--version"], {

@@ -3,8 +3,8 @@ import {
   shouldStartCleaning,
   startRoombaWithVerification,
   withTimeout,
-} from "../util.ts";
-import { instrumentWorkflow } from "../metrics.ts";
+} from "@shepherdjerred/homelab/ha/src/util.ts";
+import { instrumentWorkflow } from "@shepherdjerred/homelab/ha/src/metrics.ts";
 
 export function runVacuumIfNotHome({
   hass,

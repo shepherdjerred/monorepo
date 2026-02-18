@@ -7,11 +7,11 @@ import {
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { withCommonProps } from "../../misc/common.ts";
-import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
-import versions from "../../versions.ts";
+import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { match } from "ts-pattern";
-import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
+import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 
 export type Stage = "prod" | "beta";
 

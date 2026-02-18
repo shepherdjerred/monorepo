@@ -1,7 +1,7 @@
 import type { Container, Directory, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
-import versions from "./versions";
-import { execWithOutput } from "./errors";
+import versions from "./versions.ts";
+import { execWithOutput } from "./errors.ts";
 
 const TOFU_VERSION = "1.9.0";
 const TOFU_DIRS = ["cloudflare", "github", "seaweedfs"] as const;

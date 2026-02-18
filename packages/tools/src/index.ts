@@ -1,16 +1,13 @@
 #!/usr/bin/env bun
 
 import { parseArgs } from "node:util";
-import {
-  detectCommand,
-  healthCommand,
-  logsCommand,
-} from "./commands/pr/index.ts";
-import {
-  incidentsCommand,
-  incidentCommand,
-} from "./commands/pagerduty/index.ts";
-import { issuesCommand, issueCommand } from "./commands/bugsink/index.ts";
+import { detectCommand } from "./commands/pr/detect.ts";
+import { healthCommand } from "./commands/pr/health.ts";
+import { logsCommand } from "./commands/pr/logs.ts";
+import { incidentsCommand } from "./commands/pagerduty/incidents.ts";
+import { incidentCommand } from "./commands/pagerduty/incident.ts";
+import { issuesCommand } from "./commands/bugsink/issues.ts";
+import { issueCommand } from "./commands/bugsink/issue.ts";
 
 function printUsage(): void {
   console.log(`
@@ -288,9 +285,12 @@ async function handlePagerDutyIncidentsCommand(args: string[]): Promise<void> {
     allowPositionals: true,
   });
 
-  const statuses = values.status as
-    | ("triggered" | "acknowledged" | "resolved")[]
-    | undefined;
+  const statuses = values.status?.map((s) => {
+    if (s === "triggered" || s === "acknowledged" || s === "resolved") {
+      return s;
+    }
+    throw new Error(`Invalid status: ${s}. Must be triggered, acknowledged, or resolved.`);
+  });
   const limit =
     values.limit != null && values.limit.length > 0
       ? Number.parseInt(values.limit, 10)
@@ -368,7 +368,9 @@ async function handleBugsinkIssueCommand(args: string[]): Promise<void> {
   });
 }
 
-main().catch((error: unknown) => {
+try {
+  await main();
+} catch (error: unknown) {
   console.error("Fatal error:", error);
   process.exit(1);
-});
+}

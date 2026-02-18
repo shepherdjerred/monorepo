@@ -165,7 +165,7 @@ describe("Input length validation", () => {
     }
 
     for (const title of invalidTitles) {
-      const isValid = title.length >= 1 && title.length <= 100;
+      const isValid = title.length > 0 && title.length <= 100;
       expect(isValid).toBe(false);
     }
   });
@@ -181,7 +181,7 @@ describe("Input length validation", () => {
     }
 
     for (const desc of invalidDescriptions) {
-      const isValid = desc.length >= 1 && desc.length <= 500;
+      const isValid = desc.length > 0 && desc.length <= 500;
       expect(isValid).toBe(false);
     }
   });
@@ -197,7 +197,7 @@ describe("Input length validation", () => {
     }
 
     for (const season of invalidSeasons) {
-      const isValid = season.length >= 1 && season.length <= 100;
+      const isValid = season.length > 0 && season.length <= 100;
       expect(isValid).toBe(false);
     }
   });

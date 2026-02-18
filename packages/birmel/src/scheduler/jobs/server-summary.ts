@@ -1,7 +1,7 @@
 import type { Guild, TextChannel } from "discord.js";
-import { getDiscordClient } from "../../discord/index.js";
-import { prisma } from "../../database/index.js";
-import { logger } from "../../utils/index.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.js";
+import { prisma } from "@shepherdjerred/birmel/database/index.js";
+import { logger } from "@shepherdjerred/birmel/utils/index.js";
 
 type ServerSummaryConfig = {
   guildId: string;

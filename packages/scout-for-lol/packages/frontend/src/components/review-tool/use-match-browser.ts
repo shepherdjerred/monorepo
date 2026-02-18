@@ -222,8 +222,8 @@ export function useMatchBrowser(
 
         setMatches(matchData);
         setLoadingProgress(null);
-      } catch (err) {
-        const errorResult = ErrorSchema.safeParse(err);
+      } catch (error_) {
+        const errorResult = ErrorSchema.safeParse(error_);
         if (
           errorResult.success &&
           errorResult.data.message === "Loading cancelled"
@@ -231,7 +231,7 @@ export function useMatchBrowser(
           setError("Loading cancelled");
         } else {
           setError(
-            errorResult.success ? errorResult.data.message : String(err),
+            errorResult.success ? errorResult.data.message : String(error_),
           );
         }
       } finally {
@@ -270,9 +270,9 @@ export function useMatchBrowser(
         );
         onMatchSelected(match, rawMatch, rawTimeline);
       }
-    } catch (err) {
-      const errorResult = ErrorSchema.safeParse(err);
-      setError(errorResult.success ? errorResult.data.message : String(err));
+    } catch (error_) {
+      const errorResult = ErrorSchema.safeParse(error_);
+      setError(errorResult.success ? errorResult.data.message : String(error_));
       setSelectedMetadata(null);
     } finally {
       setLoading(false);

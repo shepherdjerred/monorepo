@@ -33,10 +33,10 @@ function subscribeToHistory(callback: () => void) {
   const handleHistoryUpdate = () => {
     void loadHistoryData();
   };
-  window.addEventListener("history-update", handleHistoryUpdate);
+  globalThis.addEventListener("history-update", handleHistoryUpdate);
   return () => {
     historyListeners.delete(callback);
-    window.removeEventListener("history-update", handleHistoryUpdate);
+    globalThis.removeEventListener("history-update", handleHistoryUpdate);
   };
 }
 
@@ -214,7 +214,7 @@ export function HistoryPanel({
                             GENERATING...
                           </span>
                         </div>
-                      ) : hasError ? (
+                      ) : (hasError ? (
                         <span className="text-defeat-600 text-xs font-semibold">
                           ERROR
                         </span>
@@ -222,7 +222,7 @@ export function HistoryPanel({
                         <span className="text-brand-600 text-xs font-semibold">
                           SUCCESS
                         </span>
-                      )}
+                      ))}
                       <span className="text-xs text-surface-500">
                         {formatTimestamp(entry.timestamp)}
                       </span>

@@ -17,17 +17,17 @@ const mockBotUser = mockUser({ id: testAccountId("999"), username: "TestBot" });
 
 describe("isPermissionError", () => {
   test("returns true for Discord missing permissions error (50013)", () => {
-    const error = { code: 50013, message: "Missing Permissions" };
+    const error = { code: 50_013, message: "Missing Permissions" };
     expect(isPermissionError(error)).toBe(true);
   });
 
   test("returns true for Discord missing access error (50001)", () => {
-    const error = { code: 50001, message: "Missing Access" };
+    const error = { code: 50_001, message: "Missing Access" };
     expect(isPermissionError(error)).toBe(true);
   });
 
   test("returns false for other error codes", () => {
-    const error = { code: 10003, message: "Unknown Channel" };
+    const error = { code: 10_003, message: "Unknown Channel" };
     expect(isPermissionError(error)).toBe(false);
   });
 
@@ -40,7 +40,7 @@ describe("isPermissionError", () => {
     expect(isPermissionError("string error")).toBe(false);
     expect(isPermissionError(123)).toBe(false);
     expect(isPermissionError(null)).toBe(false);
-    expect(isPermissionError(undefined)).toBe(false);
+    expect(isPermissionError()).toBe(false);
   });
 });
 
@@ -294,7 +294,7 @@ describe("getPermissionErrorMessage", () => {
 
 describe("formatPermissionErrorForLog", () => {
   test("formats permission error correctly", () => {
-    const error = { code: 50013, message: "Missing Permissions" };
+    const error = { code: 50_013, message: "Missing Permissions" };
     const message = formatPermissionErrorForLog(
       "123456789",
       error,
@@ -314,7 +314,7 @@ describe("formatPermissionErrorForLog", () => {
   });
 
   test("includes reason when provided", () => {
-    const error = { code: 50013, message: "Missing Permissions" };
+    const error = { code: 50_013, message: "Missing Permissions" };
     const message = formatPermissionErrorForLog(
       "123456789",
       error,

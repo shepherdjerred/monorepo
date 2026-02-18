@@ -1,7 +1,7 @@
-import { createServer } from "http";
-import { logger } from "../logger.js";
-import { createExpressApp } from "./express.js";
-import { createSocket } from "./socket.js";
+import { createServer } from "node:http";
+import { logger } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/logger.js";
+import { createExpressApp } from "./express.ts";
+import { createSocket } from "./socket.ts";
 
 export function createWebServer({
   port,

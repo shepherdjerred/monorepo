@@ -1,9 +1,9 @@
 import type { Chart } from "cdk8s";
-import { Application } from "../../../generated/imports/argoproj.io.ts";
-import versions from "../../versions.ts";
-import { createIngress } from "../../misc/tailscale.ts";
-import { createCloudflareTunnelBinding } from "../../misc/cloudflare-tunnel.ts";
-import type { HelmValuesForChart } from "../../misc/typed-helm-parameters.ts";
+import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
+import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 
 export function createArgoCdApp(chart: Chart) {
   createIngress(

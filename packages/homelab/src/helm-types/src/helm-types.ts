@@ -1,5 +1,4 @@
-// Main entry point for Helm type generation
-// This file re-exports all functionality from the modular components
+/* eslint-disable custom-rules/no-re-exports -- barrel file that re-exports all helm-types functionality */
 
 // Core types
 export type {

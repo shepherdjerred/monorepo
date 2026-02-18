@@ -4,8 +4,8 @@ import type {
   MessageCreateOptions,
   TextBasedChannel,
 } from "discord.js";
-import { prisma } from "../../../database/index.js";
-import { loggers } from "../../../utils/logger.js";
+import { prisma } from "@shepherdjerred/birmel/database/index.js";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
 
 type SendableChannel = TextBasedChannel & {
   send: (options: MessageCreateOptions) => Promise<Message>;
@@ -75,21 +75,23 @@ export async function handleCreatePoll(options: {
     message.poll != null &&
     client.user != null
   ) {
-    void prisma.pollRecord
-      .create({
-        data: {
-          guildId: message.guildId,
-          channelId,
-          messageId: message.id,
-          pollId: message.poll.question.text ?? "",
-          question,
-          createdBy: client.user.id,
-          expiresAt,
-        },
-      })
-      .catch((error: unknown) => {
+    void (async () => {
+      try {
+        await prisma.pollRecord.create({
+          data: {
+            guildId: message.guildId,
+            channelId,
+            messageId: message.id,
+            pollId: message.poll.question.text ?? "",
+            question,
+            createdBy: client.user.id,
+            expiresAt,
+          },
+        });
+      } catch (error: unknown) {
         logger.error("Failed to store poll", error);
-      });
+      }
+    })();
   }
   logger.info("Poll created", { messageId: message.id });
   return {

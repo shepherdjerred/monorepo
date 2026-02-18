@@ -67,7 +67,7 @@ function formatGameCompletionMessage(
   }
 
   const allButLast = validAliases.slice(0, -1).join(", ");
-  const lastAlias = z.string().parse(validAliases[validAliases.length - 1]);
+  const lastAlias = z.string().parse(validAliases.at(-1));
   return `${allButLast}, and ${lastAlias} finished a ${queueName} game`;
 }
 

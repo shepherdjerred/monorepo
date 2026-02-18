@@ -1,4 +1,4 @@
-import type { Message } from "../lib/claudeParser";
+import type { Message } from "@shepherdjerred/clauderon/web/frontend/src/lib/claudeParser";
 import { HelpCircle, Check } from "lucide-react";
 
 type QuestionViewProps = {
@@ -15,7 +15,7 @@ export function QuestionView({ message }: QuestionViewProps) {
     return null;
   }
 
-  const questions = questionTool.input["questions"] as
+  const questions = questionTool.input.questions as
     | {
         question: string;
         header: string;

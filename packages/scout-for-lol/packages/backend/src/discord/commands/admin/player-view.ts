@@ -86,10 +86,10 @@ function buildPlayerInfoSections(
   // Rate Limiting Info Section
   sections.push(`\n## ⏱️ Server Rate Limits`);
   sections.push(
-    `**Account Limit:** ${accountLimit !== null ? `${totalServerAccounts.toString()}/${accountLimit.toString()}` : `${totalServerAccounts.toString()} (unlimited)`}`,
+    `**Account Limit:** ${accountLimit === null ? `${totalServerAccounts.toString()} (unlimited)` : `${totalServerAccounts.toString()}/${accountLimit.toString()}`}`,
   );
   sections.push(
-    `**Subscription Limit:** ${subscriptionLimit !== null ? `${totalServerPlayers.toString()}/${subscriptionLimit.toString()} players` : `${totalServerPlayers.toString()} players (unlimited)`}`,
+    `**Subscription Limit:** ${subscriptionLimit === null ? `${totalServerPlayers.toString()} players (unlimited)` : `${totalServerPlayers.toString()}/${subscriptionLimit.toString()} players`}`,
   );
 
   // Subscriptions Section

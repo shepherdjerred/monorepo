@@ -29,7 +29,7 @@ export function isPermissionError(error: unknown): boolean {
 
   // Discord API error code 50013 = Missing Permissions
   // Discord API error code 50001 = Missing Access (can't see channel)
-  return result.data.code === 50013 || result.data.code === 50001;
+  return result.data.code === 50_013 || result.data.code === 50_001;
 }
 
 /**

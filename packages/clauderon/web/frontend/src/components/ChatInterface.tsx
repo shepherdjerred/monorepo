@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { useConsole } from "../hooks/useConsole";
-import { useSessionHistory } from "../hooks/useSessionHistory";
-import { MessageBubble } from "./MessageBubble";
+import { useConsole } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useConsole";
+import { useSessionHistory } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useSessionHistory";
+import { MessageBubble } from "./MessageBubble.tsx";
 import { Send, Terminal as TerminalIcon, X, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useSessionContext } from "../contexts/SessionContext";
+import { useSessionContext } from "@shepherdjerred/clauderon/web/frontend/src/contexts/SessionContext";
 
 type ChatInterfaceProps = {
   sessionId: string;
@@ -34,9 +34,7 @@ export function ChatInterface({
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom on new messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  ;
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();

@@ -58,13 +58,13 @@ export default function App() {
 
       const backend = await invoke<BackendStatus>("get_backend_status");
       setBackendStatus(backend);
-    } catch (err) {
-      console.error("Failed to load status:", err);
+    } catch (error_) {
+      console.error("Failed to load status:", error_);
     }
   }, []);
 
   // Load config on mount
-  // eslint-disable-next-line custom-rules/no-use-effect -- ok for now
+   
   useEffect(() => {
     const loadConfig = async () => {
       try {
@@ -87,11 +87,11 @@ export default function App() {
             "info",
             `Log files: ${paths.logs_dir} (logs dir), ${paths.debug_log} (debug log)`,
           );
-        } catch (pathErr) {
-          console.error("Failed to load log paths:", pathErr);
+        } catch (error_) {
+          console.error("Failed to load log paths:", error_);
         }
-      } catch (err) {
-        console.error("Failed to load config:", err);
+      } catch (error_) {
+        console.error("Failed to load config:", error_);
       }
     };
 
@@ -99,7 +99,7 @@ export default function App() {
   }, []);
 
   // Load status on mount and setup polling
-  // eslint-disable-next-line custom-rules/no-use-effect -- ok for now
+   
   useEffect(() => {
     void loadStatus();
     const interval = setInterval(() => {
@@ -111,7 +111,7 @@ export default function App() {
   }, [loadStatus]);
 
   // Listen for backend logs
-  // eslint-disable-next-line custom-rules/no-use-effect -- ok for now
+   
   useEffect(() => {
     const unlisten = listen<string>("backend-log", (event) => {
       addLog("info", event.payload);
@@ -134,8 +134,8 @@ export default function App() {
       await invoke("connect_lcu");
       await loadStatus();
       addLog("info", "Successfully connected to League Client");
-    } catch (err) {
-      const errorMsg = getErrorMessage(err);
+    } catch (error_) {
+      const errorMsg = getErrorMessage(error_);
       setError(errorMsg);
       addLog("error", `Failed to connect to League Client: ${errorMsg}`);
     } finally {
@@ -152,8 +152,8 @@ export default function App() {
       await invoke("disconnect_lcu");
       await loadStatus();
       addLog("info", "Disconnected from League Client");
-    } catch (err) {
-      const errorMsg = getErrorMessage(err);
+    } catch (error_) {
+      const errorMsg = getErrorMessage(error_);
       setError(errorMsg);
       addLog("error", `Failed to disconnect: ${errorMsg}`);
     } finally {
@@ -178,8 +178,8 @@ export default function App() {
       });
       await loadStatus();
       addLog("info", "Backend configured successfully");
-    } catch (err) {
-      const errorMsg = getErrorMessage(err);
+    } catch (error_) {
+      const errorMsg = getErrorMessage(error_);
       setError(errorMsg);
       addLog("error", `Failed to configure backend: ${errorMsg}`);
     } finally {
@@ -195,8 +195,8 @@ export default function App() {
     try {
       await invoke("test_backend_connection");
       addLog("info", "Backend connection test successful");
-    } catch (err) {
-      const errorMsg = getErrorMessage(err);
+    } catch (error_) {
+      const errorMsg = getErrorMessage(error_);
       setError(errorMsg);
       addLog("error", `Backend connection test failed: ${errorMsg}`);
     } finally {
@@ -240,14 +240,14 @@ export default function App() {
             addLog("error", `Error: ${diagnostics.error_message}`);
           }
         }
-      } catch (diagErr) {
+      } catch (error_) {
         addLog(
           "warning",
-          `Could not get diagnostics: ${getErrorMessage(diagErr)}`,
+          `Could not get diagnostics: ${getErrorMessage(error_)}`,
         );
       }
-    } catch (err) {
-      const errorMsg = getErrorMessage(err);
+    } catch (error_) {
+      const errorMsg = getErrorMessage(error_);
       setError(errorMsg);
       addLog("error", `Failed to start monitoring: ${errorMsg}`);
     } finally {
@@ -264,8 +264,8 @@ export default function App() {
       await invoke("stop_monitoring");
       setIsMonitoring(false);
       addLog("info", "Game monitoring stopped");
-    } catch (err) {
-      const errorMsg = getErrorMessage(err);
+    } catch (error_) {
+      const errorMsg = getErrorMessage(error_);
       setError(errorMsg);
       addLog("error", `Failed to stop monitoring: ${errorMsg}`);
     } finally {

@@ -13,10 +13,10 @@ import {
 } from "cdk8s-plus-31";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import versions from "../../versions.ts";
-import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
-import { TailscaleIngress } from "../../misc/tailscale.ts";
-import { withCommonProps } from "../../misc/common.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);
 const CURRENT_DIRNAME = dirname(CURRENT_FILENAME);

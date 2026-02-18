@@ -37,7 +37,7 @@ function createMockMatch(
       endOfGameResult: "GameComplete",
       gameCreation: gameCreationDate.getTime(),
       gameDuration: 1800,
-      gameEndTimestamp: gameCreationDate.getTime() + 1800000,
+      gameEndTimestamp: gameCreationDate.getTime() + 1_800_000,
       gameId: Number.parseInt(matchId.replace("TEST_", "")),
       gameMode: "CLASSIC",
       gameName: `teambuilder-match-${matchId}`,
@@ -65,13 +65,13 @@ function generateMatchKey(matchId: string, date: Date): string {
 // Helper to create a mock GetObjectCommandOutput
 // We need to mock the AWS SDK response for testing
 type MockBody = {
-  transformToString(): Promise<string>;
+  transformToString: () => Promise<string>;
   locked: boolean;
-  cancel(): Promise<void>;
-  getReader(): { read(): Promise<{ done: boolean; value?: unknown }> };
-  pipeThrough(): { readable: unknown; writable: unknown };
-  pipeTo(): Promise<void>;
-  [Symbol.asyncIterator](): AsyncIterator<unknown>;
+  cancel: () => Promise<void>;
+  getReader: () => { read: () => Promise<{ done: boolean; value?: unknown }> };
+  pipeThrough: () => { readable: unknown; writable: unknown };
+  pipeTo: () => Promise<void>;
+  [Symbol.asyncIterator]: () => AsyncIterator<unknown>;
 };
 
 function createMockGetObjectResponse(content: string): GetObjectCommandOutput {

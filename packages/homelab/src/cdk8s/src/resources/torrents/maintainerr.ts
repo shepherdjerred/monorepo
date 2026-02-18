@@ -10,10 +10,10 @@ import { Size } from "cdk8s";
 import {
   LINUXSERVER_GID,
   withCommonLinuxServerProps,
-} from "../../misc/linux-server.ts";
-import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
-import { TailscaleIngress } from "../../misc/tailscale.ts";
-import versions from "../../versions.ts";
+} from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
+import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
+import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export function createMaintainerrDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "maintainerr", {

@@ -86,11 +86,9 @@ async function loadPersonality(basename: string): Promise<Personality> {
   const normalizedBasename = basename.toLowerCase();
   const normalizedDisplayName = metadata.name
     .toLowerCase()
-    .replace(/[^a-z0-9._-]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-  const styleCardCandidates = Array.from(
-    new Set([normalizedBasename, normalizedDisplayName]),
-  );
+    .replaceAll(/[^a-z0-9._-]+/g, "_")
+    .replaceAll(/^_+|_+$/g, "");
+  const styleCardCandidates = [...new Set([normalizedBasename, normalizedDisplayName])];
 
   let styleCard: string | undefined;
   for (const candidate of styleCardCandidates) {
@@ -190,8 +188,8 @@ async function listValidPersonalities(): Promise<Personality[]> {
     try {
       const personality = await loadPersonality(base);
       valid.push(personality);
-    } catch (err) {
-      const reason = err instanceof Error ? err.message : String(err);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
       discarded.push(`${base} (${reason})`);
     }
   }

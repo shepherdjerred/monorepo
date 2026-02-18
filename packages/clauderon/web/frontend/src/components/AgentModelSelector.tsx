@@ -10,10 +10,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Check, AlertCircle } from "lucide-react";
-import { ProviderIcon } from "./ProviderIcon";
+import { ProviderIcon } from "./ProviderIcon.tsx";
 import { AGENT_CAPABILITIES } from "@/lib/agent-features";
 import type { getModelsForAgent } from "@/lib/model-options";
-import type { SessionFormData } from "./AdvancedContainerSettings";
+import type { SessionFormData } from "./AdvancedContainerSettings.tsx";
 
 type AgentModelSelectorProps = {
   formData: SessionFormData;

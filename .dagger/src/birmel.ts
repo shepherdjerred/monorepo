@@ -2,8 +2,8 @@ import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import {
   getBaseBunDebianContainer,
   installMonorepoWorkspaceDeps,
-} from "./lib/containers/index.js";
-import type { WorkspaceEntry } from "./lib/containers/index.js";
+} from "./lib/containers/index.ts";
+import type { WorkspaceEntry } from "./lib/containers/index.ts";
 
 /**
  * Birmel-specific base container with voice/build dependencies.
@@ -193,7 +193,7 @@ export async function smokeTestBirmelImageWithContainer(
   } catch (error) {
     try {
       output = await container.stderr();
-    } catch (_stderrError) {
+    } catch {
       return `❌ Smoke test failed: Could not capture container output. Error: ${String(error)}`;
     }
   }

@@ -43,7 +43,7 @@ export function parseQueueType(input: number): QueueType | undefined {
     .with(4250, () => "hard doom bots")
     .otherwise(() => {
       console.error(`unknown queue type: ${input.toString()}`);
-      return undefined;
+      return;
     });
 }
 

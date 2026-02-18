@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { parseYAMLComments, cleanYAMLComment } from "./comment-parser";
+import { parseYAMLComments, cleanYAMLComment } from "./comment-parser.ts";
 
 describe("YAML Comment Parsing", () => {
   test("should correctly associate comments with properties at different indent levels (minecraft tty bug)", () => {

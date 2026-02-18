@@ -93,8 +93,7 @@ async function searchPattern(
     const content = await Bun.file(file).text();
     const lines = content.split("\n");
 
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
+    for (const [i, line] of lines.entries()) {
       if (line && pattern.test(line)) {
         findings.push({
           file: file.replace(/^packages\//, ""),

@@ -1,6 +1,6 @@
 import type { Chart } from "cdk8s";
-import { ClusterTunnel } from "../../generated/imports/networking.cfargotunnel.com.ts";
-import { CLOUDFLARE_TUNNEL_SECRET_NAME } from "../misc/cloudflare-tunnel.ts";
+import { ClusterTunnel } from "@shepherdjerred/homelab/cdk8s/generated/imports/networking.cfargotunnel.com.ts";
+import { CLOUDFLARE_TUNNEL_SECRET_NAME } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 
 export function createCloudflareTunnelCRD(chart: Chart) {
   // Create ClusterTunnel CRD (cluster-scoped, accessible from all namespaces)

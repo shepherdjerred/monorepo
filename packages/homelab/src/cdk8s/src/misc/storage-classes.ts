@@ -1,9 +1,9 @@
 import type { Chart } from "cdk8s";
-import { KubeStorageClass } from "../../generated/imports/k8s.ts";
+import { KubeStorageClass } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import {
   VolumeSnapshotClass,
   VolumeSnapshotClassDeletionPolicy,
-} from "../../generated/imports/snapshot.storage.k8s.io.ts";
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/snapshot.storage.k8s.io.ts";
 
 // Note: K8s storage class names don't match hardware (legacy naming)
 // - "zfs-ssd" is backed by NVMe SSDs

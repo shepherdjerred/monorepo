@@ -18,9 +18,9 @@ export function UsageProgressBar({
   // Color scheme based on utilization
   const barColor = isAtLimit
     ? "hsl(0, 75%, 50%)" // Red
-    : isNearLimit
+    : (isNearLimit
       ? "hsl(45, 93%, 47%)" // Orange/Yellow
-      : "hsl(142, 71%, 45%)"; // Green
+      : "hsl(142, 71%, 45%)"); // Green
 
   // Format the reset time
   const formatResetTime = (isoString: string) => {

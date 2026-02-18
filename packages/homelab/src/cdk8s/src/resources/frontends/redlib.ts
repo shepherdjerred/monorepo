@@ -5,9 +5,9 @@ import {
   Service,
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
-import { withCommonProps } from "../../misc/common.ts";
-import { TailscaleIngress } from "../../misc/tailscale.ts";
-import versions from "../../versions.ts";
+import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export function createRedlibDeployment(chart: Chart) {
   const redlibDeployment = new Deployment(chart, "redlib", {

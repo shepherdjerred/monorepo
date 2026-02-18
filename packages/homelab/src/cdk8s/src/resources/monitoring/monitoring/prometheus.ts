@@ -1,19 +1,19 @@
-import { PrometheusRule } from "../../../../generated/imports/monitoring.coreos.com";
+import { PrometheusRule } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import type { Chart } from "cdk8s";
-import { getHomeAssistantRuleGroups } from "./rules/homeassistant";
-import { getVeleroRuleGroups } from "./rules/velero";
-import { getArgoCDRuleGroups } from "./rules/argocd";
-import { getResourceMonitoringRuleGroups } from "./rules/resource-monitoring";
-import { getZfsMonitoringRuleGroups } from "./rules/zfs";
-import { getSmartctlRuleGroups } from "./rules/smartctl";
-import { getHaWorkflowRuleGroups } from "./rules/ha-workflows";
-import { getGitckupRuleGroups } from "./rules/gitckup";
-import { getQBitTorrentRuleGroups } from "./rules/qbittorrent";
-import { getStaticSitesRuleGroups } from "./rules/static-sites";
-import { getR2StorageRuleGroups } from "./rules/r2-storage";
-import { getBugsinkRuleGroups } from "./rules/bugsink";
-import { getPostalRuleGroups } from "./rules/postal";
-import { getScoutRuleGroups } from "./rules/scout";
+import { getHomeAssistantRuleGroups } from "./rules/homeassistant.ts";
+import { getVeleroRuleGroups } from "./rules/velero.ts";
+import { getArgoCDRuleGroups } from "./rules/argocd.ts";
+import { getResourceMonitoringRuleGroups } from "./rules/resource-monitoring.ts";
+import { getZfsMonitoringRuleGroups } from "./rules/zfs.ts";
+import { getSmartctlRuleGroups } from "./rules/smartctl.ts";
+import { getHaWorkflowRuleGroups } from "./rules/ha-workflows.ts";
+import { getGitckupRuleGroups } from "./rules/gitckup.ts";
+import { getQBitTorrentRuleGroups } from "./rules/qbittorrent.ts";
+import { getStaticSitesRuleGroups } from "./rules/static-sites.ts";
+import { getR2StorageRuleGroups } from "./rules/r2-storage.ts";
+import { getBugsinkRuleGroups } from "./rules/bugsink.ts";
+import { getPostalRuleGroups } from "./rules/postal.ts";
+import { getScoutRuleGroups } from "./rules/scout.ts";
 
 export function createPrometheusMonitoring(chart: Chart) {
   // Create Home Assistant rules

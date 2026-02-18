@@ -1,18 +1,18 @@
 import type { Client, Message } from "discord.js";
-import { loggers } from "../../utils/logger.js";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
 import {
   withSpan,
   setSentryContext,
   clearSentryContext,
   captureException,
-} from "../../observability/index.js";
+} from "@shepherdjerred/birmel/observability/index.js";
 import {
   extractImageAttachments,
   type ImageAttachment,
-} from "../../utils/image.js";
-import { recordMessageActivity } from "../../database/repositories/activity.js";
-import { getOrCreateGuildOwner } from "../../database/repositories/guild-owner.js";
-import { generateWakeWord } from "../../config/constants.js";
+} from "@shepherdjerred/birmel/utils/image.js";
+import { recordMessageActivity } from "@shepherdjerred/birmel/database/repositories/activity.js";
+import { getOrCreateGuildOwner } from "@shepherdjerred/birmel/database/repositories/guild-owner.js";
+import { generateWakeWord } from "@shepherdjerred/birmel/config/constants.js";
 
 const logger = loggers.discord.child("message-create");
 

@@ -6,8 +6,8 @@ import {
   closeCoversWithDelay,
   verifyAfterDelay,
   withTimeout,
-} from "../util.ts";
-import { instrumentWorkflow } from "../metrics.ts";
+} from "@shepherdjerred/homelab/ha/src/util.ts";
+import { instrumentWorkflow } from "@shepherdjerred/homelab/ha/src/metrics.ts";
 
 export function goodNight({ hass, logger, context }: TServiceParams) {
   const bedroomScene = hass.refBy.id("scene.bedroom_dimmed");

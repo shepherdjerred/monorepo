@@ -22,4 +22,11 @@ export default [
       "eslint.config.ts",
     ],
   }),
+  // src/index.ts is the public API entry point re-exporting TypeShare-generated types
+  {
+    files: ["src/index.ts"],
+    rules: {
+      "custom-rules/no-re-exports": "off",
+    },
+  },
 ];

@@ -4,7 +4,7 @@ import {
   type Directory,
   type Platform,
 } from "@dagger.io/dagger";
-import versions from "../versions";
+import versions from "../versions.ts";
 
 /**
  * Returns a Bun container with the specified source directory mounted.

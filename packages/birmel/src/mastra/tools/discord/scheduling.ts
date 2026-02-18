@@ -1,16 +1,16 @@
-import { createTool } from "../../../voltagent/tools/create-tool.js";
+import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.js";
 import { z } from "zod";
-import { loggers } from "../../../utils/logger.js";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
 import {
   captureException,
   withToolSpan,
-} from "../../../observability/index.js";
+} from "@shepherdjerred/birmel/observability/index.js";
 import {
   scheduleAnnouncement,
   cancelAnnouncement,
   listPendingAnnouncements,
-} from "../../../scheduler/jobs/announcements.js";
-import { validateSnowflakes } from "./validation.js";
+} from "@shepherdjerred/birmel/scheduler/jobs/announcements.js";
+import { validateSnowflakes } from "./validation.ts";
 
 const logger = loggers.tools.child("discord.scheduling");
 
@@ -101,7 +101,7 @@ export const manageScheduledMessageTool = createTool({
               };
             }
             const scheduledDate = new Date(ctx.scheduledAt);
-            if (isNaN(scheduledDate.getTime())) {
+            if (Number.isNaN(scheduledDate.getTime())) {
               return {
                 success: false,
                 message: "Invalid date format. Please provide an ISO timestamp",

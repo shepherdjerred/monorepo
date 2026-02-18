@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { generateTypeScriptCode } from "./code-generator";
-import type { TypeScriptInterface } from "./types";
+import { generateTypeScriptCode } from "./code-generator.ts";
+import type { TypeScriptInterface } from "./types.ts";
 
 describe("Code Generation", () => {
   test("should generate basic interface", () => {

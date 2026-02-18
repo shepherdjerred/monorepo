@@ -53,9 +53,9 @@ export function LeagueSection({
                 status={
                   isConnecting
                     ? "connecting"
-                    : lcuStatus.connected
+                    : (lcuStatus.connected
                       ? "connected"
-                      : "disconnected"
+                      : "disconnected")
                 }
               />
             </div>
@@ -111,17 +111,7 @@ export function LeagueSection({
 
           {/* Action Button */}
           <div className="pt-4">
-            {!lcuStatus.connected ? (
-              <Button
-                size="lg"
-                className="w-full"
-                onClick={onConnect}
-                loading={isConnecting}
-                icon={<Link2 className="h-5 w-5" />}
-              >
-                Connect to League Client
-              </Button>
-            ) : (
+            {lcuStatus.connected ? (
               <Button
                 variant="outline"
                 size="lg"
@@ -131,6 +121,16 @@ export function LeagueSection({
                 icon={<Unlink className="h-5 w-5" />}
               >
                 Disconnect
+              </Button>
+            ) : (
+              <Button
+                size="lg"
+                className="w-full"
+                onClick={onConnect}
+                loading={isConnecting}
+                icon={<Link2 className="h-5 w-5" />}
+              >
+                Connect to League Client
               </Button>
             )}
           </div>

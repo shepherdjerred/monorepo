@@ -43,7 +43,7 @@ async function postSnapshotErrorMessage(
   const embed = new EmbedBuilder()
     .setTitle("⚠️ Competition Error")
     .setDescription(`**${competition.title}**`)
-    .setColor(0xffa500) // Orange
+    .setColor(0xFF_A5_00) // Orange
     .addFields(
       {
         name: "Error",
@@ -53,7 +53,7 @@ async function postSnapshotErrorMessage(
         name: "Details",
         value:
           errorMessage.length > 1024
-            ? errorMessage.substring(0, 1021) + "..."
+            ? errorMessage.slice(0, 1021) + "..."
             : errorMessage,
       },
       {

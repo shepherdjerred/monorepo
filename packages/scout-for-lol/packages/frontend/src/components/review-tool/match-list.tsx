@@ -76,9 +76,9 @@ export function MatchList({
                     className={
                       match.outcome.includes("Victory")
                         ? "text-green-600"
-                        : match.outcome.includes("Defeat")
+                        : (match.outcome.includes("Defeat")
                           ? "text-red-600"
-                          : ""
+                          : "")
                     }
                   >
                     {match.outcome}

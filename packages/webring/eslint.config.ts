@@ -2,5 +2,10 @@ import { recommended } from "../eslint-config/local.ts";
 
 export default [
   { ignores: ["**/example/**", "**/dist/**"] },
-  ...recommended({ tsconfigRootDir: import.meta.dirname }),
+  ...recommended({
+    tsconfigRootDir: import.meta.dirname,
+    projectService: {
+      allowDefaultProject: ["eslint.config.ts"],
+    },
+  }),
 ];

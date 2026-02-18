@@ -1,5 +1,5 @@
 import type { Chart } from "cdk8s";
-import { Application } from "../../../generated/imports/argoproj.io.ts";
+import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 
 export function createSyncthingApp(chart: Chart) {
   return new Application(chart, "syncthing-app", {

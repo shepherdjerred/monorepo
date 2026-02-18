@@ -1,11 +1,11 @@
 import type { Chart } from "cdk8s";
-import { Application } from "../../../generated/imports/argoproj.io.ts";
-import versions from "../../versions.ts";
+import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Namespace } from "cdk8s-plus-31";
 import { Size } from "cdk8s";
-import { KubeRole, KubeRoleBinding } from "../../../generated/imports/k8s.ts";
+import { KubeRole, KubeRoleBinding } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { repositories } from "./actions-runner-controller.ts";
-import { NVME_STORAGE_CLASS } from "../../misc/storage-classes.ts";
+import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 
 export function createDaggerApp(chart: Chart) {
   new Namespace(chart, "dagger-namespace", {

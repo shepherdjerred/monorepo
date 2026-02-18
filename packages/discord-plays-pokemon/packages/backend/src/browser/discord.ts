@@ -1,7 +1,8 @@
-import { By, WebDriver, until } from "selenium-webdriver";
-import { wait } from "../util.js";
-import { logger } from "../logger.js";
-import { getConfig } from "../config/index.js";
+import type { WebDriver} from "selenium-webdriver";
+import { By, until } from "selenium-webdriver";
+import { wait } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/util.js";
+import { logger } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/logger.js";
+import { getConfig } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/config/index.js";
 
 export async function setupDiscord(driver: WebDriver) {
   if (await isLoggedIn(driver)) {

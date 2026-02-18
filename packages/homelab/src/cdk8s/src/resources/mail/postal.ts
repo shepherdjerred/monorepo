@@ -11,13 +11,13 @@ import {
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { withCommonProps } from "../../misc/common.ts";
-import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
-import { createIngress } from "../../misc/tailscale.ts";
-import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
-import { createServiceMonitor } from "../../misc/service-monitor.ts";
-import versions from "../../versions.ts";
-import type { PostalMariaDB } from "../../resources/postgres/postal-mariadb.ts";
+import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
+import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import type { PostalMariaDB } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/postal-mariadb.ts";
 
 // Patched SMTPClient::Server to handle localhost and IP addresses
 // Bug: Postal's DNSResolver only does DNS lookups, not /etc/hosts

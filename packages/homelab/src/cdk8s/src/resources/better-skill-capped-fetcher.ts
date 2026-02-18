@@ -5,14 +5,14 @@ import {
   PersistentVolumeClaim,
   PersistentVolumeMode,
 } from "cdk8s-plus-31";
-import { KubeCronJob, Quantity } from "../../generated/imports/k8s.ts";
-import { OnePasswordItem } from "../../generated/imports/onepassword.com.ts";
-import { NVME_STORAGE_CLASS } from "../misc/storage-classes.ts";
+import { KubeCronJob, Quantity } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 import {
   S3_CREDENTIALS_SECRET_NAME,
   S3_ENDPOINT,
 } from "./s3-static-sites/sites.ts";
-import versions from "../versions.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export function createBetterSkillCappedFetcher(chart: Chart) {
   new OnePasswordItem(chart, "better-skill-capped-s3-credentials", {

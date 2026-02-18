@@ -4,7 +4,7 @@ import {
   type Directory,
   type Platform,
 } from "@dagger.io/dagger";
-import { getMiseRuntimeContainer, type MiseToolVersions } from "./mise";
+import { getMiseRuntimeContainer, type MiseToolVersions } from "./mise.ts";
 
 /**
  * Configuration for workspace container setup

@@ -24,7 +24,7 @@ const baseParticipant = (): RawParticipant => {
     totalMinionsKilled: 0,
     neutralMinionsKilled: 0,
     visionScore: 10,
-    totalDamageDealtToChampions: 12000,
+    totalDamageDealtToChampions: 12_000,
     goldEarned: 9000,
     teamPosition: "UTILITY",
     // fields used by converter for arena
@@ -92,7 +92,7 @@ describe("participantToArenaChampion", () => {
     expect(champ.championName).toBe("Lux");
     expect(champ.level).toBe(18);
     expect(champ.gold).toBe(9000);
-    expect(champ.damage).toBe(12000);
+    expect(champ.damage).toBe(12_000);
   });
 
   it("maps team support and arena metrics", async () => {

@@ -30,14 +30,26 @@ export function convertRawMatchToInternalFormat(
 
   // Get base example match structure
   let baseMatch: CompletedMatch | ArenaMatch;
-  if (queueType === "arena") {
+  switch (queueType) {
+  case "arena": {
     baseMatch = getExampleMatch("arena");
-  } else if (queueType === "aram") {
+  
+  break;
+  }
+  case "aram": {
     baseMatch = getExampleMatch("aram");
-  } else if (queueType === "solo" || queueType === "flex") {
+  
+  break;
+  }
+  case "solo": 
+  case "flex": {
     baseMatch = getExampleMatch("ranked");
-  } else {
+  
+  break;
+  }
+  default: {
     baseMatch = getExampleMatch("unranked");
+  }
   }
 
   // Reorder participants so selected player is first
@@ -196,11 +208,7 @@ export function extractMatchMetadataFromRawMatch(
     let outcome: string;
     if (queueType === "arena") {
       const placement = participant.placement;
-      if (placement === undefined) {
-        outcome = "Unknown";
-      } else {
-        outcome = `${String(placement)}${getOrdinalSuffix(placement)} place`;
-      }
+      outcome = placement === undefined ? "Unknown" : `${String(placement)}${getOrdinalSuffix(placement)} place`;
     } else {
       outcome = participant.win ? "Victory" : "Defeat";
     }

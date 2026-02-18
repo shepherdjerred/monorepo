@@ -1,7 +1,7 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
-import { KubeNetworkPolicy, IntOrString } from "../../generated/imports/k8s.ts";
-import { createSyncthingDeployment } from "../resources/syncthing.ts";
+import { KubeNetworkPolicy, IntOrString } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { createSyncthingDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/syncthing.ts";
 
 export function createSyncthingChart(app: App) {
   const chart = new Chart(app, "syncthing", {

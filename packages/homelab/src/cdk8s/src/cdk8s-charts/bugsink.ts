@@ -1,11 +1,11 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
-import { createBugsinkPostgreSQLDatabase } from "../resources/postgres/bugsink-db.ts";
+import { createBugsinkPostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/bugsink-db.ts";
 import {
   createBugsinkDeployment,
   createBugsinkHousekeepingCronJob,
-} from "../resources/bugsink/index.ts";
+} from "@shepherdjerred/homelab/cdk8s/src/resources/bugsink/index.ts";
 
 export function createBugsinkChart(app: App) {
   const chart = new Chart(app, "bugsink", {

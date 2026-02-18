@@ -3,9 +3,9 @@ import {
   KubeCronJob,
   KubeNamespace,
   Quantity,
-} from "../../../generated/imports/k8s.ts";
-import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
-import versions from "../../versions.ts";
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export function createDependencySummaryCronJob(chart: Chart) {
   // Create namespace for dependency summary

@@ -1,6 +1,6 @@
-import type { MessageContext } from "../../discord/events/message-create.js";
-import { downloadImageWithRetry } from "../../utils/image.js";
-import { logger } from "../../utils/logger.js";
+import type { MessageContext } from "@shepherdjerred/birmel/discord/events/message-create.js";
+import { downloadImageWithRetry } from "@shepherdjerred/birmel/utils/image.js";
+import { logger } from "@shepherdjerred/birmel/utils/logger.js";
 
 export type TextPart = {
   type: "text";

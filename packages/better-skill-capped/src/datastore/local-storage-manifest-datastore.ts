@@ -1,4 +1,5 @@
-import type { Manifest } from "#src/parser/manifest";
+import { z } from "zod";
+import { ManifestSchema, type Manifest } from "#src/parser/manifest";
 
 const IDENTIFIER = "content";
 const TIMESTAMP = IDENTIFIER + "-timestamp";
@@ -11,7 +12,11 @@ export class LocalStorageManifestDatastore {
 
   get(): Manifest | undefined {
     const stored = globalThis.localStorage.getItem(IDENTIFIER);
-    return stored === null ? undefined : (JSON.parse(stored) as Manifest);
+    if (stored === null) {
+      return undefined;
+    }
+    const raw: unknown = JSON.parse(stored);
+    return ManifestSchema.parse(raw);
   }
 
   isStale(): boolean {
@@ -19,7 +24,7 @@ export class LocalStorageManifestDatastore {
     if (timestamp === null) {
       return true;
     }
-    const storedTime = JSON.parse(timestamp) as number;
+    const storedTime = z.number().parse(JSON.parse(timestamp));
     const fifteenMinutes = 15 * 60 * 1000;
     return Date.now() - storedTime > fifteenMinutes;
   }

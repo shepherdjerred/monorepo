@@ -17,8 +17,8 @@ import type {
   CredentialStatus,
   ProxyStatus,
 } from "@clauderon/client";
-import { useSessionContext } from "../contexts/SessionContext";
-import { UsageProgressBar } from "./UsageProgressBar";
+import { useSessionContext } from "@shepherdjerred/clauderon/web/frontend/src/contexts/SessionContext";
+import { UsageProgressBar } from "./UsageProgressBar.tsx";
 
 type StatusDialogProps = {
   onClose: () => void;
@@ -46,16 +46,14 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
       setError(null);
       const data = await client.getSystemStatus();
       setStatus(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+    } catch (error_) {
+      setError(error_ instanceof Error ? error_.message : String(error_));
     } finally {
       setIsLoading(false);
     }
   }, [client]);
 
-  useEffect(() => {
-    void fetchStatus();
-  }, [fetchStatus]);
+  ;
 
   const handleCredentialChange = (serviceId: string, value: string) => {
     const newInputs = new Map(credentialInputs);
@@ -98,9 +96,9 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
 
       // Refresh status to show updated credential
       await fetchStatus();
-    } catch (err) {
+    } catch (error_) {
       const errorMap = new Map(saveErrors);
-      errorMap.set(serviceId, err instanceof Error ? err.message : String(err));
+      errorMap.set(serviceId, error_ instanceof Error ? error_.message : String(error_));
       setSaveErrors(errorMap);
       // Refresh to show actual state even on error
       await fetchStatus();

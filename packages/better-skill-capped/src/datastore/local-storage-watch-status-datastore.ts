@@ -1,7 +1,13 @@
+import { z } from "zod";
 import type { WatchStatusDatastore } from "./watch-status-datastore.ts";
 import type { WatchStatus } from "#src/model/watch-status";
 
 const IDENTIFIER = "watchStatus";
+
+const StoredWatchStatusSchema = z.custom<WatchStatus>((val) => {
+  return typeof val === "object" && val !== null && "item" in val && "isWatched" in val;
+});
+const StoredWatchStatusesSchema = z.array(StoredWatchStatusSchema);
 
 export class LocalStorageWatchStatusDatastore implements WatchStatusDatastore {
   add(watchStatus: WatchStatus): void {
@@ -11,9 +17,10 @@ export class LocalStorageWatchStatusDatastore implements WatchStatusDatastore {
   }
 
   get(): WatchStatus[] {
-    return JSON.parse(
+    const raw: unknown = JSON.parse(
       globalThis.localStorage.getItem(IDENTIFIER) ?? "[]",
-    ) as WatchStatus[];
+    );
+    return StoredWatchStatusesSchema.parse(raw);
   }
 
   remove(watchStatus: WatchStatus): void {

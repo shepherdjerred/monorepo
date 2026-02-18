@@ -1,8 +1,8 @@
 import {
   getMemory,
   getChannelConversationId,
-} from "../voltagent/memory/index.js";
-import { logger } from "./logger.js";
+} from "@shepherdjerred/birmel/voltagent/memory/index.js";
+import { logger } from "./logger.ts";
 
 /**
  * Clear conversation history for a specific channel.
@@ -43,13 +43,12 @@ if (import.meta.main) {
     process.exit(1);
   }
 
-  clearChannelMemory(channelId)
-    .then(() => {
-      console.log(`Memory cleared for channel ${channelId}`);
-      process.exit(0);
-    })
-    .catch((error: unknown) => {
-      console.error("Failed to clear memory:", error);
-      process.exit(1);
-    });
+  try {
+    await clearChannelMemory(channelId);
+    console.log(`Memory cleared for channel ${channelId}`);
+    process.exit(0);
+  } catch (error: unknown) {
+    console.error("Failed to clear memory:", error);
+    process.exit(1);
+  }
 }

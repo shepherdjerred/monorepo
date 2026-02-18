@@ -35,7 +35,7 @@ export function Router(props: RouterProps): React.ReactElement {
   const courses = content?.courses ?? [];
   const videos = content?.videos ?? [];
   const commentaries = content?.commentaries ?? [];
-  const items: OmniSearchable[] = [...courses, ...videos, ...commentaries].sort(
+  const items: OmniSearchable[] = [...courses, ...videos, ...commentaries].toSorted(
     (left, right) => right.releaseDate.getTime() - left.releaseDate.getTime(),
   );
 

@@ -1,6 +1,6 @@
 import type { Session, SessionHealthReport } from "@clauderon/client";
 import { toast } from "sonner";
-import { RecreateConfirmModal } from "./RecreateConfirmModal";
+import { RecreateConfirmModal } from "./RecreateConfirmModal.tsx";
 
 type RecreateModalWrapperProps = {
   session: Session;
@@ -23,9 +23,9 @@ function toastAction(
     .then(() => {
       toast.success(`Session "${sessionName}" ${successMsg}`);
     })
-    .catch((err: unknown) => {
+    .catch((error: unknown) => {
       toast.error(
-        `Failed to ${errorPrefix}: ${err instanceof Error ? err.message : String(err)}`,
+        `Failed to ${errorPrefix}: ${error instanceof Error ? error.message : String(error)}`,
       );
     });
 }

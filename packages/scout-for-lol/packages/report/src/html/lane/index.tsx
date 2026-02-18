@@ -22,7 +22,7 @@ if (typeof Bun !== "undefined") {
 }
 
 export function Lane({ lane }: { lane: Lane }) {
-  const environment = typeof Bun !== "undefined" ? "bun" : "browser";
+  const environment = typeof Bun === "undefined" ? "browser" : "bun";
   const image = match(environment)
     .with("bun", () => `data:image/svg+xml;base64,${images[lane]}`)
     .with("browser", () => {

@@ -3,29 +3,29 @@
  * Split into 5 focused agents to stay well under the 128 tool limit.
  */
 
-import { guildTools } from "./discord/guild.js";
-import { messageTools } from "./discord/messages.js";
-import { moderationTools } from "./discord/moderation.js";
-import { channelTools } from "./discord/channels.js";
-import { roleTools } from "./discord/roles.js";
-import { memberTools } from "./discord/members.js";
-import { emojiTools } from "./discord/emojis.js";
-import { eventTools } from "./discord/events.js";
-import { webhookTools } from "./discord/webhooks.js";
-import { inviteTools } from "./discord/invites.js";
-import { automodTools } from "./discord/automod.js";
-import { pollTools } from "./discord/polls.js";
-import { threadTools } from "./discord/threads.js";
-import { activityTools } from "./discord/activity.js";
-import { schedulingTools } from "./discord/scheduling.js";
-import { allMusicTools } from "./music/index.js";
-import { allAutomationTools } from "./automation/index.js";
-import { allExternalTools } from "./external/index.js";
-import { memoryTools } from "./memory/index.js";
-import { sqliteTools } from "./database/sqlite-query.js";
-import { electionTools } from "./elections/elections.js";
-import { birthdayTools } from "./birthdays/index.js";
-import { editorTools } from "./editor/index.js";
+import { guildTools } from "./discord/guild.ts";
+import { messageTools } from "./discord/messages.ts";
+import { moderationTools } from "./discord/moderation.ts";
+import { channelTools } from "./discord/channels.ts";
+import { roleTools } from "./discord/roles.ts";
+import { memberTools } from "./discord/members.ts";
+import { emojiTools } from "./discord/emojis.ts";
+import { eventTools } from "./discord/events.ts";
+import { webhookTools } from "./discord/webhooks.ts";
+import { inviteTools } from "./discord/invites.ts";
+import { automodTools } from "./discord/automod.ts";
+import { pollTools } from "./discord/polls.ts";
+import { threadTools } from "./discord/threads.ts";
+import { activityTools } from "./discord/activity.ts";
+import { schedulingTools } from "./discord/scheduling.ts";
+import { allMusicTools } from "./music/index.ts";
+import { allAutomationTools } from "./automation/index.ts";
+import { allExternalTools } from "./external/index.ts";
+import { memoryTools } from "./memory/index.ts";
+import { sqliteTools } from "./database/sqlite-query.ts";
+import { electionTools } from "./elections/elections.ts";
+import { birthdayTools } from "./birthdays/index.ts";
+import { editorTools } from "./editor/index.ts";
 
 /**
  * Messaging Agent - handles messages, threads, polls, and scheduling

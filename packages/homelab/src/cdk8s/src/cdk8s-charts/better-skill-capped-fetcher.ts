@@ -1,7 +1,7 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
-import { createBetterSkillCappedFetcher } from "../resources/better-skill-capped-fetcher.ts";
+import { createBetterSkillCappedFetcher } from "@shepherdjerred/homelab/cdk8s/src/resources/better-skill-capped-fetcher.ts";
 
 export function createBetterSkillCappedFetcherChart(app: App) {
   const chart = new Chart(app, "better-skill-capped-fetcher", {

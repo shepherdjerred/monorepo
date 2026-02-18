@@ -1,8 +1,8 @@
 import type { Chart } from "cdk8s";
-import { Application } from "../../../generated/imports/argoproj.io.ts";
-import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
-import versions from "../../versions.ts";
-import { CLOUDFLARE_TUNNEL_SECRET_NAME } from "../../misc/cloudflare-tunnel.ts";
+import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { CLOUDFLARE_TUNNEL_SECRET_NAME } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 
 // 1Password item path for Cloudflare API token
 const CLOUDFLARE_TUNNEL_1PASSWORD_ITEM_PATH =

@@ -41,14 +41,14 @@ function MatchReportRenderer({ match }: { match: AnyMatch }): React.ReactNode {
 
 export function App() {
   const getInitialViewMode = (): ViewMode => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(globalThis.location.search);
     const view = params.get("view");
     const result = ViewModeSchema.safeParse(view);
     return result.success ? result.data : "match-viewer";
   };
 
   const getInitialMatchType = (): MatchType => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(globalThis.location.search);
     const queryType = params.get("type");
     const result = MatchTypeSchema.safeParse(queryType);
     return result.success ? result.data : "ranked";
@@ -67,12 +67,12 @@ export function App() {
   const exampleMatch = getExampleMatch(matchType);
 
   // Update URL when view mode or match type changes - this is a side effect that must happen after render
-  // eslint-disable-next-line custom-rules/no-use-effect -- URL synchronization requires side effect after state changes
+   
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(globalThis.location.search);
     params.set("view", viewMode);
     params.set("type", matchType);
-    window.history.replaceState(null, "", `?${params.toString()}`);
+    globalThis.history.replaceState(null, "", `?${params.toString()}`);
   }, [viewMode, matchType]);
 
   const handleFetchMatch = async () => {
@@ -95,17 +95,13 @@ export function App() {
         console.log("Match parsing not yet implemented");
         setError("Match parsing not yet implemented");
       }
-    } catch (err) {
+    } catch (error_) {
       const ErrorOrStringSchema = z.union([z.instanceof(Error), z.string()]);
-      const errorZod = ErrorOrStringSchema.safeParse(err);
+      const errorZod = ErrorOrStringSchema.safeParse(error_);
       let errorMessage = "Unknown error";
       if (errorZod.success) {
         const errorData = errorZod.data;
-        if (errorData instanceof Error) {
-          errorMessage = errorData.message;
-        } else {
-          errorMessage = errorData;
-        }
+        errorMessage = errorData instanceof Error ? errorData.message : errorData;
       }
       setError(errorMessage);
     } finally {

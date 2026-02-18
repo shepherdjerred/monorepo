@@ -2,14 +2,15 @@ import {
   getPullRequest,
   getPullRequestForBranch,
   getLatestReviewsByAuthor,
-  getCheckRuns,
-  getFailedJobs,
-  type HealthReport,
-  type HealthCheck,
-  type HealthStatus,
-} from "../../lib/github/index.ts";
-import { checkMergeConflicts, isBranchUpToDate } from "../../lib/git/index.ts";
-import { formatHealthReport, formatJson } from "../../lib/output/index.ts";
+} from "@shepherdjerred/tools/lib/github/pr.ts";
+import { getCheckRuns, getFailedJobs } from "@shepherdjerred/tools/lib/github/ci.ts";
+import type {
+  HealthReport,
+  HealthCheck,
+  HealthStatus,
+} from "@shepherdjerred/tools/lib/github/types.ts";
+import { checkMergeConflicts, isBranchUpToDate } from "@shepherdjerred/tools/lib/git/conflicts.ts";
+import { formatHealthReport, formatJson } from "@shepherdjerred/tools/lib/output/formatter.ts";
 
 export type HealthOptions = {
   repo?: string | undefined;

@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { rm, mkdir } from "node:fs/promises";
-import { join } from "node:path";
-import { loggers } from "../utils/index.js";
+import path from "node:path";
+import { loggers } from "@shepherdjerred/birmel/utils/index.js";
 
 const logger = loggers.editor.child("repo-clone");
 
@@ -20,7 +20,7 @@ export async function cloneRepo(opts: CloneRepoOptions): Promise<string> {
   const { repo, branch, token, sessionId } = opts;
 
   // Create temp directory path
-  const tempDir = join("/tmp", `birmel-edit-${sessionId}`);
+  const tempDir = path.join("/tmp", `birmel-edit-${sessionId}`);
 
   // Ensure temp directory exists
   await mkdir(tempDir, { recursive: true });
@@ -57,17 +57,17 @@ export async function cloneRepo(opts: CloneRepoOptions): Promise<string> {
 /**
  * Clean up a cloned repository by removing its temp directory
  */
-export async function cleanupClone(path: string): Promise<void> {
-  if (!path.startsWith("/tmp/birmel-edit-")) {
-    logger.warn("Refusing to cleanup non-temp path", { path });
+export async function cleanupClone(clonePath: string): Promise<void> {
+  if (!clonePath.startsWith("/tmp/birmel-edit-")) {
+    logger.warn("Refusing to cleanup non-temp path", { path: clonePath });
     return;
   }
 
   try {
-    await rm(path, { recursive: true, force: true });
-    logger.info("Cleaned up cloned repository", { path });
+    await rm(clonePath, { recursive: true, force: true });
+    logger.info("Cleaned up cloned repository", { path: clonePath });
   } catch (error) {
-    logger.error("Failed to cleanup cloned repository", error, { path });
+    logger.error("Failed to cleanup cloned repository", error, { path: clonePath });
   }
 }
 

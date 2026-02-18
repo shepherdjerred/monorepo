@@ -1,8 +1,8 @@
-import { createTool } from "../../../voltagent/tools/create-tool.js";
+import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.js";
 import { z } from "zod";
-import { getDiscordClient } from "../../../discord/index.js";
-import { logger } from "../../../utils/logger.js";
-import { validateSnowflakes } from "./validation.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.js";
+import { logger } from "@shepherdjerred/birmel/utils/logger.js";
+import { validateSnowflakes } from "./validation.ts";
 
 export const manageEmojiTool = createTool({
   id: "manage-emoji",

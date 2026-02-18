@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { Session } from "@clauderon/client";
-import { useSessionContext } from "../contexts/SessionContext";
+import { useSessionContext } from "@shepherdjerred/clauderon/web/frontend/src/contexts/SessionContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { X, RefreshCw } from "lucide-react";
@@ -25,12 +25,7 @@ export function EditSessionDialog({
   });
 
   // Sync form data when session prop changes (e.g., after regeneration via WebSocket)
-  useEffect(() => {
-    setFormData({
-      title: session.title ?? session.name,
-      description: session.description ?? "",
-    });
-  }, [session.title, session.description, session.name]);
+  ;
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -41,8 +36,8 @@ export function EditSessionDialog({
       await updateSession(session.id, formData.title, formData.description);
       toast.success("Session updated successfully");
       onClose();
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+    } catch (error_) {
+      const errorMsg = error_ instanceof Error ? error_.message : String(error_);
       setError(errorMsg);
       toast.error(`Failed to update session: ${errorMsg}`);
     } finally {
@@ -62,8 +57,8 @@ export function EditSessionDialog({
       .then(() => {
         toast.success("Session metadata regenerated");
       })
-      .catch((err: unknown) => {
-        const errorMsg = err instanceof Error ? err.message : String(err);
+      .catch((error_: unknown) => {
+        const errorMsg = error_ instanceof Error ? error_.message : String(error_);
         toast.error(`Failed to regenerate metadata: ${errorMsg}`);
       });
   };

@@ -1,10 +1,10 @@
-import { createTool } from "../../../voltagent/tools/create-tool.js";
+import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.js";
 import { z } from "zod";
-import { loggers } from "../../../utils/logger.js";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
 import {
   captureException,
   withToolSpan,
-} from "../../../observability/index.js";
+} from "@shepherdjerred/birmel/observability/index.js";
 import {
   handleSetBirthday,
   handleGetBirthday,
@@ -13,7 +13,7 @@ import {
   handleTodayBirthdays,
   handleUpcomingBirthdays,
   handleBirthdaysByMonth,
-} from "./birthday-actions.js";
+} from "./birthday-actions.ts";
 
 const logger = loggers.tools.child("birthdays");
 

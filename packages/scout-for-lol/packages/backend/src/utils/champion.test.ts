@@ -46,7 +46,7 @@ describe("Champion utilities", () => {
     });
 
     test("handles invalid champion ID", () => {
-      const result = getChampionDisplayName(99999);
+      const result = getChampionDisplayName(99_999);
       expect(result).toContain("Champion");
       expect(result).toContain("99999");
     });

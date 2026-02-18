@@ -4,14 +4,14 @@ import {
   fetchReleaseNotesBetween,
   getGitHubRepoForImage,
   type FullDependencyDiff,
-} from "./index.js";
+} from "./index.ts";
 import {
   HELM_CHART_GITHUB_REPOS,
   HELM_CHART_APP_REPOS,
   DOCKER_IMAGE_GITHUB_REPOS,
-} from "./repo-mappings.js";
-import { formatEmailHtml, sendEmail } from "./email-formatter.js";
-import { summarizeWithLLM } from "./llm-summary.js";
+} from "./repo-mappings.ts";
+import { formatEmailHtml, sendEmail } from "./email-formatter.ts";
+import { summarizeWithLLM } from "./llm-summary.ts";
 import {
   DependencyInfoSchema,
   ArtifactHubSchema,
@@ -20,7 +20,7 @@ import {
   type DependencyInfo,
   type ReleaseNotes,
   type FailedFetch,
-} from "./main-schemas.js";
+} from "./main-schemas.ts";
 
 const VERSIONS_FILE_PATH = "src/cdk8s/src/versions.ts";
 const REPO_URL = "https://github.com/shepherdjerred/homelab.git";

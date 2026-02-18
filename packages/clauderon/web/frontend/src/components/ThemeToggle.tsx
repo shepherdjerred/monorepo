@@ -7,34 +7,10 @@ export function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
 
   // Load theme from localStorage or system preference after mount (SSR-safe)
-  useEffect(() => {
-    setMounted(true);
-
-    // Check localStorage first
-    const stored = localStorage.getItem("theme");
-    if (stored === "dark" || stored === "light") {
-      setTheme(stored);
-      return;
-    }
-
-    // Fall back to system preference
-    const systemPrefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)",
-    ).matches;
-    setTheme(systemPrefersDark ? "dark" : "light");
-  }, []);
+  ;
 
   // Apply theme to document
-  useEffect(() => {
-    if (!mounted) {
-      return;
-    }
-
-    const root = window.document.documentElement;
-    root.classList.remove("light", "dark");
-    root.classList.add(theme);
-    localStorage.setItem("theme", theme);
-  }, [theme, mounted]);
+  ;
 
   const toggleTheme = () => {
     setTheme(theme === "light" ? "dark" : "light");

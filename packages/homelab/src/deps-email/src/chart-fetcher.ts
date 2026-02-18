@@ -1,6 +1,6 @@
 import { parse as yamlParse } from "yaml";
-import type { ChartYaml, ChartLock } from "./types.js";
-import { ChartYamlSchema, ChartLockSchema } from "./types.js";
+import type { ChartYaml, ChartLock } from "./types.ts";
+import { ChartYamlSchema, ChartLockSchema } from "./types.ts";
 
 /**
  * Cache for fetched chart metadata

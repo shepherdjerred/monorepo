@@ -1,8 +1,8 @@
 import type { Directory, Container } from "@dagger.io/dagger";
 import { dag, type Secret } from "@dagger.io/dagger";
-import { getMiseRuntimeContainer } from "./base";
+import { getMiseRuntimeContainer } from "./base.ts";
 import type { StepResult } from ".";
-import versions from "./versions";
+import versions from "./versions.ts";
 
 /**
  * Builds a container with the dependency-summary script ready to run.

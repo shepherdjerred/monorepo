@@ -75,7 +75,7 @@ export function ResultsPanel(props: ResultsPanelProps) {
   // Calculate elapsed times only when there are active generations
   const now = Date.now();
   const activeGenerationTimers = new Map<string, number>(
-    Array.from(activeGenerations.entries()).map(([id, gen]) => [
+    [...activeGenerations.entries()].map(([id, gen]) => [
       id,
       now - gen.startTime,
     ]),

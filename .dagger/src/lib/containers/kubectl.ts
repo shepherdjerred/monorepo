@@ -1,5 +1,5 @@
 import { dag, type Container } from "@dagger.io/dagger";
-import versions from "../versions";
+import versions from "../versions.ts";
 
 /**
  * Returns a cached kubectl container optimized for Kubernetes operations.

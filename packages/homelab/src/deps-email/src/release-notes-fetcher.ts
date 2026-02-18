@@ -1,6 +1,6 @@
 import { OpenAI } from "openai";
 import { z } from "zod";
-import type { ReleaseNote } from "./types.js";
+import type { ReleaseNote } from "./types.ts";
 
 // Zod schemas for API responses
 const ArtifactHubChangeSchema = z.object({

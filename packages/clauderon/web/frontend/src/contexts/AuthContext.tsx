@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import type { AuthStatus, AuthUser } from "@clauderon/shared";
-import { useClauderonClient } from "../hooks/useClauderonClient";
+import { useClauderonClient } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useClauderonClient";
 
 type AuthContextValue = {
   authStatus: AuthStatus | null;
@@ -46,9 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [client]);
 
-  useEffect(() => {
-    void refreshAuthStatus();
-  }, [refreshAuthStatus]);
+  ;
 
   const currentUser = authStatus?.current_user ?? null;
 

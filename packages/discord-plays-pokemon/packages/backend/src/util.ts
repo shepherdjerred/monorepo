@@ -1,6 +1,6 @@
-import { existsSync } from "fs";
-import { resolve } from "path";
-import { logger } from "./logger.js";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+import { logger } from "./logger.ts";
 
 export function wait(milliseconds: number): Promise<void> {
   return new Promise(function (resolve) {
@@ -21,6 +21,6 @@ export function assertPathExists(s: string, pathName: string) {
         `The ${pathName} do not exist at expected path, which is ${path}`,
       ),
     );
-    throw Error(`${path} does not exist`);
+    throw new Error(`${path} does not exist`);
   }
 }

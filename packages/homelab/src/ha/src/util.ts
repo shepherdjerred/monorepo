@@ -5,6 +5,7 @@ import { DscVerificationError, TimeoutError } from "./errors.ts";
 import { instrumentWorkflow } from "./metrics.ts";
 import { Sentry } from "./sentry.ts";
 
+// eslint-disable-next-line custom-rules/no-re-exports -- public API surface for workflow consumers
 export { TimeoutError } from "./errors.ts";
 
 export type Time = {
@@ -39,7 +40,7 @@ export function withTimeout<T>(
   operationName?: string,
 ): Promise<T> {
   const timeoutMs = timeToMs(timeout);
-  const operation = operationName ? ` for ${operationName}` : "";
+  const operation = operationName === undefined ? "" : ` for ${operationName}`;
 
   return Promise.race([
     promise,
@@ -254,25 +255,22 @@ export function runParallel(
   return Promise.all(promiseFactories.map((factory) => factory()));
 }
 
-export function runSequential(
+export async function runSequential(
   promiseFactories: (() => Promise<unknown>)[],
-): Promise<unknown> {
-  let chain: Promise<unknown> = Promise.resolve();
+): Promise<void> {
   for (const factory of promiseFactories) {
-    chain = chain.then(() => factory());
+    await factory();
   }
-  return chain;
 }
 
-export function runSequentialWithDelay(
+export async function runSequentialWithDelay(
   promiseFactories: (() => Promise<unknown>)[],
   delay: Time,
-): Promise<unknown> {
-  let chain: Promise<unknown> = Promise.resolve();
+): Promise<void> {
   for (const factory of promiseFactories) {
-    chain = chain.then(() => factory()).then(() => wait(delay));
+    await factory();
+    await wait(delay);
   }
-  return chain;
 }
 
 export function repeat(

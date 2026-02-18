@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
-import { loggers } from "../utils/index.js";
-import { getAuth } from "./github-oauth.js";
-import type { FileChange } from "./types.js";
+import { loggers } from "@shepherdjerred/birmel/utils/index.js";
+import { getAuth } from "./github-oauth.ts";
+import type { FileChange } from "./types.ts";
 
 const logger = loggers.editor.child("github-pr");
 
@@ -134,18 +134,19 @@ function injectToken(url: string, token: string): string {
 
 async function applyChange(cwd: string, change: FileChange): Promise<void> {
   const fsPromises = await import("node:fs/promises");
+  // eslint-disable-next-line unicorn/import-style -- dynamic import for lazy loading
   const pathModule = await import("node:path");
 
-  const fullPath = pathModule.join(cwd, change.filePath);
+  const fullPath = pathModule.default.join(cwd, change.filePath);
 
   switch (change.changeType) {
     case "create":
     case "modify":
       if (change.newContent !== null) {
-        await fsPromises.mkdir(pathModule.dirname(fullPath), {
+        await fsPromises.mkdir(pathModule.default.dirname(fullPath), {
           recursive: true,
         });
-        await fsPromises.writeFile(fullPath, change.newContent, "utf-8");
+        await fsPromises.writeFile(fullPath, change.newContent, "utf8");
       }
       break;
 
@@ -186,7 +187,7 @@ async function createPRWithGh(opts: CreatePRWithGhOptions): Promise<string> {
       ],
       {
         cwd: workingDir,
-        env: { ...process.env, GH_TOKEN: token },
+        env: { ...Bun.env, GH_TOKEN: token },
         stdio: ["pipe", "pipe", "pipe"],
       },
     );

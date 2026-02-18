@@ -1,5 +1,5 @@
 import type { Container, Secret } from "@dagger.io/dagger";
-import { getSystemContainer } from "./system";
+import { getSystemContainer } from "./system.ts";
 
 export type GitHubContainerOptions = {
   /** Git user name for commits */

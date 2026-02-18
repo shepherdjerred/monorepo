@@ -131,7 +131,7 @@ export function SoundEntryCard({
       entry.source.url.includes("youtu.be"));
 
   // Check cache status on mount and when URL changes
-  // eslint-disable-next-line custom-rules/no-use-effect -- Need to check cache status on mount
+   
   useEffect(() => {
     const checkStatus = async () => {
       if (isYouTube && getCacheStatus && entry.source.type === "url") {
@@ -152,7 +152,7 @@ export function SoundEntryCard({
       // Auto-stop after a reasonable time (sounds are usually short)
       setTimeout(() => {
         setIsPlaying(false);
-      }, 10000);
+      }, 10_000);
     }
   };
 

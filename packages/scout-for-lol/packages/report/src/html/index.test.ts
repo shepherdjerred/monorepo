@@ -93,8 +93,8 @@ function getBlueTeam() {
       lane: "top",
       creepScore: 180,
       visionScore: 19,
-      damage: 18645,
-      gold: 12053,
+      damage: 18_645,
+      gold: 12_053,
       level: 16,
     }),
     createChampion({
@@ -108,8 +108,8 @@ function getBlueTeam() {
       lane: "jungle",
       creepScore: 188,
       visionScore: 21,
-      damage: 22737,
-      gold: 13930,
+      damage: 22_737,
+      gold: 13_930,
       level: 15,
     }),
     createChampion({
@@ -123,8 +123,8 @@ function getBlueTeam() {
       lane: "middle",
       creepScore: 215,
       visionScore: 27,
-      damage: 23266,
-      gold: 12686,
+      damage: 23_266,
+      gold: 12_686,
       level: 16,
     }),
     createChampion({
@@ -138,8 +138,8 @@ function getBlueTeam() {
       lane: "adc",
       creepScore: 202,
       visionScore: 16,
-      damage: 25720,
-      gold: 12583,
+      damage: 25_720,
+      gold: 12_583,
       level: 14,
     }),
     createChampion({
@@ -173,8 +173,8 @@ function getRedTeam() {
       lane: "top",
       creepScore: 219,
       visionScore: 25,
-      damage: 29663,
-      gold: 17426,
+      damage: 29_663,
+      gold: 17_426,
       level: 18,
     }),
     createChampion({
@@ -188,7 +188,7 @@ function getRedTeam() {
       lane: "jungle",
       creepScore: 134,
       visionScore: 32,
-      damage: 10916,
+      damage: 10_916,
       gold: 9051,
       level: 14,
     }),
@@ -203,8 +203,8 @@ function getRedTeam() {
       lane: "middle",
       creepScore: 193,
       visionScore: 21,
-      damage: 15943,
-      gold: 11613,
+      damage: 15_943,
+      gold: 11_613,
       level: 15,
     }),
     createChampion({
@@ -218,8 +218,8 @@ function getRedTeam() {
       lane: "adc",
       creepScore: 247,
       visionScore: 23,
-      damage: 24510,
-      gold: 15965,
+      damage: 24_510,
+      gold: 15_965,
       level: 16,
     }),
     createChampion({
@@ -233,8 +233,8 @@ function getRedTeam() {
       lane: "support",
       creepScore: 38,
       visionScore: 67,
-      damage: 24395,
-      gold: 10759,
+      damage: 24_395,
+      gold: 10_759,
       level: 14,
     }),
   ];
@@ -444,8 +444,8 @@ test("large values test", async () => {
     player.items = [3031, 3031, 3031, 3031, 3031, 3031, 3031];
     player.creepScore = 999;
     player.visionScore = 500;
-    player.damage = 999999;
-    player.gold = 500000;
+    player.damage = 999_999;
+    player.gold = 500_000;
     player.level = 25;
   });
 
@@ -458,8 +458,8 @@ test("large values test", async () => {
     player.items = [3031, 3031, 3031, 3031, 3031, 3031, 3031];
     player.creepScore = 999;
     player.visionScore = 500;
-    player.damage = 999999;
-    player.gold = 500000;
+    player.damage = 999_999;
+    player.gold = 500_000;
     player.level = 25;
   });
 
@@ -594,8 +594,8 @@ test("multiple highlighted players test", async () => {
       lane: "middle",
       creepScore: 210,
       visionScore: 25,
-      damage: 22000,
-      gold: 13000,
+      damage: 22_000,
+      gold: 13_000,
       level: 17,
     },
     outcome: "Victory",
@@ -613,8 +613,8 @@ test("multiple highlighted players test", async () => {
       lane: "middle",
       creepScore: 185,
       visionScore: 15,
-      damage: 18000,
-      gold: 12000,
+      damage: 18_000,
+      gold: 12_000,
       level: 16,
     },
   });
@@ -743,8 +743,8 @@ test("multiple players with promotion and demotion test", async () => {
       lane: "jungle",
       creepScore: 188,
       visionScore: 21,
-      damage: 22737,
-      gold: 13930,
+      damage: 22_737,
+      gold: 13_930,
       level: 15,
     },
     outcome: "Defeat",
@@ -762,7 +762,7 @@ test("multiple players with promotion and demotion test", async () => {
       lane: "jungle",
       creepScore: 134,
       visionScore: 32,
-      damage: 10916,
+      damage: 10_916,
       gold: 9051,
       level: 14,
     },
@@ -806,8 +806,8 @@ test("multiple players with promotion and demotion test", async () => {
       lane: "middle",
       creepScore: 215,
       visionScore: 27,
-      damage: 23266,
-      gold: 12686,
+      damage: 23_266,
+      gold: 12_686,
       level: 16,
     },
     outcome: "Victory",
@@ -825,8 +825,8 @@ test("multiple players with promotion and demotion test", async () => {
       lane: "middle",
       creepScore: 193,
       visionScore: 21,
-      damage: 15943,
-      gold: 11613,
+      damage: 15_943,
+      gold: 11_613,
       level: 15,
     },
   });

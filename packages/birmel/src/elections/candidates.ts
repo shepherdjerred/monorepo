@@ -1,13 +1,9 @@
+import path from "node:path";
+// eslint-disable-next-line no-restricted-imports -- readdirSync has no Bun equivalent for directory listing
 import { readdirSync } from "node:fs";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { dirname } from "node:path";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 export function getAllCandidates(): string[] {
-  const styleCardsDir = join(__dirname, "../persona/style-cards");
+  const styleCardsDir = path.join(import.meta.dir, "../persona/style-cards");
   const files = readdirSync(styleCardsDir);
 
   return files
@@ -20,7 +16,7 @@ export function selectRandomCandidates(min = 3, max = 5): string[] {
   const count = Math.floor(Math.random() * (max - min + 1)) + min;
 
   // Shuffle and select
-  const shuffled = [...allCandidates].sort(() => Math.random() - 0.5);
+  const shuffled = [...allCandidates].toSorted(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
 }
 

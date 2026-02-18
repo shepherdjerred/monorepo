@@ -3,7 +3,7 @@ import {
   parseYAMLComments,
   convertToTypeScriptInterface,
   generateTypeScriptCode,
-} from "./helm-types";
+} from "./helm-types.ts";
 
 describe("Integration Tests - Full Workflow", () => {
   test("should handle argo-cd rbac config end-to-end with */ escaping and prose extraction", () => {

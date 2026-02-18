@@ -12,11 +12,11 @@ import {
 import {
   TunnelBinding,
   TunnelBindingTunnelRefKind,
-} from "../../generated/imports/networking.cfargotunnel.com.ts";
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/networking.cfargotunnel.com.ts";
 import { withCommonProps } from "./common.ts";
-import versions from "../versions.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ApiObject } from "cdk8s";
-import { Probe } from "../../generated/imports/monitoring.coreos.com.ts";
+import { Probe } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
 
 export type StaticSiteConfig = {
   hostname: string;

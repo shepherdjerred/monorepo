@@ -41,7 +41,9 @@ export async function checkSubscriptionLimit(
   });
   const isUnlimited = subscriptionLimit === "unlimited";
 
-  if (!isUnlimited) {
+  if (isUnlimited) {
+    logger.info(`♾️ Server ${guildId} has unlimited subscriptions`);
+  } else {
     logger.info(
       `🔍 Checking subscription limit for server ${guildId}: ${subscriptionLimit.toString()} players`,
     );
@@ -79,8 +81,6 @@ export async function checkSubscriptionLimit(
         ephemeral: true,
       });
     }
-  } else {
-    logger.info(`♾️ Server ${guildId} has unlimited subscriptions`);
   }
 
   return true;
@@ -97,7 +97,9 @@ export async function checkAccountLimit(
   const accountLimit = getLimit("accounts", { server: guildId });
   const isUnlimitedAccounts = accountLimit === "unlimited";
 
-  if (!isUnlimitedAccounts) {
+  if (isUnlimitedAccounts) {
+    logger.info(`♾️ Server ${guildId} has unlimited accounts`);
+  } else {
     logger.info(
       `🔍 Checking account limit for server ${guildId}: ${accountLimit.toString()} accounts`,
     );
@@ -135,8 +137,6 @@ export async function checkAccountLimit(
         ephemeral: true,
       });
     }
-  } else {
-    logger.info(`♾️ Server ${guildId} has unlimited accounts`);
   }
 
   return true;

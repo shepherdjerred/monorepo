@@ -65,7 +65,7 @@ export function SoundPackEditorProvider({
   const [localPlayer, setLocalPlayer] = useState<LocalPlayer | null>(null);
 
   // Load champions on mount
-  // eslint-disable-next-line custom-rules/no-use-effect -- Needed to load initial data from adapter
+   
   useEffect(() => {
     const loadChampions = async () => {
       try {
@@ -79,7 +79,7 @@ export function SoundPackEditorProvider({
   }, [adapter]);
 
   // Load local player on mount
-  // eslint-disable-next-line custom-rules/no-use-effect -- Needed to load initial data from adapter
+   
   useEffect(() => {
     const loadLocalPlayer = async () => {
       try {
@@ -93,7 +93,7 @@ export function SoundPackEditorProvider({
   }, [adapter]);
 
   // Load pack on mount if no initial pack provided
-  // eslint-disable-next-line custom-rules/no-use-effect -- Needed to load initial data from adapter
+   
   useEffect(() => {
     if (!initialPack) {
       const loadPack = async () => {
@@ -130,8 +130,8 @@ export function SoundPackEditorProvider({
     try {
       await adapter.saveSoundPack(soundPack);
       setIsDirty(false);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to save sound pack");
+    } catch (error_) {
+      setError(error_ instanceof Error ? error_.message : "Failed to save sound pack");
     } finally {
       setIsLoading(false);
     }
@@ -146,8 +146,8 @@ export function SoundPackEditorProvider({
         setSoundPack(pack);
         setIsDirty(false);
       }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load sound pack");
+    } catch (error_) {
+      setError(error_ instanceof Error ? error_.message : "Failed to load sound pack");
     } finally {
       setIsLoading(false);
     }
@@ -162,8 +162,8 @@ export function SoundPackEditorProvider({
         setSoundPack(pack);
         setIsDirty(true);
       }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to import sound pack");
+    } catch (error_) {
+      setError(error_ instanceof Error ? error_.message : "Failed to import sound pack");
     } finally {
       setIsLoading(false);
     }
@@ -174,8 +174,8 @@ export function SoundPackEditorProvider({
     setError(null);
     try {
       await adapter.exportSoundPack(soundPack);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to export sound pack");
+    } catch (error_) {
+      setError(error_ instanceof Error ? error_.message : "Failed to export sound pack");
     } finally {
       setIsLoading(false);
     }
@@ -406,8 +406,8 @@ export function SoundPackEditorProvider({
     ) => {
       try {
         await adapter.playSound(source);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to preview sound");
+      } catch (error_) {
+        setError(error_ instanceof Error ? error_.message : "Failed to preview sound");
       }
     },
     [adapter],

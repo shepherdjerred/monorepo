@@ -11,13 +11,13 @@ import {
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { ApiObject, JsonPatch, Size } from "cdk8s";
-import { withCommonProps } from "../../misc/common.ts";
-import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
-import { TailscaleIngress } from "../../misc/tailscale.ts";
-import { createCloudflareTunnelBinding } from "../../misc/cloudflare-tunnel.ts";
-import versions from "../../versions.ts";
-import { createServiceMonitor } from "../../misc/service-monitor.ts";
-import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
+import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
+import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 
 export function createPlexDeployment(
   chart: Chart,

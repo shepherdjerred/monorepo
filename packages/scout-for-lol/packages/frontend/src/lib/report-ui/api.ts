@@ -124,17 +124,13 @@ export async function fetchMatchFromRiot(
     }
     const match = parseRiotMatch(dataValidated.data);
     return { match };
-  } catch (err) {
+  } catch (error) {
     const ErrorOrStringSchema = z.union([z.instanceof(Error), z.string()]);
-    const errorZod = ErrorOrStringSchema.safeParse(err);
+    const errorZod = ErrorOrStringSchema.safeParse(error);
     let errorMessage = "Unknown error";
     if (errorZod.success) {
       const errorData = errorZod.data;
-      if (errorData instanceof Error) {
-        errorMessage = errorData.message;
-      } else {
-        errorMessage = errorData;
-      }
+      errorMessage = errorData instanceof Error ? errorData.message : errorData;
     }
     return { match: null, error: errorMessage };
   }

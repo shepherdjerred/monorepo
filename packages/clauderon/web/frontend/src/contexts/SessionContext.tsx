@@ -13,8 +13,8 @@ import type {
   SessionHealthReport,
 } from "@clauderon/client";
 import type { MergeMethod } from "@clauderon/shared";
-import { useClauderonClient } from "../hooks/useClauderonClient";
-import { useSessionEvents } from "../hooks/useSessionEvents";
+import { useClauderonClient } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useClauderonClient";
+import { useSessionEvents } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useSessionEvents";
 import type { ClauderonClient } from "@clauderon/client";
 
 type SessionContextValue = {
@@ -74,8 +74,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         const sessionsList = await client.listSessions();
         const newSessions = new Map(sessionsList.map((s) => [s.id, s]));
         setSessions(newSessions);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error(String(err)));
+      } catch (error_) {
+        setError(error_ instanceof Error ? error_ : new Error(String(error_)));
       } finally {
         if (showLoading) {
           setIsLoading(false);
@@ -92,8 +92,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         health.sessions.map((report) => [report.session_id, report]),
       );
       setHealthReports(newHealthReports);
-    } catch (err) {
-      console.error("Failed to fetch health data:", err);
+    } catch (error_) {
+      console.error("Failed to fetch health data:", error_);
     }
   }, [client]);
 
@@ -248,10 +248,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useSessionEvents(handleEvent);
 
   // Initial load
-  useEffect(() => {
-    void refreshSessions();
-    void refreshHealth();
-  }, [refreshSessions, refreshHealth]);
+  ;
 
   return (
     <SessionContext.Provider

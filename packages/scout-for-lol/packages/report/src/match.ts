@@ -14,7 +14,7 @@ import {
   getTeams,
   participantToChampion,
 } from "@scout-for-lol/data";
-import { strict as assert } from "assert";
+import { strict as assert } from "node:assert";
 
 export function toMatch(
   player: Player,
@@ -36,7 +36,7 @@ export function toMatch(
   const team = parseTeam(participant.teamId);
   const teams = getTeams(rawMatch.info.participants, participantToChampion);
 
-  assert(team !== undefined);
+  assert.ok(team !== undefined);
 
   const enemyTeam = invertTeam(team);
   const queueType = parseQueueType(rawMatch.info.queueId);

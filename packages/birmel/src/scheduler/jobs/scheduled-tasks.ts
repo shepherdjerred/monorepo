@@ -1,8 +1,8 @@
 import type { ScheduledTask } from "@prisma/client";
-import { prisma } from "../../database/index.js";
-import { loggers } from "../../utils/index.js";
-import { allTools } from "../../mastra/tools/index.js";
-import { getNextCronRun } from "../utils/cron.js";
+import { prisma } from "@shepherdjerred/birmel/database/index.js";
+import { loggers } from "@shepherdjerred/birmel/utils/index.js";
+import { allTools } from "@shepherdjerred/birmel/mastra/tools/index.js";
+import { getNextCronRun } from "@shepherdjerred/birmel/scheduler/utils/cron.js";
 
 const logger = loggers.scheduler;
 

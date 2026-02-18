@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bun
 import type { Container, Directory } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
-import { getWorkspaceContainer } from "./base";
-import { execOrThrow } from "./errors";
-import { caddyVersionOnly } from "./versions";
+import { getWorkspaceContainer } from "./base.ts";
+import { execOrThrow } from "./errors.ts";
+import { caddyVersionOnly } from "./versions.ts";
 
 /**
  * Creates a prepared CDK8s container with workspace dependencies installed.

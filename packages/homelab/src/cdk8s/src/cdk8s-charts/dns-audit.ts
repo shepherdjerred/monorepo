@@ -1,12 +1,12 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { Namespace, ConfigMap } from "cdk8s-plus-31";
-import { KubeCronJob, Quantity } from "../../generated/imports/k8s.ts";
+import { KubeCronJob, Quantity } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import {
   EMAIL_DOMAINS,
   NO_EMAIL_DOMAINS,
-} from "../resources/argo-applications/domains.ts";
-import versions from "../versions.ts";
+} from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/domains.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 /**
  * DNS Audit CronJob

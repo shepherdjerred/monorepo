@@ -1,8 +1,8 @@
-import { editRepoTool } from "./edit-repo.js";
-import { listReposTool } from "./list-repos.js";
-import { getSessionTool } from "./get-session.js";
-import { approveChangesTool } from "./approve-changes.js";
-import { connectGitHubTool } from "./connect-github.js";
+import { editRepoTool } from "./edit-repo.ts";
+import { listReposTool } from "./list-repos.ts";
+import { getSessionTool } from "./get-session.ts";
+import { approveChangesTool } from "./approve-changes.ts";
+import { connectGitHubTool } from "./connect-github.ts";
 
 export { editRepoTool } from "./edit-repo.js";
 export { listReposTool } from "./list-repos.js";

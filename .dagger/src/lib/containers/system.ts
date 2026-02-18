@@ -1,5 +1,5 @@
 import { dag, type Container, type Platform } from "@dagger.io/dagger";
-import versions from "../versions";
+import versions from "../versions.ts";
 
 /**
  * Returns a base system container with OS packages installed (rarely changes).

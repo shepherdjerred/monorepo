@@ -1,8 +1,8 @@
 import type { TServiceParams } from "@digital-alchemy/core";
 import type { ENTITY_STATE } from "@digital-alchemy/hass";
 import { z } from "zod";
-import { shouldStopCleaning, verifyAfterDelay, withTimeout } from "../util.ts";
-import { instrumentWorkflow } from "../metrics.ts";
+import { shouldStopCleaning, verifyAfterDelay, withTimeout } from "@shepherdjerred/homelab/ha/src/util.ts";
+import { instrumentWorkflow } from "@shepherdjerred/homelab/ha/src/metrics.ts";
 
 export function welcomeHome({ hass, logger }: TServiceParams) {
   const personJerred = hass.refBy.id("person.jerred");

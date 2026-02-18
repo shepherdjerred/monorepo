@@ -16,8 +16,8 @@ export function logErrors(fn: () => Promise<unknown>) {
       logger.info(
         `✅ Function ${functionName} completed successfully in ${executionTime.toString()}ms`,
       );
-    } catch (e) {
-      logger.error(`❌ Function ${functionName} failed:`, e);
+    } catch (error) {
+      logger.error(`❌ Function ${functionName} failed:`, error);
 
       // Log additional error context
       const ErrorDetailsSchema = z.object({
@@ -25,7 +25,7 @@ export function logErrors(fn: () => Promise<unknown>) {
         message: z.string(),
         stack: z.string().optional(),
       });
-      const errorResult = ErrorDetailsSchema.safeParse(e);
+      const errorResult = ErrorDetailsSchema.safeParse(error);
       if (errorResult.success) {
         logger.error(`❌ Error name: ${errorResult.data.name}`);
         logger.error(`❌ Error message: ${errorResult.data.message}`);
@@ -35,7 +35,7 @@ export function logErrors(fn: () => Promise<unknown>) {
       }
 
       // Send to Sentry with additional context
-      Sentry.captureException(e, {
+      Sentry.captureException(error, {
         tags: {
           function: functionName,
           source: "cron-job",
@@ -43,7 +43,7 @@ export function logErrors(fn: () => Promise<unknown>) {
       });
 
       // Re-throw to maintain original behavior
-      throw e;
+      throw error;
     }
   };
 }

@@ -11,7 +11,7 @@ export type Course = {
   videos: CourseVideo[];
 };
 
-export function isCourse(item: unknown): item is Course {
-  const possibleCourse = item as Course;
-  return "videos" in possibleCourse;
+export function isCourse(item: unknown): boolean {
+  // eslint-disable-next-line custom-rules/prefer-zod-validation -- simple discriminant check for stored bookmark type
+  return typeof item === "object" && item !== null && "videos" in item;
 }

@@ -6,9 +6,9 @@
  * for different agent formats (Claude Code vs Codex).
  */
 
-import type { Message, MessageRole, ToolUse, CodeBlock } from "./claudeParser";
-import { extractCodeBlocks } from "./claudeParser";
-import { isCodexFormat, parseCodexHistoryLines } from "./codexHistoryParser";
+import type { Message, MessageRole, ToolUse, CodeBlock } from "./claudeParser.ts";
+import { extractCodeBlocks } from "./claudeParser.ts";
+import { isCodexFormat, parseCodexHistoryLines } from "./codexHistoryParser.ts";
 
 /**
  * Raw JSONL entry from Claude Code's history file

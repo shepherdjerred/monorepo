@@ -1,7 +1,7 @@
 import type { Chart } from "cdk8s";
-import { Application } from "../../../generated/imports/argoproj.io.ts";
-import versions from "../../versions.ts";
-import { createIngress } from "../../misc/tailscale.ts";
+import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { Namespace } from "cdk8s-plus-31";
 
 export function createGrafanaApp(chart: Chart) {

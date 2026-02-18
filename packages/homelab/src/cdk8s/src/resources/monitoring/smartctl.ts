@@ -7,7 +7,7 @@ import {
   ServiceAccount,
   Probe,
 } from "cdk8s-plus-31";
-import versions from "../../versions.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export async function createSmartctlMonitoring(chart: Chart) {
   // Create ServiceAccount for the DaemonSet

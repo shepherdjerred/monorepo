@@ -398,10 +398,10 @@ export function ResultMetadata({
           Pipeline Timing
         </h3>
         <div className="space-y-2 text-sm">
-          {traces !== undefined ? (
-            <PipelineTimingDisplay traces={traces} />
-          ) : (
+          {traces === undefined ? (
             <LegacyTimingDisplay metadata={metadata} />
+          ) : (
+            <PipelineTimingDisplay traces={traces} />
           )}
         </div>
       </div>
@@ -422,11 +422,11 @@ export function ResultMetadata({
             Cost
           </h3>
           <div className="space-y-2 text-sm">
-            {pipelineCosts !== null ? (
-              <PipelineCostDisplay costs={pipelineCosts} />
-            ) : cost !== null ? (
+            {pipelineCosts === null ? (cost === null ? null : (
               <LegacyCostDisplay cost={cost} />
-            ) : null}
+            )) : (
+              <PipelineCostDisplay costs={pipelineCosts} />
+            )}
           </div>
         </div>
       )}

@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { convertToTypeScriptInterface } from "./type-converter.js";
-import type { JSONSchemaProperty } from "./types.js";
+import { convertToTypeScriptInterface } from "./type-converter.ts";
+import type { JSONSchemaProperty } from "./types.ts";
 
 describe("JSON Schema to TypeScript Type Conversion", () => {
   test("should convert basic types", () => {

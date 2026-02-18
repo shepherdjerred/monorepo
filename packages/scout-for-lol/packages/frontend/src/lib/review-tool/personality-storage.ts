@@ -63,7 +63,7 @@ export async function deleteCustomPersonality(id: string): Promise<boolean> {
 export function generatePersonalityId(name: string): string {
   const slug = name
     .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "");
+    .replaceAll(/\s+/g, "-")
+    .replaceAll(/[^a-z0-9-]/g, "");
   return `custom-${slug}-${Date.now().toString(36)}`;
 }

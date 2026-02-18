@@ -1,11 +1,12 @@
-import { Events, Message, VoiceChannel, channelMention } from "discord.js";
-import { parseChord, type Chord } from "../game/command/chord.js";
-import client from "./client.js";
-import { execute } from "./chordExecutor.js";
-import { isValid } from "./chordValidator.js";
-import { CommandInput } from "../game/command/commandInput.js";
-import { logger } from "../logger.js";
-import { getConfig } from "../config/index.js";
+import type { Message, VoiceChannel} from "discord.js";
+import { Events, channelMention } from "discord.js";
+import { parseChord, type Chord } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/chord.js";
+import client from "./client.ts";
+import { execute } from "./chordExecutor.ts";
+import { isValid } from "./chordValidator.ts";
+import type { CommandInput } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/commandInput.js";
+import { logger } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/logger.js";
+import { getConfig } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/config/index.js";
 
 export let lastCommand = new Date();
 
@@ -43,8 +44,7 @@ async function handleMessage(
   }
 
   if (
-    !event.member ||
-    event.member.voice.channelId !== getConfig().stream.channel_id
+    event.member?.voice.channelId !== getConfig().stream.channel_id
   ) {
     await event.reply(
       `You have to be in ${channelMention(getConfig().stream.channel_id)} to play`,

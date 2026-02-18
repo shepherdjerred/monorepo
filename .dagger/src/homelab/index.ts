@@ -1,6 +1,6 @@
 import type { Directory, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
-import { formatDaggerError, execOrThrow } from "./errors.js";
+import { formatDaggerError, execOrThrow } from "./errors.ts";
 import {
   typeCheckHa,
   lintHa,
@@ -9,8 +9,8 @@ import {
   lintHaWithContainer,
   buildHaWithContainer,
   buildAndPushHaImage,
-} from "./ha.js";
-import { getMiseRuntimeContainer } from "./base.js";
+} from "./ha.ts";
+import { getMiseRuntimeContainer } from "./base.ts";
 import {
   typeCheckCdk8s,
   lintCdk8s,
@@ -21,15 +21,15 @@ import {
   buildK8sManifestsWithContainer,
   testCdk8sWithContainer,
   validateCaddyfileWithContainer,
-} from "./cdk8s.js";
-import { sync as argocdSync } from "./argocd.js";
-import { buildAndPushDependencySummaryImage } from "./dependency-summary.js";
-import { buildAndPushDnsAuditImage } from "./dns-audit.js";
-import { buildAndPushCaddyS3ProxyImage } from "./caddy-s3proxy.js";
-import { buildAllCharts, HELM_CHARTS } from "./helm.js";
-import { Stage } from "./stage.js";
-import versions from "./versions.js";
-import { planAll } from "./tofu.js";
+} from "./cdk8s.ts";
+import { sync as argocdSync } from "./argocd.ts";
+import { buildAndPushDependencySummaryImage } from "./dependency-summary.ts";
+import { buildAndPushDnsAuditImage } from "./dns-audit.ts";
+import { buildAndPushCaddyS3ProxyImage } from "./caddy-s3proxy.ts";
+import { buildAllCharts, HELM_CHARTS } from "./helm.ts";
+import { Stage } from "./stage.ts";
+import versions from "./versions.ts";
+import { planAll } from "./tofu.ts";
 
 export type StepStatus = "passed" | "failed" | "skipped";
 export type StepResult = {
@@ -175,9 +175,9 @@ export async function ciHomelab(
       status: "passed" as const,
       message: `Renovate Test: PASSED\n${msg}`,
     }))
-    .catch((e: unknown) => ({
+    .catch((error: unknown) => ({
       status: "failed" as const,
-      message: `Renovate Test: FAILED\n${formatDaggerError(e)}`,
+      message: `Renovate Test: FAILED\n${formatDaggerError(error)}`,
     }));
 
   // Helm test
@@ -188,9 +188,9 @@ export async function ciHomelab(
           status: "passed" as const,
           message: `Helm Test: PASSED\n${msg}`,
         }))
-        .catch((e: unknown) => ({
+        .catch((error: unknown) => ({
           status: "failed" as const,
-          message: `Helm Test: FAILED\n${formatDaggerError(e)}`,
+          message: `Helm Test: FAILED\n${formatDaggerError(error)}`,
         }));
 
   // CDK8s test
@@ -201,9 +201,9 @@ export async function ciHomelab(
           status: "passed" as const,
           message: `CDK8s Test: PASSED\n${msg}`,
         }))
-        .catch((e: unknown) => ({
+        .catch((error: unknown) => ({
           status: "failed" as const,
-          message: `CDK8s Test: FAILED\n${formatDaggerError(e)}`,
+          message: `CDK8s Test: FAILED\n${formatDaggerError(error)}`,
         }));
 
   // Caddyfile validation
@@ -214,9 +214,9 @@ export async function ciHomelab(
           status: "passed" as const,
           message: `Caddyfile Validate: PASSED\n${msg}`,
         }))
-        .catch((e: unknown) => ({
+        .catch((error: unknown) => ({
           status: "failed" as const,
-          message: `Caddyfile Validate: FAILED\n${formatDaggerError(e)}`,
+          message: `Caddyfile Validate: FAILED\n${formatDaggerError(error)}`,
         }));
 
   // CDK8s linting
@@ -227,9 +227,9 @@ export async function ciHomelab(
           status: "passed" as const,
           message: `CDK8s Lint: PASSED\n${msg}`,
         }))
-        .catch((e: unknown) => ({
+        .catch((error: unknown) => ({
           status: "failed" as const,
-          message: `CDK8s Lint: FAILED\n${formatDaggerError(e)}`,
+          message: `CDK8s Lint: FAILED\n${formatDaggerError(error)}`,
         }));
 
   // HA linting
@@ -242,9 +242,9 @@ export async function ciHomelab(
             status: "passed" as const,
             message: `HA Lint: PASSED\n${msg}`,
           }))
-          .catch((e: unknown) => ({
+          .catch((error: unknown) => ({
             status: "failed" as const,
-            message: `HA Lint: FAILED\n${formatDaggerError(e)}`,
+            message: `HA Lint: FAILED\n${formatDaggerError(error)}`,
           }));
 
   // CDK8s type checking
@@ -253,9 +253,9 @@ export async function ciHomelab(
       status: "passed" as const,
       message: `CDK8s TypeCheck: PASSED\n${msg}`,
     }))
-    .catch((e: unknown) => ({
+    .catch((error: unknown) => ({
       status: "failed" as const,
-      message: `CDK8s TypeCheck: FAILED\n${formatDaggerError(e)}`,
+      message: `CDK8s TypeCheck: FAILED\n${formatDaggerError(error)}`,
     }));
 
   // HA type checking
@@ -268,9 +268,9 @@ export async function ciHomelab(
             status: "passed" as const,
             message: `HA TypeCheck: PASSED\n${msg}`,
           }))
-          .catch((e: unknown) => ({
+          .catch((error: unknown) => ({
             status: "failed" as const,
-            message: `HA TypeCheck: FAILED\n${formatDaggerError(e)}`,
+            message: `HA TypeCheck: FAILED\n${formatDaggerError(error)}`,
           }));
 
   // OpenTofu plan
@@ -286,9 +286,9 @@ export async function ciHomelab(
       status: "passed" as const,
       message: `Tofu Plan: PASSED\n${msg}`,
     }))
-    .catch((e: unknown) => ({
+    .catch((error: unknown) => ({
       status: "failed" as const,
-      message: `Tofu Plan: FAILED\n${formatDaggerError(e)}`,
+      message: `Tofu Plan: FAILED\n${formatDaggerError(error)}`,
     }));
 
   // CDK8s build
@@ -299,9 +299,9 @@ export async function ciHomelab(
       status: "passed" as const,
       message: "CDK8s Build: PASSED",
     }))
-    .catch((e: unknown) => ({
+    .catch((error: unknown) => ({
       status: "failed" as const,
-      message: `CDK8s Build: FAILED\n${formatDaggerError(e)}`,
+      message: `CDK8s Build: FAILED\n${formatDaggerError(error)}`,
     }));
 
   // HA build
@@ -314,9 +314,9 @@ export async function ciHomelab(
             status: "passed" as const,
             message: "HA Build: PASSED",
           }))
-          .catch((e: unknown) => ({
+          .catch((error: unknown) => ({
             status: "failed" as const,
-            message: `HA Build: FAILED\n${formatDaggerError(e)}`,
+            message: `HA Build: FAILED\n${formatDaggerError(error)}`,
           }));
 
   // Helm build
@@ -331,10 +331,10 @@ export async function ciHomelab(
         message: "Helm Build: PASSED",
         dist,
       };
-    } catch (e: unknown) {
+    } catch (error: unknown) {
       return {
         status: "failed" as const,
-        message: `Helm Build: FAILED\n${formatDaggerError(e)}`,
+        message: `Helm Build: FAILED\n${formatDaggerError(error)}`,
         dist: undefined,
       };
     }
@@ -572,7 +572,7 @@ function homelabUpdateVersion(
   imageKey: string,
   version: string,
 ): Directory {
-  const escapedKey = imageKey.replaceAll("/", "\\/");
+  const escapedKey = imageKey.replaceAll("/", String.raw`\/`);
   return dag
     .container()
     .from(`alpine:${versions.alpine}`)
@@ -723,7 +723,7 @@ async function homelabHelmPublishBuilt(
         .withExec([
           "sh",
           "-c",
-          `curl -s -w '\\n%{http_code}' -u $CHARTMUSEUM_USERNAME:$CHARTMUSEUM_PASSWORD --data-binary @${chartFile} ${repo}/api/charts > /tmp/result.txt 2>&1`,
+          String.raw`curl -s -w '\n%{http_code}' -u $CHARTMUSEUM_USERNAME:$CHARTMUSEUM_PASSWORD --data-binary @${chartFile} ${repo}/api/charts > /tmp/result.txt 2>&1`,
         ]);
 
       const result = await container.file("/tmp/result.txt").contents();
@@ -743,8 +743,8 @@ async function homelabHelmPublishBuilt(
       }
     }
     return { status: "passed", message: results.join("\n") };
-  } catch (err: unknown) {
-    const errorMessage = formatDaggerError(err);
+  } catch (error: unknown) {
+    const errorMessage = formatDaggerError(error);
     return {
       status: "failed",
       message: `Helm Chart Publish: FAILED\n${errorMessage}`,

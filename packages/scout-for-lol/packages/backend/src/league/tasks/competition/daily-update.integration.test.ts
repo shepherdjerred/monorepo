@@ -67,7 +67,7 @@ void mock.module("../../../storage/s3-query.js", () => ({
 void mock.module("../../../storage/s3-leaderboard.js", () => ({
   saveCachedLeaderboard: async () => {
     // No-op - tests are focused on posting logic, not S3 caching
-    return Promise.resolve();
+    return;
   },
 }));
 

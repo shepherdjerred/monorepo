@@ -1,7 +1,7 @@
 import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
-import { syncToS3 } from "./lib/containers/index.js";
-import versions from "./lib/versions.js";
+import { syncToS3 } from "./lib/containers/index.ts";
+import versions from "./lib/versions.ts";
 
 function getWebringContainer(pkgSource: Directory): Container {
   return dag

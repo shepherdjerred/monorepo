@@ -10,13 +10,13 @@ import {
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
-import { withCommonProps } from "../../misc/common.ts";
-import { createServiceMonitor } from "../../misc/service-monitor.ts";
-import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
-import versions from "../../versions.ts";
-import type { Stage } from "../../cdk8s-charts/scout.ts";
+import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
 import { match } from "ts-pattern";
-import { ZfsNvmeVolume } from "../../misc/zfs-nvme-volume.ts";
+import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 
 export function createScoutDeployment(chart: Chart, stage: Stage) {
   const deployment = new Deployment(chart, "scout-backend", {

@@ -14,6 +14,21 @@ function getApiKey(): string {
   return apiKey;
 }
 
+function applySearchParams(
+  url: URL,
+  params: Record<string, string | string[]>,
+): void {
+  for (const [key, value] of Object.entries(params)) {
+    if (Array.isArray(value)) {
+      for (const v of value) {
+        url.searchParams.append(key, v);
+      }
+    } else {
+      url.searchParams.set(key, value);
+    }
+  }
+}
+
 export async function pagerDutyRequest<T>(
   endpoint: string,
   params?: Record<string, string | string[]>,
@@ -23,15 +38,7 @@ export async function pagerDutyRequest<T>(
     const url = new URL(`${PAGERDUTY_BASE_URL}${endpoint}`);
 
     if (params != null) {
-      for (const [key, value] of Object.entries(params)) {
-        if (Array.isArray(value)) {
-          for (const v of value) {
-            url.searchParams.append(key, v);
-          }
-        } else {
-          url.searchParams.set(key, value);
-        }
-      }
+      applySearchParams(url, params);
     }
 
     const response = await fetch(url.toString(), {
@@ -51,6 +58,7 @@ export async function pagerDutyRequest<T>(
       };
     }
 
+    // eslint-disable-next-line custom-rules/no-type-assertions -- API boundary: response.json() returns unknown, T is trusted from endpoint
     const data = (await response.json()) as T;
     return { success: true, data };
   } catch (error) {

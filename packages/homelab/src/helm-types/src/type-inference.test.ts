@@ -4,8 +4,8 @@ import {
   inferTypeFromValue,
   typesAreCompatible,
   convertToTypeScriptInterface,
-} from "./type-inference";
-import type { JSONSchemaProperty } from "./types";
+} from "./type-inference.ts";
+import type { JSONSchemaProperty } from "./types.ts";
 
 describe("JSON Schema to TypeScript Type Conversion", () => {
   test("should convert basic types", () => {
@@ -100,7 +100,7 @@ describe("Type Inference from Values", () => {
 
   test("should return null for null/undefined", () => {
     expect(inferTypeFromValue(null)).toBe(null);
-    expect(inferTypeFromValue(undefined)).toBe(null);
+    expect(inferTypeFromValue()).toBe(null);
   });
 });
 

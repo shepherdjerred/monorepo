@@ -13,7 +13,7 @@ export type Commentary = {
   type: string;
 } & Video;
 
-export function isCommentary(item: unknown): item is Commentary {
-  const possibleCommentary = item as Commentary;
-  return "matchLink" in possibleCommentary;
+export function isCommentary(item: unknown): boolean {
+  // eslint-disable-next-line custom-rules/prefer-zod-validation -- simple discriminant check for stored bookmark type
+  return typeof item === "object" && item !== null && "matchLink" in item;
 }

@@ -15,7 +15,19 @@ function getItemIconUrl(itemId: number): string {
 }
 
 function renderItem(item: number) {
-  if (item !== 0) {
+  if (item === 0) {
+    return (
+      <div
+        style={{
+          width: dimension,
+          height: dimension,
+          display: "flex",
+          backgroundColor: palette.blue[5],
+          border: `.01rem solid ${palette.gold.bright}`,
+        }}
+      />
+    );
+  } else {
     const isPrismatic = isPrismaticItem(item);
     const iconUrl = getItemIconUrl(item);
     return (
@@ -64,18 +76,6 @@ function renderItem(item: number) {
         )}
       </div>
     );
-  } else {
-    return (
-      <div
-        style={{
-          width: dimension,
-          height: dimension,
-          display: "flex",
-          backgroundColor: palette.blue[5],
-          border: `.01rem solid ${palette.gold.bright}`,
-        }}
-      />
-    );
   }
 }
 
@@ -89,7 +89,7 @@ export function renderItems(
     const itemsToRender = items.slice(0, 6);
     const paddedItems: number[] = [
       ...itemsToRender,
-      ...Array<number>(6 - itemsToRender.length).fill(0),
+      ...Array.from({length: 6 - itemsToRender.length}).fill(0),
     ];
     const renderedItems = map(paddedItems, renderItem);
 
@@ -102,13 +102,14 @@ export function renderItems(
     // Pad regular items to always show 6 slots
     const paddedRegularItems: number[] = [
       ...regularItems,
-      ...Array<number>(6 - regularItems.length).fill(0),
+      ...Array.from({length: 6 - regularItems.length}).fill(0),
     ];
     const renderedRegularItems = map(paddedRegularItems, renderItem);
 
     // Vision item slot
     const renderedVisionItem =
-      visionItem !== undefined ? (
+      visionItem === undefined ? (
+        // Empty vision slot
         <div
           style={{
             display: "flex",
@@ -117,7 +118,7 @@ export function renderItems(
             height: dimension,
           }}
         >
-          {renderItem(visionItem)}
+          {renderItem(0)}
           <span
             style={{
               position: "absolute",
@@ -134,7 +135,6 @@ export function renderItems(
           </span>
         </div>
       ) : (
-        // Empty vision slot
         <div
           style={{
             display: "flex",
@@ -143,7 +143,7 @@ export function renderItems(
             height: dimension,
           }}
         >
-          {renderItem(0)}
+          {renderItem(visionItem)}
           <span
             style={{
               position: "absolute",

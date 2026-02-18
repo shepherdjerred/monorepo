@@ -52,7 +52,7 @@ export async function executeSubscriptionList(
 
   const embed = new EmbedBuilder()
     .setTitle("🔔 Server Subscriptions")
-    .setColor(0xeb459e) // Pink color
+    .setColor(0xEB_45_9E) // Pink color
     .setDescription(
       `Found **${subscriptions.length.toString()}** subscription${subscriptions.length === 1 ? "" : "s"} across **${Object.keys(subscriptionsByChannel).length.toString()}** channel${Object.keys(subscriptionsByChannel).length === 1 ? "" : "s"}`,
     );

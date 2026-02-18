@@ -1,7 +1,7 @@
-import { createTool } from "../../../voltagent/tools/create-tool.js";
+import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.js";
 import { z } from "zod";
-import { getMusicPlayer } from "../../../music/index.js";
-import { logger } from "../../../utils/index.js";
+import { getMusicPlayer } from "@shepherdjerred/birmel/music/index.js";
+import { logger } from "@shepherdjerred/birmel/utils/index.js";
 
 export const musicQueueTool = createTool({
   id: "music-queue",

@@ -104,8 +104,8 @@ describe("getPollingReferenceTime", () => {
   const lastChecked = new Date("2024-01-15T11:00:00Z");
 
   test("returns undefined if never checked before", () => {
-    expect(getPollingReferenceTime(lastMatch, undefined)).toBe(undefined);
-    expect(getPollingReferenceTime(undefined, undefined)).toBe(undefined);
+    expect(getPollingReferenceTime(lastMatch)).toBe(undefined);
+    expect(getPollingReferenceTime()).toBe(undefined);
   });
 
   test("returns lastCheckedAt if never seen a match", () => {

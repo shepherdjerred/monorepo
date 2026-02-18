@@ -47,9 +47,9 @@ function selectPlayerIndex(match: CompletedMatch | ArenaMatch): number {
   const jerredIndex = match.players.findIndex(
     (p) => p.playerConfig.alias.toLowerCase() === "jerred",
   );
-  return jerredIndex !== -1
-    ? jerredIndex
-    : Math.floor(Math.random() * match.players.length);
+  return jerredIndex === -1
+    ? Math.floor(Math.random() * match.players.length)
+    : jerredIndex;
 }
 
 /**
@@ -150,12 +150,12 @@ export async function generateMatchReview(
   // Generate images only 33% of the time to reduce costs
   const stages = getDefaultStageConfigs();
   const shouldGenerateImage = Math.random() < 0.33;
-  if (!shouldGenerateImage) {
+  if (shouldGenerateImage) {
+    logger.info("Image generation enabled for this review (33% probability)");
+  } else {
     stages.imageDescription.enabled = false;
     stages.imageGeneration.enabled = false;
     logger.info("Image generation disabled for this review (67% probability)");
-  } else {
-    logger.info("Image generation enabled for this review (33% probability)");
   }
 
   try {
@@ -191,8 +191,8 @@ export async function generateMatchReview(
         trackedPlayerAliases,
         output: pipelineOutput,
       });
-    } catch (err) {
-      logger.error("Failed to save pipeline traces to S3:", err);
+    } catch (error) {
+      logger.error("Failed to save pipeline traces to S3:", error);
     }
   })();
 
@@ -205,8 +205,8 @@ export async function generateMatchReview(
         trackedPlayerAliases,
         output: pipelineOutput,
       });
-    } catch (err) {
-      logger.error("Failed to save pipeline debug to S3:", err);
+    } catch (error) {
+      logger.error("Failed to save pipeline debug to S3:", error);
     }
   })();
 
@@ -220,8 +220,8 @@ export async function generateMatchReview(
         bytes[i] = binaryString.charCodeAt(i);
       }
       reviewImage = bytes;
-    } catch (err) {
-      logger.error("Failed to decode image:", err);
+    } catch (error) {
+      logger.error("Failed to decode image:", error);
     }
   }
 

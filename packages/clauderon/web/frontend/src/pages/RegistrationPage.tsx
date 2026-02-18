@@ -4,8 +4,8 @@ import {
   type CredentialCreationOptionsJSON,
   type PublicKeyCredentialWithAttestationJSON,
 } from "@github/webauthn-json";
-import { useClauderonClient } from "../hooks/useClauderonClient";
-import { useAuth } from "../contexts/AuthContext";
+import { useClauderonClient } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useClauderonClient";
+import { useAuth } from "@shepherdjerred/clauderon/web/frontend/src/contexts/AuthContext";
 
 export function RegistrationPage() {
   const client = useClauderonClient();
@@ -48,11 +48,11 @@ export function RegistrationPage() {
 
       // Refresh auth status
       await refreshAuthStatus();
-    } catch (err) {
-      console.error("Registration error:", err);
+    } catch (error_) {
+      console.error("Registration error:", error_);
       setError(
-        err instanceof Error
-          ? err.message
+        error_ instanceof Error
+          ? error_.message
           : "Failed to create account. Please try again.",
       );
     } finally {

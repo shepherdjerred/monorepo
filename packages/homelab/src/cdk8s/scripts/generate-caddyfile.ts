@@ -3,11 +3,11 @@
  * Generates the Caddyfile for S3 static sites.
  * Used for CI validation with caddy validate.
  */
-import { generateCaddyfile } from "../src/misc/s3-static-site.ts";
+import { generateCaddyfile } from "@shepherdjerred/homelab/cdk8s/src/misc/s3-static-site.ts";
 import {
   staticSites,
   S3_ENDPOINT,
-} from "../src/resources/s3-static-sites/sites.ts";
+} from "@shepherdjerred/homelab/cdk8s/src/resources/s3-static-sites/sites.ts";
 
 const caddyfile = generateCaddyfile({
   sites: staticSites,

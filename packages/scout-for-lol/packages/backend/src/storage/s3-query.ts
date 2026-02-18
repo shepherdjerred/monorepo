@@ -11,9 +11,9 @@ import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 // Timeout for individual S3 operations (30 seconds)
-const S3_REQUEST_TIMEOUT_MS = 30000;
+const S3_REQUEST_TIMEOUT_MS = 30_000;
 // Timeout specifically for body stream reading (15 seconds)
-const BODY_STREAM_TIMEOUT_MS = 15000;
+const BODY_STREAM_TIMEOUT_MS = 15_000;
 // Retry configuration
 const MAX_RETRIES = 3;
 const RETRY_BACKOFF_MS = [1000, 2000, 4000];

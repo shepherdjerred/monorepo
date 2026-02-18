@@ -4,9 +4,9 @@ import {
   syncToS3,
   publishToGhcrMultiple,
   getGitHubContainer,
-} from "./lib/containers/index.js";
-import { logWithTimestamp, withTiming } from "./lib/index.js";
-import versions from "./lib/versions.js";
+} from "./lib/containers/index.ts";
+import { logWithTimestamp, withTiming } from "./lib/index.ts";
+import versions from "./lib/versions.ts";
 
 const BUN_VERSION = versions.bun;
 
@@ -369,7 +369,7 @@ async function smokeTestBackendImageWithContainer(
   } catch (error) {
     try {
       output = await container.stderr();
-    } catch (_stderrError) {
+    } catch {
       return `Smoke test failed: Could not capture container output. Error: ${String(error)}`;
     }
   }
@@ -655,14 +655,10 @@ function buildDesktopWindowsGnu(
     )
     .withWorkdir("/workspace/packages/desktop");
 
-  if (frontendDist) {
-    container = container.withDirectory(
+  container = frontendDist ? container.withDirectory(
       "/workspace/packages/desktop/dist",
       frontendDist,
-    );
-  } else {
-    container = container.withExec(["bunx", "vite", "build"]);
-  }
+    ) : container.withExec(["bunx", "vite", "build"]);
 
   return container
     .withWorkdir("/workspace/packages/desktop/src-tauri")
@@ -737,7 +733,7 @@ async function publishDesktopArtifactsWindowsOnly(
       `v${version}`,
       `--repo=${repo}`,
       `--title=v${version}`,
-      `--notes=Release ${version} (${gitSha.substring(0, 7)})`,
+      `--notes=Release ${version} (${gitSha.slice(0, 7)})`,
       "--latest",
     ]);
     await releaseContainer.sync();
@@ -747,7 +743,7 @@ async function publishDesktopArtifactsWindowsOnly(
   releaseContainer = releaseContainer.withExec([
     "sh",
     "-c",
-    `find windows -type f \\( -name "*.exe" -o -name "*.msi" \\) -exec gh release upload "v${version}" {} --repo="${repo}" --clobber \\; 2>&1 || (echo 'Windows upload failed' && exit 1)`,
+    String.raw`find windows -type f \( -name "*.exe" -o -name "*.msi" \) -exec gh release upload "v${version}" {} --repo="${repo}" --clobber \; 2>&1 || (echo 'Windows upload failed' && exit 1)`,
   ]);
   await releaseContainer.sync();
 

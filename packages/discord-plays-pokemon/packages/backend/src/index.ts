@@ -7,27 +7,28 @@ Sentry.init({
   environment: process.env.NODE_ENV ?? "development",
 });
 
-import { sendGameCommand } from "./browser/game.js";
-import { handleMessages } from "./discord/messageHandler.js";
-import { Browser, Builder, WebDriver } from "selenium-webdriver";
-import { writeFile } from "fs/promises";
+import { sendGameCommand } from "./browser/game.ts";
+import { handleMessages } from "./discord/messageHandler.ts";
+import type { WebDriver } from "selenium-webdriver";
+import { Browser, Builder } from "selenium-webdriver";
+import { writeFile } from "node:fs/promises";
 import { Options } from "selenium-webdriver/firefox.js";
-import { handleSlashCommands } from "./discord/slashCommands/index.js";
-import { CommandInput } from "./game/command/commandInput.js";
-import { createWebServer } from "./webserver/index.js";
-import { start } from "./browser/index.js";
+import { handleSlashCommands } from "./discord/slashCommands/index.ts";
+import type { CommandInput } from "./game/command/commandInput.ts";
+import { createWebServer } from "./webserver/index.ts";
+import { start } from "./browser/index.ts";
 import lodash from "lodash";
-import { registerSlashCommands } from "./discord/slashCommands/rest.js";
-import { logger } from "./logger.js";
-import { disconnect, joinVoiceChat, shareScreen } from "./browser/discord.js";
-import { handleChannelUpdate } from "./discord/channelHandler.js";
+import { registerSlashCommands } from "./discord/slashCommands/rest.ts";
+import { logger } from "./logger.ts";
+import { disconnect, joinVoiceChat, shareScreen } from "./browser/discord.ts";
+import { handleChannelUpdate } from "./discord/channelHandler.ts";
 import { match } from "ts-pattern";
-import {
+import type {
   LoginResponse,
   StatusResponse,
   ScreenshotResponse,
 } from "@discord-plays-pokemon/common";
-import { getConfig } from "./config/index.js";
+import { getConfig } from "./config/index.ts";
 
 let gameDriver: WebDriver | undefined;
 let streamDriver: WebDriver | undefined;
@@ -55,8 +56,8 @@ if (getConfig().web.enabled) {
                 command: event.request.value,
                 quantity: 1,
               });
-            } catch (e) {
-              logger.error(e);
+            } catch (error) {
+              logger.error(error);
             }
           }
         })
@@ -84,8 +85,8 @@ if (getConfig().web.enabled) {
                 value: screenshot,
               };
               event.socket.emit("response", response);
-            } catch (e) {
-              logger.error(e);
+            } catch (error) {
+              logger.error(error);
             }
           })();
         })
@@ -129,9 +130,9 @@ if (getConfig().stream.enabled || getConfig().game.enabled) {
     try {
       const screenshot = await gameDriver.takeScreenshot();
       await writeFile("error.png", screenshot, "base64");
-    } catch (e) {
+    } catch (error_) {
       logger.error("unable to take screenshot while handling another error");
-      throw e;
+      throw error_;
     }
   }
 
@@ -146,8 +147,8 @@ if (getConfig().game.enabled && getConfig().game.commands.enabled) {
     if (gameDriver !== undefined) {
       try {
         await sendGameCommand(gameDriver, commandInput);
-      } catch (e) {
-        logger.error(e);
+      } catch (error) {
+        logger.error(error);
       }
     }
   });
@@ -167,8 +168,8 @@ if (getConfig().stream.dynamic_streaming) {
           await streamDriver
             .switchTo()
             .window((await streamDriver.getAllWindowHandles())[1]);
-        } catch (e) {
-          logger.error(e);
+        } catch (error) {
+          logger.error(error);
         }
       } else {
         logger.info(
@@ -176,8 +177,8 @@ if (getConfig().stream.dynamic_streaming) {
         );
         try {
           await disconnect(streamDriver);
-        } catch (e) {
-          logger.error(e);
+        } catch (error) {
+          logger.error(error);
         }
       }
     } else {

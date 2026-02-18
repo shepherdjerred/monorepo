@@ -8,19 +8,16 @@
 export type * from "@clauderon/shared";
 
 // Export main client
-export {
-  ClauderonClient,
-  type ClauderonClientConfig,
-  type StorageClassInfo,
-} from "./ClauderonClient.js";
+export { ClauderonClient } from "./clauderon-client.js";
+export type { ClauderonClientConfig, StorageClassInfo } from "./client-types.js";
 
 // Export WebSocket clients
 export {
   EventsClient,
   type EventsClientConfig,
   type SessionEvent,
-} from "./EventsClient.js";
-export { ConsoleClient, type ConsoleClientConfig } from "./ConsoleClient.js";
+} from "./events-client.js";
+export { ConsoleClient, type ConsoleClientConfig } from "./console-client.js";
 
 // Export errors
 export {

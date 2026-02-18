@@ -1,4 +1,4 @@
-import type { ChartInfo } from "./types.js";
+import type { ChartInfo } from "./types.ts";
 
 /**
  * Parse chart information from versions.ts comments and values

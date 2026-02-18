@@ -112,7 +112,8 @@ export function handleCommands(client: Client) {
       }
 
       try {
-        if (commandName === "subscription") {
+        switch (commandName) {
+        case "subscription": {
           const subcommandName = interaction.options.getSubcommand();
           logger.info(`🔔 Executing subscription ${subcommandName} command`);
 
@@ -129,7 +130,10 @@ export function handleCommands(client: Client) {
                 ephemeral: true,
               });
             });
-        } else if (commandName === "competition") {
+        
+        break;
+        }
+        case "competition": {
           const subcommandName = interaction.options.getSubcommand();
           logger.info(`🏆 Executing competition ${subcommandName} command`);
 
@@ -154,7 +158,10 @@ export function handleCommands(client: Client) {
                 ephemeral: true,
               });
             });
-        } else if (commandName === "admin") {
+        
+        break;
+        }
+        case "admin": {
           // Check if user has Administrator permissions (applies to all admin subcommands)
           const member = interaction.member;
           const PermissionSchema = z
@@ -205,7 +212,10 @@ export function handleCommands(client: Client) {
                 ephemeral: true,
               });
             });
-        } else if (commandName === "debug") {
+        
+        break;
+        }
+        case "debug": {
           // Check if user has debug access (applies to all debug subcommands)
           if (!getFlag("debug", { user: userId })) {
             logger.warn(
@@ -249,12 +259,19 @@ export function handleCommands(client: Client) {
                 ephemeral: true,
               });
             });
-        } else if (commandName === "help") {
+        
+        break;
+        }
+        case "help": {
           logger.info("❓ Executing help command");
           await executeHelp(interaction);
-        } else {
+        
+        break;
+        }
+        default: {
           logger.warn(`⚠️  Unknown command received: ${commandName}`);
           await interaction.reply("Unknown command");
+        }
         }
 
         const executionTime = Date.now() - startTime;
@@ -293,17 +310,13 @@ export function handleCommands(client: Client) {
           "• Open an issue on GitHub: https://github.com/shepherdjerred/scout-for-lol/issues\n" +
           "• Join our Discord server for support: https://discord.gg/qmRewyHXFE";
 
-        if (interaction.replied || interaction.deferred) {
-          await interaction.followUp({
+        await (interaction.replied || interaction.deferred ? interaction.followUp({
             content: errorMessage,
             ephemeral: true,
-          });
-        } else {
-          await interaction.reply({
+          }) : interaction.reply({
             content: errorMessage,
             ephemeral: true,
-          });
-        }
+          }));
       }
     })();
   });

@@ -1,13 +1,10 @@
 import _ from "lodash";
-import { CommandInput, parseCommandInput } from "./commandInput.js";
+import type { CommandInput} from "./commandInput.ts";
+import { parseCommandInput } from "./commandInput.ts";
 
 export type Chord = CommandInput[];
 
 export function parseChord(input: string): Chord | undefined {
   const commands = input.split(" ").map(parseCommandInput);
-  if (commands.filter((command) => command === undefined).length) {
-    return undefined;
-  } else {
-    return commands as Chord;
-  }
+  return commands.includes(undefined) ? undefined : commands as Chord;
 }

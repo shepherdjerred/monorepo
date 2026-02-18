@@ -1,9 +1,9 @@
 import type { GuildMember } from "discord.js";
-import { getDiscordClient } from "../../discord/index.js";
-import { withSpan } from "../../observability/index.js";
-import { loggers } from "../../utils/logger.js";
-import { getConfig } from "../../config/index.js";
-import { prisma } from "../../database/index.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.js";
+import { withSpan } from "@shepherdjerred/birmel/observability/index.js";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
+import { getConfig } from "@shepherdjerred/birmel/config/index.js";
+import { prisma } from "@shepherdjerred/birmel/database/index.js";
 
 const logger = loggers.scheduler.child("activity-aggregator");
 
@@ -24,7 +24,7 @@ async function processMemberActivity(
 
   const qualifiedTier =
     roleTiers
-      .sort((a, b) => b.minimumActivity - a.minimumActivity)
+      .toSorted((a, b) => b.minimumActivity - a.minimumActivity)
       .find((tier) => activityCount >= tier.minimumActivity) ?? null;
 
   const currentActivityRoles = member.roles.cache.filter((role) =>

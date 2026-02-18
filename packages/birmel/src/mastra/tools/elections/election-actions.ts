@@ -1,6 +1,6 @@
-import { prisma } from "../../../database/index.js";
-import { getGuildOwner } from "../../../database/repositories/guild-owner.js";
-import { getAllCandidates } from "../../../elections/candidates.js";
+import { prisma } from "@shepherdjerred/birmel/database/index.js";
+import { getGuildOwner } from "@shepherdjerred/birmel/database/repositories/guild-owner.js";
+import { getAllCandidates } from "@shepherdjerred/birmel/elections/candidates.js";
 
 type ElectionResult = {
   success: boolean;

@@ -48,7 +48,7 @@ export function DefaultsTab() {
                 </div>
               </div>
               <span className="text-sm text-gray-500">
-                {pool.sounds.length} sound{pool.sounds.length !== 1 ? "s" : ""}
+                {pool.sounds.length} sound{pool.sounds.length === 1 ? "" : "s"}
               </span>
             </button>
 

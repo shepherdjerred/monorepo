@@ -5,7 +5,7 @@ import {
   KubeConfigMap,
   KubeDeployment,
   KubeServiceAccount,
-} from "../../../generated/imports/k8s.ts";
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { escapeGoTemplate } from "./monitoring/rules/shared.ts";
 
 const EVENT_EXPORTER_IMAGE = "ghcr.io/resmoio/kubernetes-event-exporter:v1.7";

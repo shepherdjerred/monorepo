@@ -10,9 +10,9 @@ import {
   verifyAfterDelay,
   wait,
   withTimeout,
-} from "../util.ts";
+} from "@shepherdjerred/homelab/ha/src/util.ts";
 import z from "zod";
-import { instrumentWorkflow } from "../metrics.ts";
+import { instrumentWorkflow } from "@shepherdjerred/homelab/ha/src/metrics.ts";
 
 export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
   const bedroomScene = hass.refBy.id("scene.bedroom_dimmed");

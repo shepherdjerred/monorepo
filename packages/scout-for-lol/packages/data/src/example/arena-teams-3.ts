@@ -18,8 +18,8 @@ export function getTeam3(): ArenaTeam {
         assists: 7,
         level: 18,
         items: [3135, 3089, 3145, 3020, 0, 0, 3364],
-        gold: 15200,
-        damage: 35800,
+        gold: 15_200,
+        damage: 35_800,
         augments: [],
         arenaMetrics: createArenaMetrics({
           playerScore0: 10,
@@ -46,8 +46,8 @@ export function getTeam3(): ArenaTeam {
         assists: 14,
         level: 18,
         items: [3091, 3060, 3504, 3001, 0, 0, 3364],
-        gold: 13800,
-        damage: 10500,
+        gold: 13_800,
+        damage: 10_500,
         augments: [],
         arenaMetrics: createArenaMetrics({
           playerScore0: 7,

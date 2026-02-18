@@ -2,8 +2,8 @@ import type {
   JSONSchemaProperty,
   TypeScriptInterface,
   TypeProperty,
-} from "./types.js";
-import type { HelmValue } from "./schemas.js";
+} from "./types.ts";
+import type { HelmValue } from "./schemas.ts";
 import {
   StringSchema,
   ActualNumberSchema,
@@ -13,12 +13,12 @@ import {
   ArraySchema,
   HelmValueSchema,
   StringBooleanSchema,
-} from "./schemas.js";
+} from "./schemas.ts";
 import {
   capitalizeFirst,
   sanitizePropertyName,
   sanitizeTypeName,
-} from "./utils.js";
+} from "./utils.ts";
 
 /**
  * Convert JSON schema type to TypeScript type string

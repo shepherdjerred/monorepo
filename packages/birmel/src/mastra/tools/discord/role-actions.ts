@@ -34,7 +34,7 @@ export async function handleListRoles(guild: Guild): Promise<RoleResult> {
       position: role.position,
       memberCount: role.members.size,
     }))
-    .sort((a, b) => b.position - a.position);
+    .toSorted((a, b) => b.position - a.position);
   return {
     success: true,
     message: `Found ${String(roleList.length)} roles`,

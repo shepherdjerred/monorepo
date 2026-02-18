@@ -1,8 +1,8 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
-import { KubeNetworkPolicy, IntOrString } from "../../generated/imports/k8s.ts";
-import { createBirmelDeployment } from "../resources/birmel/index.ts";
+import { KubeNetworkPolicy, IntOrString } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { createBirmelDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/birmel/index.ts";
 
 export function createBirmelChart(app: App) {
   const chart = new Chart(app, "birmel", {

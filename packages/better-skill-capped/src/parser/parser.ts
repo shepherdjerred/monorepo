@@ -50,11 +50,26 @@ export class Parser {
     return input.flatMap((video) => {
       const match = this.matchVideoToCourse(video, courses, chapters);
 
-      return match === undefined
-        ? ({
-            ...video,
-          } as unknown as Video)
-        : [];
+      if (match !== undefined) {
+        return [];
+      }
+
+      const releaseDate = this.parseDate(video.rDate);
+      const role = roleFromString(video.role);
+      const imageUrl = this.getImageUrl(video);
+      const title = rawTitleToDisplayTitle(video.title);
+      const videoUrl = getVideoUrl({ uuid: video.uuid });
+
+      return [{
+        role,
+        title,
+        description: video.desc,
+        releaseDate,
+        durationInSeconds: video.durSec,
+        uuid: video.uuid,
+        imageUrl,
+        skillCappedUrl: videoUrl,
+      }];
     });
   }
 
@@ -112,12 +127,7 @@ export class Parser {
         return [];
       }
 
-      const fakeVideo = {
-        title: video.title,
-        uuid: video.uuid,
-      } as Video;
-
-      const videoUrl = getVideoUrl(fakeVideo);
+      const videoUrl = getVideoUrl({ uuid: video.uuid });
 
       return {
         role,
@@ -202,21 +212,17 @@ export class Parser {
   parseCommentaries(dumpCommentary: ManifestCommentary[]): Commentary[] {
     return dumpCommentary
       .filter(
-        (commentary): commentary is ManifestCommentary & { title: string } =>
+        (commentary) =>
           commentary.title !== undefined,
       )
       .map((commentary): Commentary => {
         const releaseDate = this.parseDate(commentary.rDate);
         const role = roleFromString(commentary.role);
         const imageUrl = this.getImageUrl(commentary);
-        const title = rawTitleToDisplayTitle(commentary.title);
+        const commentaryTitle = commentary.title ?? "";
+        const title = rawTitleToDisplayTitle(commentaryTitle);
 
-        const fakeCommentary = {
-          title: commentary.title,
-          uuid: commentary.uuid,
-        } as Commentary;
-
-        const commentaryUrl = getCommentaryUrl(fakeCommentary);
+        const commentaryUrl = getCommentaryUrl({ uuid: commentary.uuid });
 
         return {
           role,

@@ -48,7 +48,7 @@ export type ApiSettings = z.infer<typeof ApiSettingsSchema>;
  */
 const ModelConfigSchema = z.object({
   model: z.string(),
-  maxTokens: z.number().int().min(100).max(100000),
+  maxTokens: z.number().int().min(100).max(100_000),
   temperature: z.number().min(0).max(2).optional(),
   topP: z.number().min(0).max(1).optional(),
 });
@@ -84,7 +84,7 @@ export type ReviewTextStageConfig = z.infer<typeof ReviewTextStageConfigSchema>;
 const ImageGenerationStageConfigSchema = z.object({
   enabled: z.boolean(),
   model: z.string(),
-  timeoutMs: z.number().int().min(10000).max(300000),
+  timeoutMs: z.number().int().min(10_000).max(300_000),
   userPrompt: z.string().optional(),
 });
 
@@ -115,9 +115,9 @@ export type PipelineStagesConfig = z.infer<typeof PipelineStagesConfigSchema>;
  */
 export const TextGenerationSettingsSchema = z.object({
   model: z.string().default("gpt-5.1"),
-  maxTokens: z.number().int().min(100).max(100000).default(3000),
-  temperature: z.number().min(0).max(2).default(1.0),
-  topP: z.number().min(0).max(1).default(1.0),
+  maxTokens: z.number().int().min(100).max(100_000).default(3000),
+  temperature: z.number().min(0).max(2).default(1),
+  topP: z.number().min(0).max(1).default(1),
 });
 
 export type TextGenerationSettings = z.infer<
@@ -133,8 +133,8 @@ export const ImageGenerationSettingsSchema = z.object({
   timeoutMs: z
     .number()
     .int()
-    .min(10000)
-    .max(300000)
+    .min(10_000)
+    .max(300_000)
     .default(DEFAULT_IMAGE_GENERATION_TIMEOUT_MS),
   artStyle: z
     .union([
@@ -434,8 +434,8 @@ export function createDefaultTabConfig(): TabConfig {
     textGeneration: {
       model: DEFAULT_REVIEW_TEXT_MODEL.model,
       maxTokens: DEFAULT_REVIEW_TEXT_MODEL.maxTokens,
-      temperature: 1.0,
-      topP: 1.0,
+      temperature: 1,
+      topP: 1,
     },
     imageGeneration: {
       enabled: true,

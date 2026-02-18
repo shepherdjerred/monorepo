@@ -63,7 +63,7 @@ export function RuleEditor({
         role="button"
         tabIndex={0}
         className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 ${
-          !rule.enabled ? "bg-gray-100" : ""
+          rule.enabled ? "" : "bg-gray-100"
         }`}
         onClick={() => {
           setIsExpanded(!isExpanded);

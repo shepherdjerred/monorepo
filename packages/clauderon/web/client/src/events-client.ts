@@ -3,8 +3,8 @@ import { WebSocketError } from "./errors.ts";
 
 /**
  * Event types emitted by the events WebSocket
- * Re-export the Event type from shared generated types
  */
+// eslint-disable-next-line custom-rules/no-re-exports -- type alias for public API naming
 export type SessionEvent = WsEvent;
 
 /**
@@ -107,15 +107,16 @@ export class EventsClient {
         }
       });
 
-      this.ws.onerror = (event) => {
+      this.ws.addEventListener("error", (event) => {
         this.emit(
           "error",
           new WebSocketError("WebSocket error occurred", event),
         );
-      };
+      });
 
-      this.ws.onmessage = (event: MessageEvent<string>) => {
+      this.ws.addEventListener("message", (event: MessageEvent<string>) => {
         try {
+          // eslint-disable-next-line custom-rules/no-type-assertions -- JSON.parse returns any
           const data = JSON.parse(event.data) as EventsMessage;
 
           // Handle connection acknowledgment
@@ -135,7 +136,7 @@ export class EventsClient {
             ),
           );
         }
-      };
+      });
     } catch (error) {
       this.emit(
         "error",

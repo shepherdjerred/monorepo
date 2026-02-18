@@ -12,7 +12,7 @@ export type Video = {
   skillCappedUrl: string;
 };
 
-export function isVideo(item: unknown): item is Video {
-  const possibleVideo = item as Video;
-  return "skillCappedUrl" in possibleVideo && !isCommentary(item);
+export function isVideo(item: unknown): boolean {
+  // eslint-disable-next-line custom-rules/prefer-zod-validation -- simple discriminant check for stored bookmark type
+  return typeof item === "object" && item !== null && "skillCappedUrl" in item && !isCommentary(item);
 }

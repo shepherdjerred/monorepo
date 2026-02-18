@@ -147,7 +147,7 @@ export function PersonalitySelector({
                     )}
                   </div>
                   <p className="text-xs text-surface-600">
-                    {personality.instructions.substring(0, 80)}
+                    {personality.instructions.slice(0, 80)}
                     {personality.instructions.length > 80 ? "..." : ""}
                   </p>
                 </div>

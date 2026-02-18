@@ -245,9 +245,9 @@ Only the competition owner can invite participants. The owner of this competitio
   try {
     const startDateStr = competition.startDate
       ? competition.startDate.toLocaleDateString()
-      : competition.seasonId
+      : (competition.seasonId
         ? `Season ${competition.seasonId}`
-        : "TBD";
+        : "TBD");
     const endDateStr = competition.endDate
       ? competition.endDate.toLocaleDateString()
       : "TBD";

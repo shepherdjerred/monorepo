@@ -1,6 +1,6 @@
 import type { Player } from "discord-player";
-import { logger } from "../utils/index.js";
-import { recordTrackPlay } from "../database/repositories/music-history.js";
+import { logger } from "@shepherdjerred/birmel/utils/index.js";
+import { recordTrackPlay } from "@shepherdjerred/birmel/database/repositories/music-history.js";
 
 type ChannelMetadata = {
   send?: (msg: string) => Promise<unknown>;

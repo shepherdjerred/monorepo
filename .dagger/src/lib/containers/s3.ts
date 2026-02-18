@@ -4,7 +4,7 @@ import {
   type Directory,
   type Secret,
 } from "@dagger.io/dagger";
-import versions from "../versions";
+import versions from "../versions.ts";
 
 export type S3SyncOptions = {
   /** The directory to sync to S3 */

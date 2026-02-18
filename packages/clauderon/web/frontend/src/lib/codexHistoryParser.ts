@@ -7,8 +7,8 @@
  * - Tool calls use function_call/function_call_output instead of tool_use/tool_result
  */
 
-import type { Message, ToolUse, CodeBlock } from "./claudeParser";
-import { extractCodeBlocks } from "./claudeParser";
+import type { Message, ToolUse, CodeBlock } from "./claudeParser.ts";
+import { extractCodeBlocks } from "./claudeParser.ts";
 
 /**
  * Codex JSONL entry types

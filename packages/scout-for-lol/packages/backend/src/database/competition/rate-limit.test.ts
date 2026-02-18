@@ -122,8 +122,8 @@ describe("getTimeRemaining", () => {
 
     // Should be close to 1 hour (60 minutes = 3,600,000 ms)
     // Allow small tolerance for test execution time
-    expect(remaining).toBeGreaterThan(3599000); // 59.98 minutes
-    expect(remaining).toBeLessThanOrEqual(3600000); // 60 minutes
+    expect(remaining).toBeGreaterThan(3_599_000); // 59.98 minutes
+    expect(remaining).toBeLessThanOrEqual(3_600_000); // 60 minutes
   });
 
   test("returns 0 after clearing rate limit", () => {

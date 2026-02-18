@@ -58,7 +58,7 @@ export function ImageGenerationPanel({
               id="timeoutMs"
               type="number"
               min={5000}
-              max={300000}
+              max={300_000}
               value={config.timeoutMs}
               onChange={(e) => {
                 onChange({

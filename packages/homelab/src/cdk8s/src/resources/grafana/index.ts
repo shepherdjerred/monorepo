@@ -1,11 +1,11 @@
 import type { Chart } from "cdk8s";
 import { ConfigMap } from "cdk8s-plus-31";
-import { exportGitckupDashboardJson } from "../../../grafana/gitckup-dashboard.ts";
-import { exportHaWorkflowDashboardJson } from "../../../grafana/ha-workflow-dashboard.ts";
-import { exportScoutDashboardJson } from "../../../grafana/scout-dashboard.ts";
-import { exportSmartctlDashboardJson } from "../../../grafana/smartctl-dashboard.ts";
-import { exportVeleroDashboardJson } from "../../../grafana/velero-dashboard.ts";
-import { exportZfsDashboardJson } from "../../../grafana/zfs-dashboard.ts";
+import { exportGitckupDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/gitckup-dashboard.ts";
+import { exportHaWorkflowDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/ha-workflow-dashboard.ts";
+import { exportScoutDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/scout-dashboard.ts";
+import { exportSmartctlDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/smartctl-dashboard.ts";
+import { exportVeleroDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/velero-dashboard.ts";
+import { exportZfsDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/zfs-dashboard.ts";
 
 /**
  * Dashboard configuration for creating Grafana dashboard ConfigMaps

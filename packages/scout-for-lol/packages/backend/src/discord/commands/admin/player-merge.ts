@@ -145,7 +145,7 @@ export async function executePlayerMerge(
         );
 
         // Create new subscriptions for channels that were only in source
-        const uniqueSourceChannels = Array.from(sourceChannelIds).filter(
+        const uniqueSourceChannels = [...sourceChannelIds].filter(
           (channelId) => !targetChannelIds.has(channelId),
         );
 
@@ -187,9 +187,7 @@ export async function executePlayerMerge(
         );
 
         // Create new participants for competitions that were only in source
-        const uniqueSourceCompetitions = Array.from(
-          sourceCompetitionIds,
-        ).filter((competitionId) => !targetCompetitionIds.has(competitionId));
+        const uniqueSourceCompetitions = [...sourceCompetitionIds].filter((competitionId) => !targetCompetitionIds.has(competitionId));
 
         if (uniqueSourceCompetitions.length > 0) {
           // Get the original participation data to preserve status and timestamps

@@ -33,12 +33,12 @@ function parseEnvValue(envContent: string, key: string): string | undefined {
     const normalized = line.startsWith("export ")
       ? line.slice("export ".length).trim()
       : line;
-    const match = /^([A-Z_]\w*)\s*=\s*(.*)$/i.exec(normalized);
-    if (!match) {
+    const envMatch = /^([A-Z_]\w*)=(.*)$/i.exec(normalized);
+    if (!envMatch) {
       continue;
     }
 
-    const [, matchKey, matchValue] = match;
+    const [, matchKey, matchValue] = envMatch;
     if (matchKey !== key || matchValue === undefined) {
       continue;
     }
@@ -59,7 +59,7 @@ function parseEnvValue(envContent: string, key: string): string | undefined {
 
 async function resolveHassToken(): Promise<string | undefined> {
   const envToken = Bun.env["HASS_TOKEN"]?.trim();
-  if (envToken) {
+  if (envToken !== undefined && envToken !== "") {
     return envToken;
   }
 
@@ -105,6 +105,40 @@ async function generateTypes() {
   }
 }
 
+async function addDisableCommentsToFile(filePath: string) {
+  let content = await Bun.file(filePath).text();
+
+  if (content.includes("@ts-nocheck")) {
+    console.log(
+      `✅ TypeScript disable comments already present in ${filePath}`,
+    );
+    return;
+  }
+
+  const lines = content.split("\n");
+  let insertIndex = 0;
+
+  for (const [i, line] of lines.entries()) {
+    if (line.startsWith("//") || line.trim() === "") {
+      insertIndex = i + 1;
+    } else {
+      break;
+    }
+  }
+
+  const tsDisableComments = [
+    "// @ts-nocheck",
+    "/* eslint-disable */",
+    "",
+  ];
+
+  lines.splice(insertIndex, 0, ...tsDisableComments);
+  content = lines.join("\n");
+
+  await Bun.write(filePath, content);
+  console.log(`✅ Added TypeScript disable comments to ${filePath}`);
+}
+
 /**
  * Add TypeScript disable comments to generated files
  */
@@ -119,40 +153,7 @@ async function addTsDisableComments() {
 
   for (const filePath of generatedFiles) {
     try {
-      let content = await Bun.file(filePath).text();
-
-      // Check if TypeScript disable comments are already present
-      if (content.includes("@ts-nocheck")) {
-        console.log(
-          `✅ TypeScript disable comments already present in ${filePath}`,
-        );
-      } else {
-        // Add TypeScript disable comments at the top after the existing header
-        const lines = content.split("\n");
-        let insertIndex = 0;
-
-        // Find where to insert (after existing header comments)
-        for (const [i, line] of lines.entries()) {
-          if (line.startsWith("//") || line.trim() === "") {
-            insertIndex = i + 1;
-          } else {
-            break;
-          }
-        }
-
-        // Insert TypeScript disable comments
-        const tsDisableComments = [
-          "// @ts-nocheck",
-          "/* eslint-disable */",
-          "",
-        ];
-
-        lines.splice(insertIndex, 0, ...tsDisableComments);
-        content = lines.join("\n");
-
-        await Bun.write(filePath, content);
-        console.log(`✅ Added TypeScript disable comments to ${filePath}`);
-      }
+      await addDisableCommentsToFile(filePath);
     } catch (error) {
       console.error(`❌ Failed to process ${filePath}:`, error);
     }
@@ -248,7 +249,7 @@ async function main() {
   );
 
   const hassToken = await resolveHassToken();
-  if (!hassToken || isPlaceholderToken(hassToken)) {
+  if (hassToken === undefined || hassToken === "" || isPlaceholderToken(hassToken)) {
     console.log("⚠️  Skipping type generation: HASS_TOKEN is not set.");
     console.log(
       "   Set HASS_TOKEN in the environment or a local .env file to enable type generation.",
@@ -273,8 +274,10 @@ async function main() {
 
 // Execute if run directly
 if (import.meta.main) {
-  main().catch((error: unknown) => {
+  try {
+    await main();
+  } catch (error: unknown) {
     console.error("❌ Script failed:", error);
     process.exit(1);
-  });
+  }
 }

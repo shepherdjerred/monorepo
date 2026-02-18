@@ -2,8 +2,8 @@ import type {
   JSONSchemaProperty,
   TypeScriptInterface,
   TypeProperty,
-} from "./types.js";
-import type { HelmValue } from "./schemas.js";
+} from "./types.ts";
+import type { HelmValue } from "./schemas.ts";
 import {
   StringSchema,
   ActualNumberSchema,
@@ -13,13 +13,13 @@ import {
   ArraySchema,
   StringBooleanSchema,
   HelmValueSchema,
-} from "./schemas.js";
-import { shouldAllowArbitraryProps, isK8sResourceSpec } from "./config.js";
+} from "./schemas.ts";
+import { shouldAllowArbitraryProps, isK8sResourceSpec } from "./config.ts";
 import {
   sanitizePropertyName,
   sanitizeTypeName,
   capitalizeFirst,
-} from "./utils.js";
+} from "./utils.ts";
 
 /**
  * Augment a Kubernetes resource spec interface with both requests and limits.

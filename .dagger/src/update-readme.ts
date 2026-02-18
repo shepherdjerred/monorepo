@@ -1,6 +1,6 @@
 import type { Directory, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
-import versions from "./lib/versions.js";
+import versions from "./lib/versions.ts";
 
 const REPO = "shepherdjerred/monorepo";
 const README_BRANCH = "auto/update-readmes";

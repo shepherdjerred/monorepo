@@ -1,12 +1,12 @@
-import type { TypeScriptInterface } from "./types.js";
+import type { TypeScriptInterface } from "./types.ts";
 import {
   StringSchema,
   ArraySchema,
   RecordSchema,
   ActualNumberSchema,
   ActualBooleanSchema,
-} from "./schemas.js";
-import { capitalizeFirst } from "./utils.js";
+} from "./schemas.ts";
+import { capitalizeFirst } from "./utils.ts";
 
 /**
  * Generate TypeScript code from interface definition

@@ -3,7 +3,7 @@ import {
   Postgresql,
   PostgresqlSpecPostgresqlVersion,
   PostgresqlSpecUsers,
-} from "../../../generated/imports/acid.zalan.do";
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/acid.zalan.do";
 
 export function createCoderPostgreSQLDatabase(chart: Chart) {
   // The postgres-operator will automatically generate passwords and store them

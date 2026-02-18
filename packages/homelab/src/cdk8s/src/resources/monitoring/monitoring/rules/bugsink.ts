@@ -1,6 +1,6 @@
-import type { PrometheusRuleSpecGroups } from "../../../../../generated/imports/monitoring.coreos.com";
-import { PrometheusRuleSpecGroupsRulesExpr } from "../../../../../generated/imports/monitoring.coreos.com";
-import { escapePrometheusTemplate } from "./shared";
+import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
+import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
+import { escapePrometheusTemplate } from "./shared.ts";
 
 export function getBugsinkRuleGroups(): PrometheusRuleSpecGroups[] {
   return [

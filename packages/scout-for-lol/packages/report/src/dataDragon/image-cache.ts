@@ -38,7 +38,7 @@ if (typeof Bun !== "undefined") {
 
 // Pre-load item images at module load time (static set)
 if (typeof Bun !== "undefined") {
-  const itemIds = Object.keys(items.data).map((id) => parseInt(id, 10));
+  const itemIds = Object.keys(items.data).map((id) => Number.parseInt(id, 10));
   await Promise.all(
     itemIds.map(async (itemId) => {
       try {

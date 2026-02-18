@@ -1,7 +1,7 @@
 import { Player } from "discord-player";
-import { getDiscordClient } from "../discord/index.js";
-import { registerExtractors } from "./extractors.js";
-import { setupPlayerEvents } from "./events.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.js";
+import { registerExtractors } from "./extractors.ts";
+import { setupPlayerEvents } from "./events.ts";
 
 let player: Player | null = null;
 let initialized = false;

@@ -1,5 +1,5 @@
 import type { Directory } from "@dagger.io/dagger";
-import { getKubectlContainer } from "./base";
+import { getKubectlContainer } from "./base.ts";
 
 /**
  * Applies Kubernetes manifests from the specified directory using kubectl.

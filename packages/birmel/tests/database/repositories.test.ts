@@ -1,5 +1,6 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { Database } from "bun:sqlite";
+// eslint-disable-next-line custom-rules/no-parent-imports, custom-rules/require-ts-extensions -- test setup file in sibling directory
 import "../setup.js";
 
 // Create an in-memory database for testing

@@ -46,7 +46,7 @@ describe("isCompetitionActive", () => {
   });
 
   test("uses current time if now not provided", () => {
-    const endDate = new Date(Date.now() + 86400000); // Tomorrow
+    const endDate = new Date(Date.now() + 86_400_000); // Tomorrow
     expect(isCompetitionActive(false, endDate)).toBe(true);
   });
 });

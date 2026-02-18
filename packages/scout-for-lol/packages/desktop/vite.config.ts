@@ -36,7 +36,7 @@ export default defineConfig({
   build: {
     outDir: "dist",
     target: "esnext",
-    minify: !isDebug ? "esbuild" : false,
+    minify: isDebug ? false : "esbuild",
     sourcemap: isDebug,
   },
 });
