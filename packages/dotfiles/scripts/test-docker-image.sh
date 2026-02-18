@@ -34,12 +34,12 @@ DOCKER_RUN="docker run --rm --platform linux/amd64 $IMAGE"
 
     # --- User & Permissions ---
     echo "=== USER & PERMISSIONS ==="
-    $DOCKER_RUN bash -c 'echo "User: $(whoami)"; echo "ID: $(id)"; echo "Home: $HOME"'
+    $DOCKER_RUN bash -c "echo \"User: \$(whoami)\"; echo \"ID: \$(id)\"; echo \"Home: \$HOME\""
     echo ""
 
     # --- Environment ---
     echo "=== ENVIRONMENT ==="
-    $DOCKER_RUN bash -c 'echo "PATH: $PATH"; echo "SHELL: $SHELL"'
+    $DOCKER_RUN bash -c "echo \"PATH: \$PATH\"; echo \"SHELL: \$SHELL\""
     echo ""
 
     # --- Shell ---

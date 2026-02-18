@@ -387,9 +387,8 @@ describe("ConsoleClient", () => {
       const ws = client.ws as MockWebSocket;
 
       // Create invalid UTF-8: 0xFF is never valid in UTF-8
-      const invalidBytes = new Uint8Array([
-        0x48, 0x65, 0x6C, 0x6C, 0x6F, 0xFF, 0x21,
-      ]); // "Hello�!"
+      // Using decimal to avoid prettier/eslint hex casing conflict
+      const invalidBytes = new Uint8Array([72, 101, 108, 108, 111, 255, 33]); // "Hello\xFF!"
       const binaryString = Array.from(invalidBytes, (byte) =>
         String.fromCharCode(byte),
       ).join("");

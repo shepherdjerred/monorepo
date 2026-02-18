@@ -1,4 +1,5 @@
-import { Directory, dag, type Secret, Container } from "@dagger.io/dagger";
+import type { Directory, Container } from "@dagger.io/dagger";
+import { dag, type Secret } from "@dagger.io/dagger";
 import { getMiseRuntimeContainer } from "./base";
 import type { StepResult } from ".";
 import versions from "./versions";

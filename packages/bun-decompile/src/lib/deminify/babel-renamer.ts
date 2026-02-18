@@ -112,7 +112,7 @@ function handleFunction(
   }
 
   // Rename the function itself if needed
-  if (mapping.functionName) {
+  if (mapping.functionName != null && mapping.functionName.length > 0) {
     if (t.isFunctionDeclaration(path.node) && path.node.id) {
       const oldFuncName = path.node.id.name;
       if (oldFuncName !== mapping.functionName) {
@@ -131,7 +131,11 @@ function handleFunction(
   }
 
   // Add description comment if provided
-  if (addComments && mapping.description) {
+  if (
+    addComments &&
+    mapping.description != null &&
+    mapping.description.length > 0
+  ) {
     const comment: t.Comment = {
       type: "CommentBlock",
       value: ` ${mapping.description} `,

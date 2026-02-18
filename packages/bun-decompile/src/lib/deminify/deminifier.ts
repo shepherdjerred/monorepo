@@ -202,7 +202,7 @@ export class Deminifier {
 
     const estimate = this.client.estimateCost(functionsToProcess);
 
-    if (!options?.skipConfirmation) {
+    if (options?.skipConfirmation !== true) {
       const confirmed = options?.confirmCost
         ? await options.confirmCost(estimate)
         : await this.defaultConfirmCost(estimate);
@@ -213,7 +213,10 @@ export class Deminifier {
     }
 
     // Use batch mode if requested (Anthropic batch API)
-    if (options?.useBatch || options?.resumeBatchId) {
+    if (
+      options?.useBatch === true ||
+      (options?.resumeBatchId != null && options.resumeBatchId.length > 0)
+    ) {
       return this.deminifyFileBatch(
         source,
         graph,
@@ -352,10 +355,18 @@ export class Deminifier {
       }
 
       // Skip deeply nested functions (nested inside a non-wrapper parent)
-      if (func.parentId && func.parentId !== iifeWrapperId) {
+      if (
+        func.parentId != null &&
+        func.parentId.length > 0 &&
+        func.parentId !== iifeWrapperId
+      ) {
         // Check if the parent's parent is also not the wrapper (deeply nested)
         const parent = graph.functions.get(func.parentId);
-        if (parent?.parentId && parent.parentId !== iifeWrapperId) {
+        if (
+          parent?.parentId != null &&
+          parent.parentId.length > 0 &&
+          parent.parentId !== iifeWrapperId
+        ) {
           return false;
         }
       }
@@ -460,7 +471,7 @@ export class Deminifier {
           current: progress.current,
           total: progress.total,
         };
-        if (progress.currentItem) {
+        if (progress.currentItem != null && progress.currentItem.length > 0) {
           progressUpdate.currentItem = progress.currentItem;
         }
         emitProgress(progressUpdate);
@@ -516,7 +527,7 @@ export class Deminifier {
     const fileName = options.fileName ?? "unknown.js";
 
     // Check for resume
-    if (options.resumeBatchId) {
+    if (options.resumeBatchId != null && options.resumeBatchId.length > 0) {
       console.log(`Resuming batch: ${options.resumeBatchId}`);
       return this.resumeBatch(
         source,
@@ -951,7 +962,7 @@ export function formatProgress(progress: DeminifyProgress): string {
   };
 
   let msg = `[${String(percent)}%] ${phases[progress.phase]}`;
-  if (progress.currentItem) {
+  if (progress.currentItem != null && progress.currentItem.length > 0) {
     msg += `: ${progress.currentItem}`;
   }
 

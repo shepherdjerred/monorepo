@@ -38,7 +38,10 @@ async function getBrowser(): Promise<Browser> {
     ];
 
     // Add user agent if configured
-    if (config.browser.userAgent != null && config.browser.userAgent.length > 0) {
+    if (
+      config.browser.userAgent != null &&
+      config.browser.userAgent.length > 0
+    ) {
       launchArgs.push(`--user-agent=${config.browser.userAgent}`);
     }
 
@@ -75,7 +78,8 @@ async function getPage(): Promise<Page> {
         width: config.browser.viewportWidth,
         height: config.browser.viewportHeight,
       },
-      ...(config.browser.userAgent != null && config.browser.userAgent.length > 0
+      ...(config.browser.userAgent != null &&
+      config.browser.userAgent.length > 0
         ? { userAgent: config.browser.userAgent }
         : {}),
     });
@@ -233,7 +237,12 @@ export const browserAutomationTool = createTool({
         }
 
         case "type": {
-          if ((ctx.selector == null || ctx.selector.length === 0) || (ctx.text == null || ctx.text.length === 0)) {
+          if (
+            ctx.selector == null ||
+            ctx.selector.length === 0 ||
+            ctx.text == null ||
+            ctx.text.length === 0
+          ) {
             return {
               success: false,
               message: "selector and text are required for type",

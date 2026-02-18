@@ -1,7 +1,6 @@
 import {
   dag,
   type Container,
-  type Directory,
   type Platform,
 } from "@dagger.io/dagger";
 import { getSystemContainer } from "./system";
@@ -83,84 +82,3 @@ export function getMiseRuntimeContainer(
   return withMiseTools(getSystemContainer(platform), toolVersions);
 }
 
-export type MiseContainerOptions = {
-  /** Source directory to mount or copy */
-  source?: Directory;
-  /** Working directory inside the container */
-  workdir?: string;
-  /** Platform specification */
-  platform?: Platform;
-  /** Specific versions for Bun, Python, and Node */
-  toolVersions?: MiseToolVersions;
-  /** Whether to mount or copy the source directory */
-  mount?: "mounted" | "copied";
-};
-
-/**
- * Returns a mise container with optional source directory handling.
- * This is a convenience wrapper that combines getMiseRuntimeContainer with
- * common patterns for mounting/copying source directories.
- *
- * @param options - Configuration options for the container
- * @returns A configured container with mise tools and optional source
- *
- * @example
- * ```ts
- * // Basic usage with mounted source
- * const container = getMiseContainer({
- *   source: dag.host().directory("."),
- *   workdir: "/workspace",
- * });
- *
- * // With copied source (for publishable images)
- * const container = getMiseContainer({
- *   source: dag.host().directory("."),
- *   mount: "copied",
- * });
- * ```
- */
-export function getMiseContainer(
-  options: MiseContainerOptions = {},
-): Container {
-  const {
-    source,
-    workdir = "/workspace",
-    platform,
-    toolVersions,
-    mount = "mounted",
-  } = options;
-
-  let container = getMiseRuntimeContainer(platform, toolVersions).withWorkdir(
-    workdir,
-  );
-
-  if (source) {
-    container =
-      mount === "mounted"
-        ? container.withMountedDirectory(workdir, source)
-        : container.withDirectory(workdir, source);
-  }
-
-  return container;
-}
-
-/**
- * Convenience alias for getMiseContainer.
- * Returns a mise container with bun, node, and python runtimes ready.
- *
- * @param options - Configuration options for the container
- * @returns A configured container with mise tools
- *
- * @example
- * ```ts
- * const container = getMiseBunNodeContainer({
- *   source: dag.host().directory("."),
- * });
- * await container.withExec(["bun", "install"]).sync();
- * ```
- */
-export function getMiseBunNodeContainer(
-  options: MiseContainerOptions = {},
-): Container {
-  return getMiseContainer(options);
-}

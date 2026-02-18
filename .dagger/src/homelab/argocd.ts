@@ -1,4 +1,4 @@
-import { Secret } from "@dagger.io/dagger";
+import type { Secret } from "@dagger.io/dagger";
 import { z } from "zod";
 import type { StepResult } from "./index";
 import { getCurlContainer } from "./base";

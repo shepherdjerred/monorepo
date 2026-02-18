@@ -1,19 +1,13 @@
 import { createTool } from "../../../voltagent/tools/create-tool.js";
 import { z } from "zod";
-import { prisma } from "../../../database/index.js";
 import { getConfig } from "../../../config/index.js";
 import { loggers } from "../../../utils/index.js";
 import {
-  parseFlexibleTime,
-  parseNaturalTime,
-  formatScheduleTime,
-  detectRecurringPattern,
-} from "../../../scheduler/utils/time-parser.js";
-import {
-  isValidCron,
-  getNextCronRun,
-  describeCron,
-} from "../../../scheduler/utils/cron.js";
+  handleSchedule,
+  handleListTasks,
+  handleCancelTask,
+  handleRemind,
+} from "./timer-actions.js";
 
 const logger = loggers.automation;
 
@@ -101,252 +95,32 @@ export const manageTaskTool = createTool({
 
     try {
       switch (ctx.action) {
-        case "schedule": {
-          if ((ctx.userId == null || ctx.userId.length === 0) || (ctx.when == null || ctx.when.length === 0) || (ctx.toolId == null || ctx.toolId.length === 0)) {
-            return {
-              success: false,
-              message: "userId, when, and toolId are required for schedule",
-            };
-          }
-
-          const existingTasks = await prisma.scheduledTask.count({
-            where: { guildId: ctx.guildId, executedAt: null, enabled: true },
-          });
-
-          if (existingTasks >= config.scheduler.maxTasksPerGuild) {
-            return {
-              success: false,
-              message: `Maximum tasks per guild (${String(config.scheduler.maxTasksPerGuild)}) reached`,
-            };
-          }
-
-          const parsed = parseFlexibleTime(ctx.when);
-          if (parsed == null) {
-            return {
-              success: false,
-              message: `Could not understand time: "${ctx.when}"`,
-            };
-          }
-
-          let scheduledAt: Date;
-          let cronPattern: string | null = null;
-          let isRecurring = false;
-
-          if (parsed.type === "cron") {
-            const cronValue = parsed.value as string;
-            if (!isValidCron(cronValue)) {
-              return {
-                success: false,
-                message: `Invalid cron pattern: "${cronValue}"`,
-              };
-            }
-            cronPattern = cronValue;
-            scheduledAt = getNextCronRun(cronPattern);
-            isRecurring = true;
-
-            const recurringCount = await prisma.scheduledTask.count({
-              where: {
-                guildId: ctx.guildId,
-                cronPattern: { not: null },
-                enabled: true,
-              },
-            });
-
-            if (recurringCount >= config.scheduler.maxRecurringTasks) {
-              return {
-                success: false,
-                message: `Maximum recurring tasks (${String(config.scheduler.maxRecurringTasks)}) reached`,
-              };
-            }
-          } else {
-            scheduledAt = parsed.value as Date;
-          }
-
-          const task = await prisma.scheduledTask.create({
-            data: {
-              guildId: ctx.guildId,
-              channelId: ctx.channelId ?? null,
-              userId: ctx.userId,
-              scheduledAt,
-              cronPattern,
-              naturalDesc: ctx.when,
-              toolId: ctx.toolId,
-              toolInput: JSON.stringify(ctx.toolInput ?? {}),
-              name: ctx.name ?? null,
-              description: ctx.description ?? null,
-              enabled: true,
-              nextRun: isRecurring ? scheduledAt : null,
-            },
-          });
-
-          logger.info("Scheduled task created", {
-            taskId: task.id,
+        case "schedule":
+          return await handleSchedule({
             guildId: ctx.guildId,
+            config,
+            userId: ctx.userId,
+            when: ctx.when,
             toolId: ctx.toolId,
+            toolInput: ctx.toolInput,
+            name: ctx.name,
+            description: ctx.description,
+            channelId: ctx.channelId,
           });
-
-          const whenDesc =
-            isRecurring && (cronPattern != null && cronPattern.length > 0)
-              ? `Recurring: ${describeCron(cronPattern)}`
-              : formatScheduleTime(scheduledAt);
-
-          return {
-            success: true,
-            message: `Task scheduled: ${whenDesc}`,
-            data: {
-              taskId: task.id,
-              scheduledAt: scheduledAt.toISOString(),
-              isRecurring,
-              cronPattern: cronPattern ?? undefined,
-            },
-          };
-        }
-
-        case "list": {
-          const where = {
+        case "list":
+          return await handleListTasks(ctx.guildId, ctx.includeExecuted);
+        case "cancel":
+          return await handleCancelTask(ctx.guildId, ctx.taskId, ctx.userId);
+        case "remind":
+          return await handleRemind({
             guildId: ctx.guildId,
-            ...(ctx.includeExecuted === true ? {} : { executedAt: null }),
-          };
-
-          const tasks = await prisma.scheduledTask.findMany({
-            where,
-            orderBy: { scheduledAt: "asc" },
+            config,
+            userId: ctx.userId,
+            when: ctx.when,
+            channelId: ctx.channelId,
+            reminderAction: ctx.reminderAction,
+            reminderMessage: ctx.reminderMessage,
           });
-
-          return {
-            success: true,
-            message: `Found ${String(tasks.length)} task${tasks.length === 1 ? "" : "s"}`,
-            data: {
-              tasks: tasks.map((task) => ({
-                id: task.id,
-                name: task.name,
-                description: task.description,
-                scheduledAt: task.scheduledAt.toISOString(),
-                toolId: task.toolId,
-                isRecurring: task.cronPattern !== null,
-                cronPattern: task.cronPattern,
-                executedAt: task.executedAt?.toISOString() ?? null,
-                enabled: task.enabled,
-              })),
-              count: tasks.length,
-            },
-          };
-        }
-
-        case "cancel": {
-          if (ctx.taskId == null || (ctx.userId == null || ctx.userId.length === 0)) {
-            return {
-              success: false,
-              message: "taskId and userId are required for cancel",
-            };
-          }
-
-          const task = await prisma.scheduledTask.findFirst({
-            where: { id: ctx.taskId, guildId: ctx.guildId },
-          });
-
-          if (task == null) {
-            return { success: false, message: "Task not found" };
-          }
-          if (task.executedAt != null) {
-            return {
-              success: false,
-              message: "Cannot cancel an executed task",
-            };
-          }
-          if (task.userId !== ctx.userId) {
-            return {
-              success: false,
-              message: "Only the task creator can cancel it",
-            };
-          }
-
-          await prisma.scheduledTask.update({
-            where: { id: ctx.taskId },
-            data: { enabled: false },
-          });
-
-          logger.info("Task cancelled", {
-            taskId: ctx.taskId,
-            guildId: ctx.guildId,
-          });
-          return { success: true, message: "Task cancelled successfully" };
-        }
-
-        case "remind": {
-          if (
-            (ctx.userId == null || ctx.userId.length === 0) ||
-            (ctx.when == null || ctx.when.length === 0) ||
-            (ctx.channelId == null || ctx.channelId.length === 0) ||
-            (ctx.reminderAction == null || ctx.reminderAction.length === 0)
-          ) {
-            return {
-              success: false,
-              message:
-                "userId, when, channelId, and reminderAction are required for remind",
-            };
-          }
-
-          const recurringPattern = detectRecurringPattern(ctx.when);
-          if (recurringPattern != null && recurringPattern.length > 0) {
-            return {
-              success: false,
-              message: `This looks like a recurring reminder. Use schedule action with cron pattern: ${recurringPattern}`,
-            };
-          }
-
-          const parsed = parseNaturalTime(ctx.when);
-          if (parsed == null) {
-            return {
-              success: false,
-              message: `Could not understand time: "${ctx.when}"`,
-            };
-          }
-
-          const existingTasks = await prisma.scheduledTask.count({
-            where: { guildId: ctx.guildId, executedAt: null, enabled: true },
-          });
-
-          if (existingTasks >= config.scheduler.maxTasksPerGuild) {
-            return {
-              success: false,
-              message: `Maximum tasks per guild (${String(config.scheduler.maxTasksPerGuild)}) reached`,
-            };
-          }
-
-          const reminderMessage =
-            ctx.reminderMessage ??
-            `<@${ctx.userId}> Reminder: ${ctx.reminderAction}`;
-
-          const task = await prisma.scheduledTask.create({
-            data: {
-              guildId: ctx.guildId,
-              channelId: ctx.channelId,
-              userId: ctx.userId,
-              scheduledAt: parsed.date,
-              naturalDesc: ctx.when,
-              toolId: "send-message",
-              toolInput: JSON.stringify({
-                channelId: ctx.channelId,
-                content: reminderMessage,
-              }),
-              name: `Reminder: ${ctx.reminderAction.slice(0, 50)}`,
-              description: ctx.reminderAction,
-              enabled: true,
-            },
-          });
-
-          logger.info("Reminder scheduled", {
-            taskId: task.id,
-            guildId: ctx.guildId,
-          });
-
-          return {
-            success: true,
-            message: `Reminder set for ${formatScheduleTime(parsed.date)}`,
-            data: { taskId: task.id, scheduledAt: parsed.date.toISOString() },
-          };
-        }
       }
     } catch (error) {
       logger.error("Failed to manage task", error);

@@ -1,8 +1,8 @@
 import {
   getIssues,
   type BugsinkIssue,
-  type BugsinkIssueLevel,
 } from "../../lib/bugsink/index.ts";
+import { getLevelEmoji } from "../../lib/bugsink/format.ts";
 import { formatJson } from "../../lib/output/index.ts";
 
 export type IssuesOptions = {
@@ -10,21 +10,6 @@ export type IssuesOptions = {
   project?: string | undefined;
   limit?: number | undefined;
 };
-
-function getLevelEmoji(level: BugsinkIssueLevel): string {
-  switch (level) {
-    case "fatal":
-      return "\uD83D\uDCA5";
-    case "error":
-      return "\uD83D\uDD34";
-    case "warning":
-      return "\uD83D\uDFE1";
-    case "info":
-      return "\uD83D\uDD35";
-    case "debug":
-      return "\u26AA";
-  }
-}
 
 function formatIssue(issue: BugsinkIssue): string {
   const lines: string[] = [];

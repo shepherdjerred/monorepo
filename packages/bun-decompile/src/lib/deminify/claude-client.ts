@@ -139,7 +139,7 @@ export class ClaudeClient {
     const codeMatch = /```(?:javascript|js)?\n?([\s\S]*?)```/.exec(
       responseText,
     );
-    if (!codeMatch?.[1]) {
+    if (codeMatch?.[1] == null || codeMatch[1].length === 0) {
       throw new Error("No code block found in response");
     }
 
@@ -152,14 +152,16 @@ export class ClaudeClient {
 
     // Try to extract metadata JSON
     let suggestedName =
-      context.targetFunction.originalName || "anonymousFunction";
+      context.targetFunction.originalName.length > 0
+        ? context.targetFunction.originalName
+        : "anonymousFunction";
     let confidence = 0.5;
     let parameterNames: Record<string, string> = {};
     let localVariableNames: Record<string, string> = {};
 
     // Look for JSON after the code block
     const jsonMatch = /```[\s\S]*?```\s*(\{[\s\S]*\})/.exec(responseText);
-    if (jsonMatch?.[1]) {
+    if (jsonMatch?.[1] != null && jsonMatch[1].length > 0) {
       try {
         const metadata = JSON.parse(jsonMatch[1]) as {
           suggestedName?: string;
@@ -167,16 +169,19 @@ export class ClaudeClient {
           parameterNames?: Record<string, string>;
           localVariableNames?: Record<string, string>;
         };
-        if (metadata.suggestedName) {
+        if (
+          metadata.suggestedName != null &&
+          metadata.suggestedName.length > 0
+        ) {
           suggestedName = metadata.suggestedName;
         }
         if (typeof metadata.confidence === "number") {
           confidence = metadata.confidence;
         }
-        if (metadata.parameterNames) {
+        if (metadata.parameterNames != null) {
           parameterNames = metadata.parameterNames;
         }
-        if (metadata.localVariableNames) {
+        if (metadata.localVariableNames != null) {
           localVariableNames = metadata.localVariableNames;
         }
       } catch {
@@ -190,7 +195,7 @@ export class ClaudeClient {
         /(?:function|const|let|var)\s+([a-zA-Z_$][\w$]*)/.exec(
           deminifiedSource,
         );
-      if (funcNameMatch?.[1]) {
+      if (funcNameMatch?.[1] != null && funcNameMatch[1].length > 0) {
         suggestedName = funcNameMatch[1];
       }
     }

@@ -250,8 +250,14 @@ export function generatePRBody(
 ): string {
   const fileList = changes
     .map((c) => {
-      const icon =
-        c.changeType === "create" ? "+" : (c.changeType === "delete" ? "-" : "~");
+      let icon: string;
+      if (c.changeType === "create") {
+        icon = "+";
+      } else if (c.changeType === "delete") {
+        icon = "-";
+      } else {
+        icon = "~";
+      }
       return `- ${icon} \`${c.filePath}\``;
     })
     .join("\n");

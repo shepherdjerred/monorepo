@@ -1,9 +1,15 @@
 import { createTool } from "../../../voltagent/tools/create-tool.js";
 import { z } from "zod";
-import type { TextChannel } from "discord.js";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/logger.js";
 import { validateSnowflakes } from "./validation.js";
+import {
+  handleListWebhooks,
+  handleCreateWebhook,
+  handleModifyWebhook,
+  handleDeleteWebhook,
+  handleExecuteWebhook,
+} from "./webhook-actions.js";
 
 export const manageWebhookTool = createTool({
   id: "manage-webhook",
@@ -84,153 +90,35 @@ export const manageWebhookTool = createTool({
       const client = getDiscordClient();
 
       switch (ctx.action) {
-        case "list": {
-          if (ctx.guildId == null || ctx.guildId.length === 0) {
-            return {
-              success: false,
-              message: "guildId is required for listing webhooks",
-            };
-          }
-          const guild = await client.guilds.fetch(ctx.guildId);
-          let webhooks;
-          if (ctx.channelId != null && ctx.channelId.length > 0) {
-            const channel = await client.channels.fetch(ctx.channelId);
-            if (channel?.isTextBased() !== true || !("fetchWebhooks" in channel)) {
-              return {
-                success: false,
-                message: "Channel does not support webhooks",
-              };
-            }
-            webhooks = await (channel as TextChannel).fetchWebhooks();
-          } else {
-            webhooks = await guild.fetchWebhooks();
-          }
-          const webhookList = webhooks.map((webhook) => ({
-            id: webhook.id,
-            name: webhook.name,
-            channelId: webhook.channelId,
-            url: webhook.url,
-          }));
-          return {
-            success: true,
-            message: `Found ${String(webhookList.length)} webhooks`,
-            data: webhookList,
-          };
-        }
-
-        case "create": {
-          if ((ctx.channelId == null || ctx.channelId.length === 0) || (ctx.name == null || ctx.name.length === 0)) {
-            return {
-              success: false,
-              message: "channelId and name are required for creating a webhook",
-            };
-          }
-          const channel = await client.channels.fetch(ctx.channelId);
-          if (channel?.isTextBased() !== true || !("createWebhook" in channel)) {
-            return {
-              success: false,
-              message: "Channel does not support webhooks",
-            };
-          }
-          const webhook = await (channel as TextChannel).createWebhook({
-            name: ctx.name,
-            ...(ctx.reason !== undefined && { reason: ctx.reason }),
-          });
-          return {
-            success: true,
-            message: `Created webhook "${webhook.name}"`,
-            data: {
-              webhookId: webhook.id,
-              webhookUrl: webhook.url,
-            },
-          };
-        }
-
-        case "modify": {
-          if (ctx.webhookId == null || ctx.webhookId.length === 0) {
-            return {
-              success: false,
-              message: "webhookId is required for modifying a webhook",
-            };
-          }
-          const webhook = await client.fetchWebhook(ctx.webhookId);
-          const hasChanges =
-            ctx.name !== undefined ||
-            ctx.avatarUrl !== undefined ||
-            ctx.channelId !== undefined;
-          if (!hasChanges) {
-            return {
-              success: false,
-              message: "No changes specified",
-            };
-          }
-          const editOptions: Parameters<typeof webhook.edit>[0] = {};
-          if (ctx.name !== undefined) {
-            editOptions.name = ctx.name;
-          }
-          if (ctx.avatarUrl !== undefined) {
-            editOptions.avatar = ctx.avatarUrl;
-          }
-          if (ctx.channelId !== undefined) {
-            editOptions.channel = ctx.channelId;
-          }
-          if (ctx.reason !== undefined) {
-            editOptions.reason = ctx.reason;
-          }
-          await webhook.edit(editOptions);
-          return {
-            success: true,
-            message: `Updated webhook "${webhook.name}"`,
-          };
-        }
-
-        case "delete": {
-          if (ctx.webhookId == null || ctx.webhookId.length === 0) {
-            return {
-              success: false,
-              message: "webhookId is required for deleting a webhook",
-            };
-          }
-          const webhook = await client.fetchWebhook(ctx.webhookId);
-          const webhookName = webhook.name;
-          await webhook.delete(ctx.reason);
-          return {
-            success: true,
-            message: `Deleted webhook "${webhookName}"`,
-          };
-        }
-
-        case "execute": {
-          if ((ctx.webhookId == null || ctx.webhookId.length === 0) || (ctx.webhookToken == null || ctx.webhookToken.length === 0)) {
-            return {
-              success: false,
-              message:
-                "webhookId and webhookToken are required for executing a webhook",
-            };
-          }
-          if (ctx.content == null || ctx.content.length === 0) {
-            return {
-              success: false,
-              message: "content is required for executing a webhook",
-            };
-          }
-          const webhook = await client.fetchWebhook(
+        case "list":
+          return await handleListWebhooks(client, ctx.guildId, ctx.channelId);
+        case "create":
+          return await handleCreateWebhook(
+            client,
+            ctx.channelId,
+            ctx.name,
+            ctx.reason,
+          );
+        case "modify":
+          return await handleModifyWebhook(
+            client,
+            ctx.webhookId,
+            ctx.name,
+            ctx.avatarUrl,
+            ctx.channelId,
+            ctx.reason,
+          );
+        case "delete":
+          return await handleDeleteWebhook(client, ctx.webhookId, ctx.reason);
+        case "execute":
+          return await handleExecuteWebhook(
+            client,
             ctx.webhookId,
             ctx.webhookToken,
+            ctx.content,
+            ctx.username,
+            ctx.avatarUrl,
           );
-          const sentMessage = await webhook.send({
-            content: ctx.content,
-            ...(ctx.username !== undefined && { username: ctx.username }),
-            ...(ctx.avatarUrl !== undefined && { avatarURL: ctx.avatarUrl }),
-          });
-          return {
-            success: true,
-            message: "Webhook message sent",
-            data: {
-              messageId: sentMessage.id,
-            },
-          };
-        }
       }
     } catch (error) {
       logger.error("Failed to manage webhook", error);

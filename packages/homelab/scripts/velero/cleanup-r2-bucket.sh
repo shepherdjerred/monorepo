@@ -36,7 +36,7 @@ aws s3 ls "s3://${BUCKET}/${PREFIX_BACKUPS}" \
   2>&1 | head -20 || echo "No files found or directory doesn't exist"
 
 echo ""
-read -p "❓ Delete all backup files? (yes/no): " confirm
+read -rp "❓ Delete all backup files? (yes/no): " confirm
 
 if [ "$confirm" = "yes" ]; then
   echo "🗑️  Deleting backup files from s3://${BUCKET}/${PREFIX_BACKUPS}..."
@@ -58,7 +58,7 @@ aws s3 ls "s3://${BUCKET}/${PREFIX_ZFS}" \
   2>&1 | head -20 || echo "No files found or directory doesn't exist"
 
 echo ""
-read -p "❓ Delete all ZFS snapshot files? (yes/no): " confirm_zfs
+read -rp "❓ Delete all ZFS snapshot files? (yes/no): " confirm_zfs
 
 if [ "$confirm_zfs" = "yes" ]; then
   echo "🗑️  Deleting ZFS snapshots from s3://${BUCKET}/${PREFIX_ZFS}..."

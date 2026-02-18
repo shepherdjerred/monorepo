@@ -39,3 +39,9 @@ packages/dpp/
 lefthook-local.yml
 
 **/.eslintcache
+
+# Application logs
+logs/
+
+# Test coverage output
+coverage/

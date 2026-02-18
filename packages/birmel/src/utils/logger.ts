@@ -42,7 +42,9 @@ function formatLogEntry(
     level,
     message,
     ...traceContext,
-    ...(moduleName != null && moduleName.length > 0 ? { module: moduleName } : {}),
+    ...(moduleName != null && moduleName.length > 0
+      ? { module: moduleName }
+      : {}),
     ...meta,
   };
 
@@ -87,18 +89,20 @@ function createLogger(moduleName?: string): Logger {
       meta?: Record<string, unknown>,
     ): void {
       if (LOG_LEVELS.error >= getLogLevel()) {
-        const errorMeta =
-          error instanceof Error
-            ? {
-                error: {
-                  name: error.name,
-                  message: error.message,
-                  stack: error.stack,
-                },
-              }
-            : (error === undefined
-              ? {}
-              : { error });
+        let errorMeta: Record<string, unknown>;
+        if (error instanceof Error) {
+          errorMeta = {
+            error: {
+              name: error.name,
+              message: error.message,
+              stack: error.stack,
+            },
+          };
+        } else if (error === undefined) {
+          errorMeta = {};
+        } else {
+          errorMeta = { error };
+        }
         console.error(
           formatLogEntry(
             "error",
@@ -111,7 +115,10 @@ function createLogger(moduleName?: string): Logger {
     },
 
     child(module: string): Logger {
-      const childModule = moduleName != null && moduleName.length > 0 ? `${moduleName}.${module}` : module;
+      const childModule =
+        moduleName != null && moduleName.length > 0
+          ? `${moduleName}.${module}`
+          : module;
       return createLogger(childModule);
     },
   };

@@ -1,10 +1,17 @@
 import { createTool } from "../../../voltagent/tools/create-tool.js";
 import { z } from "zod";
-import { QueryType, QueueRepeatMode } from "discord-player";
-import type { VoiceChannel } from "discord.js";
-import { getDiscordClient } from "../../../discord/index.js";
-import { getMusicPlayer } from "../../../music/index.js";
 import { logger } from "../../../utils/index.js";
+import {
+  handlePlay,
+  handlePause,
+  handleResume,
+  handleSkip,
+  handleStop,
+  handleSeek,
+  handleSetVolume,
+  handleSetLoop,
+  handleNowPlaying,
+} from "./playback-actions.js";
 
 export const musicPlaybackTool = createTool({
   id: "music-playback",
@@ -64,172 +71,30 @@ export const musicPlaybackTool = createTool({
   }),
   execute: async (ctx) => {
     try {
-      const player = getMusicPlayer();
-      const queue = player.queues.get(ctx.guildId);
-
       switch (ctx.action) {
-        case "play": {
-          if ((ctx.channelId == null || ctx.channelId.length === 0) || (ctx.voiceChannelId == null || ctx.voiceChannelId.length === 0) || (ctx.query == null || ctx.query.length === 0)) {
-            return {
-              success: false,
-              message:
-                "channelId, voiceChannelId, and query are required for play",
-            };
-          }
-          const client = getDiscordClient();
-          const channel = await client.channels.fetch(ctx.channelId);
-          const voiceChannel = await client.channels.fetch(ctx.voiceChannelId);
-          if (voiceChannel?.isVoiceBased() !== true) {
-            return { success: false, message: "Invalid voice channel" };
-          }
-          const searchResult = await player.search(ctx.query, {
-            ...(client.user != null && { requestedBy: client.user }),
-            searchEngine: QueryType.AUTO,
-          });
-          if (!searchResult.hasTracks()) {
-            return { success: false, message: "No results found" };
-          }
-          const result = await player.play(
-            voiceChannel as VoiceChannel,
-            searchResult,
-            {
-              nodeOptions: {
-                metadata: channel,
-                leaveOnEmpty: true,
-                leaveOnEmptyCooldown: 60_000,
-                leaveOnEnd: false,
-                leaveOnEndCooldown: 60_000,
-              },
-            },
+        case "play":
+          return await handlePlay(
+            ctx.guildId,
+            ctx.channelId,
+            ctx.voiceChannelId,
+            ctx.query,
           );
-          const track = result.track;
-          logger.info("Music playback started", {
-            guildId: ctx.guildId,
-            track: track.title,
-          });
-          return {
-            success: true,
-            message: `Playing: ${track.title}`,
-            data: {
-              title: track.title,
-              duration: track.duration,
-              url: track.url,
-            },
-          };
-        }
-
-        case "pause": {
-          if (queue?.isPlaying() !== true) {
-            return { success: false, message: "Nothing is playing" };
-          }
-          queue.node.pause();
-          return { success: true, message: "Paused playback" };
-        }
-
-        case "resume": {
-          if (queue == null) {
-            return { success: false, message: "No active queue" };
-          }
-          queue.node.resume();
-          return { success: true, message: "Resumed playback" };
-        }
-
-        case "skip": {
-          if (queue?.isPlaying() !== true) {
-            return { success: false, message: "Nothing is playing" };
-          }
-          const track = queue.currentTrack;
-          queue.node.skip();
-          return {
-            success: true,
-            message: `Skipped: ${track?.title ?? "Unknown"}`,
-          };
-        }
-
-        case "stop": {
-          if (queue == null) {
-            return { success: false, message: "No active queue" };
-          }
-          queue.delete();
-          return {
-            success: true,
-            message: "Stopped playback and cleared queue",
-          };
-        }
-
-        case "seek": {
-          if (ctx.seconds === undefined) {
-            return { success: false, message: "seconds is required for seek" };
-          }
-          if (queue?.isPlaying() !== true) {
-            return { success: false, message: "Nothing is playing" };
-          }
-          const success = await queue.node.seek(ctx.seconds * 1000);
-          if (!success) {
-            return { success: false, message: "Failed to seek" };
-          }
-          const mins = Math.floor(ctx.seconds / 60);
-          const secs = ctx.seconds % 60;
-          return {
-            success: true,
-            message: `Seeked to ${String(mins)}:${String(secs).padStart(2, "0")}`,
-          };
-        }
-
-        case "set-volume": {
-          if (ctx.volume === undefined) {
-            return {
-              success: false,
-              message: "volume is required for set-volume",
-            };
-          }
-          if (queue == null) {
-            return { success: false, message: "No active queue" };
-          }
-          queue.node.setVolume(ctx.volume);
-          return {
-            success: true,
-            message: `Volume set to ${String(ctx.volume)}%`,
-          };
-        }
-
-        case "set-loop": {
-          if (ctx.loopMode == null || ctx.loopMode.length === 0) {
-            return {
-              success: false,
-              message: "loopMode is required for set-loop",
-            };
-          }
-          if (queue == null) {
-            return { success: false, message: "No active queue" };
-          }
-          const modeMap = {
-            off: QueueRepeatMode.OFF,
-            track: QueueRepeatMode.TRACK,
-            queue: QueueRepeatMode.QUEUE,
-            autoplay: QueueRepeatMode.AUTOPLAY,
-          };
-          queue.setRepeatMode(modeMap[ctx.loopMode]);
-          return { success: true, message: `Loop mode set to ${ctx.loopMode}` };
-        }
-
-        case "now-playing": {
-          if (queue?.isPlaying() !== true || !queue.currentTrack) {
-            return { success: false, message: "Nothing is playing" };
-          }
-          const track = queue.currentTrack;
-          const progress = queue.node.createProgressBar();
-          return {
-            success: true,
-            message: `Now playing: ${track.title}`,
-            data: {
-              title: track.title,
-              duration: track.duration,
-              url: track.url,
-              progress: progress ?? "",
-            },
-          };
-        }
+        case "pause":
+          return handlePause(ctx.guildId);
+        case "resume":
+          return handleResume(ctx.guildId);
+        case "skip":
+          return handleSkip(ctx.guildId);
+        case "stop":
+          return handleStop(ctx.guildId);
+        case "seek":
+          return await handleSeek(ctx.guildId, ctx.seconds);
+        case "set-volume":
+          return handleSetVolume(ctx.guildId, ctx.volume);
+        case "set-loop":
+          return handleSetLoop(ctx.guildId, ctx.loopMode);
+        case "now-playing":
+          return handleNowPlaying(ctx.guildId);
       }
     } catch (error) {
       logger.error("Failed music playback action", error);

@@ -150,7 +150,12 @@ export const manageGuildTool = createTool({
           });
           const entries = auditLogs.entries.map((entry) => {
             let targetId: string | null = null;
-            if (entry.target && "id" in entry.target && entry.target.id != null && entry.target.id.length > 0) {
+            if (
+              entry.target &&
+              "id" in entry.target &&
+              entry.target.id != null &&
+              entry.target.id.length > 0
+            ) {
               targetId = entry.target.id;
             }
             return {

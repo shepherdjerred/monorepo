@@ -88,6 +88,22 @@
     "packages/scout-for-lol/packages/ui": {
       "entry": ["src/index.ts"],
       "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/clauderon/web/client": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/clauderon/web/frontend": {
+      "entry": ["src/main.tsx"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/clauderon/web/shared": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/clauderon/docs": {
+      "entry": ["astro.config.mjs", "src/**/*.{ts,tsx,astro,mdx}"],
+      "project": ["src/**/*.{ts,tsx,astro,mdx}", "*.mjs"]
     }
   },
   "ignore": ["**/generated/**", "**/dist/**", "archive/**"]

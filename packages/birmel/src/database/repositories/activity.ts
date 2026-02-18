@@ -43,12 +43,13 @@ export function recordMessageActivity(input: RecordMessageActivityInput): void {
         userId: input.userId,
         channelId: input.channelId,
         activityType: "message",
-        metadata: input.characterCount == null
-          ? JSON.stringify({ messageId: input.messageId })
-          : JSON.stringify({
-              messageId: input.messageId,
-              characterCount: input.characterCount,
-            }),
+        metadata:
+          input.characterCount == null
+            ? JSON.stringify({ messageId: input.messageId })
+            : JSON.stringify({
+                messageId: input.messageId,
+                characterCount: input.characterCount,
+              }),
       },
     })
     .catch((error: unknown) => {

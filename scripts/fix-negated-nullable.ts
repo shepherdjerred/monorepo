@@ -25,15 +25,21 @@ type EslintResult = {
   messages: EslintMessage[];
 };
 
-async function getEslintIssues(pkgPath: string): Promise<Map<string, EslintMessage[]>> {
-  const result = await $`cd ${path.join(ROOT, pkgPath)} && bunx eslint . --format json`.quiet().nothrow();
+async function getEslintIssues(
+  pkgPath: string,
+): Promise<Map<string, EslintMessage[]>> {
+  const result =
+    await $`cd ${path.join(ROOT, pkgPath)} && bunx eslint . --format json`
+      .quiet()
+      .nothrow();
   const data = JSON.parse(result.stdout.toString()) as EslintResult[];
 
   const issuesByFile = new Map<string, EslintMessage[]>();
   for (const file of data) {
-    const relevant = file.messages.filter(m =>
-      m.ruleId === "@typescript-eslint/strict-boolean-expressions" ||
-      m.ruleId === "@typescript-eslint/no-unnecessary-condition"
+    const relevant = file.messages.filter(
+      (m) =>
+        m.ruleId === "@typescript-eslint/strict-boolean-expressions" ||
+        m.ruleId === "@typescript-eslint/no-unnecessary-condition",
     );
     if (relevant.length > 0) {
       issuesByFile.set(file.filePath, relevant);
@@ -54,12 +60,17 @@ function fixLine(line: string, col: number, message: string): string {
   let depth = 0;
   while (exprEnd < line.length) {
     const ch = line[exprEnd];
-    if (ch === '(') depth++;
-    else if (ch === ')') {
+    if (ch === "(") depth++;
+    else if (ch === ")") {
       if (depth === 0) break;
       depth--;
-    }
-    else if (ch === ' ' || ch === '|' || ch === '&' || ch === ')' || ch === ',') {
+    } else if (
+      ch === " " ||
+      ch === "|" ||
+      ch === "&" ||
+      ch === ")" ||
+      ch === ","
+    ) {
       if (depth === 0) break;
     }
     exprEnd++;
@@ -75,7 +86,7 @@ function fixLine(line: string, col: number, message: string): string {
   const isAny = message.includes("any value");
 
   // Check if negated (! before expression)
-  const isNegated = charBeforeCol === '!';
+  const isNegated = charBeforeCol === "!";
 
   let replacement: string;
   if (isNullableString) {
@@ -124,7 +135,9 @@ async function processPackage(pkgPath: string): Promise<number> {
   let totalFixes = 0;
 
   for (const [filePath, messages] of issuesByFile) {
-    const sbeMessages = messages.filter(m => m.ruleId === "@typescript-eslint/strict-boolean-expressions");
+    const sbeMessages = messages.filter(
+      (m) => m.ruleId === "@typescript-eslint/strict-boolean-expressions",
+    );
     if (sbeMessages.length === 0) continue;
 
     const content = fs.readFileSync(filePath, "utf-8");
@@ -164,7 +177,9 @@ async function processPackage(pkgPath: string): Promise<number> {
   // Now handle no-unnecessary-condition (optional chains after null checks)
   const issuesByFile2 = await getEslintIssues(pkgPath);
   for (const [filePath, messages] of issuesByFile2) {
-    const nucMessages = messages.filter(m => m.ruleId === "@typescript-eslint/no-unnecessary-condition");
+    const nucMessages = messages.filter(
+      (m) => m.ruleId === "@typescript-eslint/no-unnecessary-condition",
+    );
     if (nucMessages.length === 0) continue;
 
     const content = fs.readFileSync(filePath, "utf-8");
@@ -204,8 +219,12 @@ async function processPackage(pkgPath: string): Promise<number> {
 async function main() {
   const packages = process.argv.slice(2);
   if (packages.length === 0) {
-    console.log("Usage: bun run scripts/fix-negated-nullable.ts <pkg1> <pkg2> ...");
-    console.log("Example: bun run scripts/fix-negated-nullable.ts packages/birmel packages/clauderon/web/frontend");
+    console.log(
+      "Usage: bun run scripts/fix-negated-nullable.ts <pkg1> <pkg2> ...",
+    );
+    console.log(
+      "Example: bun run scripts/fix-negated-nullable.ts packages/birmel packages/clauderon/web/frontend",
+    );
     process.exit(1);
   }
 

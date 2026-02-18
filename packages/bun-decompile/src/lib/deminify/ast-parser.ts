@@ -132,15 +132,17 @@ export function parseAndExtractFunctions(
       }
       if (otherFunc.start > func.start && otherFunc.end < func.end) {
         // otherFunc is nested inside func
-        const existingParent = otherFunc.parentId
-          ? functions.find((f) => f.id === otherFunc.parentId)
-          : undefined;
+        const existingParent =
+          otherFunc.parentId != null && otherFunc.parentId.length > 0
+            ? functions.find((f) => f.id === otherFunc.parentId)
+            : undefined;
         if (
-          !otherFunc.parentId ||
-          (existingParent && func.start > existingParent.start)
+          otherFunc.parentId == null ||
+          otherFunc.parentId.length === 0 ||
+          (existingParent != null && func.start > existingParent.start)
         ) {
           // func is a closer parent (more deeply nested)
-          if (otherFunc.parentId) {
+          if (otherFunc.parentId != null && otherFunc.parentId.length > 0) {
             const oldParent = functions.find(
               (f) => f.id === otherFunc.parentId,
             );
@@ -208,7 +210,7 @@ function extractFunction(
 /** Get function name from node or infer from context */
 function getFunctionName(node: FunctionNode, ancestors: Node[]): string {
   // Named function
-  if (node.id?.name) {
+  if (node.id?.name != null && node.id.name.length > 0) {
     return node.id.name;
   }
 
@@ -216,7 +218,7 @@ function getFunctionName(node: FunctionNode, ancestors: Node[]): string {
   const parent = ancestors.at(-2);
   if (parent?.type === "VariableDeclarator") {
     const varDecl = parent as Node & { id?: { name?: string } };
-    if (varDecl.id?.name) {
+    if (varDecl.id?.name != null && varDecl.id.name.length > 0) {
       return varDecl.id.name;
     }
   }
@@ -334,7 +336,7 @@ export function extractCallees(node: Node, _source: string): string[] {
     CallExpression(callNode: Node) {
       const call = callNode as CallExpressionNode;
       const name = getCalleeName(call.callee);
-      if (name) {
+      if (name != null && name.length > 0) {
         callees.add(name);
       }
     },

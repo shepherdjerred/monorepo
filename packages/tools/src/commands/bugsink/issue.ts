@@ -3,28 +3,13 @@ import {
   getLatestEvent,
   type BugsinkIssue,
   type BugsinkEvent,
-  type BugsinkIssueLevel,
 } from "../../lib/bugsink/index.ts";
+import { getLevelEmoji } from "../../lib/bugsink/format.ts";
 import { formatJson } from "../../lib/output/index.ts";
 
 export type IssueOptions = {
   json?: boolean | undefined;
 };
-
-function getLevelEmoji(level: BugsinkIssueLevel): string {
-  switch (level) {
-    case "fatal":
-      return "\uD83D\uDCA5";
-    case "error":
-      return "\uD83D\uDD34";
-    case "warning":
-      return "\uD83D\uDFE1";
-    case "info":
-      return "\uD83D\uDD35";
-    case "debug":
-      return "\u26AA";
-  }
-}
 
 function formatStacktrace(event: BugsinkEvent): string[] {
   const lines: string[] = [];
@@ -37,14 +22,18 @@ function formatStacktrace(event: BugsinkEvent): string[] {
     lines.push(`**${exception.type}:** ${exception.value}`);
     lines.push("");
 
-    if (exception.stacktrace != null && exception.stacktrace.frames.length > 0) {
+    if (
+      exception.stacktrace != null &&
+      exception.stacktrace.frames.length > 0
+    ) {
       lines.push("```");
       // Show frames in reverse order (most recent first)
       const frames = [...exception.stacktrace.frames].reverse().slice(0, 10);
       for (const frame of frames) {
-        const location = frame.lineno == null
-          ? frame.filename
-          : `${frame.filename}:${String(frame.lineno)}`;
+        const location =
+          frame.lineno == null
+            ? frame.filename
+            : `${frame.filename}:${String(frame.lineno)}`;
         const inApp = frame.in_app ? "" : " (library)";
         lines.push(`  at ${frame.function} (${location})${inApp}`);
       }
@@ -62,7 +51,10 @@ function formatStacktrace(event: BugsinkEvent): string[] {
 
 function formatMetadata(issue: BugsinkIssue): string[] {
   const lines: string[] = [];
-  if ((issue.metadata.type != null && issue.metadata.type.length > 0) || (issue.metadata.value != null && issue.metadata.value.length > 0)) {
+  if (
+    (issue.metadata.type != null && issue.metadata.type.length > 0) ||
+    (issue.metadata.value != null && issue.metadata.value.length > 0)
+  ) {
     lines.push("### Error Info");
     lines.push("");
     if (issue.metadata.type != null && issue.metadata.type.length > 0) {
@@ -94,11 +86,7 @@ function formatLatestEvent(latestEvent: BugsinkEvent): string[] {
   if (latestEvent.user != null) {
     const user = latestEvent.user;
     const userInfo =
-      user.email ??
-      user.username ??
-      user.id ??
-      user.ip_address ??
-      "anonymous";
+      user.email ?? user.username ?? user.id ?? user.ip_address ?? "anonymous";
     lines.push(`- **User:** ${userInfo}`);
   }
   lines.push("");

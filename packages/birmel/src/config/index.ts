@@ -155,13 +155,15 @@ function loadConfigFromEnv(): Config {
       ),
       oauthPort: parseNumber(process.env["EDITOR_OAUTH_PORT"], 4112),
       oauthHost: process.env["EDITOR_OAUTH_HOST"] ?? "0.0.0.0",
-      github: process.env["EDITOR_GITHUB_CLIENT_ID"] != null && process.env["EDITOR_GITHUB_CLIENT_ID"].length > 0
-        ? {
-            clientId: process.env["EDITOR_GITHUB_CLIENT_ID"] ?? "",
-            clientSecret: process.env["EDITOR_GITHUB_CLIENT_SECRET"] ?? "",
-            callbackUrl: process.env["EDITOR_GITHUB_CALLBACK_URL"] ?? "",
-          }
-        : undefined,
+      github:
+        process.env["EDITOR_GITHUB_CLIENT_ID"] != null &&
+        process.env["EDITOR_GITHUB_CLIENT_ID"].length > 0
+          ? {
+              clientId: process.env["EDITOR_GITHUB_CLIENT_ID"] ?? "",
+              clientSecret: process.env["EDITOR_GITHUB_CLIENT_SECRET"] ?? "",
+              callbackUrl: process.env["EDITOR_GITHUB_CALLBACK_URL"] ?? "",
+            }
+          : undefined,
     },
   };
 

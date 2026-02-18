@@ -28,7 +28,7 @@ export class InvalidTrailerError extends DecompileError {
 export class UnsupportedVersionError extends DecompileError {
   constructor(version?: string) {
     super(
-      version
+      version != null && version.length > 0
         ? `Unsupported Bun binary format version: ${version}`
         : "Unsupported or unrecognized Bun binary format",
     );
@@ -51,7 +51,7 @@ export class ExtractionError extends DecompileError {
     public readonly path?: string,
   ) {
     super(
-      path
+      path != null && path.length > 0
         ? `Extraction failed for ${path}: ${reason}`
         : `Extraction failed: ${reason}`,
     );

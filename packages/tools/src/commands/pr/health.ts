@@ -21,9 +21,10 @@ export async function healthCommand(
   options: HealthOptions = {},
 ): Promise<void> {
   // Get PR - either by number or from current branch
-  const pr = prNumber != null && prNumber.length > 0
-    ? await getPullRequest(prNumber, options.repo)
-    : await getPullRequestForBranch(options.repo);
+  const pr =
+    prNumber != null && prNumber.length > 0
+      ? await getPullRequest(prNumber, options.repo)
+      : await getPullRequestForBranch(options.repo);
 
   if (pr == null) {
     console.error(

@@ -57,7 +57,7 @@ export async function retry<T>(
   throw lastError;
 }
 
-export function isRetryableError(error: unknown): boolean {
+export function isRetryableError(error?: unknown): boolean {
   if (error instanceof Error) {
     // Network errors
     if (error.message.includes("ECONNRESET")) {

@@ -8,8 +8,8 @@ import { ConfirmDialog } from "./ConfirmDialog";
 import { StatusDialog } from "./StatusDialog";
 import { EditSessionDialog } from "./EditSessionDialog";
 import { StartupHealthModal } from "./StartupHealthModal";
-import { RecreateConfirmModal } from "./RecreateConfirmModal";
 import { RecreateBlockedModal } from "./RecreateBlockedModal";
+import { RecreateModalWrapper } from "./RecreateModalCallbacks";
 import { useSessionContext } from "../contexts/SessionContext";
 import { toast } from "sonner";
 import { Plus, RefreshCw, Info } from "lucide-react";
@@ -58,7 +58,8 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get("tab");
     if (
-      (tabParam != null && tabParam.length > 0) &&
+      tabParam != null &&
+      tabParam.length > 0 &&
       ["all", "running", "idle", "completed", "archived"].includes(tabParam)
     ) {
       return tabParam as FilterStatus;
@@ -519,93 +520,19 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
 
       {/* Recreate Confirm Modal */}
       {recreateModalSession != null && (
-        <RecreateConfirmModal
-          open={true}
+        <RecreateModalWrapper
+          session={recreateModalSession.session}
+          healthReport={recreateModalSession.healthReport}
           onOpenChange={(open) => {
             if (!open) {
               setRecreateModalSession(null);
             }
           }}
-          session={recreateModalSession.session}
-          healthReport={recreateModalSession.healthReport}
-          onStart={() => {
-            void startSession(recreateModalSession.session.id)
-              .then(() => {
-                toast.success(
-                  `Session "${recreateModalSession.session.name}" started`,
-                );
-              })
-              .catch((err: unknown) => {
-                toast.error(
-                  `Failed to start: ${err instanceof Error ? err.message : String(err)}`,
-                );
-              });
-          }}
-          onWake={() => {
-            void wakeSession(recreateModalSession.session.id)
-              .then(() => {
-                toast.success(
-                  `Session "${recreateModalSession.session.name}" is waking up`,
-                );
-              })
-              .catch((err: unknown) => {
-                toast.error(
-                  `Failed to wake: ${err instanceof Error ? err.message : String(err)}`,
-                );
-              });
-          }}
-          onRecreate={() => {
-            void recreateSession(recreateModalSession.session.id)
-              .then(() => {
-                toast.success(
-                  `Session "${recreateModalSession.session.name}" is being recreated`,
-                );
-              })
-              .catch((err: unknown) => {
-                toast.error(
-                  `Failed to recreate: ${err instanceof Error ? err.message : String(err)}`,
-                );
-              });
-          }}
-          onRecreateFresh={() => {
-            void recreateSession(recreateModalSession.session.id)
-              .then(() => {
-                toast.success(
-                  `Session "${recreateModalSession.session.name}" is being recreated fresh`,
-                );
-              })
-              .catch((err: unknown) => {
-                toast.error(
-                  `Failed to recreate fresh: ${err instanceof Error ? err.message : String(err)}`,
-                );
-              });
-          }}
-          onUpdateImage={() => {
-            void refreshSession(recreateModalSession.session.id)
-              .then(() => {
-                toast.success(
-                  `Session "${recreateModalSession.session.name}" is being refreshed with latest image`,
-                );
-              })
-              .catch((err: unknown) => {
-                toast.error(
-                  `Failed to update image: ${err instanceof Error ? err.message : String(err)}`,
-                );
-              });
-          }}
-          onCleanup={() => {
-            void cleanupSession(recreateModalSession.session.id)
-              .then(() => {
-                toast.success(
-                  `Session "${recreateModalSession.session.name}" cleaned up`,
-                );
-              })
-              .catch((err: unknown) => {
-                toast.error(
-                  `Failed to cleanup: ${err instanceof Error ? err.message : String(err)}`,
-                );
-              });
-          }}
+          startSession={startSession}
+          wakeSession={wakeSession}
+          recreateSession={recreateSession}
+          refreshSession={refreshSession}
+          cleanupSession={cleanupSession}
         />
       )}
 

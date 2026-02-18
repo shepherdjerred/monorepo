@@ -1,5 +1,5 @@
 import type { TServiceParams } from "@digital-alchemy/core";
-import { runIf, runParallel, verifyAfterDelay, withTimeout } from "../util.ts";
+import { isAnyoneHome, runIf, runParallel, verifyAfterDelay, withTimeout } from "../util.ts";
 import { instrumentWorkflow } from "../metrics.ts";
 import { z } from "zod";
 
@@ -41,15 +41,9 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
   const officeHeater = hass.refBy.id("climate.office_thermostat");
   // TODO: Re-enable when living room thermostat is back online
   // const livingRoomClimate = hass.refBy.id("climate.living_room");
-  const personJerred = hass.refBy.id("person.jerred");
-  const personShuxin = hass.refBy.id("person.shuxin");
   const pcPowerSensor = hass.refBy.id(
     "sensor.sonoff_desktop_pc002166152_power",
   );
-
-  function isAnyoneHome() {
-    return personJerred.state === "home" || personShuxin.state === "home";
-  }
 
   /**
    * Check if PC is generating significant heat
@@ -172,7 +166,7 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
     exec: () =>
       instrumentWorkflow("climate_pc_heat_check", async () => {
         await withTimeout(
-          runIf(isAnyoneHome(), async () => {
+          runIf(isAnyoneHome(hass), async () => {
             const pcGeneratingHeat = isPcGeneratingHeat();
 
             // Only adjust office heating based on PC state
@@ -210,7 +204,7 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
     exec: () =>
       instrumentWorkflow("climate_bedtime_prep", async () => {
         await withTimeout(
-          runIf(isAnyoneHome(), async () => {
+          runIf(isAnyoneHome(hass), async () => {
             logger.info(
               "Setting bedtime climate - comfortable for falling asleep",
             );
@@ -231,7 +225,7 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
     exec: () =>
       instrumentWorkflow("climate_deep_sleep", async () => {
         await withTimeout(
-          runIf(isAnyoneHome(), async () => {
+          runIf(isAnyoneHome(hass), async () => {
             logger.info("Setting deep sleep climate - cooler for better sleep");
             await setClimateZones(TEMP_DEEP_SLEEP, TEMP_DEEP_SLEEP);
           }),
@@ -250,7 +244,7 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
     exec: () =>
       instrumentWorkflow("climate_pre_wake_weekday", async () => {
         await withTimeout(
-          runIf(isAnyoneHome(), async () => {
+          runIf(isAnyoneHome(hass), async () => {
             logger.info(
               "Pre-wake heating for weekday - warming house before wake time",
             );
@@ -271,7 +265,7 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
     exec: () =>
       instrumentWorkflow("climate_pre_wake_weekend", async () => {
         await withTimeout(
-          runIf(isAnyoneHome(), async () => {
+          runIf(isAnyoneHome(hass), async () => {
             logger.info(
               "Pre-wake heating for weekend - warming house before wake time",
             );

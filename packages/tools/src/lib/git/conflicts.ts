@@ -19,9 +19,7 @@ export async function checkMergeConflicts(
     // Try a merge --no-commit --no-ff to check for conflicts
     // This won't actually merge, just check
     try {
-      await $`git merge-tree $(git merge-base HEAD origin/${targetBranch}) HEAD origin/${targetBranch}`.quiet();
-
-      // If merge-tree succeeds without conflicts, check for actual conflict markers
+      // Check for actual conflict markers
       const result =
         await $`git merge-tree $(git merge-base HEAD origin/${targetBranch}) HEAD origin/${targetBranch}`.quiet();
       const output = result.stdout.toString();
@@ -69,19 +67,6 @@ export async function checkMergeConflicts(
       conflictingFiles: [],
       baseBranch: targetBranch,
     };
-  }
-}
-
-export async function getMergeBase(
-  baseBranch?: string,
-): Promise<string | null> {
-  const targetBranch = baseBranch ?? (await getDefaultBranch());
-
-  try {
-    const result = await $`git merge-base HEAD origin/${targetBranch}`.quiet();
-    return result.stdout.toString().trim();
-  } catch {
-    return null;
   }
 }
 

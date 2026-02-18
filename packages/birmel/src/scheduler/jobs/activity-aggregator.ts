@@ -22,9 +22,10 @@ async function processMemberActivity(
     where: { guildId, userId, createdAt: { gte: thirtyDaysAgo } },
   });
 
-  const qualifiedTier = roleTiers
-    .sort((a, b) => b.minimumActivity - a.minimumActivity)
-    .find((tier) => activityCount >= tier.minimumActivity) ?? null;
+  const qualifiedTier =
+    roleTiers
+      .sort((a, b) => b.minimumActivity - a.minimumActivity)
+      .find((tier) => activityCount >= tier.minimumActivity) ?? null;
 
   const currentActivityRoles = member.roles.cache.filter((role) =>
     roleTiers.some((tier) => tier.roleId === role.id),
@@ -34,7 +35,10 @@ async function processMemberActivity(
     for (const [roleId] of currentActivityRoles) {
       await member.roles.remove(roleId);
       logger.info("Removed activity role (no longer qualified)", {
-        guildId, userId, roleId, activityCount,
+        guildId,
+        userId,
+        roleId,
+        activityCount,
       });
     }
     return;
@@ -44,7 +48,10 @@ async function processMemberActivity(
   if (!member.roles.cache.has(shouldHaveRole)) {
     await member.roles.add(shouldHaveRole);
     logger.info("Added activity role", {
-      guildId, userId, roleId: shouldHaveRole, activityCount,
+      guildId,
+      userId,
+      roleId: shouldHaveRole,
+      activityCount,
     });
   }
 
@@ -79,28 +86,40 @@ export async function aggregateActivityMetrics(): Promise<void> {
           }
 
           logger.debug("Processing activity roles for guild", {
-            guildId, tierCount: roleTiers.length,
+            guildId,
+            tierCount: roleTiers.length,
           });
 
           const members = await fullGuild.members.fetch();
 
           for (const [userId, member] of members) {
-            if (member.user.bot) {continue;}
+            if (member.user.bot) {
+              continue;
+            }
 
             try {
               await processMemberActivity(member, guildId, userId, roleTiers);
             } catch (error) {
-              logger.error("Failed to process activity for member", error as Error, {
-                guildId, userId,
-              });
+              logger.error(
+                "Failed to process activity for member",
+                error as Error,
+                {
+                  guildId,
+                  userId,
+                },
+              );
             }
           }
 
           logger.info("Activity aggregation completed for guild", { guildId });
         } catch (error) {
-          logger.error("Failed to aggregate activity for guild", error as Error, {
-            guildId,
-          });
+          logger.error(
+            "Failed to aggregate activity for guild",
+            error as Error,
+            {
+              guildId,
+            },
+          );
         }
       }
 
@@ -110,7 +129,9 @@ export async function aggregateActivityMetrics(): Promise<void> {
         where: { createdAt: { lt: ninetyDaysAgo } },
       });
 
-      logger.info("Activity aggregation completed", { cleanedRecords: deleted.count });
+      logger.info("Activity aggregation completed", {
+        cleanedRecords: deleted.count,
+      });
     } catch (error) {
       logger.error("Activity aggregator job failed", error as Error);
     }

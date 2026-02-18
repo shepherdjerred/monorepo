@@ -415,7 +415,7 @@ export async function postBatchedReview(
       "--method=POST",
       "-H=Accept: application/vnd.github+json",
       "-H=X-GitHub-Api-Version: 2022-11-28",
-      `/repos/${options.repository}/pulls/${options.prNumber}/reviews`,
+      `/repos/${options.repository}/pulls/${String(options.prNumber)}/reviews`,
       "--input=/tmp/review-request.json",
     ]);
 

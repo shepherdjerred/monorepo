@@ -68,14 +68,18 @@ export async function createMcpGatewayDeployment(chart: Chart) {
   });
 
   // Shared credentials (GitHub token, Fastmail token, Gmail token)
-  const mcpGatewayCredentials = new OnePasswordItem(chart, "mcp-gateway-credentials-1p", {
-    spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/openclaw",
+  const mcpGatewayCredentials = new OnePasswordItem(
+    chart,
+    "mcp-gateway-credentials-1p",
+    {
+      spec: {
+        itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/openclaw",
+      },
+      metadata: {
+        name: "mcp-gateway-credentials",
+      },
     },
-    metadata: {
-      name: "mcp-gateway-credentials",
-    },
-  });
+  );
 
   const deployment = new Deployment(chart, "mcp-gateway", {
     replicas: 1,

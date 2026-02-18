@@ -1,12 +1,16 @@
 import { createTool } from "../../../voltagent/tools/create-tool.js";
 import { z } from "zod";
-import {
-  AutoModerationRuleTriggerType,
-  AutoModerationActionType,
-} from "discord.js";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/index.js";
 import { validateSnowflakes, validateSnowflakeArray } from "./validation.js";
+import {
+  handleListRules,
+  handleGetRule,
+  handleCreateRule,
+  handleModifyRule,
+  handleDeleteRule,
+  handleToggleRule,
+} from "./automod-actions.js";
 
 export const manageAutomodRuleTool = createTool({
   id: "manage-automod-rule",
@@ -111,179 +115,51 @@ export const manageAutomodRuleTool = createTool({
       const guild = await client.guilds.fetch(ctx.guildId);
 
       switch (ctx.action) {
-        case "list": {
-          const rules = await guild.autoModerationRules.fetch();
-          const ruleList = rules.map((rule) => ({
-            id: rule.id,
-            name: rule.name,
-            enabled: rule.enabled,
-            triggerType: AutoModerationRuleTriggerType[rule.triggerType],
-          }));
-          return {
-            success: true,
-            message: `Found ${String(ruleList.length)} auto-moderation rules`,
-            data: ruleList,
-          };
-        }
-
-        case "get": {
-          if (ctx.ruleId == null || ctx.ruleId.length === 0) {
-            return {
-              success: false,
-              message: "ruleId is required for getting rule details",
-            };
-          }
-          const rule = await guild.autoModerationRules.fetch(ctx.ruleId);
-          return {
-            success: true,
-            message: `Found rule: ${rule.name}`,
-            data: {
-              id: rule.id,
-              name: rule.name,
-              enabled: rule.enabled,
-              triggerType: AutoModerationRuleTriggerType[rule.triggerType],
-              exemptRoles: rule.exemptRoles.map((r) => r.id),
-              exemptChannels: rule.exemptChannels.map((c) => c.id),
-            },
-          };
-        }
-
-        case "create": {
-          if ((ctx.name == null || ctx.name.length === 0) || !ctx.triggerType) {
-            return {
-              success: false,
-              message: "name and triggerType are required for creating a rule",
-            };
-          }
-          const triggerTypeMap = {
-            KEYWORD: AutoModerationRuleTriggerType.Keyword,
-            SPAM: AutoModerationRuleTriggerType.Spam,
-            KEYWORD_PRESET: AutoModerationRuleTriggerType.KeywordPreset,
-            MENTION_SPAM: AutoModerationRuleTriggerType.MentionSpam,
-          };
-          const presetMap = {
-            PROFANITY: 1,
-            SEXUAL_CONTENT: 2,
-            SLURS: 3,
-          } as const;
-          const rule = await guild.autoModerationRules.create({
-            name: ctx.name,
-            eventType: 1, // MESSAGE_SEND
-            triggerType: triggerTypeMap[ctx.triggerType],
-            triggerMetadata: {
-              ...(ctx.keywords != null && { keywordFilter: ctx.keywords }),
-              ...(ctx.keywordPresets != null && {
-                presets: ctx.keywordPresets.map(
-                  (p: "PROFANITY" | "SEXUAL_CONTENT" | "SLURS") => presetMap[p],
-                ),
-              }),
-              ...(ctx.mentionLimit !== undefined && {
-                mentionTotalLimit: ctx.mentionLimit,
-              }),
-            },
-            actions: [
-              {
-                type: AutoModerationActionType.BlockMessage,
-              },
-            ],
+        case "list":
+          return await handleListRules(guild);
+        case "get":
+          return await handleGetRule(guild, ctx.ruleId);
+        case "create":
+          return await handleCreateRule(guild, {
+            ...(ctx.name !== undefined && { name: ctx.name }),
+            ...(ctx.triggerType !== undefined && {
+              triggerType: ctx.triggerType,
+            }),
+            ...(ctx.keywords !== undefined && { keywords: ctx.keywords }),
+            ...(ctx.keywordPresets !== undefined && {
+              keywordPresets: ctx.keywordPresets,
+            }),
+            ...(ctx.mentionLimit !== undefined && {
+              mentionLimit: ctx.mentionLimit,
+            }),
             ...(ctx.enabled !== undefined && { enabled: ctx.enabled }),
             ...(ctx.reason !== undefined && { reason: ctx.reason }),
           });
-          return {
-            success: true,
-            message: `Created auto-moderation rule: ${rule.name}`,
-            data: {
-              id: rule.id,
-              name: rule.name,
-            },
-          };
-        }
-
-        case "modify": {
-          if (ctx.ruleId == null || ctx.ruleId.length === 0) {
-            return {
-              success: false,
-              message: "ruleId is required for modifying a rule",
-            };
-          }
-          const rule = await guild.autoModerationRules.fetch(ctx.ruleId);
-          const editOptions: Parameters<typeof rule.edit>[0] = {};
-          if (ctx.name !== undefined) {
-            editOptions.name = ctx.name;
-          }
-          if (ctx.keywords !== undefined) {
-            editOptions.triggerMetadata = { keywordFilter: ctx.keywords };
-          }
-          if (ctx.mentionLimit !== undefined) {
-            editOptions.triggerMetadata = {
-              ...editOptions.triggerMetadata,
-              mentionTotalLimit: ctx.mentionLimit,
-            };
-          }
-          if (ctx.exemptRoles !== undefined) {
-            editOptions.exemptRoles = ctx.exemptRoles;
-          }
-          if (ctx.exemptChannels !== undefined) {
-            editOptions.exemptChannels = ctx.exemptChannels;
-          }
-          if (ctx.reason !== undefined) {
-            editOptions.reason = ctx.reason;
-          }
-          const hasChanges =
-            ctx.name !== undefined ||
-            ctx.keywords !== undefined ||
-            ctx.mentionLimit !== undefined ||
-            ctx.exemptRoles !== undefined ||
-            ctx.exemptChannels !== undefined;
-          if (!hasChanges) {
-            return {
-              success: false,
-              message: "No changes specified",
-            };
-          }
-          await rule.edit(editOptions);
-          return {
-            success: true,
-            message: `Updated auto-moderation rule: ${rule.name}`,
-          };
-        }
-
-        case "delete": {
-          if (ctx.ruleId == null || ctx.ruleId.length === 0) {
-            return {
-              success: false,
-              message: "ruleId is required for deleting a rule",
-            };
-          }
-          const rule = await guild.autoModerationRules.fetch(ctx.ruleId);
-          const ruleName = rule.name;
-          await rule.delete(ctx.reason);
-          return {
-            success: true,
-            message: `Deleted auto-moderation rule: ${ruleName}`,
-          };
-        }
-
-        case "toggle": {
-          if (ctx.ruleId == null || ctx.ruleId.length === 0) {
-            return {
-              success: false,
-              message: "ruleId is required for toggling a rule",
-            };
-          }
-          if (ctx.enabled === undefined) {
-            return {
-              success: false,
-              message: "enabled is required for toggling a rule",
-            };
-          }
-          const rule = await guild.autoModerationRules.fetch(ctx.ruleId);
-          await rule.setEnabled(ctx.enabled, ctx.reason);
-          return {
-            success: true,
-            message: `${ctx.enabled ? "Enabled" : "Disabled"} auto-moderation rule: ${rule.name}`,
-          };
-        }
+        case "modify":
+          return await handleModifyRule(guild, {
+            ...(ctx.ruleId !== undefined && { ruleId: ctx.ruleId }),
+            ...(ctx.name !== undefined && { name: ctx.name }),
+            ...(ctx.keywords !== undefined && { keywords: ctx.keywords }),
+            ...(ctx.mentionLimit !== undefined && {
+              mentionLimit: ctx.mentionLimit,
+            }),
+            ...(ctx.exemptRoles !== undefined && {
+              exemptRoles: ctx.exemptRoles,
+            }),
+            ...(ctx.exemptChannels !== undefined && {
+              exemptChannels: ctx.exemptChannels,
+            }),
+            ...(ctx.reason !== undefined && { reason: ctx.reason }),
+          });
+        case "delete":
+          return await handleDeleteRule(guild, ctx.ruleId, ctx.reason);
+        case "toggle":
+          return await handleToggleRule(
+            guild,
+            ctx.ruleId,
+            ctx.enabled,
+            ctx.reason,
+          );
       }
     } catch (error) {
       logger.error("Failed to manage automod rule", error as Error);

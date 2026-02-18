@@ -53,7 +53,12 @@ async function main(): Promise<void> {
   const command = args[0];
   const subcommand = args[1];
 
-  if (command == null || command.length === 0 || command === "--help" || command === "-h") {
+  if (
+    command == null ||
+    command.length === 0 ||
+    command === "--help" ||
+    command === "-h"
+  ) {
     printUsage();
     process.exit(0);
   }
@@ -80,7 +85,12 @@ async function handlePrCommand(
   subcommand: string | undefined,
   args: string[],
 ): Promise<void> {
-  if (subcommand == null || subcommand.length === 0 || subcommand === "--help" || subcommand === "-h") {
+  if (
+    subcommand == null ||
+    subcommand.length === 0 ||
+    subcommand === "--help" ||
+    subcommand === "-h"
+  ) {
     console.log(`
 tools pr - Pull request utilities
 
@@ -118,7 +128,12 @@ async function handlePagerDutyCommand(
   subcommand: string | undefined,
   args: string[],
 ): Promise<void> {
-  if (subcommand == null || subcommand.length === 0 || subcommand === "--help" || subcommand === "-h") {
+  if (
+    subcommand == null ||
+    subcommand.length === 0 ||
+    subcommand === "--help" ||
+    subcommand === "-h"
+  ) {
     console.log(`
 tools pagerduty (pd) - PagerDuty incident management
 
@@ -159,7 +174,12 @@ async function handleBugsinkCommand(
   subcommand: string | undefined,
   args: string[],
 ): Promise<void> {
-  if (subcommand == null || subcommand.length === 0 || subcommand === "--help" || subcommand === "-h") {
+  if (
+    subcommand == null ||
+    subcommand.length === 0 ||
+    subcommand === "--help" ||
+    subcommand === "-h"
+  ) {
     console.log(`
 tools bugsink - Bugsink issue tracking
 
@@ -271,7 +291,10 @@ async function handlePagerDutyIncidentsCommand(args: string[]): Promise<void> {
   const statuses = values.status as
     | ("triggered" | "acknowledged" | "resolved")[]
     | undefined;
-  const limit = values.limit != null && values.limit.length > 0 ? Number.parseInt(values.limit, 10) : undefined;
+  const limit =
+    values.limit != null && values.limit.length > 0
+      ? Number.parseInt(values.limit, 10)
+      : undefined;
 
   await incidentsCommand({
     json: values.json,
@@ -312,7 +335,10 @@ async function handleBugsinkIssuesCommand(args: string[]): Promise<void> {
     allowPositionals: true,
   });
 
-  const limit = values.limit != null && values.limit.length > 0 ? Number.parseInt(values.limit, 10) : undefined;
+  const limit =
+    values.limit != null && values.limit.length > 0
+      ? Number.parseInt(values.limit, 10)
+      : undefined;
 
   await issuesCommand({
     json: values.json,

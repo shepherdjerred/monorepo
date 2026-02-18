@@ -41,9 +41,10 @@ export const ArenaChampionSchema = ChampionSchema.omit({
   teamSupport: TeamSupportMetricsSchema,
 });
 
-// Arena team types
-export type ArenaTeamId = z.infer<typeof ArenaTeamIdSchema>;
-export const ArenaTeamIdSchema = z.union([
+/**
+ * Schema for a 1-8 literal union, shared by team IDs and placements.
+ */
+const OneToEightSchema = z.union([
   z.literal(1),
   z.literal(2),
   z.literal(3),
@@ -54,17 +55,12 @@ export const ArenaTeamIdSchema = z.union([
   z.literal(8),
 ]);
 
+// Arena team types
+export type ArenaTeamId = z.infer<typeof ArenaTeamIdSchema>;
+export const ArenaTeamIdSchema = OneToEightSchema;
+
 export type ArenaPlacement = z.infer<typeof ArenaPlacementSchema>;
-export const ArenaPlacementSchema = z.union([
-  z.literal(1),
-  z.literal(2),
-  z.literal(3),
-  z.literal(4),
-  z.literal(5),
-  z.literal(6),
-  z.literal(7),
-  z.literal(8),
-]);
+export const ArenaPlacementSchema = OneToEightSchema;
 
 /**
  * Mapping of Arena team IDs to their display names.

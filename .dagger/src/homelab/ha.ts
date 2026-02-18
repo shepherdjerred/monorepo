@@ -1,10 +1,5 @@
-import {
-  Directory,
-  dag,
-  type Secret,
-  Container,
-  type File,
-} from "@dagger.io/dagger";
+import type { Directory, Container } from "@dagger.io/dagger";
+import { dag, type Secret, type File } from "@dagger.io/dagger";
 import { getWorkspaceContainer, getMiseRuntimeContainer } from "./base";
 import { execOrThrow } from "./errors";
 import type { StepResult } from ".";

@@ -22,7 +22,12 @@ export async function getRepoFromRemote(): Promise<RepoInfo | null> {
 
     // Handle SSH URLs: git@github.com:owner/repo.git
     const sshMatch = /git@github\.com:([^/]+)\/(.+?)(?:\.git)?$/.exec(url);
-    if (sshMatch?.[1] != null && sshMatch[1].length > 0 && sshMatch[2] != null && sshMatch[2].length > 0) {
+    if (
+      sshMatch?.[1] != null &&
+      sshMatch[1].length > 0 &&
+      sshMatch[2] != null &&
+      sshMatch[2].length > 0
+    ) {
       return {
         owner: sshMatch[1],
         name: sshMatch[2],
@@ -34,7 +39,12 @@ export async function getRepoFromRemote(): Promise<RepoInfo | null> {
     const httpsMatch = /https:\/\/github\.com\/([^/]+)\/(.+?)(?:\.git)?$/.exec(
       url,
     );
-    if (httpsMatch?.[1] != null && httpsMatch[1].length > 0 && httpsMatch[2] != null && httpsMatch[2].length > 0) {
+    if (
+      httpsMatch?.[1] != null &&
+      httpsMatch[1].length > 0 &&
+      httpsMatch[2] != null &&
+      httpsMatch[2].length > 0
+    ) {
       return {
         owner: httpsMatch[1],
         name: httpsMatch[2],

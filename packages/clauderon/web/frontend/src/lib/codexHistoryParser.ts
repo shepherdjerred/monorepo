@@ -217,7 +217,10 @@ export function parseCodexHistoryLines(lines: string[]): Message[] {
     // Handle reasoning summaries (thinking)
     if (payload.type === "reasoning") {
       const reasoningPayload = payload as CodexReasoningPayload;
-      if (reasoningPayload.summary != null && reasoningPayload.summary.length > 0) {
+      if (
+        reasoningPayload.summary != null &&
+        reasoningPayload.summary.length > 0
+      ) {
         const text = reasoningPayload.summary.map((s) => s.text).join("\n");
 
         if (text.trim()) {

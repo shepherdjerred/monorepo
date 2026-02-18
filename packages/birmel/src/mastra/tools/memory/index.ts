@@ -1,67 +1,12 @@
 import { createTool } from "../../../voltagent/tools/create-tool.js";
 import { z } from "zod";
-import {
-  getServerWorkingMemory,
-  updateServerWorkingMemory,
-  getOwnerWorkingMemory,
-  updateOwnerWorkingMemory,
-  SERVER_MEMORY_TEMPLATE,
-  OWNER_MEMORY_TEMPLATE,
-} from "../../../voltagent/memory/index.js";
-import { getGuildPersona } from "../../../persona/index.js";
 import { logger } from "../../../utils/logger.js";
-
-const MAX_MEMORY_SIZE = 4000;
-
-/**
- * Append an item to a specific section in the memory markdown.
- * Sections are identified by "# Section Name" headers.
- */
-type SectionKey = "rules" | "preferences" | "notes";
-type SectionHeaders = Record<SectionKey, string>;
-
-function appendToSection(
-  memory: string,
-  section: SectionKey,
-  item: string,
-  scope: "server" | "owner" = "server",
-): string {
-  const serverSectionHeaders: SectionHeaders = {
-    rules: "# Server Rules",
-    preferences: "# Preferences",
-    notes: "# Notes",
-  };
-  const ownerSectionHeaders: SectionHeaders = {
-    rules: "# Owner Rules",
-    preferences: "# Owner Preferences",
-    notes: "# Owner Notes",
-  };
-  const sectionHeaders: SectionHeaders =
-    scope === "owner" ? ownerSectionHeaders : serverSectionHeaders;
-  const header = sectionHeaders[section];
-
-  const lines = memory.split("\n");
-  const headerIndex = lines.findIndex((line) => line.trim() === header);
-
-  if (headerIndex === -1) {
-    // Section doesn't exist, add it at the end
-    return `${memory.trimEnd()}\n\n${header}\n- ${item}\n`;
-  }
-
-  // Find the next section or end of content
-  let insertIndex = lines.length;
-  for (let i = headerIndex + 1; i < lines.length; i++) {
-    const line = lines[i];
-    if (line?.startsWith("# ") === true) {
-      insertIndex = i;
-      break;
-    }
-  }
-
-  // Insert the new item before the next section
-  lines.splice(insertIndex, 0, `- ${item}`);
-  return lines.join("\n");
-}
+import {
+  handleGetMemory,
+  handleUpdateMemory,
+  handleAppendMemory,
+  handleClearMemory,
+} from "./memory-actions.js";
 
 export const manageMemoryTool = createTool({
   id: "manage-memory",
@@ -95,153 +40,20 @@ export const manageMemoryTool = createTool({
   }),
   execute: async (ctx) => {
     try {
-      const scope = ctx.scope;
-      const persona =
-        scope === "owner" ? await getGuildPersona(ctx.guildId) : null;
-      const scopeLabel =
-        scope === "owner" ? `owner (${persona ?? "unknown"})` : "server";
-      const template =
-        scope === "owner" ? OWNER_MEMORY_TEMPLATE : SERVER_MEMORY_TEMPLATE;
-
       switch (ctx.action) {
-        case "get": {
-          let memoryContent: string | null;
-          if (scope === "owner") {
-            if (persona == null || persona.length === 0) {
-              return {
-                success: false,
-                message: "Could not determine persona for owner memory",
-              };
-            }
-            memoryContent = await getOwnerWorkingMemory(ctx.guildId, persona);
-          } else {
-            memoryContent = await getServerWorkingMemory(ctx.guildId);
-          }
-
-          if (memoryContent == null || memoryContent.length === 0) {
-            return {
-              success: true,
-              message: `No ${scopeLabel} memory set yet`,
-              data: { memory: template },
-            };
-          }
-          return {
-            success: true,
-            message: `Retrieved ${scopeLabel} memory`,
-            data: { memory: memoryContent },
-          };
-        }
-
-        case "update": {
-          if (ctx.memory == null || ctx.memory.length === 0) {
-            return { success: false, message: "memory is required for update" };
-          }
-          // Limit memory size to avoid token bloat
-          if (ctx.memory.length > MAX_MEMORY_SIZE) {
-            return {
-              success: false,
-              message: `Memory too long (${String(ctx.memory.length)} chars, max ${String(MAX_MEMORY_SIZE)}). Summarize or remove old items.`,
-            };
-          }
-
-          if (scope === "owner") {
-            if (persona == null || persona.length === 0) {
-              return {
-                success: false,
-                message: "Could not determine persona for owner memory",
-              };
-            }
-            await updateOwnerWorkingMemory(ctx.guildId, persona, ctx.memory);
-          } else {
-            await updateServerWorkingMemory(ctx.guildId, ctx.memory);
-          }
-          logger.info(`${scopeLabel} memory updated`, {
-            guildId: ctx.guildId,
-            scope,
-          });
-          return {
-            success: true,
-            message: `${scopeLabel} memory updated successfully`,
-          };
-        }
-
-        case "append": {
-          if ((ctx.item == null || ctx.item.length === 0) || !ctx.section) {
-            return {
-              success: false,
-              message: "item and section are required for append",
-            };
-          }
-
-          let current: string | null;
-          if (scope === "owner") {
-            if (persona == null || persona.length === 0) {
-              return {
-                success: false,
-                message: "Could not determine persona for owner memory",
-              };
-            }
-            current = await getOwnerWorkingMemory(ctx.guildId, persona);
-          } else {
-            current = await getServerWorkingMemory(ctx.guildId);
-          }
-
-          const updated = appendToSection(
-            current ?? template,
-            ctx.section,
+        case "get":
+          return await handleGetMemory(ctx.guildId, ctx.scope);
+        case "update":
+          return await handleUpdateMemory(ctx.guildId, ctx.scope, ctx.memory);
+        case "append":
+          return await handleAppendMemory(
+            ctx.guildId,
+            ctx.scope,
             ctx.item,
-            scope,
+            ctx.section,
           );
-          if (updated.length > MAX_MEMORY_SIZE) {
-            return {
-              success: false,
-              message: `Memory would exceed max size (${String(MAX_MEMORY_SIZE)} chars). Use 'get' to review and remove old items first.`,
-            };
-          }
-
-          if (scope === "owner") {
-            if (persona == null || persona.length === 0) {
-              return {
-                success: false,
-                message: "Could not determine persona for owner memory",
-              };
-            }
-            await updateOwnerWorkingMemory(ctx.guildId, persona, updated);
-          } else {
-            await updateServerWorkingMemory(ctx.guildId, updated);
-          }
-          logger.info(`${scopeLabel} memory appended`, {
-            guildId: ctx.guildId,
-            scope,
-            section: ctx.section,
-          });
-          return {
-            success: true,
-            message: `Added to ${scopeLabel} ${ctx.section}: ${ctx.item}`,
-          };
-        }
-
-        case "clear": {
-          if (scope === "owner") {
-            if (persona == null || persona.length === 0) {
-              return {
-                success: false,
-                message: "Could not determine persona for owner memory",
-              };
-            }
-            await updateOwnerWorkingMemory(ctx.guildId, persona, template);
-          } else {
-            await updateServerWorkingMemory(ctx.guildId, template);
-          }
-          logger.info(`${scopeLabel} memory cleared`, {
-            guildId: ctx.guildId,
-            scope,
-          });
-          return {
-            success: true,
-            message: `${scopeLabel} memory cleared to default template`,
-          };
-        }
+        case "clear":
+          return await handleClearMemory(ctx.guildId, ctx.scope);
       }
     } catch (error) {
       logger.error("Failed to manage memory", error);

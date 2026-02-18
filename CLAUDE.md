@@ -6,14 +6,27 @@ Bun workspaces monorepo. Use `bun` commands exclusively (never npm/yarn/pnpm).
 
 ```
 packages/
-├── birmel/        # Discord bot (Mastra + Claude AI)
-├── eslint-config/ # Shared ESLint rules
-├── dagger-utils/  # Dagger CI/CD utilities
-├── a2ui-poc/      # Hono backend + React/Vite frontend
-├── claude-plugin/ # Claude Code plugin
-├── clauderon/     # Rust session manager (has its own CLAUDE.md)
-.dagger/           # CI/CD pipeline
-archive/           # Legacy projects (do not modify)
+├── anki/                    # Anki flashcard tools
+├── astro-opengraph-images/  # Astro OpenGraph image generation
+├── better-skill-capped/     # Browser extension
+├── birmel/                  # Discord bot (VoltAgent + Claude AI)
+├── bun-decompile/           # Bun binary decompiler
+├── castle-casters/          # Game project
+├── clauderon/               # Rust session manager (has its own CLAUDE.md)
+├── discord-plays-pokemon/   # Discord Plays Pokemon
+├── dotfiles/                # Dotfiles & shell config
+├── eslint-config/           # Shared ESLint rules
+├── fonts/                   # Custom fonts
+├── homelab/                 # Homelab infrastructure (K8s, Tofu)
+├── macos-cross-compiler/    # macOS cross-compilation
+├── resume/                  # Resume site
+├── scout-for-lol/           # League of Legends match analysis
+├── sjer.red/                # Personal website
+├── starlight-karma-bot/     # Discord karma bot
+├── tools/                   # CLI developer tools
+├── webring/                 # Webring component
+.dagger/                     # CI/CD pipeline
+archive/                     # Legacy projects (do not modify)
 ```
 
 ## Commands
@@ -51,6 +64,8 @@ Always verify changes:
 Each package has its own CLAUDE.md with specific instructions:
 
 - `packages/clauderon/CLAUDE.md` - Rust build order, backends, architecture
-- `packages/birmel/CLAUDE.md` - Prisma setup, Mastra studio
-- `packages/a2ui-poc/CLAUDE.md` - Dev server commands
-- `packages/eslint-config/CLAUDE.md` - Custom rules reference
+- `packages/birmel/CLAUDE.md` - VoltAgent setup, Discord bot config
+- `packages/homelab/CLAUDE.md` - K8s, cdk8s, OpenTofu infrastructure
+- `packages/scout-for-lol/CLAUDE.md` - Match analysis pipeline
+- `packages/resume/CLAUDE.md` - Resume site
+- `packages/tools/CLAUDE.md` - CLI developer tools

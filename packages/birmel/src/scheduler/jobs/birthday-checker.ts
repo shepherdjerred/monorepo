@@ -18,7 +18,10 @@ function scheduleBirthdayRoleRemoval(
         try {
           const memberToUpdate = await fullGuild.members.fetch(userId);
           await memberToUpdate.roles.remove(birthdayRoleId);
-          logger.info("Removed birthday role", { userId, roleId: birthdayRoleId });
+          logger.info("Removed birthday role", {
+            userId,
+            roleId: birthdayRoleId,
+          });
         } catch (error) {
           logger.warn("Failed to remove birthday role", { userId, error });
         }
@@ -34,7 +37,9 @@ async function assignBirthdayRole(
   userId: string,
 ): Promise<void> {
   const birthdayRoleId = getConfig().birthdays.birthdayRoleId;
-  if (birthdayRoleId == null || birthdayRoleId.length === 0) {return;}
+  if (birthdayRoleId == null || birthdayRoleId.length === 0) {
+    return;
+  }
 
   try {
     await member.roles.add(birthdayRoleId);
@@ -67,15 +72,25 @@ async function processBirthday(
   channelId ??= fullGuild.systemChannelId ?? undefined;
 
   if (channelId == null || channelId.length === 0) {
-    logger.warn("No channel available for birthday message", { guildId, userId: birthday.userId });
+    logger.warn("No channel available for birthday message", {
+      guildId,
+      userId: birthday.userId,
+    });
     return;
   }
 
   const channel = await client.channels.fetch(channelId);
-  if (channel?.isTextBased() !== true) {return;}
+  if (channel?.isTextBased() !== true) {
+    return;
+  }
 
   await (channel as TextChannel).send(birthdayMessage);
-  logger.info("Sent birthday message", { guildId, userId: birthday.userId, username, channelId });
+  logger.info("Sent birthday message", {
+    guildId,
+    userId: birthday.userId,
+    username,
+    channelId,
+  });
 
   await assignBirthdayRole(member, fullGuild, birthday.userId);
 }
@@ -94,7 +109,9 @@ export async function checkAndPostBirthdays(): Promise<void> {
       for (const [guildId, guild] of guilds) {
         try {
           const birthdays = await getBirthdaysToday(guildId);
-          if (birthdays.length === 0) {continue;}
+          if (birthdays.length === 0) {
+            continue;
+          }
 
           logger.info("Found birthdays", { guildId, count: birthdays.length });
           const fullGuild = await guild.fetch();
@@ -104,12 +121,15 @@ export async function checkAndPostBirthdays(): Promise<void> {
               await processBirthday(birthday, fullGuild, guildId);
             } catch (error) {
               logger.error("Failed to process birthday", error as Error, {
-                guildId, userId: birthday.userId,
+                guildId,
+                userId: birthday.userId,
               });
             }
           }
         } catch (error) {
-          logger.error("Failed to check birthdays for guild", error as Error, { guildId });
+          logger.error("Failed to check birthdays for guild", error as Error, {
+            guildId,
+          });
         }
       }
 

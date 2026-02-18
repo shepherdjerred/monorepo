@@ -85,10 +85,14 @@ export const manageScheduledMessageTool = createTool({
         switch (ctx.action) {
           case "schedule": {
             if (
-              (ctx.channelId == null || ctx.channelId.length === 0) ||
-              (ctx.message == null || ctx.message.length === 0) ||
-              (ctx.scheduledAt == null || ctx.scheduledAt.length === 0) ||
-              (ctx.createdBy == null || ctx.createdBy.length === 0)
+              ctx.channelId == null ||
+              ctx.channelId.length === 0 ||
+              ctx.message == null ||
+              ctx.message.length === 0 ||
+              ctx.scheduledAt == null ||
+              ctx.scheduledAt.length === 0 ||
+              ctx.createdBy == null ||
+              ctx.createdBy.length === 0
             ) {
               return {
                 success: false,
@@ -118,7 +122,10 @@ export const manageScheduledMessageTool = createTool({
               ctx.createdBy,
               repeat,
             );
-            const repeatText = repeat != null && repeat.length > 0 ? ` (repeating ${repeat})` : "";
+            const repeatText =
+              repeat != null && repeat.length > 0
+                ? ` (repeating ${repeat})`
+                : "";
             logger.info("Message scheduled", {
               scheduleId,
               guildId: ctx.guildId,

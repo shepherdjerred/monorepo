@@ -37,20 +37,17 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@eslint/js": "^9.22.0",
     "@tsconfig/node24": "^24.0.0",
     "@tsconfig/strictest": "^2.0.5",
     "@types/express": "^5.0.0",
     "@types/node": "^25.0.0",
     "@types/sanitize-html": "^2.13.0",
-    "eslint": "^9.22.0",
     "express": "^5.0.0",
     "globals": "^17.0.0",
     "typedoc": "^0.28.0",
     "typedoc-plugin-extras": "^4.0.1",
     "typedoc-plugin-zod": "^1.4.0",
     "typescript": "^5.8.2",
-    "typescript-eslint": "^8.26.1",
     "vitest": "^3.0.8"
   },
   "files": [

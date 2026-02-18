@@ -6,8 +6,12 @@ import {
   captureException,
   withToolSpan,
 } from "../../../observability/index.js";
-import { prisma } from "../../../database/index.js";
 import { validateSnowflakes } from "./validation.js";
+import {
+  handleCreatePoll,
+  handleGetPollResults,
+  handleEndPoll,
+} from "./poll-actions.js";
 
 const logger = loggers.tools.child("discord.polls");
 
@@ -100,120 +104,20 @@ export const managePollTool = createTool({
         }
 
         switch (ctx.action) {
-          case "create": {
-            if ((ctx.question == null || ctx.question.length === 0) || !ctx.answers) {
-              return {
-                success: false,
-                message: "question and answers are required for create",
-              };
-            }
-            const duration = ctx.duration ?? 24;
-            const expiresAt = new Date(Date.now() + duration * 60 * 60 * 1000);
-            const message = await channel.send({
-              poll: {
-                question: { text: ctx.question },
-                answers: ctx.answers.map((a) => ({
-                  text: a.text,
-                  ...(a.emoji != null && a.emoji.length > 0 && { emoji: a.emoji }),
-                })),
-                duration,
-                allowMultiselect: ctx.allowMultiselect ?? false,
-              },
+          case "create":
+            return await handleCreatePoll({
+              client,
+              channel,
+              channelId: ctx.channelId,
+              question: ctx.question,
+              answers: ctx.answers,
+              duration: ctx.duration,
+              allowMultiselect: ctx.allowMultiselect,
             });
-            if (message.guildId != null && message.guildId.length > 0 && message.poll != null && client.user != null) {
-              void prisma.pollRecord
-                .create({
-                  data: {
-                    guildId: message.guildId,
-                    channelId: ctx.channelId,
-                    messageId: message.id,
-                    pollId: message.poll.question.text ?? "",
-                    question: ctx.question,
-                    createdBy: client.user.id,
-                    expiresAt,
-                  },
-                })
-                .catch((error: unknown) => {
-                  logger.error("Failed to store poll", error);
-                });
-            }
-            logger.info("Poll created", { messageId: message.id });
-            return {
-              success: true,
-              message: `Poll created with ${ctx.answers.length.toString()} options`,
-              data: {
-                messageId: message.id,
-                pollId: ctx.question,
-                expiresAt: expiresAt.toISOString(),
-              },
-            };
-          }
-
-          case "get-results": {
-            if (ctx.messageId == null || ctx.messageId.length === 0) {
-              return {
-                success: false,
-                message: "messageId is required for get-results",
-              };
-            }
-            const message = await channel.messages.fetch(ctx.messageId);
-            if (message.poll == null) {
-              return {
-                success: false,
-                message: "Message does not contain a poll",
-              };
-            }
-            const poll = message.poll;
-            let totalVotes = 0;
-            const answers = [];
-            for (const answer of poll.answers.values()) {
-              totalVotes += answer.voteCount;
-              answers.push({
-                id: answer.id,
-                text: answer.text ?? "",
-                voteCount: answer.voteCount,
-                ...(answer.emoji?.name != null && answer.emoji.name.length > 0 && { emoji: answer.emoji.name }),
-              });
-            }
-            return {
-              success: true,
-              message: `Poll results: ${totalVotes.toString()} total votes`,
-              data: {
-                question: poll.question.text ?? "",
-                answers,
-                totalVotes,
-                isFinalized: poll.resultsFinalized,
-                ...(poll.expiresAt != null && {
-                  expiresAt: poll.expiresAt.toISOString(),
-                }),
-              },
-            };
-          }
-
-          case "end": {
-            if (ctx.messageId == null || ctx.messageId.length === 0) {
-              return {
-                success: false,
-                message: "messageId is required for end",
-              };
-            }
-            const message = await channel.messages.fetch(ctx.messageId);
-            if (message.poll == null) {
-              return {
-                success: false,
-                message: "Message does not contain a poll",
-              };
-            }
-            if (message.poll.resultsFinalized) {
-              return { success: false, message: "Poll already finalized" };
-            }
-            await message.poll.end();
-            logger.info("Poll ended", { messageId: ctx.messageId });
-            return {
-              success: true,
-              message: "Poll ended and results finalized",
-            };
-          }
+          case "get-results":
+            return await handleGetPollResults(channel, ctx.messageId);
+          case "end":
+            return await handleEndPoll(channel, ctx.messageId);
         }
       } catch (error) {
         logger.error("Failed to manage poll", error);

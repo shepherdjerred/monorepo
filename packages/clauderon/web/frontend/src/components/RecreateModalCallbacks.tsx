@@ -1,0 +1,94 @@
+import type { Session, SessionHealthReport } from "@clauderon/client";
+import { toast } from "sonner";
+import { RecreateConfirmModal } from "./RecreateConfirmModal";
+
+type RecreateModalWrapperProps = {
+  session: Session;
+  healthReport: SessionHealthReport;
+  onOpenChange: (open: boolean) => void;
+  startSession: (id: string) => Promise<void>;
+  wakeSession: (id: string) => Promise<void>;
+  recreateSession: (id: string) => Promise<void>;
+  refreshSession: (id: string) => Promise<void>;
+  cleanupSession: (id: string) => Promise<void>;
+};
+
+function toastAction(
+  promise: Promise<void>,
+  sessionName: string,
+  successMsg: string,
+  errorPrefix: string,
+) {
+  void promise
+    .then(() => {
+      toast.success(`Session "${sessionName}" ${successMsg}`);
+    })
+    .catch((err: unknown) => {
+      toast.error(
+        `Failed to ${errorPrefix}: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    });
+}
+
+export function RecreateModalWrapper({
+  session,
+  healthReport,
+  onOpenChange,
+  startSession,
+  wakeSession,
+  recreateSession,
+  refreshSession,
+  cleanupSession,
+}: RecreateModalWrapperProps) {
+  return (
+    <RecreateConfirmModal
+      open={true}
+      onOpenChange={onOpenChange}
+      session={session}
+      healthReport={healthReport}
+      onStart={() => {
+        toastAction(startSession(session.id), session.name, "started", "start");
+      }}
+      onWake={() => {
+        toastAction(
+          wakeSession(session.id),
+          session.name,
+          "is waking up",
+          "wake",
+        );
+      }}
+      onRecreate={() => {
+        toastAction(
+          recreateSession(session.id),
+          session.name,
+          "is being recreated",
+          "recreate",
+        );
+      }}
+      onRecreateFresh={() => {
+        toastAction(
+          recreateSession(session.id),
+          session.name,
+          "is being recreated fresh",
+          "recreate fresh",
+        );
+      }}
+      onUpdateImage={() => {
+        toastAction(
+          refreshSession(session.id),
+          session.name,
+          "is being refreshed with latest image",
+          "update image",
+        );
+      }}
+      onCleanup={() => {
+        toastAction(
+          cleanupSession(session.id),
+          session.name,
+          "cleaned up",
+          "cleanup",
+        );
+      }}
+    />
+  );
+}

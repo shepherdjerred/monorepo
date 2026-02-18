@@ -15,7 +15,8 @@ export function MessageBubble({ message }: MessageBubbleProps) {
   // Don't render if there's no displayable content
   const hasContent = message.content.trim();
   const hasToolUses = message.toolUses != null && message.toolUses.length > 0;
-  const hasCodeBlocks = message.codeBlocks != null && message.codeBlocks.length > 0;
+  const hasCodeBlocks =
+    message.codeBlocks != null && message.codeBlocks.length > 0;
 
   if (!hasContent && !hasToolUses && !hasCodeBlocks) {
     return null;

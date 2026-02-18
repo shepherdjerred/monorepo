@@ -3,6 +3,7 @@ import {
   type PagerDutyIncident,
   type PagerDutyIncidentStatus,
 } from "../../lib/pagerduty/index.ts";
+import { getStatusEmoji } from "../../lib/pagerduty/format.ts";
 import { formatJson } from "../../lib/output/index.ts";
 
 export type IncidentsOptions = {
@@ -10,17 +11,6 @@ export type IncidentsOptions = {
   statuses?: PagerDutyIncidentStatus[] | undefined;
   limit?: number | undefined;
 };
-
-function getStatusEmoji(status: PagerDutyIncidentStatus): string {
-  switch (status) {
-    case "triggered":
-      return "\uD83D\uDD34";
-    case "acknowledged":
-      return "\uD83D\uDFE1";
-    case "resolved":
-      return "\uD83D\uDFE2";
-  }
-}
 
 function getUrgencyEmoji(urgency: string): string {
   return urgency === "high" ? "\uD83D\uDD25" : "";

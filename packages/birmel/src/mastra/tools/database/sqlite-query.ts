@@ -61,10 +61,9 @@ export const manageDatabaseTool = createTool({
             if (!trimmedQuery.includes("LIMIT")) {
               finalQuery += ` LIMIT ${String(input.limit ?? 100)}`;
             }
-            const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-              finalQuery,
-              ...(input.params ?? []),
-            );
+            const rows = await prisma.$queryRawUnsafe<
+              Record<string, unknown>[]
+            >(finalQuery, ...(input.params ?? []));
             logger.info("SQLite query executed", { rowCount: rows.length });
             return {
               success: true,
