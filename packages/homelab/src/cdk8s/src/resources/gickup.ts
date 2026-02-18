@@ -8,11 +8,11 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
-import { withCommonProps } from "../misc/common.ts";
-import { ZfsSataVolume } from "../misc/zfs-sata-volume.ts";
-import { createServiceMonitor } from "../misc/service-monitor.ts";
-import { OnePasswordItem } from "../../generated/imports/onepassword.com.ts";
-import versions from "../versions.ts";
+import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { ZfsSataVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-sata-volume.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 

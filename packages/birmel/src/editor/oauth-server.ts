@@ -1,11 +1,11 @@
 import { Hono } from "hono";
-import { loggers } from "../utils/index.js";
-import { getConfig } from "../config/index.js";
-import { createOAuthRoutes } from "./oauth-routes.js";
+import { loggers } from "@shepherdjerred/birmel/utils/index.js";
+import { getConfig } from "@shepherdjerred/birmel/config/index.js";
+import { createOAuthRoutes } from "./oauth-routes.ts";
 import {
   checkClaudePrerequisites,
   checkGhPrerequisites,
-} from "./claude-client.js";
+} from "./claude-client.ts";
 
 const logger = loggers.editor.child("oauth-server");
 

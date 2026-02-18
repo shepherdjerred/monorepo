@@ -2,7 +2,7 @@ import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import {
   getSystemContainer,
   publishToGhcrMultiple,
-} from "./lib/containers/index.js";
+} from "./lib/containers/index.ts";
 
 // Default configuration
 const DEFAULT_ARCHITECTURES = "aarch64,x86_64";

@@ -14,21 +14,21 @@ export { threadTools } from "./threads.js";
 export { activityTools } from "./activity.js";
 export { schedulingTools } from "./scheduling.js";
 
-import { guildTools } from "./guild.js";
-import { messageTools } from "./messages.js";
-import { moderationTools } from "./moderation.js";
-import { channelTools } from "./channels.js";
-import { roleTools } from "./roles.js";
-import { memberTools } from "./members.js";
-import { emojiTools } from "./emojis.js";
-import { eventTools } from "./events.js";
-import { webhookTools } from "./webhooks.js";
-import { inviteTools } from "./invites.js";
-import { automodTools } from "./automod.js";
-import { pollTools } from "./polls.js";
-import { threadTools } from "./threads.js";
-import { activityTools } from "./activity.js";
-import { schedulingTools } from "./scheduling.js";
+import { guildTools } from "./guild.ts";
+import { messageTools } from "./messages.ts";
+import { moderationTools } from "./moderation.ts";
+import { channelTools } from "./channels.ts";
+import { roleTools } from "./roles.ts";
+import { memberTools } from "./members.ts";
+import { emojiTools } from "./emojis.ts";
+import { eventTools } from "./events.ts";
+import { webhookTools } from "./webhooks.ts";
+import { inviteTools } from "./invites.ts";
+import { automodTools } from "./automod.ts";
+import { pollTools } from "./polls.ts";
+import { threadTools } from "./threads.ts";
+import { activityTools } from "./activity.ts";
+import { schedulingTools } from "./scheduling.ts";
 
 export const allDiscordTools = [
   ...guildTools,

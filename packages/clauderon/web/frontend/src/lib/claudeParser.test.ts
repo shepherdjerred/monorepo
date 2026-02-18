@@ -6,7 +6,7 @@ import {
   parseToolUses,
   parseMessages,
   MessageParser,
-} from "./claudeParser";
+} from "./claudeParser.ts";
 
 describe("stripAnsi", () => {
   test("removes ANSI color codes", () => {

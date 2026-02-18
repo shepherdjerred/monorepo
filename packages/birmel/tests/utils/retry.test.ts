@@ -3,7 +3,7 @@ import {
   retry,
   isRetryableError,
   retryWithBackoff,
-} from "../../src/utils/retry.js";
+} from "@shepherdjerred/birmel/utils/retry.js";
 
 describe("retry", () => {
   describe("retry", () => {

@@ -148,7 +148,7 @@ export function AdvancedContainerSettings({
               <div className="text-sm text-muted-foreground">
                 Loading storage classes...
               </div>
-            ) : storageClasses.length > 0 ? (
+            ) : (storageClasses.length > 0 ? (
               <>
                 <select
                   id="storage_class"
@@ -178,7 +178,7 @@ export function AdvancedContainerSettings({
               <div className="text-sm text-muted-foreground">
                 No storage classes available. Check cluster configuration.
               </div>
-            )}
+            ))}
           </div>
         )}
       </div>

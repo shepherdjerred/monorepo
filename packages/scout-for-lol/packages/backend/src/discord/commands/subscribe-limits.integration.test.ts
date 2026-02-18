@@ -476,7 +476,7 @@ describe("Subscribe Command - Account Limits", () => {
     const discordUserId = testAccountId("0000001");
 
     // Add unlimited override for accounts
-    addLimitOverride("accounts", 999999, { server: serverId });
+    addLimitOverride("accounts", 999_999, { server: serverId });
 
     try {
       // Create more than the default account limit

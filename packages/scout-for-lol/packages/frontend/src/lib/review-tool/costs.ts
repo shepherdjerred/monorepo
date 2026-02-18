@@ -142,8 +142,8 @@ export function calculatePipelineCosts(
  */
 export class CostTracker {
   private costs: CostBreakdown[] = [];
-  private initPromise: Promise<void>;
-  private subscribers = new Set<() => void>();
+  private readonly initPromise: Promise<void>;
+  private readonly subscribers = new Set<() => void>();
   private cachedTotal: CostBreakdown = {
     textInputCost: 0,
     textOutputCost: 0,

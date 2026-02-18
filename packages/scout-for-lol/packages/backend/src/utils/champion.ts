@@ -40,7 +40,7 @@ const CHAMPION_NAME_TO_ID: Record<string, number> = Object.entries(
  * getChampionId("TWISTED_FATE") // 4
  */
 export function getChampionId(name: string): number | undefined {
-  const normalized = name.toLowerCase().replace(/['\s-]/g, "_");
+  const normalized = name.toLowerCase().replaceAll(/['\s-]/g, "_");
   return CHAMPION_NAME_TO_ID[normalized];
 }
 
@@ -89,7 +89,7 @@ export function searchChampions(
   query: string,
   limit = 25,
 ): { name: string; id: number }[] {
-  const normalizedQuery = query.toLowerCase().replace(/['\s-]/g, "_");
+  const normalizedQuery = query.toLowerCase().replaceAll(/['\s-]/g, "_");
 
   // Get all champions
   const allChampions = Object.entries(CHAMPION_NAME_TO_ID)

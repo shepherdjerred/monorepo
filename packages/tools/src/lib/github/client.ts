@@ -22,10 +22,13 @@ export async function runGhCommand<T>(
     }
 
     try {
+      // eslint-disable-next-line custom-rules/no-type-assertions -- API boundary: JSON.parse returns any, T is trusted from caller
       const parsed = JSON.parse(stdout) as T;
       return { success: true, data: parsed };
     } catch {
-      return { success: true, data: stdout as unknown as T };
+      // Non-JSON output: return raw string. Callers using runGhCommandRaw
+      // should be used for raw string output instead.
+      return { success: true, data: undefined };
     }
   } catch (error) {
     const message =

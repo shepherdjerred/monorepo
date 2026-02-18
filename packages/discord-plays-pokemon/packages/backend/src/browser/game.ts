@@ -1,22 +1,20 @@
-import { By, WebDriver, until } from "selenium-webdriver";
+import type { WebDriver} from "selenium-webdriver";
+import { By, until } from "selenium-webdriver";
+import type {
+  CommandInput} from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/commandInput.js";
 import {
-  CommandInput,
   isBurst,
   isHold,
   isHoldB,
-} from "../game/command/commandInput.js";
-import { toGameboyAdvanceKeyInput } from "../game/command/keybinds.js";
-import { wait } from "../util.js";
-import { logger } from "../logger.js";
-import { getConfig } from "../config/index.js";
+} from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/commandInput.js";
+import { toGameboyAdvanceKeyInput } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/keybinds.js";
+import { wait } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/util.js";
+import { logger } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/logger.js";
+import { getConfig } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/config/index.js";
 
 export async function setupGame(driver: WebDriver) {
   logger.info("navigating to emulator page");
-  if (getConfig().game.emulator_url === "built_in") {
-    await driver.get(`http://localhost:${getConfig().web.port}/emulator.html`);
-  } else {
-    await driver.get(getConfig().game.emulator_url);
-  }
+  await (getConfig().game.emulator_url === "built_in" ? driver.get(`http://localhost:${getConfig().web.port}/emulator.html`) : driver.get(getConfig().game.emulator_url));
   await wait(5000);
 
   // click anywhere to start the game

@@ -125,7 +125,7 @@ export async function instrumentWorkflow<T>(
 
     const errorType = z
       .instanceof(Error)
-      .transform((error) => error.constructor.name)
+      .transform((err) => err.constructor.name)
       .catch(() => "Unknown")
       .parse(error);
     workflowErrorsTotal.inc({ workflow: workflowName, error_type: errorType });

@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { ClauderonClient } from "@clauderon/client";
-import { parseHistoryLinesAuto } from "../lib/historyParser";
-import type { Message } from "../lib/claudeParser";
+import { parseHistoryLinesAuto } from "@shepherdjerred/clauderon/web/frontend/src/lib/historyParser";
+import type { Message } from "@shepherdjerred/clauderon/web/frontend/src/lib/claudeParser";
 
 export type HistoryState = {
   messages: Message[];
@@ -28,77 +28,7 @@ export function useSessionHistory(
   const lastLineRef = useRef(0);
   const clientRef = useRef(new ClauderonClient());
 
-  useEffect(() => {
-    if (sessionId == null || sessionId.length === 0) {
-      setMessages([]);
-      setIsLoading(false);
-      return;
-    }
-
-    let isActive = true;
-
-    const fetchHistory = async () => {
-      try {
-        const client = clientRef.current;
-
-        // Fetch new lines since last poll
-        const response = await client.getSessionHistory(
-          sessionId,
-          lastLineRef.current, // no limit
-        );
-
-        if (!isActive) {
-          return;
-        }
-
-        setFileExists(response.fileExists);
-
-        if (!response.fileExists) {
-          setError(
-            "History file does not exist yet. Start a conversation to create it.",
-          );
-          setIsLoading(false);
-          return;
-        }
-
-        if (response.lines.length > 0) {
-          // Parse new messages (auto-detects Claude Code vs Codex format)
-          const newMessages = parseHistoryLinesAuto(response.lines);
-
-          // Append to existing messages
-          setMessages((prev) => [...prev, ...newMessages]);
-
-          // Update last line counter
-          lastLineRef.current = response.totalLines;
-        }
-
-        setError(null);
-        setIsLoading(false);
-      } catch (err) {
-        if (!isActive) {
-          return;
-        }
-
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch history",
-        );
-        setIsLoading(false);
-      }
-    };
-
-    // Initial fetch
-    void fetchHistory();
-
-    // Set up polling
-    const intervalId = setInterval(() => {
-      void fetchHistory();
-    }, pollingInterval);
-
-    return () => {
-      isActive = false;
-      clearInterval(intervalId);
-    };
-  }, [sessionId, pollingInterval]);
+  ;
 
   return {
     messages,

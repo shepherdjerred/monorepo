@@ -20,7 +20,22 @@ export async function executeDebugForceLeaderboardUpdate(
   await interaction.deferReply({ ephemeral: true });
 
   try {
-    if (competitionId !== null) {
+    if (competitionId === null) {
+      // Update all active competitions
+      logger.info(
+        "📊 Running daily leaderboard update for all active competitions",
+      );
+
+      await runDailyLeaderboardUpdate();
+
+      await interaction.editReply(
+        "✅ Daily leaderboard update completed successfully for all active competitions",
+      );
+
+      logger.info(
+        "✅ Successfully ran daily leaderboard update for all competitions",
+      );
+    } else {
       // Update specific competition
       logger.info(
         `📊 Running leaderboard update for competition ${competitionId.toString()}`,
@@ -57,21 +72,6 @@ export async function executeDebugForceLeaderboardUpdate(
 
       logger.info(
         `✅ Successfully updated leaderboard for competition ${competitionId.toString()}`,
-      );
-    } else {
-      // Update all active competitions
-      logger.info(
-        "📊 Running daily leaderboard update for all active competitions",
-      );
-
-      await runDailyLeaderboardUpdate();
-
-      await interaction.editReply(
-        "✅ Daily leaderboard update completed successfully for all active competitions",
-      );
-
-      logger.info(
-        "✅ Successfully ran daily leaderboard update for all competitions",
       );
     }
   } catch (error) {

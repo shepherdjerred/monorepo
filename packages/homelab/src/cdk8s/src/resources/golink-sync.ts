@@ -5,8 +5,8 @@ import {
   KubeClusterRole,
   KubeClusterRoleBinding,
   Quantity,
-} from "../../generated/imports/k8s.ts";
-import versions from "../versions.ts";
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 /**
  * Creates a Job that syncs Tailscale ingresses to golink.

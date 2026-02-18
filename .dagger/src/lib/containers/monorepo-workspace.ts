@@ -7,7 +7,7 @@
  */
 import type { Container, Directory } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
-import versions from "../versions.js";
+import versions from "../versions.ts";
 
 const BUN_VERSION = versions.bun;
 const PLAYWRIGHT_VERSION = versions.playwright;
@@ -227,7 +227,7 @@ export function installMonorepoWorkspaceDeps(
   for (const entry of workspaces) {
     const { path, fullDirPhase1, depsOnly } = normalizeEntry(entry);
     // Skip workspaces that are deps-only or fully mounted in PHASE 1
-    if (depsOnly || fullDirPhase1) continue;
+    if (depsOnly || fullDirPhase1) {continue;}
     container = addDir(container, path);
   }
 

@@ -63,21 +63,7 @@ export function StartupHealthModal({
   onViewSessions,
 }: StartupHealthModalProps) {
   // Handle ESC key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onOpenChange(false);
-      }
-    };
-
-    if (open) {
-      document.addEventListener("keydown", handleEscape);
-      return () => {
-        document.removeEventListener("keydown", handleEscape);
-      };
-    }
-    return;
-  }, [open, onOpenChange]);
+  ;
 
   if (!open || unhealthySessions.length === 0) {
     return null;

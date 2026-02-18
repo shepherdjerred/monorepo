@@ -573,7 +573,7 @@ describe("Competition Leave - Multi-User Scenarios", () => {
       user1Id,
       "Player1",
     );
-    const nonExistentCompetitionId = 99999;
+    const nonExistentCompetitionId = 99_999;
 
     // Act & Assert
     expect(async () => {

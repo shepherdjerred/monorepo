@@ -69,7 +69,7 @@ async function main(): Promise<void> {
       const hunkMatch = /\+(\d+)/.exec(line);
       const lineStr = hunkMatch?.[1];
       if (lineStr) {
-        currentLineNumber = parseInt(lineStr);
+        currentLineNumber = Number.parseInt(lineStr);
       }
       continue;
     }
@@ -79,7 +79,7 @@ async function main(): Promise<void> {
       continue;
     }
 
-    const cleanedLine = line.substring(1); // Remove the + prefix
+    const cleanedLine = line.slice(1); // Remove the + prefix
 
     // Check if line matches any suppression pattern
     for (const pattern of SUPPRESSION_PATTERNS) {

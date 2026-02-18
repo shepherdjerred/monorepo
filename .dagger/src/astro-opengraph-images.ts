@@ -1,6 +1,6 @@
 import type { Directory } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
-import versions from "./lib/versions.js";
+import versions from "./lib/versions.ts";
 
 /**
  * Check astro-opengraph-images: lint, build, test

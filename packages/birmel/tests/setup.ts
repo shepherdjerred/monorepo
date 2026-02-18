@@ -62,10 +62,10 @@ void mock.module("@ai-sdk/openai", () => ({
 
 // Mock environment variables for testing
 beforeAll(() => {
-  process.env["DISCORD_TOKEN"] = "test-discord-token";
-  process.env["DISCORD_CLIENT_ID"] = "test-client-id";
-  process.env["ANTHROPIC_API_KEY"] = "test-anthropic-key";
-  process.env["OPENAI_API_KEY"] = "test-openai-key";
+  Bun.env["DISCORD_TOKEN"] = "test-discord-token";
+  Bun.env["DISCORD_CLIENT_ID"] = "test-client-id";
+  Bun.env["ANTHROPIC_API_KEY"] = "test-anthropic-key";
+  Bun.env["OPENAI_API_KEY"] = "test-openai-key";
 });
 
 afterAll(() => {
@@ -263,4 +263,4 @@ void mock.module("discord-player-youtubei", () => ({
   },
 }));
 
-export {};
+

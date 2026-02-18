@@ -1,19 +1,19 @@
-import { createTool } from "../../../voltagent/tools/create-tool.js";
+import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.js";
 import { z } from "zod";
-import { getDiscordClient } from "../../../discord/index.js";
-import { loggers } from "../../../utils/logger.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.js";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
 import {
   captureException,
   withToolSpan,
-} from "../../../observability/index.js";
-import { validateSnowflakes } from "./validation.js";
+} from "@shepherdjerred/birmel/observability/index.js";
+import { validateSnowflakes } from "./validation.ts";
 import {
   handleCreateFromMessage,
   handleCreateStandalone,
   handleModifyThread,
   handleAddMember,
   handleGetThreadMessages,
-} from "./thread-actions.js";
+} from "./thread-actions.ts";
 
 const logger = loggers.tools.child("discord.threads");
 

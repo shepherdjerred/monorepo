@@ -4,7 +4,7 @@
  * Handles audio streaming from various sources (files, URLs, S3, YouTube).
  */
 
-import { Readable } from "stream";
+import { Readable } from "node:stream";
 import {
   GetObjectCommand,
   HeadObjectCommand,
@@ -44,8 +44,8 @@ function webStreamToReadable(stream: ReadableStream<Uint8Array>): Readable {
         }
         readable.push(value);
       }
-    } catch (err) {
-      readable.destroy(err instanceof Error ? err : new Error(String(err)));
+    } catch (error) {
+      readable.destroy(error instanceof Error ? error : new Error(String(error)));
     }
   }
 
@@ -124,7 +124,7 @@ function urlToS3Key(url: string): string {
   const hasher = new Bun.CryptoHasher("sha256");
   hasher.update(url);
   const hash = hasher.digest("hex");
-  return `youtube-cache/${hash.substring(0, 8)}/${hash}.mp3`;
+  return `youtube-cache/${hash.slice(0, 8)}/${hash}.mp3`;
 }
 
 /**

@@ -1,20 +1,20 @@
-import type { MessageContext } from "../discord/index.js";
-import { createRoutingAgentWithPersona } from "./agents/routing-agent.js";
+import type { MessageContext } from "@shepherdjerred/birmel/discord/index.js";
+import { createRoutingAgentWithPersona } from "./agents/routing-agent.ts";
 import {
   getServerWorkingMemory,
   getOwnerWorkingMemory,
   getChannelConversationId,
-} from "./memory/index.js";
-import { getGuildPersona, buildPersonaPrompt } from "../persona/index.js";
-import { getRecentChannelMessages } from "../discord/utils/channel-history.js";
-import { buildMessageContent } from "../mastra/utils/message-builder.js";
-import { runWithRequestContext } from "../mastra/tools/request-context.js";
+} from "./memory/index.ts";
+import { getGuildPersona, buildPersonaPrompt } from "@shepherdjerred/birmel/persona/index.js";
+import { getRecentChannelMessages } from "@shepherdjerred/birmel/discord/utils/channel-history.js";
+import { buildMessageContent } from "@shepherdjerred/birmel/mastra/utils/message-builder.js";
+import { runWithRequestContext } from "@shepherdjerred/birmel/mastra/tools/request-context.js";
 import {
   setSentryContext,
   clearSentryContext,
   captureException,
-} from "../observability/index.js";
-import { logger } from "../utils/index.js";
+} from "@shepherdjerred/birmel/observability/index.js";
+import { logger } from "@shepherdjerred/birmel/utils/index.js";
 
 // Typing cursor for progressive updates
 const TYPING_CURSOR = " \u258C";

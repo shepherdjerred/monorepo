@@ -1,10 +1,10 @@
 import { Events } from "discord.js";
-import "./rest.js";
-import client from "../client.js";
-import { makeScreenshot } from "./commands/screenshot.js";
-import { WebDriver } from "selenium-webdriver";
-import { help } from "./commands/help.js";
-import { logger } from "../../logger.js";
+import "./rest.ts";
+import client from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/discord/client.js";
+import { makeScreenshot } from "./commands/screenshot.ts";
+import type { WebDriver } from "selenium-webdriver";
+import { help } from "./commands/help.ts";
+import { logger } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/logger.js";
 
 export function handleSlashCommands(driver: WebDriver) {
   logger.info("handling slash commands");
@@ -23,8 +23,8 @@ export function handleSlashCommands(driver: WebDriver) {
           case "help":
             await help(interaction);
         }
-      } catch (e) {
-        logger.error(e);
+      } catch (error) {
+        logger.error(error);
       }
     })();
   });

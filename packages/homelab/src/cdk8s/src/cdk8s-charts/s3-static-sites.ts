@@ -1,7 +1,7 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
-import { createS3StaticSitesDeployment } from "../resources/s3-static-sites/index.ts";
+import { createS3StaticSitesDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/s3-static-sites/index.ts";
 
 export function createS3StaticSitesChart(app: App) {
   const chart = new Chart(app, "s3-static-sites", {

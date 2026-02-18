@@ -169,7 +169,7 @@ describe("Non-existent competition", () => {
     // Create a competition just to set up the database properly
     await createTestCompetition(serverId, ownerId);
 
-    const nonExistentId = 999999;
+    const nonExistentId = 999_999;
     const competition = await getCompetitionById(prisma, nonExistentId);
 
     expect(competition).toBeUndefined();

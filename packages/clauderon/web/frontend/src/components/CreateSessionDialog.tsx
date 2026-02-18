@@ -7,19 +7,19 @@ import type {
   CreateRepositoryInput,
 } from "@clauderon/client";
 import { AgentType, type FeatureFlags } from "@clauderon/shared";
-import { useSessionContext } from "../contexts/SessionContext";
-import { useFeatureFlags } from "../contexts/FeatureFlagsContext";
+import { useSessionContext } from "@shepherdjerred/clauderon/web/frontend/src/contexts/SessionContext";
+import { useFeatureFlags } from "@shepherdjerred/clauderon/web/frontend/src/contexts/FeatureFlagsContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { X, Plus } from "lucide-react";
-import { RepositoryEntryForm } from "./RepositoryEntryForm";
-import { AgentModelSelector } from "./AgentModelSelector";
+import { RepositoryEntryForm } from "./RepositoryEntryForm.tsx";
+import { AgentModelSelector } from "./AgentModelSelector.tsx";
 import { toast } from "sonner";
 import { getModelsForAgent, validateRepositories } from "@/lib/model-options";
 import {
   AdvancedContainerSettings,
   type SessionFormData,
-} from "./AdvancedContainerSettings";
+} from "./AdvancedContainerSettings.tsx";
 import { useRepositoryHandlers } from "@/hooks/useRepositoryHandlers";
 
 type CreateSessionDialogProps = {
@@ -65,104 +65,22 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   });
 
   // Auto-check dangerous_skip_checks for Docker, Kubernetes, and Sprites, uncheck for Zellij
-  useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      dangerous_skip_checks:
-        (prev.backend as string) === "Docker" ||
-        (prev.backend as string) === "Kubernetes" ||
-        (prev.backend as string) === "Sprites",
-    }));
-  }, [formData.backend]);
+  ;
 
   // Fetch storage classes when Kubernetes backend is selected
-  useEffect(() => {
-    if ((formData.backend as string) === "Kubernetes") {
-      setLoadingStorageClasses(true);
-      client
-        .getStorageClasses()
-        .then((classes) => {
-          setStorageClasses(classes);
-          const defaultClass = classes.find((c) => c.is_default);
-          if (defaultClass != null && !formData.storage_class) {
-            setFormData((prev) => ({
-              ...prev,
-              storage_class: defaultClass.name,
-            }));
-          }
-        })
-        .catch((err: unknown) => {
-          console.error("Failed to fetch storage classes:", err);
-          toast.warning("Could not load storage classes from cluster");
-          setStorageClasses([]);
-        })
-        .finally(() => {
-          setLoadingStorageClasses(false);
-        });
-    } else {
-      setStorageClasses([]);
-      setFormData((prev) => ({ ...prev, storage_class: "" }));
-    }
-  }, [formData.backend, formData.storage_class, client]);
+  ;
 
   // Reset model when agent changes
-  useEffect(() => {
-    setFormData((prev) => ({ ...prev, model: undefined }));
-  }, [formData.agent]);
+  ;
 
   // Fetch feature flags on mount
-  useEffect(() => {
-    const fetchFlags = async () => {
-      try {
-        const response = await fetch("/api/feature-flags");
-        const data: { flags: FeatureFlags } = (await response.json()) as {
-          flags: FeatureFlags;
-        };
-        setFeatureFlags(data.flags);
-      } catch (fetchError) {
-        console.error("Failed to fetch feature flags:", fetchError);
-      }
-    };
-    void fetchFlags();
-  }, []);
+  ;
 
   // Reset backend if Kubernetes is disabled
-  useEffect(() => {
-    if (
-      (formData.backend as string) === "Kubernetes" &&
-      featureFlags != null &&
-      !featureFlags.enable_kubernetes_backend
-    ) {
-      setFormData((prev) => ({ ...prev, backend: "Docker" as BackendType }));
-    }
-  }, [featureFlags, formData.backend]);
+  ;
 
   // Sync repositories array with multi-repo toggle
-  useEffect(() => {
-    if (multiRepoEnabled) {
-      setRepositories((prev) =>
-        prev.length === 1
-          ? [
-              ...prev,
-              {
-                id: String(Date.now()),
-                repo_path: "",
-                mount_name: "",
-                is_primary: false,
-                base_branch: "",
-              },
-            ]
-          : prev,
-      );
-    } else {
-      setRepositories((prev) => {
-        if (prev.length > 1 && prev[0] != null) {
-          return [prev[0]];
-        }
-        return prev;
-      });
-    }
-  }, [multiRepoEnabled, setRepositories]);
+  ;
 
   const availableModels = useMemo(
     () => getModelsForAgent(formData.agent),
@@ -251,8 +169,8 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         for (const file of selectedFiles) {
           try {
             await client.uploadImage(result, file);
-          } catch (uploadErr) {
-            console.error("Failed to upload image:", uploadErr);
+          } catch (error_) {
+            console.error("Failed to upload image:", error_);
             toast.warning(`Failed to upload ${file.name}`);
           }
         }
@@ -260,8 +178,8 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
 
       toast.success("Session created successfully");
       onClose();
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+    } catch (error_) {
+      const errorMsg = error_ instanceof Error ? error_.message : String(error_);
       setError(errorMsg);
       toast.error(`Failed to create session: ${errorMsg}`);
     } finally {
@@ -270,18 +188,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   };
 
   // Handle ESC key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-
-    document.addEventListener("keydown", handleEscape);
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [onClose]);
+  ;
 
   return (
     <>

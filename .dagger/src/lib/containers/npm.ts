@@ -4,7 +4,7 @@ import {
   type Directory,
   type Secret,
 } from "@dagger.io/dagger";
-import versions from "../versions";
+import versions from "../versions.ts";
 
 export type NpmPublishOptions = {
   /** The container with the built package */

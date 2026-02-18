@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { BookmarkDatastore } from "./bookmark-datastore.ts";
 import type { Bookmark, Bookmarkable } from "#src/model/bookmark";
 import type { Content } from "#src/model/content";
@@ -6,6 +7,12 @@ import { isVideo } from "#src/model/video";
 import { isCourse } from "#src/model/course";
 
 const IDENTIFIER = "bookmarks";
+
+const StoredBookmarkSchema = z.object({
+  item: z.object({ uuid: z.string() }).passthrough(),
+  date: z.string(),
+});
+const StoredBookmarksSchema = z.array(StoredBookmarkSchema);
 
 export class LocalStorageBookmarkDatastore implements BookmarkDatastore {
   private readonly content: Content;
@@ -24,9 +31,10 @@ export class LocalStorageBookmarkDatastore implements BookmarkDatastore {
   }
 
   get(): Bookmark[] {
-    const bookmarks: Bookmark[] = JSON.parse(
+    const raw: unknown = JSON.parse(
       globalThis.localStorage.getItem(IDENTIFIER) ?? "[]",
-    ) as Bookmark[];
+    );
+    const bookmarks = StoredBookmarksSchema.parse(raw);
     const updatedBookmarks: Bookmark[] = bookmarks.flatMap((bookmark) => {
       let matchedItem: Bookmarkable | undefined;
 
@@ -53,7 +61,7 @@ export class LocalStorageBookmarkDatastore implements BookmarkDatastore {
         return {
           ...bookmark,
           item: matchedItem,
-          date: new Date(bookmark.date as unknown as string),
+          date: new Date(bookmark.date),
         };
       }
     });

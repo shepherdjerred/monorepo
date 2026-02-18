@@ -8,7 +8,7 @@ import {
   ExternalApisSchema,
   LoggingConfigSchema,
   ConfigSchema,
-} from "../../src/config/schema.js";
+} from "@shepherdjerred/birmel/config/schema.js";
 
 describe("DiscordConfigSchema", () => {
   test("validates valid config", () => {

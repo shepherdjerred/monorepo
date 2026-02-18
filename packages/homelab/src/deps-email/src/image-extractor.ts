@@ -1,7 +1,7 @@
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
-import type { ImageRef } from "./types.js";
-import { parseImageString } from "./types.js";
+import type { ImageRef } from "./types.ts";
+import { parseImageString } from "./types.ts";
 
 /**
  * Default values for charts that have required fields with no defaults.

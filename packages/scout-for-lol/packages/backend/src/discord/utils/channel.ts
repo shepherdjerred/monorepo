@@ -9,9 +9,9 @@ import type {
  * Minimal interface for text channels that support sending messages
  */
 export type SendableChannel = {
-  send(
+  send: (
     content: string | MessagePayload | MessageCreateOptions,
-  ): Promise<Message>;
+  ) => Promise<Message>;
 };
 
 /**

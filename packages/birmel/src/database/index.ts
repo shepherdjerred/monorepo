@@ -5,7 +5,7 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-const databasePath = process.env["DATABASE_PATH"];
+const databasePath = Bun.env["DATABASE_PATH"];
 let datasourceUrl: string | undefined;
 if (databasePath != null && databasePath.length > 0) {
   datasourceUrl = databasePath.startsWith("file:")
@@ -20,12 +20,12 @@ export const prisma =
       ? { datasourceUrl }
       : {}),
     log:
-      process.env["LOG_LEVEL"] === "debug"
+      Bun.env["LOG_LEVEL"] === "debug"
         ? ["query", "info", "warn", "error"]
         : ["error"],
   });
 
-if (process.env.NODE_ENV !== "production") {
+if (Bun.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
 

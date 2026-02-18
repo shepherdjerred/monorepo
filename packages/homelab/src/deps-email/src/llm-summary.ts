@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import type { DependencyInfo, ReleaseNotes } from "./main-schemas.js";
+import type { DependencyInfo, ReleaseNotes } from "./main-schemas.ts";
 
 export async function summarizeWithLLM(
   changes: DependencyInfo[],

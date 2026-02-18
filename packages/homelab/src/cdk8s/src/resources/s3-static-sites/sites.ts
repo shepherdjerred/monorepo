@@ -1,4 +1,4 @@
-import type { StaticSiteConfig } from "../../misc/s3-static-site.ts";
+import type { StaticSiteConfig } from "@shepherdjerred/homelab/cdk8s/src/misc/s3-static-site.ts";
 
 // DNS records for all sites are managed by OpenTofu (src/tofu/cloudflare/).
 export const staticSites: StaticSiteConfig[] = [

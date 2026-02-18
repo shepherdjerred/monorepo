@@ -1,10 +1,10 @@
 import type { Client } from "discord.js";
-import { setupReadyHandler } from "./ready.js";
-import { setupMessageCreateHandler } from "./message-create.js";
-import { setupGuildCreateHandler } from "./guild-create.js";
-import { setupGuildDeleteHandler } from "./guild-delete.js";
-import { handleReactionAdd } from "./reaction-add.js";
-import { setupInteractionHandler } from "./interaction-create.js";
+import { setupReadyHandler } from "./ready.ts";
+import { setupMessageCreateHandler } from "./message-create.ts";
+import { setupGuildCreateHandler } from "./guild-create.ts";
+import { setupGuildDeleteHandler } from "./guild-delete.ts";
+import { handleReactionAdd } from "./reaction-add.ts";
+import { setupInteractionHandler } from "./interaction-create.ts";
 
 export function registerEventHandlers(client: Client): void {
   setupReadyHandler(client);

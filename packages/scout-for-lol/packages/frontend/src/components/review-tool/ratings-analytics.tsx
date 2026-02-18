@@ -14,10 +14,10 @@ function subscribeToHistory(callback: () => void) {
   const handleHistoryUpdate = () => {
     void loadHistoryData();
   };
-  window.addEventListener("history-update", handleHistoryUpdate);
+  globalThis.addEventListener("history-update", handleHistoryUpdate);
   return () => {
     historyListeners.delete(callback);
-    window.removeEventListener("history-update", handleHistoryUpdate);
+    globalThis.removeEventListener("history-update", handleHistoryUpdate);
   };
 }
 
@@ -86,7 +86,7 @@ export function RatingsAnalytics() {
       }
     }
 
-    const personalityStats = Array.from(personalityMap.entries())
+    const personalityStats = [...personalityMap.entries()]
       .map(([personality, data]) => ({
         personality,
         average: data.sum / data.total,

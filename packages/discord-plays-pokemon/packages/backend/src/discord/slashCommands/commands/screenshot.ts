@@ -1,17 +1,18 @@
+import type {
+  CommandInteraction,
+  TextChannel} from "discord.js";
 import {
   SlashCommandBuilder,
-  CommandInteraction,
   AttachmentBuilder,
   EmbedBuilder,
-  TextChannel,
   channelMention,
   userMention,
   time,
 } from "discord.js";
-import { WebDriver } from "selenium-webdriver";
-import { Buffer } from "buffer";
-import client from "../../client.js";
-import { getConfig } from "../../../config/index.js";
+import type { WebDriver } from "selenium-webdriver";
+import { Buffer } from "node:buffer";
+import client from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/discord/client.js";
+import { getConfig } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/config/index.js";
 
 export const screenshotCommand = new SlashCommandBuilder()
   .setName("screenshot")
@@ -37,17 +38,13 @@ export function makeScreenshot(driver: WebDriver) {
     const channel = client.channels.cache.get(
       getConfig().bot.notifications.channel_id,
     );
-    if (channel) {
-      await (channel as TextChannel).send({
+    await (channel ? (channel as TextChannel).send({
         content: `Screenshot taken by ${userMention(interaction.user.id)} at ${time(date)}`,
         embeds: [embed],
         files: [attachment],
-      });
-    } else {
-      await interaction.reply({
+      }) : interaction.reply({
         ephemeral: true,
         content: "There was an error",
-      });
-    }
+      }));
   };
 }

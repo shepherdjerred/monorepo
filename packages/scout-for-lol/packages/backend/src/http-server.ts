@@ -67,13 +67,13 @@ const server = Bun.serve({
         now - lastSuccessTimestamp > fiveMinutesMs;
       const healthy = !(hasRecentAttempts && lastSuccessStale);
 
-      return new Response(
-        JSON.stringify({
+      return Response.json(
+        {
           healthy,
           lastSuccessTimestamp: lastSuccessTimestamp ?? null,
           lastAttemptTimestamp: lastAttemptTimestamp ?? null,
           uptimeSeconds,
-        }),
+        },
         {
           status: healthy ? 200 : 503,
           headers: {

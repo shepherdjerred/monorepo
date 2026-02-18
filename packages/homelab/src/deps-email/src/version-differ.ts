@@ -2,10 +2,10 @@ import type {
   FullDependencyDiff,
   ChartUpdate,
   ResolvedChart,
-} from "./types.js";
-import { extractAllImages, diffImages } from "./image-extractor.js";
-import { fetchChartMetadata } from "./chart-fetcher.js";
-import { resolveRepositoryUrl } from "./types.js";
+} from "./types.ts";
+import { extractAllImages, diffImages } from "./image-extractor.ts";
+import { fetchChartMetadata } from "./chart-fetcher.ts";
+import { resolveRepositoryUrl } from "./types.ts";
 
 /**
  * Compare two versions of a Helm chart and return all dependency changes

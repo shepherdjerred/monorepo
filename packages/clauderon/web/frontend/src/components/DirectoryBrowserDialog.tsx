@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Folder, FolderOpen, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useClauderonClient } from "../hooks/useClauderonClient";
+import { useClauderonClient } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useClauderonClient";
 import type { DirectoryEntryDto } from "@clauderon/client";
 
 type DirectoryBrowserDialogProps = {
@@ -23,31 +23,7 @@ export function DirectoryBrowserDialog({
   const [error, setError] = useState<string | null>(null);
 
   // Fetch directory contents
-  useEffect(() => {
-    const fetchDirectory = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const response = await client.browseDirectory(currentPath);
-
-        if (response.error != null && response.error.length > 0) {
-          setError(response.error);
-          // Don't update entries if there's an error
-        } else {
-          setCurrentPath(response.current_path);
-          setParentPath(response.parent_path ?? null);
-          setEntries(response.entries);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : String(err));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    void fetchDirectory();
-  }, [currentPath, client]);
+  ;
 
   const handleNavigateToParent = () => {
     if (parentPath != null && parentPath.length > 0) {

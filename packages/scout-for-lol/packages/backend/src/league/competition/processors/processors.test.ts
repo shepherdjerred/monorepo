@@ -219,7 +219,7 @@ function createParticipant(
     basicPings: 0,
     bountyLevel: 0,
     challenges: createDefaultChallenges(),
-    champExperience: 10000,
+    champExperience: 10_000,
     champLevel: 18,
     championName: "TestChampion",
     championTransform: 0,
@@ -243,7 +243,7 @@ function createParticipant(
     gameEndedInEarlySurrender: false,
     gameEndedInSurrender: false,
     getBackPings: 0,
-    goldEarned: 10000,
+    goldEarned: 10_000,
     goldSpent: 9000,
     holdPings: 0,
     individualPosition: "TOP" as const,
@@ -320,10 +320,10 @@ function createParticipant(
     timeCCingOthers: 0,
     timePlayed: 1800,
     totalAllyJungleMinionsKilled: 0,
-    totalDamageDealt: 100000,
-    totalDamageDealtToChampions: 15000,
+    totalDamageDealt: 100_000,
+    totalDamageDealtToChampions: 15_000,
     totalDamageShieldedOnTeammates: 0,
-    totalDamageTaken: 20000,
+    totalDamageTaken: 20_000,
     totalEnemyJungleMinionsKilled: 0,
     totalHeal: 5000,
     totalHealsOnTeammates: 0,
@@ -1313,7 +1313,7 @@ describe("processHighestWinRate", () => {
     // Only PlayerB should be included (PlayerA has < 10 games)
     expect(result.length).toBe(1);
     expect(result[0]?.playerId).toBe(playerB.id);
-    expect(result[0]?.score).toBe(1.0); // 100% win rate
+    expect(result[0]?.score).toBe(1); // 100% win rate
   });
 });
 

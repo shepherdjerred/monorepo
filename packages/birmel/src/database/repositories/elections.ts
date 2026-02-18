@@ -1,4 +1,4 @@
-import { prisma } from "../index.js";
+import { prisma } from "@shepherdjerred/birmel/database/index.js";
 import type { ElectionPoll } from "@prisma/client";
 
 export type CreateElectionInput = {

@@ -55,21 +55,21 @@ function testPuuid(identifier: string): LeaguePuuid {
 function testChannelId(identifier: string): DiscordChannelId {
   // Discord channel IDs are 17-20 characters and must be numeric (snowflake IDs)
   // Format: Take a base number and pad it to make it 18 characters
-  const base = identifier.replace(/\D/g, ""); // Remove non-digits
+  const base = identifier.replaceAll(/\D/g, ""); // Remove non-digits
   const numericId = `1${base}`.padEnd(18, "0");
   return DiscordChannelIdSchema.parse(numericId);
 }
 
 // Helper function to create a valid Discord account ID (17-18 numeric characters)
 function testAccountId(identifier: string): DiscordAccountId {
-  const base = identifier.replace(/\D/g, ""); // Remove non-digits
+  const base = identifier.replaceAll(/\D/g, ""); // Remove non-digits
   const numericId = `2${base}`.padEnd(18, "0");
   return DiscordAccountIdSchema.parse(numericId);
 }
 
 // Helper function to create a valid Discord guild ID (17-20 numeric characters)
 function testGuildId(identifier: string): DiscordGuildId {
-  const base = identifier.replace(/\D/g, ""); // Remove non-digits
+  const base = identifier.replaceAll(/\D/g, ""); // Remove non-digits
   const numericId = `3${base}`.padEnd(18, "0");
   return DiscordGuildIdSchema.parse(numericId);
 }

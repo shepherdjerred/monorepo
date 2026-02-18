@@ -246,7 +246,7 @@ function selectFromPool(pool: SoundPool): SoundEntry | null {
           return sound;
         }
       }
-      return enabledSounds[enabledSounds.length - 1] ?? null;
+      return enabledSounds.at(-1) ?? null;
     })
     .exhaustive();
 }

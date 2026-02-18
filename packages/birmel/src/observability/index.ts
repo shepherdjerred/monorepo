@@ -21,8 +21,8 @@ export {
   type DiscordSpanAttributes,
 } from "./tracing.js";
 
-import { initializeSentry, flushSentry } from "./sentry.js";
-import { initializeTracing, shutdownTracing } from "./tracing.js";
+import { initializeSentry, flushSentry } from "./sentry.ts";
+import { initializeTracing, shutdownTracing } from "./tracing.ts";
 
 /**
  * Initialize all observability systems (Sentry and OpenTelemetry).

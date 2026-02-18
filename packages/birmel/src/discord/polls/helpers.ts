@@ -1,7 +1,7 @@
 import type { Message, Poll } from "discord.js";
-import { getDiscordClient } from "../client.js";
-import { loggers } from "../../utils/logger.js";
-import { prisma } from "../../database/index.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.js";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
+import { prisma } from "@shepherdjerred/birmel/database/index.js";
 
 const logger = loggers.discord.child("polls");
 
@@ -77,21 +77,23 @@ export async function createPoll(
       message.poll != null &&
       client.user != null
     ) {
-      void prisma.pollRecord
-        .create({
-          data: {
-            guildId: message.guildId,
-            channelId: params.channelId,
-            messageId: message.id,
-            pollId: message.poll.question.text ?? "",
-            question: params.question,
-            createdBy: client.user.id,
-            expiresAt,
-          },
-        })
-        .catch((error: unknown) => {
+      void (async () => {
+        try {
+          await prisma.pollRecord.create({
+            data: {
+              guildId: message.guildId,
+              channelId: params.channelId,
+              messageId: message.id,
+              pollId: message.poll.question.text ?? "",
+              question: params.question,
+              createdBy: client.user.id,
+              expiresAt,
+            },
+          });
+        } catch (error: unknown) {
           logger.error("Failed to store poll record", error);
-        });
+        }
+      })();
     }
 
     logger.info("Poll created successfully", {

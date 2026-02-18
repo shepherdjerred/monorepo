@@ -153,7 +153,7 @@ describe("getCompetitionById", () => {
   });
 
   test("returns null for non-existent ID", async () => {
-    const found = await getCompetitionById(prisma, 99999);
+    const found = await getCompetitionById(prisma, 99_999);
     expect(found).toBeUndefined();
   });
 });
@@ -284,7 +284,7 @@ describe("getActiveCompetitions", () => {
     for (let i = 0; i < 3; i++) {
       await createCompetition(prisma, {
         serverId: DiscordGuildIdSchema.parse(
-          (100000000000000000 + i).toString(),
+          (100_000_000_000_000_000 + i).toString(),
         ),
         ownerId: testAccountId("987654321098765432"),
         channelId: testChannelId("111222333444555666"),
@@ -380,9 +380,9 @@ describe("cancelCompetition", () => {
   test("throws for non-existent competition", async () => {
     let error: unknown = null;
     try {
-      await cancelCompetition(prisma, 99999);
-    } catch (e) {
-      error = e;
+      await cancelCompetition(prisma, 99_999);
+    } catch (error_) {
+      error = error_;
     }
     expect(error).not.toBeNull();
   });

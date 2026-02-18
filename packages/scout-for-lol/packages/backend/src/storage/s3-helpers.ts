@@ -78,11 +78,7 @@ export async function saveToS3(
     // Try to validate as string first, then bytes
     let bodyBuffer: Uint8Array;
     const stringResult = StringSchema.safeParse(body);
-    if (stringResult.success) {
-      bodyBuffer = new TextEncoder().encode(stringResult.data);
-    } else {
-      bodyBuffer = BytesSchema.parse(body);
-    }
+    bodyBuffer = stringResult.success ? new TextEncoder().encode(stringResult.data) : BytesSchema.parse(body);
     const sizeBytes = bodyBuffer.length;
 
     logger.info(`[S3Storage] 📝 Upload details:`, {

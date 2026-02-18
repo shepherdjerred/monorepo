@@ -28,7 +28,8 @@
     "react-highlight-words": "^0.21.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.10.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^25.0.0",

@@ -1,5 +1,5 @@
 import type { Attachment, Message } from "discord.js";
-import { logger } from "./logger.js";
+import { logger } from "./logger.ts";
 
 export type ImageAttachment = {
   url: string;

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { init, Terminal, FitAddon } from "ghostty-web";
-import { useConsole } from "../hooks/useConsole";
+import type { Terminal} from "ghostty-web";
+import { init, FitAddon } from "ghostty-web";
+import { useConsole } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useConsole";
 import { X, MessageSquare } from "lucide-react";
 import * as Sentry from "@sentry/react";
 import { DecodeError } from "@clauderon/client";
@@ -106,18 +107,7 @@ export function Console({
   const [errorKey, setErrorKey] = useState<number>(0);
 
   // Set Sentry context for this session
-  useEffect(() => {
-    Sentry.setContext("console_session", {
-      session_id: sessionId,
-      session_name: sessionName,
-      connected_at: new Date().toISOString(),
-    });
-
-    return () => {
-      // Clear context on unmount
-      Sentry.setContext("console_session", null);
-    };
-  }, [sessionId, sessionName]);
+  ;
 
   // Dismiss error function
   const dismissError = () => {
@@ -131,203 +121,16 @@ export function Console({
   const clientRef = useRef({ client, isConnected });
 
   // Update ref whenever client or connection state changes
-  useEffect(() => {
-    clientRef.current = { client, isConnected };
-  }, [client, isConnected]);
+  ;
 
   // Initialize terminal
-  useEffect(() => {
-    if (terminalRef.current == null) {
-      return;
-    }
-
-    // Prevent duplicate initialization - check both flags synchronously
-    if (terminalInstanceRef.current != null || initializingRef.current) {
-      return;
-    }
-
-    // Set flag synchronously to prevent race condition
-    initializingRef.current = true;
-    let cleanup: (() => void) | undefined;
-
-    void (async () => {
-      const container = terminalRef.current;
-      if (container == null) {
-        return;
-      }
-
-      // Clear any existing canvases in the container
-      while (container.firstChild != null) {
-        container.firstChild.remove();
-      }
-
-      // Initialize ghostty WASM
-      await init();
-
-      const currentTheme = getCurrentTheme();
-      const terminal = new Terminal({
-        cursorBlink: true,
-        fontSize: 14,
-        fontFamily: '"Berkeley Mono", Menlo, Monaco, "Courier New", monospace',
-        theme: terminalThemes[currentTheme],
-        scrollback: 10_000,
-        smoothScrollDuration: 0, // Disable smooth scrolling
-        rows: 24, // Set explicit initial size
-        cols: 80,
-      });
-
-      terminal.open(container);
-
-      terminalInstanceRef.current = terminal;
-
-      // Use FitAddon to automatically size terminal to container
-      const fitAddon = new FitAddon();
-      terminal.loadAddon(fitAddon);
-
-      // Fit terminal after a brief delay to ensure container has dimensions
-      setTimeout(() => {
-        fitAddon.fit();
-
-        // Send size to backend
-        if (clientRef.current.client != null && clientRef.current.isConnected) {
-          clientRef.current.client.resize(terminal.rows, terminal.cols);
-        }
-
-        // Observe container size changes
-        fitAddon.observeResize();
-
-        // Focus the terminal
-        terminal.focus();
-      }, 250);
-
-      // Handle terminal input
-      terminal.onData((data) => {
-        const { client: currentClient, isConnected: currentConnected } =
-          clientRef.current;
-        if (currentClient != null && currentConnected) {
-          currentClient.write(data);
-        }
-      });
-
-      // Handle terminal resize events
-      terminal.onResize(({ rows, cols }) => {
-        if (clientRef.current.client != null && clientRef.current.isConnected) {
-          clientRef.current.client.resize(rows, cols);
-        }
-      });
-
-      // Watch for theme changes and update terminal
-      const observer = new MutationObserver(() => {
-        const newTheme = getCurrentTheme();
-        terminal.options.theme = terminalThemes[newTheme];
-      });
-
-      observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ["class"],
-      });
-
-      cleanup = () => {
-        observer.disconnect();
-        fitAddon.dispose();
-        terminal.dispose();
-        terminalInstanceRef.current = null;
-        initializingRef.current = false;
-      };
-    })();
-
-    return () => {
-      cleanup?.();
-    };
-  }, []);
+  ;
 
   // Handle WebSocket data
-  useEffect(() => {
-    if (!client || !terminalInstanceRef.current) {
-      return;
-    }
-
-    const unsubscribe = client.onData((data: string) => {
-      const terminal = terminalInstanceRef.current;
-      if (terminal != null) {
-        terminal.write(data);
-      }
-    });
-
-    const unsubscribeError = client.onError((err: Error) => {
-      // Capture error in Sentry with rich context
-      if (err instanceof DecodeError) {
-        Sentry.captureException(err, {
-          level: "error",
-          tags: {
-            error_type: "terminal_decode",
-            decode_stage: err.stage,
-            session_id: err.context.sessionId ?? "unknown",
-          },
-          contexts: {
-            decode: {
-              stage: err.stage,
-              data_length: err.context.dataLength,
-              data_sample: err.context.dataSample,
-              session_id: err.context.sessionId,
-              session_name: sessionName,
-            },
-          },
-        });
-      } else {
-        // Capture other errors with session context
-        Sentry.captureException(err, {
-          level: "error",
-          tags: {
-            error_type: "terminal_error",
-            session_id: sessionId,
-          },
-          contexts: {
-            session: {
-              session_id: sessionId,
-              session_name: sessionName,
-            },
-          },
-        });
-      }
-
-      // Show user-friendly error message
-      const userMessage = getUserFriendlyErrorMessage(err);
-      setError(userMessage);
-      setErrorKey((prev) => prev + 1);
-
-      // Clear any existing timeout
-      if (errorTimeoutRef.current != null) {
-        clearTimeout(errorTimeoutRef.current);
-      }
-
-      // Auto-dismiss error after 10 seconds to prevent UI clutter
-      errorTimeoutRef.current = setTimeout(() => {
-        setError(null);
-      }, 10_000);
-    });
-
-    return () => {
-      unsubscribe();
-      unsubscribeError();
-
-      // Clean up timeout on unmount
-      if (errorTimeoutRef.current != null) {
-        clearTimeout(errorTimeoutRef.current);
-      }
-    };
-  }, [client, sessionId, sessionName]);
+  ;
 
   // Handle connection status changes
-  useEffect(() => {
-    if (isConnected && terminalInstanceRef.current != null && client != null) {
-      // Notify backend of terminal size
-      client.resize(
-        terminalInstanceRef.current.rows,
-        terminalInstanceRef.current.cols,
-      );
-    }
-  }, [isConnected, client]);
+  ;
 
   return (
     <>

@@ -1,10 +1,8 @@
+// eslint-disable-next-line no-restricted-imports -- readFileSync/existsSync have no sync Bun equivalents
 import { readFileSync, existsSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-import { getConfig } from "../config/index.js";
-import { logger } from "../utils/index.js";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import path from "node:path";
+import { getConfig } from "@shepherdjerred/birmel/config/index.js";
+import { logger } from "@shepherdjerred/birmel/utils/index.js";
 
 export type StyleCard = {
   author: string;
@@ -23,8 +21,8 @@ export type StyleContext = {
 };
 
 function loadStyleCard(persona: string): StyleCard | null {
-  const cardPath = join(
-    __dirname,
+  const cardPath = path.join(
+    import.meta.dir,
     "style-cards",
     `${persona.toLowerCase()}_style.json`,
   );
@@ -35,7 +33,7 @@ function loadStyleCard(persona: string): StyleCard | null {
   }
 
   try {
-    const content = readFileSync(cardPath, "utf-8");
+    const content = readFileSync(cardPath, "utf8");
     return JSON.parse(content) as StyleCard;
   } catch (error) {
     logger.error("Failed to load style card", { persona, error });

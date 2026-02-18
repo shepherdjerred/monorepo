@@ -1,10 +1,10 @@
-import { createTool } from "../../../voltagent/tools/create-tool.js";
+import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.js";
 import { z } from "zod";
 import { chromium, type Browser, type Page } from "playwright";
-import { getConfig } from "../../../config/index.js";
-import { loggers } from "../../../utils/index.js";
+import { getConfig } from "@shepherdjerred/birmel/config/index.js";
+import { loggers } from "@shepherdjerred/birmel/utils/index.js";
 import { writeFile, mkdir } from "node:fs/promises";
-import { join, dirname } from "node:path";
+import path from "node:path";
 
 const logger = loggers.automation;
 
@@ -201,11 +201,11 @@ export const browserAutomationTool = createTool({
             ctx.filename ?? `screenshot-${String(timestamp)}.png`;
           // Use BIRMEL_SCREENSHOTS_DIR env var if set, otherwise default to cwd/data/screenshots
           const screenshotsDir =
-            process.env["BIRMEL_SCREENSHOTS_DIR"] ??
-            join(process.cwd(), "data", "screenshots");
-          const filepath = join(screenshotsDir, filename);
+            Bun.env["BIRMEL_SCREENSHOTS_DIR"] ??
+            path.join(process.cwd(), "data", "screenshots");
+          const filepath = path.join(screenshotsDir, filename);
           // Ensure the screenshots directory exists
-          await mkdir(dirname(filepath), { recursive: true });
+          await mkdir(path.dirname(filepath), { recursive: true });
           const screenshot = await page.screenshot({
             fullPage: ctx.fullPage ?? false,
             type: "png",

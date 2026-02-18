@@ -73,26 +73,26 @@ export function createTypedParameters(
   return valuesToParameters(values);
 }
 
-import type { ArgocdHelmValues } from "../../generated/helm/argo-cd.types";
-import type { CertmanagerHelmValues } from "../../generated/helm/cert-manager.types";
-import type { ChartmuseumHelmValues } from "../../generated/helm/chartmuseum.types";
-import type { ConnectHelmValues } from "../../generated/helm/connect.types";
-import type { InteldevicepluginsoperatorHelmValues } from "../../generated/helm/intel-device-plugins-operator.types";
-import type { KubeprometheusstackHelmValues } from "../../generated/helm/kube-prometheus-stack.types";
-import type { PrometheusadapterHelmValues } from "../../generated/helm/prometheus-adapter.types";
-import type { LokiHelmValues } from "../../generated/helm/loki.types";
-import type { MinecraftHelmValues } from "../../generated/helm/minecraft.types";
-import type { NodefeaturediscoveryHelmValues } from "../../generated/helm/node-feature-discovery.types";
-import type { OpenebsHelmValues } from "../../generated/helm/openebs.types";
-import type { PostgresoperatorHelmValues } from "../../generated/helm/postgres-operator.types";
-import type { PromtailHelmValues } from "../../generated/helm/promtail.types";
-import type { TailscaleoperatorHelmValues } from "../../generated/helm/tailscale-operator.types";
-import type { VeleroHelmValues } from "../../generated/helm/velero.types";
-import type { CoderHelmValues } from "../../generated/helm/coder.types";
-import type { RedisHelmValues } from "../../generated/helm/redis.types";
-import type { SeaweedfsHelmValues } from "../../generated/helm/seaweedfs.types";
-import type { PrometheusblackboxexporterHelmValues } from "../../generated/helm/prometheus-blackbox-exporter.types";
-import type { McrouterHelmValues } from "../../generated/helm/mc-router.types";
+import type { ArgocdHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/argo-cd.types";
+import type { CertmanagerHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/cert-manager.types";
+import type { ChartmuseumHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/chartmuseum.types";
+import type { ConnectHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/connect.types";
+import type { InteldevicepluginsoperatorHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/intel-device-plugins-operator.types";
+import type { KubeprometheusstackHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/kube-prometheus-stack.types";
+import type { PrometheusadapterHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/prometheus-adapter.types";
+import type { LokiHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/loki.types";
+import type { MinecraftHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/minecraft.types";
+import type { NodefeaturediscoveryHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/node-feature-discovery.types";
+import type { OpenebsHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/openebs.types";
+import type { PostgresoperatorHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/postgres-operator.types";
+import type { PromtailHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/promtail.types";
+import type { TailscaleoperatorHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/tailscale-operator.types";
+import type { VeleroHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/velero.types";
+import type { CoderHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/coder.types";
+import type { RedisHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/redis.types";
+import type { SeaweedfsHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/seaweedfs.types";
+import type { PrometheusblackboxexporterHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/prometheus-blackbox-exporter.types";
+import type { McrouterHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/mc-router.types";
 
 type HelmChartValuesMap = {
   "argo-cd": ArgocdHelmValues;

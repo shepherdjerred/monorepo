@@ -104,7 +104,7 @@ describe("saveSvgToS3 - Success Cases", () => {
   test("handles large SVG content", async () => {
     const matchId = MatchIdSchema.parse("NA1_LARGE_SVG");
     // Create a large SVG (simulating complex match report)
-    const largeSvgContent = "<svg>" + "x".repeat(100000) + "</svg>";
+    const largeSvgContent = "<svg>" + "x".repeat(100_000) + "</svg>";
     const queueType = "solo";
 
     s3Mock.on(PutObjectCommand).resolves({

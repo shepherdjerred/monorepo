@@ -14,7 +14,7 @@ const schemaPath = `${import.meta.dirname}/../prisma/schema.prisma`;
 // Remove existing template if it exists
 const templateFile = Bun.file(templatePath);
 if (await templateFile.exists()) {
-  const { unlinkSync } = await import("fs");
+  const { unlinkSync } = await import("node:fs");
   unlinkSync(templatePath);
 }
 

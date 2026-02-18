@@ -240,24 +240,7 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
           Share API Config
         </h3>
 
-        {!showImportExport ? (
-          <div className="flex gap-2">
-            <button
-              onClick={handleExport}
-              className="flex-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm font-medium"
-            >
-              📋 Export (Copy to Clipboard)
-            </button>
-            <button
-              onClick={() => {
-                setShowImportExport(true);
-              }}
-              className="flex-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
-            >
-              📥 Import
-            </button>
-          </div>
-        ) : (
+        {showImportExport ? (
           <div className="space-y-2">
             <textarea
               value={importInput}
@@ -286,6 +269,23 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
                 Cancel
               </button>
             </div>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <button
+              onClick={handleExport}
+              className="flex-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              📋 Export (Copy to Clipboard)
+            </button>
+            <button
+              onClick={() => {
+                setShowImportExport(true);
+              }}
+              className="flex-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
+            >
+              📥 Import
+            </button>
           </div>
         )}
 

@@ -27,8 +27,8 @@ const logger = createLogger("voice-manager");
  */
 export class VoiceManager {
   private client: Client | null = null;
-  private connections = new Map<string, VoiceConnection>();
-  private players = new Map<string, AudioPlayer>();
+  private readonly connections = new Map<string, VoiceConnection>();
+  private readonly players = new Map<string, AudioPlayer>();
 
   /**
    * Initialize with Discord client
@@ -119,8 +119,8 @@ export class VoiceManager {
         try {
           // Try to reconnect
           await Promise.race([
-            entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
-            entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
+            entersState(connection, VoiceConnectionStatus.Signalling, 5000),
+            entersState(connection, VoiceConnectionStatus.Connecting, 5000),
           ]);
         } catch {
           // Couldn't reconnect, clean up
@@ -141,7 +141,7 @@ export class VoiceManager {
   async playSound(
     guildId: string,
     source: SoundSource,
-    volume = 1.0,
+    volume = 1,
   ): Promise<void> {
     const connection = this.connections.get(guildId);
     if (!connection) {

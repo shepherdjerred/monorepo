@@ -11,7 +11,7 @@ import {
   type Span,
   type Tracer,
 } from "@opentelemetry/api";
-import { getConfig } from "../config/index.js";
+import { getConfig } from "@shepherdjerred/birmel/config/index.js";
 
 let sdk: NodeSDK | null = null;
 let tracer: Tracer | null = null;

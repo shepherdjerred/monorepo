@@ -1,11 +1,11 @@
-import type { Message } from "../lib/claudeParser";
+import type { Message } from "@shepherdjerred/clauderon/web/frontend/src/lib/claudeParser";
 import { User, Bot, Terminal, FileText, Edit, Search } from "lucide-react";
-import { formatRelativeTime } from "../lib/utils";
+import { formatRelativeTime } from "@shepherdjerred/clauderon/web/frontend/src/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { CodeBlock } from "./CodeBlock";
-import { PlanView, isPlan } from "./PlanView";
-import { QuestionView, isQuestion } from "./QuestionView";
+import { CodeBlock } from "./CodeBlock.tsx";
+import { PlanView, isPlan } from "./PlanView.tsx";
+import { QuestionView, isQuestion } from "./QuestionView.tsx";
 
 type MessageBubbleProps = {
   message: Message;
@@ -63,7 +63,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
   return (
     <div
       className={`flex gap-4 p-4 border-b-2 ${
-        isUser ? "bg-primary/5" : isSystem ? "bg-secondary/50" : "bg-card"
+        isUser ? "bg-primary/5" : (isSystem ? "bg-secondary/50" : "bg-card")
       }`}
     >
       {/* Square Avatar (brutalist) */}
@@ -80,7 +80,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         {/* Header */}
         <div className="flex items-center gap-3 mb-2">
           <span className="font-bold font-mono uppercase text-sm tracking-wide">
-            {isUser ? "You" : isSystem ? "System" : "Claude Code"}
+            {isUser ? "You" : (isSystem ? "System" : "Claude Code")}
           </span>
           <span className="text-xs font-mono text-muted-foreground">
             {formatRelativeTime(message.timestamp.toISOString())}

@@ -131,7 +131,7 @@ export const DEFAULT_TIMELINE_SUMMARY_MODEL: ModelConfig = {
  */
 export const DEFAULT_TIMELINE_CHUNK_MODEL: ModelConfig = {
   model: "gpt-5-mini",
-  maxTokens: 32000,
+  maxTokens: 32_000,
   temperature: 0.3,
 };
 

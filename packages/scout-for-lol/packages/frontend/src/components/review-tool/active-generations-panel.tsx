@@ -51,9 +51,9 @@ function PipelinePillProgress({
             className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
               status === "complete"
                 ? "bg-green-500"
-                : status === "active"
+                : (status === "active"
                   ? "bg-yellow-500 animate-pulse"
-                  : "bg-surface-200"
+                  : "bg-surface-200")
             }`}
           />
         );
@@ -78,7 +78,7 @@ export function ActiveGenerationsPanel({
         In Progress ({activeGenerations.size})
       </h3>
       <div className="space-y-2">
-        {Array.from(activeGenerations.values()).map((gen) => {
+        {[...activeGenerations.values()].map((gen) => {
           const isSelected = gen.id === selectedHistoryId;
           const elapsed = activeGenerationTimers.get(gen.id) ?? 0;
           const elapsedSeconds = Math.floor(elapsed / 1000);

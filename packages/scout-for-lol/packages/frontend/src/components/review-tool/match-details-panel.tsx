@@ -189,8 +189,7 @@ export function MatchDetailsPanel({
               Arena Teams ({match.teams.length})
             </h4>
             <div className="space-y-1 max-h-40 overflow-y-auto">
-              {match.teams
-                .slice()
+              {[...match.teams]
                 .sort((a, b) => a.placement - b.placement)
                 .map((team) => (
                   <div

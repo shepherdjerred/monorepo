@@ -7,6 +7,21 @@ export type ConflictCheckResult = {
   baseBranch: string;
 };
 
+function extractConflictingFiles(output: string): string[] {
+  const fileMatches = output.match(/^(?:\+\+\+|---) [ab]\/.+$/gm);
+  if (fileMatches == null) {
+    return [];
+  }
+  const files = new Set<string>();
+  for (const match of fileMatches) {
+    const fileMatch = /^(?:\+\+\+|---) [ab]\/(.+)$/.exec(match);
+    if (fileMatch?.[1] != null && fileMatch[1].length > 0) {
+      files.add(fileMatch[1]);
+    }
+  }
+  return [...files];
+}
+
 export async function checkMergeConflicts(
   baseBranch?: string,
 ): Promise<ConflictCheckResult> {
@@ -26,29 +41,20 @@ export async function checkMergeConflicts(
 
       // Look for conflict markers in the output
       const conflictMatches = output.match(/^<<<<<<< /gm);
-      if (conflictMatches != null && conflictMatches.length > 0) {
-        // Extract conflicting file names
-        const fileMatches = output.match(/^(?:\+\+\+|---) [ab]\/.+$/gm);
-        const files = new Set<string>();
-        if (fileMatches != null) {
-          for (const match of fileMatches) {
-            const fileMatch = /^(?:\+\+\+|---) [ab]\/(.+)$/.exec(match);
-            if (fileMatch?.[1] != null && fileMatch[1].length > 0) {
-              files.add(fileMatch[1]);
-            }
-          }
-        }
-
+      if (conflictMatches == null || conflictMatches.length === 0) {
         return {
-          hasConflicts: true,
-          conflictingFiles: [...files],
+          hasConflicts: false,
+          conflictingFiles: [],
           baseBranch: targetBranch,
         };
       }
 
+      // Extract conflicting file names
+      const conflictingFiles = extractConflictingFiles(output);
+
       return {
-        hasConflicts: false,
-        conflictingFiles: [],
+        hasConflicts: true,
+        conflictingFiles,
         baseBranch: targetBranch,
       };
     } catch {

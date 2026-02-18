@@ -123,22 +123,23 @@ export class ConsoleClient {
         this.emit("disconnected");
       });
 
-      this.ws.onerror = (event) => {
+      this.ws.addEventListener("error", (event) => {
         this.emit(
           "error",
           new WebSocketError("WebSocket error occurred", event),
         );
-      };
+      });
 
-      this.ws.onmessage = (event: MessageEvent<string>) => {
+      this.ws.addEventListener("message", (event: MessageEvent<string>) => {
         try {
+          // eslint-disable-next-line custom-rules/no-type-assertions -- JSON.parse returns any
           const message = JSON.parse(event.data) as ConsoleMessage;
 
           if (message.type === "snapshot" || message.type === "output") {
-            // Validate data field exists and is a string
             if (typeof message.data !== "string") {
               console.warn(
                 `[ConsoleClient] Invalid output message for session ${String(this.sessionId)}: ` +
+                  // eslint-disable-next-line custom-rules/prefer-zod-validation -- typeof in template string
                   `data field is ${typeof message.data}, expected string`,
               );
               return;
@@ -199,7 +200,7 @@ export class ConsoleClient {
             try {
               const binaryString = atob(message.data);
               bytes = Uint8Array.from(binaryString, (char) =>
-                char.charCodeAt(0),
+                char.codePointAt(0) ?? 0,
               );
             } catch (atobError) {
               if (this.shouldEmitError()) {
@@ -288,7 +289,7 @@ export class ConsoleClient {
             );
           }
         }
-      };
+      });
     } catch (error) {
       this.emit(
         "error",
@@ -329,7 +330,7 @@ export class ConsoleClient {
     const encoder = new TextEncoder();
     const bytes = encoder.encode(data);
     const binaryString = Array.from(bytes, (byte) =>
-      String.fromCharCode(byte),
+      String.fromCodePoint(byte),
     ).join("");
     const encoded = btoa(binaryString);
 

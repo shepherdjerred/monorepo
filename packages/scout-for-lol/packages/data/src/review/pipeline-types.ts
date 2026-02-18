@@ -94,13 +94,13 @@ export type PipelineStagesConfig = {
 export type OpenAIClient = {
   chat: {
     completions: {
-      create(params: {
+      create: (params: {
         model: string;
         messages: { role: "system" | "user" | "assistant"; content: string }[];
         max_completion_tokens: number;
         temperature?: number;
         top_p?: number;
-      }): Promise<{
+      }) => Promise<{
         choices: {
           message: {
             content: string | null;

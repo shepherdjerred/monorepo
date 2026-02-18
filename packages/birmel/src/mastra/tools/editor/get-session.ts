@@ -1,14 +1,14 @@
-import { createTool } from "../../../voltagent/tools/create-tool.js";
+import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.js";
 import { z } from "zod";
-import { loggers } from "../../../utils/logger.js";
-import { withToolSpan } from "../../../observability/index.js";
-import { getRequestContext } from "../request-context.js";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
+import { withToolSpan } from "@shepherdjerred/birmel/observability/index.js";
+import { getRequestContext } from "@shepherdjerred/birmel/mastra/tools/request-context.js";
 import {
   isEditorEnabled,
   getSession,
   getActiveSessionsForUser,
   getPendingChanges,
-} from "../../../editor/index.js";
+} from "@shepherdjerred/birmel/editor/index.js";
 
 const logger = loggers.tools.child("editor.get-session");
 

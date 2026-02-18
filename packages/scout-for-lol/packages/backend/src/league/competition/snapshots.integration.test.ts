@@ -180,7 +180,7 @@ describe("createSnapshot - START snapshot", () => {
     };
 
     const { competitionId } = await createTestCompetition(criteria);
-    const nonExistentPlayerId = 99999;
+    const nonExistentPlayerId = 99_999;
 
     expect(
       createSnapshot(prisma, {

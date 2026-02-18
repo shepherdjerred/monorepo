@@ -1,7 +1,7 @@
-import { createTool } from "../../../voltagent/tools/create-tool.js";
+import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.js";
 import { z } from "zod";
-import { getConfig } from "../../../config/index.js";
-import { loggers } from "../../../utils/index.js";
+import { getConfig } from "@shepherdjerred/birmel/config/index.js";
+import { loggers } from "@shepherdjerred/birmel/utils/index.js";
 
 const logger = loggers.automation;
 

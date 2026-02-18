@@ -9,23 +9,20 @@
  */
 
 import { parseArgs } from "node:util";
-import { resolve, join } from "node:path";
+import path from "node:path";
 import { mkdir } from "node:fs/promises";
-import {
-  decompileFile,
-  extractToDirectory,
-  getExtractionSummary,
-} from "./lib/index.ts";
+import { decompileFile } from "./lib/parser.ts";
+import { extractToDirectory, getExtractionSummary } from "./lib/extractor.ts";
 import { DecompileError } from "./lib/errors.ts";
+import type { DecompileResult } from "./lib/types.ts";
 import {
   createConfig,
   Deminifier,
   formatStats,
   interactiveConfirmCost,
-  ProgressDisplay,
-} from "./lib/deminify/index.ts";
-import type { ExtendedProgress } from "./lib/deminify/index.ts";
-import type { DecompileResult } from "./lib/types.ts";
+} from "./lib/deminify/deminifier.ts";
+import { ProgressDisplay } from "./lib/deminify/progress-display.ts";
+import type { ExtendedProgress } from "./lib/deminify/types.ts";
 
 const USAGE = `
 bun-decompile - Extract and de-minify sources from Bun compiled executables
@@ -177,7 +174,7 @@ function parseAndValidateArgs(): {
 
   // Validate concurrency
   const concurrency = Number.parseInt(values.concurrency, 10);
-  if (isNaN(concurrency) || concurrency < 1) {
+  if (Number.isNaN(concurrency) || concurrency < 1) {
     console.error("Error: --concurrency must be a positive integer");
     process.exit(1);
   }
@@ -220,11 +217,11 @@ async function validateInput(
     process.exit(0);
   }
 
-  const outputPath = resolve(options.output);
+  const outputPath = path.resolve(options.output);
 
   // File-only mode: de-minify a JS file directly
   if (options.file != null && options.file.length > 0) {
-    const filePath = resolve(options.file);
+    const filePath = path.resolve(options.file);
 
     // Check if file exists
     const file = Bun.file(filePath);
@@ -248,7 +245,7 @@ async function validateInput(
     process.exit(1);
   }
 
-  const binaryPath = resolve(binary);
+  const binaryPath = path.resolve(binary);
 
   // Check if file exists
   const file = Bun.file(binaryPath);
@@ -367,7 +364,7 @@ async function runDeminification(
   );
 
   // Create deminified output directory
-  const deminifiedDir = join(outputPath, "deminified");
+  const deminifiedDir = path.join(outputPath, "deminified");
   await mkdir(deminifiedDir, { recursive: true });
 
   for (const module of jsModules) {
@@ -450,8 +447,8 @@ async function runDeminification(
         outFileName += ".js";
       }
 
-      const outPath = join(deminifiedDir, outFileName);
-      const outDir = join(
+      const outPath = path.join(deminifiedDir, outFileName);
+      const outDir = path.join(
         deminifiedDir,
         ...outFileName.split("/").slice(0, -1),
       );
@@ -531,7 +528,7 @@ async function runFileDeminification(
   }
 
   // Create deminified output directory
-  const deminifiedDir = join(outputPath, "deminified");
+  const deminifiedDir = path.join(outputPath, "deminified");
   await mkdir(deminifiedDir, { recursive: true });
 
   // Create progress display

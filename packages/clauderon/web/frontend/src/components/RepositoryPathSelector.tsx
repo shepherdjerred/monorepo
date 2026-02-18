@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Clock, FolderOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useClauderonClient } from "../hooks/useClauderonClient";
-import { DirectoryBrowserDialog } from "./DirectoryBrowserDialog";
+import { useClauderonClient } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useClauderonClient";
+import { DirectoryBrowserDialog } from "./DirectoryBrowserDialog.tsx";
 import type { RecentRepoDto } from "@clauderon/client";
 
 type RepositoryPathSelectorProps = {
@@ -14,7 +14,7 @@ type RepositoryPathSelectorProps = {
 // Extract repository name from full path
 function extractRepoName(fullPath: string): string {
   const parts = fullPath.split("/");
-  return parts[parts.length - 1] ?? fullPath;
+  return parts.at(-1) ?? fullPath;
 }
 
 // Format relative time (simple version)
@@ -53,21 +53,7 @@ export function RepositoryPathSelector({
   const [showBrowser, setShowBrowser] = useState(false);
 
   // Fetch recent repos on mount
-  useEffect(() => {
-    const fetchRecentRepos = async () => {
-      setIsLoadingRecentRepos(true);
-      try {
-        const repos = await client.getRecentRepos();
-        setRecentRepos(repos);
-      } catch (err) {
-        console.error("Failed to fetch recent repos:", err);
-      } finally {
-        setIsLoadingRecentRepos(false);
-      }
-    };
-
-    void fetchRecentRepos();
-  }, [client]);
+  ;
 
   // Format display with subdirectory
   const formatRepoDisplay = (repo: RecentRepoDto): string => {

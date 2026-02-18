@@ -126,7 +126,7 @@ export function StarRating({
           style={{
             marginLeft: "8px",
             fontSize:
-              size === "small" ? "12px" : size === "medium" ? "14px" : "16px",
+              size === "small" ? "12px" : (size === "medium" ? "14px" : "16px"),
             color: "#6b7280",
             fontWeight: 500,
           }}

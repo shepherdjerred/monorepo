@@ -44,7 +44,7 @@ export function getApiClient() {
  * Get the stored session token
  */
 export function getSessionToken(): string | null {
-  if (typeof window === "undefined") {
+  if (globalThis.window === undefined) {
     return null;
   }
   return localStorage.getItem("scout_session_token");
@@ -54,7 +54,7 @@ export function getSessionToken(): string | null {
  * Store a session token
  */
 export function setSessionToken(token: string): void {
-  if (typeof window === "undefined") {
+  if (globalThis.window === undefined) {
     return;
   }
   localStorage.setItem("scout_session_token", token);
@@ -64,7 +64,7 @@ export function setSessionToken(token: string): void {
  * Clear the stored session token
  */
 export function clearSessionToken(): void {
-  if (typeof window === "undefined") {
+  if (globalThis.window === undefined) {
     return;
   }
   localStorage.removeItem("scout_session_token");
@@ -81,8 +81,8 @@ export function isAuthenticated(): boolean {
  * Get the redirect URI for OAuth callbacks
  */
 export function getRedirectUri(): string {
-  if (typeof window === "undefined") {
+  if (globalThis.window === undefined) {
     return `${BACKEND_URL}/app/callback`;
   }
-  return `${window.location.origin}/app/callback`;
+  return `${globalThis.location.origin}/app/callback`;
 }

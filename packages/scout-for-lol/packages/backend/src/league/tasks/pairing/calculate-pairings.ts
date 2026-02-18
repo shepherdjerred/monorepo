@@ -109,7 +109,7 @@ export async function calculatePairingStats(
 
   // Create PUUID to alias map
   const puuidToAlias = createPuuidToAliasMap(players);
-  const allPuuids = Array.from(puuidToAlias.keys());
+  const allPuuids = [...puuidToAlias.keys()];
 
   if (allPuuids.length === 0) {
     logger.warn("[CalculatePairings] No PUUIDs found, returning empty stats");
@@ -189,7 +189,7 @@ export async function calculatePairingStats(
   // Log top/bottom pairings for debugging
   const sortedPairings = [...pairings].sort((a, b) => b.winRate - a.winRate);
   const top = sortedPairings[0];
-  const bottom = sortedPairings[sortedPairings.length - 1];
+  const bottom = sortedPairings.at(-1);
   if (top !== undefined && bottom !== undefined) {
     logger.info(
       `[CalculatePairings] Highest win rate: ${top.players.join(" + ")} = ${(top.winRate * 100).toFixed(1)}% (${top.totalGames.toString()} games)`,

@@ -1,8 +1,8 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
-import { createHomeAssistantDeployment } from "../resources/home/homeassistant.ts";
-import { createHaDeployment } from "../resources/home/ha.ts";
-import { KubeNetworkPolicy, IntOrString } from "../../generated/imports/k8s.ts";
+import { createHomeAssistantDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/home/homeassistant.ts";
+import { createHaDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/home/ha.ts";
+import { KubeNetworkPolicy, IntOrString } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 
 export async function createHomeChart(app: App) {
   const chart = new Chart(app, "home", {

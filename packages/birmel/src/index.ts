@@ -3,22 +3,22 @@ import {
   initializeObservability,
   shutdownObservability,
   captureException,
-} from "./observability/index.js";
+} from "./observability/index.ts";
 initializeObservability();
 
-import { getConfig } from "./config/index.js";
+import { getConfig } from "./config/index.ts";
 import {
   getDiscordClient,
   destroyDiscordClient,
   registerEventHandlers,
   setMessageHandler,
-} from "./discord/index.js";
-import { disconnectPrisma } from "./database/index.js";
-import { handleMessageWithStreaming } from "./voltagent/message-handler.js";
-import { initializeMusicPlayer, destroyMusicPlayer } from "./music/index.js";
-import { startScheduler, stopScheduler } from "./scheduler/index.js";
-import { startOAuthServer, stopOAuthServer } from "./editor/index.js";
-import { logger } from "./utils/index.js";
+} from "./discord/index.ts";
+import { disconnectPrisma } from "./database/index.ts";
+import { handleMessageWithStreaming } from "./voltagent/message-handler.ts";
+import { initializeMusicPlayer, destroyMusicPlayer } from "./music/index.ts";
+import { startScheduler, stopScheduler } from "./scheduler/index.ts";
+import { startOAuthServer, stopOAuthServer } from "./editor/index.ts";
+import { logger } from "./utils/index.ts";
 
 async function shutdown(): Promise<void> {
   logger.info("Shutting down Birmel...");
@@ -76,11 +76,13 @@ async function main(): Promise<void> {
   process.on("SIGTERM", () => void shutdown());
 }
 
-main().catch(async (error: unknown) => {
+try {
+  await main();
+} catch (error: unknown) {
   logger.error("Fatal error", error);
   if (error instanceof Error) {
     captureException(error, { operation: "main" });
   }
   await shutdownObservability();
   process.exit(1);
-});
+}

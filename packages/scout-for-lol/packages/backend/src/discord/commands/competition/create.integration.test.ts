@@ -306,8 +306,8 @@ describe("Permission and limit integration", () => {
         testGuildId("123456789012345678"),
         ownerId,
       );
-    } catch (e) {
-      error = e;
+    } catch (error_) {
+      error = error_;
     }
 
     expect(error).not.toBeNull();
@@ -327,7 +327,7 @@ describe("Permission and limit integration", () => {
       await createCompetition(prisma, {
         serverId,
         ownerId: DiscordAccountIdSchema.parse(
-          (100000000000000000 + i).toString(),
+          (100_000_000_000_000_000 + i).toString(),
         ),
         channelId: testChannelId("111222333444555666"),
         title: `Competition ${i.toString()}`,
@@ -346,8 +346,8 @@ describe("Permission and limit integration", () => {
     let error: unknown = null;
     try {
       await validateServerLimit(prisma, serverId);
-    } catch (e) {
-      error = e;
+    } catch (error_) {
+      error = error_;
     }
 
     expect(error).not.toBeNull();

@@ -1,16 +1,16 @@
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { Application } from "../../../generated/imports/argoproj.io.ts";
-import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
-import { Schedule } from "../../../generated/imports/velero.io.ts";
-import versions from "../../versions.ts";
+import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { Schedule } from "@shepherdjerred/homelab/cdk8s/generated/imports/velero.io.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Namespace } from "cdk8s-plus-31";
-import type { HelmValuesForChart } from "../../misc/typed-helm-parameters.ts";
+import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import {
   KubeClusterRole,
   KubeClusterRoleBinding,
-} from "../../../generated/imports/k8s.ts";
-import { VELERO_SCHEDULES } from "../velero-schedules.ts";
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { VELERO_SCHEDULES } from "@shepherdjerred/homelab/cdk8s/src/resources/velero-schedules.ts";
 export function createVeleroApp(chart: Chart) {
   new Namespace(chart, `velero-namespace`, {
     metadata: {

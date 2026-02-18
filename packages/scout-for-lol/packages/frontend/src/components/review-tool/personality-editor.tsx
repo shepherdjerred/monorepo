@@ -46,9 +46,9 @@ export function PersonalityEditor({
       PersonalitySchema.parse(newPersonality);
 
       onSave(newPersonality);
-    } catch (err) {
-      const errorResult = ErrorSchema.safeParse(err);
-      setError(errorResult.success ? errorResult.data.message : String(err));
+    } catch (error_) {
+      const errorResult = ErrorSchema.safeParse(error_);
+      setError(errorResult.success ? errorResult.data.message : String(error_));
     }
   };
 

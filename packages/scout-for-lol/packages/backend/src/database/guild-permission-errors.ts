@@ -171,14 +171,7 @@ export async function getAbandonedGuilds(
 
   for (const error of errors) {
     const existing = guilds[error.serverId];
-    if (!existing) {
-      guilds[error.serverId] = {
-        serverId: error.serverId,
-        firstOccurrence: error.firstOccurrence,
-        lastOccurrence: error.lastOccurrence,
-        errorCount: error.consecutiveErrorCount,
-      };
-    } else {
+    if (existing) {
       // Update with earliest first occurrence and latest last occurrence
       if (error.firstOccurrence < existing.firstOccurrence) {
         existing.firstOccurrence = error.firstOccurrence;
@@ -187,6 +180,13 @@ export async function getAbandonedGuilds(
         existing.lastOccurrence = error.lastOccurrence;
       }
       existing.errorCount += error.consecutiveErrorCount;
+    } else {
+      guilds[error.serverId] = {
+        serverId: error.serverId,
+        firstOccurrence: error.firstOccurrence,
+        lastOccurrence: error.lastOccurrence,
+        errorCount: error.consecutiveErrorCount,
+      };
     }
   }
 

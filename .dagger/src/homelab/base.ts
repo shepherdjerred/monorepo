@@ -17,8 +17,8 @@ export {
   withMiseTools,
 } from "../lib/containers/index";
 
-import { getSystemContainer } from "../lib/containers/index";
-import { getMiseRuntimeContainer } from "../lib/containers/index";
+import { getSystemContainer } from "../lib/containers/index.ts";
+import { getMiseRuntimeContainer } from "../lib/containers/index.ts";
 
 /**
  * Creates a workspace-specific container with dependencies installed.

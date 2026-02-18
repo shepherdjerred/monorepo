@@ -131,10 +131,10 @@ async function buildCompetitionEmbed(
 
   // Set color based on status
   const color = match(status)
-    .with("DRAFT", () => 0x5865f2) // Blue
-    .with("ACTIVE", () => 0x57f287) // Green
-    .with("ENDED", () => 0xeb459e) // Pink
-    .with("CANCELLED", () => 0xed4245) // Red
+    .with("DRAFT", () => 0x58_65_F2) // Blue
+    .with("ACTIVE", () => 0x57_F2_87) // Green
+    .with("ENDED", () => 0xEB_45_9E) // Pink
+    .with("CANCELLED", () => 0xED_42_45) // Red
     .exhaustive();
 
   embed.setColor(color);

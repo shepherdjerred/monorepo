@@ -153,8 +153,8 @@ describe("Participant Management - Cannot join inactive competition", () => {
     const serverId = testGuildId("123456789012345678");
     const ownerId = testAccountId("12300000123");
     const now = new Date();
-    const yesterday = new Date(now.getTime() - 86400000);
-    const lastWeek = new Date(now.getTime() - 7 * 86400000);
+    const yesterday = new Date(now.getTime() - 86_400_000);
+    const lastWeek = new Date(now.getTime() - 7 * 86_400_000);
 
     const { playerId } = await createTestPlayer(
       serverId,
@@ -175,8 +175,8 @@ describe("Participant Management - Cannot join inactive competition", () => {
     const serverId = testGuildId("123456789012345678");
     const ownerId = testAccountId("12300000123");
     const now = new Date();
-    const yesterday = new Date(now.getTime() - 86400000);
-    const nextWeek = new Date(now.getTime() + 7 * 86400000);
+    const yesterday = new Date(now.getTime() - 86_400_000);
+    const nextWeek = new Date(now.getTime() + 7 * 86_400_000);
 
     const { playerId } = await createTestPlayer(
       serverId,
@@ -523,8 +523,8 @@ describe("Competition Limits - Owner limit", () => {
     const serverId = testGuildId("123456789012345678");
     const ownerId = testAccountId("12300000123");
     const now = new Date();
-    const lastWeek = new Date(now.getTime() - 7 * 86400000);
-    const yesterday = new Date(now.getTime() - 86400000);
+    const lastWeek = new Date(now.getTime() - 7 * 86_400_000);
+    const yesterday = new Date(now.getTime() - 86_400_000);
 
     // Create ended competition
     await createTestCompetition(serverId, ownerId, {
@@ -582,8 +582,8 @@ describe("Competition Limits - Server limit", () => {
   test("server can create competition after one ends", async () => {
     const serverId = testGuildId("123456789012345678");
     const now = new Date();
-    const lastWeek = new Date(now.getTime() - 7 * 86400000);
-    const yesterday = new Date(now.getTime() - 86400000);
+    const lastWeek = new Date(now.getTime() - 7 * 86_400_000);
+    const yesterday = new Date(now.getTime() - 86_400_000);
 
     // Create 2 competitions, one ended
     await createTestCompetition(serverId, testAccountId("10000000100"), {

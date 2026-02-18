@@ -186,19 +186,7 @@ export function MonitorSection({
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-3 pt-4">
-            {!isMonitoring ? (
-              <Button
-                variant="success"
-                size="lg"
-                className="flex-1"
-                onClick={onStart}
-                loading={isStarting}
-                disabled={!canMonitor}
-                icon={<Play className="h-5 w-5" />}
-              >
-                Start Monitoring
-              </Button>
-            ) : (
+            {isMonitoring ? (
               <>
                 <Button
                   variant="destructive"
@@ -221,6 +209,18 @@ export function MonitorSection({
                   </Button>
                 )}
               </>
+            ) : (
+              <Button
+                variant="success"
+                size="lg"
+                className="flex-1"
+                onClick={onStart}
+                loading={isStarting}
+                disabled={!canMonitor}
+                icon={<Play className="h-5 w-5" />}
+              >
+                Start Monitoring
+              </Button>
             )}
           </div>
         </CardContent>

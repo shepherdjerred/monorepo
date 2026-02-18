@@ -1,4 +1,4 @@
-import type { FileChange } from "./types.js";
+import type { FileChange } from "./types.ts";
 
 const MAX_DISCORD_EMBED_LENGTH = 4096;
 const MAX_DIFF_PREVIEW_LENGTH = 1800;

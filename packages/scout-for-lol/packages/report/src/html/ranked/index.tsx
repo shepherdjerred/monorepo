@@ -41,7 +41,7 @@ export function RankedBadge({
   newRank: Rank;
   scale?: number;
 }) {
-  const environment = typeof Bun !== "undefined" ? "bun" : "browser";
+  const environment = typeof Bun === "undefined" ? "browser" : "bun";
 
   // Use the pre-loaded images in Bun environment, or construct a URL for browser
   const badge = match(environment)

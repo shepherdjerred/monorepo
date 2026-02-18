@@ -6,10 +6,26 @@ export default [
     projectService: {
       allowDefaultProject: [
         "eslint.config.ts",
-        "src/ClauderonClient.test.ts",
-        "src/ConsoleClient.test.ts",
-        "src/EventsClient.test.ts",
+        "src/clauderon-client.test.ts",
+        "src/console-client.test.ts",
+        "src/events-client.test.ts",
       ],
     },
   }),
+  {
+    files: ["src/index.ts"],
+    rules: {
+      // Library barrel file - re-exports are the public API surface
+      "custom-rules/no-re-exports": "off",
+    },
+  },
+  {
+    files: ["**/*.test.ts"],
+    rules: {
+      // Test files create mock WebSocket objects and parse mock responses
+      "custom-rules/no-type-assertions": "off",
+      // Test suites can be long
+      "max-lines-per-function": "off",
+    },
+  },
 ];

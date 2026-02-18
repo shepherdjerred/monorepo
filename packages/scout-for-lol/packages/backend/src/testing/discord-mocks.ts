@@ -126,7 +126,7 @@ export function mockGuild(overrides: Record<string, unknown> = {}): Guild {
     systemChannelFlags: null,
     rulesChannelId: null,
     publicUpdatesChannelId: null,
-    maximumMembers: 250000,
+    maximumMembers: 250_000,
     maximumPresences: null,
     approximateMemberCount: 100,
     approximatePresenceCount: 50,
@@ -298,9 +298,9 @@ export function mockMessage(overrides: Record<string, unknown> = {}): Message {
     editable: true,
     flags: null,
     reply: (_options: unknown) => Promise.resolve(mockMessage()),
-    delete: () => Promise.resolve(undefined),
+    delete: () => Promise.resolve(),
     edit: (_options: unknown) => Promise.resolve(mockMessage()),
-    react: (_emoji: string) => Promise.resolve(undefined),
+    react: (_emoji: string) => Promise.resolve(),
     client: mockClient(),
   };
 

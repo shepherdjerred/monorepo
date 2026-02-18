@@ -1,6 +1,6 @@
-import { createTool } from "../../../voltagent/tools/create-tool.js";
+import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.js";
 import { z } from "zod";
-import { logger } from "../../../utils/index.js";
+import { logger } from "@shepherdjerred/birmel/utils/index.js";
 import {
   handlePlay,
   handlePause,
@@ -11,7 +11,7 @@ import {
   handleSetVolume,
   handleSetLoop,
   handleNowPlaying,
-} from "./playback-actions.js";
+} from "./playback-actions.ts";
 
 export const musicPlaybackTool = createTool({
   id: "music-playback",

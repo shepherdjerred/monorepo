@@ -78,9 +78,9 @@ export async function downloadConfigBundle(
   const a = document.createElement("a");
   a.href = url;
   a.download = `scout-review-config-${new Date().toISOString().split("T")[0] ?? "unknown"}.json`;
-  document.body.appendChild(a);
+  document.body.append(a);
   a.click();
-  document.body.removeChild(a);
+  a.remove();
   URL.revokeObjectURL(url);
 }
 

@@ -1,8 +1,8 @@
 import type { Container, Directory, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
-import versions from "./versions";
-import { getMiseRuntimeContainer } from "./base";
-import { execWithOutput } from "./errors";
+import versions from "./versions.ts";
+import { getMiseRuntimeContainer } from "./base.ts";
+import { execWithOutput } from "./errors.ts";
 
 // Release-please configuration
 const RELEASE_PLEASE_VERSION = "17.1.3";
@@ -55,7 +55,7 @@ export async function runReleasePleaseCommand(
     ctr.file("/tmp/output.txt").contents(),
     ctr.file("/tmp/exitcode.txt").contents(),
   ]);
-  const exitCode = parseInt(exitCodeStr.trim(), 10);
+  const exitCode = Number.parseInt(exitCodeStr.trim(), 10);
 
   return {
     output: output.trim() || "(no output)",

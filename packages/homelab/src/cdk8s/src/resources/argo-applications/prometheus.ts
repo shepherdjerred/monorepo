@@ -1,19 +1,19 @@
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { Application } from "../../../generated/imports/argoproj.io.ts";
-import versions from "../../versions.ts";
-import { createIngress } from "../../misc/tailscale.ts";
-import { NVME_STORAGE_CLASS } from "../../misc/storage-classes.ts";
-import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
-import { createPrometheusMonitoring } from "../monitoring/monitoring/prometheus.ts";
-import { createSmartctlMonitoring } from "../monitoring/smartctl.ts";
-import type { HelmValuesForChart } from "../../misc/typed-helm-parameters.ts";
-import { createNvmeMetricsMonitoring } from "../monitoring/nvme-metrics.ts";
-import { createZfsSnapshotsMonitoring } from "../monitoring/zfs-snapshots.ts";
-import { createZfsZpoolMonitoring } from "../monitoring/zfs-zpool.ts";
-import { createR2ExporterMonitoring } from "../monitoring/r2-exporter.ts";
-import { createKubernetesEventExporter } from "../monitoring/kubernetes-event-exporter.ts";
-import { escapeAlertmanagerTemplate } from "../monitoring/monitoring/rules/shared.ts";
+import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { createPrometheusMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/prometheus.ts";
+import { createSmartctlMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/smartctl.ts";
+import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { createNvmeMetricsMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/nvme-metrics.ts";
+import { createZfsSnapshotsMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/zfs-snapshots.ts";
+import { createZfsZpoolMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/zfs-zpool.ts";
+import { createR2ExporterMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/r2-exporter.ts";
+import { createKubernetesEventExporter } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/kubernetes-event-exporter.ts";
+import { escapeAlertmanagerTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 // import { HelmValuesForChart } from "../types/helm/index.js"; // Using 'any' for complex config
 
 export async function createPrometheusApp(chart: Chart) {

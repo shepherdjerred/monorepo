@@ -500,7 +500,7 @@ describe("Competition View - CANCELLED Status", () => {
 
 describe("Competition View - Error Cases", () => {
   test("should return null for non-existent competition", async () => {
-    const competition = await getCompetitionById(prisma, 999999);
+    const competition = await getCompetitionById(prisma, 999_999);
     expect(competition).toBeUndefined();
   });
 });

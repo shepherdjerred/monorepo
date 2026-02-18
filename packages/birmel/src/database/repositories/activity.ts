@@ -1,5 +1,5 @@
-import { prisma } from "../index.js";
-import { loggers } from "../../utils/logger.js";
+import { prisma } from "@shepherdjerred/birmel/database/index.js";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
 
 const logger = loggers.database.child("activity");
 
@@ -36,28 +36,30 @@ export type TopUser = {
  * Record a message activity (fire-and-forget pattern)
  */
 export function recordMessageActivity(input: RecordMessageActivityInput): void {
-  void prisma.userActivity
-    .create({
-      data: {
-        guildId: input.guildId,
-        userId: input.userId,
-        channelId: input.channelId,
-        activityType: "message",
-        metadata:
-          input.characterCount == null
-            ? JSON.stringify({ messageId: input.messageId })
-            : JSON.stringify({
-                messageId: input.messageId,
-                characterCount: input.characterCount,
-              }),
-      },
-    })
-    .catch((error: unknown) => {
+  void (async () => {
+    try {
+      await prisma.userActivity.create({
+        data: {
+          guildId: input.guildId,
+          userId: input.userId,
+          channelId: input.channelId,
+          activityType: "message",
+          metadata:
+            input.characterCount == null
+              ? JSON.stringify({ messageId: input.messageId })
+              : JSON.stringify({
+                  messageId: input.messageId,
+                  characterCount: input.characterCount,
+                }),
+        },
+      });
+    } catch (error: unknown) {
       logger.error("Failed to record message activity", error, {
         guildId: input.guildId,
         userId: input.userId,
       });
-    });
+    }
+  })();
 }
 
 /**
@@ -66,25 +68,27 @@ export function recordMessageActivity(input: RecordMessageActivityInput): void {
 export function recordReactionActivity(
   input: RecordReactionActivityInput,
 ): void {
-  void prisma.userActivity
-    .create({
-      data: {
-        guildId: input.guildId,
-        userId: input.userId,
-        channelId: input.channelId,
-        activityType: "reaction",
-        metadata: JSON.stringify({
-          messageId: input.messageId,
-          emoji: input.emoji,
-        }),
-      },
-    })
-    .catch((error: unknown) => {
+  void (async () => {
+    try {
+      await prisma.userActivity.create({
+        data: {
+          guildId: input.guildId,
+          userId: input.userId,
+          channelId: input.channelId,
+          activityType: "reaction",
+          metadata: JSON.stringify({
+            messageId: input.messageId,
+            emoji: input.emoji,
+          }),
+        },
+      });
+    } catch (error: unknown) {
       logger.error("Failed to record reaction activity", error, {
         guildId: input.guildId,
         userId: input.userId,
       });
-    });
+    }
+  })();
 }
 
 /**

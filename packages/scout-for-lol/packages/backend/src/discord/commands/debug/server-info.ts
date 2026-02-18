@@ -81,7 +81,7 @@ export async function executeDebugServerInfo(
 
     const overviewEmbed = new EmbedBuilder()
       .setTitle("📊 Server Overview")
-      .setColor(0x5865f2)
+      .setColor(0x58_65_F2)
       .addFields(
         {
           name: "👥 Total Players",
@@ -125,13 +125,13 @@ export async function executeDebugServerInfo(
     if (players.length > 0) {
       const playersEmbed = new EmbedBuilder()
         .setTitle("👥 Players")
-        .setColor(0x57f287);
+        .setColor(0x57_F2_87);
       const playersList = players.slice(0, 10).map((player) => {
         const accountCount = player.accounts.length;
         const discordMention = player.discordId
           ? `<@${player.discordId}>`
           : "No Discord";
-        return `**${player.alias}** - ${accountCount.toString()} account${accountCount !== 1 ? "s" : ""} - ${discordMention}`;
+        return `**${player.alias}** - ${accountCount.toString()} account${accountCount === 1 ? "" : "s"} - ${discordMention}`;
       });
       if (playersList.length > 0) {
         playersEmbed.setDescription(playersList.join("\n"));
@@ -147,7 +147,7 @@ export async function executeDebugServerInfo(
     if (accounts.length > 0) {
       const accountsEmbed = new EmbedBuilder()
         .setTitle("🎮 Accounts")
-        .setColor(0xfee75c);
+        .setColor(0xFE_E7_5C);
       const accountsList = accounts.slice(0, 10).map((account) => {
         const region = account.region.toUpperCase();
         return `**${account.alias}** (${region}) - ${account.player.alias}`;
@@ -166,12 +166,12 @@ export async function executeDebugServerInfo(
     if (subscriptions.length > 0) {
       const subscriptionsEmbed = new EmbedBuilder()
         .setTitle("🔔 Subscriptions")
-        .setColor(0xeb459e);
+        .setColor(0xEB_45_9E);
       const channelsList = Object.entries(channelMap)
         .slice(0, 10)
         .map(
           ([channelId, count]) =>
-            `<#${channelId}>: ${count.toString()} subscription${count !== 1 ? "s" : ""}`,
+            `<#${channelId}>: ${count.toString()} subscription${count === 1 ? "" : "s"}`,
         )
         .join("\n");
       subscriptionsEmbed.setDescription(channelsList);
@@ -181,7 +181,7 @@ export async function executeDebugServerInfo(
     if (activeCompetitions.length > 0) {
       const competitionsEmbed = new EmbedBuilder()
         .setTitle("🏆 Active Competitions")
-        .setColor(0xed4245);
+        .setColor(0xED_42_45);
       const competitionsList = activeCompetitions.slice(0, 5).map((comp) => {
         const participantCount = comp.participants.length;
         const owner = `<@${comp.ownerId}>`;
@@ -213,13 +213,13 @@ export async function executeDebugServerInfo(
 
     const debugEmbed = new EmbedBuilder()
       .setTitle("🐛 Debug Info")
-      .setColor(0x9b59b6)
+      .setColor(0x9B_59_B6)
       .addFields(
         { name: "Bot Version", value: configuration.version, inline: true },
         { name: "Environment", value: configuration.environment, inline: true },
         {
           name: "Git SHA",
-          value: configuration.gitSha.substring(0, 8),
+          value: configuration.gitSha.slice(0, 8),
           inline: true,
         },
         {

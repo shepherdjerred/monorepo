@@ -1,13 +1,13 @@
-import { createTool } from "../../../voltagent/tools/create-tool.js";
+import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.js";
 import { z } from "zod";
-import { getConfig } from "../../../config/index.js";
-import { logger } from "../../../utils/index.js";
+import { getConfig } from "@shepherdjerred/birmel/config/index.js";
+import { logger } from "@shepherdjerred/birmel/utils/index.js";
 import {
   handleFetchUrl,
   handleSearch,
   handleNews,
   handleLol,
-} from "./web-actions.js";
+} from "./web-actions.ts";
 
 export const externalServiceTool = createTool({
   id: "external-service",

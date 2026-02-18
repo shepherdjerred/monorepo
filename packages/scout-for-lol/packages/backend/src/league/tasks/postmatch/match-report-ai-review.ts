@@ -96,9 +96,9 @@ export async function generateAiReviewIfEnabled(
     jerredOverride || (isRanked && exceptionalResult.isExceptional);
 
   if (!shouldGenerateReview) {
-    const reason = !isRanked
-      ? `not a ranked queue (queueType: ${completedMatch.queueType ?? "unknown"})`
-      : "not an exceptional game";
+    const reason = isRanked
+      ? "not an exceptional game"
+      : `not a ranked queue (queueType: ${completedMatch.queueType ?? "unknown"})`;
     logger.info(`[generateMatchReport] Skipping AI review - ${reason}`);
     return { text: undefined, image: undefined };
   }

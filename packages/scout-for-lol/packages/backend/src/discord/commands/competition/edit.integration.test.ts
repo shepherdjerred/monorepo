@@ -538,7 +538,7 @@ describe("Partial updates", () => {
 
 describe("Error cases", () => {
   test("updating non-existent competition throws error", async () => {
-    const nonExistentId = CompetitionIdSchema.parse(999999);
+    const nonExistentId = CompetitionIdSchema.parse(999_999);
     const updateInput: UpdateCompetitionInput = {
       title: "Should Fail",
     };

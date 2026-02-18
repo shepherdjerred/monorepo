@@ -43,7 +43,7 @@ export function ModelConfigForm({ value, onChange }: ModelConfigFormProps) {
           id="maxTokens"
           type="number"
           min={100}
-          max={100000}
+          max={100_000}
           value={value.maxTokens}
           onChange={(e) => {
             onChange({

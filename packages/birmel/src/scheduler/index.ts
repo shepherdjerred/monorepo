@@ -1,18 +1,18 @@
-import { getConfig } from "../config/index.js";
-import { loggers } from "../utils/index.js";
-import { checkAndSendDailyPosts } from "./daily-posts.js";
+import { getConfig } from "@shepherdjerred/birmel/config/index.js";
+import { loggers } from "@shepherdjerred/birmel/utils/index.js";
+import { checkAndSendDailyPosts } from "./daily-posts.ts";
 
 const logger = loggers.scheduler;
 
-import { runAnnouncementsJob } from "./jobs/announcements.js";
-import { checkAndPostBirthdays } from "./jobs/birthday-checker.js";
-import { aggregateActivityMetrics } from "./jobs/activity-aggregator.js";
+import { runAnnouncementsJob } from "./jobs/announcements.ts";
+import { checkAndPostBirthdays } from "./jobs/birthday-checker.ts";
+import { aggregateActivityMetrics } from "./jobs/activity-aggregator.ts";
 import {
   checkAndStartElections,
   checkAndEndElections,
   processElectionResults,
-} from "./jobs/elections.js";
-import { runScheduledTasksJob } from "./jobs/scheduled-tasks.js";
+} from "./jobs/elections.ts";
+import { runScheduledTasksJob } from "./jobs/scheduled-tasks.ts";
 
 let schedulerInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -55,12 +55,7 @@ export function stopScheduler(): void {
   }
 }
 
-export {
-  checkAndStartElections,
-  checkAndEndElections,
-  processElectionResults,
-  runScheduledTasksJob,
-};
+
 
 export {
   configureDailyPost,
@@ -76,3 +71,7 @@ export {
 } from "./jobs/announcements.js";
 export { checkAndPostBirthdays } from "./jobs/birthday-checker.js";
 export { aggregateActivityMetrics } from "./jobs/activity-aggregator.js";
+
+export {checkAndStartElections} from "./jobs/elections.js";
+export {checkAndEndElections, processElectionResults} from "./jobs/elections.ts";
+export {runScheduledTasksJob} from "./jobs/scheduled-tasks.ts";

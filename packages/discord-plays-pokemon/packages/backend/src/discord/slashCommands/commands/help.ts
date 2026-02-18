@@ -1,5 +1,6 @@
+import type {
+  CommandInteraction} from "discord.js";
 import {
-  CommandInteraction,
   SlashCommandBuilder,
   bold,
   channelMention,
@@ -15,9 +16,9 @@ import {
   select,
   start,
   up,
-} from "../../../game/command/command.js";
-import { burst, hold, hold_b } from "../../../game/command/commandInput.js";
-import { getConfig } from "../../../config/index.js";
+} from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/command.js";
+import { burst, hold, hold_b } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/game/command/commandInput.js";
+import { getConfig } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/config/index.js";
 
 export const helpCommand = new SlashCommandBuilder()
   .setName("help")
@@ -50,7 +51,7 @@ export async function help(interaction: CommandInteraction) {
     })
     .join("\n");
   const lines = [
-    `${bold("Pokébot Help")}`,
+    bold("Pokébot Help"),
     `The Pokébot is available when ${userMention(
       getConfig().stream.userbot.id,
     )} is online and streaming in the ${channelMention(getConfig().stream.channel_id)} channel.`,
@@ -59,7 +60,7 @@ export async function help(interaction: CommandInteraction) {
     )} channel.`,
     `Notifications will be posted in ${channelMention(getConfig().bot.notifications.channel_id)}.`,
     ``,
-    `${bold("Commands")}`,
+    bold("Commands"),
     `Commands are messages sent to the ${channelMention(
       getConfig().game.commands.channel_id,
     )}. The command format is ${inlineCode("[QUANTITY][MODIFIER][ACTION]")}. Quantity is a number from 0-${
@@ -72,7 +73,7 @@ export async function help(interaction: CommandInteraction) {
       getConfig().game.commands.chord.max_total
     } actions in a single message. For example, the message ${inlineCode("2a 2b")} results in a total of four actions.`,
     ``,
-    `${bold("Modifiers")}`,
+    bold("Modifiers"),
     `You can add modifiers to commands to change how the button presses occur.`,
     `The burst modifier will rapidly press a button ${getConfig().game.commands.burst.quantity} times.`,
     `The hold modifier will hold a button for ${getConfig().game.commands.hold.duration_in_milliseconds} milliseconds`,
@@ -81,17 +82,17 @@ export async function help(interaction: CommandInteraction) {
       getConfig().game.commands.burst.quantity * 2
     } times and B to be held for ${getConfig().game.commands.hold.duration_in_milliseconds * 2} milliseconds.`,
     ``,
-    `${bold("Action List:")}`,
+    bold("Action List:"),
     `You can perform the listed action by providing any of the words listed. For example, to press Up you can send ${inlineCode(
       "up",
     )} or ${inlineCode("u")}.`,
     `All words are case insensitive.`,
     commandString,
     ``,
-    `${bold("Modifier List:")}`,
+    bold("Modifier List:"),
     modifiersString,
     ``,
-    `${bold("Extras:")}`,
+    bold("Extras:"),
     getConfig().bot.commands.screenshot.enabled
       ? `The ${inlineCode(
           "/screenshot",

@@ -1,9 +1,9 @@
 // Using Bun.$ for path operations instead of node:path
 import { parse as yamlParse } from "yaml";
-import type { ChartInfo, JSONSchemaProperty } from "./types.js";
-import { HelmValueSchema, RecordSchema, ErrorSchema } from "./schemas.js";
-import type { HelmValue } from "./schemas.js";
-import { parseYAMLComments } from "./yaml-comments.js";
+import type { ChartInfo, JSONSchemaProperty } from "./types.ts";
+import { HelmValueSchema, RecordSchema, ErrorSchema } from "./schemas.ts";
+import type { HelmValue } from "./schemas.ts";
+import { parseYAMLComments } from "./yaml-comments.ts";
 
 /**
  * Load JSON schema if it exists in the chart

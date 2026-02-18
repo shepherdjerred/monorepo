@@ -1,6 +1,6 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
-import { createGrafanaPostgreSQLDatabase } from "../resources/postgres/grafana-db.ts";
+import { createGrafanaPostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/grafana-db.ts";
 
 export function createGrafanaDbChart(app: App) {
   // grafana-db deploys to prometheus namespace (where Grafana lives)

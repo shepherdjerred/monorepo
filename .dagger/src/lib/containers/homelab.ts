@@ -1,5 +1,5 @@
 import type { Secret } from "@dagger.io/dagger";
-import { getGitHubContainer } from "./github";
+import { getGitHubContainer } from "./github.ts";
 
 export type CommitVersionsBackOptions = {
   /** GitHub token for authentication */
@@ -34,7 +34,7 @@ export async function commitVersionsBack(
     ]);
 
   for (const [key, ver] of Object.entries(options.versions)) {
-    const escaped = key.replaceAll("/", "\\/");
+    const escaped = key.replaceAll("/", String.raw`\/`);
     container = container.withExec([
       "sh",
       "-c",

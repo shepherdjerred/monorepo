@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/node";
-import { getConfig } from "../config/index.js";
+import { getConfig } from "@shepherdjerred/birmel/config/index.js";
 
 let sentryInitialized = false;
 

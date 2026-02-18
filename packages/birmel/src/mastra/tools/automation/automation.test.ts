@@ -12,8 +12,9 @@ import {
   executeShellCommandTool,
   manageTaskTool,
   browserAutomationTool,
-} from "./index.js";
-import { prisma } from "../../../database/index.js";
+} from "./index.ts";
+import { prisma } from "@shepherdjerred/birmel/database/index.js";
+// eslint-disable-next-line no-restricted-imports -- existsSync has no sync Bun equivalent
 import { existsSync } from "node:fs";
 
 const testContext = {
@@ -189,7 +190,7 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
   });
 });
 
-describe.skipIf(process.env["BROWSER_ENABLED"] === "false")(
+describe.skipIf(Bun.env["BROWSER_ENABLED"] === "false")(
   "Phase 3: Browser Tools",
   () => {
     test("navigates to a URL", async () => {

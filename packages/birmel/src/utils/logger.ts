@@ -1,5 +1,5 @@
-import { getConfig } from "../config/index.js";
-import { getTraceContext } from "../observability/tracing.js";
+import { getConfig } from "@shepherdjerred/birmel/config/index.js";
+import { getTraceContext } from "@shepherdjerred/birmel/observability/tracing.js";
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 

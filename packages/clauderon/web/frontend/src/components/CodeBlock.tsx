@@ -18,7 +18,7 @@ function escapeHtml(text: string): string {
     '"': "&quot;",
     "'": "&#039;",
   };
-  return text.replace(/[&<>"']/g, (char) => map[char] ?? char);
+  return text.replaceAll(/[&<>"']/g, (char) => map[char] ?? char);
 }
 
 /**
@@ -40,34 +40,7 @@ export function CodeBlock({ code, language, filePath }: CodeBlockProps) {
     }
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function highlight() {
-      try {
-        const highlighted = await codeToHtml(code, {
-          lang: language || "text",
-          theme: "nord",
-        });
-        if (!cancelled) {
-          applyHighlightedHtml(highlighted);
-          setIsLoading(false);
-        }
-      } catch {
-        // Fallback to plain text if language is not supported
-        if (!cancelled) {
-          applyHighlightedHtml(`<pre><code>${escapeHtml(code)}</code></pre>`);
-          setIsLoading(false);
-        }
-      }
-    }
-
-    void highlight();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [code, language, applyHighlightedHtml]);
+  ;
 
   return (
     <div className="border-4 border-primary overflow-hidden">

@@ -34,7 +34,7 @@ type InputProps = InputHTMLAttributes<HTMLInputElement> & {
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, helperText, error, icon, className, id, ...props }, ref) => {
-    const inputId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
+    const inputId = id ?? label?.toLowerCase().replaceAll(/\s+/g, "-");
 
     return (
       <div className="space-y-2.5">
@@ -88,7 +88,7 @@ type SelectProps = InputHTMLAttributes<HTMLSelectElement> & {
 
 const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ label, helperText, className, id, children, ...props }, ref) => {
-    const selectId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
+    const selectId = id ?? label?.toLowerCase().replaceAll(/\s+/g, "-");
 
     return (
       <div className="space-y-2.5">

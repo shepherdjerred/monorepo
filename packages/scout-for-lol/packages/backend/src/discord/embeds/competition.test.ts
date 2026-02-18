@@ -440,7 +440,7 @@ describe("formatScore", () => {
       games: 20,
     };
 
-    const result = formatScore(75.0, criteria, metadata);
+    const result = formatScore(75, criteria, metadata);
     expect(result).toBe("75.0% (15-5)");
   });
 
@@ -456,7 +456,7 @@ describe("formatScore", () => {
       games: 10,
     };
 
-    const result = formatScore(100.0, criteria, metadata);
+    const result = formatScore(100, criteria, metadata);
     expect(result).toBe("100.0% (10-0)");
   });
 
@@ -472,7 +472,7 @@ describe("formatScore", () => {
       games: 10,
     };
 
-    const result = formatScore(0.0, criteria, metadata);
+    const result = formatScore(0, criteria, metadata);
     expect(result).toBe("0.0% (0-10)");
   });
 });

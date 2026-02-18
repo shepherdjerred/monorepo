@@ -46,8 +46,9 @@ export function startMetricsServer({ logger, hass }: TServiceParams) {
         const connectionState = hass.socket.connectionState;
         // hass.call[d] is typed as always present, but at runtime domains may be
         // undefined if HA core hasn't finished loading integrations yet
+        // eslint-disable-next-line custom-rules/no-type-assertions -- runtime type narrowing for dynamic HA domain check
         const call = hass.call as unknown as Record<string, unknown>;
-        const missingDomains = CRITICAL_DOMAINS.filter((d) => !call[d]);
+        const missingDomains = CRITICAL_DOMAINS.filter((d) => call[d] === undefined || call[d] === null);
         const domainsReady = missingDomains.length === 0;
         const isHealthy = connectionState === "connected" && domainsReady;
         return Response.json(

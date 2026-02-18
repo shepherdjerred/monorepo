@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import type { FeatureFlags } from "@clauderon/shared";
-import { useClauderonClient } from "../hooks/useClauderonClient";
+import { useClauderonClient } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useClauderonClient";
 
 type FeatureFlagsContextValue = {
   flags: FeatureFlags | null;
@@ -24,19 +24,7 @@ export function FeatureFlagsProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    async function loadFlags() {
-      try {
-        const response = await client.getFeatureFlags();
-        setFlags(response.flags);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error(String(err)));
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    void loadFlags();
-  }, [client]);
+  ;
 
   return (
     <FeatureFlagsContext.Provider value={{ flags, isLoading, error }}>

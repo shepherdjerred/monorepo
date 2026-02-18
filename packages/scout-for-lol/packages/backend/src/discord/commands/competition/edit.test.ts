@@ -35,8 +35,8 @@ describe("Competition status checks", () => {
   test("DRAFT competition should allow all edits", () => {
     const competition: Competition = {
       isCancelled: false,
-      startDate: new Date(Date.now() + 86400000), // Tomorrow
-      endDate: new Date(Date.now() + 2 * 86400000), // Day after tomorrow
+      startDate: new Date(Date.now() + 86_400_000), // Tomorrow
+      endDate: new Date(Date.now() + 2 * 86_400_000), // Day after tomorrow
       seasonId: null,
       startProcessedAt: null,
       endProcessedAt: null,
@@ -64,8 +64,8 @@ describe("Competition status checks", () => {
   test("ACTIVE competition should restrict edits", () => {
     const competition: Competition = {
       isCancelled: false,
-      startDate: new Date(Date.now() - 86400000), // Yesterday
-      endDate: new Date(Date.now() + 86400000), // Tomorrow
+      startDate: new Date(Date.now() - 86_400_000), // Yesterday
+      endDate: new Date(Date.now() + 86_400_000), // Tomorrow
       seasonId: null,
       startProcessedAt: null,
       endProcessedAt: null,
@@ -94,8 +94,8 @@ describe("Competition status checks", () => {
   test("ENDED competition should restrict edits", () => {
     const competition: Competition = {
       isCancelled: false,
-      startDate: new Date(Date.now() - 2 * 86400000), // Two days ago
-      endDate: new Date(Date.now() - 86400000), // Yesterday
+      startDate: new Date(Date.now() - 2 * 86_400_000), // Two days ago
+      endDate: new Date(Date.now() - 86_400_000), // Yesterday
       seasonId: null,
       startProcessedAt: null,
       endProcessedAt: null,
@@ -124,8 +124,8 @@ describe("Competition status checks", () => {
   test("CANCELLED competition should be rejected", () => {
     const competition: Competition = {
       isCancelled: true,
-      startDate: new Date(Date.now() + 86400000),
-      endDate: new Date(Date.now() + 2 * 86400000),
+      startDate: new Date(Date.now() + 86_400_000),
+      endDate: new Date(Date.now() + 2 * 86_400_000),
       seasonId: null,
       startProcessedAt: null,
       endProcessedAt: null,
@@ -286,7 +286,7 @@ describe("Input length validation", () => {
     }
 
     for (const title of invalidTitles) {
-      const isValid = title.length >= 1 && title.length <= 100;
+      const isValid = title.length > 0 && title.length <= 100;
       expect(isValid).toBe(false);
     }
   });
@@ -301,7 +301,7 @@ describe("Input length validation", () => {
     }
 
     for (const desc of invalidDescriptions) {
-      const isValid = desc.length >= 1 && desc.length <= 500;
+      const isValid = desc.length > 0 && desc.length <= 500;
       expect(isValid).toBe(false);
     }
   });

@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bun
 
 import { z } from "zod";
-import cdk8sVersions from "../../packages/homelab/src/cdk8s/src/versions";
-import daggerVersions from "../src/lib/versions";
+import cdk8sVersions from "@homelab/cdk8s/src/versions";
+import daggerVersions from "../src/lib/versions.ts";
 
 /**
  * Test script to validate that versions.ts files have properly formatted
@@ -67,16 +67,16 @@ async function parseVersionsFile(
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]?.trim();
-    if (!line) continue;
+    if (!line) {continue;}
 
     // Match single-line property definitions: "property": "value" or property: "value" (including empty strings)
     const quotedRegex = /^"(.+?)":\s*"(.*?)",?$/;
-    const unquotedRegex = /^([a-zA-Z0-9_/-]+):\s*"(.*?)",?$/;
+    const unquotedRegex = /^([\w/-]+):\s*"(.*?)",?$/;
     const quotedMatch = quotedRegex.exec(line);
     const unquotedMatch = unquotedRegex.exec(line);
 
     // Match multi-line property definitions: property: (without value on same line)
-    const multiLineRegex = /^([a-zA-Z0-9_/".-]+):\s*$/;
+    const multiLineRegex = /^([\w/".-]+):\s*$/;
     const multiLineMatch = multiLineRegex.exec(line);
 
     let property = "";
@@ -97,7 +97,7 @@ async function parseVersionsFile(
       // Look for the value on the next few lines
       for (let j = i + 1; j < Math.min(i + 4, lines.length); j++) {
         const valueLine = lines[j]?.trim();
-        if (!valueLine) continue;
+        if (!valueLine) {continue;}
         const valueRegex = /^"(.*?)",?$/;
         const valueMatch = valueRegex.exec(valueLine);
         if (valueMatch?.[1] !== undefined) {
@@ -106,7 +106,7 @@ async function parseVersionsFile(
         }
       }
 
-      if (!value) continue; // Skip if we couldn't find the value
+      if (!value) {continue;} // Skip if we couldn't find the value
     } else {
       continue; // Skip lines that don't match any property format
     }
@@ -120,7 +120,7 @@ async function parseVersionsFile(
 
     for (let j = propertyLine - 1; j >= Math.max(0, propertyLine - 3); j--) {
       const prevLine = lines[j]?.trim();
-      if (!prevLine) continue;
+      if (!prevLine) {continue;}
       if (prevLine.includes("// renovate:")) {
         renovateComment = prevLine;
         hasRenovateComment = true;
@@ -253,7 +253,11 @@ async function main() {
       );
 
       // Check if detected count matches actual count
-      if (detectedCount !== actualCount) {
+      if (detectedCount === actualCount) {
+        console.log(
+          `✅ Dependency count validation: ${String(detectedCount)}/${String(actualCount)} properties detected correctly`,
+        );
+      } else {
         console.log(
           `❌ Dependency count mismatch: detected ${String(detectedCount)} but actual TS object has ${String(actualCount)} properties`,
         );
@@ -279,10 +283,6 @@ async function main() {
         }
 
         fileErrors++;
-      } else {
-        console.log(
-          `✅ Dependency count validation: ${String(detectedCount)}/${String(actualCount)} properties detected correctly`,
-        );
       }
 
       console.log(`   Errors: ${String(fileErrors)}`);

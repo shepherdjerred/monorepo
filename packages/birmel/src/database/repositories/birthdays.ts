@@ -1,6 +1,6 @@
-import { prisma } from "../index.js";
+import { prisma } from "@shepherdjerred/birmel/database/index.js";
 import type { Birthday } from "@prisma/client";
-import { loggers } from "../../utils/logger.js";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
 
 const logger = loggers.database.child("birthdays");
 

@@ -285,9 +285,9 @@ export async function generateMatchReview(
     const lane =
       match.queueType === "arena"
         ? undefined
-        : player && "lane" in player
+        : (player && "lane" in player
           ? player.lane
-          : undefined;
+          : undefined);
     const laneContext = config.prompts.laneContext ?? getLaneContext(lane);
 
     // Initialize OpenAI client

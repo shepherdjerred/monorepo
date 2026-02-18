@@ -4,14 +4,14 @@ export type Config = z.infer<typeof ConfigSchema>;
 export const ConfigSchema = z.strictObject({
   server_id: z
     .string()
-    .regex(/[0-9]*/, "IDs must only have numeric characters")
+    .regex(/\d*/, "IDs must only have numeric characters")
     .min(1),
   bot: z.strictObject({
     enabled: z.boolean(),
     discord_token: z.string().min(1),
     application_id: z
       .string()
-      .regex(/[0-9]*/, "IDs must only have numeric characters")
+      .regex(/\d*/, "IDs must only have numeric characters")
       .min(1),
     commands: z.strictObject({
       enabled: z.boolean(),
@@ -23,7 +23,7 @@ export const ConfigSchema = z.strictObject({
     notifications: z.strictObject({
       channel_id: z
         .string()
-        .regex(/[0-9]*/, "IDs must only have numeric characters")
+        .regex(/\d*/, "IDs must only have numeric characters")
         .min(1),
       enabled: z.boolean(),
     }),
@@ -32,7 +32,7 @@ export const ConfigSchema = z.strictObject({
     enabled: z.boolean(),
     channel_id: z
       .string()
-      .regex(/[0-9]*/, "IDs must only have numeric characters")
+      .regex(/\d*/, "IDs must only have numeric characters")
       .min(1),
     dynamic_streaming: z.boolean(),
     minimum_in_channel: z.number().nonnegative(),
@@ -40,7 +40,7 @@ export const ConfigSchema = z.strictObject({
     userbot: z.strictObject({
       id: z
         .string()
-        .regex(/[0-9]*/, "IDs must only have numeric characters")
+        .regex(/\d*/, "IDs must only have numeric characters")
         .min(1),
       username: z.string().min(1),
       password: z.string().min(1),
@@ -59,7 +59,7 @@ export const ConfigSchema = z.strictObject({
       enabled: z.boolean(),
       channel_id: z
         .string()
-        .regex(/[0-9]*/, "IDs must only have numeric characters")
+        .regex(/\d*/, "IDs must only have numeric characters")
         .min(1),
       max_actions_per_command: z.number().nonnegative(),
       max_quantity_per_action: z.number().nonnegative(),
@@ -88,7 +88,7 @@ export const ConfigSchema = z.strictObject({
       .number()
       .nonnegative()
       .min(1024, "Ports below 1024 are reserved")
-      .max(49151, "Ports above 49151 are reserved"),
+      .max(49_151, "Ports above 49151 are reserved"),
     assets: z.string(),
     api: z.strictObject({
       enabled: z.boolean(),

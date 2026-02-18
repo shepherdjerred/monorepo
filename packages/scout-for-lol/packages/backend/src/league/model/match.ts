@@ -20,7 +20,7 @@ import {
   getTeams,
   PlayerConfigEntrySchema,
 } from "@scout-for-lol/data/index";
-import { strict as assert } from "assert";
+import { strict as assert } from "node:assert";
 import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.ts";
 import { participantToChampion } from "@scout-for-lol/data/model/match-helpers";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
@@ -90,7 +90,7 @@ export function toMatch(
     const champion = participantToChampion(participant);
     const team = parseTeam(participant.teamId);
 
-    assert(team !== undefined);
+    assert.ok(team !== undefined);
 
     const enemyTeam = invertTeam(team);
 
@@ -201,7 +201,7 @@ export function getArenaTeammate(
       return p;
     }
   }
-  return undefined;
+  return;
 }
 
 export function toArenaSubteams(participants: RawParticipant[]): ArenaTeam[] {

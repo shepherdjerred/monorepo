@@ -1,5 +1,5 @@
 import { describe, expect, test, mock, beforeEach, afterEach } from "bun:test";
-import { ConsoleClient } from "./ConsoleClient.ts";
+import { ConsoleClient } from "./console-client.ts";
 import { WebSocketError } from "./errors.ts";
 import type { DecodeError } from "./errors.ts";
 
@@ -323,7 +323,7 @@ describe("ConsoleClient", () => {
       // Send first part (incomplete sequence)
       const chunk1 = bytes.slice(0, 2);
       const binaryString1 = Array.from(chunk1, (byte) =>
-        String.fromCharCode(byte),
+        String.fromCodePoint(byte),
       ).join("");
       const message1 = JSON.stringify({
         type: "output",
@@ -334,7 +334,7 @@ describe("ConsoleClient", () => {
       // Send second part (completes the sequence)
       const chunk2 = bytes.slice(2);
       const binaryString2 = Array.from(chunk2, (byte) =>
-        String.fromCharCode(byte),
+        String.fromCodePoint(byte),
       ).join("");
       const message2 = JSON.stringify({
         type: "output",
@@ -390,7 +390,7 @@ describe("ConsoleClient", () => {
       // Using decimal to avoid prettier/eslint hex casing conflict
       const invalidBytes = new Uint8Array([72, 101, 108, 108, 111, 255, 33]); // "Hello\xFF!"
       const binaryString = Array.from(invalidBytes, (byte) =>
-        String.fromCharCode(byte),
+        String.fromCodePoint(byte),
       ).join("");
       const message = JSON.stringify({
         type: "output",
@@ -423,7 +423,7 @@ describe("ConsoleClient", () => {
       // Encode properly: string → UTF-8 bytes → binary string → base64
       const bytes = new TextEncoder().encode(mixedText);
       const binaryString = Array.from(bytes, (byte) =>
-        String.fromCharCode(byte),
+        String.fromCodePoint(byte),
       ).join("");
       const message = JSON.stringify({
         type: "output",

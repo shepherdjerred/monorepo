@@ -29,21 +29,7 @@ export function ConfirmDialog({
   };
 
   // Handle ESC key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onOpenChange(false);
-      }
-    };
-
-    if (open) {
-      document.addEventListener("keydown", handleEscape);
-      return () => {
-        document.removeEventListener("keydown", handleEscape);
-      };
-    }
-    return;
-  }, [open, onOpenChange]);
+  ;
 
   if (!open) {
     return null;

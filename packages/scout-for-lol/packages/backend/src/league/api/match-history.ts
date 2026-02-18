@@ -72,17 +72,17 @@ export async function getRecentMatchIds(
     );
 
     return matchIds;
-  } catch (e) {
+  } catch (error) {
     riotApiRequestsTotal.inc({
       source: "match-history",
       status:
-        e instanceof Error && e.message.includes("timed out")
+        error instanceof Error && error.message.includes("timed out")
           ? "timeout"
           : "error",
     });
     updateRiotApiHealth(false);
 
-    const result = z.object({ status: z.number() }).safeParse(e);
+    const result = z.object({ status: z.number() }).safeParse(error);
     if (result.success) {
       const status = result.data.status;
       if (status === 404) {
@@ -94,7 +94,7 @@ export async function getRecentMatchIds(
         source: "match-history-api",
         http_status: status.toString(),
       });
-      Sentry.captureException(e, {
+      Sentry.captureException(error, {
         tags: {
           source: "match-history-api",
           playerAlias,
@@ -103,7 +103,7 @@ export async function getRecentMatchIds(
         },
       });
     } else {
-      logger.error(`❌ Error fetching match history for ${playerAlias}:`, e);
+      logger.error(`❌ Error fetching match history for ${playerAlias}:`, error);
       riotApiErrorsTotal.inc({
         source: "match-history-api",
         http_status: "unknown",

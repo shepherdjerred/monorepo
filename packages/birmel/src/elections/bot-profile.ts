@@ -1,7 +1,7 @@
-import { getDiscordClient } from "../discord/client.js";
-import { getDiscordIdForPersona } from "./persona-discord-ids.js";
-import { generateNickname } from "./winner.js";
-import { loggers } from "../utils/index.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.js";
+import { getDiscordIdForPersona } from "./persona-discord-ids.ts";
+import { generateNickname } from "./winner.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/index.js";
 
 const logger = loggers.scheduler.child("elections").child("profile");
 

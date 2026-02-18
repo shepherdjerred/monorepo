@@ -1,4 +1,4 @@
-import { getConfig, type EditorRepoConfig } from "../config/index.js";
+import { getConfig, type EditorRepoConfig } from "@shepherdjerred/birmel/config/index.js";
 
 /**
  * Check if the editor feature is enabled

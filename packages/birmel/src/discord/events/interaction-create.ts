@@ -9,8 +9,8 @@ async function getEmbedBuilder(): Promise<typeof EmbedBuilderType> {
   const { EmbedBuilder } = await import("discord.js");
   return EmbedBuilder;
 }
-import { loggers } from "../../utils/index.js";
-import { captureException } from "../../observability/index.js";
+import { loggers } from "@shepherdjerred/birmel/utils/index.js";
+import { captureException } from "@shepherdjerred/birmel/observability/index.js";
 import {
   getSession,
   getPendingChanges,
@@ -24,7 +24,7 @@ import {
   generatePRBody,
   updatePrUrl,
   extendSession,
-} from "../../editor/index.js";
+} from "@shepherdjerred/birmel/editor/index.js";
 
 const logger = loggers.discord.child("interaction-create");
 

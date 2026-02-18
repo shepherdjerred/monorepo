@@ -1,6 +1,6 @@
 import type { TServiceParams } from "@digital-alchemy/core";
-import { isAnyoneHome, runIf, runParallel, verifyAfterDelay, withTimeout } from "../util.ts";
-import { instrumentWorkflow } from "../metrics.ts";
+import { isAnyoneHome, runIf, runParallel, verifyAfterDelay, withTimeout } from "@shepherdjerred/homelab/ha/src/util.ts";
+import { instrumentWorkflow } from "@shepherdjerred/homelab/ha/src/metrics.ts";
 import { z } from "zod";
 
 // ============================================================================

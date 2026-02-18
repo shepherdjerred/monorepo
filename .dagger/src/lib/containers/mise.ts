@@ -3,8 +3,8 @@ import {
   type Container,
   type Platform,
 } from "@dagger.io/dagger";
-import { getSystemContainer } from "./system";
-import versions from "../versions";
+import { getSystemContainer } from "./system.ts";
+import versions from "../versions.ts";
 
 export type MiseToolVersions = {
   bun?: string;

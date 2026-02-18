@@ -319,7 +319,7 @@ async function downloadAugmentImages(): Promise<number> {
 
   const { iconPaths } = await fetchAndSaveArenaAugments();
 
-  const augmentImages = Array.from(iconPaths).map((iconPath) => {
+  const augmentImages = [...iconPaths].map((iconPath) => {
     const filename = iconPath.split("/").pop() ?? "unknown.png";
     return {
       url: `${COMMUNITY_DRAGON_URL}/${iconPath}`,

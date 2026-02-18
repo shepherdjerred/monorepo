@@ -1,5 +1,5 @@
 import { dag, type Container, type Secret } from "@dagger.io/dagger";
-import versions from "../versions";
+import versions from "../versions.ts";
 
 export type ReleasePleaseContainerOptions = {
   /** Custom Node.js version (defaults to versions.node) */

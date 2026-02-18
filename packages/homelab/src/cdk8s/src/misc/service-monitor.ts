@@ -1,5 +1,5 @@
 import type { Chart } from "cdk8s";
-import { ServiceMonitor } from "../../generated/imports/monitoring.coreos.com.ts";
+import { ServiceMonitor } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
 
 export type CreateServiceMonitorOptions = {
   /** The app name - used for construct ID, metadata name, and default matchLabels */

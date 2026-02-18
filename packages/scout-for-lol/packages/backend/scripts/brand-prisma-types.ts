@@ -103,7 +103,7 @@ function main() {
   if (BRANDED_TYPES_TO_IMPORT.size > 0) {
     sourceFile.insertImportDeclaration(0, {
       moduleSpecifier: "@scout-for-lol/data",
-      namedImports: Array.from(BRANDED_TYPES_TO_IMPORT).sort(),
+      namedImports: [...BRANDED_TYPES_TO_IMPORT].sort(),
     });
   }
 
@@ -121,7 +121,7 @@ function main() {
 
   logger.info(`✅ Transformed ${transformCount.toString()} properties`);
   logger.info(
-    `✅ Added imports: ${Array.from(BRANDED_TYPES_TO_IMPORT).join(", ")}`,
+    `✅ Added imports: ${[...BRANDED_TYPES_TO_IMPORT].join(", ")}`,
   );
   logger.info("🎉 Prisma types successfully branded!");
 }
@@ -150,7 +150,7 @@ function transformFieldTypeInContent(
     if (brandedType) {
       const newType = isNullable ? `${brandedType} | null` : brandedType;
       const fieldReplacePattern = new RegExp(
-        `${fieldName}:\\s*${baseType}(\\s*\\|\\s*null)?`,
+        String.raw`${fieldName}:\s*${baseType}(\s*\|\s*null)?`,
       );
       transformedContent = transformedContent.replace(
         fieldReplacePattern,
@@ -336,8 +336,8 @@ function transformSimpleObjectType(
       prop,
       modelName,
       (fullText, brandedType, propName) => {
-        const simpleNumberPattern = new RegExp(`${propName}\\??:\\s*number\\b`);
-        const simpleStringPattern = new RegExp(`${propName}\\??:\\s*string\\b`);
+        const simpleNumberPattern = new RegExp(String.raw`${propName}\??:\s*number\b`);
+        const simpleStringPattern = new RegExp(String.raw`${propName}\??:\s*string\b`);
 
         const numberMatch = simpleNumberPattern.exec(fullText);
         const stringMatch = simpleStringPattern.exec(fullText);
@@ -351,7 +351,7 @@ function transformSimpleObjectType(
         }
 
         // Match union patterns: number | SomeOtherType OR string | SomeOtherType
-        const unionPattern = new RegExp(`${propName}\\??:\\s*([^\\n]+)`);
+        const unionPattern = new RegExp(String.raw`${propName}\??:\s*([^\n]+)`);
         const unionMatch = unionPattern.exec(fullText);
         if (unionMatch?.[1]) {
           const typeExpression = unionMatch[1];

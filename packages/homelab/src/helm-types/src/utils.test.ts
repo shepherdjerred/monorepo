@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { sanitizePropertyName } from "./utils.js";
-import { convertToTypeScriptInterface } from "./type-converter.js";
+import { sanitizePropertyName } from "./utils.ts";
+import { convertToTypeScriptInterface } from "./type-converter.ts";
 
 describe("Sanitization", () => {
   test("should sanitize reserved keywords", () => {

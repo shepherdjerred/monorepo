@@ -1,5 +1,5 @@
 import type { Chart } from "cdk8s";
-import { AppProject } from "../../../generated/imports/argoproj.io.ts";
+import { AppProject } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 
 export function createProject(chart: Chart) {
   new AppProject(chart, "project", {

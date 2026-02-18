@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { isCodexFormat, parseCodexHistoryLines } from "./codexHistoryParser";
-import { parseHistoryLinesAuto } from "./historyParser";
+import { isCodexFormat, parseCodexHistoryLines } from "./codexHistoryParser.ts";
+import { parseHistoryLinesAuto } from "./historyParser.ts";
 
 describe("isCodexFormat", () => {
   test("returns true for session_meta type", () => {

@@ -5,7 +5,7 @@ import { JsonPatch } from "cdk8s";
 import { Construct } from "constructs";
 import { merge } from "lodash";
 import type { Chart } from "cdk8s";
-import { KubeIngress } from "../../generated/imports/k8s.ts";
+import { KubeIngress } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 
 type ServiceObject = {
   name: string;

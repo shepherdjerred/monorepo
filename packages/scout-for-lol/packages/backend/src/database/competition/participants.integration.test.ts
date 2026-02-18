@@ -222,8 +222,8 @@ describe("addParticipant - duplicate prevention", () => {
         playerId: playerId,
         status: "JOINED",
       });
-    } catch (e) {
-      error = e;
+    } catch (error_) {
+      error = error_;
     }
 
     expect(error).not.toBeNull();
@@ -256,8 +256,8 @@ describe("addParticipant - duplicate prevention", () => {
         playerId: playerId,
         status: "JOINED",
       });
-    } catch (e) {
-      error = e;
+    } catch (error_) {
+      error = error_;
     }
 
     expect(error).not.toBeNull();
@@ -332,8 +332,8 @@ describe("addParticipant - max participants", () => {
         playerId: playerId,
         status: "JOINED",
       });
-    } catch (e) {
-      error = e;
+    } catch (error_) {
+      error = error_;
     }
 
     expect(error).not.toBeNull();
@@ -448,8 +448,8 @@ describe("removeParticipant", () => {
     let error: unknown = null;
     try {
       await removeParticipant(prisma, competitionId, playerId);
-    } catch (e) {
-      error = e;
+    } catch (error_) {
+      error = error_;
     }
 
     expect(error).not.toBeNull();
@@ -477,8 +477,8 @@ describe("removeParticipant", () => {
     let error: unknown = null;
     try {
       await removeParticipant(prisma, competitionId, playerId);
-    } catch (e) {
-      error = e;
+    } catch (error_) {
+      error = error_;
     }
 
     expect(error).not.toBeNull();

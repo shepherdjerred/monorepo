@@ -44,9 +44,9 @@ describe("ThemeToggle localStorage behavior", () => {
   beforeEach(() => {
     mockLocalStorage.clear();
     // @ts-expect-error - mocking global localStorage for test isolation
-    global.localStorage = mockLocalStorage;
+    globalThis.localStorage = mockLocalStorage;
     // @ts-expect-error - mocking global matchMedia for test isolation
-    global.matchMedia = mockMatchMedia(false);
+    globalThis.matchMedia = mockMatchMedia(false);
   });
 
   test("localStorage stores 'light' theme", () => {
@@ -68,24 +68,24 @@ describe("ThemeToggle system preference detection", () => {
   beforeEach(() => {
     mockLocalStorage.clear();
     // @ts-expect-error - mocking global localStorage for test isolation
-    global.localStorage = mockLocalStorage;
+    globalThis.localStorage = mockLocalStorage;
     // @ts-expect-error - mocking global window for test isolation
-    global.window = global;
+    globalThis.window = globalThis;
   });
 
   test("matchMedia detects dark mode preference", () => {
     // @ts-expect-error - mocking global matchMedia for test isolation
-    global.matchMedia = mockMatchMedia(true);
+    globalThis.matchMedia = mockMatchMedia(true);
     // @ts-expect-error - calling mocked matchMedia returns partial type
-    const mediaQuery = global.matchMedia("(prefers-color-scheme: dark)");
+    const mediaQuery = globalThis.matchMedia("(prefers-color-scheme: dark)");
     expect(mediaQuery.matches).toBe(true);
   });
 
   test("matchMedia detects light mode preference", () => {
     // @ts-expect-error - mocking global matchMedia for test isolation
-    global.matchMedia = mockMatchMedia(false);
+    globalThis.matchMedia = mockMatchMedia(false);
     // @ts-expect-error - calling mocked matchMedia returns partial type
-    const mediaQuery = global.matchMedia("(prefers-color-scheme: dark)");
+    const mediaQuery = globalThis.matchMedia("(prefers-color-scheme: dark)");
     expect(mediaQuery.matches).toBe(false);
   });
 });
@@ -94,9 +94,9 @@ describe("ThemeToggle theme persistence logic", () => {
   beforeEach(() => {
     mockLocalStorage.clear();
     // @ts-expect-error - mocking global localStorage for test isolation
-    global.localStorage = mockLocalStorage;
+    globalThis.localStorage = mockLocalStorage;
     // @ts-expect-error - mocking global matchMedia for test isolation
-    global.matchMedia = mockMatchMedia(false);
+    globalThis.matchMedia = mockMatchMedia(false);
   });
 
   test("prefers localStorage over system preference", () => {
@@ -104,7 +104,7 @@ describe("ThemeToggle theme persistence logic", () => {
     mockLocalStorage.setItem("theme", "dark");
     // But system prefers light
     // @ts-expect-error - mocking global matchMedia for test isolation
-    global.matchMedia = mockMatchMedia(false);
+    globalThis.matchMedia = mockMatchMedia(false);
 
     // Should use localStorage value
     const stored = mockLocalStorage.getItem("theme");
@@ -117,9 +117,9 @@ describe("ThemeToggle theme persistence logic", () => {
 
     // System prefers dark
     // @ts-expect-error - mocking global matchMedia for test isolation
-    global.matchMedia = mockMatchMedia(true);
+    globalThis.matchMedia = mockMatchMedia(true);
     // @ts-expect-error - calling mocked matchMedia returns partial type
-    const mediaQuery = global.matchMedia("(prefers-color-scheme: dark)");
+    const mediaQuery = globalThis.matchMedia("(prefers-color-scheme: dark)");
 
     // Should detect system preference
     expect(mediaQuery.matches).toBe(true);
@@ -139,9 +139,9 @@ describe("ThemeToggle edge cases", () => {
   beforeEach(() => {
     mockLocalStorage.clear();
     // @ts-expect-error - mocking global localStorage for test isolation
-    global.localStorage = mockLocalStorage;
+    globalThis.localStorage = mockLocalStorage;
     // @ts-expect-error - mocking global matchMedia for test isolation
-    global.matchMedia = mockMatchMedia(false);
+    globalThis.matchMedia = mockMatchMedia(false);
   });
 
   test("handles invalid localStorage value", () => {
@@ -171,7 +171,7 @@ describe("ThemeToggle edge cases", () => {
     };
 
     // @ts-expect-error - mocking global localStorage with broken implementation
-    global.localStorage = brokenStorage;
+    globalThis.localStorage = brokenStorage;
 
     // Should not crash when trying to access localStorage
     expect(() => {

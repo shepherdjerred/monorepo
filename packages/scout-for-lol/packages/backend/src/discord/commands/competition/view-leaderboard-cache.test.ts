@@ -367,12 +367,12 @@ describe("Cache Miss Handling", () => {
 
     // In the actual code, when cached is null, we return early
     // and don't call calculateLeaderboard
-    if (!cached) {
-      // Show message, don't calculate
-      expect(true).toBe(true); // This path is correct
-    } else {
+    if (cached) {
       // This path should not be reached
       throw new Error("Should not attempt calculation");
+    } else {
+      // Show message, don't calculate
+      expect(true).toBe(true); // This path is correct
     }
   });
 });

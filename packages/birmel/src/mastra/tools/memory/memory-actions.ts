@@ -5,9 +5,9 @@ import {
   updateOwnerWorkingMemory,
   SERVER_MEMORY_TEMPLATE,
   OWNER_MEMORY_TEMPLATE,
-} from "../../../voltagent/memory/index.js";
-import { getGuildPersona } from "../../../persona/index.js";
-import { logger } from "../../../utils/logger.js";
+} from "@shepherdjerred/birmel/voltagent/memory/index.js";
+import { getGuildPersona } from "@shepherdjerred/birmel/persona/index.js";
+import { logger } from "@shepherdjerred/birmel/utils/logger.js";
 
 const MAX_MEMORY_SIZE = 4000;
 

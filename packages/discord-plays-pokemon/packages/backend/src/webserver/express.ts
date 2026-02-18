@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
-import { assertPathExists } from "../util.js";
-import { logger } from "../logger.js";
+import { assertPathExists } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/util.js";
+import { logger } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/logger.js";
 
 export function createExpressApp({
   isCorsEnabled,

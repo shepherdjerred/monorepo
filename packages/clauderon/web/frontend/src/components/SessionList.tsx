@@ -2,15 +2,15 @@ import { useState, useMemo, useEffect } from "react";
 import type { Session, SessionHealthReport } from "@clauderon/client";
 import { SessionStatus } from "@clauderon/shared";
 import type { MergeMethod } from "@clauderon/shared";
-import { SessionCard } from "./SessionCard";
-import { ThemeToggle } from "./ThemeToggle";
-import { ConfirmDialog } from "./ConfirmDialog";
-import { StatusDialog } from "./StatusDialog";
-import { EditSessionDialog } from "./EditSessionDialog";
-import { StartupHealthModal } from "./StartupHealthModal";
-import { RecreateBlockedModal } from "./RecreateBlockedModal";
-import { RecreateModalWrapper } from "./RecreateModalCallbacks";
-import { useSessionContext } from "../contexts/SessionContext";
+import { SessionCard } from "./SessionCard.tsx";
+import { ThemeToggle } from "./ThemeToggle.tsx";
+import { ConfirmDialog } from "./ConfirmDialog.tsx";
+import { StatusDialog } from "./StatusDialog.tsx";
+import { EditSessionDialog } from "./EditSessionDialog.tsx";
+import { StartupHealthModal } from "./StartupHealthModal.tsx";
+import { RecreateBlockedModal } from "./RecreateBlockedModal.tsx";
+import { RecreateModalWrapper } from "./RecreateModalCallbacks.tsx";
+import { useSessionContext } from "@shepherdjerred/clauderon/web/frontend/src/contexts/SessionContext";
 import { toast } from "sonner";
 import { Plus, RefreshCw, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -55,7 +55,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
 
   // Initialize filter from URL parameter
   const getInitialFilter = (): FilterStatus => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(globalThis.location.search);
     const tabParam = params.get("tab");
     if (
       tabParam != null &&
@@ -107,51 +107,16 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   }, [sessions, filter]);
 
   // Update URL when filter changes
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    url.searchParams.set("tab", filter);
-    window.history.pushState({}, "", url.toString());
-  }, [filter]);
+  ;
 
   // Auto-refresh every 2 seconds (silent - no loading indicators)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      void Promise.all([refreshSessions(false), refreshHealth()]).then(() => {
-        setLastRefreshTime(new Date());
-      });
-    }, 2000);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [refreshSessions, refreshHealth]);
+  ;
 
   // Update time display every second
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTickCounter((prev) => prev + 1);
-    }, 1000);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
+  ;
 
   // Startup health check - show modal if there are unhealthy sessions
-  useEffect(() => {
-    if (startupHealthCheckDone || isLoading || healthReports.size === 0) {
-      return;
-    }
-
-    const unhealthySessions = [...healthReports.values()].filter(
-      (report) => report.state.type !== "Healthy",
-    );
-
-    if (unhealthySessions.length > 0) {
-      setShowStartupHealthModal(true);
-    }
-    setStartupHealthCheckDone(true);
-  }, [healthReports, isLoading, startupHealthCheckDone]);
+  ;
 
   // Compute unhealthy sessions for the startup modal
   const unhealthySessions = useMemo(() => {
@@ -213,9 +178,9 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
       .then(() => {
         toast.success(`Pull request for "${session.name}" merged successfully`);
       })
-      .catch((err: unknown) => {
+      .catch((error_: unknown) => {
         toast.error(
-          `Failed to merge PR: ${err instanceof Error ? err.message : String(err)}`,
+          `Failed to merge PR: ${error_ instanceof Error ? error_.message : String(error_)}`,
         );
       });
   };
@@ -231,9 +196,9 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
           .then(() => {
             toast.success(`Session "${confirmDialog.session.name}" archived`);
           })
-          .catch((err: unknown) => {
+          .catch((error_: unknown) => {
             toast.error(
-              `Failed to archive: ${err instanceof Error ? err.message : String(err)}`,
+              `Failed to archive: ${error_ instanceof Error ? error_.message : String(error_)}`,
             );
           });
 
@@ -246,9 +211,9 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
               `Session "${confirmDialog.session.name}" restored from archive`,
             );
           })
-          .catch((err: unknown) => {
+          .catch((error_: unknown) => {
             toast.error(
-              `Failed to unarchive: ${err instanceof Error ? err.message : String(err)}`,
+              `Failed to unarchive: ${error_ instanceof Error ? error_.message : String(error_)}`,
             );
           });
 
@@ -261,9 +226,9 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
               `Session "${confirmDialog.session.name}" is being refreshed`,
             );
           })
-          .catch((err: unknown) => {
+          .catch((error_: unknown) => {
             toast.error(
-              `Failed to refresh: ${err instanceof Error ? err.message : String(err)}`,
+              `Failed to refresh: ${error_ instanceof Error ? error_.message : String(error_)}`,
             );
           });
 
@@ -274,9 +239,9 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
           .then(() => {
             toast.info(`Deleting session "${confirmDialog.session.name}"...`);
           })
-          .catch((err: unknown) => {
+          .catch((error_: unknown) => {
             toast.error(
-              `Failed to delete: ${err instanceof Error ? err.message : String(err)}`,
+              `Failed to delete: ${error_ instanceof Error ? error_.message : String(error_)}`,
             );
           });
       }
@@ -412,7 +377,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
               </Card>
             ))}
           </div>
-        ) : filteredSessions.length === 0 ? (
+        ) : (filteredSessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
             <p className="text-lg mb-2 font-semibold">No sessions found</p>
             <p className="text-sm">Create a new session to get started</p>
@@ -444,7 +409,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
               );
             })}
           </div>
-        )}
+        ))}
       </main>
 
       {/* Confirmation Dialog */}

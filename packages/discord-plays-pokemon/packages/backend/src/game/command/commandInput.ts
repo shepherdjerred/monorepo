@@ -1,4 +1,5 @@
-import { Command, isCommand } from "./command.js";
+import type { Command} from "./command.ts";
+import { isCommand } from "./command.ts";
 
 export type Quantity = number;
 
@@ -26,7 +27,7 @@ export function isModifier(input: string): input is Modifier {
   return modifier.includes(input.toLowerCase());
 }
 
-export interface CommandInput {
+export type CommandInput = {
   command: Command;
   quantity: Quantity;
   modifier?: Modifier;
@@ -34,7 +35,7 @@ export interface CommandInput {
 
 export function parseCommandInput(input: string): CommandInput | undefined {
   let split = input
-    .split(/([0-9]*)([-_]*)([a-zA-Z]+)/)
+    .split(/(\d*)([-_]*)([a-z]+)/i)
     .filter((group) => group !== "");
 
   let quantity: Quantity = 1;

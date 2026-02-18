@@ -1,7 +1,7 @@
-import { prisma } from "../database/index.js";
-import { loggers } from "../utils/index.js";
-import { getGitHubConfig, isGitHubConfigured } from "./config.js";
-import type { GitHubAuth } from "./types.js";
+import { prisma } from "@shepherdjerred/birmel/database/index.js";
+import { loggers } from "@shepherdjerred/birmel/utils/index.js";
+import { getGitHubConfig, isGitHubConfigured } from "./config.ts";
+import type { GitHubAuth } from "./types.ts";
 
 const logger = loggers.editor.child("github-oauth");
 

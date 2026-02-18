@@ -1,18 +1,18 @@
 import { Agent } from "@voltagent/core";
 import { openai } from "@ai-sdk/openai";
-import { getConfig } from "../../config/index.js";
-import { createMemory } from "../memory/index.js";
+import { getConfig } from "@shepherdjerred/birmel/config/index.js";
+import { createMemory } from "@shepherdjerred/birmel/voltagent/memory/index.js";
 import {
   SYSTEM_PROMPT,
   buildSystemPromptWithPersona,
-} from "./system-prompt.js";
+} from "./system-prompt.ts";
 
-import { messagingAgent } from "./specialized/messaging-agent.js";
-import { serverAgent } from "./specialized/server-agent.js";
-import { moderationAgent } from "./specialized/moderation-agent.js";
-import { musicAgent } from "./specialized/music-agent.js";
-import { automationAgent } from "./specialized/automation-agent.js";
-import { editorAgent } from "./specialized/editor-agent.js";
+import { messagingAgent } from "./specialized/messaging-agent.ts";
+import { serverAgent } from "./specialized/server-agent.ts";
+import { moderationAgent } from "./specialized/moderation-agent.ts";
+import { musicAgent } from "./specialized/music-agent.ts";
+import { automationAgent } from "./specialized/automation-agent.ts";
+import { editorAgent } from "./specialized/editor-agent.ts";
 
 const config = getConfig();
 

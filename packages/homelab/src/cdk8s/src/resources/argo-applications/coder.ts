@@ -1,17 +1,17 @@
 import type { Chart } from "cdk8s";
-import { Application } from "../../../generated/imports/argoproj.io.ts";
+import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { Namespace } from "cdk8s-plus-31";
-import { PodMonitor } from "../../../generated/imports/monitoring.coreos.com.ts";
-import { OnePasswordItem } from "../../../generated/imports/onepassword.com.ts";
+import { PodMonitor } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
   KubeClusterRole,
   KubeClusterRoleBinding,
-} from "../../../generated/imports/k8s.ts";
-import versions from "../../versions.ts";
-import { createIngress } from "../../misc/tailscale.ts";
-import { createCloudflareTunnelBinding } from "../../misc/cloudflare-tunnel.ts";
-import { createCoderPostgreSQLDatabase } from "../postgres/coder-db.ts";
-import type { HelmValuesForChart } from "../../misc/typed-helm-parameters.ts";
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
+import { createCoderPostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/coder-db.ts";
+import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 
 export function createCoderApp(chart: Chart) {
   // Create namespace with privileged pod security for rootless DinD workspaces

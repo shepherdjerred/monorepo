@@ -299,15 +299,15 @@ function buildRankContext(match: CompletedMatch | ArenaMatch): string {
       // Show LP change for non-promotion/demotion games
       const lpDelta =
         rankToLeaguePoints(rankAfter) - rankToLeaguePoints(rankBefore);
-      if (lpDelta !== 0) {
+      if (lpDelta === 0) {
+        rankInfo.push(rankLine);
+      } else {
         const lpStr = lpDiffToString(lpDelta);
         const changeStr =
           lpDelta > 0
             ? `gained ${lpStr.replace(/[+-]/, "")}`
             : `lost ${lpStr.replace(/[+-]/, "")}`;
         rankInfo.push(`${rankLine} They ${changeStr}.`);
-      } else {
-        rankInfo.push(rankLine);
       }
     } else {
       rankInfo.push(rankLine);

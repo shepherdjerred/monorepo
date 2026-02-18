@@ -6,8 +6,8 @@ import {
   getBirthdaysToday,
   getUpcomingBirthdays,
   getBirthdaysByMonth,
-} from "../../../database/repositories/birthdays.js";
-import { loggers } from "../../../utils/logger.js";
+} from "@shepherdjerred/birmel/database/repositories/birthdays.js";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
 
 const logger = loggers.tools.child("birthdays");
 

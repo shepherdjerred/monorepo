@@ -83,7 +83,7 @@ export function ConfigImportModal({
     }
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.addEventListener('load', (e) => {
       const stringResult = z.string().safeParse(e.target?.result);
       if (!stringResult.success) {
         setParseError("Failed to read file");
@@ -103,7 +103,7 @@ export function ConfigImportModal({
         );
         setParsedBundle(null);
       }
-    };
+    });
     reader.readAsText(file);
   };
 

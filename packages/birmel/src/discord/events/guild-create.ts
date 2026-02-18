@@ -1,5 +1,5 @@
 import type { Client, Guild } from "discord.js";
-import { loggers } from "../../utils/logger.js";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
 
 const logger = loggers.discord.child("guild-create");
 

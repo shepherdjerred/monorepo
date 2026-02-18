@@ -1,6 +1,6 @@
 import type { Directory, Container } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
-import { runNamedParallel, type NamedResult } from "./lib/index.js";
+import { runNamedParallel, type NamedResult } from "./lib/index.ts";
 
 /**
  * Get a Maven container with Java 21 and Maven 3

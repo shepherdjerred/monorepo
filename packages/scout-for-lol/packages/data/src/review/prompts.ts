@@ -98,8 +98,7 @@ export function selectRandomBehaviors(
     // Find which behavior was selected
     let cumulative = 0;
     let selectedIndex = 0;
-    for (let j = 0; j < remaining.length; j++) {
-      const behavior = remaining[j];
+    for (const [j, behavior] of remaining.entries()) {
       if (behavior) {
         cumulative += behavior.weight;
         if (roll < cumulative) {

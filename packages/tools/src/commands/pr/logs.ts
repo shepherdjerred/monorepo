@@ -1,4 +1,4 @@
-import { getRunLogs } from "../../lib/github/ci.ts";
+import { getRunLogs } from "@shepherdjerred/tools/lib/github/ci.ts";
 
 export type LogsOptions = {
   repo?: string | undefined;

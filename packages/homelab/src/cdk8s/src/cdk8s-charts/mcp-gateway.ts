@@ -1,8 +1,8 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
-import { KubeNetworkPolicy, IntOrString } from "../../generated/imports/k8s.ts";
-import { createMcpGatewayDeployment } from "../resources/mcp-gateway/index.ts";
+import { KubeNetworkPolicy, IntOrString } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { createMcpGatewayDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/mcp-gateway/index.ts";
 
 export async function createMcpGatewayChart(app: App) {
   const chart = new Chart(app, "mcp-gateway", {

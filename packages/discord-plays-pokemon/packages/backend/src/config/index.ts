@@ -1,9 +1,9 @@
 import { ztomlSync } from "@d6v/zconf";
-import { ConfigSchema } from "./schema.js";
-import { resolve } from "path";
-import { addErrorLinks, assertPathExists } from "../util.js";
-import { ZodError } from "zod";
-import { logger } from "../logger.js";
+import { ConfigSchema } from "./schema.ts";
+import { resolve } from "node:path";
+import { addErrorLinks, assertPathExists } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/util.js";
+import type { ZodError } from "zod";
+import { logger } from "@shepherdjerred/discord-plays-pokemon/packages/backend/src/logger.js";
 
 export function getConfig(file?: string) {
   file = file || "config.toml";
@@ -13,25 +13,25 @@ export function getConfig(file?: string) {
 
   try {
     ztomlSync(ConfigSchema, path);
-  } catch (e) {
-    if (e instanceof Error) {
-      if (e.name === "SyntaxError") {
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.name === "SyntaxError") {
         logger.error(
           `Your configuration at ${path} _is not_ valid TOML.\nCorrect your config to continue\nA TOML validator may be useful, such as an IDE plugin, or https://www.toml-lint.com/\n`,
         );
-        throw Error();
+        throw new Error();
       }
-      if (e.name === "ZodError") {
-        const errors = JSON.parse(e.message) as ZodError[];
+      if (error.name === "ZodError") {
+        const errors = JSON.parse(error.message) as ZodError[];
         logger.error(
           `Your configuration at ${path} _is_ valid TOML, but it is not a valid configuration for this application.\nThe following problems were found:\n\n`,
           errors,
           addErrorLinks(""),
         );
-        throw Error();
+        throw new Error();
       }
     } else {
-      throw new Error(`Your configuration is invalid.`, { cause: e });
+      throw new Error(`Your configuration is invalid.`, { cause: error });
     }
   }
   return ztomlSync(ConfigSchema, path);

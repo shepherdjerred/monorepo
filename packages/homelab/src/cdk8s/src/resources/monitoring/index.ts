@@ -1,4 +1,4 @@
-// Export all monitoring services
+/* eslint-disable custom-rules/no-re-exports -- barrel file for monitoring services */
 export { createSmartctlMonitoring } from "./smartctl";
 export { createNvmeMetricsMonitoring } from "./nvme-metrics";
 export { createZfsSnapshotsMonitoring } from "./zfs-snapshots";

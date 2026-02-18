@@ -229,8 +229,8 @@ async function safeSave(
 ): Promise<void> {
   try {
     await operation();
-  } catch (err) {
-    logger.error(errorMessage, err);
+  } catch (error) {
+    logger.error(errorMessage, error);
   }
 }
 

@@ -1,9 +1,9 @@
 import type { Directory, Container } from "@dagger.io/dagger";
 import { dag, type Secret, type File } from "@dagger.io/dagger";
-import { getWorkspaceContainer, getMiseRuntimeContainer } from "./base";
-import { execOrThrow } from "./errors";
+import { getWorkspaceContainer, getMiseRuntimeContainer } from "./base.ts";
+import { execOrThrow } from "./errors.ts";
 import type { StepResult } from ".";
-import versions from "./versions";
+import versions from "./versions.ts";
 
 /**
  * Prepares the HA container by generating hass.d.ts if needed.

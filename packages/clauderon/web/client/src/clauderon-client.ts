@@ -410,6 +410,7 @@ export class ClauderonClient {
       });
 
       if (!response.ok) {
+        // eslint-disable-next-line custom-rules/no-type-assertions -- response.json() returns any
         const data = (await response.json()) as { error?: string };
         throw new ApiError(
           data.error ??
@@ -419,6 +420,7 @@ export class ClauderonClient {
         );
       }
 
+      // eslint-disable-next-line custom-rules/no-type-assertions -- response.json() returns any
       return (await response.json()) as UploadResponse;
     } catch (error) {
       if (error instanceof ApiError) {
@@ -460,6 +462,7 @@ export class ClauderonClient {
         response.status === 204 ||
         response.headers.get("content-length") === "0"
       ) {
+        // eslint-disable-next-line custom-rules/no-type-assertions -- empty response narrowed to void via generic
         return undefined as T;
       }
 
@@ -468,6 +471,7 @@ export class ClauderonClient {
 
       // Check for error responses
       if (!response.ok) {
+        // eslint-disable-next-line custom-rules/no-type-assertions -- error response shape from API
         const errorData = data as { error?: string };
         throw new ApiError(
           errorData.error ??
@@ -477,6 +481,7 @@ export class ClauderonClient {
         );
       }
 
+      // eslint-disable-next-line custom-rules/no-type-assertions -- validated JSON response narrowed to generic type
       return data as T;
     } catch (error) {
       if (error instanceof ApiError) {
@@ -489,8 +494,3 @@ export class ClauderonClient {
     }
   }
 }
-
-export {
-  type StorageClassInfo,
-  type ClauderonClientConfig,
-} from "./client-types.js";

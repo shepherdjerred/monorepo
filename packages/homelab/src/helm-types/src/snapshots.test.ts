@@ -2,7 +2,7 @@ import { describe, test, expect } from "bun:test";
 import {
   convertToTypeScriptInterface,
   generateTypeScriptCode,
-} from "./helm-types";
+} from "./helm-types.ts";
 
 describe("Snapshot Tests", () => {
   test("should generate consistent output for basic types with comments", () => {

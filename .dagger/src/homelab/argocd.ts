@@ -1,7 +1,7 @@
 import type { Secret } from "@dagger.io/dagger";
 import { z } from "zod";
-import type { StepResult } from "./index";
-import { getCurlContainer } from "./base";
+import type { StepResult } from "./index.ts";
+import { getCurlContainer } from "./base.ts";
 
 /**
  * Triggers a sync operation on the ArgoCD application using the provided token as a Dagger Secret.
@@ -24,7 +24,7 @@ export async function sync(
       "sh",
       "-c",
       // Output: body\nHTTP_CODE
-      `curl -s -w '\\n%{http_code}' -X POST ${argocdServer}/api/v1/applications/${appName}/sync ` +
+      String.raw`curl -s -w '\n%{http_code}' -X POST ${argocdServer}/api/v1/applications/${appName}/sync ` +
         '-H "Authorization: Bearer $ARGOCD_TOKEN" ' +
         "-H 'Content-Type: application/json' > /tmp/result.txt 2>&1",
     ]);

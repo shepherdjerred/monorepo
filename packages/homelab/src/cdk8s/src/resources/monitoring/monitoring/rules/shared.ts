@@ -1,4 +1,4 @@
-import { PrometheusRuleSpecGroupsRulesExpr } from "../../../../../generated/imports/monitoring.coreos.com";
+import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 
 // Generic helper to escape Go template syntax so Helm doesn't process it
 // Converts "{{ anything }}" to "{{ "{{" }} anything {{ "}}" }}"

@@ -1,4 +1,4 @@
-import { createTool } from "../../../voltagent/tools/create-tool.js";
+import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.js";
 import { z } from "zod";
 import type { ButtonBuilder as ButtonBuilderType } from "discord.js";
 
@@ -8,13 +8,13 @@ async function getDiscordComponents() {
     await import("discord.js");
   return { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder };
 }
-import { getDiscordClient } from "../../../discord/index.js";
-import { loggers } from "../../../utils/logger.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.js";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.js";
 import {
   withToolSpan,
   captureException,
-} from "../../../observability/index.js";
-import { getRequestContext } from "../request-context.js";
+} from "@shepherdjerred/birmel/observability/index.js";
+import { getRequestContext } from "@shepherdjerred/birmel/mastra/tools/request-context.js";
 import {
   isEditorEnabled,
   getRepoConfig,
@@ -36,7 +36,7 @@ import {
   isGitHubConfigured,
   getGitHubConfig,
   cloneRepo,
-} from "../../../editor/index.js";
+} from "@shepherdjerred/birmel/editor/index.js";
 
 const logger = loggers.tools.child("editor.edit-repo");
 

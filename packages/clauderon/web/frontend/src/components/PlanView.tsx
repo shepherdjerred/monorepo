@@ -1,4 +1,4 @@
-import type { Message } from "../lib/claudeParser";
+import type { Message } from "@shepherdjerred/clauderon/web/frontend/src/lib/claudeParser";
 import { FileText, CheckCircle2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -51,9 +51,9 @@ export function PlanView({ message }: PlanViewProps) {
               const childText =
                 typeof children === "string"
                   ? children
-                  : Array.isArray(children)
+                  : (Array.isArray(children)
                     ? children.join("")
-                    : "";
+                    : "");
               if (childText.includes("[ ]") || childText.includes("[x]")) {
                 const isChecked = childText.includes("[x]");
                 return (

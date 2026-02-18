@@ -6,7 +6,7 @@ import {
   clearRateLimit,
   clearAllRateLimits,
   cleanupExpiredLimits,
-} from "../../src/utils/rate-limiter.js";
+} from "@shepherdjerred/birmel/utils/rate-limiter.js";
 
 describe("rate-limiter", () => {
   beforeEach(() => {

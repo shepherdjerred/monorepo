@@ -26,7 +26,7 @@ export function getTeam8(): ArenaTeam {
           playerScore1: 0,
           playerScore2: 150.1,
           playerScore3: 0.05,
-          playerScore4: 1.0,
+          playerScore4: 1,
           playerScore5: 200.1,
           playerScore6: 600.1,
           playerScore7: 40.1,

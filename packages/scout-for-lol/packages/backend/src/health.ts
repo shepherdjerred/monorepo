@@ -1,4 +1,4 @@
-import { strict as assert } from "assert";
+import { strict as assert } from "node:assert";
 import configuration from "@scout-for-lol/backend/configuration.ts";
 import { ErrorSchema } from "@scout-for-lol/backend/utils/errors.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
@@ -22,7 +22,7 @@ try {
   logger.info(`📊 Health check response time: ${responseTime.toString()}ms`);
   logger.info(`📋 HTTP Status: ${response.status.toString()}`);
 
-  assert(response.ok);
+  assert.ok(response.ok);
   logger.info("✅ Health check passed");
   process.exit(0);
 } catch (error) {

@@ -72,7 +72,7 @@ async function createCompetitionWithPlayers(
       return prisma.player.create({
         data: {
           alias: `Player${playerNum.toString()}`,
-          discordId: testAccountId((playerNum * 100000000).toString()),
+          discordId: testAccountId((playerNum * 100_000_000).toString()),
           serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
