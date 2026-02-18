@@ -58,11 +58,13 @@ describe("BatchProcessor integration", () => {
 
     // Access private method via type assertion for testing
     const sortByDepth = (
+      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
       processor as unknown as { sortByDepth: (g: typeof graph) => unknown[] }
     ).sortByDepth;
     const sorted = sortByDepth.call(processor, graph);
 
     // Verify that leaf functions (add, multiply) come before their callers (calculate, main)
+    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
     const names = (sorted as { originalName: string }[]).map(
       (f) => f.originalName,
     );
@@ -122,6 +124,7 @@ describe("BatchProcessor integration", () => {
 
     // Access private method for testing
     const createBatches = (
+      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
       processor as unknown as {
         createBatches: (
           funcs: typeof functions,

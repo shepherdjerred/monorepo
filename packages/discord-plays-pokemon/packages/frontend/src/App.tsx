@@ -1,13 +1,12 @@
 import { Notifications } from "./stories/notifications.tsx";
 import type { Notification } from "./model/notification.tsx";
 import lodash from "lodash";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Container } from "./stories/container.tsx";
 import { P, match } from "ts-pattern";
 import { GamePage } from "./pages/game-page.tsx";
 import { LoginPage } from "./pages/login-page.tsx";
 import { useInterval } from "react-use";
-import { randomId, downloadScreenshot } from "./util.tsx";
 import type { Connection } from "./model/connection.tsx";
 import { socket } from "./socket.tsx";
 import type {
@@ -16,13 +15,10 @@ import type {
   Player,
   ScreenshotRequest,
   Status} from "@discord-plays-pokemon/common";
-import {
-  ResponseSchema
-} from "@discord-plays-pokemon/common";
 
 export function App() {
-  const [player, setPlayer] = useState<Player>();
-  const [status, setStatus] = useState<Status>({
+  const [player, _setPlayer] = useState<Player>();
+  const [status, _setStatus] = useState<Status>({
     playerList: [],
   });
   const [connection, setConnection] = useState<Connection>({
@@ -31,11 +27,9 @@ export function App() {
   });
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  const addNotification = useCallback((notification: Notification) => {
+  const _addNotification = useCallback((notification: Notification) => {
     setNotifications((prev) => [...prev, notification]);
   }, []);
-
-  ;
 
   useInterval(() => {
     const start = Date.now();

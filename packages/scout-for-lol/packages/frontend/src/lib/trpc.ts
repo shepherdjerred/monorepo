@@ -7,9 +7,8 @@
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import type { AppRouter } from "@scout-for-lol/backend/trpc/router/index.ts";
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Astro's import.meta.env returns any for custom env vars
-const envBackendUrl: string | undefined = import.meta.env["PUBLIC_BACKEND_URL"];
-const BACKEND_URL: string = envBackendUrl ?? "http://localhost:3000";
+const envBackendUrl: unknown = import.meta.env["PUBLIC_BACKEND_URL"];
+const BACKEND_URL: string = typeof envBackendUrl === "string" ? envBackendUrl : "http://localhost:3000";
 
 /**
  * Create a tRPC client with optional auth token

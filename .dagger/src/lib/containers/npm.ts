@@ -87,7 +87,7 @@ export async function publishToNpm(
     registry,
   ];
 
-  if (options.dryRun) {
+  if (options.dryRun === true) {
     publishArgs.push("--dry-run");
   }
 

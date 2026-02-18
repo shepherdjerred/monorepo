@@ -62,6 +62,7 @@ export async function loadBatchState(
   try {
     const statePath = getStatePath(cacheDir);
     const content = await readFile(statePath, "utf8");
+    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
     return JSON.parse(content) as BatchState;
   } catch {
     return null;

@@ -941,7 +941,7 @@ export class Monorepo {
       const appVersions: Record<string, string> = {};
 
       // Birmel publish (reuses pre-built image)
-      if (version && gitSha && registryUsername && registryPassword) {
+      if (version !== undefined && gitSha !== undefined && registryUsername !== undefined && registryPassword !== undefined) {
         outputs.push("\n--- Birmel Release ---");
         const refs = await publishBirmelImageWithContainer({
           image: birmelImage,
@@ -1023,7 +1023,7 @@ export class Monorepo {
       }
 
       // GHCR + homelab deployments
-      if (version && gitSha && registryUsername && registryPassword) {
+      if (version !== undefined && gitSha !== undefined && registryUsername !== undefined && registryPassword !== undefined) {
         // starlight-karma-bot → GHCR + homelab
         try {
           outputs.push(
@@ -1111,14 +1111,14 @@ export class Monorepo {
 
       // Homelab full CI/deploy
       if (
-        argocdToken &&
-        chartMuseumUsername &&
-        chartMuseumPassword &&
-        cloudflareApiToken &&
-        cloudflareAccountId &&
-        registryPassword &&
-        s3AccessKeyId &&
-        s3SecretAccessKey
+        argocdToken !== undefined &&
+        chartMuseumUsername !== undefined &&
+        chartMuseumPassword !== undefined &&
+        cloudflareApiToken !== undefined &&
+        cloudflareAccountId !== undefined &&
+        registryPassword !== undefined &&
+        s3AccessKeyId !== undefined &&
+        s3SecretAccessKey !== undefined
       ) {
         outputs.push("\n--- Homelab Release ---");
         try {
@@ -1149,7 +1149,7 @@ export class Monorepo {
       }
 
       // Commit updated versions back to git
-      if (commitBackToken && version) {
+      if (commitBackToken !== undefined && version !== undefined) {
         outputs.push("\n--- Version Commit-Back ---");
         try {
           const allVersions: Record<string, string> = {
@@ -1176,7 +1176,11 @@ export class Monorepo {
       );
       const clauderonVersion = clauderonVersionMatch?.[1];
 
-      if (clauderonVersion) {
+      if (clauderonVersion === undefined) {
+        outputs.push(
+          "\nNo clauderon release detected - skipping binary upload",
+        );
+      } else {
         outputs.push("\n--- Multiplexer Release ---");
         outputs.push(`Detected clauderon release: v${clauderonVersion}`);
 
@@ -1215,10 +1219,6 @@ export class Monorepo {
           outputs.push(`✗ ${failureMsg}`);
           releaseErrors.push(failureMsg);
         }
-      } else {
-        outputs.push(
-          "\nNo clauderon release detected - skipping binary upload",
-        );
       }
 
       // Fail CI if any release phase errors occurred
@@ -1804,13 +1804,13 @@ retry = 3
       claudeOauthToken,
       prNumber,
       commentBody: bodyText,
-      eventContext: commentPath
-        ? {
+      eventContext: commentPath === undefined
+        ? undefined
+        : {
             path: commentPath,
             line: commentLine,
             diffHunk: commentDiffHunk,
-          }
-        : undefined,
+          },
     });
   }
 

@@ -1,4 +1,3 @@
-/* eslint-disable max-lines -- Large test file with many test cases for competition criteria */
 import { describe, expect, test } from "bun:test";
 import {
   ChampionIdSchema,

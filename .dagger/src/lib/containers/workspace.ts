@@ -69,19 +69,19 @@ export function getWorkspaceContainer(
   }
 
   // Copy config files if specified
-  if (configFiles.eslint) {
+  if (configFiles.eslint !== undefined) {
     container = container.withFile(
       configFiles.eslint,
       repoRoot.file(configFiles.eslint),
     );
   }
-  if (configFiles.prettier) {
+  if (configFiles.prettier !== undefined) {
     container = container.withFile(
       configFiles.prettier,
       repoRoot.file(configFiles.prettier),
     );
   }
-  if (configFiles.tsconfig) {
+  if (configFiles.tsconfig !== undefined) {
     container = container.withFile(
       configFiles.tsconfig,
       repoRoot.file(configFiles.tsconfig),
@@ -89,7 +89,7 @@ export function getWorkspaceContainer(
   }
 
   // Copy eslint rules directory if specified
-  if (eslintRulesDir) {
+  if (eslintRulesDir !== undefined) {
     container = container.withDirectory(
       eslintRulesDir,
       repoRoot.directory(eslintRulesDir),

@@ -576,8 +576,8 @@ function normalizeVersion(version: string): string {
  * Returns: negative if v1 < v2, positive if v1 > v2, 0 if equal
  */
 function compareVersions(v1: string, v2: string): number {
-  const parts1 = v1.split(/[.-]/).map(partToNumber);
-  const parts2 = v2.split(/[.-]/).map(partToNumber);
+  const parts1 = v1.split(/[.-]/).map((p) => partToNumber(p));
+  const parts2 = v2.split(/[.-]/).map((p) => partToNumber(p));
 
   const maxLength = Math.max(parts1.length, parts2.length);
 

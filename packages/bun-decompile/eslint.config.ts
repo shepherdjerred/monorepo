@@ -11,4 +11,12 @@ export default [
     ],
   }),
   { rules: { "no-console": "off" } },
+  {
+    files: [
+      "src/index.ts",
+      "src/lib/deminify/batch-processor.ts",
+      "src/lib/deminify/deminifier.ts",
+    ],
+    rules: { "max-lines": "off" },
+  },
 ];

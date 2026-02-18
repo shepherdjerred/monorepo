@@ -164,7 +164,7 @@ export function cleanYAMLComment(comment: string): string {
   }
 
   // Normalize all lines
-  const lines = comment.split("\n").map(normalizeCommentLine);
+  const lines = comment.split("\n").map((line) => normalizeCommentLine(line));
 
   // Filter out code examples and section headers, keep documentation
   const cleaned: string[] = [];
@@ -292,11 +292,11 @@ export function preprocessYAMLComments(yamlContent: string): string {
     // Exit block scalar on non-indented line or blank line
     if (inBlockScalar) {
       const isIndented =
-        trimmed &&
+        trimmed.length > 0 &&
         (line.startsWith("  ") ||
           line.startsWith("\t") ||
           /^#\s{2,}/.test(line));
-      if (!trimmed || !isIndented) {
+      if (trimmed.length === 0 || !isIndented) {
         inBlockScalar = false;
       }
     }

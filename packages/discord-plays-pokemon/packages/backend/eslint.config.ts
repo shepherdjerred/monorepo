@@ -33,6 +33,8 @@ export default [
       // Unresolved import paths cause error types
       "@typescript-eslint/no-redundant-type-constituents": "off",
       "@typescript-eslint/restrict-plus-operands": "off",
+      // With no-unsafe-* off, many expressions resolve to `any` — allow in boolean context
+      "@typescript-eslint/strict-boolean-expressions": ["error", { allowAny: true }],
     },
   },
 ];

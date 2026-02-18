@@ -2,11 +2,8 @@ import { spawn } from "bun";
 import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import {
-  decompileFile,
-  extractToDirectory,
-  getExtractionSummary,
-} from "./index.ts";
+import { decompileFile } from "./parser.ts";
+import { extractToDirectory, getExtractionSummary } from "./extractor.ts";
 
 const TEST_DIR = "/tmp/bun-decompile-test";
 const SAMPLE_APP_DIR = path.join(TEST_DIR, "sample-app");

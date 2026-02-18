@@ -87,4 +87,36 @@ export default [
   },
   // Dagger functions external interface
   { files: [".dagger/src/index.ts"], rules: { "max-params": "off" } },
+  // Scripts and frontend — console output is expected
+  {
+    files: ["scripts/**/*.ts", "**/scripts/**/*.ts", "packages/frontend/**/*.ts", "packages/frontend/**/*.tsx", "packages/report/**/*.ts"],
+    rules: { "no-console": "off" },
+  },
+  // Library index files re-export intentionally
+  {
+    files: [
+      "packages/data/src/index.ts",
+      "packages/data/src/model/arena/index.ts",
+      "packages/data/src/model/index.ts",
+      "packages/data/src/sound-pack/index.ts",
+      "packages/report/src/browser.ts",
+      "packages/report/src/index.ts",
+      "packages/ui/src/components/sound-pack-editor/index.ts",
+      "packages/ui/src/index.ts",
+    ],
+    rules: { "custom-rules/no-re-exports": "off" },
+  },
+  // Large test/component files
+  {
+    files: [
+      "packages/data/src/model/competition.test.ts",
+      "packages/ui/src/components/sound-pack-editor/condition-builder.tsx",
+    ],
+    rules: { "max-lines": "off" },
+  },
+  // Vite config runs in Node context, not Bun
+  {
+    files: ["packages/desktop/vite.config.ts"],
+    rules: { "custom-rules/prefer-bun-apis": "off" },
+  },
 ];

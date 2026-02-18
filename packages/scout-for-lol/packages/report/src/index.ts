@@ -1,4 +1,3 @@
-/* eslint-disable custom-rules/no-re-exports -- report package is a library, so re-exports are intentional */
 export { matchToImage, matchToSvg, svgToPng } from "./html/index.tsx";
 export { Report } from "./html/report.tsx";
 export { toMatch } from "./match.ts";

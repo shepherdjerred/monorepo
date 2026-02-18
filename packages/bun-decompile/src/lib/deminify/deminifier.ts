@@ -1,4 +1,3 @@
-/* eslint-disable max-lines -- deminification orchestrator with multiple processing modes */
 import { DeminifyCache, shouldCache, hashSource } from "./cache.ts";
 import {
   buildCallGraph,
@@ -119,6 +118,7 @@ export class Deminifier {
   }
 
   /** De-minify a single JavaScript file */
+  // eslint-disable-next-line complexity -- inherent complexity in processing logic
   async deminifyFile(
     source: string,
     options?: DeminifyFileOptions,
@@ -167,6 +167,7 @@ export class Deminifier {
     try {
       graph = buildCallGraph(source);
     } catch (error) {
+      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
       throw new Error(`Failed to parse source: ${(error as Error).message}`, {
         cause: error,
       });
@@ -272,6 +273,7 @@ export class Deminifier {
   }
 
   /** Process functions in real-time mode (one at a time, in dependency order) */
+  // eslint-disable-next-line max-params -- method parameters are all required
   private async processRealTimeMode(
     source: string,
     graph: CallGraph,
@@ -317,6 +319,7 @@ export class Deminifier {
       } catch (error) {
         this.stats.errors++;
         console.error(
+          // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
           `Error processing ${funcId}: ${(error as Error).message}`,
         );
       }
@@ -428,6 +431,7 @@ export class Deminifier {
    *
    * This guarantees functional equivalence and dramatically reduces API calls.
    */
+  // eslint-disable-next-line max-params -- method parameters are all required
   private async deminifyFileBatchRenaming(
     source: string,
     graph: CallGraph,
@@ -509,6 +513,7 @@ export class Deminifier {
   }
 
   /** De-minify using batch API (50% cheaper, async processing) */
+  // eslint-disable-next-line max-params -- method parameters are all required
   private async deminifyFileBatch(
     source: string,
     graph: CallGraph,
@@ -725,6 +730,7 @@ export class Deminifier {
   }
 
   /** Resume a pending batch */
+  // eslint-disable-next-line complexity, max-params -- inherent complexity in processing logic
   private async resumeBatch(
     source: string,
     graph: CallGraph,

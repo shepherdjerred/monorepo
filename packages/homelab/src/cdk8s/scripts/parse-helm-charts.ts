@@ -27,7 +27,7 @@ export async function parseChartInfoFromVersions(
     // Look for renovate comments that indicate Helm charts
     if (line?.includes("renovate: datasource=helm") && nextLine) {
       const repoUrlMatch = /registryUrl=(\S+)/.exec(line);
-      const versionKeyMatch = /^\s*"?([^":]+)"?:/.exec(nextLine);
+      const versionKeyMatch = /^\s*"?([^":\s]+)"?:/.exec(nextLine);
 
       if (repoUrlMatch && versionKeyMatch) {
         const repoUrl = repoUrlMatch[1];

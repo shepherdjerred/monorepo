@@ -97,6 +97,7 @@ export class OpenAIClient {
 
         return this.parseResponse(content, context);
       } catch (error) {
+        // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
         lastError = error as Error;
 
         // Check for rate limit error
@@ -155,6 +156,7 @@ export class OpenAIClient {
     const jsonMatch = /```[\s\S]*?```\s*(\{[\s\S]*\})/.exec(responseText);
     if (jsonMatch?.[1] != null && jsonMatch[1].length > 0) {
       try {
+        // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
         const metadata = JSON.parse(jsonMatch[1]) as {
           suggestedName?: string;
           confidence?: number;

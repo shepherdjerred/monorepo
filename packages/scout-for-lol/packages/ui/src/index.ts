@@ -5,8 +5,6 @@
  * that can be used in both the desktop app and the web frontend.
  */
 
-/* eslint-disable custom-rules/no-re-exports -- This is a library package */
-
 // Types
 export type {
   SoundPackAdapter,

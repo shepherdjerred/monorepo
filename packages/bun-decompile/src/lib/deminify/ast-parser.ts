@@ -63,6 +63,7 @@ export function parseAndExtractFunctions(
   walk.ancestor(ast, {
     FunctionDeclaration(node: Node, _state: unknown, ancestors: Node[]) {
       const func = extractFunction(
+        // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
         node as FunctionNode,
         source,
         functionIndex++,
@@ -75,6 +76,7 @@ export function parseAndExtractFunctions(
     },
     FunctionExpression(node: Node, _state: unknown, ancestors: Node[]) {
       const func = extractFunction(
+        // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
         node as FunctionNode,
         source,
         functionIndex++,
@@ -87,6 +89,7 @@ export function parseAndExtractFunctions(
     },
     ArrowFunctionExpression(node: Node, _state: unknown, ancestors: Node[]) {
       const func = extractFunction(
+        // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
         node as FunctionNode,
         source,
         functionIndex++,
@@ -98,7 +101,9 @@ export function parseAndExtractFunctions(
       nodeToFunction.set(node, func);
     },
     MethodDefinition(node: Node, _state: unknown, ancestors: Node[]) {
+      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
       const methodNode = node as MethodDefinitionNode;
+      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
       const valueNode = methodNode.value as FunctionNode;
       const type = getMethodType(methodNode.kind);
       const func = extractFunction(
@@ -142,10 +147,12 @@ export function parseAndExtractFunctions(
           (existingParent != null && func.start > existingParent.start)
         ) {
           // func is a closer parent (more deeply nested)
+          // eslint-disable-next-line max-depth -- nested control flow required for logic
           if (otherFunc.parentId != null && otherFunc.parentId.length > 0) {
             const oldParent = functions.find(
               (f) => f.id === otherFunc.parentId,
             );
+            // eslint-disable-next-line max-depth -- nested control flow required for logic
             if (oldParent) {
               oldParent.children = oldParent.children.filter(
                 (c) => c !== otherFunc.id,
@@ -163,6 +170,7 @@ export function parseAndExtractFunctions(
 }
 
 /** Extract a single function from an AST node */
+// eslint-disable-next-line max-params -- method parameters are all required
 function extractFunction(
   node: FunctionNode,
   source: string,
@@ -217,6 +225,7 @@ function getFunctionName(node: FunctionNode, ancestors: Node[]): string {
   // Check if assigned to a variable: const foo = function() {}
   const parent = ancestors.at(-2);
   if (parent?.type === "VariableDeclarator") {
+    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
     const varDecl = parent as Node & { id?: { name?: string } };
     if (varDecl.id?.name != null && varDecl.id.name.length > 0) {
       return varDecl.id.name;
@@ -225,24 +234,30 @@ function getFunctionName(node: FunctionNode, ancestors: Node[]): string {
 
   // Check if property assignment: obj.foo = function() {}
   if (parent?.type === "AssignmentExpression") {
+    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
     const assign = parent as Node & {
       left?: MemberExpressionNode | IdentifierNode;
     };
     if (assign.left?.type === "MemberExpression") {
+      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
       const prop = (assign.left as MemberExpressionNode).property;
       if (prop.type === "Identifier") {
+        // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
         return (prop as IdentifierNode).name;
       }
     }
     if (assign.left?.type === "Identifier") {
+      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
       return (assign.left as IdentifierNode).name;
     }
   }
 
   // Check if object property: { foo: function() {} }
   if (parent?.type === "Property") {
+    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
     const prop = parent as Node & { key?: IdentifierNode | Node };
     if (prop.key?.type === "Identifier") {
+      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
       return (prop.key as IdentifierNode).name;
     }
   }
@@ -267,6 +282,7 @@ function getMethodType(kind: string): FunctionType {
 /** Get method name from MethodDefinition node */
 function getMethodName(node: MethodDefinitionNode): string {
   if (node.key.type === "Identifier") {
+    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
     return (node.key as IdentifierNode).name;
   }
   return "";
@@ -286,6 +302,7 @@ function generateFunctionId(
 
 /** Extract parameter information from a function node */
 function extractParameters(node: FunctionNode): ParameterInfo[] {
+  // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
   return node.params.map((param) => extractParameterInfo(param as PatternNode));
 }
 
@@ -302,6 +319,7 @@ function extractParameterInfo(param: PatternNode): ParameterInfo {
 
   // Rest parameter: function(...args)
   if (param.type === "RestElement") {
+    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
     const arg = param.argument as PatternNode | undefined;
     return {
       name: arg?.name ?? "",
@@ -312,6 +330,7 @@ function extractParameterInfo(param: PatternNode): ParameterInfo {
 
   // Default parameter: function(x = 1)
   if (param.type === "AssignmentPattern") {
+    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
     const left = param.left as PatternNode | undefined;
     return {
       name: left?.name ?? "",
@@ -334,6 +353,7 @@ export function extractCallees(node: Node, _source: string): string[] {
 
   walk.simple(node, {
     CallExpression(callNode: Node) {
+      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
       const call = callNode as CallExpressionNode;
       const name = getCalleeName(call.callee);
       if (name != null && name.length > 0) {
@@ -349,13 +369,16 @@ export function extractCallees(node: Node, _source: string): string[] {
 function getCalleeName(callee: Node): string | null {
   // Direct call: foo()
   if (callee.type === "Identifier") {
+    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
     return (callee as IdentifierNode).name;
   }
 
   // Member call: obj.method() - return "method"
   if (callee.type === "MemberExpression") {
+    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
     const member = callee as MemberExpressionNode;
     if (!member.computed && member.property.type === "Identifier") {
+      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
       return (member.property as IdentifierNode).name;
     }
   }

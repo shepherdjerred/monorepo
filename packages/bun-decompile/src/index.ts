@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-/* eslint-disable max-lines -- CLI entry point with multiple command handlers */
 /**
  * CLI entry point for bun-decompile.
  *

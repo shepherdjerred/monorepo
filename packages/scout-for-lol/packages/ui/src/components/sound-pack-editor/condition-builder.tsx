@@ -1,4 +1,3 @@
-/* eslint-disable max-lines -- Component contains multiple related condition editors that benefit from co-location */
 /**
  * Condition Builder Component
  *

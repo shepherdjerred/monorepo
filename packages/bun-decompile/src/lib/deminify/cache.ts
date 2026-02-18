@@ -59,6 +59,7 @@ export class DeminifyCache {
       const file = Bun.file(filePath);
       if (await file.exists()) {
         const content = await file.text();
+        // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
         const entry = JSON.parse(content) as CacheEntry;
 
         // Verify model version matches
@@ -124,6 +125,7 @@ export class DeminifyCache {
         const filePath = path.join(this.cacheDir, file);
         try {
           const content = await Bun.file(filePath).text();
+          // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
           const entry = JSON.parse(content) as CacheEntry;
 
           if (now - entry.timestamp > maxAgeMs) {

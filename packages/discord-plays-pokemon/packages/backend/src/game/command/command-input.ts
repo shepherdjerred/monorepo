@@ -56,7 +56,7 @@ export function parseCommandInput(input: string): CommandInput | undefined {
     [, ...split] = split;
   }
 
-  if (split.length === 0 && command) {
+  if (split.length === 0 && command !== undefined) {
     return {
       command,
       quantity,
