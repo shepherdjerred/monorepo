@@ -12,7 +12,7 @@ export function parseLane(input: string): Lane | undefined {
     .with("jungle", () => "jungle")
     .with("bottom", () => "adc")
     .with("utility", () => "support")
-    .otherwise(() => {});
+    .otherwise(() => undefined);
 }
 
 export function laneToString(lane: Lane): string {

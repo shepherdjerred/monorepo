@@ -22,8 +22,8 @@ export function processMostWinsChampion(
     participantFilter: (participantData) =>
       participantData.championId === criteria.championId,
     scoreFn: (wins) => wins, // Score is just wins
-    metadataFn: (wins, games, criteria) => ({
-      championId: criteria.championId,
+    metadataFn: (wins, games, innerCriteria) => ({
+      championId: innerCriteria.championId,
       wins,
       games,
       losses: games - wins,

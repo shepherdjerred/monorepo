@@ -19,9 +19,9 @@ describe("Date validation patterns", () => {
     const date2 = new Date(dateStr2);
     const date3 = new Date(dateStr3);
 
-    expect(isNaN(date1.getTime())).toBe(false);
-    expect(isNaN(date2.getTime())).toBe(false);
-    expect(isNaN(date3.getTime())).toBe(false);
+    expect(Number.isNaN(date1.getTime())).toBe(false);
+    expect(Number.isNaN(date2.getTime())).toBe(false);
+    expect(Number.isNaN(date3.getTime())).toBe(false);
   });
 
   test("start date must be before end date", () => {
@@ -56,7 +56,7 @@ describe("Date validation patterns", () => {
 
     for (const dateStr of dateFormats) {
       const date = new Date(dateStr);
-      expect(isNaN(date.getTime())).toBe(false);
+      expect(Number.isNaN(date.getTime())).toBe(false);
     }
   });
 
@@ -79,7 +79,7 @@ describe("Date validation patterns", () => {
 
     for (const dateStr of invalidDates) {
       const date = new Date(dateStr);
-      expect(isNaN(date.getTime())).toBe(true);
+      expect(Number.isNaN(date.getTime())).toBe(true);
     }
   });
 });

@@ -95,7 +95,8 @@ async function loadPersonality(basename: string): Promise<Personality> {
     const stylePath = `${STYLECARDS_DIR}/${candidate}_style.json`;
     const styleFile = Bun.file(stylePath);
     if (await styleFile.exists()) {
-      styleCard = (await styleFile.text()).trim();
+      const text = await styleFile.text();
+      styleCard = text.trim();
       break;
     }
   }

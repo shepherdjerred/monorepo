@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useConsole } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useConsole";
 import { useSessionHistory } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useSessionHistory";
 import { MessageBubble } from "./MessageBubble.tsx";

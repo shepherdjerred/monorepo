@@ -217,7 +217,7 @@ export async function generateMatchReview(
       const binaryString = atob(pipelineOutput.review.imageBase64);
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
+        bytes[i] = binaryString.codePointAt(i) ?? 0;
       }
       reviewImage = bytes;
     } catch (error) {

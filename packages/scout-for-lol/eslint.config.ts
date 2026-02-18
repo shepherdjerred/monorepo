@@ -103,6 +103,7 @@ export default [
       "packages/report/src/index.ts",
       "packages/ui/src/components/sound-pack-editor/index.ts",
       "packages/ui/src/index.ts",
+      "packages/backend/src/voice/index.ts",
     ],
     rules: { "custom-rules/no-re-exports": "off" },
   },
@@ -114,9 +115,30 @@ export default [
     ],
     rules: { "max-lines": "off" },
   },
+  // Test fixtures contain long hash-like strings (PUUIDs, match IDs)
+  {
+    files: ["**/*.test.ts", "**/*.test.tsx", "**/*.integration.test.ts", "**/example/**/*.ts"],
+    rules: { "no-secrets/no-secrets": "off" },
+  },
   // Vite config runs in Node context, not Bun
   {
     files: ["packages/desktop/vite.config.ts"],
     rules: { "custom-rules/prefer-bun-apis": "off" },
+  },
+  // UI components use shadcn theme tokens by design
+  {
+    files: [
+      "packages/frontend/src/components/ui/**",
+      "packages/frontend/src/components/review-tool/ui/**",
+    ],
+    rules: { "custom-rules/no-shadcn-theme-tokens": "off" },
+  },
+  // IndexedDB uses .onerror/.onsuccess as standard API pattern
+  {
+    files: [
+      "packages/frontend/src/lib/review-tool/cache.ts",
+      "packages/frontend/src/lib/review-tool/indexeddb-helpers.ts",
+    ],
+    rules: { "unicorn/prefer-add-event-listener": "off" },
   },
 ];

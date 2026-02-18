@@ -258,6 +258,7 @@ function buildQueueContext(queueType: string | undefined): string {
       return "This is an ARAM game - All Random All Mid on the Howling Abyss. Players get random champions and fight in a single lane. It's a more casual, chaotic mode focused on teamfighting.";
     case "normal":
       return "This is a Normal (unranked) game - a casual queue for practicing or playing without ranked pressure.";
+    // eslint-disable-next-line unicorn/no-useless-switch-case -- required for switch-exhaustiveness-check
     case undefined:
     default:
       return "This is a standard League of Legends game.";

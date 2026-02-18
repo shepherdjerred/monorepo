@@ -10,7 +10,7 @@ if (typeof Bun !== "undefined") {
       await Promise.all(
         LaneSchema.options.map(async (lane): Promise<[Lane, string]> => {
           const image = await Bun.file(
-            new URL(`./assets/${lane}.svg`, import.meta.url),
+            new URL(`assets/${lane}.svg`, import.meta.url),
           ).arrayBuffer();
           const bytes = new Uint8Array(image);
           // Use Buffer to avoid stack overflow with large arrays
@@ -27,7 +27,7 @@ export function Lane({ lane }: { lane: Lane }) {
     .with("bun", () => `data:image/svg+xml;base64,${images[lane]}`)
     .with("browser", () => {
       // Construct the URL for Vite to handle at build time
-      return new URL(`./assets/${lane}.svg`, import.meta.url).href;
+      return new URL(`assets/${lane}.svg`, import.meta.url).href;
     })
     .exhaustive();
   return (

@@ -84,7 +84,7 @@ export function parseArgs(): TestOptions {
       case "--count":
       case "-c": {
         const count = Number.parseInt(args[i + 1] ?? "1", 10);
-        if (!isNaN(count)) {
+        if (!Number.isNaN(count)) {
           options.count = count;
           i++;
         }
@@ -101,7 +101,7 @@ export function parseArgs(): TestOptions {
       }
       case "--s3-days": {
         const days = Number.parseInt(args[i + 1] ?? "7", 10);
-        if (!isNaN(days) && days > 0) {
+        if (!Number.isNaN(days) && days > 0) {
           options.s3Days = days;
           i++;
         }

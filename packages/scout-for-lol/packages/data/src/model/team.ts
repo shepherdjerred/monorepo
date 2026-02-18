@@ -17,5 +17,5 @@ export function parseTeam(input: number) {
     .returnType<Team | undefined>()
     .with(100, () => "blue")
     .with(200, () => "red")
-    .otherwise(() => {});
+    .otherwise(() => undefined);
 }

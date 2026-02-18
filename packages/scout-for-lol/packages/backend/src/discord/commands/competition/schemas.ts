@@ -27,7 +27,7 @@ function createFixedDatesSchema() {
       (data) => {
         const start = new Date(data.startDate);
         const end = new Date(data.endDate);
-        return !isNaN(start.getTime()) && !isNaN(end.getTime());
+        return !Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime());
       },
       {
         message:
