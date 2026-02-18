@@ -5,6 +5,13 @@ export {
   type MiseToolVersions,
 } from "./mise";
 export { getWorkspaceContainer, type WorkspaceConfig } from "./workspace";
+export {
+  getBaseBunDebianContainer,
+  installMonorepoWorkspaceDeps,
+  type BaseContainerConfig,
+  type WorkspaceEntry,
+  type InstallWorkspaceDepsConfig,
+} from "./monorepo-workspace";
 export { getKubectlContainer } from "./kubectl";
 export { getCurlContainer } from "./curl";
 export { getBunContainer, getBunNodeContainer } from "./bun";

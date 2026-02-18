@@ -4,7 +4,10 @@ import {
   commitVersionsBack,
   syncToS3,
   getReleasePleaseContainer as getLibReleasePleaseContainer,
+  getBaseBunDebianContainer,
+  installMonorepoWorkspaceDeps,
 } from "./lib/containers/index.js";
+import type { WorkspaceEntry } from "./lib/containers/index.js";
 import versions from "./lib/versions.js";
 import {
   checkBirmel,
@@ -50,7 +53,6 @@ const PACKAGES = [
 const REPO_URL = "shepherdjerred/monorepo";
 
 const BUN_VERSION = versions.bun;
-const PLAYWRIGHT_VERSION = versions.playwright;
 const RELEASE_PLEASE_VERSION = versions["release-please"];
 const RUST_VERSION = versions.rust;
 const SCCACHE_VERSION = versions.sccache;
@@ -66,273 +68,74 @@ const CLAUDERON_TARGETS = [
 ] as const;
 
 /**
- * Get a base Bun container with system dependencies and caching.
- * LAYER ORDERING: System deps and caches are set up BEFORE any source files.
- * This is a lightweight container (python3 only) for main CI tasks.
+ * All workspace entries for the main CI container.
+ * Includes every workspace in the monorepo for full CI coverage.
  */
-function getBaseContainer(): Container {
-  return (
-    dag
-      .container()
-      .from(`oven/bun:${BUN_VERSION}-debian`)
-      // Cache APT packages (version in key for invalidation on upgrade)
-      .withMountedCache(
-        "/var/cache/apt",
-        dag.cacheVolume(`apt-cache-bun-${BUN_VERSION}-debian`),
-      )
-      .withMountedCache(
-        "/var/lib/apt",
-        dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`),
-      )
-      .withExec(["apt-get", "update"])
-      .withExec(["apt-get", "install", "-y", "python3"])
-      // Cache Bun packages
-      .withMountedCache(
-        "/root/.bun/install/cache",
-        dag.cacheVolume("bun-cache"),
-      )
-      // Cache Playwright browsers (version in key for invalidation)
-      .withMountedCache(
-        "/root/.cache/ms-playwright",
-        dag.cacheVolume(`playwright-browsers-${PLAYWRIGHT_VERSION}`),
-      )
-      // Install Playwright Chromium and dependencies for browser automation
-      .withExec(["bunx", "playwright", "install", "--with-deps", "chromium"])
-      // Cache ESLint (incremental linting)
-      .withMountedCache(
-        "/workspace/.eslintcache",
-        dag.cacheVolume("eslint-cache"),
-      )
-      // Cache TypeScript incremental build
-      .withMountedCache(
-        "/workspace/.tsbuildinfo",
-        dag.cacheVolume("tsbuildinfo-cache"),
-      )
-  );
-}
+const CI_WORKSPACES: WorkspaceEntry[] = [
+  "packages/birmel",
+  "packages/bun-decompile",
+  "packages/eslint-config",
+  { path: "packages/resume", depsOnly: true },
+  "packages/tools",
+  // Clauderon web: parent provides package.json + bun.lock for resolution,
+  // sub-packages get their source mounted in PHASE 3
+  {
+    path: "packages/clauderon/web",
+    depsOnly: true,
+    extraFiles: ["packages/clauderon/web/bun.lock"],
+    subPackages: [
+      "packages/clauderon/web/shared",
+      "packages/clauderon/web/client",
+      "packages/clauderon/web/frontend",
+    ],
+  },
+  "packages/clauderon/web/shared",
+  "packages/clauderon/web/client",
+  "packages/clauderon/web/frontend",
+  // Clauderon docs: full directory in PHASE 1 (workspace validation)
+  { path: "packages/clauderon/docs", fullDirPhase1: true },
+  "packages/astro-opengraph-images",
+  "packages/better-skill-capped",
+  "packages/sjer.red",
+  "packages/webring",
+  "packages/starlight-karma-bot",
+  "packages/homelab",
+  // Discord Plays Pokemon with sub-packages
+  {
+    path: "packages/discord-plays-pokemon",
+    subPackages: [
+      "packages/discord-plays-pokemon/packages/backend",
+      "packages/discord-plays-pokemon/packages/common",
+      "packages/discord-plays-pokemon/packages/frontend",
+    ],
+  },
+  // Scout for LoL with sub-packages
+  {
+    path: "packages/scout-for-lol",
+    subPackages: [
+      "packages/scout-for-lol/packages/backend",
+      "packages/scout-for-lol/packages/data",
+      "packages/scout-for-lol/packages/desktop",
+      "packages/scout-for-lol/packages/frontend",
+      "packages/scout-for-lol/packages/report",
+      "packages/scout-for-lol/packages/ui",
+    ],
+  },
+];
 
 /**
- * Install workspace dependencies with optimal layer ordering.
- * PHASE 1: Copy only dependency files (package.json, bun.lock)
- * PHASE 2: Run bun install (cached if lockfile unchanged)
- * PHASE 3: Copy source files (changes frequently)
- *
+ * Install workspace dependencies with optimal layer ordering (using mounts for CI).
  * @param source The full workspace source directory
- * @returns Container with deps installed (using mounts for CI)
+ * @returns Container with deps installed
  */
 function installWorkspaceDeps(source: Directory): Container {
-  let container = getBaseContainer().withWorkdir("/workspace");
-
-  // PHASE 1: Dependency files only (cached if lockfile unchanged)
-  container = container
-    .withMountedFile("/workspace/package.json", source.file("package.json"))
-    .withMountedFile("/workspace/bun.lock", source.file("bun.lock"))
-    // Each workspace's package.json (bun needs these for workspace resolution)
-    .withMountedFile(
-      "/workspace/packages/birmel/package.json",
-      source.file("packages/birmel/package.json"),
-    )
-    .withMountedFile(
-      "/workspace/packages/bun-decompile/package.json",
-      source.file("packages/bun-decompile/package.json"),
-    )
-    .withMountedFile(
-      "/workspace/packages/eslint-config/package.json",
-      source.file("packages/eslint-config/package.json"),
-    )
-    .withMountedFile(
-      "/workspace/packages/resume/package.json",
-      source.file("packages/resume/package.json"),
-    )
-    .withMountedFile(
-      "/workspace/packages/tools/package.json",
-      source.file("packages/tools/package.json"),
-    )
-    // Clauderon web packages (nested workspace with own lockfile)
-    .withMountedFile(
-      "/workspace/packages/clauderon/web/package.json",
-      source.file("packages/clauderon/web/package.json"),
-    )
-    .withMountedFile(
-      "/workspace/packages/clauderon/web/bun.lock",
-      source.file("packages/clauderon/web/bun.lock"),
-    )
-    .withMountedFile(
-      "/workspace/packages/clauderon/web/shared/package.json",
-      source.file("packages/clauderon/web/shared/package.json"),
-    )
-    .withMountedFile(
-      "/workspace/packages/clauderon/web/client/package.json",
-      source.file("packages/clauderon/web/client/package.json"),
-    )
-    .withMountedFile(
-      "/workspace/packages/clauderon/web/frontend/package.json",
-      source.file("packages/clauderon/web/frontend/package.json"),
-    )
-    // Clauderon docs (mount package.json only, will mount full dir in PHASE 3 after install)
-    .withExec(["mkdir", "-p", "/workspace/packages/clauderon/docs"])
-    .withMountedFile(
-      "/workspace/packages/clauderon/docs/package.json",
-      source.file("packages/clauderon/docs/package.json"),
-    )
-    // New workspace members
-    .withMountedFile(
-      "/workspace/packages/astro-opengraph-images/package.json",
-      source.file("packages/astro-opengraph-images/package.json"),
-    )
-    .withMountedFile(
-      "/workspace/packages/better-skill-capped/package.json",
-      source.file("packages/better-skill-capped/package.json"),
-    )
-    .withMountedFile(
-      "/workspace/packages/sjer.red/package.json",
-      source.file("packages/sjer.red/package.json"),
-    )
-    .withMountedFile(
-      "/workspace/packages/webring/package.json",
-      source.file("packages/webring/package.json"),
-    )
-    .withMountedFile(
-      "/workspace/packages/starlight-karma-bot/package.json",
-      source.file("packages/starlight-karma-bot/package.json"),
-    )
-    .withMountedFile(
-      "/workspace/packages/homelab/package.json",
-      source.file("packages/homelab/package.json"),
-    )
-    .withMountedFile(
-      "/workspace/packages/discord-plays-pokemon/package.json",
-      source.file("packages/discord-plays-pokemon/package.json"),
-    )
-    .withMountedFile(
-      "/workspace/packages/scout-for-lol/package.json",
-      source.file("packages/scout-for-lol/package.json"),
-    )
-    .withMountedFile(
-      "/workspace/packages/discord-plays-pokemon/packages/backend/package.json",
-      source.file(
-        "packages/discord-plays-pokemon/packages/backend/package.json",
-      ),
-    )
-    .withMountedFile(
-      "/workspace/packages/discord-plays-pokemon/packages/common/package.json",
-      source.file(
-        "packages/discord-plays-pokemon/packages/common/package.json",
-      ),
-    )
-    .withMountedFile(
-      "/workspace/packages/discord-plays-pokemon/packages/frontend/package.json",
-      source.file(
-        "packages/discord-plays-pokemon/packages/frontend/package.json",
-      ),
-    )
-    .withMountedFile(
-      "/workspace/packages/scout-for-lol/packages/backend/package.json",
-      source.file("packages/scout-for-lol/packages/backend/package.json"),
-    )
-    .withMountedFile(
-      "/workspace/packages/scout-for-lol/packages/data/package.json",
-      source.file("packages/scout-for-lol/packages/data/package.json"),
-    )
-    .withMountedFile(
-      "/workspace/packages/scout-for-lol/packages/desktop/package.json",
-      source.file("packages/scout-for-lol/packages/desktop/package.json"),
-    )
-    .withMountedFile(
-      "/workspace/packages/scout-for-lol/packages/frontend/package.json",
-      source.file("packages/scout-for-lol/packages/frontend/package.json"),
-    )
-    .withMountedFile(
-      "/workspace/packages/scout-for-lol/packages/report/package.json",
-      source.file("packages/scout-for-lol/packages/report/package.json"),
-    )
-    .withMountedFile(
-      "/workspace/packages/scout-for-lol/packages/ui/package.json",
-      source.file("packages/scout-for-lol/packages/ui/package.json"),
-    );
-
-  // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
-  container = container.withExec(["bun", "install", "--frozen-lockfile"]);
-
-  // PHASE 3: Config files and source code (changes frequently, added AFTER install)
-  container = container
-    .withMountedFile(
-      "/workspace/tsconfig.base.json",
-      source.file("tsconfig.base.json"),
-    )
-    .withMountedDirectory(
-      "/workspace/packages/birmel",
-      source.directory("packages/birmel"),
-    )
-    .withMountedDirectory(
-      "/workspace/packages/bun-decompile",
-      source.directory("packages/bun-decompile"),
-    )
-    .withMountedDirectory(
-      "/workspace/packages/eslint-config",
-      source.directory("packages/eslint-config"),
-    )
-    .withMountedDirectory(
-      "/workspace/packages/tools",
-      source.directory("packages/tools"),
-    )
-    // Clauderon web packages
-    .withMountedDirectory(
-      "/workspace/packages/clauderon/web/shared",
-      source.directory("packages/clauderon/web/shared"),
-    )
-    .withMountedDirectory(
-      "/workspace/packages/clauderon/web/client",
-      source.directory("packages/clauderon/web/client"),
-    )
-    .withMountedDirectory(
-      "/workspace/packages/clauderon/web/frontend",
-      source.directory("packages/clauderon/web/frontend"),
-    )
-    // Clauderon docs (remount with full source including screenshots)
-    .withMountedDirectory(
-      "/workspace/packages/clauderon/docs",
-      source.directory("packages/clauderon/docs"),
-    )
-    // New workspace members
-    .withMountedDirectory(
-      "/workspace/packages/astro-opengraph-images",
-      source.directory("packages/astro-opengraph-images"),
-    )
-    .withMountedDirectory(
-      "/workspace/packages/better-skill-capped",
-      source.directory("packages/better-skill-capped"),
-    )
-    .withMountedDirectory(
-      "/workspace/packages/sjer.red",
-      source.directory("packages/sjer.red"),
-    )
-    .withMountedDirectory(
-      "/workspace/packages/webring",
-      source.directory("packages/webring"),
-    )
-    .withMountedDirectory(
-      "/workspace/packages/starlight-karma-bot",
-      source.directory("packages/starlight-karma-bot"),
-    )
-    .withMountedDirectory(
-      "/workspace/packages/homelab",
-      source.directory("packages/homelab"),
-    )
-    .withMountedDirectory(
-      "/workspace/packages/discord-plays-pokemon",
-      source.directory("packages/discord-plays-pokemon"),
-    )
-    .withMountedDirectory(
-      "/workspace/packages/scout-for-lol",
-      source.directory("packages/scout-for-lol"),
-    );
-
-  // PHASE 4: Re-run bun install to recreate workspace node_modules symlinks
-  // (Source mounts in Phase 3 replace the symlinks that Phase 2 created)
-  container = container.withExec(["bun", "install", "--frozen-lockfile"]);
-
-  return container;
+  return installMonorepoWorkspaceDeps({
+    baseContainer: getBaseBunDebianContainer(),
+    source,
+    useMounts: true,
+    workspaces: CI_WORKSPACES,
+    rootConfigFiles: ["tsconfig.base.json"],
+  });
 }
 
 /**
@@ -614,67 +417,15 @@ async function runReleasePleaseCommand(
 
 /**
  * Verify that non-exempt packages have required config files and scripts.
- * Runs as an inline shell script inside a container to check the source directory.
+ * Delegates to scripts/compliance-check.sh to avoid duplicating logic.
  */
 function complianceCheck(source: Directory): Container {
-  const script = `#!/bin/sh
-set -e
-ERRORS=0
-
-# Guardrail: all packages in monorepo must remain integrated.
-if grep -q '"!packages/' /workspace/package.json; then
-  echo 'FAIL: package.json contains excluded workspaces (!packages/...)'
-  ERRORS=$((ERRORS+1))
-fi
-
-for dir in /workspace/packages/*/; do
-  PKG=$(basename "$dir")
-
-  echo "Checking $PKG..."
-
-  # Non-Bun packages are still part of the monorepo; they simply do not
-  # participate in this package.json contract check.
-  if [ ! -f "$dir/package.json" ]; then
-    echo "  INFO: $PKG has no package.json (non-Bun package)"
-    continue
-  fi
-
-  # Check for script contract expected by root automation.
-  if ! grep -q '"build"' "$dir/package.json" 2>/dev/null; then
-    echo "  FAIL: $PKG missing build script"
-    ERRORS=$((ERRORS+1))
-  fi
-
-  if ! grep -q '"test"' "$dir/package.json" 2>/dev/null; then
-    echo "  FAIL: $PKG missing test script"
-    ERRORS=$((ERRORS+1))
-  fi
-
-  if ! grep -q '"lint"' "$dir/package.json" 2>/dev/null; then
-    echo "  FAIL: $PKG missing lint script"
-    ERRORS=$((ERRORS+1))
-  fi
-
-  if ! grep -q '"typecheck"' "$dir/package.json" 2>/dev/null; then
-    echo "  FAIL: $PKG missing typecheck script"
-    ERRORS=$((ERRORS+1))
-  fi
-done
-
-if [ "$ERRORS" -gt 0 ]; then
-  echo "Compliance check failed with $ERRORS error(s)"
-  exit 1
-fi
-echo "All packages compliant"
-`;
-
   return dag
     .container()
     .from("alpine:latest")
     .withMountedDirectory("/workspace", source)
     .withWorkdir("/workspace")
-    .withNewFile("/tmp/compliance.sh", script)
-    .withExec(["sh", "/tmp/compliance.sh"]);
+    .withExec(["sh", "scripts/compliance-check.sh"]);
 }
 
 /**
