@@ -189,7 +189,10 @@ export function installMonorepoWorkspaceDeps(
 
   // PHASE 1: Dependency files only (cached if lockfile unchanged)
   container = addFile(container, "package.json");
-  container = addFile(container, "bun.lock");
+  // Always copy (not mount) bun.lock so bun install can update it for workspace subsets.
+  // Mounted files are read-only in Dagger, and bun install needs to write the lockfile
+  // when the workspace subset differs from the full monorepo lockfile.
+  container = container.withFile("/workspace/bun.lock", source.file("bun.lock"));
 
   for (const entry of workspaces) {
     const { path, subPackages, extraFiles, fullDirPhase1 } =

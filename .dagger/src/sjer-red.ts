@@ -35,13 +35,14 @@ function installDepsWithWebring(
   return baseContainer
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
     .withFile("/workspace/package.json", source.file("package.json"))
-    .withFile("/workspace/bun.lock", source.file("bun.lock"))
     .withExec([
       "bun",
       "-e",
       `const pkg = JSON.parse(await Bun.file('/workspace/package.json').text()); pkg.workspaces = ['packages/sjer.red', 'packages/webring']; await Bun.write('/workspace/package.json', JSON.stringify(pkg));`,
     ])
-    .withDirectory("/workspace/packages/sjer.red", pkgSource)
+    // Exclude sjer.red's own bun.lock — it resolves webring from npm.
+    // Without any lockfile, bun generates fresh workspace resolution.
+    .withDirectory("/workspace/packages/sjer.red", pkgSource.withoutFile("bun.lock"))
     .withDirectory(
       "/workspace/packages/webring",
       source.directory("packages/webring"),
@@ -67,13 +68,12 @@ export async function checkSjerRed(source: Directory): Promise<string> {
     getBunContainer()
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
       .withFile("/workspace/package.json", source.file("package.json"))
-      .withFile("/workspace/bun.lock", source.file("bun.lock"))
       .withExec([
         "bun",
         "-e",
         `const pkg = JSON.parse(await Bun.file('/workspace/package.json').text()); pkg.workspaces = ['packages/sjer.red', 'packages/eslint-config', 'packages/webring']; await Bun.write('/workspace/package.json', JSON.stringify(pkg));`,
       ])
-      .withDirectory("/workspace/packages/sjer.red", ciSource)
+      .withDirectory("/workspace/packages/sjer.red", ciSource.withoutFile("bun.lock"))
       .withDirectory(
         "/workspace/packages/eslint-config",
         source.directory("packages/eslint-config"),
