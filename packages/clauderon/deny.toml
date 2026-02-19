@@ -1,6 +1,11 @@
 [advisories]
 yanked = "warn"
-unmaintained = "warn"
+unmaintained = "workspace"
+ignore = [
+    # rustls-pemfile is unmaintained; replacement (rustls-pem) not yet adopted
+    # by the dependency tree. Tracked upstream.
+    "RUSTSEC-2025-0134",
+]
 
 [licenses]
 allow = [
