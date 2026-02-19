@@ -11,5 +11,5 @@
       "@images/*": ["src/images/*"]
     }
   },
-  "exclude": ["eslint.config.ts"]
+  "exclude": ["eslint.config.ts", "astro.config.ts"]
 }
