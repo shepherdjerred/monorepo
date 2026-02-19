@@ -1,6 +1,7 @@
 {
   "eslint-disable": {
-    "packages/scout-for-lol/packages/backend/src/testing/discord-mocks.ts": 2
+    "packages/scout-for-lol/packages/backend/src/testing/discord-mocks.ts": 2,
+    "packages/scout-for-lol/packages/backend/src/testing/riot-mocks.ts": 1
   },
   "ts-suppressions": {
     "packages/sjer.red/astro.config.ts": 1
