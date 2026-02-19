@@ -217,7 +217,10 @@ export function installMonorepoWorkspaceDeps(
   }
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
-  container = container.withExec(["bun", "install", "--frozen-lockfile"]);
+  // Note: can't use --frozen-lockfile here because this container may have a workspace
+  // subset (e.g., birmel CI uses fewer packages than the full monorepo). The root bun.lock
+  // was generated with all workspaces, so a subset will always differ.
+  container = container.withExec(["bun", "install"]);
 
   // PHASE 3: Config files and source code (changes frequently, added AFTER install)
   for (const configFile of rootConfigFiles) {
@@ -233,7 +236,7 @@ export function installMonorepoWorkspaceDeps(
 
   // PHASE 4: Re-run bun install to recreate workspace node_modules symlinks
   // (Source mounts/copies in Phase 3 replace the symlinks that Phase 2 created)
-  container = container.withExec(["bun", "install", "--frozen-lockfile"]);
+  container = container.withExec(["bun", "install"]);
 
   return container;
 }
