@@ -14,9 +14,10 @@ export async function executeDebugServerInfo(
   await interaction.deferReply({ ephemeral: true });
 
   try {
-    const serverId = interaction.guildId !== null && interaction.guildId.length > 0
-      ? DiscordGuildIdSchema.parse(interaction.guildId)
-      : null;
+    const serverId =
+      interaction.guildId !== null && interaction.guildId.length > 0
+        ? DiscordGuildIdSchema.parse(interaction.guildId)
+        : null;
 
     if (!serverId) {
       await interaction.editReply({
@@ -81,7 +82,7 @@ export async function executeDebugServerInfo(
 
     const overviewEmbed = new EmbedBuilder()
       .setTitle("📊 Server Overview")
-      .setColor(0x58_65_F2)
+      .setColor(0x58_65_f2)
       .addFields(
         {
           name: "👥 Total Players",
@@ -125,7 +126,7 @@ export async function executeDebugServerInfo(
     if (players.length > 0) {
       const playersEmbed = new EmbedBuilder()
         .setTitle("👥 Players")
-        .setColor(0x57_F2_87);
+        .setColor(0x57_f2_87);
       const playersList = players.slice(0, 10).map((player) => {
         const accountCount = player.accounts.length;
         const discordMention = player.discordId
@@ -147,7 +148,7 @@ export async function executeDebugServerInfo(
     if (accounts.length > 0) {
       const accountsEmbed = new EmbedBuilder()
         .setTitle("🎮 Accounts")
-        .setColor(0xFE_E7_5C);
+        .setColor(0xfe_e7_5c);
       const accountsList = accounts.slice(0, 10).map((account) => {
         const region = account.region.toUpperCase();
         return `**${account.alias}** (${region}) - ${account.player.alias}`;
@@ -166,7 +167,7 @@ export async function executeDebugServerInfo(
     if (subscriptions.length > 0) {
       const subscriptionsEmbed = new EmbedBuilder()
         .setTitle("🔔 Subscriptions")
-        .setColor(0xEB_45_9E);
+        .setColor(0xeb_45_9e);
       const channelsList = Object.entries(channelMap)
         .slice(0, 10)
         .map(
@@ -181,7 +182,7 @@ export async function executeDebugServerInfo(
     if (activeCompetitions.length > 0) {
       const competitionsEmbed = new EmbedBuilder()
         .setTitle("🏆 Active Competitions")
-        .setColor(0xED_42_45);
+        .setColor(0xed_42_45);
       const competitionsList = activeCompetitions.slice(0, 5).map((comp) => {
         const participantCount = comp.participants.length;
         const owner = `<@${comp.ownerId}>`;
@@ -213,7 +214,7 @@ export async function executeDebugServerInfo(
 
     const debugEmbed = new EmbedBuilder()
       .setTitle("🐛 Debug Info")
-      .setColor(0x9B_59_B6)
+      .setColor(0x9b_59_b6)
       .addFields(
         { name: "Bot Version", value: configuration.version, inline: true },
         { name: "Environment", value: configuration.environment, inline: true },

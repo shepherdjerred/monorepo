@@ -99,9 +99,7 @@ export async function createContext(request: Request): Promise<Context> {
 export function generateApiToken(): { token: string; hash: string } {
   const bytes = new Uint8Array(32);
   globalThis.crypto.getRandomValues(bytes);
-  const token = [...bytes]
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+  const token = [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
   const hash = hashToken(token);
   return { token, hash };
 }

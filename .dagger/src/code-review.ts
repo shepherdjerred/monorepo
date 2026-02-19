@@ -101,14 +101,8 @@ export async function reviewPr(options: ReviewPrOptions): Promise<string> {
 
   const prompt = buildReviewPrompt(analysis);
   const execResult = await runClaudeReview({ source, githubToken, claudeOauthToken, prompt, maxTurns: analysis.maxTurns, prNumber });
-  if (typeof execResult === "string") {
-    return execResult;
-  }
 
   const verdict = await parseVerdict(execResult.stdout, githubToken, prNumber);
-  if (typeof verdict === "string") {
-    return verdict;
-  }
 
   const inlineCommentError = await postInlineComments(githubToken, prNumber, headSha, verdict);
   const inlineNote = inlineCommentError === undefined
@@ -174,7 +168,7 @@ type RunClaudeReviewOptions = {
  */
 async function runClaudeReview(
   options: RunClaudeReviewOptions,
-): Promise<{ stdout: string; stderr: string; exitCode: number } | string> {
+): Promise<{ stdout: string; stderr: string; exitCode: number }> {
   const { source, githubToken, claudeOauthToken, prompt, maxTurns, prNumber } = options;
   let container = getClaudeContainer();
   container = withClaudeAuth(container, { claudeOauthToken });
@@ -185,7 +179,7 @@ async function runClaudeReview(
 
   container = withClaudeRun(container, {
     prompt,
-    model: "claude-opus-4-5-20251101",
+    model: "claude-opus-4-6",
     maxTurns,
     jsonSchema: REVIEW_VERDICT_SCHEMA,
   });
@@ -195,13 +189,16 @@ async function runClaudeReview(
     if (execResult.exitCode !== 0) {
       const errorDetail = execResult.stderr || execResult.stdout || "Unknown error";
       await postErrorComment(githubToken, prNumber, `Claude exited with code ${String(execResult.exitCode)}:\n\n${errorDetail.slice(0, 1000)}`);
-      return `Review failed for PR #${String(prNumber)}: Claude exited with code ${String(execResult.exitCode)}`;
+      throw new Error(`Review failed for PR #${String(prNumber)}: Claude exited with code ${String(execResult.exitCode)}`);
     }
     return execResult;
   } catch (error) {
+    if (error instanceof Error && error.message.startsWith("Review failed for PR")) {
+      throw error;
+    }
     const errorMessage = error instanceof Error ? error.message : String(error);
     await postErrorComment(githubToken, prNumber, errorMessage.slice(0, 1000));
-    return `Review failed for PR #${String(prNumber)}: ${errorMessage}`;
+    throw new Error(`Review failed for PR #${String(prNumber)}: ${errorMessage}`);
   }
 }
 
@@ -261,9 +258,6 @@ export async function handleInteractive(
 
   const prompt = buildInteractivePrompt(commentBody, eventContext);
   const output = await runInteractiveClaude({ source, githubToken, claudeOauthToken, prompt, prNumber });
-  if (typeof output !== "string") {
-    return output.errorMessage;
-  }
 
   return postInteractiveResponse(githubToken, prNumber, output);
 }
@@ -325,7 +319,7 @@ type RunInteractiveClaudeOptions = {
  */
 async function runInteractiveClaude(
   options: RunInteractiveClaudeOptions,
-): Promise<string | { errorMessage: string }> {
+): Promise<string> {
   const { source, githubToken, claudeOauthToken, prompt, prNumber } = options;
   let container = getClaudeContainer();
   container = withClaudeAuth(container, { claudeOauthToken });
@@ -336,7 +330,7 @@ async function runInteractiveClaude(
 
   container = withClaudeRun(container, {
     prompt,
-    model: "claude-opus-4-5-20251101",
+    model: "claude-opus-4-6",
     maxTurns: 35,
   });
 
@@ -346,14 +340,17 @@ async function runInteractiveClaude(
     if (execResult.exitCode !== 0) {
       const errorDetail = execResult.stderr || execResult.stdout || "Unknown error";
       await postErrorComment(githubToken, prNumber, `Claude exited with code ${String(execResult.exitCode)}:\n\n${errorDetail.slice(0, 1000)}`);
-      return { errorMessage: `Interactive request failed for PR #${String(prNumber)}: Claude exited with code ${String(execResult.exitCode)}` };
+      throw new Error(`Interactive request failed for PR #${String(prNumber)}: Claude exited with code ${String(execResult.exitCode)}`);
     }
 
     return execResult.stdout;
   } catch (error) {
+    if (error instanceof Error && error.message.startsWith("Interactive request failed for PR")) {
+      throw error;
+    }
     const errorMessage = error instanceof Error ? error.message : String(error);
     await postErrorComment(githubToken, prNumber, errorMessage.slice(0, 1000));
-    return { errorMessage: `Interactive request failed for PR #${String(prNumber)}: ${errorMessage}` };
+    throw new Error(`Interactive request failed for PR #${String(prNumber)}: ${errorMessage}`);
   }
 }
 

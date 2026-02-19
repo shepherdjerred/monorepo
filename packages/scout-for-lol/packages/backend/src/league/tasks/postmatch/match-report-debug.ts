@@ -30,7 +30,11 @@ export function logErrorDetails(
   // Use a Zod schema to validate any object with a stack property
   const ObjectWithStackSchema = z.object({ stack: z.string() });
   let stackTrace: string | undefined;
-  if (errorResult.success && errorResult.data.stack !== undefined && errorResult.data.stack.length > 0) {
+  if (
+    errorResult.success &&
+    errorResult.data.stack !== undefined &&
+    errorResult.data.stack.length > 0
+  ) {
     stackTrace = errorResult.data.stack;
   } else {
     const stackResult = ObjectWithStackSchema.safeParse(error);
@@ -50,7 +54,10 @@ export function logErrorDetails(
     logger.error(
       `[generateMatchReport] ❌ Error message: ${errorResult.data.message}`,
     );
-    if (errorResult.data.cause !== undefined && errorResult.data.cause !== null) {
+    if (
+      errorResult.data.cause !== undefined &&
+      errorResult.data.cause !== null
+    ) {
       logger.error(
         `[generateMatchReport] ❌ Error cause:`,
         errorResult.data.cause,

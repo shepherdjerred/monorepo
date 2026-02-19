@@ -98,7 +98,9 @@ export async function executeSubscriptionAdd(
   }
 
   // Check if this exact account already exists
-  const existingAccount: (Account & { player: Player & { subscriptions: Subscription[] } }) | null = await prisma.account.findUnique({
+  const existingAccount:
+    | (Account & { player: Player & { subscriptions: Subscription[] } })
+    | null = await prisma.account.findUnique({
     where: {
       serverId_puuid: {
         serverId: guildId,
@@ -148,7 +150,14 @@ export async function executeSubscriptionAdd(
       result.isAddingToExistingPlayer !== undefined
     ) {
       // Handle existing subscription case
-      const playerAccount: (Account & { player: Player & { accounts: Account[]; subscriptions: Subscription[] } }) | null = await prisma.account.findUnique({
+      const playerAccount:
+        | (Account & {
+            player: Player & {
+              accounts: Account[];
+              subscriptions: Subscription[];
+            };
+          })
+        | null = await prisma.account.findUnique({
         where: {
           serverId_puuid: {
             serverId: guildId,

@@ -1,19 +1,33 @@
 import type { Directory, Secret } from "@dagger.io/dagger";
+import { dag } from "@dagger.io/dagger";
 import { publishToGhcrMultiple } from "./lib-ghcr.ts";
+import { execOrThrow } from "./lib-errors.ts";
+import versions from "./lib-versions.ts";
+
+const BUN_VERSION = versions.bun;
 
 /**
- * Check starlight-karma-bot: Docker build validation
+ * Check starlight-karma-bot: Docker build validation + prettier
  */
 export async function checkStarlightKarmaBot(
   source: Directory,
 ): Promise<string> {
   const pkgSource = source.directory("packages/starlight-karma-bot");
 
-  // Build the Docker image using Dockerfile to validate it compiles
-  const image = pkgSource.dockerBuild();
-  await image.sync();
+  // Run Docker build and prettier check in parallel
+  const prettierContainer = dag
+    .container()
+    .from(`oven/bun:${BUN_VERSION}`)
+    .withMountedDirectory("/workspace", pkgSource)
+    .withWorkdir("/workspace")
+    .withExec(["bun", "install"]);
 
-  return "✓ starlight-karma-bot Docker build passed";
+  await Promise.all([
+    pkgSource.dockerBuild().sync(),
+    execOrThrow(prettierContainer, ["bunx", "prettier", "--check", "."]),
+  ]);
+
+  return "✓ starlight-karma-bot Docker build + prettier passed";
 }
 
 /**

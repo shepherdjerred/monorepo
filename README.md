@@ -152,8 +152,6 @@ def generate_summary(content, prompt, summary_path):
                 MODEL,
                 "--sandbox",
                 "read-only",
-                "--ask-for-approval",
-                "never",
                 "--output-schema",
                 str(schema_path),
                 "-o",
@@ -167,6 +165,10 @@ def generate_summary(content, prompt, summary_path):
         )
 
         if result.returncode != 0 or not out_path.exists():
+            import sys
+            print(f"[cog] codex failed for {summary_path}: rc={result.returncode}", file=sys.stderr)
+            if result.stderr:
+                print(f"[cog]   stderr: {result.stderr[:500]}", file=sys.stderr)
             return None
 
         try:

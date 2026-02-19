@@ -112,11 +112,21 @@ pre-commit:
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
 
+                - name: prettier-starlight-karma-bot
+                  root: "packages/starlight-karma-bot/"
+                  glob: "packages/starlight-karma-bot/**/*.{ts,tsx,js,jsx}"
+                  run: bunx prettier --check {staged_files}
+
                 - name: eslint-scout-for-lol
                   root: "packages/scout-for-lol/"
                   glob: "packages/scout-for-lol/**/*.{ts,tsx,js,jsx,astro}"
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
+
+                - name: prettier-scout-for-lol
+                  root: "packages/scout-for-lol/"
+                  glob: "packages/scout-for-lol/**/*.{ts,tsx,js,jsx}"
+                  run: bunx prettier --check {staged_files}
 
                 - name: eslint-discord-plays-pokemon-common
                   root: "packages/discord-plays-pokemon/packages/common/"
@@ -193,7 +203,7 @@ pre-commit:
               - "packages/clauderon/Cargo.lock"
             skip:
               - run: "! command -v cargo-deny >/dev/null 2>&1"
-            run: cargo deny check
+            run: cargo deny check advisories bans sources
 
           # --- TypeScript typecheck per package ---
           - name: birmel-typecheck

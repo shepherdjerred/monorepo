@@ -86,9 +86,9 @@ export async function executeCompetitionList(
   if (competitions.length === 0) {
     const message = showOwnOnly
       ? "You haven't created any competitions yet."
-      : (showActiveOnly
+      : showActiveOnly
         ? "No active competitions found."
-        : "No competitions found. Create one with `/competition create`!");
+        : "No competitions found. Create one with `/competition create`!";
 
     await interaction.reply({
       content: truncateDiscordMessage(`📋 ${message}`),
@@ -149,27 +149,27 @@ export async function executeCompetitionList(
 
         // Update page based on button clicked
         switch (buttonInteraction.customId) {
-        case "list_first": {
-          page = 0;
-        
-        break;
-        }
-        case "list_prev": {
-          page = Math.max(0, page - 1);
-        
-        break;
-        }
-        case "list_next": {
-          page = Math.min(totalPages - 1, page + 1);
-        
-        break;
-        }
-        case "list_last": {
-          page = totalPages - 1;
-        
-        break;
-        }
-        // No default
+          case "list_first": {
+            page = 0;
+
+            break;
+          }
+          case "list_prev": {
+            page = Math.max(0, page - 1);
+
+            break;
+          }
+          case "list_next": {
+            page = Math.min(totalPages - 1, page + 1);
+
+            break;
+          }
+          case "list_last": {
+            page = totalPages - 1;
+
+            break;
+          }
+          // No default
         }
 
         // Update the message
@@ -210,7 +210,7 @@ function buildListEmbed(params: {
 }): EmbedBuilder {
   const { competitions, currentPage, totalPages, showActiveOnly, showOwnOnly } =
     params;
-  const embed = new EmbedBuilder().setColor(0x58_65_F2); // Blue
+  const embed = new EmbedBuilder().setColor(0x58_65_f2); // Blue
 
   // Build title
   let title = "🏆 Competitions";

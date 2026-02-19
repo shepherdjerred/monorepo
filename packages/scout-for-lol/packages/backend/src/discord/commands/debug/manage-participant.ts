@@ -58,9 +58,10 @@ export async function executeDebugManageParticipant(
   }
 
   const { action, competitionId } = optionsResult.data;
-  const serverId = interaction.guildId !== null && interaction.guildId.length > 0
-    ? DiscordGuildIdSchema.parse(interaction.guildId)
-    : null;
+  const serverId =
+    interaction.guildId !== null && interaction.guildId.length > 0
+      ? DiscordGuildIdSchema.parse(interaction.guildId)
+      : null;
 
   if (!serverId) {
     await interaction.reply({

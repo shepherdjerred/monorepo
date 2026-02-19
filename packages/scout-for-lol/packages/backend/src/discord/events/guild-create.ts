@@ -26,7 +26,9 @@ type WelcomeChannel = {
  * @param guild The guild that was joined
  * @returns A sendable channel or null if no suitable channel found
  */
-async function findWelcomeChannel(guild: Guild): Promise<WelcomeChannel | null> {
+async function findWelcomeChannel(
+  guild: Guild,
+): Promise<WelcomeChannel | null> {
   // Try system channel first
   if (guild.systemChannel) {
     const permissions = guild.systemChannel.permissionsFor(

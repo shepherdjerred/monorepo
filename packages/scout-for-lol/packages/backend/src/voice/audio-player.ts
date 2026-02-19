@@ -45,7 +45,9 @@ function webStreamToReadable(stream: ReadableStream<Uint8Array>): Readable {
         readable.push(value);
       }
     } catch (error) {
-      readable.destroy(error instanceof Error ? error : new Error(String(error)));
+      readable.destroy(
+        error instanceof Error ? error : new Error(String(error)),
+      );
     }
   }
 
@@ -234,7 +236,10 @@ async function downloadYouTubeAudio(url: string, s3Key: string): Promise<void> {
     }
 
     // Upload to S3
-    if (configuration.s3BucketName !== undefined && configuration.s3BucketName.length > 0) {
+    if (
+      configuration.s3BucketName !== undefined &&
+      configuration.s3BucketName.length > 0
+    ) {
       const file = Bun.file(tempFile);
       const fileBuffer = await file.arrayBuffer();
       const s3Client = createS3Client();
