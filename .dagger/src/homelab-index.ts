@@ -157,6 +157,7 @@ export async function checkHomelab(
     "CDK8s Lint",
     "CDK8s Test",
   ];
+  const hasFailures = results.some((r) => r.status === "rejected");
   const summary = results
     .map((result, index) => {
       const name = names[index] ?? "Unknown";
@@ -167,7 +168,11 @@ export async function checkHomelab(
       return `${name}: FAILED\n${errorDetails}`;
     })
     .join("\n\n");
-  return `Pipeline Results:\n${summary}`;
+  const output = `Pipeline Results:\n${summary}`;
+  if (hasFailures) {
+    throw new Error(output);
+  }
+  return output;
 }
 
 /**
