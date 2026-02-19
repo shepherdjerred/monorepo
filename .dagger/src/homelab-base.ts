@@ -14,6 +14,11 @@ import { getMiseRuntimeContainer } from "./lib-mise.ts";
  * Mounts the eslint-config package at /eslint-config/, installs deps, builds,
  * then restores the working directory. Also mounts tsconfig.base.json at root
  * for the eslint-config's tsconfig.json extends resolution.
+ *
+ * The homelab root eslint.config.ts imports from "../eslint-config/local.ts"
+ * which resolves to /eslint-config/local.ts from /workspace/. ESLint's jiti
+ * resolver can fail with paths at the filesystem root, so we patch the import
+ * to use an absolute path after building.
  */
 export function withEslintConfig(
   container: Container,
@@ -26,6 +31,14 @@ export function withEslintConfig(
     .withWorkdir("/eslint-config")
     .withExec(["bun", "install"])
     .withExec(["bun", "run", "build"])
+    // Fix: ESLint's jiti/CJS resolver fails to resolve relative paths that
+    // traverse to the filesystem root (../eslint-config from /workspace/).
+    // Patch the import to use an absolute path instead.
+    .withExec([
+      "sed", "-i",
+      `s|"../eslint-config/local.ts"|"/eslint-config/local.ts"|`,
+      "/workspace/eslint.config.ts",
+    ])
     .withWorkdir(restoreWorkdir);
 }
 

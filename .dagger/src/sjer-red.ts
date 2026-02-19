@@ -14,7 +14,7 @@ function getBunContainer(): Container {
 function getPlaywrightContainer(): Container {
   return dag
     .container()
-    .from("mcr.microsoft.com/playwright:v1.57.0-noble")
+    .from("mcr.microsoft.com/playwright:v1.58.2-noble")
     .withWorkdir("/workspace")
     .withExec(["apt-get", "update"])
     .withExec(["apt-get", "install", "-y", "unzip"])
