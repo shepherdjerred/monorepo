@@ -78,7 +78,10 @@ function formatTransitiveDepsHtml(
         <tbody>
           ${diff.images.updated
             .map((img) => {
-              const registry = img.registry != null && img.registry !== "" ? `${img.registry}/` : "";
+              const registry =
+                img.registry != null && img.registry !== ""
+                  ? `${img.registry}/`
+                  : "";
               return `
             <tr>
               <td style="padding: 8px; border: 1px solid #ddd;">${registry}${img.repository}</td>
@@ -295,7 +298,7 @@ export async function sendEmail(
   const recipientEmail = Bun.env["RECIPIENT_EMAIL"];
   const senderEmail = Bun.env["SENDER_EMAIL"] ?? "updates@homelab.local";
 
-  if ((recipientEmail == null || recipientEmail === "")) {
+  if (recipientEmail == null || recipientEmail === "") {
     console.error("RECIPIENT_EMAIL not set, cannot send email");
     throw new Error("RECIPIENT_EMAIL not set");
   }

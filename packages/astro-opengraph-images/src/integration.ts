@@ -4,8 +4,8 @@ import type {
   IntegrationDefaults,
   IntegrationInput,
   IntegrationOptions,
-} from "./types.ts";
-import { buildDoneHook } from "./hook.ts";
+} from "./types.js";
+import { buildDoneHook } from "./hook.js";
 
 const defaults: IntegrationDefaults = {
   width: 1200,

@@ -140,10 +140,10 @@ export function createPostalClientFromEnv(): PostalClient {
   const apiKey = Bun.env["POSTAL_API_KEY"];
   const hostHeader = Bun.env["POSTAL_HOST_HEADER"];
 
-  if ((host == null || host === "")) {
+  if (host == null || host === "") {
     throw new Error("POSTAL_HOST environment variable not set");
   }
-  if ((apiKey == null || apiKey === "")) {
+  if (apiKey == null || apiKey === "") {
     throw new Error("POSTAL_API_KEY environment variable not set");
   }
 

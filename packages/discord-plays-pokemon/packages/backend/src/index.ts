@@ -15,6 +15,7 @@ import { writeFile } from "node:fs/promises";
 import { Options } from "selenium-webdriver/firefox.js";
 import { handleSlashCommands } from "./discord/slashCommands/index.ts";
 import type { CommandInput } from "./game/command/command-input.ts";
+import { parseCommandInput } from "./game/command/command-input.ts";
 import { createWebServer } from "./webserver/index.ts";
 import { start } from "./browser/index.ts";
 import lodash from "lodash";
@@ -52,10 +53,12 @@ if (getConfig().web.enabled) {
           logger.info("handling command request", commandEvent.request);
           if (gameDriver !== undefined) {
             try {
-              void sendGameCommand(gameDriver, {
-                command: commandEvent.request.value,
-                quantity: 1,
-              });
+              const parsed = parseCommandInput(commandEvent.request.value);
+              if (parsed) {
+                void sendGameCommand(gameDriver, parsed);
+              } else {
+                logger.error("invalid command", commandEvent.request.value);
+              }
             } catch (error) {
               logger.error(error);
             }

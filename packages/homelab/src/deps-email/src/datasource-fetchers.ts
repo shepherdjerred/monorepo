@@ -40,7 +40,7 @@ export async function tryArtifactHubFallback(
     }
 
     const repoUrl = parsed.data.repository?.url;
-    if ((repoUrl == null || repoUrl === "")) {
+    if (repoUrl == null || repoUrl === "") {
       return null;
     }
 
@@ -50,7 +50,7 @@ export async function tryArtifactHubFallback(
     }
 
     const [owner, repo] = repoMatch[1].split("/");
-    if ((owner == null || owner === "") || (repo == null || repo === "")) {
+    if (owner == null || owner === "" || repo == null || repo === "") {
       return null;
     }
 
@@ -116,7 +116,9 @@ export async function fetchDockerReleaseNotes(
   return null;
 }
 
-export async function fetchChartReleaseNotes(dep: DependencyInfo): Promise<ReleaseNotes | null> {
+export async function fetchChartReleaseNotes(
+  dep: DependencyInfo,
+): Promise<ReleaseNotes | null> {
   const chartRepo = HELM_CHART_GITHUB_REPOS[dep.name];
   if (chartRepo == null || chartRepo === "") {
     return null;
@@ -147,7 +149,9 @@ export async function fetchChartReleaseNotes(dep: DependencyInfo): Promise<Relea
   return null;
 }
 
-export async function fetchAppReleaseNotes(dep: DependencyInfo): Promise<ReleaseNotes | null> {
+export async function fetchAppReleaseNotes(
+  dep: DependencyInfo,
+): Promise<ReleaseNotes | null> {
   const chartRepo = HELM_CHART_GITHUB_REPOS[dep.name];
   const appRepo = HELM_CHART_APP_REPOS[dep.name];
   if (appRepo == null || appRepo === "" || appRepo === chartRepo) {
@@ -199,7 +203,11 @@ export async function fetchTransitiveReleaseNotes(
       console.log(
         `    Fetching release notes for ${imageUpdate.repository} (${imageUpdate.oldTag} -> ${imageUpdate.newTag})...`,
       );
-      const notes = await fetchReleaseNotesBetween(githubRepo, imageUpdate.oldTag, imageUpdate.newTag);
+      const notes = await fetchReleaseNotesBetween(
+        githubRepo,
+        imageUpdate.oldTag,
+        imageUpdate.newTag,
+      );
       for (const note of notes) {
         results.push({
           dependency: `${dep.name} -> ${imageUpdate.repository}`,
@@ -212,14 +220,20 @@ export async function fetchTransitiveReleaseNotes(
     }
 
     for (const chartUpdate of transitiveDiff.charts.updated) {
-      const subChartRepo = HELM_CHART_GITHUB_REPOS[chartUpdate.name] ?? HELM_CHART_APP_REPOS[chartUpdate.name];
+      const subChartRepo =
+        HELM_CHART_GITHUB_REPOS[chartUpdate.name] ??
+        HELM_CHART_APP_REPOS[chartUpdate.name];
       if (subChartRepo == null || subChartRepo === "") {
         continue;
       }
       console.log(
         `    Fetching release notes for sub-chart ${chartUpdate.name} (${chartUpdate.oldVersion} -> ${chartUpdate.newVersion})...`,
       );
-      const notes = await fetchReleaseNotesBetween(subChartRepo, chartUpdate.oldVersion, chartUpdate.newVersion);
+      const notes = await fetchReleaseNotesBetween(
+        subChartRepo,
+        chartUpdate.oldVersion,
+        chartUpdate.newVersion,
+      );
       for (const note of notes) {
         results.push({
           dependency: `${dep.name} -> ${chartUpdate.name}`,
@@ -235,7 +249,9 @@ export async function fetchTransitiveReleaseNotes(
       `  Found ${String(transitiveDiff.images.updated.length)} image updates, ${String(transitiveDiff.charts.updated.length)} sub-chart updates`,
     );
   } catch (error) {
-    console.warn(`  Failed to fetch transitive deps for ${dep.name}: ${String(error)}`);
+    console.warn(
+      `  Failed to fetch transitive deps for ${dep.name}: ${String(error)}`,
+    );
   }
 
   return results;
@@ -258,13 +274,19 @@ export async function fetchHelmReleaseNotes(
   }
 
   if (results.length === 0) {
-    const artifactHubResult = await tryArtifactHubFallback(dep.name, dep.newVersion);
+    const artifactHubResult = await tryArtifactHubFallback(
+      dep.name,
+      dep.newVersion,
+    );
     if (artifactHubResult) {
       results.push(artifactHubResult);
     }
   }
 
-  const transitiveResults = await fetchTransitiveReleaseNotes(dep, transitiveDepsDiffs);
+  const transitiveResults = await fetchTransitiveReleaseNotes(
+    dep,
+    transitiveDepsDiffs,
+  );
   results.push(...transitiveResults);
 
   return results;

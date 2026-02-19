@@ -76,8 +76,12 @@ export type ImageRef = z.infer<typeof ImageRefSchema>;
  * Full image string representation
  */
 export function imageRefToString(image: ImageRef): string {
-  const registry = image.registry != null && image.registry !== "" ? `${image.registry}/` : "";
-  const tag = image.digest != null && image.digest !== "" ? `@${image.digest}` : `:${image.tag}`;
+  const registry =
+    image.registry != null && image.registry !== "" ? `${image.registry}/` : "";
+  const tag =
+    image.digest != null && image.digest !== ""
+      ? `@${image.digest}`
+      : `:${image.tag}`;
   return `${registry}${image.repository}${tag}`;
 }
 
@@ -292,7 +296,7 @@ export function resolveRepositoryUrl(
   repoRef: string | undefined,
   parentRepoUrl?: string,
 ): string | null {
-  if ((repoRef == null || repoRef === "")) {
+  if (repoRef == null || repoRef === "") {
     // Empty/undefined means bundled subchart
     return parentRepoUrl ?? null;
   }

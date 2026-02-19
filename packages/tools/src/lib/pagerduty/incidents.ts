@@ -1,12 +1,14 @@
 import { pagerDutyRequest } from "./client.ts";
+import {
+  PagerDutyIncidentsResponseSchema,
+  PagerDutyIncidentResponseSchema,
+  PagerDutyNotesResponseSchema,
+  PagerDutyLogEntriesResponseSchema,
+} from "./schemas.ts";
 import type {
   PagerDutyIncident,
-  PagerDutyIncidentsResponse,
-  PagerDutyIncidentResponse,
   PagerDutyNote,
-  PagerDutyNotesResponse,
   PagerDutyLogEntry,
-  PagerDutyLogEntriesResponse,
 } from "./types.ts";
 
 export type GetIncidentsOptions = {
@@ -36,8 +38,9 @@ export async function getIncidents(
     params["team_ids[]"] = options.teamIds;
   }
 
-  const result = await pagerDutyRequest<PagerDutyIncidentsResponse>(
+  const result = await pagerDutyRequest(
     "/incidents",
+    PagerDutyIncidentsResponseSchema,
     params,
   );
 
@@ -51,8 +54,9 @@ export async function getIncidents(
 export async function getIncident(
   incidentId: string,
 ): Promise<PagerDutyIncident | null> {
-  const result = await pagerDutyRequest<PagerDutyIncidentResponse>(
+  const result = await pagerDutyRequest(
     `/incidents/${incidentId}`,
+    PagerDutyIncidentResponseSchema,
   );
 
   if (!result.success) {
@@ -68,8 +72,9 @@ export async function getIncident(
 export async function getIncidentNotes(
   incidentId: string,
 ): Promise<PagerDutyNote[]> {
-  const result = await pagerDutyRequest<PagerDutyNotesResponse>(
+  const result = await pagerDutyRequest(
     `/incidents/${incidentId}/notes`,
+    PagerDutyNotesResponseSchema,
   );
 
   if (!result.success || !result.data) {
@@ -83,8 +88,9 @@ export async function getIncidentLogEntries(
   incidentId: string,
   limit = 25,
 ): Promise<PagerDutyLogEntry[]> {
-  const result = await pagerDutyRequest<PagerDutyLogEntriesResponse>(
+  const result = await pagerDutyRequest(
     `/incidents/${incidentId}/log_entries`,
+    PagerDutyLogEntriesResponseSchema,
     { limit: String(limit) },
   );
 

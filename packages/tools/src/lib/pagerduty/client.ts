@@ -1,4 +1,4 @@
-import { z } from "zod";
+import type { z } from "zod";
 
 export type PagerDutyClientResult<T> = {
   success: boolean;
@@ -33,6 +33,7 @@ function applySearchParams(
 
 export async function pagerDutyRequest<T>(
   endpoint: string,
+  schema: z.ZodType<T>,
   params?: Record<string, string | string[]>,
 ): Promise<PagerDutyClientResult<T>> {
   try {
@@ -61,7 +62,7 @@ export async function pagerDutyRequest<T>(
     }
 
     const json: unknown = await response.json();
-    const data = z.custom<T>().parse(json);
+    const data = schema.parse(json);
     return { success: true, data };
   } catch (error) {
     const message =

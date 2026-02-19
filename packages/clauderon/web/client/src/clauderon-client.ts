@@ -23,13 +23,13 @@ import type {
   MergeMethod,
   MergePrRequest,
 } from "@clauderon/shared";
-import { ApiError, NetworkError, SessionNotFoundError } from "./errors.ts";
+import { ApiError, NetworkError, SessionNotFoundError } from "./errors.js";
 import {
   type ClauderonClientConfig,
   type StorageClassInfo,
   getDefaultBaseUrl,
-} from "./client-types.ts";
-import { readResponseJson } from "./json.ts";
+} from "./client-types.js";
+import { readResponseJson } from "./json.js";
 
 function extractErrorMessage(data: unknown): string | undefined {
   if (typeof data !== "object" || data === null) {

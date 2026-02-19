@@ -154,7 +154,7 @@ async function fetchFromGitHubReleases(
   newVersion: string,
 ): Promise<ReleaseNote[]> {
   const [owner, repoName] = repo.split("/");
-  if ((owner == null || owner === "") || (repoName == null || repoName === "")) {
+  if (owner == null || owner === "" || repoName == null || repoName === "") {
     return [];
   }
 
@@ -186,14 +186,15 @@ async function fetchFromGitHubReleases(
 
       for (const release of parsed.data) {
         const tag = release.tag_name;
-        if ((tag == null || tag === "")) {
+        if (tag == null || tag === "") {
           continue;
         }
 
         // Check if this version is in range
         if (
           isVersionInRange(tag, oldVersion, newVersion) &&
-          release.body != null && release.body !== "" &&
+          release.body != null &&
+          release.body !== "" &&
           release.body.length > 10
         ) {
           notes.push({
@@ -230,7 +231,7 @@ async function fetchFromChangelog(
   newVersion: string,
 ): Promise<ReleaseNote[]> {
   const [owner, repoName] = repo.split("/");
-  if ((owner == null || owner === "") || (repoName == null || repoName === "")) {
+  if (owner == null || owner === "" || repoName == null || repoName === "") {
     return [];
   }
 
@@ -346,7 +347,7 @@ async function fetchFromGitCompare(
   newVersion: string,
 ): Promise<ReleaseNote[]> {
   const [owner, repoName] = repo.split("/");
-  if ((owner == null || owner === "") || (repoName == null || repoName === "")) {
+  if (owner == null || owner === "" || repoName == null || repoName === "") {
     return [];
   }
 
@@ -418,7 +419,7 @@ async function extractWithLLM(
   newVersion: string,
 ): Promise<ReleaseNote[]> {
   const apiKey = Bun.env["OPENAI_API_KEY"];
-  if ((apiKey == null || apiKey === "")) {
+  if (apiKey == null || apiKey === "") {
     // Return raw commits as fallback
     return [
       {
@@ -483,7 +484,10 @@ export function getGitHubRepoForImage(imageRepo: string): string | null {
 
   // Try without registry prefix
   const withoutRegistry = imageRepo.replace(/^[^/]+\.io\//, "");
-  if (IMAGE_TO_GITHUB[withoutRegistry] != null && IMAGE_TO_GITHUB[withoutRegistry] !== "") {
+  if (
+    IMAGE_TO_GITHUB[withoutRegistry] != null &&
+    IMAGE_TO_GITHUB[withoutRegistry] !== ""
+  ) {
     return IMAGE_TO_GITHUB[withoutRegistry];
   }
 

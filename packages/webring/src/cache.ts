@@ -8,9 +8,9 @@ import {
   type CachedConfiguration,
   CacheSchema,
   type CacheConfiguration,
-} from "./types.ts";
-import { fetch } from "./fetch.ts";
-import { asyncMapFilterUndefined } from "./util.ts";
+} from "./types.js";
+import { fetch } from "./fetch.js";
+import { asyncMapFilterUndefined } from "./util.js";
 import * as fs from "node:fs/promises";
 
 async function loadCache({

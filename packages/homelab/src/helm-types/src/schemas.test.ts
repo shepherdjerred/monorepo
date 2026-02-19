@@ -82,7 +82,7 @@ describe("Schema Validation - NullSchema", () => {
   });
 
   test("should reject non-null", () => {
-    expect(NullSchema.safeParse().success).toBe(false);
+    expect(NullSchema.safeParse(undefined).success).toBe(false);
     expect(NullSchema.safeParse("").success).toBe(false);
     expect(NullSchema.safeParse(0).success).toBe(false);
   });
@@ -90,7 +90,7 @@ describe("Schema Validation - NullSchema", () => {
 
 describe("Schema Validation - UndefinedSchema", () => {
   test("should validate undefined", () => {
-    expect(UndefinedSchema.safeParse().success).toBe(true);
+    expect(UndefinedSchema.safeParse(undefined).success).toBe(true);
   });
 
   test("should reject non-undefined", () => {

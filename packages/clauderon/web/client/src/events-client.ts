@@ -1,6 +1,6 @@
 import type { Event as WsEvent } from "@clauderon/shared";
-import { WebSocketError } from "./errors.ts";
-import { parseJson, resolveJsonValue } from "./json.ts";
+import { WebSocketError } from "./errors.js";
+import { parseJson, resolveJsonValue } from "./json.js";
 
 /**
  * Event types emitted by the events WebSocket.

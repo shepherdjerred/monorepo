@@ -1,6 +1,6 @@
-import { presets as importedPresets } from "./presets/index.ts";
-import { getImagePath as importedGetImagePath } from "./util.ts";
-import { astroOpenGraphImages } from "./integration.ts";
+import { presets as importedPresets } from "./presets/index.js";
+import { getImagePath as importedGetImagePath } from "./util.js";
+import { astroOpenGraphImages } from "./integration.js";
 import type {
   IntegrationInput as _IntegrationInput,
   IntegrationDefaults as _IntegrationDefaults,
@@ -15,7 +15,7 @@ import type {
   SatoriFontStyle as _SatoriFontStyle,
   SatoriFontOptions as _SatoriFontOptions,
   SatoriOptions as _SatoriOptions,
-} from "./types.ts";
+} from "./types.js";
 
 export const presets = importedPresets;
 export const getImagePath = importedGetImagePath;

@@ -48,8 +48,7 @@ export function leavingHome({ hass, logger }: TServiceParams) {
           verifyAfterDelay({
             entityId: bedroomHeater.entity_id,
             workflowName: "climate_leaving_home",
-            getActualState: () =>
-              String(bedroomHeater.attributes.temperature),
+            getActualState: () => String(bedroomHeater.attributes.temperature),
             check: (actual) => actual === "20",
             delay: { amount: 30, unit: "s" },
             description: "target 20°C",

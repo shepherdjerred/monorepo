@@ -4,7 +4,7 @@ import IconError from "~icons/ph/x-circle";
 import IconClose from "~icons/ph/x";
 import IconWarning from "~icons/ph/warning-circle";
 import IconInfo from "~icons/ph/info";
-import type { Level } from "@shepherdjerred/discord-plays-pokemon/packages/frontend/src/model/Notification";
+import type { Level } from "../model/notification";
 
 export function Notification({
   title = "",

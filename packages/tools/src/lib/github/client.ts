@@ -1,5 +1,5 @@
 import { $ } from "bun";
-import { z } from "zod";
+import type { z } from "zod";
 
 export type GhCommandResult<T> = {
   success: boolean;
@@ -9,6 +9,7 @@ export type GhCommandResult<T> = {
 
 export async function runGhCommand<T>(
   args: string[],
+  schema: z.ZodType<T>,
   repo?: string,
 ): Promise<GhCommandResult<T>> {
   const repoArgs = repo != null && repo.length > 0 ? ["--repo", repo] : [];
@@ -24,7 +25,7 @@ export async function runGhCommand<T>(
 
     try {
       const json: unknown = JSON.parse(stdout);
-      const parsed = z.custom<T>().parse(json);
+      const parsed = schema.parse(json);
       return { success: true, data: parsed };
     } catch {
       // Non-JSON output: return raw string. Callers using runGhCommandRaw

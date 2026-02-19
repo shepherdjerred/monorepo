@@ -1,44 +1,15 @@
-export type PullRequest = {
-  number: number;
-  title: string;
-  url: string;
-  headRefName: string;
-  baseRefName: string;
-  state: "OPEN" | "CLOSED" | "MERGED";
-  isDraft: boolean;
-  mergeable: "MERGEABLE" | "CONFLICTING" | "UNKNOWN";
-  reviewDecision: "APPROVED" | "CHANGES_REQUESTED" | "REVIEW_REQUIRED" | null;
-};
+import type { z } from "zod";
+import type {
+  PullRequestSchema,
+  ReviewSchema,
+  CheckRunSchema,
+  WorkflowRunSchema,
+} from "./schemas.ts";
 
-export type Review = {
-  author: {
-    login: string;
-  };
-  state:
-    | "APPROVED"
-    | "CHANGES_REQUESTED"
-    | "COMMENTED"
-    | "PENDING"
-    | "DISMISSED";
-  submittedAt: string;
-};
-
-export type CheckRun = {
-  name: string;
-  status: string;
-  conclusion: string | null;
-  detailsUrl: string;
-  workflowName: string;
-};
-
-export type WorkflowRun = {
-  databaseId: number;
-  name: string;
-  status: string;
-  conclusion: string | null;
-  url: string;
-  createdAt: string;
-};
+export type PullRequest = z.infer<typeof PullRequestSchema>;
+export type Review = z.infer<typeof ReviewSchema>;
+export type CheckRun = z.infer<typeof CheckRunSchema>;
+export type WorkflowRun = z.infer<typeof WorkflowRunSchema>;
 
 export type HealthStatus = "HEALTHY" | "UNHEALTHY" | "PENDING";
 

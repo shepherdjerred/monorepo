@@ -113,7 +113,7 @@ async function getS3AudioStream(s3Url: string): Promise<Readable> {
     throw new Error(`No body in S3 response for ${s3Url}`);
   }
 
-  return Readable.from(response.Body.transformToByteArray());
+  return Readable.from(await response.Body.transformToByteArray());
 }
 
 /**
@@ -163,7 +163,10 @@ async function getFromS3Cache(key: string): Promise<Readable> {
       Key: key,
     }),
   );
-  return Readable.from(response.Body.transformToByteArray());
+  if (!response.Body) {
+    throw new Error("No body in S3 response");
+  }
+  return Readable.from(await response.Body.transformToByteArray());
 }
 
 /**

@@ -1,6 +1,10 @@
 import type { TServiceParams } from "@digital-alchemy/core";
 import type { ENTITY_STATE } from "@digital-alchemy/hass";
-import { shouldStopCleaning, verifyAfterDelay, withTimeout } from "@shepherdjerred/homelab/ha/src/util.ts";
+import {
+  shouldStopCleaning,
+  verifyAfterDelay,
+  withTimeout,
+} from "@shepherdjerred/homelab/ha/src/util.ts";
 import { instrumentWorkflow } from "@shepherdjerred/homelab/ha/src/metrics.ts";
 
 export function welcomeHome({ hass, logger }: TServiceParams) {
@@ -51,8 +55,7 @@ export function welcomeHome({ hass, logger }: TServiceParams) {
           verifyAfterDelay({
             entityId: bedroomHeater.entity_id,
             workflowName: "climate_welcome_home",
-            getActualState: () =>
-              String(bedroomHeater.attributes.temperature),
+            getActualState: () => String(bedroomHeater.attributes.temperature),
             check: (actual) => actual === "22",
             delay: { amount: 30, unit: "s" },
             description: "target 22°C",

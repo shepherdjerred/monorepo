@@ -1,4 +1,4 @@
-import { z } from "zod";
+import type { z } from "zod";
 
 export type BugsinkClientResult<T> = {
   success: boolean;
@@ -24,6 +24,7 @@ function getAuthToken(): string {
 
 export async function bugsinkRequest<T>(
   endpoint: string,
+  schema: z.ZodType<T>,
   params?: Record<string, string>,
 ): Promise<BugsinkClientResult<T>> {
   try {
@@ -54,7 +55,7 @@ export async function bugsinkRequest<T>(
     }
 
     const json: unknown = await response.json();
-    const data = z.custom<T>().parse(json);
+    const data = schema.parse(json);
     return { success: true, data };
   } catch (error) {
     const message =

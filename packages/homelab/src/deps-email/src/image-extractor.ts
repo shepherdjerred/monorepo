@@ -159,7 +159,9 @@ function extractImagesFromManifest(
 
   if (kind === "CronJob") {
     const cronJobParsed = CronJobSpecSchema.safeParse(spec);
-    const jobSpec = cronJobParsed.success ? cronJobParsed.data.jobTemplate?.spec : undefined;
+    const jobSpec = cronJobParsed.success
+      ? cronJobParsed.data.jobTemplate?.spec
+      : undefined;
     const cronTemplateParsed = jobSpec
       ? PodTemplateSpecSchema.safeParse(jobSpec.template)
       : undefined;

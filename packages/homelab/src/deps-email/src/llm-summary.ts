@@ -6,7 +6,7 @@ export async function summarizeWithLLM(
   releaseNotes: ReleaseNotes[],
 ): Promise<string> {
   const apiKey = Bun.env["OPENAI_API_KEY"];
-  if ((apiKey == null || apiKey === "")) {
+  if (apiKey == null || apiKey === "") {
     console.warn("OPENAI_API_KEY not set, skipping LLM summarization");
     return "LLM summarization skipped - API key not configured";
   }
@@ -29,7 +29,9 @@ export async function summarizeWithLLM(
 
   // Note which dependencies we couldn't fetch notes for
   const fetchedDeps = new Set(
-    releaseNotes.map((n) => n.dependency.replace(/ \((?:helm chart|app)\)$/, "")),
+    releaseNotes.map((n) =>
+      n.dependency.replace(/ \((?:helm chart|app)\)$/, ""),
+    ),
   );
   const missingNotes = changes
     .filter((c) => !fetchedDeps.has(c.name))

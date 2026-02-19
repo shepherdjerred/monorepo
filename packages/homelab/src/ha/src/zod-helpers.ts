@@ -5,10 +5,7 @@ import { z } from "zod";
  * Equivalent to z.coerce.string().catch(fallback).parse(value)
  * but avoids using Zod's .catch() method which triggers the prefer-async-await lint rule.
  */
-export function safeCoerceString(
-  value: unknown,
-  fallback = "unknown",
-): string {
+export function safeCoerceString(value: unknown, fallback = "unknown"): string {
   const result = z.coerce.string().safeParse(value);
   return result.success ? result.data : fallback;
 }
