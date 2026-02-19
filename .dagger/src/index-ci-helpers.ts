@@ -198,6 +198,29 @@ export async function buildClauderonWeb(
 }
 
 /**
+ * Retry a check if it fails with a transient Dagger graphql error.
+ */
+async function withGraphqlRetry<T>(
+  name: string,
+  fn: () => Promise<T>,
+  maxRetries = 2,
+): Promise<T> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      const isGraphqlError = msg.includes("unknown error while requesting data via graphql");
+      if (!isGraphqlError || attempt === maxRetries) {
+        throw error;
+      }
+      console.log(`⟳ ${name}: graphql error on attempt ${String(attempt + 1)}, retrying...`);
+    }
+  }
+  throw new Error("unreachable");
+}
+
+/**
  * Run package-specific validation checks in parallel.
  */
 export async function runPackageValidation(
@@ -215,7 +238,7 @@ export async function runPackageValidation(
     checkBetterSkillCapped(source),
     checkSjerRed(source),
     checkDiscordPlaysPokemon(source),
-    checkScoutForLol(source),
+    withGraphqlRetry("scout-for-lol", () => checkScoutForLol(source)),
     checkCastleCasters(source),
     checkHomelab(source, hassBaseUrl, hassToken),
   ]);
