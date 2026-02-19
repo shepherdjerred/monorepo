@@ -88,7 +88,9 @@ async function loadPersonality(basename: string): Promise<Personality> {
     .toLowerCase()
     .replaceAll(/[^a-z0-9._-]+/g, "_")
     .replaceAll(/^_+|_+$/g, "");
-  const styleCardCandidates = [...new Set([normalizedBasename, normalizedDisplayName])];
+  const styleCardCandidates = [
+    ...new Set([normalizedBasename, normalizedDisplayName]),
+  ];
 
   let styleCard: string | undefined;
   for (const candidate of styleCardCandidates) {
@@ -231,7 +233,11 @@ export function getLaneContext(lane: string | undefined): {
   let filename = "lanes/generic.txt";
   let content = genericLane;
 
-  if (lowerLane !== undefined && lowerLane.length > 0 && lowerLane in LANE_CONTEXTS) {
+  if (
+    lowerLane !== undefined &&
+    lowerLane.length > 0 &&
+    lowerLane in LANE_CONTEXTS
+  ) {
     const laneContent = LANE_CONTEXTS[lowerLane];
     if (laneContent !== undefined && laneContent.length > 0) {
       content = laneContent;

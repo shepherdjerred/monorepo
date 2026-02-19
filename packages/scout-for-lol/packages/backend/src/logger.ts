@@ -20,7 +20,7 @@ import { Logger, type ILogObj, type ISettingsParam } from "tslog";
 import { z } from "zod";
 // Bun.write() does not support append mode (see https://github.com/oven-sh/bun/issues/10473)
 // Bun implements node:fs for this use case, and recommends using it for file appending
- 
+
 import { appendFile, mkdir } from "node:fs/promises";
 
 /**

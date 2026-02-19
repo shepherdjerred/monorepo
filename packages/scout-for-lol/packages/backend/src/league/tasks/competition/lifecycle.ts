@@ -151,7 +151,9 @@ async function postFinalLeaderboard(
   if (topEntries.length === 0) {
     message += "\nNo participants completed the competition.";
   } else {
-    message += "\n" + topEntries.map((entry) => formatLeaderboardEntry(entry)).join("\n");
+    message +=
+      "\n" +
+      topEntries.map((entry) => formatLeaderboardEntry(entry)).join("\n");
 
     if (leaderboard.length > 10) {
       message += `\n\n_...and ${(leaderboard.length - 10).toString()} more participants_`;

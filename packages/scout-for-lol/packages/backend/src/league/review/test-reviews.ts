@@ -154,7 +154,9 @@ function convertRawMatchToInternalFormat(
   }
 
   const playerName =
-    firstParticipant.riotIdGameName !== undefined && firstParticipant.riotIdGameName.length > 0 && firstParticipant.riotIdTagline
+    firstParticipant.riotIdGameName !== undefined &&
+    firstParticipant.riotIdGameName.length > 0 &&
+    firstParticipant.riotIdTagline
       ? `${firstParticipant.riotIdGameName}#${firstParticipant.riotIdTagline}`
       : "Unknown";
 
@@ -168,7 +170,9 @@ function convertRawMatchToInternalFormat(
     ranks: {},
   };
 
-  return queueType === "arena" ? toArenaMatch([player], rawMatch) : toMatch([player], rawMatch, new Map());
+  return queueType === "arena"
+    ? toArenaMatch([player], rawMatch)
+    : toMatch([player], rawMatch, new Map());
 }
 
 type S3MatchResult = {

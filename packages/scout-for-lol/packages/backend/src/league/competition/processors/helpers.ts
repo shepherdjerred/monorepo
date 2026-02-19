@@ -15,9 +15,7 @@ export function isPlayerInMatch(
   match: RawMatch,
 ): boolean {
   const playerPuuids = new Set(player.accounts.map((account) => account.puuid));
-  return match.metadata.participants.some((puuid) =>
-    playerPuuids.has(puuid),
-  );
+  return match.metadata.participants.some((puuid) => playerPuuids.has(puuid));
 }
 
 /**

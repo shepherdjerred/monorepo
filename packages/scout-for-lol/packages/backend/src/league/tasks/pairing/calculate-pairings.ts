@@ -187,7 +187,9 @@ export async function calculatePairingStats(
   }
 
   // Log top/bottom pairings for debugging
-  const sortedPairings = [...pairings].toSorted((a, b) => b.winRate - a.winRate);
+  const sortedPairings = [...pairings].toSorted(
+    (a, b) => b.winRate - a.winRate,
+  );
   const top = sortedPairings[0];
   const bottom = sortedPairings.at(-1);
   if (top !== undefined && bottom !== undefined) {

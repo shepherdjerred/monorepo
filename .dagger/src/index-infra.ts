@@ -358,6 +358,28 @@ echo "Quality ratchet passed"
 }
 
 /**
+ * Run ESLint on the .dagger/ directory.
+ */
+export function daggerLintCheck(source: Directory): Container {
+  return dag
+    .container()
+    .from(`oven/bun:${BUN_VERSION}`)
+    .withMountedDirectory("/workspace/.dagger", source.directory(".dagger"))
+    .withMountedDirectory(
+      "/workspace/packages/eslint-config",
+      source.directory("packages/eslint-config"),
+    )
+    .withFile("/workspace/tsconfig.base.json", source.file("tsconfig.base.json"))
+    .withWorkdir("/workspace/.dagger")
+    .withExec(["bun", "install"])
+    .withWorkdir("/workspace/packages/eslint-config")
+    .withExec(["bun", "install"])
+    .withExec(["bun", "run", "build"])
+    .withWorkdir("/workspace/.dagger")
+    .withExec(["bunx", "eslint", "src"]);
+}
+
+/**
  * Run shellcheck on all .sh files under packages/ and scripts/.
  */
 export function shellcheckStep(source: Directory): Container {

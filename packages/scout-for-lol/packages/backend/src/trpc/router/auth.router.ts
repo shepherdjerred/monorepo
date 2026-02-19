@@ -212,9 +212,10 @@ export const authRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { token, hash } = generateApiToken();
 
-      const expiresAt = input.expiresInDays === undefined
-        ? null
-        : new Date(Date.now() + input.expiresInDays * 24 * 60 * 60 * 1000);
+      const expiresAt =
+        input.expiresInDays === undefined
+          ? null
+          : new Date(Date.now() + input.expiresInDays * 24 * 60 * 60 * 1000);
 
       const apiToken = await prisma.apiToken.create({
         data: {

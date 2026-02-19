@@ -103,7 +103,10 @@ export async function getRecentMatchIds(
         },
       });
     } else {
-      logger.error(`❌ Error fetching match history for ${playerAlias}:`, error);
+      logger.error(
+        `❌ Error fetching match history for ${playerAlias}:`,
+        error,
+      );
       riotApiErrorsTotal.inc({
         source: "match-history-api",
         http_status: "unknown",

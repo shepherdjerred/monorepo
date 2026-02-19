@@ -85,6 +85,9 @@ export async function checkScoutForLol(source: Directory): Promise<string> {
       withTiming("duplication check", () =>
         execOrThrow(workspace, ["bun", "run", "duplication-check"]),
       ),
+      withTiming("prettier check", () =>
+        execOrThrow(workspace, ["bunx", "prettier", "--check", "packages/"]),
+      ),
       withTiming("desktop check (parallel TS + Rust)", async () => {
         await checkDesktopParallel(pkgSource, desktopFrontend, eslintConfigSource, tsconfigBase);
       }),

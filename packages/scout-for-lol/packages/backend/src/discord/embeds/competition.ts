@@ -87,7 +87,9 @@ export function generateLeaderboardEmbed(
           entry.metadata,
         );
         const isViewingUser =
-          viewingUserId !== undefined && viewingUserId.length > 0 && entry.discordId === viewingUserId;
+          viewingUserId !== undefined &&
+          viewingUserId.length > 0 &&
+          entry.discordId === viewingUserId;
         const baseText = `${medal} **${entry.rank.toString()}.** ${entry.playerName} - ${score}`;
         return isViewingUser ? `${baseText} 👤` : baseText;
       })

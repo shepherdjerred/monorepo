@@ -111,7 +111,10 @@ export async function fetchMatchData(
         },
       });
     } else {
-      logger.error(`[fetchMatchData] ❌ Error fetching match ${matchId}:`, error);
+      logger.error(
+        `[fetchMatchData] ❌ Error fetching match ${matchId}:`,
+        error,
+      );
       trackApiError("match-data-fetch", "unknown");
     }
     return undefined;

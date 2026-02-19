@@ -77,7 +77,8 @@ function shouldSkipPollingRun(): boolean {
     return false;
   }
 
-  const elapsed = pollingStartTime === undefined ? 0 : Date.now() - pollingStartTime;
+  const elapsed =
+    pollingStartTime === undefined ? 0 : Date.now() - pollingStartTime;
 
   // Check if the lock is stale (stuck for over 5 minutes)
   if (elapsed > POLLING_TIMEOUT_MS) {

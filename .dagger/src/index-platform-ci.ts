@@ -83,7 +83,7 @@ export async function runClauderonCi(
     base.withExec(["cargo", "fmt", "--check"]).sync(),
     base
       .withExec(["cargo", "install", "cargo-deny", "--locked"])
-      .withExec(["cargo", "deny", "check"])
+      .withExec(["cargo", "deny", "check", "advisories", "bans", "sources"])
       .sync(),
   ]);
 
