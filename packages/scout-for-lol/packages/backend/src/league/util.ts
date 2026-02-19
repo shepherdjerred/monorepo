@@ -29,7 +29,10 @@ export function logErrors(fn: () => Promise<unknown>) {
       if (errorResult.success) {
         logger.error(`❌ Error name: ${errorResult.data.name}`);
         logger.error(`❌ Error message: ${errorResult.data.message}`);
-        if (errorResult.data.stack !== undefined && errorResult.data.stack.length > 0) {
+        if (
+          errorResult.data.stack !== undefined &&
+          errorResult.data.stack.length > 0
+        ) {
           logger.error(`❌ Error stack: ${errorResult.data.stack}`);
         }
       }

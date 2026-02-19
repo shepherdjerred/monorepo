@@ -8,8 +8,8 @@ import versions from "./lib-versions.ts";
 import type { ExecResult } from "./lib-errors.ts";
 import { getGitHubContainer } from "./lib-github.ts";
 
-// Pin Claude Code CLI version for reproducible builds
-const CLAUDE_CODE_VERSION = "1.0.33";
+// Claude Code CLI version — managed via lib-versions.ts
+const CLAUDE_CODE_VERSION = versions["claude-code"];
 // GitHub CLI version (same as getGitHubContainer)
 const GH_CLI_VERSION = "2.63.2";
 

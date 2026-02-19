@@ -949,8 +949,8 @@ impl ExecutionBackend for AppleContainerBackend {
         );
 
         // Get UID and GID using safe users crate
-        let uid = users::get_current_uid();
-        let gid = users::get_current_gid();
+        let uid = uzers::get_current_uid();
+        let gid = uzers::get_current_gid();
 
         // Ensure cache volumes exist with correct ownership before creating container
         // This fixes permission issues with Docker named volumes (which are created as root by default)

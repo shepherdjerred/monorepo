@@ -36,6 +36,7 @@ import {
   knipCheck,
   trivyScan,
   semgrepScan,
+  daggerLintCheck,
   uploadReleaseAssets,
   CLAUDERON_TARGETS,
 } from "./index-infra.ts";
@@ -264,6 +265,7 @@ export class Monorepo {
       { name: "Actionlint", operation: async () => { await actionlintStep(source).sync(); return "✓ Actionlint"; } },
       { name: "Trivy", operation: async () => { await trivyScan(source).sync(); return "✓ Trivy"; } },
       { name: "Semgrep", operation: async () => { await semgrepScan(source).sync(); return "✓ Semgrep"; } },
+      { name: "Dagger ESLint", operation: async () => { await daggerLintCheck(source).sync(); return "✓ Dagger ESLint"; } },
     ]);
     const outputs: string[] = [];
     for (const result of results) {

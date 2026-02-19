@@ -1517,8 +1517,8 @@ impl ExecutionBackend for DockerBackend {
 
         // Create the container with the worktree mounted
         // Run as current user to avoid root privileges (claude refuses --dangerously-skip-permissions as root)
-        let uid = users::get_current_uid();
-        let gid = users::get_current_gid();
+        let uid = uzers::get_current_uid();
+        let gid = uzers::get_current_gid();
 
         // Ensure cache volumes exist with correct ownership before creating container
         // This fixes permission issues with Docker named volumes (which are created as root by default)

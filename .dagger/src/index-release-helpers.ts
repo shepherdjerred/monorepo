@@ -229,7 +229,7 @@ export async function runAppDeployments(
   const errors: string[] = [];
   const appVersions: Record<string, string> = {};
 
-  function collectTaskResults(results: Array<{ name: string; success: boolean; value?: unknown; error?: unknown }>, tasks: DeployTask[]): void {
+  function collectTaskResults(results: { name: string; success: boolean; value?: unknown; error?: unknown }[], tasks: DeployTask[]): void {
     for (const result of results) {
       const task = tasks.find(t => t.name === result.name);
       if (task === undefined) { continue; }

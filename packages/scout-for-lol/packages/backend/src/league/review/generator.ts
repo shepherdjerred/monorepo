@@ -212,7 +212,10 @@ export async function generateMatchReview(
 
   // Convert base64 image to Uint8Array if present
   let reviewImage: Uint8Array | undefined;
-  if (pipelineOutput.review.imageBase64 !== undefined && pipelineOutput.review.imageBase64.length > 0) {
+  if (
+    pipelineOutput.review.imageBase64 !== undefined &&
+    pipelineOutput.review.imageBase64.length > 0
+  ) {
     try {
       const binaryString = atob(pipelineOutput.review.imageBase64);
       const bytes = new Uint8Array(binaryString.length);

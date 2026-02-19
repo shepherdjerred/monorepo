@@ -43,7 +43,7 @@ async function postSnapshotErrorMessage(
   const embed = new EmbedBuilder()
     .setTitle("⚠️ Competition Error")
     .setDescription(`**${competition.title}**`)
-    .setColor(0xFF_A5_00) // Orange
+    .setColor(0xff_a5_00) // Orange
     .addFields(
       {
         name: "Error",
@@ -336,10 +336,7 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
         const channelSendError = z
           .instanceof(ChannelSendError)
           .safeParse(error);
-        if (
-          channelSendError.success &&
-          channelSendError.data.permissionError
-        ) {
+        if (channelSendError.success && channelSendError.data.permissionError) {
           logger.warn(
             `[DailyLeaderboard] ⚠️  Cannot update competition ${competition.id.toString()} - missing permissions in channel ${competition.channelId}. Server owner has been notified.`,
           );

@@ -36,9 +36,10 @@ export function extractCompetitionId(
 export async function validateServerContext(
   interaction: ChatInputCommandInteraction,
 ): Promise<DiscordGuildId | null> {
-  const serverId = interaction.guildId !== null && interaction.guildId.length > 0
-    ? DiscordGuildIdSchema.parse(interaction.guildId)
-    : null;
+  const serverId =
+    interaction.guildId !== null && interaction.guildId.length > 0
+      ? DiscordGuildIdSchema.parse(interaction.guildId)
+      : null;
 
   if (!serverId) {
     await replyWithError(

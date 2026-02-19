@@ -37,6 +37,8 @@ const defaultVersions = {
 
   // Tool versions (not Docker images)
   // renovate: datasource=npm versioning=semver
+  "claude-code": "2.1.45",
+  // renovate: datasource=npm versioning=semver
   playwright: "1.57.0",
   // renovate: datasource=npm versioning=semver
   "release-please": "17.1.3",

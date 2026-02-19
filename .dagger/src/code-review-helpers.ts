@@ -154,7 +154,7 @@ export async function postErrorComment(githubToken: Secret, prNumber: number, de
  * Parse and validate the structured verdict from Claude's output.
  * Returns the verdict or an error message string.
  */
-export async function parseVerdict(stdout: string, githubToken: Secret, prNumber: number): Promise<ReviewVerdict | string> {
+export async function parseVerdict(stdout: string, githubToken: Secret, prNumber: number): Promise<ReviewVerdict> {
   try {
     const jsonMatch = /\{[\s\S]*"should_approve"[\s\S]*\}/.exec(stdout);
     if (!jsonMatch) {
@@ -181,7 +181,7 @@ export async function parseVerdict(stdout: string, githubToken: Secret, prNumber
         notifyError instanceof Error ? notifyError.message : String(notifyError),
       );
     }
-    return `Review output parsing failed for PR #${String(prNumber)}: ${errorMessage}`;
+    throw new Error(`Review output parsing failed for PR #${String(prNumber)}: ${errorMessage}`);
   }
 }
 

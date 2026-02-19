@@ -146,30 +146,30 @@ describe("generateDatePrefixes", () => {
 // Create a mock match factory
 function createMockMatch(participantPuuids: string[]): RawMatch {
   return {
-      metadata: {
-        dataVersion: "2",
-        matchId: "TEST_MATCH",
-        participants: participantPuuids,
-      },
-      info: {
-        endOfGameResult: "GameComplete",
-        gameCreation: 1_000_000,
-        gameDuration: 1800,
-        gameEndTimestamp: 2_000_000,
-        gameId: 123_456_789,
-        gameMode: "CLASSIC",
-        gameName: "teambuilder-match-123",
-        gameStartTimestamp: 1_000_000,
-        gameType: "MATCHED_GAME",
-        gameVersion: "14.1.1",
-        mapId: 11,
-        participants: [],
-        platformId: "NA1",
-        queueId: 420,
-        teams: [],
-        tournamentCode: "",
-      },
-    };
+    metadata: {
+      dataVersion: "2",
+      matchId: "TEST_MATCH",
+      participants: participantPuuids,
+    },
+    info: {
+      endOfGameResult: "GameComplete",
+      gameCreation: 1_000_000,
+      gameDuration: 1800,
+      gameEndTimestamp: 2_000_000,
+      gameId: 123_456_789,
+      gameMode: "CLASSIC",
+      gameName: "teambuilder-match-123",
+      gameStartTimestamp: 1_000_000,
+      gameType: "MATCHED_GAME",
+      gameVersion: "14.1.1",
+      mapId: 11,
+      participants: [],
+      platformId: "NA1",
+      queueId: 420,
+      teams: [],
+      tournamentCode: "",
+    },
+  };
 }
 
 describe("matchIncludesParticipant", () => {

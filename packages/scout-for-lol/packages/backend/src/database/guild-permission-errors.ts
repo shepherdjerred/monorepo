@@ -33,30 +33,30 @@ export async function recordPermissionError(
 
   await (existing
     ? prisma.guildPermissionError.update({
-      where: {
-        serverId_channelId: {
+        where: {
+          serverId_channelId: {
+            serverId,
+            channelId,
+          },
+        },
+        data: {
+          lastOccurrence: now,
+          consecutiveErrorCount: existing.consecutiveErrorCount + 1,
+          errorType,
+          errorReason: errorReason ?? existing.errorReason,
+        },
+      })
+    : prisma.guildPermissionError.create({
+        data: {
           serverId,
           channelId,
+          errorType,
+          errorReason: errorReason ?? null,
+          firstOccurrence: now,
+          lastOccurrence: now,
+          consecutiveErrorCount: 1,
         },
-      },
-      data: {
-        lastOccurrence: now,
-        consecutiveErrorCount: existing.consecutiveErrorCount + 1,
-        errorType,
-        errorReason: errorReason ?? existing.errorReason,
-      },
-    })
-    : prisma.guildPermissionError.create({
-      data: {
-        serverId,
-        channelId,
-        errorType,
-        errorReason: errorReason ?? null,
-        firstOccurrence: now,
-        lastOccurrence: now,
-        consecutiveErrorCount: 1,
-      },
-    }));
+      }));
 }
 
 /**
@@ -81,28 +81,28 @@ export async function recordSuccessfulSend(
 
   await (existing
     ? prisma.guildPermissionError.update({
-      where: {
-        serverId_channelId: {
+        where: {
+          serverId_channelId: {
+            serverId,
+            channelId,
+          },
+        },
+        data: {
+          consecutiveErrorCount: 0,
+          lastSuccessfulSend: now,
+        },
+      })
+    : prisma.guildPermissionError.create({
+        data: {
           serverId,
           channelId,
+          errorType: "none",
+          firstOccurrence: now,
+          lastOccurrence: now,
+          consecutiveErrorCount: 0,
+          lastSuccessfulSend: now,
         },
-      },
-      data: {
-        consecutiveErrorCount: 0,
-        lastSuccessfulSend: now,
-      },
-    })
-    : prisma.guildPermissionError.create({
-      data: {
-        serverId,
-        channelId,
-        errorType: "none",
-        firstOccurrence: now,
-        lastOccurrence: now,
-        consecutiveErrorCount: 0,
-        lastSuccessfulSend: now,
-      },
-    }));
+      }));
 }
 
 /**

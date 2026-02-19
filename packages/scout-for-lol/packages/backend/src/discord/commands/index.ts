@@ -113,165 +113,167 @@ export function handleCommands(client: Client) {
 
       try {
         switch (commandName) {
-        case "subscription": {
-          const subcommandName = interaction.options.getSubcommand();
-          logger.info(`🔔 Executing subscription ${subcommandName} command`);
+          case "subscription": {
+            const subcommandName = interaction.options.getSubcommand();
+            logger.info(`🔔 Executing subscription ${subcommandName} command`);
 
-          await match(subcommandName)
-            .with("add", () => executeSubscriptionAdd(interaction))
-            .with("delete", () => executeSubscriptionDelete(interaction))
-            .with("list", () => executeSubscriptionList(interaction))
-            .otherwise(() => {
-              logger.warn(
-                `⚠️  Unknown subscription subcommand: ${subcommandName}`,
-              );
-              return interaction.reply({
-                content: "Unknown subscription subcommand",
-                ephemeral: true,
+            await match(subcommandName)
+              .with("add", () => executeSubscriptionAdd(interaction))
+              .with("delete", () => executeSubscriptionDelete(interaction))
+              .with("list", () => executeSubscriptionList(interaction))
+              .otherwise(() => {
+                logger.warn(
+                  `⚠️  Unknown subscription subcommand: ${subcommandName}`,
+                );
+                return interaction.reply({
+                  content: "Unknown subscription subcommand",
+                  ephemeral: true,
+                });
               });
-            });
-        
-        break;
-        }
-        case "competition": {
-          const subcommandName = interaction.options.getSubcommand();
-          logger.info(`🏆 Executing competition ${subcommandName} command`);
 
-          await match(subcommandName)
-            .with("create", async () => executeCompetitionCreate(interaction))
-            .with("edit", async () => executeCompetitionEdit(interaction))
-            .with("cancel", async () => executeCompetitionCancel(interaction))
-            .with("grant-permission", async () =>
-              executeGrantPermission(interaction),
-            )
-            .with("join", async () => executeCompetitionJoin(interaction))
-            .with("invite", async () => executeCompetitionInvite(interaction))
-            .with("leave", async () => executeCompetitionLeave(interaction))
-            .with("view", async () => executeCompetitionView(interaction))
-            .with("list", async () => executeCompetitionList(interaction))
-            .otherwise(async () => {
+            break;
+          }
+          case "competition": {
+            const subcommandName = interaction.options.getSubcommand();
+            logger.info(`🏆 Executing competition ${subcommandName} command`);
+
+            await match(subcommandName)
+              .with("create", async () => executeCompetitionCreate(interaction))
+              .with("edit", async () => executeCompetitionEdit(interaction))
+              .with("cancel", async () => executeCompetitionCancel(interaction))
+              .with("grant-permission", async () =>
+                executeGrantPermission(interaction),
+              )
+              .with("join", async () => executeCompetitionJoin(interaction))
+              .with("invite", async () => executeCompetitionInvite(interaction))
+              .with("leave", async () => executeCompetitionLeave(interaction))
+              .with("view", async () => executeCompetitionView(interaction))
+              .with("list", async () => executeCompetitionList(interaction))
+              .otherwise(async () => {
+                logger.warn(
+                  `⚠️  Unknown competition subcommand: ${subcommandName}`,
+                );
+                await interaction.reply({
+                  content: "Unknown competition subcommand",
+                  ephemeral: true,
+                });
+              });
+
+            break;
+          }
+          case "admin": {
+            // Check if user has Administrator permissions (applies to all admin subcommands)
+            const member = interaction.member;
+            const PermissionSchema = z
+              .object({ permissions: z.instanceof(PermissionsBitField) })
+              .loose();
+            const permissionResult = PermissionSchema.safeParse(member);
+            const hasAdminPermission =
+              permissionResult.success &&
+              permissionResult.data.permissions.has(
+                PermissionFlagsBits.Administrator,
+              );
+
+            if (!hasAdminPermission) {
               logger.warn(
-                `⚠️  Unknown competition subcommand: ${subcommandName}`,
+                `⚠️  Unauthorized admin command access attempt by ${username} (${userId})`,
               );
               await interaction.reply({
-                content: "Unknown competition subcommand",
+                content:
+                  "❌ Admin commands require Administrator permissions in this server.",
                 ephemeral: true,
               });
-            });
-        
-        break;
-        }
-        case "admin": {
-          // Check if user has Administrator permissions (applies to all admin subcommands)
-          const member = interaction.member;
-          const PermissionSchema = z
-            .object({ permissions: z.instanceof(PermissionsBitField) })
-            .loose();
-          const permissionResult = PermissionSchema.safeParse(member);
-          const hasAdminPermission =
-            permissionResult.success &&
-            permissionResult.data.permissions.has(
-              PermissionFlagsBits.Administrator,
+              return;
+            }
+
+            const subcommandName = interaction.options.getSubcommand();
+            logger.info(
+              `🔧 Executing admin ${subcommandName} command (authorized: ${username})`,
             );
 
-          if (!hasAdminPermission) {
-            logger.warn(
-              `⚠️  Unauthorized admin command access attempt by ${username} (${userId})`,
-            );
-            await interaction.reply({
-              content:
-                "❌ Admin commands require Administrator permissions in this server.",
-              ephemeral: true,
-            });
-            return;
-          }
-
-          const subcommandName = interaction.options.getSubcommand();
-          logger.info(
-            `🔧 Executing admin ${subcommandName} command (authorized: ${username})`,
-          );
-
-          await match(subcommandName)
-            .with("player-edit", () => executePlayerEdit(interaction))
-            .with("account-delete", () => executeAccountDelete(interaction))
-            .with("account-add", () => executeAccountAdd(interaction))
-            .with("account-transfer", () => executeAccountTransfer(interaction))
-            .with("player-merge", () => executePlayerMerge(interaction))
-            .with("player-delete", () => executePlayerDelete(interaction))
-            .with("player-link-discord", () =>
-              executePlayerLinkDiscord(interaction),
-            )
-            .with("player-unlink-discord", () =>
-              executePlayerUnlinkDiscord(interaction),
-            )
-            .with("player-view", () => executePlayerView(interaction))
-            .otherwise(() => {
-              logger.warn(`⚠️  Unknown admin subcommand: ${subcommandName}`);
-              return interaction.reply({
-                content: "Unknown admin subcommand",
-                ephemeral: true,
+            await match(subcommandName)
+              .with("player-edit", () => executePlayerEdit(interaction))
+              .with("account-delete", () => executeAccountDelete(interaction))
+              .with("account-add", () => executeAccountAdd(interaction))
+              .with("account-transfer", () =>
+                executeAccountTransfer(interaction),
+              )
+              .with("player-merge", () => executePlayerMerge(interaction))
+              .with("player-delete", () => executePlayerDelete(interaction))
+              .with("player-link-discord", () =>
+                executePlayerLinkDiscord(interaction),
+              )
+              .with("player-unlink-discord", () =>
+                executePlayerUnlinkDiscord(interaction),
+              )
+              .with("player-view", () => executePlayerView(interaction))
+              .otherwise(() => {
+                logger.warn(`⚠️  Unknown admin subcommand: ${subcommandName}`);
+                return interaction.reply({
+                  content: "Unknown admin subcommand",
+                  ephemeral: true,
+                });
               });
-            });
-        
-        break;
-        }
-        case "debug": {
-          // Check if user has debug access (applies to all debug subcommands)
-          if (!getFlag("debug", { user: userId })) {
-            logger.warn(
-              `⚠️  Unauthorized debug command access attempt by ${username} (${userId})`,
-            );
-            await interaction.reply({
-              content:
-                "❌ Debug commands are only available to authorized users.",
-              ephemeral: true,
-            });
-            return;
+
+            break;
           }
-
-          const subcommandName = interaction.options.getSubcommand();
-          logger.info(
-            `🐛 Executing debug ${subcommandName} command (authorized: ${username})`,
-          );
-
-          await match(subcommandName)
-            .with("database", async () => executeDebugDatabase(interaction))
-            .with("polling", async () => executeDebugPolling(interaction))
-            .with("server-info", async () =>
-              executeDebugServerInfo(interaction),
-            )
-            .with("force-snapshot", async () =>
-              executeDebugForceSnapshot(interaction),
-            )
-            .with("force-leaderboard-update", async () =>
-              executeDebugForceLeaderboardUpdate(interaction),
-            )
-            .with("manage-participant", async () =>
-              executeDebugManageParticipant(interaction),
-            )
-            .with("force-pairing-update", async () =>
-              executeDebugForcePairingUpdate(interaction),
-            )
-            .otherwise(async () => {
-              logger.warn(`⚠️  Unknown debug subcommand: ${subcommandName}`);
+          case "debug": {
+            // Check if user has debug access (applies to all debug subcommands)
+            if (!getFlag("debug", { user: userId })) {
+              logger.warn(
+                `⚠️  Unauthorized debug command access attempt by ${username} (${userId})`,
+              );
               await interaction.reply({
-                content: "Unknown debug subcommand",
+                content:
+                  "❌ Debug commands are only available to authorized users.",
                 ephemeral: true,
               });
-            });
-        
-        break;
-        }
-        case "help": {
-          logger.info("❓ Executing help command");
-          await executeHelp(interaction);
-        
-        break;
-        }
-        default: {
-          logger.warn(`⚠️  Unknown command received: ${commandName}`);
-          await interaction.reply("Unknown command");
-        }
+              return;
+            }
+
+            const subcommandName = interaction.options.getSubcommand();
+            logger.info(
+              `🐛 Executing debug ${subcommandName} command (authorized: ${username})`,
+            );
+
+            await match(subcommandName)
+              .with("database", async () => executeDebugDatabase(interaction))
+              .with("polling", async () => executeDebugPolling(interaction))
+              .with("server-info", async () =>
+                executeDebugServerInfo(interaction),
+              )
+              .with("force-snapshot", async () =>
+                executeDebugForceSnapshot(interaction),
+              )
+              .with("force-leaderboard-update", async () =>
+                executeDebugForceLeaderboardUpdate(interaction),
+              )
+              .with("manage-participant", async () =>
+                executeDebugManageParticipant(interaction),
+              )
+              .with("force-pairing-update", async () =>
+                executeDebugForcePairingUpdate(interaction),
+              )
+              .otherwise(async () => {
+                logger.warn(`⚠️  Unknown debug subcommand: ${subcommandName}`);
+                await interaction.reply({
+                  content: "Unknown debug subcommand",
+                  ephemeral: true,
+                });
+              });
+
+            break;
+          }
+          case "help": {
+            logger.info("❓ Executing help command");
+            await executeHelp(interaction);
+
+            break;
+          }
+          default: {
+            logger.warn(`⚠️  Unknown command received: ${commandName}`);
+            await interaction.reply("Unknown command");
+          }
         }
 
         const executionTime = Date.now() - startTime;
@@ -310,13 +312,15 @@ export function handleCommands(client: Client) {
           "• Open an issue on GitHub: https://github.com/shepherdjerred/scout-for-lol/issues\n" +
           "• Join our Discord server for support: https://discord.gg/qmRewyHXFE";
 
-        await (interaction.replied || interaction.deferred ? interaction.followUp({
-            content: errorMessage,
-            ephemeral: true,
-          }) : interaction.reply({
-            content: errorMessage,
-            ephemeral: true,
-          }));
+        await (interaction.replied || interaction.deferred
+          ? interaction.followUp({
+              content: errorMessage,
+              ephemeral: true,
+            })
+          : interaction.reply({
+              content: errorMessage,
+              ephemeral: true,
+            }));
       }
     })();
   });
