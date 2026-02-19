@@ -2,6 +2,7 @@ import type { Directory, Secret } from "@dagger.io/dagger";
 import { syncToS3 } from "./lib-s3.ts";
 import { publishToGhcrMultiple } from "./lib-ghcr.ts";
 import { logWithTimestamp, withTiming } from "./lib-timing.ts";
+import { execOrThrow } from "./lib-errors.ts";
 import {
   generatePrismaClient,
   getPreparedWorkspace,
@@ -58,42 +59,32 @@ export async function checkScoutForLol(source: Directory): Promise<string> {
   // Build desktop frontend once and share
   const desktopFrontend = buildDesktopFrontend(pkgSource);
 
-  // Run all checks in parallel for maximum speed
+  // Run all checks in parallel using execOrThrow to capture actual error output
+  // (avoids opaque "GraphQL error" messages from Dagger on non-zero exit codes)
+  const workspace = preparedWorkspace.withWorkdir("/workspace");
   await withTiming("all checks", async () => {
     await Promise.all([
-      withTiming("typecheck all", async () => {
-        await preparedWorkspace
-          .withWorkdir("/workspace")
-          .withExec(["bun", "run", "typecheck"])
-          .sync();
-      }),
-      withTiming("lint all", async () => {
-        await preparedWorkspace
-          .withWorkdir("/workspace")
-          .withExec([
-            "bunx",
-            "eslint",
-            "packages/",
-            "--cache",
-            "--cache-strategy",
-            "content",
-            "--cache-location",
-            "/workspace/.eslintcache",
-          ])
-          .sync();
-      }),
-      withTiming("test all", async () => {
-        await preparedWorkspace
-          .withWorkdir("/workspace")
-          .withExec(["bun", "run", "test"])
-          .sync();
-      }),
-      withTiming("duplication check", async () => {
-        await preparedWorkspace
-          .withWorkdir("/workspace")
-          .withExec(["bun", "run", "duplication-check"])
-          .sync();
-      }),
+      withTiming("typecheck all", () =>
+        execOrThrow(workspace, ["bun", "run", "typecheck"]),
+      ),
+      withTiming("lint all", () =>
+        execOrThrow(workspace, [
+          "bunx",
+          "eslint",
+          "packages/",
+          "--cache",
+          "--cache-strategy",
+          "content",
+          "--cache-location",
+          "/workspace/.eslintcache",
+        ]),
+      ),
+      withTiming("test all", () =>
+        execOrThrow(workspace, ["bun", "run", "test"]),
+      ),
+      withTiming("duplication check", () =>
+        execOrThrow(workspace, ["bun", "run", "duplication-check"]),
+      ),
       withTiming("desktop check (parallel TS + Rust)", async () => {
         await checkDesktopParallel(pkgSource, desktopFrontend, eslintConfigSource, tsconfigBase);
       }),
