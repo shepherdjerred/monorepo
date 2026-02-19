@@ -41,14 +41,14 @@ function MatchReportRenderer({ match }: { match: AnyMatch }): React.ReactNode {
 
 export function App() {
   const getInitialViewMode = (): ViewMode => {
-    const params = new URLSearchParams(globalThis.location.search);
+    const params = new URLSearchParams(window.location.search);
     const view = params.get("view");
     const result = ViewModeSchema.safeParse(view);
     return result.success ? result.data : "match-viewer";
   };
 
   const getInitialMatchType = (): MatchType => {
-    const params = new URLSearchParams(globalThis.location.search);
+    const params = new URLSearchParams(window.location.search);
     const queryType = params.get("type");
     const result = MatchTypeSchema.safeParse(queryType);
     return result.success ? result.data : "ranked";
@@ -69,7 +69,7 @@ export function App() {
   // Update URL when view mode or match type changes - this is a side effect that must happen after render
    
   useEffect(() => {
-    const params = new URLSearchParams(globalThis.location.search);
+    const params = new URLSearchParams(window.location.search);
     params.set("view", viewMode);
     params.set("type", matchType);
     globalThis.history.replaceState(null, "", `?${params.toString()}`);
