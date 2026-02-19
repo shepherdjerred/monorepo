@@ -5,6 +5,7 @@ import { logWithTimestamp, withTiming } from "./lib-timing.ts";
 import {
   generatePrismaClient,
   getPreparedWorkspace,
+  getPreparedMountedWorkspace,
   buildBackendImage,
   smokeTestBackendImageWithContainer,
   buildFrontend,
