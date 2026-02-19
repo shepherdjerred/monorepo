@@ -61,8 +61,8 @@ jobs:
       - name: Extract Dagger version
         id: dagger-version
         run: |
-          DAGGER_IMAGE=$(kubectl get pod --selector=name=dagger-dagger-helm-engine --namespace=dagger -o jsonpath='{.items[0].spec.containers[0].image}')
-          DAGGER_VERSION="${DAGGER_IMAGE##*:v}"
+          DAGGER_VERSION=$(jq -r '.engineVersion' dagger.json | sed 's/^v//')
+          echo "Dagger version from dagger.json: $DAGGER_VERSION"
           echo "version=$DAGGER_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Cache Dagger CLI
@@ -105,6 +105,14 @@ jobs:
         run: |
           DAGGER_ENGINE_POD_NAME="$(kubectl get pod --selector=name=dagger-dagger-helm-engine --namespace=dagger --output=jsonpath='{.items[0].metadata.name}')"
           echo "_EXPERIMENTAL_DAGGER_RUNNER_HOST=kube-pod://$DAGGER_ENGINE_POD_NAME?namespace=dagger" >> "$GITHUB_ENV"
+
+      - name: Check Dagger version compatibility
+        run: |
+          CLI_VERSION=$(dagger version | head -1 | awk '{print $2}')
+          ENGINE_IMAGE=$(kubectl get pod --selector=name=dagger-dagger-helm-engine --namespace=dagger -o jsonpath='{.items[0].spec.containers[0].image}' 2>/dev/null || echo "unknown")
+          echo "CLI version: $CLI_VERSION"
+          echo "Remote engine image: $ENGINE_IMAGE"
+          echo "Expected (dagger.json): v${{ steps.dagger-version.outputs.version }}"
 
       - name: Install Dagger module dependencies
         working-directory: .dagger
