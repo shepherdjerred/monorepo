@@ -219,6 +219,7 @@ function buildDockerImage(
     .withEnvVariable("PATH", standardPath)
     .withEnvVariable("DEBIAN_FRONTEND", "noninteractive")
     .withUser("root")
+    .withExec(["sh", "-c", "rm -f /etc/apt/sources.list.d/google-chrome*"])
     .withExec(["apt", "update"])
     .withExec([
       "apt",
