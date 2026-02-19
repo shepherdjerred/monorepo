@@ -294,7 +294,7 @@ function buildDocs(workspaceSource: Directory): Directory {
     .from("squidfunk/mkdocs-material:latest")
     .withDirectory("/docs", workspaceSource.directory("docs"))
     .withWorkdir("/docs")
-    .withExec(["build"]);
+    .withExec(["mkdocs", "build"]);
 
   return container.directory("/docs/site");
 }
