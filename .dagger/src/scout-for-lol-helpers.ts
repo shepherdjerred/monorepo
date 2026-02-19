@@ -354,7 +354,8 @@ export function buildBackendImage(
     .withLabel("healthcheck.command", "bun run src/health.ts")
     .withLabel("healthcheck.interval", "30s")
     .withLabel("healthcheck.timeout", "10s")
-    .withLabel("healthcheck.retries", "3");
+    .withLabel("healthcheck.retries", "3")
+    .withLabel("org.opencontainers.image.source", "https://github.com/shepherdjerred/monorepo");
 }
 
 export async function smokeTestBackendImageWithContainer(

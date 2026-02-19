@@ -34,6 +34,8 @@ ENV GIT_SHA=${GIT_SHA}
 # - SENTRY_DSN: Sentry DSN for error tracking
 # - PORT: Server port (default: 8000)
 
+LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
+
 # Create data directory
 RUN mkdir -p /app/data
 

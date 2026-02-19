@@ -156,7 +156,8 @@ export function buildBirmelImage(
     .withLabel(
       "org.opencontainers.image.description",
       "AI-powered Discord server management bot",
-    );
+    )
+    .withLabel("org.opencontainers.image.source", "https://github.com/shepherdjerred/monorepo");
 }
 
 /**

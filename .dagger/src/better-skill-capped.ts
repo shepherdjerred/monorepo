@@ -108,7 +108,8 @@ export async function deployBetterSkillCapped(
   const fetcherContainer = getBscContainer()
     .withDirectory("/workspace", fetcherSource)
     .withExec(["bun", "install"])
-    .withEntrypoint(["bun", "run", "src/index.ts"]);
+    .withEntrypoint(["bun", "run", "src/index.ts"])
+    .withLabel("org.opencontainers.image.source", "https://github.com/shepherdjerred/monorepo");
 
   const fetcherImage = "ghcr.io/shepherdjerred/better-skill-capped-fetcher";
   await publishToGhcrMultiple({

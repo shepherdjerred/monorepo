@@ -281,7 +281,8 @@ function buildDockerImage(
       "Discord Plays Pokemon - A bot that lets Discord users play Pokemon",
     )
     .withLabel("org.opencontainers.image.version", version)
-    .withLabel("org.opencontainers.image.revision", gitSha);
+    .withLabel("org.opencontainers.image.revision", gitSha)
+    .withLabel("org.opencontainers.image.source", "https://github.com/shepherdjerred/monorepo");
 }
 
 /**

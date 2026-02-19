@@ -136,7 +136,7 @@ jobs:
               --version="1.0.${{ github.run_number }}"
               --git-sha="${{ github.sha }}"
               --registry-username="${{ github.actor }}"
-              --registry-password=env:GH_TOKEN
+              --registry-password=env:GITHUB_TOKEN
               --commit-back-token=env:GITHUB_TOKEN
             )
           fi
