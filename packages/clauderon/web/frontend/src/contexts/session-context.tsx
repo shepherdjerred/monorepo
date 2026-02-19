@@ -12,8 +12,8 @@ import type {
   SessionHealthReport,
 } from "@clauderon/client";
 import type { MergeMethod } from "@clauderon/shared";
-import { useClauderonClient } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useClauderonClient";
-import { useSessionEvents } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useSessionEvents";
+import { useClauderonClient } from "@/hooks/use-clauderon-client.ts";
+import { useSessionEvents } from "@/hooks/use-session-events.ts";
 import type { ClauderonClient } from "@clauderon/client";
 
 type SessionContextValue = {
@@ -71,7 +71,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         }
         setError(null);
         const sessionsList = await client.listSessions();
-        const newSessions = new Map(sessionsList.map((s) => [s.id, s]));
+        const newSessions = new Map(sessionsList.map((s: Session) => [s.id, s]));
         setSessions(newSessions);
       } catch (error_) {
         setError(error_ instanceof Error ? error_ : new Error(String(error_)));
@@ -88,7 +88,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     try {
       const health = await client.getHealth();
       const newHealthReports = new Map(
-        health.sessions.map((report) => [report.session_id, report]),
+        health.sessions.map((report: SessionHealthReport) => [report.session_id, report]),
       );
       setHealthReports(newHealthReports);
     } catch (error_) {

@@ -24,10 +24,9 @@ export type SendableChannel = {
  * @returns SendableChannel if channel is text-based, undefined otherwise
  */
 export function asTextChannel(channel: Channel): SendableChannel | undefined {
-  if (!channel.isTextBased()) {
+  if (!channel.isSendable()) {
     return undefined;
   }
 
-  // isTextBased() narrows to TextBasedChannel which has send()
   return channel;
 }

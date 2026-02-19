@@ -10,10 +10,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Check, AlertCircle } from "lucide-react";
-import { ProviderIcon } from "./ProviderIcon.tsx";
+import { ProviderIcon } from "./provider-icon.tsx";
 import { AGENT_CAPABILITIES } from "@/lib/agent-features";
 import type { getModelsForAgent } from "@/lib/model-options";
-import type { SessionFormData } from "./AdvancedContainerSettings.tsx";
+import type { SessionFormData } from "./advanced-container-settings.tsx";
 
 function toBackendType(value: string): BackendType | undefined {
   const map: Record<string, BackendType> = {

@@ -4,7 +4,7 @@ import IconError from "~icons/ph/x-circle";
 import IconClose from "~icons/ph/x";
 import IconWarning from "~icons/ph/warning-circle";
 import IconInfo from "~icons/ph/info";
-import type { Level } from "../model/notification";
+import type { Level } from "#src/model/notification.ts";
 
 export function Notification({
   title = "",

@@ -1,6 +1,6 @@
 import type { Session, SessionHealthReport } from "@clauderon/client";
 import { toast } from "sonner";
-import { RecreateConfirmModal } from "./RecreateConfirmModal.tsx";
+import { RecreateConfirmModal } from "./recreate-confirm-modal.tsx";
 
 type RecreateModalWrapperProps = {
   session: Session;

@@ -1,11 +1,11 @@
-import type { Message } from "@shepherdjerred/clauderon/web/frontend/src/lib/claudeParser";
+import type { Message, ToolUse, CodeBlock as CodeBlockType } from "@/lib/claude-parser.ts";
 import { User, Bot, Terminal, FileText, Edit, Search } from "lucide-react";
-import { formatRelativeTime } from "@shepherdjerred/clauderon/web/frontend/src/lib/utils";
+import { formatRelativeTime } from "@/lib/utils.ts";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { CodeBlock } from "./CodeBlock.tsx";
-import { PlanView, isPlan } from "./PlanView.tsx";
-import { QuestionView, isQuestion } from "./QuestionView.tsx";
+import { CodeBlock } from "./code-block.tsx";
+import { PlanView, isPlan } from "./plan-view.tsx";
+import { QuestionView, isQuestion } from "./question-view.tsx";
 
 type MessageBubbleProps = {
   message: Message;
@@ -98,7 +98,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         {/* Tool uses with chunky borders */}
         {message.toolUses != null && message.toolUses.length > 0 && (
           <div className="space-y-3 mb-3">
-            {message.toolUses.map((tool, idx) => (
+            {message.toolUses.map((tool: ToolUse, idx: number) => (
               <div
                 key={idx}
                 className="flex items-start gap-3 p-3 bg-accent/5 border-2 border-accent text-sm"
@@ -127,7 +127,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         {/* Code blocks with syntax highlighting */}
         {message.codeBlocks != null && message.codeBlocks.length > 0 && (
           <div className="space-y-3">
-            {message.codeBlocks.map((block, idx) => (
+            {message.codeBlocks.map((block: CodeBlockType, idx: number) => (
               <CodeBlock
                 key={idx}
                 code={block.code}

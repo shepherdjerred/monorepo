@@ -1,7 +1,7 @@
 import type { Session, SessionHealthReport } from "@clauderon/client";
 import { SessionStatus } from "@clauderon/shared";
 import type { MergeMethod } from "@clauderon/shared";
-import { formatRelativeTime, cn, getRepoUrlFromPrUrl } from "@shepherdjerred/clauderon/web/frontend/src/lib/utils";
+import { formatRelativeTime, cn, getRepoUrlFromPrUrl } from "@/lib/utils.ts";
 import { Clock } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,11 +12,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { AGENT_CAPABILITIES } from "@/lib/agent-features";
-import { ProviderIcon } from "./ProviderIcon.tsx";
-import { MergePrDialog } from "./MergePrDialog.tsx";
-import { WorkflowProgress } from "./WorkflowProgress.tsx";
-import { SessionCardFooterBar } from "./SessionCardFooter.tsx";
-import { SessionStatusIndicators } from "./SessionStatusIndicators.tsx";
+import { ProviderIcon } from "./provider-icon.tsx";
+import { MergePrDialog } from "./merge-pr-dialog.tsx";
+import { WorkflowProgress } from "./workflow-progress.tsx";
+import { SessionCardFooterBar } from "./session-card-footer.tsx";
+import { SessionStatusIndicators } from "./session-status-indicators.tsx";
 import { shouldSpanWide, getHealthDisplay } from "@/lib/session-card-helpers";
 import { useState } from "react";
 

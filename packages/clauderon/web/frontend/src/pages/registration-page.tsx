@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { create } from "@github/webauthn-json";
-import { useClauderonClient } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useClauderonClient";
-import { useAuth } from "@shepherdjerred/clauderon/web/frontend/src/contexts/AuthContext";
+import { useClauderonClient } from "@/hooks/use-clauderon-client.ts";
+import { useAuth } from "@/contexts/auth-context.tsx";
 
 export function RegistrationPage() {
   const client = useClauderonClient();

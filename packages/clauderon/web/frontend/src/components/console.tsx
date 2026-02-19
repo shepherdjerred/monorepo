@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import type { Terminal } from "ghostty-web";
-import { useConsole } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useConsole";
+import { useConsole } from "@/hooks/use-console.ts";
 import { X, MessageSquare } from "lucide-react";
 
 type ConsoleProps = {

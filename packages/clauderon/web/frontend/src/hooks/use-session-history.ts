@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Message } from "@shepherdjerred/clauderon/web/frontend/src/lib/claudeParser";
+import type { Message } from "@/lib/claude-parser.ts";
 
 export type HistoryState = {
   messages: Message[];

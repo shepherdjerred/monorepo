@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Session } from "@clauderon/client";
-import { useSessionContext } from "@shepherdjerred/clauderon/web/frontend/src/contexts/SessionContext";
+import { useSessionContext } from "@/contexts/session-context.tsx";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { X, RefreshCw } from "lucide-react";

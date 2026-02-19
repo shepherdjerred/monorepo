@@ -1,6 +1,6 @@
-import { isVideo } from "./video.tsx";
-import { isCommentary } from "./commentary.tsx";
-import { isCourse } from "./course.tsx";
+import { isVideo } from "./video.ts";
+import { isCommentary } from "./commentary.ts";
+import { isCourse } from "./course.ts";
 
 enum Type {
   VIDEO,

@@ -1,11 +1,11 @@
 import { useRef, useState } from "react";
-import { useConsole } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useConsole";
-import { useSessionHistory } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useSessionHistory";
-import { MessageBubble } from "./MessageBubble.tsx";
+import { useConsole } from "@/hooks/use-console.ts";
+import { useSessionHistory } from "@/hooks/use-session-history.ts";
+import { MessageBubble } from "./message-bubble.tsx";
 import { Send, Terminal as TerminalIcon, X, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useSessionContext } from "@shepherdjerred/clauderon/web/frontend/src/contexts/SessionContext";
+import { useSessionContext } from "@/contexts/session-context.tsx";
 
 type ChatInterfaceProps = {
   sessionId: string;

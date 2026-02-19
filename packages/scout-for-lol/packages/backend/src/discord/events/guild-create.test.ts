@@ -17,7 +17,7 @@ import {
 
 describe("handleGuildCreate", () => {
   it("should send welcome message to system channel when available", async () => {
-    const sendMock = mock(() => Promise.resolve({}));
+    const sendMock = mock((_msg: unknown) => Promise.resolve({}));
 
     const guild = mockGuild({
       name: "Test Server",
@@ -60,7 +60,7 @@ describe("handleGuildCreate", () => {
   });
 
   it("should find first available text channel if system channel unavailable", async () => {
-    const sendMock = mock(() => Promise.resolve({}));
+    const sendMock = mock((_msg: unknown) => Promise.resolve({}));
 
     const mockChannel = mockTextChannel({
       type: ChannelType.GuildText,

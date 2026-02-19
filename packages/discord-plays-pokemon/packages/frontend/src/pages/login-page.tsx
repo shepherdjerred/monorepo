@@ -1,4 +1,4 @@
-import { Login } from "../stories/login";
+import { Login } from "#src/stories/login.tsx";
 
 export function LoginPage({
   handleLogin,

@@ -1,5 +1,5 @@
 import lodash from "lodash";
-import type { Notification } from "../model/notification";
+import type { Notification } from "#src/model/notification.ts";
 import { Notification as NotificationElement } from "./notification.tsx";
 
 export function Notifications({

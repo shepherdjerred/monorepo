@@ -92,6 +92,7 @@ describe("YAML Comment Helpers - Detection Functions", () => {
 
     test("should not detect headers when not followed by YAML", () => {
       expect(isSectionHeader("Some header", "This is prose")).toBe(false);
+      // eslint-disable-next-line unicorn/no-useless-undefined -- testing undefined second arg
       expect(isSectionHeader("Redis configuration", undefined)).toBe(false);
     });
 

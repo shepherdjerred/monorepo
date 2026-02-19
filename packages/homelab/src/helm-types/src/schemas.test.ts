@@ -82,6 +82,7 @@ describe("Schema Validation - NullSchema", () => {
   });
 
   test("should reject non-null", () => {
+    // eslint-disable-next-line unicorn/no-useless-undefined -- testing that undefined is rejected
     expect(NullSchema.safeParse(undefined).success).toBe(false);
     expect(NullSchema.safeParse("").success).toBe(false);
     expect(NullSchema.safeParse(0).success).toBe(false);
@@ -90,6 +91,7 @@ describe("Schema Validation - NullSchema", () => {
 
 describe("Schema Validation - UndefinedSchema", () => {
   test("should validate undefined", () => {
+    // eslint-disable-next-line unicorn/no-useless-undefined -- testing that undefined is accepted
     expect(UndefinedSchema.safeParse(undefined).success).toBe(true);
   });
 

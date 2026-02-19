@@ -28,7 +28,8 @@ export function getWorkspaceContainer(
     .withFile("package.json", repoRoot.file("package.json"))
     .withFile("bun.lock", repoRoot.file("bun.lock"))
     // Copy patches directory for bun patch support
-    .withDirectory("patches", repoRoot.directory("patches"))
+    // Path matches patchedDependencies in package.json (relative to workspace root)
+    .withDirectory("packages/homelab/patches", repoRoot.directory("patches"))
     // Copy root eslint config (workspace configs import from it)
     .withFile("eslint.config.ts", repoRoot.file("eslint.config.ts"))
     // Copy custom eslint rules directory (required by eslint.config.ts)

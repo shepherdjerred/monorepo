@@ -1,5 +1,5 @@
-import { WebSocketError, DecodeError } from "./errors.js";
-import { parseJson } from "./json.js";
+import { WebSocketError, DecodeError } from "./errors.ts";
+import { parseJson } from "./json.ts";
 
 /**
  * Result of parsing a console WebSocket message.

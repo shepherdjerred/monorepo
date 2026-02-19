@@ -40,7 +40,8 @@ describe("isPermissionError", () => {
     expect(isPermissionError("string error")).toBe(false);
     expect(isPermissionError(123)).toBe(false);
     expect(isPermissionError(null)).toBe(false);
-    expect(isPermissionError()).toBe(false);
+    // eslint-disable-next-line unicorn/no-useless-undefined -- testing undefined input
+    expect(isPermissionError(undefined)).toBe(false);
   });
 });
 

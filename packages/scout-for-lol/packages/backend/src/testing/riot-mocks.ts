@@ -178,7 +178,8 @@ export function makeTestParticipant(
 export function makeTestChallenges(
   overrides: Partial<RawChallenges> = {},
 ): RawChallenges {
-  return {
+  const result = {
+    "12AssistStreakCount": 0,
     abilityUses: 0,
     acesBefore15Minutes: 0,
     alliedJungleMonsterKills: 0,
@@ -206,6 +207,7 @@ export function makeTestChallenges(
     epicMonsterSteals: 0,
     epicMonsterStolenWithoutSmite: 0,
     firstTurretKilled: 0,
+    fistBumpParticipation: 0,
     flawlessAces: 0,
     fullTeamTakedown: 0,
     gameLength: 0,
@@ -233,6 +235,7 @@ export function makeTestChallenges(
     laneMinionsFirst10Minutes: 0,
     laningPhaseGoldExpAdvantage: 0,
     legendaryCount: 0,
+    legendaryItemUsed: [],
     lostAnInhibitor: 0,
     maxCsAdvantageOnLaneOpponent: 0,
     maxKillDeficit: 0,
@@ -285,9 +288,12 @@ export function makeTestChallenges(
     unseenRecalls: 0,
     visionScoreAdvantageLaneOpponent: 0,
     visionScorePerMinute: 0,
+    voidMonsterKill: 0,
     wardTakedowns: 0,
     wardTakedownsBefore20M: 0,
     wardsGuarded: 0,
     ...overrides,
-  } satisfies RawChallenges;
+  };
+  // eslint-disable-next-line custom-rules/no-type-assertions -- test mock with Partial spread requires assertion
+  return result as unknown as RawChallenges;
 }
