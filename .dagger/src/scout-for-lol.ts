@@ -50,6 +50,11 @@ export async function checkScoutForLol(source: Directory): Promise<string> {
       "/workspace/eslint.config.ts",
     ]);
 
+  // Evaluate the workspace DAG before running parallel checks.
+  // Without this sync, each parallel check submits the FULL workspace
+  // construction DAG to the engine, which can exceed GraphQL query limits.
+  await withTiming("workspace setup", () => preparedWorkspace.sync());
+
   // Build desktop frontend once and share
   const desktopFrontend = buildDesktopFrontend(pkgSource);
 
