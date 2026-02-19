@@ -154,11 +154,12 @@ export async function runAppDeployments(
 ): Promise<{ outputs: string[]; errors: string[]; appVersions: Record<string, string> }> {
   const { source, version, gitSha, registryUsername, registryPassword, s3AccessKeyId, s3SecretAccessKey, birmelImage } = options;
 
-  const tasks: DeployTask[] = [];
+  const s3Tasks: DeployTask[] = [];
+  const ghcrTasks: DeployTask[] = [];
 
-  // Birmel publish
+  // Birmel publish (GHCR)
   if (version !== undefined && gitSha !== undefined && registryUsername !== undefined && registryPassword !== undefined) {
-    tasks.push({
+    ghcrTasks.push({
       name: "Birmel publish",
       versionKey: "shepherdjerred/birmel",
       deploy: async () => {
@@ -171,9 +172,9 @@ export async function runAppDeployments(
     });
   }
 
-  // Docs/resume/S3 deployments
+  // Docs/resume/S3 deployments (lightweight)
   if (s3AccessKeyId !== undefined && s3SecretAccessKey !== undefined) {
-    tasks.push(
+    s3Tasks.push(
       { name: "Clauderon docs", deploy: () => options.muxSiteDeployFn(source, s3AccessKeyId, s3SecretAccessKey) },
       { name: "Resume", deploy: () => options.resumeDeployFn(source, s3AccessKeyId, s3SecretAccessKey) },
       { name: "sjer.red", deploy: () => deploySjerRed(source, s3AccessKeyId, s3SecretAccessKey) },
@@ -181,9 +182,9 @@ export async function runAppDeployments(
     );
   }
 
-  // GHCR deployments
+  // GHCR container publish deployments (heavy — overwhelm Dagger engine in parallel)
   if (version !== undefined && gitSha !== undefined && registryUsername !== undefined && registryPassword !== undefined) {
-    tasks.push({
+    ghcrTasks.push({
       name: "Starlight Karma Bot",
       versionKey: "shepherdjerred/starlight-karma-bot/beta",
       deploy: () => deployStarlightKarmaBot({
@@ -193,7 +194,7 @@ export async function runAppDeployments(
     });
 
     if (s3AccessKeyId !== undefined && s3SecretAccessKey !== undefined) {
-      tasks.push(
+      ghcrTasks.push(
         {
           name: "Better Skill Capped",
           versionKey: "shepherdjerred/better-skill-capped-fetcher",
@@ -224,27 +225,47 @@ export async function runAppDeployments(
     }
   }
 
-  // Run all deployment tasks in parallel, with per-task GraphQL error retry
-  const results = await runNamedParallel(tasks.map(t => ({
-    name: t.name,
-    operation: () => withDeployRetry(t.name, t.deploy),
-  })));
-
-  // Collect results and build appVersions from SUCCESSFUL deployments only
   const outputs: string[] = [];
   const errors: string[] = [];
   const appVersions: Record<string, string> = {};
 
-  for (const result of results) {
-    const task = tasks.find(t => t.name === result.name);
-    if (task === undefined) { continue; }
-    if (result.success) {
-      outputs.push(`✓ ${task.name}: ${String(result.value)}`);
+  function collectTaskResults(results: Array<{ name: string; success: boolean; value?: unknown; error?: unknown }>, tasks: DeployTask[]): void {
+    for (const result of results) {
+      const task = tasks.find(t => t.name === result.name);
+      if (task === undefined) { continue; }
+      if (result.success) {
+        outputs.push(`✓ ${task.name}: ${String(result.value)}`);
+        if (task.versionKey !== undefined && version !== undefined) {
+          appVersions[task.versionKey] = version;
+        }
+      } else {
+        const { error } = result;
+        const msg = error instanceof Error ? error.message : String(error);
+        outputs.push(`✗ ${task.name}: ${msg}`);
+        errors.push(`${task.name}: ${msg}`);
+      }
+    }
+  }
+
+  // Phase 1: S3 deployments in parallel (lightweight, no engine pressure)
+  if (s3Tasks.length > 0) {
+    const s3Results = await runNamedParallel(s3Tasks.map(t => ({
+      name: t.name,
+      operation: () => withDeployRetry(t.name, t.deploy),
+    })));
+    collectTaskResults(s3Results, s3Tasks);
+  }
+
+  // Phase 2: GHCR container publishes sequentially (each publish overwhelms
+  // the Dagger engine when run in parallel — causes consistent GraphQL errors)
+  for (const task of ghcrTasks) {
+    try {
+      const result = await withDeployRetry(task.name, task.deploy);
+      outputs.push(`✓ ${task.name}: ${result}`);
       if (task.versionKey !== undefined && version !== undefined) {
         appVersions[task.versionKey] = version;
       }
-    } else {
-      const { error } = result;
+    } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       outputs.push(`✗ ${task.name}: ${msg}`);
       errors.push(`${task.name}: ${msg}`);
