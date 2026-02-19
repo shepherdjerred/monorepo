@@ -1,6 +1,7 @@
 import type { Container, Directory, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 import { formatDaggerError } from "./lib-errors.ts";
+import { withEslintConfig } from "./homelab-base.ts";
 import {
   prepareHaContainer,
   typeCheckHaWithContainer,
@@ -97,6 +98,7 @@ export async function runValidationPhase(
   updatedSource: Directory,
   secrets: HomelabSecrets,
   versionOnly: boolean,
+  monoRepoSource?: Directory,
 ): Promise<ValidationResults> {
   const {
     cloudflareApiToken,
@@ -111,8 +113,16 @@ export async function runValidationPhase(
 
   const haContainerPromise = versionOnly
     ? undefined
-    : prepareHaContainer(updatedSource, hassBaseUrl, hassToken);
-  const cdk8sContainer = prepareCdk8sContainer(updatedSource);
+    : (async () => {
+        const container = await prepareHaContainer(updatedSource, hassBaseUrl, hassToken);
+        return monoRepoSource
+          ? withEslintConfig(container, monoRepoSource, "/workspace/src/ha")
+          : container;
+      })();
+  const baseCdk8sContainer = prepareCdk8sContainer(updatedSource);
+  const cdk8sContainer = monoRepoSource
+    ? withEslintConfig(baseCdk8sContainer, monoRepoSource, "/workspace/src/cdk8s")
+    : baseCdk8sContainer;
 
   const [
     renovateTestResult,
