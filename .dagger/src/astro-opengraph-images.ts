@@ -8,17 +8,29 @@ import versions from "./lib-versions.ts";
 export async function checkAstroOpengraphImages(
   source: Directory,
 ): Promise<string> {
-  const pkgSource = source.directory("packages/astro-opengraph-images");
-
   const container = dag
     .container()
     .from(`oven/bun:${versions["oven/bun"]}`)
     .withWorkdir("/workspace")
     .withEnvVariable("CI", "true")
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
-    .withDirectory("/workspace", pkgSource, {
-      exclude: ["node_modules", "examples", "**/.astro", "**/.dagger"],
-    })
+    // Root workspace files for bun install
+    .withFile("/workspace/package.json", source.file("package.json"))
+    .withFile("/workspace/bun.lock", source.file("bun.lock"))
+    // Package source
+    .withDirectory(
+      "/workspace/packages/astro-opengraph-images",
+      source.directory("packages/astro-opengraph-images"),
+      {
+        exclude: ["node_modules", "examples", "**/.astro", "**/.dagger"],
+      },
+    )
+    // Eslint config (needed for lint — ../eslint-config/local.ts)
+    .withDirectory(
+      "/workspace/packages/eslint-config",
+      source.directory("packages/eslint-config"),
+    )
+    .withWorkdir("/workspace/packages/astro-opengraph-images")
     .withExec(["bun", "install", "--frozen-lockfile"]);
 
   // Run lint, build, test sequentially

@@ -26,11 +26,18 @@ export async function checkBetterSkillCapped(
 
   // Run lint, build (main), and fetcher build in parallel
   await Promise.all([
-    // Main app lint
+    // Main app lint — needs workspace structure for eslint-config
     getBscContainer()
-      .withMountedDirectory("/workspace", mainSource)
+      .withFile("/workspace/package.json", source.file("package.json"))
+      .withFile("/workspace/bun.lock", source.file("bun.lock"))
+      .withDirectory("/workspace/packages/better-skill-capped", mainSource)
+      .withDirectory(
+        "/workspace/packages/eslint-config",
+        source.directory("packages/eslint-config"),
+      )
+      .withWorkdir("/workspace/packages/better-skill-capped")
       .withExec(["bun", "install", "--frozen-lockfile"])
-      .withExec(["bun", "run", "lint:fix"])
+      .withExec(["bun", "run", "lint"])
       .sync(),
     // Main app build
     getBscContainer()
