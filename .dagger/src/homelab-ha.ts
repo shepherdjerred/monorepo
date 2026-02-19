@@ -19,10 +19,16 @@ export async function prepareHaContainer(
 ): Promise<Container> {
   let container = getWorkspaceContainer(source, "src/ha");
 
-  // Check if hass directory already exists by looking at the parent directory entries
-  const haSourceDir = source.directory("src/ha/src");
-  const entries = await haSourceDir.entries();
-  const hasExistingTypes = entries.includes("hass");
+  // Check if hass types exist inside the container (after getWorkspaceContainer
+  // copies src/ha into the container). Checking the source Directory directly
+  // can fail due to Dagger engine source-filtering bugs (observed with dev
+  // engine v0.19.11-dev where entries() omits committed directories).
+  const checkResult = await container
+    .withExec(["test", "-f", "src/hass/mappings.mts"])
+    .sync()
+    .then(() => true)
+    .catch(() => false);
+  const hasExistingTypes = checkResult;
 
   if (hasExistingTypes) {
     console.log("✅ Using existing @hass/ types from src/ha/src/hass/");
