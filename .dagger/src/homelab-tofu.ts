@@ -33,7 +33,7 @@ type PlanDirOptions = {
   cloudflareAccountId: Secret;
   awsAccessKeyId: Secret;
   awsSecretAccessKey: Secret;
-  githubToken?: Secret;
+  githubToken?: Secret | undefined;
 };
 
 export async function planDir(
@@ -85,7 +85,7 @@ type PlanAllOptions = {
   cloudflareAccountId: Secret;
   awsAccessKeyId: Secret;
   awsSecretAccessKey: Secret;
-  githubToken?: Secret;
+  githubToken?: Secret | undefined;
 };
 
 export async function planAll(

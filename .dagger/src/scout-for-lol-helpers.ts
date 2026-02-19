@@ -231,7 +231,11 @@ function getMountedWorkspace(
     )
     .withExec(["bun", "install", "--frozen-lockfile"]);
 
-  return addMountedSourceFiles(container, workspaceSource);
+  container = addMountedSourceFiles(container, workspaceSource);
+
+  // Phase 3: Re-run bun install to recreate per-package node_modules symlinks
+  // that were hidden by withMountedDirectory in addMountedSourceFiles
+  return container.withExec(["bun", "install", "--frozen-lockfile"]);
 }
 
 /**

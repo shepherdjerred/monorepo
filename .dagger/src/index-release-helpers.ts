@@ -1,4 +1,4 @@
-import type { Secret, Directory, Container } from "@dagger.io/dagger";
+import type { Secret, Container } from "@dagger.io/dagger";
 import {
   publishBirmelImageWithContainer,
 } from "./birmel.ts";
@@ -217,14 +217,15 @@ export async function runAppDeployments(
 
   for (const result of results) {
     const task = tasks.find(t => t.name === result.name);
-    if (task === undefined) continue;
+    if (task === undefined) { continue; }
     if (result.success) {
       outputs.push(`✓ ${task.name}: ${String(result.value)}`);
       if (task.versionKey !== undefined && version !== undefined) {
         appVersions[task.versionKey] = version;
       }
     } else {
-      const msg = result.error instanceof Error ? result.error.message : String(result.error);
+      const { error } = result;
+      const msg = error instanceof Error ? error.message : String(error);
       outputs.push(`✗ ${task.name}: ${msg}`);
       errors.push(`${task.name}: ${msg}`);
     }

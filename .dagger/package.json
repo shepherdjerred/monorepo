@@ -3,7 +3,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "lint": "bunx eslint src"
+    "lint": "bunx eslint src",
+    "typecheck": "bunx tsc --noEmit"
   },
   "dependencies": {
     "typescript": "^5.8.0",

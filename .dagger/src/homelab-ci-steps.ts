@@ -32,13 +32,13 @@ import versions from "./lib-versions.ts";
  */
 async function runStep(
   name: string,
-  fn: () => Promise<string | undefined>,
+  fn: () => Promise<string>,
 ): Promise<StepResult> {
   try {
     const msg = await fn();
     return {
       status: "passed",
-      message: `${name}: PASSED${msg !== undefined && msg !== "" ? `\n${msg}` : ""}`,
+      message: `${name}: PASSED${msg === "" ? "" : `\n${msg}`}`,
     };
   } catch (error: unknown) {
     return {
@@ -55,7 +55,7 @@ async function runContainerStep(
   name: string,
   containerPromise: Promise<Container> | undefined,
   versionOnly: boolean,
-  fn: (container: Container) => Promise<string | undefined>,
+  fn: (container: Container) => Promise<string>,
 ): Promise<StepResult> {
   if (versionOnly || containerPromise === undefined) {
     return { status: "skipped", message: `${name}: SKIPPED (version-only)` };
@@ -65,7 +65,7 @@ async function runContainerStep(
     const msg = await fn(container);
     return {
       status: "passed",
-      message: `${name}: PASSED${msg !== undefined && msg !== "" ? `\n${msg}` : ""}`,
+      message: `${name}: PASSED${msg === "" ? "" : `\n${msg}`}`,
     };
   } catch (error: unknown) {
     return {
@@ -154,11 +154,11 @@ export async function runValidationPhase(
     })),
     runStep("CDK8s Build", () => {
       buildK8sManifestsWithContainer(cdk8sContainer);
-      return Promise.resolve();
+      return Promise.resolve("");
     }),
     runContainerStep("HA Build", haContainerPromise, versionOnly, (c) => {
       buildHaWithContainer(c);
-      return Promise.resolve();
+      return Promise.resolve("");
     }),
     ((): Promise<HelmBuildResult> => {
       try {
