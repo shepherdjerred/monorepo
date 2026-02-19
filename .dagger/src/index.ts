@@ -1,7 +1,5 @@
 import type { Secret, Directory, Container, File } from "@dagger.io/dagger";
-import { dag, object, func } from "@dagger.io/dagger";
-import { syncToS3 } from "./lib-s3.ts";
-import versions from "./lib-versions.ts";
+import { object, func } from "@dagger.io/dagger";
 import { reviewPr, handleInteractive } from "./code-review.ts";
 import { updateReadmes as updateReadmesFn } from "./update-readme.ts";
 import {
@@ -28,8 +26,6 @@ import {
 } from "./birmel.ts";
 import {
   getRustContainer,
-  getCrossCompileContainer,
-  uploadReleaseAssets,
   getReleasePleaseContainer,
   runReleasePleaseCommand,
   complianceCheck,
@@ -39,15 +35,22 @@ import {
   knipCheck,
   trivyScan,
   semgrepScan,
+  uploadReleaseAssets,
   CLAUDERON_TARGETS,
-  runMobileCi,
-  runClauderonCi,
 } from "./index-infra.ts";
+import { runMobileCi, runClauderonCi } from "./index-platform-ci.ts";
+import {
+  buildMuxSiteContainer,
+  getMuxSiteOutput,
+  deployMuxSite,
+  buildResumeFile,
+  getResumeOutput,
+  deployResumeSite,
+  buildMultiplexerBinaries,
+  releaseMultiplexer,
+} from "./index-build-deploy-helpers.ts";
 import { withTiming } from "./lib-timing.ts";
 import { runNamedParallel } from "./lib-parallel.ts";
-
-const BUN_VERSION = versions.bun;
-const LATEX_IMAGE = "blang/latex:ubuntu";
 
 @object()
 export class Monorepo {
@@ -83,9 +86,10 @@ export class Monorepo {
     // TIER 0: Launch all source-only work at t=0
     // These create their own containers — no dependency on bun workspace
     // ========================================================================
-    const tier0Compliance = withTiming("Compliance check", () =>
-      complianceCheck(source).sync().then(() => "✓ Compliance check"),
-    );
+    const tier0Compliance = withTiming("Compliance check", async () => {
+      await complianceCheck(source).sync();
+      return "✓ Compliance check";
+    });
     const tier0Mobile = withTiming("Mobile CI", () => this.mobileCi(source));
     const tier0BirmelImage = buildBirmelImage(source, version ?? "dev", gitSha ?? "dev");
     const tier0Birmel = withTiming("Birmel validation", () =>
@@ -101,7 +105,7 @@ export class Monorepo {
     // Guard: suppress unhandled rejection warnings if critical path throws
     // before we get to collect tier 0 results
     const allTier0 = [tier0Compliance, tier0Mobile, tier0Birmel, tier0Packages, tier0Quality];
-    Promise.allSettled(allTier0);
+    void Promise.allSettled(allTier0);
 
     // ========================================================================
     // TIER 1: Critical path — bun install + TypeShare in parallel
@@ -141,7 +145,13 @@ export class Monorepo {
         this.clauderonCi(source, webResult.frontendDist, s3AccessKeyId, s3SecretAccessKey),
       ),
       withTiming("Monorepo build", async () => {
-        const c = container.withExec(["bun", "run", "build"]);
+        // Build webring before monorepo build — sjer.red depends on webring's dist
+        // and run-package-script.ts builds alphabetically (s before w)
+        const c = container
+          .withWorkdir("/workspace/packages/webring")
+          .withExec(["bun", "run", "build"])
+          .withWorkdir("/workspace")
+          .withExec(["bun", "run", "build"]);
         await c.sync();
         return c;
       }),
@@ -153,7 +163,7 @@ export class Monorepo {
       outputs.push("::endgroup::");
     } else {
       outputs.push("::endgroup::");
-      const reason = clauderonResult.reason;
+      const reason: unknown = clauderonResult.reason;
       throw reason instanceof Error ? reason : new Error(String(reason));
     }
 
@@ -161,7 +171,7 @@ export class Monorepo {
       container = buildResult.value;
       outputs.push("✓ Build");
     } else {
-      const reason = buildResult.reason;
+      const reason: unknown = buildResult.reason;
       throw reason instanceof Error ? reason : new Error(String(reason));
     }
 
@@ -232,9 +242,6 @@ export class Monorepo {
     return outputs.join("\n");
   }
 
-  /**
-   * Run all package-specific validation checks in parallel.
-   */
   @func()
   async packageValidation(source: Directory, hassBaseUrl?: Secret, hassToken?: Secret): Promise<string> {
     const result = await runPackageValidation(source, hassBaseUrl, hassToken);
@@ -247,17 +254,14 @@ export class Monorepo {
     return outputs.join("\n");
   }
 
-  /**
-   * Run quality and security checks (shellcheck, actionlint, trivy, semgrep, quality ratchet).
-   */
   @func()
   async qualityChecks(source: Directory): Promise<string> {
     const results = await runNamedParallel<string>([
-      { name: "Quality ratchet", operation: () => qualityRatchet(source).sync().then(() => "✓ Quality ratchet") },
-      { name: "Shellcheck", operation: () => shellcheckStep(source).sync().then(() => "✓ Shellcheck") },
-      { name: "Actionlint", operation: () => actionlintStep(source).sync().then(() => "✓ Actionlint") },
-      { name: "Trivy", operation: () => trivyScan(source).sync().then(() => "✓ Trivy") },
-      { name: "Semgrep", operation: () => semgrepScan(source).sync().then(() => "✓ Semgrep") },
+      { name: "Quality ratchet", operation: async () => { await qualityRatchet(source).sync(); return "✓ Quality ratchet"; } },
+      { name: "Shellcheck", operation: async () => { await shellcheckStep(source).sync(); return "✓ Shellcheck"; } },
+      { name: "Actionlint", operation: async () => { await actionlintStep(source).sync(); return "✓ Actionlint"; } },
+      { name: "Trivy", operation: async () => { await trivyScan(source).sync(); return "✓ Trivy"; } },
+      { name: "Semgrep", operation: async () => { await semgrepScan(source).sync(); return "✓ Semgrep"; } },
     ]);
     const outputs: string[] = [];
     for (const result of results) {
@@ -273,9 +277,6 @@ export class Monorepo {
     return outputs.join("\n");
   }
 
-  /**
-   * Run birmel CI, build image, and smoke test.
-   */
   @func()
   async birmelValidation(source: Directory, version: string, gitSha: string): Promise<string> {
     const outputs: string[] = [];
@@ -351,50 +352,7 @@ export class Monorepo {
 
   @func()
   multiplexerBuild(source: Directory, s3AccessKeyId?: Secret, s3SecretAccessKey?: Secret): Directory {
-    const container = getCrossCompileContainer(source, s3AccessKeyId, s3SecretAccessKey);
-    const linuxTargets = CLAUDERON_TARGETS.filter((t) => t.os === "linux");
-    let outputContainer = dag.directory();
-
-    for (const { target, os, arch } of linuxTargets) {
-      // Per-target cache volume to avoid Dagger serializing access
-      let buildContainer = container
-        .withEnvVariable("CARGO_TARGET_DIR", `/workspace/target-cross-${arch}`)
-        .withMountedCache(`/workspace/target-cross-${arch}`, dag.cacheVolume(`clauderon-cross-target-${arch}`));
-
-      if (target === "aarch64-unknown-linux-gnu") {
-        const cargoConfig = `
-[registries.crates-io]
-protocol = "sparse"
-
-[build]
-jobs = -1
-
-[target.x86_64-unknown-linux-gnu]
-linker = "clang"
-rustflags = ["-C", "link-arg=-fuse-ld=mold"]
-
-[target.aarch64-unknown-linux-gnu]
-linker = "aarch64-linux-gnu-gcc"
-
-[net]
-retry = 3
-`;
-        buildContainer = buildContainer
-          .withNewFile("/workspace/.cargo/config.toml", cargoConfig)
-          .withEnvVariable("OPENSSL_DIR", "/usr")
-          .withEnvVariable("OPENSSL_LIB_DIR", "/usr/lib/aarch64-linux-gnu")
-          .withEnvVariable("OPENSSL_INCLUDE_DIR", "/usr/include")
-          .withEnvVariable("PKG_CONFIG_ALLOW_CROSS", "1")
-          .withEnvVariable("PKG_CONFIG_PATH", "/usr/lib/aarch64-linux-gnu/pkgconfig");
-      }
-
-      buildContainer = buildContainer.withExec(["cargo", "build", "--release", "--target", target]);
-      const binaryPath = `/workspace/target-cross-${arch}/${target}/release/clauderon`;
-      const filename = `clauderon-${os}-${arch}`;
-      outputContainer = outputContainer.withFile(filename, buildContainer.file(binaryPath));
-    }
-
-    return outputContainer;
+    return buildMultiplexerBinaries(source, s3AccessKeyId, s3SecretAccessKey);
   }
 
   @func()
@@ -402,98 +360,40 @@ retry = 3
     source: Directory, version: string, githubToken: Secret,
     s3AccessKeyId?: Secret, s3SecretAccessKey?: Secret,
   ): Promise<string> {
-    const outputs: string[] = [];
-
-    outputs.push("--- Clauderon CI ---");
-    outputs.push(await this.clauderonCi(source, undefined, s3AccessKeyId, s3SecretAccessKey));
-
-    outputs.push("\n--- Building Binaries ---");
-    const binaries = this.multiplexerBuild(source, s3AccessKeyId, s3SecretAccessKey);
-
-    const linuxTargets = CLAUDERON_TARGETS.filter((t) => t.os === "linux");
-    const filenames = linuxTargets.map(({ os, arch }) => `clauderon-${os}-${arch}`);
-    for (const filename of filenames) { outputs.push(`✓ Built ${filename}`); }
-
-    outputs.push("\n--- Uploading to GitHub Release ---");
-    const uploadResults = await uploadReleaseAssets(githubToken, version, binaries, filenames);
-    outputs.push(...uploadResults.outputs);
-
-    if (uploadResults.errors.length > 0) {
-      throw new Error(`Failed to upload ${String(uploadResults.errors.length)} asset(s):\n${uploadResults.errors.join("\n")}`);
-    }
-
-    return outputs.join("\n");
+    return releaseMultiplexer({
+      source, version, githubToken, s3AccessKeyId, s3SecretAccessKey,
+      clauderonCiFn: (s, fd, k, sk) => this.clauderonCi(s, fd, k, sk),
+    });
   }
 
   @func()
   muxSiteBuild(source: Directory): Container {
-    return dag.container()
-      .from(`oven/bun:${BUN_VERSION}-debian`)
-      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
-      .withWorkdir("/workspace")
-      .withDirectory("/workspace", source.directory("packages/clauderon/docs"))
-      .withExec(["bun", "install"])
-      .withExec(["bun", "run", "build"]);
+    return buildMuxSiteContainer(source);
   }
 
   @func()
   muxSiteOutput(source: Directory): Directory {
-    return this.muxSiteBuild(source).directory("/workspace/dist");
+    return getMuxSiteOutput(source);
   }
 
   @func()
   async muxSiteDeploy(source: Directory, s3AccessKeyId: Secret, s3SecretAccessKey: Secret): Promise<string> {
-    const outputs: string[] = [];
-    const siteDir = this.muxSiteOutput(source);
-    outputs.push("✓ Built clauderon docs");
-
-    const syncOutput = await syncToS3({
-      sourceDir: siteDir, bucketName: "clauderon",
-      endpointUrl: "https://seaweedfs.sjer.red",
-      accessKeyId: s3AccessKeyId, secretAccessKey: s3SecretAccessKey,
-      region: "us-east-1", deleteRemoved: true,
-    });
-
-    outputs.push("✓ Deployed to SeaweedFS S3 (bucket: clauderon)");
-    outputs.push(syncOutput);
-    return outputs.join("\n");
+    return deployMuxSite(source, s3AccessKeyId, s3SecretAccessKey);
   }
 
   @func()
   resumeBuild(source: Directory): File {
-    return dag.container()
-      .from(LATEX_IMAGE)
-      .withMountedDirectory("/workspace", source.directory("packages/resume"))
-      .withWorkdir("/workspace")
-      .withExec(["pdflatex", "resume.tex"])
-      .file("/workspace/resume.pdf");
+    return buildResumeFile(source);
   }
 
   @func()
   resumeOutput(source: Directory): Directory {
-    const pdf = this.resumeBuild(source);
-    const resumeDir = source.directory("packages/resume");
-    return dag.directory()
-      .withFile("resume.pdf", pdf)
-      .withFile("index.html", resumeDir.file("index.html"));
+    return getResumeOutput(source);
   }
 
   @func()
   async resumeDeploy(source: Directory, s3AccessKeyId: Secret, s3SecretAccessKey: Secret): Promise<string> {
-    const outputs: string[] = [];
-    const outputDir = this.resumeOutput(source);
-    outputs.push("✓ Built resume.pdf");
-
-    const syncOutput = await syncToS3({
-      sourceDir: outputDir, bucketName: "resume",
-      endpointUrl: "https://seaweedfs.sjer.red",
-      accessKeyId: s3AccessKeyId, secretAccessKey: s3SecretAccessKey,
-      region: "us-east-1", deleteRemoved: true,
-    });
-
-    outputs.push("✓ Deployed to SeaweedFS S3 (bucket: resume)");
-    outputs.push(syncOutput);
-    return outputs.join("\n");
+    return deployResumeSite(source, s3AccessKeyId, s3SecretAccessKey);
   }
 
   @func()
