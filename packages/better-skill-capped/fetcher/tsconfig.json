@@ -5,7 +5,7 @@
     "@tsconfig/recommended/tsconfig.json"
   ],
   "compilerOptions": {
-    "types": ["bun-types"],
+    "types": ["@types/bun"],
     "moduleResolution": "Node16",
     "module": "Node16"
   }

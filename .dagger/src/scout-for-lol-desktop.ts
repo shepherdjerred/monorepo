@@ -203,6 +203,7 @@ export async function checkDesktopParallel(
       .withDirectory("/eslint-config", eslintConfigSource)
       .withWorkdir("/eslint-config")
       .withExec(["bun", "install"])
+      .withExec(["bun", "run", "build"])
       .withWorkdir("/workspace");
   }
 

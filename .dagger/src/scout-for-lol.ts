@@ -40,6 +40,7 @@ export async function checkScoutForLol(source: Directory): Promise<string> {
     .withDirectory("/eslint-config", eslintConfigSource)
     .withWorkdir("/eslint-config")
     .withExec(["bun", "install"])
+    .withExec(["bun", "run", "build"])
     .withWorkdir("/workspace");
 
   // Build desktop frontend once and share

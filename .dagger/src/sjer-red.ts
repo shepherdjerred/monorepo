@@ -59,6 +59,8 @@ export async function checkSjerRed(source: Directory): Promise<string> {
       )
       .withWorkdir("/workspace")
       .withExec(["bun", "install"])
+      .withWorkdir("/workspace/packages/eslint-config")
+      .withExec(["bun", "run", "build"])
       .withWorkdir("/workspace/packages/sjer.red")
       .withExec(["bunx", "astro", "sync"])
       .withExec(["bun", "run", "lint"])
