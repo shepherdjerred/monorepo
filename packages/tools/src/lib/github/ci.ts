@@ -1,11 +1,17 @@
 import { runGhCommand, runGhCommandRaw } from "./client.ts";
+import {
+  CheckRunSchema,
+  WorkflowRunSchema,
+  HeadRefResponseSchema,
+} from "./schemas.ts";
+import { z } from "zod";
 import type { CheckRun, WorkflowRun } from "./types.ts";
 
 export async function getCheckRuns(
   prNumber: number | string,
   repo?: string,
 ): Promise<CheckRun[]> {
-  const result = await runGhCommand<CheckRun[]>(
+  const result = await runGhCommand(
     [
       "pr",
       "checks",
@@ -13,6 +19,7 @@ export async function getCheckRuns(
       "--json",
       "name,status,conclusion,detailsUrl,workflowName",
     ],
+    z.array(CheckRunSchema),
     repo,
   );
 
@@ -28,8 +35,9 @@ export async function getWorkflowRuns(
   repo?: string,
 ): Promise<WorkflowRun[]> {
   // Get the PR's head branch first
-  const prResult = await runGhCommand<{ headRefName: string }>(
+  const prResult = await runGhCommand(
     ["pr", "view", String(prNumber), "--json", "headRefName"],
+    HeadRefResponseSchema,
     repo,
   );
 
@@ -39,7 +47,7 @@ export async function getWorkflowRuns(
 
   const branch = prResult.data.headRefName;
 
-  const result = await runGhCommand<WorkflowRun[]>(
+  const result = await runGhCommand(
     [
       "run",
       "list",
@@ -50,6 +58,7 @@ export async function getWorkflowRuns(
       "--json",
       "databaseId,name,status,conclusion,url,createdAt",
     ],
+    z.array(WorkflowRunSchema),
     repo,
   );
 

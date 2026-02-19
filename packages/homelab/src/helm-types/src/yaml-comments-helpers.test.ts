@@ -92,7 +92,7 @@ describe("YAML Comment Helpers - Detection Functions", () => {
 
     test("should not detect headers when not followed by YAML", () => {
       expect(isSectionHeader("Some header", "This is prose")).toBe(false);
-      expect(isSectionHeader("Redis configuration")).toBe(false);
+      expect(isSectionHeader("Redis configuration", undefined)).toBe(false);
     });
 
     test("should not detect ref: as section header", () => {

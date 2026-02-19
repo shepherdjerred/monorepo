@@ -1,5 +1,6 @@
 # Use Bun official image as base
-FROM oven/bun:1 AS base
+# renovate: datasource=docker registryUrl=https://docker.io versioning=docker
+FROM oven/bun:1.3.9 AS base
 WORKDIR /app
 
 # Install dependencies into temp directory

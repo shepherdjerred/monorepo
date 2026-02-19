@@ -7,9 +7,9 @@ import {
   type ResultEntry,
   FeedEntrySchema,
   type Configuration,
-} from "./types.ts";
+} from "./types.js";
 import * as R from "remeda";
-import { asyncMapFilterUndefined } from "./util.ts";
+import { asyncMapFilterUndefined } from "./util.js";
 
 // Handle ESM/CommonJS interop - truncate-html exports differently in different environments
 const TruncateFnSchema = z

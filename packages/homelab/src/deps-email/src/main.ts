@@ -22,7 +22,8 @@ const REPO_URL = "https://github.com/shepherdjerred/homelab.git";
 const args = Bun.argv.slice(2);
 const dryRun = args.includes("--dry-run");
 const daysArg = args.find((a) => !a.startsWith("--"));
-const DAYS_TO_LOOK_BACK = daysArg != null && daysArg !== "" ? Number.parseInt(daysArg, 10) : 7;
+const DAYS_TO_LOOK_BACK =
+  daysArg != null && daysArg !== "" ? Number.parseInt(daysArg, 10) : 7;
 
 async function main() {
   console.log(
@@ -157,7 +158,7 @@ function findMatchingAddedLine(options: {
 }): DependencyInfo | null {
   for (let j = options.startIndex; j < options.lines.length; j++) {
     const nextLine = options.lines[j];
-    if ((nextLine == null || nextLine === "")) {
+    if (nextLine == null || nextLine === "") {
       continue;
     }
     if (!nextLine.startsWith("+") || nextLine.startsWith("+++")) {
@@ -175,11 +176,16 @@ function findMatchingAddedLine(options: {
     }
 
     const newVersion = newVersionMatch[3];
-    if ((newVersion == null || newVersion === "")) {
+    if (newVersion == null || newVersion === "") {
       continue;
     }
 
-    return parseRenovateComment(options.renovateComment, options.name, options.oldVersion, newVersion);
+    return parseRenovateComment(
+      options.renovateComment,
+      options.name,
+      options.oldVersion,
+      newVersion,
+    );
   }
   return null;
 }
@@ -193,7 +199,7 @@ function parseDiff(diff: string): DependencyInfo[] {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if ((line == null || line === "")) {
+    if (line == null || line === "") {
       continue;
     }
 
@@ -204,7 +210,12 @@ function parseDiff(diff: string): DependencyInfo[] {
         // Name is either group 1 (quoted) or group 2 (unquoted)
         const name = versionMatch[1] ?? versionMatch[2];
         const oldVersion = versionMatch[3];
-        if ((name == null || name === "") || (oldVersion == null || oldVersion === "")) {
+        if (
+          name == null ||
+          name === "" ||
+          oldVersion == null ||
+          oldVersion === ""
+        ) {
           continue;
         }
 
@@ -241,7 +252,7 @@ function parseRenovateComment(
   oldVersion: string,
   newVersion: string,
 ): DependencyInfo | null {
-  if ((comment == null || comment === "")) {
+  if (comment == null || comment === "") {
     return null;
   }
 
@@ -262,7 +273,11 @@ function parseRenovateComment(
     "github-releases",
     "custom.papermc",
   ];
-  if ((datasource == null || datasource === "") || !validDatasources.includes(datasource)) {
+  if (
+    datasource == null ||
+    datasource === "" ||
+    !validDatasources.includes(datasource)
+  ) {
     return null;
   }
 
@@ -318,7 +333,9 @@ async function fetchAllReleaseNotes(
   return { notes, failed };
 }
 
-async function fetchReleaseNotesForDep(dep: DependencyInfo): Promise<ReleaseNotes[]> {
+async function fetchReleaseNotesForDep(
+  dep: DependencyInfo,
+): Promise<ReleaseNotes[]> {
   const results: ReleaseNotes[] = [];
 
   switch (dep.datasource) {
@@ -355,7 +372,7 @@ async function fetchGitHubReleaseNotes(
 ): Promise<ReleaseNotes | null> {
   // dep.name is like "kubernetes/kubernetes" or "siderolabs/talos"
   const [owner, repo] = dep.name.split("/");
-  if ((owner == null || owner === "") || (repo == null || repo === "")) {
+  if (owner == null || owner === "" || repo == null || repo === "") {
     return null;
   }
 

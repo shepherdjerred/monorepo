@@ -42,7 +42,8 @@ export async function fetchGitHubReleases(
         const parsed = GitHubReleaseSchema.safeParse(rawData);
         if (
           parsed.success &&
-          parsed.data.body != null && parsed.data.body !== "" &&
+          parsed.data.body != null &&
+          parsed.data.body !== "" &&
           parsed.data.body.length > 50
         ) {
           return {
@@ -75,7 +76,11 @@ export async function fetchGitHubReleases(
             r.tag_name?.includes(version.replace(/^v/, "")) === true,
         );
 
-        if (matchingRelease?.body != null && matchingRelease.body !== "" && matchingRelease.body.length > 50) {
+        if (
+          matchingRelease?.body != null &&
+          matchingRelease.body !== "" &&
+          matchingRelease.body.length > 50
+        ) {
           return {
             body: matchingRelease.body,
             url:

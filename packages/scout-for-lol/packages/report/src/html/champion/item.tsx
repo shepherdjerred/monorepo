@@ -89,7 +89,7 @@ export function renderItems(
     const itemsToRender = items.slice(0, 6);
     const paddedItems: number[] = [
       ...itemsToRender,
-      ...Array.from({length: 6 - itemsToRender.length}).fill(0),
+      ...new Array<number>(6 - itemsToRender.length).fill(0),
     ];
     const renderedItems = map(paddedItems, renderItem);
 
@@ -102,7 +102,7 @@ export function renderItems(
     // Pad regular items to always show 6 slots
     const paddedRegularItems: number[] = [
       ...regularItems,
-      ...Array.from({length: 6 - regularItems.length}).fill(0),
+      ...new Array<number>(6 - regularItems.length).fill(0),
     ];
     const renderedRegularItems = map(paddedRegularItems, renderItem);
 

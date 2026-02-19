@@ -1,6 +1,6 @@
 import { Resvg } from "@resvg/resvg-js";
 import satori, { type SatoriOptions } from "satori";
-import { presets } from "./index.ts";
+import { presets } from "./index.js";
 import * as fs from "node:fs/promises";
 import type { RenderFunctionInput } from "#src/types.js";
 import { getFilePath } from "#src/util.js";

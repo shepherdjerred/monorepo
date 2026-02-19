@@ -1,9 +1,10 @@
 import { bugsinkRequest } from "./client.ts";
-import type {
-  BugsinkIssue,
-  BugsinkEvent,
-  BugsinkPaginatedResponse,
-} from "./types.ts";
+import {
+  BugsinkIssueSchema,
+  BugsinkEventSchema,
+  BugsinkPaginatedResponseSchema,
+} from "./schemas.ts";
+import type { BugsinkIssue, BugsinkEvent } from "./types.ts";
 
 export type GetIssuesOptions = {
   project?: string | undefined;
@@ -23,8 +24,9 @@ export async function getIssues(
     params["limit"] = String(options.limit);
   }
 
-  const result = await bugsinkRequest<BugsinkPaginatedResponse<BugsinkIssue>>(
+  const result = await bugsinkRequest(
     "/issues/",
+    BugsinkPaginatedResponseSchema(BugsinkIssueSchema),
     params,
   );
 
@@ -36,7 +38,10 @@ export async function getIssues(
 }
 
 export async function getIssue(issueId: string): Promise<BugsinkIssue | null> {
-  const result = await bugsinkRequest<BugsinkIssue>(`/issues/${issueId}/`);
+  const result = await bugsinkRequest(
+    `/issues/${issueId}/`,
+    BugsinkIssueSchema,
+  );
 
   if (!result.success) {
     if (result.error?.includes("404") === true) {
@@ -52,8 +57,9 @@ export async function getIssueEvents(
   issueId: string,
   limit = 10,
 ): Promise<BugsinkEvent[]> {
-  const result = await bugsinkRequest<BugsinkPaginatedResponse<BugsinkEvent>>(
+  const result = await bugsinkRequest(
     `/issues/${issueId}/events/`,
+    BugsinkPaginatedResponseSchema(BugsinkEventSchema),
     { limit: String(limit) },
   );
 

@@ -100,7 +100,7 @@ describe("Type Inference from Values", () => {
 
   test("should return null for null/undefined", () => {
     expect(inferTypeFromValue(null)).toBe(null);
-    expect(inferTypeFromValue()).toBe(null);
+    expect(inferTypeFromValue(undefined)).toBe(null);
   });
 });
 

@@ -1,7 +1,7 @@
 import { Notifications } from "./stories/notifications.tsx";
 import type { Notification } from "./model/notification.tsx";
 import lodash from "lodash";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { Container } from "./stories/container.tsx";
 import { P, match } from "ts-pattern";
 import { GamePage } from "./pages/game-page.tsx";
@@ -26,10 +26,6 @@ export function App() {
     latency: undefined,
   });
   const [notifications, setNotifications] = useState<Notification[]>([]);
-
-  const _addNotification = useCallback((notification: Notification) => {
-    setNotifications((prev) => [...prev, notification]);
-  }, []);
 
   useInterval(() => {
     const start = Date.now();

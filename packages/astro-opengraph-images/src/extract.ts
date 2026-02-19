@@ -1,4 +1,4 @@
-import type { PageDetails } from "./types.ts";
+import type { PageDetails } from "./types.js";
 
 // Astro CSS parsing fails: Error: Could not parse CSS stylesheet
 // Remove CSS from the HTML

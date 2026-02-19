@@ -126,11 +126,7 @@ async function addDisableCommentsToFile(filePath: string) {
     }
   }
 
-  const tsDisableComments = [
-    "// @ts-nocheck",
-    "/* eslint-disable */",
-    "",
-  ];
+  const tsDisableComments = ["// @ts-nocheck", "/* eslint-disable */", ""];
 
   lines.splice(insertIndex, 0, ...tsDisableComments);
   content = lines.join("\n");
@@ -249,7 +245,11 @@ async function main() {
   );
 
   const hassToken = await resolveHassToken();
-  if (hassToken === undefined || hassToken === "" || isPlaceholderToken(hassToken)) {
+  if (
+    hassToken === undefined ||
+    hassToken === "" ||
+    isPlaceholderToken(hassToken)
+  ) {
     console.log("⚠️  Skipping type generation: HASS_TOKEN is not set.");
     console.log(
       "   Set HASS_TOKEN in the environment or a local .env file to enable type generation.",

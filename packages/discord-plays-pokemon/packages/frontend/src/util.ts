@@ -1,7 +1,7 @@
 import lodash from "lodash";
 
 export function wait(wait: number) {
-  return new Promise((resolve) => {
+  return new Promise<void>((resolve) => {
     setTimeout(() => { resolve(); }, wait);
   });
 }

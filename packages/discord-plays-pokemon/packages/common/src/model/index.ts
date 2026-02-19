@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { LoginRequestSchema, LoginResponseSchema } from "./login.ts";
-import { StatusRequestSchema, StatusResponseSchema } from "./status.ts";
-import { CommandRequestSchema } from "./command.ts";
+import { LoginRequestSchema, LoginResponseSchema } from "./login.js";
+import { StatusRequestSchema, StatusResponseSchema } from "./status.js";
+import { CommandRequestSchema } from "./command.js";
 import {
   ScreenshotRequestSchema,
   ScreenshotResponseSchema,
-} from "./screenshot.ts";
+} from "./screenshot.js";
 
 export type Request = z.infer<typeof RequestSchema>;
 export const RequestSchema = z.discriminatedUnion("kind", [

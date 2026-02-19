@@ -1,5 +1,11 @@
 import type { TServiceParams } from "@digital-alchemy/core";
-import { isAnyoneHome, runIf, runParallel, verifyAfterDelay, withTimeout } from "@shepherdjerred/homelab/ha/src/util.ts";
+import {
+  isAnyoneHome,
+  runIf,
+  runParallel,
+  verifyAfterDelay,
+  withTimeout,
+} from "@shepherdjerred/homelab/ha/src/util.ts";
 import { instrumentWorkflow } from "@shepherdjerred/homelab/ha/src/metrics.ts";
 import { z } from "zod";
 
@@ -127,8 +133,7 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
     verifyAfterDelay({
       entityId: bedroomHeater.entity_id,
       workflowName: "climate_bedroom",
-      getActualState: () =>
-        String(bedroomHeater.attributes.temperature),
+      getActualState: () => String(bedroomHeater.attributes.temperature),
       check: (actual) => actual === bedroomTemp.toString(),
       delay: { amount: 30, unit: "s" },
       description: `target ${bedroomTemp.toString()}°C`,
@@ -140,8 +145,7 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
       verifyAfterDelay({
         entityId: officeHeater.entity_id,
         workflowName: "climate_office",
-        getActualState: () =>
-          String(officeHeater.attributes.temperature),
+        getActualState: () => String(officeHeater.attributes.temperature),
         check: (actual) => actual === officeTemp.toString(),
         delay: { amount: 30, unit: "s" },
         description: `target ${officeTemp.toString()}°C`,

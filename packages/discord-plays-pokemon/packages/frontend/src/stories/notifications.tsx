@@ -1,5 +1,5 @@
 import lodash from "lodash";
-import type { Notification } from "@shepherdjerred/discord-plays-pokemon/packages/frontend/src/model/Notification";
+import type { Notification } from "../model/notification";
 import { Notification as NotificationElement } from "./notification.tsx";
 
 export function Notifications({

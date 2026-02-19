@@ -1,11 +1,12 @@
 import { runGhCommand } from "./client.ts";
+import { PullRequestSchema, ReviewsResponseSchema } from "./schemas.ts";
 import type { PullRequest, Review } from "./types.ts";
 
 export async function getPullRequest(
   prNumber: number | string,
   repo?: string,
 ): Promise<PullRequest | null> {
-  const result = await runGhCommand<PullRequest>(
+  const result = await runGhCommand(
     [
       "pr",
       "view",
@@ -13,6 +14,7 @@ export async function getPullRequest(
       "--json",
       "number,title,url,headRefName,baseRefName,state,isDraft,mergeable,reviewDecision",
     ],
+    PullRequestSchema,
     repo,
   );
 
@@ -26,13 +28,14 @@ export async function getPullRequest(
 export async function getPullRequestForBranch(
   repo?: string,
 ): Promise<PullRequest | null> {
-  const result = await runGhCommand<PullRequest>(
+  const result = await runGhCommand(
     [
       "pr",
       "view",
       "--json",
       "number,title,url,headRefName,baseRefName,state,isDraft,mergeable,reviewDecision",
     ],
+    PullRequestSchema,
     repo,
   );
 
@@ -47,8 +50,9 @@ export async function getReviews(
   prNumber: number | string,
   repo?: string,
 ): Promise<Review[]> {
-  const result = await runGhCommand<{ reviews: Review[] }>(
+  const result = await runGhCommand(
     ["pr", "view", String(prNumber), "--json", "reviews"],
+    ReviewsResponseSchema,
     repo,
   );
 

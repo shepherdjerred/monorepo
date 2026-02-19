@@ -56,8 +56,10 @@ export async function compareChartVersions(
   const appVersionChanges: AppVersionChange[] = [];
 
   if (
-    oldMeta.chartYaml.appVersion != null && oldMeta.chartYaml.appVersion !== "" &&
-    newMeta.chartYaml.appVersion != null && newMeta.chartYaml.appVersion !== "" &&
+    oldMeta.chartYaml.appVersion != null &&
+    oldMeta.chartYaml.appVersion !== "" &&
+    newMeta.chartYaml.appVersion != null &&
+    newMeta.chartYaml.appVersion !== "" &&
     oldMeta.chartYaml.appVersion !== newMeta.chartYaml.appVersion
   ) {
     appVersionChanges.push({
@@ -333,7 +335,8 @@ export function formatDependencyDiff(diff: FullDependencyDiff): string {
   if (diff.images.updated.length > 0) {
     lines.push("### Container Image Updates");
     for (const img of diff.images.updated) {
-      const registry = img.registry != null && img.registry !== "" ? `${img.registry}/` : "";
+      const registry =
+        img.registry != null && img.registry !== "" ? `${img.registry}/` : "";
       lines.push(
         `- ${registry}${img.repository}: ${img.oldTag} → ${img.newTag}`,
       );

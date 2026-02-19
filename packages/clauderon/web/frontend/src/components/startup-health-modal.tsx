@@ -14,7 +14,7 @@ type StartupHealthModalProps = {
 function getHealthLabel(state: ResourceState): string {
   switch (state.type) {
     case "Healthy":
-      return "Healthy";
+      return "Unknown";
     case "Stopped":
       return "Stopped";
     case "Hibernated":

@@ -23,20 +23,36 @@ class MockWebSocket {
   readyState = MockWebSocket.CONNECTING;
   url: string;
 
-  onopen: (() => void) | null = null;
-  onclose: (() => void) | null = null;
-  onerror: ((event: unknown) => void) | null = null;
-  onmessage: ((event: MessageEvent<string>) => void) | null = null;
-
   private readonly sentMessages: string[] = [];
+  private readonly eventListeners = new Map<string, ((...args: any[]) => void)[]>();
 
   constructor(url: string) {
     this.url = url;
     // Simulate async connection
     setTimeout(() => {
       this.readyState = MockWebSocket.OPEN;
-      this.onopen?.();
+      this.dispatchEvent('open');
     }, 0);
+  }
+
+  addEventListener(type: string, listener: (...args: any[]) => void): void {
+    const listeners = this.eventListeners.get(type) ?? [];
+    listeners.push(listener);
+    this.eventListeners.set(type, listeners);
+  }
+
+  removeEventListener(type: string, listener: (...args: any[]) => void): void {
+    const listeners = this.eventListeners.get(type);
+    if (listeners) {
+      this.eventListeners.set(type, listeners.filter((l) => l !== listener));
+    }
+  }
+
+  private dispatchEvent(type: string, event?: any): void {
+    const listeners = this.eventListeners.get(type) ?? [];
+    for (const listener of listeners) {
+      listener(event);
+    }
   }
 
   send(data: string): void {
@@ -45,7 +61,7 @@ class MockWebSocket {
 
   close(): void {
     this.readyState = MockWebSocket.CLOSED;
-    this.onclose?.();
+    this.dispatchEvent('close');
   }
 
   getSentMessages(): string[] {
@@ -55,11 +71,11 @@ class MockWebSocket {
   // Test helpers to simulate server messages
   simulateMessage(data: string): void {
     const event: any = { data };
-    this.onmessage?.(event);
+    this.dispatchEvent('message', event);
   }
 
   simulateError(event: unknown): void {
-    this.onerror?.(event);
+    this.dispatchEvent('error', event);
   }
 }
 
