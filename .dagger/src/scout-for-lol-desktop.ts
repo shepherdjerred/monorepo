@@ -124,10 +124,6 @@ function addDesktopSourceFiles(
       workspaceSource.file("eslint.config.ts"),
     )
     .withFile("/workspace/.jscpd.json", workspaceSource.file(".jscpd.json"))
-    .withDirectory(
-      "/workspace/eslint-rules",
-      workspaceSource.directory("eslint-rules"),
-    )
     .withDirectory("/workspace/scripts", workspaceSource.directory("scripts"))
     .withDirectory(
       "/workspace/packages/backend",

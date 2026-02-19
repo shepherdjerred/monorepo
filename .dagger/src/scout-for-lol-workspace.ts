@@ -85,10 +85,6 @@ export function installWorkspaceDeps(
       workspaceSource.file("eslint.config.ts"),
     )
     .withFile("/workspace/.jscpd.json", workspaceSource.file(".jscpd.json"))
-    .withDirectory(
-      "/workspace/eslint-rules",
-      workspaceSource.directory("eslint-rules"),
-    )
     .withDirectory("/workspace/types", workspaceSource.directory("types"))
     .withDirectory("/workspace/scripts", workspaceSource.directory("scripts"))
     .withDirectory(
@@ -230,10 +226,6 @@ export function getMountedWorkspace(
     .withMountedFile(
       "/workspace/.jscpd.json",
       workspaceSource.file(".jscpd.json"),
-    )
-    .withMountedDirectory(
-      "/workspace/eslint-rules",
-      workspaceSource.directory("eslint-rules"),
     )
     .withMountedDirectory(
       "/workspace/types",
@@ -420,10 +412,6 @@ export function installDesktopDeps(
       workspaceSource.file("eslint.config.ts"),
     )
     .withFile("/workspace/.jscpd.json", workspaceSource.file(".jscpd.json"))
-    .withDirectory(
-      "/workspace/eslint-rules",
-      workspaceSource.directory("eslint-rules"),
-    )
     .withDirectory("/workspace/scripts", workspaceSource.directory("scripts"))
     .withDirectory(
       "/workspace/packages/backend",

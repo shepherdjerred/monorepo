@@ -10,5 +10,6 @@
       "@styles/*": ["src/styles/*"],
       "@images/*": ["src/images/*"]
     }
-  }
+  },
+  "exclude": ["eslint.config.ts"]
 }

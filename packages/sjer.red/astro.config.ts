@@ -87,7 +87,6 @@ export default defineConfig({
   prefetch: true,
 
   vite: {
-    // @ts-expect-error tailwindcss uses vite 7.x types but Astro uses vite 6.x
     plugins: [tailwindcss()],
     ssr: {
       external: ["@resvg/resvg-js"],
