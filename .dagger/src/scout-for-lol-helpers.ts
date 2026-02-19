@@ -83,7 +83,11 @@ export function installWorkspaceDeps(
     .withExec(["bun", "install", "--frozen-lockfile"]);
 
   // PHASE 2: Config files and source code
-  return addSourceFiles(container, workspaceSource);
+  container = addSourceFiles(container, workspaceSource);
+
+  // PHASE 3: Re-run bun install to recreate per-package node_modules symlinks
+  // that were overwritten by withDirectory in addSourceFiles
+  return container.withExec(["bun", "install", "--frozen-lockfile"]);
 }
 
 /**
