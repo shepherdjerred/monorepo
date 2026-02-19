@@ -47,6 +47,11 @@ export async function checkSjerRed(source: Directory): Promise<string> {
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
       .withFile("/workspace/package.json", source.file("package.json"))
       .withFile("/workspace/bun.lock", source.file("bun.lock"))
+      .withExec([
+        "bun",
+        "-e",
+        `const pkg = JSON.parse(await Bun.file('/workspace/package.json').text()); pkg.workspaces = ['packages/sjer.red', 'packages/eslint-config']; await Bun.write('/workspace/package.json', JSON.stringify(pkg));`,
+      ])
       .withDirectory("/workspace/packages/sjer.red", ciSource)
       .withDirectory(
         "/workspace/packages/eslint-config",

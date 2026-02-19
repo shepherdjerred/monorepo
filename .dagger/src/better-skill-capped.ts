@@ -30,6 +30,11 @@ export async function checkBetterSkillCapped(
     getBscContainer()
       .withFile("/workspace/package.json", source.file("package.json"))
       .withFile("/workspace/bun.lock", source.file("bun.lock"))
+      .withExec([
+        "bun",
+        "-e",
+        `const pkg = JSON.parse(await Bun.file('/workspace/package.json').text()); pkg.workspaces = ['packages/better-skill-capped', 'packages/eslint-config']; await Bun.write('/workspace/package.json', JSON.stringify(pkg));`,
+      ])
       .withDirectory("/workspace/packages/better-skill-capped", mainSource)
       .withDirectory(
         "/workspace/packages/eslint-config",

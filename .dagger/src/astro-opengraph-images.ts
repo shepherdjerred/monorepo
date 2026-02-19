@@ -14,9 +14,14 @@ export async function checkAstroOpengraphImages(
     .withWorkdir("/workspace")
     .withEnvVariable("CI", "true")
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
-    // Root workspace files for bun install
+    // Root workspace files for bun install (strip workspaces to avoid resolving missing members)
     .withFile("/workspace/package.json", source.file("package.json"))
     .withFile("/workspace/bun.lock", source.file("bun.lock"))
+    .withExec([
+      "bun",
+      "-e",
+      `const pkg = JSON.parse(await Bun.file('/workspace/package.json').text()); pkg.workspaces = ['packages/astro-opengraph-images', 'packages/eslint-config']; await Bun.write('/workspace/package.json', JSON.stringify(pkg));`,
+    ])
     // Package source
     .withDirectory(
       "/workspace/packages/astro-opengraph-images",
