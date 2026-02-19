@@ -1,6 +1,6 @@
 import { Label } from "@/components/ui/label";
 import { Trash2, Star } from "lucide-react";
-import { RepositoryPathSelector } from "./RepositoryPathSelector.tsx";
+import { RepositoryPathSelector } from "./repository-path-selector.tsx";
 
 type RepositoryEntry = {
   id: string;

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { useAuth } from "@shepherdjerred/clauderon/web/frontend/src/contexts/AuthContext";
-import { LoginPage } from "@shepherdjerred/clauderon/web/frontend/src/pages/LoginPage";
-import { RegistrationPage } from "@shepherdjerred/clauderon/web/frontend/src/pages/RegistrationPage";
+import { useAuth } from "@/contexts/auth-context.tsx";
+import { LoginPage } from "@/pages/login-page.tsx";
+import { RegistrationPage } from "@/pages/registration-page.tsx";
 
 type AuthGuardProps = {
   children: ReactNode;

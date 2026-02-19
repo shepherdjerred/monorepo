@@ -2,15 +2,15 @@ import { useState, useMemo } from "react";
 import type { Session, SessionHealthReport } from "@clauderon/client";
 import { SessionStatus } from "@clauderon/shared";
 import type { MergeMethod } from "@clauderon/shared";
-import { SessionCard } from "./SessionCard.tsx";
-import { ThemeToggle } from "./ThemeToggle.tsx";
-import { ConfirmDialog } from "./ConfirmDialog.tsx";
-import { StatusDialog } from "./StatusDialog.tsx";
-import { EditSessionDialog } from "./EditSessionDialog.tsx";
-import { StartupHealthModal } from "./StartupHealthModal.tsx";
-import { RecreateBlockedModal } from "./RecreateBlockedModal.tsx";
-import { RecreateModalWrapper } from "./RecreateModalCallbacks.tsx";
-import { useSessionContext } from "@shepherdjerred/clauderon/web/frontend/src/contexts/SessionContext";
+import { SessionCard } from "./session-card.tsx";
+import { ThemeToggle } from "./theme-toggle.tsx";
+import { ConfirmDialog } from "./confirm-dialog.tsx";
+import { StatusDialog } from "./status-dialog.tsx";
+import { EditSessionDialog } from "./edit-session-dialog.tsx";
+import { StartupHealthModal } from "./startup-health-modal.tsx";
+import { RecreateBlockedModal } from "./recreate-blocked-modal.tsx";
+import { RecreateModalWrapper } from "./recreate-modal-callbacks.tsx";
+import { useSessionContext } from "@/contexts/session-context.tsx";
 import { toast } from "sonner";
 import { Plus, RefreshCw, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -421,7 +421,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
       {confirmDialog != null && (
         <ConfirmDialog
           open={true}
-          onOpenChange={(open) => {
+          onOpenChange={(open: boolean) => {
             if (!open) {
               setConfirmDialog(null);
             }
@@ -469,7 +469,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
         <RecreateModalWrapper
           session={recreateModalSession.session}
           healthReport={recreateModalSession.healthReport}
-          onOpenChange={(open) => {
+          onOpenChange={(open: boolean) => {
             if (!open) {
               setRecreateModalSession(null);
             }
@@ -486,7 +486,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
       {blockedModalSession != null && (
         <RecreateBlockedModal
           open={true}
-          onOpenChange={(open) => {
+          onOpenChange={(open: boolean) => {
             if (!open) {
               setBlockedModalSession(null);
             }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Clock, FolderOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { DirectoryBrowserDialog } from "./DirectoryBrowserDialog.tsx";
+import { DirectoryBrowserDialog } from "./directory-browser-dialog.tsx";
 import type { RecentRepoDto } from "@clauderon/client";
 
 type RepositoryPathSelectorProps = {

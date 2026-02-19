@@ -1,13 +1,13 @@
 import { useState } from "react";
 import type { Session } from "@clauderon/client";
-import { AuthProvider } from "./contexts/AuthContext.tsx";
-import { AuthGuard } from "./components/AuthGuard.tsx";
-import { SessionProvider } from "./contexts/SessionContext.tsx";
-import { FeatureFlagsProvider } from "./contexts/FeatureFlagsContext.tsx";
-import { SessionList } from "./components/SessionList.tsx";
-import { CreateSessionDialog } from "./components/CreateSessionDialog.tsx";
-import { Console } from "./components/Console.tsx";
-import { ChatInterface } from "./components/ChatInterface.tsx";
+import { AuthProvider } from "./contexts/auth-context.tsx";
+import { AuthGuard } from "./components/auth-guard.tsx";
+import { SessionProvider } from "./contexts/session-context.tsx";
+import { FeatureFlagsProvider } from "./contexts/feature-flags-context.tsx";
+import { SessionList } from "./components/session-list.tsx";
+import { CreateSessionDialog } from "./components/create-session-dialog.tsx";
+import { Console } from "./components/console.tsx";
+import { ChatInterface } from "./components/chat-interface.tsx";
 import { Toaster } from "sonner";
 
 type View = "list" | "console" | "chat";

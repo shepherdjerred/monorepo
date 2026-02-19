@@ -100,6 +100,7 @@ describe("Type Inference from Values", () => {
 
   test("should return null for null/undefined", () => {
     expect(inferTypeFromValue(null)).toBe(null);
+    // eslint-disable-next-line unicorn/no-useless-undefined -- testing undefined input
     expect(inferTypeFromValue(undefined)).toBe(null);
   });
 });

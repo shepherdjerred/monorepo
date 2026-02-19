@@ -1,4 +1,4 @@
-import type { Message } from "@shepherdjerred/clauderon/web/frontend/src/lib/claudeParser";
+import type { Message } from "@/lib/claude-parser.ts";
 import { HelpCircle, Check } from "lucide-react";
 import { z } from "zod";
 
@@ -32,7 +32,7 @@ export function QuestionView({ message }: QuestionViewProps) {
     return null;
   }
 
-  const parseResult = QuestionsSchema.safeParse(questionTool.input.questions);
+  const parseResult = QuestionsSchema.safeParse(questionTool.input["questions"]);
   const questions: QuestionItem[] | undefined =
     parseResult.success && parseResult.data.length > 0
       ? parseResult.data

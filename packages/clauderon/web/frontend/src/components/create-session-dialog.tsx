@@ -5,20 +5,20 @@ import type {
   CreateRepositoryInput,
 } from "@clauderon/client";
 import { AgentType, BackendType, AccessMode } from "@clauderon/shared";
-import { useSessionContext } from "@shepherdjerred/clauderon/web/frontend/src/contexts/SessionContext";
-import { useFeatureFlags } from "@shepherdjerred/clauderon/web/frontend/src/contexts/FeatureFlagsContext";
+import { useSessionContext } from "@/contexts/session-context.tsx";
+import { useFeatureFlags } from "@/contexts/feature-flags-context.tsx";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { X, Plus } from "lucide-react";
-import { RepositoryEntryForm } from "./RepositoryEntryForm.tsx";
-import { AgentModelSelector } from "./AgentModelSelector.tsx";
+import { RepositoryEntryForm } from "./repository-entry-form.tsx";
+import { AgentModelSelector } from "./agent-model-selector.tsx";
 import { toast } from "sonner";
 import { getModelsForAgent, validateRepositories } from "@/lib/model-options";
 import {
   AdvancedContainerSettings,
   type SessionFormData,
-} from "./AdvancedContainerSettings.tsx";
-import { useRepositoryHandlers } from "@/hooks/useRepositoryHandlers";
+} from "./advanced-container-settings.tsx";
+import { useRepositoryHandlers } from "@/hooks/use-repository-handlers.ts";
 import { ImageAttachmentInput } from "./image-attachment-input.tsx";
 
 type CreateSessionDialogProps = {
@@ -379,7 +379,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             <AgentModelSelector
               formData={formData}
               setFormData={setFormData}
-              featureFlags={featureFlags}
+              featureFlags={flags}
               enableReadonlyMode={flags?.enable_readonly_mode === true}
               availableModels={availableModels}
             />

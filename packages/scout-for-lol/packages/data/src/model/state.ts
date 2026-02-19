@@ -43,6 +43,7 @@ export function parseQueueType(input: number): QueueType | undefined {
     .with(4250, () => "hard doom bots")
     .otherwise(() => {
       console.error(`unknown queue type: ${input.toString()}`);
+      // eslint-disable-next-line unicorn/no-useless-undefined -- void not assignable to QueueType | undefined
       return undefined;
     });
 }

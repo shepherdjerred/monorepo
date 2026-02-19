@@ -12,8 +12,8 @@ import type {
   SystemStatus,
   ProxyStatus,
 } from "@clauderon/client";
-import { useSessionContext } from "@shepherdjerred/clauderon/web/frontend/src/contexts/SessionContext";
-import { UsageProgressBar } from "./UsageProgressBar.tsx";
+import { useSessionContext } from "@/contexts/session-context.tsx";
+import { UsageProgressBar } from "./usage-progress-bar.tsx";
 import { CredentialCard } from "./credential-card.tsx";
 
 type StatusDialogProps = {

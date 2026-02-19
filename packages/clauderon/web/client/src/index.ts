@@ -8,16 +8,16 @@
 export type * from "@clauderon/shared";
 
 // Export main client
-export { ClauderonClient } from "./clauderon-client.js";
-export type { ClauderonClientConfig, StorageClassInfo } from "./client-types.js";
+export { ClauderonClient } from "./clauderon-client.ts";
+export type { ClauderonClientConfig, StorageClassInfo } from "./client-types.ts";
 
 // Export WebSocket clients
 export {
   EventsClient,
   type EventsClientConfig,
   type SessionEvent,
-} from "./events-client.js";
-export { ConsoleClient, type ConsoleClientConfig } from "./console-client.js";
+} from "./events-client.ts";
+export { ConsoleClient, type ConsoleClientConfig } from "./console-client.ts";
 
 // Export errors
 export {
@@ -27,4 +27,4 @@ export {
   SessionNotFoundError,
   WebSocketError,
   DecodeError,
-} from "./errors.js";
+} from "./errors.ts";

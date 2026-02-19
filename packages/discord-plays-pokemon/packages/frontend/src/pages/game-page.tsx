@@ -1,10 +1,10 @@
 import type { Status, Player } from "@discord-plays-pokemon/common";
-import type { Connection } from "../model/connection";
-import { Button } from "../stories/button";
-import { Card } from "../stories/card";
-import { Controls } from "../stories/controls";
-import { Keys } from "../stories/keys";
-import { Profile } from "../stories/profile";
+import type { Connection } from "#src/model/connection.ts";
+import { Button } from "#src/stories/button.tsx";
+import { Card } from "#src/stories/card.tsx";
+import { Controls } from "#src/stories/controls.tsx";
+import { Keys } from "#src/stories/keys.tsx";
+import { Profile } from "#src/stories/profile.tsx";
 
 export function GamePage({
   status,

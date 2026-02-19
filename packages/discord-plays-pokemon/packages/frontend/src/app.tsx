@@ -1,5 +1,5 @@
 import { Notifications } from "./stories/notifications.tsx";
-import type { Notification } from "./model/notification.tsx";
+import type { Notification } from "./model/notification.ts";
 import lodash from "lodash";
 import { useState } from "react";
 import { Container } from "./stories/container.tsx";
@@ -7,8 +7,8 @@ import { P, match } from "ts-pattern";
 import { GamePage } from "./pages/game-page.tsx";
 import { LoginPage } from "./pages/login-page.tsx";
 import { useInterval } from "react-use";
-import type { Connection } from "./model/connection.tsx";
-import { socket } from "./socket.tsx";
+import type { Connection } from "./model/connection.ts";
+import { socket } from "./socket.ts";
 import type {
   CommandRequest,
   LoginRequest,

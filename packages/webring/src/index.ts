@@ -1,11 +1,11 @@
 import * as R from "remeda";
-import { fetchAllCached } from "./cache.js";
-import { fetchAll as fetchAllUncached } from "./fetch.js";
+import { fetchAllCached } from "./cache.ts";
+import { fetchAll as fetchAllUncached } from "./fetch.ts";
 import {
   type Configuration,
   type Result,
   CachedConfigurationSchema,
-} from "./types.js";
+} from "./types.ts";
 
 export async function run(config: Configuration): Promise<Result> {
   const { success, data } = CachedConfigurationSchema.safeParse(config);

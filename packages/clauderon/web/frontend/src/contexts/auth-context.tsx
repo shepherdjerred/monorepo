@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import type { AuthStatus, AuthUser } from "@clauderon/shared";
-import { useClauderonClient } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useClauderonClient";
+import { useClauderonClient } from "@/hooks/use-clauderon-client.ts";
 
 type AuthContextValue = {
   authStatus: AuthStatus | null;

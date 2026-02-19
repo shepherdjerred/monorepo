@@ -78,7 +78,7 @@ function addDesktopDepFiles(
     .withWorkdir("/workspace")
     .withFile("/workspace/package.json", workspaceSource.file("package.json"))
     .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
-    .withDirectory("/workspace/patches", workspaceSource.directory("patches"))
+    .withDirectory("/workspace/packages/scout-for-lol/patches", workspaceSource.directory("patches"))
     .withFile(
       "/workspace/packages/backend/package.json",
       workspaceSource.file("packages/backend/package.json"),
