@@ -114,7 +114,7 @@ export class Monorepo {
     // ========================================================================
     const typeSharePromise = withTiming("TypeShare generation", async () => {
       const rc = getRustContainer(source, undefined, s3AccessKeyId, s3SecretAccessKey)
-        .withExec(["cargo", "install", "typeshare-cli", "--locked"])
+        .withExec(["cargo", "install", "typeshare-cli", "--locked", "--root", "/root/.cargo-tools"])
         .withExec(["typeshare", ".", "--lang=typescript", "--output-file=web/shared/src/generated/index.ts"]);
       await rc.sync();
       return rc;
@@ -185,28 +185,37 @@ export class Monorepo {
 
     // ========================================================================
     // TIER 3: knipCheck (needs fully-built container) + collect tier 0
+    // Run in parallel — knip shouldn't block tier 0 collection
     // ========================================================================
-    try {
-      await knipCheck(container).sync();
+    const [knipResult, tier0Result] = await Promise.allSettled([
+      knipCheck(container).sync(),
+      collectTier0Results({
+        compliance: tier0Compliance,
+        mobile: tier0Mobile,
+        birmel: tier0Birmel,
+        packages: tier0Packages,
+        quality: tier0Quality,
+      }),
+    ]);
+
+    // Handle knip (non-blocking)
+    if (knipResult.status === "fulfilled") {
       outputs.push("✓ Knip");
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
+    } else {
+      const msg = knipResult.reason instanceof Error ? knipResult.reason.message : String(knipResult.reason);
       outputs.push(`::warning title=Knip::${msg.slice(0, 200)}`);
       outputs.push(`⚠ Knip (non-blocking): ${msg}`);
     }
 
-    // Collect TIER 0 results (have been running throughout critical path)
-    // Each step is try-caught so one failure doesn't prevent collecting others
-    const tier0Result = await collectTier0Results({
-      compliance: tier0Compliance,
-      mobile: tier0Mobile,
-      birmel: tier0Birmel,
-      packages: tier0Packages,
-      quality: tier0Quality,
-    });
-    outputs.push(...tier0Result.outputs);
-    if (tier0Result.errors.length > 0) {
-      throw new Error(`Tier 0 failures:\n${tier0Result.errors.join("\n")}`);
+    // Handle tier 0 results (blocking)
+    if (tier0Result.status === "fulfilled") {
+      outputs.push(...tier0Result.value.outputs);
+      if (tier0Result.value.errors.length > 0) {
+        throw new Error(`Tier 0 failures:\n${tier0Result.value.errors.join("\n")}`);
+      }
+    } else {
+      const reason: unknown = tier0Result.reason;
+      throw reason instanceof Error ? reason : new Error(String(reason));
     }
 
     // RELEASE PHASE

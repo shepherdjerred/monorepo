@@ -1,16 +1,20 @@
 import type { Directory, Container, Secret } from "@dagger.io/dagger";
+import { dag } from "@dagger.io/dagger";
 import {
   getBaseBunDebianContainer,
   installMonorepoWorkspaceDeps,
 } from "./lib-monorepo-workspace.ts";
 import type { WorkspaceEntry } from "./lib-monorepo-workspace.ts";
+import versions from "./lib-versions.ts";
+
+const PLAYWRIGHT_VERSION = versions.playwright;
 
 /**
  * Birmel-specific base container with voice/build dependencies.
  * Adds ffmpeg, build tools, GitHub CLI, and Claude CLI on top of the shared base.
  */
 function getBirmelBaseContainer(): Container {
-  return getBaseBunDebianContainer({
+  const base = getBaseBunDebianContainer({
     extraAptPackages: ["ffmpeg", "make", "g++", "libtool-bin", "curl", "git"],
     postAptSetup: (container) =>
       container
@@ -27,6 +31,14 @@ function getBirmelBaseContainer(): Container {
           "curl -fsSL https://claude.ai/install.sh | bash && ln -sf /root/.local/bin/claude /usr/local/bin/claude",
         ]),
   });
+
+  // Playwright only needed by birmel (browser automation feature)
+  return base
+    .withMountedCache(
+      "/root/.cache/ms-playwright",
+      dag.cacheVolume(`playwright-browsers-${PLAYWRIGHT_VERSION}`),
+    )
+    .withExec(["bunx", "playwright", "install", "--with-deps", "chromium"]);
 }
 
 /**

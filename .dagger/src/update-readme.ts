@@ -44,8 +44,10 @@ git remote set-url origin "https://x-access-token:\${GH_TOKEN}@github.com/$REPO.
 # Keep tools local to this repo run.
 python3 -m pip install --break-system-packages cogapp >/tmp/pip.log 2>&1
 
+# Clear cached summaries so every run regenerates from current prompt/rules.
+git rm -f --ignore-unmatch -- "packages/*/_summary.md" "practice/*/_summary.md" "archive/*/_summary.md"
+
 # Regenerate README content (cog blocks call Codex CLI).
-# Existing _summary.md files are kept as cache; only missing ones are generated.
 python3 -m cogapp -r README.md practice/README.md archive/README.md
 
 if git diff --quiet; then

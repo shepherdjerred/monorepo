@@ -75,6 +75,8 @@ export function getRustContainer(
     )
     .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
     .withMountedCache("/workspace/target", dag.cacheVolume("clauderon-target"))
+    .withMountedCache("/root/.cargo-tools/bin", dag.cacheVolume("cargo-tools-bin"))
+    .withEnvVariable("PATH", "/root/.cargo-tools/bin:/usr/local/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin")
     .withMountedDirectory("/workspace", source.directory("packages/clauderon"))
     .withExec(["rustup", "component", "add", "rustfmt", "clippy"]);
 

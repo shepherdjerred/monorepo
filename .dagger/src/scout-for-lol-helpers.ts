@@ -39,7 +39,7 @@ export function installWorkspaceDeps(
 
   container = container.withMountedCache(
     "/root/.bun/install/cache",
-    dag.cacheVolume("bun-install-cache"),
+    dag.cacheVolume("bun-cache"),
   );
   container = container.withMountedCache(
     "/workspace/.eslintcache",
@@ -187,7 +187,7 @@ function getMountedWorkspace(
 
   container = container.withMountedCache(
     "/root/.bun/install/cache",
-    dag.cacheVolume("bun-install-cache"),
+    dag.cacheVolume("bun-cache"),
   );
   container = container.withMountedCache(
     "/workspace/.eslintcache",

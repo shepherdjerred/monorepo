@@ -166,9 +166,6 @@ export async function buildClauderonWeb(
 ): Promise<{ container: Container; frontendDist: Directory; outputs: string[] }> {
   const outputs: string[] = [];
 
-  await rustContainer.sync();
-  outputs.push("✓ TypeScript types generated");
-
   const generatedTypes = rustContainer.directory(
     "/workspace/web/shared/src/generated",
   );
@@ -176,8 +173,6 @@ export async function buildClauderonWeb(
     "/workspace/packages/clauderon/web/shared/src/generated",
     generatedTypes,
   );
-  await c.sync();
-  outputs.push("✓ Types copied to workspace");
 
   c = c
     .withWorkdir("/workspace/packages/clauderon/web/shared")
@@ -188,7 +183,7 @@ export async function buildClauderonWeb(
     .withExec(["bun", "run", "build"])
     .withWorkdir("/workspace");
   await c.sync();
-  outputs.push("✓ Web packages built");
+  outputs.push("✓ TypeScript types generated and web packages built");
 
   const frontendDist = c.directory(
     "/workspace/packages/clauderon/web/frontend/dist",
