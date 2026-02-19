@@ -25,6 +25,7 @@ export default [
       "**/.astro/**/*",
       ".dagger/sdk/**/*",
       "**/src-tauri/target/**/*",
+      "**/scripts/**/*",
       "**/*.md",
       "**/*.mdx",
       "**/*.astro",

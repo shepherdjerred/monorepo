@@ -51,6 +51,14 @@ function installDepsWithWebring(
     .withExec(["bun", "install"])
     .withWorkdir("/workspace/packages/webring")
     .withExec(["bun", "run", "build"])
+    // Ensure workspace symlink resolves to the built package.
+    // bun may place the link at sjer.red/node_modules/webring or root node_modules;
+    // force both so TypeScript always finds the dist/ types.
+    .withExec([
+      "sh",
+      "-c",
+      "mkdir -p /workspace/packages/sjer.red/node_modules && ln -sfn ../../webring /workspace/packages/sjer.red/node_modules/webring && mkdir -p /workspace/node_modules && ln -sfn ../packages/webring /workspace/node_modules/webring",
+    ])
     .withWorkdir("/workspace/packages/sjer.red");
 }
 
@@ -89,6 +97,11 @@ export async function checkSjerRed(source: Directory): Promise<string> {
       .withExec(["bun", "run", "build"])
       .withWorkdir("/workspace/packages/webring")
       .withExec(["bun", "run", "build"])
+      .withExec([
+        "sh",
+        "-c",
+        "mkdir -p /workspace/packages/sjer.red/node_modules && ln -sfn ../../webring /workspace/packages/sjer.red/node_modules/webring && mkdir -p /workspace/node_modules && ln -sfn ../packages/webring /workspace/node_modules/webring",
+      ])
       .withWorkdir("/workspace/packages/sjer.red")
       .withExec(["bunx", "astro", "sync"])
       .withExec(["bun", "run", "lint"])

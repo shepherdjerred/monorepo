@@ -8,3 +8,4 @@ matches
 npm
 **/__snapshots__/*.png
 *.svg
+!src/html/**/assets/*.svg
