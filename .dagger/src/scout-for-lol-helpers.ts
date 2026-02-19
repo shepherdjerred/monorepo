@@ -200,7 +200,7 @@ function getMountedWorkspace(
       "/workspace/package.json",
       workspaceSource.file("package.json"),
     )
-    .withMountedFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
+    .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
     .withMountedDirectory(
       "/workspace/packages/scout-for-lol/patches",
       workspaceSource.directory("patches"),

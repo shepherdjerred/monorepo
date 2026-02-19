@@ -33,7 +33,8 @@ export async function withTiming<T>(
     return result;
   } catch (error) {
     const duration = ((performance.now() - start) / 1000).toFixed(2);
-    logWithTimestamp(`Failed: ${name} (${duration}s)`);
+    const msg = error instanceof Error ? error.message : String(error);
+    logWithTimestamp(`Failed: ${name} (${duration}s): ${msg.slice(0, 500)}`);
     throw error;
   }
 }

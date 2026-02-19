@@ -17,6 +17,7 @@ import {
   buildClauderonWeb,
   runPackageValidation,
   runReleasePhase,
+  collectTier0Results,
 } from "./index-ci-helpers.ts";
 import type { ReleasePhaseOptions } from "./index-ci-helpers.ts";
 import {
@@ -188,23 +189,18 @@ export class Monorepo {
     }
 
     // Collect TIER 0 results (have been running throughout critical path)
-    outputs.push(await tier0Compliance);
-
-    outputs.push("::group::Clauderon Mobile Validation");
-    outputs.push(await tier0Mobile);
-    outputs.push("::endgroup::");
-
-    outputs.push("::group::Birmel Validation");
-    outputs.push(await tier0Birmel);
-    outputs.push("::endgroup::");
-
-    outputs.push("::group::Package Validation");
-    outputs.push(await tier0Packages);
-    outputs.push("::endgroup::");
-
-    outputs.push("::group::Quality & Security Checks");
-    outputs.push(await tier0Quality);
-    outputs.push("::endgroup::");
+    // Each step is try-caught so one failure doesn't prevent collecting others
+    const tier0Result = await collectTier0Results({
+      compliance: tier0Compliance,
+      mobile: tier0Mobile,
+      birmel: tier0Birmel,
+      packages: tier0Packages,
+      quality: tier0Quality,
+    });
+    outputs.push(...tier0Result.outputs);
+    if (tier0Result.errors.length > 0) {
+      throw new Error(`Tier 0 failures:\n${tier0Result.errors.join("\n")}`);
+    }
 
     // RELEASE PHASE
     if (isRelease && githubToken !== undefined && npmToken !== undefined) {

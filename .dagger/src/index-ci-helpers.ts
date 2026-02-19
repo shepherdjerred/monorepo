@@ -245,6 +245,47 @@ export async function runPackageValidation(
 }
 
 /**
+ * Collect tier 0 results, wrapping each in try-catch so one failure
+ * doesn't prevent collecting others. Returns outputs and errors separately.
+ */
+export async function collectTier0Results(tier0: {
+  compliance: Promise<string>;
+  mobile: Promise<string>;
+  birmel: Promise<string>;
+  packages: Promise<string>;
+  quality: Promise<string>;
+}): Promise<{ outputs: string[]; errors: string[] }> {
+  const outputs: string[] = [];
+  const errors: string[] = [];
+
+  const steps: { name: string; promise: Promise<string>; group: string | undefined }[] = [
+    { name: "Compliance", promise: tier0.compliance, group: undefined },
+    { name: "Mobile CI", promise: tier0.mobile, group: "Clauderon Mobile Validation" },
+    { name: "Birmel", promise: tier0.birmel, group: "Birmel Validation" },
+    { name: "Packages", promise: tier0.packages, group: "Package Validation" },
+    { name: "Quality", promise: tier0.quality, group: "Quality & Security Checks" },
+  ];
+
+  for (const step of steps) {
+    if (step.group !== undefined) {
+      outputs.push(`::group::${step.group}`);
+    }
+    try {
+      outputs.push(await step.promise);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      errors.push(`${step.name}: ${msg}`);
+      outputs.push(`✗ ${step.name}: ${msg}`);
+    }
+    if (step.group !== undefined) {
+      outputs.push("::endgroup::");
+    }
+  }
+
+  return { outputs, errors };
+}
+
+/**
  * Options for the release phase
  */
 export type ReleasePhaseOptions = {
