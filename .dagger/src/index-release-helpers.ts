@@ -129,6 +129,26 @@ type DeployTask = {
   deploy: () => Promise<string>;
 };
 
+async function withDeployRetry(
+  name: string,
+  fn: () => Promise<string>,
+  maxRetries = 2,
+): Promise<string> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      const isGraphqlError = msg.includes("unknown error while requesting data via graphql");
+      if (!isGraphqlError || attempt === maxRetries) {
+        throw error;
+      }
+      console.log(`⟳ ${name}: graphql error on attempt ${String(attempt + 1)}, retrying...`);
+    }
+  }
+  throw new Error("unreachable");
+}
+
 export async function runAppDeployments(
   options: ReleasePhaseOptions,
 ): Promise<{ outputs: string[]; errors: string[]; appVersions: Record<string, string> }> {
@@ -204,10 +224,10 @@ export async function runAppDeployments(
     }
   }
 
-  // Run all deployment tasks in parallel
+  // Run all deployment tasks in parallel, with per-task GraphQL error retry
   const results = await runNamedParallel(tasks.map(t => ({
     name: t.name,
-    operation: t.deploy,
+    operation: () => withDeployRetry(t.name, t.deploy),
   })));
 
   // Collect results and build appVersions from SUCCESSFUL deployments only
