@@ -40,6 +40,7 @@ export async function checkBetterSkillCapped(
         "/workspace/packages/eslint-config",
         source.directory("packages/eslint-config"),
       )
+      .withFile("/workspace/tsconfig.base.json", source.file("tsconfig.base.json"))
       .withWorkdir("/workspace")
       .withExec(["bun", "install"])
       .withWorkdir("/workspace/packages/eslint-config")
@@ -47,16 +48,16 @@ export async function checkBetterSkillCapped(
       .withWorkdir("/workspace/packages/better-skill-capped")
       .withExec(["bun", "run", "lint"])
       .sync(),
-    // Main app build
+    // Main app build (no lockfile in package — can't use --frozen-lockfile)
     getBscContainer()
       .withMountedDirectory("/workspace", mainSource)
-      .withExec(["bun", "install", "--frozen-lockfile"])
+      .withExec(["bun", "install"])
       .withExec(["bun", "run", "build"])
       .sync(),
-    // Fetcher build
+    // Fetcher build (no lockfile in package — can't use --frozen-lockfile)
     getBscContainer()
       .withMountedDirectory("/workspace", fetcherSource)
-      .withExec(["bun", "install", "--frozen-lockfile"])
+      .withExec(["bun", "install"])
       .withExec(["bun", "run", "build"])
       .sync(),
   ]);
@@ -88,7 +89,7 @@ export async function deployBetterSkillCapped(
   // Build and deploy frontend to S3
   const buildContainer = getBscContainer()
     .withDirectory("/workspace", mainSource)
-    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withExec(["bun", "install"])
     .withExec(["bun", "run", "build"]);
   const dist = buildContainer.directory("/workspace/dist");
 
@@ -106,7 +107,7 @@ export async function deployBetterSkillCapped(
   // Build and publish fetcher container to GHCR
   const fetcherContainer = getBscContainer()
     .withDirectory("/workspace", fetcherSource)
-    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withExec(["bun", "install"])
     .withEntrypoint(["bun", "run", "src/index.ts"]);
 
   const fetcherImage = "ghcr.io/shepherdjerred/better-skill-capped-fetcher";

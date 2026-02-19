@@ -1,4 +1,4 @@
-import type { Directory, Container, Secret } from "@dagger.io/dagger";
+import type { Directory, Container, Secret, File } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 import { getGitHubContainer } from "./lib-github.ts";
 import { logWithTimestamp } from "./lib-timing.ts";
@@ -194,13 +194,18 @@ export async function checkDesktopParallel(
   workspaceSource: Directory,
   frontendDist?: Directory,
   eslintConfigSource?: Directory,
+  tsconfigBase?: File,
 ): Promise<void> {
   let baseContainer = installDesktopDeps(workspaceSource);
 
   // Mount eslint-config for lint (eslint.config.ts imports from ../eslint-config/local.ts)
   if (eslintConfigSource) {
     baseContainer = baseContainer
-      .withDirectory("/eslint-config", eslintConfigSource)
+      .withDirectory("/eslint-config", eslintConfigSource);
+    if (tsconfigBase) {
+      baseContainer = baseContainer.withFile("/tsconfig.base.json", tsconfigBase);
+    }
+    baseContainer = baseContainer
       .withWorkdir("/eslint-config")
       .withExec(["bun", "install"])
       .withExec(["bun", "run", "build"])

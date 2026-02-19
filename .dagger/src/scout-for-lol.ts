@@ -25,6 +25,7 @@ import {
 export async function checkScoutForLol(source: Directory): Promise<string> {
   const pkgSource = source.directory("packages/scout-for-lol");
   const eslintConfigSource = source.directory("packages/eslint-config");
+  const tsconfigBase = source.file("tsconfig.base.json");
 
   logWithTimestamp("Starting comprehensive check process for scout-for-lol");
 
@@ -38,6 +39,7 @@ export async function checkScoutForLol(source: Directory): Promise<string> {
     prismaGenerated,
   )
     .withDirectory("/eslint-config", eslintConfigSource)
+    .withFile("/tsconfig.base.json", tsconfigBase)
     .withWorkdir("/eslint-config")
     .withExec(["bun", "install"])
     .withExec(["bun", "run", "build"])
@@ -83,7 +85,7 @@ export async function checkScoutForLol(source: Directory): Promise<string> {
           .sync();
       }),
       withTiming("desktop check (parallel TS + Rust)", async () => {
-        await checkDesktopParallel(pkgSource, desktopFrontend, eslintConfigSource);
+        await checkDesktopParallel(pkgSource, desktopFrontend, eslintConfigSource, tsconfigBase);
       }),
     ]);
   });

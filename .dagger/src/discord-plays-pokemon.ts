@@ -1,4 +1,4 @@
-import type { Directory, Container, Secret } from "@dagger.io/dagger";
+import type { Directory, Container, Secret, File } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 import { syncToS3 } from "./lib-s3.ts";
 import { publishToGhcrMultiple } from "./lib-ghcr.ts";
@@ -51,10 +51,12 @@ function installCommonDeps(workspaceSource: Directory): Container {
 function lintCommon(
   workspaceSource: Directory,
   eslintConfigSource: Directory,
+  tsconfigBase: File,
 ): Container {
   return installCommonDeps(workspaceSource)
     .withFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
     .withDirectory("/eslint-config", eslintConfigSource)
+    .withFile("/tsconfig.base.json", tsconfigBase)
     .withWorkdir("/eslint-config")
     .withExec(["bun", "install"])
     .withExec(["bun", "run", "build"])
@@ -106,10 +108,12 @@ function installBackendDeps(workspaceSource: Directory): Container {
 function lintBackend(
   workspaceSource: Directory,
   eslintConfigSource: Directory,
+  tsconfigBase: File,
 ): Container {
   return installBackendDeps(workspaceSource)
     .withFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
     .withDirectory("/eslint-config", eslintConfigSource)
+    .withFile("/tsconfig.base.json", tsconfigBase)
     .withWorkdir("/eslint-config")
     .withExec(["bun", "install"])
     .withExec(["bun", "run", "build"])
@@ -163,10 +167,12 @@ function installFrontendDeps(workspaceSource: Directory): Container {
 function lintFrontend(
   workspaceSource: Directory,
   eslintConfigSource: Directory,
+  tsconfigBase: File,
 ): Container {
   return installFrontendDeps(workspaceSource)
     .withFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
     .withDirectory("/eslint-config", eslintConfigSource)
+    .withFile("/tsconfig.base.json", tsconfigBase)
     .withWorkdir("/eslint-config")
     .withExec(["bun", "install"])
     .withExec(["bun", "run", "build"])
@@ -308,11 +314,12 @@ export async function checkDiscordPlaysPokemon(
 ): Promise<string> {
   const pkgSource = source.directory("packages/discord-plays-pokemon");
   const eslintConfig = source.directory("packages/eslint-config");
+  const tsconfigBase = source.file("tsconfig.base.json");
 
   await Promise.all([
     // Common lint
     withTiming("Common lint", async () => {
-      await lintCommon(pkgSource, eslintConfig).sync();
+      await lintCommon(pkgSource, eslintConfig, tsconfigBase).sync();
     }),
     // Common test
     withTiming("Common test", async () => {
@@ -324,7 +331,7 @@ export async function checkDiscordPlaysPokemon(
     }),
     // Backend lint
     withTiming("Backend lint", async () => {
-      await lintBackend(pkgSource, eslintConfig).sync();
+      await lintBackend(pkgSource, eslintConfig, tsconfigBase).sync();
     }),
     // Backend test
     withTiming("Backend test", async () => {
@@ -336,7 +343,7 @@ export async function checkDiscordPlaysPokemon(
     }),
     // Frontend lint
     withTiming("Frontend lint", async () => {
-      await lintFrontend(pkgSource, eslintConfig).sync();
+      await lintFrontend(pkgSource, eslintConfig, tsconfigBase).sync();
     }),
     // Frontend test
     withTiming("Frontend test", async () => {
