@@ -8,4 +8,10 @@ export default [
       allowDefaultProject: ["eslint.config.ts"],
     },
   }),
+  {
+    files: ["src/index.ts"],
+    rules: {
+      "custom-rules/no-re-exports": "off",
+    },
+  },
 ];

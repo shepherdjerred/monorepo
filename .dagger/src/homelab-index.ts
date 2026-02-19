@@ -1,4 +1,4 @@
-import type { Directory, Secret } from "@dagger.io/dagger";
+import type { Container, Directory, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 import { execOrThrow } from "./lib-errors.ts";
 import { getMiseRuntimeContainer } from "./lib-mise.ts";
@@ -126,15 +126,26 @@ export async function checkHomelab(
     monoRepoSource,
     "/workspace/src/cdk8s",
   );
-  const haContainer = withEslintConfig(
-    await prepareHaContainer(source, hassBaseUrl, hassToken),
-    monoRepoSource,
-    "/workspace/src/ha",
-  );
+
+  // HA container prep may fail (e.g., missing hass types + no secrets).
+  // Wrap in a promise so failure doesn't block CDK8s checks.
+  const haContainerPromise = (async () =>
+    withEslintConfig(
+      await prepareHaContainer(source, hassBaseUrl, hassToken),
+      monoRepoSource,
+      "/workspace/src/ha",
+    ))();
+
+  const haStep = async (
+    fn: (container: Container) => Promise<string>,
+  ): Promise<string> => {
+    const container = await haContainerPromise;
+    return fn(container);
+  };
 
   const results = await Promise.allSettled([
-    typeCheckHaWithContainer(haContainer),
-    lintHaWithContainer(haContainer),
+    haStep((c) => typeCheckHaWithContainer(c)),
+    haStep((c) => lintHaWithContainer(c)),
     typeCheckCdk8sWithContainer(cdk8sContainer),
     lintCdk8sWithContainer(cdk8sContainer),
     testCdk8sWithContainer(cdk8sContainer),
