@@ -36,7 +36,7 @@ export async function checkBetterSkillCapped(
         source.directory("packages/eslint-config"),
       )
       .withWorkdir("/workspace/packages/better-skill-capped")
-      .withExec(["bun", "install", "--frozen-lockfile"])
+      .withExec(["bun", "install"])
       .withExec(["bun", "run", "lint"])
       .sync(),
     // Main app build

@@ -53,7 +53,7 @@ export async function checkSjerRed(source: Directory): Promise<string> {
         source.directory("packages/eslint-config"),
       )
       .withWorkdir("/workspace/packages/sjer.red")
-      .withExec(["bun", "install", "--frozen-lockfile"])
+      .withExec(["bun", "install"])
       .withExec(["bunx", "astro", "sync"])
       .withExec(["bun", "run", "lint"])
       .sync(),
