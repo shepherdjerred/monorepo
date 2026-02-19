@@ -231,19 +231,22 @@ export async function runPackageValidation(
   const outputs: string[] = [];
   const errors: string[] = [];
 
-  const results = await Promise.allSettled([
+  // Run most checks in parallel. Scout-for-lol is excluded because its
+  // complex DAG (Prisma + eslint-config build + desktop Rust) consistently
+  // triggers Dagger engine graphql errors when launched alongside 8+ other
+  // parallel DAGs. Running it separately reduces engine query pressure.
+  const mainResults = await Promise.allSettled([
     checkAstroOpengraphImages(source),
     checkWebring(source),
     checkStarlightKarmaBot(source),
     checkBetterSkillCapped(source),
     checkSjerRed(source),
     checkDiscordPlaysPokemon(source),
-    withGraphqlRetry("scout-for-lol", () => checkScoutForLol(source)),
     checkCastleCasters(source),
     checkHomelab(source, hassBaseUrl, hassToken),
   ]);
 
-  for (const result of results) {
+  for (const result of mainResults) {
     if (result.status === "fulfilled") {
       outputs.push(result.value);
     } else {
@@ -254,6 +257,15 @@ export async function runPackageValidation(
       outputs.push(`✗ ${msg}`);
       errors.push(msg);
     }
+  }
+
+  // Run scout-for-lol separately with retry to avoid graphql errors
+  try {
+    outputs.push(await withGraphqlRetry("scout-for-lol", () => checkScoutForLol(source)));
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    outputs.push(`✗ scout-for-lol: ${msg}`);
+    errors.push(`scout-for-lol: ${msg}`);
   }
 
   // macos-cross-compiler: non-blocking due to very long build time
