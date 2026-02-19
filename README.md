@@ -230,36 +230,83 @@ for dirname, commit_date in subdirs_with_dates:
             cog.outl("*No description available.*")
     cog.outl()
 ]]]-->
+**19 active packages**
 
-**7 active packages**
+### [dotfiles](https://github.com/shepherdjerred/monorepo/tree/main/packages/dotfiles) (2026-02-19)
 
-### [mux-site](https://github.com/shepherdjerred/monorepo/tree/main/packages/mux-site) (2026-01-04)
+*No description available.*
 
-This project is a website built using Astro, leveraging the @astrojs/starlight theme for documentation and sharp for image processing. TypeScript is used for type safety during development. The source code and static files are organized under the src and public directories, respectively, while Astro's configuration and tooling manage site generation and build processes.
+### [discord-plays-pokemon](https://github.com/shepherdjerred/monorepo/tree/main/packages/discord-plays-pokemon) (2026-02-19)
 
-### [clauderon](https://github.com/shepherdjerred/monorepo/tree/main/packages/clauderon) (2026-01-01)
+*No description available.*
 
-Clauderon is a Rust-based session management system tailored for AI coding agents, enabling users to create, manage, and interact with coding agent sessions via command line or a terminal user interface (TUI). It leverages asynchronous programming (Tokio), terminal management (ratatui, crossterm, pty-process), persistent storage (SQLx with SQLite), and structured command-line parsing (clap), providing extensible backend options (like zellij or Docker) for session orchestration. The system supports operations such as session creation, listing, attachment, archiving, and deletion, and includes a daemon mode with optional HTTP API services.
+### [clauderon](https://github.com/shepherdjerred/monorepo/tree/main/packages/clauderon) (2026-02-19)
 
-### [bun-decompile](https://github.com/shepherdjerred/monorepo/tree/main/packages/bun-decompile) (2025-12-30)
+*No description available.*
 
-This project, bun-decompile, is a CLI tool designed to extract and de-minify source code from executables compiled with the Bun JavaScript runtime. It leverages AI models—accessed via providers like OpenAI or Anthropic—to reconstruct and de-minify obfuscated or minified JavaScript, providing options for batch processing, API concurrency, and result caching. Key technologies include Bun, Babel for parsing and transforming code, the Anthropic AI/SDK for LLM integration, and a command-line interface for flexible operation.
+### [eslint-config](https://github.com/shepherdjerred/monorepo/tree/main/packages/eslint-config) (2026-02-19)
 
-### [claude-plugin](https://github.com/shepherdjerred/monorepo/tree/main/packages/claude-plugin) (2025-12-23)
+*No description available.*
 
-This project implements a system for managing and utilizing AI agents. It uses Python and likely leverages frameworks such as LangChain for orchestrating agent workflows. The agents can be configured for various tasks, enabling flexible and modular AI-powered solutions.
+### [castle-casters](https://github.com/shepherdjerred/monorepo/tree/main/packages/castle-casters) (2026-02-19)
 
-### [birmel](https://github.com/shepherdjerred/monorepo/tree/main/packages/birmel) (2025-12-20)
+*No description available.*
 
-This project, @shepherdjerred/birmel, is a TypeScript-based application that integrates with Discord to provide AI-powered message handling features. It uses the Mastra framework for core logic and observability, connects to a database (via Prisma and libsql), and incorporates OpenAI services for AI interactions. The architecture emphasizes observability (with OpenTelemetry and Sentry), scheduled tasks, and modular components supporting Discord event handling, memory management, and a music player.
+### [sjer.red](https://github.com/shepherdjerred/monorepo/tree/main/packages/sjer.red) (2026-02-19)
 
-### [dagger-utils](https://github.com/shepherdjerred/monorepo/tree/main/packages/dagger-utils) (2025-12-13)
+*No description available.*
 
-@shepherdjerred/dagger-utils is a TypeScript library providing reusable container builders and utilities for Dagger-based CI/CD pipelines. It offers optimized, cache-aware container factory functions for popular tools (such as Node, Bun, GitHub, and Cloudflare), as well as utilities for parallel execution and logging within pipeline workflows. Core technology includes Dagger, Zod for validation, and TypeScript for type safety.
+### [anki](https://github.com/shepherdjerred/monorepo/tree/main/packages/anki) (2026-02-19)
 
-### [eslint-config](https://github.com/shepherdjerred/monorepo/tree/main/packages/eslint-config) (2025-12-13)
+*No description available.*
 
-packages/eslint-config provides a comprehensive and modular ESLint configuration for TypeScript projects, offering extensible support for React, accessibility (jsx-a11y), Astro, and Bun-specific coding patterns. It incorporates a range of popular ESLint plugins—including @typescript-eslint, eslint-plugin-unicorn, eslint-plugin-import, eslint-plugin-react, and others—and provides both prebuilt composable configs and custom rule plugins to enforce consistent code quality and best practices. The project is written in TypeScript and designed for advanced customization and integration into modern JavaScript/TypeScript codebases.
+### [homelab](https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab) (2026-02-19)
+
+*No description available.*
+
+### [tools](https://github.com/shepherdjerred/monorepo/tree/main/packages/tools) (2026-02-19)
+
+*No description available.*
+
+### [resume](https://github.com/shepherdjerred/monorepo/tree/main/packages/resume) (2026-02-19)
+
+*No description available.*
+
+### [astro-opengraph-images](https://github.com/shepherdjerred/monorepo/tree/main/packages/astro-opengraph-images) (2026-02-19)
+
+*No description available.*
+
+### [birmel](https://github.com/shepherdjerred/monorepo/tree/main/packages/birmel) (2026-02-19)
+
+*No description available.*
+
+### [bun-decompile](https://github.com/shepherdjerred/monorepo/tree/main/packages/bun-decompile) (2026-02-19)
+
+*No description available.*
+
+### [starlight-karma-bot](https://github.com/shepherdjerred/monorepo/tree/main/packages/starlight-karma-bot) (2026-02-19)
+
+*No description available.*
+
+### [fonts](https://github.com/shepherdjerred/monorepo/tree/main/packages/fonts) (2026-02-19)
+
+*No description available.*
+
+### [better-skill-capped](https://github.com/shepherdjerred/monorepo/tree/main/packages/better-skill-capped) (2026-02-19)
+
+*No description available.*
+
+### [macos-cross-compiler](https://github.com/shepherdjerred/monorepo/tree/main/packages/macos-cross-compiler) (2026-02-19)
+
+*No description available.*
+
+### [webring](https://github.com/shepherdjerred/monorepo/tree/main/packages/webring) (2026-02-19)
+
+*No description available.*
+
+### [scout-for-lol](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol) (2026-02-19)
+
+*No description available.*
 
 <!--[[[end]]]-->
 

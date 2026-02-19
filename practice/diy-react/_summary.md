@@ -1,1 +1,0 @@
-I do not have enough information to summarize the project, as the only file provided is "README.md" but its content is not included. Please provide the content of the README.md or additional source files to enable an accurate summary.

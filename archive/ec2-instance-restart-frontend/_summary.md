@@ -1,1 +1,0 @@
-This project is a React-based frontend application, styled with Bulma, designed to interact with AWS EC2 instance restart functionality. It uses TypeScript, Axios for HTTP requests, and is structured using modern React best practices. The deployment is managed with AWS SAM (as indicated by the template.yml file), making it suitable for serverless environments.
