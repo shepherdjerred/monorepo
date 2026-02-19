@@ -59,6 +59,14 @@ export async function checkScoutForLol(source: Directory): Promise<string> {
   // Build desktop frontend once and share
   const desktopFrontend = buildDesktopFrontend(pkgSource);
 
+  // Debug: check file state in container before running checks
+  const debugContainer = preparedWorkspace.withWorkdir("/workspace");
+  const debugOutput = await execOrThrow(debugContainer, [
+    "sh", "-c",
+    "echo '=== env.d.ts ===' && cat packages/frontend/src/env.d.ts && echo '=== astro in node_modules ===' && ls -la node_modules/astro/client.d.ts 2>&1 || echo 'astro not found' && echo '=== vite in node_modules ===' && ls -la node_modules/vite/client.d.ts 2>&1 || echo 'vite not found' && echo '=== frontend node_modules ===' && ls packages/frontend/node_modules/ 2>&1 || echo 'no frontend node_modules' && echo '=== data package resolution ===' && ls node_modules/@scout-for-lol/data/src/review/prompts/personalities/aaron.txt 2>&1 || echo 'data file not found'",
+  ]);
+  logWithTimestamp(`Debug output:\n${debugOutput}`);
+
   // Run all checks in parallel using execOrThrow to capture actual error output
   // (avoids opaque "GraphQL error" messages from Dagger on non-zero exit codes)
   const workspace = preparedWorkspace.withWorkdir("/workspace");
