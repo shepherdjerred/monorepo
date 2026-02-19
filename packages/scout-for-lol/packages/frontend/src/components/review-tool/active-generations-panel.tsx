@@ -1,6 +1,8 @@
 /**
  * Active generations panel showing in-progress generations
  */
+import { PipelinePillProgress } from "./generation-progress.tsx";
+
 type ActiveGeneration = {
   id: string;
   progress?: {
@@ -18,49 +20,6 @@ type ActiveGenerationsPanelProps = {
   selectedHistoryId: string | undefined;
   onSelectGeneration: (id: string) => void;
 };
-
-type StageStatus = "complete" | "active" | "pending";
-
-/** Pill-style progress bar with 5 connected segments */
-function PipelinePillProgress({
-  currentStage,
-  totalStages,
-}: {
-  currentStage: number;
-  totalStages: number;
-}) {
-  const stages = 5;
-
-  return (
-    <div className="flex gap-0.5 mt-2">
-      {Array.from({ length: stages }).map((_, index) => {
-        let status: StageStatus = "pending";
-        if (index < currentStage) {
-          status = "complete";
-        } else if (index === currentStage) {
-          status = "active";
-        }
-        // If this stage is beyond totalStages, it's skipped
-        if (index >= totalStages) {
-          status = "pending";
-        }
-
-        return (
-          <div
-            key={index}
-            className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-              status === "complete"
-                ? "bg-green-500"
-                : (status === "active"
-                  ? "bg-yellow-500 animate-pulse"
-                  : "bg-surface-200")
-            }`}
-          />
-        );
-      })}
-    </div>
-  );
-}
 
 export function ActiveGenerationsPanel({
   activeGenerations,
@@ -113,6 +72,7 @@ export function ActiveGenerationsPanel({
               <PipelinePillProgress
                 currentStage={currentStage}
                 totalStages={totalStages}
+                isComplete={false}
               />
             </button>
           );

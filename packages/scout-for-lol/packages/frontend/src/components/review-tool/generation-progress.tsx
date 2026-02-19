@@ -10,10 +10,10 @@ type GenerationProgressProps = {
   elapsedMs: number;
 };
 
-type StageStatus = "complete" | "active" | "pending";
+export type StageStatus = "complete" | "active" | "pending";
 
 /** Pill-style progress bar with connected segments based on total stages */
-function PipelinePillProgress({
+export function PipelinePillProgress({
   currentStage,
   totalStages,
   isComplete,
