@@ -10,6 +10,26 @@ import { getSystemContainer } from "./lib-system.ts";
 import { getMiseRuntimeContainer } from "./lib-mise.ts";
 
 /**
+ * Add eslint-config to a container for lint operations.
+ * Mounts the eslint-config package at /eslint-config/, installs deps, builds,
+ * then restores the working directory. Also mounts tsconfig.base.json at root
+ * for the eslint-config's tsconfig.json extends resolution.
+ */
+export function withEslintConfig(
+  container: Container,
+  monoRepoSource: Directory,
+  restoreWorkdir: string,
+): Container {
+  return container
+    .withDirectory("/eslint-config", monoRepoSource.directory("packages/eslint-config"))
+    .withFile("/tsconfig.base.json", monoRepoSource.file("tsconfig.base.json"))
+    .withWorkdir("/eslint-config")
+    .withExec(["bun", "install"])
+    .withExec(["bun", "run", "build"])
+    .withWorkdir(restoreWorkdir);
+}
+
+/**
  * Creates a workspace-specific container with dependencies installed.
  * Uses Docker layer caching: copy dependency files -> install -> copy source.
  * @param repoRoot The repository root directory (must contain package.json, bun.lock, etc.)

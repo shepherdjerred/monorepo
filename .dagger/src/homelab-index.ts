@@ -4,14 +4,17 @@ import { execOrThrow } from "./lib-errors.ts";
 import { getMiseRuntimeContainer } from "./lib-mise.ts";
 import { buildAllCharts } from "./homelab-helm.ts";
 import {
-  typeCheckHa,
-  lintHa,
+  prepareHaContainer,
+  typeCheckHaWithContainer,
+  lintHaWithContainer,
 } from "./homelab-ha.ts";
 import {
-  typeCheckCdk8s,
-  lintCdk8s,
-  testCdk8s,
+  prepareCdk8sContainer,
+  typeCheckCdk8sWithContainer,
+  lintCdk8sWithContainer,
+  testCdk8sWithContainer,
 } from "./homelab-cdk8s.ts";
+import { withEslintConfig } from "./homelab-base.ts";
 import { sync as argocdSync } from "./homelab-argocd.ts";
 import { Stage } from "./lib-types.ts";
 import versions from "./lib-versions.ts";
@@ -116,17 +119,25 @@ export async function checkHomelab(
   hassToken?: Secret,
 ): Promise<string> {
   const source = getHomelabSource(monoRepoSource);
-  const haTypeCheck = typeCheckHa(source, hassBaseUrl, hassToken);
-  const haLint = lintHa(source, hassBaseUrl, hassToken);
-  const cdk8sTypeCheck = typeCheckCdk8s(source);
-  const cdk8sLint = lintCdk8s(source);
-  const cdk8sTest = testCdk8s(source);
+
+  // Prepare containers with eslint-config mounted for lint operations
+  const cdk8sContainer = withEslintConfig(
+    prepareCdk8sContainer(source),
+    monoRepoSource,
+    "/workspace/src/cdk8s",
+  );
+  const haContainer = withEslintConfig(
+    await prepareHaContainer(source, hassBaseUrl, hassToken),
+    monoRepoSource,
+    "/workspace/src/ha",
+  );
+
   const results = await Promise.allSettled([
-    haTypeCheck,
-    haLint,
-    cdk8sTypeCheck,
-    cdk8sLint,
-    cdk8sTest,
+    typeCheckHaWithContainer(haContainer),
+    lintHaWithContainer(haContainer),
+    typeCheckCdk8sWithContainer(cdk8sContainer),
+    lintCdk8sWithContainer(cdk8sContainer),
+    testCdk8sWithContainer(cdk8sContainer),
   ]);
   const names = [
     "HA TypeCheck",
@@ -166,7 +177,7 @@ export async function ciHomelab(
     : source;
 
   // Run validation steps in parallel
-  const validation = await runValidationPhase(updatedSource, secrets, versionOnly);
+  const validation = await runValidationPhase(updatedSource, secrets, versionOnly, monoRepoSource);
 
   // Run publish steps (prod only)
   const publish = await runPublishPhase(env, updatedSource, secrets, validation.helmBuildResult);
