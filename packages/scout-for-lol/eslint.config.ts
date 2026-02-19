@@ -13,8 +13,8 @@ export default [
       "./packages/backend/tsconfig.json",
       "./packages/data/tsconfig.json",
       "./packages/report/tsconfig.json",
-      "./packages/frontend/tsconfig.json",
       "./packages/desktop/tsconfig.json",
+      "./packages/ui/tsconfig.json",
     ],
     ignores: [
       "**/generated/**/*",

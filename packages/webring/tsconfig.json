@@ -10,5 +10,5 @@
     "sourceMap": true,
     "rewriteRelativeImportExtensions": true
   },
-  "include": ["src", "vitest.config.mts"]
+  "include": ["src"]
 }
