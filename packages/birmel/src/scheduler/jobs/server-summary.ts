@@ -1,7 +1,8 @@
-import type { Guild, TextChannel } from "discord.js";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { toError } from "@shepherdjerred/birmel/utils/errors.ts";
+import type { Guild } from "discord.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
-import { logger } from "@shepherdjerred/birmel/utils/index.ts";
+import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 
 type ServerSummaryConfig = {
   guildId: string;
@@ -149,11 +150,13 @@ async function sendServerSummary(config: ServerSummaryConfig): Promise<void> {
 
     const counts = await countEventTypes(config.guildId);
     const message = generateServerSummary(guild, counts);
-    await (channel as TextChannel).send(message);
+    if ("send" in channel) {
+      await channel.send(message);
+    }
 
     logger.info("Sent server summary", { guildId: config.guildId });
   } catch (error) {
-    logger.error("Failed to send server summary", error as Error, {
+    logger.error("Failed to send server summary", toError(error), {
       guildId: config.guildId,
     });
   }
@@ -182,6 +185,6 @@ export async function runServerSummaryJob(): Promise<void> {
       guildsProcessed: configs.length,
     });
   } catch (error) {
-    logger.error("Server summary job failed", error as Error);
+    logger.error("Server summary job failed", toError(error));
   }
 }

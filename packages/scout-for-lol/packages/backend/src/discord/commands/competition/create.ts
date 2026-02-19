@@ -472,7 +472,7 @@ ${competition.description}
 
     successMessage += `\n\n${dateInfo}`;
 
-    if (!args.addAllMembers === true) {
+    if (args.addAllMembers !== true) {
       successMessage += `\n\nUsers can join with:
 \`/competition join competition-id:${competition.id.toString()}\``;
     }

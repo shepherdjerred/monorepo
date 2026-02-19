@@ -1,9 +1,5 @@
 import { useState } from "react";
-import {
-  create,
-  type CredentialCreationOptionsJSON,
-  type PublicKeyCredentialWithAttestationJSON,
-} from "@github/webauthn-json";
+import { create } from "@github/webauthn-json";
 import { useClauderonClient } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useClauderonClient";
 import { useAuth } from "@shepherdjerred/clauderon/web/frontend/src/contexts/AuthContext";
 
@@ -22,27 +18,23 @@ export function RegistrationPage() {
     setIsLoading(true);
 
     try {
-      // Start registration flow
+      // Start registration flow - options is typed as 'any' from TypeShare
       const trimmedDisplayName = displayName.trim();
-      const response: {
-        challenge_id: string;
-        options: CredentialCreationOptionsJSON;
-      } = (await client.registerStart({
+      const response = await client.registerStart({
         username,
         ...(trimmedDisplayName && { display_name: trimmedDisplayName }),
-      })) as { challenge_id: string; options: CredentialCreationOptionsJSON };
+      });
 
       // Trigger passkey creation
-      const credential: PublicKeyCredentialWithAttestationJSON = await create(
-        response.options,
-      );
+      // response.options is 'any' from the generated type, create() accepts CredentialCreationOptionsJSON
+      const credential = await create(response.options);
 
-      // Finish registration flow
+      // Finish registration flow - credential field accepts 'any' in the generated type
       const trimmedDeviceName = deviceName.trim();
       await client.registerFinish({
         username,
         challenge_id: response.challenge_id,
-        credential: credential as unknown as Record<string, unknown>,
+        credential,
         ...(trimmedDeviceName && { device_name: trimmedDeviceName }),
       });
 

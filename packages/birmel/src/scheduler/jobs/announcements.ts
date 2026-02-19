@@ -1,20 +1,25 @@
-import type { TextChannel } from "discord.js";
+import { toError } from "@shepherdjerred/birmel/utils/errors.ts";
 import type { ScheduledAnnouncement } from "@prisma/client";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
-import { logger } from "@shepherdjerred/birmel/utils/index.ts";
+import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
+
+type ScheduleAnnouncementOptions = {
+  guildId: string;
+  channelId: string;
+  message: string;
+  scheduledAt: Date;
+  createdBy: string;
+  repeat?: "daily" | "weekly" | "monthly" | undefined;
+};
 
 /**
  * Schedule a new announcement
  */
 export async function scheduleAnnouncement(
-  guildId: string,
-  channelId: string,
-  message: string,
-  scheduledAt: Date,
-  createdBy: string,
-  repeat?: "daily" | "weekly" | "monthly",
+  options: ScheduleAnnouncementOptions,
 ): Promise<number> {
+  const { guildId, channelId, message, scheduledAt, createdBy, repeat } = options;
   const result = await prisma.scheduledAnnouncement.create({
     data: {
       guildId,
@@ -109,7 +114,9 @@ async function sendAnnouncement(
       return;
     }
 
-    await (channel as TextChannel).send(announcement.message);
+    if ("send" in channel) {
+      await channel.send(announcement.message);
+    }
 
     // Mark as sent
     await prisma.scheduledAnnouncement.update({
@@ -133,14 +140,17 @@ async function sendAnnouncement(
           break;
       }
 
-      await scheduleAnnouncement(
-        announcement.guildId,
-        announcement.channelId,
-        announcement.message,
-        nextDate,
-        announcement.createdBy,
-        announcement.repeat as "daily" | "weekly" | "monthly",
-      );
+      const repeatValue = announcement.repeat;
+      if (repeatValue === "daily" || repeatValue === "weekly" || repeatValue === "monthly") {
+        await scheduleAnnouncement({
+          guildId: announcement.guildId,
+          channelId: announcement.channelId,
+          message: announcement.message,
+          scheduledAt: nextDate,
+          createdBy: announcement.createdBy,
+          repeat: repeatValue,
+        });
+      }
     }
 
     logger.info("Sent announcement", {
@@ -148,7 +158,7 @@ async function sendAnnouncement(
       guildId: announcement.guildId,
     });
   } catch (error) {
-    logger.error("Failed to send announcement", error as Error, {
+    logger.error("Failed to send announcement", toError(error), {
       id: announcement.id,
       guildId: announcement.guildId,
     });
@@ -181,6 +191,6 @@ export async function runAnnouncementsJob(): Promise<void> {
       await sendAnnouncement(announcement);
     }
   } catch (error) {
-    logger.error("Announcements job failed", error as Error);
+    logger.error("Announcements job failed", toError(error));
   }
 }

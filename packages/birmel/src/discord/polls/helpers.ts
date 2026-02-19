@@ -1,3 +1,4 @@
+import { getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
 import type { Message, Poll } from "discord.js";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
@@ -119,7 +120,7 @@ export async function createPoll(
     });
     return {
       success: false,
-      message: `Failed to create poll: ${(error as Error).message}`,
+      message: `Failed to create poll: ${getErrorMessage(error)}`,
     };
   }
 }
@@ -203,7 +204,7 @@ export async function getPollResults(
     });
     return {
       success: false,
-      message: `Failed to fetch poll results: ${(error as Error).message}`,
+      message: `Failed to fetch poll results: ${getErrorMessage(error)}`,
     };
   }
 }
@@ -257,7 +258,7 @@ export async function endPoll(
     });
     return {
       success: false,
-      message: `Failed to end poll: ${(error as Error).message}`,
+      message: `Failed to end poll: ${getErrorMessage(error)}`,
     };
   }
 }

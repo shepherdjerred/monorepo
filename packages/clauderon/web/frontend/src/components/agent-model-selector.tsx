@@ -1,6 +1,6 @@
-import type { BackendType, AccessMode, SessionModel } from "@clauderon/client";
+import type { SessionModel } from "@clauderon/client";
 import type { FeatureFlags } from "@clauderon/shared";
-import { AgentType } from "@clauderon/shared";
+import { AgentType, BackendType, AccessMode } from "@clauderon/shared";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -14,6 +14,41 @@ import { ProviderIcon } from "./ProviderIcon.tsx";
 import { AGENT_CAPABILITIES } from "@/lib/agent-features";
 import type { getModelsForAgent } from "@/lib/model-options";
 import type { SessionFormData } from "./AdvancedContainerSettings.tsx";
+
+function toBackendType(value: string): BackendType | undefined {
+  const map: Record<string, BackendType> = {
+    [BackendType.Docker]: BackendType.Docker,
+    [BackendType.Zellij]: BackendType.Zellij,
+    [BackendType.Kubernetes]: BackendType.Kubernetes,
+    [BackendType.Sprites]: BackendType.Sprites,
+    [BackendType.AppleContainer]: BackendType.AppleContainer,
+  };
+  return map[value];
+}
+
+function toAgentType(value: string): AgentType | undefined {
+  const map: Record<string, AgentType> = {
+    [AgentType.ClaudeCode]: AgentType.ClaudeCode,
+    [AgentType.Codex]: AgentType.Codex,
+    [AgentType.Gemini]: AgentType.Gemini,
+  };
+  return map[value];
+}
+
+function toAccessMode(value: string): AccessMode | undefined {
+  const map: Record<string, AccessMode> = {
+    [AccessMode.ReadOnly]: AccessMode.ReadOnly,
+    [AccessMode.ReadWrite]: AccessMode.ReadWrite,
+  };
+  return map[value];
+}
+
+function findModelByKey(
+  key: string,
+  models: { value: SessionModel; label: string }[],
+): SessionModel | undefined {
+  return models.find((m) => JSON.stringify(m.value) === key)?.value;
+}
 
 type AgentModelSelectorProps = {
   formData: SessionFormData;
@@ -41,10 +76,10 @@ export function AgentModelSelector({
             id="backend"
             value={formData.backend}
             onChange={(e) => {
-              setFormData({
-                ...formData,
-                backend: e.target.value as BackendType,
-              });
+              const backend = toBackendType(e.target.value);
+              if (backend != null) {
+                setFormData({ ...formData, backend });
+              }
             }}
             className="cursor-pointer flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -64,7 +99,10 @@ export function AgentModelSelector({
           <Select
             value={formData.agent}
             onValueChange={(value) => {
-              setFormData({ ...formData, agent: value as AgentType });
+              const agent = toAgentType(value);
+              if (agent != null) {
+                setFormData({ ...formData, agent });
+              }
             }}
           >
             <SelectTrigger className="border-2">
@@ -124,10 +162,8 @@ export function AgentModelSelector({
             id="model"
             value={formData.model == null ? "" : JSON.stringify(formData.model)}
             onChange={(e) => {
-              const value: SessionModel | undefined = e.target.value
-                ? (JSON.parse(e.target.value) as SessionModel)
-                : undefined;
-              setFormData({ ...formData, model: value });
+              const model = findModelByKey(e.target.value, availableModels);
+              setFormData({ ...formData, model });
             }}
             className="cursor-pointer flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -152,10 +188,10 @@ export function AgentModelSelector({
               id="access_mode"
               value={formData.access_mode}
               onChange={(e) => {
-                setFormData({
-                  ...formData,
-                  access_mode: e.target.value as AccessMode,
-                });
+                const accessMode = toAccessMode(e.target.value);
+                if (accessMode != null) {
+                  setFormData({ ...formData, access_mode: accessMode });
+                }
               }}
               className="cursor-pointer flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -207,7 +243,7 @@ export function AgentModelSelector({
         </div>
       )}
 
-      {(formData.backend as string) === "Kubernetes" && (
+      {formData.backend === BackendType.Kubernetes && (
         <div
           className="mt-2 p-3 border-2 text-sm font-mono"
           style={{

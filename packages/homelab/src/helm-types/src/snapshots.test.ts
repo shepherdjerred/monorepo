@@ -1,8 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import {
-  convertToTypeScriptInterface,
-  generateTypeScriptCode,
-} from "./helm-types.ts";
+import { convertToTypeScriptInterface } from "./type-converter.ts";
+import { generateTypeScriptCode } from "./interface-generator.ts";
 
 describe("Snapshot Tests", () => {
   test("should generate consistent output for basic types with comments", () => {
@@ -18,12 +16,12 @@ describe("Snapshot Tests", () => {
       ["image", "Container image to use"],
     ]);
 
-    const tsInterface = convertToTypeScriptInterface(
-      values,
-      "BasicHelmValues",
-      undefined,
-      comments,
-    );
+    const tsInterface = convertToTypeScriptInterface({
+      values: values,
+      interfaceName: "BasicHelmValues",
+      schema: undefined,
+      yamlComments: comments,
+    });
     const code = generateTypeScriptCode(tsInterface, "basic");
 
     expect(code).toMatchSnapshot();
@@ -44,12 +42,12 @@ describe("Snapshot Tests", () => {
       ["ingress.hostname", "Ingress hostname"],
     ]);
 
-    const tsInterface = convertToTypeScriptInterface(
-      values,
-      "DottedKeysHelmValues",
-      undefined,
-      comments,
-    );
+    const tsInterface = convertToTypeScriptInterface({
+      values: values,
+      interfaceName: "DottedKeysHelmValues",
+      schema: undefined,
+      yamlComments: comments,
+    });
     const code = generateTypeScriptCode(tsInterface, "dotted-keys");
 
     expect(code).toMatchSnapshot();
@@ -69,12 +67,12 @@ describe("Snapshot Tests", () => {
       ["rules", "Glob patterns: */*.js, */test/*, and */*/*.ts should match"],
     ]);
 
-    const tsInterface = convertToTypeScriptInterface(
-      values,
-      "EscapedHelmValues",
-      undefined,
-      comments,
-    );
+    const tsInterface = convertToTypeScriptInterface({
+      values: values,
+      interfaceName: "EscapedHelmValues",
+      schema: undefined,
+      yamlComments: comments,
+    });
     const code = generateTypeScriptCode(tsInterface, "escaped");
 
     expect(code).toMatchSnapshot();
@@ -106,12 +104,12 @@ describe("Snapshot Tests", () => {
       ["ingress.hosts", "List of ingress hostnames"],
     ]);
 
-    const tsInterface = convertToTypeScriptInterface(
-      values,
-      "NestedHelmValues",
-      undefined,
-      comments,
-    );
+    const tsInterface = convertToTypeScriptInterface({
+      values: values,
+      interfaceName: "NestedHelmValues",
+      schema: undefined,
+      yamlComments: comments,
+    });
     const code = generateTypeScriptCode(tsInterface, "nested");
 
     expect(code).toMatchSnapshot();
@@ -151,12 +149,12 @@ describe("Snapshot Tests", () => {
       ],
     ]);
 
-    const tsInterface = convertToTypeScriptInterface(
-      values,
-      "ArgocdRbacHelmValues",
-      undefined,
-      comments,
-    );
+    const tsInterface = convertToTypeScriptInterface({
+      values: values,
+      interfaceName: "ArgocdRbacHelmValues",
+      schema: undefined,
+      yamlComments: comments,
+    });
     const code = generateTypeScriptCode(tsInterface, "argocd-rbac");
 
     expect(code).toMatchSnapshot();
@@ -189,12 +187,12 @@ describe("Snapshot Tests", () => {
       ["env", "Environment variables"],
     ]);
 
-    const tsInterface = convertToTypeScriptInterface(
-      values,
-      "ComplexTypesHelmValues",
-      undefined,
-      comments,
-    );
+    const tsInterface = convertToTypeScriptInterface({
+      values: values,
+      interfaceName: "ComplexTypesHelmValues",
+      schema: undefined,
+      yamlComments: comments,
+    });
     const code = generateTypeScriptCode(tsInterface, "complex-types");
 
     expect(code).toMatchSnapshot();
@@ -217,12 +215,12 @@ describe("Snapshot Tests", () => {
       ],
     ]);
 
-    const tsInterface = convertToTypeScriptInterface(
-      values,
-      "SpecialCharsHelmValues",
-      undefined,
-      comments,
-    );
+    const tsInterface = convertToTypeScriptInterface({
+      values: values,
+      interfaceName: "SpecialCharsHelmValues",
+      schema: undefined,
+      yamlComments: comments,
+    });
     const code = generateTypeScriptCode(tsInterface, "special-chars");
 
     expect(code).toMatchSnapshot();

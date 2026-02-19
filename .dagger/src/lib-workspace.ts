@@ -39,13 +39,18 @@ export type WorkspaceConfig = {
  * @param toolVersions - Optional specific versions for mise tools
  * @returns A configured container with workspace dependencies installed
  */
+type GetWorkspaceContainerOptions = {
+  repoRoot: Directory;
+  workspacePath: string;
+  config: WorkspaceConfig;
+  platform?: Platform;
+  toolVersions?: MiseToolVersions;
+};
+
 export function getWorkspaceContainer(
-  repoRoot: Directory,
-  workspacePath: string,
-  config: WorkspaceConfig,
-  platform?: Platform,
-  toolVersions?: MiseToolVersions,
+  options: GetWorkspaceContainerOptions,
 ): Container {
+  const { repoRoot, workspacePath, config, platform, toolVersions } = options;
   const {
     workspaces,
     rootFiles = ["package.json", "bun.lock"],

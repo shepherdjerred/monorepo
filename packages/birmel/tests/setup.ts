@@ -1,17 +1,21 @@
 import { beforeAll, afterAll, mock } from "bun:test";
 
 // Mock @mastra/libsql
+const emptyObject: Record<string, never> = {};
 void mock.module("@mastra/libsql", () => ({
-  // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- empty mock class for testing
-  LibSQLStore: class MockLibSQLStore {},
-  // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- empty mock class for testing
-  LibSQLVector: class MockLibSQLVector {},
+  LibSQLStore: function MockLibSQLStore() {
+    return { ...emptyObject };
+  },
+  LibSQLVector: function MockLibSQLVector() {
+    return { ...emptyObject };
+  },
 }));
 
 // Mock @mastra/memory
 void mock.module("@mastra/memory", () => ({
-  // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- empty mock class for testing
-  Memory: class MockMemory {},
+  Memory: function MockMemory() {
+    return { ...emptyObject };
+  },
 }));
 
 // Mock @mastra/core/agent

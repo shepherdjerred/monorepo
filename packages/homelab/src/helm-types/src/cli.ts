@@ -5,12 +5,10 @@
  * Generate TypeScript types from Helm charts
  */
 import { z } from "zod";
-import {
-  fetchHelmChart,
-  convertToTypeScriptInterface,
-  generateTypeScriptCode,
-} from "./helm-types.ts";
-import type { ChartInfo } from "./helm-types.ts";
+import { fetchHelmChart } from "./chart-fetcher.ts";
+import { convertToTypeScriptInterface } from "./type-converter.ts";
+import { generateTypeScriptCode } from "./interface-generator.ts";
+import type { ChartInfo } from "./types.ts";
 
 const ErrorSchema = z.object({
   message: z.string(),
@@ -65,6 +63,27 @@ type CliArgs = {
   help?: boolean;
 };
 
+/** String-valued flag names (excludes boolean 'help') */
+type StringCliArgsKey = Exclude<keyof CliArgs, "help">;
+
+/** Map from flag name to CliArgs key */
+const FLAG_MAP: Record<string, StringCliArgsKey> = {
+  "--name": "name",
+  "-n": "name",
+  "--chart": "chart",
+  "-c": "chart",
+  "--repo": "repo",
+  "-r": "repo",
+  "--version": "version",
+  "-v": "version",
+  "--output": "output",
+  "-o": "output",
+  "--interface": "interface",
+  "-i": "interface",
+};
+
+const HELP_FLAGS = new Set(["--help", "-h"]);
+
 /**
  * Simple argument parser for Bun CLI
  */
@@ -73,81 +92,27 @@ function parseCliArgs(args: string[]): CliArgs {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (!arg) {
+    if (arg == null || arg === "") {
       continue;
     }
 
-    switch (arg) {
-      case "--help":
-      case "-h": {
-        result.help = true;
+    if (HELP_FLAGS.has(arg)) {
+      result.help = true;
+      continue;
+    }
 
-        break;
+    const key = FLAG_MAP[arg];
+    if (key != null) {
+      const value = args[i + 1];
+      if (value != null && value !== "") {
+        result[key] = value;
+        i += 1;
       }
-      case "--name":
-      case "-n": {
-        const value = args[i + 1];
-        if (value) {
-          result.name = value;
-          i += 1;
-        }
+      continue;
+    }
 
-        break;
-      }
-      case "--chart":
-      case "-c": {
-        const value = args[i + 1];
-        if (value) {
-          result.chart = value;
-          i += 1;
-        }
-
-        break;
-      }
-      case "--repo":
-      case "-r": {
-        const value = args[i + 1];
-        if (value) {
-          result.repo = value;
-          i += 1;
-        }
-
-        break;
-      }
-      case "--version":
-      case "-v": {
-        const value = args[i + 1];
-        if (value) {
-          result.version = value;
-          i += 1;
-        }
-
-        break;
-      }
-      case "--output":
-      case "-o": {
-        const value = args[i + 1];
-        if (value) {
-          result.output = value;
-          i += 1;
-        }
-
-        break;
-      }
-      case "--interface":
-      case "-i": {
-        const value = args[i + 1];
-        if (value) {
-          result.interface = value;
-          i += 1;
-        }
-
-        break;
-      }
-      default:
-        if (arg.startsWith("-")) {
-          throw new Error(`Unknown argument: ${arg}`);
-        }
+    if (arg.startsWith("-")) {
+      throw new Error(`Unknown argument: ${arg}`);
     }
   }
 
@@ -159,13 +124,13 @@ async function main() {
     const args = parseCliArgs(Bun.argv.slice(2));
 
     // Show help
-    if (args.help) {
+    if (args.help === true) {
       console.log(HELP_TEXT);
       process.exit(0);
     }
 
     // Validate required arguments
-    if (!args.name || !args.repo || !args.version) {
+    if ((args.name == null || args.name === "") || (args.repo == null || args.repo === "") || (args.version == null || args.version === "")) {
       console.error("Error: Missing required arguments");
       console.error("Required: --name, --repo, --version");
       console.error("\nRun with --help for usage information");
@@ -197,20 +162,19 @@ async function main() {
     console.error(`Converting to TypeScript interface: ${interfaceName}`);
 
     // Convert to TypeScript interface
-    const tsInterface = convertToTypeScriptInterface(
+    const tsInterface = convertToTypeScriptInterface({
       values,
       interfaceName,
       schema,
       yamlComments,
-      "",
-      args.name,
-    );
+      chartName: args.name,
+    });
 
     // Generate TypeScript code
     const code = generateTypeScriptCode(tsInterface, args.name);
 
     // Write to file or stdout
-    if (args.output) {
+    if (args.output != null && args.output !== "") {
       await Bun.write(args.output, code);
       console.error("");
       console.error(`✅ Types written to: ${args.output}`);

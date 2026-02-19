@@ -1,26 +1,3 @@
-export {
-  initializeSentry,
-  isSentryEnabled,
-  setSentryContext,
-  clearSentryContext,
-  logErrors,
-  captureException,
-  captureMessage,
-  flushSentry,
-  type DiscordContext,
-} from "./sentry.ts";
-
-export {
-  initializeTracing,
-  getTracer,
-  shutdownTracing,
-  getTraceContext,
-  withSpan,
-  withToolSpan,
-  withAgentSpan,
-  type DiscordSpanAttributes,
-} from "./tracing.ts";
-
 import { initializeSentry, flushSentry } from "./sentry.ts";
 import { initializeTracing, shutdownTracing } from "./tracing.ts";
 

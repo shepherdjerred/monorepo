@@ -12,8 +12,11 @@ Sentry.init({
 
 const queryClient = new QueryClient();
 
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- root element always exists in index.html
-ReactDOM.createRoot(document.querySelector("#root")!).render(
+const rootElement = document.querySelector("#root");
+if (rootElement === null) {
+  throw new Error("Root element #root not found in document");
+}
+ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <Sentry.ErrorBoundary fallback={<p>An error occurred</p>}>
       <QueryClientProvider client={queryClient}>

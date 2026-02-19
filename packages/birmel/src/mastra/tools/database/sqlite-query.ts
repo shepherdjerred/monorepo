@@ -1,11 +1,10 @@
+import { getErrorMessage, toError } from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import {
-  captureException,
-  withToolSpan,
-} from "@shepherdjerred/birmel/observability/index.ts";
+import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
+import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 
 const logger = loggers.tools.child("database.sqlite");
 
@@ -95,10 +94,10 @@ export const manageDatabaseTool = createTool({
         }
       } catch (error) {
         logger.error("Database operation failed", error);
-        captureException(error as Error, { operation: "tool.manage-database" });
+        captureException(toError(error), { operation: "tool.manage-database" });
         return {
           success: false,
-          message: `Failed: ${(error as Error).message}`,
+          message: `Failed: ${getErrorMessage(error)}`,
         };
       }
     });

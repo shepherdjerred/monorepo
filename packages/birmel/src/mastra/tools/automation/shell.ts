@@ -1,7 +1,7 @@
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
-import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 
 const logger = loggers.automation;
 
@@ -71,7 +71,7 @@ The tool captures stdout, stderr, exit code, and execution time.`,
     }
 
     const startTime = Date.now();
-    let timedOut = false;
+    const timeoutState = { timedOut: false };
 
     // Build command for logging
     const fullCommand = [ctx.command, ...(ctx.args ?? [])].join(" ");
@@ -84,7 +84,7 @@ The tool captures stdout, stderr, exit code, and execution time.`,
       // Create abort controller for timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
-        timedOut = true;
+        timeoutState.timedOut = true;
         controller.abort();
       }, timeout);
 
@@ -105,7 +105,7 @@ The tool captures stdout, stderr, exit code, and execution time.`,
 
       try {
         // Wait for process with timeout
-        const result = (await Promise.race([
+        const raceResult: unknown = await Promise.race([
           proc.exited,
           new Promise((_, reject) => {
             controller.signal.addEventListener("abort", () => {
@@ -113,9 +113,9 @@ The tool captures stdout, stderr, exit code, and execution time.`,
               reject(new Error("Command timed out"));
             });
           }),
-        ])) as number;
+        ]);
 
-        exitCode = result;
+        exitCode = typeof raceResult === "number" ? raceResult : 0;
 
         // Read stdout and stderr
         const stdoutText = await new Response(proc.stdout).text();
@@ -124,8 +124,7 @@ The tool captures stdout, stderr, exit code, and execution time.`,
         stdout = stdoutText;
         stderr = stderrText;
       } catch (error) {
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- timedOut is set by async timeout callback
-        if (timedOut) {
+        if (timeoutState.timedOut) {
           const duration = Date.now() - startTime;
           return {
             success: false,
@@ -164,7 +163,7 @@ The tool captures stdout, stderr, exit code, and execution time.`,
           stdout,
           stderr,
           exitCode,
-          timedOut: false,
+          timedOut: timeoutState.timedOut,
           duration,
         },
       };
@@ -182,7 +181,7 @@ The tool captures stdout, stderr, exit code, and execution time.`,
           stdout: "",
           stderr: String(error),
           exitCode: -1,
-          timedOut,
+          timedOut: timeoutState.timedOut,
           duration,
         },
       };

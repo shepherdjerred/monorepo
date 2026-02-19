@@ -1,10 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { validateSource } from "./ast-parser.ts";
 import {
   getSimpleFunctionPrompt,
   getFunctionPrompt,
   getSystemPrompt,
 } from "./prompt-templates.ts";
+import { parseLLMResponse, getErrorMessage } from "./response-parser.ts";
 import type {
   DeminifyConfig,
   DeminifyContext,
@@ -143,13 +143,14 @@ export class BatchDeminifyClient {
 
       if (entry.result.type === "succeeded") {
         try {
-          const result = this.parseResponse(entry.result.message, context);
-          results.set(funcId, result);
+          const result = this.parseSucceededResult(entry.result.message, context);
+          if (result) {
+            results.set(funcId, result);
+          }
         } catch (error) {
           if (this.config.verbose) {
             console.error(
-              // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-              `Failed to parse result for ${funcId}: ${(error as Error).message}`,
+              `Failed to parse result for ${funcId}: ${getErrorMessage(error)}`,
             );
           }
         }
@@ -182,12 +183,11 @@ export class BatchDeminifyClient {
     };
   }
 
-  /** Parse a message response into a DeminifyResult */
-  // eslint-disable-next-line complexity -- inherent complexity in processing logic
-  private parseResponse(
+  /** Parse a succeeded message into a DeminifyResult */
+  private parseSucceededResult(
     message: { content: { type: string; text?: string }[] },
     context: DeminifyContext,
-  ): DeminifyResult {
+  ): DeminifyResult | null {
     const content = message.content[0];
     if (
       content?.type !== "text" ||
@@ -197,83 +197,7 @@ export class BatchDeminifyClient {
       throw new Error("Unexpected response type");
     }
 
-    const responseText = content.text;
-
-    // Extract code from markdown code blocks
-    const codeMatch = /```(?:javascript|js)?\n?([\s\S]*?)```/.exec(
-      responseText,
-    );
-    if (codeMatch?.[1] == null || codeMatch[1].length === 0) {
-      throw new Error("No code block found in response");
-    }
-
-    const deminifiedSource = codeMatch[1].trim();
-
-    // Validate the code parses
-    if (!validateSource(deminifiedSource)) {
-      throw new Error("De-minified code failed to parse");
-    }
-
-    // Try to extract metadata JSON
-    let suggestedName =
-      context.targetFunction.originalName.length > 0
-        ? context.targetFunction.originalName
-        : "anonymousFunction";
-    let confidence = 0.5;
-    let parameterNames: Record<string, string> = {};
-    let localVariableNames: Record<string, string> = {};
-
-    // Look for JSON after the code block
-    const jsonMatch = /```[\s\S]*?```\s*(\{[\s\S]*\})/.exec(responseText);
-    if (jsonMatch?.[1] != null && jsonMatch[1].length > 0) {
-      try {
-        // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-        const metadata = JSON.parse(jsonMatch[1]) as {
-          suggestedName?: string;
-          confidence?: number;
-          parameterNames?: Record<string, string>;
-          localVariableNames?: Record<string, string>;
-        };
-        if (
-          metadata.suggestedName != null &&
-          metadata.suggestedName.length > 0
-        ) {
-          suggestedName = metadata.suggestedName;
-        }
-        if (typeof metadata.confidence === "number") {
-          confidence = metadata.confidence;
-        }
-        if (metadata.parameterNames != null) {
-          parameterNames = metadata.parameterNames;
-        }
-        if (metadata.localVariableNames != null) {
-          localVariableNames = metadata.localVariableNames;
-        }
-      } catch {
-        // JSON parsing failed, use defaults
-      }
-    }
-
-    // Try to infer name from the de-minified code if not provided
-    if (suggestedName === "anonymousFunction") {
-      const funcNameMatch =
-        /(?:function|const|let|var)\s+([a-zA-Z_$][\w$]*)/.exec(
-          deminifiedSource,
-        );
-      if (funcNameMatch?.[1] != null && funcNameMatch[1].length > 0) {
-        suggestedName = funcNameMatch[1];
-      }
-    }
-
-    return {
-      functionId: context.targetFunction.id,
-      originalSource: context.targetFunction.source,
-      deminifiedSource,
-      suggestedName,
-      confidence,
-      parameterNames,
-      localVariableNames,
-    };
+    return parseLLMResponse(content.text, context);
   }
 
   private sleep(ms: number): Promise<void> {

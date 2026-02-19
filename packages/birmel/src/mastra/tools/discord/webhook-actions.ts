@@ -1,4 +1,4 @@
-import type { TextChannel, Client } from "discord.js";
+import type { Client } from "discord.js";
 
 type WebhookResult = {
   success: boolean;
@@ -27,7 +27,11 @@ export async function handleListWebhooks(
     if (channel?.isTextBased() !== true || !("fetchWebhooks" in channel)) {
       return { success: false, message: "Channel does not support webhooks" };
     }
-    webhooks = await (channel as TextChannel).fetchWebhooks();
+    if ("fetchWebhooks" in channel) {
+      webhooks = await channel.fetchWebhooks();
+    } else {
+      return { success: false, message: "Channel does not support webhooks" };
+    }
   } else {
     webhooks = await guild.fetchWebhooks();
   }
@@ -65,7 +69,10 @@ export async function handleCreateWebhook(
   if (channel?.isTextBased() !== true || !("createWebhook" in channel)) {
     return { success: false, message: "Channel does not support webhooks" };
   }
-  const webhook = await (channel as TextChannel).createWebhook({
+  if (!("createWebhook" in channel)) {
+    return { success: false, message: "Channel does not support webhooks" };
+  }
+  const webhook = await channel.createWebhook({
     name,
     ...(reason !== undefined && { reason }),
   });
@@ -76,14 +83,19 @@ export async function handleCreateWebhook(
   };
 }
 
+type ModifyWebhookOptions = {
+  client: Client;
+  webhookId: string | undefined;
+  name: string | undefined;
+  avatarUrl: string | undefined;
+  channelId: string | undefined;
+  reason: string | undefined;
+};
+
 export async function handleModifyWebhook(
-  client: Client,
-  webhookId: string | undefined,
-  name: string | undefined,
-  avatarUrl: string | undefined,
-  channelId: string | undefined,
-  reason: string | undefined,
+  options: ModifyWebhookOptions,
 ): Promise<WebhookResult> {
+  const { client, webhookId, name, avatarUrl, channelId, reason } = options;
   if (webhookId == null || webhookId.length === 0) {
     return {
       success: false,
@@ -130,14 +142,19 @@ export async function handleDeleteWebhook(
   return { success: true, message: `Deleted webhook "${webhookName}"` };
 }
 
+type ExecuteWebhookOptions = {
+  client: Client;
+  webhookId: string | undefined;
+  webhookToken: string | undefined;
+  content: string | undefined;
+  username: string | undefined;
+  avatarUrl: string | undefined;
+};
+
 export async function handleExecuteWebhook(
-  client: Client,
-  webhookId: string | undefined,
-  webhookToken: string | undefined,
-  content: string | undefined,
-  username: string | undefined,
-  avatarUrl: string | undefined,
+  options: ExecuteWebhookOptions,
 ): Promise<WebhookResult> {
+  const { client, webhookId, webhookToken, content, username, avatarUrl } = options;
   if (
     webhookId == null ||
     webhookId.length === 0 ||

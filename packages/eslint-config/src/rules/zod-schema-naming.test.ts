@@ -1,9 +1,8 @@
 import { describe, expect, it } from "bun:test";
+import { zodSchemaNaming } from "./zod-schema-naming.ts";
 
 describe("zod-schema-naming", () => {
   it("exports the rule correctly", () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { zodSchemaNaming } = require("./zod-schema-naming");
     expect(zodSchemaNaming).toBeDefined();
     expect(zodSchemaNaming.meta).toBeDefined();
     expect(zodSchemaNaming.meta.type).toBe("suggestion");

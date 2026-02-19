@@ -143,11 +143,11 @@ function transformFieldTypeInContent(
       continue;
     }
 
-    const isNullable = !match[2] === undefined;
+    const isNullable = match[2] !== undefined;
     const originalType = `${baseType}${match[2] ?? ""}`;
 
     const brandedType = getBrandedType(fieldName, modelName);
-    if (brandedType !== undefined && brandedType.length > 0) {
+    if (brandedType !== null && brandedType.length > 0) {
       const newType = isNullable ? `${brandedType} | null` : brandedType;
       const fieldReplacePattern = new RegExp(
         String.raw`${fieldName}:\s*${baseType}(\s*\|\s*null)?`,
@@ -214,7 +214,7 @@ function transformPayloadType(typeAlias: TypeAliasDeclaration): number {
     }
 
     const objectContent = extractScalarsContent(prop);
-    if (objectContent === undefined) {
+    if (objectContent === null) {
       continue;
     }
 
@@ -294,14 +294,14 @@ function transformPropertyType(
   }
 
   const brandedType = getBrandedType(propName, modelName);
-  if (brandedType === undefined) {
+  if (brandedType === null) {
     return false;
   }
 
   const fullText = prop.getText();
   const newText = transformFn(fullText, brandedType, propName);
 
-  if (newText !== undefined && newText.length > 0) {
+  if (newText !== null && newText.length > 0) {
     prop.replaceWithText(newText);
     BRANDED_TYPES_TO_IMPORT.add(brandedType);
     return true;
@@ -353,7 +353,7 @@ function transformSimpleObjectType(
         // Match union patterns: number | SomeOtherType OR string | SomeOtherType
         const unionPattern = new RegExp(String.raw`${propName}\??:\s*([^\n]+)`);
         const unionMatch = unionPattern.exec(fullText);
-        if (unionMatch?.[1] !== undefined && unionMatch?.[1].length > 0) {
+        if (unionMatch?.[1] !== undefined && unionMatch[1].length > 0) {
           const typeExpression = unionMatch[1];
           if (typeExpression.includes("number")) {
             return fullText.replace(/\bnumber\b/, brandedType);

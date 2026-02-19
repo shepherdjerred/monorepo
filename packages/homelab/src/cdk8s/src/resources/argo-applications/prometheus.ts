@@ -5,6 +5,7 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createPrometheusMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/prometheus.ts";
 import { createSmartctlMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/smartctl.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
@@ -17,25 +18,21 @@ import { escapeAlertmanagerTemplate } from "@shepherdjerred/homelab/cdk8s/src/re
 // import { HelmValuesForChart } from "../types/helm/index.js"; // Using 'any' for complex config
 
 export async function createPrometheusApp(chart: Chart) {
-  createIngress(
-    chart,
-    "alertmanager-ingress",
-    "prometheus",
-    "prometheus-kube-prometheus-alertmanager",
-    9093,
-    ["alertmanager"],
-    false,
-  );
+  createIngress(chart, "alertmanager-ingress", {
+    namespace: "prometheus",
+    service: "prometheus-kube-prometheus-alertmanager",
+    port: 9093,
+    hosts: ["alertmanager"],
+    funnel: false,
+  });
 
-  createIngress(
-    chart,
-    "prometheus-ingress",
-    "prometheus",
-    "prometheus-kube-prometheus-prometheus",
-    9090,
-    ["prometheus"],
-    false,
-  );
+  createIngress(chart, "prometheus-ingress", {
+    namespace: "prometheus",
+    service: "prometheus-kube-prometheus-prometheus",
+    port: 9090,
+    hosts: ["prometheus"],
+    funnel: false,
+  });
 
   const alertmanagerSecrets = new OnePasswordItem(
     chart,
@@ -57,8 +54,7 @@ export async function createPrometheusApp(chart: Chart) {
     "grafana-secret-onepassword",
     {
       spec: {
-        itemPath:
-          "vaults/v64ocnykdqju4ui6j6pua56xw4/items/42fn7x3zaemfenz35en27thw5u",
+        itemPath: vaultItemPath("42fn7x3zaemfenz35en27thw5u"),
       },
       metadata: {
         name: "prometheus-secrets",
@@ -76,7 +72,6 @@ export async function createPrometheusApp(chart: Chart) {
   createKubernetesEventExporter(chart);
 
   // Type extension for blackbox-exporter subchart (not included in generated types)
-  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents -- HelmValuesForChart resolves to error type from generated code
   type PrometheusValuesWithBlackbox = HelmValuesForChart<"kube-prometheus-stack"> & {
       "prometheus-blackbox-exporter"?: {
         enabled?: boolean;

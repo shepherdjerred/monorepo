@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { rm, mkdir } from "node:fs/promises";
 import path from "node:path";
-import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 
 const logger = loggers.editor.child("repo-clone");
 

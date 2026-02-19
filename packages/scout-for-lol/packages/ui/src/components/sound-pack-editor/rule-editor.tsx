@@ -109,13 +109,7 @@ export function RuleEditor({
         />
 
         {/* Priority */}
-        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- Priority input area needs to stop click propagation */}
-        <div
-          className="flex items-center gap-1"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
+        <div className="flex items-center gap-1">
           <label
             htmlFor={`priority-${rule.id}`}
             className="text-xs text-gray-500"
@@ -130,6 +124,9 @@ export function RuleEditor({
             value={rule.priority}
             onChange={(e) => {
               onUpdate({ priority: Number(e.currentTarget.value) });
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
             }}
             className="w-16 px-2 py-1 text-xs border rounded"
           />

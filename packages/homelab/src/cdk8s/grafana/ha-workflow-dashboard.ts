@@ -5,6 +5,11 @@ import * as stat from "@grafana/grafana-foundation-sdk/stat";
 import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
 import { exportDashboardWithHelmEscaping } from "./dashboard-export.ts";
 
+// Helper function to build filter expression
+function buildFilter() {
+  return 'workflow=~"$workflow"';
+}
+
 /**
  * Creates a Grafana dashboard for HA workflow monitoring
  * Tracks workflow executions, errors, performance, and scheduled workflow health
@@ -25,11 +30,6 @@ export function createHaWorkflowDashboard() {
     .includeAll(true)
     .allValue(".*");
 
-  // Helper function to build filter expression
-  const buildFilter = () => {
-    return 'workflow=~"$workflow"';
-  };
-
   // Build the main dashboard
   const builder = new dashboard.DashboardBuilder("HA Workflows - Monitoring")
     .uid("ha-workflow-dashboard")
@@ -40,30 +40,30 @@ export function createHaWorkflowDashboard() {
     .editable()
     .withVariable(workflowVariable);
 
-  const createStatPanel = (
-    title: string,
-    description: string,
-    query: string,
-    legend: string,
-    gridPos: dashboard.GridPos,
-    unit: string,
-    decimals?: number,
-    graphMode: common.BigValueGraphMode = common.BigValueGraphMode.Area,
-  ) => {
+  const createStatPanel = (options: {
+    title: string;
+    description: string;
+    query: string;
+    legend: string;
+    gridPos: dashboard.GridPos;
+    unit: string;
+    decimals?: number;
+    graphMode?: common.BigValueGraphMode;
+  }) => {
     const panel = new stat.PanelBuilder()
-      .title(title)
-      .description(description)
+      .title(options.title)
+      .description(options.description)
       .datasource(prometheusDatasource)
       .withTarget(
-        new prometheus.DataqueryBuilder().expr(query).legendFormat(legend),
+        new prometheus.DataqueryBuilder().expr(options.query).legendFormat(options.legend),
       )
-      .unit(unit)
+      .unit(options.unit)
       .colorMode(common.BigValueColorMode.Value)
-      .graphMode(graphMode)
-      .gridPos(gridPos);
+      .graphMode(options.graphMode ?? common.BigValueGraphMode.Area)
+      .gridPos(options.gridPos);
 
-    if (decimals !== undefined) {
-      panel.decimals(decimals);
+    if (options.decimals !== undefined) {
+      panel.decimals(options.decimals);
     }
 
     return panel;
@@ -74,27 +74,27 @@ export function createHaWorkflowDashboard() {
 
   // Total Executions (24h)
   builder.withPanel(
-    createStatPanel(
-      "Total Executions (24h)",
-      "Total workflow executions in the last 24 hours",
-      `sum without(pod, instance, container, endpoint) (increase(ha_workflow_executions_total{${buildFilter()}}[24h]))`,
-      "{{workflow}}",
-      { x: 0, y: 1, w: 12, h: 4 },
-      "short",
-    ),
+    createStatPanel({
+      title: "Total Executions (24h)",
+      description: "Total workflow executions in the last 24 hours",
+      query: `sum without(pod, instance, container, endpoint) (increase(ha_workflow_executions_total{${buildFilter()}}[24h]))`,
+      legend: "{{workflow}}",
+      gridPos: { x: 0, y: 1, w: 12, h: 4 },
+      unit: "short",
+    }),
   );
 
   // Success Rate
   builder.withPanel(
-    createStatPanel(
-      "Success Rate (24h)",
-      "Percentage of successful executions",
-      `(sum without(pod, instance, container, endpoint) (increase(ha_workflow_executions_total{status="success",${buildFilter()}}[24h])) / sum without(pod, instance, container, endpoint) (increase(ha_workflow_executions_total{${buildFilter()}}[24h]))) * 100`,
-      "{{workflow}}",
-      { x: 12, y: 1, w: 12, h: 4 },
-      "percent",
-      1,
-    ).thresholds(
+    createStatPanel({
+      title: "Success Rate (24h)",
+      description: "Percentage of successful executions",
+      query: `(sum without(pod, instance, container, endpoint) (increase(ha_workflow_executions_total{status="success",${buildFilter()}}[24h])) / sum without(pod, instance, container, endpoint) (increase(ha_workflow_executions_total{${buildFilter()}}[24h]))) * 100`,
+      legend: "{{workflow}}",
+      gridPos: { x: 12, y: 1, w: 12, h: 4 },
+      unit: "percent",
+      decimals: 1,
+    }).thresholds(
       new dashboard.ThresholdsConfigBuilder()
         .mode(dashboard.ThresholdsMode.Absolute)
         .steps([
@@ -107,16 +107,15 @@ export function createHaWorkflowDashboard() {
 
   // Workflows In Progress
   builder.withPanel(
-    createStatPanel(
-      "Workflows In Progress",
-      "Currently running workflows",
-      `sum without(pod, instance, container, endpoint) (ha_workflows_in_progress{${buildFilter()}})`,
-      "{{workflow}}",
-      { x: 0, y: 5, w: 12, h: 4 },
-      "short",
-      undefined,
-      common.BigValueGraphMode.None,
-    ).thresholds(
+    createStatPanel({
+      title: "Workflows In Progress",
+      description: "Currently running workflows",
+      query: `sum without(pod, instance, container, endpoint) (ha_workflows_in_progress{${buildFilter()}})`,
+      legend: "{{workflow}}",
+      gridPos: { x: 0, y: 5, w: 12, h: 4 },
+      unit: "short",
+      graphMode: common.BigValueGraphMode.None,
+    }).thresholds(
       new dashboard.ThresholdsConfigBuilder()
         .mode(dashboard.ThresholdsMode.Absolute)
         .steps([
@@ -129,14 +128,14 @@ export function createHaWorkflowDashboard() {
 
   // Application Uptime
   builder.withPanel(
-    createStatPanel(
-      "Application Uptime",
-      "Time since last restart",
-      `max(ha_uptime_seconds)`,
-      "Uptime",
-      { x: 12, y: 5, w: 12, h: 4 },
-      "s",
-    ),
+    createStatPanel({
+      title: "Application Uptime",
+      description: "Time since last restart",
+      query: `max(ha_uptime_seconds)`,
+      legend: "Uptime",
+      gridPos: { x: 12, y: 5, w: 12, h: 4 },
+      unit: "s",
+    }),
   );
 
   // Row 2: Execution Metrics
@@ -178,15 +177,15 @@ export function createHaWorkflowDashboard() {
 
   // Last Execution Timestamp
   builder.withPanel(
-    createStatPanel(
-      "Last Successful Execution",
-      "Time since last successful execution (seconds ago)",
-      `time() - max without(pod, instance, container, endpoint) (ha_workflow_last_success_timestamp_max{${buildFilter()}})`,
-      "{{workflow}}",
-      { x: 0, y: 17, w: 24, h: 8 },
-      "s",
-      0,
-    ).thresholds(
+    createStatPanel({
+      title: "Last Successful Execution",
+      description: "Time since last successful execution (seconds ago)",
+      query: `time() - max without(pod, instance, container, endpoint) (ha_workflow_last_success_timestamp_max{${buildFilter()}})`,
+      legend: "{{workflow}}",
+      gridPos: { x: 0, y: 17, w: 24, h: 8 },
+      unit: "s",
+      decimals: 0,
+    }).thresholds(
       new dashboard.ThresholdsConfigBuilder()
         .mode(dashboard.ThresholdsMode.Absolute)
         .steps([
@@ -228,15 +227,15 @@ export function createHaWorkflowDashboard() {
 
   // Workflows Currently In Progress
   builder.withPanel(
-    createStatPanel(
-      "Workflows In Progress",
-      "Currently executing workflows (may indicate stuck workflows if persistently non-zero)",
-      `sum without(pod, instance, container, endpoint) (ha_workflows_in_progress{${buildFilter()}})`,
-      "{{workflow}}",
-      { x: 12, y: 25, w: 12, h: 8 },
-      "short",
-      0,
-    ).thresholds(
+    createStatPanel({
+      title: "Workflows In Progress",
+      description: "Currently executing workflows (may indicate stuck workflows if persistently non-zero)",
+      query: `sum without(pod, instance, container, endpoint) (ha_workflows_in_progress{${buildFilter()}})`,
+      legend: "{{workflow}}",
+      gridPos: { x: 12, y: 25, w: 12, h: 8 },
+      unit: "short",
+      decimals: 0,
+    }).thresholds(
       new dashboard.ThresholdsConfigBuilder()
         .mode(dashboard.ThresholdsMode.Absolute)
         .steps([

@@ -1,5 +1,3 @@
-export { webTools, externalServiceTool } from "./web.ts";
+import { externalServiceTool } from "./web.ts";
 
-import { webTools } from "./web.ts";
-
-export const allExternalTools = [...webTools];
+export const allExternalTools = [externalServiceTool];

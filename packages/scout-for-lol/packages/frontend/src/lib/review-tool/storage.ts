@@ -201,11 +201,11 @@ async function migrateSingleItem(
   key?: string,
 ): Promise<void> {
   const stored = localStorage.getItem(localStorageKey);
-  if (stored === undefined) {
+  if (stored === null) {
     return;
   }
 
-  const parsed = JSON.parse(stored);
+  const parsed: unknown = JSON.parse(stored);
 
   if (isArray === true) {
     // For array data, store each item individually

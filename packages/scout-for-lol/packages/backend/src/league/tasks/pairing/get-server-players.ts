@@ -68,7 +68,7 @@ export function createAliasToDiscordIdMap(
 ): Map<string, string> {
   const map = new Map<string, string>();
   for (const player of players) {
-    if (player.discordId !== undefined && player.discordId.length > 0) {
+    if (player.discordId !== null && player.discordId.length > 0) {
       map.set(player.alias, player.discordId);
     }
   }

@@ -1,8 +1,8 @@
 import { QueryType, QueueRepeatMode } from "discord-player";
-import type { VoiceChannel } from "discord.js";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
-import { getMusicPlayer } from "@shepherdjerred/birmel/music/index.ts";
-import { logger } from "@shepherdjerred/birmel/utils/index.ts";
+import { ChannelType } from "discord.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
+import { getMusicPlayer } from "@shepherdjerred/birmel/music/player.ts";
+import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 
 type PlaybackResult = {
   success: boolean;
@@ -48,7 +48,10 @@ export async function handlePlay(
   if (!searchResult.hasTracks()) {
     return { success: false, message: "No results found" };
   }
-  const result = await player.play(voiceChannel as VoiceChannel, searchResult, {
+  if (voiceChannel.type !== ChannelType.GuildVoice) {
+    return { success: false, message: "Channel is not a voice channel" };
+  }
+  const result = await player.play(voiceChannel, searchResult, {
     nodeOptions: {
       metadata: channel,
       leaveOnEmpty: true,

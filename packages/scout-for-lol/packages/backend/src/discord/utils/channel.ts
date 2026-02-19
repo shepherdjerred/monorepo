@@ -17,8 +17,8 @@ export type SendableChannel = {
 /**
  * Check if a channel is text-based and return it with proper typing
  *
- * This is one of the rare cases where we use a type assertion, as Discord.js
- * channel types are complex and after checking isTextBased(), we know it has send()
+ * Discord.js's isTextBased() is a type guard that narrows to TextBasedChannel,
+ * which includes the send() method we need.
  *
  * @param channel Channel to check
  * @returns SendableChannel if channel is text-based, undefined otherwise
@@ -28,8 +28,6 @@ export function asTextChannel(channel: Channel): SendableChannel | undefined {
     return undefined;
   }
 
-  // Type assertion needed: Discord.js's isTextBased() runtime check guarantees send() method exists
-  // but TypeScript's type system can't express this relationship
-  // eslint-disable-next-line custom-rules/no-type-assertions -- Type assertion is safe here because we checked the type above
-  return channel as unknown as SendableChannel;
+  // isTextBased() narrows to TextBasedChannel which has send()
+  return channel;
 }

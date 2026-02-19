@@ -2,97 +2,15 @@ import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import type { ImageRef } from "./types.ts";
 import { parseImageString } from "./types.ts";
-
-/**
- * Default values for charts that have required fields with no defaults.
- * These minimal values allow helm template to render without errors.
- */
-const CHART_DEFAULT_VALUES: Record<string, Record<string, unknown>> = {
-  loki: {
-    loki: {
-      storage: {
-        bucketNames: {
-          chunks: "chunks",
-          ruler: "ruler",
-          admin: "admin",
-        },
-        type: "filesystem",
-      },
-    },
-  },
-  gitlab: {
-    global: {
-      hosts: {
-        domain: "example.com",
-      },
-    },
-    "certmanager-issuer": {
-      email: "admin@example.com",
-    },
-  },
-  "kube-prometheus-stack": {
-    // Usually works without extra values, but add common ones
-    prometheus: {
-      prometheusSpec: {
-        retention: "10d",
-      },
-    },
-  },
-};
-
-/**
- * Get default values for a chart if it has required fields
- */
-function getDefaultValuesForChart(
-  chartName: string,
-): Record<string, unknown> | null {
-  return CHART_DEFAULT_VALUES[chartName] ?? null;
-}
-
-// Zod schemas for K8s manifest parsing
-const ContainerSchema = z.looseObject({
-  image: z.string().optional(),
-});
-
-const ContainersArraySchema = z.array(ContainerSchema);
-
-const PodSpecSchema = z.looseObject({
-  containers: ContainersArraySchema.optional(),
-  initContainers: ContainersArraySchema.optional(),
-  ephemeralContainers: ContainersArraySchema.optional(),
-});
-
-const PodTemplateSpecSchema = z.looseObject({
-  spec: PodSpecSchema.optional(),
-});
-
-const JobSpecSchema = z.looseObject({
-  template: PodTemplateSpecSchema.optional(),
-});
-
-const CronJobSpecSchema = z.looseObject({
-  jobTemplate: z
-    .looseObject({
-      spec: JobSpecSchema.optional(),
-    })
-    .optional(),
-});
-
-const PrometheusCRDSpecSchema = z.looseObject({
-  image: z.string().optional(),
-  thanos: z
-    .looseObject({
-      image: z.string().optional(),
-    })
-    .optional(),
-  configReloaderImage: z.string().optional(),
-  containers: ContainersArraySchema.optional(),
-});
-
-const K8sManifestSchema = z.looseObject({
-  kind: z.string().optional(),
-  spec: z.record(z.string(), z.unknown()).optional(),
-});
+import {
+  getDefaultValuesForChart,
+  PodSpecSchema,
+  PodTemplateSpecSchema,
+  CronJobSpecSchema,
+  PrometheusCRDSpecSchema,
+  K8sManifestSchema,
+  RecursiveImageSchema,
+} from "./image-extractor-schemas.ts";
 
 /**
  * Extract all container images from a Helm chart by rendering templates
@@ -193,9 +111,7 @@ async function renderHelmTemplate(
     const manifests: unknown[] = [];
 
     for (const doc of documents) {
-      if (doc.toJS()) {
-        manifests.push(doc.toJS());
-      }
+      manifests.push(doc.toJS());
     }
 
     return manifests;
@@ -207,6 +123,70 @@ async function renderHelmTemplate(
     });
     await removeProc.exited;
   }
+}
+
+/** Kinds that use PodTemplateSpec in spec.template */
+const POD_TEMPLATE_KINDS = new Set([
+  "Deployment",
+  "StatefulSet",
+  "DaemonSet",
+  "ReplicaSet",
+  "Job",
+]);
+
+/** Kinds that use Prometheus Operator CRD spec pattern */
+const PROMETHEUS_CRD_KINDS = new Set([
+  "Prometheus",
+  "Alertmanager",
+  "ThanosRuler",
+]);
+
+/**
+ * Extract images from a single K8s manifest based on its kind
+ */
+function extractImagesFromManifest(
+  kind: string,
+  spec: Record<string, unknown>,
+  images: ImageRef[],
+): void {
+  if (POD_TEMPLATE_KINDS.has(kind)) {
+    const templateParsed = PodTemplateSpecSchema.safeParse(spec["template"]);
+    if (templateParsed.success) {
+      extractFromPodSpec(templateParsed.data.spec, images);
+    }
+    return;
+  }
+
+  if (kind === "CronJob") {
+    const cronJobParsed = CronJobSpecSchema.safeParse(spec);
+    const jobSpec = cronJobParsed.success ? cronJobParsed.data.jobTemplate?.spec : undefined;
+    const cronTemplateParsed = jobSpec
+      ? PodTemplateSpecSchema.safeParse(jobSpec.template)
+      : undefined;
+    if (cronTemplateParsed?.success === true) {
+      extractFromPodSpec(cronTemplateParsed.data.spec, images);
+    }
+    return;
+  }
+
+  if (kind === "Pod") {
+    const podSpecParsed = PodSpecSchema.safeParse(spec);
+    if (podSpecParsed.success) {
+      extractFromPodSpec(podSpecParsed.data, images);
+    }
+    return;
+  }
+
+  if (PROMETHEUS_CRD_KINDS.has(kind)) {
+    const crdParsed = PrometheusCRDSpecSchema.safeParse(spec);
+    if (crdParsed.success) {
+      extractCRDImage(crdParsed.data, images);
+    }
+    return;
+  }
+
+  // Try generic extraction for unknown types
+  extractImagesRecursively(spec, images);
 }
 
 /**
@@ -224,60 +204,7 @@ function extractImagesFromManifests(manifests: unknown[]): ImageRef[] {
     const { kind, spec } = parsed.data;
 
     if (spec && kind !== undefined) {
-      switch (kind) {
-        case "Deployment":
-        case "StatefulSet":
-        case "DaemonSet":
-        case "ReplicaSet":
-        case "Job": {
-          const templateParsed = PodTemplateSpecSchema.safeParse(
-            spec["template"],
-          );
-          if (templateParsed.success) {
-            extractFromPodSpec(templateParsed.data.spec, images);
-          }
-          break;
-        }
-
-        case "CronJob": {
-          const cronJobParsed = CronJobSpecSchema.safeParse(spec);
-          if (cronJobParsed.success) {
-            const jobSpec = cronJobParsed.data.jobTemplate?.spec;
-            if (jobSpec) {
-              const templateParsed = PodTemplateSpecSchema.safeParse(
-                jobSpec.template,
-              );
-              if (templateParsed.success) {
-                extractFromPodSpec(templateParsed.data.spec, images);
-              }
-            }
-          }
-          break;
-        }
-
-        case "Pod": {
-          const podSpecParsed = PodSpecSchema.safeParse(spec);
-          if (podSpecParsed.success) {
-            extractFromPodSpec(podSpecParsed.data, images);
-          }
-          break;
-        }
-
-        // CRD-specific patterns
-        case "Prometheus":
-        case "Alertmanager":
-        case "ThanosRuler": {
-          const crdParsed = PrometheusCRDSpecSchema.safeParse(spec);
-          if (crdParsed.success) {
-            extractCRDImage(crdParsed.data, images);
-          }
-          break;
-        }
-
-        default:
-          // Try generic extraction for unknown types
-          extractImagesRecursively(spec, images);
-      }
+      extractImagesFromManifest(kind, spec, images);
     }
   }
 
@@ -298,7 +225,7 @@ function extractFromPodSpec(
   // Main containers
   if (podSpec.containers) {
     for (const container of podSpec.containers) {
-      if (container.image) {
+      if (container.image != null && container.image !== "") {
         const parsed = parseImageString(container.image);
         if (parsed) {
           images.push(parsed);
@@ -310,7 +237,7 @@ function extractFromPodSpec(
   // Init containers
   if (podSpec.initContainers) {
     for (const container of podSpec.initContainers) {
-      if (container.image) {
+      if (container.image != null && container.image !== "") {
         const parsed = parseImageString(container.image);
         if (parsed) {
           images.push(parsed);
@@ -322,7 +249,7 @@ function extractFromPodSpec(
   // Ephemeral containers
   if (podSpec.ephemeralContainers) {
     for (const container of podSpec.ephemeralContainers) {
-      if (container.image) {
+      if (container.image != null && container.image !== "") {
         const parsed = parseImageString(container.image);
         if (parsed) {
           images.push(parsed);
@@ -340,7 +267,7 @@ function extractCRDImage(
   images: ImageRef[],
 ): void {
   // Direct image field (Prometheus, Alertmanager)
-  if (spec.image) {
+  if (spec.image != null && spec.image !== "") {
     const parsed = parseImageString(spec.image);
     if (parsed) {
       images.push(parsed);
@@ -348,7 +275,7 @@ function extractCRDImage(
   }
 
   // Thanos sidecar
-  if (spec.thanos?.image) {
+  if (spec.thanos?.image != null && spec.thanos.image !== "") {
     const parsed = parseImageString(spec.thanos.image);
     if (parsed) {
       images.push(parsed);
@@ -356,7 +283,7 @@ function extractCRDImage(
   }
 
   // Config reloader
-  if (spec.configReloaderImage) {
+  if (spec.configReloaderImage != null && spec.configReloaderImage !== "") {
     const parsed = parseImageString(spec.configReloaderImage);
     if (parsed) {
       images.push(parsed);
@@ -366,7 +293,7 @@ function extractCRDImage(
   // Containers array (some CRDs have this)
   if (spec.containers) {
     for (const container of spec.containers) {
-      if (container.image) {
+      if (container.image != null && container.image !== "") {
         const parsed = parseImageString(container.image);
         if (parsed) {
           images.push(parsed);
@@ -375,11 +302,6 @@ function extractCRDImage(
     }
   }
 }
-
-// Schema for recursive image extraction
-const RecursiveImageSchema = z.looseObject({
-  image: z.string().optional(),
-});
 
 /**
  * Recursively extract images from any object structure
@@ -413,7 +335,7 @@ function extractImagesRecursively(
   const record = objResult.data;
 
   // Check for image field
-  if (record.image) {
+  if (record.image != null && record.image !== "") {
     const parsed = parseImageString(record.image);
     if (parsed) {
       images.push(parsed);

@@ -15,12 +15,13 @@
  */
 
 import OpenAI from "openai";
-import { validateSource } from "./ast-parser.ts";
 import {
   getSimpleFunctionPrompt,
   getFunctionPrompt,
   getSystemPrompt,
 } from "./prompt-templates.ts";
+import { parseLLMResponse, getErrorMessage } from "./response-parser.ts";
+import { BatchResponseSchema } from "./json-schemas.ts";
 import type {
   DeminifyConfig,
   DeminifyContext,
@@ -171,10 +172,34 @@ export class OpenAIBatchClient {
     return batch.id;
   }
 
+  /** Check if a batch is still in a processing state */
+  private isBatchProcessing(
+    status: string,
+  ): boolean {
+    return (
+      status === "validating" ||
+      status === "in_progress" ||
+      status === "finalizing"
+    );
+  }
+
+  /** Build an OpenAIBatchStatus from a batch retrieve response */
+  private toBatchStatus(
+    batchId: string,
+    batch: { status: OpenAIBatchStatus["status"]; request_counts?: { total: number; completed: number; failed: number } | null },
+  ): OpenAIBatchStatus {
+    return {
+      batchId,
+      status: batch.status,
+      total: batch.request_counts?.total ?? 0,
+      completed: batch.request_counts?.completed ?? 0,
+      failed: batch.request_counts?.failed ?? 0,
+    };
+  }
+
   /**
    * Poll for batch completion.
    */
-  // eslint-disable-next-line complexity -- inherent complexity in processing logic
   async waitForCompletion(
     batchId: string,
     callbacks?: OpenAIBatchCallbacks,
@@ -182,35 +207,13 @@ export class OpenAIBatchClient {
   ): Promise<void> {
     let batch = await this.client.batches.retrieve(batchId);
 
-    while (
-      batch.status === "validating" ||
-      batch.status === "in_progress" ||
-      batch.status === "finalizing"
-    ) {
-      const status: OpenAIBatchStatus = {
-        batchId,
-        status: batch.status,
-        total: batch.request_counts?.total ?? 0,
-        completed: batch.request_counts?.completed ?? 0,
-        failed: batch.request_counts?.failed ?? 0,
-      };
-
-      callbacks?.onStatusUpdate?.(status);
-
+    while (this.isBatchProcessing(batch.status)) {
+      callbacks?.onStatusUpdate?.(this.toBatchStatus(batchId, batch));
       await this.sleep(pollIntervalMs);
       batch = await this.client.batches.retrieve(batchId);
     }
 
-    // Final status update
-    const finalStatus: OpenAIBatchStatus = {
-      batchId,
-      status: batch.status,
-      total: batch.request_counts?.total ?? 0,
-      completed: batch.request_counts?.completed ?? 0,
-      failed: batch.request_counts?.failed ?? 0,
-    };
-
-    callbacks?.onStatusUpdate?.(finalStatus);
+    callbacks?.onStatusUpdate?.(this.toBatchStatus(batchId, batch));
 
     if (batch.status === "failed" || batch.status === "expired") {
       throw new Error(
@@ -246,56 +249,73 @@ export class OpenAIBatchClient {
       if (!line.trim()) {
         continue;
       }
-
-      try {
-        // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-        const entry = JSON.parse(line) as BatchResponse;
-        const funcId = entry.custom_id;
-        const context = contexts.get(funcId);
-
-        if (!context) {
-          if (this.config.verbose) {
-            console.warn(`Unknown function ID in results: ${funcId}`);
-          }
-          continue;
-        }
-
-        if (entry.response?.status_code === 200) {
-          try {
-            const responseText =
-              entry.response.body.choices[0]?.message.content;
-            // eslint-disable-next-line max-depth -- nested control flow required for logic
-            if (responseText != null && responseText.length > 0) {
-              const result = this.parseResponse(responseText, context);
-              results.set(funcId, result);
-            }
-          } catch (error) {
-            // eslint-disable-next-line max-depth -- nested control flow required for logic
-            if (this.config.verbose) {
-              console.error(
-                `Failed to parse result for ${funcId}: ${
-                  // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-                  (error as Error).message
-                }`,
-              );
-            }
-          }
-        } else if (entry.error && this.config.verbose) {
-          console.error(
-            `Batch error for ${funcId}: ${entry.error.code} - ${entry.error.message}`,
-          );
-        }
-      } catch (error) {
-        if (this.config.verbose) {
-          console.error(
-            // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-            `Failed to parse batch response line: ${(error as Error).message}`,
-          );
-        }
-      }
+      this.processResultLine(line, contexts, results);
     }
 
     return results;
+  }
+
+  /** Process a single JSONL result line */
+  private processResultLine(
+    line: string,
+    contexts: Map<string, DeminifyContext>,
+    results: Map<string, DeminifyResult>,
+  ): void {
+    let raw: unknown;
+    try {
+      raw = JSON.parse(line);
+    } catch (error) {
+      if (this.config.verbose) {
+        console.error(`Failed to parse batch response line: ${getErrorMessage(error)}`);
+      }
+      return;
+    }
+    const parsed = BatchResponseSchema.safeParse(raw);
+    if (!parsed.success) {
+      if (this.config.verbose) {
+        console.error(`Invalid batch response structure: ${parsed.error.message}`);
+      }
+      return;
+    }
+    const entry = parsed.data;
+
+    const funcId = entry.custom_id;
+    const context = contexts.get(funcId);
+
+    if (!context) {
+      if (this.config.verbose) {
+        console.warn(`Unknown function ID in results: ${funcId}`);
+      }
+      return;
+    }
+
+    if (entry.response?.status_code === 200) {
+      this.processSuccessfulEntry(entry, funcId, context, results);
+    } else if (entry.error && this.config.verbose) {
+      console.error(
+        `Batch error for ${funcId}: ${entry.error.code} - ${entry.error.message}`,
+      );
+    }
+  }
+
+  /** Process a successful batch response entry */
+  private processSuccessfulEntry(
+    entry: BatchResponse,
+    funcId: string,
+    context: DeminifyContext,
+    results: Map<string, DeminifyResult>,
+  ): void {
+    try {
+      const responseText = entry.response?.body.choices[0]?.message.content;
+      if (responseText != null && responseText.length > 0) {
+        const result = parseLLMResponse(responseText, context);
+        results.set(funcId, result);
+      }
+    } catch (error) {
+      if (this.config.verbose) {
+        console.error(`Failed to parse result for ${funcId}: ${getErrorMessage(error)}`);
+      }
+    }
   }
 
   /**
@@ -318,90 +338,6 @@ export class OpenAIBatchClient {
    */
   async cancelBatch(batchId: string): Promise<void> {
     await this.client.batches.cancel(batchId);
-  }
-
-  /**
-   * Parse a response into a DeminifyResult.
-   */
-  private parseResponse(
-    responseText: string,
-    context: DeminifyContext,
-  ): DeminifyResult {
-    // Extract code from markdown code blocks
-    const codeMatch = /```(?:javascript|js)?\n?([\s\S]*?)```/.exec(
-      responseText,
-    );
-    if (codeMatch?.[1] == null || codeMatch[1].length === 0) {
-      throw new Error("No code block found in response");
-    }
-
-    const deminifiedSource = codeMatch[1].trim();
-
-    // Validate the code parses
-    if (!validateSource(deminifiedSource)) {
-      throw new Error("De-minified code failed to parse");
-    }
-
-    // Try to extract metadata JSON
-    let suggestedName =
-      context.targetFunction.originalName.length > 0
-        ? context.targetFunction.originalName
-        : "anonymousFunction";
-    let confidence = 0.5;
-    let parameterNames: Record<string, string> = {};
-    let localVariableNames: Record<string, string> = {};
-
-    // Look for JSON after the code block
-    const jsonMatch = /```[\s\S]*?```\s*(\{[\s\S]*\})/.exec(responseText);
-    if (jsonMatch?.[1] != null && jsonMatch[1].length > 0) {
-      try {
-        // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-        const metadata = JSON.parse(jsonMatch[1]) as {
-          suggestedName?: string;
-          confidence?: number;
-          parameterNames?: Record<string, string>;
-          localVariableNames?: Record<string, string>;
-        };
-        if (
-          metadata.suggestedName != null &&
-          metadata.suggestedName.length > 0
-        ) {
-          suggestedName = metadata.suggestedName;
-        }
-        if (typeof metadata.confidence === "number") {
-          confidence = metadata.confidence;
-        }
-        if (metadata.parameterNames != null) {
-          parameterNames = metadata.parameterNames;
-        }
-        if (metadata.localVariableNames != null) {
-          localVariableNames = metadata.localVariableNames;
-        }
-      } catch {
-        // JSON parsing failed, use defaults
-      }
-    }
-
-    // Try to infer name from the de-minified code if not provided
-    if (suggestedName === "anonymousFunction") {
-      const funcNameMatch =
-        /(?:function|const|let|var)\s+([a-zA-Z_$][\w$]*)/.exec(
-          deminifiedSource,
-        );
-      if (funcNameMatch?.[1] != null && funcNameMatch[1].length > 0) {
-        suggestedName = funcNameMatch[1];
-      }
-    }
-
-    return {
-      functionId: context.targetFunction.id,
-      originalSource: context.targetFunction.source,
-      deminifiedSource,
-      suggestedName,
-      confidence,
-      parameterNames,
-      localVariableNames,
-    };
   }
 
   private sleep(ms: number): Promise<void> {

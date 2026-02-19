@@ -276,56 +276,65 @@ export class LLMCaller {
   }
 }
 
-/**
- * Parse LLM response into rename mappings.
- */
+/** Extract string values from an unknown object */
+function toStringRecord(value: unknown): Record<string, string> {
+  if (typeof value !== "object" || value === null) {
+    return {};
+  }
+  const result: Record<string, string> = {};
+  for (const [k, v] of Object.entries(value)) {
+    if (typeof v === "string") {
+      result[k] = v;
+    }
+  }
+  return result;
+}
+
+/** Parse a single mapping entry from an unknown value */
+function parseMappingEntry(value: unknown): RenameMappings[string] | null {
+  if (typeof value !== "object" || value === null) {
+    return null;
+  }
+  const props = new Map<string, unknown>(Object.entries(value));
+  const renames = toStringRecord(props.get("renames"));
+  const entry: RenameMappings[string] = { renames };
+
+  const funcName = props.get("functionName");
+  if (typeof funcName === "string") {
+    entry.functionName = funcName;
+  }
+  const desc = props.get("description");
+  if (typeof desc === "string") {
+    entry.description = desc;
+  }
+  return entry;
+}
+
+/** Parse LLM response into rename mappings. */
 export function parseResponse(content: string): RenameMappings {
-  // Try to extract JSON from the response
   let jsonStr = content.trim();
 
-  // If wrapped in markdown code blocks, extract
   const jsonMatch = /```(?:json)?\n?([\s\S]*?)```/.exec(jsonStr);
   if (jsonMatch?.[1] != null && jsonMatch[1].length > 0) {
     jsonStr = jsonMatch[1].trim();
   }
 
   try {
-    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-    const raw = JSON.parse(jsonStr) as Record<string, unknown>;
-    const parsed: RenameMappings = {};
-
-    // Validate structure
-    for (const [id, mapping] of Object.entries(raw)) {
-      if (typeof mapping !== "object" || mapping === null) {
-        continue;
-      }
-
-      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-      const m = mapping as Record<string, unknown>;
-
-      // Ensure renames is an object
-      const renames =
-        typeof m["renames"] === "object" && m["renames"] !== null
-          // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-          ? (m["renames"] as Record<string, string>)
-          : {};
-
-      const entry: RenameMappings[string] = { renames };
-      if (typeof m["functionName"] === "string") {
-        entry.functionName = m["functionName"];
-      }
-      if (typeof m["description"] === "string") {
-        entry.description = m["description"];
-      }
-      parsed[id] = entry;
+    const raw: unknown = JSON.parse(jsonStr);
+    if (typeof raw !== "object" || raw === null) {
+      return {};
     }
 
+    const parsed: RenameMappings = {};
+    for (const [id, mapping] of Object.entries(raw)) {
+      const entry = parseMappingEntry(mapping);
+      if (entry) {
+        parsed[id] = entry;
+      }
+    }
     return parsed;
   } catch {
-    console.error(
-      "Failed to parse LLM response as JSON:",
-      content.slice(0, 200),
-    );
+    console.error("Failed to parse LLM response as JSON:", content.slice(0, 200));
     return {};
   }
 }

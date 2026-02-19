@@ -1,10 +1,6 @@
-import type {
-  BackendType,
-  AccessMode,
-  StorageClassInfo,
-  SessionModel,
-} from "@clauderon/client";
-import type { AgentType } from "@clauderon/shared";
+import type { StorageClassInfo, SessionModel } from "@clauderon/client";
+import type { AgentType, AccessMode } from "@clauderon/shared";
+import { BackendType } from "@clauderon/shared";
 import { Label } from "@/components/ui/label";
 
 export type SessionFormData = {
@@ -92,13 +88,10 @@ export function AdvancedContainerSettings({
               id="pull_policy"
               value={formData.pull_policy}
               onChange={(e) => {
-                setFormData({
-                  ...formData,
-                  pull_policy: e.target.value as
-                    | "always"
-                    | "if-not-present"
-                    | "never",
-                });
+                const val = e.target.value;
+                if (val === "always" || val === "if-not-present" || val === "never") {
+                  setFormData({ ...formData, pull_policy: val });
+                }
               }}
               className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
             >
@@ -141,7 +134,7 @@ export function AdvancedContainerSettings({
         </div>
 
         {/* Storage Class (Kubernetes only) */}
-        {(formData.backend as string) === "Kubernetes" && (
+        {formData.backend === BackendType.Kubernetes && (
           <div className="space-y-2">
             <Label htmlFor="storage_class">Storage Class (Kubernetes)</Label>
             {loadingStorageClasses ? (

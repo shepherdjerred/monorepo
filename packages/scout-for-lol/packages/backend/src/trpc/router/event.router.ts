@@ -17,12 +17,12 @@ import {
   type EventContext,
 } from "@scout-for-lol/backend/sound-engine/index.ts";
 import { voiceManager } from "@scout-for-lol/backend/voice/index.ts";
-import type {
-  SoundPack,
-  SoundPackSettings,
-  DefaultSounds,
-  SoundRule,
-  SoundPackId,
+import {
+  SoundPackSettingsSchema,
+  DefaultSoundsSchema,
+  SoundRuleSchema,
+  SoundPackIdSchema,
+  type SoundPack,
 } from "@scout-for-lol/data";
 
 const logger = createLogger("event-router");
@@ -222,12 +222,9 @@ function parseSoundPack(dbPack: {
     id: dbPack.id.toString(),
     name: dbPack.name,
     version: "1.0.0",
-    // eslint-disable-next-line custom-rules/no-type-assertions -- JSON.parse returns unknown, type assertion needed for parsed database JSON
-    settings: JSON.parse(dbPack.settings) as SoundPackSettings,
-    // eslint-disable-next-line custom-rules/no-type-assertions -- JSON.parse returns unknown, type assertion needed for parsed database JSON
-    defaults: JSON.parse(dbPack.defaults) as DefaultSounds,
-    // eslint-disable-next-line custom-rules/no-type-assertions -- JSON.parse returns unknown, type assertion needed for parsed database JSON
-    rules: JSON.parse(dbPack.rules) as SoundRule[],
+    settings: SoundPackSettingsSchema.parse(JSON.parse(dbPack.settings)),
+    defaults: DefaultSoundsSchema.parse(JSON.parse(dbPack.defaults)),
+    rules: z.array(SoundRuleSchema).parse(JSON.parse(dbPack.rules)),
   };
 }
 
@@ -257,7 +254,7 @@ export const eventRouter = router({
         });
       }
 
-      if (client.voiceChannelId === undefined || client.guildId === undefined) {
+      if (client.voiceChannelId === null || client.guildId === null) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "Voice channel not configured for desktop client",
@@ -377,8 +374,7 @@ export const eventRouter = router({
     .mutation(async ({ input, ctx }) => {
       // Verify sound pack access if provided
       if (input.soundPackId !== undefined) {
-        // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation
-        const soundPackId = input.soundPackId as SoundPackId;
+        const soundPackId = SoundPackIdSchema.parse(input.soundPackId);
         const pack = await prisma.soundPack.findFirst({
           where: {
             id: soundPackId,

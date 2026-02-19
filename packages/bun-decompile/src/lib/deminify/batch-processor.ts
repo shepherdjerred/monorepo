@@ -1,20 +1,4 @@
-/**
- * Batch processor for bottom-up de-minification.
- *
- * Key algorithm:
- * 1. Build call graph as a tree
- * 2. Process bottom-up (leaves first)
- * 3. After each round, apply renames to source
- * 4. Parent functions see renamed callees for better context
- *
- * Error handling strategy:
- * - LLM API errors: logged, empty mappings returned, processing continues
- * - Parse errors: logged, processing continues with other functions
- * - Cache errors: silently ignored, operation proceeds without caching
- * - Final rename errors: logged, original source returned
- *
- * @see Plan: /Users/jerred/.claude/plans/dazzling-popping-firefly.md
- */
+/** Batch processor for bottom-up de-minification (leaves first, Babel rename). */
 
 import {
   applyRenames,
@@ -61,9 +45,6 @@ export type BatchProcessorOptions = {
   verbose?: boolean;
 };
 
-/**
- * Batch processor for bottom-up de-minification.
- */
 export class BatchProcessor {
   private readonly config: DeminifyConfig;
   private readonly cache: FunctionCache;
@@ -81,26 +62,11 @@ export class BatchProcessor {
     this.llmCaller = new LLMCaller(config);
   }
 
-  /**
-   * Set log file path for raw request/response logging.
-   */
   setLogFile(logPath: string): void {
     this.llmCaller.setLogFile(logPath);
   }
 
-  /**
-   * Process all functions in the call graph bottom-up.
-   *
-   * Strategy: Collect all rename mappings first, then apply once at the end.
-   * This avoids position-shift issues where function IDs become invalid
-   * after source modifications.
-   *
-   * @param source - The full source code
-   * @param graph - The call graph
-   * @param options - Processing options
-   * @returns The de-minified source code
-   */
-  // eslint-disable-next-line complexity -- inherent complexity in processing logic
+  /** Process all functions bottom-up, collecting rename mappings and applying once at end. */
   async processAll(
     source: string,
     graph: CallGraph,
@@ -175,18 +141,7 @@ export class BatchProcessor {
         const mappings = await this.processBatch(batch, knownNames, verbose);
 
         // Merge mappings
-        for (const [id, mapping] of Object.entries(mappings)) {
-          allMappings[id] = mapping;
-
-          // Track function name for context in subsequent rounds.
-          if (mapping.functionName != null && mapping.functionName.length > 0) {
-            const fn = functions.find((f) => f.id === id);
-            // eslint-disable-next-line max-depth -- nested control flow required for logic
-            if (fn?.originalName != null && fn.originalName.length > 0) {
-              knownNames.set(fn.originalName, mapping.functionName);
-            }
-          }
-        }
+        this.mergeMappings(mappings, allMappings, knownNames, functions);
 
         // Mark as processed
         for (const fn of batch) {
@@ -231,9 +186,26 @@ export class BatchProcessor {
     }
   }
 
-  /**
-   * Sort functions by depth in call graph (leaves first).
-   */
+  /** Merge batch mappings into the accumulated mappings and known names */
+  private mergeMappings(
+    batchMappings: RenameMappings,
+    allMappings: RenameMappings,
+    knownNames: Map<string, string>,
+    functions: ExtractedFunction[],
+  ): void {
+    for (const [id, mapping] of Object.entries(batchMappings)) {
+      allMappings[id] = mapping;
+
+      // Track function name for context in subsequent rounds.
+      if (mapping.functionName != null && mapping.functionName.length > 0) {
+        const fn = functions.find((f) => f.id === id);
+        if (fn?.originalName != null && fn.originalName.length > 0) {
+          knownNames.set(fn.originalName, mapping.functionName);
+        }
+      }
+    }
+  }
+
   private sortByDepth(graph: CallGraph): ExtractedFunction[] {
     const functions = [...graph.functions.values()];
     const depths = new Map<string, number>();
@@ -283,9 +255,6 @@ export class BatchProcessor {
     });
   }
 
-  /**
-   * Get functions that are ready to process (all callees already processed).
-   */
   private getReadyFunctions(
     functions: ExtractedFunction[],
     graph: CallGraph,
@@ -312,10 +281,6 @@ export class BatchProcessor {
     });
   }
 
-  /**
-   * Create batches of functions that fit within token budget.
-   * Uses accurate token counting via tiktoken/anthropic tokenizer.
-   */
   private createBatches(
     functions: ExtractedFunction[],
     maxTokens: number,
@@ -366,14 +331,7 @@ export class BatchProcessor {
     return batches;
   }
 
-  /**
-   * Add inline comments to function source showing relevant known renames.
-   * This gives the LLM context about what the called functions do.
-   *
-   * Security note: We sanitize the annotation to prevent malicious source code
-   * from injecting fake annotations. Only alphanumeric identifiers and arrows
-   * are included in the comment.
-   */
+  /** Add inline comments showing relevant known renames for LLM context. */
   private annotateWithKnownNames(
     source: string,
     knownNames: Map<string, string>,
@@ -409,9 +367,6 @@ export class BatchProcessor {
     return `${comment}\n${source}`;
   }
 
-  /**
-   * Process a batch of functions and get rename mappings.
-   */
   private async processBatch(
     functions: ExtractedFunction[],
     knownNames: Map<string, string>,
@@ -484,9 +439,6 @@ export class BatchProcessor {
     return mappings;
   }
 
-  /**
-   * Get processing statistics.
-   */
   getStats(): BatchResult {
     return {
       processed: this.cacheHits + this.cacheMisses,

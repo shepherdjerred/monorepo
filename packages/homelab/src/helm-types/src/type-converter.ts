@@ -6,13 +6,13 @@ import type {
 import type { HelmValue } from "./schemas.ts";
 import {
   StringSchema,
-  ActualNumberSchema,
-  ActualBooleanSchema,
   NullSchema,
   UndefinedSchema,
   ArraySchema,
-  StringBooleanSchema,
   HelmValueSchema,
+  ActualBooleanSchema,
+  ActualNumberSchema,
+  StringBooleanSchema,
 } from "./schemas.ts";
 import { shouldAllowArbitraryProps, isK8sResourceSpec } from "./config.ts";
 import {
@@ -20,74 +20,12 @@ import {
   sanitizeTypeName,
   capitalizeFirst,
 } from "./utils.ts";
-
-/**
- * Augment a Kubernetes resource spec interface with both requests and limits.
- * If only one is present, copy its type structure to the other.
- */
-function augmentK8sResourceSpec(iface: TypeScriptInterface): void {
-  const hasRequests = "requests" in iface.properties;
-  const hasLimits = "limits" in iface.properties;
-
-  // If we have requests but not limits, add limits with the same structure
-  if (hasRequests && !hasLimits) {
-    const requestsProp = iface.properties["requests"];
-    if (requestsProp) {
-      // Create limits property with the same type but different name for the nested interface
-      const limitsTypeName = requestsProp.type.replace("Requests", "Limits");
-
-      // If there's a nested interface, create a copy for limits
-      if (requestsProp.nested) {
-        const limitsNested: TypeScriptInterface = {
-          name: limitsTypeName,
-          properties: { ...requestsProp.nested.properties },
-          allowArbitraryProps: requestsProp.nested.allowArbitraryProps,
-        };
-        iface.properties["limits"] = {
-          type: limitsTypeName,
-          optional: true,
-          nested: limitsNested,
-          description: "Kubernetes resource limits (memory, cpu, etc.)",
-        };
-      } else {
-        // No nested interface, just copy the type
-        iface.properties["limits"] = {
-          type: requestsProp.type,
-          optional: true,
-          description: "Kubernetes resource limits (memory, cpu, etc.)",
-        };
-      }
-    }
-  }
-
-  // If we have limits but not requests, add requests with the same structure
-  if (hasLimits && !hasRequests) {
-    const limitsProp = iface.properties["limits"];
-    if (limitsProp) {
-      const requestsTypeName = limitsProp.type.replace("Limits", "Requests");
-
-      if (limitsProp.nested) {
-        const requestsNested: TypeScriptInterface = {
-          name: requestsTypeName,
-          properties: { ...limitsProp.nested.properties },
-          allowArbitraryProps: limitsProp.nested.allowArbitraryProps,
-        };
-        iface.properties["requests"] = {
-          type: requestsTypeName,
-          optional: true,
-          nested: requestsNested,
-          description: "Kubernetes resource requests (memory, cpu, etc.)",
-        };
-      } else {
-        iface.properties["requests"] = {
-          type: limitsProp.type,
-          optional: true,
-          description: "Kubernetes resource requests (memory, cpu, etc.)",
-        };
-      }
-    }
-  }
-}
+import type { PropertyConversionContext } from "./type-converter-helpers.ts";
+import {
+  mergeDescriptions,
+  inferPrimitiveType,
+  augmentK8sResourceSpec,
+} from "./type-converter-helpers.ts";
 
 /**
  * Convert JSON schema type to TypeScript type string
@@ -289,324 +227,205 @@ export function typesAreCompatible(
 /**
  * Convert Helm values to TypeScript interface
  */
-export function convertToTypeScriptInterface(
-  values: HelmValue,
-  interfaceName: string,
-  schema?: JSONSchemaProperty | null,
-  yamlComments?: Map<string, string>,
-  keyPrefix = "",
-  chartName?: string,
-): TypeScriptInterface {
+export function convertToTypeScriptInterface(options: {
+  values: HelmValue;
+  interfaceName: string;
+  schema?: JSONSchemaProperty | null;
+  yamlComments?: Map<string, string>;
+  keyPrefix?: string;
+  chartName?: string;
+}): TypeScriptInterface {
+  const keyPrefix = options.keyPrefix ?? "";
   const properties: Record<string, TypeProperty> = {};
-  const schemaProps = schema?.properties;
+  const schemaProps = options.schema?.properties;
 
-  for (const [key, value] of Object.entries(values)) {
+  for (const [key, value] of Object.entries(options.values)) {
     const sanitizedKey = sanitizePropertyName(key);
     const typeNameSuffix = sanitizeTypeName(key);
     const propertySchema = schemaProps?.[key];
     const fullKey = keyPrefix ? `${keyPrefix}.${key}` : key;
-    const yamlComment = yamlComments?.get(fullKey);
+    const yamlComment = options.yamlComments?.get(fullKey);
 
-    properties[sanitizedKey] = convertValueToProperty(
+    properties[sanitizedKey] = convertValueToProperty({
       value,
-      `${interfaceName}${capitalizeFirst(typeNameSuffix)}`,
-      propertySchema,
-      key, // Pass the property name for better warnings
+      nestedTypeName: `${options.interfaceName}${capitalizeFirst(typeNameSuffix)}`,
+      schema: propertySchema,
+      propertyName: key,
       yamlComment,
-      yamlComments,
+      yamlComments: options.yamlComments,
       fullKey,
-      chartName,
-    );
+      chartName: options.chartName,
+    });
   }
 
   // Check if this interface should allow arbitrary properties
-  const allowArbitraryProps = chartName
+  const allowArbitraryProps = options.chartName != null && options.chartName !== ""
     ? shouldAllowArbitraryProps(
         keyPrefix,
-        chartName,
+        options.chartName,
         keyPrefix.split(".").pop() ?? "",
-        yamlComments?.get(keyPrefix),
+        options.yamlComments?.get(keyPrefix),
       )
     : false;
 
   return {
-    name: interfaceName,
+    name: options.interfaceName,
     properties,
     allowArbitraryProps,
   };
 }
 
-function convertValueToProperty(
-  value: unknown,
-  nestedTypeName: string,
-  schema?: JSONSchemaProperty,
-  propertyName?: string,
-  yamlComment?: string,
-  yamlComments?: Map<string, string>,
-  fullKey?: string,
-  chartName?: string,
-): TypeProperty {
-  // If we have a JSON schema for this property, prefer it over inference
-  if (schema) {
-    // First, infer the type from the actual value for comparison
-    const inferredType = inferTypeFromValue(value);
-    const schemaType = jsonSchemaToTypeScript(schema);
+/**
+ * Convert a value to a TypeProperty using JSON schema information
+ */
+function convertWithSchema(ctx: PropertyConversionContext & { schema: JSONSchemaProperty }): TypeProperty {
+  const { value, nestedTypeName, schema, propertyName, yamlComment, yamlComments, fullKey, chartName } = ctx;
 
-    // Check if schema and inferred types are in agreement
-    if (inferredType && !typesAreCompatible(inferredType, schemaType)) {
-      const propName = propertyName ? `'${propertyName}': ` : "";
-      console.warn(
-        `  ⚠️  Type mismatch for ${propName}Schema says '${schemaType}' but value suggests '${inferredType}' (value: ${String(value).slice(0, 50)})`,
-      );
-    }
+  // Infer the type from the actual value for comparison
+  const inferredType = inferTypeFromValue(value);
+  const schemaType = jsonSchemaToTypeScript(schema);
 
-    // Merge description from schema and YAML comments
-    let description = schema.description;
-    if (yamlComment) {
-      description = description
-        ? `${yamlComment}\n\n${description}`
-        : yamlComment;
-    }
-    const defaultValue = schema.default === undefined ? value : schema.default;
-
-    // If schema defines it as an object with properties, recurse
-    const helmValueCheckForProps = HelmValueSchema.safeParse(value);
-    if (schema.properties && helmValueCheckForProps.success) {
-      const nestedInterface = convertToTypeScriptInterface(
-        helmValueCheckForProps.data,
-        nestedTypeName,
-        schema,
-        yamlComments,
-        fullKey,
-        chartName,
-      );
-      return {
-        type: nestedTypeName,
-        optional: true,
-        nested: nestedInterface,
-        description,
-        default: defaultValue,
-      };
-    }
-
-    // Otherwise, use the schema type directly
-    const tsType = schemaType;
-
-    // Handle object types without explicit properties
-    const helmValueCheckForObject = HelmValueSchema.safeParse(value);
-    if (tsType === "object" && helmValueCheckForObject.success) {
-      const nestedInterface = convertToTypeScriptInterface(
-        helmValueCheckForObject.data,
-        nestedTypeName,
-        undefined,
-        yamlComments,
-        fullKey,
-        chartName,
-      );
-      return {
-        type: nestedTypeName,
-        optional: true,
-        nested: nestedInterface,
-        description,
-        default: defaultValue,
-      };
-    }
-
-    return { type: tsType, optional: true, description, default: defaultValue };
+  // Warn about type mismatches
+  if (inferredType != null && inferredType !== "" && !typesAreCompatible(inferredType, schemaType)) {
+    const propName = propertyName != null && propertyName !== "" ? `'${propertyName}': ` : "";
+    console.warn(
+      `  ⚠️  Type mismatch for ${propName}Schema says '${schemaType}' but value suggests '${inferredType}' (value: ${String(value).slice(0, 50)})`,
+    );
   }
 
-  // Fall back to runtime type inference when no schema is available
-  // Use Zod schemas for robust type detection
-  // IMPORTANT: Check for complex types (arrays, objects) BEFORE primitive types with coercion
+  const description = mergeDescriptions(schema.description, yamlComment);
+  const defaultValue = schema.default === undefined ? value : schema.default;
+
+  // If schema defines it as an object with properties, recurse
+  const helmValueCheckForProps = HelmValueSchema.safeParse(value);
+  if (schema.properties && helmValueCheckForProps.success) {
+    const nestedInterface = convertToTypeScriptInterface({
+      values: helmValueCheckForProps.data,
+      interfaceName: nestedTypeName,
+      schema,
+      yamlComments,
+      keyPrefix: fullKey,
+      chartName,
+    });
+    return { type: nestedTypeName, optional: true, nested: nestedInterface, description, default: defaultValue };
+  }
+
+  // Handle object types without explicit properties
+  const helmValueCheckForObject = HelmValueSchema.safeParse(value);
+  if (schemaType === "object" && helmValueCheckForObject.success) {
+    const nestedInterface = convertToTypeScriptInterface({
+      values: helmValueCheckForObject.data,
+      interfaceName: nestedTypeName,
+      yamlComments,
+      keyPrefix: fullKey,
+      chartName,
+    });
+    return { type: nestedTypeName, optional: true, nested: nestedInterface, description, default: defaultValue };
+  }
+
+  return { type: schemaType, optional: true, description, default: defaultValue };
+}
+
+/**
+ * Infer array element type from sampled elements
+ */
+function inferArrayType(ctx: PropertyConversionContext, arrayValue: unknown[]): TypeProperty {
+  const { nestedTypeName } = ctx;
+
+  if (arrayValue.length === 0) {
+    return { type: "unknown[]", optional: true };
+  }
+
+  // Sample multiple elements for better type inference
+  const elementTypes = new Set<string>();
+  const elementTypeProps: TypeProperty[] = [];
+  const sampleSize = Math.min(arrayValue.length, 3);
+
+  for (let i = 0; i < sampleSize; i++) {
+    const elementType = convertValueToProperty({ value: arrayValue[i], nestedTypeName });
+    elementTypes.add(elementType.type);
+    elementTypeProps.push(elementType);
+  }
+
+  // If all elements have the same type, use that
+  if (elementTypes.size === 1) {
+    return inferUniformArrayType(ctx, elementTypes, elementTypeProps);
+  }
+
+  // If mixed types, use union type for common cases
+  const types = [...elementTypes].toSorted();
+  if (types.length <= 3 && types.every((t) => ["string", "number", "boolean"].includes(t))) {
+    return { type: `(${types.join(" | ")})[]`, optional: true };
+  }
+
+  return { type: "unknown[]", optional: true };
+}
+
+/**
+ * Build TypeProperty for a uniform-type array
+ */
+function inferUniformArrayType(ctx: PropertyConversionContext, elementTypes: Set<string>, elementTypeProps: TypeProperty[]): TypeProperty {
+  const { nestedTypeName, chartName, fullKey, propertyName, yamlComment } = ctx;
+  const elementType = [...elementTypes][0];
+  const elementProp = elementTypeProps[0];
+  if (elementType == null || elementType === "" || !elementProp) {
+    return { type: "unknown[]", optional: true };
+  }
+
+  if (elementProp.nested) {
+    const arrayElementTypeName = `${nestedTypeName}Element`;
+    const allowArbitraryProps =
+      chartName != null && chartName !== "" && fullKey != null && fullKey !== ""
+        ? shouldAllowArbitraryProps(fullKey, chartName, propertyName ?? "", yamlComment)
+        : false;
+    const arrayElementInterface: TypeScriptInterface = {
+      name: arrayElementTypeName,
+      properties: elementProp.nested.properties,
+      allowArbitraryProps,
+    };
+    return { type: `${arrayElementTypeName}[]`, optional: true, nested: arrayElementInterface };
+  }
+
+  return { type: `${elementType}[]`, optional: true };
+}
+
+function convertValueToProperty(opts: PropertyConversionContext): TypeProperty {
+  const { value, nestedTypeName, schema, propertyName, yamlComment, yamlComments, fullKey, chartName } = opts;
+
+  // If we have a JSON schema for this property, prefer it over inference
+  if (schema) {
+    return convertWithSchema({ ...opts, schema });
+  }
 
   // Check for null/undefined first
-  if (
-    NullSchema.safeParse(value).success ||
-    UndefinedSchema.safeParse(value).success
-  ) {
+  if (NullSchema.safeParse(value).success || UndefinedSchema.safeParse(value).success) {
     return { type: "unknown", optional: true };
   }
 
-  // Check for array (before coercion checks, as coercion can convert arrays to true)
+  // Check for array (before coercion checks)
   const arrayResult = ArraySchema.safeParse(value);
   if (arrayResult.success) {
-    const arrayValue = arrayResult.data;
-    if (arrayValue.length === 0) {
-      return { type: "unknown[]", optional: true };
-    }
-
-    // Sample multiple elements for better type inference
-    const elementTypes = new Set<string>();
-    const elementTypeProps: TypeProperty[] = [];
-    const sampleSize = Math.min(arrayValue.length, 3); // Check up to 3 elements
-
-    for (let i = 0; i < sampleSize; i++) {
-      const elementType = convertValueToProperty(arrayValue[i], nestedTypeName);
-      elementTypes.add(elementType.type);
-      elementTypeProps.push(elementType);
-    }
-
-    // If all elements have the same type, use that
-    if (elementTypes.size === 1) {
-      const elementType = [...elementTypes][0];
-      const elementProp = elementTypeProps[0];
-      if (elementType && elementProp) {
-        // For object array elements, we need to create a proper interface for the array element
-        if (elementProp.nested) {
-          // Create a new interface name for array elements
-          const arrayElementTypeName = `${nestedTypeName}Element`;
-
-          // Check if array elements should allow arbitrary properties
-          // Array elements inherit extensibility from their parent array
-          const allowArbitraryProps =
-            chartName && fullKey
-              ? shouldAllowArbitraryProps(
-                  fullKey,
-                  chartName,
-                  propertyName ?? "",
-                  yamlComment,
-                )
-              : false;
-
-          const arrayElementInterface: TypeScriptInterface = {
-            name: arrayElementTypeName,
-            properties: elementProp.nested.properties,
-            allowArbitraryProps,
-          };
-
-          return {
-            type: `${arrayElementTypeName}[]`,
-            optional: true,
-            nested: arrayElementInterface,
-          };
-        } else {
-          return {
-            type: `${elementType}[]`,
-            optional: true,
-          };
-        }
-      }
-    }
-
-    // If mixed types, use union type for common cases
-    const types = [...elementTypes].toSorted();
-    if (
-      types.length <= 3 &&
-      types.every((t) => ["string", "number", "boolean"].includes(t))
-    ) {
-      return {
-        type: `(${types.join(" | ")})[]`,
-        optional: true,
-      };
-    }
-
-    // Otherwise fall back to unknown[]
-    return { type: "unknown[]", optional: true };
+    return inferArrayType(opts, arrayResult.data);
   }
 
   // Check for object (before primitive coercion checks)
   const objectResult = HelmValueSchema.safeParse(value);
   if (objectResult.success) {
-    const nestedInterface = convertToTypeScriptInterface(
-      objectResult.data,
-      nestedTypeName,
-      undefined,
+    const nestedInterface = convertToTypeScriptInterface({
+      values: objectResult.data,
+      interfaceName: nestedTypeName,
       yamlComments,
-      fullKey,
+      keyPrefix: fullKey,
       chartName,
-    );
+    });
 
-    // Augment K8s resource specs with both requests and limits
-    if (propertyName && isK8sResourceSpec(propertyName)) {
+    if (propertyName != null && propertyName !== "" && isK8sResourceSpec(propertyName)) {
       augmentK8sResourceSpec(nestedInterface);
     }
 
-    return {
-      type: nestedTypeName,
-      optional: true,
-      nested: nestedInterface,
-      description: yamlComment,
-      default: value,
-    };
+    return { type: nestedTypeName, optional: true, nested: nestedInterface, description: yamlComment, default: value };
   }
 
-  // Now check for primitives - first actual runtime types, then coerced string types
-  // This prevents objects from being coerced to booleans
-
-  // Check for actual runtime boolean (true/false)
-  if (ActualBooleanSchema.safeParse(value).success) {
-    return {
-      type: "boolean",
-      optional: true,
-      description: yamlComment,
-      default: value,
-    };
-  }
-
-  // Check for actual runtime number
-  if (ActualNumberSchema.safeParse(value).success) {
-    return {
-      type: "number",
-      optional: true,
-      description: yamlComment,
-      default: value,
-    };
-  }
-
-  // Check if it's a string that represents a boolean ("true", "FALSE", etc.)
-  if (StringBooleanSchema.safeParse(value).success) {
-    return {
-      type: "boolean",
-      optional: true,
-      description: yamlComment,
-      default: value,
-    };
-  }
-
-  // Check if it's a string that represents a number ("15", "0", etc.)
-  // Only treat non-empty strings that parse as numbers as numbers
-  const stringCheckForNumber = StringSchema.safeParse(value);
-  if (stringCheckForNumber.success) {
-    const trimmed = stringCheckForNumber.data.trim();
-    // Don't treat empty strings or purely whitespace as numbers
-    if (
-      trimmed !== "" &&
-      !Number.isNaN(Number(trimmed)) &&
-      Number.isFinite(Number(trimmed))
-    ) {
-      return {
-        type: "number",
-        optional: true,
-        description: yamlComment,
-        default: value,
-      };
-    }
-  }
-
-  // Check for plain string (strings that don't look like numbers or booleans)
-  const stringCheckForPlain = StringSchema.safeParse(value);
-  if (stringCheckForPlain.success) {
-    // Special case: "default" is often used as a sentinel value in Helm charts
-    // that can be overridden with actual typed values (numbers, booleans, etc.)
-    if (stringCheckForPlain.data === "default") {
-      return {
-        type: "string | number | boolean",
-        optional: true,
-        description: yamlComment,
-        default: value,
-      };
-    }
-    return {
-      type: "string",
-      optional: true,
-      description: yamlComment,
-      default: value,
-    };
-  }
-
-  // Fallback for any unrecognized type
-  console.warn(
-    `Unrecognized value type for: ${String(value)}, using 'unknown'`,
-  );
-  return { type: "unknown", optional: true, description: yamlComment };
+  // Infer primitive type from runtime value
+  return inferPrimitiveType(value, yamlComment);
 }

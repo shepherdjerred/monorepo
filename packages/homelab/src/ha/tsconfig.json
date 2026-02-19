@@ -1,7 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "paths": {
+      "@shepherdjerred/homelab/ha/*": ["./*"]
+    }
   },
   "exclude": ["node_modules", "eslint.config.ts"]
 }

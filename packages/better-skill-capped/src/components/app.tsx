@@ -36,8 +36,11 @@ export default class App extends React.Component<unknown, AppState> {
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises -- React lifecycle method that returns Promise
-  async componentDidMount(): Promise<undefined> {
+  componentDidMount(): void {
+    void this.loadContent();
+  }
+
+  private async loadContent(): Promise<void> {
     const manifestLoader = new ManifestLoader();
     const manifest = await manifestLoader.load();
     const parser = new Parser();

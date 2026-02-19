@@ -1,5 +1,6 @@
 import { Hono } from "hono";
-import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+import { getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
 import { getGitHubConfig, isGitHubConfigured } from "./config.ts";
 import { exchangeCodeForToken, storeAuth } from "./github-oauth.ts";
 
@@ -89,7 +90,7 @@ export function createOAuthRoutes(): Hono {
     } catch (error_) {
       logger.error("Failed to exchange OAuth code", error_);
       return c.html(
-        renderErrorPage("token_exchange_failed", (error_ as Error).message),
+        renderErrorPage("token_exchange_failed", getErrorMessage(error_)),
       );
     }
   });

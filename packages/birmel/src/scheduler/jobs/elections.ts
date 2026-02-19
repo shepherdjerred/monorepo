@@ -16,7 +16,7 @@ import {
 import { determineWinner, generateNickname } from "@shepherdjerred/birmel/elections/winner.ts";
 import { updateBotNickname } from "@shepherdjerred/birmel/elections/bot-nickname.ts";
 import { updateBotProfile } from "@shepherdjerred/birmel/elections/bot-profile.ts";
-import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 
@@ -161,7 +161,7 @@ export async function checkAndStartElections(): Promise<void> {
         }
 
         // Select random candidates and create poll
-        const candidates = selectRandomCandidates();
+        const candidates = await selectRandomCandidates();
         const answers = createElectionAnswers(candidates);
 
         const now = new Date();
@@ -253,6 +253,72 @@ export async function checkAndEndElections(): Promise<void> {
   }
 }
 
+async function announceTie(
+  channelId: string,
+  results: ReturnType<typeof determineWinner>,
+): Promise<void> {
+  const client = getDiscordClient();
+  const channel = await client.channels.fetch(channelId);
+  if (channel?.isTextBased() !== true || !("send" in channel)) {
+    return;
+  }
+  const tiedNames = results.tiedCandidates
+    .map((name) => name.charAt(0).toUpperCase() + name.slice(1))
+    .join(", ");
+  const winnerName =
+    (results.winner ?? "jerred").charAt(0).toUpperCase() +
+    (results.winner ?? "jerred").slice(1);
+  const voteCount = results.voteCounts[results.tiedCandidates[0] ?? ""] ?? 0;
+  await channel.send(
+    `🎲 **It's a tie!** ${tiedNames} each received ${String(voteCount)} votes. ` +
+      `A random winner has been selected: **${winnerName}**! 🎉`,
+  );
+}
+
+async function processElectionResult(
+  election: { id: number; guildId: string; channelId: string; messageId: string | null },
+): Promise<void> {
+  if (election.messageId == null || election.messageId.length === 0) {
+    return;
+  }
+
+  const pollResults = await getPollResults(election.channelId, election.messageId);
+  if (!pollResults.success || pollResults.data?.isFinalized !== true) {
+    return;
+  }
+
+  const results = determineWinner(pollResults.data.answers);
+
+  if (results.isTie) {
+    await announceTie(election.channelId, results);
+    logger.info("Tie resolved with random winner", {
+      guildId: election.guildId,
+      tiedCandidates: results.tiedCandidates,
+      randomWinner: results.winner,
+    });
+  }
+
+  const winner = results.winner ?? "jerred";
+  const nickname = generateNickname(winner);
+
+  await setGuildOwner(election.guildId, winner, nickname);
+  await updateBotNickname(election.guildId, nickname);
+  await updateBotProfile(winner);
+
+  await updateElectionStatus(election.id, "completed", {
+    actualEnd: new Date(),
+    winner,
+    voteCounts: JSON.stringify(results.voteCounts),
+  });
+
+  logger.info("Election completed", {
+    guildId: election.guildId,
+    winner,
+    nickname,
+    totalVotes: results.totalVotes,
+  });
+}
+
 export async function processElectionResults(): Promise<void> {
   try {
     const elections = await prisma.electionPoll.findMany({
@@ -264,69 +330,8 @@ export async function processElectionResults(): Promise<void> {
     });
 
     for (const election of elections) {
-      if (election.messageId == null || election.messageId.length === 0) {
-        continue;
-      }
-
       try {
-        // Check if poll is finalized
-        const pollResults = await getPollResults(
-          election.channelId,
-          election.messageId,
-        );
-
-        if (!pollResults.success || pollResults.data?.isFinalized !== true) {
-          continue;
-        }
-
-        const results = determineWinner(pollResults.data.answers);
-
-        // Handle tie - announce and use random winner
-        if (results.isTie) {
-          const client = getDiscordClient();
-          const channel = await client.channels.fetch(election.channelId);
-          if (channel?.isTextBased() === true && "send" in channel) {
-            const tiedNames = results.tiedCandidates
-              .map((name) => name.charAt(0).toUpperCase() + name.slice(1))
-              .join(", ");
-            const winnerName =
-              (results.winner ?? "jerred").charAt(0).toUpperCase() +
-              (results.winner ?? "jerred").slice(1);
-            const voteCount =
-              results.voteCounts[results.tiedCandidates[0] ?? ""] ?? 0;
-            await channel.send(
-              `🎲 **It's a tie!** ${tiedNames} each received ${String(voteCount)} votes. ` +
-                `A random winner has been selected: **${winnerName}**! 🎉`,
-            );
-          }
-
-          logger.info("Tie resolved with random winner", {
-            guildId: election.guildId,
-            tiedCandidates: results.tiedCandidates,
-            randomWinner: results.winner,
-          });
-        }
-
-        // Update guild owner
-        const winner = results.winner ?? "jerred";
-        const nickname = generateNickname(winner);
-
-        await setGuildOwner(election.guildId, winner, nickname);
-        await updateBotNickname(election.guildId, nickname);
-        await updateBotProfile(winner);
-
-        await updateElectionStatus(election.id, "completed", {
-          actualEnd: new Date(),
-          winner,
-          voteCounts: JSON.stringify(results.voteCounts),
-        });
-
-        logger.info("Election completed", {
-          guildId: election.guildId,
-          winner,
-          nickname,
-          totalVotes: results.totalVotes,
-        });
+        await processElectionResult(election);
       } catch (error) {
         logger.error("Failed to process election results", error, {
           electionId: election.id,

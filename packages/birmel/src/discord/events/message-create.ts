@@ -1,11 +1,12 @@
+import { toError } from "@shepherdjerred/birmel/utils/errors.ts";
 import type { Client, Message } from "discord.js";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import {
-  withSpan,
   setSentryContext,
   clearSentryContext,
   captureException,
-} from "@shepherdjerred/birmel/observability/index.ts";
+} from "@shepherdjerred/birmel/observability/sentry.ts";
 import {
   extractImageAttachments,
   type ImageAttachment,
@@ -199,7 +200,7 @@ export function setupMessageCreateHandler(client: Client): void {
           });
         } catch (error) {
           logger.error("Error handling message", error);
-          captureException(error as Error, {
+          captureException(toError(error), {
             operation: "messageCreate",
             discord: discordContext,
           });
@@ -220,4 +221,4 @@ export function setupMessageCreateHandler(client: Client): void {
   });
 }
 
-export { type ImageAttachment } from "../../utils/image.ts";
+

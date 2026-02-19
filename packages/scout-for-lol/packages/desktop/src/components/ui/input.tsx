@@ -63,7 +63,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
         </div>
-        {(helperText !== undefined && helperText.length > 0 ?? error) && (
+        {((helperText !== undefined && helperText.length > 0) || (error !== undefined && error.length > 0)) && (
           <p
             className={cn(
               "text-xs",

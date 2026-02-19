@@ -302,7 +302,7 @@ export function App() {
             {isLoading ? "Loading..." : "Fetch Match"}
           </button>
 
-          {error !== undefined && error.length > 0 && (
+          {error !== null && error.length > 0 && (
             <div
               style={{ marginTop: "10px", color: "#d32f2f", fontSize: "14px" }}
             >

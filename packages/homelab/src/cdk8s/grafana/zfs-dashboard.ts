@@ -7,9 +7,15 @@ import { exportDashboardWithHelmEscaping } from "./dashboard-export.ts";
 import {
   addL2arcPanels,
   addMemoryPanels,
-  addPerformancePanels,
   addBufferAndAdvancedPanels,
 } from "./zfs-dashboard-panels.ts";
+import { addPerformancePanels } from "./zfs-dashboard-performance-panels.ts";
+import { addAdvancedMetricsPanels } from "./zfs-dashboard-advanced-panels.ts";
+
+// Helper function to build filter expression
+function buildFilter() {
+  return 'instance=~"$instance"';
+}
 
 // TODO: grafana is not creating this one
 
@@ -32,11 +38,6 @@ export function createZfsDashboard() {
     .multi(true)
     .includeAll(true)
     .allValue(".*");
-
-  // Helper function to build filter expression
-  const buildFilter = () => {
-    return 'instance=~"$instance"';
-  };
 
   // Build the main dashboard
   const builder = new dashboard.DashboardBuilder("ZFS - Storage Monitoring")
@@ -274,6 +275,7 @@ export function createZfsDashboard() {
   addMemoryPanels(builder, prometheusDatasource, buildFilter);
   addPerformancePanels(builder, prometheusDatasource, buildFilter);
   addBufferAndAdvancedPanels(builder, prometheusDatasource, buildFilter);
+  addAdvancedMetricsPanels(builder, prometheusDatasource, buildFilter);
 
   return builder.build();
 }

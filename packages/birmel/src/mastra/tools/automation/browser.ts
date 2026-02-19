@@ -2,7 +2,7 @@ import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.t
 import { z } from "zod";
 import { chromium, type Browser, type Page } from "playwright";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
-import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 
@@ -126,6 +126,133 @@ async function closeBrowser(): Promise<void> {
   logger.info("Browser session closed");
 }
 
+type BrowserResult = {
+  success: boolean;
+  message: string;
+  data?: {
+    url?: string;
+    title?: string;
+    path?: string;
+    filename?: string;
+    text?: string;
+  };
+};
+
+type BrowserContext = {
+  action: string;
+  url?: string | undefined;
+  waitUntil?: "load" | "domcontentloaded" | "networkidle" | undefined;
+  filename?: string | undefined;
+  fullPage?: boolean | undefined;
+  selector?: string | undefined;
+  text?: string | undefined;
+  pressEnter?: boolean | undefined;
+  timeout?: number | undefined;
+};
+
+async function handleNavigate(ctx: BrowserContext): Promise<BrowserResult> {
+  if (ctx.url == null || ctx.url.length === 0) {
+    return { success: false, message: "url is required for navigate" };
+  }
+  const page = await getPage();
+  resetSessionTimeout();
+  await page.goto(ctx.url, {
+    waitUntil: ctx.waitUntil ?? "load",
+    timeout: 30_000,
+  });
+  const title = await page.title();
+  logger.info("Navigated to URL", { url: ctx.url, title });
+  return {
+    success: true,
+    message: `Navigated to: ${title}`,
+    data: { url: page.url(), title },
+  };
+}
+
+async function handleScreenshot(ctx: BrowserContext): Promise<BrowserResult> {
+  const page = await getPage();
+  resetSessionTimeout();
+  const timestamp = Date.now();
+  const filename = ctx.filename ?? `screenshot-${String(timestamp)}.png`;
+  const screenshotsDir =
+    Bun.env["BIRMEL_SCREENSHOTS_DIR"] ??
+    path.join(process.cwd(), "data", "screenshots");
+  const filepath = path.join(screenshotsDir, filename);
+  await mkdir(path.dirname(filepath), { recursive: true });
+  const screenshot = await page.screenshot({
+    fullPage: ctx.fullPage ?? false,
+    type: "png",
+  });
+  await writeFile(filepath, screenshot);
+  logger.info("Screenshot captured", { filepath, fullPage: ctx.fullPage });
+  return {
+    success: true,
+    message: "Screenshot saved",
+    data: { path: filepath, filename },
+  };
+}
+
+async function handleClick(ctx: BrowserContext): Promise<BrowserResult> {
+  if (ctx.selector == null || ctx.selector.length === 0) {
+    return { success: false, message: "selector is required for click" };
+  }
+  const page = await getPage();
+  resetSessionTimeout();
+  await page.click(ctx.selector, { timeout: ctx.timeout ?? 30_000 });
+  logger.info("Clicked element", { selector: ctx.selector });
+  return { success: true, message: `Clicked: ${ctx.selector}` };
+}
+
+async function handleType(ctx: BrowserContext): Promise<BrowserResult> {
+  if (
+    ctx.selector == null ||
+    ctx.selector.length === 0 ||
+    ctx.text == null ||
+    ctx.text.length === 0
+  ) {
+    return {
+      success: false,
+      message: "selector and text are required for type",
+    };
+  }
+  const page = await getPage();
+  resetSessionTimeout();
+  await page.fill(ctx.selector, ctx.text, {
+    timeout: ctx.timeout ?? 30_000,
+  });
+  if (ctx.pressEnter === true) {
+    await page.press(ctx.selector, "Enter");
+  }
+  logger.info("Typed text", {
+    selector: ctx.selector,
+    length: ctx.text.length,
+  });
+  return { success: true, message: `Typed into: ${ctx.selector}` };
+}
+
+async function handleGetText(ctx: BrowserContext): Promise<BrowserResult> {
+  const page = await getPage();
+  resetSessionTimeout();
+  let text: string;
+  if (ctx.selector != null && ctx.selector.length > 0) {
+    const element = await page.waitForSelector(ctx.selector, {
+      timeout: ctx.timeout ?? 30_000,
+    });
+    text = (await element.textContent()) ?? "";
+  } else {
+    text = (await page.textContent("body")) ?? "";
+  }
+  logger.info("Extracted text", {
+    selector: ctx.selector ?? "body",
+    length: text.length,
+  });
+  return {
+    success: true,
+    message: "Text extracted",
+    data: { text: text.trim() },
+  };
+}
+
 export const browserAutomationTool = createTool({
   id: "browser-automation",
   description:
@@ -174,118 +301,16 @@ export const browserAutomationTool = createTool({
   execute: async (ctx) => {
     try {
       switch (ctx.action) {
-        case "navigate": {
-          if (ctx.url == null || ctx.url.length === 0) {
-            return { success: false, message: "url is required for navigate" };
-          }
-          const page = await getPage();
-          resetSessionTimeout();
-          await page.goto(ctx.url, {
-            waitUntil: ctx.waitUntil ?? "load",
-            timeout: 30_000,
-          });
-          const title = await page.title();
-          logger.info("Navigated to URL", { url: ctx.url, title });
-          return {
-            success: true,
-            message: `Navigated to: ${title}`,
-            data: { url: page.url(), title },
-          };
-        }
-
-        case "screenshot": {
-          const page = await getPage();
-          resetSessionTimeout();
-          const timestamp = Date.now();
-          const filename =
-            ctx.filename ?? `screenshot-${String(timestamp)}.png`;
-          // Use BIRMEL_SCREENSHOTS_DIR env var if set, otherwise default to cwd/data/screenshots
-          const screenshotsDir =
-            Bun.env["BIRMEL_SCREENSHOTS_DIR"] ??
-            path.join(process.cwd(), "data", "screenshots");
-          const filepath = path.join(screenshotsDir, filename);
-          // Ensure the screenshots directory exists
-          await mkdir(path.dirname(filepath), { recursive: true });
-          const screenshot = await page.screenshot({
-            fullPage: ctx.fullPage ?? false,
-            type: "png",
-          });
-          await writeFile(filepath, screenshot);
-          logger.info("Screenshot captured", {
-            filepath,
-            fullPage: ctx.fullPage,
-          });
-          return {
-            success: true,
-            message: "Screenshot saved",
-            data: { path: filepath, filename },
-          };
-        }
-
-        case "click": {
-          if (ctx.selector == null || ctx.selector.length === 0) {
-            return {
-              success: false,
-              message: "selector is required for click",
-            };
-          }
-          const page = await getPage();
-          resetSessionTimeout();
-          await page.click(ctx.selector, { timeout: ctx.timeout ?? 30_000 });
-          logger.info("Clicked element", { selector: ctx.selector });
-          return { success: true, message: `Clicked: ${ctx.selector}` };
-        }
-
-        case "type": {
-          if (
-            ctx.selector == null ||
-            ctx.selector.length === 0 ||
-            ctx.text == null ||
-            ctx.text.length === 0
-          ) {
-            return {
-              success: false,
-              message: "selector and text are required for type",
-            };
-          }
-          const page = await getPage();
-          resetSessionTimeout();
-          await page.fill(ctx.selector, ctx.text, {
-            timeout: ctx.timeout ?? 30_000,
-          });
-          if (ctx.pressEnter === true) {
-            await page.press(ctx.selector, "Enter");
-          }
-          logger.info("Typed text", {
-            selector: ctx.selector,
-            length: ctx.text.length,
-          });
-          return { success: true, message: `Typed into: ${ctx.selector}` };
-        }
-
-        case "get-text": {
-          const page = await getPage();
-          resetSessionTimeout();
-          let text: string;
-          if (ctx.selector != null && ctx.selector.length > 0) {
-            const element = await page.waitForSelector(ctx.selector, {
-              timeout: ctx.timeout ?? 30_000,
-            });
-            text = (await element.textContent()) ?? "";
-          } else {
-            text = (await page.textContent("body")) ?? "";
-          }
-          logger.info("Extracted text", {
-            selector: ctx.selector ?? "body",
-            length: text.length,
-          });
-          return {
-            success: true,
-            message: "Text extracted",
-            data: { text: text.trim() },
-          };
-        }
-
+        case "navigate":
+          return await handleNavigate(ctx);
+        case "screenshot":
+          return await handleScreenshot(ctx);
+        case "click":
+          return await handleClick(ctx);
+        case "type":
+          return await handleType(ctx);
+        case "get-text":
+          return await handleGetText(ctx);
         case "close": {
           await closeBrowser();
           return { success: true, message: "Browser session closed" };

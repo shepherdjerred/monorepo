@@ -60,7 +60,7 @@ export function BackendSection({
               : "Configure your API token and backend URL to connect"}
           </CardDescription>
         </CardHeader>
-        {backendStatus.lastError !== undefined && backendStatus.lastError.length > 0 && (
+        {backendStatus.lastError !== null && backendStatus.lastError.length > 0 && (
           <CardContent>
             <p className="text-sm text-red-400">
               Last error: {backendStatus.lastError}

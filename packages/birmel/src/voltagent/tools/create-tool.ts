@@ -37,8 +37,7 @@ export type MastraCompatibleToolOptions<
   outputSchema?: O;
   /**
    * Execute function.
-   * Accepts both Mastra-style (single ctx argument) and VoltAgent-style (args, options).
-   * The adapter detects which style is being used based on function arity.
+   * Accepts Mastra-style (single ctx argument).
    */
   execute: (
     ctx: z.infer<T>,
@@ -63,16 +62,15 @@ export function createTool<
     throw new Error("Tool must have either `parameters` or `inputSchema`");
   }
 
-  // Create VoltAgent tool with adapted options
+  // Create VoltAgent tool with adapted options.
+  // Pass the original execute directly since it already accepts z.infer<T>.
   if (options.outputSchema != null) {
     return voltAgentCreateTool({
       name,
       description: options.description,
       parameters,
       outputSchema: options.outputSchema,
-      execute: async (args) => {
-        return await options.execute(args as z.infer<T>);
-      },
+      execute: options.execute,
     });
   }
 
@@ -81,11 +79,6 @@ export function createTool<
     name,
     description: options.description,
     parameters,
-    execute: async (args) => {
-      return await options.execute(args as z.infer<T>);
-    },
+    execute: options.execute,
   });
 }
-
-// Re-export VoltAgent's createTool as well for new tools
-export { createTool as createVoltagentTool } from "@voltagent/core";

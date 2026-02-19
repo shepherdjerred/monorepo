@@ -1,10 +1,9 @@
+import { getErrorMessage, toError } from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import {
-  captureException,
-  withToolSpan,
-} from "@shepherdjerred/birmel/observability/index.ts";
+import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
+import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import {
   handleGetOwner,
   handleGetHistory,
@@ -64,7 +63,7 @@ export const manageElectionTool = createTool({
           case "get-stats":
             return await handleGetStats(ctx.guildId);
           case "get-candidates":
-            return handleGetCandidates();
+            return await handleGetCandidates();
           case "get-by-id":
             return await handleGetById(ctx.electionId);
           case "get-candidate-stats":
@@ -75,10 +74,10 @@ export const manageElectionTool = createTool({
         }
       } catch (error) {
         logger.error("Failed to manage election", error);
-        captureException(error as Error, { operation: "tool.manage-election" });
+        captureException(toError(error), { operation: "tool.manage-election" });
         return {
           success: false,
-          message: `Failed: ${(error as Error).message}`,
+          message: `Failed: ${getErrorMessage(error)}`,
         };
       }
     });

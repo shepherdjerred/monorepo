@@ -17,11 +17,8 @@ import {
   SoundPackSettingsSchema,
   DefaultSoundsSchema,
   SoundRuleSchema,
+  SoundPackIdSchema,
   type SoundPack,
-  type SoundPackSettings,
-  type DefaultSounds,
-  type SoundRule,
-  type SoundPackId,
 } from "@scout-for-lol/data";
 import {
   selectSoundForEvent,
@@ -65,12 +62,9 @@ function parseSoundPackFromDb(dbPack: {
     name: dbPack.name,
     version: dbPack.version,
     description: dbPack.description,
-    // eslint-disable-next-line custom-rules/no-type-assertions -- JSON.parse returns unknown, type assertion needed for parsed database JSON
-    settings: JSON.parse(dbPack.settings) as SoundPackSettings,
-    // eslint-disable-next-line custom-rules/no-type-assertions -- JSON.parse returns unknown, type assertion needed for parsed database JSON
-    defaults: JSON.parse(dbPack.defaults) as DefaultSounds,
-    // eslint-disable-next-line custom-rules/no-type-assertions -- JSON.parse returns unknown, type assertion needed for parsed database JSON
-    rules: JSON.parse(dbPack.rules) as SoundRule[],
+    settings: SoundPackSettingsSchema.parse(JSON.parse(dbPack.settings)),
+    defaults: DefaultSoundsSchema.parse(JSON.parse(dbPack.defaults)),
+    rules: z.array(SoundRuleSchema).parse(JSON.parse(dbPack.rules)),
   };
 }
 
@@ -104,8 +98,7 @@ export const soundPackRouter = router({
   get: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input, ctx }) => {
-      // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation
-      const soundPackId = input.id as SoundPackId;
+      const soundPackId = SoundPackIdSchema.parse(input.id);
       const pack = await prisma.soundPack.findFirst({
         where: {
           id: soundPackId,
@@ -175,8 +168,7 @@ export const soundPackRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation
-      const soundPackId = input.id as SoundPackId;
+      const soundPackId = SoundPackIdSchema.parse(input.id);
       const existing = await prisma.soundPack.findFirst({
         where: {
           id: soundPackId,
@@ -240,8 +232,7 @@ export const soundPackRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input, ctx }) => {
-      // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation
-      const soundPackId = input.id as SoundPackId;
+      const soundPackId = SoundPackIdSchema.parse(input.id);
       const existing = await prisma.soundPack.findFirst({
         where: {
           id: soundPackId,
@@ -314,8 +305,7 @@ export const soundPackRouter = router({
       }),
     )
     .query(async ({ input, ctx }) => {
-      // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation
-      const soundPackId = input.soundPackId as SoundPackId;
+      const soundPackId = SoundPackIdSchema.parse(input.soundPackId);
       const pack = await prisma.soundPack.findFirst({
         where: {
           id: soundPackId,
@@ -389,8 +379,7 @@ export const soundPackRouter = router({
   export: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input, ctx }) => {
-      // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation
-      const soundPackId = input.id as SoundPackId;
+      const soundPackId = SoundPackIdSchema.parse(input.id);
       const pack = await prisma.soundPack.findFirst({
         where: {
           id: soundPackId,

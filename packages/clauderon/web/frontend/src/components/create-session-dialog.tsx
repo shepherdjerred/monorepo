@@ -1,12 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import type {
   CreateSessionRequest,
-  BackendType,
-  AccessMode,
   StorageClassInfo,
   CreateRepositoryInput,
 } from "@clauderon/client";
-import { AgentType, type FeatureFlags } from "@clauderon/shared";
+import { AgentType, BackendType, AccessMode } from "@clauderon/shared";
 import { useSessionContext } from "@shepherdjerred/clauderon/web/frontend/src/contexts/SessionContext";
 import { useFeatureFlags } from "@shepherdjerred/clauderon/web/frontend/src/contexts/FeatureFlagsContext";
 import { Button } from "@/components/ui/button";
@@ -21,6 +19,7 @@ import {
   type SessionFormData,
 } from "./AdvancedContainerSettings.tsx";
 import { useRepositoryHandlers } from "@/hooks/useRepositoryHandlers";
+import { ImageAttachmentInput } from "./image-attachment-input.tsx";
 
 type CreateSessionDialogProps = {
   onClose: () => void;
@@ -32,15 +31,13 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [featureFlags, setFeatureFlags] = useState<FeatureFlags | null>(null);
-  const [storageClasses, setStorageClasses] = useState<StorageClassInfo[]>([]);
-  const [loadingStorageClasses, setLoadingStorageClasses] = useState(false);
+  const [storageClasses] = useState<StorageClassInfo[]>([]);
+  const [loadingStorageClasses] = useState(false);
 
   const {
     multiRepoEnabled,
     setMultiRepoEnabled,
     repositories,
-    setRepositories,
     handleRepoPathChange,
     handleSetPrimary,
     handleMountNameChange,
@@ -51,10 +48,10 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
 
   const [formData, setFormData] = useState<SessionFormData>({
     initial_prompt: "",
-    backend: "Docker" as BackendType,
+    backend: BackendType.Docker,
     agent: AgentType.ClaudeCode,
     model: undefined,
-    access_mode: "ReadWrite" as AccessMode,
+    access_mode: AccessMode.ReadWrite,
     plan_mode: true,
     dangerous_skip_checks: true,
     container_image: "",
@@ -87,6 +84,64 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     [formData.agent],
   );
 
+  const buildSessionRequest = (): CreateSessionRequest => {
+    // Build CreateRepositoryInput array
+    // Use repositories array if multi-repo enabled, or if base_branch is specified (for Sprites/K8s)
+    const firstRepo = repositories[0];
+    if (firstRepo == null) {
+      throw new Error("No repository specified");
+    }
+    const needsRepositoriesArray =
+      multiRepoEnabled || firstRepo.base_branch.length > 0;
+    const repoInputs: CreateRepositoryInput[] | undefined =
+      needsRepositoriesArray
+        ? repositories.map((repo) => ({
+            repo_path: repo.repo_path,
+            is_primary: repo.is_primary,
+            ...(repo.base_branch && { base_branch: repo.base_branch }),
+          }))
+        : undefined;
+
+    return {
+      repo_path: firstRepo.repo_path, // Legacy field for backward compat
+      ...(repoInputs != null && { repositories: repoInputs }), // New multi-repo field
+      initial_prompt: formData.initial_prompt,
+      backend: formData.backend,
+      agent: formData.agent,
+      ...(formData.model != null && { model: formData.model }),
+      dangerous_skip_checks: formData.dangerous_skip_checks,
+      print_mode: false,
+      plan_mode: formData.plan_mode,
+      access_mode: formData.access_mode,
+      images: [],
+      // Include container settings if specified
+      pull_policy: formData.pull_policy,
+      ...(formData.container_image && {
+        container_image: formData.container_image,
+      }),
+      ...(formData.cpu_limit && { cpu_limit: formData.cpu_limit }),
+      ...(formData.memory_limit && { memory_limit: formData.memory_limit }),
+      ...(formData.storage_class && {
+        storage_class: formData.storage_class,
+      }),
+    };
+  };
+
+  const uploadImages = async (sessionId: string) => {
+    if (selectedFiles.length === 0) {
+      return;
+    }
+    toast.info(`Uploading ${String(selectedFiles.length)} image(s)...`);
+    for (const file of selectedFiles) {
+      try {
+        await client.uploadImage(sessionId, file);
+      } catch (error_) {
+        console.error("Failed to upload image:", error_);
+        toast.warning(`Failed to upload ${file.name}`);
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -94,7 +149,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
 
     // Validate storage class for Kubernetes backend
     if (
-      (formData.backend as string) === "Kubernetes" &&
+      formData.backend === BackendType.Kubernetes &&
       storageClasses.length > 0
     ) {
       const hasDefault = storageClasses.some((sc) => sc.is_default);
@@ -112,7 +167,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       const validationError = validateRepositories(
         repositories,
         multiRepoEnabled,
-        formData.backend as string,
+        formData.backend,
       );
       if (validationError != null && validationError.length > 0) {
         setError(validationError);
@@ -120,60 +175,12 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         return;
       }
 
-      // Build CreateRepositoryInput array
-      // Use repositories array if multi-repo enabled, or if base_branch is specified (for Sprites/K8s)
-      const firstRepo = repositories[0];
-      if (firstRepo == null) {
-        throw new Error("No repository specified");
-      }
-      const needsRepositoriesArray =
-        multiRepoEnabled || firstRepo.base_branch.length > 0;
-      const repoInputs: CreateRepositoryInput[] | undefined =
-        needsRepositoriesArray
-          ? repositories.map((repo) => ({
-              repo_path: repo.repo_path,
-              is_primary: repo.is_primary,
-              ...(repo.base_branch && { base_branch: repo.base_branch }),
-            }))
-          : undefined;
-
-      const request: CreateSessionRequest = {
-        repo_path: firstRepo.repo_path, // Legacy field for backward compat
-        ...(repoInputs != null && { repositories: repoInputs }), // New multi-repo field
-        initial_prompt: formData.initial_prompt,
-        backend: formData.backend,
-        agent: formData.agent,
-        ...(formData.model != null && { model: formData.model }),
-        dangerous_skip_checks: formData.dangerous_skip_checks,
-        print_mode: false,
-        plan_mode: formData.plan_mode,
-        access_mode: formData.access_mode,
-        images: [],
-        // Include container settings if specified
-        pull_policy: formData.pull_policy,
-        ...(formData.container_image && {
-          container_image: formData.container_image,
-        }),
-        ...(formData.cpu_limit && { cpu_limit: formData.cpu_limit }),
-        ...(formData.memory_limit && { memory_limit: formData.memory_limit }),
-        ...(formData.storage_class && {
-          storage_class: formData.storage_class,
-        }),
-      };
-
+      const request = buildSessionRequest();
       const result = await createSession(request);
 
       // Upload images if any were selected
-      if (selectedFiles.length > 0 && result) {
-        toast.info(`Uploading ${String(selectedFiles.length)} image(s)...`);
-        for (const file of selectedFiles) {
-          try {
-            await client.uploadImage(result, file);
-          } catch (error_) {
-            console.error("Failed to upload image:", error_);
-            toast.warning(`Failed to upload ${file.name}`);
-          }
-        }
+      if (result) {
+        await uploadImages(result);
       }
 
       toast.success("Session created successfully");
@@ -278,7 +285,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 supported with Docker backend.
               </p>
               {multiRepoEnabled &&
-                (formData.backend as string) !== "Docker" && (
+                formData.backend !== BackendType.Docker && (
                   <div
                     className="p-3 border-2 text-sm font-mono ml-6"
                     style={{
@@ -333,7 +340,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               ))}
 
               {repositories.length > 1 &&
-                (formData.backend as string) !== "Docker" && (
+                formData.backend !== BackendType.Docker && (
                   <div
                     className="p-3 border-2 text-sm font-mono"
                     style={{
@@ -361,7 +368,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 }}
                 className="flex w-full rounded-md border-2 border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm min-h-[100px]"
                 placeholder={
-                  (formData.agent as string) === "Codex"
+                  formData.agent === AgentType.Codex
                     ? "What should Codex do?"
                     : "What should Claude Code do?"
                 }
@@ -377,46 +384,10 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               availableModels={availableModels}
             />
 
-            <div className="space-y-2">
-              <Label htmlFor="images">Attach Images (optional)</Label>
-              <input
-                type="file"
-                id="images"
-                accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
-                multiple
-                onChange={(e) => {
-                  if (e.target.files != null) {
-                    setSelectedFiles([...e.target.files]);
-                  }
-                }}
-                className="block w-full text-sm border-2 rounded file:mr-4 file:py-2 file:px-4 file:border-0 file:font-semibold"
-              />
-              {selectedFiles.length > 0 && (
-                <div className="space-y-1 mt-2">
-                  {selectedFiles.map((file, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center justify-between p-2 border-2 rounded bg-white"
-                    >
-                      <span className="text-sm truncate font-mono">
-                        {file.name}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedFiles((files) =>
-                            files.filter((_, idx) => idx !== i),
-                          );
-                        }}
-                        className="text-red-600 font-bold px-2 hover:bg-red-100 rounded"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <ImageAttachmentInput
+              selectedFiles={selectedFiles}
+              setSelectedFiles={setSelectedFiles}
+            />
 
             <AdvancedContainerSettings
               formData={formData}

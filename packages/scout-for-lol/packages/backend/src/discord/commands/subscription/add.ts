@@ -10,6 +10,11 @@ import {
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { fromError } from "zod-validation-error";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import type {
+  Account,
+  Player,
+  Subscription,
+} from "@scout-for-lol/backend/generated/prisma/client/index.js";
 
 const logger = createLogger("subscription-add");
 import {
@@ -88,12 +93,12 @@ export async function executeSubscriptionAdd(
 
   // Resolve Riot ID to PUUID
   const puuid = await resolveRiotIdToPuuid(interaction, riotId, region);
-  if (puuid === undefined) {
+  if (puuid === null) {
     return;
   }
 
   // Check if this exact account already exists
-  const existingAccount = await prisma.account.findUnique({
+  const existingAccount: (Account & { player: Player & { subscriptions: Subscription[] } }) | null = await prisma.account.findUnique({
     where: {
       serverId_puuid: {
         serverId: guildId,
@@ -114,9 +119,9 @@ export async function executeSubscriptionAdd(
       `⚠️  Account already exists: ${riotId.game_name}#${riotId.tag_line} (PUUID: ${puuid}) for player "${existingAccount.player.alias}"`,
     );
 
-    const subscriptions = existingAccount.player.subscriptions;
+    const subscriptions: Subscription[] = existingAccount.player.subscriptions;
     const channelList = subscriptions
-      .map((sub) => `<#${sub.channelId}>`)
+      .map((sub) => `<#${sub.channelId.toString()}>`)
       .join(", ");
 
     await interaction.editReply({
@@ -143,7 +148,7 @@ export async function executeSubscriptionAdd(
       result.isAddingToExistingPlayer !== undefined
     ) {
       // Handle existing subscription case
-      const playerAccount = await prisma.account.findUnique({
+      const playerAccount: (Account & { player: Player & { accounts: Account[]; subscriptions: Subscription[] } }) | null = await prisma.account.findUnique({
         where: {
           serverId_puuid: {
             serverId: guildId,
@@ -162,17 +167,17 @@ export async function executeSubscriptionAdd(
 
       if (playerAccount) {
         if (result.isAddingToExistingPlayer) {
-          const accountCount = playerAccount.player.accounts.length;
-          const accountList = playerAccount.player.accounts
-            .map((acc) => `• ${acc.alias} (${acc.region})`)
+          const accountCount: number = playerAccount.player.accounts.length;
+          const accountList: string = playerAccount.player.accounts
+            .map((acc: Account) => `• ${acc.alias} (${acc.region})`)
             .join("\n");
 
           await interaction.editReply({
-            content: `✅ **Account added successfully**\n\nAdded **${riotId.game_name}#${riotId.tag_line}** to player "${playerAccount.player.alias}".\n\nThis player is already subscribed in <#${channel}> and now has ${accountCount.toString()} account${accountCount === 1 ? "" : "s"}:\n${accountList}\n\nMatch updates for all accounts will continue to be posted there.`,
+            content: `✅ **Account added successfully**\n\nAdded **${riotId.game_name}#${riotId.tag_line}** to player "${playerAccount.player.alias}".\n\nThis player is already subscribed in <#${channel.toString()}> and now has ${accountCount.toString()} account${accountCount === 1 ? "" : "s"}:\n${accountList}\n\nMatch updates for all accounts will continue to be posted there.`,
           });
         } else {
           await interaction.editReply({
-            content: `ℹ️ **Already subscribed**\n\nPlayer "${playerAccount.player.alias}" is already subscribed in <#${channel}>.\n\nMatch updates will continue to be posted there.`,
+            content: `ℹ️ **Already subscribed**\n\nPlayer "${playerAccount.player.alias}" is already subscribed in <#${channel.toString()}>.\n\nMatch updates will continue to be posted there.`,
           });
         }
       }

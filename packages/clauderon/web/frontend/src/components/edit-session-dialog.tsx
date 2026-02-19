@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { Session } from "@clauderon/client";
 import { useSessionContext } from "@shepherdjerred/clauderon/web/frontend/src/contexts/SessionContext";
 import { Button } from "@/components/ui/button";
@@ -53,14 +53,16 @@ export function EditSessionDialog({
     onClose();
 
     // Fire-and-forget operation
-    void regenerateMetadata(session.id)
-      .then(() => {
+    const regenerate = async () => {
+      try {
+        await regenerateMetadata(session.id);
         toast.success("Session metadata regenerated");
-      })
-      .catch((caughtError: unknown) => {
+      } catch (caughtError: unknown) {
         const errorMsg = caughtError instanceof Error ? caughtError.message : String(caughtError);
         toast.error(`Failed to regenerate metadata: ${errorMsg}`);
-      });
+      }
+    };
+    void regenerate();
   };
 
   return (

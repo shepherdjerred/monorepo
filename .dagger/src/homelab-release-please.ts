@@ -1,7 +1,7 @@
 import type { Container, Directory, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 import versions from "./lib-versions.ts";
-import { getMiseRuntimeContainer } from "./homelab-base.ts";
+import { getMiseRuntimeContainer } from "./lib-mise.ts";
 import { execWithOutput } from "./lib-errors.ts";
 
 // Release-please configuration

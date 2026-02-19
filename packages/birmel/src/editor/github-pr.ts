@@ -1,5 +1,7 @@
 import { spawn } from "node:child_process";
-import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
+import { mkdir, writeFile, unlink } from "node:fs/promises";
+import path from "node:path";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { getAuth } from "./github-oauth.ts";
 import type { FileChange } from "./types.ts";
 
@@ -133,25 +135,19 @@ function injectToken(url: string, token: string): string {
 }
 
 async function applyChange(cwd: string, change: FileChange): Promise<void> {
-  const fsPromises = await import("node:fs/promises");
-  // eslint-disable-next-line unicorn/import-style -- dynamic import for lazy loading
-  const pathModule = await import("node:path");
-
-  const fullPath = pathModule.default.join(cwd, change.filePath);
+  const fullPath = path.join(cwd, change.filePath);
 
   switch (change.changeType) {
     case "create":
     case "modify":
       if (change.newContent !== null) {
-        await fsPromises.mkdir(pathModule.default.dirname(fullPath), {
-          recursive: true,
-        });
-        await fsPromises.writeFile(fullPath, change.newContent, "utf8");
+        await mkdir(path.dirname(fullPath), { recursive: true });
+        await writeFile(fullPath, change.newContent, "utf8");
       }
       break;
 
     case "delete":
-      await fsPromises.unlink(fullPath).catch(() => {
+      await unlink(fullPath).catch(() => {
         // Ignore if file doesn't exist
       });
       break;

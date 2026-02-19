@@ -9,6 +9,7 @@ import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { match } from "ts-pattern";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
@@ -37,7 +38,7 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
     .with("beta", () => {
       return {
         image: `ghcr.io/shepherdjerred/starlight-karma-bot:${versions["shepherdjerred/starlight-karma-bot/beta"]}`,
-        path: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/tdxe6cq7ozhv7cesfvnlkl5gh4",
+        path: vaultItemPath("tdxe6cq7ozhv7cesfvnlkl5gh4"),
         applicationId: "1092616671388254248",
       };
     })

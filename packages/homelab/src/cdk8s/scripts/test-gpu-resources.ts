@@ -45,31 +45,32 @@ async function testGpuResources() {
       if (matches.length === 0) {
         console.error(`❌ No Intel GPU resources found in ${yamlFile}`);
         errors++;
-      } else {
-        console.log(
-          `📊 Found ${matches.length.toString()} Intel GPU resource(s) in ${yamlFile}`,
-        );
+        continue;
+      }
 
-        for (const match of matches) {
-          if (!match[1]) {
-            throw new Error(`No match found for ${match.toString()}`);
-          }
-          const value = match[1].trim();
-          const lineNumber = content
-            .slice(0, Math.max(0, match.index))
-            .split("\n").length;
+      console.log(
+        `📊 Found ${matches.length.toString()} Intel GPU resource(s) in ${yamlFile}`,
+      );
 
-          if (value === EXPECTED_VALUE.toString()) {
-            console.log(
-              `✅ Line ${lineNumber.toString()}: gpu.intel.com/i915: ${value} (correct)`,
-            );
-            successes++;
-          } else {
-            console.error(
-              `❌ Line ${lineNumber.toString()}: gpu.intel.com/i915: ${value} (should be ${EXPECTED_VALUE.toString()})`,
-            );
-            errors++;
-          }
+      for (const match of matches) {
+        if ((match[1] == null || match[1] === "")) {
+          throw new Error(`No match found for ${match.toString()}`);
+        }
+        const value = match[1].trim();
+        const lineNumber = content
+          .slice(0, Math.max(0, match.index))
+          .split("\n").length;
+
+        if (value === EXPECTED_VALUE.toString()) {
+          console.log(
+            `✅ Line ${lineNumber.toString()}: gpu.intel.com/i915: ${value} (correct)`,
+          );
+          successes++;
+        } else {
+          console.error(
+            `❌ Line ${lineNumber.toString()}: gpu.intel.com/i915: ${value} (should be ${EXPECTED_VALUE.toString()})`,
+          );
+          errors++;
         }
       }
 
@@ -80,7 +81,7 @@ async function testGpuResources() {
       );
       const serviceMatch = servicePattern.exec(content);
 
-      if (serviceMatch?.[1]) {
+      if (serviceMatch?.[1] != null && serviceMatch[1] !== "") {
         const value = serviceMatch[1].trim();
         if (value === EXPECTED_VALUE.toString()) {
           console.log(

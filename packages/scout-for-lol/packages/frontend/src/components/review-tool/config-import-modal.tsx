@@ -216,7 +216,7 @@ export function ConfigImportModal({
             </div>
 
             {/* Parse Error */}
-            {parseError !== undefined && parseError.length > 0 && (
+            {parseError !== null && parseError.length > 0 && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="text-sm text-red-800 font-medium">
                   Failed to parse JSON:

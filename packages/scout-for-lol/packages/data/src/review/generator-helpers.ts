@@ -243,6 +243,10 @@ function buildFlexQueueContext(
  * Provides context about the game mode to help the AI understand the stakes and setting
  */
 function buildQueueContext(queueType: string | undefined): string {
+  if (queueType === undefined) {
+    return "This is a standard League of Legends game.";
+  }
+
   switch (queueType) {
     case "solo":
       return "This is a Solo/Duo Ranked game - the most competitive standard queue where players climb the ranked ladder. Games are taken seriously and LP is on the line.";
@@ -258,8 +262,6 @@ function buildQueueContext(queueType: string | undefined): string {
       return "This is an ARAM game - All Random All Mid on the Howling Abyss. Players get random champions and fight in a single lane. It's a more casual, chaotic mode focused on teamfighting.";
     case "normal":
       return "This is a Normal (unranked) game - a casual queue for practicing or playing without ranked pressure.";
-    // eslint-disable-next-line unicorn/no-useless-switch-case -- required for switch-exhaustiveness-check
-    case undefined:
     default:
       return "This is a standard League of Legends game.";
   }

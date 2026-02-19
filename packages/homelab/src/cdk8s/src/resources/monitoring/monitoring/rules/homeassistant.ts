@@ -8,23 +8,23 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
     {
       name: "homeassistant-litter-robot",
       rules: [
-        createSensorAlert(
-          "LitterRobotLitterLow",
-          'homeassistant_sensor_unit_percent{entity="sensor.litter_robot_4_litter_level"}',
-          "<",
-          90,
-          "Litter Robot litter is low: {{ $value }}% ({{ $labels.entity }}).",
-          "Litter Robot litter low",
-        ),
-        createSensorAlert(
-          "LitterRobotWasteHigh",
-          'homeassistant_sensor_unit_percent{entity="sensor.litter_robot_4_waste_drawer"}',
-          ">",
-          70,
-          "Litter Robot waste drawer is high: {{ $value }}% ({{ $labels.entity }}).",
-          "Litter Robot waste high",
-          "1h", // Increased from default 10m to reduce flapping from sensor variance
-        ),
+        createSensorAlert({
+          name: "LitterRobotLitterLow",
+          entity: 'homeassistant_sensor_unit_percent{entity="sensor.litter_robot_4_litter_level"}',
+          condition: "<",
+          threshold: 90,
+          description: "Litter Robot litter is low: {{ $value }}% ({{ $labels.entity }}).",
+          summary: "Litter Robot litter low",
+        }),
+        createSensorAlert({
+          name: "LitterRobotWasteHigh",
+          entity: 'homeassistant_sensor_unit_percent{entity="sensor.litter_robot_4_waste_drawer"}',
+          condition: ">",
+          threshold: 70,
+          description: "Litter Robot waste drawer is high: {{ $value }}% ({{ $labels.entity }}).",
+          summary: "Litter Robot waste high",
+          duration: "1h", // Increased from default 10m to reduce flapping from sensor variance
+        }),
         {
           alert: "LitterRobotNotCyclingRecently",
           annotations: {
@@ -45,39 +45,39 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
     {
       name: "homeassistant-binary-sensors",
       rules: [
-        createBinarySensorAlert(
-          "EversweetWaterLevelBad",
-          "binary_sensor.eversweet_3_pro_water_level",
-          "Binary sensor {{ $labels.entity }} reports low state ({{ $value }}).",
-          "Eversweet water level low",
-        ),
-        createBinarySensorAlert(
-          "GranaryFeederBatteryStatusBad",
-          "binary_sensor.granary_smart_camera_feeder_battery_status",
-          "Binary sensor {{ $labels.entity }} reports low state ({{ $value }}).",
-          "Granary feeder battery status low",
-        ),
-        createBinarySensorAlert(
-          "GranaryFeederFoodDispenserBad",
-          "binary_sensor.granary_smart_camera_feeder_food_dispenser",
-          "Binary sensor {{ $labels.entity }} reports bad state ({{ $value }}).",
-          "Granary feeder food dispenser bad",
-        ),
-        createBinarySensorAlert(
-          "GranaryFeederFoodStatusBad",
-          "binary_sensor.granary_smart_camera_feeder_food_status",
-          "Binary sensor {{ $labels.entity }} reports low state ({{ $value }}).",
-          "Granary feeder low food",
-        ),
-        createSensorAlert(
-          "GranaryFeederDesiccantRemainingDays",
-          'homeassistant_sensor_duration_d{entity="sensor.granary_smart_camera_feeder_desiccant_remaining_days"}',
-          "<=",
-          0,
-          "Granary feeder desiccant is overdue: {{ $value }} days remaining ({{ $labels.entity }}).",
-          "Granary feeder desiccant remaining days",
-          "24h", // Alert once per day instead of every 10m to reduce noise
-        ),
+        createBinarySensorAlert({
+          name: "EversweetWaterLevelBad",
+          entity: "binary_sensor.eversweet_3_pro_water_level",
+          description: "Binary sensor {{ $labels.entity }} reports low state ({{ $value }}).",
+          summary: "Eversweet water level low",
+        }),
+        createBinarySensorAlert({
+          name: "GranaryFeederBatteryStatusBad",
+          entity: "binary_sensor.granary_smart_camera_feeder_battery_status",
+          description: "Binary sensor {{ $labels.entity }} reports low state ({{ $value }}).",
+          summary: "Granary feeder battery status low",
+        }),
+        createBinarySensorAlert({
+          name: "GranaryFeederFoodDispenserBad",
+          entity: "binary_sensor.granary_smart_camera_feeder_food_dispenser",
+          description: "Binary sensor {{ $labels.entity }} reports bad state ({{ $value }}).",
+          summary: "Granary feeder food dispenser bad",
+        }),
+        createBinarySensorAlert({
+          name: "GranaryFeederFoodStatusBad",
+          entity: "binary_sensor.granary_smart_camera_feeder_food_status",
+          description: "Binary sensor {{ $labels.entity }} reports low state ({{ $value }}).",
+          summary: "Granary feeder low food",
+        }),
+        createSensorAlert({
+          name: "GranaryFeederDesiccantRemainingDays",
+          entity: 'homeassistant_sensor_duration_d{entity="sensor.granary_smart_camera_feeder_desiccant_remaining_days"}',
+          condition: "<=",
+          threshold: 0,
+          description: "Granary feeder desiccant is overdue: {{ $value }} days remaining ({{ $labels.entity }}).",
+          summary: "Granary feeder desiccant remaining days",
+          duration: "24h", // Alert once per day instead of every 10m to reduce noise
+        }),
         {
           alert: "GranaryFeederNotDispensing",
           annotations: {
@@ -91,13 +91,13 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "30m",
           labels: { severity: "warning" },
         },
-        createBinarySensorAlert(
-          "RoombaBinFull",
-          "binary_sensor.roomba_bin_full",
-          "Binary sensor {{ $labels.entity }} reports bad state ({{ $value }}).",
-          "Roomba bin full",
-          "15m",
-        ),
+        createBinarySensorAlert({
+          name: "RoombaBinFull",
+          entity: "binary_sensor.roomba_bin_full",
+          description: "Binary sensor {{ $labels.entity }} reports bad state ({{ $value }}).",
+          summary: "Roomba bin full",
+          duration: "15m",
+        }),
         {
           alert: "RoombaNotRunningRecently",
           annotations: {
@@ -141,15 +141,15 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
       name: "homeassistant-batteries",
       rules: [
         // General battery alert for non-Roomba devices
-        createSensorAlert(
-          "HomeAssistantBatteryLow",
-          'min by (entity) (homeassistant_sensor_battery_percent{entity!="sensor.roomba_battery",entity!~".*blue_pure.*filter.*"})',
-          "<",
-          30, // Lowered from 50 to reduce noise - 30% is still actionable
-          "Battery low: {{ $value }}% ({{ $labels.entity }}).",
-          "Home Assistant battery low",
-          "1h",
-        ),
+        createSensorAlert({
+          name: "HomeAssistantBatteryLow",
+          entity: 'min by (entity) (homeassistant_sensor_battery_percent{entity!="sensor.roomba_battery",entity!~".*blue_pure.*filter.*"})',
+          condition: "<",
+          threshold: 30, // Lowered from 50 to reduce noise - 30% is still actionable
+          description: "Battery low: {{ $value }}% ({{ $labels.entity }}).",
+          summary: "Home Assistant battery low",
+          duration: "1h",
+        }),
         // Specific Roomba battery alert that only fires when battery is low AND decreasing (not charging)
         {
           alert: "RoombaBatteryLowNotCharging",

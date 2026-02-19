@@ -23,8 +23,8 @@ export function createCloudflareTunnelBinding(
 
   return new TunnelBinding(chart, id, {
     metadata: {
-      ...(props.namespace ? { namespace: props.namespace } : {}),
-      ...(props.annotations ? { annotations: props.annotations } : {}),
+      ...(props.namespace === undefined ? {} : { namespace: props.namespace }),
+      ...(props.annotations === undefined ? {} : { annotations: props.annotations }),
       // Labels and finalizer added by cloudflare-operator controller - include to prevent ArgoCD drift
       labels: {
         "cfargotunnel.com/kind": "TunnelBinding",

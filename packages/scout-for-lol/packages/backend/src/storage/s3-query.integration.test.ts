@@ -13,7 +13,6 @@ import {
   ListObjectsV2Command,
   S3Client,
 } from "@aws-sdk/client-s3";
-import type { GetObjectCommandOutput } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
 import type { RawMatch } from "@scout-for-lol/data";
 import { queryMatchesByDateRange } from "@scout-for-lol/backend/storage/s3-query.ts";
@@ -63,41 +62,28 @@ function generateMatchKey(matchId: string, date: Date): string {
 }
 
 // Helper to create a mock GetObjectCommandOutput
-// We need to mock the AWS SDK response for testing
-type MockBody = {
-  transformToString: () => Promise<string>;
-  locked: boolean;
-  cancel: () => Promise<void>;
-  getReader: () => { read: () => Promise<{ done: boolean; value?: unknown }> };
-  pipeThrough: () => { readable: unknown; writable: unknown };
-  pipeTo: () => Promise<void>;
-  [Symbol.asyncIterator]: () => AsyncIterator<unknown>;
-};
-
-function createMockGetObjectResponse(content: string): GetObjectCommandOutput {
-  const mockBody: MockBody = {
-    transformToString: () => Promise.resolve(content),
-    locked: false,
-    cancel: () => Promise.resolve(),
-    getReader: () => ({
-      read: () => Promise.resolve({ done: true, value: undefined }),
-    }),
-    pipeThrough: () => ({ readable: undefined, writable: undefined }),
-    pipeTo: () => Promise.resolve(),
-    async *[Symbol.asyncIterator]() {
-      // Empty async generator
-      yield* [];
-    },
-  };
-
-  // Create a response object that matches GetObjectCommandOutput structure
-  // The mock body implements transformToString() which is what's actually used
-  // TypeScript can't verify the full structural match, but the mock works at runtime
-  // eslint-disable-next-line custom-rules/no-type-assertions -- ok for now
+// We need to mock the AWS SDK response for testing.
+// The return type is left inferred (not annotated as GetObjectCommandOutput)
+// because SdkStream can't be constructed in test code. The mock library
+// accepts the structural shape via .resolves().
+function createMockGetObjectResponse(content: string) {
   return {
-    Body: mockBody,
+    Body: {
+      transformToString: () => Promise.resolve(content),
+      locked: false,
+      cancel: () => Promise.resolve(),
+      getReader: () => ({
+        read: (): Promise<{ done: boolean; value?: unknown }> =>
+          Promise.resolve({ done: true, value: undefined }),
+      }),
+      pipeThrough: () => ({ readable: undefined, writable: undefined }),
+      pipeTo: () => Promise.resolve(),
+      async *[Symbol.asyncIterator]() {
+        yield* [];
+      },
+    },
     $metadata: {},
-  } as unknown as GetObjectCommandOutput;
+  };
 }
 
 beforeEach(() => {

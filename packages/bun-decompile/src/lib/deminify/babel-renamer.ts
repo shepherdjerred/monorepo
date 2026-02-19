@@ -10,17 +10,9 @@
 
 import * as babel from "@babel/core";
 import type { NodePath } from "@babel/traverse";
-import _traverse from "@babel/traverse";
-import _generate from "@babel/generator";
+import traverse from "@babel/traverse";
+import generate from "@babel/generator";
 import * as t from "@babel/types";
-
-// Handle ESM/CJS interop for Babel packages
-const traverse =
-  // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-  (_traverse as unknown as { default?: typeof _traverse }).default ?? _traverse;
-const generate =
-  // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-  (_generate as unknown as { default?: typeof _generate }).default ?? _generate;
 
 /** Rename mapping for a single function */
 export type FunctionRenameMapping = {

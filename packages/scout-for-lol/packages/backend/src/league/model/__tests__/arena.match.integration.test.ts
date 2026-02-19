@@ -1,6 +1,5 @@
 import { describe, it, expect } from "bun:test";
 import type {
-  RawChallenges,
   RawParticipant,
   Player,
   RawMatch,
@@ -15,6 +14,10 @@ import {
   toArenaMatch,
   toArenaSubteams,
 } from "@scout-for-lol/backend/league/model/match.ts";
+import {
+  makeTestParticipant,
+  makeTestChallenges,
+} from "@scout-for-lol/backend/testing/riot-mocks.ts";
 
 function makeParticipant(
   overrides: Partial<RawParticipant> & {
@@ -23,79 +26,12 @@ function makeParticipant(
     puuid: string;
   },
 ): RawParticipant {
-  const base: Partial<RawParticipant> = {
-    riotIdGameName: "P#NA1",
-    summonerName: "P",
-    championName: "Lux",
-    kills: 1,
-    deaths: 1,
-    assists: 1,
-    champLevel: 18,
-    item0: 0,
-    item1: 0,
-    item2: 0,
-    item3: 0,
-    item4: 0,
-    item5: 0,
-    item6: 0,
-    summoner1Id: 4,
-    summoner2Id: 7,
-    totalMinionsKilled: 0,
-    neutralMinionsKilled: 0,
-    visionScore: 0,
-    totalDamageDealtToChampions: 0,
-    goldEarned: 0,
-    teamPosition: "UTILITY",
-    teamId: 100,
-    playerAugment1: 0,
-    playerAugment2: 0,
-    playerAugment3: 0,
-    playerAugment4: 0,
-    playerAugment5: 0,
-    playerAugment6: 0,
-    PlayerScore0: 0,
-    PlayerScore1: 0,
-    PlayerScore2: 0,
-    PlayerScore3: 0,
-    PlayerScore4: 0,
-    PlayerScore5: 0,
-    PlayerScore6: 0,
-    PlayerScore7: 0,
-    PlayerScore8: 0,
-    // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
-    challenges: {
-      damageTakenOnTeamPercentage: 0.2,
-    } satisfies Partial<RawChallenges> as unknown as RawChallenges,
-    perks: {
-      statPerks: {
-        defense: 0,
-        flex: 0,
-        offense: 0,
-      },
-      styles: [
-        {
-          description: "primaryStyle",
-          selections: [
-            { perk: 8112, var1: 0, var2: 0, var3: 0 },
-            { perk: 8126, var1: 0, var2: 0, var3: 0 },
-          ],
-          style: 8100,
-        },
-        {
-          description: "subStyle",
-          selections: [{ perk: 8210, var1: 0, var2: 0, var3: 0 }],
-          style: 8200,
-        },
-      ],
-    },
-  };
-  // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
-  return {
+  return makeTestParticipant({
     totalHealsOnTeammates: 300,
     totalDamageShieldedOnTeammates: 500,
-    ...base,
+    challenges: makeTestChallenges({ damageTakenOnTeamPercentage: 0.2 }),
     ...overrides,
-  } satisfies Partial<RawParticipant> as unknown as RawParticipant;
+  });
 }
 
 const longPuuid = (label: string) => (label + "-".repeat(80)).slice(0, 78);

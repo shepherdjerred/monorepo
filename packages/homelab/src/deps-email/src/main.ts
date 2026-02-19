@@ -1,26 +1,18 @@
 import simpleGit from "simple-git";
-import {
-  getFullDependencyChanges,
-  fetchReleaseNotesBetween,
-  getGitHubRepoForImage,
-  type FullDependencyDiff,
-} from "./index.ts";
-import {
-  HELM_CHART_GITHUB_REPOS,
-  HELM_CHART_APP_REPOS,
-  DOCKER_IMAGE_GITHUB_REPOS,
-} from "./repo-mappings.ts";
+import type { FullDependencyDiff } from "./types.ts";
 import { formatEmailHtml, sendEmail } from "./email-formatter.ts";
 import { summarizeWithLLM } from "./llm-summary.ts";
 import {
   DependencyInfoSchema,
-  ArtifactHubSchema,
-  GitHubReleaseSchema,
-  GitHubReleasesArraySchema,
   type DependencyInfo,
   type ReleaseNotes,
   type FailedFetch,
 } from "./main-schemas.ts";
+import { fetchGitHubReleases } from "./github-releases.ts";
+import {
+  fetchDockerReleaseNotes,
+  fetchHelmReleaseNotes,
+} from "./datasource-fetchers.ts";
 
 const VERSIONS_FILE_PATH = "src/cdk8s/src/versions.ts";
 const REPO_URL = "https://github.com/shepherdjerred/homelab.git";
@@ -30,7 +22,7 @@ const REPO_URL = "https://github.com/shepherdjerred/homelab.git";
 const args = Bun.argv.slice(2);
 const dryRun = args.includes("--dry-run");
 const daysArg = args.find((a) => !a.startsWith("--"));
-const DAYS_TO_LOOK_BACK = daysArg ? Number.parseInt(daysArg, 10) : 7;
+const DAYS_TO_LOOK_BACK = daysArg != null && daysArg !== "" ? Number.parseInt(daysArg, 10) : 7;
 
 async function main() {
   console.log(
@@ -155,39 +147,39 @@ async function getVersionChanges(repoPath: string): Promise<DependencyInfo[]> {
   return [...uniqueChanges.values()];
 }
 
-function findMatchingAddedLine(
-  lines: string[],
-  startIndex: number,
-  versionRegex: RegExp,
-  name: string,
-  renovateComment: string | null,
-  oldVersion: string,
-): DependencyInfo | null {
-  for (let j = startIndex; j < lines.length; j++) {
-    const nextLine = lines[j];
-    if (!nextLine) {
+function findMatchingAddedLine(options: {
+  lines: string[];
+  startIndex: number;
+  versionRegex: RegExp;
+  name: string;
+  renovateComment: string | null;
+  oldVersion: string;
+}): DependencyInfo | null {
+  for (let j = options.startIndex; j < options.lines.length; j++) {
+    const nextLine = options.lines[j];
+    if ((nextLine == null || nextLine === "")) {
       continue;
     }
     if (!nextLine.startsWith("+") || nextLine.startsWith("+++")) {
       continue;
     }
 
-    const newVersionMatch = versionRegex.exec(nextLine);
+    const newVersionMatch = options.versionRegex.exec(nextLine);
     if (!newVersionMatch) {
       continue;
     }
 
     const newName = newVersionMatch[1] ?? newVersionMatch[2];
-    if (newName !== name) {
+    if (newName !== options.name) {
       continue;
     }
 
     const newVersion = newVersionMatch[3];
-    if (!newVersion) {
+    if ((newVersion == null || newVersion === "")) {
       continue;
     }
 
-    return parseRenovateComment(renovateComment, name, oldVersion, newVersion);
+    return parseRenovateComment(options.renovateComment, options.name, options.oldVersion, newVersion);
   }
   return null;
 }
@@ -201,7 +193,7 @@ function parseDiff(diff: string): DependencyInfo[] {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (!line) {
+    if ((line == null || line === "")) {
       continue;
     }
 
@@ -212,7 +204,7 @@ function parseDiff(diff: string): DependencyInfo[] {
         // Name is either group 1 (quoted) or group 2 (unquoted)
         const name = versionMatch[1] ?? versionMatch[2];
         const oldVersion = versionMatch[3];
-        if (!name || !oldVersion) {
+        if ((name == null || name === "") || (oldVersion == null || oldVersion === "")) {
           continue;
         }
 
@@ -220,19 +212,19 @@ function parseDiff(diff: string): DependencyInfo[] {
         // The comment must be on the immediately preceding line (in context)
         let renovateComment: string | null = null;
         const prevLine = lines[i - 1];
-        if (prevLine?.includes("// renovate:")) {
+        if (prevLine?.includes("// renovate:") === true) {
           renovateComment = prevLine;
         }
 
         // Look for the corresponding added line
-        const matchedInfo = findMatchingAddedLine(
+        const matchedInfo = findMatchingAddedLine({
           lines,
-          i + 1,
+          startIndex: i + 1,
           versionRegex,
           name,
           renovateComment,
           oldVersion,
-        );
+        });
         if (matchedInfo) {
           changes.push(matchedInfo);
         }
@@ -249,7 +241,7 @@ function parseRenovateComment(
   oldVersion: string,
   newVersion: string,
 ): DependencyInfo | null {
-  if (!comment) {
+  if ((comment == null || comment === "")) {
     return null;
   }
 
@@ -270,7 +262,7 @@ function parseRenovateComment(
     "github-releases",
     "custom.papermc",
   ];
-  if (!datasource || !validDatasources.includes(datasource)) {
+  if ((datasource == null || datasource === "") || !validDatasources.includes(datasource)) {
     return null;
   }
 
@@ -301,7 +293,7 @@ async function fetchAllReleaseNotes(
       console.log(
         `Fetching release notes for ${change.name} (${change.datasource})...`,
       );
-      const releaseNotesList = await fetchReleaseNotes(change);
+      const releaseNotesList = await fetchReleaseNotesForDep(change);
       if (releaseNotesList.length > 0) {
         for (const note of releaseNotesList) {
           const preview = note.notes.slice(0, 100).replaceAll("\n", " ");
@@ -326,7 +318,7 @@ async function fetchAllReleaseNotes(
   return { notes, failed };
 }
 
-async function fetchReleaseNotes(dep: DependencyInfo): Promise<ReleaseNotes[]> {
+async function fetchReleaseNotesForDep(dep: DependencyInfo): Promise<ReleaseNotes[]> {
   const results: ReleaseNotes[] = [];
 
   switch (dep.datasource) {
@@ -346,7 +338,7 @@ async function fetchReleaseNotes(dep: DependencyInfo): Promise<ReleaseNotes[]> {
     }
     case "helm": {
       // For Helm, fetch both chart notes AND underlying app notes
-      const helmNotes = await fetchHelmReleaseNotes(dep);
+      const helmNotes = await fetchHelmReleaseNotes(dep, transitiveDepsDiffs);
       results.push(...helmNotes);
       break;
     }
@@ -363,7 +355,7 @@ async function fetchGitHubReleaseNotes(
 ): Promise<ReleaseNotes | null> {
   // dep.name is like "kubernetes/kubernetes" or "siderolabs/talos"
   const [owner, repo] = dep.name.split("/");
-  if (!owner || !repo) {
+  if ((owner == null || owner === "") || (repo == null || repo === "")) {
     return null;
   }
 
@@ -380,340 +372,8 @@ async function fetchGitHubReleaseNotes(
   return null;
 }
 
-async function tryArtifactHubFallback(
-  depName: string,
-  newVersion: string,
-): Promise<ReleaseNotes | null> {
-  try {
-    const searchUrl = `https://artifacthub.io/api/v1/packages/helm/${depName}`;
-    const response = await fetch(searchUrl, {
-      headers: {
-        Accept: "application/json",
-        "User-Agent": "homelab-dependency-summary",
-      },
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const rawData: unknown = await response.json();
-    const parsed = ArtifactHubSchema.safeParse(rawData);
-    if (!parsed.success) {
-      return null;
-    }
-
-    const repoUrl = parsed.data.repository?.url;
-    if (!repoUrl) {
-      return null;
-    }
-
-    const repoMatch = /github\.com\/([^/]+\/[^/]+)/i.exec(repoUrl);
-    if (!repoMatch?.[1]) {
-      return null;
-    }
-
-    const [owner, repo] = repoMatch[1].split("/");
-    if (!owner || !repo) {
-      return null;
-    }
-
-    const releases = await fetchGitHubReleases(owner, repo, newVersion);
-    if (!releases) {
-      return null;
-    }
-
-    return {
-      dependency: depName,
-      version: newVersion,
-      notes: releases.body,
-      url: releases.url,
-      source: "helm-chart",
-    };
-  } catch {
-    return null;
-  }
-}
-
-async function fetchDockerReleaseNotes(
-  dep: DependencyInfo,
-): Promise<ReleaseNotes | null> {
-  // Look up the GitHub repo for this Docker image
-  const githubRepo = DOCKER_IMAGE_GITHUB_REPOS[dep.name];
-
-  // Build list of repos to try (mapped repo first, then fallback patterns)
-  const reposToTry: string[] = [];
-
-  if (githubRepo) {
-    reposToTry.push(githubRepo);
-  }
-
-  // Try common GitHub repo patterns as fallback
-  const [org, image] = dep.name.split("/");
-  if (org && image) {
-    reposToTry.push(
-      `${org}/${image}`,
-      `${org}/docker-${image}`,
-      `${image}/${image}`, // e.g., syncthing/syncthing
-    );
-  }
-
-  // Use the full fallback chain (GitHub Releases → CHANGELOG.md → Git Compare + LLM)
-  for (const repoPath of reposToTry) {
-    const notes = await fetchReleaseNotesBetween(
-      repoPath,
-      dep.oldVersion,
-      dep.newVersion,
-    );
-
-    if (notes.length > 0) {
-      return {
-        dependency: dep.name,
-        version: dep.newVersion,
-        notes: notes.map((n) => n.body).join("\n\n---\n\n"),
-        url: notes[0]?.url,
-        source: "docker",
-      };
-    }
-  }
-
-  return null;
-}
-
-async function fetchHelmReleaseNotes(
-  dep: DependencyInfo,
-): Promise<ReleaseNotes[]> {
-  const results: ReleaseNotes[] = [];
-
-  // 1. Try to fetch Helm chart release notes
-  const chartRepo = HELM_CHART_GITHUB_REPOS[dep.name];
-  if (chartRepo) {
-    const [owner, repo] = chartRepo.split("/");
-    if (owner && repo) {
-      // Try chart-specific tag formats
-      const chartTags = [
-        `${dep.name}-${dep.newVersion}`,
-        dep.newVersion,
-        `v${dep.newVersion}`,
-      ];
-
-      for (const tag of chartTags) {
-        const releases = await fetchGitHubReleases(owner, repo, tag);
-        if (releases) {
-          results.push({
-            dependency: `${dep.name} (helm chart)`,
-            version: dep.newVersion,
-            notes: releases.body,
-            url: releases.url,
-            source: "helm-chart",
-          });
-          break;
-        }
-      }
-    }
-  }
-
-  // 2. Try to fetch underlying app release notes
-  const appRepo = HELM_CHART_APP_REPOS[dep.name];
-  if (appRepo && appRepo !== chartRepo) {
-    const [owner, repo] = appRepo.split("/");
-    if (owner && repo) {
-      // For app releases, we need to look up what app version corresponds to the chart version
-      // For now, try to find releases that might match
-      const releases = await fetchGitHubReleases(owner, repo, dep.newVersion);
-      if (releases) {
-        results.push({
-          dependency: `${dep.name} (app)`,
-          version: dep.newVersion,
-          notes: releases.body,
-          url: releases.url,
-          source: "app",
-        });
-      }
-    }
-  }
-
-  // 3. If still nothing, try ArtifactHub API as fallback
-  if (results.length === 0) {
-    const artifactHubResult = await tryArtifactHubFallback(
-      dep.name,
-      dep.newVersion,
-    );
-    if (artifactHubResult) {
-      results.push(artifactHubResult);
-    }
-  }
-
-  // 4. NEW: Fetch transitive dependency release notes
-  if (dep.registryUrl) {
-    try {
-      console.log(`  Fetching transitive dependencies for ${dep.name}...`);
-      const transitiveDiff = await getFullDependencyChanges(
-        dep.name,
-        dep.registryUrl,
-        dep.oldVersion,
-        dep.newVersion,
-      );
-
-      // Store the diff for later formatting
-      transitiveDepsDiffs.set(dep.name, transitiveDiff);
-
-      // Fetch release notes for image updates
-      for (const imageUpdate of transitiveDiff.images.updated) {
-        const githubRepo = getGitHubRepoForImage(imageUpdate.repository);
-        if (githubRepo) {
-          console.log(
-            `    Fetching release notes for ${imageUpdate.repository} (${imageUpdate.oldTag} -> ${imageUpdate.newTag})...`,
-          );
-          const notes = await fetchReleaseNotesBetween(
-            githubRepo,
-            imageUpdate.oldTag,
-            imageUpdate.newTag,
-          );
-
-          for (const note of notes) {
-            results.push({
-              dependency: `${dep.name} → ${imageUpdate.repository}`,
-              version: note.version,
-              notes: note.body,
-              url: note.url,
-              source: "app", // Transitive image dependency
-            });
-          }
-        }
-      }
-
-      // Fetch release notes for sub-chart updates
-      for (const chartUpdate of transitiveDiff.charts.updated) {
-        const subChartRepo =
-          HELM_CHART_GITHUB_REPOS[chartUpdate.name] ??
-          HELM_CHART_APP_REPOS[chartUpdate.name];
-        if (subChartRepo) {
-          console.log(
-            `    Fetching release notes for sub-chart ${chartUpdate.name} (${chartUpdate.oldVersion} -> ${chartUpdate.newVersion})...`,
-          );
-          const notes = await fetchReleaseNotesBetween(
-            subChartRepo,
-            chartUpdate.oldVersion,
-            chartUpdate.newVersion,
-          );
-
-          for (const note of notes) {
-            results.push({
-              dependency: `${dep.name} → ${chartUpdate.name}`,
-              version: note.version,
-              notes: note.body,
-              url: note.url,
-              source: "helm-chart",
-            });
-          }
-        }
-      }
-
-      console.log(
-        `  Found ${String(transitiveDiff.images.updated.length)} image updates, ${String(transitiveDiff.charts.updated.length)} sub-chart updates`,
-      );
-    } catch (error) {
-      console.warn(
-        `  Failed to fetch transitive deps for ${dep.name}: ${String(error)}`,
-      );
-    }
-  }
-
-  return results;
-}
-
 // Store transitive dependency diffs for email formatting
 const transitiveDepsDiffs = new Map<string, FullDependencyDiff>();
-
-function getGitHubHeaders(): Record<string, string> {
-  const headers: Record<string, string> = {
-    Accept: "application/vnd.github.v3+json",
-    "User-Agent": "homelab-dependency-summary",
-  };
-
-  const token = Bun.env["GITHUB_TOKEN"];
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-
-  return headers;
-}
-
-async function fetchGitHubReleases(
-  owner: string,
-  repo: string,
-  version: string,
-): Promise<{ body: string; url: string } | null> {
-  const headers = getGitHubHeaders();
-
-  // Try exact version tag first
-  const tagsToTry = [
-    version,
-    `v${version}`,
-    version.replace(/^v/, ""),
-    `${repo}-${version}`, // Some repos use repo-name-version format
-  ];
-
-  for (const tag of tagsToTry) {
-    const url = `https://api.github.com/repos/${owner}/${repo}/releases/tags/${tag}`;
-    try {
-      const response = await fetch(url, { headers });
-
-      if (response.ok) {
-        const rawData: unknown = await response.json();
-        const parsed = GitHubReleaseSchema.safeParse(rawData);
-        if (
-          parsed.success &&
-          parsed.data.body &&
-          parsed.data.body.length > 50
-        ) {
-          return {
-            body: parsed.data.body,
-            url:
-              parsed.data.html_url ??
-              `https://github.com/${owner}/${repo}/releases/tag/${tag}`,
-          };
-        }
-      }
-    } catch {
-      continue;
-    }
-  }
-
-  // Fall back to fetching recent releases and finding a match
-  try {
-    const url = `https://api.github.com/repos/${owner}/${repo}/releases?per_page=20`;
-    const response = await fetch(url, { headers });
-
-    if (response.ok) {
-      const rawData: unknown = await response.json();
-      const parsed = GitHubReleasesArraySchema.safeParse(rawData);
-
-      if (parsed.success) {
-        // Find release containing our version
-        const matchingRelease = parsed.data.find(
-          (r) =>
-            r.tag_name?.includes(version) ??
-            r.tag_name?.includes(version.replace(/^v/, "")),
-        );
-
-        if (matchingRelease?.body && matchingRelease.body.length > 50) {
-          return {
-            body: matchingRelease.body,
-            url:
-              matchingRelease.html_url ??
-              `https://github.com/${owner}/${repo}/releases`,
-          };
-        }
-      }
-    }
-  } catch {
-    // Fall through
-  }
-
-  return null;
-}
 
 // Run the script
 await main();

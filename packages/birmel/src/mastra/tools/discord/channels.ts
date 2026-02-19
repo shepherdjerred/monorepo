@@ -1,11 +1,10 @@
+import { getErrorMessage, toError } from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import {
-  withToolSpan,
-  captureException,
-} from "@shepherdjerred/birmel/observability/index.ts";
+import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
+import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { validateSnowflakes } from "./validation.ts";
 import { parseDiscordAPIError, formatDiscordAPIError } from "./error-utils.ts";
 import {
@@ -125,35 +124,35 @@ export const manageChannelTool = createTool({
           case "get":
             return await handleGet(client, ctx.channelId);
           case "create":
-            return await handleCreate(
+            return await handleCreate({
               client,
-              ctx.guildId,
-              ctx.name,
-              ctx.type,
-              ctx.parentId,
-              ctx.topic,
-            );
+              guildId: ctx.guildId,
+              name: ctx.name,
+              type: ctx.type,
+              parentId: ctx.parentId,
+              topic: ctx.topic,
+            });
           case "modify":
-            return await handleModify(
+            return await handleModify({
               client,
-              ctx.channelId,
-              ctx.name,
-              ctx.topic,
-              ctx.position,
-              ctx.parentId,
-            );
+              channelId: ctx.channelId,
+              name: ctx.name,
+              topic: ctx.topic,
+              position: ctx.position,
+              parentId: ctx.parentId,
+            });
           case "delete":
             return await handleDelete(client, ctx.channelId, ctx.reason);
           case "reorder":
             return await handleReorder(client, ctx.guildId, ctx.positions);
           case "set-permissions":
-            return await handleSetPermissions(
+            return await handleSetPermissions({
               client,
-              ctx.channelId,
-              ctx.targetId,
-              ctx.allow,
-              ctx.deny,
-            );
+              channelId: ctx.channelId,
+              targetId: ctx.targetId,
+              allow: ctx.allow,
+              deny: ctx.deny,
+            });
         }
       } catch (error) {
         const apiError = parseDiscordAPIError(error);
@@ -175,10 +174,10 @@ export const manageChannelTool = createTool({
           };
         }
         logger.error("Failed to manage channel", error);
-        captureException(error as Error, { operation: "tool.manage-channel" });
+        captureException(toError(error), { operation: "tool.manage-channel" });
         return {
           success: false,
-          message: `Failed: ${(error as Error).message}`,
+          message: `Failed: ${getErrorMessage(error)}`,
         };
       }
     });

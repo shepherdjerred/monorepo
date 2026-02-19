@@ -11,6 +11,7 @@ import { withCommonLinuxServerProps } from "@shepherdjerred/homelab/cdk8s/src/mi
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 
 export function createRecyclarrDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "recyclarr", {
@@ -35,8 +36,7 @@ export function createRecyclarrDeployment(chart: Chart) {
     "recyclarr-config-onepassword-homelab",
     {
       spec: {
-        itemPath:
-          "vaults/v64ocnykdqju4ui6j6pua56xw4/items/fu5ufvg6bx3kkcp7lqi5pmwj2a",
+        itemPath: vaultItemPath("fu5ufvg6bx3kkcp7lqi5pmwj2a"),
       },
       metadata: {
         name: "recyclarr-config-homelab",

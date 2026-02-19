@@ -11,6 +11,7 @@ import { Duration } from "cdk8s";
 import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export function createHaDeployment(chart: Chart) {
@@ -32,8 +33,7 @@ export function createHaDeployment(chart: Chart) {
 
   const haTokenItem = new OnePasswordItem(chart, "ha-token", {
     spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/a5fjhnycunqy2iag34ls2owzzy",
+      itemPath: vaultItemPath("a5fjhnycunqy2iag34ls2owzzy"),
     },
   });
 

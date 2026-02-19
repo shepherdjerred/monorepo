@@ -1,10 +1,12 @@
 import { describe, it, expect } from "bun:test";
-import type { RawParticipant } from "@scout-for-lol/data";
 import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.ts";
+import {
+  makeTestParticipant,
+  makeTestChallenges,
+} from "@scout-for-lol/backend/testing/riot-mocks.ts";
 
-const baseParticipant = (): RawParticipant => {
-  // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
-  const participant = {
+const baseParticipant = () =>
+  makeTestParticipant({
     riotIdGameName: "Player#NA1",
     summonerName: "Player",
     championName: "Lux",
@@ -13,21 +15,11 @@ const baseParticipant = (): RawParticipant => {
     assists: 4,
     champLevel: 18,
     item0: 6655,
-    item1: 0,
-    item2: 0,
-    item3: 0,
-    item4: 0,
-    item5: 0,
     item6: 3363,
-    summoner1Id: 4,
-    summoner2Id: 7,
-    totalMinionsKilled: 0,
-    neutralMinionsKilled: 0,
     visionScore: 10,
     totalDamageDealtToChampions: 12_000,
     goldEarned: 9000,
     teamPosition: "UTILITY",
-    // fields used by converter for arena
     playerAugment1: 667,
     playerAugment2: 0,
     playerAugment3: 123,
@@ -45,37 +37,9 @@ const baseParticipant = (): RawParticipant => {
     PlayerScore6: 7,
     PlayerScore7: 8,
     PlayerScore8: 9,
-    // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
-    challenges: {
-      damageTakenOnTeamPercentage: 0.2,
-    } as unknown as RawParticipant["challenges"],
-    perks: {
-      statPerks: {
-        defense: 0,
-        flex: 0,
-        offense: 0,
-      },
-      styles: [
-        {
-          description: "primaryStyle",
-          selections: [
-            { perk: 8112, var1: 0, var2: 0, var3: 0 },
-            { perk: 8126, var1: 0, var2: 0, var3: 0 },
-          ],
-          style: 8100,
-        },
-        {
-          description: "subStyle",
-          selections: [{ perk: 8210, var1: 0, var2: 0, var3: 0 }],
-          style: 8200,
-        },
-      ],
-    },
-    // unused fields for this test
+    challenges: makeTestChallenges({ damageTakenOnTeamPercentage: 0.2 }),
     teamId: 100,
-  } as unknown as RawParticipant;
-  return participant;
-};
+  });
 
 describe("participantToArenaChampion", () => {
   it("extracts and filters augments, keeps order", async () => {

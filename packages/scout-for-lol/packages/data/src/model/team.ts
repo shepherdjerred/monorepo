@@ -12,11 +12,12 @@ export function invertTeam(team: Team) {
     .exhaustive();
 }
 
-export function parseTeam(input: number) {
-  return match(input)
-    .returnType<Team | undefined>()
-    .with(100, () => "blue")
-    .with(200, () => "red")
-    // eslint-disable-next-line unicorn/no-useless-undefined -- ts-pattern otherwise requires explicit undefined for Optional return type
-    .otherwise(() => undefined);
+export function parseTeam(input: number): Team | undefined {
+  if (input === 100) {
+    return "blue";
+  }
+  if (input === 200) {
+    return "red";
+  }
+  return undefined;
 }

@@ -6,43 +6,32 @@ import type {
   FunctionType,
   ParameterInfo,
 } from "./types.ts";
+import {
+  PatternSchema,
+  asFunctionNode,
+  asMethodDefinitionNode,
+  asCallExpressionNode,
+  asIdentifierNode,
+  asMemberExpressionNode,
+  asVariableDeclaratorNode,
+  asAssignmentExpressionNode,
+  asPropertyNode,
+  type FunctionNode,
+  type AssignmentExpressionNode,
+  type MethodDefinitionNode,
+} from "./ast-node-schemas.ts";
 
-/** Extended node types for Acorn AST */
-type FunctionNode = {
-  id?: { name: string } | null;
-  params: Node[];
-  body: Node;
-  async?: boolean;
-  generator?: boolean;
-} & Node;
-
-type CallExpressionNode = {
-  callee: Node;
-  arguments: Node[];
-} & Node;
-
-type IdentifierNode = {
-  name: string;
-} & Node;
-
-type MemberExpressionNode = {
-  object: Node;
-  property: Node;
-  computed: boolean;
-} & Node;
-
-type MethodDefinitionNode = {
-  key: Node;
-  value: Node;
-  kind: "constructor" | "method" | "get" | "set";
-  static: boolean;
-} & Node;
-
-type PatternNode = {
-  left?: Node;
-  argument?: Node;
-  name?: string;
-} & Node;
+/** Options for extractFunction */
+type ExtractFunctionOpts = {
+  node: FunctionNode;
+  originalNode: Node;
+  source: string;
+  index: number;
+  type: FunctionType;
+  ancestors: Node[];
+  nodeToFunction: Map<Node, ExtractedFunction>;
+  overrideName?: string;
+};
 
 /** Parse JavaScript source and extract all functions */
 export function parseAndExtractFunctions(
@@ -62,59 +51,76 @@ export function parseAndExtractFunctions(
   // First pass: extract all functions
   walk.ancestor(ast, {
     FunctionDeclaration(node: Node, _state: unknown, ancestors: Node[]) {
-      const func = extractFunction(
-        // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-        node as FunctionNode,
+      const fn = asFunctionNode(node);
+      if (!fn) {
+        return;
+      }
+      const func = extractFunction({
+        node: fn,
+        originalNode: node,
         source,
-        functionIndex++,
-        "function-declaration",
+        index: functionIndex++,
+        type: "function-declaration",
         ancestors,
         nodeToFunction,
-      );
+      });
       functions.push(func);
       nodeToFunction.set(node, func);
     },
     FunctionExpression(node: Node, _state: unknown, ancestors: Node[]) {
-      const func = extractFunction(
-        // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-        node as FunctionNode,
+      const fn = asFunctionNode(node);
+      if (!fn) {
+        return;
+      }
+      const func = extractFunction({
+        node: fn,
+        originalNode: node,
         source,
-        functionIndex++,
-        "function-expression",
+        index: functionIndex++,
+        type: "function-expression",
         ancestors,
         nodeToFunction,
-      );
+      });
       functions.push(func);
       nodeToFunction.set(node, func);
     },
     ArrowFunctionExpression(node: Node, _state: unknown, ancestors: Node[]) {
-      const func = extractFunction(
-        // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-        node as FunctionNode,
+      const fn = asFunctionNode(node);
+      if (!fn) {
+        return;
+      }
+      const func = extractFunction({
+        node: fn,
+        originalNode: node,
         source,
-        functionIndex++,
-        "arrow-function",
+        index: functionIndex++,
+        type: "arrow-function",
         ancestors,
         nodeToFunction,
-      );
+      });
       functions.push(func);
       nodeToFunction.set(node, func);
     },
     MethodDefinition(node: Node, _state: unknown, ancestors: Node[]) {
-      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-      const methodNode = node as MethodDefinitionNode;
-      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-      const valueNode = methodNode.value as FunctionNode;
-      const type = getMethodType(methodNode.kind);
-      const func = extractFunction(
-        valueNode,
+      const methodDef = asMethodDefinitionNode(node);
+      if (!methodDef) {
+        return;
+      }
+      const valueFn = asFunctionNode(methodDef.value);
+      if (!valueFn) {
+        return;
+      }
+      const type = getMethodType(methodDef.kind);
+      const func = extractFunction({
+        node: valueFn,
+        originalNode: node,
         source,
-        functionIndex++,
+        index: functionIndex++,
         type,
         ancestors,
         nodeToFunction,
-        getMethodName(methodNode),
-      );
+        overrideName: getMethodName(methodDef),
+      });
       // Use the full method definition range including the key
       func.start = node.start;
       func.end = node.end;
@@ -130,56 +136,61 @@ export function parseAndExtractFunctions(
   }
 
   // Establish parent-child relationships
+  establishParentChildRelationships(functions);
+
+  return functions;
+}
+
+/** Establish parent-child relationships between nested functions */
+function establishParentChildRelationships(
+  functions: ExtractedFunction[],
+): void {
   for (const func of functions) {
     for (const otherFunc of functions) {
       if (func === otherFunc) {
         continue;
       }
-      if (otherFunc.start > func.start && otherFunc.end < func.end) {
-        // otherFunc is nested inside func
-        const existingParent =
-          otherFunc.parentId != null && otherFunc.parentId.length > 0
-            ? functions.find((f) => f.id === otherFunc.parentId)
-            : undefined;
-        if (
-          otherFunc.parentId == null ||
-          otherFunc.parentId.length === 0 ||
-          (existingParent != null && func.start > existingParent.start)
-        ) {
-          // func is a closer parent (more deeply nested)
-          // eslint-disable-next-line max-depth -- nested control flow required for logic
-          if (otherFunc.parentId != null && otherFunc.parentId.length > 0) {
-            const oldParent = functions.find(
-              (f) => f.id === otherFunc.parentId,
-            );
-            // eslint-disable-next-line max-depth -- nested control flow required for logic
-            if (oldParent) {
-              oldParent.children = oldParent.children.filter(
-                (c) => c !== otherFunc.id,
-              );
-            }
-          }
-          otherFunc.parentId = func.id;
-          func.children.push(otherFunc.id);
-        }
+      if (otherFunc.start <= func.start || otherFunc.end >= func.end) {
+        continue;
+      }
+
+      // otherFunc is nested inside func
+      const existingParent =
+        otherFunc.parentId != null && otherFunc.parentId.length > 0
+          ? functions.find((f) => f.id === otherFunc.parentId)
+          : undefined;
+      if (
+        otherFunc.parentId == null ||
+        otherFunc.parentId.length === 0 ||
+        (existingParent != null && func.start > existingParent.start)
+      ) {
+        // func is a closer parent (more deeply nested)
+        removeFromOldParent(otherFunc, functions);
+        otherFunc.parentId = func.id;
+        func.children.push(otherFunc.id);
       }
     }
   }
+}
 
-  return functions;
+/** Remove otherFunc from its old parent's children list */
+function removeFromOldParent(
+  otherFunc: ExtractedFunction,
+  functions: ExtractedFunction[],
+): void {
+  if (otherFunc.parentId == null || otherFunc.parentId.length === 0) {
+    return;
+  }
+  const oldParent = functions.find((f) => f.id === otherFunc.parentId);
+  if (oldParent) {
+    oldParent.children = oldParent.children.filter((c) => c !== otherFunc.id);
+  }
 }
 
 /** Extract a single function from an AST node */
-// eslint-disable-next-line max-params -- method parameters are all required
-function extractFunction(
-  node: FunctionNode,
-  source: string,
-  index: number,
-  type: FunctionType,
-  ancestors: Node[],
-  nodeToFunction: Map<Node, ExtractedFunction>,
-  overrideName?: string,
-): ExtractedFunction {
+function extractFunction(opts: ExtractFunctionOpts): ExtractedFunction {
+  const { node, originalNode, source, index, type, ancestors, nodeToFunction, overrideName } =
+    opts;
   const name = overrideName ?? getFunctionName(node, ancestors);
   const id = generateFunctionId(node, source, index, name);
 
@@ -204,88 +215,91 @@ function extractFunction(
     start: node.start,
     end: node.end,
     source: source.slice(node.start, node.end),
-    callees: [], // Populated in second pass
-    callers: [], // Populated by call graph builder
+    callees: [],
+    callers: [],
     params: extractParameters(node),
     isAsync: node.async ?? false,
     isGenerator: node.generator ?? false,
     parentId,
     children: [],
-    node,
+    node: originalNode,
   };
 }
 
 /** Get function name from node or infer from context */
 function getFunctionName(node: FunctionNode, ancestors: Node[]): string {
-  // Named function
   if (node.id?.name != null && node.id.name.length > 0) {
     return node.id.name;
   }
 
-  // Check if assigned to a variable: const foo = function() {}
   const parent = ancestors.at(-2);
-  if (parent?.type === "VariableDeclarator") {
-    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-    const varDecl = parent as Node & { id?: { name?: string } };
-    if (varDecl.id?.name != null && varDecl.id.name.length > 0) {
+  if (parent != null) {
+    const varDecl = asVariableDeclaratorNode(parent);
+    if (varDecl?.id?.name != null && varDecl.id.name.length > 0) {
       return varDecl.id.name;
     }
   }
 
-  // Check if property assignment: obj.foo = function() {}
-  if (parent?.type === "AssignmentExpression") {
-    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-    const assign = parent as Node & {
-      left?: MemberExpressionNode | IdentifierNode;
-    };
-    if (assign.left?.type === "MemberExpression") {
-      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-      const prop = (assign.left as MemberExpressionNode).property;
-      if (prop.type === "Identifier") {
-        // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-        return (prop as IdentifierNode).name;
+  if (parent != null) {
+    const assign = asAssignmentExpressionNode(parent);
+    if (assign) {
+      return getNameFromAssignment(assign);
+    }
+  }
+
+  if (parent != null) {
+    const prop = asPropertyNode(parent);
+    if (prop?.key != null) {
+      const keyIdent = asIdentifierNode(prop.key);
+      if (keyIdent) {
+        return keyIdent.name;
       }
     }
-    if (assign.left?.type === "Identifier") {
-      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-      return (assign.left as IdentifierNode).name;
-    }
   }
 
-  // Check if object property: { foo: function() {} }
-  if (parent?.type === "Property") {
-    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-    const prop = parent as Node & { key?: IdentifierNode | Node };
-    if (prop.key?.type === "Identifier") {
-      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-      return (prop.key as IdentifierNode).name;
+  return "";
+}
+
+/** Extract name from an assignment expression's left-hand side */
+function getNameFromAssignment(assign: AssignmentExpressionNode): string {
+  if (assign.left != null) {
+    const member = asMemberExpressionNode(assign.left);
+    if (member) {
+      const propIdent = asIdentifierNode(member.property);
+      if (propIdent) {
+        return propIdent.name;
+      }
+    }
+    const ident = asIdentifierNode(assign.left);
+    if (ident) {
+      return ident.name;
     }
   }
-
   return "";
 }
 
 /** Get method type from MethodDefinition kind */
 function getMethodType(kind: string): FunctionType {
   switch (kind) {
-    case "constructor":
+    case "constructor": {
       return "constructor";
-    case "get":
+    }
+    case "get": {
       return "getter";
-    case "set":
+    }
+    case "set": {
       return "setter";
-    default:
+    }
+    default: {
       return "method";
+    }
   }
 }
 
 /** Get method name from MethodDefinition node */
 function getMethodName(node: MethodDefinitionNode): string {
-  if (node.key.type === "Identifier") {
-    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-    return (node.key as IdentifierNode).name;
-  }
-  return "";
+  const ident = asIdentifierNode(node.key);
+  return ident?.name ?? "";
 }
 
 /** Generate a unique ID for a function */
@@ -296,55 +310,38 @@ function generateFunctionId(
   name = "anon",
 ): string {
   const prefix = name || "anon";
-  // Use start_end format to match babel-renamer.ts
   return `${prefix}_${String(node.start)}_${String(node.end)}`;
 }
 
 /** Extract parameter information from a function node */
 function extractParameters(node: FunctionNode): ParameterInfo[] {
-  // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-  return node.params.map((param) => extractParameterInfo(param as PatternNode));
+  return node.params.map((param) => extractParameterInfo(param));
 }
 
 /** Extract info from a single parameter node */
-function extractParameterInfo(param: PatternNode): ParameterInfo {
-  // Simple identifier: function(x)
-  if (param.type === "Identifier") {
-    return {
-      name: param.name ?? "",
-      hasDefault: false,
-      isRest: false,
-    };
+function extractParameterInfo(param: unknown): ParameterInfo {
+  const identParam = asIdentifierNode(param);
+  if (identParam) {
+    return { name: identParam.name, hasDefault: false, isRest: false };
   }
 
-  // Rest parameter: function(...args)
-  if (param.type === "RestElement") {
-    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-    const arg = param.argument as PatternNode | undefined;
-    return {
-      name: arg?.name ?? "",
-      hasDefault: false,
-      isRest: true,
-    };
+  const parsed = PatternSchema.safeParse(param);
+  if (!parsed.success) {
+    return { name: "", hasDefault: false, isRest: false };
+  }
+  const pattern = parsed.data;
+
+  if (pattern.type === "RestElement") {
+    const argIdent = pattern.argument ? asIdentifierNode(pattern.argument) : undefined;
+    return { name: argIdent?.name ?? "", hasDefault: false, isRest: true };
   }
 
-  // Default parameter: function(x = 1)
-  if (param.type === "AssignmentPattern") {
-    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-    const left = param.left as PatternNode | undefined;
-    return {
-      name: left?.name ?? "",
-      hasDefault: true,
-      isRest: false,
-    };
+  if (pattern.type === "AssignmentPattern") {
+    const leftIdent = pattern.left ? asIdentifierNode(pattern.left) : undefined;
+    return { name: leftIdent?.name ?? "", hasDefault: true, isRest: false };
   }
 
-  // Destructuring: function({ x, y }) or function([a, b])
-  return {
-    name: "",
-    hasDefault: false,
-    isRest: false,
-  };
+  return { name: "", hasDefault: false, isRest: false };
 }
 
 /** Extract all function callees from a node */
@@ -353,8 +350,10 @@ export function extractCallees(node: Node, _source: string): string[] {
 
   walk.simple(node, {
     CallExpression(callNode: Node) {
-      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-      const call = callNode as CallExpressionNode;
+      const call = asCallExpressionNode(callNode);
+      if (!call) {
+        return;
+      }
       const name = getCalleeName(call.callee);
       if (name != null && name.length > 0) {
         callees.add(name);
@@ -366,20 +365,17 @@ export function extractCallees(node: Node, _source: string): string[] {
 }
 
 /** Get the name of a callee from a CallExpression */
-function getCalleeName(callee: Node): string | null {
-  // Direct call: foo()
-  if (callee.type === "Identifier") {
-    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-    return (callee as IdentifierNode).name;
+function getCalleeName(callee: unknown): string | null {
+  const ident = asIdentifierNode(callee);
+  if (ident) {
+    return ident.name;
   }
 
-  // Member call: obj.method() - return "method"
-  if (callee.type === "MemberExpression") {
-    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-    const member = callee as MemberExpressionNode;
-    if (!member.computed && member.property.type === "Identifier") {
-      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-      return (member.property as IdentifierNode).name;
+  const member = asMemberExpressionNode(callee);
+  if (member && !member.computed) {
+    const propIdent = asIdentifierNode(member.property);
+    if (propIdent) {
+      return propIdent.name;
     }
   }
 
@@ -401,18 +397,11 @@ export function parseSource(
 /** Validate that source code parses successfully */
 export function validateSource(source: string): boolean {
   try {
-    acorn.parse(source, {
-      ecmaVersion: "latest",
-      sourceType: "module",
-    });
+    acorn.parse(source, { ecmaVersion: "latest", sourceType: "module" });
     return true;
   } catch {
     try {
-      // Try as script (CommonJS)
-      acorn.parse(source, {
-        ecmaVersion: "latest",
-        sourceType: "script",
-      });
+      acorn.parse(source, { ecmaVersion: "latest", sourceType: "script" });
       return true;
     } catch {
       return false;

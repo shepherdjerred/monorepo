@@ -18,11 +18,11 @@ function isPartOfYAMLBlock(line: string, trimmed: string): boolean {
 function isSectionHeaderForCommentedBlock(
   nextLine: string | undefined,
 ): boolean {
-  if (!nextLine) {
+  if ((nextLine == null || nextLine === "")) {
     return false;
   }
   const nextTrimmed = nextLine.trim();
-  return /^[\w.-]+:\s*(\||$)/.test(nextTrimmed);
+  return /^[\w.-]+:\s*(?:\||$)/.test(nextTrimmed);
 }
 
 /**

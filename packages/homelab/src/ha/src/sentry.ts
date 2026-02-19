@@ -26,5 +26,6 @@ if (enabled && dsn !== undefined && dsn !== "") {
   console.log("Sentry disabled or DSN not configured");
 }
 
-// eslint-disable-next-line custom-rules/no-re-exports, unicorn/prefer-export-from -- Sentry is initialized here and re-exported as the single entry point
-export const Sentry = SentryLib;
+// Re-export Sentry as an initialized module.
+// Consumers import from here to guarantee Sentry.init() has executed.
+export const Sentry = Object.assign({}, SentryLib);

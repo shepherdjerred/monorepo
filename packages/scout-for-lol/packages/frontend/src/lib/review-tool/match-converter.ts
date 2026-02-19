@@ -16,6 +16,78 @@ import { getExampleMatch } from "@scout-for-lol/data";
 import { getOutcome, participantToChampion } from "./s3-helpers.ts";
 
 /**
+ * Get the base example match structure for a given queue type
+ */
+function getBaseMatch(
+  queueType: ReturnType<typeof parseQueueType>,
+): CompletedMatch | ArenaMatch {
+  switch (queueType) {
+    case "arena":
+      return getExampleMatch("arena");
+    case "aram":
+      return getExampleMatch("aram");
+    case "solo":
+    case "flex":
+      return getExampleMatch("ranked");
+    case "clash":
+    case "aram clash":
+    case "arurf":
+    case "urf":
+    case "quickplay":
+    case "swiftplay":
+    case "brawl":
+    case "draft pick":
+    case "easy doom bots":
+    case "normal doom bots":
+    case "hard doom bots":
+    case "custom":
+    case undefined:
+      return getExampleMatch("unranked");
+  }
+}
+
+/**
+ * Build a Riot ID string from participant data
+ */
+function buildRiotId(
+  participant: RawMatch["info"]["participants"][number],
+  fallback: string,
+): string {
+  return participant.riotIdGameName !== undefined &&
+    participant.riotIdGameName.length > 0 &&
+    participant.riotIdTagline
+    ? `${participant.riotIdGameName}#${participant.riotIdTagline}`
+    : fallback;
+}
+
+/**
+ * Reorder participants so that the selected player appears first
+ */
+function reorderParticipants(
+  participants: RawMatch["info"]["participants"],
+  selectedPlayerName: string | undefined,
+): RawMatch["info"]["participants"] {
+  if (selectedPlayerName === undefined || selectedPlayerName.length === 0) {
+    return [...participants];
+  }
+
+  const result = [...participants];
+  const selectedIndex = result.findIndex((p) => {
+    const riotId = buildRiotId(p, "Unknown");
+    return riotId === selectedPlayerName;
+  });
+
+  if (selectedIndex > 0) {
+    const selectedPlayer = result[selectedIndex];
+    if (selectedPlayer) {
+      return [selectedPlayer, ...result.filter((_, i) => i !== selectedIndex)];
+    }
+  }
+
+  return result;
+}
+
+/**
  * Convert a Riot API match to our internal format
  * This is a simplified conversion for dev tool purposes - we use example match structure
  * but populate it with real player data including Riot IDs
@@ -27,54 +99,11 @@ export function convertRawMatchToInternalFormat(
   selectedPlayerName?: string,
 ): CompletedMatch | ArenaMatch {
   const queueType = parseQueueType(rawMatch.info.queueId);
-
-  // Get base example match structure
-  let baseMatch: CompletedMatch | ArenaMatch;
-  // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check -- unhandled queue types fall through to default (unranked)
-  switch (queueType) {
-  case "arena": {
-    baseMatch = getExampleMatch("arena");
-  
-  break;
-  }
-  case "aram": {
-    baseMatch = getExampleMatch("aram");
-  
-  break;
-  }
-  case "solo": 
-  case "flex": {
-    baseMatch = getExampleMatch("ranked");
-  
-  break;
-  }
-  default: {
-    baseMatch = getExampleMatch("unranked");
-  }
-  }
-
-  // Reorder participants so selected player is first
-  let reorderedParticipants = [...rawMatch.info.participants];
-  if (selectedPlayerName !== undefined && selectedPlayerName.length > 0) {
-    const selectedIndex = reorderedParticipants.findIndex((p) => {
-      const riotId =
-        p.riotIdGameName !== undefined && p.riotIdGameName.length > 0 && p.riotIdTagline
-          ? `${p.riotIdGameName}#${p.riotIdTagline}`
-          : "Unknown";
-      return riotId === selectedPlayerName;
-    });
-
-    if (selectedIndex !== -1 && selectedIndex !== 0) {
-      // Move selected player to first position
-      const selectedPlayer = reorderedParticipants[selectedIndex];
-      if (selectedPlayer) {
-        reorderedParticipants = [
-          selectedPlayer,
-          ...reorderedParticipants.filter((_, i) => i !== selectedIndex),
-        ];
-      }
-    }
-  }
+  const baseMatch = getBaseMatch(queueType);
+  const reorderedParticipants = reorderParticipants(
+    rawMatch.info.participants,
+    selectedPlayerName,
+  );
 
   // Build team rosters first (needed for lane opponent calculation)
   const teams = {
@@ -91,32 +120,25 @@ export function convertRawMatchToInternalFormat(
     const arenaMatch: ArenaMatch = baseMatch;
     const updatedPlayers = arenaMatch.players.map((player, index) => {
       const participant = reorderedParticipants[index];
-      if (participant) {
-        // Build Riot ID (GameName#Tagline)
-        const riotId =
-          participant.riotIdGameName !== undefined && participant.riotIdGameName.length > 0 && participant.riotIdTagline
-            ? `${participant.riotIdGameName}#${participant.riotIdTagline}`
-            : player.playerConfig.alias;
-
-        return {
-          ...player,
-          playerConfig: {
-            ...player.playerConfig,
-            alias: riotId,
-          },
-          champion: {
-            ...player.champion,
-            championName: participant.championName,
-            kills: participant.kills,
-            deaths: participant.deaths,
-            assists: participant.assists,
-          },
-        };
+      if (!participant) {
+        return player;
       }
-      return player;
+      return {
+        ...player,
+        playerConfig: {
+          ...player.playerConfig,
+          alias: buildRiotId(participant, player.playerConfig.alias),
+        },
+        champion: {
+          ...player.champion,
+          championName: participant.championName,
+          kills: participant.kills,
+          deaths: participant.deaths,
+          assists: participant.assists,
+        },
+      };
     });
 
-    // For arena matches, no teams roster
     return {
       ...arenaMatch,
       players: updatedPlayers,
@@ -128,44 +150,36 @@ export function convertRawMatchToInternalFormat(
   const completedMatch = baseMatch;
   const updatedPlayers = completedMatch.players.map((player, index) => {
     const participant = reorderedParticipants[index];
-    if (participant) {
-      // Build Riot ID (GameName#Tagline)
-      const riotId =
-        participant.riotIdGameName !== undefined && participant.riotIdGameName.length > 0 && participant.riotIdTagline
-          ? `${participant.riotIdGameName}#${participant.riotIdTagline}`
-          : player.playerConfig.alias;
-
-      const champion = participantToChampion(participant);
-      const team = parseTeam(participant.teamId);
-      // Team should always be defined for valid matches (teamId is 100 or 200)
-      if (!team) {
-        console.warn(
-          `Invalid teamId ${participant.teamId.toString()} for participant`,
-        );
-        return player; // Keep original player if team is invalid
-      }
-      const enemyTeam = invertTeam(team);
-      const laneOpponent = getLaneOpponent(champion, teams[enemyTeam]);
-      const outcome = getOutcome(participant);
-
-      // For regular matches, include lane, lane opponent, outcome, and team
-      return {
-        ...player,
-        playerConfig: {
-          ...player.playerConfig,
-          alias: riotId,
-        },
-        champion,
-        lane: champion.lane,
-        laneOpponent,
-        outcome,
-        team,
-      };
+    if (!participant) {
+      return player;
     }
-    return player;
+
+    const champion = participantToChampion(participant);
+    const team = parseTeam(participant.teamId);
+    if (!team) {
+      console.warn(
+        `Invalid teamId ${participant.teamId.toString()} for participant`,
+      );
+      return player;
+    }
+    const enemyTeam = invertTeam(team);
+    const laneOpponent = getLaneOpponent(champion, teams[enemyTeam]);
+    const outcome = getOutcome(participant);
+
+    return {
+      ...player,
+      playerConfig: {
+        ...player.playerConfig,
+        alias: buildRiotId(participant, player.playerConfig.alias),
+      },
+      champion,
+      lane: champion.lane,
+      laneOpponent,
+      outcome,
+      team,
+    };
   });
 
-  // Return completed match with updated players
   return {
     ...completedMatch,
     players: updatedPlayers,

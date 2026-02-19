@@ -154,7 +154,7 @@ function loadFeatureConfig() {
 function loadGithubConfig() {
   const clientId = Bun.env["EDITOR_GITHUB_CLIENT_ID"];
   if (clientId == null || clientId.length === 0) {
-    return undefined;
+    return;
   }
   return {
     clientId,

@@ -1,6 +1,6 @@
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
-import { logger } from "@shepherdjerred/birmel/utils/index.ts";
+import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 import {
   handlePlay,
   handlePause,

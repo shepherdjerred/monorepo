@@ -1,5 +1,4 @@
 import { Counter, Histogram, Gauge, Registry } from "prom-client";
-import { z } from "zod";
 import { DscVerificationError } from "./errors.ts";
 import { Sentry } from "./sentry.ts";
 
@@ -123,11 +122,8 @@ export async function instrumentWorkflow<T>(
       Date.now() / 1000,
     );
 
-    const errorType = z
-      .instanceof(Error)
-      .transform((err) => err.constructor.name)
-      .catch(() => "Unknown")
-      .parse(error);
+    const errorType =
+      error instanceof Error ? error.constructor.name : "Unknown";
     workflowErrorsTotal.inc({ workflow: workflowName, error_type: errorType });
 
     Sentry.withScope((scope) => {

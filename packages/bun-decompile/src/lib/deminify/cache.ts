@@ -11,6 +11,7 @@
 
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
+import { CacheEntrySchema } from "./json-schemas.ts";
 import type { CacheEntry, DeminifyResult, ExtractedFunction } from "./types.ts";
 
 /** File-based cache for de-minification results */
@@ -59,8 +60,11 @@ export class DeminifyCache {
       const file = Bun.file(filePath);
       if (await file.exists()) {
         const content = await file.text();
-        // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-        const entry = JSON.parse(content) as CacheEntry;
+        const parsed = CacheEntrySchema.safeParse(JSON.parse(content));
+        if (!parsed.success) {
+          return null;
+        }
+        const entry = parsed.data;
 
         // Verify model version matches
         if (entry.modelVersion === this.modelVersion) {
@@ -102,8 +106,6 @@ export class DeminifyCache {
 
   /** Generate cache key for a function */
   getCacheKey(func: ExtractedFunction): string {
-    // Hash based on function source (context-independent)
-    // Functions with the same source will have the same de-minified result
     return hashSource(func.source);
   }
 
@@ -125,11 +127,9 @@ export class DeminifyCache {
         const filePath = path.join(this.cacheDir, file);
         try {
           const content = await Bun.file(filePath).text();
-          // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-          const entry = JSON.parse(content) as CacheEntry;
-
-          if (now - entry.timestamp > maxAgeMs) {
-            await Bun.write(filePath, ""); // Clear file
+          const parsed = CacheEntrySchema.safeParse(JSON.parse(content));
+          if (parsed.success && now - parsed.data.timestamp > maxAgeMs) {
+            await Bun.write(filePath, "");
             pruned++;
           }
         } catch {
@@ -161,7 +161,7 @@ export class DeminifyCache {
       for await (const file of glob.scan(this.cacheDir)) {
         const filePath = path.join(this.cacheDir, file);
         try {
-          await Bun.write(filePath, ""); // Clear file
+          await Bun.write(filePath, "");
         } catch {
           // Skip files that can't be cleared
         }
@@ -208,10 +208,9 @@ export class DeminifyCache {
 
 /** Hash function source for cache key */
 export function hashSource(source: string): string {
-  // Use Bun's built-in hasher for fast hashing
   const hasher = new Bun.CryptoHasher("sha256");
   hasher.update(source);
-  return hasher.digest("hex").slice(0, 16); // Use first 16 chars
+  return hasher.digest("hex").slice(0, 16);
 }
 
 /**
@@ -221,36 +220,24 @@ export function hashSource(source: string): string {
  * - Functions are cached based on source code only (context-independent).
  * - The thresholds below are heuristics tuned for typical minified code:
  *
- * 1. Callee count ≤2: Functions calling 0-2 other functions are usually
+ * 1. Callee count <=2: Functions calling 0-2 other functions are usually
  *    self-contained utilities (formatters, validators, helpers). Their
  *    de-minified names don't depend much on caller context.
  *
- * 2. Small functions (<500 chars) with ≤5 callees: Even with moderate
+ * 2. Small functions (<500 chars) with <=5 callees: Even with moderate
  *    dependencies, small functions have limited semantic scope. The LLM
  *    can usually infer purpose from the code alone.
  *
  * 3. Large functions with many callees: These are context-sensitive.
  *    A function calling 10+ others might be named differently depending
  *    on whether it's in a "user" module vs "admin" module.
- *
- * Future improvement: Track cache hit rates by function characteristics
- * to tune these thresholds empirically.
  */
 export function shouldCache(func: ExtractedFunction): boolean {
-  // Don't cache functions that are too context-dependent
-  // (i.e., functions that call many external functions)
-
-  // If function has few or no callees, it's more context-independent
   if (func.callees.length <= 2) {
     return true;
   }
-
-  // If function is small and self-contained, cache it
   if (func.source.length < 500 && func.callees.length <= 5) {
     return true;
   }
-
-  // Large functions with many dependencies may have different
-  // de-minification results based on context, so don't cache
   return false;
 }

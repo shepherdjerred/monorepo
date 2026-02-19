@@ -71,14 +71,19 @@ export async function handleGet(
   };
 }
 
+type CreateChannelOptions = {
+  client: Client;
+  guildId: string | undefined;
+  name: string | undefined;
+  type: "text" | "voice" | "category" | undefined;
+  parentId: string | null | undefined;
+  topic: string | undefined;
+};
+
 export async function handleCreate(
-  client: Client,
-  guildId: string | undefined,
-  name: string | undefined,
-  type: "text" | "voice" | "category" | undefined,
-  parentId: string | null | undefined,
-  topic: string | undefined,
+  options: CreateChannelOptions,
 ): Promise<ChannelResult> {
+  const { client, guildId, name, type, parentId, topic } = options;
   if (
     guildId == null ||
     guildId.length === 0 ||
@@ -117,14 +122,19 @@ export async function handleCreate(
   };
 }
 
+type ModifyChannelOptions = {
+  client: Client;
+  channelId: string | undefined;
+  name: string | undefined;
+  topic: string | undefined;
+  position: number | undefined;
+  parentId: string | null | undefined;
+};
+
 export async function handleModify(
-  client: Client,
-  channelId: string | undefined,
-  name: string | undefined,
-  topic: string | undefined,
-  position: number | undefined,
-  parentId: string | null | undefined,
+  options: ModifyChannelOptions,
 ): Promise<ChannelResult> {
+  const { client, channelId, name, topic, position, parentId } = options;
   if (channelId == null || channelId.length === 0) {
     return { success: false, message: "channelId is required for modify" };
   }
@@ -148,7 +158,8 @@ export async function handleModify(
   if (parentId !== undefined) {
     opts.parent = parentId;
   }
-  await channel.edit(opts as Parameters<typeof channel.edit>[0]);
+  // The 'edit' method exists on the channel (checked above) and GuildChannelEditOptions is compatible
+  await channel.edit(opts);
   return { success: true, message: "Channel updated successfully" };
 }
 
@@ -211,13 +222,18 @@ export const normalizePermissionName = (perm: string): string => {
   return perm;
 };
 
+type SetPermissionsOptions = {
+  client: Client;
+  channelId: string | undefined;
+  targetId: string | undefined;
+  allow: string[] | undefined;
+  deny: string[] | undefined;
+};
+
 export async function handleSetPermissions(
-  client: Client,
-  channelId: string | undefined,
-  targetId: string | undefined,
-  allow: string[] | undefined,
-  deny: string[] | undefined,
+  options: SetPermissionsOptions,
 ): Promise<ChannelResult> {
+  const { client, channelId, targetId, allow, deny } = options;
   if (
     channelId == null ||
     channelId.length === 0 ||

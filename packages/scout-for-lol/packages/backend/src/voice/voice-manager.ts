@@ -15,7 +15,7 @@ import {
   type VoiceConnection,
   type AudioPlayer,
 } from "@discordjs/voice";
-import type { Client, VoiceChannel } from "discord.js";
+import type { Client } from "discord.js";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import type { SoundSource } from "@scout-for-lol/data";
 import { getAudioStream } from "@scout-for-lol/backend/voice/audio-player.ts";
@@ -76,13 +76,13 @@ export class VoiceManager {
     }
 
     const channel = await this.client.channels.fetch(channelId);
-    if (!channel?.isVoiceBased() === true) {
+    if (channel?.isVoiceBased() !== true) {
       throw new Error(`Channel ${channelId} is not a voice channel`);
     }
 
-    // channel.isVoiceBased() ensures this is a voice channel
-    // eslint-disable-next-line custom-rules/no-type-assertions -- Discord.js type narrowing doesn't properly narrow isVoiceBased()
-    const voiceChannel = channel as unknown as VoiceChannel;
+    // Discord.js isVoiceBased() is a type guard that narrows to VoiceBasedChannel
+    // VoiceBasedChannel has the properties we need (id, guild, guild.voiceAdapterCreator)
+    const voiceChannel = channel;
 
     // Disconnect existing connection if any
     const existingConnection = getVoiceConnection(guildId);

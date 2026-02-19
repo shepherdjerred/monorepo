@@ -52,14 +52,19 @@ export async function checkBetterSkillCapped(
 /**
  * Deploy better-skill-capped: S3 frontend + GHCR fetcher + homelab
  */
+type DeployBetterSkillCappedOptions = {
+  source: Directory;
+  version: string;
+  s3AccessKeyId: Secret;
+  s3SecretAccessKey: Secret;
+  ghcrUsername: string;
+  ghcrPassword: Secret;
+};
+
 export async function deployBetterSkillCapped(
-  source: Directory,
-  version: string,
-  s3AccessKeyId: Secret,
-  s3SecretAccessKey: Secret,
-  ghcrUsername: string,
-  ghcrPassword: Secret,
+  options: DeployBetterSkillCappedOptions,
 ): Promise<string> {
+  const { source, version, s3AccessKeyId, s3SecretAccessKey, ghcrUsername, ghcrPassword } = options;
   const pkgSource = source.directory("packages/better-skill-capped");
   const mainSource = pkgSource.withoutDirectory("fetcher");
   const fetcherSource = pkgSource.directory("fetcher");

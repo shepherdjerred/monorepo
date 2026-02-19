@@ -1,7 +1,8 @@
+import { getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
-import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import {
   handleSchedule,
   handleListTasks,
@@ -124,7 +125,7 @@ export const manageTaskTool = createTool({
       }
     } catch (error) {
       logger.error("Failed to manage task", error);
-      return { success: false, message: `Failed: ${(error as Error).message}` };
+      return { success: false, message: `Failed: ${getErrorMessage(error)}` };
     }
   },
 });

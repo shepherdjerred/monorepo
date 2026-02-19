@@ -9,7 +9,7 @@ import {
   parseBitnamiParams,
 } from "./yaml-comments.ts";
 
-describe("YAML Comment Helper Functions", () => {
+describe("YAML Comment Helpers - Detection Functions", () => {
   describe("isYAMLKey", () => {
     test("should detect YAML keys without values", () => {
       expect(isYAMLKey("key:")).toBe(true);
@@ -23,7 +23,6 @@ describe("YAML Comment Helper Functions", () => {
     });
 
     test("should not detect YAML keys with values", () => {
-      // This function specifically looks for keys with | or empty values only
       expect(isYAMLKey("key: value")).toBe(false);
       expect(isYAMLKey("my-key: some value")).toBe(false);
       expect(isYAMLKey("dotted.key: value")).toBe(false);
@@ -32,7 +31,7 @@ describe("YAML Comment Helper Functions", () => {
     test("should not detect non-YAML patterns", () => {
       expect(isYAMLKey("This is a sentence")).toBe(false);
       expect(isYAMLKey("No colon here")).toBe(false);
-      expect(isYAMLKey("ref: https://example.com")).toBe(false); // This actually matches, but context matters
+      expect(isYAMLKey("ref: https://example.com")).toBe(false);
       expect(isYAMLKey("- list item")).toBe(false);
     });
 
@@ -61,9 +60,8 @@ describe("YAML Comment Helper Functions", () => {
     });
 
     test("should not detect complex patterns", () => {
-      // Note: "config: |" technically matches the simple pattern but is filtered elsewhere
-      expect(isSimpleYAMLValue("key:")).toBe(false); // No value after colon
-      expect(isSimpleYAMLValue("nested: key: value")).toBe(false); // Multiple colons
+      expect(isSimpleYAMLValue("key:")).toBe(false);
+      expect(isSimpleYAMLValue("nested: key: value")).toBe(false);
     });
   });
 
@@ -158,7 +156,9 @@ describe("YAML Comment Helper Functions", () => {
       );
     });
   });
+});
 
+describe("YAML Comment Helpers - Prose and Parsing", () => {
   describe("looksLikeProse", () => {
     test("should detect sentences with punctuation", () => {
       expect(looksLikeProse("This is a sentence.", 4)).toBe(true);
@@ -197,7 +197,7 @@ describe("YAML Comment Helper Functions", () => {
     });
 
     test("should not detect YAML keys", () => {
-      expect(looksLikeProse("Config:", 1)).toBe(false); // Too short anyway
+      expect(looksLikeProse("Config:", 1)).toBe(false);
     });
 
     test("should not detect lines without capital letters", () => {
@@ -365,7 +365,6 @@ Some prose`;
 
       expect(result.params.size).toBe(1);
       expect(result.params.get("valid.key")).toBe("Valid description");
-      // Malformed @param lines are treated as text (not extracted as params)
       expect(result.remainingLines.length).toBe(3);
       expect(result.remainingLines[0]).toBe("@param");
       expect(result.remainingLines[1]).toBe("@param nokey");

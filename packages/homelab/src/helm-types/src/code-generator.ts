@@ -73,10 +73,10 @@ function generateInterfaceCode(iface: TypeScriptInterface): string {
     const optional = prop.optional ? "?" : "";
 
     // Generate JSDoc comment if we have description or default
-    if (prop.description || prop.default !== undefined) {
+    if (prop.description != null && prop.description !== "" || prop.default !== undefined) {
       code += `  /**\n`;
 
-      if (prop.description) {
+      if (prop.description != null && prop.description !== "") {
         // Format multi-line descriptions properly with " * " prefix
         // Escape */ sequences to prevent premature comment closure
         const escapedDescription = prop.description.replaceAll(
@@ -91,10 +91,11 @@ function generateInterfaceCode(iface: TypeScriptInterface): string {
 
       if (prop.default !== undefined) {
         const defaultStr = formatDefaultValue(prop.default);
-        if (defaultStr) {
-          if (prop.description) {
-            code += `   *\n`;
-          }
+        const hasDescription = prop.description != null && prop.description !== "";
+        if (defaultStr != null && defaultStr !== "" && hasDescription) {
+          code += `   *\n`;
+        }
+        if (defaultStr != null && defaultStr !== "") {
           code += `   * @default ${defaultStr}\n`;
         }
       }

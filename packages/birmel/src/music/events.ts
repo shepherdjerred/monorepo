@@ -1,15 +1,43 @@
 import type { Player } from "discord-player";
-import { logger } from "@shepherdjerred/birmel/utils/index.ts";
+import { z } from "zod";
+import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 import { recordTrackPlay } from "@shepherdjerred/birmel/database/repositories/music-history.ts";
 
 type ChannelMetadata = {
-  send?: (msg: string) => Promise<unknown>;
-  id?: string;
+  send?: ((msg: string) => Promise<unknown>) | undefined;
+  id?: string | undefined;
 };
+
+const ChannelMetadataSchema = z.object({
+  send: z.any().optional(),
+  id: z.string().optional(),
+}).loose();
+
+function wrapSendFunction(value: unknown): ((msg: string) => Promise<unknown>) | undefined {
+  if (typeof value !== "function") {
+    return undefined;
+  }
+  const fn = value;
+  return (msg: string): Promise<unknown> => {
+    const result: unknown = Reflect.apply(fn, undefined, [msg]);
+    if (result instanceof Promise) {
+      return result;
+    }
+    return Promise.resolve(result);
+  };
+}
+
+function getChannelMetadata(metadata: unknown): ChannelMetadata | undefined {
+  const result = ChannelMetadataSchema.safeParse(metadata);
+  if (!result.success) {
+    return undefined;
+  }
+  return { send: wrapSendFunction(result.data.send), id: result.data.id };
+}
 
 export function setupPlayerEvents(player: Player): void {
   player.events.on("playerStart", (queue, track) => {
-    const channel = queue.metadata as ChannelMetadata | undefined;
+    const channel = getChannelMetadata(queue.metadata);
     if (channel?.send != null) {
       void channel.send(`🎵 Now playing: **${track.title}**`);
     }
@@ -34,14 +62,14 @@ export function setupPlayerEvents(player: Player): void {
   });
 
   player.events.on("audioTrackAdd", (queue, track) => {
-    const channel = queue.metadata as ChannelMetadata | undefined;
+    const channel = getChannelMetadata(queue.metadata);
     if (channel?.send != null) {
       void channel.send(`✅ Added to queue: **${track.title}**`);
     }
   });
 
   player.events.on("emptyQueue", (queue) => {
-    const channel = queue.metadata as ChannelMetadata | undefined;
+    const channel = getChannelMetadata(queue.metadata);
     if (channel?.send != null) {
       void channel.send(
         "Queue finished! Add more songs to keep the party going.",
@@ -62,7 +90,7 @@ export function setupPlayerEvents(player: Player): void {
 
   player.events.on("playerError", (queue, error) => {
     logger.error("Player playback error", error, { guildId: queue.guild.id });
-    const channel = queue.metadata as ChannelMetadata | undefined;
+    const channel = getChannelMetadata(queue.metadata);
     if (channel?.send != null) {
       void channel.send("An error occurred during playback. Skipping...");
     }

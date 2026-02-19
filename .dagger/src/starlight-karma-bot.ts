@@ -19,13 +19,18 @@ export async function checkStarlightKarmaBot(
 /**
  * Deploy starlight-karma-bot: GHCR publish + homelab
  */
+type DeployStarlightKarmaBotOptions = {
+  source: Directory;
+  version: string;
+  gitSha: string;
+  ghcrUsername: string;
+  ghcrPassword: Secret;
+};
+
 export async function deployStarlightKarmaBot(
-  source: Directory,
-  version: string,
-  gitSha: string,
-  ghcrUsername: string,
-  ghcrPassword: Secret,
+  options: DeployStarlightKarmaBotOptions,
 ): Promise<string> {
+  const { source, version, gitSha, ghcrUsername, ghcrPassword } = options;
   const pkgSource = source.directory("packages/starlight-karma-bot");
   const outputs: string[] = [];
 

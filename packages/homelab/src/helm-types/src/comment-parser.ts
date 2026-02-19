@@ -1,24 +1,60 @@
 /**
+ * Check if a line looks like an example/code block rather than documentation
+ */
+function isExampleLine(line: string): boolean {
+  return (
+    /^-{3,}/.test(line) ||
+    /^BEGIN .*(?:KEY|CERTIFICATE)/.test(line) ||
+    /^END .*(?:KEY|CERTIFICATE)/.test(line) ||
+    (line.startsWith("-") &&
+      (line.includes(":") || /^-\s+\|/.test(line))) ||
+    /^\w+:$/.test(line) ||
+    /^[\w-]+:\s*$/.test(line) ||
+    /^[\w.-]+:\s*\|/.test(line) || // YAML multiline indicator (e.g., "policy.csv: |")
+    line.startsWith("|") ||
+    line.includes("$ARGOCD_") ||
+    line.includes("$KUBE_") ||
+    /^\s{2,}/.test(line) ||
+    /^echo\s+/.test(line) ||
+    /^[pg],\s*/.test(line) // Policy rules like "p, role:..." or "g, subject, ..."
+  );
+}
+
+/**
+ * Check if a line looks like normal prose (sentence case, punctuation)
+ */
+function looksLikeProse(line: string): boolean {
+  return (
+    /^[A-Z][\w\s]+[.!?]$/.test(line) ||
+    /^[A-Z][\w\s,'"-]+(?::\s*)?$/.test(line) ||
+    line.startsWith("Ref:") ||
+    line.startsWith("See:") ||
+    line.startsWith("http://") ||
+    line.startsWith("https://")
+  );
+}
+
+/**
+ * Strip YAML comment markers from a single line
+ */
+function stripCommentMarkers(line: string): string {
+  let result = line.replace(/^#+\s*/, "");
+  result = result.replace(/^--\s*/, "");
+  result = result.replace(/^##\s*/, "");
+  return result.trim();
+}
+
+/**
  * Clean up YAML comment text for use in JSDoc
  */
 export function cleanYAMLComment(comment: string): string {
-  const lines = comment.split("\n").map((line) => {
-    // Remove leading # symbols
-    line = line.replace(/^#+\s*/, "");
-    // Remove common Helm chart comment markers
-    line = line.replace(/^--\s*/, "");
-    line = line.replace(/^##\s*/, "");
-    return line.trim();
-  });
+  const lines = comment.split("\n").map((line) => stripCommentMarkers(line));
 
   // Filter and clean lines
   const cleaned: string[] = [];
   let inCodeBlock = false;
 
-  for (const line of lines) {
-    const currentLine = line;
-
-    // Skip empty lines
+  for (const currentLine of lines) {
     if (currentLine.length === 0) {
       if (inCodeBlock) {
         inCodeBlock = false;
@@ -26,52 +62,23 @@ export function cleanYAMLComment(comment: string): string {
       continue;
     }
 
-    // Skip @default lines (we'll generate our own)
     if (currentLine.startsWith("@default")) {
       continue;
     }
 
-    // Detect various patterns that indicate this is an example/code block, not documentation
-    const isExample =
-      /^-{3,}/.test(currentLine) ||
-      /^BEGIN .*(KEY|CERTIFICATE)/.test(currentLine) ||
-      /^END .*(KEY|CERTIFICATE)/.test(currentLine) ||
-      (currentLine.startsWith("-") &&
-        (currentLine.includes(":") || /^-\s+\|/.test(currentLine))) ||
-      /^\w+:$/.test(currentLine) ||
-      /^[\w-]+:\s*$/.test(currentLine) ||
-      /^[\w.-]+:\s*\|/.test(currentLine) || // YAML multiline indicator (e.g., "policy.csv: |")
-      currentLine.startsWith("|") ||
-      currentLine.includes("$ARGOCD_") ||
-      currentLine.includes("$KUBE_") ||
-      /^\s{2,}/.test(currentLine) ||
-      /^echo\s+/.test(currentLine) ||
-      /^[pg],\s*/.test(currentLine); // Policy rules like "p, role:..." or "g, subject, ..."
-
-    if (isExample) {
+    if (isExampleLine(currentLine)) {
       inCodeBlock = true;
       continue;
     }
 
-    // If we're in a code block, skip until we hit normal prose
     if (inCodeBlock) {
-      // Check if this line looks like normal prose (sentence case, punctuation)
-      const looksLikeProse =
-        /^[A-Z][\w\s]+[.!?]$/.test(currentLine) ||
-        /^[A-Z][\w\s,'"-]+(?::\s*)?$/.test(currentLine) ||
-        currentLine.startsWith("Ref:") ||
-        currentLine.startsWith("See:") ||
-        currentLine.startsWith("http://") ||
-        currentLine.startsWith("https://");
-
-      if (looksLikeProse) {
+      if (looksLikeProse(currentLine)) {
         inCodeBlock = false;
       } else {
         continue;
       }
     }
 
-    // Keep the line
     cleaned.push(currentLine);
   }
 
@@ -115,7 +122,7 @@ export function parseYAMLComments(yamlContent: string): Map<string, string> {
     if (keyMatch) {
       const indent = keyMatch[1]?.length ?? 0;
       const key = keyMatch[2];
-      if (!key) {
+      if ((key == null || key === "")) {
         continue;
       }
 
@@ -136,8 +143,8 @@ export function parseYAMLComments(yamlContent: string): Map<string, string> {
           : key;
 
       // Check for inline comment
-      const inlineCommentMatch = /#\s*(.+)$/.exec(currentLine);
-      if (inlineCommentMatch?.[1]) {
+      const inlineCommentMatch = /#\s*(\S.*)$/.exec(currentLine);
+      if (inlineCommentMatch?.[1] != null && inlineCommentMatch[1] !== "") {
         pendingComments.push({ text: inlineCommentMatch[1].trim(), indent });
       }
 

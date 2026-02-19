@@ -1,4 +1,4 @@
-import type { FullDependencyDiff } from "./index.ts";
+import type { FullDependencyDiff } from "./types.ts";
 import { createPostalClientFromEnv } from "./postal-client.ts";
 
 type DependencyInfo = {
@@ -78,7 +78,7 @@ function formatTransitiveDepsHtml(
         <tbody>
           ${diff.images.updated
             .map((img) => {
-              const registry = img.registry ? `${img.registry}/` : "";
+              const registry = img.registry != null && img.registry !== "" ? `${img.registry}/` : "";
               return `
             <tr>
               <td style="padding: 8px; border: 1px solid #ddd;">${registry}${img.repository}</td>
@@ -247,7 +247,7 @@ export async function sendEmail(
           rowMatches.forEach((row, index) => {
             const cells: string[] = [];
             const cellMatches =
-              row.match(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/gi) ?? [];
+              row.match(/<t[hd][^>]*>[\s\S]*?<\/t[hd]>/gi) ?? [];
             cellMatches.forEach((cell) => {
               const content = cell
                 .replace(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/i, "$1")
@@ -295,7 +295,7 @@ export async function sendEmail(
   const recipientEmail = Bun.env["RECIPIENT_EMAIL"];
   const senderEmail = Bun.env["SENDER_EMAIL"] ?? "updates@homelab.local";
 
-  if (!recipientEmail) {
+  if ((recipientEmail == null || recipientEmail === "")) {
     console.error("RECIPIENT_EMAIL not set, cannot send email");
     throw new Error("RECIPIENT_EMAIL not set");
   }

@@ -1,6 +1,7 @@
 import { Construct } from "constructs";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export type PostalMariaDBProps = {
@@ -62,7 +63,7 @@ export class PostalMariaDB extends Construct {
       },
       spec: {
         itemPath:
-          "vaults/v64ocnykdqju4ui6j6pua56xw4/items/zlz4hlpcgk74nhqysgrre5wv4i",
+          vaultItemPath("zlz4hlpcgk74nhqysgrre5wv4i"),
       },
     });
 

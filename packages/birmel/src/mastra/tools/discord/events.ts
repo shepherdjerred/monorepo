@@ -1,6 +1,8 @@
+import { getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import type { Guild } from "discord.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 import { validateSnowflakes } from "./validation.ts";
 import {
@@ -10,6 +12,50 @@ import {
   handleDeleteEvent,
   handleGetEventUsers,
 } from "./event-actions.ts";
+
+type EventInput = {
+  guildId: string;
+  action: string;
+  eventId?: string | undefined;
+  name?: string | undefined;
+  description?: string | undefined;
+  scheduledStartTime?: string | undefined;
+  scheduledEndTime?: string | undefined;
+  location?: string | undefined;
+  channelId?: string | undefined;
+  limit?: number | undefined;
+};
+
+async function dispatchEventAction(guild: Guild, ctx: EventInput) {
+  switch (ctx.action) {
+    case "list":
+      return await handleListEvents(guild);
+    case "create":
+      return await handleCreateEvent(guild, {
+        ...(ctx.name !== undefined && { name: ctx.name }),
+        ...(ctx.scheduledStartTime !== undefined && { scheduledStartTime: ctx.scheduledStartTime }),
+        ...(ctx.scheduledEndTime !== undefined && { scheduledEndTime: ctx.scheduledEndTime }),
+        ...(ctx.description !== undefined && { description: ctx.description }),
+        ...(ctx.channelId !== undefined && { channelId: ctx.channelId }),
+        ...(ctx.location !== undefined && { location: ctx.location }),
+      });
+    case "modify":
+      return await handleModifyEvent(guild, {
+        ...(ctx.eventId !== undefined && { eventId: ctx.eventId }),
+        ...(ctx.name !== undefined && { name: ctx.name }),
+        ...(ctx.description !== undefined && { description: ctx.description }),
+        ...(ctx.scheduledStartTime !== undefined && { scheduledStartTime: ctx.scheduledStartTime }),
+        ...(ctx.scheduledEndTime !== undefined && { scheduledEndTime: ctx.scheduledEndTime }),
+        ...(ctx.location !== undefined && { location: ctx.location }),
+      });
+    case "delete":
+      return await handleDeleteEvent(guild, ctx.eventId);
+    case "get-users":
+      return await handleGetEventUsers(guild, ctx.eventId, ctx.limit);
+    default:
+      return { success: false, message: `Unknown action: ${ctx.action}` };
+  }
+}
 
 export const manageScheduledEventTool = createTool({
   id: "manage-scheduled-event",
@@ -77,7 +123,6 @@ export const manageScheduledEventTool = createTool({
   }),
   execute: async (ctx) => {
     try {
-      // Validate all Discord IDs before making API calls
       const idError = validateSnowflakes([
         { value: ctx.guildId, fieldName: "guildId" },
         { value: ctx.eventId, fieldName: "eventId" },
@@ -90,49 +135,12 @@ export const manageScheduledEventTool = createTool({
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
 
-      switch (ctx.action) {
-        case "list":
-          return await handleListEvents(guild);
-        case "create":
-          return await handleCreateEvent(guild, {
-            ...(ctx.name !== undefined && { name: ctx.name }),
-            ...(ctx.scheduledStartTime !== undefined && {
-              scheduledStartTime: ctx.scheduledStartTime,
-            }),
-            ...(ctx.scheduledEndTime !== undefined && {
-              scheduledEndTime: ctx.scheduledEndTime,
-            }),
-            ...(ctx.description !== undefined && {
-              description: ctx.description,
-            }),
-            ...(ctx.channelId !== undefined && { channelId: ctx.channelId }),
-            ...(ctx.location !== undefined && { location: ctx.location }),
-          });
-        case "modify":
-          return await handleModifyEvent(guild, {
-            ...(ctx.eventId !== undefined && { eventId: ctx.eventId }),
-            ...(ctx.name !== undefined && { name: ctx.name }),
-            ...(ctx.description !== undefined && {
-              description: ctx.description,
-            }),
-            ...(ctx.scheduledStartTime !== undefined && {
-              scheduledStartTime: ctx.scheduledStartTime,
-            }),
-            ...(ctx.scheduledEndTime !== undefined && {
-              scheduledEndTime: ctx.scheduledEndTime,
-            }),
-            ...(ctx.location !== undefined && { location: ctx.location }),
-          });
-        case "delete":
-          return await handleDeleteEvent(guild, ctx.eventId);
-        case "get-users":
-          return await handleGetEventUsers(guild, ctx.eventId, ctx.limit);
-      }
+      return await dispatchEventAction(guild, ctx);
     } catch (error) {
       logger.error("Failed to manage scheduled event", error);
       return {
         success: false,
-        message: `Failed to manage scheduled event: ${(error as Error).message}`,
+        message: `Failed to manage scheduled event: ${getErrorMessage(error)}`,
       };
     }
   },

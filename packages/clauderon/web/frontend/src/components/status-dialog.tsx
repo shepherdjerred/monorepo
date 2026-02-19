@@ -1,24 +1,20 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   X,
-  CheckCircle2,
   XCircle,
   Globe,
   Server,
   Shield,
-  Eye,
-  EyeOff,
-  Lock,
   Loader2,
   TrendingUp,
 } from "lucide-react";
 import type {
   SystemStatus,
-  CredentialStatus,
   ProxyStatus,
 } from "@clauderon/client";
 import { useSessionContext } from "@shepherdjerred/clauderon/web/frontend/src/contexts/SessionContext";
 import { UsageProgressBar } from "./UsageProgressBar.tsx";
+import { CredentialCard } from "./credential-card.tsx";
 
 type StatusDialogProps = {
   onClose: () => void;
@@ -173,154 +169,18 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                   </div>
 
                   <div className="grid gap-3">
-                    {status.credentials.map((cred: CredentialStatus) => (
-                      <div
+                    {status.credentials.map((cred) => (
+                      <CredentialCard
                         key={cred.service_id}
-                        className="p-4 bg-secondary/30 rounded-md border border-secondary"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          {/* Credential Info */}
-                          <div className="flex items-start gap-3 flex-1">
-                            {cred.available ? (
-                              <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                            ) : (
-                              <XCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-medium">{cred.name}</span>
-                                {cred.readonly && (
-                                  <div className="flex items-center gap-1 text-xs text-muted-foreground bg-background px-2 py-0.5 rounded">
-                                    <Lock className="w-3 h-3" />
-                                    <span>Environment</span>
-                                  </div>
-                                )}
-                                {cred.available &&
-                                  cred.source != null &&
-                                  cred.source.length > 0 &&
-                                  !cred.readonly && (
-                                    <span className="text-xs text-muted-foreground bg-background px-2 py-0.5 rounded">
-                                      {cred.source}
-                                    </span>
-                                  )}
-                              </div>
-
-                              {cred.available &&
-                                cred.masked_value != null &&
-                                cred.masked_value.length > 0 && (
-                                  <div className="mt-1 font-mono text-sm text-muted-foreground">
-                                    {cred.masked_value}
-                                  </div>
-                                )}
-
-                              {cred.readonly && cred.available && (
-                                <div className="mt-2 text-sm text-muted-foreground">
-                                  Set via environment variable - cannot be
-                                  updated through UI
-                                </div>
-                              )}
-
-                              {/* Input for missing or file-based credentials */}
-                              {!cred.available && !cred.readonly && (
-                                <div className="mt-3 space-y-2">
-                                  <div className="flex gap-2">
-                                    <div className="relative flex-1">
-                                      <input
-                                        type={
-                                          showCredentials.get(
-                                            cred.service_id,
-                                          ) === true
-                                            ? "text"
-                                            : "password"
-                                        }
-                                        value={
-                                          credentialInputs.get(
-                                            cred.service_id,
-                                          ) ?? ""
-                                        }
-                                        onChange={(e) => {
-                                          handleCredentialChange(
-                                            cred.service_id,
-                                            e.target.value,
-                                          );
-                                        }}
-                                        placeholder={`Enter ${cred.name} credential`}
-                                        className="w-full px-3 py-2 bg-background border border-input rounded-md pr-10"
-                                        disabled={
-                                          savingCredential === cred.service_id
-                                        }
-                                        autoComplete="new-password"
-                                      />
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          toggleShowCredential(cred.service_id);
-                                        }}
-                                        className="cursor-pointer absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-secondary rounded transition-colors duration-200"
-                                        disabled={
-                                          savingCredential === cred.service_id
-                                        }
-                                      >
-                                        {showCredentials.get(
-                                          cred.service_id,
-                                        ) === true ? (
-                                          <EyeOff className="w-4 h-4" />
-                                        ) : (
-                                          <Eye className="w-4 h-4" />
-                                        )}
-                                      </button>
-                                    </div>
-                                    <button
-                                      onClick={() => {
-                                        void handleSaveCredential(
-                                          cred.service_id,
-                                        );
-                                      }}
-                                      disabled={
-                                        savingCredential === cred.service_id
-                                      }
-                                      className="cursor-pointer px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                    >
-                                      {savingCredential === cred.service_id ? (
-                                        <>
-                                          <Loader2 className="w-4 h-4 animate-spin" />
-                                          <span>Saving...</span>
-                                        </>
-                                      ) : (
-                                        <span>Save</span>
-                                      )}
-                                    </button>
-                                  </div>
-                                  {(() => {
-                                    const errMsg = saveErrors.get(
-                                      cred.service_id,
-                                    );
-                                    return errMsg != null &&
-                                      errMsg.length > 0 ? (
-                                      <div className="text-sm text-destructive">
-                                        {errMsg}
-                                      </div>
-                                    ) : null;
-                                  })()}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Status Badge */}
-                          <div className="flex-shrink-0">
-                            <span
-                              className={`text-sm font-medium ${
-                                cred.available
-                                  ? "text-green-500"
-                                  : "text-red-500"
-                              }`}
-                            >
-                              {cred.available ? "Found" : "Not Found"}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+                        cred={cred}
+                        credentialInput={credentialInputs.get(cred.service_id) ?? ""}
+                        showCredential={showCredentials.get(cred.service_id) === true}
+                        savingCredential={savingCredential === cred.service_id}
+                        saveError={saveErrors.get(cred.service_id)}
+                        onCredentialChange={handleCredentialChange}
+                        onToggleShow={toggleShowCredential}
+                        onSave={(id) => { void handleSaveCredential(id); }}
+                      />
                     ))}
                   </div>
 

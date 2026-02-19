@@ -41,35 +41,40 @@ async function synthesizeApp(): Promise<string> {
   return app.synthYaml();
 }
 
-describe("Helm Compatibility Tests", () => {
-  let yamlContent: string;
+/**
+ * Parse all K8s resources from synthesized YAML content
+ */
+function parseResources(yamlContent: string): { file: string; resource: K8sResource }[] {
+  const resources: { file: string; resource: K8sResource }[] = [];
+  const documents = yamlContent
+    .split(/^---$/m)
+    .map((doc) => doc.trim())
+    .filter((doc) => doc.length > 0);
+
+  for (const doc of documents) {
+    try {
+      const parsed = parseYaml(doc) as unknown;
+      const result = K8sResourceSchema.safeParse(parsed);
+      if (result.success) {
+        resources.push({
+          file: "manifests.k8s.yaml",
+          resource: result.data,
+        });
+      }
+    } catch {
+      // Skip invalid YAML documents
+    }
+  }
+
+  return resources;
+}
+
+describe("Helm Compatibility - Annotations and Labels", () => {
   let allResources: { file: string; resource: K8sResource }[];
 
   beforeAll(async () => {
-    // Synthesize all manifests in-memory
-    yamlContent = await synthesizeApp();
-
-    // Parse all resources from the YAML content
-    allResources = [];
-    const documents = yamlContent
-      .split(/^---$/m)
-      .map((doc) => doc.trim())
-      .filter((doc) => doc.length > 0);
-
-    for (const doc of documents) {
-      try {
-        const parsed = parseYaml(doc) as unknown;
-        const result = K8sResourceSchema.safeParse(parsed);
-        if (result.success) {
-          allResources.push({
-            file: "manifests.k8s.yaml",
-            resource: result.data,
-          });
-        }
-      } catch {
-        // Skip invalid YAML documents
-      }
-    }
+    const yamlContent = await synthesizeApp();
+    allResources = parseResources(yamlContent);
   });
 
   describe("Annotation Validation", () => {
@@ -189,6 +194,58 @@ describe("Helm Compatibility Tests", () => {
     });
   });
 
+  describe("Reserved Kubernetes Annotations", () => {
+    it("should not use kubernetes.io annotations reserved for system components", () => {
+      const RESERVED_K8S_ANNOTATIONS = [
+        "kubernetes.io/ingress.class", // Use spec.ingressClassName instead
+      ];
+
+      const violations: {
+        file: string;
+        resource: string;
+        annotation: string;
+      }[] = [];
+
+      for (const { file, resource } of allResources) {
+        const annotations = resource.metadata?.annotations ?? {};
+        const resourceName = `${resource.kind}/${resource.metadata?.name ?? "unnamed"}`;
+
+        for (const reserved of RESERVED_K8S_ANNOTATIONS) {
+          if (reserved in annotations) {
+            violations.push({
+              file,
+              resource: resourceName,
+              annotation: reserved,
+            });
+          }
+        }
+      }
+
+      if (violations.length > 0) {
+        console.warn(
+          [
+            "Warning: Found potentially deprecated Kubernetes annotations:",
+            ...violations.map(
+              (v) => `  - ${v.file}: ${v.resource} uses "${v.annotation}"`,
+            ),
+            "",
+            "Consider using newer alternatives if available.",
+          ].join("\n"),
+        );
+      }
+    });
+  });
+});
+
+describe("Helm Compatibility - Templates and Structure", () => {
+  let yamlContent: string;
+  let allResources: { file: string; resource: K8sResource }[];
+
+  beforeAll(async () => {
+    yamlContent = await synthesizeApp();
+    allResources = parseResources(yamlContent);
+  });
+
   describe("Template Syntax Validation", () => {
     it("should not contain unescaped Helm template syntax", () => {
       const violations: {
@@ -206,46 +263,27 @@ describe("Helm Compatibility Tests", () => {
           continue;
         }
 
-        // Skip comments
         if (line.trim().startsWith("#")) {
           continue;
         }
 
-        // Check for unescaped Helm template syntax
-        // {{ "{{" }} and {{ "}}" }} are properly escaped and should be allowed
-        // These are used to preserve literal {{ }} in the final output (e.g., for Prometheus alerts)
-
-        // Pattern to find {{ }} that are NOT escaped
-        // Escaped patterns look like: {{ "{{" }} or {{ "}}" }}
         const hasTemplateStart = line.includes("{{");
         const hasTemplateEnd = line.includes("}}");
 
         if (
           hasTemplateStart &&
-          hasTemplateEnd && // If we have {{ }} but it's not the escaped form, it's a violation
-          // We need to check for unescaped patterns like:
-          // - {{ .Values.something }}
-          // - {{ template "name" }}
-          // - {{ range .Items }}
-          // But NOT:
-          // - {{ "{{" }} $value {{ "}}" }} (this is escaped and OK)
-
-          // Simple heuristic: if line contains {{ but NOT {{ " then it might be unescaped
-          // This catches {{ .Values and {{ template but allows {{ "{{" }}
-          (/\{\{(?!\s*"[{"}]")/.test(line) || // Matches {{ not followed by "{{" or "}}"
-            /[^"]\}\}/.test(line.replaceAll('}}" }}', ""))) // Matches }} not part of }}" }}
+          hasTemplateEnd &&
+          (/\{\{(?!\s*"[{"}]")/.test(line) ||
+            /[^"]\}\}/.test(line.replaceAll('}}" }}', "")))
         ) {
-          // Additional check: the escaped pattern should have the quotes
-          // If we see {{ something }} where something is not a string literal with {{ or }}
-          // then it's likely unescaped
           const suspiciousPatterns = [
-            /\{\{\s*\.\w+/, // {{ .Values, {{ .Release, etc.
-            /\{\{\s*template\s+/, // {{ template
-            /\{\{\s*include\s+/, // {{ include
-            /\{\{\s*range\s+/, // {{ range
-            /\{\{\s*if\s+/, // {{ if
-            /\{\{\s*with\s+/, // {{ with
-            /\{\{\s*define\s+/, // {{ define
+            /\{\{\s*\.\w+/,
+            /\{\{\s*template\s+/,
+            /\{\{\s*include\s+/,
+            /\{\{\s*range\s+/,
+            /\{\{\s*if\s+/,
+            /\{\{\s*with\s+/,
+            /\{\{\s*define\s+/,
           ];
 
           for (const pattern of suspiciousPatterns) {
@@ -266,21 +304,16 @@ describe("Helm Compatibility Tests", () => {
     });
 
     it("should properly escape template syntax for Prometheus alerts", () => {
-      // This test verifies that Prometheus alert templates are properly escaped
-      // Prometheus uses Go templates with {{ }}, which must be escaped in Helm charts
-      // Count properly escaped template syntax
-      // {{ "{{" }} is the correct way to output a literal {{ in Helm
       const escapedStartCount = (yamlContent.match(/\{\{ "\{\{" \}\}/g) ?? [])
         .length;
       const escapedEndCount = (yamlContent.match(/\{\{ "\}\}" \}\}/g) ?? [])
         .length;
       const escapedCount = escapedStartCount + escapedEndCount;
 
-      // This is informational - we expect to see proper escaping in files with Prometheus rules
       if (escapedCount > 0) {
         console.log(
           [
-            "✓ Found properly escaped template syntax (for Prometheus/Grafana templates):",
+            "Found properly escaped template syntax (for Prometheus/Grafana templates):",
             `  - manifests.k8s.yaml: ${String(escapedCount)} escaped template markers`,
           ].join("\n"),
         );
@@ -372,58 +405,10 @@ describe("Helm Compatibility Tests", () => {
 
   describe("Helm Chart Lint", () => {
     it("should pass helm lint when packaged as a chart", async () => {
-      // This test validates that the manifests work correctly in a Helm chart context
-      // The actual helm lint is run by the lint-helm.sh script
-      // Here we just verify that the script exists and can be executed
-
       const scriptPath = `${import.meta.dir}/../../../scripts/lint-helm.sh`;
       const fileExists = await Bun.file(scriptPath).exists();
 
       expect(fileExists).toBe(true);
-    });
-  });
-
-  describe("Reserved Kubernetes Annotations", () => {
-    it("should not use kubernetes.io annotations reserved for system components", () => {
-      // Some kubernetes.io annotations are reserved for the system
-      const RESERVED_K8S_ANNOTATIONS = [
-        "kubernetes.io/ingress.class", // Use spec.ingressClassName instead
-      ];
-
-      const violations: {
-        file: string;
-        resource: string;
-        annotation: string;
-      }[] = [];
-
-      for (const { file, resource } of allResources) {
-        const annotations = resource.metadata?.annotations ?? {};
-        const resourceName = `${resource.kind}/${resource.metadata?.name ?? "unnamed"}`;
-
-        for (const reserved of RESERVED_K8S_ANNOTATIONS) {
-          if (reserved in annotations) {
-            violations.push({
-              file,
-              resource: resourceName,
-              annotation: reserved,
-            });
-          }
-        }
-      }
-
-      // This is a warning, not a hard failure - some charts may intentionally use these
-      if (violations.length > 0) {
-        console.warn(
-          [
-            "⚠️  Found potentially deprecated Kubernetes annotations:",
-            ...violations.map(
-              (v) => `  - ${v.file}: ${v.resource} uses "${v.annotation}"`,
-            ),
-            "",
-            "Consider using newer alternatives if available.",
-          ].join("\n"),
-        );
-      }
     });
   });
 });

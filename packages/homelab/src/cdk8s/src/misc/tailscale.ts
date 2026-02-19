@@ -1,4 +1,5 @@
-import type { IngressProps, Service } from "cdk8s-plus-31";
+import type { IngressProps } from "cdk8s-plus-31";
+import type { Service } from "cdk8s-plus-31";
 import { Ingress, IngressBackend } from "cdk8s-plus-31";
 import { ApiObject } from "cdk8s";
 import { JsonPatch } from "cdk8s";
@@ -7,11 +8,6 @@ import { merge } from "lodash";
 import type { Chart } from "cdk8s";
 import { KubeIngress } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 
-type ServiceObject = {
-  name: string;
-  port: number;
-};
-
 export class TailscaleIngress extends Construct {
   constructor(
     scope: Construct,
@@ -19,14 +15,13 @@ export class TailscaleIngress extends Construct {
     props: Partial<IngressProps> & {
       host: string;
       funnel?: boolean;
-      service: Service | ServiceObject;
+      service: Service;
     },
   ) {
     super(scope, id);
 
     let base: IngressProps = {
-      // eslint-disable-next-line custom-rules/no-type-assertions -- CDK8s Ingress API requires Service type but we accept a broader interface
-      defaultBackend: IngressBackend.fromService(props.service as Service),
+      defaultBackend: IngressBackend.fromService(props.service),
       tls: [
         {
           hosts: [props.host],
@@ -34,7 +29,7 @@ export class TailscaleIngress extends Construct {
       ],
     };
 
-    if (props.funnel) {
+    if (props.funnel === true) {
       base = {
         ...base,
         metadata: {
@@ -56,30 +51,32 @@ export class TailscaleIngress extends Construct {
 export function createIngress(
   chart: Chart,
   name: string,
-  namespace: string,
-  service: string,
-  port: number,
-  hosts: string[],
-  funnel: boolean,
+  options: {
+    namespace: string;
+    service: string;
+    port: number;
+    hosts: string[];
+    funnel: boolean;
+  },
 ) {
   const ingress = new KubeIngress(chart, name, {
     metadata: {
-      namespace: namespace,
-      annotations: funnel ? { "tailscale.com/funnel": "true" } : {},
+      namespace: options.namespace,
+      annotations: options.funnel ? { "tailscale.com/funnel": "true" } : {},
     },
     spec: {
       defaultBackend: {
         service: {
-          name: service,
+          name: options.service,
           port: {
-            number: port,
+            number: options.port,
           },
         },
       },
       ingressClassName: "tailscale",
       tls: [
         {
-          hosts: hosts,
+          hosts: options.hosts,
         },
       ],
     },

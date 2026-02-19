@@ -1,9 +1,9 @@
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import { withToolSpan } from "@shepherdjerred/birmel/observability/index.ts";
+import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { getRequestContext } from "@shepherdjerred/birmel/mastra/tools/request-context.ts";
-import { isEditorEnabled, getAllowedRepos } from "@shepherdjerred/birmel/editor/index.ts";
+import { isEditorEnabled, getAllowedRepos } from "@shepherdjerred/birmel/editor/config.ts";
 
 const logger = loggers.tools.child("editor.list-repos");
 

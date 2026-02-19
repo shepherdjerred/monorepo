@@ -364,15 +364,20 @@ export async function checkDiscordPlaysPokemon(
  * @param s3SecretAccessKey S3 secret access key for docs deployment
  * @returns A message indicating completion
  */
+type DeployDiscordPlaysPokemonOptions = {
+  source: Directory;
+  version: string;
+  gitSha: string;
+  ghcrUsername: string;
+  ghcrPassword: Secret;
+  s3AccessKeyId: Secret;
+  s3SecretAccessKey: Secret;
+};
+
 export async function deployDiscordPlaysPokemon(
-  source: Directory,
-  version: string,
-  gitSha: string,
-  ghcrUsername: string,
-  ghcrPassword: Secret,
-  s3AccessKeyId: Secret,
-  s3SecretAccessKey: Secret,
+  options: DeployDiscordPlaysPokemonOptions,
 ): Promise<string> {
+  const { source, version, gitSha, ghcrUsername, ghcrPassword, s3AccessKeyId, s3SecretAccessKey } = options;
   const pkgSource = source.directory("packages/discord-plays-pokemon");
   const outputs: string[] = [];
 

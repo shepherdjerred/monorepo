@@ -113,8 +113,7 @@ async function getS3AudioStream(s3Url: string): Promise<Readable> {
     throw new Error(`No body in S3 response for ${s3Url}`);
   }
 
-  // eslint-disable-next-line custom-rules/no-type-assertions -- AWS SDK returns SdkStream which is compatible with Readable
-  return response.Body as unknown as Readable;
+  return Readable.from(response.Body.transformToByteArray());
 }
 
 /**
@@ -164,8 +163,7 @@ async function getFromS3Cache(key: string): Promise<Readable> {
       Key: key,
     }),
   );
-  // eslint-disable-next-line custom-rules/no-type-assertions -- AWS SDK returns SdkStream which is compatible with Readable
-  return response.Body as unknown as Readable;
+  return Readable.from(response.Body.transformToByteArray());
 }
 
 /**

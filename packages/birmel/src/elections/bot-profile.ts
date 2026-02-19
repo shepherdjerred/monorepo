@@ -1,7 +1,8 @@
+import { z } from "zod";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { getDiscordIdForPersona } from "./persona-discord-ids.ts";
 import { generateNickname } from "./winner.ts";
-import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 
 const logger = loggers.scheduler.child("elections").child("profile");
 
@@ -94,10 +95,12 @@ async function updateBotBio(winnerDiscordId: string): Promise<void> {
   try {
     // Fetch the winner's profile to get their bio
     // Note: This requires the user to be in a mutual guild and may not always include bio
-    const userProfile = (await client.rest.get(
+    const userProfileResult: unknown = await client.rest.get(
       `/users/${winnerDiscordId}`,
-    )) as { bio?: string };
-    const bio = userProfile.bio ?? "";
+    );
+    const ProfileSchema = z.object({ bio: z.string().optional() }).loose();
+    const profileParsed = ProfileSchema.safeParse(userProfileResult);
+    const bio = profileParsed.success ? (profileParsed.data.bio ?? "") : "";
 
     // Update the bot's bio using REST API
     await client.rest.patch("/users/@me", {

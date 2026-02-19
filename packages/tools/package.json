@@ -19,5 +19,8 @@
     "@types/bun": "latest",
     "eslint": "^9.39.2",
     "typescript": "latest"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
   }
 }

@@ -52,6 +52,13 @@ Environment:
 `);
 }
 
+function parseMatchType(nextArg: string | undefined): MatchType | undefined {
+  if (nextArg === undefined || nextArg.length === 0) {
+    return undefined;
+  }
+  return MATCH_TYPES.find((t) => t === nextArg);
+}
+
 export function parseArgs(): TestOptions {
   const args = process.argv.slice(2);
   const options: TestOptions = {
@@ -71,13 +78,10 @@ export function parseArgs(): TestOptions {
     switch (arg) {
       case "--type":
       case "-t": {
-        const nextArg = args[i + 1];
-        if (nextArg !== undefined && nextArg.length > 0) {
-          const matchedType = MATCH_TYPES.find((t) => t === nextArg);
-          if (matchedType) {
-            options.matchType = matchedType;
-            i++;
-          }
+        const matchedType = parseMatchType(args[i + 1]);
+        if (matchedType) {
+          options.matchType = matchedType;
+          i++;
         }
         break;
       }

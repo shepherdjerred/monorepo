@@ -1,17 +1,16 @@
+import { getErrorMessage, toError } from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import {
-  captureException,
-  withToolSpan,
-} from "@shepherdjerred/birmel/observability/index.ts";
+import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
+import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import {
   recordMessageActivity,
   recordReactionActivity,
   getUserActivityStats,
   getTopActiveUsers,
 } from "@shepherdjerred/birmel/database/repositories/activity.ts";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 
 const logger = loggers.tools.child("discord.activity");
 
@@ -93,10 +92,10 @@ export const recordActivityTool = createTool({
           guildId: ctx.guildId,
           userId: ctx.userId,
         });
-        captureException(error as Error, { operation: "tool.record-activity" });
+        captureException(toError(error), { operation: "tool.record-activity" });
         return {
           success: false,
-          message: `Failed to record activity: ${(error as Error).message}`,
+          message: `Failed to record activity: ${getErrorMessage(error)}`,
         };
       }
     });
@@ -255,12 +254,12 @@ export const getActivityStatsTool = createTool({
         logger.error("Failed to get activity stats", error, {
           guildId: ctx.guildId,
         });
-        captureException(error as Error, {
+        captureException(toError(error), {
           operation: "tool.get-activity-stats",
         });
         return {
           success: false,
-          message: `Failed to get activity stats: ${(error as Error).message}`,
+          message: `Failed to get activity stats: ${getErrorMessage(error)}`,
         };
       }
     });

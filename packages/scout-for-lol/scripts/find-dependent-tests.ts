@@ -14,9 +14,10 @@ if (args.length < 2) {
   throw new Error("Missing required arguments");
 }
 
-// Args are guaranteed to exist after length check
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- CLI args validated above
-const packageDir = args[0]!;
+const packageDir = args[0];
+if (packageDir === undefined) {
+  throw new Error("Package dir argument is required");
+}
 const changedFiles = args.slice(1);
 
 // Convert to absolute paths

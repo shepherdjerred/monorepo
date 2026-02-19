@@ -14,9 +14,3 @@ export function registerEventHandlers(client: Client): void {
   handleReactionAdd(client);
   setupInteractionHandler(client);
 }
-
-export {
-  setMessageHandler,
-  type MessageContext,
-  type MessageHandler,
-} from "./message-create.ts";

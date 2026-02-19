@@ -16,7 +16,8 @@ const runCommand = async (command: string, args: string[]) => {
 };
 
 // Use gsed if available (macOS with GNU sed installed), otherwise use sed
-const sedCommand = Bun.which("gsed") ? "gsed" : "sed";
+const gsedPath = Bun.which("gsed");
+const sedCommand = gsedPath === null ? "sed" : "gsed";
 
 // Files that may contain Intel GPU resources
 const filesToPatch = ["dist/media.k8s.yaml", "dist/pokemon.k8s.yaml"];

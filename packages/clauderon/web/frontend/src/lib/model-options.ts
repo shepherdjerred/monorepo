@@ -1,10 +1,10 @@
-import type {
-  SessionModel,
+import type { SessionModel } from "@clauderon/client";
+import {
+  AgentType,
   ClaudeModel,
   CodexModel,
   GeminiModel,
-} from "@clauderon/client";
-import { AgentType } from "@clauderon/shared";
+} from "@clauderon/shared";
 
 type ModelOption = {
   value: SessionModel;
@@ -13,98 +13,89 @@ type ModelOption = {
 
 const CLAUDE_MODELS: ModelOption[] = [
   {
-    value: { type: "Claude" as const, content: "Sonnet4_5" as ClaudeModel },
+    value: { type: "Claude", content: ClaudeModel.Sonnet4_5 },
     label: "Sonnet 4.5 (Default - Balanced)",
   },
   {
-    value: { type: "Claude" as const, content: "Opus4_5" as ClaudeModel },
+    value: { type: "Claude", content: ClaudeModel.Opus4_5 },
     label: "Opus 4.5 (Most Capable)",
   },
   {
-    value: { type: "Claude" as const, content: "Haiku4_5" as ClaudeModel },
+    value: { type: "Claude", content: ClaudeModel.Haiku4_5 },
     label: "Haiku 4.5 (Fastest)",
   },
   {
-    value: { type: "Claude" as const, content: "Opus4_1" as ClaudeModel },
+    value: { type: "Claude", content: ClaudeModel.Opus4_1 },
     label: "Opus 4.1 (Agentic)",
   },
   {
-    value: { type: "Claude" as const, content: "Opus4" as ClaudeModel },
+    value: { type: "Claude", content: ClaudeModel.Opus4 },
     label: "Opus 4",
   },
   {
-    value: { type: "Claude" as const, content: "Sonnet4" as ClaudeModel },
+    value: { type: "Claude", content: ClaudeModel.Sonnet4 },
     label: "Sonnet 4",
   },
 ];
 
 const CODEX_MODELS: ModelOption[] = [
   {
-    value: { type: "Codex" as const, content: "Gpt5_2Codex" as CodexModel },
+    value: { type: "Codex", content: CodexModel.Gpt5_2Codex },
     label: "GPT-5.2-Codex (Default - Best for Code)",
   },
   {
-    value: { type: "Codex" as const, content: "Gpt5_2" as CodexModel },
+    value: { type: "Codex", content: CodexModel.Gpt5_2 },
     label: "GPT-5.2",
   },
   {
-    value: { type: "Codex" as const, content: "Gpt5_2Instant" as CodexModel },
+    value: { type: "Codex", content: CodexModel.Gpt5_2Instant },
     label: "GPT-5.2 Instant (Fast)",
   },
   {
-    value: {
-      type: "Codex" as const,
-      content: "Gpt5_2Thinking" as CodexModel,
-    },
+    value: { type: "Codex", content: CodexModel.Gpt5_2Thinking },
     label: "GPT-5.2 Thinking (Reasoning)",
   },
   {
-    value: { type: "Codex" as const, content: "Gpt5_2Pro" as CodexModel },
+    value: { type: "Codex", content: CodexModel.Gpt5_2Pro },
     label: "GPT-5.2 Pro (Premium)",
   },
   {
-    value: { type: "Codex" as const, content: "Gpt5_1" as CodexModel },
+    value: { type: "Codex", content: CodexModel.Gpt5_1 },
     label: "GPT-5.1",
   },
   {
-    value: { type: "Codex" as const, content: "Gpt5_1Instant" as CodexModel },
+    value: { type: "Codex", content: CodexModel.Gpt5_1Instant },
     label: "GPT-5.1 Instant",
   },
   {
-    value: {
-      type: "Codex" as const,
-      content: "Gpt5_1Thinking" as CodexModel,
-    },
+    value: { type: "Codex", content: CodexModel.Gpt5_1Thinking },
     label: "GPT-5.1 Thinking",
   },
   {
-    value: { type: "Codex" as const, content: "Gpt4_1" as CodexModel },
+    value: { type: "Codex", content: CodexModel.Gpt4_1 },
     label: "GPT-4.1 (Coding Specialist)",
   },
   {
-    value: { type: "Codex" as const, content: "O3Mini" as CodexModel },
+    value: { type: "Codex", content: CodexModel.O3Mini },
     label: "o3-mini (Small Reasoning)",
   },
 ];
 
 const GEMINI_MODELS: ModelOption[] = [
   {
-    value: { type: "Gemini" as const, content: "Gemini3Pro" as GeminiModel },
+    value: { type: "Gemini", content: GeminiModel.Gemini3Pro },
     label: "Gemini 3 Pro (Default - 1M Context)",
   },
   {
-    value: { type: "Gemini" as const, content: "Gemini3Flash" as GeminiModel },
+    value: { type: "Gemini", content: GeminiModel.Gemini3Flash },
     label: "Gemini 3 Flash (Fast)",
   },
   {
-    value: { type: "Gemini" as const, content: "Gemini2_5Pro" as GeminiModel },
+    value: { type: "Gemini", content: GeminiModel.Gemini2_5Pro },
     label: "Gemini 2.5 Pro",
   },
   {
-    value: {
-      type: "Gemini" as const,
-      content: "Gemini2_0Flash" as GeminiModel,
-    },
+    value: { type: "Gemini", content: GeminiModel.Gemini2_0Flash },
     label: "Gemini 2.0 Flash",
   },
 ];

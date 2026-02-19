@@ -14,7 +14,6 @@ import type {
   LoginStartResponse,
   LoginFinishRequest,
   LoginFinishResponse,
-  BrowseDirectoryRequest,
   BrowseDirectoryResponse,
   UploadResponse,
   HealthCheckResult,
@@ -30,6 +29,15 @@ import {
   type StorageClassInfo,
   getDefaultBaseUrl,
 } from "./client-types.ts";
+import { readResponseJson } from "./json.ts";
+
+function extractErrorMessage(data: unknown): string | undefined {
+  if (typeof data !== "object" || data === null) {
+    return undefined;
+  }
+  const error: unknown = Reflect.get(data, "error");
+  return typeof error === "string" ? error : undefined;
+}
 
 /**
  * Type-safe HTTP client for the Clauderon API
@@ -86,147 +94,77 @@ export class ClauderonClient {
   }
 
   async deleteSession(id: string): Promise<void> {
-    await this.request("DELETE", `/api/sessions/${encodeURIComponent(id)}`);
+    await this.requestVoid("DELETE", `/api/sessions/${encodeURIComponent(id)}`);
   }
 
   async archiveSession(id: string): Promise<void> {
-    await this.request(
+    await this.requestVoid(
       "POST",
       `/api/sessions/${encodeURIComponent(id)}/archive`,
     );
   }
 
   async unarchiveSession(id: string): Promise<void> {
-    await this.request(
+    await this.requestVoid(
       "POST",
       `/api/sessions/${encodeURIComponent(id)}/unarchive`,
     );
   }
 
   async refreshSession(id: string): Promise<void> {
-    await this.request(
+    await this.requestVoid(
       "POST",
       `/api/sessions/${encodeURIComponent(id)}/refresh`,
     );
   }
 
-  /**
-   * Get health status of all sessions
-   */
   async getHealth(): Promise<HealthCheckResult> {
-    const response = await this.request<HealthCheckResult>(
-      "GET",
-      "/api/health",
-    );
-    return response;
+    return this.request<HealthCheckResult>("GET", "/api/health");
   }
 
-  /**
-   * Get health status of a single session
-   */
   async getSessionHealth(id: string): Promise<SessionHealthReport> {
-    const response = await this.request<SessionHealthReport>(
-      "GET",
-      `/api/sessions/${encodeURIComponent(id)}/health`,
-    );
-    return response;
+    return this.request<SessionHealthReport>("GET", `/api/sessions/${encodeURIComponent(id)}/health`);
   }
 
   /**
    * Start a stopped session (container/pod)
    */
   async startSession(id: string): Promise<void> {
-    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/start`);
+    await this.requestVoid("POST", `/api/sessions/${encodeURIComponent(id)}/start`);
   }
 
   /**
    * Wake a hibernated session (sprites)
    */
   async wakeSession(id: string): Promise<void> {
-    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/wake`);
+    await this.requestVoid("POST", `/api/sessions/${encodeURIComponent(id)}/wake`);
   }
 
-  /**
-   * Recreate a session (delete and recreate backend)
-   *
-   * @throws ApiError with status 409 if recreate is blocked for safety reasons
-   */
   async recreateSession(id: string): Promise<RecreateResult> {
-    const response = await this.request<RecreateResult>(
-      "POST",
-      `/api/sessions/${encodeURIComponent(id)}/recreate`,
-    );
-    return response;
+    return this.request<RecreateResult>("POST", `/api/sessions/${encodeURIComponent(id)}/recreate`);
   }
 
-  /**
-   * Cleanup a session (remove from database when worktree is missing)
-   */
   async cleanupSession(id: string): Promise<void> {
-    await this.request(
-      "POST",
-      `/api/sessions/${encodeURIComponent(id)}/cleanup`,
-    );
+    await this.requestVoid("POST", `/api/sessions/${encodeURIComponent(id)}/cleanup`);
   }
 
-  /**
-   * Get recent repositories
-   */
   async getRecentRepos(): Promise<RecentRepoDto[]> {
-    const response = await this.request<{ repos: RecentRepoDto[] }>(
-      "GET",
-      "/api/recent-repos",
-    );
+    const response = await this.request<{ repos: RecentRepoDto[] }>("GET", "/api/recent-repos");
     return response.repos;
   }
 
-  /**
-   * Browse a directory on the daemon's filesystem
-   * @param path Path to the directory to browse
-   */
   async browseDirectory(path: string): Promise<BrowseDirectoryResponse> {
-    const request: BrowseDirectoryRequest = { path };
-    const response = await this.request<BrowseDirectoryResponse>(
-      "POST",
-      "/api/browse-directory",
-      request,
-    );
-    return response;
+    return this.request<BrowseDirectoryResponse>("POST", "/api/browse-directory", { path });
   }
 
-  /**
-   * Update session access mode
-   */
   async updateAccessMode(id: string, mode: AccessMode): Promise<void> {
-    await this.request(
-      "POST",
-      `/api/sessions/${encodeURIComponent(id)}/access-mode`,
-      { access_mode: mode },
-    );
+    await this.requestVoid("POST", `/api/sessions/${encodeURIComponent(id)}/access-mode`, { access_mode: mode });
   }
 
-  /**
-   * Update session metadata (title and/or description)
-   */
-  async updateSessionMetadata(
-    id: string,
-    title?: string,
-    description?: string,
-  ): Promise<void> {
-    await this.request(
-      "POST",
-      `/api/sessions/${encodeURIComponent(id)}/metadata`,
-      {
-        title,
-        description,
-      },
-    );
+  async updateSessionMetadata(id: string, title?: string, description?: string): Promise<void> {
+    await this.requestVoid("POST", `/api/sessions/${encodeURIComponent(id)}/metadata`, { title, description });
   }
 
-  /**
-   * Regenerate session metadata using AI
-   * Returns the updated session with new title and description
-   */
   async regenerateMetadata(id: string): Promise<Session> {
     const response = await this.request<{ session: Session }>(
       "POST",
@@ -235,55 +173,22 @@ export class ClauderonClient {
     return response.session;
   }
 
-  /**
-   * Merge a pull request for a session
-   * @param id Session ID
-   * @param method Merge method to use (Merge, Squash, or Rebase)
-   * @param deleteBranch Whether to delete the branch after merge
-   */
-  async mergePr(
-    id: string,
-    method: MergeMethod,
-    deleteBranch: boolean,
-  ): Promise<void> {
-    const request: MergePrRequest = {
-      method,
-      delete_branch: deleteBranch,
-    };
-    await this.request(
-      "POST",
-      `/api/sessions/${encodeURIComponent(id)}/merge-pr`,
-      request,
-    );
+  async mergePr(id: string, method: MergeMethod, deleteBranch: boolean): Promise<void> {
+    const request: MergePrRequest = { method, delete_branch: deleteBranch };
+    await this.requestVoid("POST", `/api/sessions/${encodeURIComponent(id)}/merge-pr`, request);
   }
 
-  /**
-   * Get system status including credentials and proxies
-   */
   async getSystemStatus(): Promise<SystemStatus> {
-    const response = await this.request<SystemStatus>("GET", "/api/status");
-    return response;
+    return this.request<SystemStatus>("GET", "/api/status");
   }
 
-  /**
-   * Get feature flags configuration
-   */
   async getFeatureFlags(): Promise<FeatureFlagsResponse> {
-    return await this.request<FeatureFlagsResponse>(
-      "GET",
-      "/api/feature-flags",
-    );
+    return this.request<FeatureFlagsResponse>("GET", "/api/feature-flags");
   }
 
-  /**
-   * Update a credential value
-   */
   async updateCredential(serviceId: string, value: string): Promise<void> {
-    const request: UpdateCredentialRequest = {
-      service_id: serviceId,
-      value,
-    };
-    await this.request("POST", "/api/credentials", request);
+    const request: UpdateCredentialRequest = { service_id: serviceId, value };
+    await this.requestVoid("POST", "/api/credentials", request);
   }
 
   /**
@@ -387,7 +292,7 @@ export class ClauderonClient {
   }
 
   async logout(): Promise<void> {
-    await this.request("POST", "/api/auth/logout");
+    await this.requestVoid("POST", "/api/auth/logout");
   }
 
   /**
@@ -410,18 +315,16 @@ export class ClauderonClient {
       });
 
       if (!response.ok) {
-        // eslint-disable-next-line custom-rules/no-type-assertions -- response.json() returns any
-        const data = (await response.json()) as { error?: string };
+        const data = await readResponseJson(response);
         throw new ApiError(
-          data.error ??
+          extractErrorMessage(data) ??
             `HTTP ${String(response.status)}: ${response.statusText}`,
           undefined,
           response.status,
         );
       }
 
-      // eslint-disable-next-line custom-rules/no-type-assertions -- response.json() returns any
-      return (await response.json()) as UploadResponse;
+      return await readResponseJson<UploadResponse>(response);
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
@@ -434,13 +337,36 @@ export class ClauderonClient {
   }
 
   /**
-   * Internal method to make HTTP requests
+   * Internal: make an HTTP request expecting a JSON response body
    */
-  private async request<T = void>(
+  private async request<T>(
     method: string,
     path: string,
     body?: unknown,
   ): Promise<T> {
+    const response = await this.doFetch(method, path, body);
+    return await readResponseJson<T>(response);
+  }
+
+  /**
+   * Internal: make an HTTP request expecting no response body
+   */
+  private async requestVoid(
+    method: string,
+    path: string,
+    body?: unknown,
+  ): Promise<void> {
+    await this.doFetch(method, path, body);
+  }
+
+  /**
+   * Shared fetch logic: builds request, handles errors, returns the raw Response
+   */
+  private async doFetch(
+    method: string,
+    path: string,
+    body?: unknown,
+  ): Promise<Response> {
     const url = `${this.baseUrl}${path}`;
 
     try {
@@ -457,32 +383,18 @@ export class ClauderonClient {
 
       const response = await this.fetch(url, init);
 
-      // Handle empty responses (204 No Content, etc.)
-      if (
-        response.status === 204 ||
-        response.headers.get("content-length") === "0"
-      ) {
-        // eslint-disable-next-line custom-rules/no-type-assertions -- empty response narrowed to void via generic
-        return undefined as T;
-      }
-
-      // Parse JSON response
-      const data: unknown = await response.json();
-
       // Check for error responses
       if (!response.ok) {
-        // eslint-disable-next-line custom-rules/no-type-assertions -- error response shape from API
-        const errorData = data as { error?: string };
+        const data = await readResponseJson(response);
         throw new ApiError(
-          errorData.error ??
+          extractErrorMessage(data) ??
             `HTTP ${String(response.status)}: ${response.statusText}`,
           undefined,
           response.status,
         );
       }
 
-      // eslint-disable-next-line custom-rules/no-type-assertions -- validated JSON response narrowed to generic type
-      return data as T;
+      return response;
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;

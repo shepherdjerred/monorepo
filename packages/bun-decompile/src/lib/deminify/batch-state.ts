@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile, unlink } from "node:fs/promises";
 import path from "node:path";
 import { hashSource } from "./cache.ts";
+import { BatchStateSchema } from "./json-schemas.ts";
 
 /** Persisted batch state for resume support */
 export type BatchState = {
@@ -62,8 +63,11 @@ export async function loadBatchState(
   try {
     const statePath = getStatePath(cacheDir);
     const content = await readFile(statePath, "utf8");
-    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-    return JSON.parse(content) as BatchState;
+    const parsed = BatchStateSchema.safeParse(JSON.parse(content));
+    if (!parsed.success) {
+      return null;
+    }
+    return parsed.data;
   } catch {
     return null;
   }

@@ -14,7 +14,7 @@ import { getConfig } from "#src/config/index.ts";
 
 export async function setupGame(driver: WebDriver) {
   logger.info("navigating to emulator page");
-  await (getConfig().game.emulator_url === "built_in" ? driver.get(`http://localhost:${getConfig().web.port}/emulator.html`) : driver.get(getConfig().game.emulator_url));
+  await (getConfig().game.emulator_url === "built_in" ? driver.get(`http://localhost:${String(getConfig().web.port)}/emulator.html`) : driver.get(getConfig().game.emulator_url));
   await wait(5000);
 
   // click anywhere to start the game

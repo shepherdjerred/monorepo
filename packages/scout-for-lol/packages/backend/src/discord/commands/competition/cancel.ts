@@ -56,7 +56,7 @@ export async function executeCompetitionCancel(
     typeof member.permissions !== "string" &&
     member.permissions.has(PermissionFlagsBits.Administrator);
 
-  if (!isOwner && !isAdmin === true) {
+  if (!isOwner && isAdmin !== true) {
     await interaction.reply({
       content: truncateDiscordMessage(
         "Only the competition owner or server administrators can cancel competitions",

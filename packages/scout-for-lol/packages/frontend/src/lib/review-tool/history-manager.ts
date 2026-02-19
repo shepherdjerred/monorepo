@@ -134,7 +134,7 @@ function validateAndTransformEntry(
 async function migrateFromLocalStorage(): Promise<void> {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === undefined) {
+    if (stored === null) {
       return;
     } // Nothing to migrate
 

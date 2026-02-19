@@ -39,13 +39,13 @@ export async function compareChartVersions(
   const imageDiff = diffImages(oldImages, newImages);
 
   // Diff sub-charts
-  const chartDiff = diffSubCharts(
-    oldMeta.chartYaml.dependencies ?? [],
-    oldMeta.chartLock,
-    newMeta.chartYaml.dependencies ?? [],
-    newMeta.chartLock,
-    chartName,
-  );
+  const chartDiff = diffSubCharts({
+    oldDeps: oldMeta.chartYaml.dependencies ?? [],
+    oldLock: oldMeta.chartLock,
+    newDeps: newMeta.chartYaml.dependencies ?? [],
+    newLock: newMeta.chartLock,
+    parentChart: chartName,
+  });
 
   // AppVersion changes
   type AppVersionChange = {
@@ -56,8 +56,8 @@ export async function compareChartVersions(
   const appVersionChanges: AppVersionChange[] = [];
 
   if (
-    oldMeta.chartYaml.appVersion &&
-    newMeta.chartYaml.appVersion &&
+    oldMeta.chartYaml.appVersion != null && oldMeta.chartYaml.appVersion !== "" &&
+    newMeta.chartYaml.appVersion != null && newMeta.chartYaml.appVersion !== "" &&
     oldMeta.chartYaml.appVersion !== newMeta.chartYaml.appVersion
   ) {
     appVersionChanges.push({
@@ -90,13 +90,13 @@ type ChartDep = { name: string; version: string; repository?: string };
 type LockDep = { name: string; version: string; repository: string };
 type ChartLockData = { dependencies?: LockDep[] } | null;
 
-function diffSubCharts(
-  oldDeps: ChartDep[],
-  oldLock: ChartLockData,
-  newDeps: ChartDep[],
-  newLock: ChartLockData,
-  parentChart: string,
-): {
+function diffSubCharts(options: {
+  oldDeps: ChartDep[];
+  oldLock: ChartLockData;
+  newDeps: ChartDep[];
+  newLock: ChartLockData;
+  parentChart: string;
+}): {
   added: ResolvedChart[];
   removed: ResolvedChart[];
   updated: ChartUpdate[];
@@ -109,8 +109,8 @@ function diffSubCharts(
   const oldMap = new Map<string, { version: string; repository: string }>();
   const newMap = new Map<string, { version: string; repository: string }>();
 
-  for (const dep of oldDeps) {
-    const pinnedVersion = oldLock?.dependencies?.find(
+  for (const dep of options.oldDeps) {
+    const pinnedVersion = options.oldLock?.dependencies?.find(
       (d) => d.name === dep.name,
     )?.version;
     const repo = resolveRepositoryUrl(dep.repository) ?? "";
@@ -120,8 +120,8 @@ function diffSubCharts(
     });
   }
 
-  for (const dep of newDeps) {
-    const pinnedVersion = newLock?.dependencies?.find(
+  for (const dep of options.newDeps) {
+    const pinnedVersion = options.newLock?.dependencies?.find(
       (d) => d.name === dep.name,
     )?.version;
     const repo = resolveRepositoryUrl(dep.repository) ?? "";
@@ -144,7 +144,7 @@ function diffSubCharts(
         dependencies: [],
         images: [],
         depth: 1,
-        parent: parentChart,
+        parent: options.parentChart,
       });
     } else if (oldInfo.version !== newInfo.version) {
       // Updated
@@ -168,7 +168,7 @@ function diffSubCharts(
         dependencies: [],
         images: [],
         depth: 1,
-        parent: parentChart,
+        parent: options.parentChart,
       });
     }
   }
@@ -181,67 +181,67 @@ function diffSubCharts(
  *
  * This recursively resolves sub-chart changes
  */
-export async function getFullDependencyChanges(
-  chartName: string,
-  registryUrl: string,
-  oldVersion: string,
-  newVersion: string,
-  maxDepth = 3,
-): Promise<FullDependencyDiff> {
+export async function getFullDependencyChanges(options: {
+  chartName: string;
+  registryUrl: string;
+  oldVersion: string;
+  newVersion: string;
+  maxDepth?: number;
+}): Promise<FullDependencyDiff> {
   const visited = new Set<string>();
 
-  return await getChangesRecursive(
-    chartName,
-    registryUrl,
-    oldVersion,
-    newVersion,
-    0,
-    maxDepth,
+  return await getChangesRecursive({
+    chartName: options.chartName,
+    registryUrl: options.registryUrl,
+    oldVersion: options.oldVersion,
+    newVersion: options.newVersion,
+    depth: 0,
+    maxDepth: options.maxDepth ?? 3,
     visited,
-  );
+  });
 }
 
-async function getChangesRecursive(
-  chartName: string,
-  registryUrl: string,
-  oldVersion: string,
-  newVersion: string,
-  depth: number,
-  maxDepth: number,
-  visited: Set<string>,
-): Promise<FullDependencyDiff> {
-  const key = `${registryUrl}/${chartName}`;
+async function getChangesRecursive(options: {
+  chartName: string;
+  registryUrl: string;
+  oldVersion: string;
+  newVersion: string;
+  depth: number;
+  maxDepth: number;
+  visited: Set<string>;
+}): Promise<FullDependencyDiff> {
+  const key = `${options.registryUrl}/${options.chartName}`;
 
-  if (visited.has(key) || depth > maxDepth) {
+  if (options.visited.has(key) || options.depth > options.maxDepth) {
     return emptyDiff();
   }
 
-  visited.add(key);
+  options.visited.add(key);
 
   try {
     const diff = await compareChartVersions(
-      chartName,
-      registryUrl,
-      oldVersion,
-      newVersion,
+      options.chartName,
+      options.registryUrl,
+      options.oldVersion,
+      options.newVersion,
     );
 
     // Recursively get changes for updated sub-charts
     for (const update of diff.charts.updated) {
       if (update.repository) {
         try {
-          const subDiff = await getChangesRecursive(
-            update.name,
-            update.repository,
-            update.oldVersion,
-            update.newVersion,
-            depth + 1,
-            maxDepth,
-            visited,
-          );
+          const subDiff = await getChangesRecursive({
+            chartName: update.name,
+            registryUrl: update.repository,
+            oldVersion: update.oldVersion,
+            newVersion: update.newVersion,
+            depth: options.depth + 1,
+            maxDepth: options.maxDepth,
+            visited: options.visited,
+          });
 
           // Merge sub-chart diff into main diff
-          mergeDiffs(diff, subDiff, depth + 1);
+          mergeDiffs(diff, subDiff, options.depth + 1);
         } catch (error) {
           console.warn(
             `Failed to get transitive deps for ${update.name}: ${String(error)}`,
@@ -252,7 +252,7 @@ async function getChangesRecursive(
 
     return diff;
   } catch (error) {
-    console.warn(`Failed to compare ${chartName}: ${String(error)}`);
+    console.warn(`Failed to compare ${options.chartName}: ${String(error)}`);
     return emptyDiff();
   }
 }
@@ -333,7 +333,7 @@ export function formatDependencyDiff(diff: FullDependencyDiff): string {
   if (diff.images.updated.length > 0) {
     lines.push("### Container Image Updates");
     for (const img of diff.images.updated) {
-      const registry = img.registry ? `${img.registry}/` : "";
+      const registry = img.registry != null && img.registry !== "" ? `${img.registry}/` : "";
       lines.push(
         `- ${registry}${img.repository}: ${img.oldTag} → ${img.newTag}`,
       );

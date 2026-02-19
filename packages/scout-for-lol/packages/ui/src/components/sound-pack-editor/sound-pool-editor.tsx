@@ -75,7 +75,7 @@ export function SoundPoolEditor({
 
   const handleAddFile = async () => {
     const path = await onSelectFile();
-    if (path !== undefined && path.length > 0) {
+    if (path !== null && path.length > 0) {
       onAddSound({
         source: { type: "file", path },
         volume: 1,

@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
-import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
+import { z } from "zod";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import type { EditResult, FileChange } from "./types.ts";
 
 const logger = loggers.editor.child("claude-client");
@@ -10,29 +11,28 @@ const logger = loggers.editor.child("claude-client");
 export type ExecuteEditOptions = {
   prompt: string;
   workingDirectory: string;
-  resumeSessionId?: string;
-  allowedPaths?: string[];
+  resumeSessionId?: string | undefined;
+  allowedPaths?: string[] | undefined;
 };
 
-/**
- * Message types from Claude Code output
- */
-type ClaudeMessage = {
-  type: string;
-  subtype?: string;
-  session_id?: string;
-  tool_name?: string;
-  tool_input?: {
-    file_path?: string;
-    old_string?: string;
-    new_string?: string;
-    content?: string;
-  };
-  content?: string;
-  result?: {
-    text?: string;
-  };
-};
+const ClaudeMessageSchema = z.object({
+  type: z.string(),
+  subtype: z.string().optional(),
+  session_id: z.string().optional(),
+  tool_name: z.string().optional(),
+  tool_input: z.object({
+    file_path: z.string().optional(),
+    old_string: z.string().optional(),
+    new_string: z.string().optional(),
+    content: z.string().optional(),
+  }).optional(),
+  content: z.string().optional(),
+  result: z.object({
+    text: z.string().optional(),
+  }).optional(),
+}).loose();
+
+type ClaudeMessage = z.infer<typeof ClaudeMessageSchema>;
 
 /**
  * Execute an edit using Claude Code CLI
@@ -94,7 +94,12 @@ export async function executeEdit(
           continue;
         }
         try {
-          const msg = JSON.parse(line) as ClaudeMessage;
+          const parsed: unknown = JSON.parse(line);
+          const parseResult = ClaudeMessageSchema.safeParse(parsed);
+          if (!parseResult.success) {
+            continue;
+          }
+          const msg = parseResult.data;
           processMessage(msg, {
             setSessionId: (id) => {
               sdkSessionId = id;
@@ -174,6 +179,37 @@ type MessageHandlers = {
   trackOriginal: (path: string, content: string) => void;
 };
 
+function processToolUse(msg: ClaudeMessage, handlers: MessageHandlers): void {
+  const input = msg.tool_input;
+  if (input?.file_path == null || input.file_path.length === 0) {
+    return;
+  }
+
+  if (msg.tool_name === "Write" && input.content !== undefined) {
+    handlers.addChange({
+      filePath: input.file_path,
+      oldContent: null,
+      newContent: input.content,
+      changeType: "create",
+    });
+  }
+
+  if (
+    msg.tool_name === "Edit" &&
+    input.old_string != null &&
+    input.old_string.length > 0 &&
+    input.new_string != null &&
+    input.new_string.length > 0
+  ) {
+    handlers.addChange({
+      filePath: input.file_path,
+      oldContent: input.old_string,
+      newContent: input.new_string,
+      changeType: "modify",
+    });
+  }
+}
+
 function processMessage(msg: ClaudeMessage, handlers: MessageHandlers): void {
   // Capture session ID from init message
   if (
@@ -185,49 +221,9 @@ function processMessage(msg: ClaudeMessage, handlers: MessageHandlers): void {
     handlers.setSessionId(msg.session_id);
   }
 
-  // Capture file reads for tracking original content
-  if (
-    msg.type === "tool_result" &&
-    msg.tool_name === "Read" &&
-    msg.result?.text != null &&
-    msg.result.text.length > 0
-  ) {
-    // The tool input should have the file path - this is a simplified version
-    // In practice, we'd need to correlate with the tool_use message
-  }
-
   // Capture file writes/edits
   if (msg.type === "tool_use") {
-    const input = msg.tool_input;
-    if (input?.file_path == null || input.file_path.length === 0) {
-      return;
-    }
-
-    if (msg.tool_name === "Write" && input.content !== undefined) {
-      handlers.addChange({
-        filePath: input.file_path,
-        oldContent: null,
-        newContent: input.content,
-        changeType: "create",
-      });
-    }
-
-    if (
-      msg.tool_name === "Edit" &&
-      input.old_string != null &&
-      input.old_string.length > 0 &&
-      input.new_string != null &&
-      input.new_string.length > 0
-    ) {
-      // For edits, we track partial changes
-      // In a full implementation, we'd need to reconstruct the full file
-      handlers.addChange({
-        filePath: input.file_path,
-        oldContent: input.old_string,
-        newContent: input.new_string,
-        changeType: "modify",
-      });
-    }
+    processToolUse(msg, handlers);
   }
 
   // Capture assistant summary
@@ -249,13 +245,17 @@ function extractFinalSummary(output: string): string {
       continue;
     }
     try {
-      const msg = JSON.parse(line) as ClaudeMessage;
+      const parsed: unknown = JSON.parse(line);
+      const result = ClaudeMessageSchema.safeParse(parsed);
+      if (!result.success) {
+        continue;
+      }
       if (
-        msg.type === "assistant" &&
-        msg.content != null &&
-        msg.content.length > 0
+        result.data.type === "assistant" &&
+        result.data.content != null &&
+        result.data.content.length > 0
       ) {
-        return msg.content;
+        return result.data.content;
       }
     } catch {
       // Not JSON

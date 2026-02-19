@@ -1,4 +1,5 @@
 import { $ } from "bun";
+import { z } from "zod";
 
 export type GhCommandResult<T> = {
   success: boolean;
@@ -22,8 +23,8 @@ export async function runGhCommand<T>(
     }
 
     try {
-      // eslint-disable-next-line custom-rules/no-type-assertions -- API boundary: JSON.parse returns any, T is trusted from caller
-      const parsed = JSON.parse(stdout) as T;
+      const json: unknown = JSON.parse(stdout);
+      const parsed = z.custom<T>().parse(json);
       return { success: true, data: parsed };
     } catch {
       // Non-JSON output: return raw string. Callers using runGhCommandRaw

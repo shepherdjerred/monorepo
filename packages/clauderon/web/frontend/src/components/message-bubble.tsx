@@ -11,24 +11,32 @@ type MessageBubbleProps = {
   message: Message;
 };
 
-export function MessageBubble({ message }: MessageBubbleProps) {
-  // Don't render if there's no displayable content
-  const hasContent = message.content.trim();
-  const hasToolUses = message.toolUses != null && message.toolUses.length > 0;
-  const hasCodeBlocks =
-    message.codeBlocks != null && message.codeBlocks.length > 0;
+function hasDisplayableContent(message: Message): boolean {
+  if (message.content.trim()) { return true; }
+  if (message.toolUses != null && message.toolUses.length > 0) { return true; }
+  if (message.codeBlocks != null && message.codeBlocks.length > 0) { return true; }
+  return false;
+}
 
-  if (!hasContent && !hasToolUses && !hasCodeBlocks) {
+const TOOL_ICONS: Record<string, React.ReactNode> = {
+  Read: <FileText className="w-4 h-4" />,
+  Write: <FileText className="w-4 h-4" />,
+  Edit: <Edit className="w-4 h-4" />,
+  Bash: <Terminal className="w-4 h-4" />,
+  Grep: <Search className="w-4 h-4" />,
+  Glob: <Search className="w-4 h-4" />,
+};
+
+export function MessageBubble({ message }: MessageBubbleProps) {
+  if (!hasDisplayableContent(message)) {
     return null;
   }
 
   const isUser = message.role === "user";
   const isSystem = message.role === "system";
-  const messageIsPlan = isPlan(message);
-  const messageIsQuestion = isQuestion(message);
 
   // Render question with special styling
-  if (messageIsQuestion && !isUser) {
+  if (isQuestion(message) && !isUser) {
     return (
       <div className="p-4 border-b-2">
         <QuestionView message={message} />
@@ -37,7 +45,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
   }
 
   // Render plan with special styling
-  if (messageIsPlan && !isUser) {
+  if (isPlan(message) && !isUser) {
     return (
       <div className="p-4 border-b-2">
         <PlanView message={message} />
@@ -50,15 +58,6 @@ export function MessageBubble({ message }: MessageBubbleProps) {
   ) : (
     <Bot className="w-5 h-5" />
   );
-
-  const toolIcons: Record<string, React.ReactNode> = {
-    Read: <FileText className="w-4 h-4" />,
-    Write: <FileText className="w-4 h-4" />,
-    Edit: <Edit className="w-4 h-4" />,
-    Bash: <Terminal className="w-4 h-4" />,
-    Grep: <Search className="w-4 h-4" />,
-    Glob: <Search className="w-4 h-4" />,
-  };
 
   return (
     <div
@@ -105,7 +104,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                 className="flex items-start gap-3 p-3 bg-accent/5 border-2 border-accent text-sm"
               >
                 <div className="flex-shrink-0 mt-0.5">
-                  {toolIcons[tool.name] ?? <Terminal className="w-4 h-4" />}
+                  {TOOL_ICONS[tool.name] ?? <Terminal className="w-4 h-4" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-bold font-mono">{tool.name}</div>

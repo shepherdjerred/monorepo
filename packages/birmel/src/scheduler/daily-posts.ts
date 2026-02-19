@@ -1,9 +1,10 @@
-import type { TextChannel } from "discord.js";
+import { toError, parseJsonRecord } from "@shepherdjerred/birmel/utils/errors.ts";
 import type { DailyPostConfig } from "@prisma/client";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
-import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
-import { withSpan, captureException } from "@shepherdjerred/birmel/observability/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
+import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
 
 const logger = loggers.scheduler.child("daily-posts");
 
@@ -76,7 +77,7 @@ async function getRecentEvents(
 
   return events.map((e: { eventType: string; eventData: string }) => ({
     eventType: e.eventType,
-    eventData: JSON.parse(e.eventData) as Record<string, unknown>,
+    eventData: parseJsonRecord(e.eventData),
   }));
 }
 
@@ -136,7 +137,9 @@ async function sendDailyPost(config: DailyPostConfig): Promise<void> {
         span.setAttribute("channel.valid", true);
         const message = await generateDailyPost(config.guildId);
         span.setAttribute("message.length", message.length);
-        await (channel as TextChannel).send(message);
+        if ("send" in channel) {
+          await channel.send(message);
+        }
 
         // Update last post time
         await prisma.dailyPostConfig.update({
@@ -149,7 +152,7 @@ async function sendDailyPost(config: DailyPostConfig): Promise<void> {
         logger.error("Failed to send daily post", error, {
           guildId: config.guildId,
         });
-        captureException(error as Error, {
+        captureException(toError(error), {
           operation: "scheduler.sendDailyPost",
           discord: { guildId: config.guildId },
         });
@@ -178,7 +181,7 @@ export async function checkAndSendDailyPosts(): Promise<void> {
         }
       } catch (error) {
         logger.error("Failed to check daily posts", error);
-        captureException(error as Error, {
+        captureException(toError(error), {
           operation: "scheduler.checkAndSendDailyPosts",
         });
       }

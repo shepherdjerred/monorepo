@@ -15,7 +15,7 @@ import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { generateApiToken } from "@scout-for-lol/backend/trpc/context.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import configuration from "@scout-for-lol/backend/configuration.ts";
-import type { DiscordAccountId, ApiTokenId } from "@scout-for-lol/data";
+import { DiscordAccountIdSchema, ApiTokenIdSchema } from "@scout-for-lol/data";
 
 const logger = createLogger("auth-router");
 
@@ -153,8 +153,7 @@ export const authRouter = router({
       const discordUser = userResult.data;
 
       // Upsert user in database
-      // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after Zod validation
-      const discordId = discordUser.id as DiscordAccountId;
+      const discordId = DiscordAccountIdSchema.parse(discordUser.id);
       const user = await prisma.user.upsert({
         where: { discordId },
         update: {
@@ -213,9 +212,9 @@ export const authRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { token, hash } = generateApiToken();
 
-      const expiresAt = input.expiresInDays !== undefined
-        ? new Date(Date.now() + input.expiresInDays * 24 * 60 * 60 * 1000)
-        : null;
+      const expiresAt = input.expiresInDays === undefined
+        ? null
+        : new Date(Date.now() + input.expiresInDays * 24 * 60 * 60 * 1000);
 
       const apiToken = await prisma.apiToken.create({
         data: {
@@ -272,8 +271,7 @@ export const authRouter = router({
   revokeApiToken: protectedProcedure
     .input(z.object({ tokenId: z.number() }))
     .mutation(async ({ input, ctx }) => {
-      // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after Zod validation
-      const tokenId = input.tokenId as ApiTokenId;
+      const tokenId = ApiTokenIdSchema.parse(input.tokenId);
       const token = await prisma.apiToken.findFirst({
         where: {
           id: tokenId,

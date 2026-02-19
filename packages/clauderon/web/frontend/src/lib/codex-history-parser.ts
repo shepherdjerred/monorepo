@@ -7,83 +7,58 @@
  * - Tool calls use function_call/function_call_output instead of tool_use/tool_result
  */
 
-import type { Message, ToolUse, CodeBlock } from "./claudeParser.ts";
-import { extractCodeBlocks } from "./claudeParser.ts";
+import type { Message, ToolUse, CodeBlock } from "./claude-parser.ts";
+import { extractCodeBlocks } from "./claude-parser.ts";
+import { z } from "zod";
 
 /**
- * Codex JSONL entry types
+ * Zod schemas for Codex history JSONL validation
  */
-type CodexEntryType =
-  | "session_meta"
-  | "response_item"
-  | "event_msg"
-  | "turn_context";
+const CodexEntrySchema = z.object({
+  timestamp: z.string(),
+  type: z.string(),
+  payload: z.unknown(),
+});
 
-/**
- * Raw JSONL entry from Codex's history file
- */
-type CodexEntry = {
-  timestamp: string;
-  type: CodexEntryType;
-  payload: unknown;
-};
+const ContentBlockSchema = z.object({
+  type: z.string(),
+  text: z.string().optional(),
+});
 
-/**
- * Content block within a Codex message
- */
-type CodexContentBlock = {
-  type: string;
-  text?: string;
-};
+const MessagePayloadSchema = z.object({
+  type: z.literal("message"),
+  role: z.string(),
+  content: z.array(ContentBlockSchema),
+});
 
-/**
- * Message payload from Codex response_item
- */
-type CodexMessagePayload = {
-  type: "message";
-  role: "user" | "assistant" | "system";
-  content: CodexContentBlock[];
-};
+const FunctionCallPayloadSchema = z.object({
+  type: z.literal("function_call"),
+  name: z.string(),
+  arguments: z.string(),
+  call_id: z.string(),
+});
 
-/**
- * Function call payload from Codex response_item
- */
-type CodexFunctionCallPayload = {
-  type: "function_call";
-  name: string;
-  arguments: string; // JSON string
-  call_id: string;
-};
+const FunctionCallOutputPayloadSchema = z.object({
+  type: z.literal("function_call_output"),
+  call_id: z.string(),
+  output: z.string(),
+});
 
-/**
- * Function call output payload from Codex response_item
- */
-type CodexFunctionCallOutputPayload = {
-  type: "function_call_output";
-  call_id: string;
-  output: string;
-};
+const ReasoningSummaryItemSchema = z.object({
+  text: z.string(),
+});
 
-/**
- * Reasoning payload from Codex response_item
- */
-type CodexReasoningPayload = {
-  type: "reasoning";
-  summary?: {
-    type: "summary_text";
-    text: string;
-  }[];
-};
+const ReasoningPayloadSchema = z.object({
+  type: z.literal("reasoning"),
+  summary: z.array(ReasoningSummaryItemSchema).optional(),
+});
 
-/**
- * All possible payload types
- */
-type CodexPayload =
-  | CodexMessagePayload
-  | CodexFunctionCallPayload
-  | CodexFunctionCallOutputPayload
-  | CodexReasoningPayload
-  | { type: string };
+const CODEX_TYPES = new Set([
+  "session_meta",
+  "response_item",
+  "event_msg",
+  "turn_context",
+]);
 
 /**
  * Check if a JSONL line is from Codex format
@@ -93,25 +68,140 @@ type CodexPayload =
  */
 export function isCodexFormat(firstLine: string): boolean {
   try {
-    const entry = JSON.parse(firstLine) as CodexEntry;
-    const codexTypes: CodexEntryType[] = [
-      "session_meta",
-      "response_item",
-      "event_msg",
-      "turn_context",
-    ];
-    return codexTypes.includes(entry.type);
+    const result = CodexEntrySchema.safeParse(JSON.parse(firstLine));
+    if (!result.success) {
+      return false;
+    }
+    return CODEX_TYPES.has(result.data.type);
   } catch {
     return false;
   }
 }
 
-/**
- * Parse Codex history JSONL lines into Messages
- *
- * @param lines - Array of JSONL lines from the history file
- * @returns Array of parsed messages
- */
+function handleMessagePayload(
+  payload: unknown,
+  timestamp: string,
+  messages: Message[],
+): void {
+  const result = MessagePayloadSchema.safeParse(payload);
+  if (!result.success) {
+    return;
+  }
+  const { role, content } = result.data;
+
+  // Extract text content from content blocks
+  const textParts: string[] = [];
+  for (const c of content) {
+    if ((c.type === "input_text" || c.type === "output_text") && c.text != null) {
+      textParts.push(c.text);
+    }
+  }
+  const text = textParts.join("");
+
+  // Skip system context messages (environment setup)
+  if (text.includes("<environment_context>") || !text.trim()) {
+    return;
+  }
+
+  const codeBlocks: CodeBlock[] = extractCodeBlocks(text);
+
+  messages.push({
+    id: crypto.randomUUID(),
+    role: role === "user" ? "user" : "assistant",
+    content: text,
+    timestamp: new Date(timestamp),
+    toolUses: undefined,
+    codeBlocks: codeBlocks.length > 0 ? codeBlocks : undefined,
+  });
+}
+
+function handleFunctionCall(
+  payload: unknown,
+  timestamp: string,
+  messages: Message[],
+  functionCallMap: Map<string, ToolUse>,
+): void {
+  const result = FunctionCallPayloadSchema.safeParse(payload);
+  if (!result.success) {
+    return;
+  }
+  const { name, call_id: callId } = result.data;
+  const args = result.data.arguments;
+
+  let parsedInput: Record<string, unknown> | undefined;
+  try {
+    const parsed: unknown = JSON.parse(args);
+    if (typeof parsed === "object" && parsed != null) {
+      const record: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(parsed)) {
+        record[k] = v;
+      }
+      parsedInput = record;
+    }
+  } catch {
+    parsedInput = { raw: args };
+  }
+
+  const toolUse: ToolUse = {
+    name,
+    description: undefined,
+    input: parsedInput,
+    result: undefined,
+  };
+  functionCallMap.set(callId, toolUse);
+
+  messages.push({
+    id: crypto.randomUUID(),
+    role: "assistant",
+    content: `Using tool: ${name}`,
+    timestamp: new Date(timestamp),
+    toolUses: [toolUse],
+    codeBlocks: undefined,
+  });
+}
+
+function handleFunctionCallOutput(
+  payload: unknown,
+  functionCallMap: Map<string, ToolUse>,
+): void {
+  const result = FunctionCallOutputPayloadSchema.safeParse(payload);
+  if (!result.success) {
+    return;
+  }
+  const toolUse = functionCallMap.get(result.data.call_id);
+  if (toolUse != null) {
+    toolUse.result = result.data.output;
+  }
+}
+
+function handleReasoning(payload: unknown, timestamp: string, messages: Message[]): void {
+  const result = ReasoningPayloadSchema.safeParse(payload);
+  if (!result.success) {
+    return;
+  }
+  const { summary } = result.data;
+  if (summary == null || summary.length === 0) {
+    return;
+  }
+
+  const text = summary.map((s) => s.text).join("\n");
+
+  if (text.trim()) {
+    messages.push({
+      id: crypto.randomUUID(),
+      role: "assistant",
+      content: `_Thinking: ${text}_`,
+      timestamp: new Date(timestamp),
+      toolUses: undefined,
+      codeBlocks: undefined,
+    });
+  }
+}
+
+const PayloadWithTypeSchema = z.object({
+  type: z.string(),
+});
+
 export function parseCodexHistoryLines(lines: string[]): Message[] {
   const functionCallMap = new Map<string, ToolUse>();
   const messages: Message[] = [];
@@ -121,118 +211,42 @@ export function parseCodexHistoryLines(lines: string[]): Message[] {
       continue;
     }
 
-    let entry: CodexEntry;
+    let entry: z.infer<typeof CodexEntrySchema> | undefined;
     try {
-      entry = JSON.parse(line) as CodexEntry;
+      const result = CodexEntrySchema.safeParse(JSON.parse(line));
+      if (result.success) {
+        entry = result.data;
+      }
     } catch (error) {
       console.error("Failed to parse Codex JSONL line:", error, line);
       continue;
     }
 
-    // Only process response_item entries
-    if (entry.type !== "response_item") {
+    if (entry?.type !== "response_item") {
       continue;
     }
 
-    const payload = entry.payload as CodexPayload;
-
-    // Handle message entries
-    if (payload.type === "message") {
-      const messagePayload = payload as CodexMessagePayload;
-
-      // Extract text content from content blocks
-      const text = messagePayload.content
-        .filter(
-          (c): c is CodexContentBlock & { text: string } =>
-            (c.type === "input_text" || c.type === "output_text") &&
-            typeof c.text === "string",
-        )
-        .map((c) => c.text)
-        .join("");
-
-      // Skip system context messages (environment setup)
-      if (text.includes("<environment_context>")) {
-        continue;
-      }
-
-      // Skip empty messages
-      if (!text.trim()) {
-        continue;
-      }
-
-      const codeBlocks: CodeBlock[] = extractCodeBlocks(text);
-
-      messages.push({
-        id: crypto.randomUUID(),
-        role: messagePayload.role === "user" ? "user" : "assistant",
-        content: text,
-        timestamp: new Date(entry.timestamp),
-        toolUses: undefined,
-        codeBlocks: codeBlocks.length > 0 ? codeBlocks : undefined,
-      });
+    const payloadResult = PayloadWithTypeSchema.safeParse(entry.payload);
+    if (!payloadResult.success) {
+      continue;
     }
 
-    // Handle function calls (tool use)
-    if (payload.type === "function_call") {
-      const fnPayload = payload as CodexFunctionCallPayload;
-
-      let parsedInput: Record<string, unknown> | undefined;
-      try {
-        parsedInput = JSON.parse(fnPayload.arguments) as Record<
-          string,
-          unknown
-        >;
-      } catch {
-        // If arguments aren't valid JSON, use as string
-        parsedInput = { raw: fnPayload.arguments };
+    switch (payloadResult.data.type) {
+      case "message": {
+        handleMessagePayload(entry.payload, entry.timestamp, messages);
+        break;
       }
-
-      const toolUse: ToolUse = {
-        name: fnPayload.name,
-        description: undefined,
-        input: parsedInput,
-        result: undefined,
-      };
-      functionCallMap.set(fnPayload.call_id, toolUse);
-
-      messages.push({
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: `Using tool: ${fnPayload.name}`,
-        timestamp: new Date(entry.timestamp),
-        toolUses: [toolUse],
-        codeBlocks: undefined,
-      });
-    }
-
-    // Handle function call outputs (tool results)
-    if (payload.type === "function_call_output") {
-      const outputPayload = payload as CodexFunctionCallOutputPayload;
-      const toolUse = functionCallMap.get(outputPayload.call_id);
-      if (toolUse != null) {
-        toolUse.result = outputPayload.output;
+      case "function_call": {
+        handleFunctionCall(entry.payload, entry.timestamp, messages, functionCallMap);
+        break;
       }
-    }
-
-    // Handle reasoning summaries (thinking)
-    if (payload.type === "reasoning") {
-      const reasoningPayload = payload as CodexReasoningPayload;
-      if (
-        reasoningPayload.summary != null &&
-        reasoningPayload.summary.length > 0
-      ) {
-        const text = reasoningPayload.summary.map((s) => s.text).join("\n");
-
-        if (text.trim()) {
-          messages.push({
-            id: crypto.randomUUID(),
-            role: "assistant",
-            content: `_Thinking: ${text}_`,
-            timestamp: new Date(entry.timestamp),
-            toolUses: undefined,
-            codeBlocks: undefined,
-          });
-        }
+      case "function_call_output": {
+        handleFunctionCallOutput(entry.payload, functionCallMap);
+        break;
+      }
+      case "reasoning": {
+        handleReasoning(entry.payload, entry.timestamp, messages);
+        break;
       }
     }
   }

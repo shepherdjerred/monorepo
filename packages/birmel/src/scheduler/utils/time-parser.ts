@@ -1,5 +1,5 @@
 import * as chrono from "chrono-node";
-import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 
 const logger = loggers.scheduler;
 

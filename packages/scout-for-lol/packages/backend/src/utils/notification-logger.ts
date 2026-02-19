@@ -86,9 +86,9 @@ export function logNotification(
     CRON_TRIGGER: "⏰",
   }[type];
 
-  const competitionInfo = entry.competitionId !== undefined
-    ? ` [Competition ${entry.competitionId.toString()}: ${entry.competitionTitle ?? "Unknown"}]`
-    : "";
+  const competitionInfo = entry.competitionId === undefined
+    ? ""
+    : ` [Competition ${entry.competitionId.toString()}: ${entry.competitionTitle ?? "Unknown"}]`;
 
   logger.info(
     `${emoji} [NotificationLog] ${type}${competitionInfo} | Trigger: ${trigger} | Instance: ${INSTANCE_ID}`,

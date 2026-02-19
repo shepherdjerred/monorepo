@@ -1,6 +1,7 @@
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { getGuildOwner } from "@shepherdjerred/birmel/database/repositories/guild-owner.ts";
 import { getAllCandidates } from "@shepherdjerred/birmel/elections/candidates.ts";
+import { parseJsonStringArray, parseJsonNumberRecord } from "@shepherdjerred/birmel/utils/errors.ts";
 
 type ElectionResult = {
   success: boolean;
@@ -49,10 +50,10 @@ export async function handleGetHistory(
     pollType: e.pollType,
     status: e.status,
     winner: e.winner ?? undefined,
-    candidates: JSON.parse(e.candidates) as string[],
+    candidates: parseJsonStringArray(e.candidates),
     voteCounts:
       e.voteCounts != null && e.voteCounts.length > 0
-        ? (JSON.parse(e.voteCounts) as Record<string, number>)
+        ? (parseJsonNumberRecord(e.voteCounts))
         : undefined,
     scheduledStart: e.scheduledStart.toISOString(),
     scheduledEnd: e.scheduledEnd.toISOString(),
@@ -85,7 +86,7 @@ export async function handleGetCurrent(
       id: election.id,
       pollType: election.pollType,
       status: election.status,
-      candidates: JSON.parse(election.candidates) as string[],
+      candidates: parseJsonStringArray(election.candidates),
       scheduledStart: election.scheduledStart.toISOString(),
       scheduledEnd: election.scheduledEnd.toISOString(),
       messageId: election.messageId ?? undefined,
@@ -115,7 +116,7 @@ export async function handleGetStats(
       winsByCandidate[e.winner] = (winsByCandidate[e.winner] ?? 0) + 1;
     }
     if (e.voteCounts != null && e.voteCounts.length > 0) {
-      const votes = JSON.parse(e.voteCounts) as Record<string, number>;
+      const votes = parseJsonNumberRecord(e.voteCounts);
       for (const count of Object.values(votes)) {
         totalVotesCast += count;
       }
@@ -138,8 +139,8 @@ export async function handleGetStats(
   };
 }
 
-export function handleGetCandidates(): ElectionResult {
-  const candidates = getAllCandidates();
+export async function handleGetCandidates(): Promise<ElectionResult> {
+  const candidates = await getAllCandidates();
   return {
     success: true,
     message: `Found ${candidates.length.toString()} candidates`,
@@ -172,11 +173,11 @@ export async function handleGetById(
       messageId: election.messageId ?? undefined,
       pollType: election.pollType,
       status: election.status,
-      candidates: JSON.parse(election.candidates) as string[],
+      candidates: parseJsonStringArray(election.candidates),
       winner: election.winner ?? undefined,
       voteCounts:
         election.voteCounts != null && election.voteCounts.length > 0
-          ? (JSON.parse(election.voteCounts) as Record<string, number>)
+          ? (parseJsonNumberRecord(election.voteCounts))
           : undefined,
       scheduledStart: election.scheduledStart.toISOString(),
       scheduledEnd: election.scheduledEnd.toISOString(),
@@ -186,80 +187,84 @@ export async function handleGetById(
   };
 }
 
+type CandidateAccumulator = {
+  totalElectionsParticipated: number;
+  wins: number;
+  totalVotesReceived: number;
+  lastElectionDate: string | undefined;
+  lastWinDate: string | undefined;
+};
+
+function getVotesForCandidate(voteCounts: string | null, candidateLower: string): number {
+  if (voteCounts == null || voteCounts.length === 0) {
+    return 0;
+  }
+  const votes = parseJsonNumberRecord(voteCounts);
+  let total = 0;
+  for (const [name, count] of Object.entries(votes)) {
+    if (name.toLowerCase() === candidateLower) {
+      total += count;
+    }
+  }
+  return total;
+}
+
+function accumulateCandidateElection(
+  acc: CandidateAccumulator,
+  election: { winner: string | null; actualEnd: Date | null; voteCounts: string | null },
+  candidateLower: string,
+): void {
+  acc.totalElectionsParticipated++;
+  if ((acc.lastElectionDate == null || acc.lastElectionDate.length === 0) && election.actualEnd != null) {
+    acc.lastElectionDate = election.actualEnd.toISOString();
+  }
+  if (election.winner?.toLowerCase() === candidateLower) {
+    acc.wins++;
+    if ((acc.lastWinDate == null || acc.lastWinDate.length === 0) && election.actualEnd != null) {
+      acc.lastWinDate = election.actualEnd.toISOString();
+    }
+  }
+  acc.totalVotesReceived += getVotesForCandidate(election.voteCounts, candidateLower);
+}
+
 export async function handleGetCandidateStats(
   guildId: string | undefined,
   candidateName: string | undefined,
 ): Promise<ElectionResult> {
   if (
-    guildId == null ||
-    guildId.length === 0 ||
-    candidateName == null ||
-    candidateName.length === 0
+    guildId == null || guildId.length === 0 ||
+    candidateName == null || candidateName.length === 0
   ) {
-    return {
-      success: false,
-      message: "guildId and candidateName are required",
-    };
+    return { success: false, message: "guildId and candidateName are required" };
   }
   const elections = await prisma.electionPoll.findMany({
     where: { guildId, status: "completed" },
     orderBy: { actualEnd: "desc" },
   });
   const candidateLower = candidateName.toLowerCase();
-  let totalElectionsParticipated = 0;
-  let wins = 0;
-  let totalVotesReceived = 0;
-  let lastElectionDate: string | undefined;
-  let lastWinDate: string | undefined;
+  const acc: CandidateAccumulator = {
+    totalElectionsParticipated: 0,
+    wins: 0,
+    totalVotesReceived: 0,
+    lastElectionDate: undefined,
+    lastWinDate: undefined,
+  };
+
   for (const e of elections) {
-    const candidates = (JSON.parse(e.candidates) as string[]).map((c) =>
-      c.toLowerCase(),
-    );
+    const candidates = parseJsonStringArray(e.candidates).map((c) => c.toLowerCase());
     if (candidates.includes(candidateLower)) {
-      totalElectionsParticipated++;
-      if (
-        (lastElectionDate == null || lastElectionDate.length === 0) &&
-        e.actualEnd != null
-      ) {
-        lastElectionDate = e.actualEnd.toISOString();
-      }
-      if (e.winner?.toLowerCase() === candidateLower) {
-        wins++;
-        if (
-          (lastWinDate == null || lastWinDate.length === 0) &&
-          e.actualEnd != null
-        ) {
-          lastWinDate = e.actualEnd.toISOString();
-        }
-      }
-      if (e.voteCounts != null && e.voteCounts.length > 0) {
-        const votes = JSON.parse(e.voteCounts) as Record<string, number>;
-        for (const [name, count] of Object.entries(votes)) {
-          if (name.toLowerCase() === candidateLower) {
-            totalVotesReceived += count;
-          }
-        }
-      }
+      accumulateCandidateElection(acc, e, candidateLower);
     }
   }
+
   return {
     success: true,
-    message: `Stats for ${candidateName}: ${wins.toString()} wins in ${totalElectionsParticipated.toString()} elections`,
+    message: `Stats for ${candidateName}: ${acc.wins.toString()} wins in ${acc.totalElectionsParticipated.toString()} elections`,
     data: {
       candidateName,
-      totalElectionsParticipated,
-      wins,
-      winRate:
-        totalElectionsParticipated > 0
-          ? Math.round((wins / totalElectionsParticipated) * 100)
-          : 0,
-      totalVotesReceived,
-      averageVotesPerElection:
-        totalElectionsParticipated > 0
-          ? Math.round(totalVotesReceived / totalElectionsParticipated)
-          : 0,
-      lastElectionDate,
-      lastWinDate,
+      ...acc,
+      winRate: acc.totalElectionsParticipated > 0 ? Math.round((acc.wins / acc.totalElectionsParticipated) * 100) : 0,
+      averageVotesPerElection: acc.totalElectionsParticipated > 0 ? Math.round(acc.totalVotesReceived / acc.totalElectionsParticipated) : 0,
     },
   };
 }

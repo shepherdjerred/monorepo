@@ -6,14 +6,12 @@
  */
 
 // Using string concatenation instead of node:path
-import {
-  fetchHelmChart,
-  convertToTypeScriptInterface,
-  generateTypeScriptCode,
-  type TypeScriptInterface,
-  type HelmValue,
-  type JSONSchemaProperty,
-} from "@shepherdjerred/helm-types";
+import { fetchHelmChart } from "@shepherdjerred/helm-types/src/chart-fetcher.ts";
+import { convertToTypeScriptInterface } from "@shepherdjerred/helm-types/src/type-converter.ts";
+import { generateTypeScriptCode } from "@shepherdjerred/helm-types/src/interface-generator.ts";
+import type { TypeScriptInterface } from "@shepherdjerred/helm-types/src/types.ts";
+import type { HelmValue } from "@shepherdjerred/helm-types/src/schemas.ts";
+import type { JSONSchemaProperty } from "@shepherdjerred/helm-types/src/types.ts";
 import {
   parseChartInfoFromVersions,
   type ChartInfo,
@@ -180,14 +178,13 @@ export type ${capitalizeFirst(chart.name).replaceAll("-", "")}HelmParameters = {
 
   console.log(`  🏗️  Converting to TypeScript interfaces...`);
   const interfaceName = `${capitalizeFirst(chart.name).replaceAll("-", "")}HelmValues`;
-  const tsInterface: TypeScriptInterface = convertToTypeScriptInterface(
-    helmValues,
+  const tsInterface: TypeScriptInterface = convertToTypeScriptInterface({
+    values: helmValues,
     interfaceName,
     schema,
     yamlComments,
-    "",
-    chart.name,
-  );
+    chartName: chart.name,
+  });
   const code: string = generateTypeScriptCode(tsInterface, chart.name);
 
   const filePath = `${OUTPUT_DIR}/${chart.name}.types.ts`;

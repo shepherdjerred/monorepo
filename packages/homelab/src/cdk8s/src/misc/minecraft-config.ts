@@ -159,7 +159,7 @@ export function getMinecraftConfigMapManifests(
       // Extract plugin name (e.g., "plugins__BlueMap__core.conf" -> "BlueMap")
       const parts = key.split("__");
       const pluginName = parts[1];
-      if (pluginName) {
+      if (pluginName != null && pluginName !== "") {
         const existing = pluginConfigs.get(pluginName) ?? {};
         existing[key] = value;
         pluginConfigs.set(pluginName, existing);
@@ -325,7 +325,7 @@ export function getMinecraftExtraVolumes(
       for (const key of pluginKeys) {
         const parts = key.split("__");
         const pluginName = parts[1];
-        if (pluginName) {
+        if (pluginName != null && pluginName !== "") {
           const existing = pluginGroups.get(pluginName) ?? [];
           existing.push(key);
           pluginGroups.set(pluginName, existing);
@@ -425,7 +425,7 @@ export function getMinecraftPluginConfigInitContainer(
     for (const key of pluginKeys) {
       const parts = key.split("__");
       const pluginName = parts[1];
-      if (pluginName) {
+      if (pluginName != null && pluginName !== "") {
         pluginNames.add(pluginName);
       }
     }

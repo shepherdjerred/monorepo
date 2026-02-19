@@ -1,55 +1,16 @@
-// Core types
-export type {
-  ChartInfo,
-  JSONSchemaProperty,
-  TypeScriptInterface,
-  TypeProperty,
-} from "./types.js";
+/**
+ * This file previously served as a barrel/re-export module.
+ * Import directly from submodules instead:
+ * - ./types.ts - Core types
+ * - ./schemas.ts - Zod schemas
+ * - ./config.ts - Configuration
+ * - ./chart-info-parser.ts - Chart info parsing
+ * - ./yaml-comments.ts - YAML comments
+ * - ./chart-fetcher.ts - Chart fetching
+ * - ./type-converter.ts - Type conversion
+ * - ./interface-generator.ts - Code generation
+ * - ./utils.ts - Utilities
+ */
 
-// Schemas
-export type { HelmValue } from "./schemas.js";
-export {
-  StringSchema,
-  ActualNumberSchema,
-  ActualBooleanSchema,
-  NullSchema,
-  UndefinedSchema,
-  ArraySchema,
-  RecordSchema,
-  ErrorSchema,
-  StringBooleanSchema,
-  HelmValueSchema,
-} from "./schemas.js";
-
-// Configuration
-export {
-  EXTENSIBLE_TYPE_PATTERNS,
-  shouldAllowArbitraryProps,
-} from "./config.js";
-
-// Chart info parsing
-export { parseChartInfoFromVersions } from "./chart-info-parser.js";
-
-// YAML comments
-export { cleanYAMLComment, parseYAMLComments } from "./yaml-comments.js";
-
-// Chart fetching
-export { fetchHelmChart } from "./chart-fetcher.js";
-
-// Type conversion
-export {
-  jsonSchemaToTypeScript,
-  inferTypeFromValue,
-  typesAreCompatible,
-  convertToTypeScriptInterface,
-} from "./type-converter.js";
-
-// Code generation
-export { generateTypeScriptCode } from "./interface-generator.js";
-
-// Utilities
-export {
-  sanitizePropertyName,
-  sanitizeTypeName,
-  capitalizeFirst,
-} from "./utils.js";
+/** Version marker for the helm-types module. */
+export const HELM_TYPES_VERSION = "1.1.0";

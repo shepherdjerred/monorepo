@@ -38,17 +38,15 @@ export function makeScreenshot(driver: WebDriver) {
     const channel = client.channels.cache.get(
       getConfig().bot.notifications.channel_id,
     );
-    if (channel !== undefined && channel.type === ChannelType.GuildText) {
-      await channel.send({
-        content: `Screenshot taken by ${userMention(interaction.user.id)} at ${time(date)}`,
-        embeds: [embed],
-        files: [attachment],
-      });
-    } else {
-      await interaction.reply({
-        ephemeral: true,
-        content: "There was an error",
-      });
-    }
+    await (channel?.type === ChannelType.GuildText
+      ? channel.send({
+          content: `Screenshot taken by ${userMention(interaction.user.id)} at ${time(date)}`,
+          embeds: [embed],
+          files: [attachment],
+        })
+      : interaction.reply({
+          ephemeral: true,
+          content: "There was an error",
+        }));
   };
 }
