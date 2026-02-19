@@ -18,7 +18,7 @@ function getPlaywrightContainer(): Container {
     .withWorkdir("/workspace")
     .withExec(["apt-get", "update"])
     .withExec(["apt-get", "install", "-y", "unzip"])
-    .withExec(["sh", "-c", "curl -fsSL https://bun.sh/install | bash"])
+    .withExec(["sh", "-c", `curl -fsSL https://bun.sh/install | bash -s "bun-v${versions.bun}"`])
     .withEnvVariable("PATH", "/root/.bun/bin:$PATH", { expand: true });
 }
 

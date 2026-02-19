@@ -10,6 +10,7 @@
     "packages/ui"
   ],
   "scripts": {
+    "build": "bun run --filter='*' build",
     "typecheck": "bun run --filter='*' typecheck",
     "lint": "bun run --filter='*' lint",
     "lint:ci": "bunx eslint packages/ --format json --output-file eslint-report.json || true",

@@ -362,9 +362,10 @@ echo "Quality ratchet passed"
  * Run shellcheck on all .sh files under packages/ and scripts/.
  */
 export function shellcheckStep(source: Directory): Container {
+  // Use actionlint image which includes sh, find, AND shellcheck
   return dag
     .container()
-    .from("koalaman/shellcheck:stable")
+    .from("rhysd/actionlint:latest")
     .withMountedDirectory("/workspace", source)
     .withWorkdir("/workspace")
     .withExec([
@@ -383,7 +384,7 @@ export function actionlintStep(source: Directory): Container {
     .from("rhysd/actionlint:latest")
     .withMountedDirectory("/workspace", source)
     .withWorkdir("/workspace")
-    .withExec(["/actionlint", "-color"]);
+    .withExec(["actionlint", "-color"]);
 }
 
 /**

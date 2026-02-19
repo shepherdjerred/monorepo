@@ -210,7 +210,7 @@ function buildDockerImage(
       "kde-config-screenlocker",
       "unzip",
     ])
-    .withExec(["sh", "-c", "curl -fsSL https://bun.sh/install | bash"])
+    .withExec(["sh", "-c", `curl -fsSL https://bun.sh/install | bash -s "bun-v${BUN_VERSION}"`])
     .withEnvVariable(
       "PATH",
       `/root/.bun/bin:/home/ubuntu/.bun/bin:${standardPath}`,

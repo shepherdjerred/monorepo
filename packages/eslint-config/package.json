@@ -21,6 +21,7 @@
   ],
   "scripts": {
     "build": "tsc --outDir ./dist",
+    "lint": "true",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "bun run build"
