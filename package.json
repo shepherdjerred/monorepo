@@ -4,6 +4,7 @@
   "private": true,
   "workspaces": [
     "packages/*",
+    "packages/better-skill-capped/*",
     "packages/clauderon/web/*",
     "packages/clauderon/docs",
     "packages/discord-plays-pokemon/packages/*",

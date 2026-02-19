@@ -48,7 +48,10 @@ export const CI_WORKSPACES: WorkspaceEntry[] = [
   "packages/clauderon/web/frontend",
   { path: "packages/clauderon/docs", fullDirPhase1: true },
   "packages/astro-opengraph-images",
-  "packages/better-skill-capped",
+  {
+    path: "packages/better-skill-capped",
+    subPackages: ["packages/better-skill-capped/fetcher"],
+  },
   "packages/sjer.red",
   "packages/webring",
   "packages/starlight-karma-bot",
@@ -104,7 +107,7 @@ export function installWorkspaceDeps(source: Directory): Container {
 }
 
 /**
- * Set up Prisma client for Birmel CI.
+ * Set up Prisma clients for Birmel and Scout-for-LoL.
  */
 export async function setupPrisma(
   container: Container,
@@ -117,6 +120,7 @@ export async function setupPrisma(
     "packages/birmel/node_modules/.prisma",
   ]);
 
+  // Birmel Prisma
   c = c
     .withWorkdir("/workspace/packages/birmel")
     .withEnvVariable(
@@ -136,8 +140,19 @@ export async function setupPrisma(
       "--accept-data-loss",
     ])
     .withWorkdir("/workspace");
+
+  // Scout-for-LoL Prisma
+  c = c
+    .withWorkdir("/workspace/packages/scout-for-lol/packages/backend")
+    .withEnvVariable(
+      "DATABASE_URL",
+      "file:/workspace/packages/scout-for-lol/packages/backend/data/test.db",
+    )
+    .withExec(["bunx", "prisma", "generate"])
+    .withWorkdir("/workspace");
+
   await c.sync();
-  outputs.push("✓ Prisma setup");
+  outputs.push("✓ Prisma setup (birmel + scout-for-lol)");
 
   return { container: c, outputs };
 }
