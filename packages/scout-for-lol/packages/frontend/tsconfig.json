@@ -3,6 +3,6 @@
     "lib": ["ESNext", "DOM", "DOM.Iterable"]
   },
   "exclude": ["dist"],
-  "extends": ["astro/tsconfigs/strictest", "../../tsconfig.base.json"],
+  "extends": ["../../tsconfig.base.json"],
   "include": [".astro/types.d.ts", "**/*", "postcss.config.ts"]
 }
