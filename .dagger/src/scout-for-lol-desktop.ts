@@ -159,7 +159,7 @@ export function installDesktopDeps(
   container = installBunInRustContainer(container);
   container = container.withMountedCache(
     "/root/.bun/install/cache",
-    dag.cacheVolume("bun-install-cache"),
+    dag.cacheVolume("bun-cache"),
   );
 
   if (target === "windows-gnu") {

@@ -82,7 +82,7 @@ export async function runClauderonCi(
   const [fmtResult, denyResult] = await Promise.allSettled([
     base.withExec(["cargo", "fmt", "--check"]).sync(),
     base
-      .withExec(["cargo", "install", "cargo-deny", "--locked"])
+      .withExec(["cargo", "install", "cargo-deny", "--locked", "--root", "/root/.cargo-tools"])
       .withExec(["cargo", "deny", "check", "advisories", "bans", "sources"])
       .sync(),
   ]);
@@ -115,7 +115,7 @@ export async function runClauderonCi(
   // Phase 3: Coverage (non-blocking, independent)
   try {
     await base
-      .withExec(["cargo", "install", "cargo-llvm-cov", "--locked"])
+      .withExec(["cargo", "install", "cargo-llvm-cov", "--locked", "--root", "/root/.cargo-tools"])
       .withExec(["cargo", "llvm-cov", "--fail-under-lines", "40"])
       .sync();
     outputs.push("✓ Coverage threshold met");

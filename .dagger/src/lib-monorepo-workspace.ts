@@ -10,7 +10,6 @@ import { dag } from "@dagger.io/dagger";
 import versions from "./lib-versions.ts";
 
 const BUN_VERSION = versions.bun;
-const PLAYWRIGHT_VERSION = versions.playwright;
 
 /**
  * Configuration for the base bun-debian container.
@@ -26,8 +25,8 @@ export type BaseContainerConfig = {
  * Creates a base oven/bun container with system dependencies and caching.
  * LAYER ORDERING: System deps and caches are set up BEFORE any source files.
  *
- * Includes: APT caching, python3, bun cache, playwright + chromium,
- * eslint cache, and TypeScript build cache.
+ * Includes: APT caching, python3, bun cache, eslint cache,
+ * and TypeScript build cache.
  *
  * @param config Optional configuration for extra packages and setup steps
  * @returns A configured base container
@@ -64,13 +63,6 @@ export function getBaseBunDebianContainer(
         "/root/.bun/install/cache",
         dag.cacheVolume("bun-cache"),
       )
-      // Cache Playwright browsers (version in key for invalidation)
-      .withMountedCache(
-        "/root/.cache/ms-playwright",
-        dag.cacheVolume(`playwright-browsers-${PLAYWRIGHT_VERSION}`),
-      )
-      // Install Playwright Chromium and dependencies for browser automation
-      .withExec(["bunx", "playwright", "install", "--with-deps", "chromium"])
       // Cache ESLint (incremental linting)
       .withMountedCache(
         "/workspace/.eslintcache",
