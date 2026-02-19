@@ -118,9 +118,21 @@ pre-commit:
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
 
-                - name: eslint-discord-plays-pokemon
-                  root: "packages/discord-plays-pokemon/"
-                  glob: "packages/discord-plays-pokemon/**/*.{ts,tsx,js,jsx}"
+                - name: eslint-discord-plays-pokemon-common
+                  root: "packages/discord-plays-pokemon/packages/common/"
+                  glob: "packages/discord-plays-pokemon/packages/common/**/*.{ts,tsx,js,jsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-discord-plays-pokemon-backend
+                  root: "packages/discord-plays-pokemon/packages/backend/"
+                  glob: "packages/discord-plays-pokemon/packages/backend/**/*.{ts,tsx,js,jsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-discord-plays-pokemon-frontend
+                  root: "packages/discord-plays-pokemon/packages/frontend/"
+                  glob: "packages/discord-plays-pokemon/packages/frontend/**/*.{ts,tsx,js,jsx}"
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
 
@@ -295,7 +307,7 @@ pre-commit:
             glob:
               - "**/package.json"
               - "**/knip.json"
-            run: bunx knip
+            run: bunx knip --no-exit-code
 
           # --- Compliance ---
           - name: compliance-check

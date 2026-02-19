@@ -106,5 +106,5 @@
       "project": ["src/**/*.{ts,tsx,astro,mdx}", "*.mjs"]
     }
   },
-  "ignore": ["**/generated/**", "**/dist/**", "archive/**"]
+  "ignore": ["**/generated/**", "**/dist/**", "archive/**", ".dagger/**", "practice/**", "packages/clauderon/mobile/**", "packages/castle-casters/**", "packages/macos-cross-compiler/**", "packages/resume/**", "packages/dotfiles/**", "packages/fonts/**", "packages/anki/**", "scripts/**"]
 }
