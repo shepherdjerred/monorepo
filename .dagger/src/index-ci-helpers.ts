@@ -52,7 +52,18 @@ export const CI_WORKSPACES: WorkspaceEntry[] = [
   "packages/sjer.red",
   "packages/webring",
   "packages/starlight-karma-bot",
-  "packages/homelab",
+  {
+    path: "packages/homelab",
+    extraFiles: [
+      "packages/homelab/patches/@digital-alchemy%2Ftype-writer@25.10.12.patch",
+    ],
+    subPackages: [
+      "packages/homelab/src/cdk8s",
+      "packages/homelab/src/deps-email",
+      "packages/homelab/src/ha",
+      "packages/homelab/src/helm-types",
+    ],
+  },
   {
     path: "packages/discord-plays-pokemon",
     subPackages: [
@@ -63,6 +74,9 @@ export const CI_WORKSPACES: WorkspaceEntry[] = [
   },
   {
     path: "packages/scout-for-lol",
+    extraFiles: [
+      "packages/scout-for-lol/patches/satori@0.18.3.patch",
+    ],
     subPackages: [
       "packages/scout-for-lol/packages/backend",
       "packages/scout-for-lol/packages/data",
