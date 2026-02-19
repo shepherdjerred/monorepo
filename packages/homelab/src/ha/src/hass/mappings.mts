@@ -393,7 +393,9 @@ declare module "@digital-alchemy/hass" {
     _d68f17ff4aac0fb9e4f04926ce850be5:
       | "light.bludot_stilt_lamp"
       | "sensor.bludot_stilt_lamp_zigbee_connectivity";
-    _637f2e2d6ab391620ca2071e89f254bc: "light.signe_lamp" | "sensor.signe_lamp_zigbee_connectivity";
+    _637f2e2d6ab391620ca2071e89f254bc:
+      | "light.signe_lamp"
+      | "sensor.signe_lamp_zigbee_connectivity";
     _f9a090c1e5c412df43c21128a10d8522:
       | "binary_sensor.tv_entertainment_configuration"
       | "sensor.philips_hue_zigbee_connectivity"
@@ -456,7 +458,9 @@ declare module "@digital-alchemy/hass" {
       | "switch.living_room_surround_enabled"
       | "switch.living_room_touch_controls"
       | "device_tracker.sonos_inc";
-    _61775de23d9778e6529c1366ce0ef400: "scene.bronze_lamp_bright" | "scene.bronze_lamp_dimmed";
+    _61775de23d9778e6529c1366ce0ef400:
+      | "scene.bronze_lamp_bright"
+      | "scene.bronze_lamp_dimmed";
     _7d476afe344ddf0d11fc61499e5fd2f2:
       | "scene.living_room_soho"
       | "scene.living_room_dimmed"
@@ -470,7 +474,9 @@ declare module "@digital-alchemy/hass" {
       | "scene.bedroom_read"
       | "scene.bedroom_relax"
       | "scene.bedroom_nightlight";
-    _54d5234262d81a12e2ba0cbcfe287386: "switch.hacs_pre_release" | "update.hacs_update";
+    _54d5234262d81a12e2ba0cbcfe287386:
+      | "switch.hacs_pre_release"
+      | "update.hacs_update";
     _cec0ccddb59c74903ccde1e9f2cc7493:
       | "sensor.hue_tap_dial_switch_1_battery"
       | "sensor.hue_tap_dial_switch_1_zigbee_connectivity"
@@ -742,8 +748,12 @@ declare module "@digital-alchemy/hass" {
       | "sensor.litter_robot_4_total_cycles"
       | "select.litter_robot_4_globe_brightness"
       | "select.litter_robot_4_globe_light";
-    _5bcf901a4d33d101bb44838d0448b5c4: "sensor.thor_weight" | "sensor.thor_visits_today";
-    _25b72a38da06fa41cc1b2500f931cd61: "sensor.kit_weight" | "sensor.kit_visits_today";
+    _5bcf901a4d33d101bb44838d0448b5c4:
+      | "sensor.thor_weight"
+      | "sensor.thor_visits_today";
+    _25b72a38da06fa41cc1b2500f931cd61:
+      | "sensor.kit_weight"
+      | "sensor.kit_visits_today";
     _6771585b99db055873b50a44e4b2ca75:
       | "sensor.192_168_1_1_download"
       | "sensor.192_168_1_1_upload"
@@ -825,7 +835,9 @@ declare module "@digital-alchemy/hass" {
       | "sensor.blue_pure_pm_2_5"
       | "sensor.blue_pure_filter_life"
       | "switch.blue_pure_child_lock";
-    _12d96f86d40190e2bd0299e468a1e277: "sensor.liuyue_weight" | "sensor.liuyue_visits_today";
+    _12d96f86d40190e2bd0299e468a1e277:
+      | "sensor.liuyue_weight"
+      | "sensor.liuyue_visits_today";
     _c3671e2ad452702f63047be7fdac7671:
       | "media_player.living_room_television"
       | "sensor.living_room_television_tv_channel"
@@ -949,7 +961,10 @@ declare module "@digital-alchemy/hass" {
   }
   export interface HassPlatformMapping {
     _person: "person.jerred" | "person.shuxin";
-    _cloud: "binary_sensor.remote_ui" | "stt.home_assistant_cloud" | "tts.home_assistant_cloud";
+    _cloud:
+      | "binary_sensor.remote_ui"
+      | "stt.home_assistant_cloud"
+      | "tts.home_assistant_cloud";
     _hue:
       | "binary_sensor.tv_entertainment_configuration"
       | "light.bludot_stilt_lamp"
