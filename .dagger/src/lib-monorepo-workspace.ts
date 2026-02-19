@@ -35,7 +35,7 @@ export type BaseContainerConfig = {
 export function getBaseBunDebianContainer(
   config?: BaseContainerConfig,
 ): Container {
-  const aptPackages = ["python3", ...(config?.extraAptPackages ?? [])];
+  const aptPackages = ["python3", "git", ...(config?.extraAptPackages ?? [])];
 
   let container = dag
     .container()
