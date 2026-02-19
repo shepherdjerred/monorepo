@@ -146,11 +146,17 @@ export class Monorepo {
         this.clauderonCi(source, webResult.frontendDist, s3AccessKeyId, s3SecretAccessKey),
       ),
       withTiming("Monorepo build", async () => {
-        // Build webring before monorepo build — sjer.red depends on webring's dist
-        // and run-package-script.ts builds alphabetically (s before w)
-        const c = container
+        // Build webring first — sjer.red depends on webring's dist/
+        // and run-package-script.ts builds alphabetically (s before w).
+        // Must extract dist/ as a Dagger Directory and mount it separately because
+        // the parent withMountedDirectory at packages/webring hides overlay writes.
+        const webringBuilt = container
           .withWorkdir("/workspace/packages/webring")
-          .withExec(["bun", "run", "build"])
+          .withExec(["bun", "run", "build"]);
+        const webringDist = webringBuilt.directory("/workspace/packages/webring/dist");
+
+        const c = container
+          .withMountedDirectory("/workspace/packages/webring/dist", webringDist)
           .withWorkdir("/workspace")
           .withExec(["bun", "run", "build"]);
         await c.sync();
