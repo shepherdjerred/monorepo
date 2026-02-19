@@ -43,7 +43,7 @@ export function installWorkspaceDeps(
   );
   container = container.withMountedCache(
     "/workspace/.eslintcache",
-    dag.cacheVolume("scout-eslint-cache-v3"),
+    dag.cacheVolume("scout-eslint-cache-v4"),
   );
   container = container.withMountedCache(
     "/workspace/.tsbuildinfo",
@@ -191,7 +191,7 @@ function getMountedWorkspace(
   );
   container = container.withMountedCache(
     "/workspace/.eslintcache",
-    dag.cacheVolume("scout-eslint-cache-v3"),
+    dag.cacheVolume("scout-eslint-cache-v4"),
   );
   container = container.withMountedCache(
     "/workspace/.tsbuildinfo",
