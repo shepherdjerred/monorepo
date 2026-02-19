@@ -421,8 +421,8 @@ export function semgrepScan(source: Directory): Container {
   return dag
     .container()
     .from("semgrep/semgrep:latest")
-    .withMountedDirectory("/workspace", source)
-    .withWorkdir("/workspace")
+    .withMountedDirectory("/src", source)
+    .withWorkdir("/src")
     .withExec(["semgrep", "scan", "--config=auto", "--error"]);
 }
 
