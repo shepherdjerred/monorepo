@@ -503,11 +503,22 @@ declare module "@digital-alchemy/hass" {
       >;
     };
     "sensor.backup_backup_manager_state": {
-      state: "idle" | "create_backup" | "blocked" | "receive_backup" | "restore_backup";
+      state:
+        | "idle"
+        | "create_backup"
+        | "blocked"
+        | "receive_backup"
+        | "restore_backup";
       attributes: DynamicMergeAttributes<
         "sensor.backup_backup_manager_state",
         {
-          options: ("idle" | "create_backup" | "blocked" | "receive_backup" | "restore_backup")[];
+          options: (
+            | "idle"
+            | "create_backup"
+            | "blocked"
+            | "receive_backup"
+            | "restore_backup"
+          )[];
           device_class: "enum";
           friendly_name: "Backup Backup Manager state";
         }
@@ -1411,7 +1422,11 @@ declare module "@digital-alchemy/hass" {
       >;
     };
     "sensor.bedroom_switch_zigbee_connectivity": {
-      state: "connected" | "disconnected" | "connectivity_issue" | "unidirectional_incoming";
+      state:
+        | "connected"
+        | "disconnected"
+        | "connectivity_issue"
+        | "unidirectional_incoming";
       attributes: DynamicMergeAttributes<
         "sensor.bedroom_switch_zigbee_connectivity",
         {
@@ -1432,7 +1447,11 @@ declare module "@digital-alchemy/hass" {
       >;
     };
     "sensor.entry_switch_zigbee_connectivity": {
-      state: "connected" | "disconnected" | "connectivity_issue" | "unidirectional_incoming";
+      state:
+        | "connected"
+        | "disconnected"
+        | "connectivity_issue"
+        | "unidirectional_incoming";
       attributes: DynamicMergeAttributes<
         "sensor.entry_switch_zigbee_connectivity",
         {
@@ -1453,7 +1472,11 @@ declare module "@digital-alchemy/hass" {
       >;
     };
     "sensor.signe_lamp_zigbee_connectivity": {
-      state: "connected" | "disconnected" | "connectivity_issue" | "unidirectional_incoming";
+      state:
+        | "connected"
+        | "disconnected"
+        | "connectivity_issue"
+        | "unidirectional_incoming";
       attributes: DynamicMergeAttributes<
         "sensor.signe_lamp_zigbee_connectivity",
         {
@@ -1474,7 +1497,11 @@ declare module "@digital-alchemy/hass" {
       >;
     };
     "sensor.light_strip_zigbee_connectivity": {
-      state: "connected" | "disconnected" | "connectivity_issue" | "unidirectional_incoming";
+      state:
+        | "connected"
+        | "disconnected"
+        | "connectivity_issue"
+        | "unidirectional_incoming";
       attributes: DynamicMergeAttributes<
         "sensor.light_strip_zigbee_connectivity",
         {
@@ -1495,7 +1522,11 @@ declare module "@digital-alchemy/hass" {
       >;
     };
     "sensor.philips_hue_zigbee_connectivity": {
-      state: "connected" | "disconnected" | "connectivity_issue" | "unidirectional_incoming";
+      state:
+        | "connected"
+        | "disconnected"
+        | "connectivity_issue"
+        | "unidirectional_incoming";
       attributes: DynamicMergeAttributes<
         "sensor.philips_hue_zigbee_connectivity",
         {
@@ -1516,7 +1547,11 @@ declare module "@digital-alchemy/hass" {
       >;
     };
     "sensor.bronze_lamp_lower_zigbee_connectivity": {
-      state: "connected" | "disconnected" | "connectivity_issue" | "unidirectional_incoming";
+      state:
+        | "connected"
+        | "disconnected"
+        | "connectivity_issue"
+        | "unidirectional_incoming";
       attributes: DynamicMergeAttributes<
         "sensor.bronze_lamp_lower_zigbee_connectivity",
         {
@@ -1537,7 +1572,11 @@ declare module "@digital-alchemy/hass" {
       >;
     };
     "sensor.hue_tap_dial_switch_1_zigbee_connectivity": {
-      state: "connected" | "disconnected" | "connectivity_issue" | "unidirectional_incoming";
+      state:
+        | "connected"
+        | "disconnected"
+        | "connectivity_issue"
+        | "unidirectional_incoming";
       attributes: DynamicMergeAttributes<
         "sensor.hue_tap_dial_switch_1_zigbee_connectivity",
         {
@@ -1558,7 +1597,11 @@ declare module "@digital-alchemy/hass" {
       >;
     };
     "sensor.bludot_bender_lamp_zigbee_connectivity": {
-      state: "connected" | "disconnected" | "connectivity_issue" | "unidirectional_incoming";
+      state:
+        | "connected"
+        | "disconnected"
+        | "connectivity_issue"
+        | "unidirectional_incoming";
       attributes: DynamicMergeAttributes<
         "sensor.bludot_bender_lamp_zigbee_connectivity",
         {
@@ -1579,7 +1622,11 @@ declare module "@digital-alchemy/hass" {
       >;
     };
     "sensor.hue_play_gradient_lightstrip_1_zigbee_connectivity": {
-      state: "connected" | "disconnected" | "connectivity_issue" | "unidirectional_incoming";
+      state:
+        | "connected"
+        | "disconnected"
+        | "connectivity_issue"
+        | "unidirectional_incoming";
       attributes: DynamicMergeAttributes<
         "sensor.hue_play_gradient_lightstrip_1_zigbee_connectivity",
         {
@@ -1600,7 +1647,11 @@ declare module "@digital-alchemy/hass" {
       >;
     };
     "sensor.bronze_lamp_upper_zigbee_connectivity": {
-      state: "connected" | "disconnected" | "connectivity_issue" | "unidirectional_incoming";
+      state:
+        | "connected"
+        | "disconnected"
+        | "connectivity_issue"
+        | "unidirectional_incoming";
       attributes: DynamicMergeAttributes<
         "sensor.bronze_lamp_upper_zigbee_connectivity",
         {
@@ -1621,7 +1672,11 @@ declare module "@digital-alchemy/hass" {
       >;
     };
     "sensor.hue_color_lamp_1_zigbee_connectivity_4": {
-      state: "connected" | "disconnected" | "connectivity_issue" | "unidirectional_incoming";
+      state:
+        | "connected"
+        | "disconnected"
+        | "connectivity_issue"
+        | "unidirectional_incoming";
       attributes: DynamicMergeAttributes<
         "sensor.hue_color_lamp_1_zigbee_connectivity_4",
         {
@@ -1642,7 +1697,11 @@ declare module "@digital-alchemy/hass" {
       >;
     };
     "sensor.hue_color_lamp_1_zigbee_connectivity_3": {
-      state: "connected" | "disconnected" | "connectivity_issue" | "unidirectional_incoming";
+      state:
+        | "connected"
+        | "disconnected"
+        | "connectivity_issue"
+        | "unidirectional_incoming";
       attributes: DynamicMergeAttributes<
         "sensor.hue_color_lamp_1_zigbee_connectivity_3",
         {
@@ -1663,7 +1722,11 @@ declare module "@digital-alchemy/hass" {
       >;
     };
     "sensor.bludot_stilt_lamp_zigbee_connectivity": {
-      state: "connected" | "disconnected" | "connectivity_issue" | "unidirectional_incoming";
+      state:
+        | "connected"
+        | "disconnected"
+        | "connectivity_issue"
+        | "unidirectional_incoming";
       attributes: DynamicMergeAttributes<
         "sensor.bludot_stilt_lamp_zigbee_connectivity",
         {
@@ -1684,7 +1747,11 @@ declare module "@digital-alchemy/hass" {
       >;
     };
     "sensor.bronze_lamp_middle_zigbee_connectivity": {
-      state: "connected" | "disconnected" | "connectivity_issue" | "unidirectional_incoming";
+      state:
+        | "connected"
+        | "disconnected"
+        | "connectivity_issue"
+        | "unidirectional_incoming";
       attributes: DynamicMergeAttributes<
         "sensor.bronze_lamp_middle_zigbee_connectivity",
         {
@@ -1705,7 +1772,11 @@ declare module "@digital-alchemy/hass" {
       >;
     };
     "sensor.ikea_floor_lamp_zigbee_connectivity": {
-      state: "connected" | "disconnected" | "connectivity_issue" | "unidirectional_incoming";
+      state:
+        | "connected"
+        | "disconnected"
+        | "connectivity_issue"
+        | "unidirectional_incoming";
       attributes: DynamicMergeAttributes<
         "sensor.ikea_floor_lamp_zigbee_connectivity",
         {
@@ -6276,7 +6347,10 @@ declare module "@digital-alchemy/hass" {
            * > ```
            */ hue_type: string;
           lights: ("R&B Lamp" | "BluDot Bender Lamp")[];
-          entity_id: ("light.bludot_bender_lamp" | "light.room_and_board_table_lamp")[];
+          entity_id: (
+            | "light.bludot_bender_lamp"
+            | "light.room_and_board_table_lamp"
+          )[];
           dynamics: boolean;
           icon: "mdi:lightbulb-group";
           friendly_name: "Bedroom";
@@ -6408,7 +6482,10 @@ declare module "@digital-alchemy/hass" {
            * > id: jerred
            * > ```
            */ id: string;
-          device_trackers: ("device_tracker.iphone" | "device_tracker.ipad_2_2")[];
+          device_trackers: (
+            | "device_tracker.iphone"
+            | "device_tracker.ipad_2_2"
+          )[];
           /**
            * > ```yaml
            * > latitude: 47.611566525376304
@@ -10793,7 +10870,15 @@ declare module "@digital-alchemy/hass" {
       >;
     };
     "vacuum.roomba": {
-      state: "error" | "docked" | "charging" | "paused" | "returning" | "cleaning" | "idle" | "unavailable";
+      state:
+        | "error"
+        | "docked"
+        | "charging"
+        | "paused"
+        | "returning"
+        | "cleaning"
+        | "idle"
+        | "unavailable";
       attributes: DynamicMergeAttributes<
         "vacuum.roomba",
         {

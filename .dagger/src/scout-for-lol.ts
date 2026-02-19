@@ -5,7 +5,6 @@ import { logWithTimestamp, withTiming } from "./lib-timing.ts";
 import {
   generatePrismaClient,
   getPreparedWorkspace,
-  getPreparedMountedWorkspace,
   buildBackendImage,
   smokeTestBackendImageWithContainer,
   buildFrontend,
@@ -32,9 +31,9 @@ export async function checkScoutForLol(source: Directory): Promise<string> {
   // Generate Prisma client once and share
   const prismaGenerated = generatePrismaClient(pkgSource);
 
-  // Use mounted workspace for CI checks (faster than copying files)
+  // Use embedded workspace for CI checks (simpler DAG, avoids engine issues)
   // Mount eslint-config at /eslint-config/ (eslint.config.ts imports from ../eslint-config/local.ts)
-  const preparedWorkspace = getPreparedMountedWorkspace(
+  const preparedWorkspace = getPreparedWorkspace(
     pkgSource,
     prismaGenerated,
   )

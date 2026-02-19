@@ -7,7 +7,6 @@ import "@digital-alchemy/hass";
 
 export const InstalledAddons = {} as const;
 
-
 import {
   AndroidNotificationData,
   AppleNotificationData,
@@ -1354,7 +1353,9 @@ declare module "@digital-alchemy/hass" {
            * >   reorder: false
            * > ```
            */
-          media_player: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          media_player:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
         } & RequireAtLeastOne<{
           /**
            * Assisted definition
@@ -1802,7 +1803,14 @@ declare module "@digital-alchemy/hass" {
           /**
            * ## hvac_mode
            */
-          hvac_mode?: "off" | "auto" | "cool" | "dry" | "fan_only" | "heat_cool" | "heat";
+          hvac_mode?:
+            | "off"
+            | "auto"
+            | "cool"
+            | "dry"
+            | "fan_only"
+            | "heat_cool"
+            | "heat";
           /**
            * ## target_temp_high
            *
@@ -3611,7 +3619,9 @@ declare module "@digital-alchemy/hass" {
            * >     integration: hue
            * > ```
            */
-          entity_id: PICK_FROM_PLATFORM<"hue", "scene"> | PICK_FROM_PLATFORM<"hue", "scene">[];
+          entity_id:
+            | PICK_FROM_PLATFORM<"hue", "scene">
+            | PICK_FROM_PLATFORM<"hue", "scene">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5002,7 +5012,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 131072
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5025,7 +5037,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 8192
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5059,7 +5073,9 @@ declare module "@digital-alchemy/hass" {
            * >   reorder: false
            * > ```
            */
-          group_members: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          group_members:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
         } & RequireAtLeastOne<{
           /**
            * Assisted definition
@@ -5071,7 +5087,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 524288
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5094,7 +5112,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 32
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5117,7 +5137,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 1
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5140,7 +5162,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 16384
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5163,7 +5187,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 16385
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5186,7 +5212,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 16
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5224,7 +5252,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 2
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5247,7 +5277,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 4096
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5312,7 +5344,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 512
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5340,7 +5374,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 262144
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5444,7 +5480,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 4194304
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5488,7 +5526,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 65536
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5532,7 +5572,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 2048
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5566,7 +5608,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 32768
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5589,7 +5633,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 384
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5612,7 +5658,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 256
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5635,7 +5683,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 128
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5658,7 +5708,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 524288
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5682,7 +5734,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 1024
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5716,7 +5770,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 8
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5754,7 +5810,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 4
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5778,7 +5836,9 @@ declare module "@digital-alchemy/hass" {
            * >       - 1024
            * > ```
            */
-          entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           device_id: TDeviceId | TDeviceId[];
           label_id: TLabelId | TLabelId[];
           area_id: TAreaId | TAreaId[];
@@ -5810,7 +5870,8 @@ declare module "@digital-alchemy/hass" {
          * > object: null
          * > ```
          */
-        data?: NotificationData & (AndroidNotificationData | AppleNotificationData);
+        data?: NotificationData &
+          (AndroidNotificationData | AppleNotificationData);
         /**
          * ## message
          *
@@ -5877,7 +5938,8 @@ declare module "@digital-alchemy/hass" {
          * > object: null
          * > ```
          */
-        data?: NotificationData & (AndroidNotificationData | AppleNotificationData);
+        data?: NotificationData &
+          (AndroidNotificationData | AppleNotificationData);
         /**
          * ## message
          *
@@ -5944,7 +6006,8 @@ declare module "@digital-alchemy/hass" {
          * > object: null
          * > ```
          */
-        data?: NotificationData & (AndroidNotificationData | AppleNotificationData);
+        data?: NotificationData &
+          (AndroidNotificationData | AppleNotificationData);
         /**
          * ## message
          *
@@ -6011,7 +6074,8 @@ declare module "@digital-alchemy/hass" {
          * > object: null
          * > ```
          */
-        data?: NotificationData & (AndroidNotificationData | AppleNotificationData);
+        data?: NotificationData &
+          (AndroidNotificationData | AppleNotificationData);
         /**
          * ## message
          *
@@ -6423,7 +6487,15 @@ declare module "@digital-alchemy/hass" {
          * > }
          * > ```
          */
-        types: ("change" | "last_reset" | "max" | "mean" | "min" | "state" | "sum")[];
+        types: (
+          | "change"
+          | "last_reset"
+          | "max"
+          | "mean"
+          | "min"
+          | "state"
+          | "sum"
+        )[];
         /**
          * ## units
          *
@@ -8357,7 +8429,9 @@ declare module "@digital-alchemy/hass" {
            * >   reorder: false
            * > ```
            */
-          media_player_entity_id: PICK_ENTITY<"media_player"> | PICK_ENTITY<"media_player">[];
+          media_player_entity_id:
+            | PICK_ENTITY<"media_player">
+            | PICK_ENTITY<"media_player">[];
           /**
            * ## message
            *
