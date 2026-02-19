@@ -346,7 +346,7 @@ function getRustTauriContainer(): Container {
 
 function installBunInRustContainer(container: Container): Container {
   return container
-    .withExec(["sh", "-c", "curl -fsSL https://bun.sh/install | bash"])
+    .withExec(["sh", "-c", `curl -fsSL https://bun.sh/install | bash -s "bun-v${BUN_VERSION}"`])
     .withEnvVariable("PATH", "/root/.bun/bin:$PATH", { expand: true });
 }
 

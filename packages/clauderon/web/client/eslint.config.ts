@@ -13,6 +13,14 @@ export default [
     },
   }),
   {
+    files: ["src/**/*.ts"],
+    rules: {
+      // This package emits JS (noEmit: false), so imports must use .js extensions
+      // for TypeScript module resolution. The .ts extension rule conflicts with this.
+      "custom-rules/require-ts-extensions": "off",
+    },
+  },
+  {
     files: ["src/index.ts"],
     rules: {
       // Library barrel file - re-exports are the public API surface

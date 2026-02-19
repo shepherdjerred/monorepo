@@ -5,6 +5,7 @@
   "description": "LaTeX resume - built and deployed via Dagger",
   "scripts": {
     "build": "true",
+    "lint": "true",
     "test": "true",
     "typecheck": "true"
   }

@@ -2,6 +2,9 @@ import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 import { getGitHubContainer } from "./lib-github.ts";
 import { logWithTimestamp } from "./lib-timing.ts";
+import versions from "./lib-versions.ts";
+
+const BUN_VERSION = versions.bun;
 
 // ============================================================
 // Desktop helpers
@@ -60,7 +63,7 @@ function getRustTauriContainer(): Container {
 
 function installBunInRustContainer(container: Container): Container {
   return container
-    .withExec(["sh", "-c", "curl -fsSL https://bun.sh/install | bash"])
+    .withExec(["sh", "-c", `curl -fsSL https://bun.sh/install | bash -s "bun-v${BUN_VERSION}"`])
     .withEnvVariable("PATH", "/root/.bun/bin:$PATH", { expand: true });
 }
 
