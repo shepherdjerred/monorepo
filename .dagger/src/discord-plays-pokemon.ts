@@ -54,7 +54,6 @@ function lintCommon(
   tsconfigBase: File,
 ): Container {
   return installCommonDeps(workspaceSource)
-    .withFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
     .withDirectory("/eslint-config", eslintConfigSource)
     .withFile("/tsconfig.base.json", tsconfigBase)
     .withWorkdir("/eslint-config")
@@ -111,7 +110,6 @@ function lintBackend(
   tsconfigBase: File,
 ): Container {
   return installBackendDeps(workspaceSource)
-    .withFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
     .withDirectory("/eslint-config", eslintConfigSource)
     .withFile("/tsconfig.base.json", tsconfigBase)
     .withWorkdir("/eslint-config")
@@ -170,7 +168,6 @@ function lintFrontend(
   tsconfigBase: File,
 ): Container {
   return installFrontendDeps(workspaceSource)
-    .withFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
     .withDirectory("/eslint-config", eslintConfigSource)
     .withFile("/tsconfig.base.json", tsconfigBase)
     .withWorkdir("/eslint-config")
