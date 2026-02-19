@@ -43,11 +43,11 @@ export function installWorkspaceDeps(
   );
   container = container.withMountedCache(
     "/workspace/.eslintcache",
-    dag.cacheVolume("scout-eslint-cache-v4"),
+    dag.cacheVolume("scout-eslint-cache-v5"),
   );
   container = container.withMountedCache(
     "/workspace/.tsbuildinfo",
-    dag.cacheVolume("tsbuildinfo-cache-v2"),
+    dag.cacheVolume("tsbuildinfo-cache-v3"),
   );
 
   // PHASE 1: Dependency files only (for bun install caching)
@@ -191,11 +191,11 @@ function getMountedWorkspace(
   );
   container = container.withMountedCache(
     "/workspace/.eslintcache",
-    dag.cacheVolume("scout-eslint-cache-v4"),
+    dag.cacheVolume("scout-eslint-cache-v5"),
   );
   container = container.withMountedCache(
     "/workspace/.tsbuildinfo",
-    dag.cacheVolume("tsbuildinfo-cache-v2"),
+    dag.cacheVolume("tsbuildinfo-cache-v3"),
   );
 
   container = container
