@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "bunx @tauri-apps/cli dev",
     "dev:frontend": "bunx vite",
-    "build": "bunx @tauri-apps/cli build",
+    "build": "bunx vite build",
+    "build:tauri": "bunx @tauri-apps/cli build",
     "build:macos": "bunx @tauri-apps/cli build --target universal-apple-darwin",
     "build:macos:arm": "bunx @tauri-apps/cli build --target aarch64-apple-darwin",
     "build:macos:intel": "bunx @tauri-apps/cli build --target x86_64-apple-darwin",
