@@ -1,4 +1,3 @@
-import { spawn } from "node:child_process";
 import { z } from "zod";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import type { EditResult, FileChange } from "./types.ts";
@@ -52,124 +51,102 @@ export async function executeEdit(
     hasResume: !(resumeSessionId == null || resumeSessionId.length === 0),
   });
 
-  return new Promise((resolve, reject) => {
-    const args = [
-      "--print", // Non-interactive mode
-      "--output-format",
-      "stream-json", // Structured output
-      "--permission-mode",
-      "acceptEdits", // Auto-accept file edits
-      "--allowedTools",
-      "Read,Write,Edit,Glob,Grep", // No Bash for security
-    ];
+  const args = [
+    "--print", // Non-interactive mode
+    "--output-format",
+    "stream-json", // Structured output
+    "--permission-mode",
+    "acceptEdits", // Auto-accept file edits
+    "--allowedTools",
+    "Read,Write,Edit,Glob,Grep", // No Bash for security
+  ];
 
-    if (resumeSessionId != null && resumeSessionId.length > 0) {
-      args.push("--resume", resumeSessionId);
-    }
+  if (resumeSessionId != null && resumeSessionId.length > 0) {
+    args.push("--resume", resumeSessionId);
+  }
 
-    // Add the prompt
-    args.push(prompt);
+  // Add the prompt
+  args.push(prompt);
 
-    const proc = spawn("claude", args, {
-      cwd: workingDirectory,
-      env: { ...Bun.env },
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-
-    let stdout = "";
-    let stderr = "";
-    let sdkSessionId: string | null = null;
-    const changes: FileChange[] = [];
-    const fileContents = new Map<string, string>(); // Track original contents
-    let summary = "";
-
-    proc.stdout.on("data", (data: Buffer) => {
-      stdout += data.toString();
-      // Parse streaming JSON output
-      const lines = stdout.split("\n");
-      stdout = lines.pop() ?? ""; // Keep incomplete line
-
-      for (const line of lines) {
-        if (!line.trim()) {
-          continue;
-        }
-        try {
-          const parsed: unknown = JSON.parse(line);
-          const parseResult = ClaudeMessageSchema.safeParse(parsed);
-          if (!parseResult.success) {
-            continue;
-          }
-          const msg = parseResult.data;
-          processMessage(msg, {
-            setSessionId: (id) => {
-              sdkSessionId = id;
-            },
-            addChange: (change) => {
-              // Deduplicate by file path
-              const existing = changes.findIndex(
-                (c) => c.filePath === change.filePath,
-              );
-              if (existing === -1) {
-                changes.push(change);
-              } else {
-                changes[existing] = change;
-              }
-            },
-            setSummary: (s) => {
-              summary = s;
-            },
-            trackOriginal: (path, content) => {
-              if (!fileContents.has(path)) {
-                fileContents.set(path, content);
-              }
-            },
-          });
-        } catch {
-          // Not JSON, ignore
-        }
-      }
-    });
-
-    proc.stderr.on("data", (data: Buffer) => {
-      stderr += data.toString();
-    });
-
-    proc.on("close", (code) => {
-      if (code !== 0) {
-        logger.error("Claude process exited with error", undefined, {
-          code,
-          stderr,
-        });
-        reject(
-          new Error(
-            `Claude process exited with code ${String(code)}: ${stderr}`,
-          ),
-        );
-        return;
-      }
-
-      // Extract summary from final assistant message if not already set
-      if (!summary) {
-        summary = extractFinalSummary(stdout);
-      }
-
-      logger.info("Edit complete", {
-        sessionId: sdkSessionId,
-        changeCount: changes.length,
-      });
-
-      resolve({
-        sdkSessionId,
-        changes,
-        summary: summary || "Changes applied successfully.",
-      });
-    });
-
-    proc.on("error", (err) => {
-      logger.error("Failed to spawn Claude process", err);
-      reject(err);
-    });
+  const proc = Bun.spawn(["claude", ...args], {
+    cwd: workingDirectory,
+    env: { ...Bun.env },
+    stdout: "pipe",
+    stderr: "pipe",
   });
+
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(proc.stdout).text(),
+    new Response(proc.stderr).text(),
+    proc.exited,
+  ]);
+
+  if (exitCode !== 0) {
+    logger.error("Claude process exited with error", undefined, {
+      code: exitCode,
+      stderr,
+    });
+    throw new Error(
+      `Claude process exited with code ${String(exitCode)}: ${stderr}`,
+    );
+  }
+
+  let sdkSessionId: string | null = null;
+  const changes: FileChange[] = [];
+  let summary = "";
+
+  const handlers: MessageHandlers = {
+    setSessionId: (id) => {
+      sdkSessionId = id;
+    },
+    addChange: (change) => {
+      const existing = changes.findIndex(
+        (c) => c.filePath === change.filePath,
+      );
+      if (existing === -1) {
+        changes.push(change);
+      } else {
+        changes[existing] = change;
+      }
+    },
+    setSummary: (s) => {
+      summary = s;
+    },
+    trackOriginal: () => {
+      // No-op: originals only needed during streaming
+    },
+  };
+
+  for (const line of stdout.split("\n")) {
+    if (!line.trim()) {
+      continue;
+    }
+    try {
+      const parsed: unknown = JSON.parse(line);
+      const parseResult = ClaudeMessageSchema.safeParse(parsed);
+      if (!parseResult.success) {
+        continue;
+      }
+      processMessage(parseResult.data, handlers);
+    } catch {
+      // Not JSON, ignore
+    }
+  }
+
+  if (!summary) {
+    summary = extractFinalSummary(stdout);
+  }
+
+  logger.info("Edit complete", {
+    sessionId: sdkSessionId,
+    changeCount: changes.length,
+  });
+
+  return {
+    sdkSessionId,
+    changes,
+    summary: summary || "Changes applied successfully.",
+  };
 }
 
 type MessageHandlers = {
@@ -268,19 +245,16 @@ function extractFinalSummary(output: string): string {
  * Check if Claude Code CLI is available
  */
 export async function isClaudeAvailable(): Promise<boolean> {
-  return new Promise((resolve) => {
-    const proc = spawn("claude", ["--version"], {
-      stdio: ["pipe", "pipe", "pipe"],
+  try {
+    const proc = Bun.spawn(["claude", "--version"], {
+      stdout: "pipe",
+      stderr: "pipe",
     });
-
-    proc.on("close", (code) => {
-      resolve(code === 0);
-    });
-
-    proc.on("error", () => {
-      resolve(false);
-    });
-  });
+    const exitCode = await proc.exited;
+    return exitCode === 0;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -295,39 +269,22 @@ export async function checkClaudePrerequisites(): Promise<{
     Bun.env["ANTHROPIC_API_KEY"] != null &&
     Bun.env["ANTHROPIC_API_KEY"].length > 0;
 
-  return new Promise((resolve) => {
-    const proc = spawn("claude", ["--version"], {
-      stdio: ["pipe", "pipe", "pipe"],
+  try {
+    const proc = Bun.spawn(["claude", "--version"], {
+      stdout: "pipe",
+      stderr: "pipe",
     });
-
-    let stdout = "";
-
-    proc.stdout.on("data", (data: Buffer) => {
-      stdout += data.toString();
-    });
-
-    proc.on("close", (code) => {
-      if (code === 0) {
-        resolve({
-          installed: true,
-          version: stdout.trim(),
-          hasApiKey,
-        });
-      } else {
-        resolve({
-          installed: false,
-          hasApiKey,
-        });
-      }
-    });
-
-    proc.on("error", () => {
-      resolve({
-        installed: false,
-        hasApiKey,
-      });
-    });
-  });
+    const [stdout, exitCode] = await Promise.all([
+      new Response(proc.stdout).text(),
+      proc.exited,
+    ]);
+    if (exitCode === 0) {
+      return { installed: true, version: stdout.trim(), hasApiKey };
+    }
+    return { installed: false, hasApiKey };
+  } catch {
+    return { installed: false, hasApiKey };
+  }
 }
 
 /**
@@ -336,17 +293,14 @@ export async function checkClaudePrerequisites(): Promise<{
 export async function checkGhPrerequisites(): Promise<{
   installed: boolean;
 }> {
-  return new Promise((resolve) => {
-    const proc = spawn("gh", ["--version"], {
-      stdio: ["pipe", "pipe", "pipe"],
+  try {
+    const proc = Bun.spawn(["gh", "--version"], {
+      stdout: "pipe",
+      stderr: "pipe",
     });
-
-    proc.on("close", (code) => {
-      resolve({ installed: code === 0 });
-    });
-
-    proc.on("error", () => {
-      resolve({ installed: false });
-    });
-  });
+    const exitCode = await proc.exited;
+    return { installed: exitCode === 0 };
+  } catch {
+    return { installed: false };
+  }
 }

@@ -1,4 +1,3 @@
-import { spawn } from "node:child_process";
 import { mkdir, writeFile, unlink } from "node:fs/promises";
 import path from "node:path";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
@@ -95,30 +94,22 @@ export async function createPullRequest(
 }
 
 async function runGitCommand(cwd: string, args: string[]): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const proc = spawn("git", args, { cwd, stdio: ["pipe", "pipe", "pipe"] });
-
-    let stdout = "";
-    let stderr = "";
-
-    proc.stdout.on("data", (data: Buffer) => {
-      stdout += data.toString();
-    });
-
-    proc.stderr.on("data", (data: Buffer) => {
-      stderr += data.toString();
-    });
-
-    proc.on("close", (code) => {
-      if (code === 0) {
-        resolve(stdout.trim());
-      } else {
-        reject(new Error(`git ${args.join(" ")} failed: ${stderr}`));
-      }
-    });
-
-    proc.on("error", reject);
+  const proc = Bun.spawn(["git", ...args], {
+    cwd,
+    stdout: "pipe",
+    stderr: "pipe",
   });
+
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(proc.stdout).text(),
+    new Response(proc.stderr).text(),
+    proc.exited,
+  ]);
+
+  if (exitCode === 0) {
+    return stdout.trim();
+  }
+  throw new Error(`git ${args.join(" ")} failed: ${stderr}`);
 }
 
 async function getRemoteUrl(cwd: string): Promise<string> {
@@ -166,50 +157,38 @@ type CreatePRWithGhOptions = {
 async function createPRWithGh(opts: CreatePRWithGhOptions): Promise<string> {
   const { workingDir, title, body, baseBranch, headBranch, token } = opts;
 
-  return new Promise((resolve, reject) => {
-    const proc = spawn(
+  const proc = Bun.spawn(
+    [
       "gh",
-      [
-        "pr",
-        "create",
-        "--title",
-        title,
-        "--body",
-        body,
-        "--base",
-        baseBranch,
-        "--head",
-        headBranch,
-      ],
-      {
-        cwd: workingDir,
-        env: { ...Bun.env, GH_TOKEN: token },
-        stdio: ["pipe", "pipe", "pipe"],
-      },
-    );
+      "pr",
+      "create",
+      "--title",
+      title,
+      "--body",
+      body,
+      "--base",
+      baseBranch,
+      "--head",
+      headBranch,
+    ],
+    {
+      cwd: workingDir,
+      env: { ...Bun.env, GH_TOKEN: token },
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+  );
 
-    let stdout = "";
-    let stderr = "";
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(proc.stdout).text(),
+    new Response(proc.stderr).text(),
+    proc.exited,
+  ]);
 
-    proc.stdout.on("data", (data: Buffer) => {
-      stdout += data.toString();
-    });
-
-    proc.stderr.on("data", (data: Buffer) => {
-      stderr += data.toString();
-    });
-
-    proc.on("close", (code) => {
-      if (code === 0) {
-        // gh pr create outputs the PR URL
-        resolve(stdout.trim());
-      } else {
-        reject(new Error(`gh pr create failed: ${stderr}`));
-      }
-    });
-
-    proc.on("error", reject);
-  });
+  if (exitCode === 0) {
+    return stdout.trim();
+  }
+  throw new Error(`gh pr create failed: ${stderr}`);
 }
 
 /**
