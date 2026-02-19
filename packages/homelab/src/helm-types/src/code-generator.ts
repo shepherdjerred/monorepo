@@ -31,10 +31,9 @@ export function generateTypeScriptCode(
   // Generate parameter type (flattened dot notation)
   code += generateParameterType(mainInterface, chartName);
 
-  // Check if any 'any' types were generated and add ESLint disable if needed
+  // Add header comment for generated files
   if (code.includes(": any")) {
     code = `// Generated TypeScript types for ${chartName} Helm chart
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 ${code.slice(Math.max(0, code.indexOf("\n\n") + 2))}`;
   }

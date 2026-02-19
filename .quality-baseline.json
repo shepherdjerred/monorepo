@@ -1,7 +1,11 @@
 {
-  "eslint-disable": 15,
-  "ts-suppressions": 47,
-  "rust-allow": 0,
-  "prettier-ignore": 2,
+  "eslint-disable": {
+    "packages/scout-for-lol/packages/backend/src/testing/discord-mocks.ts": 2
+  },
+  "ts-suppressions": {
+    "packages/sjer.red/astro.config.ts": 1
+  },
+  "rust-allow": {},
+  "prettier-ignore": {},
   "updated": "2026-02-18"
 }

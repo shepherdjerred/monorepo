@@ -204,9 +204,7 @@ describe("Code Generation", () => {
 
     const code = generateTypeScriptCode(iface, "test-chart");
 
-    expect(code).toContain(
-      "/* eslint-disable @typescript-eslint/no-explicit-any */",
-    );
+    expect(code).toContain("Generated TypeScript types for test-chart Helm chart");
   });
 
   test("should normalize chart names with hyphens", () => {
