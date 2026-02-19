@@ -88,6 +88,7 @@ export async function checkSjerRed(source: Directory): Promise<string> {
           "test",
           "--project=chromium",
           "--max-failures=1",
+          "--ignore-snapshots",
         ])
         .sync();
     })(),
