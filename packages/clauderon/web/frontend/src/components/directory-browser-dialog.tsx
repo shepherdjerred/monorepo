@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { X, Folder, FolderOpen, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useClauderonClient } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useClauderonClient";
 import type { DirectoryEntryDto } from "@clauderon/client";
 
 type DirectoryBrowserDialogProps = {
@@ -15,12 +14,11 @@ export function DirectoryBrowserDialog({
   onSelect,
   initialPath,
 }: DirectoryBrowserDialogProps) {
-  const client = useClauderonClient();
   const [currentPath, setCurrentPath] = useState(initialPath ?? "~");
-  const [parentPath, setParentPath] = useState<string | null>(null);
-  const [entries, setEntries] = useState<DirectoryEntryDto[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [parentPath] = useState<string | null>(null);
+  const [entries] = useState<DirectoryEntryDto[]>([]);
+  const [isLoading] = useState(false);
+  const [error] = useState<string | null>(null);
 
   // Fetch directory contents
   ;

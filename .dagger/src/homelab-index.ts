@@ -1,35 +1,26 @@
 import type { Directory, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
-import { formatDaggerError, execOrThrow } from "./lib-errors.ts";
+import { execOrThrow } from "./lib-errors.ts";
+import { getMiseRuntimeContainer } from "./lib-mise.ts";
+import { buildAllCharts } from "./homelab-helm.ts";
 import {
   typeCheckHa,
   lintHa,
-  prepareHaContainer,
-  typeCheckHaWithContainer,
-  lintHaWithContainer,
-  buildHaWithContainer,
-  buildAndPushHaImage,
 } from "./homelab-ha.ts";
-import { getMiseRuntimeContainer } from "./homelab-base.ts";
 import {
   typeCheckCdk8s,
   lintCdk8s,
   testCdk8s,
-  prepareCdk8sContainer,
-  typeCheckCdk8sWithContainer,
-  lintCdk8sWithContainer,
-  buildK8sManifestsWithContainer,
-  testCdk8sWithContainer,
-  validateCaddyfileWithContainer,
 } from "./homelab-cdk8s.ts";
 import { sync as argocdSync } from "./homelab-argocd.ts";
-import { buildAndPushDependencySummaryImage } from "./homelab-dependency-summary.ts";
-import { buildAndPushDnsAuditImage } from "./homelab-dns-audit.ts";
-import { buildAndPushCaddyS3ProxyImage } from "./homelab-caddy-s3proxy.ts";
-import { buildAllCharts, HELM_CHARTS } from "./homelab-helm.ts";
 import { Stage } from "./lib-types.ts";
 import versions from "./lib-versions.ts";
-import { planAll } from "./homelab-tofu.ts";
+import { formatDaggerError } from "./lib-errors.ts";
+import {
+  runValidationPhase,
+  runPublishPhase,
+  checkForFailures,
+} from "./homelab-ci-steps.ts";
 
 export type StepStatus = "passed" | "failed" | "skipped";
 export type StepResult = {
@@ -64,6 +55,55 @@ export type HomelabSecrets = {
  */
 function getHomelabSource(monoRepoSource: Directory): Directory {
   return monoRepoSource.directory("packages/homelab");
+}
+
+/**
+ * Update a single image version in versions.ts using sed.
+ * Accepts homelab source directory (not monorepo root).
+ */
+function homelabUpdateVersion(
+  source: Directory,
+  imageKey: string,
+  version: string,
+): Directory {
+  const escapedKey = imageKey.replaceAll("/", String.raw`\/`);
+  return dag
+    .container()
+    .from(`alpine:${versions.alpine}`)
+    .withMountedDirectory("/workspace", source)
+    .withWorkdir("/workspace")
+    .withExec([
+      "sed",
+      "-i",
+      `s/"${escapedKey}": "[^"]*"/"${escapedKey}": "${version}"/`,
+      "src/cdk8s/src/versions.ts",
+    ])
+    .directory("/workspace");
+}
+
+/**
+ * Update image versions for prod deployment.
+ */
+function updateVersionsForProd(
+  source: Directory,
+  chartVersion: string,
+  appVersions?: Record<string, string>,
+): Directory {
+  let updatedSource = source;
+  for (const key of [
+    "shepherdjerred/homelab",
+    "shepherdjerred/dependency-summary",
+    "shepherdjerred/dns-audit",
+    "shepherdjerred/caddy-s3proxy",
+  ]) {
+    updatedSource = homelabUpdateVersion(updatedSource, key, chartVersion);
+  }
+  if (appVersions) {
+    for (const [key, ver] of Object.entries(appVersions)) {
+      updatedSource = homelabUpdateVersion(updatedSource, key, ver);
+    }
+  }
+  return updatedSource;
 }
 
 /**
@@ -119,472 +159,20 @@ export async function ciHomelab(
   versionOnly = false,
 ): Promise<string> {
   const source = getHomelabSource(monoRepoSource);
-  const {
-    argocdToken,
-    ghcrUsername,
-    ghcrPassword,
-    chartVersion,
-    chartRepo = "https://chartmuseum.tailnet-1a49.ts.net",
-    chartMuseumUsername,
-    chartMuseumPassword,
-    cloudflareApiToken,
-    cloudflareAccountId,
-    awsAccessKeyId,
-    awsSecretAccessKey,
-    hassBaseUrl,
-    hassToken,
-    tofuGithubToken,
-  } = secrets;
 
   // Update image versions in versions.ts if prod
-  let updatedSource = source;
-  if (env === Stage.Prod) {
-    // Infra images use chartVersion
-    for (const key of [
-      "shepherdjerred/homelab",
-      "shepherdjerred/dependency-summary",
-      "shepherdjerred/dns-audit",
-      "shepherdjerred/caddy-s3proxy",
-    ]) {
-      updatedSource = homelabUpdateVersion(updatedSource, key, chartVersion);
-    }
-    // App images from upstream callers
-    if (secrets.appVersions) {
-      for (const [key, ver] of Object.entries(secrets.appVersions)) {
-        updatedSource = homelabUpdateVersion(updatedSource, key, ver);
-      }
-    }
-  }
+  const updatedSource = env === Stage.Prod
+    ? updateVersionsForProd(source, secrets.chartVersion, secrets.appVersions)
+    : source;
 
-  // Prepare shared containers once
-  const haContainerPromise = versionOnly
-    ? undefined
-    : prepareHaContainer(updatedSource, hassBaseUrl, hassToken);
-  const cdk8sContainer = prepareCdk8sContainer(updatedSource);
-  const versionOnlySkip = (
-    name: string,
-  ): Promise<{ status: "skipped"; message: string }> =>
-    Promise.resolve({
-      status: "skipped" as const,
-      message: `${name}: SKIPPED (version-only)`,
-    });
+  // Run validation steps in parallel
+  const validation = await runValidationPhase(updatedSource, secrets, versionOnly);
 
-  // Renovate regex test
-  const renovateTestPromise = homelabTestRenovateRegex(updatedSource)
-    .then((msg) => ({
-      status: "passed" as const,
-      message: `Renovate Test: PASSED\n${msg}`,
-    }))
-    .catch((error: unknown) => ({
-      status: "failed" as const,
-      message: `Renovate Test: FAILED\n${formatDaggerError(error)}`,
-    }));
+  // Run publish steps (prod only)
+  const publish = await runPublishPhase(env, updatedSource, secrets, validation.helmBuildResult);
 
-  // Helm test
-  const helmTestPromise = versionOnly
-    ? versionOnlySkip("Helm Test")
-    : homelabTestHelm(updatedSource)
-        .then((msg) => ({
-          status: "passed" as const,
-          message: `Helm Test: PASSED\n${msg}`,
-        }))
-        .catch((error: unknown) => ({
-          status: "failed" as const,
-          message: `Helm Test: FAILED\n${formatDaggerError(error)}`,
-        }));
-
-  // CDK8s test
-  const cdk8sTestPromise = versionOnly
-    ? versionOnlySkip("CDK8s Test")
-    : testCdk8sWithContainer(cdk8sContainer)
-        .then((msg) => ({
-          status: "passed" as const,
-          message: `CDK8s Test: PASSED\n${msg}`,
-        }))
-        .catch((error: unknown) => ({
-          status: "failed" as const,
-          message: `CDK8s Test: FAILED\n${formatDaggerError(error)}`,
-        }));
-
-  // Caddyfile validation
-  const caddyfileValidatePromise = versionOnly
-    ? versionOnlySkip("Caddyfile Validate")
-    : validateCaddyfileWithContainer(cdk8sContainer)
-        .then((msg) => ({
-          status: "passed" as const,
-          message: `Caddyfile Validate: PASSED\n${msg}`,
-        }))
-        .catch((error: unknown) => ({
-          status: "failed" as const,
-          message: `Caddyfile Validate: FAILED\n${formatDaggerError(error)}`,
-        }));
-
-  // CDK8s linting
-  const cdk8sLintPromise = versionOnly
-    ? versionOnlySkip("CDK8s Lint")
-    : lintCdk8sWithContainer(cdk8sContainer)
-        .then((msg) => ({
-          status: "passed" as const,
-          message: `CDK8s Lint: PASSED\n${msg}`,
-        }))
-        .catch((error: unknown) => ({
-          status: "failed" as const,
-          message: `CDK8s Lint: FAILED\n${formatDaggerError(error)}`,
-        }));
-
-  // HA linting
-  const haLintPromise =
-    versionOnly || !haContainerPromise
-      ? versionOnlySkip("HA Lint")
-      : haContainerPromise
-          .then((container) => lintHaWithContainer(container))
-          .then((msg) => ({
-            status: "passed" as const,
-            message: `HA Lint: PASSED\n${msg}`,
-          }))
-          .catch((error: unknown) => ({
-            status: "failed" as const,
-            message: `HA Lint: FAILED\n${formatDaggerError(error)}`,
-          }));
-
-  // CDK8s type checking
-  const cdk8sTypeCheckPromise = typeCheckCdk8sWithContainer(cdk8sContainer)
-    .then((msg) => ({
-      status: "passed" as const,
-      message: `CDK8s TypeCheck: PASSED\n${msg}`,
-    }))
-    .catch((error: unknown) => ({
-      status: "failed" as const,
-      message: `CDK8s TypeCheck: FAILED\n${formatDaggerError(error)}`,
-    }));
-
-  // HA type checking
-  const haTypeCheckPromise =
-    versionOnly || !haContainerPromise
-      ? versionOnlySkip("HA TypeCheck")
-      : haContainerPromise
-          .then((container) => typeCheckHaWithContainer(container))
-          .then((msg) => ({
-            status: "passed" as const,
-            message: `HA TypeCheck: PASSED\n${msg}`,
-          }))
-          .catch((error: unknown) => ({
-            status: "failed" as const,
-            message: `HA TypeCheck: FAILED\n${formatDaggerError(error)}`,
-          }));
-
-  // OpenTofu plan
-  const tofuPlanPromise = planAll(
-    updatedSource,
-    cloudflareApiToken,
-    cloudflareAccountId,
-    awsAccessKeyId,
-    awsSecretAccessKey,
-    tofuGithubToken,
-  )
-    .then((msg) => ({
-      status: "passed" as const,
-      message: `Tofu Plan: PASSED\n${msg}`,
-    }))
-    .catch((error: unknown) => ({
-      status: "failed" as const,
-      message: `Tofu Plan: FAILED\n${formatDaggerError(error)}`,
-    }));
-
-  // CDK8s build
-  const cdk8sBuildPromise = Promise.resolve(
-    buildK8sManifestsWithContainer(cdk8sContainer),
-  )
-    .then(() => ({
-      status: "passed" as const,
-      message: "CDK8s Build: PASSED",
-    }))
-    .catch((error: unknown) => ({
-      status: "failed" as const,
-      message: `CDK8s Build: FAILED\n${formatDaggerError(error)}`,
-    }));
-
-  // HA build
-  const haBuildPromise =
-    versionOnly || !haContainerPromise
-      ? versionOnlySkip("HA Build")
-      : haContainerPromise
-          .then((container) => buildHaWithContainer(container))
-          .then(() => ({
-            status: "passed" as const,
-            message: "HA Build: PASSED",
-          }))
-          .catch((error: unknown) => ({
-            status: "failed" as const,
-            message: `HA Build: FAILED\n${formatDaggerError(error)}`,
-          }));
-
-  // Helm build
-  const helmBuildPromise = Promise.resolve().then(() => {
-    try {
-      const dist = homelabHelmBuild(
-        updatedSource,
-        chartVersion || "dev-snapshot",
-      );
-      return {
-        status: "passed" as const,
-        message: "Helm Build: PASSED",
-        dist,
-      };
-    } catch (error: unknown) {
-      return {
-        status: "failed" as const,
-        message: `Helm Build: FAILED\n${formatDaggerError(error)}`,
-        dist: undefined,
-      };
-    }
-  });
-
-  // Await all
-  const [
-    cdk8sBuildResult,
-    haBuildResult,
-    helmBuildResult,
-    renovateTestResult,
-    helmTestResult,
-    cdk8sTestResult,
-    caddyfileValidateResult,
-    cdk8sLintResult,
-    haLintResult,
-    cdk8sTypeCheckResult,
-    haTypeCheckResult,
-    tofuPlanResult,
-  ] = await Promise.all([
-    cdk8sBuildPromise,
-    haBuildPromise,
-    helmBuildPromise,
-    renovateTestPromise,
-    helmTestPromise,
-    cdk8sTestPromise,
-    caddyfileValidatePromise,
-    cdk8sLintPromise,
-    haLintPromise,
-    cdk8sTypeCheckPromise,
-    haTypeCheckPromise,
-    tofuPlanPromise,
-  ]);
-
-  // Publish phase (prod only)
-  let haPublishResult: StepResult = {
-    status: "skipped",
-    message: "[SKIPPED] Not prod",
-  };
-  let depSummaryPublishResult: StepResult = {
-    status: "skipped",
-    message: "[SKIPPED] Not prod",
-  };
-  let dnsAuditPublishResult: StepResult = {
-    status: "skipped",
-    message: "[SKIPPED] Not prod",
-  };
-  let caddyS3ProxyPublishResult: StepResult = {
-    status: "skipped",
-    message: "[SKIPPED] Not prod",
-  };
-  let helmPublishResult: StepResult = {
-    status: "skipped",
-    message: "[SKIPPED] Not prod",
-  };
-
-  if (env === Stage.Prod) {
-    const [
-      haResults,
-      depSummaryResults,
-      dnsAuditResults,
-      caddyS3ProxyResult,
-      helmResult,
-    ] = await Promise.all([
-      Promise.all([
-        buildAndPushHaImage(
-          updatedSource,
-          `ghcr.io/shepherdjerred/homelab:${chartVersion}`,
-          ghcrUsername,
-          ghcrPassword,
-          false,
-        ),
-        buildAndPushHaImage(
-          updatedSource,
-          `ghcr.io/shepherdjerred/homelab:latest`,
-          ghcrUsername,
-          ghcrPassword,
-          false,
-        ),
-      ]),
-      Promise.all([
-        buildAndPushDependencySummaryImage(
-          updatedSource,
-          `ghcr.io/shepherdjerred/dependency-summary:${chartVersion}`,
-          ghcrUsername,
-          ghcrPassword,
-          false,
-        ),
-        buildAndPushDependencySummaryImage(
-          updatedSource,
-          `ghcr.io/shepherdjerred/dependency-summary:latest`,
-          ghcrUsername,
-          ghcrPassword,
-          false,
-        ),
-      ]),
-      Promise.all([
-        buildAndPushDnsAuditImage(
-          `ghcr.io/shepherdjerred/dns-audit:${chartVersion}`,
-          ghcrUsername,
-          ghcrPassword,
-          false,
-        ),
-        buildAndPushDnsAuditImage(
-          `ghcr.io/shepherdjerred/dns-audit:latest`,
-          ghcrUsername,
-          ghcrPassword,
-          false,
-        ),
-      ]),
-      Promise.all([
-        buildAndPushCaddyS3ProxyImage(
-          `ghcr.io/shepherdjerred/caddy-s3proxy:${chartVersion}`,
-          ghcrUsername,
-          ghcrPassword,
-          false,
-        ),
-        buildAndPushCaddyS3ProxyImage(
-          `ghcr.io/shepherdjerred/caddy-s3proxy:latest`,
-          ghcrUsername,
-          ghcrPassword,
-          false,
-        ),
-      ]).then(([versioned, latest]) => ({
-        status:
-          versioned.status === "passed" && latest.status === "passed"
-            ? ("passed" as const)
-            : ("failed" as const),
-        message: `Versioned tag: ${versioned.message}\nLatest tag: ${latest.message}`,
-      })),
-      helmBuildResult.dist
-        ? homelabHelmPublishBuilt(
-            helmBuildResult.dist,
-            `1.0.0-${chartVersion}`,
-            chartRepo,
-            chartMuseumUsername,
-            chartMuseumPassword,
-            env,
-          )
-        : Promise.resolve({
-            status: "skipped" as const,
-            message: "[SKIPPED] No dist available",
-          }),
-    ]);
-
-    haPublishResult = {
-      status:
-        haResults[0].status === "passed" && haResults[1].status === "passed"
-          ? "passed"
-          : "failed",
-      message: `Versioned tag: ${haResults[0].message}\nLatest tag: ${haResults[1].message}`,
-    };
-    depSummaryPublishResult = {
-      status:
-        depSummaryResults[0].status === "passed" &&
-        depSummaryResults[1].status === "passed"
-          ? "passed"
-          : "failed",
-      message: `Versioned tag: ${depSummaryResults[0].message}\nLatest tag: ${depSummaryResults[1].message}`,
-    };
-    dnsAuditPublishResult = {
-      status:
-        dnsAuditResults[0].status === "passed" &&
-        dnsAuditResults[1].status === "passed"
-          ? "passed"
-          : "failed",
-      message: `Versioned tag: ${dnsAuditResults[0].message}\nLatest tag: ${dnsAuditResults[1].message}`,
-    };
-    caddyS3ProxyPublishResult = caddyS3ProxyResult;
-    helmPublishResult = helmResult;
-  }
-
-  // Sync
-  let syncResult: StepResult = {
-    status: "skipped",
-    message: "[SKIPPED] Not prod or chart publish failed",
-  };
-  if (env === Stage.Prod && helmPublishResult.status === "passed") {
-    syncResult = await argocdSync(argocdToken);
-  }
-
-  // Build summary
-  const summary = [
-    renovateTestResult.message,
-    helmTestResult.message,
-    cdk8sTestResult.message,
-    caddyfileValidateResult.message,
-    cdk8sLintResult.message,
-    haLintResult.message,
-    cdk8sTypeCheckResult.message,
-    haTypeCheckResult.message,
-    `Sync result:\n${syncResult.message}`,
-    cdk8sBuildResult.message,
-    haBuildResult.message,
-    helmBuildResult.message,
-    `HA Image Publish result:\n${haPublishResult.message}`,
-    `Dependency Summary Image Publish result:\n${depSummaryPublishResult.message}`,
-    `Dns Audit Image Publish result:\n${dnsAuditPublishResult.message}`,
-    `Caddy S3Proxy Image Publish result:\n${caddyS3ProxyPublishResult.message}`,
-    `Helm Chart Publish result:\n${helmPublishResult.message}`,
-    tofuPlanResult.message,
-  ].join("\n\n");
-
-  if (
-    renovateTestResult.status === "failed" ||
-    helmTestResult.status === "failed" ||
-    cdk8sTestResult.status === "failed" ||
-    caddyfileValidateResult.status === "failed" ||
-    cdk8sLintResult.status === "failed" ||
-    haLintResult.status === "failed" ||
-    cdk8sTypeCheckResult.status === "failed" ||
-    haTypeCheckResult.status === "failed" ||
-    syncResult.status === "failed" ||
-    cdk8sBuildResult.status === "failed" ||
-    haBuildResult.status === "failed" ||
-    helmBuildResult.status === "failed" ||
-    (env === Stage.Prod &&
-      (haPublishResult.status === "failed" ||
-        depSummaryPublishResult.status === "failed" ||
-        dnsAuditPublishResult.status === "failed" ||
-        caddyS3ProxyPublishResult.status === "failed" ||
-        helmPublishResult.status === "failed"))
-  ) {
-    throw new Error(summary);
-  }
-  return summary;
-}
-
-/**
- * Update a single image version in versions.ts using sed.
- * Accepts homelab source directory (not monorepo root).
- */
-function homelabUpdateVersion(
-  source: Directory,
-  imageKey: string,
-  version: string,
-): Directory {
-  const escapedKey = imageKey.replaceAll("/", String.raw`\/`);
-  return dag
-    .container()
-    .from(`alpine:${versions.alpine}`)
-    .withMountedDirectory("/workspace", source)
-    .withWorkdir("/workspace")
-    .withExec([
-      "sed",
-      "-i",
-      `s/"${escapedKey}": "[^"]*"/"${escapedKey}": "${version}"/`,
-      "src/cdk8s/src/versions.ts",
-    ])
-    .directory("/workspace");
+  // Check for failures and return summary
+  return checkForFailures(env, validation, publish);
 }
 
 /**
@@ -636,8 +224,6 @@ export async function homelabTestRenovateRegex(
   monoRepoSource: Directory,
 ): Promise<string> {
   const homelabSource = getHomelabSource(monoRepoSource);
-  // The test file and dagger versions.ts are inside the Dagger module (excluded from source),
-  // so we access them via dag.currentModule().source()
   const daggerModuleSource = dag.currentModule().source();
   const container = getMiseRuntimeContainer()
     .withWorkdir("/workspace")
@@ -670,7 +256,6 @@ export async function homelabTestRenovateRegex(
       "src/cdk8s/src/versions.ts",
       homelabSource.file("src/cdk8s/src/versions.ts"),
     )
-    // Map dagger module files to paths the test expects
     .withFile(
       ".dagger/src/versions.ts",
       daggerModuleSource.file("src/homelab/versions.ts"),
@@ -694,62 +279,3 @@ export async function homelabSync(argocdToken: Secret): Promise<string> {
   const result = await argocdSync(argocdToken);
   return `ArgoCD Sync: ${result.status.toUpperCase()}\n${result.message}`;
 }
-
-/**
- * Publish a pre-built Helm chart to ChartMuseum.
- */
-async function homelabHelmPublishBuilt(
-  builtDist: Directory,
-  version: string,
-  repo: string,
-  chartMuseumUsername: string,
-  chartMuseumPassword: Secret,
-  env: Stage,
-): Promise<StepResult> {
-  if (env !== Stage.Prod) {
-    return { status: "skipped", message: "[SKIPPED] Not prod" };
-  }
-  try {
-    const results: string[] = [];
-    for (const chartName of HELM_CHARTS) {
-      const chartFile = `${chartName}-${version}.tgz`;
-      const container = dag
-        .container()
-        .from(`alpine/helm:${versions["alpine/helm"]}`)
-        .withMountedDirectory("/workspace", builtDist.directory(chartName))
-        .withWorkdir("/workspace")
-        .withEnvVariable("CHARTMUSEUM_USERNAME", chartMuseumUsername)
-        .withSecretVariable("CHARTMUSEUM_PASSWORD", chartMuseumPassword)
-        .withExec([
-          "sh",
-          "-c",
-          String.raw`curl -s -w '\n%{http_code}' -u $CHARTMUSEUM_USERNAME:$CHARTMUSEUM_PASSWORD --data-binary @${chartFile} ${repo}/api/charts > /tmp/result.txt 2>&1`,
-        ]);
-
-      const result = await container.file("/tmp/result.txt").contents();
-      const lines = result.trim().split("\n");
-      const httpCode = lines.pop() ?? "";
-      const body = lines.join("\n");
-
-      if (httpCode === "201" || httpCode === "200") {
-        results.push(`${chartName}: published successfully`);
-      } else if (httpCode === "409") {
-        results.push(`${chartName}: already exists (409)`);
-      } else {
-        return {
-          status: "failed",
-          message: `Helm Chart Publish: FAILED for ${chartName}\nHTTP ${httpCode}: ${body}`,
-        };
-      }
-    }
-    return { status: "passed", message: results.join("\n") };
-  } catch (error: unknown) {
-    const errorMessage = formatDaggerError(error);
-    return {
-      status: "failed",
-      message: `Helm Chart Publish: FAILED\n${errorMessage}`,
-    };
-  }
-}
-
-export { Stage } from "./stage.js";

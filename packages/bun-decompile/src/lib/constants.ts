@@ -1,3 +1,5 @@
+import type { Encoding, FileSide, Loader, ModuleFormat } from "./types.ts";
+
 /** Magic trailer at end of Bun executables */
 export const BUN_TRAILER = "\n---- Bun! ----\n";
 export const BUN_TRAILER_BYTES = new TextEncoder().encode(BUN_TRAILER);
@@ -17,7 +19,7 @@ export const STRING_POINTER_SIZE = 8; // u32 offset + u32 length
 export const MODULE_ENTRY_SIZE = 36; // Size of CompiledModuleGraphFile
 
 /** Loader type mapping from Bun's enum values */
-export const LOADER_MAP: Record<number, string> = {
+export const LOADER_MAP: Record<number, Loader> = {
   0: "jsx",
   1: "js",
   2: "ts",
@@ -33,21 +35,21 @@ export const LOADER_MAP: Record<number, string> = {
 };
 
 /** Encoding type mapping */
-export const ENCODING_MAP: Record<number, string> = {
+export const ENCODING_MAP: Record<number, Encoding> = {
   0: "binary",
   1: "latin1",
   2: "utf8",
 };
 
 /** Module format mapping */
-export const MODULE_FORMAT_MAP: Record<number, string> = {
+export const MODULE_FORMAT_MAP: Record<number, ModuleFormat> = {
   0: "none",
   1: "cjs",
   2: "esm",
 };
 
 /** File side mapping */
-export const FILE_SIDE_MAP: Record<number, string> = {
+export const FILE_SIDE_MAP: Record<number, FileSide> = {
   0: "server",
   1: "client",
 };

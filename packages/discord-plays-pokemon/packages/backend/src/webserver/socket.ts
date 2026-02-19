@@ -2,8 +2,8 @@ import type { Socket } from "socket.io";
 import { Server } from "socket.io";
 import { logger } from "#src/logger.ts";
 import type http from "node:http";
-import { Observable, fromEvent } from "rxjs";
-import type { Request} from "@discord-plays-pokemon/common";
+import { Observable } from "rxjs";
+import type { Request } from "@discord-plays-pokemon/common";
 import { RequestSchema } from "@discord-plays-pokemon/common";
 import lodash from "lodash";
 
@@ -32,27 +32,25 @@ export function createSocket({
     cors,
   });
 
-  const connection = fromEvent(io, "connection");
-
   return new Observable((subscriber) => {
-    connection.subscribe((socket) => {
+    io.on("connection", (socket: Socket) => {
       const identifier = lodash.uniqueId();
       logger.info("a new socket has connected", identifier);
 
-      (socket as Socket).on("ping", (callback: () => void) => {
+      socket.on("ping", (callback: () => void) => {
         callback();
       });
 
-      fromEvent(socket as Socket, "disconnect").subscribe((_event) => {
+      socket.on("disconnect", () => {
         logger.info("a socket has disconnected", identifier);
       });
 
-      fromEvent(socket as Socket, "request").subscribe((event) => {
+      socket.on("request", (event: unknown) => {
         logger.info("request received", identifier);
         const result = RequestSchema.safeParse(event);
         if (result.success) {
           logger.info("request parsed", identifier, result.data);
-          subscriber.next({ request: result.data, socket: socket as Socket });
+          subscriber.next({ request: result.data, socket });
         } else {
           logger.error("unable to parse request", identifier, event);
         }

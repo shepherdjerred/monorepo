@@ -20,11 +20,7 @@ import {
 import { parseSourceMap } from "./sourcemap-parser.ts";
 import type {
   DecompileResult,
-  Encoding,
-  FileSide,
-  Loader,
   ModuleEntry,
-  ModuleFormat,
   Offsets,
   OriginalSource,
   StringPointer,
@@ -210,15 +206,10 @@ function parseModules(
         : null;
 
     // Map enum values
-    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-    const encoding = (ENCODING_MAP[encodingByte] ?? "binary") as Encoding;
-    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-    const loader = (LOADER_MAP[loaderByte] ?? "unknown") as Loader;
-    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-    const moduleFormat = (MODULE_FORMAT_MAP[moduleFormatByte] ??
-      "none") as ModuleFormat;
-    // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-    const side = (FILE_SIDE_MAP[sideByte] ?? "server") as FileSide;
+    const encoding = ENCODING_MAP[encodingByte] ?? "binary";
+    const loader = LOADER_MAP[loaderByte] ?? "unknown";
+    const moduleFormat = MODULE_FORMAT_MAP[moduleFormatByte] ?? "none";
+    const side = FILE_SIDE_MAP[sideByte] ?? "server";
 
     modules.push({
       name,

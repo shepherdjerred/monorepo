@@ -5,6 +5,11 @@ import * as stat from "@grafana/grafana-foundation-sdk/stat";
 import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
 import { exportDashboardWithHelmEscaping } from "./dashboard-export.ts";
 
+// Helper function to build filter expression
+function buildFilter() {
+  return 'environment=~"$environment",instance=~"$server"';
+}
+
 /**
  * Creates a Grafana dashboard for Scout for LoL usage and performance metrics
  * Uses Grafana Foundation SDK to define the dashboard programmatically
@@ -36,11 +41,6 @@ export function createScoutDashboard() {
     .includeAll(true)
     .allValue(".*");
 
-  // Helper function to build filter expression
-  const buildFilter = () => {
-    return 'environment=~"$environment",instance=~"$server"';
-  };
-
   // Build the main dashboard
   const builder = new dashboard.DashboardBuilder(
     "Scout for LoL - Usage & Performance",
@@ -54,29 +54,24 @@ export function createScoutDashboard() {
     .withVariable(environmentVariable)
     .withVariable(serverVariable);
 
-  const createStatPanel = (
-    title: string,
-    query: string,
-    legend: string,
-    gridPos: {
-      x: number;
-      y: number;
-      w: number;
-      h: number;
-    },
-    unit = "short",
-    graphMode = common.BigValueGraphMode.Area,
-  ) => {
+  const createStatPanel = (options: {
+    title: string;
+    query: string;
+    legend: string;
+    gridPos: { x: number; y: number; w: number; h: number };
+    unit?: string;
+    graphMode?: common.BigValueGraphMode;
+  }) => {
     return new stat.PanelBuilder()
-      .title(title)
+      .title(options.title)
       .datasource(prometheusDatasource)
       .withTarget(
-        new prometheus.DataqueryBuilder().expr(query).legendFormat(legend),
+        new prometheus.DataqueryBuilder().expr(options.query).legendFormat(options.legend),
       )
-      .unit(unit)
+      .unit(options.unit ?? "short")
       .colorMode(common.BigValueColorMode.Value)
-      .graphMode(graphMode)
-      .gridPos(gridPos);
+      .graphMode(options.graphMode ?? common.BigValueGraphMode.Area)
+      .gridPos(options.gridPos);
   };
 
   // Row 1: Overview Stats
@@ -84,62 +79,62 @@ export function createScoutDashboard() {
 
   // Guild Count
   builder.withPanel(
-    createStatPanel(
-      "Discord Guilds",
-      `sum by (environment) (discord_guilds{${buildFilter()}})`,
-      "{{environment}}",
-      {
+    createStatPanel({
+      title: "Discord Guilds",
+      query: `sum by (environment) (discord_guilds{${buildFilter()}})`,
+      legend: "{{environment}}",
+      gridPos: {
         x: 0,
         y: 1,
         w: 4,
         h: 4,
       },
-    ),
+    }),
   );
 
   // User Count
   builder.withPanel(
-    createStatPanel(
-      "Discord Users",
-      `sum by (environment) (discord_users{${buildFilter()}})`,
-      "{{environment}}",
-      {
+    createStatPanel({
+      title: "Discord Users",
+      query: `sum by (environment) (discord_users{${buildFilter()}})`,
+      legend: "{{environment}}",
+      gridPos: {
         x: 4,
         y: 1,
         w: 4,
         h: 4,
       },
-    ),
+    }),
   );
 
   // Players Tracked
   builder.withPanel(
-    createStatPanel(
-      "Players Tracked",
-      `sum by (environment) (players_tracked_total{${buildFilter()}})`,
-      "{{environment}}",
-      { x: 8, y: 1, w: 4, h: 4 },
-    ),
+    createStatPanel({
+      title: "Players Tracked",
+      query: `sum by (environment) (players_tracked_total{${buildFilter()}})`,
+      legend: "{{environment}}",
+      gridPos: { x: 8, y: 1, w: 4, h: 4 },
+    }),
   );
 
   // Accounts Tracked
   builder.withPanel(
-    createStatPanel(
-      "Accounts Tracked",
-      `sum by (environment) (accounts_tracked_total{${buildFilter()}})`,
-      "{{environment}}",
-      { x: 12, y: 1, w: 4, h: 4 },
-    ),
+    createStatPanel({
+      title: "Accounts Tracked",
+      query: `sum by (environment) (accounts_tracked_total{${buildFilter()}})`,
+      legend: "{{environment}}",
+      gridPos: { x: 12, y: 1, w: 4, h: 4 },
+    }),
   );
 
   // Servers with Data
   builder.withPanel(
-    createStatPanel(
-      "Servers with Data",
-      `sum by (environment) (servers_with_data_total{${buildFilter()}})`,
-      "{{environment}}",
-      { x: 16, y: 1, w: 4, h: 4 },
-    ),
+    createStatPanel({
+      title: "Servers with Data",
+      query: `sum by (environment) (servers_with_data_total{${buildFilter()}})`,
+      legend: "{{environment}}",
+      gridPos: { x: 16, y: 1, w: 4, h: 4 },
+    }),
   );
 
   // Connection Status
@@ -212,45 +207,45 @@ export function createScoutDashboard() {
 
   // Uptime
   builder.withPanel(
-    createStatPanel(
-      "Uptime",
-      `max by (environment) (application_uptime_seconds{${buildFilter()}})`,
-      "{{environment}}",
-      { x: 0, y: 13, w: 6, h: 4 },
-      "s",
-    ),
+    createStatPanel({
+      title: "Uptime",
+      query: `max by (environment) (application_uptime_seconds{${buildFilter()}})`,
+      legend: "{{environment}}",
+      gridPos: { x: 0, y: 13, w: 6, h: 4 },
+      unit: "s",
+    }),
   );
 
   // Active Competitions
   builder.withPanel(
-    createStatPanel(
-      "Active Competitions",
-      `sum by (environment) (competitions_active_total{${buildFilter()}})`,
-      "{{environment}}",
-      { x: 6, y: 13, w: 6, h: 4 },
-    ),
+    createStatPanel({
+      title: "Active Competitions",
+      query: `sum by (environment) (competitions_active_total{${buildFilter()}})`,
+      legend: "{{environment}}",
+      gridPos: { x: 6, y: 13, w: 6, h: 4 },
+    }),
   );
 
   // Total Subscriptions
   builder.withPanel(
-    createStatPanel(
-      "Active Subscriptions",
-      `sum by (environment) (subscriptions_total{${buildFilter()}})`,
-      "{{environment}}",
-      { x: 12, y: 13, w: 6, h: 4 },
-    ),
+    createStatPanel({
+      title: "Active Subscriptions",
+      query: `sum by (environment) (subscriptions_total{${buildFilter()}})`,
+      legend: "{{environment}}",
+      gridPos: { x: 12, y: 13, w: 6, h: 4 },
+    }),
   );
 
   // Average Accounts per Player
   builder.withPanel(
-    createStatPanel(
-      "Avg Accounts/Player",
-      `avg by (environment) (avg_accounts_per_player{${buildFilter()}})`,
-      "{{environment}}",
-      { x: 18, y: 13, w: 6, h: 4 },
-      "short",
-      common.BigValueGraphMode.None,
-    ).decimals(2),
+    createStatPanel({
+      title: "Avg Accounts/Player",
+      query: `avg by (environment) (avg_accounts_per_player{${buildFilter()}})`,
+      legend: "{{environment}}",
+      gridPos: { x: 18, y: 13, w: 6, h: 4 },
+      unit: "short",
+      graphMode: common.BigValueGraphMode.None,
+    }).decimals(2),
   );
 
   // Cron Job Performance

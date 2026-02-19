@@ -210,7 +210,7 @@ const versions = {
 };
 
 const daggerVersion = versions["dagger-helm"].split("@")[0];
-if (!daggerVersion) {
+if (daggerVersion == null || daggerVersion === "") {
   throw new Error("Failed to parse dagger version");
 }
 

@@ -11,7 +11,6 @@ import {
   wait,
   withTimeout,
 } from "@shepherdjerred/homelab/ha/src/util.ts";
-import z from "zod";
 import { instrumentWorkflow } from "@shepherdjerred/homelab/ha/src/metrics.ts";
 
 export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
@@ -180,11 +179,10 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                         });
                         logger.info("Successfully started media playback");
                       } catch (playError) {
-                        const errorMsg = z
-                          .instanceof(Error)
-                          .transform((error) => error.message)
-                          .catch((error) => String(error.value))
-                          .parse(playError);
+                        const errorMsg =
+                          playError instanceof Error
+                            ? playError.message
+                            : String(playError);
                         logger.error(
                           `First play_media attempt failed: ${errorMsg}`,
                         );
@@ -200,11 +198,10 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                           });
                           logger.info("Retry successful");
                         } catch (retryError) {
-                          const retryErrorMsg = z
-                            .instanceof(Error)
-                            .transform((error) => error.message)
-                            .catch((error) => String(error.value))
-                            .parse(retryError);
+                          const retryErrorMsg =
+                            retryError instanceof Error
+                              ? retryError.message
+                              : String(retryError);
                           logger.error(`Retry also failed: ${retryErrorMsg}`);
                           // Continue with the rest of the routine even if media fails
                         }

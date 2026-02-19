@@ -4,13 +4,13 @@ import * as Sentry from "@sentry/react";
 import "./index.css";
 import "./assets/fonts.css";
 import { App } from "./app.tsx";
-import { SENTRY_DSN } from "./config.ts";
+import { getSentryDsn } from "./config.ts";
 
 // Initialize Sentry for error reporting (DSN is configured at build time)
-// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- SENTRY_DSN may be empty string at build time
-if (SENTRY_DSN) {
+const sentryDsn = getSentryDsn();
+if (sentryDsn) {
   Sentry.init({
-    dsn: SENTRY_DSN,
+    dsn: sentryDsn,
     environment: import.meta.env.MODE,
   });
 }

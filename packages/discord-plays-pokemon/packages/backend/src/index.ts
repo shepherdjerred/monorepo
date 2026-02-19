@@ -2,9 +2,9 @@ import * as Sentry from "@sentry/node";
 
 Sentry.init({
   dsn:
-    process.env.SENTRY_DSN ??
+    Bun.env.SENTRY_DSN ??
     "https://9c905c2bb5924e55b4dea32e2a95f0d1@bugsink.sjer.red/8",
-  environment: process.env.NODE_ENV ?? "development",
+  environment: Bun.env.NODE_ENV ?? "development",
 });
 
 import { sendGameCommand } from "./browser/game.ts";
@@ -48,12 +48,12 @@ if (getConfig().web.enabled) {
   if (socket) {
     socket.subscribe((event) => {
       match(event)
-        .with({ request: { kind: "command" } }, (event) => {
-          logger.info("handling command request", event.request);
+        .with({ request: { kind: "command" } }, (commandEvent) => {
+          logger.info("handling command request", commandEvent.request);
           if (gameDriver !== undefined) {
             try {
               void sendGameCommand(gameDriver, {
-                command: event.request.value,
+                command: commandEvent.request.value,
                 quantity: 1,
               });
             } catch (error) {
@@ -61,18 +61,18 @@ if (getConfig().web.enabled) {
             }
           }
         })
-        .with({ request: { kind: "login" } }, (event) => {
-          logger.info("handling login request", event.request);
+        .with({ request: { kind: "login" } }, (loginEvent) => {
+          logger.info("handling login request", loginEvent.request);
           // TODO: perform auth here
           const player = { discordId: "id", discordUsername: "username" };
           const response: LoginResponse = {
             kind: "login",
             value: player,
           };
-          event.socket.emit("response", response);
+          loginEvent.socket.emit("response", response);
         })
-        .with({ request: { kind: "screenshot" } }, (event) => {
-          logger.info("handling screenshot request", event.request);
+        .with({ request: { kind: "screenshot" } }, (screenshotEvent) => {
+          logger.info("handling screenshot request", screenshotEvent.request);
           if (gameDriver === undefined) {
             logger.error("gameDriver is not initialized");
             return;
@@ -84,21 +84,21 @@ if (getConfig().web.enabled) {
                 kind: "screenshot",
                 value: screenshot,
               };
-              event.socket.emit("response", response);
+              screenshotEvent.socket.emit("response", response);
             } catch (error) {
               logger.error(error);
             }
           })();
         })
-        .with({ request: { kind: "status" } }, (event) => {
-          logger.info("handling status request", event.request);
+        .with({ request: { kind: "status" } }, (statusEvent) => {
+          logger.info("handling status request", statusEvent.request);
           const response: StatusResponse = {
             kind: "status",
             value: {
               playerList: [],
             },
           };
-          event.socket.emit("response", response);
+          statusEvent.socket.emit("response", response);
         })
         .exhaustive();
     });

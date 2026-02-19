@@ -1,9 +1,26 @@
 import { PrismaClient } from "@prisma/client";
 
-// Singleton pattern for Prisma client
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
+// Singleton pattern for Prisma client using a well-known key
+const PRISMA_KEY = "__birmel_prisma__";
+
+function getGlobalPrisma(): PrismaClient | undefined {
+  if (PRISMA_KEY in globalThis) {
+    const value: unknown = Object.getOwnPropertyDescriptor(globalThis, PRISMA_KEY)?.value;
+    if (value instanceof PrismaClient) {
+      return value;
+    }
+  }
+  return undefined;
+}
+
+function setGlobalPrisma(client: PrismaClient): void {
+  Object.defineProperty(globalThis, PRISMA_KEY, {
+    value: client,
+    writable: true,
+    configurable: true,
+    enumerable: false,
+  });
+}
 
 const databasePath = Bun.env["DATABASE_PATH"];
 let datasourceUrl: string | undefined;
@@ -14,7 +31,7 @@ if (databasePath != null && databasePath.length > 0) {
 }
 
 export const prisma =
-  globalForPrisma.prisma ??
+  getGlobalPrisma() ??
   new PrismaClient({
     ...(datasourceUrl != null && datasourceUrl.length > 0
       ? { datasourceUrl }
@@ -26,7 +43,7 @@ export const prisma =
   });
 
 if (Bun.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+  setGlobalPrisma(prisma);
 }
 
 export async function disconnectPrisma(): Promise<void> {

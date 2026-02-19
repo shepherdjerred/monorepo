@@ -1,6 +1,7 @@
+import { getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 import { validateSnowflakes } from "./validation.ts";
 import { parseDiscordAPIError, formatDiscordAPIError } from "./error-utils.ts";
@@ -114,22 +115,22 @@ export const manageRoleTool = createTool({
         case "get":
           return await handleGetRole(guild, ctx.roleId);
         case "create":
-          return await handleCreateRole(
+          return await handleCreateRole({
             guild,
-            ctx.name,
-            ctx.color,
-            ctx.hoist,
-            ctx.mentionable,
-          );
+            name: ctx.name,
+            color: ctx.color,
+            hoist: ctx.hoist,
+            mentionable: ctx.mentionable,
+          });
         case "modify":
-          return await handleModifyRole(
+          return await handleModifyRole({
             guild,
-            ctx.roleId,
-            ctx.name,
-            ctx.color,
-            ctx.hoist,
-            ctx.mentionable,
-          );
+            roleId: ctx.roleId,
+            name: ctx.name,
+            color: ctx.color,
+            hoist: ctx.hoist,
+            mentionable: ctx.mentionable,
+          });
         case "delete":
           return await handleDeleteRole(guild, ctx.roleId, ctx.reason);
         case "reorder":
@@ -154,7 +155,7 @@ export const manageRoleTool = createTool({
       logger.error("Failed to manage role", error);
       return {
         success: false,
-        message: `Failed: ${(error as Error).message}`,
+        message: `Failed: ${getErrorMessage(error)}`,
       };
     }
   },

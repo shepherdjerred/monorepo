@@ -87,7 +87,4 @@ export function createRoutingAgentWithPersona(
   });
 }
 
-export {
-  SYSTEM_PROMPT,
-  buildSystemPromptWithPersona,
-} from "./system-prompt.ts";
+

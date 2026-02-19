@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export type PagerDutyClientResult<T> = {
   success: boolean;
   data?: T | undefined;
@@ -58,8 +60,8 @@ export async function pagerDutyRequest<T>(
       };
     }
 
-    // eslint-disable-next-line custom-rules/no-type-assertions -- API boundary: response.json() returns unknown, T is trusted from endpoint
-    const data = (await response.json()) as T;
+    const json: unknown = await response.json();
+    const data = z.custom<T>().parse(json);
     return { success: true, data };
   } catch (error) {
     const message =

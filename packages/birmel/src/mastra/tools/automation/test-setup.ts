@@ -3,8 +3,7 @@
  * This must be loaded before the test file to ensure Prisma Client
  * is initialized with the correct database URL
  */
-// eslint-disable-next-line no-restricted-imports -- mkdirSync has no sync Bun equivalent
-import { mkdirSync } from "node:fs";
+import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
@@ -24,7 +23,7 @@ if (
   Bun.env["DATABASE_PATH"].length === 0
 ) {
   const dataDir = path.join(process.cwd(), "data");
-  mkdirSync(dataDir, { recursive: true });
+  await mkdir(dataDir, { recursive: true });
   const testDbPath = path.join(dataDir, "test-automation.db");
   Bun.env["DATABASE_PATH"] = testDbPath;
 }
@@ -33,7 +32,7 @@ if (
 const screenshotsDir =
   Bun.env["BIRMEL_SCREENSHOTS_DIR"] ??
   path.join(process.cwd(), "data", "screenshots");
-mkdirSync(screenshotsDir, { recursive: true });
+await mkdir(screenshotsDir, { recursive: true });
 Bun.env["BIRMEL_SCREENSHOTS_DIR"] ??= screenshotsDir;
 
 // Ensure database directory exists if it's a file-based database
@@ -42,7 +41,7 @@ const normalizedDbPath = dbPath.startsWith("file:")
   ? dbPath.replace("file:", "")
   : dbPath;
 if (normalizedDbPath) {
-  mkdirSync(path.dirname(normalizedDbPath), { recursive: true });
+  await mkdir(path.dirname(normalizedDbPath), { recursive: true });
 }
 
 // Push database schema (creates tables if they don't exist)

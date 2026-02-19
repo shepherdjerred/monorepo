@@ -8,15 +8,15 @@
 
 import path from "node:path";
 import { mkdir } from "node:fs/promises";
+import { Deminifier } from "#src/lib/deminify/deminifier.ts";
 import {
   createConfig,
-  Deminifier,
   formatStats,
   interactiveConfirmCost,
-} from "../lib/deminify/deminifier.ts";
-import { ProgressDisplay } from "../lib/deminify/progress-display.ts";
-import type { ExtendedProgress } from "../lib/deminify/types.ts";
-import type { DecompileResult } from "../lib/types.ts";
+} from "#src/lib/deminify/deminify-utils.ts";
+import { ProgressDisplay } from "#src/lib/deminify/progress-display.ts";
+import type { ExtendedProgress } from "#src/lib/deminify/types.ts";
+import type { DecompileResult } from "#src/lib/types.ts";
 import type { CliOptions } from "./args.ts";
 import { validateApiKey } from "./args.ts";
 
@@ -100,30 +100,42 @@ export async function runDeminification(
       continue;
     }
 
-    await processModule(
+    await processModule({
       deminifier,
       source,
       fileName,
-      module.name,
-      module.isEntryPoint,
+      moduleName: module.name,
+      isEntryPoint: module.isEntryPoint,
       deminifiedDir,
-      options,
-    );
+      cliOptions: options,
+    });
   }
 }
+
+/** Options for processing a single module */
+type ProcessModuleOptions = {
+  deminifier: Deminifier;
+  source: string;
+  fileName: string;
+  moduleName: string;
+  isEntryPoint: boolean;
+  deminifiedDir: string;
+  cliOptions: CliOptions;
+};
 
 /**
  * Process a single module for de-minification.
  */
-async function processModule(
-  deminifier: Deminifier,
-  source: string,
-  fileName: string,
-  moduleName: string,
-  isEntryPoint: boolean,
-  deminifiedDir: string,
-  options: CliOptions,
-): Promise<void> {
+async function processModule(opts: ProcessModuleOptions): Promise<void> {
+  const {
+    deminifier,
+    source,
+    fileName,
+    moduleName,
+    isEntryPoint,
+    deminifiedDir,
+    cliOptions: options,
+  } = opts;
   // Create progress display
   const progressDisplay = new ProgressDisplay({
     quiet: options.quiet,

@@ -12,8 +12,10 @@ if (args.length < 2) {
   throw new Error("Missing required arguments");
 }
 
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- CLI args are checked above
-const packageDir = args[0]!;
+const packageDir = args[0];
+if (packageDir === undefined) {
+  throw new Error("Package dir argument is required");
+}
 const changedFiles = args.slice(1);
 
 // Find relevant test files using TypeScript compiler API

@@ -1,5 +1,5 @@
 import CronParser from "cron-parser";
-import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 
 const logger = loggers.scheduler;
 

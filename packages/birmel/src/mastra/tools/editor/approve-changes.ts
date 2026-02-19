@@ -1,23 +1,20 @@
+import { getErrorMessage, toError } from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import {
-  withToolSpan,
-  captureException,
-} from "@shepherdjerred/birmel/observability/index.ts";
+import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
+import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { getRequestContext } from "@shepherdjerred/birmel/mastra/tools/request-context.ts";
+import { isEditorEnabled } from "@shepherdjerred/birmel/editor/config.ts";
 import {
-  isEditorEnabled,
   getSession,
   getPendingChanges,
   updateSessionState,
   updatePrUrl,
-  SessionState,
-  hasValidAuth,
-  createPullRequest,
-  generatePRTitle,
-  generatePRBody,
-} from "@shepherdjerred/birmel/editor/index.ts";
+} from "@shepherdjerred/birmel/editor/session-manager.ts";
+import { SessionState } from "@shepherdjerred/birmel/editor/types.ts";
+import { hasValidAuth } from "@shepherdjerred/birmel/editor/github-oauth.ts";
+import { createPullRequest, generatePRTitle, generatePRBody } from "@shepherdjerred/birmel/editor/github-pr.ts";
 
 const logger = loggers.tools.child("editor.approve-changes");
 
@@ -172,10 +169,10 @@ export const approveChangesTool = createTool({
         };
       } catch (error) {
         logger.error("Failed to approve changes", error);
-        captureException(error as Error, { operation: "tool.approve-changes" });
+        captureException(toError(error), { operation: "tool.approve-changes" });
         return {
           success: false,
-          message: `Failed to approve changes: ${(error as Error).message}`,
+          message: `Failed to approve changes: ${getErrorMessage(error)}`,
         };
       }
     });

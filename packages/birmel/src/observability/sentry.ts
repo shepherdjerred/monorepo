@@ -65,7 +65,7 @@ export function setSentryContext(context: DiscordContext): void {
     return;
   }
 
-  Sentry.setContext("discord", context as Record<string, unknown>);
+  Sentry.setContext("discord", { ...context });
 
   if (context.userId != null && context.userId.length > 0) {
     Sentry.setUser({
@@ -90,11 +90,11 @@ export function clearSentryContext(): void {
  * Wrap an async function to capture exceptions to Sentry.
  * Similar pattern to Scout for LoL's logErrors wrapper.
  */
-export function logErrors<
-  T extends (...args: never[]) => Promise<R>,
-  R = unknown,
->(fn: T, operationName?: string): T {
-  return (async (...args: Parameters<T>): Promise<R> => {
+export function logErrors(
+  fn: (...args: never[]) => Promise<unknown>,
+  operationName?: string,
+): (...args: never[]) => Promise<unknown> {
+  return async (...args: never[]): Promise<unknown> => {
     try {
       return await fn(...args);
     } catch (error) {
@@ -107,7 +107,7 @@ export function logErrors<
       }
       throw error;
     }
-  }) as T;
+  };
 }
 
 /**
@@ -130,7 +130,7 @@ export function captureException(
       scope.setTag("operation", context.operation);
     }
     if (context?.discord != null) {
-      scope.setContext("discord", context.discord as Record<string, unknown>);
+      scope.setContext("discord", { ...context.discord });
     }
     if (context?.extra != null) {
       scope.setExtras(context.extra);

@@ -7,6 +7,7 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import type { FunctionRenameMapping } from "./babel-renamer.ts";
+import { CachedRenameResultSchema } from "./json-schemas.ts";
 
 /** Cached rename result */
 export type CachedRenameResult = {
@@ -88,8 +89,21 @@ export class FunctionCache {
     try {
       const cachePath = this.getCachePath(hash);
       const content = await readFile(cachePath, "utf8");
-      // eslint-disable-next-line custom-rules/no-type-assertions -- JSON.parse returns unknown, CachedRenameResult is trusted
-      const result = JSON.parse(content) as CachedRenameResult;
+      const parsed = CachedRenameResultSchema.safeParse(JSON.parse(content));
+      if (!parsed.success) {
+        return null;
+      }
+      const { data } = parsed;
+      const result: CachedRenameResult = {
+        hash: data.hash,
+        mapping: {
+          renames: data.mapping.renames,
+          ...(data.mapping.functionName == null ? {} : { functionName: data.mapping.functionName }),
+          ...(data.mapping.description == null ? {} : { description: data.mapping.description }),
+        },
+        timestamp: data.timestamp,
+        model: data.model,
+      };
 
       // Cache in memory for faster subsequent access
       this.inMemoryCache.set(hash, result);

@@ -1,6 +1,7 @@
+import { getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 import { validateSnowflakes } from "./validation.ts";
 import {
@@ -100,31 +101,31 @@ export const manageWebhookTool = createTool({
             ctx.reason,
           );
         case "modify":
-          return await handleModifyWebhook(
+          return await handleModifyWebhook({
             client,
-            ctx.webhookId,
-            ctx.name,
-            ctx.avatarUrl,
-            ctx.channelId,
-            ctx.reason,
-          );
+            webhookId: ctx.webhookId,
+            name: ctx.name,
+            avatarUrl: ctx.avatarUrl,
+            channelId: ctx.channelId,
+            reason: ctx.reason,
+          });
         case "delete":
           return await handleDeleteWebhook(client, ctx.webhookId, ctx.reason);
         case "execute":
-          return await handleExecuteWebhook(
+          return await handleExecuteWebhook({
             client,
-            ctx.webhookId,
-            ctx.webhookToken,
-            ctx.content,
-            ctx.username,
-            ctx.avatarUrl,
-          );
+            webhookId: ctx.webhookId,
+            webhookToken: ctx.webhookToken,
+            content: ctx.content,
+            username: ctx.username,
+            avatarUrl: ctx.avatarUrl,
+          });
       }
     } catch (error) {
       logger.error("Failed to manage webhook", error);
       return {
         success: false,
-        message: `Failed to manage webhook: ${(error as Error).message}`,
+        message: `Failed to manage webhook: ${getErrorMessage(error)}`,
       };
     }
   },

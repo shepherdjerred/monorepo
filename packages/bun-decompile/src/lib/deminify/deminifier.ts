@@ -27,21 +27,12 @@ import type {
   DeminifyProgress,
   DeminifyResult,
   DeminifyStats,
-  ExtendedProgress,
   ExtendedProgressCallback,
   ExtractedFunction,
   FileContext,
   ProgressCallback,
 } from "./types.ts";
 
-// Re-export utility functions to preserve the public API
-export {
-  createConfig,
-  deminify,
-  formatProgress,
-  formatStats,
-  interactiveConfirmCost,
-} from "./deminify-utils.ts";
 
 /** Batch status callback */
 export type BatchStatusCallback = (status: BatchStatus) => void;
@@ -112,13 +103,12 @@ export class Deminifier {
     this.stats = this.initStats();
 
     // Create batch mode processor
-    this.batchMode = new BatchModeProcessor(
+    this.batchMode = new BatchModeProcessor({
       config,
-      this.client,
-      this.batchClient,
-      this.openAIBatchClient,
-      this.cache,
-    );
+      batchClient: this.batchClient,
+      openAIBatchClient: this.openAIBatchClient,
+      cache: this.cache,
+    });
   }
 
   /** Initialize statistics */
@@ -135,35 +125,22 @@ export class Deminifier {
     };
   }
 
-  /** De-minify a single JavaScript file */
-  // eslint-disable-next-line complexity -- inherent complexity in processing logic
-  async deminifyFile(
-    source: string,
-    options?: DeminifyFileOptions,
-  ): Promise<string> {
-    const startTime = Date.now();
-    this.stats = this.initStats();
+  /** Create a progress emitter that wraps both basic and extended callbacks */
+  private createProgressEmitter(
+    options: DeminifyFileOptions | undefined,
+    confidences: number[],
+    startTime: number,
+  ): (progress: DeminifyProgress) => void {
+    return (progress: DeminifyProgress) => {
+      options?.onProgress?.(progress);
 
-    const fileName = options?.fileName ?? "unknown.js";
-    const isEntryPoint = options?.isEntryPoint ?? false;
-    const onProgress = options?.onProgress;
-    const onExtendedProgress = options?.onExtendedProgress;
-
-    // Track confidences for live average
-    const confidences: number[] = [];
-
-    // Helper to emit progress (both callbacks)
-    const emitProgress = (progress: DeminifyProgress) => {
-      onProgress?.(progress);
-
-      // Build extended progress with live stats
       const clientStats = this.client.getStats();
       const avgConf =
         confidences.length > 0
           ? confidences.reduce((a, b) => a + b, 0) / confidences.length
           : 0;
 
-      const extendedProgress: ExtendedProgress = {
+      options?.onExtendedProgress?.({
         ...progress,
         cacheHits: this.stats.cacheHits,
         cacheMisses: this.stats.cacheMisses,
@@ -173,39 +150,62 @@ export class Deminifier {
         avgConfidence: avgConf,
         startTime,
         elapsed: Date.now() - startTime,
-      };
-
-      onExtendedProgress?.(extendedProgress);
+      });
     };
+  }
+
+  /** Parse source into a call graph, wrapping parse errors */
+  private parseSourceToGraph(source: string): CallGraph {
+    try {
+      return buildCallGraph(source);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to parse source: ${message}`, { cause: error });
+    }
+  }
+
+  /** Confirm cost with user or skip if configured */
+  private async confirmOrSkip(
+    options: DeminifyFileOptions | undefined,
+    estimate: CostEstimate,
+  ): Promise<void> {
+    if (options?.skipConfirmation === true) {
+      return;
+    }
+    const confirmed = options?.confirmCost
+      ? await options.confirmCost(estimate)
+      : await this.defaultConfirmCost(estimate);
+    if (!confirmed) {
+      throw new Error("De-minification cancelled by user");
+    }
+  }
+
+  /** De-minify a single JavaScript file */
+  async deminifyFile(
+    source: string,
+    options?: DeminifyFileOptions,
+  ): Promise<string> {
+    const startTime = Date.now();
+    this.stats = this.initStats();
+    const confidences: number[] = [];
+    const emitProgress = this.createProgressEmitter(options, confidences, startTime);
 
     // Phase 1: Parse and build call graph
     emitProgress({ phase: "parsing", current: 0, total: 1 });
-
-    let graph: CallGraph;
-    try {
-      graph = buildCallGraph(source);
-    } catch (error) {
-      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-      throw new Error(`Failed to parse source: ${(error as Error).message}`, {
-        cause: error,
-      });
-    }
+    const graph = this.parseSourceToGraph(source);
 
     if (this.config.verbose) {
       console.log(`Parsed ${String(graph.functions.size)} functions`);
     }
 
-    // Build file context
     const fileContext: FileContext = {
-      fileName,
+      fileName: options?.fileName ?? "unknown.js",
       imports: graph.imports,
       exports: graph.exports,
-      isEntryPoint,
+      isEntryPoint: options?.isEntryPoint ?? false,
     };
 
-    // Filter functions by size
     const functionsToProcess = this.filterFunctions(graph);
-
     if (functionsToProcess.length === 0) {
       if (this.config.verbose) {
         console.log("No functions to de-minify");
@@ -214,63 +214,49 @@ export class Deminifier {
     }
 
     // Phase 2: Estimate cost and confirm
-    emitProgress({
-      phase: "analyzing",
-      current: 0,
-      total: functionsToProcess.length,
+    emitProgress({ phase: "analyzing", current: 0, total: functionsToProcess.length });
+    await this.confirmOrSkip(options, this.client.estimateCost(functionsToProcess));
+
+    // Delegate to appropriate processing mode
+    return this.dispatchProcessing({
+      source, graph, functionsToProcess, fileContext,
+      options, confidences, emitProgress, startTime,
     });
+  }
 
-    const estimate = this.client.estimateCost(functionsToProcess);
+  /** Dispatch to the appropriate processing mode */
+  private async dispatchProcessing(opts: {
+    source: string;
+    graph: CallGraph;
+    functionsToProcess: ExtractedFunction[];
+    fileContext: FileContext;
+    options: DeminifyFileOptions | undefined;
+    confidences: number[];
+    emitProgress: (progress: DeminifyProgress) => void;
+    startTime: number;
+  }): Promise<string> {
+    const { source, graph, functionsToProcess, fileContext, options, confidences, emitProgress, startTime } = opts;
 
-    if (options?.skipConfirmation !== true) {
-      const confirmed = options?.confirmCost
-        ? await options.confirmCost(estimate)
-        : await this.defaultConfirmCost(estimate);
-
-      if (!confirmed) {
-        throw new Error("De-minification cancelled by user");
-      }
-    }
-
-    // Use batch mode if requested (Anthropic batch API)
     if (
       options?.useBatch === true ||
       (options?.resumeBatchId != null && options.resumeBatchId.length > 0)
     ) {
-      return this.batchMode.deminifyFileBatch(
-        source,
-        graph,
-        functionsToProcess,
-        fileContext,
-        options,
-        this.stats,
-      );
+      return this.batchMode.deminifyFileBatch({
+        source, graph, functionsToProcess, fileContext, options, stats: this.stats,
+      });
     }
 
-    // Use new bottom-up batch renaming by default (recommended)
-    const useBatchRenaming = options?.useBatchRenaming ?? true;
-    if (useBatchRenaming) {
-      return this.batchMode.deminifyFileBatchRenaming(
-        source,
-        graph,
-        options,
-        startTime,
-        this.stats,
-        emitProgress,
-      );
+    if (options?.useBatchRenaming ?? true) {
+      return this.batchMode.deminifyFileBatchRenaming({
+        source, graph, options, startTime, stats: this.stats, emitProgress,
+      });
     }
 
-    // Phase 3: Process functions (real-time mode)
-    const reassembled = await this.processRealTimeMode(
-      source,
-      graph,
-      functionsToProcess,
-      fileContext,
-      confidences,
-      emitProgress,
-    );
+    // Real-time mode
+    const reassembled = await this.processRealTimeMode({
+      source, graph, functionsToProcess, fileContext, confidences, emitProgress,
+    });
 
-    // Update final stats
     const clientStats = this.client.getStats();
     this.stats.inputTokensUsed = clientStats.inputTokensUsed;
     this.stats.outputTokensUsed = clientStats.outputTokensUsed;
@@ -281,27 +267,20 @@ export class Deminifier {
         confidences.reduce((a, b) => a + b, 0) / confidences.length;
     }
 
-    // Emit final progress
-    emitProgress({
-      phase: "reassembling",
-      current: 1,
-      total: 1,
-      currentItem: "Complete",
-    });
-
+    emitProgress({ phase: "reassembling", current: 1, total: 1, currentItem: "Complete" });
     return reassembled;
   }
 
   /** Process functions in real-time mode (one at a time, in dependency order) */
-  // eslint-disable-next-line max-params -- method parameters are all required
-  private async processRealTimeMode(
-    source: string,
-    graph: CallGraph,
-    functionsToProcess: ExtractedFunction[],
-    fileContext: FileContext,
-    confidences: number[],
-    emitProgress: (progress: DeminifyProgress) => void,
-  ): Promise<string> {
+  private async processRealTimeMode(opts: {
+    source: string;
+    graph: CallGraph;
+    functionsToProcess: ExtractedFunction[];
+    fileContext: FileContext;
+    confidences: number[];
+    emitProgress: (progress: DeminifyProgress) => void;
+  }): Promise<string> {
+    const { source, graph, functionsToProcess, fileContext, confidences, emitProgress } = opts;
     const processingOrder = getProcessingOrder(graph);
     const results = new Map<string, DeminifyResult>();
 
@@ -338,10 +317,8 @@ export class Deminifier {
         }
       } catch (error) {
         this.stats.errors++;
-        console.error(
-          // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-          `Error processing ${funcId}: ${(error as Error).message}`,
-        );
+        const message = error instanceof Error ? error.message : String(error);
+        console.error(`Error processing ${funcId}: ${message}`);
       }
 
       processed++;

@@ -1,20 +1,30 @@
 import type { Event as WsEvent } from "@clauderon/shared";
 import { WebSocketError } from "./errors.ts";
+import { parseJson, resolveJsonValue } from "./json.ts";
 
 /**
- * Event types emitted by the events WebSocket
+ * Event types emitted by the events WebSocket.
+ * Matches the server-side Event union from @clauderon/shared.
  */
-// eslint-disable-next-line custom-rules/no-re-exports -- type alias for public API naming
-export type SessionEvent = WsEvent;
+export type SessionEvent = WsEvent & Record<never, never>;
 
 /**
- * Message received from the events WebSocket
+ * Parse a raw WebSocket message, extracting `type` and optional `event`.
+ * Returns null if the message is not a valid object with a string `type`.
+ * The event payload is typed as `unknown` on the parse boundary.
  */
-type EventsMessage = {
-  type: string;
-  event?: SessionEvent;
-  message?: string;
-};
+function parseEventsMessage(raw: string): { type: string; event: unknown } | null {
+  const parsed = parseJson(raw);
+  if (typeof parsed !== "object" || parsed === null) {
+    return null;
+  }
+  const type: unknown = Reflect.get(parsed, "type");
+  if (typeof type !== "string") {
+    return null;
+  }
+  const event: unknown = "event" in parsed ? Reflect.get(parsed, "event") : undefined;
+  return { type, event };
+}
 
 /**
  * Configuration for EventsClient
@@ -116,17 +126,19 @@ export class EventsClient {
 
       this.ws.addEventListener("message", (event: MessageEvent<string>) => {
         try {
-          // eslint-disable-next-line custom-rules/no-type-assertions -- JSON.parse returns any
-          const data = JSON.parse(event.data) as EventsMessage;
+          const envelope = parseEventsMessage(event.data);
+          if (envelope === null) {
+            return;
+          }
 
           // Handle connection acknowledgment
-          if (data.type === "connected") {
+          if (envelope.type === "connected") {
             return;
           }
 
           // Handle session events (backend sends with type "event" and nested event object)
-          if (data.type === "event" && data.event) {
-            this.emit("event", data.event);
+          if (envelope.type === "event" && envelope.event !== undefined) {
+            void this.emitSessionEvent(envelope.event);
           }
         } catch (error) {
           this.emit(
@@ -218,6 +230,11 @@ export class EventsClient {
    */
   get isConnected(): boolean {
     return this.ws?.readyState === WebSocket.OPEN;
+  }
+
+  private async emitSessionEvent(event: unknown): Promise<void> {
+    const sessionEvent = await resolveJsonValue<SessionEvent>(event);
+    this.emit("event", sessionEvent);
   }
 
   private scheduleReconnect(): void {

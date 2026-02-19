@@ -8,7 +8,7 @@
  * Note: This is an in-memory store suitable for single-instance deployments.
  * For multi-instance deployments, consider using Redis.
  */
-let rateLimitStore: Record<string, number> = {};
+let rateLimitStore = new Map<string, number>();
 
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
@@ -25,7 +25,7 @@ const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
  */
 export function checkRateLimit(serverId: string, userId: string): boolean {
   const key = `${serverId}:${userId}`;
-  const lastCreation = rateLimitStore[key];
+  const lastCreation = rateLimitStore.get(key);
 
   if (lastCreation === undefined) {
     return true; // No previous creation
@@ -45,7 +45,7 @@ export function checkRateLimit(serverId: string, userId: string): boolean {
  */
 export function recordCreation(serverId: string, userId: string): void {
   const key = `${serverId}:${userId}`;
-  rateLimitStore[key] = Date.now();
+  rateLimitStore.set(key, Date.now());
 }
 
 /**
@@ -57,7 +57,7 @@ export function recordCreation(serverId: string, userId: string): void {
  */
 export function getTimeRemaining(serverId: string, userId: string): number {
   const key = `${serverId}:${userId}`;
-  const lastCreation = rateLimitStore[key];
+  const lastCreation = rateLimitStore.get(key);
 
   if (lastCreation === undefined) {
     return 0;
@@ -78,13 +78,12 @@ export function getTimeRemaining(serverId: string, userId: string): number {
  */
 export function clearRateLimit(serverId: string, userId: string): void {
   const key = `${serverId}:${userId}`;
-  // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- Required for clearing rate limit entries
-  delete rateLimitStore[key];
+  rateLimitStore.delete(key);
 }
 
 /**
  * Clear all rate limits (useful for testing)
  */
 export function clearAllRateLimits(): void {
-  rateLimitStore = {};
+  rateLimitStore = new Map();
 }

@@ -3,6 +3,9 @@
   "version": "0.2.0",
   "description": "Extract and de-minify source code from Bun-compiled executables using AI (Bun runtime required)",
   "type": "module",
+  "imports": {
+    "#src/*": "./src/*"
+  },
   "bin": {
     "bun-decompile": "./src/index.ts"
   },
@@ -59,7 +62,8 @@
     "acorn": "^8.15.0",
     "acorn-walk": "^8.3.4",
     "openai": "^6.15.0",
-    "tiktoken": "^1.0.22"
+    "tiktoken": "^1.0.22",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/babel__core": "^7.20.5",

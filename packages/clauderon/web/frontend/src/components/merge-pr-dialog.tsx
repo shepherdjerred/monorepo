@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/select";
 import { CheckCircle } from "lucide-react";
 import { useState } from "react";
-import type { Session, MergeMethod } from "@clauderon/shared";
+import { MergeMethod } from "@clauderon/shared";
+import type { Session } from "@clauderon/shared";
 
 type MergePrDialogProps = {
   isOpen: boolean;
@@ -78,7 +79,15 @@ export function MergePrDialog({
             <Select
               value={selectedMethod ?? ""}
               onValueChange={(v) => {
-                setSelectedMethod(v as MergeMethod);
+                const map: Record<string, MergeMethod> = {
+                  [MergeMethod.Merge]: MergeMethod.Merge,
+                  [MergeMethod.Squash]: MergeMethod.Squash,
+                  [MergeMethod.Rebase]: MergeMethod.Rebase,
+                };
+                const method = map[v];
+                if (method != null) {
+                  setSelectedMethod(method);
+                }
               }}
             >
               <SelectTrigger>

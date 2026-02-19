@@ -1,6 +1,7 @@
+import { getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 import { validateSnowflakes } from "./validation.ts";
 import { parseDiscordAPIError, formatDiscordAPIError } from "./error-utils.ts";
@@ -124,7 +125,7 @@ export const manageMemberTool = createTool({
         };
       }
       logger.error("Failed to manage member", error);
-      return { success: false, message: `Failed: ${(error as Error).message}` };
+      return { success: false, message: `Failed: ${getErrorMessage(error)}` };
     }
   },
 });

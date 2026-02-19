@@ -1,5 +1,5 @@
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
-import { logger } from "@shepherdjerred/birmel/utils/index.ts";
+import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 
 export type TrackPlayInput = {
   guildId: string;

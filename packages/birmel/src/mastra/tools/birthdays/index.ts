@@ -1,10 +1,8 @@
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import {
-  captureException,
-  withToolSpan,
-} from "@shepherdjerred/birmel/observability/index.ts";
+import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
+import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import {
   handleSetBirthday,
   handleGetBirthday,
@@ -14,6 +12,7 @@ import {
   handleUpcomingBirthdays,
   handleBirthdaysByMonth,
 } from "./birthday-actions.ts";
+import { getErrorMessage, toError } from "@shepherdjerred/birmel/utils/errors.ts";
 
 const logger = loggers.tools.child("birthdays");
 
@@ -79,29 +78,29 @@ export const manageBirthdayTool = createTool({
       .optional(),
   }),
   execute: async (ctx) => {
-    return withToolSpan("manage-birthday", undefined, async () => {
+    return await withToolSpan("manage-birthday", undefined, async () => {
       try {
         switch (ctx.action) {
           case "set":
-            return await handleSetBirthday(
-              ctx.guildId,
-              ctx.userId,
-              ctx.birthMonth,
-              ctx.birthDay,
-              ctx.birthYear,
-              ctx.timezone,
-            );
+            return await handleSetBirthday({
+              guildId: ctx.guildId,
+              userId: ctx.userId,
+              birthMonth: ctx.birthMonth,
+              birthDay: ctx.birthDay,
+              birthYear: ctx.birthYear,
+              timezone: ctx.timezone,
+            });
           case "get":
             return await handleGetBirthday(ctx.guildId, ctx.userId);
           case "update":
-            return await handleUpdateBirthday(
-              ctx.guildId,
-              ctx.userId,
-              ctx.birthMonth,
-              ctx.birthDay,
-              ctx.birthYear,
-              ctx.timezone,
-            );
+            return await handleUpdateBirthday({
+              guildId: ctx.guildId,
+              userId: ctx.userId,
+              birthMonth: ctx.birthMonth,
+              birthDay: ctx.birthDay,
+              birthYear: ctx.birthYear,
+              timezone: ctx.timezone,
+            });
           case "delete":
             return await handleDeleteBirthday(ctx.guildId, ctx.userId);
           case "today":
@@ -113,10 +112,10 @@ export const manageBirthdayTool = createTool({
         }
       } catch (error) {
         logger.error("Failed to manage birthday", error);
-        captureException(error as Error, { operation: "tool.manage-birthday" });
+        captureException(toError(error), { operation: "tool.manage-birthday" });
         return {
           success: false,
-          message: `Failed: ${(error as Error).message}`,
+          message: `Failed: ${getErrorMessage(error)}`,
         };
       }
     });

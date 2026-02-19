@@ -1,5 +1,4 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { validateSource } from "./ast-parser.ts";
 import {
   estimateOutputTokens,
   estimatePromptTokens,
@@ -7,6 +6,7 @@ import {
   getSimpleFunctionPrompt,
   getSystemPrompt,
 } from "./prompt-templates.ts";
+import { parseLLMResponse } from "./response-parser.ts";
 import type {
   CostEstimate,
   DeminifyConfig,
@@ -91,10 +91,9 @@ export class ClaudeClient {
           throw new Error("Unexpected response type");
         }
 
-        return this.parseResponse(content.text, context);
+        return parseLLMResponse(content.text, context);
       } catch (error) {
-        // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-        lastError = error as Error;
+        lastError = error instanceof Error ? error : new Error(String(error));
 
         // Check for rate limit error
         if (error instanceof Anthropic.APIError && error.status === 429) {
@@ -129,88 +128,6 @@ export class ClaudeClient {
     }
 
     throw lastError ?? new Error("Max retries exceeded");
-  }
-
-  /** Parse Claude's response into structured result */
-  private parseResponse(
-    responseText: string,
-    context: DeminifyContext,
-  ): DeminifyResult {
-    // Extract code from markdown code blocks
-    const codeMatch = /```(?:javascript|js)?\n?([\s\S]*?)```/.exec(
-      responseText,
-    );
-    if (codeMatch?.[1] == null || codeMatch[1].length === 0) {
-      throw new Error("No code block found in response");
-    }
-
-    const deminifiedSource = codeMatch[1].trim();
-
-    // Validate the code parses
-    if (!validateSource(deminifiedSource)) {
-      throw new Error("De-minified code failed to parse");
-    }
-
-    // Try to extract metadata JSON
-    let suggestedName =
-      context.targetFunction.originalName.length > 0
-        ? context.targetFunction.originalName
-        : "anonymousFunction";
-    let confidence = 0.5;
-    let parameterNames: Record<string, string> = {};
-    let localVariableNames: Record<string, string> = {};
-
-    // Look for JSON after the code block
-    const jsonMatch = /```[\s\S]*?```\s*(\{[\s\S]*\})/.exec(responseText);
-    if (jsonMatch?.[1] != null && jsonMatch[1].length > 0) {
-      try {
-        // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-        const metadata = JSON.parse(jsonMatch[1]) as {
-          suggestedName?: string;
-          confidence?: number;
-          parameterNames?: Record<string, string>;
-          localVariableNames?: Record<string, string>;
-        };
-        if (
-          metadata.suggestedName != null &&
-          metadata.suggestedName.length > 0
-        ) {
-          suggestedName = metadata.suggestedName;
-        }
-        if (typeof metadata.confidence === "number") {
-          confidence = metadata.confidence;
-        }
-        if (metadata.parameterNames != null) {
-          parameterNames = metadata.parameterNames;
-        }
-        if (metadata.localVariableNames != null) {
-          localVariableNames = metadata.localVariableNames;
-        }
-      } catch {
-        // JSON parsing failed, use defaults
-      }
-    }
-
-    // Try to infer name from the de-minified code if not provided
-    if (suggestedName === "anonymousFunction") {
-      const funcNameMatch =
-        /(?:function|const|let|var)\s+([a-zA-Z_$][\w$]*)/.exec(
-          deminifiedSource,
-        );
-      if (funcNameMatch?.[1] != null && funcNameMatch[1].length > 0) {
-        suggestedName = funcNameMatch[1];
-      }
-    }
-
-    return {
-      functionId: context.targetFunction.id,
-      originalSource: context.targetFunction.source,
-      deminifiedSource,
-      suggestedName,
-      confidence,
-      parameterNames,
-      localVariableNames,
-    };
   }
 
   /** Wait for rate limit token */

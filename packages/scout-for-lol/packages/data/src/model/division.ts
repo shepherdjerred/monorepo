@@ -11,14 +11,20 @@ export const DivisionSchema = z.union([
 ]);
 
 export function parseDivision(input: string): Division | undefined {
-  return match(input.toUpperCase())
-    .returnType<Division | undefined>()
-    .with("IV", () => 4)
-    .with("III", () => 3)
-    .with("II", () => 2)
-    .with("I", () => 1)
-    // eslint-disable-next-line unicorn/no-useless-undefined -- ts-pattern otherwise requires explicit undefined for Optional return type
-    .otherwise(() => undefined);
+  const normalized = input.toUpperCase();
+  if (normalized === "IV") {
+    return 4;
+  }
+  if (normalized === "III") {
+    return 3;
+  }
+  if (normalized === "II") {
+    return 2;
+  }
+  if (normalized === "I") {
+    return 1;
+  }
+  return undefined;
 }
 
 export function divisionToString(division: Division): string {

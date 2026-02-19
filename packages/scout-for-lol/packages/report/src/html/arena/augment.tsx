@@ -10,7 +10,7 @@ export function renderAugment(augment: Augment) {
       ? getAugmentIcon(augment.iconLarge)
       : null;
 
-    if (iconUrl !== undefined && iconUrl.length > 0) {
+    if (iconUrl !== null && iconUrl.length > 0) {
       return (
         <div
           style={{

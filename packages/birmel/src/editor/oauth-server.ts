@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { createOAuthRoutes } from "./oauth-routes.ts";
 import {

@@ -18,14 +18,21 @@ import { pollTools } from "./discord/polls.ts";
 import { threadTools } from "./discord/threads.ts";
 import { activityTools } from "./discord/activity.ts";
 import { schedulingTools } from "./discord/scheduling.ts";
-import { allMusicTools } from "./music/index.ts";
-import { allAutomationTools } from "./automation/index.ts";
-import { allExternalTools } from "./external/index.ts";
-import { memoryTools } from "./memory/index.ts";
+import { playbackTools } from "./music/playback.ts";
+import { queueTools } from "./music/queue.ts";
+import { executeShellCommandTool } from "./automation/shell.ts";
+import { manageTaskTool } from "./automation/timers.ts";
+import { browserAutomationTool } from "./automation/browser.ts";
+import { externalServiceTool } from "./external/web.ts";
+import { manageMemoryTool } from "./memory/index.ts";
 import { sqliteTools } from "./database/sqlite-query.ts";
 import { electionTools } from "./elections/elections.ts";
-import { birthdayTools } from "./birthdays/index.ts";
-import { editorTools } from "./editor/index.ts";
+import { manageBirthdayTool } from "./birthdays/index.ts";
+import { editRepoTool } from "./editor/edit-repo.ts";
+import { listReposTool } from "./editor/list-repos.ts";
+import { getSessionTool } from "./editor/get-session.ts";
+import { approveChangesTool } from "./editor/approve-changes.ts";
+import { connectGitHubTool } from "./editor/connect-github.ts";
 
 /**
  * Messaging Agent - handles messages, threads, polls, and scheduling
@@ -36,7 +43,7 @@ export const messagingToolSet = [
   ...pollTools,
   ...activityTools,
   ...schedulingTools,
-  ...memoryTools,
+  manageMemoryTool,
 ];
 
 /**
@@ -64,24 +71,30 @@ export const moderationToolSet = [
 /**
  * Music Agent - handles music playback
  */
-export const musicToolSet = [...allMusicTools];
+export const musicToolSet = [...playbackTools, ...queueTools];
 
 /**
  * Automation Agent - handles automation, external APIs, events, elections, birthdays
  */
 export const automationToolSet = [
-  ...allAutomationTools,
-  ...allExternalTools,
+  executeShellCommandTool,
+  manageTaskTool,
+  browserAutomationTool,
+  externalServiceTool,
   ...eventTools,
   ...electionTools,
-  ...birthdayTools,
+  manageBirthdayTool,
 ];
 
 /**
  * Editor Agent - handles file editing in allowed repositories
  */
 export const editorToolSet = [
-  ...editorTools,
+  editRepoTool,
+  listReposTool,
+  getSessionTool,
+  approveChangesTool,
+  connectGitHubTool,
   ...messageTools, // Needs message tools for replies
 ];
 
@@ -137,11 +150,9 @@ export function getAgentDescription(agentType: AgentType): string {
  * Convert a tool array to a record for Mastra Agent.
  * Uses unknown type to avoid strict type checking issues with different tool schemas.
  */
-export function toolsToRecord(tools: { id: string }[]) {
-  return Object.fromEntries(tools.map((tool) => [tool.id, tool])) as Record<
-    string,
-    unknown
-  >;
+export function toolsToRecord(tools: { id: string }[]): Record<string, unknown> {
+  const entries: [string, unknown][] = tools.map((tool) => [tool.id, tool]);
+  return Object.fromEntries(entries);
 }
 
 // Log tool counts on module load (for debugging)

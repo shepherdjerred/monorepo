@@ -2,6 +2,12 @@ import * as acorn from "acorn";
 import * as walk from "acorn-walk";
 import type { Node } from "acorn";
 import { parseAndExtractFunctions, extractCallees } from "./ast-parser.ts";
+import {
+  asImportDeclarationNode,
+  asExportNamedDeclarationNode,
+  asExportDefaultDeclarationNode,
+  type ExportNamedDeclarationNode,
+} from "./ast-node-schemas.ts";
 import type {
   CallGraph,
   CodeSegment,
@@ -14,37 +20,10 @@ import type {
   ImportInfo,
 } from "./types.ts";
 
-/** Extended node types */
-type ImportDeclarationNode = {
-  source: { value: string };
-  specifiers: {
-    type: string;
-    local: { name: string };
-    imported?: { name: string };
-  }[];
-} & Node;
-
-type ExportNamedDeclarationNode = {
-  declaration?: Node & {
-    id?: { name: string };
-    declarations?: { id: { name: string } }[];
-  };
-  specifiers: {
-    local: { name: string };
-    exported: { name: string };
-  }[];
-} & Node;
-
-type ExportDefaultDeclarationNode = {
-  declaration: Node & { id?: { name: string }; name?: string };
-} & Node;
-
 /** Build a complete call graph from source code */
 export function buildCallGraph(source: string): CallGraph {
-  // Parse and extract functions
   const functions = parseAndExtractFunctions(source);
 
-  // Create maps
   const functionsMap = new Map<string, ExtractedFunction>();
   const nameToId = new Map<string, string>();
 
@@ -55,13 +34,9 @@ export function buildCallGraph(source: string): CallGraph {
     }
   }
 
-  // Resolve callers (inverse of callees)
   resolveCallers(functionsMap, nameToId);
 
-  // Extract imports and exports
   const { imports, exports: moduleExports } = extractImportsExports(source);
-
-  // Extract top-level segments
   const topLevelSegments = extractTopLevelSegments(source, functions);
 
   return {
@@ -92,6 +67,57 @@ function resolveCallers(
   }
 }
 
+/** Extract import specifier name */
+function getImportSpecifierName(s: {
+  type: string;
+  local: { name: string };
+  imported?: { name: string } | undefined;
+}): string {
+  if (s.type === "ImportDefaultSpecifier") {
+    return s.local.name;
+  }
+  if (s.type === "ImportNamespaceSpecifier") {
+    return `* as ${s.local.name}`;
+  }
+  return s.imported?.name ?? s.local.name;
+}
+
+/** Extract named exports from an ExportNamedDeclaration node */
+function extractNamedExports(
+  exportNode: ExportNamedDeclarationNode,
+  node: Node,
+  exports: ExportInfo[],
+): void {
+  if (exportNode.declaration) {
+    const decl = exportNode.declaration;
+    if (decl.id) {
+      exports.push({
+        name: decl.id.name,
+        localName: decl.id.name,
+        start: node.start,
+        end: node.end,
+      });
+    } else if (decl.declarations) {
+      for (const d of decl.declarations) {
+        exports.push({
+          name: d.id.name,
+          localName: d.id.name,
+          start: node.start,
+          end: node.end,
+        });
+      }
+    }
+  }
+  for (const spec of exportNode.specifiers) {
+    exports.push({
+      name: spec.exported.name,
+      localName: spec.local.name,
+      start: node.start,
+      end: node.end,
+    });
+  }
+}
+
 /** Extract import and export information */
 function extractImportsExports(source: string): {
   imports: ImportInfo[];
@@ -107,64 +133,36 @@ function extractImportsExports(source: string): {
       sourceType: "module",
     });
   } catch {
-    // Not a module, no imports/exports
     return { imports, exports };
   }
 
   walk.simple(ast, {
     ImportDeclaration(node: Node) {
-      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-      const importNode = node as ImportDeclarationNode;
+      const importNode = asImportDeclarationNode(node);
+      if (!importNode) {
+        return;
+      }
       imports.push({
         source: importNode.source.value,
-        specifiers: importNode.specifiers.map((s) => {
-          if (s.type === "ImportDefaultSpecifier") {
-            return s.local.name;
-          }
-          if (s.type === "ImportNamespaceSpecifier") {
-            return `* as ${s.local.name}`;
-          }
-          return s.imported?.name ?? s.local.name;
-        }),
+        specifiers: importNode.specifiers.map((s) =>
+          getImportSpecifierName(s),
+        ),
         start: node.start,
         end: node.end,
       });
     },
     ExportNamedDeclaration(node: Node) {
-      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-      const exportNode = node as ExportNamedDeclarationNode;
-      if (exportNode.declaration) {
-        const decl = exportNode.declaration;
-        if (decl.id) {
-          exports.push({
-            name: decl.id.name,
-            localName: decl.id.name,
-            start: node.start,
-            end: node.end,
-          });
-        } else if (decl.declarations) {
-          for (const d of decl.declarations) {
-            exports.push({
-              name: d.id.name,
-              localName: d.id.name,
-              start: node.start,
-              end: node.end,
-            });
-          }
-        }
+      const exportNode = asExportNamedDeclarationNode(node);
+      if (!exportNode) {
+        return;
       }
-      for (const spec of exportNode.specifiers) {
-        exports.push({
-          name: spec.exported.name,
-          localName: spec.local.name,
-          start: node.start,
-          end: node.end,
-        });
-      }
+      extractNamedExports(exportNode, node, exports);
     },
     ExportDefaultDeclaration(node: Node) {
-      // eslint-disable-next-line custom-rules/no-type-assertions -- AST node type narrowing requires assertion
-      const exportNode = node as ExportDefaultDeclarationNode;
+      const exportNode = asExportDefaultDeclarationNode(node);
+      if (!exportNode) {
+        return;
+      }
       const name =
         exportNode.declaration.id?.name ??
         exportNode.declaration.name ??
@@ -186,9 +184,8 @@ function extractTopLevelSegments(
   source: string,
   functions: ExtractedFunction[],
 ): CodeSegment[] {
-  // Sort functions by start position
   const sortedFunctions = [...functions]
-    .filter((f) => f.parentId == null || f.parentId.length === 0) // Only top-level functions
+    .filter((f) => f.parentId == null || f.parentId.length === 0)
     .toSorted((a, b) => a.start - b.start);
 
   const segments: CodeSegment[] = [];
@@ -211,7 +208,6 @@ function extractTopLevelSegments(
     currentPos = func.end;
   }
 
-  // Add final segment
   if (currentPos < source.length) {
     const segmentSource = source.slice(currentPos);
     if (segmentSource.trim().length > 0) {
@@ -238,7 +234,6 @@ function extractTopLevelCallees(source: string): string[] {
     });
     return extractCallees(ast, source);
   } catch {
-    // May fail on partial code, just return empty
     return [];
   }
 }
@@ -249,13 +244,11 @@ export function getProcessingOrder(graph: CallGraph): string[] {
   const visited = new Set<string>();
   const visiting = new Set<string>();
 
-  // Topological sort with cycle detection
   function visit(id: string): void {
     if (visited.has(id)) {
       return;
     }
     if (visiting.has(id)) {
-      // Cycle detected, just add to order
       if (!visited.has(id)) {
         order.push(id);
         visited.add(id);
@@ -266,7 +259,6 @@ export function getProcessingOrder(graph: CallGraph): string[] {
     visiting.add(id);
     const func = graph.functions.get(id);
     if (func) {
-      // Visit callees first (dependencies)
       for (const calleeName of func.callees) {
         const calleeId = graph.nameToId.get(calleeName);
         if (
@@ -283,7 +275,6 @@ export function getProcessingOrder(graph: CallGraph): string[] {
     order.push(id);
   }
 
-  // Start from functions with no callers (entry points)
   const roots = [...graph.functions.values()].filter(
     (f) => f.callers.length === 0,
   );
@@ -291,12 +282,26 @@ export function getProcessingOrder(graph: CallGraph): string[] {
     visit(root.id);
   }
 
-  // Visit any remaining functions (in cycles)
   for (const id of graph.functions.keys()) {
     visit(id);
   }
 
   return order;
+}
+
+/** Extract a cycle from the stack starting at the given ID */
+function extractCycle(
+  stack: string[],
+  startId: string,
+  cycles: string[][],
+): void {
+  const cycleStart = stack.indexOf(startId);
+  if (cycleStart !== -1) {
+    const cycle = stack.slice(cycleStart);
+    if (cycle.length > 1) {
+      cycles.push(cycle);
+    }
+  }
 }
 
 /** Find strongly connected components (cycles) */
@@ -326,15 +331,7 @@ export function findCycles(graph: CallGraph): string[][] {
         if (!visited.has(calleeId)) {
           strongConnect(calleeId);
         } else if (onStack.has(calleeId)) {
-          // Found cycle
-          const cycleStart = stack.indexOf(calleeId);
-          if (cycleStart !== -1) {
-            const cycle = stack.slice(cycleStart);
-            // eslint-disable-next-line max-depth -- nested control flow required for logic
-            if (cycle.length > 1) {
-              cycles.push(cycle);
-            }
-          }
+          extractCycle(stack, calleeId, cycles);
         }
       }
     }
@@ -352,6 +349,49 @@ export function findCycles(graph: CallGraph): string[][] {
   return cycles;
 }
 
+/** Build a FunctionContext from a function and optional result */
+function buildFunctionContext(
+  func: ExtractedFunction,
+  result: DeminifyResult | undefined,
+  id: string,
+): FunctionContext {
+  return {
+    id,
+    originalSource: truncateSource(func.source, 500),
+    deminifiedSource: result
+      ? truncateSource(result.deminifiedSource, 500)
+      : null,
+    suggestedName: result?.suggestedName ?? null,
+  };
+}
+
+/** Build known names map from deminified results */
+function buildKnownNames(
+  graph: CallGraph,
+  deminifiedResults: Map<string, DeminifyResult>,
+): Map<string, string> {
+  const knownNames = new Map<string, string>();
+  for (const [id, result] of deminifiedResults) {
+    const graphFunc = graph.functions.get(id);
+    if (
+      graphFunc?.originalName != null &&
+      graphFunc.originalName.length > 0 &&
+      result.suggestedName.length > 0
+    ) {
+      knownNames.set(graphFunc.originalName, result.suggestedName);
+    }
+    for (const [orig, suggested] of Object.entries(result.parameterNames)) {
+      knownNames.set(orig, suggested);
+    }
+    for (const [orig, suggested] of Object.entries(
+      result.localVariableNames,
+    )) {
+      knownNames.set(orig, suggested);
+    }
+  }
+  return knownNames;
+}
+
 /** Get context for de-minifying a specific function */
 export function getFunctionContext(
   graph: CallGraph,
@@ -364,28 +404,21 @@ export function getFunctionContext(
     throw new Error(`Function not found: ${functionId}`);
   }
 
-  // Get caller contexts
   const callers: FunctionContext[] = func.callers
     .map((callerId) => {
       const caller = graph.functions.get(callerId);
       if (!caller) {
         return null;
       }
-      const result = deminifiedResults.get(callerId);
-      return {
-        id: callerId,
-        originalSource: truncateSource(caller.source, 500),
-        deminifiedSource: result
-          ? truncateSource(result.deminifiedSource, 500)
-          : null,
-        suggestedName: result?.suggestedName ?? null,
-      };
+      return buildFunctionContext(
+        caller,
+        deminifiedResults.get(callerId),
+        callerId,
+      );
     })
-    // eslint-disable-next-line custom-rules/no-type-guards -- type predicate needed for array filter narrowing
-    .filter((c): c is FunctionContext => c !== null)
-    .slice(0, 3); // Limit to 3 callers
+    .filter((c) => c !== null)
+    .slice(0, 3);
 
-  // Get callee contexts
   const callees: FunctionContext[] = func.callees
     .map((calleeName) => {
       const calleeId = graph.nameToId.get(calleeName);
@@ -396,39 +429,16 @@ export function getFunctionContext(
       if (!callee) {
         return null;
       }
-      const result = deminifiedResults.get(calleeId);
-      return {
-        id: calleeId,
-        originalSource: truncateSource(callee.source, 500),
-        deminifiedSource: result
-          ? truncateSource(result.deminifiedSource, 500)
-          : null,
-        suggestedName: result?.suggestedName ?? null,
-      };
+      return buildFunctionContext(
+        callee,
+        deminifiedResults.get(calleeId),
+        calleeId,
+      );
     })
-    // eslint-disable-next-line custom-rules/no-type-guards -- type predicate needed for array filter narrowing
-    .filter((c): c is FunctionContext => c !== null)
-    .slice(0, 5); // Limit to 5 callees
+    .filter((c) => c !== null)
+    .slice(0, 5);
 
-  // Build known names map from results
-  const knownNames = new Map<string, string>();
-  for (const [id, result] of deminifiedResults) {
-    const graphFunc = graph.functions.get(id);
-    if (
-      graphFunc?.originalName != null &&
-      graphFunc.originalName.length > 0 &&
-      result.suggestedName.length > 0
-    ) {
-      knownNames.set(graphFunc.originalName, result.suggestedName);
-    }
-    // Add parameter and variable mappings
-    for (const [orig, suggested] of Object.entries(result.parameterNames)) {
-      knownNames.set(orig, suggested);
-    }
-    for (const [orig, suggested] of Object.entries(result.localVariableNames)) {
-      knownNames.set(orig, suggested);
-    }
-  }
+  const knownNames = buildKnownNames(graph, deminifiedResults);
 
   return {
     targetFunction: func,

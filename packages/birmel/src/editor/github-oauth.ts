@@ -1,7 +1,16 @@
+import { z } from "zod";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
-import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { getGitHubConfig, isGitHubConfigured } from "./config.ts";
-import type { GitHubAuth } from "./types.ts";
+import type { GitHubAuth } from "@prisma/client";
+
+const TokenResponseSchema = z.object({
+  access_token: z.string().optional(),
+  refresh_token: z.string().optional(),
+  expires_in: z.number().optional(),
+  error: z.string().optional(),
+  error_description: z.string().optional(),
+}).loose();
 
 const logger = loggers.editor.child("github-oauth");
 
@@ -62,36 +71,33 @@ export async function exchangeCodeForToken(
     );
   }
 
-  const data = (await response.json()) as {
-    access_token: string;
-    token_type: string;
-    scope: string;
-    refresh_token?: string;
-    expires_in?: number;
-    error?: string;
-    error_description?: string;
-  };
+  const rawData: unknown = await response.json();
+  const parsed = TokenResponseSchema.safeParse(rawData);
+  if (!parsed.success) {
+    throw new Error("Invalid token response from GitHub");
+  }
+
+  const data = parsed.data;
 
   if (data.error != null && data.error.length > 0) {
     throw new Error(data.error_description ?? data.error);
   }
 
-  const result: {
-    accessToken: string;
-    refreshToken?: string;
-    expiresAt?: Date;
-  } = {
-    accessToken: data.access_token,
-  };
+  return buildTokenResult(data.access_token ?? "", data.refresh_token, data.expires_in);
+}
 
-  if (data.refresh_token != null && data.refresh_token.length > 0) {
-    result.refreshToken = data.refresh_token;
+function buildTokenResult(
+  accessToken: string,
+  refreshToken: string | undefined,
+  expiresIn: number | undefined,
+): { accessToken: string; refreshToken?: string; expiresAt?: Date } {
+  const result: { accessToken: string; refreshToken?: string; expiresAt?: Date } = { accessToken };
+  if (refreshToken != null && refreshToken.length > 0) {
+    result.refreshToken = refreshToken;
   }
-
-  if (data.expires_in != null) {
-    result.expiresAt = new Date(Date.now() + data.expires_in * 1000);
+  if (expiresIn != null) {
+    result.expiresAt = new Date(Date.now() + expiresIn * 1000);
   }
-
   return result;
 }
 

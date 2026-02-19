@@ -1,13 +1,68 @@
+import { getErrorMessage, toError, parseJsonStringArray, parseJsonNumberRecord } from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import {
-  captureException,
-  withToolSpan,
-} from "@shepherdjerred/birmel/observability/index.ts";
+import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
+import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 
 const logger = loggers.tools.child("elections");
+
+type ElectionProcessResult = {
+  won: boolean;
+  votes: number;
+  lastElectionDate: string | undefined;
+  lastWinDate: string | undefined;
+};
+
+function processCandidateElection(
+  election: { candidates: string | null; winner: string | null; actualEnd: Date | null; voteCounts: string | null },
+  candidateLower: string,
+  currentLastElectionDate: string | undefined,
+  currentLastWinDate: string | undefined,
+): ElectionProcessResult | null {
+  if (election.candidates == null) {
+    return null;
+  }
+  const candidates = parseJsonStringArray(election.candidates);
+  const candidatesLower = candidates.map((c) => c.toLowerCase());
+  if (!candidatesLower.includes(candidateLower)) {
+    return null;
+  }
+
+  let lastElectionDate = currentLastElectionDate;
+  let lastWinDate = currentLastWinDate;
+
+  if ((lastElectionDate == null || lastElectionDate.length === 0) && election.actualEnd != null) {
+    lastElectionDate = election.actualEnd.toISOString();
+  }
+
+  const won = election.winner?.toLowerCase() === candidateLower;
+  if (won && (lastWinDate == null || lastWinDate.length === 0) && election.actualEnd != null) {
+    lastWinDate = election.actualEnd.toISOString();
+  }
+
+  const votes = getVotesForCandidateFromRecord(election.voteCounts, candidateLower);
+
+  return { won, votes, lastElectionDate, lastWinDate };
+}
+
+function getVotesForCandidateFromRecord(
+  voteCounts: string | null,
+  candidateLower: string,
+): number {
+  if (voteCounts == null || voteCounts.length === 0) {
+    return 0;
+  }
+  const votes = parseJsonNumberRecord(voteCounts);
+  let total = 0;
+  for (const [name, count] of Object.entries(votes)) {
+    if (name.toLowerCase() === candidateLower) {
+      total += count;
+    }
+  }
+  return total;
+}
 
 export const getCandidateStatsTool = createTool({
   id: "get-candidate-stats",
@@ -66,41 +121,20 @@ export const getCandidateStatsTool = createTool({
         let lastWinDate: string | undefined;
 
         for (const election of elections) {
-          const candidates = JSON.parse(election.candidates) as string[];
-          const candidatesLower = candidates.map((c) => c.toLowerCase());
-
-          if (candidatesLower.includes(candidateLower)) {
-            totalElectionsParticipated++;
-
-            if (
-              (lastElectionDate == null || lastElectionDate.length === 0) &&
-              election.actualEnd != null
-            ) {
-              lastElectionDate = election.actualEnd.toISOString();
-            }
-
-            if (election.winner?.toLowerCase() === candidateLower) {
-              wins++;
-              if (
-                (lastWinDate == null || lastWinDate.length === 0) &&
-                election.actualEnd != null
-              ) {
-                lastWinDate = election.actualEnd.toISOString();
-              }
-            }
-
-            if (election.voteCounts != null && election.voteCounts.length > 0) {
-              const votes = JSON.parse(election.voteCounts) as Record<
-                string,
-                number
-              >;
-              for (const [name, count] of Object.entries(votes)) {
-                if (name.toLowerCase() === candidateLower) {
-                  totalVotesReceived += count;
-                }
-              }
-            }
+          const result = processCandidateElection(
+            election,
+            candidateLower,
+            lastElectionDate,
+            lastWinDate,
+          );
+          if (result == null) {
+            continue;
           }
+          totalElectionsParticipated++;
+          wins += result.won ? 1 : 0;
+          totalVotesReceived += result.votes;
+          lastElectionDate = result.lastElectionDate;
+          lastWinDate = result.lastWinDate;
         }
 
         const winRate =
@@ -138,13 +172,13 @@ export const getCandidateStatsTool = createTool({
           guildId: input.guildId,
           candidateName: input.candidateName,
         });
-        captureException(error as Error, {
+        captureException(toError(error), {
           operation: "tool.get-candidate-stats",
           extra: { guildId: input.guildId, candidateName: input.candidateName },
         });
         return {
           success: false,
-          message: `Failed to fetch stats: ${(error as Error).message}`,
+          message: `Failed to fetch stats: ${getErrorMessage(error)}`,
         };
       }
     });

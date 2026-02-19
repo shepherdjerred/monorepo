@@ -1,11 +1,10 @@
+import { getErrorMessage, toError } from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import {
-  captureException,
-  withToolSpan,
-} from "@shepherdjerred/birmel/observability/index.ts";
+import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
+import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { validateSnowflakes } from "./validation.ts";
 import {
   handleCreateFromMessage,
@@ -128,31 +127,31 @@ export const manageThreadTool = createTool({
 
         switch (ctx.action) {
           case "create-from-message":
-            return await handleCreateFromMessage(
+            return await handleCreateFromMessage({
               client,
-              ctx.channelId,
-              ctx.messageId,
-              ctx.name,
-              ctx.autoArchiveDuration,
-            );
+              channelId: ctx.channelId,
+              messageId: ctx.messageId,
+              name: ctx.name,
+              autoArchiveDuration: ctx.autoArchiveDuration,
+            });
           case "create-standalone":
-            return await handleCreateStandalone(
+            return await handleCreateStandalone({
               client,
-              ctx.channelId,
-              ctx.name,
-              ctx.autoArchiveDuration,
-              ctx.type,
-              ctx.message,
-            );
+              channelId: ctx.channelId,
+              name: ctx.name,
+              autoArchiveDurationStr: ctx.autoArchiveDuration,
+              type: ctx.type,
+              messageContent: ctx.message,
+            });
           case "modify":
-            return await handleModifyThread(
+            return await handleModifyThread({
               client,
-              ctx.threadId,
-              ctx.name,
-              ctx.archived,
-              ctx.locked,
-              ctx.autoArchiveDuration,
-            );
+              threadId: ctx.threadId,
+              name: ctx.name,
+              archived: ctx.archived,
+              locked: ctx.locked,
+              autoArchiveDuration: ctx.autoArchiveDuration,
+            });
           case "add-member":
             return await handleAddMember(client, ctx.threadId, ctx.userId);
           case "get-messages":
@@ -165,10 +164,10 @@ export const manageThreadTool = createTool({
         }
       } catch (error) {
         logger.error("Failed to manage thread", error);
-        captureException(error as Error, { operation: "tool.manage-thread" });
+        captureException(toError(error), { operation: "tool.manage-thread" });
         return {
           success: false,
-          message: `Failed to manage thread: ${(error as Error).message}`,
+          message: `Failed to manage thread: ${getErrorMessage(error)}`,
         };
       }
     });

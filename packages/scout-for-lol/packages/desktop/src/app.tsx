@@ -69,13 +69,13 @@ export default function App() {
     const loadConfig = async () => {
       try {
         const config = await invoke<Config>("load_config");
-        if (config.apiToken !== undefined && config.apiToken.length > 0) {
+        if (config.apiToken !== null && config.apiToken.length > 0) {
           setApiToken(config.apiToken);
         }
-        if (config.backendUrl !== undefined && config.backendUrl.length > 0) {
+        if (config.backendUrl !== null && config.backendUrl.length > 0) {
           setBackendUrl(config.backendUrl);
         }
-        if (config.apiToken !== undefined && config.apiToken.length > 0 || config.backendUrl !== undefined && config.backendUrl.length > 0) {
+        if (config.apiToken !== null && config.apiToken.length > 0 || config.backendUrl !== null && config.backendUrl.length > 0) {
           addLog("info", "Loaded saved backend configuration");
         }
 
@@ -236,7 +236,7 @@ export default function App() {
             `To enable: League Client → Settings → Game → Enable Live Client Data API`,
           );
           addLog("error", `Then restart League Client and reconnect.`);
-          if (diagnostics.error_message !== undefined && diagnostics.error_message.length > 0) {
+          if (diagnostics.error_message !== null && diagnostics.error_message.length > 0) {
             addLog("error", `Error: ${diagnostics.error_message}`);
           }
         }
@@ -337,7 +337,7 @@ export default function App() {
         {/* Error/Loading Alerts */}
         {(error !== null || loading !== null) && (
           <div className="border-b border-gray-800 px-8 py-5 space-y-4">
-            {error !== undefined && error.length > 0 && (
+            {error !== null && error.length > 0 && (
               <Alert
                 variant="error"
                 onDismiss={() => {
@@ -347,7 +347,7 @@ export default function App() {
                 {error}
               </Alert>
             )}
-            {loading !== undefined && loading.length > 0 && <Alert variant="loading">{loading}</Alert>}
+            {loading !== null && loading.length > 0 && <Alert variant="loading">{loading}</Alert>}
           </div>
         )}
 

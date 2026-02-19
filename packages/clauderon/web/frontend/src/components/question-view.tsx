@@ -1,9 +1,26 @@
 import type { Message } from "@shepherdjerred/clauderon/web/frontend/src/lib/claudeParser";
 import { HelpCircle, Check } from "lucide-react";
+import { z } from "zod";
 
 type QuestionViewProps = {
   message: Message;
 };
+
+const QuestionOptionSchema = z.object({
+  label: z.string(),
+  description: z.string(),
+});
+
+const QuestionItemSchema = z.object({
+  question: z.string(),
+  header: z.string(),
+  options: z.array(QuestionOptionSchema),
+  multiSelect: z.boolean().optional(),
+});
+
+const QuestionsSchema = z.array(QuestionItemSchema);
+
+type QuestionItem = z.infer<typeof QuestionItemSchema>;
 
 export function QuestionView({ message }: QuestionViewProps) {
   // Find the AskUserQuestion tool use
@@ -15,17 +32,11 @@ export function QuestionView({ message }: QuestionViewProps) {
     return null;
   }
 
-  const questions = questionTool.input.questions as
-    | {
-        question: string;
-        header: string;
-        options: {
-          label: string;
-          description: string;
-        }[];
-        multiSelect: boolean;
-      }[]
-    | undefined;
+  const parseResult = QuestionsSchema.safeParse(questionTool.input.questions);
+  const questions: QuestionItem[] | undefined =
+    parseResult.success && parseResult.data.length > 0
+      ? parseResult.data
+      : undefined;
 
   if (!questions || questions.length === 0) {
     return null;

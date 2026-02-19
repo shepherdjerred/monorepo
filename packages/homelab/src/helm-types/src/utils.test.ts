@@ -10,7 +10,7 @@ describe("Sanitization", () => {
       function: "fn",
     };
 
-    const result = convertToTypeScriptInterface(values, "TestValues");
+    const result = convertToTypeScriptInterface({ values: values, interfaceName: "TestValues" });
 
     expect(result.properties['"default"']).toBeDefined();
     expect(result.properties['"class"']).toBeDefined();
@@ -24,7 +24,7 @@ describe("Sanitization", () => {
       "space name": "value",
     };
 
-    const result = convertToTypeScriptInterface(values, "TestValues");
+    const result = convertToTypeScriptInterface({ values: values, interfaceName: "TestValues" });
 
     expect(result.properties['"kebab-case"']).toBeDefined();
     expect(result.properties['"dot.notation"']).toBeDefined();
@@ -36,7 +36,7 @@ describe("Sanitization", () => {
       "123start": "value",
     };
 
-    const result = convertToTypeScriptInterface(values, "TestValues");
+    const result = convertToTypeScriptInterface({ values: values, interfaceName: "TestValues" });
 
     expect(result.properties['"123start"']).toBeDefined();
   });

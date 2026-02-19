@@ -1,14 +1,15 @@
+import { z } from "zod";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
-import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { getMaxSessionDuration, getMaxSessionsPerUser } from "./config.ts";
 import { cleanupClone } from "./repo-clone.ts";
 import {
   SessionState,
   type CreateSessionParams,
-  type EditorSession,
   type FileChange,
   type PendingChanges,
 } from "./types.ts";
+import type { EditorSession } from "@prisma/client";
 
 const logger = loggers.editor.child("session-manager");
 
@@ -167,6 +168,17 @@ export async function storePendingChanges(
 /**
  * Get pending changes for a session
  */
+const PendingChangesSchema = z.object({
+  changes: z.array(z.object({
+    filePath: z.string(),
+    oldContent: z.string().nullable(),
+    newContent: z.string().nullable(),
+    changeType: z.enum(["create", "modify", "delete"]),
+  })),
+  branchName: z.string(),
+  baseBranch: z.string(),
+});
+
 export function getPendingChanges(
   session: EditorSession,
 ): PendingChanges | null {
@@ -174,7 +186,16 @@ export function getPendingChanges(
     return null;
   }
   try {
-    return JSON.parse(session.pendingChanges) as PendingChanges;
+    const parsed: unknown = JSON.parse(session.pendingChanges);
+    const result = PendingChangesSchema.safeParse(parsed);
+    if (result.success) {
+      return {
+        changes: result.data.changes,
+        branchName: result.data.branchName,
+        baseBranch: result.data.baseBranch,
+      };
+    }
+    return null;
   } catch {
     logger.error("Failed to parse pending changes", undefined, {
       sessionId: session.id,

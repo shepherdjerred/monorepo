@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { X, AlertTriangle } from "lucide-react";
-import { useEffect } from "react";
 import type { Session, SessionHealthReport } from "@clauderon/client";
 import { Badge } from "@/components/ui/badge";
 

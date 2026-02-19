@@ -62,7 +62,7 @@ export async function executeGrantPermission(
   // ============================================================================
 
   const targetUser = interaction.options.getUser("user", true);
-  const serverId = interaction.guildId !== undefined && interaction.guildId.length > 0
+  const serverId = interaction.guildId !== null && interaction.guildId.length > 0
     ? DiscordGuildIdSchema.parse(interaction.guildId)
     : null;
 

@@ -1,6 +1,6 @@
 import type { Directory, Container } from "@dagger.io/dagger";
 import { dag, type Secret } from "@dagger.io/dagger";
-import { getMiseRuntimeContainer } from "./homelab-base.ts";
+import { getMiseRuntimeContainer } from "./lib-mise.ts";
 import type { StepResult } from "./homelab-index.ts";
 import versions from "./lib-versions.ts";
 
@@ -70,13 +70,24 @@ function buildDependencySummaryContainer(source: Directory): Container {
  * @param dryRun If true, builds the image but doesn't publish it (default: false)
  * @returns The result of the build and/or push operation.
  */
+type BuildAndPushDependencySummaryImageOptions = {
+  source: Directory;
+  imageName?: string;
+  ghcrUsername: string;
+  ghcrPassword: Secret;
+  dryRun?: boolean;
+};
+
 export async function buildAndPushDependencySummaryImage(
-  source: Directory,
-  imageName = "ghcr.io/shepherdjerred/dependency-summary:latest",
-  ghcrUsername: string,
-  ghcrPassword: Secret,
-  dryRun = false,
+  options: BuildAndPushDependencySummaryImageOptions,
 ): Promise<StepResult> {
+  const {
+    source,
+    imageName = "ghcr.io/shepherdjerred/dependency-summary:latest",
+    ghcrUsername,
+    ghcrPassword,
+    dryRun = false,
+  } = options;
   const container = buildDependencySummaryContainer(source);
 
   // Build or publish the image based on dry-run flag

@@ -33,11 +33,11 @@ import type {
 type Expect<T extends true> = T;
 
 /**
- * Inverts a false to true - used for negative assertions
+ * Inverts a false to true - used for negative assertions.
+ * T is used in the constraint to verify the input type extends false;
+ * the conditional keeps ESLint from flagging T as unused.
  */
-// @ts-expect-error - type is intentionally unused
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Type helper for compile-time assertions
-type Not<T extends false> = true;
+type Not<T extends false> = T extends false ? true : never;
 
 /**
  * Check if two types are mutually assignable (works with branded types)
@@ -203,10 +203,9 @@ type ProcessPlayerAcceptsPlayerId = Expect<
 // ============================================================================
 
 /**
- * All type tests in one place
- * If any test fails, TypeScript will error at compile time
- *
- * @ts-ignore - Unused type, but all members are still type-checked!
+ * All type tests in one place.
+ * If any test fails, TypeScript will error at compile time.
+ * The type is exported below to prevent unused-type warnings.
  */
 type AllTests = [
   // Player model - numeric IDs

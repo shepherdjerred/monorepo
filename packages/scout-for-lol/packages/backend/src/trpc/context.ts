@@ -35,7 +35,7 @@ function hashToken(token: string): string {
  * Extract and validate bearer token from Authorization header
  */
 function extractBearerToken(authHeader: string | null): string | null {
-  if (!authHeader?.startsWith("Bearer ") === true) {
+  if (authHeader?.startsWith("Bearer ") !== true) {
     return null;
   }
   return authHeader.slice(7);
@@ -53,7 +53,7 @@ export async function createContext(request: Request): Promise<Context> {
   let user: User | null = null;
   let apiToken: ApiToken | null = null;
 
-  if (bearerToken !== undefined && bearerToken.length > 0) {
+  if (bearerToken !== null && bearerToken.length > 0) {
     // Try API token authentication first
     const hashedToken = hashToken(bearerToken);
     const tokenRecord = await prisma.apiToken.findUnique({

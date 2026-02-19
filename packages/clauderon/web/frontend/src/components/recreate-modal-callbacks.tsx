@@ -13,21 +13,20 @@ type RecreateModalWrapperProps = {
   cleanupSession: (id: string) => Promise<void>;
 };
 
-function toastAction(
+async function toastAction(
   promise: Promise<void>,
   sessionName: string,
   successMsg: string,
   errorPrefix: string,
 ) {
-  void promise
-    .then(() => {
-      toast.success(`Session "${sessionName}" ${successMsg}`);
-    })
-    .catch((error: unknown) => {
-      toast.error(
-        `Failed to ${errorPrefix}: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    });
+  try {
+    await promise;
+    toast.success(`Session "${sessionName}" ${successMsg}`);
+  } catch (error: unknown) {
+    toast.error(
+      `Failed to ${errorPrefix}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
 }
 
 export function RecreateModalWrapper({
@@ -47,10 +46,10 @@ export function RecreateModalWrapper({
       session={session}
       healthReport={healthReport}
       onStart={() => {
-        toastAction(startSession(session.id), session.name, "started", "start");
+        void toastAction(startSession(session.id), session.name, "started", "start");
       }}
       onWake={() => {
-        toastAction(
+        void toastAction(
           wakeSession(session.id),
           session.name,
           "is waking up",
@@ -58,7 +57,7 @@ export function RecreateModalWrapper({
         );
       }}
       onRecreate={() => {
-        toastAction(
+        void toastAction(
           recreateSession(session.id),
           session.name,
           "is being recreated",
@@ -66,7 +65,7 @@ export function RecreateModalWrapper({
         );
       }}
       onRecreateFresh={() => {
-        toastAction(
+        void toastAction(
           recreateSession(session.id),
           session.name,
           "is being recreated fresh",
@@ -74,7 +73,7 @@ export function RecreateModalWrapper({
         );
       }}
       onUpdateImage={() => {
-        toastAction(
+        void toastAction(
           refreshSession(session.id),
           session.name,
           "is being refreshed with latest image",
@@ -82,7 +81,7 @@ export function RecreateModalWrapper({
         );
       }}
       onCleanup={() => {
-        toastAction(
+        void toastAction(
           cleanupSession(session.id),
           session.name,
           "cleaned up",

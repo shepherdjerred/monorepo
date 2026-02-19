@@ -3,7 +3,6 @@ import {
   useContext,
   useState,
   useCallback,
-  useEffect,
   type ReactNode,
 } from "react";
 import type {
@@ -213,36 +212,47 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     [client, refreshSessions],
   );
 
-  // Handle real-time events
+  // Handle real-time events using the typed SessionEvent discriminated union
+  const handleSessionCreatedOrUpdated = useCallback(
+    (payload: Session | { id: string } | undefined) => {
+      // Session objects have a `name` property, while delete payloads do not
+      if (payload != null && "name" in payload) {
+        setSessions((prev) => {
+          const newSessions = new Map(prev);
+          newSessions.set(payload.id, payload);
+          return newSessions;
+        });
+      }
+    },
+    [],
+  );
+
+  const handleSessionDeleted = useCallback(
+    (payload: Session | { id: string } | undefined) => {
+      if (payload != null && "id" in payload) {
+        setSessions((prev) => {
+          const newSessions = new Map(prev);
+          newSessions.delete(payload.id);
+          return newSessions;
+        });
+      }
+    },
+    [],
+  );
+
   const handleEvent = useCallback(
     (event: { type: string; payload?: Session | { id: string } }) => {
       switch (event.type) {
         case "SessionCreated":
-        case "SessionUpdated": {
-          // Event payload contains the full session object
-          const session = event.payload as Session;
-          setSessions((prev) => {
-            const newSessions = new Map(prev);
-            newSessions.set(session.id, session);
-            return newSessions;
-          });
+        case "SessionUpdated":
+          handleSessionCreatedOrUpdated(event.payload);
           break;
-        }
-        case "SessionDeleted": {
-          // Event payload contains { id: string }
-          const payload = event.payload as { id: string };
-          if (payload.id) {
-            setSessions((prev) => {
-              const newSessions = new Map(prev);
-              newSessions.delete(payload.id);
-              return newSessions;
-            });
-          }
+        case "SessionDeleted":
+          handleSessionDeleted(event.payload);
           break;
-        }
       }
     },
-    [],
+    [handleSessionCreatedOrUpdated, handleSessionDeleted],
   );
 
   useSessionEvents(handleEvent);

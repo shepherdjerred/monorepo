@@ -2,6 +2,7 @@ import { parseDocument } from "yaml";
 import { z } from "zod";
 import { filterCommentedOutYAML } from "./yaml-comment-filters.ts";
 import { parseCommentsWithRegex } from "./yaml-comment-regex-parser.ts";
+import { preprocessYAMLComments } from "./yaml-preprocess.ts";
 
 /**
  * Metadata about how a comment was extracted
@@ -26,7 +27,7 @@ export type CommentWithMetadata = {
  * Exported for testing purposes
  */
 export function isYAMLKey(line: string): boolean {
-  return /^[\w.-]+:\s*(\||$)/.test(line);
+  return /^[\w.-]+:\s*(?:\||$)/.test(line);
 }
 
 /**
@@ -47,7 +48,7 @@ export function isSectionHeader(
   line: string,
   nextLine: string | undefined,
 ): boolean {
-  if (!nextLine) {
+  if ((nextLine == null || nextLine === "")) {
     return false;
   }
 
@@ -62,14 +63,14 @@ export function isSectionHeader(
 
   const wordCount = line.split(/\s+/).length;
   const hasConfigKeywords =
-    /\b(configuration|config|example|setup|settings?|options?|alternative)\b/i.test(
+    /\b(?:configuration|config|example|setup|settings?|options?|alternative)\b/i.test(
       line,
     );
   const endsWithPunctuation = /[.!?]$/.test(line);
   const hasURL = line.includes("http://") || line.includes("https://");
-  const startsWithArticle = /^(This|The|A|An)\s/i.test(line);
+  const startsWithArticle = /^(?:This|The|A|An)\s/i.test(line);
   const startsWithCommonWord =
-    /^(This|The|A|An|It|For|To|If|When|You|We|Use|Configure)\s/i.test(line);
+    /^(?:This|The|A|An|It|For|To|If|When|You|We|Use|Configure)\s/i.test(line);
 
   return (
     ((wordCount === 2 && !startsWithCommonWord) ||
@@ -98,8 +99,8 @@ export function isCodeExample(line: string, wordCount: number): boolean {
     line.includes("$KUBE_");
   const isSeparator =
     /^-{3,}/.test(line) ||
-    /^BEGIN .*(KEY|CERTIFICATE)/.test(line) ||
-    /^END .*(KEY|CERTIFICATE)/.test(line);
+    /^BEGIN .*(?:KEY|CERTIFICATE)/.test(line) ||
+    /^END .*(?:KEY|CERTIFICATE)/.test(line);
 
   return (
     isSeparator ||
@@ -124,10 +125,10 @@ export function looksLikeProse(line: string, wordCount: number): boolean {
   const notYamlKey = !(isYAMLKey(line) && !hasURL && !/^ref:/i.test(line));
   const reasonableLength = line.length > 10;
   const hasMultipleWords = wordCount >= 3;
-  const startsWithArticle = /^(This|The|A|An)\s/i.test(line);
+  const startsWithArticle = /^(?:This|The|A|An)\s/i.test(line);
 
   // Lines starting with markers like ^, ->, etc. are documentation references
-  const isReferenceMarker = /^(\^|->|→)\s/.test(line);
+  const isReferenceMarker = /^(?:\^|->|→)\s/.test(line);
 
   return (
     (startsWithCapital || isReferenceMarker) &&
@@ -236,169 +237,6 @@ export function cleanYAMLComment(comment: string): string {
 }
 
 /**
- * Pre-process YAML to uncomment commented-out keys
- * In Helm charts, commented-out keys are documentation of available options
- * e.g., "## key: value" or "# key: value"
- *
- * This allows us to parse them as real keys and associate their comments
- *
- * Only uncomments keys that are:
- * - At root level or similar indentation to real keys
- * - Not part of "Example:" blocks
- * - Not part of documentation prose (have their own dedicated comment block)
- * - Not deeply nested (which would indicate example YAML)
- *
- * Exported for testing purposes
- */
-export function preprocessYAMLComments(yamlContent: string): string {
-  const lines = yamlContent.split("\n");
-  const processedLines: string[] = [];
-  let inExampleBlock = false;
-  let inBlockScalar = false; // Track if we're in a block scalar (| or >)
-  let lastRealKeyIndent = -1;
-  let consecutiveCommentedKeys = 0;
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i] ?? "";
-    const trimmed = line.trim();
-
-    // Detect "Example:" markers (case-insensitive)
-    if (/^##?\s*Example:?$/i.test(trimmed)) {
-      inExampleBlock = true;
-      processedLines.push(line);
-      continue;
-    }
-
-    // Exit example block on blank line or "For more information"
-    if (
-      inExampleBlock &&
-      (!trimmed ||
-        trimmed.startsWith("For more information") ||
-        trimmed.startsWith("Ref:"))
-    ) {
-      inExampleBlock = false;
-    }
-
-    // Detect if previous commented line had a block scalar indicator (| or >)
-    if (i > 0) {
-      const prevLine = lines[i - 1];
-      const prevTrimmed = prevLine?.trim() ?? "";
-      // Check if previous line is a commented key with block scalar
-      if (/^#+\s*[\w.-]+:\s*[|>]\s*$/.test(prevTrimmed)) {
-        inBlockScalar = true;
-      }
-    }
-
-    // Exit block scalar on non-indented line or blank line
-    if (inBlockScalar) {
-      const isIndented =
-        trimmed.length > 0 &&
-        (line.startsWith("  ") ||
-          line.startsWith("\t") ||
-          /^#\s{2,}/.test(line));
-      if (trimmed.length === 0 || !isIndented) {
-        inBlockScalar = false;
-      }
-    }
-
-    // Track indentation of real (uncommented) keys
-    if (!trimmed.startsWith("#") && /^[\w.-]+:/.test(trimmed)) {
-      lastRealKeyIndent = line.search(/\S/);
-      consecutiveCommentedKeys = 0;
-    }
-
-    // Don't uncomment if we're in an example block or block scalar
-    if (inExampleBlock || inBlockScalar) {
-      processedLines.push(line);
-      consecutiveCommentedKeys = 0;
-      continue;
-    }
-
-    // Check if this is a commented-out YAML key
-    // Pattern: one or more # followed by optional whitespace, then key: value
-    const commentedKeyMatch = /^([ \t]*)(#+)\s*([\w.-]+:\s*(?:\S.*)?)$/.exec(
-      line,
-    );
-
-    if (commentedKeyMatch) {
-      const [, indent, , keyValue] = commentedKeyMatch;
-
-      if (!keyValue || !indent) {
-        processedLines.push(line);
-        continue;
-      }
-
-      // Check if the key part looks like a valid YAML key (not prose)
-      const keyPart = keyValue.split(":")[0]?.trim() ?? "";
-      const isValidKey = /^[\w.-]+$/.test(keyPart);
-
-      // Don't uncomment documentation references like "ref: https://..."
-      const isDocReference =
-        /^ref:/i.test(keyValue) &&
-        (keyValue.includes("http://") || keyValue.includes("https://"));
-
-      // Don't uncomment URLs (they might be continuation lines in multi-line Ref comments)
-      const isURL =
-        keyValue.trim().startsWith("http://") ||
-        keyValue.trim().startsWith("https://");
-
-      if (isValidKey && !isDocReference && !isURL) {
-        const keyIndent = indent.length;
-
-        // Check the context: look at previous lines to see if this is part of prose
-        // If the previous line is prose (not a commented key or blank), this is likely an example
-        const prevLine = i > 0 ? lines[i - 1] : "";
-        const prevTrimmed = prevLine?.trim() ?? "";
-        const prevIsCommentedKey = /^#+\s*[\w.-]+:\s/.test(prevTrimmed);
-        const prevIsBlank = !prevTrimmed;
-        const prevIsListItem =
-          prevTrimmed.startsWith("#") &&
-          prevTrimmed.slice(1).trim().startsWith("-");
-
-        // If previous line is prose or a list item, this is likely a YAML example
-        const likelyExample =
-          (!prevIsBlank &&
-            !prevIsCommentedKey &&
-            prevTrimmed.startsWith("#")) ||
-          prevIsListItem;
-
-        // Also check if we're in a sequence of commented keys (good sign of commented-out config)
-        if (prevIsCommentedKey) {
-          consecutiveCommentedKeys++;
-        } else if (!prevIsBlank) {
-          consecutiveCommentedKeys = 0;
-        }
-
-        // Only uncomment if:
-        // 1. It's not likely an example (based on context)
-        // 2. AND (we haven't seen any real keys yet OR this key is at similar indent level)
-        // 3. OR we've seen multiple consecutive commented keys (likely a commented-out config block)
-        const shouldUncomment =
-          !likelyExample &&
-          (lastRealKeyIndent === -1 ||
-            Math.abs(keyIndent - lastRealKeyIndent) <= 4 ||
-            consecutiveCommentedKeys >= 2);
-
-        if (shouldUncomment) {
-          processedLines.push(`${indent}${keyValue}`);
-          continue;
-        }
-      }
-    }
-
-    // Reset consecutive count if not a commented key
-    if (!commentedKeyMatch) {
-      consecutiveCommentedKeys = 0;
-    }
-
-    // Keep the line as-is
-    processedLines.push(line);
-  }
-
-  return processedLines.join("\n");
-}
-
-/**
  * Parse Bitnami-style @param directives from a comment
  * Format: @param key.path Description
  * Returns: Map of extracted params and remaining non-param lines
@@ -418,10 +256,10 @@ export function parseBitnamiParams(comment: string): {
       .replace(/^#+\s*/, "")
       .replace(/^--\s*/, "");
 
-    const paramMatch = /^@param\s+([\w.-]+)\s+(.+)$/.exec(trimmedLine);
+    const paramMatch = /^@param\s+([\w.-]+)\s+(\S.*)$/.exec(trimmedLine);
     if (paramMatch) {
       const [, paramKey, description] = paramMatch;
-      if (paramKey && description) {
+      if (paramKey != null && paramKey !== "" && description != null && description !== "") {
         params.set(paramKey, description);
       }
     } else if (trimmedLine) {
@@ -452,174 +290,147 @@ export function parseYAMLCommentsWithMetadata(
     // Use preprocessed YAML so commented-out keys are treated as real keys
     const regexComments = parseCommentsWithRegex(preprocessedYaml);
 
+    // Zod schemas for YAML AST parsing, defined once
+    const MapNodeSchema = z.object({
+      items: z.array(z.unknown()),
+      commentBefore: z.unknown().optional(),
+    });
+    const PairSchema = z.object({ key: z.unknown(), value: z.unknown() });
+    const KeyValueSchema = z.object({ value: z.string() });
+    const CommentBeforeSchema = z.object({ commentBefore: z.unknown() });
+    const InlineCommentSchema = z.object({ comment: z.unknown() });
+
+    /**
+     * Extract the commentBefore string from a YAML node
+     */
+    function extractCommentBefore(node: unknown): string {
+      const check = CommentBeforeSchema.safeParse(node);
+      if (!check.success) {
+        return "";
+      }
+      const strCheck = z.string().safeParse(check.data.commentBefore);
+      return strCheck.success ? strCheck.data : "";
+    }
+
+    /**
+     * Extract the inline comment string from a YAML value node
+     */
+    function extractInlineComment(node: unknown): string {
+      const check = InlineCommentSchema.safeParse(node);
+      if (!check.success) {
+        return "";
+      }
+      const strCheck = z.string().safeParse(check.data.comment);
+      return strCheck.success ? strCheck.data : "";
+    }
+
+    /**
+     * Collect all comment sources for a YAML pair (key comment, pair comment, inline comment)
+     */
+    function collectItemComment(
+      pairData: { keyNode: unknown; item: unknown; valueNode: unknown },
+      context: { index: number; mapComment: string },
+    ): string {
+      let comment = extractCommentBefore(pairData.keyNode);
+      const pairComment = extractCommentBefore(pairData.item);
+      if (pairComment) {
+        comment = comment ? `${pairComment}\n${comment}` : pairComment;
+      }
+      const inlineComment = extractInlineComment(pairData.valueNode);
+      if (inlineComment) {
+        comment = comment ? `${comment}\n${inlineComment}` : inlineComment;
+      }
+      // First item inherits map comment if it has none
+      if (context.index === 0 && !comment && context.mapComment) {
+        comment = context.mapComment;
+      }
+      if (comment) {
+        comment = filterCommentedOutYAML(comment);
+      }
+      return comment;
+    }
+
+    /**
+     * Store a comment (with @param handling) into the comments map
+     */
+    function storeComment(comment: string, fullKey: string): void {
+      const hasParamDirective = comment.includes("@param ");
+      if (hasParamDirective) {
+        const { params, remainingLines } = parseBitnamiParams(comment);
+        for (const [paramKey, description] of params.entries()) {
+          comments.set(paramKey, {
+            text: description,
+            metadata: { source: "AST", rawComment: comment, debugInfo: `Bitnami @param directive for ${paramKey}` },
+          });
+        }
+        const remainingCleaned = remainingLines.length > 0
+          ? cleanYAMLComment(remainingLines.join("\n"))
+          : "";
+        if (remainingCleaned) {
+          comments.set(fullKey, {
+            text: remainingCleaned,
+            metadata: { source: "AST", rawComment: comment, debugInfo: `AST comment after extracting @param directives` },
+          });
+        }
+      } else if (comment) {
+        const cleaned = cleanYAMLComment(comment);
+        if (cleaned) {
+          comments.set(fullKey, {
+            text: cleaned,
+            metadata: { source: "AST", rawComment: comment, debugInfo: `Direct AST comment for ${fullKey}` },
+          });
+        }
+      }
+    }
+
     // Recursively walk the YAML AST and extract comments
     function visitNode(
       node: unknown,
       keyPath: string[] = [],
       inheritedComment = "",
     ): void {
-      if (!node) {
+      if (node == null) {
         return;
       }
 
-      // Handle map/object nodes - check if node has items array
-      const mapNodeCheck = z
-        .object({
-          items: z.array(z.unknown()),
-          commentBefore: z.unknown().optional(),
-        })
-        .safeParse(node);
-      if (mapNodeCheck.success) {
-        // Extract the map's own comment (to be inherited by first child if needed)
-        let mapComment = inheritedComment;
-        const mapCommentCheck = z
-          .string()
-          .safeParse(mapNodeCheck.data.commentBefore);
-        if (mapCommentCheck.success) {
-          mapComment = mapCommentCheck.data;
+      const mapNodeCheck = MapNodeSchema.safeParse(node);
+      if (!mapNodeCheck.success) {
+        return;
+      }
+
+      // Extract the map's own comment (to be inherited by first child if needed)
+      let mapComment = inheritedComment;
+      const mapCommentCheck = z.string().safeParse(mapNodeCheck.data.commentBefore);
+      if (mapCommentCheck.success) {
+        mapComment = mapCommentCheck.data;
+      }
+
+      for (let i = 0; i < mapNodeCheck.data.items.length; i++) {
+        const item = mapNodeCheck.data.items[i];
+        const itemCheck = PairSchema.safeParse(item);
+        if (!itemCheck.success) {
+          continue;
         }
 
-        for (let i = 0; i < mapNodeCheck.data.items.length; i++) {
-          const item = mapNodeCheck.data.items[i];
-          const itemCheck = z
-            .object({ key: z.unknown(), value: z.unknown() })
-            .safeParse(item);
-          if (!itemCheck.success) {
-            continue;
-          }
+        const keyNodeCheck = KeyValueSchema.safeParse(itemCheck.data.key);
+        if (!keyNodeCheck.success) {
+          continue;
+        }
 
-          // Get the key - validate it has a value property that's a string
-          const keyNodeCheck = z
-            .object({ value: z.string() })
-            .safeParse(itemCheck.data.key);
-          if (!keyNodeCheck.success) {
-            continue;
-          }
+        const key = keyNodeCheck.data.value;
+        const newPath = [...keyPath, key];
+        const fullKey = newPath.join(".");
 
-          const key = keyNodeCheck.data.value;
-          const newPath = [...keyPath, key];
-          const fullKey = newPath.join(".");
+        const comment = collectItemComment(
+          { keyNode: itemCheck.data.key, item, valueNode: itemCheck.data.value },
+          { index: i, mapComment },
+        );
+        storeComment(comment, fullKey);
 
-          // Extract comment from the key's commentBefore
-          let comment = "";
-          const keyCommentCheck = z
-            .object({ commentBefore: z.unknown() })
-            .safeParse(itemCheck.data.key);
-          if (keyCommentCheck.success) {
-            const commentCheck = z
-              .string()
-              .safeParse(keyCommentCheck.data.commentBefore);
-            comment = commentCheck.success ? commentCheck.data : "";
-          }
+        const valueInheritedComment = extractCommentBefore(itemCheck.data.value);
 
-          // Also check the pair itself for comments
-          const pairCommentCheck = z
-            .object({ commentBefore: z.unknown() })
-            .safeParse(item);
-          if (pairCommentCheck.success) {
-            const pairCommentValue = z
-              .string()
-              .safeParse(pairCommentCheck.data.commentBefore);
-            const pairComment = pairCommentValue.success
-              ? pairCommentValue.data
-              : "";
-            if (pairComment) {
-              comment = comment ? `${pairComment}\n${comment}` : pairComment;
-            }
-          }
-
-          // Check for inline comments on the value
-          const valueCommentCheck = z
-            .object({ comment: z.unknown() })
-            .safeParse(itemCheck.data.value);
-          if (valueCommentCheck.success) {
-            const inlineComment = z
-              .string()
-              .safeParse(valueCommentCheck.data.comment);
-            if (inlineComment.success && inlineComment.data) {
-              comment = comment
-                ? `${comment}\n${inlineComment.data}`
-                : inlineComment.data;
-            }
-          }
-
-          // If this is the first item and has no comment, inherit from map
-          if (i === 0 && !comment && mapComment) {
-            comment = mapComment;
-          }
-
-          // Filter out commented-out YAML blocks before cleaning
-          if (comment) {
-            comment = filterCommentedOutYAML(comment);
-          }
-
-          // Check if this is a Bitnami-style @param comment
-          // These need special handling before cleaning
-          const hasParamDirective = comment.includes("@param ");
-          if (hasParamDirective) {
-            const { params, remainingLines } = parseBitnamiParams(comment);
-
-            // Store each param comment with its specific key
-            for (const [paramKey, description] of params.entries()) {
-              comments.set(paramKey, {
-                text: description,
-                metadata: {
-                  source: "AST",
-                  rawComment: comment,
-                  debugInfo: `Bitnami @param directive for ${paramKey}`,
-                },
-              });
-            }
-
-            // Store remaining non-param lines with the current key if any
-            if (remainingLines.length > 0) {
-              const cleaned = cleanYAMLComment(remainingLines.join("\n"));
-              if (cleaned) {
-                comments.set(fullKey, {
-                  text: cleaned,
-                  metadata: {
-                    source: "AST",
-                    rawComment: comment,
-                    debugInfo: `AST comment after extracting @param directives`,
-                  },
-                });
-              }
-            }
-          } else {
-            // Clean and store the comment normally
-            if (comment) {
-              const cleaned = cleanYAMLComment(comment);
-              if (cleaned) {
-                comments.set(fullKey, {
-                  text: cleaned,
-                  metadata: {
-                    source: "AST",
-                    rawComment: comment,
-                    debugInfo: `Direct AST comment for ${fullKey}`,
-                  },
-                });
-              }
-            }
-          }
-
-          // Check if the value has a commentBefore (for nested structures)
-          let valueInheritedComment = "";
-          const valueCommentBeforeCheck = z
-            .object({ commentBefore: z.unknown() })
-            .safeParse(itemCheck.data.value);
-          if (valueCommentBeforeCheck.success) {
-            const valueCommentBefore = z
-              .string()
-              .safeParse(valueCommentBeforeCheck.data.commentBefore);
-            if (valueCommentBefore.success) {
-              valueInheritedComment = valueCommentBefore.data;
-            }
-          }
-
-          // Recurse into nested structures
-          if (itemCheck.data.value) {
-            visitNode(itemCheck.data.value, newPath, valueInheritedComment);
-          }
+        if (itemCheck.data.value != null) {
+          visitNode(itemCheck.data.value, newPath, valueInheritedComment);
         }
       }
     }

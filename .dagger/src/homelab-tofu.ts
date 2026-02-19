@@ -26,15 +26,20 @@ function getTofuContainer(): Container {
  * Returns plan output with drift indicator.
  * Exit code 0 = no changes, 1 = error, 2 = drift detected.
  */
+type PlanDirOptions = {
+  source: Directory;
+  dir: string;
+  cloudflareApiToken: Secret;
+  cloudflareAccountId: Secret;
+  awsAccessKeyId: Secret;
+  awsSecretAccessKey: Secret;
+  githubToken?: Secret;
+};
+
 export async function planDir(
-  source: Directory,
-  dir: string,
-  cloudflareApiToken: Secret,
-  cloudflareAccountId: Secret,
-  awsAccessKeyId: Secret,
-  awsSecretAccessKey: Secret,
-  githubToken?: Secret,
+  options: PlanDirOptions,
 ): Promise<{ dir: string; hasDrift: boolean; output: string }> {
+  const { source, dir, cloudflareApiToken, cloudflareAccountId, awsAccessKeyId, awsSecretAccessKey, githubToken } = options;
   let container = getTofuContainer()
     .withMountedDirectory("/workspace", source.directory(`src/tofu/${dir}`))
     .withWorkdir("/workspace")
@@ -74,17 +79,22 @@ export async function planDir(
  * Runs tofu plan for all directories in parallel.
  * Returns a summary string. Throws if any directory fails.
  */
+type PlanAllOptions = {
+  source: Directory;
+  cloudflareApiToken: Secret;
+  cloudflareAccountId: Secret;
+  awsAccessKeyId: Secret;
+  awsSecretAccessKey: Secret;
+  githubToken?: Secret;
+};
+
 export async function planAll(
-  source: Directory,
-  cloudflareApiToken: Secret,
-  cloudflareAccountId: Secret,
-  awsAccessKeyId: Secret,
-  awsSecretAccessKey: Secret,
-  githubToken?: Secret,
+  options: PlanAllOptions,
 ): Promise<string> {
+  const { source, cloudflareApiToken, cloudflareAccountId, awsAccessKeyId, awsSecretAccessKey, githubToken } = options;
   const results = await Promise.allSettled(
     TOFU_DIRS.map((dir) =>
-      planDir(
+      planDir({
         source,
         dir,
         cloudflareApiToken,
@@ -92,7 +102,7 @@ export async function planAll(
         awsAccessKeyId,
         awsSecretAccessKey,
         githubToken,
-      ),
+      }),
     ),
   );
 

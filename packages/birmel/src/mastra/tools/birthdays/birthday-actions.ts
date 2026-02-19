@@ -48,14 +48,19 @@ type BirthdayResult = {
       };
 };
 
+type SetBirthdayOptions = {
+  guildId: string;
+  userId: string | undefined;
+  birthMonth: number | undefined;
+  birthDay: number | undefined;
+  birthYear: number | undefined;
+  timezone: string | undefined;
+};
+
 export async function handleSetBirthday(
-  guildId: string,
-  userId: string | undefined,
-  birthMonth: number | undefined,
-  birthDay: number | undefined,
-  birthYear: number | undefined,
-  timezone: string | undefined,
+  options: SetBirthdayOptions,
 ): Promise<BirthdayResult> {
+  const { guildId, userId, birthMonth, birthDay, birthYear, timezone } = options;
   if (
     userId == null ||
     userId.length === 0 ||
@@ -113,14 +118,19 @@ export async function handleGetBirthday(
   };
 }
 
+type UpdateBirthdayOptions = {
+  guildId: string;
+  userId: string | undefined;
+  birthMonth: number | undefined;
+  birthDay: number | undefined;
+  birthYear: number | undefined;
+  timezone: string | undefined;
+};
+
 export async function handleUpdateBirthday(
-  guildId: string,
-  userId: string | undefined,
-  birthMonth: number | undefined,
-  birthDay: number | undefined,
-  birthYear: number | undefined,
-  timezone: string | undefined,
+  options: UpdateBirthdayOptions,
 ): Promise<BirthdayResult> {
+  const { guildId, userId, birthMonth, birthDay, birthYear, timezone } = options;
   if (userId == null || userId.length === 0) {
     return { success: false, message: "userId is required for update" };
   }

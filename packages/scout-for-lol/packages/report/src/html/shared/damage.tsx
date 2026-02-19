@@ -20,6 +20,20 @@ type DamageProps = {
   fillBorderRadius?: number;
 };
 
+function optionalStyle<T>(
+  value: T | undefined,
+  key: string,
+): Record<string, T> {
+  return value === undefined ? {} : { [key]: value };
+}
+
+function optionalStringStyle(
+  value: string | undefined,
+  key: string,
+): Record<string, string> {
+  return value !== undefined && value.length > 0 ? { [key]: value } : {};
+}
+
 export function Damage({
   value,
   percent,
@@ -50,10 +64,8 @@ export function Damage({
         flexDirection: "column",
         alignItems: "center",
         gap: containerGap,
-        ...(containerWidth !== undefined && containerWidth.length > 0 ? { width: containerWidth } : {}),
-        ...(containerMinWidth === undefined
-          ? {}
-          : { minWidth: containerMinWidth }),
+        ...optionalStringStyle(containerWidth, "width"),
+        ...optionalStyle(containerMinWidth, "minWidth"),
       }}
     >
       {textLayout === "simple" ? (
@@ -62,7 +74,7 @@ export function Damage({
             display: "flex",
             gap: textGap,
             fontWeight: textFontWeight,
-            ...(textColor !== undefined && textColor.length > 0 ? { color: textColor } : {}),
+            ...optionalStringStyle(textColor, "color"),
           }}
         >
           {value.toLocaleString()} dmg
@@ -72,9 +84,9 @@ export function Damage({
           style={{
             display: "flex",
             gap: textGap,
-            ...(textFontSize === undefined ? {} : { fontSize: textFontSize }),
+            ...optionalStyle(textFontSize, "fontSize"),
             fontWeight: textFontWeight,
-            ...(textColor !== undefined && textColor.length > 0 ? { color: textColor } : {}),
+            ...optionalStringStyle(textColor, "color"),
           }}
         >
           <span>{value.toLocaleString()}</span>
@@ -86,10 +98,8 @@ export function Damage({
           width: barWidth,
           height: barHeight,
           backgroundColor: barBackgroundColor,
-          ...(barBorderRadius === undefined
-            ? {}
-            : { borderRadius: barBorderRadius }),
-          ...(barOverflow !== undefined && barOverflow.length > 0 ? { overflow: barOverflow } : {}),
+          ...optionalStyle(barBorderRadius, "borderRadius"),
+          ...optionalStringStyle(barOverflow, "overflow"),
         }}
       >
         <span
@@ -98,9 +108,7 @@ export function Damage({
             width: `${percent.toString()}%`,
             height: "100%",
             backgroundColor: fillColor,
-            ...(fillBorderRadius === undefined
-              ? {}
-              : { borderRadius: fillBorderRadius }),
+            ...optionalStyle(fillBorderRadius, "borderRadius"),
           }}
         />
       </span>

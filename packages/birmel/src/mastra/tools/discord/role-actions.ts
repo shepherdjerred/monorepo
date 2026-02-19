@@ -1,4 +1,4 @@
-import type { ColorResolvable, Guild } from "discord.js";
+import type { Guild } from "discord.js";
 
 type RoleResult = {
   success: boolean;
@@ -72,13 +72,18 @@ export async function handleGetRole(
   };
 }
 
+type CreateRoleOptions = {
+  guild: Guild;
+  name: string | undefined;
+  color: string | undefined;
+  hoist: boolean | undefined;
+  mentionable: boolean | undefined;
+};
+
 export async function handleCreateRole(
-  guild: Guild,
-  name: string | undefined,
-  color: string | undefined,
-  hoist: boolean | undefined,
-  mentionable: boolean | undefined,
+  options: CreateRoleOptions,
 ): Promise<RoleResult> {
+  const { guild, name, color, hoist, mentionable } = options;
   if (name == null || name.length === 0) {
     return {
       success: false,
@@ -92,9 +97,10 @@ export async function handleCreateRole(
       message: `Server has too many roles (${String(existingRoles.size)}/250). Delete some roles before creating new ones.`,
     };
   }
+  const colorNum = color === undefined ? undefined : Number.parseInt(color.replace("#", ""), 16);
   const role = await guild.roles.create({
     name,
-    ...(color !== undefined && { color: color as ColorResolvable }),
+    ...(colorNum !== undefined && { color: colorNum }),
     ...(hoist !== undefined && { hoist }),
     ...(mentionable !== undefined && { mentionable }),
   });
@@ -105,14 +111,19 @@ export async function handleCreateRole(
   };
 }
 
+type ModifyRoleOptions = {
+  guild: Guild;
+  roleId: string | undefined;
+  name: string | undefined;
+  color: string | undefined;
+  hoist: boolean | undefined;
+  mentionable: boolean | undefined;
+};
+
 export async function handleModifyRole(
-  guild: Guild,
-  roleId: string | undefined,
-  name: string | undefined,
-  color: string | undefined,
-  hoist: boolean | undefined,
-  mentionable: boolean | undefined,
+  options: ModifyRoleOptions,
 ): Promise<RoleResult> {
+  const { guild, roleId, name, color, hoist, mentionable } = options;
   if (roleId == null || roleId.length === 0) {
     return {
       success: false,
@@ -131,9 +142,10 @@ export async function handleModifyRole(
   if (!hasChanges) {
     return { success: false, message: "No changes specified" };
   }
+  const editColorNum = color === undefined ? undefined : Number.parseInt(color.replace("#", ""), 16);
   await role.edit({
     ...(name !== undefined && { name }),
-    ...(color !== undefined && { color: color as ColorResolvable }),
+    ...(editColorNum !== undefined && { color: editColorNum }),
     ...(hoist !== undefined && { hoist }),
     ...(mentionable !== undefined && { mentionable }),
   });

@@ -6,7 +6,7 @@ import {
   SERVER_MEMORY_TEMPLATE,
   OWNER_MEMORY_TEMPLATE,
 } from "@shepherdjerred/birmel/voltagent/memory/index.ts";
-import { getGuildPersona } from "@shepherdjerred/birmel/persona/index.ts";
+import { getGuildPersona } from "@shepherdjerred/birmel/persona/guild-persona.ts";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 
 const MAX_MEMORY_SIZE = 4000;

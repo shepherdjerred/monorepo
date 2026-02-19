@@ -5,15 +5,23 @@ export type Lane = z.infer<typeof LaneSchema>;
 export const LaneSchema = z.enum(["top", "jungle", "middle", "adc", "support"]);
 
 export function parseLane(input: string): Lane | undefined {
-  return match(input.toLowerCase())
-    .returnType<Lane | undefined>()
-    .with("middle", () => "middle")
-    .with("top", () => "top")
-    .with("jungle", () => "jungle")
-    .with("bottom", () => "adc")
-    .with("utility", () => "support")
-    // eslint-disable-next-line unicorn/no-useless-undefined -- ts-pattern otherwise requires explicit undefined for Optional return type
-    .otherwise(() => undefined);
+  const normalized = input.toLowerCase();
+  if (normalized === "middle") {
+    return "middle";
+  }
+  if (normalized === "top") {
+    return "top";
+  }
+  if (normalized === "jungle") {
+    return "jungle";
+  }
+  if (normalized === "bottom") {
+    return "adc";
+  }
+  if (normalized === "utility") {
+    return "support";
+  }
+  return undefined;
 }
 
 export function laneToString(lane: Lane): string {

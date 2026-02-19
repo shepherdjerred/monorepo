@@ -62,7 +62,7 @@ export function PersonalityEditor({
         </div>
 
         <div className="p-6 space-y-6">
-          {error !== undefined && error.length > 0 && (
+          {error !== null && error.length > 0 && (
             <div className="p-4 bg-red-50 border border-red-200 rounded text-red-800">
               {error}
             </div>

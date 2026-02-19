@@ -51,8 +51,4 @@ export const SessionState = {
 
 export type SessionStateType = (typeof SessionState)[keyof typeof SessionState];
 
-/**
- * Re-export Prisma types for convenience
- */
-
-export { type EditorSession, type GitHubAuth } from "@prisma/client";
+// Prisma types should be imported directly from "@prisma/client"

@@ -1,7 +1,7 @@
 {
-  "eslint-disable": 25,
-  "ts-suppressions": 49,
+  "eslint-disable": 15,
+  "ts-suppressions": 47,
   "rust-allow": 0,
-  "prettier-ignore": 3,
-  "updated": "2026-02-15"
+  "prettier-ignore": 2,
+  "updated": "2026-02-18"
 }

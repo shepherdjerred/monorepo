@@ -4,12 +4,17 @@
  * Handles when the bot is added to a new server
  */
 
-import { type Guild, ChannelType, type TextChannel } from "discord.js";
+import { type Guild, ChannelType } from "discord.js";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("guild-create");
+
+type WelcomeChannel = {
+  name: string;
+  send: (options: { content: string }) => Promise<unknown>;
+};
 
 /**
  * Find the best channel to send a welcome message to
@@ -19,9 +24,9 @@ const logger = createLogger("guild-create");
  * 2. First text channel the bot can send messages to
  *
  * @param guild The guild that was joined
- * @returns TextChannel or null if no suitable channel found
+ * @returns A sendable channel or null if no suitable channel found
  */
-async function findWelcomeChannel(guild: Guild): Promise<TextChannel | null> {
+async function findWelcomeChannel(guild: Guild): Promise<WelcomeChannel | null> {
   // Try system channel first
   if (guild.systemChannel) {
     const permissions = guild.systemChannel.permissionsFor(
@@ -41,14 +46,15 @@ async function findWelcomeChannel(guild: Guild): Promise<TextChannel | null> {
     if (channel.type !== ChannelType.GuildText) {
       continue;
     }
+    if (!channel.isTextBased()) {
+      continue;
+    }
 
     const permissions = channel.permissionsFor(
       guild.members.me ?? guild.client.user,
     );
     if (permissions?.has(["ViewChannel", "SendMessages"]) === true) {
-      // Type assertion is safe here: we checked channel.type === GuildText above
-      // eslint-disable-next-line custom-rules/no-type-assertions -- Type assertion is safe here because we checked the type above
-      return channel as unknown as TextChannel;
+      return channel;
     }
   }
 

@@ -1,11 +1,13 @@
-import type { MessageContext } from "@shepherdjerred/birmel/discord/index.ts";
+import { toError } from "@shepherdjerred/birmel/utils/errors.ts";
+import type { MessageContext } from "@shepherdjerred/birmel/discord/events/message-create.ts";
 import { createRoutingAgentWithPersona } from "./agents/routing-agent.ts";
 import {
   getServerWorkingMemory,
   getOwnerWorkingMemory,
   getChannelConversationId,
 } from "./memory/index.ts";
-import { getGuildPersona, buildPersonaPrompt } from "@shepherdjerred/birmel/persona/index.ts";
+import { getGuildPersona } from "@shepherdjerred/birmel/persona/guild-persona.ts";
+import { buildPersonaPrompt } from "@shepherdjerred/birmel/persona/style-transform.ts";
 import { getRecentChannelMessages } from "@shepherdjerred/birmel/discord/utils/channel-history.ts";
 import { buildMessageContent } from "@shepherdjerred/birmel/mastra/utils/message-builder.ts";
 import { runWithRequestContext } from "@shepherdjerred/birmel/mastra/tools/request-context.ts";
@@ -13,8 +15,8 @@ import {
   setSentryContext,
   clearSentryContext,
   captureException,
-} from "@shepherdjerred/birmel/observability/index.ts";
-import { logger } from "@shepherdjerred/birmel/utils/index.ts";
+} from "@shepherdjerred/birmel/observability/sentry.ts";
+import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 
 // Typing cursor for progressive updates
 const TYPING_CURSOR = " \u258C";
@@ -95,7 +97,7 @@ ${memoryContext}${conversationHistory}`;
     const messageContent = await buildMessageContent(context, prompt);
 
     // 7. Create agent with persona-embedded instructions
-    const personaPrompt = buildPersonaPrompt(persona);
+    const personaPrompt = await buildPersonaPrompt(persona);
     const agent = createRoutingAgentWithPersona(personaPrompt);
 
     // 8. Stream response with progressive Discord updates
@@ -182,7 +184,7 @@ ${memoryContext}${conversationHistory}`;
       requestId,
       totalDurationMs: totalDuration,
     });
-    captureException(error as Error, {
+    captureException(toError(error), {
       operation: "handleMessageWithStreaming",
       discord: discordContext,
       extra: { requestId },

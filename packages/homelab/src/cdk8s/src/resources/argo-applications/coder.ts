@@ -3,6 +3,7 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import { Namespace } from "cdk8s-plus-31";
 import { PodMonitor } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { vaultItemPath, buildPostgresUrlExpr } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
   KubeClusterRole,
   KubeClusterRoleBinding,
@@ -30,7 +31,7 @@ export function createCoderApp(chart: Chart) {
   createCoderPostgreSQLDatabase(chart);
 
   // Create Tailscale ingress for Coder
-  createIngress(chart, "coder-ingress", "coder", "coder", 80, ["coder"], true);
+  createIngress(chart, "coder-ingress", { namespace: "coder", service: "coder", port: 80, hosts: ["coder"], funnel: true });
 
   createCloudflareTunnelBinding(chart, "coder-cf-tunnel", {
     serviceName: "coder",
@@ -53,8 +54,7 @@ export function createCoderApp(chart: Chart) {
       namespace: "coder",
     },
     spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/op63camrorymbnz734lx3pw5pe",
+      itemPath: vaultItemPath("op63camrorymbnz734lx3pw5pe"),
     },
   });
   // Create ClusterRole for CRD read permissions
@@ -112,13 +112,13 @@ export function createCoderApp(chart: Chart) {
           image: `docker.io/busybox:${versions["library/busybox"]}`,
           command: ["/bin/sh", "-c"],
           args: [
-            `
-            USER=$(cat /pg-secret/username)
-            PASS=$(cat /pg-secret/password)
-            DB=$(cat /pg-secret/dbname)
-            echo "postgres://$USER:$PASS@coder-postgresql:5432/$DB?sslmode=disable" > /db-url/url
-            echo "Database URL built successfully"
-            `,
+            [
+              "USER=$(cat /pg-secret/username)",
+              "PASS=$(cat /pg-secret/password)",
+              "DB=$(cat /pg-secret/dbname)",
+              `echo "${buildPostgresUrlExpr("coder-postgresql:5432", "$DB", "sslmode=disable")}" > /db-url/url`,
+              'echo "Database URL built successfully"',
+            ].join("\n"),
           ],
           volumeMounts: [
             {

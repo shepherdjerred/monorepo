@@ -1,8 +1,9 @@
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { toError } from "@shepherdjerred/birmel/utils/errors.ts";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { getBirthdaysToday } from "@shepherdjerred/birmel/database/repositories/birthdays.ts";
-import { withSpan } from "@shepherdjerred/birmel/observability/index.ts";
+import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import type { TextChannel, Guild, GuildMember } from "discord.js";
+import type { Guild, GuildMember, OAuth2Guild } from "discord.js";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 
 const logger = loggers.scheduler.child("birthday-checker");
@@ -84,7 +85,9 @@ async function processBirthday(
     return;
   }
 
-  await (channel as TextChannel).send(birthdayMessage);
+  if ("send" in channel) {
+    await channel.send(birthdayMessage);
+  }
   logger.info("Sent birthday message", {
     guildId,
     userId: birthday.userId,
@@ -93,6 +96,26 @@ async function processBirthday(
   });
 
   await assignBirthdayRole(member, fullGuild, birthday.userId);
+}
+
+async function processGuildBirthdays(guild: OAuth2Guild, guildId: string): Promise<void> {
+  try {
+    const birthdays = await getBirthdaysToday(guildId);
+    if (birthdays.length === 0) {
+      return;
+    }
+    logger.info("Found birthdays", { guildId, count: birthdays.length });
+    const fullGuild = await guild.fetch();
+    for (const birthday of birthdays) {
+      try {
+        await processBirthday(birthday, fullGuild, guildId);
+      } catch (error) {
+        logger.error("Failed to process birthday", toError(error), { guildId, userId: birthday.userId });
+      }
+    }
+  } catch (error) {
+    logger.error("Failed to check birthdays for guild", toError(error), { guildId });
+  }
 }
 
 /**
@@ -107,35 +130,12 @@ export async function checkAndPostBirthdays(): Promise<void> {
       const guilds = await getDiscordClient().guilds.fetch();
 
       for (const [guildId, guild] of guilds) {
-        try {
-          const birthdays = await getBirthdaysToday(guildId);
-          if (birthdays.length === 0) {
-            continue;
-          }
-
-          logger.info("Found birthdays", { guildId, count: birthdays.length });
-          const fullGuild = await guild.fetch();
-
-          for (const birthday of birthdays) {
-            try {
-              await processBirthday(birthday, fullGuild, guildId);
-            } catch (error) {
-              logger.error("Failed to process birthday", error as Error, {
-                guildId,
-                userId: birthday.userId,
-              });
-            }
-          }
-        } catch (error) {
-          logger.error("Failed to check birthdays for guild", error as Error, {
-            guildId,
-          });
-        }
+        await processGuildBirthdays(guild, guildId);
       }
 
       logger.info("Birthday check completed");
     } catch (error) {
-      logger.error("Birthday checker job failed", error as Error);
+      logger.error("Birthday checker job failed", toError(error));
     }
   });
 }

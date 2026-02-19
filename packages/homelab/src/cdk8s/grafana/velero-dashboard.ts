@@ -5,6 +5,17 @@ import * as stat from "@grafana/grafana-foundation-sdk/stat";
 import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
 import { exportDashboardWithHelmEscaping } from "./dashboard-export.ts";
 import * as text from "@grafana/grafana-foundation-sdk/text";
+import { addBackupCoveragePanels, addBackupOperationsPanels } from "./velero-panels.ts";
+
+// Helper function to build schedule filter expression
+function buildScheduleFilter() {
+  return 'schedule=~"$schedule"';
+}
+
+// Helper function to build namespace filter expression
+function buildNamespaceFilter() {
+  return 'namespace=~"$namespace"';
+}
 
 /**
  * Creates a Grafana dashboard for Velero backup monitoring
@@ -36,15 +47,6 @@ export function createVeleroDashboard() {
     .multi(true)
     .includeAll(true)
     .allValue(".*");
-
-  // Helper function to build filter expression
-  const buildScheduleFilter = () => {
-    return 'schedule=~"$schedule"';
-  };
-
-  const buildNamespaceFilter = () => {
-    return 'namespace=~"$namespace"';
-  };
 
   // Build the main dashboard
   const builder = new dashboard.DashboardBuilder("Velero - Backup Monitoring")
@@ -94,35 +96,35 @@ This usually means that Prometheus is not successfully scraping metrics from the
 
   builder.withPanel(overallStatusPanel);
 
-  const createStatPanel = (
-    title: string,
-    description: string,
-    expr: string,
-    legend: string,
-    gridPos: dashboard.GridPos,
-    unit?: string,
-    graphMode?: common.BigValueGraphMode,
-    decimals?: number,
-  ) => {
+  const createStatPanel = (options: {
+    title: string;
+    description: string;
+    expr: string;
+    legend: string;
+    gridPos: dashboard.GridPos;
+    unit?: string;
+    graphMode?: common.BigValueGraphMode;
+    decimals?: number;
+  }) => {
     const panel = new stat.PanelBuilder()
-      .title(title)
-      .description(description)
+      .title(options.title)
+      .description(options.description)
       .datasource(prometheusDatasource)
       .withTarget(
-        new prometheus.DataqueryBuilder().expr(expr).legendFormat(legend),
+        new prometheus.DataqueryBuilder().expr(options.expr).legendFormat(options.legend),
       )
-      .gridPos(gridPos);
+      .gridPos(options.gridPos);
 
-    if (unit) {
-      panel.unit(unit);
+    if (options.unit != null && options.unit !== "") {
+      panel.unit(options.unit);
     }
 
-    if (graphMode !== undefined) {
-      panel.graphMode(graphMode);
+    if (options.graphMode !== undefined) {
+      panel.graphMode(options.graphMode);
     }
 
-    if (decimals !== undefined) {
-      panel.decimals(decimals);
+    if (options.decimals !== undefined) {
+      panel.decimals(options.decimals);
     }
 
     return panel;
@@ -133,16 +135,16 @@ This usually means that Prometheus is not successfully scraping metrics from the
 
   // Backup Success Rate by Schedule
   builder.withPanel(
-    createStatPanel(
-      "Backup Success Rate",
-      "Percentage of successful backups per schedule",
-      `(sum by (schedule) (increase(velero_backup_success_total{${buildScheduleFilter()}}[7d])) / sum by (schedule) (increase(velero_backup_attempt_total{${buildScheduleFilter()}}[7d]))) * 100`,
-      "{{schedule}}",
-      { x: 0, y: 9, w: 6, h: 4 },
-      "percent",
-      common.BigValueGraphMode.Area,
-      1,
-    ).thresholds(
+    createStatPanel({
+      title: "Backup Success Rate",
+      description: "Percentage of successful backups per schedule",
+      expr: `(sum by (schedule) (increase(velero_backup_success_total{${buildScheduleFilter()}}[7d])) / sum by (schedule) (increase(velero_backup_attempt_total{${buildScheduleFilter()}}[7d]))) * 100`,
+      legend: "{{schedule}}",
+      gridPos: { x: 0, y: 9, w: 6, h: 4 },
+      unit: "percent",
+      graphMode: common.BigValueGraphMode.Area,
+      decimals: 1,
+    }).thresholds(
       new dashboard.ThresholdsConfigBuilder()
         .mode(dashboard.ThresholdsMode.Absolute)
         .steps([
@@ -155,35 +157,35 @@ This usually means that Prometheus is not successfully scraping metrics from the
 
   // Total Backup Attempts (7 days)
   builder.withPanel(
-    createStatPanel(
-      "Total Backup Attempts (7d)",
-      "Total backup attempts in the last 7 days",
-      `sum by (schedule) (increase(velero_backup_attempt_total{${buildScheduleFilter()}}[7d]))`,
-      "{{schedule}}",
-      { x: 6, y: 9, w: 6, h: 4 },
-    ),
+    createStatPanel({
+      title: "Total Backup Attempts (7d)",
+      description: "Total backup attempts in the last 7 days",
+      expr: `sum by (schedule) (increase(velero_backup_attempt_total{${buildScheduleFilter()}}[7d]))`,
+      legend: "{{schedule}}",
+      gridPos: { x: 6, y: 9, w: 6, h: 4 },
+    }),
   );
 
   // Total Successful Backups (7 days)
   builder.withPanel(
-    createStatPanel(
-      "Successful Backups (7d)",
-      "Total successful backups in the last 7 days",
-      `sum by (schedule) (increase(velero_backup_success_total{${buildScheduleFilter()}}[7d]))`,
-      "{{schedule}}",
-      { x: 12, y: 9, w: 6, h: 4 },
-    ),
+    createStatPanel({
+      title: "Successful Backups (7d)",
+      description: "Total successful backups in the last 7 days",
+      expr: `sum by (schedule) (increase(velero_backup_success_total{${buildScheduleFilter()}}[7d]))`,
+      legend: "{{schedule}}",
+      gridPos: { x: 12, y: 9, w: 6, h: 4 },
+    }),
   );
 
   // Total Failed Backups (7 days)
   builder.withPanel(
-    createStatPanel(
-      "Failed Backups (7d)",
-      "Total failed backups in the last 7 days",
-      `sum by (schedule) (increase(velero_backup_failure_total{${buildScheduleFilter()}}[7d]))`,
-      "{{schedule}}",
-      { x: 18, y: 9, w: 6, h: 4 },
-    ).thresholds(
+    createStatPanel({
+      title: "Failed Backups (7d)",
+      description: "Total failed backups in the last 7 days",
+      expr: `sum by (schedule) (increase(velero_backup_failure_total{${buildScheduleFilter()}}[7d]))`,
+      legend: "{{schedule}}",
+      gridPos: { x: 18, y: 9, w: 6, h: 4 },
+    }).thresholds(
       new dashboard.ThresholdsConfigBuilder()
         .mode(dashboard.ThresholdsMode.Absolute)
         .steps([
@@ -199,37 +201,37 @@ This usually means that Prometheus is not successfully scraping metrics from the
 
   // Last Successful Backup Time
   builder.withPanel(
-    createStatPanel(
-      "Last Successful Backup",
-      "Time since last successful backup per schedule",
-      `time() - velero_backup_last_successful_timestamp{${buildScheduleFilter()}}`,
-      "{{schedule}}",
-      { x: 0, y: 13, w: 6, h: 4 },
-      "dtdurations",
-      common.BigValueGraphMode.None,
-    ),
+    createStatPanel({
+      title: "Last Successful Backup",
+      description: "Time since last successful backup per schedule",
+      expr: `time() - velero_backup_last_successful_timestamp{${buildScheduleFilter()}}`,
+      legend: "{{schedule}}",
+      gridPos: { x: 0, y: 13, w: 6, h: 4 },
+      unit: "dtdurations",
+      graphMode: common.BigValueGraphMode.None,
+    }),
   );
 
   // Total Backup Items
   builder.withPanel(
-    createStatPanel(
-      "Total Backup Items",
-      "Total items backed up per schedule",
-      `velero_backup_items_total{${buildScheduleFilter()}}`,
-      "{{schedule}}",
-      { x: 6, y: 13, w: 6, h: 4 },
-    ),
+    createStatPanel({
+      title: "Total Backup Items",
+      description: "Total items backed up per schedule",
+      expr: `velero_backup_items_total{${buildScheduleFilter()}}`,
+      legend: "{{schedule}}",
+      gridPos: { x: 6, y: 13, w: 6, h: 4 },
+    }),
   );
 
   // Backup Item Errors
   builder.withPanel(
-    createStatPanel(
-      "Backup Item Errors",
-      "Number of items with errors per schedule",
-      `velero_backup_items_errors{${buildScheduleFilter()}}`,
-      "{{schedule}}",
-      { x: 12, y: 13, w: 6, h: 4 },
-    ).thresholds(
+    createStatPanel({
+      title: "Backup Item Errors",
+      description: "Number of items with errors per schedule",
+      expr: `velero_backup_items_errors{${buildScheduleFilter()}}`,
+      legend: "{{schedule}}",
+      gridPos: { x: 12, y: 13, w: 6, h: 4 },
+    }).thresholds(
       new dashboard.ThresholdsConfigBuilder()
         .mode(dashboard.ThresholdsMode.Absolute)
         .steps([
@@ -242,13 +244,13 @@ This usually means that Prometheus is not successfully scraping metrics from the
 
   // Backup Success Status (Current)
   builder.withPanel(
-    createStatPanel(
-      "Current Backup Status",
-      "1 = Success in last hour, 0 = No success",
-      `(sum by (schedule) (increase(velero_backup_success_total{${buildScheduleFilter()}}[1h])) > 0)`,
-      "{{schedule}}",
-      { x: 18, y: 13, w: 6, h: 4 },
-    ).thresholds(
+    createStatPanel({
+      title: "Current Backup Status",
+      description: "1 = Success in last hour, 0 = No success",
+      expr: `(sum by (schedule) (increase(velero_backup_success_total{${buildScheduleFilter()}}[1h])) > 0)`,
+      legend: "{{schedule}}",
+      gridPos: { x: 18, y: 13, w: 6, h: 4 },
+    }).thresholds(
       new dashboard.ThresholdsConfigBuilder()
         .mode(dashboard.ThresholdsMode.Absolute)
         .steps([
@@ -362,52 +364,52 @@ This usually means that Prometheus is not successfully scraping metrics from the
 
   // Total Backup Eligible Storage
   builder.withPanel(
-    createStatPanel(
-      "Total Backup Eligible Storage",
-      "Total size of PVCs marked for backup",
-      `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{label_velero_io_backup="enabled",${buildNamespaceFilter()}})`,
-      "Total",
-      { x: 0, y: 37, w: 6, h: 4 },
-      "bytes",
-    ),
+    createStatPanel({
+      title: "Total Backup Eligible Storage",
+      description: "Total size of PVCs marked for backup",
+      expr: `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{label_velero_io_backup="enabled",${buildNamespaceFilter()}})`,
+      legend: "Total",
+      gridPos: { x: 0, y: 37, w: 6, h: 4 },
+      unit: "bytes",
+    }),
   );
 
   // Backup Eligible Storage by Namespace
   builder.withPanel(
-    createStatPanel(
-      "Backup Eligible Storage by Namespace",
-      "Total size of PVCs marked for backup by namespace",
-      `sum by (namespace) (kube_persistentvolumeclaim_resource_requests_storage_bytes{label_velero_io_backup="enabled",${buildNamespaceFilter()}})`,
-      "{{namespace}}",
-      { x: 6, y: 37, w: 6, h: 4 },
-      "bytes",
-    ),
+    createStatPanel({
+      title: "Backup Eligible Storage by Namespace",
+      description: "Total size of PVCs marked for backup by namespace",
+      expr: `sum by (namespace) (kube_persistentvolumeclaim_resource_requests_storage_bytes{label_velero_io_backup="enabled",${buildNamespaceFilter()}})`,
+      legend: "{{namespace}}",
+      gridPos: { x: 6, y: 37, w: 6, h: 4 },
+      unit: "bytes",
+    }),
   );
 
   // Total Storage (All PVCs)
   builder.withPanel(
-    createStatPanel(
-      "Total Storage (All PVCs)",
-      "Total size of all PVCs in cluster",
-      `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{${buildNamespaceFilter()}})`,
-      "Total",
-      { x: 12, y: 37, w: 6, h: 4 },
-      "bytes",
-    ),
+    createStatPanel({
+      title: "Total Storage (All PVCs)",
+      description: "Total size of all PVCs in cluster",
+      expr: `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{${buildNamespaceFilter()}})`,
+      legend: "Total",
+      gridPos: { x: 12, y: 37, w: 6, h: 4 },
+      unit: "bytes",
+    }),
   );
 
   // Backup Coverage Percentage
   builder.withPanel(
-    createStatPanel(
-      "Backup Coverage",
-      "Percentage of storage covered by backups",
-      `(sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{label_velero_io_backup="enabled",${buildNamespaceFilter()}}) / sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{${buildNamespaceFilter()}})) * 100`,
-      "Coverage",
-      { x: 18, y: 37, w: 6, h: 4 },
-      "percent",
-      common.BigValueGraphMode.None,
-      1,
-    ).thresholds(
+    createStatPanel({
+      title: "Backup Coverage",
+      description: "Percentage of storage covered by backups",
+      expr: `(sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{label_velero_io_backup="enabled",${buildNamespaceFilter()}}) / sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{${buildNamespaceFilter()}})) * 100`,
+      legend: "Coverage",
+      gridPos: { x: 18, y: 37, w: 6, h: 4 },
+      unit: "percent",
+      graphMode: common.BigValueGraphMode.None,
+      decimals: 1,
+    }).thresholds(
       new dashboard.ThresholdsConfigBuilder()
         .mode(dashboard.ThresholdsMode.Absolute)
         .steps([
@@ -470,118 +472,9 @@ This usually means that Prometheus is not successfully scraping metrics from the
       .gridPos({ x: 12, y: 41, w: 12, h: 8 }),
   );
 
-  // Row 5: What is/isn't Backed Up
-  builder.withRow(new dashboard.RowBuilder("Backup Coverage Analysis"));
-
-  // Storage Not Backed Up
-  builder.withPanel(
-    createStatPanel(
-      "Storage Not Backed Up",
-      "Total size of PVCs without velero.io/backup label",
-      `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{label_velero_io_backup!="enabled",${buildNamespaceFilter()}})`,
-      "Not Backed Up",
-      { x: 0, y: 49, w: 6, h: 4 },
-      "bytes",
-    ),
-  );
-
-  // Storage Backed Up
-  builder.withPanel(
-    createStatPanel(
-      "Storage Backed Up",
-      "Total size of PVCs with velero.io/backup=enabled label",
-      `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{label_velero_io_backup="enabled",${buildNamespaceFilter()}})`,
-      "Backed Up",
-      { x: 6, y: 49, w: 6, h: 4 },
-      "bytes",
-    ),
-  );
-
-  // Number of PVCs Not Backed Up
-  builder.withPanel(
-    createStatPanel(
-      "PVCs Not Backed Up",
-      "Count of PVCs without backup label",
-      `count(kube_persistentvolumeclaim_resource_requests_storage_bytes{label_velero_io_backup!="enabled",${buildNamespaceFilter()}})`,
-      "Count",
-      { x: 12, y: 49, w: 6, h: 4 },
-      "short",
-      common.BigValueGraphMode.None,
-    ),
-  );
-
-  // Number of PVCs Backed Up
-  builder.withPanel(
-    createStatPanel(
-      "PVCs Backed Up",
-      "Count of PVCs with backup label",
-      `count(kube_persistentvolumeclaim_resource_requests_storage_bytes{label_velero_io_backup="enabled",${buildNamespaceFilter()}})`,
-      "Count",
-      { x: 18, y: 49, w: 6, h: 4 },
-      "short",
-      common.BigValueGraphMode.None,
-    ),
-  );
-
-  // Row 6: Backup Operations
-  builder.withRow(new dashboard.RowBuilder("Backup Operations"));
-
-  // Backup Deletion Success Rate
-  builder.withPanel(
-    new timeseries.PanelBuilder()
-      .title("Backup Deletion Success Rate")
-      .description("Rate of successful backup deletions (old backups cleanup)")
-      .datasource(prometheusDatasource)
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            `(sum(rate(velero_backup_deletion_success_total[5m])) / sum(rate(velero_backup_deletion_attempt_total[5m]))) * 100`,
-          )
-          .legendFormat("Success Rate"),
-      )
-      .unit("percent")
-      .decimals(1)
-      .lineWidth(2)
-      .fillOpacity(10)
-      .thresholds(
-        new dashboard.ThresholdsConfigBuilder()
-          .mode(dashboard.ThresholdsMode.Absolute)
-          .steps([
-            { value: 0, color: "red" },
-            { value: 95, color: "yellow" },
-            { value: 99, color: "green" },
-          ]),
-      )
-      .gridPos({ x: 0, y: 57, w: 12, h: 8 }),
-  );
-
-  // Backup Deletion Failures
-  builder.withPanel(
-    new timeseries.PanelBuilder()
-      .title("Backup Deletion Failures")
-      .description(
-        "Rate of backup deletion failures (may cause storage exhaustion)",
-      )
-      .datasource(prometheusDatasource)
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(`sum(rate(velero_backup_deletion_failure_total[5m]))`)
-          .legendFormat("Deletion Failures"),
-      )
-      .unit("ops")
-      .lineWidth(2)
-      .fillOpacity(10)
-      .thresholds(
-        new dashboard.ThresholdsConfigBuilder()
-          .mode(dashboard.ThresholdsMode.Absolute)
-          .steps([
-            { value: 0, color: "green" },
-            { value: 0.01, color: "yellow" },
-            { value: 0.1, color: "red" },
-          ]),
-      )
-      .gridPos({ x: 12, y: 57, w: 12, h: 8 }),
-  );
+  // Backup coverage and operations panels
+  addBackupCoveragePanels(builder, prometheusDatasource, buildNamespaceFilter);
+  addBackupOperationsPanels(builder, prometheusDatasource);
 
   return builder.build();
 }

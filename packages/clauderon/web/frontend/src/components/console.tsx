@@ -1,10 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import type { Terminal} from "ghostty-web";
-import { init, FitAddon } from "ghostty-web";
+import { useRef, useState } from "react";
+import type { Terminal } from "ghostty-web";
 import { useConsole } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useConsole";
 import { X, MessageSquare } from "lucide-react";
-import * as Sentry from "@sentry/react";
-import { DecodeError } from "@clauderon/client";
 
 type ConsoleProps = {
   sessionId: string;
@@ -13,84 +10,6 @@ type ConsoleProps = {
   onSwitchToChat?: () => void;
 };
 
-// Terminal color themes
-const terminalThemes = {
-  light: {
-    background: "#ffffff",
-    foreground: "#1a1a1a",
-    cursor: "#1a1a1a",
-    cursorAccent: "#ffffff",
-    selectionBackground: "rgba(33, 66, 131, 0.3)",
-    black: "#000000",
-    red: "#cd3131",
-    green: "#00bc00",
-    yellow: "#949800",
-    blue: "#0451a5",
-    magenta: "#bc05bc",
-    cyan: "#0598bc",
-    white: "#555555",
-    brightBlack: "#666666",
-    brightRed: "#cd3131",
-    brightGreen: "#14ce14",
-    brightYellow: "#b5ba00",
-    brightBlue: "#0451a5",
-    brightMagenta: "#bc05bc",
-    brightCyan: "#0598bc",
-    brightWhite: "#a5a5a5",
-  },
-  dark: {
-    background: "#0a0e14",
-    foreground: "#e6e1dc",
-    cursor: "#00ff00",
-    cursorAccent: "#000000",
-    selectionBackground: "rgba(72, 118, 255, 0.3)",
-    black: "#000000",
-    red: "#ff3333",
-    green: "#00ff00",
-    yellow: "#ffff00",
-    blue: "#0066ff",
-    magenta: "#cc00ff",
-    cyan: "#00ffff",
-    white: "#cccccc",
-    brightBlack: "#666666",
-    brightRed: "#ff6666",
-    brightGreen: "#66ff66",
-    brightYellow: "#ffff66",
-    brightBlue: "#6666ff",
-    brightMagenta: "#ff66ff",
-    brightCyan: "#66ffff",
-    brightWhite: "#ffffff",
-  },
-};
-
-/**
- * Convert technical error to user-friendly message
- */
-function getUserFriendlyErrorMessage(error: Error): string {
-  if (error instanceof DecodeError) {
-    switch (error.stage) {
-      case "validation":
-        return "Received invalid data format from session. The session may be experiencing issues.";
-      case "base64":
-        return "Terminal output decode error. The session is still running, but some output may be lost.";
-      case "utf8":
-        return "Terminal encoding error. Some characters may not display correctly.";
-    }
-  }
-
-  // Network/WebSocket errors
-  if (error.message.includes("WebSocket")) {
-    return "Connection lost. Attempting to reconnect...";
-  }
-
-  // Default fallback
-  return "An unexpected error occurred. The session may still be running.";
-}
-
-// Get current theme from document
-function getCurrentTheme(): "light" | "dark" {
-  return document.documentElement.classList.contains("dark") ? "dark" : "light";
-}
 
 export function Console({
   sessionId,
@@ -100,11 +19,10 @@ export function Console({
 }: ConsoleProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const terminalInstanceRef = useRef<Terminal | null>(null);
-  const initializingRef = useRef<boolean>(false);
   const { client, isConnected } = useConsole(sessionId);
   const [error, setError] = useState<string | null>(null);
   const errorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [errorKey, setErrorKey] = useState<number>(0);
+  const [errorKey] = useState<number>(0);
 
   // Set Sentry context for this session
   ;
@@ -117,8 +35,7 @@ export function Console({
     }
   };
 
-  // Track current client and connection state for terminal input handler
-  const clientRef = useRef({ client, isConnected });
+  void client; // Used by terminal input handler when hooks are re-enabled
 
   // Update ref whenever client or connection state changes
   ;

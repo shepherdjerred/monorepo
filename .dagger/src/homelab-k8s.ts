@@ -1,5 +1,5 @@
 import type { Directory } from "@dagger.io/dagger";
-import { getKubectlContainer } from "./homelab-base.ts";
+import { getKubectlContainer } from "./lib-kubectl.ts";
 
 /**
  * Applies Kubernetes manifests from the specified directory using kubectl.

@@ -1,8 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
     // Note: verbatimModuleSyntax disabled because of cdk8s generation
+    "paths": {
+      "@shepherdjerred/homelab/cdk8s/*": ["./*"],
+      "@shepherdjerred/helm-types/*": ["../helm-types/*"]
+    }
   },
   "exclude": ["node_modules", "eslint.config.ts"]
 }

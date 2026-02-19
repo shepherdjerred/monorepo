@@ -150,7 +150,7 @@ export function useMatchBrowser(
         } else {
           console.log(`[Cache MISS] Need to fetch matches`, {
             forceRefresh,
-            hasCachedData: !!cached !== undefined && cached !== null,
+            hasCachedData: cached !== null,
           });
         }
       }

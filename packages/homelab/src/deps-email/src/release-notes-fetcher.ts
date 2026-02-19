@@ -1,6 +1,12 @@
 import { OpenAI } from "openai";
 import { z } from "zod";
 import type { ReleaseNote } from "./types.ts";
+import { IMAGE_TO_GITHUB } from "./image-github-mapping.ts";
+import {
+  isVersionInRange,
+  isVersionLessThanOrEqual,
+  compareVersions,
+} from "./version-compare.ts";
 
 // Zod schemas for API responses
 const ArtifactHubChangeSchema = z.object({
@@ -38,44 +44,6 @@ const GitHubCompareResponseSchema = z.object({
     )
     .optional(),
 });
-
-/**
- * Image repository to GitHub repository mapping
- */
-export const IMAGE_TO_GITHUB: Record<string, string> = {
-  // Prometheus ecosystem
-  "prometheus/prometheus": "prometheus/prometheus",
-  "prometheus/alertmanager": "prometheus/alertmanager",
-  "prometheus/node-exporter": "prometheus/node_exporter",
-  "prometheus/blackbox-exporter": "prometheus/blackbox_exporter",
-  "prometheus/pushgateway": "prometheus/pushgateway",
-  "prometheus-operator/prometheus-operator":
-    "prometheus-operator/prometheus-operator",
-  "prometheus-operator/prometheus-config-reloader":
-    "prometheus-operator/prometheus-operator",
-  "prometheus-operator/admission-webhook":
-    "prometheus-operator/prometheus-operator",
-
-  // Grafana ecosystem
-  "grafana/grafana": "grafana/grafana",
-  "grafana/loki": "grafana/loki",
-  "grafana/promtail": "grafana/loki",
-  "grafana/tempo": "grafana/tempo",
-  "grafana/mimir": "grafana/mimir",
-
-  // Kubernetes ecosystem
-  "kube-state-metrics/kube-state-metrics": "kubernetes/kube-state-metrics",
-  "ingress-nginx/controller": "kubernetes/ingress-nginx",
-  "ingress-nginx/kube-webhook-certgen": "kubernetes/ingress-nginx",
-
-  // Thanos
-  "thanos/thanos": "thanos-io/thanos",
-
-  // Other common images
-  "kiwigrid/k8s-sidecar": "kiwigrid/k8s-sidecar",
-  "jimmidyson/configmap-reload": "jimmidyson/configmap-reload",
-  "quay.io/brancz/kube-rbac-proxy": "brancz/kube-rbac-proxy",
-};
 
 /**
  * Fetch all release notes between two versions
@@ -163,10 +131,6 @@ export async function fetchFromArtifactHub(
   }
 }
 
-// ============================================================================
-// GitHub Releases
-// ============================================================================
-
 function getGitHubHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
     Accept: "application/vnd.github.v3+json",
@@ -174,7 +138,7 @@ function getGitHubHeaders(): Record<string, string> {
   };
 
   const token = Bun.env["GITHUB_TOKEN"];
-  if (token) {
+  if (token != null && token !== "") {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
@@ -190,7 +154,7 @@ async function fetchFromGitHubReleases(
   newVersion: string,
 ): Promise<ReleaseNote[]> {
   const [owner, repoName] = repo.split("/");
-  if (!owner || !repoName) {
+  if ((owner == null || owner === "") || (repoName == null || repoName === "")) {
     return [];
   }
 
@@ -222,14 +186,14 @@ async function fetchFromGitHubReleases(
 
       for (const release of parsed.data) {
         const tag = release.tag_name;
-        if (!tag) {
+        if ((tag == null || tag === "")) {
           continue;
         }
 
         // Check if this version is in range
         if (
           isVersionInRange(tag, oldVersion, newVersion) &&
-          release.body &&
+          release.body != null && release.body !== "" &&
           release.body.length > 10
         ) {
           notes.push({
@@ -260,20 +224,13 @@ async function fetchFromGitHubReleases(
   return notes;
 }
 
-// ============================================================================
-// CHANGELOG.md
-// ============================================================================
-
-/**
- * Fetch and parse CHANGELOG.md from GitHub
- */
 async function fetchFromChangelog(
   repo: string,
   oldVersion: string,
   newVersion: string,
 ): Promise<ReleaseNote[]> {
   const [owner, repoName] = repo.split("/");
-  if (!owner || !repoName) {
+  if ((owner == null || owner === "") || (repoName == null || repoName === "")) {
     return [];
   }
 
@@ -293,13 +250,14 @@ async function fetchFromChangelog(
         const url = `https://raw.githubusercontent.com/${owner}/${repoName}/${branch}/${filename}`;
         const response = await fetch(url);
 
-        if (response.ok) {
-          const content = await response.text();
-          const notes = parseChangelog(content, oldVersion, newVersion);
+        if (!response.ok) {
+          continue;
+        }
+        const content = await response.text();
+        const notes = parseChangelog(content, oldVersion, newVersion);
 
-          if (notes.length > 0) {
-            return notes;
-          }
+        if (notes.length > 0) {
+          return notes;
         }
       } catch {
         continue;
@@ -335,7 +293,7 @@ function parseChangelog(
     let match;
     while ((match = pattern.exec(content)) !== null) {
       const version = match[1];
-      if (version) {
+      if (version != null && version !== "") {
         versionPositions.push({
           version: version,
           start: match.index,
@@ -382,20 +340,13 @@ function parseChangelog(
   return notes;
 }
 
-// ============================================================================
-// Git Compare (with LLM extraction)
-// ============================================================================
-
-/**
- * Fetch commit messages between two versions using GitHub compare API
- */
 async function fetchFromGitCompare(
   repo: string,
   oldVersion: string,
   newVersion: string,
 ): Promise<ReleaseNote[]> {
   const [owner, repoName] = repo.split("/");
-  if (!owner || !repoName) {
+  if ((owner == null || owner === "") || (repoName == null || repoName === "")) {
     return [];
   }
 
@@ -433,13 +384,10 @@ async function fetchFromGitCompare(
         }
 
         // Extract commit messages
-        const messages: string[] = [];
-        for (const c of parsed.data.commits) {
-          const msgResult = z.string().safeParse(c.commit?.message);
-          if (msgResult.success) {
-            messages.push(msgResult.data);
-          }
-        }
+        const messages = parsed.data.commits
+          .map((c) => z.string().safeParse(c.commit?.message))
+          .filter((result) => result.success)
+          .map((result) => result.data);
         const commitMessages = messages.join("\n---\n");
 
         // Use LLM to extract meaningful release notes from commits
@@ -470,7 +418,7 @@ async function extractWithLLM(
   newVersion: string,
 ): Promise<ReleaseNote[]> {
   const apiKey = Bun.env["OPENAI_API_KEY"];
-  if (!apiKey) {
+  if ((apiKey == null || apiKey === "")) {
     // Return raw commits as fallback
     return [
       {
@@ -508,7 +456,7 @@ ${content.slice(0, 10_000)}`;
 
     const choice = response.choices[0];
     const body = choice?.message.content;
-    if (body && body.length > 20) {
+    if (body != null && body !== "" && body.length > 20) {
       return [
         {
           version: newVersion,
@@ -524,98 +472,18 @@ ${content.slice(0, 10_000)}`;
   return [];
 }
 
-// ============================================================================
-// Version Comparison Utilities
-// ============================================================================
-
-/**
- * Check if a version is in the range (oldVersion, newVersion]
- * i.e., greater than oldVersion and less than or equal to newVersion
- */
-function isVersionInRange(
-  version: string,
-  oldVersion: string,
-  newVersion: string,
-): boolean {
-  const normalizedVersion = normalizeVersion(version);
-  const normalizedOld = normalizeVersion(oldVersion);
-  const normalizedNew = normalizeVersion(newVersion);
-
-  return (
-    compareVersions(normalizedVersion, normalizedOld) > 0 &&
-    compareVersions(normalizedVersion, normalizedNew) <= 0
-  );
-}
-
-/**
- * Check if v1 <= v2
- */
-function isVersionLessThanOrEqual(v1: string, v2: string): boolean {
-  return compareVersions(normalizeVersion(v1), normalizeVersion(v2)) <= 0;
-}
-
-/**
- * Normalize version string (remove 'v' prefix, handle tags like 'chart-name-1.2.3')
- */
-function normalizeVersion(version: string): string {
-  // Remove 'v' prefix
-  let normalized = version.replace(/^v/, "");
-
-  // Handle chart-name-version format (e.g., "grafana-10.3.0")
-  const chartVersionRegex = /^[a-z-]+-(\d+\.\d+\.\d.*)$/i;
-  const chartVersionMatch = chartVersionRegex.exec(normalized);
-  if (chartVersionMatch?.[1]) {
-    normalized = chartVersionMatch[1];
-  }
-
-  return normalized;
-}
-
-/**
- * Compare two semver-ish versions
- * Returns: negative if v1 < v2, positive if v1 > v2, 0 if equal
- */
-function compareVersions(v1: string, v2: string): number {
-  const parts1 = v1.split(/[.-]/).map((p) => partToNumber(p));
-  const parts2 = v2.split(/[.-]/).map((p) => partToNumber(p));
-
-  const maxLength = Math.max(parts1.length, parts2.length);
-
-  for (let i = 0; i < maxLength; i++) {
-    const p1 = parts1[i] ?? 0;
-    const p2 = parts2[i] ?? 0;
-
-    if (p1 < p2) {
-      return -1;
-    }
-    if (p1 > p2) {
-      return 1;
-    }
-  }
-
-  return 0;
-}
-
-/**
- * Convert a version part to a number for comparison
- */
-function partToNumber(part: string): number {
-  const num = Number.parseInt(part, 10);
-  return Number.isNaN(num) ? 0 : num;
-}
-
 /**
  * Map an image repository to its GitHub repository
  */
 export function getGitHubRepoForImage(imageRepo: string): string | null {
   // Check direct mapping
-  if (IMAGE_TO_GITHUB[imageRepo]) {
+  if (IMAGE_TO_GITHUB[imageRepo] != null && IMAGE_TO_GITHUB[imageRepo] !== "") {
     return IMAGE_TO_GITHUB[imageRepo];
   }
 
   // Try without registry prefix
   const withoutRegistry = imageRepo.replace(/^[^/]+\.io\//, "");
-  if (IMAGE_TO_GITHUB[withoutRegistry]) {
+  if (IMAGE_TO_GITHUB[withoutRegistry] != null && IMAGE_TO_GITHUB[withoutRegistry] !== "") {
     return IMAGE_TO_GITHUB[withoutRegistry];
   }
 

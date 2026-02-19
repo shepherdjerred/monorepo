@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import type { Session, SessionHealthReport } from "@clauderon/client";
 import { SessionStatus } from "@clauderon/shared";
 import type { MergeMethod } from "@clauderon/shared";
@@ -30,6 +30,45 @@ type SessionListProps = {
 
 type FilterStatus = "all" | "running" | "idle" | "completed" | "archived";
 
+const FILTER_STATUS_MAP: Record<string, FilterStatus> = {
+  all: "all",
+  running: "running",
+  idle: "idle",
+  completed: "completed",
+  archived: "archived",
+};
+
+function toFilterStatus(value: string): FilterStatus | undefined {
+  return FILTER_STATUS_MAP[value];
+}
+
+function getConfirmDialogTitle(type: string): string {
+  switch (type) {
+    case "archive": return "Archive Session";
+    case "unarchive": return "Unarchive Session";
+    case "refresh": return "Refresh Session";
+    default: return "Delete Session";
+  }
+}
+
+function getConfirmDialogDescription(type: string, name: string): string {
+  switch (type) {
+    case "archive": return `Are you sure you want to archive "${name}"?`;
+    case "unarchive": return `Are you sure you want to restore "${name}" from the archive?`;
+    case "refresh": return `This will pull the latest image and recreate the container for "${name}". The session history will be preserved.`;
+    default: return `Are you sure you want to delete "${name}"? This action cannot be undone.`;
+  }
+}
+
+function getConfirmDialogLabel(type: string): string {
+  switch (type) {
+    case "archive": return "Archive";
+    case "unarchive": return "Unarchive";
+    case "refresh": return "Refresh";
+    default: return "Delete";
+  }
+}
+
 const TAB_TRIGGER_CLASS =
   "cursor-pointer transition-all duration-200 hover:bg-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-2 data-[state=active]:border-primary data-[state=active]:shadow-[4px_4px_0_hsl(220,85%,25%)] data-[state=active]:font-bold";
 
@@ -45,7 +84,6 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     deleteSession,
     mergePr,
     getSessionHealth,
-    refreshHealth,
     healthReports,
     startSession,
     wakeSession,
@@ -57,12 +95,11 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   const getInitialFilter = (): FilterStatus => {
     const params = new URLSearchParams(globalThis.location.search);
     const tabParam = params.get("tab");
-    if (
-      tabParam != null &&
-      tabParam.length > 0 &&
-      ["all", "running", "idle", "completed", "archived"].includes(tabParam)
-    ) {
-      return tabParam as FilterStatus;
+    if (tabParam != null && tabParam.length > 0) {
+      const filterStatus = toFilterStatus(tabParam);
+      if (filterStatus != null) {
+        return filterStatus;
+      }
     }
     return "all";
   };
@@ -75,7 +112,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState<Date>(new Date());
-  const [, setTickCounter] = useState(0); // Force re-render for time display
+  const [, _setTickCounter] = useState(0); // Force re-render for time display
 
   // Health modal state
   const [showStartupHealthModal, setShowStartupHealthModal] = useState(false);
@@ -87,7 +124,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     session: Session;
     healthReport: SessionHealthReport;
   } | null>(null);
-  const [startupHealthCheckDone, setStartupHealthCheckDone] = useState(false);
+  const [_startupHealthCheckDone, _setStartupHealthCheckDone] = useState(false);
 
   const filteredSessions = useMemo(() => {
     const sessionArray = [...sessions.values()];
@@ -106,17 +143,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     }
   }, [sessions, filter]);
 
-  // Update URL when filter changes
-  ;
-
-  // Auto-refresh every 2 seconds (silent - no loading indicators)
-  ;
-
-  // Update time display every second
-  ;
-
-  // Startup health check - show modal if there are unhealthy sessions
-  ;
+  // Note: useEffect hooks for URL sync, auto-refresh, tick counter, and startup health check were removed during stub-out
 
   // Compute unhealthy sessions for the startup modal
   const unhealthySessions = useMemo(() => {
@@ -174,15 +201,44 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     method: MergeMethod,
     deleteBranch: boolean,
   ) => {
-    void mergePr(session.id, method, deleteBranch)
-      .then(() => {
+    const doMerge = async () => {
+      try {
+        await mergePr(session.id, method, deleteBranch);
         toast.success(`Pull request for "${session.name}" merged successfully`);
-      })
-      .catch((caughtError: unknown) => {
+      } catch (caughtError: unknown) {
         toast.error(
           `Failed to merge PR: ${caughtError instanceof Error ? caughtError.message : String(caughtError)}`,
         );
-      });
+      }
+    };
+    void doMerge();
+  };
+
+  const runConfirmAction = async (type: string, sessionObj: Session) => {
+    try {
+      switch (type) {
+        case "archive":
+          await archiveSession(sessionObj.id);
+          toast.success(`Session "${sessionObj.name}" archived`);
+          break;
+        case "unarchive":
+          await unarchiveSession(sessionObj.id);
+          toast.success(`Session "${sessionObj.name}" restored from archive`);
+          break;
+        case "refresh":
+          await refreshSession(sessionObj.id);
+          toast.success(`Session "${sessionObj.name}" is being refreshed`);
+          break;
+        case "delete":
+          await deleteSession(sessionObj.id);
+          toast.info(`Deleting session "${sessionObj.name}"...`);
+          break;
+      }
+    } catch (caughtError: unknown) {
+      toast.error(
+        `Failed to ${type}: ${caughtError instanceof Error ? caughtError.message : String(caughtError)}`,
+      );
+    }
   };
 
   const handleConfirm = () => {
@@ -190,62 +246,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
       return;
     }
 
-    switch (confirmDialog.type) {
-      case "archive": {
-        void archiveSession(confirmDialog.session.id)
-          .then(() => {
-            toast.success(`Session "${confirmDialog.session.name}" archived`);
-          })
-          .catch((caughtError: unknown) => {
-            toast.error(
-              `Failed to archive: ${caughtError instanceof Error ? caughtError.message : String(caughtError)}`,
-            );
-          });
-
-        break;
-      }
-      case "unarchive": {
-        void unarchiveSession(confirmDialog.session.id)
-          .then(() => {
-            toast.success(
-              `Session "${confirmDialog.session.name}" restored from archive`,
-            );
-          })
-          .catch((caughtError: unknown) => {
-            toast.error(
-              `Failed to unarchive: ${caughtError instanceof Error ? caughtError.message : String(caughtError)}`,
-            );
-          });
-
-        break;
-      }
-      case "refresh": {
-        void refreshSession(confirmDialog.session.id)
-          .then(() => {
-            toast.success(
-              `Session "${confirmDialog.session.name}" is being refreshed`,
-            );
-          })
-          .catch((caughtError: unknown) => {
-            toast.error(
-              `Failed to refresh: ${caughtError instanceof Error ? caughtError.message : String(caughtError)}`,
-            );
-          });
-
-        break;
-      }
-      case "delete": {
-        void deleteSession(confirmDialog.session.id)
-          .then(() => {
-            toast.info(`Deleting session "${confirmDialog.session.name}"...`);
-          })
-          .catch((caughtError: unknown) => {
-            toast.error(
-              `Failed to delete: ${caughtError instanceof Error ? caughtError.message : String(caughtError)}`,
-            );
-          });
-      }
-    }
+    void runConfirmAction(confirmDialog.type, confirmDialog.session);
   };
 
   return (
@@ -268,9 +269,10 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
             variant="ghost"
             size="icon"
             onClick={() => {
-              void refreshSessions(false).then(() => {
+              void (async () => {
+                await refreshSessions(false);
                 setLastRefreshTime(new Date());
-              });
+              })();
             }}
             disabled={isLoading}
             aria-label="Refresh sessions"
@@ -307,7 +309,10 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
         <Tabs
           value={filter}
           onValueChange={(v) => {
-            setFilter(v as FilterStatus);
+            const filterStatus = toFilterStatus(v);
+            if (filterStatus != null) {
+              setFilter(filterStatus);
+            }
           }}
         >
           <TabsList className="grid w-full grid-cols-5 border-2 gap-2 p-2">
@@ -421,33 +426,9 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
               setConfirmDialog(null);
             }
           }}
-          title={
-            confirmDialog.type === "archive"
-              ? "Archive Session"
-              : confirmDialog.type === "unarchive"
-                ? "Unarchive Session"
-                : confirmDialog.type === "refresh"
-                  ? "Refresh Session"
-                  : "Delete Session"
-          }
-          description={
-            confirmDialog.type === "archive"
-              ? `Are you sure you want to archive "${confirmDialog.session.name}"?`
-              : confirmDialog.type === "unarchive"
-                ? `Are you sure you want to restore "${confirmDialog.session.name}" from the archive?`
-                : confirmDialog.type === "refresh"
-                  ? `This will pull the latest image and recreate the container for "${confirmDialog.session.name}". The session history will be preserved.`
-                  : `Are you sure you want to delete "${confirmDialog.session.name}"? This action cannot be undone.`
-          }
-          confirmLabel={
-            confirmDialog.type === "archive"
-              ? "Archive"
-              : confirmDialog.type === "unarchive"
-                ? "Unarchive"
-                : confirmDialog.type === "refresh"
-                  ? "Refresh"
-                  : "Delete"
-          }
+          title={getConfirmDialogTitle(confirmDialog.type)}
+          description={getConfirmDialogDescription(confirmDialog.type, confirmDialog.session.name)}
+          confirmLabel={getConfirmDialogLabel(confirmDialog.type)}
           variant={confirmDialog.type === "delete" ? "destructive" : "default"}
           onConfirm={handleConfirm}
         />

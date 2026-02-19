@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { preprocessYAMLComments, parseYAMLComments } from "./yaml-comments.ts";
+import { parseYAMLComments } from "./yaml-comments.ts";
+import { preprocessYAMLComments } from "./yaml-preprocess.ts";
 
-describe("YAML Preprocessing", () => {
+describe("YAML Preprocessing - Preprocessor", () => {
   describe("preprocessYAMLComments", () => {
     test("should be conservative about uncommenting without real key context", () => {
       // Commented keys at root level without any real keys aren't uncommented
@@ -151,22 +152,6 @@ config:
     });
   });
 
-  describe("Commented-out Keys Behavior", () => {
-    test("documents that preprocessing is conservative by design", () => {
-      // The preprocessor is intentionally conservative to avoid false positives
-      // It only uncomments in very specific scenarios:
-      // 1. When keys have consistent indentation with existing real keys
-      // 2. When there are multiple consecutive commented keys (3+)
-      // 3. When NOT in Example blocks or after block scalars
-
-      // Most commented-out keys in practice stay commented and are handled by
-      // the regex fallback parser or filterCommentedOutYAML function instead.
-      // This test documents this intentional design decision.
-
-      expect(true).toBe(true); // Placeholder to make this a valid test
-    });
-  });
-
   describe("Refs and URLs", () => {
     test("should preserve ref: lines with URLs in comments", () => {
       const yaml = `# ref: https://hub.docker.com/r/itzg/minecraft-server/
@@ -284,6 +269,24 @@ setting: value`;
       expect(preprocessed).toContain("real-option: true");
     });
   });
+});
+
+describe("YAML Preprocessing - Directives and Patterns", () => {
+  describe("Commented-out Keys Behavior", () => {
+    test("documents that preprocessing is conservative by design", () => {
+      // The preprocessor is intentionally conservative to avoid false positives
+      // It only uncomments in very specific scenarios:
+      // 1. When keys have consistent indentation with existing real keys
+      // 2. When there are multiple consecutive commented keys (3+)
+      // 3. When NOT in Example blocks or after block scalars
+
+      // Most commented-out keys in practice stay commented and are handled by
+      // the regex fallback parser or filterCommentedOutYAML function instead.
+      // This test documents this intentional design decision.
+
+      expect(true).toBe(true);
+    });
+  });
 
   describe("Bitnami @section Directive", () => {
     test("should remove @section prefix from comments", () => {
@@ -343,21 +346,20 @@ key: value`;
       );
     });
 
-    test("should recognize → (unicode arrow) as prose marker", () => {
+    test("should recognize -> (unicode arrow) as prose marker", () => {
       const yaml = `# Configuration
 # sample: data
-# → See above for reference
+# -> See above for reference
 setting: value`;
 
       const comments = parseYAMLComments(yaml);
 
-      expect(comments.get("setting")).toContain("→ See above for reference");
+      expect(comments.get("setting")).toContain("-> See above for reference");
     });
   });
 
   describe("Integration: Complex Real-World Patterns", () => {
     test("should handle real keys correctly even with commented keys in vicinity", () => {
-      // Documents actual behavior: real keys get comments, preprocessing helps in edge cases
       const yaml = `controller:
   ## Controller name
   name: controller
@@ -371,15 +373,10 @@ setting: value`;
 
       const comments = parseYAMLComments(yaml);
 
-      // Real keys always work correctly
       expect(comments.get("controller.name")).toBe("Controller name");
-      // Section header "Controller configuration" gets filtered, Ref stays
       expect(comments.get("controller.config")).toContain(
         "Ref: https://example.com",
       );
-
-      // Commented-out keys in complex scenarios are handled by the existing tests
-      // The preprocessor is conservative by design to avoid false positives
     });
 
     test("should handle Bitnami chart patterns with mixed directives", () => {
@@ -456,10 +453,6 @@ policy.csv: ''`;
       // Policy rule examples should be filtered
       expect(comments.get("policy.csv")).not.toContain("p, subject, resource");
     });
-
-    // Note: The following patterns document current conservative preprocessor behavior
-    // The preprocessor requires strong signals (consecutive keys + real key context)
-    // to uncomment. This prevents false positives from YAML examples in docs.
   });
 
   describe("Edge Cases", () => {
@@ -495,18 +488,14 @@ section2:
     });
 
     test("should handle keys with hyphens and dots from real charts", () => {
-      // Real-world pattern that actually works
       const yaml = `config:
   use-forwarded-headers: "true"
   dotted.config.item: value`;
 
       const comments = parseYAMLComments(yaml);
 
-      // Real keys with special chars work fine
-      expect(comments.get("config.use-forwarded-headers")).toBeUndefined(); // No comment in this example
-      expect(comments.get("config.dotted.config.item")).toBeUndefined(); // No comment in this example
-
-      // Just verifying parsing doesn't break with these characters
+      expect(comments.get("config.use-forwarded-headers")).toBeUndefined();
+      expect(comments.get("config.dotted.config.item")).toBeUndefined();
       expect(comments.size).toBeGreaterThanOrEqual(0);
     });
 
@@ -520,14 +509,10 @@ database:
 
       const comments = parseYAMLComments(yaml);
 
-      // "To configure the database connection:" starts with prose
-      // followed by what looks like YAML, so should be kept as example
       expect(comments.get("database")).toContain(
         "To configure the database connection:",
       );
       expect(comments.get("database")).toContain("This is just an example");
-
-      // The YAML-like lines should be filtered as examples
       expect(comments.get("database")).not.toContain(
         "host: your-database-host",
       );

@@ -44,15 +44,13 @@ export function createMinecraftSjerredApp(chart: Chart) {
     },
   });
 
-  createIngress(
-    chart,
-    "minecraft-sjerred-bluemap-ingress",
-    "minecraft-sjerred",
-    "minecraft-sjerred-bluemap",
-    8100,
-    ["minecraft-sjerred-bluemap"],
-    true,
-  );
+  createIngress(chart, "minecraft-sjerred-bluemap-ingress", {
+    namespace: "minecraft-sjerred",
+    service: "minecraft-sjerred-bluemap",
+    port: 8100,
+    hosts: ["minecraft-sjerred-bluemap"],
+    funnel: true,
+  });
 
   createCloudflareTunnelBinding(chart, "minecraft-sjerred-bluemap-cf-tunnel", {
     serviceName: "minecraft-sjerred-bluemap",

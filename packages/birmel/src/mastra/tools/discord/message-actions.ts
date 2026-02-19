@@ -1,4 +1,4 @@
-import type { TextChannel, Client } from "discord.js";
+import { ChannelType, type Client, type TextChannel } from "discord.js";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import {
   getRequestContext,
@@ -30,10 +30,14 @@ async function fetchTextChannel(
   channelId: string,
 ): Promise<TextChannel | null> {
   const channel = await client.channels.fetch(channelId);
-  if (channel?.isTextBased() !== true) {
+  if (channel == null) {
     return null;
   }
-  return channel as TextChannel;
+  // Narrow to GuildText channel type which has concrete .send() and .messages types
+  if (channel.type === ChannelType.GuildText) {
+    return channel;
+  }
+  return null;
 }
 
 export async function handleSend(
@@ -291,13 +295,18 @@ export async function handleAddReaction(
   return { success: true, message: "Reaction added successfully" };
 }
 
+type RemoveReactionOptions = {
+  client: Client;
+  channelId: string | null | undefined;
+  messageId: string | null | undefined;
+  emoji: string | null | undefined;
+  userId: string | null | undefined;
+};
+
 export async function handleRemoveReaction(
-  client: Client,
-  channelId: string | null | undefined,
-  messageId: string | null | undefined,
-  emoji: string | null | undefined,
-  userId: string | null | undefined,
+  options: RemoveReactionOptions,
 ): Promise<MessageResult> {
+  const { client, channelId, messageId, emoji, userId } = options;
   if (
     channelId == null ||
     channelId.length === 0 ||

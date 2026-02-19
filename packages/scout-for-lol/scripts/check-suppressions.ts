@@ -25,19 +25,7 @@ type Finding = {
   pattern: string;
 };
 
-async function main(): Promise<void> {
-  console.log("🔍 Checking for new code quality suppressions...\n");
-
-  // Get the diff of staged files (bypass external diff tools)
-  const diffResult =
-    await $`git diff --cached --unified=0 --no-ext-diff`.quiet();
-  const diff = diffResult.text();
-
-  if (!diff) {
-    console.log("✅ No staged changes to check");
-    return;
-  }
-
+function parseDiffForSuppressions(diff: string): Finding[] {
   const findings: Finding[] = [];
   const lines = diff.split("\n");
   let currentFile = "";
@@ -46,12 +34,10 @@ async function main(): Promise<void> {
   for (const line of lines) {
     // Track which file we're in
     if (line.startsWith("+++ ")) {
-      // Extract filename (handles both "b/" and "i/" prefixes)
       const match = /^\+\+\+ [a-z]\/(.*)/.exec(line);
       const matchedFile = match?.[1];
       if (matchedFile !== undefined && matchedFile.length > 0) {
         currentFile = matchedFile;
-        // Skip checking the suppression checker script itself
         if (currentFile === "scripts/check-suppressions.ts") {
           currentFile = "";
         }
@@ -59,12 +45,10 @@ async function main(): Promise<void> {
       continue;
     }
 
-    // Skip if we're in an excluded file
     if (!currentFile) {
       continue;
     }
 
-    // Track line numbers from diff hunks
     if (line.startsWith("@@")) {
       const hunkMatch = /\+(\d+)/.exec(line);
       const lineStr = hunkMatch?.[1];
@@ -74,14 +58,12 @@ async function main(): Promise<void> {
       continue;
     }
 
-    // Only check added lines (starting with +)
     if (!line.startsWith("+") || line.startsWith("+++")) {
       continue;
     }
 
-    const cleanedLine = line.slice(1); // Remove the + prefix
+    const cleanedLine = line.slice(1);
 
-    // Check if line matches any suppression pattern
     for (const pattern of SUPPRESSION_PATTERNS) {
       if (pattern.test(cleanedLine)) {
         findings.push({
@@ -90,12 +72,29 @@ async function main(): Promise<void> {
           line: cleanedLine.trim(),
           pattern: pattern.toString(),
         });
-        break; // Only report each line once
+        break;
       }
     }
 
     currentLineNumber++;
   }
+
+  return findings;
+}
+
+async function main(): Promise<void> {
+  console.log("🔍 Checking for new code quality suppressions...\n");
+
+  const diffResult =
+    await $`git diff --cached --unified=0 --no-ext-diff`.quiet();
+  const diff = diffResult.text();
+
+  if (!diff) {
+    console.log("✅ No staged changes to check");
+    return;
+  }
+
+  const findings = parseDiffForSuppressions(diff);
 
   if (findings.length === 0) {
     console.log("✅ No new code quality suppressions found");

@@ -1,8 +1,28 @@
+import { z } from "zod";
+
 type WebResult = {
   success: boolean;
   message: string;
   data?: unknown;
 };
+
+const NewsApiResponseSchema = z.object({
+  status: z.string(),
+  articles: z.array(z.object({
+    title: z.string(),
+    description: z.string().nullable(),
+    url: z.string(),
+    source: z.object({ name: z.string() }),
+    publishedAt: z.string(),
+  })),
+});
+
+const VersionsSchema = z.array(z.string());
+
+const PlatformDataSchema = z.object({
+  incidents: z.array(z.unknown()),
+  maintenances: z.array(z.unknown()),
+});
 
 export async function handleFetchUrl(
   url: string | undefined,
@@ -100,18 +120,6 @@ export async function handleSearch(
   };
 }
 
-type NewsArticle = {
-  title: string;
-  description: string | null;
-  url: string;
-  source: { name: string };
-  publishedAt: string;
-};
-
-type NewsApiResponse = {
-  status: string;
-  articles: NewsArticle[];
-};
 
 export async function handleNews(
   apiKey: string | undefined,
@@ -147,7 +155,12 @@ export async function handleNews(
       message: `News API error: ${String(response.status)}`,
     };
   }
-  const data = (await response.json()) as NewsApiResponse;
+  const rawData: unknown = await response.json();
+  const parsedData = NewsApiResponseSchema.safeParse(rawData);
+  if (!parsedData.success) {
+    return { success: false, message: "Failed to parse news response" };
+  }
+  const data = parsedData.data;
   if (data.status !== "ok") {
     return { success: false, message: "Failed to fetch news" };
   }
@@ -177,7 +190,12 @@ export async function handleLol(
     if (!response.ok) {
       return { success: false, message: "Failed to fetch patch info" };
     }
-    const versions = (await response.json()) as string[];
+    const rawVersions: unknown = await response.json();
+    const versionsParsed = VersionsSchema.safeParse(rawVersions);
+    if (!versionsParsed.success) {
+      return { success: false, message: "Failed to parse patch info" };
+    }
+    const versions = versionsParsed.data;
     const latestVersion = versions[0];
     if (type === "patch") {
       return {
@@ -212,10 +230,12 @@ export async function handleLol(
       message: `Riot API error: ${String(response.status)}`,
     };
   }
-  const data = (await response.json()) as {
-    incidents: unknown[];
-    maintenances: unknown[];
-  };
+  const rawStatusData: unknown = await response.json();
+  const statusParsed = PlatformDataSchema.safeParse(rawStatusData);
+  if (!statusParsed.success) {
+    return { success: false, message: "Failed to parse status data" };
+  }
+  const data = statusParsed.data;
   const incidents = data.incidents.length;
   const maintenances = data.maintenances.length;
   return {

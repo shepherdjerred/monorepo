@@ -101,15 +101,16 @@ export async function withSpan<T>(
   fn: (span: Span) => Promise<T>,
 ): Promise<T> {
   if (tracer == null) {
-    // Create a no-op span object when tracing is disabled
-    const noopSpan = {
-      setAttribute: () => noopSpan,
-      setAttributes: () => noopSpan,
-      setStatus: () => noopSpan,
-      recordException: () => void 0,
-      end: () => void 0,
-    } as unknown as Span;
-    return fn(noopSpan);
+    // When tracing is disabled, run without a span
+    // Using a real no-op tracer from the API to avoid type assertions
+    const noopTracer = trace.getTracer("noop");
+    return noopTracer.startActiveSpan(name, async (span) => {
+      try {
+        return await fn(span);
+      } finally {
+        span.end();
+      }
+    });
   }
 
   return tracer.startActiveSpan(name, async (span) => {

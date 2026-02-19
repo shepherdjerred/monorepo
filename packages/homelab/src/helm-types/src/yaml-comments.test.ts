@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { parseYAMLComments } from "./yaml-comments.ts";
 
-describe("YAML Comment Parsing - Real Helm Chart Examples", () => {
+describe("YAML Comment Parsing - Basic Patterns", () => {
   test("should correctly associate comments with properties at different indent levels (minecraft tty bug)", () => {
     // Real example from minecraft helm chart that was incorrectly associating comments
     const yaml = `    loadBalancerClass:
@@ -145,16 +145,12 @@ scopes: "[groups]"`;
 
     const comments = parseYAMLComments(yaml);
 
-    // All comments between policy.csv and scopes get associated with scopes
-    // This includes both the policy rules explanation AND the OIDC prose
     expect(comments.get("scopes")).toContain("Policy rules are in the form:");
     expect(comments.get("scopes")).toContain(
       "Role definitions and bindings are in the form:",
     );
     expect(comments.get("scopes")).toContain("OIDC scopes to examine");
     expect(comments.get("scopes")).toContain("The scope value can be a string");
-
-    // Should filter out the example rules that could break JSDoc (containing */*)
     expect(comments.get("scopes")).not.toContain("p, role:org-admin");
     expect(comments.get("scopes")).not.toContain("g, your-github-org");
   });
@@ -169,11 +165,11 @@ service:
     const comments = parseYAMLComments(yaml);
 
     expect(comments.get("service")).toContain("Configure the service");
-    // The type: LoadBalancer line should be filtered as an example
   });
+});
 
+describe("YAML Comment Parsing - Advanced Patterns", () => {
   test("should handle actual argo-cd scopes field with proper indentation", () => {
-    // This is the exact structure from argo-cd values.yaml
     const yaml = `  rbac:
     create: true
     annotations: {}
@@ -199,7 +195,6 @@ service:
 
     const comments = parseYAMLComments(yaml);
 
-    // Should get the OIDC description
     expect(comments.get("rbac.scopes")).toBeDefined();
     expect(comments.get("rbac.scopes")).toContain("OIDC scopes to examine");
     expect(comments.get("rbac.scopes")).toContain(
@@ -308,7 +303,6 @@ image: repository`;
   });
 
   test("should NOT associate section headers from commented-out config blocks with later properties (argo-cd bug)", () => {
-    // This is the exact structure from argo-cd values.yaml that caused the bug
     const yaml = `    # Dex configuration
     # dex.config: |
     #   connectors:
@@ -339,7 +333,6 @@ image: repository`;
 
     const comments = parseYAMLComments(yaml);
 
-    // The property should get its actual documentation
     expect(
       comments.get("resource.customizations.ignoreResourceUpdates.all"),
     ).toContain("Default configuration for ignoreResourceUpdates");
@@ -347,7 +340,6 @@ image: repository`;
       comments.get("resource.customizations.ignoreResourceUpdates.all"),
     ).toContain("Ignoring status for all resources");
 
-    // BUT it should NOT include the section headers from commented-out configs
     expect(
       comments.get("resource.customizations.ignoreResourceUpdates.all"),
     ).not.toContain("Dex configuration");

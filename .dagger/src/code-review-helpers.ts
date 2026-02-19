@@ -1,4 +1,5 @@
 import type { Secret } from "@dagger.io/dagger";
+import { z } from "zod";
 import {
   postReview,
   postComment,
@@ -6,6 +7,40 @@ import {
 } from "./lib-claude.ts";
 
 export const REPO = "shepherdjerred/monorepo";
+
+/**
+ * Zod schema for PR analysis output
+ */
+export const PR_ANALYSIS_SCHEMA = z.object({
+  shouldSkip: z.boolean(),
+  maxTurns: z.number(),
+  complexity: z.enum(["empty", "simple", "medium", "complex"]),
+  isRereview: z.boolean(),
+  previousState: z.enum(["APPROVED", "CHANGES_REQUESTED", "COMMENTED", "none"]),
+  previousWasApproved: z.boolean(),
+  totalChanges: z.number(),
+  changedFiles: z.number(),
+});
+
+const INLINE_COMMENT_SCHEMA = z.object({
+  path: z.string(),
+  line: z.number(),
+  side: z.enum(["LEFT", "RIGHT"]),
+  body: z.string(),
+});
+
+const REVIEW_VERDICT_SCHEMA_ZOD = z.object({
+  should_approve: z.boolean(),
+  confidence: z.number(),
+  issue_count: z.object({
+    critical: z.number(),
+    major: z.number(),
+    minor: z.number(),
+    nitpick: z.number(),
+  }),
+  reasoning: z.string(),
+  inline_comments: z.array(INLINE_COMMENT_SCHEMA).default([]),
+});
 
 /**
  * Review prompt for Claude - focuses on things linters can't catch
@@ -125,25 +160,12 @@ export async function parseVerdict(stdout: string, githubToken: Secret, prNumber
     if (!jsonMatch) {
       throw new Error("No valid JSON found in Claude output");
     }
-    // eslint-disable-next-line custom-rules/no-type-assertions -- validated with runtime checks immediately after
-    const verdict = JSON.parse(jsonMatch[0]) as ReviewVerdict;
-
-    if (typeof verdict.should_approve !== "boolean") {
-      throw new TypeError("Missing or invalid should_approve field");
+    const parsed: unknown = JSON.parse(jsonMatch[0]);
+    const validationResult = REVIEW_VERDICT_SCHEMA_ZOD.safeParse(parsed);
+    if (!validationResult.success) {
+      throw new TypeError(`Invalid verdict: ${validationResult.error.message}`);
     }
-    if (typeof verdict.confidence !== "number") {
-      throw new TypeError("Missing or invalid confidence field");
-    }
-    if (typeof verdict.issue_count.critical !== "number") {
-      throw new TypeError("Missing or invalid issue_count field");
-    }
-    if (typeof verdict.reasoning !== "string") {
-      throw new TypeError("Missing or invalid reasoning field");
-    }
-    if (!Array.isArray(verdict.inline_comments)) {
-      verdict.inline_comments = [];
-    }
-    return verdict;
+    return validationResult.data;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     try {
@@ -205,13 +227,141 @@ export async function postApproval(
 /**
  * Post a changes-requested review.
  */
+type PostChangesRequestedOptions = {
+  githubToken: Secret;
+  prNumber: number;
+  verdict: ReviewVerdict;
+  analysis: PrAnalysis;
+  inlineNote: string;
+};
+
+/**
+ * Build the bash analysis script for PR complexity.
+ */
+export function buildAnalysisScript(): string {
+  return `#!/bin/bash
+set -eu
+
+PR_NUMBER="\${PR_NUMBER}"
+BASE_REF="\${BASE_REF}"
+HEAD_SHA="\${HEAD_SHA}"
+
+echo "Analyzing PR #\${PR_NUMBER}" >&2
+
+PR_DATA=$(gh api "repos/${REPO}/pulls/\${PR_NUMBER}")
+
+ADDITIONS=$(echo "$PR_DATA" | jq -r '.additions')
+DELETIONS=$(echo "$PR_DATA" | jq -r '.deletions')
+CHANGED_FILES=$(echo "$PR_DATA" | jq -r '.changed_files')
+COMMITS=$(echo "$PR_DATA" | jq -r '.commits')
+
+echo "PR Metrics: +\${ADDITIONS} -\${DELETIONS}, \${CHANGED_FILES} files, \${COMMITS} commits" >&2
+
+if [ "$COMMITS" -eq 0 ]; then
+  echo "PR has no commits" >&2
+  jq -n \\
+    --argjson shouldSkip true \\
+    --argjson maxTurns 35 \\
+    --arg complexity "empty" \\
+    --argjson isRereview false \\
+    --arg previousState "none" \\
+    --argjson previousWasApproved false \\
+    --argjson totalChanges 0 \\
+    --argjson changedFiles 0 \\
+    '{shouldSkip: $shouldSkip, maxTurns: $maxTurns, complexity: $complexity, isRereview: $isRereview, previousState: $previousState, previousWasApproved: $previousWasApproved, totalChanges: $totalChanges, changedFiles: $changedFiles}'
+  exit 0
+fi
+
+COMMITS_DATA=$(gh api "repos/${REPO}/pulls/\${PR_NUMBER}/commits")
+MERGE_COMMIT_COUNT=$(echo "$COMMITS_DATA" | jq '[.[] | select(.parents | length >= 2)] | length')
+TOTAL_COMMITS=$(echo "$COMMITS_DATA" | jq 'length')
+
+echo "Merge commits: \${MERGE_COMMIT_COUNT} / \${TOTAL_COMMITS}" >&2
+
+ACTUAL_ADDITIONS="$ADDITIONS"
+ACTUAL_DELETIONS="$DELETIONS"
+
+git fetch origin "\${BASE_REF}" --depth=50 2>/dev/null || echo "Git fetch failed, using API stats" >&2
+
+if DIFF_OUTPUT=$(git diff --shortstat "origin/\${BASE_REF}...\${HEAD_SHA}" 2>/dev/null); then
+  if [ -n "$DIFF_OUTPUT" ]; then
+    ACTUAL_ADDITIONS=$(echo "$DIFF_OUTPUT" | sed -n 's/.*\\([0-9][0-9]*\\) insertion.*/\\1/p')
+    ACTUAL_DELETIONS=$(echo "$DIFF_OUTPUT" | sed -n 's/.*\\([0-9][0-9]*\\) deletion.*/\\1/p')
+    ACTUAL_ADDITIONS=\${ACTUAL_ADDITIONS:-0}
+    ACTUAL_DELETIONS=\${ACTUAL_DELETIONS:-0}
+    echo "Actual changes: +\${ACTUAL_ADDITIONS} -\${ACTUAL_DELETIONS}" >&2
+  fi
+fi
+
+if ! [[ "$ACTUAL_ADDITIONS" =~ ^[0-9]+$ ]]; then ACTUAL_ADDITIONS="$ADDITIONS"; fi
+if ! [[ "$ACTUAL_DELETIONS" =~ ^[0-9]+$ ]]; then ACTUAL_DELETIONS="$DELETIONS"; fi
+
+TOTAL_ACTUAL_CHANGES=$((ACTUAL_ADDITIONS + ACTUAL_DELETIONS))
+
+SHOULD_SKIP=false
+
+if [ "$MERGE_COMMIT_COUNT" -eq "$TOTAL_COMMITS" ] && [ "$MERGE_COMMIT_COUNT" -gt 0 ]; then
+  if [ "$TOTAL_ACTUAL_CHANGES" -lt 50 ]; then
+    echo "Trivial PR: Pure merge with <50 line changes" >&2
+    SHOULD_SKIP=true
+  fi
+fi
+
+if [ "$ACTUAL_ADDITIONS" -eq 0 ] && [ "$ACTUAL_DELETIONS" -eq 0 ]; then
+  echo "Trivial PR: Pure rebase with 0 changes" >&2
+  SHOULD_SKIP=true
+fi
+
+TOTAL_CHANGES=$((ADDITIONS + DELETIONS))
+MAX_TURNS=35
+COMPLEXITY="complex"
+
+if [ "$TOTAL_CHANGES" -lt 100 ] && [ "$CHANGED_FILES" -lt 5 ]; then
+  COMPLEXITY="simple"
+elif [ "$TOTAL_CHANGES" -lt 250 ] && [ "$CHANGED_FILES" -lt 8 ]; then
+  COMPLEXITY="medium"
+fi
+
+echo "Complexity: \${COMPLEXITY}, max_turns: \${MAX_TURNS}" >&2
+
+REVIEWS=$(gh api "repos/${REPO}/pulls/\${PR_NUMBER}/reviews" --jq 'sort_by(.submitted_at) | reverse')
+PREVIOUS_STATE=$(echo "$REVIEWS" | jq -r '[.[] | select(.user.login == "github-actions[bot]")] | .[0].state // "none"')
+PREVIOUS_WAS_APPROVED=false
+
+if [ "$PREVIOUS_STATE" = "APPROVED" ]; then
+  PREVIOUS_WAS_APPROVED=true
+fi
+
+echo "Previous state: \${PREVIOUS_STATE}" >&2
+
+IS_REREVIEW=false
+if [ "$PREVIOUS_STATE" != "none" ]; then
+  LAST_REVIEW_COMMIT=$(echo "$REVIEWS" | jq -r '[.[] | select(.user.login == "github-actions[bot]")] | .[0].commit_id // ""')
+  if [ -n "$LAST_REVIEW_COMMIT" ] && [ "$LAST_REVIEW_COMMIT" != "null" ]; then
+    if [ "$LAST_REVIEW_COMMIT" != "$HEAD_SHA" ]; then
+      IS_REREVIEW=true
+      echo "Re-review: new commits since last review" >&2
+    fi
+  fi
+fi
+
+jq -n \\
+  --argjson shouldSkip $SHOULD_SKIP \\
+  --argjson maxTurns $MAX_TURNS \\
+  --arg complexity "$COMPLEXITY" \\
+  --argjson isRereview $IS_REREVIEW \\
+  --arg previousState "$PREVIOUS_STATE" \\
+  --argjson previousWasApproved $PREVIOUS_WAS_APPROVED \\
+  --argjson totalChanges $TOTAL_CHANGES \\
+  --argjson changedFiles $CHANGED_FILES \\
+  '{shouldSkip: $shouldSkip, maxTurns: $maxTurns, complexity: $complexity, isRereview: $isRereview, previousState: $previousState, previousWasApproved: $previousWasApproved, totalChanges: $totalChanges, changedFiles: $changedFiles}'
+`;
+}
+
 export async function postChangesRequested(
-  githubToken: Secret,
-  prNumber: number,
-  verdict: ReviewVerdict,
-  analysis: PrAnalysis,
-  inlineNote: string,
+  options: PostChangesRequestedOptions,
 ): Promise<string> {
+  const { githubToken, prNumber, verdict, analysis, inlineNote } = options;
   const header = analysis.isRereview && analysis.previousWasApproved
     ? "⚠️ **Approval revoked - Changes requested**"
     : "❌ **Changes requested**";

@@ -9,11 +9,6 @@ import { dag, type Platform } from "@dagger.io/dagger";
 import { getSystemContainer } from "./lib-system.ts";
 import { getMiseRuntimeContainer } from "./lib-mise.ts";
 
-export { getSystemContainer } from "./lib-system.ts";
-export { getMiseRuntimeContainer, withMiseTools } from "./lib-mise.ts";
-export { getCurlContainer } from "./lib-curl.ts";
-export { getKubectlContainer } from "./lib-kubectl.ts";
-
 /**
  * Creates a workspace-specific container with dependencies installed.
  * Uses Docker layer caching: copy dependency files -> install -> copy source.

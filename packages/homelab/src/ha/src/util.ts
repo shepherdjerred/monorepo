@@ -5,9 +5,6 @@ import { DscVerificationError, TimeoutError } from "./errors.ts";
 import { instrumentWorkflow } from "./metrics.ts";
 import { Sentry } from "./sentry.ts";
 
-// eslint-disable-next-line custom-rules/no-re-exports -- public API surface for workflow consumers
-export { TimeoutError } from "./errors.ts";
-
 export type Time = {
   amount: number;
   unit?: "ms" | "s" | "m";

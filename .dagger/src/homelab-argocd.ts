@@ -1,7 +1,96 @@
 import type { Secret } from "@dagger.io/dagger";
 import { z } from "zod";
 import type { StepResult } from "./homelab-index.ts";
-import { getCurlContainer } from "./homelab-base.ts";
+import { getCurlContainer } from "./lib-curl.ts";
+
+/**
+ * Zod schema for ArgoCD sync response.
+ */
+const ArgocdResponseSchema = z.object({
+  status: z
+    .object({
+      sync: z
+        .object({
+          status: z.string().optional(),
+          revision: z.string().optional(),
+        })
+        .optional(),
+      health: z
+        .object({
+          status: z.string().optional(),
+        })
+        .optional(),
+      resources: z.array(z.unknown()).optional(),
+      conditions: z
+        .array(
+          z.object({
+            message: z.string().optional(),
+          }),
+        )
+        .optional(),
+    })
+    .optional(),
+  message: z.string().optional(),
+});
+
+/**
+ * Extract sync info fields from validated ArgoCD response data.
+ */
+function extractSyncInfo(data: z.infer<typeof ArgocdResponseSchema>): {
+  phase: string;
+  health: string;
+  revision: string;
+  resourcesCount: number;
+  message: string;
+} {
+  const status = data.status;
+  return {
+    phase: status?.sync?.status ?? "Unknown",
+    health: status?.health?.status ?? "Unknown",
+    revision: status?.sync?.revision?.slice(0, 8) ?? "Unknown",
+    resourcesCount: status?.resources?.length ?? 0,
+    message:
+      status?.conditions?.[0]?.message ??
+      data.message ??
+      "Sync operation completed",
+  };
+}
+
+/**
+ * Parse the ArgoCD sync response body into a human-readable message.
+ */
+function parseArgocdResponse(bodyRaw: string): string {
+  try {
+    const parsed = JSON.parse(bodyRaw) as unknown;
+    const result = ArgocdResponseSchema.safeParse(parsed);
+
+    if (!result.success) {
+      return `Response validation failed: ${bodyRaw}`;
+    }
+
+    const syncInfo = extractSyncInfo(result.data);
+    return `Phase: ${syncInfo.phase}, Health: ${syncInfo.health}, Revision: ${syncInfo.revision}, Resources: ${String(syncInfo.resourcesCount)}\n${syncInfo.message}`;
+  } catch {
+    // Fallback to raw body if not JSON
+    return bodyRaw;
+  }
+}
+
+/**
+ * Determine the StepResult from a status code and parsed message.
+ */
+function buildSyncResult(statusCode: string, message: string): StepResult {
+  if (statusCode.startsWith("2")) {
+    return { status: "passed", message };
+  }
+  if (message.includes("another operation is already in progress")) {
+    return {
+      status: "passed",
+      message: `Sync already in progress (skipped): ${message}`,
+    };
+  }
+  return { status: "failed", message };
+}
 
 /**
  * Triggers a sync operation on the ArgoCD application using the provided token as a Dagger Secret.
@@ -34,72 +123,7 @@ export async function sync(
   const lastNewline = output.lastIndexOf("\n");
   const bodyRaw = output.slice(0, lastNewline);
   const statusCode = output.slice(lastNewline + 1).trim();
-  let message: string;
-  try {
-    // Define Zod schema for ArgoCD sync response
-    const ArgocdResponseSchema = z.object({
-      status: z
-        .object({
-          sync: z
-            .object({
-              status: z.string().optional(),
-              revision: z.string().optional(),
-            })
-            .optional(),
-          health: z
-            .object({
-              status: z.string().optional(),
-            })
-            .optional(),
-          resources: z.array(z.unknown()).optional(),
-          conditions: z
-            .array(
-              z.object({
-                message: z.string().optional(),
-              }),
-            )
-            .optional(),
-        })
-        .optional(),
-      message: z.string().optional(),
-    });
 
-    // Parse and validate the JSON response
-    const parsed = JSON.parse(bodyRaw) as unknown;
-    const result = ArgocdResponseSchema.safeParse(parsed);
-
-    if (result.success) {
-      const typedParsed = result.data;
-
-      // Extract concise sync information instead of dumping entire JSON
-      const syncInfo = {
-        phase: typedParsed.status?.sync?.status ?? "Unknown",
-        health: typedParsed.status?.health?.status ?? "Unknown",
-        revision: typedParsed.status?.sync?.revision?.slice(0, 8) ?? "Unknown",
-        resourcesCount: typedParsed.status?.resources?.length ?? 0,
-        message:
-          typedParsed.status?.conditions?.[0]?.message ??
-          typedParsed.message ??
-          "Sync operation completed",
-      };
-      message = `Phase: ${syncInfo.phase}, Health: ${syncInfo.health}, Revision: ${syncInfo.revision}, Resources: ${String(syncInfo.resourcesCount)}\n${syncInfo.message}`;
-    } else {
-      // Schema validation failed, use raw body
-      message = `Response validation failed: ${bodyRaw}`;
-    }
-  } catch {
-    // Fallback to raw body if not JSON
-    message = bodyRaw;
-  }
-  if (statusCode.startsWith("2")) {
-    return { status: "passed", message };
-  } else if (message.includes("another operation is already in progress")) {
-    // Another sync is already running - this is fine, not a failure
-    return {
-      status: "passed",
-      message: `Sync already in progress (skipped): ${message}`,
-    };
-  } else {
-    return { status: "failed", message };
-  }
+  const message = parseArgocdResponse(bodyRaw);
+  return buildSyncResult(statusCode, message);
 }

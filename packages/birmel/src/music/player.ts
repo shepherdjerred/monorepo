@@ -1,5 +1,5 @@
 import { Player } from "discord-player";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { registerExtractors } from "./extractors.ts";
 import { setupPlayerEvents } from "./events.ts";
 

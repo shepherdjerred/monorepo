@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Clock, FolderOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useClauderonClient } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useClauderonClient";
 import { DirectoryBrowserDialog } from "./DirectoryBrowserDialog.tsx";
 import type { RecentRepoDto } from "@clauderon/client";
 
@@ -46,9 +45,8 @@ export function RepositoryPathSelector({
   onChange,
   required,
 }: RepositoryPathSelectorProps) {
-  const client = useClauderonClient();
-  const [recentRepos, setRecentRepos] = useState<RecentRepoDto[]>([]);
-  const [isLoadingRecentRepos, setIsLoadingRecentRepos] = useState(false);
+  const [recentRepos] = useState<RecentRepoDto[]>([]);
+  const [isLoadingRecentRepos] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showBrowser, setShowBrowser] = useState(false);
 

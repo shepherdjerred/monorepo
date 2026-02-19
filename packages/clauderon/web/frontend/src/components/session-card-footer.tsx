@@ -1,5 +1,5 @@
 import type { Session } from "@clauderon/client";
-import { SessionStatus } from "@clauderon/shared";
+import { SessionStatus, BackendType } from "@clauderon/shared";
 import {
   Archive,
   ArchiveRestore,
@@ -81,7 +81,7 @@ export function SessionCardFooterBar({
           <TooltipContent>Edit title/description</TooltipContent>
         </Tooltip>
 
-        {(session.backend as string) === "Docker" && (
+        {session.backend === BackendType.Docker && (
           <Tooltip>
             <TooltipTrigger asChild>
               <Button

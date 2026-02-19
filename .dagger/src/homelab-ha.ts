@@ -1,6 +1,7 @@
 import type { Directory, Container } from "@dagger.io/dagger";
 import { dag, type Secret, type File } from "@dagger.io/dagger";
-import { getWorkspaceContainer, getMiseRuntimeContainer } from "./homelab-base.ts";
+import { getWorkspaceContainer } from "./homelab-base.ts";
+import { getMiseRuntimeContainer } from "./lib-mise.ts";
 import { execOrThrow } from "./lib-errors.ts";
 import type { StepResult } from "./homelab-index.ts";
 import versions from "./lib-versions.ts";
@@ -175,13 +176,24 @@ export function buildAndExportHaImage(source: Directory): File {
  * @param dryRun If true, builds the image but doesn't publish it (default: false)
  * @returns The result of the build and/or push operation.
  */
+type BuildAndPushHaImageOptions = {
+  source: Directory;
+  imageName?: string;
+  ghcrUsername: string;
+  ghcrPassword: Secret;
+  dryRun?: boolean;
+};
+
 export async function buildAndPushHaImage(
-  source: Directory,
-  imageName = "ghcr.io/shepherdjerred/homelab:latest",
-  ghcrUsername: string,
-  ghcrPassword: Secret,
-  dryRun = false,
+  options: BuildAndPushHaImageOptions,
 ): Promise<StepResult> {
+  const {
+    source,
+    imageName = "ghcr.io/shepherdjerred/homelab:latest",
+    ghcrUsername,
+    ghcrPassword,
+    dryRun = false,
+  } = options;
   const container = buildHaContainer(source);
 
   // Build or publish the image based on dry-run flag

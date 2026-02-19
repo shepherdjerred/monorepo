@@ -14,7 +14,7 @@ export async function executeDebugServerInfo(
   await interaction.deferReply({ ephemeral: true });
 
   try {
-    const serverId = interaction.guildId !== undefined && interaction.guildId.length > 0
+    const serverId = interaction.guildId !== null && interaction.guildId.length > 0
       ? DiscordGuildIdSchema.parse(interaction.guildId)
       : null;
 

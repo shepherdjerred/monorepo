@@ -3,6 +3,19 @@ import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 
 const logger = loggers.tools.child("discord.threads");
 
+type AutoArchiveDuration = 60 | 1440 | 4320 | 10_080;
+
+function parseAutoArchiveDuration(value: string | null | undefined): AutoArchiveDuration {
+  if (value == null || value.length === 0) {
+    return 1440;
+  }
+  const parsed = Number.parseInt(value);
+  if (parsed === 60 || parsed === 1440 || parsed === 4320 || parsed === 10_080) {
+    return parsed;
+  }
+  return 1440;
+}
+
 type ThreadResult = {
   success: boolean;
   message: string;
@@ -20,13 +33,18 @@ type ThreadResult = {
       };
 };
 
+type CreateFromMessageOptions = {
+  client: Client;
+  channelId: string | undefined;
+  messageId: string | undefined;
+  name: string | undefined;
+  autoArchiveDuration: string | undefined;
+};
+
 export async function handleCreateFromMessage(
-  client: Client,
-  channelId: string | undefined,
-  messageId: string | undefined,
-  name: string | undefined,
-  autoArchiveDuration: string | undefined,
+  options: CreateFromMessageOptions,
 ): Promise<ThreadResult> {
+  const { client, channelId, messageId, name, autoArchiveDuration } = options;
   if (
     channelId == null ||
     channelId.length === 0 ||
@@ -51,10 +69,7 @@ export async function handleCreateFromMessage(
   const message = await channel.messages.fetch(messageId);
   const thread = await message.startThread({
     name,
-    autoArchiveDuration:
-      autoArchiveDuration != null && autoArchiveDuration.length > 0
-        ? (Number.parseInt(autoArchiveDuration) as 60 | 1440 | 4320 | 10_080)
-        : 1440,
+    autoArchiveDuration: parseAutoArchiveDuration(autoArchiveDuration),
   });
   logger.info("Thread created from message", { threadId: thread.id });
   return {
@@ -64,14 +79,19 @@ export async function handleCreateFromMessage(
   };
 }
 
+type CreateStandaloneOptions = {
+  client: Client;
+  channelId: string | undefined;
+  name: string | undefined;
+  autoArchiveDurationStr: string | undefined;
+  type: "public" | "private" | undefined;
+  messageContent: string | undefined;
+};
+
 export async function handleCreateStandalone(
-  client: Client,
-  channelId: string | undefined,
-  name: string | undefined,
-  autoArchiveDurationStr: string | undefined,
-  type: "public" | "private" | undefined,
-  messageContent: string | undefined,
+  options: CreateStandaloneOptions,
 ): Promise<ThreadResult> {
+  const { client, channelId, name, autoArchiveDurationStr, type, messageContent } = options;
   if (
     channelId == null ||
     channelId.length === 0 ||
@@ -87,10 +107,7 @@ export async function handleCreateStandalone(
   if (channel?.isTextBased() !== true || !("threads" in channel)) {
     return { success: false, message: "Channel must support threads" };
   }
-  const autoArchiveDuration =
-    autoArchiveDurationStr != null && autoArchiveDurationStr.length > 0
-      ? (Number.parseInt(autoArchiveDurationStr) as 60 | 1440 | 4320 | 10_080)
-      : 1440;
+  const autoArchiveDuration = parseAutoArchiveDuration(autoArchiveDurationStr);
   const threadType =
     type === "private" ? ChannelType.PrivateThread : ChannelType.PublicThread;
   const thread = await channel.threads.create({
@@ -109,14 +126,19 @@ export async function handleCreateStandalone(
   };
 }
 
+type ModifyThreadOptions = {
+  client: Client;
+  threadId: string | undefined;
+  name: string | undefined;
+  archived: boolean | undefined;
+  locked: boolean | undefined;
+  autoArchiveDuration: string | undefined;
+};
+
 export async function handleModifyThread(
-  client: Client,
-  threadId: string | undefined,
-  name: string | undefined,
-  archived: boolean | undefined,
-  locked: boolean | undefined,
-  autoArchiveDuration: string | undefined,
+  options: ModifyThreadOptions,
 ): Promise<ThreadResult> {
+  const { client, threadId, name, archived, locked, autoArchiveDuration } = options;
   if (threadId == null || threadId.length === 0) {
     return { success: false, message: "threadId is required for modify" };
   }
@@ -140,11 +162,7 @@ export async function handleModifyThread(
     updates.locked = locked;
   }
   if (autoArchiveDuration !== undefined) {
-    updates.autoArchiveDuration = Number.parseInt(autoArchiveDuration) as
-      | 60
-      | 1440
-      | 4320
-      | 10_080;
+    updates.autoArchiveDuration = parseAutoArchiveDuration(autoArchiveDuration);
   }
   if (Object.keys(updates).length === 0) {
     return {

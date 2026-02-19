@@ -26,44 +26,46 @@ export function escapePrometheusTemplate(template: string): string {
 export const escapeAlertmanagerTemplate = escapeGoTemplate;
 
 // Rule factory functions for common alert patterns
-export function createSensorAlert(
-  name: string,
-  entity: string,
-  condition: string,
-  threshold: string | number,
-  description: string,
-  summary: string,
-  duration = "10m",
-  severity = "warning",
-) {
+export function createSensorAlert(options: {
+  name: string;
+  entity: string;
+  condition: string;
+  threshold: string | number;
+  description: string;
+  summary: string;
+  duration?: string;
+  severity?: string;
+}) {
+  const duration = options.duration ?? "10m";
+  const severity = options.severity ?? "warning";
   return {
-    alert: name,
+    alert: options.name,
     annotations: {
-      description: escapePrometheusTemplate(description),
-      summary,
+      description: escapePrometheusTemplate(options.description),
+      summary: options.summary,
     },
     expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-      `${entity} ${condition} ${String(threshold)}`,
+      `${options.entity} ${options.condition} ${String(options.threshold)}`,
     ),
     for: duration,
     labels: { severity },
   };
 }
 
-export function createBinarySensorAlert(
-  name: string,
-  entity: string,
-  description: string,
-  summary: string,
-  duration = "5m",
-) {
-  return createSensorAlert(
-    name,
-    `homeassistant_binary_sensor_state{entity="${entity}"}`,
-    "==",
-    1,
-    description,
-    summary,
-    duration,
-  );
+export function createBinarySensorAlert(options: {
+  name: string;
+  entity: string;
+  description: string;
+  summary: string;
+  duration?: string;
+}) {
+  return createSensorAlert({
+    name: options.name,
+    entity: `homeassistant_binary_sensor_state{entity="${options.entity}"}`,
+    condition: "==",
+    threshold: 1,
+    description: options.description,
+    summary: options.summary,
+    duration: options.duration ?? "5m",
+  });
 }

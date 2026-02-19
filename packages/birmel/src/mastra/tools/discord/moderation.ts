@@ -1,7 +1,8 @@
+import { getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
 import type { Guild } from "discord.js";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 import { validateSnowflakes } from "./validation.ts";
 import { parseDiscordAPIError, formatDiscordAPIError } from "./error-utils.ts";
@@ -79,6 +80,102 @@ async function handlePrune(
   };
 }
 
+async function handleUnban(
+  guild: Guild,
+  memberId: string | undefined,
+  reason: string | undefined,
+): Promise<ModerationResult> {
+  if (memberId == null || memberId.length === 0) {
+    return { success: false, message: "memberId is required for unban" };
+  }
+  await guild.members.unban(memberId, reason);
+  return { success: true, message: `Unbanned user ${memberId}` };
+}
+
+async function handleTimeout(
+  guild: Guild,
+  memberId: string | undefined,
+  durationMinutes: number | undefined,
+  reason: string | undefined,
+): Promise<ModerationResult> {
+  if (memberId == null || memberId.length === 0 || durationMinutes == null) {
+    return {
+      success: false,
+      message: "memberId and durationMinutes are required for timeout",
+    };
+  }
+  const member = await guild.members.fetch(memberId);
+  await member.timeout(durationMinutes * 60 * 1000, reason);
+  return {
+    success: true,
+    message: `Timed out ${member.user.username} for ${String(durationMinutes)} minutes`,
+  };
+}
+
+async function handleRemoveTimeout(
+  guild: Guild,
+  memberId: string | undefined,
+  reason: string | undefined,
+): Promise<ModerationResult> {
+  if (memberId == null || memberId.length === 0) {
+    return { success: false, message: "memberId is required for remove-timeout" };
+  }
+  const member = await guild.members.fetch(memberId);
+  await member.timeout(null, reason);
+  return { success: true, message: `Removed timeout from ${member.user.username}` };
+}
+
+async function handleListBans(
+  guild: Guild,
+  limit: number | undefined,
+): Promise<ModerationResult> {
+  const bans = await guild.bans.fetch({ limit: limit ?? 100 });
+  const list = bans.map((b) => ({
+    id: b.user.id,
+    username: b.user.username,
+    reason: b.reason ?? null,
+  }));
+  return {
+    success: true,
+    message: `Found ${String(list.length)} banned users`,
+    data: list,
+  };
+}
+
+type ModerationInput = {
+  guildId: string;
+  action: string;
+  memberId?: string | undefined;
+  reason?: string | undefined;
+  deleteMessageSeconds?: number | undefined;
+  durationMinutes?: number | undefined;
+  limit?: number | undefined;
+  days?: number | undefined;
+};
+
+async function dispatchModerationAction(guild: Guild, ctx: ModerationInput): Promise<ModerationResult> {
+  switch (ctx.action) {
+    case "kick":
+      return await handleKick(guild, ctx.memberId, ctx.reason);
+    case "ban":
+      return await handleBan(guild, ctx.memberId, ctx.reason, ctx.deleteMessageSeconds);
+    case "unban":
+      return await handleUnban(guild, ctx.memberId, ctx.reason);
+    case "timeout":
+      return await handleTimeout(guild, ctx.memberId, ctx.durationMinutes, ctx.reason);
+    case "remove-timeout":
+      return await handleRemoveTimeout(guild, ctx.memberId, ctx.reason);
+    case "list-bans":
+      return await handleListBans(guild, ctx.limit);
+    case "prune":
+      return await handlePrune(guild, ctx.days, ctx.reason, false);
+    case "prune-count":
+      return await handlePrune(guild, ctx.days, ctx.reason, true);
+    default:
+      return { success: false, message: `Unknown action: ${ctx.action}` };
+  }
+}
+
 export const moderateMemberTool = createTool({
   id: "moderate-member",
   description:
@@ -150,76 +247,7 @@ export const moderateMemberTool = createTool({
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
 
-      switch (ctx.action) {
-        case "kick":
-          return await handleKick(guild, ctx.memberId, ctx.reason);
-        case "ban":
-          return await handleBan(
-            guild,
-            ctx.memberId,
-            ctx.reason,
-            ctx.deleteMessageSeconds,
-          );
-        case "unban": {
-          if (ctx.memberId == null || ctx.memberId.length === 0) {
-            return {
-              success: false,
-              message: "memberId is required for unban",
-            };
-          }
-          await guild.members.unban(ctx.memberId, ctx.reason);
-          return { success: true, message: `Unbanned user ${ctx.memberId}` };
-        }
-        case "timeout": {
-          if (
-            ctx.memberId == null ||
-            ctx.memberId.length === 0 ||
-            ctx.durationMinutes == null
-          ) {
-            return {
-              success: false,
-              message: "memberId and durationMinutes are required for timeout",
-            };
-          }
-          const member = await guild.members.fetch(ctx.memberId);
-          await member.timeout(ctx.durationMinutes * 60 * 1000, ctx.reason);
-          return {
-            success: true,
-            message: `Timed out ${member.user.username} for ${String(ctx.durationMinutes)} minutes`,
-          };
-        }
-        case "remove-timeout": {
-          if (ctx.memberId == null || ctx.memberId.length === 0) {
-            return {
-              success: false,
-              message: "memberId is required for remove-timeout",
-            };
-          }
-          const member = await guild.members.fetch(ctx.memberId);
-          await member.timeout(null, ctx.reason);
-          return {
-            success: true,
-            message: `Removed timeout from ${member.user.username}`,
-          };
-        }
-        case "list-bans": {
-          const bans = await guild.bans.fetch({ limit: ctx.limit ?? 100 });
-          const list = bans.map((b) => ({
-            id: b.user.id,
-            username: b.user.username,
-            reason: b.reason ?? null,
-          }));
-          return {
-            success: true,
-            message: `Found ${String(list.length)} banned users`,
-            data: list,
-          };
-        }
-        case "prune":
-          return await handlePrune(guild, ctx.days, ctx.reason, false);
-        case "prune-count":
-          return await handlePrune(guild, ctx.days, ctx.reason, true);
-      }
+      return await dispatchModerationAction(guild, ctx);
     } catch (error) {
       const apiError = parseDiscordAPIError(error);
       if (apiError != null) {
@@ -237,7 +265,7 @@ export const moderateMemberTool = createTool({
         };
       }
       logger.error("Failed to moderate member", error);
-      return { success: false, message: `Failed: ${(error as Error).message}` };
+      return { success: false, message: `Failed: ${getErrorMessage(error)}` };
     }
   },
 });

@@ -1,7 +1,9 @@
+import { getErrorMessage, toError } from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
-import { logger } from "@shepherdjerred/birmel/utils/index.ts";
+import type { Guild } from "discord.js";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
+import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 import { validateSnowflakes, validateSnowflakeArray } from "./validation.ts";
 import {
   handleListRules,
@@ -11,6 +13,86 @@ import {
   handleDeleteRule,
   handleToggleRule,
 } from "./automod-actions.ts";
+
+type AutomodInput = {
+  guildId: string;
+  action: string;
+  ruleId?: string | undefined;
+  name?: string | undefined;
+  triggerType?: string | undefined;
+  keywords?: string[] | undefined;
+  keywordPresets?: string[] | undefined;
+  mentionLimit?: number | undefined;
+  exemptRoles?: string[] | undefined;
+  exemptChannels?: string[] | undefined;
+  enabled?: boolean | undefined;
+  reason?: string | undefined;
+};
+
+function validateAutomodInput(ctx: AutomodInput): { success: boolean; message: string } | null {
+  const idError = validateSnowflakes([
+    { value: ctx.guildId, fieldName: "guildId" },
+    { value: ctx.ruleId, fieldName: "ruleId" },
+  ]);
+  if (idError != null && idError.length > 0) {
+    return { success: false, message: idError };
+  }
+
+  const rolesError = validateSnowflakeArray(ctx.exemptRoles, "exemptRoles");
+  if (rolesError != null && rolesError.length > 0) {
+    return { success: false, message: rolesError };
+  }
+
+  const channelsError = validateSnowflakeArray(ctx.exemptChannels, "exemptChannels");
+  if (channelsError != null && channelsError.length > 0) {
+    return { success: false, message: channelsError };
+  }
+
+  return null;
+}
+
+function buildCreateOptions(ctx: AutomodInput): Record<string, unknown> {
+  return {
+    ...(ctx.name !== undefined && { name: ctx.name }),
+    ...(ctx.triggerType !== undefined && { triggerType: ctx.triggerType }),
+    ...(ctx.keywords !== undefined && { keywords: ctx.keywords }),
+    ...(ctx.keywordPresets !== undefined && { keywordPresets: ctx.keywordPresets }),
+    ...(ctx.mentionLimit !== undefined && { mentionLimit: ctx.mentionLimit }),
+    ...(ctx.enabled !== undefined && { enabled: ctx.enabled }),
+    ...(ctx.reason !== undefined && { reason: ctx.reason }),
+  };
+}
+
+function buildModifyOptions(ctx: AutomodInput): Record<string, unknown> {
+  return {
+    ...(ctx.ruleId !== undefined && { ruleId: ctx.ruleId }),
+    ...(ctx.name !== undefined && { name: ctx.name }),
+    ...(ctx.keywords !== undefined && { keywords: ctx.keywords }),
+    ...(ctx.mentionLimit !== undefined && { mentionLimit: ctx.mentionLimit }),
+    ...(ctx.exemptRoles !== undefined && { exemptRoles: ctx.exemptRoles }),
+    ...(ctx.exemptChannels !== undefined && { exemptChannels: ctx.exemptChannels }),
+    ...(ctx.reason !== undefined && { reason: ctx.reason }),
+  };
+}
+
+async function dispatchAutomodAction(guild: Guild, ctx: AutomodInput) {
+  switch (ctx.action) {
+    case "list":
+      return await handleListRules(guild);
+    case "get":
+      return await handleGetRule(guild, ctx.ruleId);
+    case "create":
+      return await handleCreateRule(guild, buildCreateOptions(ctx));
+    case "modify":
+      return await handleModifyRule(guild, buildModifyOptions(ctx));
+    case "delete":
+      return await handleDeleteRule(guild, ctx.ruleId, ctx.reason);
+    case "toggle":
+      return await handleToggleRule(guild, ctx.ruleId, ctx.enabled, ctx.reason);
+    default:
+      return { success: false, message: `Unknown action: ${ctx.action}` };
+  }
+}
 
 export const manageAutomodRuleTool = createTool({
   id: "manage-automod-rule",
@@ -89,83 +171,20 @@ export const manageAutomodRuleTool = createTool({
   }),
   execute: async (ctx) => {
     try {
-      // Validate all Discord IDs before making API calls
-      const idError = validateSnowflakes([
-        { value: ctx.guildId, fieldName: "guildId" },
-        { value: ctx.ruleId, fieldName: "ruleId" },
-      ]);
-      if (idError != null && idError.length > 0) {
-        return { success: false, message: idError };
-      }
-
-      const rolesError = validateSnowflakeArray(ctx.exemptRoles, "exemptRoles");
-      if (rolesError != null && rolesError.length > 0) {
-        return { success: false, message: rolesError };
-      }
-
-      const channelsError = validateSnowflakeArray(
-        ctx.exemptChannels,
-        "exemptChannels",
-      );
-      if (channelsError != null && channelsError.length > 0) {
-        return { success: false, message: channelsError };
+      const validationError = validateAutomodInput(ctx);
+      if (validationError != null) {
+        return validationError;
       }
 
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
 
-      switch (ctx.action) {
-        case "list":
-          return await handleListRules(guild);
-        case "get":
-          return await handleGetRule(guild, ctx.ruleId);
-        case "create":
-          return await handleCreateRule(guild, {
-            ...(ctx.name !== undefined && { name: ctx.name }),
-            ...(ctx.triggerType !== undefined && {
-              triggerType: ctx.triggerType,
-            }),
-            ...(ctx.keywords !== undefined && { keywords: ctx.keywords }),
-            ...(ctx.keywordPresets !== undefined && {
-              keywordPresets: ctx.keywordPresets,
-            }),
-            ...(ctx.mentionLimit !== undefined && {
-              mentionLimit: ctx.mentionLimit,
-            }),
-            ...(ctx.enabled !== undefined && { enabled: ctx.enabled }),
-            ...(ctx.reason !== undefined && { reason: ctx.reason }),
-          });
-        case "modify":
-          return await handleModifyRule(guild, {
-            ...(ctx.ruleId !== undefined && { ruleId: ctx.ruleId }),
-            ...(ctx.name !== undefined && { name: ctx.name }),
-            ...(ctx.keywords !== undefined && { keywords: ctx.keywords }),
-            ...(ctx.mentionLimit !== undefined && {
-              mentionLimit: ctx.mentionLimit,
-            }),
-            ...(ctx.exemptRoles !== undefined && {
-              exemptRoles: ctx.exemptRoles,
-            }),
-            ...(ctx.exemptChannels !== undefined && {
-              exemptChannels: ctx.exemptChannels,
-            }),
-            ...(ctx.reason !== undefined && { reason: ctx.reason }),
-          });
-        case "delete":
-          return await handleDeleteRule(guild, ctx.ruleId, ctx.reason);
-        case "toggle":
-          return await handleToggleRule(
-            guild,
-            ctx.ruleId,
-            ctx.enabled,
-            ctx.reason,
-          );
-      }
+      return await dispatchAutomodAction(guild, ctx);
     } catch (error) {
-      logger.error("Failed to manage automod rule", error as Error);
+      logger.error("Failed to manage automod rule", toError(error));
       return {
         success: false,
-        message: `Failed to manage auto-moderation rule: ${(error as Error).message}`,
+        message: `Failed to manage auto-moderation rule: ${getErrorMessage(error)}`,
       };
     }
   },

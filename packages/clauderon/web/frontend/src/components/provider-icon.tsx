@@ -1,5 +1,5 @@
 import { Brain, Code, Sparkles } from "lucide-react";
-import type { AgentType } from "@clauderon/shared";
+import { AgentType } from "@clauderon/shared";
 
 type ProviderIconProps = {
   agent: AgentType;
@@ -10,12 +10,12 @@ export function ProviderIcon({
   agent,
   className = "w-4 h-4",
 }: ProviderIconProps) {
-  switch (agent as string) {
-    case "ClaudeCode":
+  switch (agent) {
+    case AgentType.ClaudeCode:
       return <Brain className={className} />;
-    case "Codex":
+    case AgentType.Codex:
       return <Code className={className} />;
-    case "Gemini":
+    case AgentType.Gemini:
       return <Sparkles className={className} />;
     default:
       return null;

@@ -133,7 +133,7 @@ jobs:
             )
           fi
 
-          dagger call ci "${ARGS[@]}"
+          dagger -v call ci "${ARGS[@]}"
 
       - name: Update READMEs via Dagger
         if: github.ref_name == 'main'

@@ -64,7 +64,7 @@ export function LeagueSection({
 
         <CardContent className="space-y-8">
           {/* Summoner Info */}
-          {lcuStatus.connected && lcuStatus.summonerName !== undefined && lcuStatus.summonerName.length > 0 && (
+          {lcuStatus.connected && lcuStatus.summonerName !== null && lcuStatus.summonerName.length > 0 && (
             <div className="flex items-center gap-4 rounded-lg bg-gray-900/50 p-5">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-lol-gold/20 to-lol-accent/20 ring-2 ring-lol-gold/30">
                 <User className="h-6 w-6 text-lol-gold" />

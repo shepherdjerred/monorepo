@@ -14,15 +14,13 @@ export function createGrafanaApp(chart: Chart) {
     },
   });
 
-  createIngress(
-    chart,
-    "grafana-ingress",
-    "prometheus",
-    "prometheus-grafana",
-    80,
-    ["grafana"],
-    false,
-  );
+  createIngress(chart, "grafana-ingress", {
+    namespace: "prometheus",
+    service: "prometheus-grafana",
+    port: 80,
+    hosts: ["grafana"],
+    funnel: false,
+  });
 
   return new Application(chart, "grafana-app", {
     metadata: {

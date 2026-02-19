@@ -1,6 +1,7 @@
 import type { ScheduledTask } from "@prisma/client";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
-import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+import { parseJsonRecord } from "@shepherdjerred/birmel/utils/errors.ts";
 import { allTools } from "@shepherdjerred/birmel/mastra/tools/index.ts";
 import { getNextCronRun } from "@shepherdjerred/birmel/scheduler/utils/cron.ts";
 
@@ -40,7 +41,7 @@ async function executeScheduledTask(task: ScheduledTask): Promise<void> {
     let toolInput: Record<string, unknown> = {};
     if (task.toolInput != null && task.toolInput.length > 0) {
       try {
-        toolInput = JSON.parse(task.toolInput) as Record<string, unknown>;
+        toolInput = parseJsonRecord(task.toolInput);
       } catch (error) {
         logger.error("Failed to parse tool input", {
           taskId: task.id,
@@ -53,18 +54,25 @@ async function executeScheduledTask(task: ScheduledTask): Promise<void> {
     }
 
     // Execute the tool using its execute method
-    const executableTool = tool as unknown as {
-      execute: (
-        input: Record<string, unknown>,
-        context: Record<string, string>,
-      ) => Promise<Record<string, unknown>>;
-    };
-    const result = await executableTool.execute(toolInput, {
+    const toolObj: unknown = tool;
+    if (toolObj == null || typeof toolObj !== "object" || !("execute" in toolObj)) {
+      logger.error("Tool has no execute method", { toolId: task.toolId });
+      await markTaskExecuted(task);
+      return;
+    }
+    const executeProp: unknown = toolObj.execute;
+    if (typeof executeProp !== "function") {
+      logger.error("Tool execute is not a function", { toolId: task.toolId });
+      await markTaskExecuted(task);
+      return;
+    }
+    const executeResult: unknown = await Reflect.apply(executeProp, undefined, [toolInput, {
       runId: `scheduled-task-${String(task.id)}`,
       agentId: "birmel",
-    });
+    }]);
+    const result = executeResult != null && typeof executeResult === "object" ? executeResult : {};
 
-    const success = "success" in result ? Boolean(result["success"]) : true;
+    const success = "success" in result ? Boolean(result.success) : true;
     logger.info("Scheduled task executed successfully", {
       id: task.id,
       toolId: task.toolId,

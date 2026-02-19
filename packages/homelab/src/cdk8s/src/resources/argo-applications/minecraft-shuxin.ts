@@ -19,15 +19,13 @@ export function createMinecraftShuxinApp(chart: Chart) {
   // Create ConfigMaps externally (not in Helm values) to avoid Application size limits
   createMinecraftConfigMaps(chart, "shuxin", NAMESPACE);
 
-  createIngress(
-    chart,
-    "minecraft-shuxin-bluemap-ingress",
-    "minecraft-shuxin",
-    "minecraft-shuxin-bluemap",
-    8100,
-    ["minecraft-shuxin-bluemap"],
-    true,
-  );
+  createIngress(chart, "minecraft-shuxin-bluemap-ingress", {
+    namespace: "minecraft-shuxin",
+    service: "minecraft-shuxin-bluemap",
+    port: 8100,
+    hosts: ["minecraft-shuxin-bluemap"],
+    funnel: true,
+  });
 
   createCloudflareTunnelBinding(chart, "minecraft-shuxin-bluemap-cf-tunnel", {
     serviceName: "minecraft-shuxin-bluemap",

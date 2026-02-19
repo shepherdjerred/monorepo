@@ -194,7 +194,7 @@ groups:
 `;
 
 export function createLokiApp(chart: Chart) {
-  createIngress(chart, "loki-ingress", "loki", "loki", 3100, ["loki"], false);
+  createIngress(chart, "loki-ingress", { namespace: "loki", service: "loki", port: 3100, hosts: ["loki"], funnel: false });
 
   // Create ConfigMap for Loki alert rules
   const rulesConfigMap = new ConfigMap(chart, "loki-alert-rules", {

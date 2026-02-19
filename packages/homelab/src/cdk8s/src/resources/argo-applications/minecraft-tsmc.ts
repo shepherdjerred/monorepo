@@ -44,15 +44,13 @@ export function createMinecraftTsmcApp(chart: Chart) {
     },
   });
 
-  createIngress(
-    chart,
-    "minecraft-tsmc-bluemap-ingress",
-    "minecraft-tsmc",
-    "minecraft-tsmc-bluemap",
-    8100,
-    ["minecraft-tsmc-bluemap"],
-    true,
-  );
+  createIngress(chart, "minecraft-tsmc-bluemap-ingress", {
+    namespace: "minecraft-tsmc",
+    service: "minecraft-tsmc-bluemap",
+    port: 8100,
+    hosts: ["minecraft-tsmc-bluemap"],
+    funnel: true,
+  });
 
   createCloudflareTunnelBinding(chart, "minecraft-tsmc-bluemap-cf-tunnel", {
     serviceName: "minecraft-tsmc-bluemap",

@@ -29,6 +29,17 @@ import { ChannelType, PermissionFlagsBits } from "discord.js";
 import { testAccountId, testGuildId, testChannelId } from "./test-ids.ts";
 
 /**
+ * Cast a plain object to a Discord.js type for testing.
+ * Discord.js types are classes with many required properties;
+ * in tests we only need partial implementations.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- Centralized mock helper: Discord.js types are classes that can't be constructed without a real Client
+function castMock<T>(obj: Record<string, unknown>): T {
+  // eslint-disable-next-line custom-rules/no-type-assertions -- Discord.js types are classes that can't be constructed without a real Client
+  return obj as unknown as T;
+}
+
+/**
  * Create a mock Discord User object
  */
 export function mockUser(overrides: Record<string, unknown> = {}): User {
@@ -52,8 +63,7 @@ export function mockUser(overrides: Record<string, unknown> = {}): User {
     toString: () => `<@${testAccountId("1")}>`,
   };
 
-  // eslint-disable-next-line custom-rules/no-type-assertions -- ok for Discord test mocks only
-  return { ...defaults, ...overrides } as unknown as User;
+  return castMock<User>({ ...defaults, ...overrides });
 }
 
 /**
@@ -83,8 +93,7 @@ export function mockGuildMember(
     },
   };
 
-  // eslint-disable-next-line custom-rules/no-type-assertions -- ok for Discord test mocks only
-  return { ...defaults, ...overrides } as unknown as GuildMember;
+  return castMock<GuildMember>({ ...defaults, ...overrides });
 }
 
 /**
@@ -175,8 +184,7 @@ export function mockGuild(overrides: Record<string, unknown> = {}): Guild {
     client: mockClient(),
   };
 
-  // eslint-disable-next-line custom-rules/no-type-assertions -- ok for Discord test mocks only
-  return { ...defaults, ...overrides } as unknown as Guild;
+  return castMock<Guild>({ ...defaults, ...overrides });
 }
 
 /**
@@ -231,8 +239,7 @@ export function mockTextChannel(
     client: mockClient(),
   };
 
-  // eslint-disable-next-line custom-rules/no-type-assertions -- ok for Discord test mocks only
-  return { ...defaults, ...overrides } as unknown as TextChannel;
+  return castMock<TextChannel>({ ...defaults, ...overrides });
 }
 
 /**
@@ -261,8 +268,7 @@ export function mockDMChannel(
     client: mockClient(),
   };
 
-  // eslint-disable-next-line custom-rules/no-type-assertions -- ok for Discord test mocks only
-  return { ...defaults, ...overrides } as unknown as DMChannel;
+  return castMock<DMChannel>({ ...defaults, ...overrides });
 }
 
 /**
@@ -304,8 +310,7 @@ export function mockMessage(overrides: Record<string, unknown> = {}): Message {
     client: mockClient(),
   };
 
-  // eslint-disable-next-line custom-rules/no-type-assertions -- ok for Discord test mocks only
-  return { ...defaults, ...overrides } as unknown as Message;
+  return castMock<Message>({ ...defaults, ...overrides });
 }
 
 /**
@@ -340,8 +345,7 @@ export function mockClient(overrides: Record<string, unknown> = {}): Client {
     },
   };
 
-  // eslint-disable-next-line custom-rules/no-type-assertions -- ok for Discord test mocks only
-  return { ...defaults, ...overrides } as unknown as Client;
+  return castMock<Client>({ ...defaults, ...overrides });
 }
 
 /**
@@ -351,8 +355,7 @@ export function mockClient(overrides: Record<string, unknown> = {}): Client {
 export function mockPermissions(
   permissions: bigint = PermissionFlagsBits.ViewChannel,
 ): PermissionsBitField {
-  // eslint-disable-next-line custom-rules/no-type-assertions -- ok for Discord test mocks only
-  return {
+  return castMock<PermissionsBitField>({
     bitfield: permissions,
     has: (permission: bigint | bigint[]) => {
       const perms = Array.isArray(permission) ? permission : [permission];
@@ -363,5 +366,5 @@ export function mockPermissions(
     serialize: () => ({}),
     toArray: () => [],
     freeze: () => mockPermissions(),
-  } as unknown as PermissionsBitField;
+  });
 }

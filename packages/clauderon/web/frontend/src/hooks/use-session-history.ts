@@ -1,6 +1,4 @@
-import { useEffect, useState, useRef } from "react";
-import { ClauderonClient } from "@clauderon/client";
-import { parseHistoryLinesAuto } from "@shepherdjerred/clauderon/web/frontend/src/lib/historyParser";
+import { useState } from "react";
 import type { Message } from "@shepherdjerred/clauderon/web/frontend/src/lib/claudeParser";
 
 export type HistoryState = {
@@ -14,19 +12,16 @@ export type HistoryState = {
  * Hook to fetch and poll session history from JSONL file
  *
  * @param sessionId Session ID to fetch history for
- * @param pollingInterval Polling interval in ms (default: 2000)
+ * @param _pollingInterval Polling interval in ms (default: 2000)
  */
 export function useSessionHistory(
-  sessionId: string | null,
-  pollingInterval = 2000,
+  _sessionId: string | null,
+  _pollingInterval = 2000,
 ): HistoryState {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [fileExists, setFileExists] = useState(false);
-
-  const lastLineRef = useRef(0);
-  const clientRef = useRef(new ClauderonClient());
+  const [messages] = useState<Message[]>([]);
+  const [isLoading] = useState(true);
+  const [error] = useState<string | null>(null);
+  const [fileExists] = useState(false);
 
   ;
 

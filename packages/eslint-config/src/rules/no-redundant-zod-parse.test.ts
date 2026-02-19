@@ -1,9 +1,8 @@
 import { describe, expect, it } from "bun:test";
+import { noRedundantZodParse } from "./no-redundant-zod-parse.ts";
 
 describe("no-redundant-zod-parse", () => {
   it("exports the rule correctly", () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { noRedundantZodParse } = require("./no-redundant-zod-parse");
     expect(noRedundantZodParse).toBeDefined();
     expect(noRedundantZodParse.meta).toBeDefined();
     expect(noRedundantZodParse.meta.type).toBe("problem");

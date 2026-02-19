@@ -59,10 +59,7 @@ export function goodNight({ hass, logger, context }: TServiceParams) {
               entityId: bedroomHeater.entity_id,
               workflowName: "climate_good_night",
               getActualState: () =>
-                z.coerce
-                  .string()
-                  .catch("unknown")
-                  .parse(bedroomHeater.attributes.temperature),
+                String(bedroomHeater.attributes.temperature),
               check: (actual) => actual === "22",
               delay: { amount: 30, unit: "s" },
               description: "target 22°C",

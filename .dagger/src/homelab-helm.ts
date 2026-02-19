@@ -52,13 +52,18 @@ export type HelmChartName = (typeof HELM_CHARTS)[number];
  * @param version The version to set in Chart.yaml and appVersion.
  * @returns Container with the chart built and packaged.
  */
+type HelmContainerForChartOptions = {
+  chartDir: Directory;
+  chartName: string;
+  cdk8sManifests: Directory;
+  repoRoot: Directory;
+  version: string;
+};
+
 function getHelmContainerForChart(
-  chartDir: Directory,
-  chartName: string,
-  cdk8sManifests: Directory,
-  repoRoot: Directory,
-  version: string,
+  options: HelmContainerForChartOptions,
 ): Container {
+  const { chartDir, chartName, cdk8sManifests, repoRoot, version } = options;
   return (
     dag
       .container()
@@ -96,20 +101,25 @@ function getHelmContainerForChart(
  * @param version The full semver version (e.g. "1.0.0-123").
  * @returns The packaged chart file (.tgz).
  */
+type BuildChartOptions = {
+  chartDir: Directory;
+  chartName: string;
+  cdk8sManifests: Directory;
+  repoRoot: Directory;
+  version: string;
+};
+
 export function buildChart(
-  chartDir: Directory,
-  chartName: string,
-  cdk8sManifests: Directory,
-  repoRoot: Directory,
-  version: string,
+  options: BuildChartOptions,
 ): Directory {
-  const container = getHelmContainerForChart(
+  const { chartDir, chartName, cdk8sManifests, repoRoot, version } = options;
+  const container = getHelmContainerForChart({
     chartDir,
     chartName,
     cdk8sManifests,
     repoRoot,
     version,
-  );
+  });
 
   return container
     .withExec(["mkdir", "-p", "dist"])
@@ -133,13 +143,13 @@ export function buildAllCharts(
   for (const chartName of HELM_CHARTS) {
     // Use full path from repo root to avoid nested .directory() issues
     const chartDir = repoRoot.directory(`src/cdk8s/helm/${chartName}`);
-    const chartDist = buildChart(
+    const chartDist = buildChart({
       chartDir,
       chartName,
       cdk8sManifests,
       repoRoot,
       version,
-    );
+    });
     outputDir = outputDir.withDirectory(chartName, chartDist);
   }
 
@@ -156,14 +166,26 @@ export function buildAllCharts(
  * @param chartMuseumPassword The ChartMuseum password (secret).
  * @returns The curl output from the publish step.
  */
+type PublishChartOptions = {
+  chartName: string;
+  chartDist: Directory;
+  version: string;
+  repo?: string;
+  chartMuseumUsername: string;
+  chartMuseumPassword: Secret;
+};
+
 export async function publishChart(
-  chartName: string,
-  chartDist: Directory,
-  version: string,
-  repo = "https://chartmuseum.tailnet-1a49.ts.net",
-  chartMuseumUsername: string,
-  chartMuseumPassword: Secret,
+  options: PublishChartOptions,
 ): Promise<string> {
+  const {
+    chartName,
+    chartDist,
+    version,
+    repo = "https://chartmuseum.tailnet-1a49.ts.net",
+    chartMuseumUsername,
+    chartMuseumPassword,
+  } = options;
   const chartFile = `${chartName}-${version}.tgz`;
   // Use file-based output capture to avoid Dagger SDK URLSearchParams.toJSON bug with Bun
   const container = await dag
@@ -209,25 +231,36 @@ export async function publishChart(
  * @param chartMuseumPassword The ChartMuseum password (secret).
  * @returns Object mapping chart names to their publish results.
  */
+type PublishAllChartsOptions = {
+  allChartsDist: Directory;
+  version: string;
+  repo?: string;
+  chartMuseumUsername: string;
+  chartMuseumPassword: Secret;
+};
+
 export async function publishAllCharts(
-  allChartsDist: Directory,
-  version: string,
-  repo = "https://chartmuseum.tailnet-1a49.ts.net",
-  chartMuseumUsername: string,
-  chartMuseumPassword: Secret,
+  options: PublishAllChartsOptions,
 ): Promise<Record<string, string>> {
+  const {
+    allChartsDist,
+    version,
+    repo = "https://chartmuseum.tailnet-1a49.ts.net",
+    chartMuseumUsername,
+    chartMuseumPassword,
+  } = options;
   const results: Record<string, string> = {};
 
   for (const chartName of HELM_CHARTS) {
     const chartDist = allChartsDist.directory(chartName);
-    results[chartName] = await publishChart(
+    results[chartName] = await publishChart({
       chartName,
       chartDist,
       version,
       repo,
       chartMuseumUsername,
       chartMuseumPassword,
-    );
+    });
   }
 
   return results;

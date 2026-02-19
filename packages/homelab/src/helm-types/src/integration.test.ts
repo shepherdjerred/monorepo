@@ -1,11 +1,9 @@
 import { describe, test, expect } from "bun:test";
-import {
-  parseYAMLComments,
-  convertToTypeScriptInterface,
-  generateTypeScriptCode,
-} from "./helm-types.ts";
+import { parseYAMLComments } from "./yaml-comments.ts";
+import { convertToTypeScriptInterface } from "./type-converter.ts";
+import { generateTypeScriptCode } from "./interface-generator.ts";
 
-describe("Integration Tests - Full Workflow", () => {
+describe("Integration Tests - RBAC and Dotted Keys", () => {
   test("should handle argo-cd rbac config end-to-end with */ escaping and prose extraction", () => {
     // Real-world test: simulate the full workflow from YAML to TypeScript
     const yaml = `configs:
@@ -56,12 +54,12 @@ describe("Integration Tests - Full Workflow", () => {
     const comments = parseYAMLComments(yaml);
 
     // Step 3: Convert to TypeScript interface with comments
-    const tsInterface = convertToTypeScriptInterface(
-      values,
-      "TestHelmValues",
-      undefined,
-      comments,
-    );
+    const tsInterface = convertToTypeScriptInterface({
+      values: values,
+      interfaceName: "TestHelmValues",
+      schema: undefined,
+      yamlComments: comments,
+    });
 
     // Step 4: Generate TypeScript code
     const code = generateTypeScriptCode(tsInterface, "test");
@@ -84,7 +82,6 @@ describe("Integration Tests - Full Workflow", () => {
     );
 
     // Verify that if there were */ in comments, they would be escaped
-    // In this case, the policy rules with */ were filtered out, so we test the escaping separately
     const testCodeWithStarSlash = generateTypeScriptCode(
       {
         name: "Test",
@@ -109,9 +106,7 @@ describe("Integration Tests - Full Workflow", () => {
     // Verify no unescaped */ in comments (which would break TypeScript)
     const jsdocComments = code.match(/\/\*\*[\s\S]*?\*\//g) ?? [];
     for (const comment of jsdocComments) {
-      // Count unescaped */ (not preceded by backslash)
       const unescapedMatches = comment.match(/[^\\]\*\//g);
-      // Should only be 1 (the closing */)
       if (unescapedMatches) {
         expect(unescapedMatches.length).toBe(1);
       }
@@ -136,12 +131,12 @@ describe("Integration Tests - Full Workflow", () => {
     };
 
     const comments = parseYAMLComments(yaml);
-    const tsInterface = convertToTypeScriptInterface(
-      values,
-      "TestValues",
-      undefined,
-      comments,
-    );
+    const tsInterface = convertToTypeScriptInterface({
+      values: values,
+      interfaceName: "TestValues",
+      schema: undefined,
+      yamlComments: comments,
+    });
     const code = generateTypeScriptCode(tsInterface, "test");
 
     // Verify dotted keys are handled
@@ -156,7 +151,9 @@ describe("Integration Tests - Full Workflow", () => {
       "Comment for tls.enabled",
     );
   });
+});
 
+describe("Integration Tests - K8s Manifests and Documentation", () => {
   test("should handle complex real-world Kubernetes manifests", () => {
     const yaml = `deployment:
   # -- Number of replicas
@@ -212,12 +209,12 @@ describe("Integration Tests - Full Workflow", () => {
     };
 
     const comments = parseYAMLComments(yaml);
-    const tsInterface = convertToTypeScriptInterface(
-      values,
-      "K8sManifestValues",
-      undefined,
-      comments,
-    );
+    const tsInterface = convertToTypeScriptInterface({
+      values: values,
+      interfaceName: "K8sManifestValues",
+      schema: undefined,
+      yamlComments: comments,
+    });
     const code = generateTypeScriptCode(tsInterface, "k8s-manifest");
 
     // Verify structure
@@ -260,12 +257,12 @@ describe("Integration Tests - Full Workflow", () => {
     };
 
     const comments = parseYAMLComments(yaml);
-    const tsInterface = convertToTypeScriptInterface(
-      values,
-      "DocValues",
-      undefined,
-      comments,
-    );
+    const tsInterface = convertToTypeScriptInterface({
+      values: values,
+      interfaceName: "DocValues",
+      schema: undefined,
+      yamlComments: comments,
+    });
     const code = generateTypeScriptCode(tsInterface, "docs");
 
     // Verify multi-paragraph structure is preserved

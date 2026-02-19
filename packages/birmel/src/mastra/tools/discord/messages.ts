@@ -1,11 +1,10 @@
+import { getErrorMessage, toError } from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/index.ts";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import {
-  withToolSpan,
-  captureException,
-} from "@shepherdjerred/birmel/observability/index.ts";
+import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
+import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { validateSnowflakes, validateSnowflakeArray } from "./validation.ts";
 import { parseDiscordAPIError, formatDiscordAPIError } from "./error-utils.ts";
 import {
@@ -162,13 +161,13 @@ export const manageMessageTool = createTool({
               ctx.emoji,
             );
           case "remove-reaction":
-            return await handleRemoveReaction(
+            return await handleRemoveReaction({
               client,
-              ctx.channelId,
-              ctx.messageId,
-              ctx.emoji,
-              ctx.userId,
-            );
+              channelId: ctx.channelId,
+              messageId: ctx.messageId,
+              emoji: ctx.emoji,
+              userId: ctx.userId,
+            });
           case "get":
             return await handleGetMessages(
               client,
@@ -197,10 +196,10 @@ export const manageMessageTool = createTool({
           };
         }
         logger.error("Failed to manage message", error);
-        captureException(error as Error, { operation: "tool.manage-message" });
+        captureException(toError(error), { operation: "tool.manage-message" });
         return {
           success: false,
-          message: `Failed: ${(error as Error).message}`,
+          message: `Failed: ${getErrorMessage(error)}`,
         };
       }
     });

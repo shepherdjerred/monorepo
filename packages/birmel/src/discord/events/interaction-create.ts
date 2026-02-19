@@ -1,3 +1,4 @@
+import { getErrorMessage, toError } from "@shepherdjerred/birmel/utils/errors.ts";
 import type {
   Client,
   ButtonInteraction,
@@ -9,22 +10,19 @@ async function getEmbedBuilder(): Promise<typeof EmbedBuilderType> {
   const { EmbedBuilder } = await import("discord.js");
   return EmbedBuilder;
 }
-import { loggers } from "@shepherdjerred/birmel/utils/index.ts";
-import { captureException } from "@shepherdjerred/birmel/observability/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
 import {
   getSession,
   getPendingChanges,
   updateSessionState,
   cleanupSessionClone,
-  SessionState,
-  hasValidAuth,
-  getAuthorizationUrl,
-  createPullRequest,
-  generatePRTitle,
-  generatePRBody,
   updatePrUrl,
   extendSession,
-} from "@shepherdjerred/birmel/editor/index.ts";
+} from "@shepherdjerred/birmel/editor/session-manager.ts";
+import { SessionState } from "@shepherdjerred/birmel/editor/types.ts";
+import { hasValidAuth, getAuthorizationUrl } from "@shepherdjerred/birmel/editor/github-oauth.ts";
+import { createPullRequest, generatePRTitle, generatePRBody } from "@shepherdjerred/birmel/editor/github-pr.ts";
 
 const logger = loggers.discord.child("interaction-create");
 
@@ -44,14 +42,14 @@ export function setupInteractionHandler(client: Client): void {
         await handleEditorButton(interaction);
       } catch (error) {
         logger.error("Failed to handle editor interaction", error);
-        captureException(error as Error, {
+        captureException(toError(error), {
           operation: "interaction.editor",
           extra: { customId: interaction.customId },
         });
 
         // Try to respond with error
         try {
-          const errorMessage = `An error occurred: ${(error as Error).message}`;
+          const errorMessage = `An error occurred: ${getErrorMessage(error)}`;
           await (interaction.replied || interaction.deferred
             ? interaction.followUp({ content: errorMessage, flags: 64 })
             : interaction.reply({ content: errorMessage, flags: 64 }));

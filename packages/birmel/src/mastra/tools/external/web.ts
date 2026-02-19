@@ -1,7 +1,8 @@
+import { getErrorMessage, toError } from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
-import { logger } from "@shepherdjerred/birmel/utils/index.ts";
+import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 import {
   handleFetchUrl,
   handleSearch,
@@ -71,8 +72,8 @@ export const externalServiceTool = createTool({
           return await handleLol(ctx.lolType, config.externalApis.riotApiKey);
       }
     } catch (error) {
-      logger.error("External service failed", error as Error);
-      return { success: false, message: `Failed: ${(error as Error).message}` };
+      logger.error("External service failed", toError(error));
+      return { success: false, message: `Failed: ${getErrorMessage(error)}` };
     }
   },
 });

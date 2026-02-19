@@ -13,6 +13,7 @@ import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.t
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { vaultItemPath, buildDbUrlScript } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Service as ServiceType } from "cdk8s-plus-31";
 
@@ -32,8 +33,7 @@ export function createPlausibleDeployment(
   // - totp_vault_key: Random 32 character string for TOTP encryption (use: openssl rand -base64 32)
   const plausibleSecrets = new OnePasswordItem(chart, "plausible-secrets", {
     spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/grbpijpjbt2ocw3vmrue2yoelq",
+      itemPath: vaultItemPath("grbpijpjbt2ocw3vmrue2yoelq"),
     },
   });
   const secretRef = Secret.fromSecretName(
@@ -82,12 +82,7 @@ export function createPlausibleDeployment(
       image: `library/busybox:${versions["library/busybox"]}`,
       command: ["/bin/sh", "-c"],
       args: [
-        `
-USER=$(cat /pg-secret/username)
-PASS=$(cat /pg-secret/password)
-echo "postgres://$USER:$PASS@plausible-postgresql:5432/plausible_db" > /db-url/url
-echo "Database URL built successfully"
-`,
+        buildDbUrlScript("plausible-postgresql:5432", "plausible_db", "/db-url/url"),
       ],
       securityContext: {
         user: UID,

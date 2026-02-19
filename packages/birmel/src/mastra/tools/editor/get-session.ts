@@ -1,14 +1,14 @@
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import { withToolSpan } from "@shepherdjerred/birmel/observability/index.ts";
+import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { getRequestContext } from "@shepherdjerred/birmel/mastra/tools/request-context.ts";
+import { isEditorEnabled } from "@shepherdjerred/birmel/editor/config.ts";
 import {
-  isEditorEnabled,
   getSession,
   getActiveSessionsForUser,
   getPendingChanges,
-} from "@shepherdjerred/birmel/editor/index.ts";
+} from "@shepherdjerred/birmel/editor/session-manager.ts";
 
 const logger = loggers.tools.child("editor.get-session");
 

@@ -1,9 +1,5 @@
 import { useState } from "react";
-import {
-  get,
-  type CredentialRequestOptionsJSON,
-  type PublicKeyCredentialWithAssertionJSON,
-} from "@github/webauthn-json";
+import { get } from "@github/webauthn-json";
 import { useClauderonClient } from "@shepherdjerred/clauderon/web/frontend/src/hooks/useClauderonClient";
 import { useAuth } from "@shepherdjerred/clauderon/web/frontend/src/contexts/AuthContext";
 
@@ -20,25 +16,18 @@ export function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Start login flow
-      const response: {
-        challenge_id: string;
-        options: CredentialRequestOptionsJSON;
-      } = (await client.loginStart({ username })) as {
-        challenge_id: string;
-        options: CredentialRequestOptionsJSON;
-      };
+      // Start login flow - options is typed as 'any' from TypeShare
+      const response = await client.loginStart({ username });
 
       // Trigger passkey authentication
-      const credential: PublicKeyCredentialWithAssertionJSON = await get(
-        response.options,
-      );
+      // response.options is 'any' from the generated type, get() accepts CredentialRequestOptionsJSON
+      const credential = await get(response.options);
 
-      // Finish login flow
+      // Finish login flow - credential field accepts 'any' in the generated type
       await client.loginFinish({
         username,
         challenge_id: response.challenge_id,
-        credential: credential as unknown as Record<string, unknown>,
+        credential,
       });
 
       // Refresh auth status

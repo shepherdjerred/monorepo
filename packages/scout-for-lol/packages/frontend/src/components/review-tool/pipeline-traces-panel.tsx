@@ -67,6 +67,27 @@ type TraceCardProps = {
   text: string | undefined;
 };
 
+function TraceCardStats({ trace }: { trace: StageTrace }) {
+  return (
+    <div className="text-xs text-surface-600 text-right space-y-0.5">
+      <div>{trace.model.model}</div>
+      <div className="flex items-center gap-2">
+        <span>{trace.durationMs}ms</span>
+        {trace.tokensPrompt !== undefined && (
+          <span className="text-surface-500">
+            {trace.tokensPrompt.toLocaleString()} input tokens
+          </span>
+        )}
+        {trace.tokensCompletion !== undefined && (
+          <span className="text-surface-500">
+            {trace.tokensCompletion.toLocaleString()} output tokens
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function TraceCard({ label, trace, text }: TraceCardProps) {
   if (!trace && text === undefined) {
     return null;
@@ -84,24 +105,7 @@ function TraceCard({ label, trace, text }: TraceCardProps) {
     <Card>
       <CardHeader className="flex items-start justify-between">
         <CardTitle>{label}</CardTitle>
-        {trace && (
-          <div className="text-xs text-surface-600 text-right space-y-0.5">
-            <div>{trace.model.model}</div>
-            <div className="flex items-center gap-2">
-              <span>{trace.durationMs}ms</span>
-              {trace.tokensPrompt !== undefined && (
-                <span className="text-surface-500">
-                  {trace.tokensPrompt.toLocaleString()} input tokens
-                </span>
-              )}
-              {trace.tokensCompletion !== undefined && (
-                <span className="text-surface-500">
-                  {trace.tokensCompletion.toLocaleString()} output tokens
-                </span>
-              )}
-            </div>
-          </div>
-        )}
+        {trace && <TraceCardStats trace={trace} />}
       </CardHeader>
       <CardContent className="space-y-2">
         {systemPrompt !== undefined && systemPrompt.length > 0 && (
@@ -276,9 +280,9 @@ function ImageSettingsCard({
 }) {
   const hasSettings =
     (intermediate?.selectedImagePrompts?.length ?? 0) > 0 ||
-    intermediate?.selectedArtStyle;
+    (intermediate?.selectedArtStyle !== undefined && intermediate.selectedArtStyle.length > 0);
 
-  if (!Boolean(hasSettings)) {
+  if (!hasSettings) {
     return null;
   }
 
@@ -288,7 +292,7 @@ function ImageSettingsCard({
         <CardTitle>Image Generation Settings</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 text-xs text-surface-800">
-        {intermediate?.selectedArtStyle !== undefined && intermediate?.selectedArtStyle.length > 0 && (
+        {intermediate?.selectedArtStyle !== undefined && intermediate.selectedArtStyle.length > 0 && (
           <div>
             <p className="text-surface-600 mb-1">Art style:</p>
             <p className="text-surface-700 bg-surface-50 rounded-md p-2">
@@ -346,9 +350,9 @@ function ImageGenerationCard({
         </CollapsibleSection>
         <div className="text-surface-700">
           Generated: {trace.response.imageGenerated ? "yes" : "no"}{" "}
-          {trace.response.imageSizeBytes !== undefined
-            ? `(${trace.response.imageSizeBytes.toLocaleString()} bytes)`
-            : ""}
+          {trace.response.imageSizeBytes === undefined
+            ? ""
+            : `(${trace.response.imageSizeBytes.toLocaleString()} bytes)`}
         </div>
       </CardContent>
     </Card>
