@@ -48,6 +48,7 @@
     "typedoc-plugin-extras": "^4.0.1",
     "typedoc-plugin-zod": "^1.4.0",
     "typescript": "^5.8.2",
+    "eslint": "^9.22.0",
     "vitest": "^3.0.8"
   },
   "files": [
