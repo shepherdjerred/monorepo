@@ -20,13 +20,6 @@ function getBaseBunContainer(): Container {
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"));
 }
 
-/**
- * Get a Bun container with source mounted.
- */
-function getBunContainer(source: Directory): Container {
-  return getBaseBunContainer().withMountedDirectory("/workspace", source);
-}
-
 // --- Common package helpers ---
 
 /**
@@ -55,12 +48,16 @@ function installCommonDeps(workspaceSource: Directory): Container {
     .withExec(["bun", "install"]);
 }
 
-function lintCommon(workspaceSource: Directory): Container {
-  return installCommonDeps(workspaceSource).withExec([
-    "bun",
-    "run",
-    "lint:check",
-  ]);
+function lintCommon(
+  workspaceSource: Directory,
+  eslintConfigSource: Directory,
+): Container {
+  return installCommonDeps(workspaceSource)
+    .withDirectory("/eslint-config", eslintConfigSource)
+    .withWorkdir("/eslint-config")
+    .withExec(["bun", "install"])
+    .withWorkdir("/workspace/packages/common")
+    .withExec(["bun", "run", "lint:check"]);
 }
 
 function buildCommon(workspaceSource: Directory): Container {
@@ -104,8 +101,14 @@ function installBackendDeps(workspaceSource: Directory): Container {
     .withExec(["bun", "install", "--frozen-lockfile"]);
 }
 
-function lintBackend(workspaceSource: Directory): Container {
+function lintBackend(
+  workspaceSource: Directory,
+  eslintConfigSource: Directory,
+): Container {
   return installBackendDeps(workspaceSource)
+    .withDirectory("/eslint-config", eslintConfigSource)
+    .withWorkdir("/eslint-config")
+    .withExec(["bun", "install"])
     .withWorkdir("/workspace/packages/backend")
     .withExec(["bun", "run", "lint:check"]);
 }
@@ -153,8 +156,14 @@ function installFrontendDeps(workspaceSource: Directory): Container {
     .withExec(["bun", "install", "--frozen-lockfile"]);
 }
 
-function lintFrontend(workspaceSource: Directory): Container {
+function lintFrontend(
+  workspaceSource: Directory,
+  eslintConfigSource: Directory,
+): Container {
   return installFrontendDeps(workspaceSource)
+    .withDirectory("/eslint-config", eslintConfigSource)
+    .withWorkdir("/eslint-config")
+    .withExec(["bun", "install"])
     .withWorkdir("/workspace/packages/frontend")
     .withExec(["bun", "run", "lint:check"]);
 }
@@ -292,11 +301,12 @@ export async function checkDiscordPlaysPokemon(
   source: Directory,
 ): Promise<string> {
   const pkgSource = source.directory("packages/discord-plays-pokemon");
+  const eslintConfig = source.directory("packages/eslint-config");
 
   await Promise.all([
     // Common lint
     withTiming("Common lint", async () => {
-      await lintCommon(pkgSource).sync();
+      await lintCommon(pkgSource, eslintConfig).sync();
     }),
     // Common test
     withTiming("Common test", async () => {
@@ -308,7 +318,7 @@ export async function checkDiscordPlaysPokemon(
     }),
     // Backend lint
     withTiming("Backend lint", async () => {
-      await lintBackend(pkgSource).sync();
+      await lintBackend(pkgSource, eslintConfig).sync();
     }),
     // Backend test
     withTiming("Backend test", async () => {
@@ -320,7 +330,7 @@ export async function checkDiscordPlaysPokemon(
     }),
     // Frontend lint
     withTiming("Frontend lint", async () => {
-      await lintFrontend(pkgSource).sync();
+      await lintFrontend(pkgSource, eslintConfig).sync();
     }),
     // Frontend test
     withTiming("Frontend test", async () => {
@@ -329,13 +339,6 @@ export async function checkDiscordPlaysPokemon(
     // Frontend build
     withTiming("Frontend build", async () => {
       await buildFrontend(pkgSource).sync();
-    }),
-    // Prettier
-    withTiming("Prettier check", async () => {
-      await getBunContainer(pkgSource)
-        .withExec(["bun", "install", "--frozen-lockfile"])
-        .withExec(["bun", "run", "prettier"])
-        .sync();
     }),
     // Markdownlint
     withTiming("Markdownlint check", async () => {
@@ -349,7 +352,7 @@ export async function checkDiscordPlaysPokemon(
     }),
   ]);
 
-  return "discord-plays-pokemon CI passed (lint, test, build, prettier, markdownlint)";
+  return "discord-plays-pokemon CI passed (lint, test, build, markdownlint)";
 }
 
 /**

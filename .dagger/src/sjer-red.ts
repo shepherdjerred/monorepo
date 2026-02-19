@@ -42,8 +42,18 @@ export async function checkSjerRed(source: Directory): Promise<string> {
 
   // Run lint, test, and build in parallel
   await Promise.all([
-    // Lint (simple Bun container)
-    installDeps(getBunContainer(), ciSource)
+    // Lint (Bun container with workspace structure for eslint-config)
+    getBunContainer()
+      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
+      .withFile("/workspace/package.json", source.file("package.json"))
+      .withFile("/workspace/bun.lock", source.file("bun.lock"))
+      .withDirectory("/workspace/packages/sjer.red", ciSource)
+      .withDirectory(
+        "/workspace/packages/eslint-config",
+        source.directory("packages/eslint-config"),
+      )
+      .withWorkdir("/workspace/packages/sjer.red")
+      .withExec(["bun", "install", "--frozen-lockfile"])
       .withExec(["bunx", "astro", "sync"])
       .withExec(["bun", "run", "lint"])
       .sync(),

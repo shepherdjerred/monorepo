@@ -3,22 +3,36 @@ import { dag } from "@dagger.io/dagger";
 import { syncToS3 } from "./lib-s3.ts";
 import versions from "./lib-versions.ts";
 
-function getWebringContainer(pkgSource: Directory): Container {
+function getWebringContainer(source: Directory): Container {
   return dag
     .container()
     .from(`oven/bun:${versions["oven/bun"]}`)
     .withWorkdir("/workspace")
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
-    .withDirectory("/workspace", pkgSource, {
-      exclude: [
-        "node_modules",
-        "dist",
-        "build",
-        ".cache",
-        ".dagger",
-        "generated",
-      ],
-    })
+    // Root workspace files for bun install
+    .withFile("/workspace/package.json", source.file("package.json"))
+    .withFile("/workspace/bun.lock", source.file("bun.lock"))
+    // Package source
+    .withDirectory(
+      "/workspace/packages/webring",
+      source.directory("packages/webring"),
+      {
+        exclude: [
+          "node_modules",
+          "dist",
+          "build",
+          ".cache",
+          ".dagger",
+          "generated",
+        ],
+      },
+    )
+    // Eslint config (needed for lint — ../eslint-config/local.ts)
+    .withDirectory(
+      "/workspace/packages/eslint-config",
+      source.directory("packages/eslint-config"),
+    )
+    .withWorkdir("/workspace/packages/webring")
     .withExec(["bun", "install", "--frozen-lockfile"]);
 }
 
@@ -26,8 +40,7 @@ function getWebringContainer(pkgSource: Directory): Container {
  * Check webring: lint, build, test (with example app)
  */
 export async function checkWebring(source: Directory): Promise<string> {
-  const pkgSource = source.directory("packages/webring");
-  const container = getWebringContainer(pkgSource);
+  const container = getWebringContainer(source);
 
   // Lint and build in parallel
   await Promise.all([
@@ -44,9 +57,9 @@ export async function checkWebring(source: Directory): Promise<string> {
   await container.withExec(["bun", "run", "test", "--", "--run"]).sync();
 
   // Test example app with workaround for symlink issues
-  const exampleContainer = getWebringContainer(pkgSource)
+  const exampleContainer = getWebringContainer(source)
     .withDirectory("dist", buildDir)
-    .withWorkdir("/workspace/example")
+    .withWorkdir("/workspace/packages/webring/example")
     .withExec([
       "bun",
       "-e",
@@ -70,8 +83,7 @@ export async function deployWebringDocs(
   s3AccessKeyId: Secret,
   s3SecretAccessKey: Secret,
 ): Promise<string> {
-  const pkgSource = source.directory("packages/webring");
-  const container = getWebringContainer(pkgSource);
+  const container = getWebringContainer(source);
 
   const docsDir = container
     .withExec(["bun", "run", "typedoc"])
