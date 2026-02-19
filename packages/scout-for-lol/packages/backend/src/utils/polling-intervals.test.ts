@@ -104,10 +104,8 @@ describe("getPollingReferenceTime", () => {
   const lastChecked = new Date("2024-01-15T11:00:00Z");
 
   test("returns undefined if never checked before", () => {
-    // eslint-disable-next-line unicorn/no-useless-undefined -- testing undefined lastCheckedAt
-    expect(getPollingReferenceTime(lastMatch, undefined)).toBe(undefined);
-    // eslint-disable-next-line unicorn/no-useless-undefined -- testing both undefined
-    expect(getPollingReferenceTime(undefined, undefined)).toBe(undefined);
+    expect(getPollingReferenceTime(lastMatch)).toBeUndefined();
+    expect(getPollingReferenceTime()).toBeUndefined();
   });
 
   test("returns lastCheckedAt if never seen a match", () => {

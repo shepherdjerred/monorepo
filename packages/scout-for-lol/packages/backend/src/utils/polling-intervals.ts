@@ -125,12 +125,12 @@ export function calculatePollingInterval(
  * @returns The time to use for polling interval calculations
  */
 export function getPollingReferenceTime(
-  lastMatchTime: Date | undefined,
-  lastCheckedAt: Date | undefined,
+  lastMatchTime?: Date,
+  lastCheckedAt?: Date,
 ): Date | undefined {
   // Never checked before - should check now
   if (lastCheckedAt === undefined) {
-    return undefined;
+    return;
   }
 
   // Never seen a match - use last checked time
