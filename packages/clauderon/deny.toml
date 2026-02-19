@@ -1,6 +1,6 @@
 [advisories]
 yanked = "warn"
-unmaintained = "workspace"
+unmaintained = "warn"
 
 [licenses]
 allow = [
@@ -9,6 +9,7 @@ allow = [
     "BSD-2-Clause",
     "BSD-3-Clause",
     "ISC",
+    "NCSA",
     "Unicode-3.0",
     "Unicode-DFS-2016",
     "CC0-1.0",
