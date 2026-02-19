@@ -1,7 +1,7 @@
 import { recommended } from "../eslint-config/local.ts";
 
 export default [
-  { ignores: ["**/*.astro"] },
+  { ignores: ["**/*.astro", "src/env.d.ts"] },
   ...recommended({ tsconfigRootDir: import.meta.dirname }),
   {
     files: ["astro.config.*", "playwright.config.*"],

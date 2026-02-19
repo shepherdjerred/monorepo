@@ -104,17 +104,14 @@ export async function handleCreateStandalone(
     };
   }
   const channel = await client.channels.fetch(channelId);
-  if (channel?.isTextBased() !== true || !("threads" in channel)) {
-    return { success: false, message: "Channel must support threads" };
+  if (channel?.type !== ChannelType.GuildText) {
+    return { success: false, message: "Channel must be a text channel" };
   }
   const autoArchiveDuration = parseAutoArchiveDuration(autoArchiveDurationStr);
-  const threadType =
-    type === "private" ? ChannelType.PrivateThread : ChannelType.PublicThread;
   const thread = await channel.threads.create({
     name,
     autoArchiveDuration,
-    // @ts-expect-error - ChannelType enum complexity with Discord.js types
-    type: threadType,
+    type: type === "private" ? ChannelType.PrivateThread : ChannelType.PublicThread,
     ...(messageContent != null &&
       messageContent.length > 0 && { message: { content: messageContent } }),
   });
