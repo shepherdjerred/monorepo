@@ -87,9 +87,10 @@ function installWorkspaceDeps(
  * @returns Container ready for birmel operations
  */
 export function getBirmelPrepared(workspaceSource: Directory): Container {
-  return installWorkspaceDeps(workspaceSource, true).withWorkdir(
-    "/workspace/packages/birmel",
-  );
+  return installWorkspaceDeps(workspaceSource, true)
+    .withWorkdir("/workspace/packages/eslint-config")
+    .withExec(["bun", "run", "build"])
+    .withWorkdir("/workspace/packages/birmel");
 }
 
 /**

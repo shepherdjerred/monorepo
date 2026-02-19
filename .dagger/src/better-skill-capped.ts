@@ -42,6 +42,8 @@ export async function checkBetterSkillCapped(
       )
       .withWorkdir("/workspace")
       .withExec(["bun", "install"])
+      .withWorkdir("/workspace/packages/eslint-config")
+      .withExec(["bun", "run", "build"])
       .withWorkdir("/workspace/packages/better-skill-capped")
       .withExec(["bun", "run", "lint"])
       .sync(),

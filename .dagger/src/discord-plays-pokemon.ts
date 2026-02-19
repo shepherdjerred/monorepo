@@ -57,6 +57,7 @@ function lintCommon(
     .withDirectory("/eslint-config", eslintConfigSource)
     .withWorkdir("/eslint-config")
     .withExec(["bun", "install"])
+    .withExec(["bun", "run", "build"])
     .withWorkdir("/workspace/packages/common")
     .withExec(["bun", "run", "lint:check"]);
 }
@@ -111,6 +112,7 @@ function lintBackend(
     .withDirectory("/eslint-config", eslintConfigSource)
     .withWorkdir("/eslint-config")
     .withExec(["bun", "install"])
+    .withExec(["bun", "run", "build"])
     .withWorkdir("/workspace/packages/backend")
     .withExec(["bun", "run", "lint:check"]);
 }
@@ -167,6 +169,7 @@ function lintFrontend(
     .withDirectory("/eslint-config", eslintConfigSource)
     .withWorkdir("/eslint-config")
     .withExec(["bun", "install"])
+    .withExec(["bun", "run", "build"])
     .withWorkdir("/workspace/packages/frontend")
     .withExec(["bun", "run", "lint:check"]);
 }

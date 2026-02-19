@@ -37,6 +37,8 @@ export async function checkAstroOpengraphImages(
     )
     .withWorkdir("/workspace")
     .withExec(["bun", "install"])
+    .withWorkdir("/workspace/packages/eslint-config")
+    .withExec(["bun", "run", "build"])
     .withWorkdir("/workspace/packages/astro-opengraph-images");
 
   // Run lint, build, test sequentially
