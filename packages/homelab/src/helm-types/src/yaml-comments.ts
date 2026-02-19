@@ -46,7 +46,7 @@ export function isSimpleYAMLValue(line: string): boolean {
  */
 export function isSectionHeader(
   line: string,
-  nextLine: string | undefined,
+  nextLine?: string,
 ): boolean {
   if ((nextLine == null || nextLine === "")) {
     return false;

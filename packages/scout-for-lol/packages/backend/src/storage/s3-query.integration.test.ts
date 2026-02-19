@@ -10,7 +10,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import {
   GetObjectCommand,
-  type GetObjectCommandOutput,
   ListObjectsV2Command,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -62,16 +61,16 @@ function generateMatchKey(matchId: string, date: Date): string {
   return `games/${year.toString()}/${month}/${day}/${matchId}/match.json`;
 }
 
-// Helper to create a mock GetObjectCommandOutput
-// We cast to the expected type since SdkStream can't be constructed in test code.
-function createMockGetObjectResponse(content: string): GetObjectCommandOutput {
-  // eslint-disable-next-line custom-rules/no-type-assertions -- SdkStream can't be constructed in test code
+// Helper to create a mock GetObjectCommandOutput.
+// SdkStream can't be constructed in test code, so we return a partial mock
+// and use callsFake() (which accepts any return type) instead of resolves().
+function createMockGetObjectResponse(content: string) {
   return {
     Body: {
       transformToString: () => Promise.resolve(content),
     },
     $metadata: {},
-  } as unknown as GetObjectCommandOutput;
+  };
 }
 
 beforeEach(() => {
@@ -121,15 +120,15 @@ describe("queryMatchesByDateRange - single day", () => {
     // Mock S3 GetObject for each match
     s3Mock
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_1001", date) })
-      .resolves(createMockGetObjectResponse(JSON.stringify(match1)));
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match1)));
 
     s3Mock
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_1002", date) })
-      .resolves(createMockGetObjectResponse(JSON.stringify(match2)));
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match2)));
 
     s3Mock
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_1003", date) })
-      .resolves(createMockGetObjectResponse(JSON.stringify(match3)));
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match3)));
 
     // Query for matches with puuid1 or puuid2
     const results = await queryMatchesByDateRange(date, date, [puuid1, puuid2]);
@@ -176,15 +175,15 @@ describe("queryMatchesByDateRange - single day", () => {
 
     s3Mock
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_2001", date) })
-      .resolves(createMockGetObjectResponse(JSON.stringify(match1)));
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match1)));
 
     s3Mock
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_2002", date) })
-      .resolves(createMockGetObjectResponse(JSON.stringify(match2)));
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match2)));
 
     s3Mock
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_2003", date) })
-      .resolves(createMockGetObjectResponse(JSON.stringify(match3)));
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match3)));
 
     // Query for matches with targetPuuid only
     const results = await queryMatchesByDateRange(date, date, [targetPuuid]);
@@ -241,15 +240,15 @@ describe("queryMatchesByDateRange - date range", () => {
 
     s3Mock
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_3001", date1) })
-      .resolves(createMockGetObjectResponse(JSON.stringify(match1)));
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match1)));
 
     s3Mock
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_3002", date2) })
-      .resolves(createMockGetObjectResponse(JSON.stringify(match2)));
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match2)));
 
     s3Mock
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_3003", date3) })
-      .resolves(createMockGetObjectResponse(JSON.stringify(match3)));
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match3)));
 
     // Query the entire range
     const results = await queryMatchesByDateRange(date1, date3, [puuid]);
@@ -283,11 +282,11 @@ describe("queryMatchesByDateRange - date range", () => {
 
     s3Mock
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_4002", date2) })
-      .resolves(createMockGetObjectResponse(JSON.stringify(match2)));
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match2)));
 
     s3Mock
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_4003", date3) })
-      .resolves(createMockGetObjectResponse(JSON.stringify(match3)));
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match3)));
 
     // Query only middle 2 days
     const results = await queryMatchesByDateRange(date2, date3, [puuid]);
@@ -324,15 +323,15 @@ describe("queryMatchesByDateRange - date range", () => {
 
     s3Mock
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_5001", date1) })
-      .resolves(createMockGetObjectResponse(JSON.stringify(match1)));
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match1)));
 
     s3Mock
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_5002", date2) })
-      .resolves(createMockGetObjectResponse(JSON.stringify(match2)));
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match2)));
 
     s3Mock
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_5003", date3) })
-      .resolves(createMockGetObjectResponse(JSON.stringify(match3)));
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match3)));
 
     const results = await queryMatchesByDateRange(date1, date3, [puuid]);
 
@@ -373,14 +372,14 @@ describe("queryMatchesByDateRange - edge cases", () => {
     // Valid match returns proper JSON
     s3Mock
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_6001", date) })
-      .resolves(createMockGetObjectResponse(JSON.stringify(validMatch)));
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(validMatch)));
 
     // Invalid match returns malformed JSON
     s3Mock
       .on(GetObjectCommand, {
         Key: generateMatchKey("TEST_6002_INVALID", date),
       })
-      .resolves(createMockGetObjectResponse("{ invalid json content"));
+      .callsFake(() => createMockGetObjectResponse("{ invalid json content"));
 
     // Query should skip invalid JSON and return valid match
     const results = await queryMatchesByDateRange(date, date, [puuid]);
@@ -427,15 +426,15 @@ describe("queryMatchesByDateRange - edge cases", () => {
 
     s3Mock
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_7001", date) })
-      .resolves(createMockGetObjectResponse(JSON.stringify(match1)));
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match1)));
 
     s3Mock
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_7002", date) })
-      .resolves(createMockGetObjectResponse(JSON.stringify(match2)));
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match2)));
 
     s3Mock
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_7003", date) })
-      .resolves(createMockGetObjectResponse(JSON.stringify(match3)));
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match3)));
 
     // Query for puuid1 and puuid2
     const results = await queryMatchesByDateRange(date, date, [puuid1, puuid2]);
@@ -466,7 +465,7 @@ describe("queryMatchesByDateRange - edge cases", () => {
     // First match returns successfully
     s3Mock
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_8001", date) })
-      .resolves(createMockGetObjectResponse(JSON.stringify(validMatch)));
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(validMatch)));
 
     // Second match throws error
     s3Mock
@@ -507,7 +506,7 @@ describe("queryMatchesByDateRange - data verification", () => {
 
     s3Mock
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_9001", date) })
-      .resolves(createMockGetObjectResponse(JSON.stringify(match)));
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match)));
 
     const results = await queryMatchesByDateRange(date, date, [puuid]);
 
