@@ -57,6 +57,7 @@ export async function checkSjerRed(source: Directory): Promise<string> {
         "/workspace/packages/eslint-config",
         source.directory("packages/eslint-config"),
       )
+      .withFile("/workspace/tsconfig.base.json", source.file("tsconfig.base.json"))
       .withWorkdir("/workspace")
       .withExec(["bun", "install"])
       .withWorkdir("/workspace/packages/eslint-config")
