@@ -209,7 +209,13 @@ export async function checkDesktopParallel(
       .withWorkdir("/eslint-config")
       .withExec(["bun", "install"])
       .withExec(["bun", "run", "build"])
-      .withWorkdir("/workspace");
+      .withWorkdir("/workspace")
+      // Fix jiti/CJS resolver: rewrite relative import that traverses to filesystem root
+      .withExec([
+        "sed", "-i",
+        `s|"../eslint-config/local.ts"|"/eslint-config/local.ts"|`,
+        "/workspace/eslint.config.ts",
+      ]);
   }
 
   const frontend = frontendDist ?? buildDesktopFrontend(workspaceSource);
