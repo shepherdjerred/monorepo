@@ -24,6 +24,7 @@ import {
  */
 export async function checkScoutForLol(source: Directory): Promise<string> {
   const pkgSource = source.directory("packages/scout-for-lol");
+  const eslintConfigSource = source.directory("packages/eslint-config");
 
   logWithTimestamp("Starting comprehensive check process for scout-for-lol");
 
@@ -31,10 +32,15 @@ export async function checkScoutForLol(source: Directory): Promise<string> {
   const prismaGenerated = generatePrismaClient(pkgSource);
 
   // Use mounted workspace for CI checks (faster than copying files)
+  // Mount eslint-config at /eslint-config/ (eslint.config.ts imports from ../eslint-config/local.ts)
   const preparedWorkspace = getPreparedMountedWorkspace(
     pkgSource,
     prismaGenerated,
-  );
+  )
+    .withDirectory("/eslint-config", eslintConfigSource)
+    .withWorkdir("/eslint-config")
+    .withExec(["bun", "install"])
+    .withWorkdir("/workspace");
 
   // Build desktop frontend once and share
   const desktopFrontend = buildDesktopFrontend(pkgSource);
@@ -76,7 +82,7 @@ export async function checkScoutForLol(source: Directory): Promise<string> {
           .sync();
       }),
       withTiming("desktop check (parallel TS + Rust)", async () => {
-        await checkDesktopParallel(pkgSource, desktopFrontend);
+        await checkDesktopParallel(pkgSource, desktopFrontend, eslintConfigSource);
       }),
     ]);
   });

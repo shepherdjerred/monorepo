@@ -197,8 +197,19 @@ export function buildDesktopFrontend(workspaceSource: Directory): Directory {
 export async function checkDesktopParallel(
   workspaceSource: Directory,
   frontendDist?: Directory,
+  eslintConfigSource?: Directory,
 ): Promise<void> {
-  const baseContainer = installDesktopDeps(workspaceSource);
+  let baseContainer = installDesktopDeps(workspaceSource);
+
+  // Mount eslint-config for lint (eslint.config.ts imports from ../eslint-config/local.ts)
+  if (eslintConfigSource) {
+    baseContainer = baseContainer
+      .withDirectory("/eslint-config", eslintConfigSource)
+      .withWorkdir("/eslint-config")
+      .withExec(["bun", "install"])
+      .withWorkdir("/workspace");
+  }
+
   const frontend = frontendDist ?? buildDesktopFrontend(workspaceSource);
 
   const containerWithFrontend = baseContainer

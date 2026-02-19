@@ -33,7 +33,7 @@ function getWebringContainer(source: Directory): Container {
       source.directory("packages/eslint-config"),
     )
     .withWorkdir("/workspace/packages/webring")
-    .withExec(["bun", "install", "--frozen-lockfile"]);
+    .withExec(["bun", "install"]);
 }
 
 /**

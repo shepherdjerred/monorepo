@@ -31,7 +31,7 @@ export async function checkAstroOpengraphImages(
       source.directory("packages/eslint-config"),
     )
     .withWorkdir("/workspace/packages/astro-opengraph-images")
-    .withExec(["bun", "install", "--frozen-lockfile"]);
+    .withExec(["bun", "install"]);
 
   // Run lint, build, test sequentially
   await container.withExec(["bun", "run", "lint"]).sync();

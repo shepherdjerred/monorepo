@@ -125,9 +125,10 @@ export async function setupPrisma(
       "OPS_DATABASE_URL",
       "file:/workspace/packages/birmel/data/test-ops.db",
     )
-    .withExec(["/workspace/node_modules/.bin/prisma", "generate"])
+    .withExec(["bunx", "prisma", "generate"])
     .withExec([
-      "/workspace/node_modules/.bin/prisma",
+      "bunx",
+      "prisma",
       "db",
       "push",
       "--accept-data-loss",
