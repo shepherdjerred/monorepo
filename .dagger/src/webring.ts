@@ -32,8 +32,9 @@ function getWebringContainer(source: Directory): Container {
       "/workspace/packages/eslint-config",
       source.directory("packages/eslint-config"),
     )
-    .withWorkdir("/workspace/packages/webring")
-    .withExec(["bun", "install"]);
+    .withWorkdir("/workspace")
+    .withExec(["bun", "install"])
+    .withWorkdir("/workspace/packages/webring");
 }
 
 /**

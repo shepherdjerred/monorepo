@@ -32,8 +32,6 @@ export function getWorkspaceContainer(
     .withDirectory("packages/homelab/patches", repoRoot.directory("patches"))
     // Copy root eslint config (workspace configs import from it)
     .withFile("eslint.config.ts", repoRoot.file("eslint.config.ts"))
-    // Copy custom eslint rules directory (required by eslint.config.ts)
-    .withDirectory("eslint-rules", repoRoot.directory("eslint-rules"))
     // Copy root TypeScript config (workspace configs extend from it)
     .withFile("tsconfig.base.json", repoRoot.file("tsconfig.base.json"))
     // Create stub .dagger/package.json since Dagger excludes .dagger directory by default

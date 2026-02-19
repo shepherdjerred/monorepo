@@ -30,8 +30,9 @@ export async function checkAstroOpengraphImages(
       "/workspace/packages/eslint-config",
       source.directory("packages/eslint-config"),
     )
-    .withWorkdir("/workspace/packages/astro-opengraph-images")
-    .withExec(["bun", "install"]);
+    .withWorkdir("/workspace")
+    .withExec(["bun", "install"])
+    .withWorkdir("/workspace/packages/astro-opengraph-images");
 
   // Run lint, build, test sequentially
   await container.withExec(["bun", "run", "lint"]).sync();

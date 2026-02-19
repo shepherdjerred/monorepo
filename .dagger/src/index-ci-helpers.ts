@@ -98,7 +98,9 @@ export function installWorkspaceDeps(source: Directory): Container {
     useMounts: true,
     workspaces: CI_WORKSPACES,
     rootConfigFiles: ["tsconfig.base.json"],
-  });
+  })
+    // Mount scripts directory (root package.json scripts reference scripts/run-package-script.ts)
+    .withMountedDirectory("/workspace/scripts", source.directory("scripts"));
 }
 
 /**
