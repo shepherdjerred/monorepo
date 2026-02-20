@@ -125,7 +125,7 @@ const versions = {
   "library/python":
     "3.14-alpine@sha256:079b889b270e730f38bdbabf505362538db449a216895c2c45664b1538bd34d5",
   // renovate: datasource=docker registryUrl=https://registry.dagger.io versioning=loose
-  "dagger-helm": "0.19.10",
+  "dagger-helm": "0.19.11",
   // renovate: datasource=helm registryUrl=https://vmware-tanzu.github.io/helm-charts versioning=semver
   velero: "11.3.2",
   // renovate: datasource=helm registryUrl=https://kyverno.github.io/kyverno versioning=semver
