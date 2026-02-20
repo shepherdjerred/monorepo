@@ -89,9 +89,6 @@ export function createDaggerApp(chart: Chart) {
           // TODO: use types for this
           valuesObject: {
             engine: {
-              image: {
-                ref: `ghcr.io/shepherdjerred/dagger-engine:v${versions.dagger}`,
-              },
               // Configure GC to prevent disk from filling up (1TB volume)
               configJson: JSON.stringify({
                 gc: {
