@@ -66,7 +66,6 @@ export function buildXar(
     .withExec(["./configure", "--prefix=/xar"])
     .withExec(["make", "-j" + cores.toString()])
     .withExec(["make", "install"]);
-
   return xarContainer.directory("/xar");
 }
 
@@ -103,7 +102,6 @@ export function buildLibdispatch(
       "-DCMAKE_CXX_COMPILER=clang++",
     ])
     .withExec(["make", "install", "-j" + cores.toString()]);
-
   return libdispatchContainer.directory("/libdispatch");
 }
 
@@ -129,7 +127,6 @@ export function buildLibtapi(
     .withEnvVariable("INSTALLPREFIX", "/libtapi")
     .withExec(["./build.sh"])
     .withExec(["./install.sh"]);
-
   return libtapiContainer.directory("/libtapi");
 }
 

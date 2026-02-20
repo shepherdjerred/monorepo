@@ -463,3 +463,34 @@ async function postInteractiveResponse(
 
   return `Responded to interactive request on PR #${String(prNumber)}`;
 }
+
+/**
+ * Handle an interactive @claude mention, reading the comment body from a Secret.
+ */
+export async function handleInteractiveFromSecret(options: {
+  source: Directory;
+  githubToken: Secret;
+  claudeOauthToken: Secret;
+  prNumber: number;
+  commentBody: Secret;
+  commentPath?: string | undefined;
+  commentLine?: number | undefined;
+  commentDiffHunk?: string | undefined;
+}): Promise<string> {
+  const bodyText = await options.commentBody.plaintext();
+  return handleInteractive({
+    source: options.source,
+    githubToken: options.githubToken,
+    claudeOauthToken: options.claudeOauthToken,
+    prNumber: options.prNumber,
+    commentBody: bodyText,
+    eventContext:
+      options.commentPath === undefined
+        ? undefined
+        : {
+            path: options.commentPath,
+            line: options.commentLine,
+            diffHunk: options.commentDiffHunk,
+          },
+  });
+}
